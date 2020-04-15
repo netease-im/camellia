@@ -25,15 +25,17 @@ public class LockSamples {
         long expireTimeoutMillis = 3000;//锁的过期时间
         CamelliaRedisLock redisLock = CamelliaRedisLock.newLock(template, lockKey, acquireTimeoutMillis, expireTimeoutMillis);
 
-        //1. 获取锁，若没有会阻塞直到acquireTimeoutMillis
-        redisLock.lock();
-        try {
-            System.out.println("do some thing");
-        } finally {
-            redisLock.release();
+        //1. 获取锁，若获取失败，则会阻塞直到acquireTimeoutMillis
+        boolean lock = redisLock.lock();
+        if (lock) {
+            try {
+                System.out.println("do some thing");
+            } finally {
+                redisLock.release();
+            }
         }
 
-        //2.获取锁，若获取成功则执行Runnable，若没有，会阻塞直到acquireTimeoutMillis
+        //2.获取锁，若获取成功则执行Runnable，若获取失败，则会阻塞直到acquireTimeoutMillis
         boolean ok = redisLock.lockAndRun(() -> System.out.println("do some thing"));
 
         //3.尝试获取锁，若获取失败，立即返回
@@ -48,7 +50,7 @@ public class LockSamples {
 
         //4.延长锁过期时间
         boolean renew = redisLock.renew();
-        
+
         //5.清空锁相关的key，会释放不是自己获取到的锁
         redisLock.clear();
     }
