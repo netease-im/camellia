@@ -1,0 +1,206 @@
+package com.netease.nim.camellia.redis.proxy.util;
+
+import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
+import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
+import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
+import io.netty.buffer.ByteBuf;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.List;
+
+/**
+ *
+ * Created by caojiajun on 2019/11/5.
+ */
+public class Utils {
+
+    public static final String syntaxError = "syntax error";
+
+    public static final byte[] NEG_ONE = convert(-1, false);
+    public static final byte[] NEG_ONE_WITH_CRLF = convert(-1, true);
+    public static final char CR = '\r';
+    public static final char LF = '\n';
+    public static final char ZERO = '0';
+    public static Charset utf8Charset = Charset.forName("utf-8");
+
+    private static final int NUM_MAP_LENGTH = 256;
+    private static byte[][] numMap = new byte[NUM_MAP_LENGTH][];
+    private static byte[][] numMapWithCRLF = new byte[NUM_MAP_LENGTH][];
+    static {
+        for (int i = 0; i < NUM_MAP_LENGTH; i++) {
+            numMapWithCRLF[i] = convert(i, true);
+        }
+    }
+
+    public static long readLong(ByteBuf is) throws IOException {
+        long size = 0;
+        int sign = 1;
+        int read = is.readByte();
+        if (read == '-') {
+            read = is.readByte();
+            sign = -1;
+        }
+        do {
+            if (read == CR) {
+                if (is.readByte() == LF) {
+                    break;
+                }
+            }
+            int value = read - ZERO;
+            if (value >= 0 && value < 10) {
+                size *= 10;
+                size += value;
+            } else {
+                throw new IOException("Invalid character in integer");
+            }
+            read = is.readByte();
+        } while (true);
+        return size * sign;
+    }
+
+    public static byte[] numToBytes(long value, boolean withCRLF) {
+        if (value >= 0 && value < NUM_MAP_LENGTH) {
+            int index = (int) value;
+            return withCRLF ? numMapWithCRLF[index] : numMap[index];
+        } else if (value == -1) {
+            return withCRLF ? NEG_ONE_WITH_CRLF : NEG_ONE;
+        }
+        return convert(value, withCRLF);
+    }
+
+    private static byte[] convert(long value, boolean withCRLF) {
+        boolean negative = value < 0;
+        // Checked javadoc: If the argument is equal to 10^n for integer n, then the result is n.
+        // Also, if negative, leave another slot for the sign.
+        long abs = Math.abs(value);
+        int index = (value == 0 ? 0 : (int) Math.log10(abs)) + (negative ? 2 : 1);
+        // Append the CRLF if necessary
+        byte[] bytes = new byte[withCRLF ? index + 2 : index];
+        if (withCRLF) {
+            bytes[index] = CR;
+            bytes[index + 1] = LF;
+        }
+        // Put the sign in the slot we saved
+        if (negative) bytes[0] = '-';
+        long next = abs;
+        while ((next /= 10) > 0) {
+            bytes[--index] = (byte) ('0' + (abs % 10));
+            abs = next;
+        }
+        bytes[--index] = (byte) ('0' + abs);
+        return bytes;
+    }
+
+    public static boolean checkStringIgnoreCase(byte[] bytes, String string) {
+        if (bytes == null) {
+            return string == null;
+        }
+        return new String(bytes, utf8Charset).equalsIgnoreCase(string);
+    }
+
+    public static double bytesToDouble(byte[] bytes) {
+        if (bytes == null) {
+            throw new IllegalArgumentException(syntaxError);
+        }
+        try {
+            return Double.parseDouble(new String(bytes, utf8Charset));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(syntaxError);
+        }
+    }
+
+    public static byte[] doubleToBytes(Double d) {
+        if (d == null) return null;
+        return String.valueOf(d).getBytes(utf8Charset);
+    }
+
+    public static String bytesToString(byte[] bytes) {
+        if (bytes == null) return null;
+        return new String(bytes, utf8Charset);
+    }
+
+    public static IllegalArgumentException illegalArgumentException() {
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        if (stackTrace != null && stackTrace.length > 4) {
+            String methodName = stackTrace[3].getMethodName();
+            return new IllegalArgumentException("wrong number of arguments for '" + methodName + "' command");
+        }
+        return new IllegalArgumentException("wrong number of arguments");
+    }
+
+    public static long bytesToNum(byte[] bytes) {
+        int length = bytes.length;
+        if (length == 0) {
+            throw new IllegalArgumentException("value is not an integer or out of range");
+        }
+        int position = 0;
+        int sign;
+        int read = bytes[position++];
+        if (read == '-') {
+            read = bytes[position++];
+            sign = -1;
+        } else {
+            sign = 1;
+        }
+        long number = 0;
+        do {
+            int value = read - '0';
+            if (value >= 0 && value < 10) {
+                number *= 10;
+                number += value;
+            } else {
+                throw new IllegalArgumentException("value is not an integer or out of range");
+            }
+            if (position == length) {
+                return number * sign;
+            }
+            read = bytes[position++];
+        } while (true);
+    }
+
+    public static Reply mergeIntegerReply(List<Reply> replies) {
+        if (replies == null || replies.isEmpty()) {
+            return new IntegerReply(0L);
+        } else {
+            long ret = 0;
+            for (Reply reply : replies) {
+                if (reply instanceof IntegerReply) {
+                    ret += ((IntegerReply) reply).getInteger();
+                } else {
+                    return checkErrorReply(reply);
+                }
+            }
+            return new IntegerReply(ret);
+        }
+    }
+
+    public static Reply mergeStatusReply(List<Reply> replies) {
+        if (replies == null || replies.isEmpty()) {
+            return StatusReply.OK;
+        }
+        for (Reply reply : replies) {
+            if (reply instanceof StatusReply) {
+                String status = ((StatusReply) reply).getStatus();
+                if (!status.equalsIgnoreCase(StatusReply.OK.getStatus())) {
+                    return reply;
+                }
+            } else {
+                return checkErrorReply(reply);
+            }
+        }
+        return StatusReply.OK;
+    }
+
+    private static Reply checkErrorReply(Reply reply) {
+        if (reply == ErrorReply.NOT_AVAILABLE) {
+            //非预期的返回一般是ErrorReply.NOT_AVAILABLE，先判断一下
+            return reply;
+        } else if (reply instanceof ErrorReply) {
+            return reply;
+        } else {
+            return ErrorReply.NOT_AVAILABLE;
+        }
+    }
+}

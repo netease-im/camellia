@@ -1,0 +1,6 @@
+
+#see CamelliaRedisProperties
+camellia-redis:
+  type: local
+  local:
+    resource: redis-cluster://@127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381

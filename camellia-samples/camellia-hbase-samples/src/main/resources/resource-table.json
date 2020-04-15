@@ -1,0 +1,14 @@
+{
+  "type": "simple",
+  "operation": {
+    "read": "hbase://xxx1.163.org,xxx2.163.org,xxx3.163.org/hbase",
+    "type": "rw_separate",
+    "write": {
+      "resources": [
+        "hbase://xxx1.163.org,xxx2.163.org,xxx3.163.org/hbase",
+        "hbase://yyy1.163.org,yyy2.163.org,yyy3.163.org/hbase"
+      ],
+      "type": "multi"
+    }
+  }
+}

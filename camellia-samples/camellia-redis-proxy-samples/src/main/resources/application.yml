@@ -1,0 +1,14 @@
+
+server:
+  port: 6381
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+#  password: pass123
+  transpond:
+    type: local
+    local:
+      resource: redis://abc@127.0.0.1:6379
+

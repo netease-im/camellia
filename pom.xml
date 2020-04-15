@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.netease.nim</groupId>
+	<artifactId>camellia</artifactId>
+	<version>1.0.4-SNAPSHOT</version>
+	<name>camellia base module</name>
+	<packaging>pom</packaging>
+	<modules>
+		<module>camellia-core</module>
+		<module>camellia-dashboard</module>
+		<module>camellia-hbase</module>
+		<module>camellia-redis</module>
+		<module>camellia-redis-toolkit</module>
+		<module>camellia-redis-proxy</module>
+		<module>camellia-redis-proxy-hbase</module>
+		<module>camellia-samples</module>
+		<module>camellia-spring-boot-starters</module>
+	</modules>
+
+	<properties>
+		<spring.boot.version>2.0.6.RELEASE</spring.boot.version>
+		<spring.cloud.version>Finchley.RELEASE</spring.cloud.version>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.4.3</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>fastjson</artifactId>
+			<version>1.2.60</version>
+		</dependency>
+	</dependencies>
+
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>https://choosealicense.com/licenses/mit/</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<scm>
+		<url>https://github.com/netease-im/camellia</url>
+		<connection>https://github.com/netease-im/camellia.git</connection>
+		<developerConnection>https://github.com/caojiajun</developerConnection>
+	</scm>
+
+	<developers>
+		<developer>
+			<name>caojiajun</name>
+			<email>zj_caojiajun@163.com</email>
+			<url>https://github.com/caojiajun</url>
+		</developer>
+	</developers>
+
+	<repositories>
+		<repository>
+			<id>repo1.maven.org</id>
+			<url>http://repo1.maven.org/maven2</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+
+	</repositories>
+
+</project>

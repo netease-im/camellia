@@ -1,0 +1,20 @@
+
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  type: async #支持两种转发模式（sync和async，分别使用jedis和netty转发）
+  transpond:
+    type: local
+    local:
+      type: simple
+      resource: redis://@127.0.0.1:6379
+
+
+
+
+

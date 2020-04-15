@@ -1,0 +1,18 @@
+
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      type: complex
+      json-file: resource-table.json
+
+
+
+

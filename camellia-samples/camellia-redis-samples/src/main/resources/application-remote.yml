@@ -1,0 +1,8 @@
+
+#see CamelliaRedisProperties
+camellia-redis:
+  type: remote
+  remote:
+    bid: 1
+    bgroup: default
+    url: http://127.0.0.1:8080

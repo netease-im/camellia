@@ -1,0 +1,61 @@
+package com.netease.nim.camellia.redis.proxy.netty;
+
+import com.netease.nim.camellia.redis.proxy.command.sync.SyncCommandInvoker;
+import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.concurrent.DefaultThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ *
+ * Created by caojiajun on 2019/11/5.
+ */
+public class CamelliaRedisProxyServer {
+
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyServer.class);
+
+    private CamelliaServerProperties serverProperties;
+    private ServerHandler serverHandler;
+    private InitHandler initHandler = new InitHandler();
+
+    public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, CommandInvoker invoker) {
+        this.serverProperties = serverProperties;
+        this.serverHandler = new ServerHandler(serverProperties, invoker);
+    }
+
+    public void start() throws Exception {
+        int bossThread = serverProperties.getBossThread();
+        int workThread = serverProperties.getWorkThread();
+        logger.info("CamelliaRedisProxyServer init, bossThread = {}, workThread = {}", bossThread, workThread);
+        EventLoopGroup bossGroup = new NioEventLoopGroup(bossThread, new DefaultThreadFactory("boss-group"));
+        EventLoopGroup workGroup = new NioEventLoopGroup(workThread, new DefaultThreadFactory("work-group"));
+        ServerBootstrap serverBootstrap = new ServerBootstrap();
+        serverBootstrap.group(bossGroup, workGroup)
+                .channel(NioServerSocketChannel.class)
+                .option(ChannelOption.SO_BACKLOG, serverProperties.getSoBacklog())
+                .childOption(ChannelOption.SO_SNDBUF, serverProperties.getSoSndbuf())
+                .childOption(ChannelOption.SO_RCVBUF, serverProperties.getSoRcvbuf())
+                .childOption(ChannelOption.TCP_NODELAY, true)
+                .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK,
+                        new WriteBufferWaterMark(serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh()))
+                .childHandler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    public void initChannel(SocketChannel ch) throws Exception {
+                        ChannelPipeline p = ch.pipeline();
+                        p.addLast(new CommandDecoder(serverProperties.getCommandDecodeMaxBatchSize()));
+                        p.addLast(new ReplyEncoder(serverProperties));
+                        p.addLast(initHandler);
+                        p.addLast(serverHandler);
+                    }
+                });
+        serverBootstrap.bind(serverProperties.getPort()).sync();
+        logger.info("CamelliaRedisProxyServer start at port: {}", serverProperties.getPort());
+    }
+}

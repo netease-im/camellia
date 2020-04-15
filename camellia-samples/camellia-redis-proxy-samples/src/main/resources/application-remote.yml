@@ -1,0 +1,20 @@
+
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: remote
+    remote:
+      bid: 1
+      bgroup: default
+      dynamic: true
+      url: http://127.0.0.1:8080
+
+
+
+
