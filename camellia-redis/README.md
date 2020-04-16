@@ -2,10 +2,15 @@
 # camellia-redis 
 ## 简介
 基于camellia-core和jedis开发的Redis客户端CamelliaRedisTemplate  
-支持redis、redis sentinel、redis cluster，支持pipeline，对外暴露统一的api（方法和参数同jedis）    
-可以基于本地的静态配置构造客户端  
-也可以基于远程dashboard的动态配置构造客户端  
-提供了一个spring boot starter  
+
+## 特性
+* 支持redis、redis sentinel、redis cluster，对外暴露统一的api（方法和参数同普通jedis）
+* 支持pipeline（原生JedisCluster不支持）
+* 支持mget/mset等multiKey的命令（原生JedisCluster不支持）    
+* 支持配置客户端分片，从而可以多个redis/redis-cluster当做一个使用
+* 支持配置多读多写（如：双写/读写分离）
+* 支持配置在线修改（需整合camellia-dashboard）
+* 提供了一个spring-boot-starter，快速接入
 
 ## 使用场景
 * 需要从redis迁移到redis cluster，CamelliaRedisTemplate的接口定义和Jedis一致，并且支持了mget/mset/pipeline等批量命令    

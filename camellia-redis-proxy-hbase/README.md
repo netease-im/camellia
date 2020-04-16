@@ -3,19 +3,23 @@
 ## 简介  
 这是一个基于camellia-redis和camellia-hbase开发的camellia-redis-proxy的插件  
 目前实现了zset相关的命令，可以实现自动的冷热数据分离（冷数据存hbase，热数据存redis）  
+提供了一个spring-boot-starter，3行代码构建一个冷热分离的zset服务  
 
 ## 原理
-对于zset数据结构，hbase存储完整的数据（保留原始ttl，注意：hbase表的ttl需要大于redis的ttl），redis仅作为缓存使用（设置一个较小的ttl）  
+对于zset数据结构，hbase存储完整的数据，redis仅作为缓存使用  
 查询时，如果redis不存在，则会穿透到hbase捞数据，捞到之后会重建缓存    
 考虑到zset的很多查询是增量的（如zrangeByScore），因此如果zset的value较大，则缓存中只会保留value的一个引用，以减少缓存的开销  
 整体的数据结构图如下：  
 1、冷热分层结构  
 <img src="doc/1.png" width="40%" height="40%">  
 2、数据结构图  
-<img src="doc/2.png" width="50%" height="50%">    
+<img src="doc/2.png" width="50%" height="50%">
+
+## 注意事项
+如果所有的业务数据均有ttl，则建议在hbase建表时加上ttl，此时要确保hbase表的ttl大于业务ttl（建议2倍以上）
 
 ## 使用场景
-* 需要大容量redis，且需要较长ttl，使用本插件可以节省内存成本  
+* 需要大容量redis，使用本插件可以节省内存成本  
 
 ## maven依赖
 ```

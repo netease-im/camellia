@@ -1,19 +1,25 @@
 
 # camellia-redis-proxy
 ## 简介  
-基于netty和camellia-redis开发的redis代理服务  
-实现了redis协议，可以使用标准redis客户端连接  
-从而可以让不方便修改业务端代码的服务能够使用camellia-redis  
-可以基于本地的静态配置（yml文件）  
-也可以基于远程dashboard的动态配置（配置可以动态变更，yml配置dashboard地址即可）  
-并且支持多个业务共享一组代理服务器（需要使用camellia-dashboard管理多组代理配置），即A业务代理到redis1集群，B业务代理到redis2集群  
+基于netty和camellia-core开发的redis代理服务，实现了redis协议，可以使用标准redis客户端连接  
 提供sync和async两种转发模式，sync使用camellia-redis进行转发，是同步的；async使用netty进行转发，是异步的，建议使用默认的async模式    
-对于双（N）写场景，sync模式会等待配置的两（N）个地址均响应之后再返回给客户端，而async模式会在配置的第一个双（N）写地址响应之后就返回，因此客户端RT表现会优于sync模式（async模式会保证来自于同一个连接的命令的执行顺序在双写场景下是一致的）    
-提供了一个spring-boot-starter，可以快速的搭建redis-proxy  
+区别：对于双（N）写场景，sync模式会等待配置的两（N）个地址均响应之后再返回给客户端（并发双写，取决于慢的那个），而async模式会在配置的第一个双（N）写地址响应之后就返回（async模式会保证来自于同一个连接的命令的执行顺序在双写场景下是一致的）
+
+## 特性
+* 支持设置密码
+* 支持代理到普通redis，也支持代理到redis cluster
+* 支持配置自定义的分片逻辑（可以代理到多个redis/redis-cluster集群）
+* 支持配置自定义的双写逻辑（服务器会识别命令的读写属性，配置双写之后写命令会同时发往多个后端）
+* 支持外部插件，从而可以复用协议解析模块（当前包括camellia-redis-proxy-hbase插件，实现了zset命令的冷热分离存储）
+* 支持在线变更配置（需引入camellia-dashboard）
+* 支持多个业务逻辑共享一套proxy集群，如：A业务配置转发规则1，B业务配置转发规则2（需要在建立redis连接时通过client命令设置业务类型）      
+* 提供了一个spring-boot-starter，3行代码快速搭建camellia-redis-proxy集群  
+
 ## 使用场景
 * 需要从redis迁移到redis cluster，但是客户端代码不方便修改  
 * 客户端直连redis cluster，导致cluster服务器连接过多  
 * 需要使用camellia-redis的多读多写和分片功能，但是客户端代码不方便修改  
+
 ## 部署架构
 redis-proxy本身无状态，可以水平扩展，为了实现高可用和负载均衡，有如下两种部署方式：     
 #### 部署方式一
