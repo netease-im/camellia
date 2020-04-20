@@ -81,7 +81,7 @@ public class RedisHBaseZSetMixClient {
             }
             CamelliaRedisLock redisLock = null;
             if (!cacheExists) {
-                redisLock = CamelliaRedisLock.newLock(redisTemplate, key, RedisHBaseConfiguration.lockAcquireTimeoutMillis(), RedisHBaseConfiguration.lockExpireMillis());
+                redisLock = CamelliaRedisLock.newLock(redisTemplate, lockKey(key), RedisHBaseConfiguration.lockAcquireTimeoutMillis(), RedisHBaseConfiguration.lockExpireMillis());
                 boolean lock = redisLock.lock();
                 if (!lock) {
                     logger.warn("zadd lock fail, key = {}", SafeEncoder.encode(key));
@@ -470,7 +470,7 @@ public class RedisHBaseZSetMixClient {
     }
 
     private Double _zincrby(byte[] key, double score, byte[] member) {
-        CamelliaRedisLock redisLock = CamelliaRedisLock.newLock(redisTemplate, key, RedisHBaseConfiguration.lockAcquireTimeoutMillis(), RedisHBaseConfiguration.lockExpireMillis());
+        CamelliaRedisLock redisLock = CamelliaRedisLock.newLock(redisTemplate, lockKey(key), RedisHBaseConfiguration.lockAcquireTimeoutMillis(), RedisHBaseConfiguration.lockExpireMillis());
         boolean lock = redisLock.lock();
         if (!lock) {
             logger.warn("zincrby lock fail, key = {}", SafeEncoder.encode(key));
@@ -811,7 +811,7 @@ public class RedisHBaseZSetMixClient {
                 return HBase2RedisRebuildResult.NULL_CACHE_HIT;
             }
         }
-        CamelliaRedisLock redisLock = CamelliaRedisLock.newLock(redisTemplate, key, RedisHBaseConfiguration.lockAcquireTimeoutMillis(), RedisHBaseConfiguration.lockExpireMillis());
+        CamelliaRedisLock redisLock = CamelliaRedisLock.newLock(redisTemplate, lockKey(key), RedisHBaseConfiguration.lockAcquireTimeoutMillis(), RedisHBaseConfiguration.lockExpireMillis());
         boolean lock = redisLock.lock();
         if (!lock) {
             logger.warn("rebuildZSet lock fail, key = {}", SafeEncoder.encode(key));
@@ -946,5 +946,9 @@ public class RedisHBaseZSetMixClient {
             RedisHBaseMonitor.incr(method, OpeType.HIT_TO_HBASE);
         }
         return KeyStatus.CACHE_OK;
+    }
+
+    private byte[] lockKey(byte[] key) {
+        return Bytes.add(key, Bytes.toBytes("~camellia_lock"));
     }
 }
