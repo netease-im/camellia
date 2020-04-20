@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.toolkit.lock;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.util.SafeEncoder;
 
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -16,7 +17,7 @@ public class CamelliaRedisLock {
     private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisLock.class);
 
     private CamelliaRedisTemplate template;//redis客户端
-    private String lockKey;//锁key，用于标识一个锁
+    private byte[] lockKey;//锁key，用于标识一个锁
     private long acquireTimeoutMillis;//获取锁的等待时间
     private long expireTimeoutMillis;//锁的过期时间
     private long tryLockIntervalMillis;//两次尝试获取锁时的间隔
@@ -24,7 +25,7 @@ public class CamelliaRedisLock {
     private boolean lockOk = false;//锁是否获取到了
     private long expireTimestamp = -1;//锁的过期时间戳
 
-    private CamelliaRedisLock(CamelliaRedisTemplate template, String lockKey, String lockId, long acquireTimeoutMillis, long expireTimeoutMillis, long tryLockIntervalMillis) {
+    private CamelliaRedisLock(CamelliaRedisTemplate template, byte[] lockKey, String lockId, long acquireTimeoutMillis, long expireTimeoutMillis, long tryLockIntervalMillis) {
         this.template = template;
         this.lockKey = lockKey;
         this.lockId = lockId;
@@ -43,6 +44,19 @@ public class CamelliaRedisLock {
      */
     public static CamelliaRedisLock newLock(CamelliaRedisTemplate template, String lockKey,
                                             long acquireTimeoutMillis, long expireTimeoutMillis) {
+        return new CamelliaRedisLock(template, SafeEncoder.encode(lockKey), UUID.randomUUID().toString(), acquireTimeoutMillis, expireTimeoutMillis, 5);
+    }
+
+    /**
+     * 获取一个锁对象
+     * @param template redis客户端
+     * @param lockKey 锁key
+     * @param acquireTimeoutMillis 获取锁的超时时间
+     * @param expireTimeoutMillis 锁的过期时间
+     * @return 锁对象
+     */
+    public static CamelliaRedisLock newLock(CamelliaRedisTemplate template, byte[] lockKey,
+                                            long acquireTimeoutMillis, long expireTimeoutMillis) {
         return new CamelliaRedisLock(template, lockKey, UUID.randomUUID().toString(), acquireTimeoutMillis, expireTimeoutMillis, 5);
     }
 
@@ -56,6 +70,20 @@ public class CamelliaRedisLock {
      * @return 锁对象
      */
     public static CamelliaRedisLock newLock(CamelliaRedisTemplate template, String lockKey, String lockId,
+                                            long acquireTimeoutMillis, long expireTimeoutMillis) {
+        return new CamelliaRedisLock(template, SafeEncoder.encode(lockKey), lockId, acquireTimeoutMillis, expireTimeoutMillis, 5);
+    }
+
+    /**
+     * 获取一个锁对象
+     * @param template redis客户端
+     * @param lockKey 锁key
+     * @param lockId 锁id
+     * @param acquireTimeoutMillis 获取锁的超时时间
+     * @param expireTimeoutMillis 锁的过期时间
+     * @return 锁对象
+     */
+    public static CamelliaRedisLock newLock(CamelliaRedisTemplate template, byte[] lockKey, String lockId,
                                             long acquireTimeoutMillis, long expireTimeoutMillis) {
         return new CamelliaRedisLock(template, lockKey, lockId, acquireTimeoutMillis, expireTimeoutMillis, 5);
     }
@@ -72,6 +100,21 @@ public class CamelliaRedisLock {
      */
     public static CamelliaRedisLock newLock(CamelliaRedisTemplate template, String lockKey, String lockId,
                                             long acquireTimeoutMillis, long expireTimeoutMillis, long tryLockIntervalMillis) {
+        return new CamelliaRedisLock(template, SafeEncoder.encode(lockKey), lockId, acquireTimeoutMillis, expireTimeoutMillis, tryLockIntervalMillis);
+    }
+
+    /**
+     * 获取一个锁对象
+     * @param template redis客户端
+     * @param lockKey 锁key
+     * @param lockId 锁id
+     * @param acquireTimeoutMillis 获取锁的超时时间
+     * @param expireTimeoutMillis 锁的过期时间
+     * @param tryLockIntervalMillis 两次尝试获取锁时的间隔
+     * @return 锁对象
+     */
+    public static CamelliaRedisLock newLock(CamelliaRedisTemplate template, byte[] lockKey, String lockId,
+                                            long acquireTimeoutMillis, long expireTimeoutMillis, long tryLockIntervalMillis) {
         return new CamelliaRedisLock(template, lockKey, lockId, acquireTimeoutMillis, expireTimeoutMillis, tryLockIntervalMillis);
     }
 
@@ -81,7 +124,7 @@ public class CamelliaRedisLock {
     public boolean tryLock() {
         try {
             long timestamp = System.currentTimeMillis() + expireTimeoutMillis;
-            String set = template.set(lockKey, lockId, "NX", "PX", expireTimeoutMillis);
+            String set = template.set(lockKey, SafeEncoder.encode(lockId), SafeEncoder.encode("NX"), SafeEncoder.encode("PX"), expireTimeoutMillis);
             boolean ok = set != null && set.equalsIgnoreCase("ok");
             if (ok) {
                 this.lockOk = true;
@@ -103,8 +146,8 @@ public class CamelliaRedisLock {
         if (System.currentTimeMillis() < this.expireTimestamp) {
             return true;
         }
-        String value = template.get(lockKey);
-        return value != null && value.equals(lockId);
+        byte[] value = template.get(lockKey);
+        return value != null && SafeEncoder.encode(value).equals(lockId);
     }
 
     /**
@@ -138,8 +181,8 @@ public class CamelliaRedisLock {
             return false;
         }
         try {
-            String value = template.get(lockKey);
-            if (value != null && value.equals(this.lockId)) {
+            byte[] value = template.get(lockKey);
+            if (value != null && SafeEncoder.encode(value).equals(this.lockId)) {
                 long timestamp = System.currentTimeMillis() + expireTimeoutMillis;
                 template.pexpire(lockKey, expireTimeoutMillis);
                 this.expireTimestamp = timestamp;
@@ -158,8 +201,9 @@ public class CamelliaRedisLock {
      */
     public boolean release() {
         try {
-            String value = template.get(lockKey);
-            if (value != null && value.equals(this.lockId)) {
+            if (!lockOk) return false;
+            byte[] value = template.get(lockKey);
+            if (value != null && SafeEncoder.encode(value).equals(this.lockId)) {
                 template.del(lockKey);
                 return true;
             }

@@ -1,11 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.hbase.util;
 
 import com.netease.nim.camellia.core.util.MD5Util;
-import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import redis.clients.util.SafeEncoder;
 
 import java.util.ArrayList;
@@ -17,48 +14,10 @@ import java.util.List;
  */
 public class RedisHBaseUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(RedisHBaseUtil.class);
-
     public static final byte[] NULL_CACHE_YES = SafeEncoder.encode("Y");
     public static final byte[] NULL_CACHE_NO = SafeEncoder.encode("N");
     public static final byte[] NX = SafeEncoder.encode("NX");
     public static final byte[] EX = SafeEncoder.encode("EX");
-    public static final byte[] PX = SafeEncoder.encode("PX");
-    public static final byte[] LOCK_SUFFIX = SafeEncoder.encode("~lock");
-    public static final byte[] LOCK_VALUE = SafeEncoder.encode("lock");
-
-    public static boolean lock(CamelliaRedisTemplate template, byte[] key) {
-        try {
-            byte[] lockKey = Bytes.add(key, LOCK_SUFFIX);
-            long start = System.currentTimeMillis();
-            while (true) {
-                String set = template.set(lockKey, LOCK_VALUE, NX, PX, RedisHBaseConfiguration.lockExpireMillis());
-                if (set.equalsIgnoreCase("ok")) {
-                    return true;
-                } else {
-                    if (System.currentTimeMillis() - start > RedisHBaseConfiguration.lockExpireMillis()) {
-                        return false;
-                    }
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException ignore) {
-                    }
-                }
-            }
-        } catch (Exception e) {
-            logger.error("lock error, key = {}", SafeEncoder.encode(key), e);
-            return false;
-        }
-    }
-
-    public static void unlock(CamelliaRedisTemplate template, byte[] key) {
-        try {
-            byte[] lockKey = Bytes.add(key, LOCK_SUFFIX);
-            template.del(lockKey);
-        } catch (Exception e) {
-            logger.error("unlock error, key = {}", SafeEncoder.encode(key), e);
-        }
-    }
 
     public static byte[] nullCacheKey(byte[] key) {
         byte[] prefix = RedisHBaseConfiguration.nullCachePrefix();

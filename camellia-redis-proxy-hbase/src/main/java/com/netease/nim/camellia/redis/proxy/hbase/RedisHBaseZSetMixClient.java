@@ -11,6 +11,7 @@ import com.netease.nim.camellia.redis.proxy.hbase.model.RedisHBaseType;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.OpeType;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
 import com.netease.nim.camellia.redis.proxy.util.RedisKey;
+import com.netease.nim.camellia.redis.toolkit.lock.CamelliaRedisLock;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
@@ -78,8 +79,10 @@ public class RedisHBaseZSetMixClient {
                 ret = _redis_zadd(key, scoreMembers, putList);
                 cacheExists = true;
             }
+            CamelliaRedisLock redisLock = null;
             if (!cacheExists) {
-                boolean lock = lock(redisTemplate, key);
+                redisLock = CamelliaRedisLock.newLock(redisTemplate, key, RedisHBaseConfiguration.lockAcquireTimeoutMillis(), RedisHBaseConfiguration.lockExpireMillis());
+                boolean lock = redisLock.lock();
                 if (!lock) {
                     logger.warn("zadd lock fail, key = {}", SafeEncoder.encode(key));
                 }
@@ -97,7 +100,7 @@ public class RedisHBaseZSetMixClient {
             putList.add(put);
             hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), putList);
             if (!cacheExists) {
-                unlock(redisTemplate, key);
+                redisLock.release();
             }
             if (ret != null) {
                 return ret;
@@ -467,7 +470,8 @@ public class RedisHBaseZSetMixClient {
     }
 
     private Double _zincrby(byte[] key, double score, byte[] member) {
-        boolean lock = lock(redisTemplate, key);
+        CamelliaRedisLock redisLock = CamelliaRedisLock.newLock(redisTemplate, key, RedisHBaseConfiguration.lockAcquireTimeoutMillis(), RedisHBaseConfiguration.lockExpireMillis());
+        boolean lock = redisLock.lock();
         if (!lock) {
             logger.warn("zincrby lock fail, key = {}", SafeEncoder.encode(key));
         }
@@ -510,7 +514,7 @@ public class RedisHBaseZSetMixClient {
             return finalScore;
         } finally {
             if (lock) {
-                unlock(redisTemplate, key);
+                redisLock.release();
             }
         }
     }
@@ -807,7 +811,8 @@ public class RedisHBaseZSetMixClient {
                 return HBase2RedisRebuildResult.NULL_CACHE_HIT;
             }
         }
-        boolean lock = lock(redisTemplate, key);
+        CamelliaRedisLock redisLock = CamelliaRedisLock.newLock(redisTemplate, key, RedisHBaseConfiguration.lockAcquireTimeoutMillis(), RedisHBaseConfiguration.lockExpireMillis());
+        boolean lock = redisLock.lock();
         if (!lock) {
             logger.warn("rebuildZSet lock fail, key = {}", SafeEncoder.encode(key));
         }
@@ -816,7 +821,7 @@ public class RedisHBaseZSetMixClient {
             if (cacheNull) {
                 redisTemplate.set(nullCacheKey(key), NULL_CACHE_YES, NX, EX, RedisHBaseConfiguration.nullCacheExpireSeconds());
             }
-            unlock(redisTemplate, key);
+            redisLock.release();
             return HBase2RedisRebuildResult.NONE_RESULT;
         }
         NavigableMap<byte[], byte[]> map = result.getFamilyMap(CF_D);
@@ -824,7 +829,7 @@ public class RedisHBaseZSetMixClient {
             if (cacheNull) {
                 redisTemplate.set(nullCacheKey(key), NULL_CACHE_YES, NX, EX, RedisHBaseConfiguration.nullCacheExpireSeconds());
             }
-            unlock(redisTemplate, key);
+            redisLock.release();
             return HBase2RedisRebuildResult.NONE_RESULT;
         }
         Map<byte[], Double> scoreMembers = new HashMap<>();
@@ -837,7 +842,7 @@ public class RedisHBaseZSetMixClient {
         }
         List<Put> putList = new ArrayList<>();
         _redis_zadd(key, scoreMembers, putList);
-        unlock(redisTemplate, key);
+        redisLock.release();
         if (!putList.isEmpty()) {
             hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), putList);
         }

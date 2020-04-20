@@ -99,6 +99,10 @@ public class RedisHBaseConfiguration {
         return SafeEncoder.encode(prefix);
     }
 
+    public static int lockAcquireTimeoutMillis() {
+        return ConfigurationUtil.getInteger(properties, "redis.acquire.timeout.millis", 2000);
+    }
+
     public static int lockExpireMillis() {
         return ConfigurationUtil.getInteger(properties, "redis.lock.expire.millis", 2000);
     }

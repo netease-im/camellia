@@ -23,6 +23,11 @@
 			<artifactId>camellia-hbase</artifactId>
 			<version>1.0.4-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-redis-toolkit</artifactId>
+			<version>1.0.4-SNAPSHOT</version>
+		</dependency>
     </dependencies>
 	<build>
 		<plugins>

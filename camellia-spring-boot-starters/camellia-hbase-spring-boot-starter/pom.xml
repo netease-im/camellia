@@ -8,7 +8,7 @@
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia</artifactId>
+		<artifactId>camellia-spring-boot-starters</artifactId>
 		<version>1.0.4-SNAPSHOT</version>
 	</parent>
 
