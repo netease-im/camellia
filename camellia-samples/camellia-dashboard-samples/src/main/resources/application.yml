@@ -25,7 +25,7 @@ camellia-dashboard:
 camellia-redis:
   type: local
   local:
-    url: redis://@127.0.0.1:6379
+    resource: redis://@127.0.0.1:6379
   redis-conf:
     jedis:
       max-idle: 8
