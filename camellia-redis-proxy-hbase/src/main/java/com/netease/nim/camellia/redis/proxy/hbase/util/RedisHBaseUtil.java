@@ -76,9 +76,9 @@ public class RedisHBaseUtil {
 
     public static boolean isDataQualifier(byte[] qualifierOriginal) {
         for (int i=0; i<D.length; i++) {
-           if (qualifierOriginal[i] != D[i]) {
-               return false;
-           }
+            if (qualifierOriginal[i] != D[i]) {
+                return false;
+            }
         }
         return true;
     }

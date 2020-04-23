@@ -9,24 +9,33 @@ import java.util.List;
  */
 public class RedisHBaseStats {
 
-    private List<MethodStats> methodStatsList = new ArrayList<>();
-    private List<MethodCacheHitStats> methodCacheHitStatsList = new ArrayList<>();
+    private List<ReadMethodStats> readMethodStatsList = new ArrayList<>();
+    private List<ReadMethodCacheHitStats> readMethodCacheHitStatsList = new ArrayList<>();
+    private List<WriteMethodStats> writeMethodStatsList = new ArrayList<>();
     private ZSetStats zSetStats = new ZSetStats();
 
-    public List<MethodStats> getMethodStatsList() {
-        return methodStatsList;
+    public List<ReadMethodStats> getReadMethodStatsList() {
+        return readMethodStatsList;
     }
 
-    public void setMethodStatsList(List<MethodStats> methodStatsList) {
-        this.methodStatsList = methodStatsList;
+    public void setReadMethodStatsList(List<ReadMethodStats> readMethodStatsList) {
+        this.readMethodStatsList = readMethodStatsList;
     }
 
-    public List<MethodCacheHitStats> getMethodCacheHitStatsList() {
-        return methodCacheHitStatsList;
+    public List<ReadMethodCacheHitStats> getReadMethodCacheHitStatsList() {
+        return readMethodCacheHitStatsList;
     }
 
-    public void setMethodCacheHitStatsList(List<MethodCacheHitStats> methodCacheHitStatsList) {
-        this.methodCacheHitStatsList = methodCacheHitStatsList;
+    public void setReadMethodCacheHitStatsList(List<ReadMethodCacheHitStats> readMethodCacheHitStatsList) {
+        this.readMethodCacheHitStatsList = readMethodCacheHitStatsList;
+    }
+
+    public List<WriteMethodStats> getWriteMethodStatsList() {
+        return writeMethodStatsList;
+    }
+
+    public void setWriteMethodStatsList(List<WriteMethodStats> writeMethodStatsList) {
+        this.writeMethodStatsList = writeMethodStatsList;
     }
 
     public ZSetStats getzSetStats() {
@@ -76,9 +85,9 @@ public class RedisHBaseStats {
         }
     }
 
-    public static class MethodStats {
+    public static class WriteMethodStats {
         private String method;
-        private OpeType opeType;
+        private WriteOpeType opeType;
         private long count;
 
         public String getMethod() {
@@ -89,11 +98,11 @@ public class RedisHBaseStats {
             this.method = method;
         }
 
-        public OpeType getOpeType() {
+        public WriteOpeType getOpeType() {
             return opeType;
         }
 
-        public void setOpeType(OpeType opeType) {
+        public void setOpeType(WriteOpeType opeType) {
             this.opeType = opeType;
         }
 
@@ -106,7 +115,37 @@ public class RedisHBaseStats {
         }
     }
 
-    public static class MethodCacheHitStats {
+    public static class ReadMethodStats {
+        private String method;
+        private ReadOpeType opeType;
+        private long count;
+
+        public String getMethod() {
+            return method;
+        }
+
+        public void setMethod(String method) {
+            this.method = method;
+        }
+
+        public ReadOpeType getOpeType() {
+            return opeType;
+        }
+
+        public void setOpeType(ReadOpeType opeType) {
+            this.opeType = opeType;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+        public void setCount(long count) {
+            this.count = count;
+        }
+    }
+
+    public static class ReadMethodCacheHitStats {
         private String method;
         private long count;
         private double cacheHitPercent;

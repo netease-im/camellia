@@ -20,7 +20,9 @@ public class RedisHBaseMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger("redis-hbase-stats");
 
-    private static ConcurrentHashMap<String, AtomicLong> map = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, AtomicLong> readMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, AtomicLong> writeMap = new ConcurrentHashMap<>();
+
     private static AtomicLong zsetValueSizeTotal = new AtomicLong(0L);
     private static AtomicLong zsetValueSizeCount = new AtomicLong(0L);
     private static AtomicLong zsetValueSizeMax = new AtomicLong(0L);
@@ -36,10 +38,17 @@ public class RedisHBaseMonitor {
                 .scheduleAtFixedRate(RedisHBaseMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
     }
 
-    public static void incr(String method, OpeType type) {
+    public static void incrRead(String method, ReadOpeType type) {
         if (!RedisHBaseConfiguration.isMonitorEnable()) return;
         String key = method + "|" + type.name();
-        AtomicLong count = map.computeIfAbsent(key, k -> new AtomicLong());
+        AtomicLong count = readMap.computeIfAbsent(key, k -> new AtomicLong());
+        count.incrementAndGet();
+    }
+
+    public static void incrWrite(String method, WriteOpeType type) {
+        if (!RedisHBaseConfiguration.isMonitorEnable()) return;
+        String key = method + "|" + type.name();
+        AtomicLong count = writeMap.computeIfAbsent(key, k -> new AtomicLong());
         count.incrementAndGet();
     }
 
@@ -68,30 +77,46 @@ public class RedisHBaseMonitor {
     }
 
     private static void calc() {
-        Map<String, AtomicLong> cacheHitCountMap = new HashMap<>();
-        Map<String, AtomicLong> cacheMissCountMap = new HashMap<>();
+        Map<String, AtomicLong> cacheHitCountReadMap = new HashMap<>();
+        Map<String, AtomicLong> cacheMissCountReadMap = new HashMap<>();
         Set<String> methodSet = new HashSet<>();
-        List<RedisHBaseStats.MethodStats> methodStatsList = new ArrayList<>();
-        for (Map.Entry<String, AtomicLong> entry : map.entrySet()) {
+        List<RedisHBaseStats.ReadMethodStats> readMethodStatsList = new ArrayList<>();
+        for (Map.Entry<String, AtomicLong> entry : readMap.entrySet()) {
             String key = entry.getKey();
             String[] split = key.split("\\|");
             String method = split[0];
-            OpeType opeType = OpeType.valueOf(split[1]);
+            ReadOpeType opeType = ReadOpeType.valueOf(split[1]);
             long count = entry.getValue().getAndSet(0);
-            RedisHBaseStats.MethodStats methodStats = new RedisHBaseStats.MethodStats();
+            RedisHBaseStats.ReadMethodStats methodStats = new RedisHBaseStats.ReadMethodStats();
             methodStats.setMethod(method);
             methodStats.setOpeType(opeType);
             methodStats.setCount(count);
-            methodStatsList.add(methodStats);
-            if (opeType == OpeType.HIT_TO_HBASE || opeType == OpeType.HIT_TO_HBASE_AND_MISS) {
-                AtomicLong cacheMissCount = cacheMissCountMap.computeIfAbsent(method, k -> new AtomicLong(0L));
+            readMethodStatsList.add(methodStats);
+            if (opeType == ReadOpeType.HIT_TO_HBASE || opeType == ReadOpeType.HIT_TO_HBASE_AND_MISS) {
+                AtomicLong cacheMissCount = cacheMissCountReadMap.computeIfAbsent(method, k -> new AtomicLong(0L));
                 cacheMissCount.addAndGet(count);
             } else {
-                AtomicLong cacheHitCount = cacheHitCountMap.computeIfAbsent(method, k -> new AtomicLong(0L));
+                AtomicLong cacheHitCount = cacheHitCountReadMap.computeIfAbsent(method, k -> new AtomicLong(0L));
                 cacheHitCount.addAndGet(count);
             }
             methodSet.add(method);
         }
+
+        List<RedisHBaseStats.WriteMethodStats> writeMethodStatsList = new ArrayList<>();
+        for (Map.Entry<String, AtomicLong> entry : writeMap.entrySet()) {
+            String key = entry.getKey();
+            String[] split = key.split("\\|");
+            String method = split[0];
+            WriteOpeType opeType = WriteOpeType.valueOf(split[1]);
+            long count = entry.getValue().getAndSet(0);
+
+            RedisHBaseStats.WriteMethodStats methodStats = new RedisHBaseStats.WriteMethodStats();
+            methodStats.setMethod(method);
+            methodStats.setOpeType(opeType);
+            methodStats.setCount(count);
+            writeMethodStatsList.add(methodStats);
+        }
+
         long max = zsetValueSizeMax.getAndSet(0);
         long count = zsetValueSizeCount.getAndSet(0);
         long total = zsetValueSizeTotal.getAndSet(0);
@@ -105,12 +130,12 @@ public class RedisHBaseMonitor {
         }
         zSetStats.setZsetValueSizeMax(max);
 
-        List<RedisHBaseStats.MethodCacheHitStats> methodCacheHitStatsList = new ArrayList<>();
+        List<RedisHBaseStats.ReadMethodCacheHitStats> methodCacheHitStatsList = new ArrayList<>();
         for (String method : methodSet) {
-            RedisHBaseStats.MethodCacheHitStats methodCacheHitStats = new RedisHBaseStats.MethodCacheHitStats();
+            RedisHBaseStats.ReadMethodCacheHitStats methodCacheHitStats = new RedisHBaseStats.ReadMethodCacheHitStats();
             methodCacheHitStats.setMethod(method);
-            AtomicLong cacheHitCount = cacheHitCountMap.get(method);
-            AtomicLong cacheMissCount = cacheMissCountMap.get(method);
+            AtomicLong cacheHitCount = cacheHitCountReadMap.get(method);
+            AtomicLong cacheMissCount = cacheMissCountReadMap.get(method);
             if (cacheHitCount == null) {
                 cacheHitCount = new AtomicLong(0L);
             }
@@ -126,9 +151,10 @@ public class RedisHBaseMonitor {
         }
 
         RedisHBaseStats redisHBaseStats = new RedisHBaseStats();
-        redisHBaseStats.setMethodStatsList(methodStatsList);
+        redisHBaseStats.setReadMethodStatsList(readMethodStatsList);
+        redisHBaseStats.setWriteMethodStatsList(writeMethodStatsList);
         redisHBaseStats.setzSetStats(zSetStats);
-        redisHBaseStats.setMethodCacheHitStatsList(methodCacheHitStatsList);
+        redisHBaseStats.setReadMethodCacheHitStatsList(methodCacheHitStatsList);
 
         RedisHBaseMonitor.redisHBaseStats = redisHBaseStats;
 
@@ -139,13 +165,17 @@ public class RedisHBaseMonitor {
             logger.info("zset.value.size.max={}", zSetStats.getZsetValueSizeMax());
             logger.info("zset.value.hit.threshold.count={}", zSetStats.getZsetValueHitThresholdCount());
             logger.info("zset.value.not.hit.threshold.count={}", zSetStats.getZsetValueNotHitThresholdCount());
-            logger.info("====method====");
-            for (RedisHBaseStats.MethodStats methodStats : redisHBaseStats.getMethodStatsList()) {
-                logger.info("method={},opeType={},count={}", methodStats.getMethod(), methodStats.getOpeType(), methodStats.getCount());
+            logger.info("====read.method====");
+            for (RedisHBaseStats.ReadMethodStats methodStats : redisHBaseStats.getReadMethodStatsList()) {
+                logger.info("read.method={},opeType={},count={}", methodStats.getMethod(), methodStats.getOpeType(), methodStats.getCount());
             }
-            logger.info("====method.cache.hit====");
-            for (RedisHBaseStats.MethodCacheHitStats methodCacheHitStats : redisHBaseStats.getMethodCacheHitStatsList()) {
-                logger.info("method={},count={},cacheHitPercent={}", methodCacheHitStats.getMethod(), methodCacheHitStats.getCount(), methodCacheHitStats.getCacheHitPercent());
+            logger.info("====read.method.cache.hit====");
+            for (RedisHBaseStats.ReadMethodCacheHitStats methodCacheHitStats : redisHBaseStats.getReadMethodCacheHitStatsList()) {
+                logger.info("read.method={},count={},cacheHitPercent={}", methodCacheHitStats.getMethod(), methodCacheHitStats.getCount(), methodCacheHitStats.getCacheHitPercent());
+            }
+            logger.info("====write.method====");
+            for (RedisHBaseStats.WriteMethodStats methodStats : redisHBaseStats.getWriteMethodStatsList()) {
+                logger.info("write.method={},opeType={},count={}", methodStats.getMethod(), methodStats.getOpeType(), methodStats.getCount());
             }
             logger.info("<<<<<<<END<<<<<<<");
         }
