@@ -18,6 +18,7 @@
     <modules>
         <module>camellia-dashboard-spring-boot-starter</module>
         <module>camellia-redis-spring-boot-starter</module>
+        <module>camellia-redis-eureka-spring-boot-starter</module>
         <module>camellia-redis-proxy-spring-boot-starter</module>
         <module>camellia-hbase-spring-boot-starter</module>
         <module>camellia-redis-proxy-hbase-spring-boot-starter</module>

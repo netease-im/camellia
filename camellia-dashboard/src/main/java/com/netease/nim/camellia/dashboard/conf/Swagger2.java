@@ -33,8 +33,8 @@ public class Swagger2 {
         return new ApiInfoBuilder()
                 .title("Camellia Dashboard")
                 .description("Camellia资源管理平台")
-                .contact("caojiajun@corp.netease.com")
-                .version("1.0.0")
+                .contact("zj_caojiajun@163.com")
+                .version("1.0.5")
                 .build();
     }
 }
