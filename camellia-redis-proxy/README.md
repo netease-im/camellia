@@ -28,6 +28,7 @@ redis-proxy本身无状态，可以水平扩展，为了实现高可用和负载
 #### 部署方式二
 可以通过eureka、zk等注册中心进行注册，在客户端进行负载均衡   
 此时客户端可以使用RedisProxyJedisPool代替JedisPool即可使用标准Jedis访问代理服务  
+特别的，对于Java客户，特别是使用了SpringCloudEureka，camellia提供了camellia-redis-eureka-spring-boot-starter，结合camellia-redis-spring-boot-starter使用，即可直接接入使用客户端负载均衡模式的proxy  
 <img src="doc/2.png" width="80%" height="80%">  
 
 ## maven依赖

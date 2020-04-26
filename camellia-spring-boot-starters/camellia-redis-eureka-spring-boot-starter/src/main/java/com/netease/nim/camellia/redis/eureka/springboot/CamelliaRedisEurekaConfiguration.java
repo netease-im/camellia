@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.eureka.springboot;
 
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
-import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyContext;
 import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +26,7 @@ public class CamelliaRedisEurekaConfiguration {
 
     @Bean
     public CamelliaRedisProxyFactory redisProxyFactory(CamelliaRedisEurekaProperties properties) {
-        CamelliaRedisProxyEurekaFactory factory = new CamelliaRedisProxyEurekaFactory(discoveryClient, properties);
-        CamelliaRedisProxyContext.register(factory);
-        logger.info("register CamelliaRedisProxyEurekaFactory success");
-        return factory;
+        logger.info("CamelliaRedisProxyEurekaFactory init success");
+        return new CamelliaRedisProxyEurekaFactory(discoveryClient, properties);
     }
 }

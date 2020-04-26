@@ -11,7 +11,12 @@ import com.netease.nim.camellia.redis.CamelliaRedisEnv;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.jedis.JedisPoolFactory;
 import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
+import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyContext;
+import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyFactory;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -30,14 +35,24 @@ import java.util.Set;
 @EnableConfigurationProperties({CamelliaRedisProperties.class})
 public class CamelliaRedisConfiguration {
 
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisConfiguration.class);
+
     @Bean
     @ConditionalOnMissingBean(value = {ProxyEnv.class})
     public ProxyEnv proxyEnv() {
         return ProxyEnv.defaultProxyEnv();
     }
 
+    @Autowired(required = false)
+    private CamelliaRedisProxyFactory proxyFactory;
+
     @Bean
     public CamelliaRedisTemplate camelliaRedisTemplate(CamelliaRedisProperties properties) {
+        if (proxyFactory != null) {
+            CamelliaRedisProxyContext.register(proxyFactory);
+            logger.info("CamelliaRedisProxyFactory register success, type = {}", proxyFactory.getClass().getName());
+        }
+
         CamelliaRedisProperties.Type type = properties.getType();
         CamelliaRedisProperties.RedisConf redisConf = properties.getRedisConf();
         CamelliaRedisEnv redisEnv = camelliaRedisEnv(redisConf);
