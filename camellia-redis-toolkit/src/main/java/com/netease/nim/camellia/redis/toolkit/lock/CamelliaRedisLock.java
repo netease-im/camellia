@@ -1,8 +1,10 @@
 package com.netease.nim.camellia.redis.toolkit.lock;
 
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.Response;
 import redis.clients.util.SafeEncoder;
 
 import java.util.UUID;
@@ -24,6 +26,7 @@ public class CamelliaRedisLock {
     private String lockId;//锁唯一标识，用于标识谁获取的锁
     private boolean lockOk = false;//锁是否获取到了
     private long expireTimestamp = -1;//锁的过期时间戳
+    private final Object lockObj = new Object();
 
     private CamelliaRedisLock(CamelliaRedisTemplate template, byte[] lockKey, String lockId, long acquireTimeoutMillis, long expireTimeoutMillis, long tryLockIntervalMillis) {
         this.template = template;
@@ -122,18 +125,20 @@ public class CamelliaRedisLock {
      * 尝试获取锁，若获取不到，则立即返回
      */
     public boolean tryLock() {
-        try {
-            long timestamp = System.currentTimeMillis() + expireTimeoutMillis;
-            String set = template.set(lockKey, SafeEncoder.encode(lockId), SafeEncoder.encode("NX"), SafeEncoder.encode("PX"), expireTimeoutMillis);
-            boolean ok = set != null && set.equalsIgnoreCase("ok");
-            if (ok) {
-                this.lockOk = true;
-                this.expireTimestamp = timestamp;
+        synchronized (lockObj) {
+            try {
+                long timestamp = System.currentTimeMillis() + expireTimeoutMillis;
+                String set = template.set(lockKey, SafeEncoder.encode(lockId), SafeEncoder.encode("NX"), SafeEncoder.encode("PX"), expireTimeoutMillis);
+                boolean ok = set != null && set.equalsIgnoreCase("ok");
+                if (ok) {
+                    this.lockOk = true;
+                    this.expireTimestamp = timestamp;
+                }
+                return ok;
+            } catch (Exception e) {
+                logger.error("tryLock error, lockKey = {}, lockId = {}", lockKey, lockId, e);
+                return false;
             }
-            return ok;
-        } catch (Exception e) {
-            logger.error("tryLock error, lockKey = {}, lockId = {}", lockKey, lockId, e);
-            return false;
         }
     }
 
@@ -142,12 +147,19 @@ public class CamelliaRedisLock {
      * @return 成功/失败
      */
     public boolean isLockOk() {
-        if (!lockOk) return false;
-        if (System.currentTimeMillis() < this.expireTimestamp) {
-            return true;
+        synchronized (lockObj) {
+            if (!lockOk) return false;
+            if (System.currentTimeMillis() < this.expireTimestamp) {
+                return true;
+            }
+            byte[] value = template.get(lockKey);
+            boolean ok = value != null && SafeEncoder.encode(value).equals(lockId);
+            if (!ok) {
+                lockOk = false;
+                expireTimestamp = -1;
+            }
+            return ok;
         }
-        byte[] value = template.get(lockKey);
-        return value != null && SafeEncoder.encode(value).equals(lockId);
     }
 
     /**
@@ -155,6 +167,7 @@ public class CamelliaRedisLock {
      * @return 成功/失败
      */
     public boolean lock() {
+        if (isLockOk()) return true;
         long start = System.currentTimeMillis();
         while (true) {
             boolean lockOk = tryLock();
@@ -177,40 +190,59 @@ public class CamelliaRedisLock {
      * @return 成功/失败
      */
     public boolean renew() {
-        if (!lockOk) {
-            return false;
-        }
-        try {
-            byte[] value = template.get(lockKey);
-            if (value != null && SafeEncoder.encode(value).equals(this.lockId)) {
-                long timestamp = System.currentTimeMillis() + expireTimeoutMillis;
-                template.pexpire(lockKey, expireTimeoutMillis);
-                this.expireTimestamp = timestamp;
-                return true;
+        synchronized (lockObj) {
+            if (!lockOk) {
+                return false;
             }
-            return false;
-        } catch (Exception e) {
-            logger.error("renew error, lockKey = {}, lockId = {}", lockKey, lockId, e);
-            return false;
+            try {
+                byte[] value = template.get(lockKey);
+                if (value != null && SafeEncoder.encode(value).equals(this.lockId)) {
+                    long timestamp = System.currentTimeMillis() + expireTimeoutMillis;
+                    Response<byte[]> response;
+                    try (ICamelliaRedisPipeline pipelined = template.pipelined()) {
+                        pipelined.pexpire(lockKey, expireTimeoutMillis);
+                        response = pipelined.get(lockKey);
+                        pipelined.sync();
+                    }
+                    byte[] bytes = response.get();
+                    if (bytes != null && SafeEncoder.encode(bytes).equalsIgnoreCase(this.lockId)) {
+                        this.expireTimestamp = timestamp;
+                        return true;
+                    }
+                }
+                lockOk = false;
+                expireTimestamp = -1;
+                return false;
+            } catch (Exception e) {
+                logger.error("renew error, lockKey = {}, lockId = {}", lockKey, lockId, e);
+                return false;
+            }
         }
     }
 
     /**
      * 释放锁，只能释放自己获取到的锁
+     * 边界情况下可能释放了别人的锁（拿到value，发现是自己，然后准备去删除的时候ttl到期了）
      * @return 成功/失败
      */
     public boolean release() {
-        try {
-            if (!lockOk) return false;
-            byte[] value = template.get(lockKey);
-            if (value != null && SafeEncoder.encode(value).equals(this.lockId)) {
-                template.del(lockKey);
-                return true;
+        synchronized (lockObj) {
+            try {
+                if (!lockOk) return false;
+                byte[] value = template.get(lockKey);
+                if (value != null && SafeEncoder.encode(value).equals(this.lockId)) {
+                    template.del(lockKey);
+                    lockOk = false;
+                    expireTimestamp = -1;
+                    return true;
+                }
+                lockOk = false;
+                expireTimestamp = -1;
+                return false;
+            } catch (Exception e) {
+                logger.error("release error, lockKey = {}, lockId = {}", lockKey, lockId, e);
+                return false;
             }
-            return false;
-        } catch (Exception e) {
-            logger.error("release error, lockKey = {}, lockId = {}", lockKey, lockId, e);
-            return false;
         }
     }
 
@@ -219,11 +251,16 @@ public class CamelliaRedisLock {
      * @return 成功/失败
      */
     public boolean clear() {
-        try {
-            return template.del(lockKey) > 0;
-        } catch (Exception e) {
-            logger.error("clear error, lockKey = {}, lockId = {}", lockKey, lockId, e);
-            return false;
+        synchronized (lockObj) {
+            try {
+                boolean ok = template.del(lockKey) > 0;
+                lockOk = false;
+                expireTimestamp = -1;
+                return ok;
+            } catch (Exception e) {
+                logger.error("clear error, lockKey = {}, lockId = {}", lockKey, lockId, e);
+                return false;
+            }
         }
     }
 
