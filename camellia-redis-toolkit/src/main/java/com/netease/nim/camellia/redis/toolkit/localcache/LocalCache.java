@@ -35,20 +35,40 @@ public class LocalCache {
     /**
      * 添加缓存
      */
-    public void put(String tag, Object key, Object value, int expire) {
+    public void put(String tag, Object key, Object value, long expireMillis) {
         String uniqueKey = CacheUtil.buildCacheKey(tag, key);
         CacheBean bean;
         if (value == null) {
             value = nullCache;
         }
-        if (expire <= 0) {
+        if (expireMillis <= 0) {
             bean = new CacheBean(value, Long.MAX_VALUE);
         } else {
-            bean = new CacheBean(value, System.currentTimeMillis() + expire * 1000);
+            bean = new CacheBean(value, System.currentTimeMillis() + expireMillis);
         }
         cache.put(uniqueKey, bean);
         if (logger.isDebugEnabled()) {
-            logger.debug("local cache put, tag = {}, key = {}, expire = {}", tag, key, expire);
+            logger.debug("local cache put, tag = {}, key = {}, expireMillis = {}", tag, key, expireMillis);
+        }
+    }
+
+    /**
+     * 添加缓存
+     */
+    public void put(String tag, Object key, Object value, int expireSeconds) {
+        String uniqueKey = CacheUtil.buildCacheKey(tag, key);
+        CacheBean bean;
+        if (value == null) {
+            value = nullCache;
+        }
+        if (expireSeconds <= 0) {
+            bean = new CacheBean(value, Long.MAX_VALUE);
+        } else {
+            bean = new CacheBean(value, System.currentTimeMillis() + expireSeconds * 1000);
+        }
+        cache.put(uniqueKey, bean);
+        if (logger.isDebugEnabled()) {
+            logger.debug("local cache put, tag = {}, key = {}, expireSeconds = {}", tag, key, expireSeconds);
         }
     }
 

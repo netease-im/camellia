@@ -1,7 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.hbase.util;
 
 import com.netease.nim.camellia.core.util.MD5Util;
+import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
+import com.netease.nim.camellia.redis.toolkit.localcache.LocalCache;
 import org.apache.hadoop.hbase.util.Bytes;
 import redis.clients.util.SafeEncoder;
 
@@ -39,6 +41,37 @@ public class RedisHBaseUtil {
             list.add(redisKey(key));
         }
         return list.toArray(new byte[0][0]);
+    }
+
+    //
+    private static final LocalCache localCache = new LocalCache(RedisHBaseConfiguration.redisKeyCheckExistsLocalCacheCapacity());
+    public static boolean checkRedisKeyExists(CamelliaRedisTemplate redisTemplate, byte[] key) {
+        if (!RedisHBaseConfiguration.redisKeyCheckExistsLocalCacheEnable()) {
+            Boolean exists = redisTemplate.exists(redisKey(key));
+            return exists != null && exists;
+        } else {
+            String localCacheKey = Bytes.toHex(redisKey(key));
+            String tag = "exists";
+            Boolean cache = localCache.get(tag, localCacheKey, Boolean.class);
+            if (cache != null) {
+                return cache;
+            }
+            Boolean exists = redisTemplate.exists(redisKey(key));
+            boolean ret = exists != null && exists;
+            long expireMillis = RedisHBaseConfiguration.redisKeyCheckExistsExpireMillis();
+            if (RedisHBaseConfiguration.redisKeyCheckExistsLocalCacheOnlyExists()) {
+                if (ret) {
+                    localCache.put(tag, localCacheKey, true, expireMillis);
+                }
+            } else {
+                localCache.put(tag, localCacheKey, ret, expireMillis);
+            }
+            return ret;
+        }
+    }
+
+    public static byte[] lockKey(byte[] key) {
+        return Bytes.add(key, Bytes.toBytes("~camellia_lock"));
     }
 
     //32字节

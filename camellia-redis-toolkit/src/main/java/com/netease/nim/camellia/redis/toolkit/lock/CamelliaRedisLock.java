@@ -11,19 +11,20 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 /**
- * 基于redis的分布式锁
+ * 基于redis的分布式锁（不是严格的）
+ * 严格的redis分布式锁请使用lua脚本进行原子操作
  * Created by caojiajun on 2020/4/9.
  */
 public class CamelliaRedisLock {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisLock.class);
 
-    private CamelliaRedisTemplate template;//redis客户端
-    private byte[] lockKey;//锁key，用于标识一个锁
-    private long acquireTimeoutMillis;//获取锁的等待时间
-    private long expireTimeoutMillis;//锁的过期时间
-    private long tryLockIntervalMillis;//两次尝试获取锁时的间隔
-    private String lockId;//锁唯一标识，用于标识谁获取的锁
+    private final CamelliaRedisTemplate template;//redis客户端
+    private final byte[] lockKey;//锁key，用于标识一个锁
+    private final long acquireTimeoutMillis;//获取锁的等待时间
+    private final long expireTimeoutMillis;//锁的过期时间
+    private final long tryLockIntervalMillis;//两次尝试获取锁时的间隔
+    private final String lockId;//锁唯一标识，用于标识谁获取的锁
     private boolean lockOk = false;//锁是否获取到了
     private long expireTimestamp = -1;//锁的过期时间戳
     private final Object lockObj = new Object();
@@ -125,6 +126,7 @@ public class CamelliaRedisLock {
      * 尝试获取锁，若获取不到，则立即返回
      */
     public boolean tryLock() {
+        if (isLockOk()) return true;
         synchronized (lockObj) {
             try {
                 long timestamp = System.currentTimeMillis() + expireTimeoutMillis;
@@ -187,6 +189,8 @@ public class CamelliaRedisLock {
 
     /**
      * 尝试对锁进行renew，只能renew自己获取到的锁
+     * 边界情况可能renew了别人的锁
+     * 严格的renew请使用lua脚本进行原子操作
      * @return 成功/失败
      */
     public boolean renew() {
@@ -223,6 +227,7 @@ public class CamelliaRedisLock {
     /**
      * 释放锁，只能释放自己获取到的锁
      * 边界情况下可能释放了别人的锁（拿到value，发现是自己，然后准备去删除的时候ttl到期了）
+     * 严格的release请使用lua脚本进行原子操作
      * @return 成功/失败
      */
     public boolean release() {

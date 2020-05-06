@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.hbase;
 
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
 import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
 import com.netease.nim.camellia.redis.proxy.hbase.model.HBase2RedisRebuildResult;
@@ -12,6 +13,7 @@ import com.netease.nim.camellia.redis.proxy.hbase.monitor.ReadOpeType;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.WriteOpeType;
 import com.netease.nim.camellia.redis.proxy.util.RedisKey;
+import com.netease.nim.camellia.redis.toolkit.localcache.LocalCache;
 import com.netease.nim.camellia.redis.toolkit.lock.CamelliaRedisLock;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -71,23 +73,26 @@ public class RedisHBaseZSetMixClient {
      */
     private static final String zadd_method = "zadd(byte[],Map)";
     public Long zadd(byte[] key, Map<byte[], Double> scoreMembers) {
+        CamelliaRedisLock redisLock = null;
         try {
             List<Put> putList = new ArrayList<>();
             Long ret = null;
             boolean cacheExists = false;
-            if (checkRedisKeyExists(key)) {//说明存在
+            if (checkRedisKeyExists(redisTemplate, key)) {//说明存在
                 RedisHBaseMonitor.incrWrite(zadd_method, WriteOpeType.REDIS_HIT);
                 ret = _redis_zadd(key, scoreMembers, putList);
                 cacheExists = true;
             } else {
                 RedisHBaseMonitor.incrWrite(zadd_method, WriteOpeType.HBASE_ONLY);
             }
-            CamelliaRedisLock redisLock = null;
             if (!cacheExists) {
                 redisLock = CamelliaRedisLock.newLock(redisTemplate, lockKey(key), RedisHBaseConfiguration.lockAcquireTimeoutMillis(), RedisHBaseConfiguration.lockExpireMillis());
                 boolean lock = redisLock.lock();
                 if (!lock) {
                     logger.warn("zadd lock fail, key = {}", SafeEncoder.encode(key));
+                    if (RedisHBaseConfiguration.errorIfLockFail()) {
+                        throw new CamelliaRedisException("zadd lock fail, please retry");
+                    }
                 }
             }
             if (!cacheExists) {
@@ -111,10 +116,14 @@ public class RedisHBaseZSetMixClient {
                 return (long) scoreMembers.size();
             }
         } finally {
+            if (redisLock != null) {
+                redisLock.release();
+            }
             boolean cacheNull = RedisHBaseConfiguration.isZSetHBaseCacheNull();
             if (cacheNull) {
                 redisTemplate.setex(nullCacheKey(key), RedisHBaseConfiguration.notNullCacheExpireSeconds(), NULL_CACHE_NO);
             }
+
         }
     }
 
@@ -146,7 +155,7 @@ public class RedisHBaseZSetMixClient {
             RedisHBaseMonitor.incrRead(zcount_method, ReadOpeType.REDIS_ONLY);
             return zcount;
         } else {
-            if (checkRedisKeyExists(key)) {
+            if (checkRedisKeyExists(redisTemplate, key)) {
                 RedisHBaseMonitor.incrRead(zcount_method, ReadOpeType.REDIS_ONLY);
                 return 0L;
             } else {
@@ -436,6 +445,9 @@ public class RedisHBaseZSetMixClient {
             boolean lock = redisLock.lock();
             if (!lock) {
                 logger.warn("zincrby lock fail, key = {}", SafeEncoder.encode(key));
+                if (RedisHBaseConfiguration.errorIfLockFail()) {
+                    throw new CamelliaRedisException("zincrby lock fail, please retry");
+                }
             }
             KeyStatus keyStatus = checkCacheAndRebuild4Write(key, zincrby_method);
             if (keyStatus == KeyStatus.NULL) {
@@ -797,34 +809,40 @@ public class RedisHBaseZSetMixClient {
         boolean lock = redisLock.lock();
         if (!lock) {
             logger.warn("rebuildZSet lock fail, key = {}", SafeEncoder.encode(key));
-        }
-        Result result = checkZSetExists(key);
-        if (result == null) {
-            if (cacheNull) {
-                redisTemplate.set(nullCacheKey(key), NULL_CACHE_YES, NX, EX, RedisHBaseConfiguration.nullCacheExpireSeconds());
+            if (RedisHBaseConfiguration.errorIfLockFail()) {
+                throw new CamelliaRedisException("rebuildZSet lock fail, please retry");
             }
+        }
+        Result result;
+        List<Put> putList;
+        try {
+            result = checkZSetExists(key);
+            if (result == null) {
+                if (cacheNull) {
+                    redisTemplate.set(nullCacheKey(key), NULL_CACHE_YES, NX, EX, RedisHBaseConfiguration.nullCacheExpireSeconds());
+                }
+                return HBase2RedisRebuildResult.NONE_RESULT;
+            }
+            NavigableMap<byte[], byte[]> map = result.getFamilyMap(CF_D);
+            if (map.isEmpty()) {
+                if (cacheNull) {
+                    redisTemplate.set(nullCacheKey(key), NULL_CACHE_YES, NX, EX, RedisHBaseConfiguration.nullCacheExpireSeconds());
+                }
+                return HBase2RedisRebuildResult.NONE_RESULT;
+            }
+            Map<byte[], Double> scoreMembers = new HashMap<>();
+            for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
+                byte[] value = entry.getKey();
+                byte[] score = entry.getValue();
+                if (isDataQualifier(value)) {
+                    scoreMembers.put(data(value), Bytes.toDouble(score));
+                }
+            }
+            putList = new ArrayList<>();
+            _redis_zadd(key, scoreMembers, putList);
+        } finally {
             redisLock.release();
-            return HBase2RedisRebuildResult.NONE_RESULT;
         }
-        NavigableMap<byte[], byte[]> map = result.getFamilyMap(CF_D);
-        if (map.isEmpty()) {
-            if (cacheNull) {
-                redisTemplate.set(nullCacheKey(key), NULL_CACHE_YES, NX, EX, RedisHBaseConfiguration.nullCacheExpireSeconds());
-            }
-            redisLock.release();
-            return HBase2RedisRebuildResult.NONE_RESULT;
-        }
-        Map<byte[], Double> scoreMembers = new HashMap<>();
-        for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
-            byte[] value = entry.getKey();
-            byte[] score = entry.getValue();
-            if (isDataQualifier(value)) {
-                scoreMembers.put(data(value), Bytes.toDouble(score));
-            }
-        }
-        List<Put> putList = new ArrayList<>();
-        _redis_zadd(key, scoreMembers, putList);
-        redisLock.release();
         if (!putList.isEmpty()) {
             hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), putList);
         }
@@ -899,7 +917,7 @@ public class RedisHBaseZSetMixClient {
 
     //
     private KeyStatus checkCacheAndRebuild4Write(byte[] key, String method) {
-        if (checkRedisKeyExists(key)) {
+        if (checkRedisKeyExists(redisTemplate, key)) {
             RedisHBaseMonitor.incrWrite(method, WriteOpeType.REDIS_HIT);
             return KeyStatus.CACHE_OK;
         } else {
@@ -921,7 +939,7 @@ public class RedisHBaseZSetMixClient {
 
     //
     private KeyStatus checkCacheAndRebuild4Read(byte[] key, String method) {
-        if (checkRedisKeyExists(key)) {
+        if (checkRedisKeyExists(redisTemplate, key)) {
             RedisHBaseMonitor.incrRead(method, ReadOpeType.REDIS_ONLY);
         } else {
             HBase2RedisRebuildResult rebuildResult = rebuildZSet(key);
@@ -946,15 +964,5 @@ public class RedisHBaseZSetMixClient {
                 return true;
         }
         throw new IllegalArgumentException("unknown HBase2RedisRebuildResult");
-    }
-
-    //
-    private boolean checkRedisKeyExists(byte[] key) {
-        Boolean exists = redisTemplate.exists(redisKey(key));
-        return exists != null && exists;
-    }
-
-    private byte[] lockKey(byte[] key) {
-        return Bytes.add(key, Bytes.toBytes("~camellia_lock"));
     }
 }
