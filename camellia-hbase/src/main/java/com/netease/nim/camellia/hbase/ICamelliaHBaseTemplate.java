@@ -19,6 +19,8 @@ public interface ICamelliaHBaseTemplate {
 
     void delete(String tableName, List<Delete> deletes);
 
+    void batchWriteOpe(String tableName, List<? extends Row> actions, Object[] results);
+
     boolean checkAndDelete(String tableName, byte[] row, byte[] family, byte[] qualifier, byte[] value, Delete delete);
 
     boolean checkAndDelete(String tableName, byte[] row, byte[] family, byte[] qualifier,

@@ -22,7 +22,7 @@ public class ClientCommandUtil {
     private static final String BGROUP = "BGROUP";
     private static final String CLIENT_NAME = "CLIENT_NAME";
 
-    public static Reply<String> invokeClientCommand(ChannelInfo channelInfo, Command client) {
+    public static Reply invokeClientCommand(ChannelInfo channelInfo, Command client) {
         byte[][] objects = client.getObjects();
         if (objects.length == 2) {
             boolean getname = Utils.checkStringIgnoreCase(objects[1], RedisKeyword.GETNAME.name());

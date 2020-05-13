@@ -21,8 +21,8 @@ import java.util.Set;
  */
 public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
 
-    private RedisHBaseZSetMixClient zSetMixClient;
-    private RedisHBaseCommonMixClient commonMixClient;
+    private final RedisHBaseZSetMixClient zSetMixClient;
+    private final RedisHBaseCommonMixClient commonMixClient;
 
     public RedisHBaseCommandProcessor(CamelliaRedisTemplate redisTemplate, CamelliaHBaseTemplate hBaseTemplate) {
         //做一下预热
@@ -32,9 +32,10 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
         } catch (Exception e) {
             throw new IllegalArgumentException("warm fail, please check");
         }
+        HBaseWriteAsyncExecutor hBaseWriteAsyncExecutor = new HBaseWriteAsyncExecutor(redisTemplate, hBaseTemplate);
         //
-        this.zSetMixClient = new RedisHBaseZSetMixClient(redisTemplate, hBaseTemplate);
-        this.commonMixClient = new RedisHBaseCommonMixClient(redisTemplate, hBaseTemplate, this.zSetMixClient);
+        this.zSetMixClient = new RedisHBaseZSetMixClient(redisTemplate, hBaseTemplate, hBaseWriteAsyncExecutor);
+        this.commonMixClient = new RedisHBaseCommonMixClient(redisTemplate, hBaseTemplate, hBaseWriteAsyncExecutor, this.zSetMixClient);
     }
 
     @Override

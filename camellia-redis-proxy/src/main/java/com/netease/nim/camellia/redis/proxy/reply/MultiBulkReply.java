@@ -9,13 +9,13 @@ import java.io.IOException;
 /**
  * Nested replies.
  */
-public class MultiBulkReply implements Reply<Reply[]> {
+public class MultiBulkReply implements Reply {
 
     public static final MultiBulkReply EMPTY = new MultiBulkReply(new Reply[0]);
 
     private static final char MARKER = Marker.MultiBulkReply.getMarker();
 
-    private Reply[] replies;
+    private final Reply[] replies;
 
     public MultiBulkReply(Reply[] replies) {
         this.replies = replies;

@@ -26,8 +26,8 @@ public class Utils {
     public static Charset utf8Charset = Charset.forName("utf-8");
 
     private static final int NUM_MAP_LENGTH = 256;
-    private static byte[][] numMap = new byte[NUM_MAP_LENGTH][];
-    private static byte[][] numMapWithCRLF = new byte[NUM_MAP_LENGTH][];
+    private static final byte[][] numMap = new byte[NUM_MAP_LENGTH][];
+    private static final byte[][] numMapWithCRLF = new byte[NUM_MAP_LENGTH][];
     static {
         for (int i = 0; i < NUM_MAP_LENGTH; i++) {
             numMapWithCRLF[i] = convert(i, true);

@@ -225,6 +225,31 @@ public class CamelliaRedisLock {
     }
 
     /**
+     * 获取锁过期的时间戳，毫秒
+     * @return 锁过期的时间戳
+     */
+    public long getExpireTimestamp() {
+        if (!lockOk) return -1;
+        return expireTimestamp;
+    }
+
+    /**
+     * 获取LockKey
+     * @return LockKey
+     */
+    public byte[] getLockKey() {
+        return lockKey;
+    }
+
+    /**
+     * 获取LockId
+     * @return LockId
+     */
+    public String getLockId() {
+        return lockId;
+    }
+
+    /**
      * 释放锁，只能释放自己获取到的锁
      * 边界情况下可能释放了别人的锁（拿到value，发现是自己，然后准备去删除的时候ttl到期了）
      * 严格的release请使用lua脚本进行原子操作

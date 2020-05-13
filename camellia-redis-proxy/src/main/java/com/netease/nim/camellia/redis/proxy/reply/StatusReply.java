@@ -6,7 +6,7 @@ import io.netty.buffer.ByteBuf;
 
 import java.io.IOException;
 
-public class StatusReply implements Reply<String> {
+public class StatusReply implements Reply {
 
     public static final StatusReply OK = new StatusReply(RedisKeyword.OK.name());
     public static final StatusReply PONG = new StatusReply(RedisKeyword.PONG.name());

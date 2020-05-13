@@ -25,8 +25,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerHandler.class);
 
-    private CommandInvoker invoker;
-    private CamelliaServerProperties env;
+    private final CommandInvoker invoker;
+    private final CamelliaServerProperties env;
 
     public ServerHandler(CamelliaServerProperties env, CommandInvoker invoker) {
         super();
@@ -92,7 +92,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
 
                 //特殊处理client命令
                 if (command.getName().equalsIgnoreCase(RedisCommand.CLIENT.name())) {
-                    Reply<String> reply = ClientCommandUtil.invokeClientCommand(channelInfo, command);
+                    Reply reply = ClientCommandUtil.invokeClientCommand(channelInfo, command);
                     ctx.writeAndFlush(reply);
                     continue;
                 }

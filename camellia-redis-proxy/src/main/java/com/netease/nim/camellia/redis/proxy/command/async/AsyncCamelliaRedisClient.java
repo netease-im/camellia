@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class AsyncCamelliaRedisClient implements AsyncClient {
 
-    private RedisResource redisResource;
+    private final RedisResource redisResource;
 
     public AsyncCamelliaRedisClient(RedisResource redisResource) {
         this.redisResource = redisResource;

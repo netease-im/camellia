@@ -7,7 +7,7 @@ import io.netty.buffer.Unpooled;
 import java.io.IOException;
 
 
-public class BulkReply implements Reply<ByteBuf> {
+public class BulkReply implements Reply {
     public static final BulkReply NIL_REPLY = new BulkReply();
 
     private static final char MARKER = Marker.BulkReply.getMarker();

@@ -1,7 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.hbase.monitor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -13,6 +15,7 @@ public class RedisHBaseStats {
     private List<ReadMethodCacheHitStats> readMethodCacheHitStatsList = new ArrayList<>();
     private List<WriteMethodStats> writeMethodStatsList = new ArrayList<>();
     private ZSetStats zSetStats = new ZSetStats();
+    private Set<String> hbaseAsyncWriteTopics = new HashSet<>();
 
     public List<ReadMethodStats> getReadMethodStatsList() {
         return readMethodStatsList;
@@ -44,6 +47,14 @@ public class RedisHBaseStats {
 
     public void setzSetStats(ZSetStats zSetStats) {
         this.zSetStats = zSetStats;
+    }
+
+    public Set<String> getHbaseAsyncWriteTopics() {
+        return hbaseAsyncWriteTopics;
+    }
+
+    public void setHbaseAsyncWriteTopics(Set<String> hbaseAsyncWriteTopics) {
+        this.hbaseAsyncWriteTopics = hbaseAsyncWriteTopics;
     }
 
     public static class ZSetStats {

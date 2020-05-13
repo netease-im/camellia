@@ -13,7 +13,7 @@ public enum Marker {
     IntegerReply(':'),
     ;
 
-    private char ch;
+    private final char ch;
 
     Marker(char ch) {
         this.ch = ch;

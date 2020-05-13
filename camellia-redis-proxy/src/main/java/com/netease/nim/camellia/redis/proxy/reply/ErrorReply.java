@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBuf;
 
 import java.io.IOException;
 
-public class ErrorReply implements Reply<String> {
+public class ErrorReply implements Reply {
     public static final ErrorReply NOT_SUPPORT = new ErrorReply("Not Support");
     public static final ErrorReply NOT_AVAILABLE = new ErrorReply("Not Available");
     public static final ErrorReply TOO_BUSY = new ErrorReply("Too Busy");

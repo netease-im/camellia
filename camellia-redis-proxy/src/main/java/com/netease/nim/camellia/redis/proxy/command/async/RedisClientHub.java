@@ -16,11 +16,11 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class RedisClientHub {
 
-    private static ConcurrentHashMap<String, RedisClient> map = new ConcurrentHashMap<>();
-    private static ConcurrentHashMap<String, AtomicLong> failCountMap = new ConcurrentHashMap<>();
-    private static ConcurrentHashMap<String, AtomicLong> failTimestampMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, RedisClient> map = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, AtomicLong> failCountMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, AtomicLong> failTimestampMap = new ConcurrentHashMap<>();
 
-    private static ExecutorService exec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
+    private static final ExecutorService exec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(1024), new CamelliaThreadFactory(RedisClientHub.class));
 
     private static final Object lock = new Object();

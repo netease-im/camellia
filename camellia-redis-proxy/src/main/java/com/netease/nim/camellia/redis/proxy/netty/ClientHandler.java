@@ -13,8 +13,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class ClientHandler extends SimpleChannelInboundHandler<Reply> {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientHandler.class);
-    private LinkedBlockingQueue<CompletableFuture<Reply>> queue;
-    private String clientName;
+    private final LinkedBlockingQueue<CompletableFuture<Reply>> queue;
+    private final String clientName;
 
     public ClientHandler(LinkedBlockingQueue<CompletableFuture<Reply>> queue, String clientName) {
         this.queue = queue;

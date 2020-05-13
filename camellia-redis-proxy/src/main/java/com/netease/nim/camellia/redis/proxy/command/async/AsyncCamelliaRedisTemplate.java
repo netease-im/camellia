@@ -37,10 +37,10 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     private static final long defaultCheckIntervalMillis = 5000;
     private static final boolean defaultMonitorEnable = false;
 
-    private AsyncNettyClientFactory factory;
+    private final AsyncNettyClientFactory factory;
 
-    private long bid;
-    private String bgroup;
+    private final long bid;
+    private final String bgroup;
     private AsyncCamelliaRedisEnv env;
     private ResourceChooser resourceChooser;
 
@@ -363,12 +363,12 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
     private static class ReloadTask implements Runnable {
 
-        private AtomicBoolean running = new AtomicBoolean(false);
+        private final AtomicBoolean running = new AtomicBoolean(false);
 
-        private AsyncCamelliaRedisTemplate template;
-        private CamelliaApi service;
-        private long bid;
-        private String bgroup;
+        private final AsyncCamelliaRedisTemplate template;
+        private final CamelliaApi service;
+        private final long bid;
+        private final String bgroup;
         private String md5;
 
         ReloadTask(AsyncCamelliaRedisTemplate template, CamelliaApi service, long bid, String bgroup, String md5) {

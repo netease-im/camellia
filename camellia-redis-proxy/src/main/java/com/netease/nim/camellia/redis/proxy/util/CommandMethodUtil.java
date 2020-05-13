@@ -5,10 +5,6 @@ import com.netease.nim.camellia.redis.proxy.enums.CommandFinder;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-/**
- *
- * Created by popo on 2020/2/27.
- */
 public class CommandMethodUtil {
 
     public static void initCommandFinderMethods(Class clazz, Map<String, Method> map) {

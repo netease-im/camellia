@@ -23,14 +23,14 @@ public class AsyncCamelliaRedisTemplateChooser {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncCamelliaRedisTemplateChooser.class);
 
-    private CamelliaTranspondProperties properties;
+    private final CamelliaTranspondProperties properties;
     private AsyncCamelliaRedisEnv env;
     private CamelliaApi apiService;
 
     private final Object lock = new Object();
     private AsyncCamelliaRedisTemplate remoteInstance;
     private AsyncCamelliaRedisTemplate localInstance;
-    private Map<String, AsyncCamelliaRedisTemplate> remoteInstanceMap = new HashMap<>();
+    private final Map<String, AsyncCamelliaRedisTemplate> remoteInstanceMap = new HashMap<>();
 
     public AsyncCamelliaRedisTemplateChooser(CamelliaTranspondProperties properties) {
         this.properties = properties;

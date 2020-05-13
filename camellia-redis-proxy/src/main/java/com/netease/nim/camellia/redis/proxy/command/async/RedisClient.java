@@ -39,22 +39,22 @@ public class RedisClient implements AsyncClient {
     private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
     private static final AtomicLong id = new AtomicLong(0);
 
-    private static ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("redis-heart-beat"));
+    private static final ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("redis-heart-beat"));
 
     private EventLoopGroup loopGroup = new NioEventLoopGroup(1, new DefaultThreadFactory("redis"));
-    private String host;
-    private int port;
-    private String password;
+    private final String host;
+    private final int port;
+    private final String password;
     private Channel channel;
     private volatile boolean valid = true;
     private ScheduledFuture<?> scheduledFuture;
-    private LinkedBlockingQueue<CompletableFuture<Reply>> queue = new LinkedBlockingQueue<>(100000);
-    private LinkedBlockingQueue<CommandWrapper> commandQueue = new LinkedBlockingQueue<>(100000);
-    private int heartbeatIntervalSeconds = Constants.Async.heartbeatIntervalSeconds;
-    private long heartbeatTimeoutMillis = Constants.Async.heartbeatTimeoutMillis;
-    private int commandPipelineFlushThreshold = Constants.Async.commandPipelineFlushThreshold;
-    private int connectTimeoutMillis = Constants.Async.connectTimeoutMillis;
-    private String clientName;
+    private final LinkedBlockingQueue<CompletableFuture<Reply>> queue = new LinkedBlockingQueue<>(100000);
+    private final LinkedBlockingQueue<CommandWrapper> commandQueue = new LinkedBlockingQueue<>(100000);
+    private final int heartbeatIntervalSeconds;
+    private final long heartbeatTimeoutMillis;
+    private final int commandPipelineFlushThreshold;
+    private final int connectTimeoutMillis;
+    private final String clientName;
     private final Object lock = new Object();
 
     public RedisClient(String host, int port, String password,

@@ -16,9 +16,9 @@ public class AsyncTaskQueue {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncTaskQueue.class);
 
-    private ChannelInfo channelInfo;
-    private LinkedBlockingQueue<AsyncTask> queue = new LinkedBlockingQueue<>(1000000);
-    private AtomicBoolean callbacking = new AtomicBoolean(false);
+    private final ChannelInfo channelInfo;
+    private final LinkedBlockingQueue<AsyncTask> queue = new LinkedBlockingQueue<>(1000000);
+    private final AtomicBoolean callbacking = new AtomicBoolean(false);
 
     public AsyncTaskQueue(ChannelInfo channelInfo) {
         this.channelInfo = channelInfo;

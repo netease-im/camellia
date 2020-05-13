@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ChannelMonitor {
 
-    private static ConcurrentHashMap<String, ChannelInfo> map = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, ChannelInfo> map = new ConcurrentHashMap<>();
 
     public static void init(ChannelInfo channelInfo) {
         map.put(channelInfo.getConsid(), channelInfo);

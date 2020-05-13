@@ -6,7 +6,7 @@ import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 
 
-public class IntegerReply implements Reply<Long> {
+public class IntegerReply implements Reply {
 
     public static final IntegerReply REPLY_1 = new IntegerReply(1L);
     public static final IntegerReply REPLY_0 = new IntegerReply(0L);

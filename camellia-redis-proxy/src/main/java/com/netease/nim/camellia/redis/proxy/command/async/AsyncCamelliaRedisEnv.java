@@ -33,7 +33,7 @@ public class AsyncCamelliaRedisEnv {
     }
 
     public static class Builder {
-        private AsyncCamelliaRedisEnv redisEnv;
+        private final AsyncCamelliaRedisEnv redisEnv;
         public Builder() {
             redisEnv = new AsyncCamelliaRedisEnv();
         }

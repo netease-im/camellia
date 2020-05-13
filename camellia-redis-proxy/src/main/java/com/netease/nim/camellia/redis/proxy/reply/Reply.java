@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBuf;
 
 import java.io.IOException;
 
-public interface Reply<T> {
+public interface Reply {
 
   byte[] CRLF = new byte[] {Utils.CR, Utils.LF};
 

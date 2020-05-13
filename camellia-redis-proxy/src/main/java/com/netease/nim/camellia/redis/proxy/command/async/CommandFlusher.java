@@ -17,8 +17,8 @@ import java.util.concurrent.CompletableFuture;
  */
 public class CommandFlusher {
 
-    private Map<AsyncClient, List<Command>> commandMap = new HashMap<>();
-    private Map<AsyncClient, List<CompletableFuture<Reply>>> futureMap = new HashMap<>();
+    private final Map<AsyncClient, List<Command>> commandMap = new HashMap<>();
+    private final Map<AsyncClient, List<CompletableFuture<Reply>>> futureMap = new HashMap<>();
 
     public void sendCommand(AsyncClient client, Command command, CompletableFuture<Reply> future) {
         List<Command> commands = commandMap.computeIfAbsent(client, k -> new ArrayList<>());

@@ -4,9 +4,7 @@ import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
 import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
-import com.netease.nim.camellia.redis.proxy.hbase.model.ExpireTask;
 import com.netease.nim.camellia.redis.proxy.hbase.model.RedisHBaseType;
-import com.netease.nim.camellia.redis.proxy.util.RedisKey;
 import com.netease.nim.camellia.redis.toolkit.localcache.LocalCache;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -15,12 +13,10 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Response;
 import redis.clients.util.SafeEncoder;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.netease.nim.camellia.redis.proxy.hbase.util.RedisHBaseUtil.*;
 
@@ -35,14 +31,23 @@ public class RedisHBaseCommonMixClient {
     private final CamelliaRedisTemplate redisTemplate;
     private final RedisHBaseZSetMixClient zSetMixClient;
     private final CamelliaHBaseTemplate hBaseTemplate;
+    private final HBaseWriteAsyncExecutor hBaseWriteAsyncExecutor;
+    private final List<ExpireTaskExecutor> list;
 
     public RedisHBaseCommonMixClient(CamelliaRedisTemplate redisTemplate,
                                      CamelliaHBaseTemplate hBaseTemplate,
+                                     HBaseWriteAsyncExecutor hBaseWriteAsyncExecutor,
                                      RedisHBaseZSetMixClient zSetMixClient) {
         this.redisTemplate = redisTemplate;
-        this.zSetMixClient = zSetMixClient;
         this.hBaseTemplate = hBaseTemplate;
-        this.startAsyncExpireTask();
+        this.hBaseWriteAsyncExecutor = hBaseWriteAsyncExecutor;
+        this.zSetMixClient = zSetMixClient;
+        this.list = new ArrayList<>();
+        for (int i=0; i<RedisHBaseConfiguration.expireAsyncThreadSize(); i++) {
+            ExpireTaskExecutor executor = new ExpireTaskExecutor(this);
+            executor.start();
+            list.add(executor);
+        }
     }
 
     /**
@@ -103,7 +108,11 @@ public class RedisHBaseCommonMixClient {
         }
         Delete delete = new Delete(buildRowKey(key));
         delete.addColumns(CF_D, COL_EXPIRE_TIME);
-        hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), delete);
+        if (RedisHBaseConfiguration.hbaseWriteOpeAsyncEnable() && checkRedisKeyExists(redisTemplate, key)) {
+            hBaseWriteAsyncExecutor.delete(key, Collections.singletonList(delete));
+        } else {
+            hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), delete);
+        }
         return 1L;
     }
 
@@ -135,7 +144,11 @@ public class RedisHBaseCommonMixClient {
         long pttl = Bytes.toLong(value) - System.currentTimeMillis();
         if (pttl < 0) {
             Delete delete = new Delete(buildRowKey(key));
-            hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), delete);
+            if (RedisHBaseConfiguration.hbaseWriteOpeAsyncEnable() && checkRedisKeyExists(redisTemplate, key)) {
+                hBaseWriteAsyncExecutor.delete(key, Collections.singletonList(delete));
+            } else {
+                hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), delete);
+            }
             return -2L;
         }
         return pttl;
@@ -145,17 +158,12 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long pexpireAt(byte[] key, long millisecondsTimestamp) {
-        if (RedisHBaseConfiguration.expireCommandTaskAsyncEnable()) {
-            return _pexpireAtAsync(key, millisecondsTimestamp);
+        if (!RedisHBaseConfiguration.expireAsyncEnable()) {
+            return _pexpireAt(key, millisecondsTimestamp);
         } else {
-            try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
-                List<Put> putList = new ArrayList<>();
-                _pexpireAt(pipeline, putList, key, millisecondsTimestamp);
-                pipeline.sync();
-                if (!putList.isEmpty()) {
-                    hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), putList);
-                }
-            }
+            int index = Math.abs(Arrays.hashCode(key)) % list.size();
+            ExpireTaskExecutor executor = list.get(index);
+            executor.submit(new ExpireTask(key, millisecondsTimestamp));
             return 1L;
         }
     }
@@ -278,90 +286,75 @@ public class RedisHBaseCommonMixClient {
         return null;
     }
 
-    private final LinkedBlockingQueue<ExpireTask> expireTaskQueue = new LinkedBlockingQueue<>(1000000);
-    private Long _pexpireAtAsync(byte[] key, long millisecondsTimestamp) {
-        ExpireTask expireTask = new ExpireTask(key, millisecondsTimestamp);
-        boolean offer = expireTaskQueue.offer(expireTask);
-        if (!offer) {
-            logger.warn("expire command discard! key = {}", SafeEncoder.encode(key));
+    //
+    private long _pexpireAt(byte[] key, long millisecondsTimestamp) {
+        RedisHBaseType redisHBaseType = redisHBaseType(key);
+        if (redisHBaseType == null) return 0L;
+        try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
+            long now = System.currentTimeMillis();
+            if (redisHBaseType == RedisHBaseType.ZSET) {
+                long seconds = (millisecondsTimestamp - now) / 1000;
+                if (seconds > RedisHBaseConfiguration.zsetExpireSeconds()) {
+                    pipeline.expire(redisKey(key), RedisHBaseConfiguration.zsetExpireSeconds());
+                } else {
+                    pipeline.pexpire(redisKey(key), millisecondsTimestamp - now);
+                }
+            } else {
+                pipeline.pexpire(redisKey(key), millisecondsTimestamp - now);
+            }
+            pipeline.sync();
+        }
+        Put put = new Put(buildRowKey(key));
+        put.addColumn(CF_D, COL_EXPIRE_TIME, Bytes.toBytes(millisecondsTimestamp));
+        if (RedisHBaseConfiguration.hbaseWriteOpeAsyncEnable() && checkRedisKeyExists(redisTemplate, key)) {
+            hBaseWriteAsyncExecutor.put(key, Collections.singletonList(put));
+        } else {
+            hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), put);
         }
         return 1L;
     }
 
-    private void startAsyncExpireTask() {
-        new Thread(() -> {
-            List<ExpireTask> buffer = new ArrayList<>();
-            while (true) {
-                try {
-                    if (buffer.isEmpty()) {
-                        ExpireTask expireTask = expireTaskQueue.poll(1, TimeUnit.SECONDS);
-                        if (expireTask != null) {
-                            buffer.add(expireTask);
-                        }
-                        continue;
-                    } else {
-                        expireTaskQueue.drainTo(buffer, RedisHBaseConfiguration.expireCommandTaskBatchSize() - 1);
-                    }
-                    if (buffer.isEmpty()) {
-                        continue;
-                    }
-                    try {
-                        if (buffer.size() > 1) {
-                            Map<RedisKey, ExpireTask> map = new HashMap<>();
-                            for (ExpireTask expireTask : buffer) {
-                                RedisKey redisKey = new RedisKey(expireTask.getKey());
-                                ExpireTask task = map.get(redisKey);
-                                if (task == null) {
-                                    map.put(redisKey, expireTask);
-                                } else {
-                                    if (task.getMillisecondsTimestamp() < expireTask.getMillisecondsTimestamp()) {
-                                        map.put(redisKey, expireTask);
-                                    }
-                                }
-                            }
-                            buffer.clear();
-                            buffer.addAll(map.values());
-                        }
-                        List<Put> putList = new ArrayList<>();
-                        try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
-                            for (ExpireTask expireTask : buffer) {
-                                _pexpireAt(pipeline, putList, expireTask.getKey(), expireTask.getMillisecondsTimestamp());
-                            }
-                            pipeline.sync();
-                        }
-                        if (!putList.isEmpty()) {
-                            hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), putList);
-                        }
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("flush expire commands, size = {}", buffer.size());
-                        }
-                    } finally {
-                        buffer.clear();
-                    }
-                } catch (Exception e) {
-                    logger.error("expire task error", e);
-                }
-            }
-        }, "expire-command-async-task").start();
+    private static class ExpireTask {
+        private final byte[] key;
+        private final long millisecondsTimestamp;
+        public ExpireTask(byte[] key, long millisecondsTimestamp) {
+            this.key = key;
+            this.millisecondsTimestamp = millisecondsTimestamp;
+        }
     }
 
-    //
-    private void _pexpireAt(ICamelliaRedisPipeline pipeline, List<Put> putList, byte[] key, long millisecondsTimestamp) {
-        RedisHBaseType redisHBaseType = redisHBaseType(key);
-        if (redisHBaseType == null) return;
-        long now = System.currentTimeMillis();
-        if (redisHBaseType == RedisHBaseType.ZSET) {
-            long seconds = (millisecondsTimestamp - now) / 1000;
-            if (seconds > RedisHBaseConfiguration.zsetExpireSeconds()) {
-                pipeline.expire(redisKey(key), RedisHBaseConfiguration.zsetExpireSeconds());
-            } else {
-                pipeline.pexpire(redisKey(key), millisecondsTimestamp - now);
-            }
-        } else {
-            pipeline.pexpire(redisKey(key), millisecondsTimestamp - now);
+    private static class ExpireTaskExecutor extends Thread {
+
+        private static final AtomicLong idGenerator = new AtomicLong(0L);
+        private final LinkedBlockingQueue<RedisHBaseCommonMixClient.ExpireTask> queue = new LinkedBlockingQueue<>(RedisHBaseConfiguration.expireAsyncQueueSize());
+        private final RedisHBaseCommonMixClient commonMixClient;
+        private final long id;
+
+        public ExpireTaskExecutor(RedisHBaseCommonMixClient commonMixClient) {
+            this.commonMixClient = commonMixClient;
+            this.id = idGenerator.incrementAndGet();
+            setName("ExpireTaskExecutor-" + id);
         }
-        Put put = new Put(buildRowKey(key));
-        put.addColumn(CF_D, COL_EXPIRE_TIME, Bytes.toBytes(millisecondsTimestamp));
-        putList.add(put);
+
+        public void submit(RedisHBaseCommonMixClient.ExpireTask expireTask) {
+            boolean offer = queue.offer(expireTask);
+            if (!offer) {
+                logger.warn("submit ExpireTask fail, key = {}, millisecondsTimestamp = {}", SafeEncoder.encode(expireTask.key), expireTask.millisecondsTimestamp);
+            }
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    RedisHBaseCommonMixClient.ExpireTask expireTask = queue.poll(1, TimeUnit.SECONDS);
+                    if (expireTask != null) {
+                        commonMixClient._pexpireAt(expireTask.key, expireTask.millisecondsTimestamp);
+                    }
+                } catch (Exception e) {
+                    logger.error("expireTask error, id = {}", id, e);
+                }
+            }
+        }
     }
 }

@@ -25,9 +25,9 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncCamelliaRedisClusterClient.class);
 
-    private RedisClusterSlotInfo clusterSlotInfo;
-    private RedisClusterResource redisClusterResource;
-    private int maxAttempts = 5;
+    private final RedisClusterSlotInfo clusterSlotInfo;
+    private final RedisClusterResource redisClusterResource;
+    private final int maxAttempts;
 
     public AsyncCamelliaRedisClusterClient(RedisClusterResource redisClusterResource, int maxAttempts) {
         this.redisClusterResource = redisClusterResource;
@@ -99,9 +99,9 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
 
     private static class CompletableFutureWrapper extends CompletableFuture<Reply> {
         private static final Command ASKING = new Command(new byte[][]{RedisCommand.ASKING.raw()});
-        private AsyncCamelliaRedisClusterClient clusterClient;
-        private CompletableFuture<Reply> future;
-        private Command command;
+        private final AsyncCamelliaRedisClusterClient clusterClient;
+        private final CompletableFuture<Reply> future;
+        private final Command command;
         private int attempts = 0;
 
         CompletableFutureWrapper(AsyncCamelliaRedisClusterClient clusterClient, CompletableFuture<Reply> future, Command command) {

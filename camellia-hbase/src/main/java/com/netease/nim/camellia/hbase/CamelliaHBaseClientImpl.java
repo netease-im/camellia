@@ -103,6 +103,26 @@ public class CamelliaHBaseClientImpl {
     }
 
     @WriteOp
+    public void batchWriteOpe(String tableName, List<? extends Row> actions, Object[] results) {
+        try {
+            for (Row action : actions) {
+                if (action instanceof Get) {
+                    throw new CamelliaHBaseException("not support GET");
+                }
+            }
+            try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
+                table.batch(actions, results);
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new CamelliaHBaseException(e);
+        } finally {
+            if (logger.isDebugEnabled()) {
+                logger.debug("{} batchWriteOpe, resource = {}, size = {}", tableName, resource.getUrl(), actions.size());
+            }
+        }
+    }
+
+    @WriteOp
     public boolean checkAndDelete(String tableName, byte[] row, byte[] family, byte[] qualifier, byte[] value, Delete delete) {
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {

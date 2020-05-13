@@ -3,6 +3,8 @@ package com.netease.nim.camellia.redis.proxy.netty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  *
  * Created by caojiajun on 2019/11/28.
@@ -19,7 +21,7 @@ public class ServerStatus {
         Thread thread = new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(1000);
+                    TimeUnit.SECONDS.sleep(1);
                     currentTime = System.currentTimeMillis();
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);

@@ -14,7 +14,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
  */
 public class ReplyEncoder extends MessageToByteEncoder<Reply> {
 
-    private CamelliaServerProperties serverProperties;
+    private final CamelliaServerProperties serverProperties;
 
     public ReplyEncoder(CamelliaServerProperties serverProperties) {
         super();

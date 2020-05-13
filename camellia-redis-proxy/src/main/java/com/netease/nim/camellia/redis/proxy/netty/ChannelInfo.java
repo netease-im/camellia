@@ -20,8 +20,8 @@ public class ChannelInfo {
     private final String consid;
     private final Map<String, Object> map = new HashMap<>();
     private ChannelStats channelStats = ChannelStats.NO_AUTH;
-    private ChannelHandlerContext ctx;
-    private AsyncTaskQueue asyncTaskQueue;
+    private final ChannelHandlerContext ctx;
+    private final AsyncTaskQueue asyncTaskQueue;
 
     private ChannelInfo(ChannelHandlerContext ctx) {
         this.ctx = ctx;

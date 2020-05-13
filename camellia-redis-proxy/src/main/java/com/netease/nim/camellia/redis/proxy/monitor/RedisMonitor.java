@@ -23,7 +23,7 @@ public class RedisMonitor {
 
     private static ConcurrentHashMap<String, AtomicLong> map = new ConcurrentHashMap<>();
     private static Stats stats = new Stats();
-    private static ConcurrentHashMap<String, AtomicLong> failCountMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, AtomicLong> failCountMap = new ConcurrentHashMap<>();
 
     public static void init(int seconds) {
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("monitor"))

@@ -8,8 +8,8 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  */
 public class ConsoleResult {
 
-    private HttpResponseStatus code = HttpResponseStatus.OK;
-    private String data = "success";
+    private HttpResponseStatus code;
+    private String data;
 
     public ConsoleResult(HttpResponseStatus code, String data) {
         this.code = code;

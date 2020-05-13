@@ -11,10 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPoolConfig;
 
-/**
- *
- * Created by popo on 2020/2/27.
- */
 public class JedisRedisEnvUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(JedisRedisEnvUtil.class);

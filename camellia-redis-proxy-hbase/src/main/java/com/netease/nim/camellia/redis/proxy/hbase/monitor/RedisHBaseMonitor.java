@@ -20,15 +20,16 @@ public class RedisHBaseMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger("redis-hbase-stats");
 
-    private static ConcurrentHashMap<String, AtomicLong> readMap = new ConcurrentHashMap<>();
-    private static ConcurrentHashMap<String, AtomicLong> writeMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, AtomicLong> readMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, AtomicLong> writeMap = new ConcurrentHashMap<>();
 
-    private static AtomicLong zsetValueSizeTotal = new AtomicLong(0L);
-    private static AtomicLong zsetValueSizeCount = new AtomicLong(0L);
-    private static AtomicLong zsetValueSizeMax = new AtomicLong(0L);
-    private static AtomicLong zsetValueNotHitThresholdCount = new AtomicLong(0L);
-    private static AtomicLong zsetValueHitThresholdCount = new AtomicLong(0L);
-    private static ExecutorService exec = Executors.newFixedThreadPool(1);
+    private static final AtomicLong zsetValueSizeTotal = new AtomicLong(0L);
+    private static final AtomicLong zsetValueSizeCount = new AtomicLong(0L);
+    private static final AtomicLong zsetValueSizeMax = new AtomicLong(0L);
+    private static final AtomicLong zsetValueNotHitThresholdCount = new AtomicLong(0L);
+    private static final AtomicLong zsetValueHitThresholdCount = new AtomicLong(0L);
+    private static final ExecutorService exec = Executors.newFixedThreadPool(1);
+    private static final Set<String> hbaseAsyncWriteTopics = new HashSet<>();
 
     private static RedisHBaseStats redisHBaseStats = new RedisHBaseStats();
 
@@ -70,6 +71,11 @@ public class RedisHBaseMonitor {
         } else {
             zsetValueNotHitThresholdCount.incrementAndGet();
         }
+    }
+
+    public static void refreshHBaseAsyncWriteTopics(Set<String> topics) {
+        hbaseAsyncWriteTopics.clear();
+        hbaseAsyncWriteTopics.addAll(topics);
     }
 
     public static RedisHBaseStats getRedisHBaseStats() {
@@ -155,6 +161,7 @@ public class RedisHBaseMonitor {
         redisHBaseStats.setWriteMethodStatsList(writeMethodStatsList);
         redisHBaseStats.setzSetStats(zSetStats);
         redisHBaseStats.setReadMethodCacheHitStatsList(methodCacheHitStatsList);
+        redisHBaseStats.setHbaseAsyncWriteTopics(hbaseAsyncWriteTopics);
 
         RedisHBaseMonitor.redisHBaseStats = redisHBaseStats;
 
@@ -176,6 +183,11 @@ public class RedisHBaseMonitor {
             logger.info("====write.method====");
             for (RedisHBaseStats.WriteMethodStats methodStats : redisHBaseStats.getWriteMethodStatsList()) {
                 logger.info("write.method={},opeType={},count={}", methodStats.getMethod(), methodStats.getOpeType(), methodStats.getCount());
+            }
+            logger.info("====hbase.async.write.topics====");
+            logger.info("hbase.async.write.topic.count={}", redisHBaseStats.getHbaseAsyncWriteTopics().size());
+            for (String topic : redisHBaseStats.getHbaseAsyncWriteTopics()) {
+                logger.info("hbase.async.write.topic={}", topic);
             }
             logger.info("<<<<<<<END<<<<<<<");
         }

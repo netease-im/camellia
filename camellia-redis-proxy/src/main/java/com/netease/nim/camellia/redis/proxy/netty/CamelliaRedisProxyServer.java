@@ -1,8 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
-import com.netease.nim.camellia.redis.proxy.command.sync.SyncCommandInvoker;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
-import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -21,9 +19,9 @@ public class CamelliaRedisProxyServer {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyServer.class);
 
-    private CamelliaServerProperties serverProperties;
-    private ServerHandler serverHandler;
-    private InitHandler initHandler = new InitHandler();
+    private final CamelliaServerProperties serverProperties;
+    private final ServerHandler serverHandler;
+    private final InitHandler initHandler = new InitHandler();
 
     public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, CommandInvoker invoker) {
         this.serverProperties = serverProperties;

@@ -23,7 +23,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 public class ConsoleServerHandler extends SimpleChannelInboundHandler<Object> {
     private HttpRequest request;
     private CustomRequestObject requestObject;
-    private ConsoleService consoleService;
+    private final ConsoleService consoleService;
 
     public ConsoleServerHandler(ConsoleService consoleService) {
         this.consoleService = consoleService;

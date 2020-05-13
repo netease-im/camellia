@@ -25,7 +25,7 @@ public class AsyncCommandInvoker implements CommandInvoker {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncCommandInvoker.class);
 
-    private AsyncCamelliaRedisTemplateChooser chooser;
+    private final AsyncCamelliaRedisTemplateChooser chooser;
 
     public AsyncCommandInvoker(CamelliaTranspondProperties transpondProperties) {
         chooser = new AsyncCamelliaRedisTemplateChooser(transpondProperties);

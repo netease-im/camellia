@@ -3,10 +3,6 @@ package com.netease.nim.camellia.redis.proxy.util;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ExecutionException;
 
-/**
- *
- * Created by popo on 2020/2/27.
- */
 public class ErrorHandlerUtil {
 
     public static Throwable handler(Throwable e) {

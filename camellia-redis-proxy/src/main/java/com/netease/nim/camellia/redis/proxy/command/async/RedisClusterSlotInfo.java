@@ -33,8 +33,8 @@ public class RedisClusterSlotInfo {
     private Map<Integer, Node> slotMap = new HashMap<>();
     private Set<Node> nodeSet = new HashSet<>();
 
-    private RedisClusterResource redisClusterResource;
-    private String password;
+    private final RedisClusterResource redisClusterResource;
+    private final String password;
     public RedisClusterSlotInfo(RedisClusterResource redisClusterResource) {
         if (redisClusterResource == null) {
             throw new CamelliaRedisException("redisClusterResource is null");
@@ -62,7 +62,7 @@ public class RedisClusterSlotInfo {
      * 刷新slot信息
      */
     private long lastRenewTimestamp = 0L;
-    private AtomicBoolean renew = new AtomicBoolean(false);
+    private final AtomicBoolean renew = new AtomicBoolean(false);
     public boolean renew() {
         //限制1s内最多renew一次
         if (ServerStatus.getCurrentTimeMillis() - lastRenewTimestamp < 1000) {

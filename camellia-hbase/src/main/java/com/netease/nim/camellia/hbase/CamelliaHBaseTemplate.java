@@ -136,6 +136,11 @@ public class CamelliaHBaseTemplate implements ICamelliaHBaseTemplate {
     }
 
     @Override
+    public void batchWriteOpe(String tableName, List<? extends Row> actions, Object[] results) {
+        factory.getProxy().batchWriteOpe(tableName, actions, results);
+    }
+
+    @Override
     public boolean checkAndDelete(String tableName, byte[] row, byte[] family, byte[] qualifier, byte[] value, Delete delete) {
         return factory.getProxy().checkAndDelete(tableName, row, family, qualifier, value, delete);
     }
