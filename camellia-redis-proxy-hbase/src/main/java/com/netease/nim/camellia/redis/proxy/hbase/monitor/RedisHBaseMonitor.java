@@ -169,8 +169,8 @@ public class RedisHBaseMonitor {
             redisHBaseStats.setWriteMethodStatsList(writeMethodStatsList);
             redisHBaseStats.setzSetStats(zSetStats);
             redisHBaseStats.setReadMethodCacheHitStatsList(methodCacheHitStatsList);
-            redisHBaseStats.setHbaseAsyncWriteTopics(hbaseAsyncWriteTopics);
-            redisHBaseStats.setHbaseAsyncWriteTopicLengthMap(hbaseAsyncWriteTopicLengthMap);
+            redisHBaseStats.setHbaseAsyncWriteTopics(new HashSet<>(hbaseAsyncWriteTopics));
+            redisHBaseStats.setHbaseAsyncWriteTopicLengthMap(new HashMap<>(hbaseAsyncWriteTopicLengthMap));
 
             RedisHBaseMonitor.redisHBaseStats = redisHBaseStats;
 
