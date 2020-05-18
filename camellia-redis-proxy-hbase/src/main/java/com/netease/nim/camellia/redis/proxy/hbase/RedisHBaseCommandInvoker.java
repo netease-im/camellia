@@ -25,8 +25,8 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisHBaseCommandInvoker.class);
 
-    private Map<String, Method> methodMap = new HashMap<>();
-    private RedisHBaseCommandProcessor processor;
+    private final Map<String, Method> methodMap = new HashMap<>();
+    private final RedisHBaseCommandProcessor processor;
 
     public RedisHBaseCommandInvoker(CamelliaRedisTemplate redisTemplate, CamelliaHBaseTemplate hBaseTemplate) {
         processor = new RedisHBaseCommandProcessor(redisTemplate, hBaseTemplate);

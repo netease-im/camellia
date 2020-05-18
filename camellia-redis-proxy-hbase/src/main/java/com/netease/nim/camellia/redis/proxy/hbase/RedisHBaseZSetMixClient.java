@@ -12,7 +12,7 @@ import com.netease.nim.camellia.redis.proxy.hbase.model.RedisHBaseType;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.ReadOpeType;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.WriteOpeType;
-import com.netease.nim.camellia.redis.proxy.util.RedisKey;
+import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import com.netease.nim.camellia.redis.toolkit.lock.CamelliaRedisLock;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -50,11 +50,11 @@ public class RedisHBaseZSetMixClient {
     public Long del(byte[]... keys) {
         List<byte[]> toDeleteRedisKeyList = new ArrayList<>();
         List<Delete> toDeleteHBaseList = new ArrayList<>();
-        Map<RedisKey, List<Delete>> deleteMap = new HashMap<>();
+        Map<BytesKey, List<Delete>> deleteMap = new HashMap<>();
         for (byte[] key : keys) {
             toDeleteRedisKeyList.add(redisKey(key));
             toDeleteHBaseList.add(new Delete(buildRowKey(key)));
-            List<Delete> list = deleteMap.computeIfAbsent(new RedisKey(key), k -> new ArrayList<>());
+            List<Delete> list = deleteMap.computeIfAbsent(new BytesKey(key), k -> new ArrayList<>());
             list.add(new Delete(buildRowKey(key)));
             Set<byte[]> zrange = zrange(key, 0, -1);
             if (zrange != null && !zrange.isEmpty()) {
@@ -71,8 +71,8 @@ public class RedisHBaseZSetMixClient {
         }
         if (RedisHBaseConfiguration.hbaseWriteOpeAsyncEnable()) {
             List<Delete> list = new ArrayList<>();
-            for (Map.Entry<RedisKey, List<Delete>> entry : deleteMap.entrySet()) {
-                RedisKey redisKey = entry.getKey();
+            for (Map.Entry<BytesKey, List<Delete>> entry : deleteMap.entrySet()) {
+                BytesKey redisKey = entry.getKey();
                 List<Delete> deleteList = entry.getValue();
                 if (checkRedisKeyExists(redisTemplate, redisKey.getKey())) {
                     hBaseWriteAsyncExecutor.delete(redisKey.getKey(), deleteList);
@@ -695,13 +695,13 @@ public class RedisHBaseZSetMixClient {
     private static final String zmember_valueRef_method = "zmember_valueRef";
     private Set<Tuple> checkAndGetOriginalTupleSet(byte[] key, Set<Tuple> tupleSet) {
         if (tupleSet.isEmpty()) return tupleSet;
-        Map<RedisKey, Tuple> map = new HashMap<>();
+        Map<BytesKey, Tuple> map = new HashMap<>();
         List<byte[]> valueRefKeyList = new ArrayList<>();
-        Map<RedisKey, Tuple> tmpMap = new HashMap<>();
+        Map<BytesKey, Tuple> tmpMap = new HashMap<>();
         for (Tuple tuple : tupleSet) {
             byte[] value = tuple.getBinaryElement();
             boolean valueRefKey = isValueRefKey(key, value);
-            RedisKey redisKey = new RedisKey(tuple.getBinaryElement());
+            BytesKey redisKey = new BytesKey(tuple.getBinaryElement());
             if (valueRefKey) {
                 valueRefKeyList.add(value);
                 tmpMap.put(redisKey, tuple);
@@ -716,7 +716,7 @@ public class RedisHBaseZSetMixClient {
                 byte[] valueRefKey = valueRefKeyList.get(i);
                 byte[] originalValue = mget.get(i);
                 if (originalValue != null) {
-                    RedisKey redisKey = new RedisKey(valueRefKey);
+                    BytesKey redisKey = new BytesKey(valueRefKey);
                     Tuple tuple = tmpMap.get(redisKey);
                     map.put(redisKey, new Tuple(originalValue, tuple.getScore()));
                     RedisHBaseMonitor.incrRead(zmember_valueRef_method, ReadOpeType.REDIS_ONLY);
@@ -733,7 +733,7 @@ public class RedisHBaseZSetMixClient {
                     byte[] originalValue = results[i].getValue(CF_D, COL_DATA);
                     byte[] valueRefKey = getList.get(i).getRow();
                     if (originalValue != null) {
-                        RedisKey redisKey = new RedisKey(valueRefKey);
+                        BytesKey redisKey = new BytesKey(valueRefKey);
                         Tuple tuple = tmpMap.get(redisKey);
                         map.put(redisKey, new Tuple(originalValue, tuple.getScore()));
 
@@ -757,7 +757,7 @@ public class RedisHBaseZSetMixClient {
         }
         List<Tuple> ret = new ArrayList<>();
         for (Tuple tuple : tupleSet) {
-            RedisKey redisKey = new RedisKey(tuple.getBinaryElement());
+            BytesKey redisKey = new BytesKey(tuple.getBinaryElement());
             Tuple originalTuble = map.get(redisKey);
             if (originalTuble != null) {
                 ret.add(originalTuble);
@@ -772,14 +772,14 @@ public class RedisHBaseZSetMixClient {
     //
     private Set<byte[]> checkAndGetOriginalSet(byte[] key, Set<byte[]> set) {
         if (set.isEmpty()) return set;
-        Map<RedisKey, byte[]> map = new HashMap<>();
+        Map<BytesKey, byte[]> map = new HashMap<>();
         List<byte[]> valueRefKeyList = new ArrayList<>();
         for (byte[] value : set) {
             boolean isValueRefKey = isValueRefKey(key, value);
             if (isValueRefKey) {
                 valueRefKeyList.add(value);
             } else {
-                map.put(new RedisKey(value), value);
+                map.put(new BytesKey(value), value);
             }
         }
         if (!valueRefKeyList.isEmpty()) {
@@ -789,7 +789,7 @@ public class RedisHBaseZSetMixClient {
                 byte[] valueRefKey = valueRefKeyList.get(i);
                 byte[] value = mget.get(i);
                 if (value != null) {
-                    map.put(new RedisKey(valueRefKey), value);
+                    map.put(new BytesKey(valueRefKey), value);
                     RedisHBaseMonitor.incrRead(zmember_valueRef_method, ReadOpeType.REDIS_ONLY);
                 } else {
                     getList.add(new Get(valueRefKey));
@@ -802,7 +802,7 @@ public class RedisHBaseZSetMixClient {
                     byte[] originalValue = results[i].getValue(CF_D, COL_DATA);
                     byte[] valueRefKey = getList.get(i).getRow();
                     if (originalValue != null) {
-                        map.put(new RedisKey(valueRefKey), originalValue);
+                        map.put(new BytesKey(valueRefKey), originalValue);
                         cacheRebuildMap.put(valueRefKey, originalValue);
                         RedisHBaseMonitor.incrRead(zmember_valueRef_method, ReadOpeType.HIT_TO_HBASE);
                     } else {
@@ -821,7 +821,7 @@ public class RedisHBaseZSetMixClient {
         }
         List<byte[]> ret = new ArrayList<>();
         for (byte[] bytes : set) {
-            RedisKey redisKey = new RedisKey(bytes);
+            BytesKey redisKey = new BytesKey(bytes);
             byte[] originalValue = map.get(redisKey);
             if (originalValue != null) {
                 ret.add(originalValue);

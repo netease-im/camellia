@@ -206,9 +206,9 @@ public class RedisHBaseConfiguration {
         return ConfigurationUtil.getInteger(properties, "hbase.write.async.lock.acquire.timeout.millis", 3000);
     }
 
-    //hbase异步写线程肚子上的过期时间
+    //hbase异步写线程独占锁的过期时间
     public static int hbaseWriteAsyncLockExpireMillis() {
-        return ConfigurationUtil.getInteger(properties, "hbase.write.async.lock.expire.millis", 30*1000);
+        return ConfigurationUtil.getInteger(properties, "hbase.write.async.lock.expire.millis", 12*1000);
     }
 
     //hbase异步写线程的间隔时间（当没有消息时）
@@ -229,5 +229,20 @@ public class RedisHBaseConfiguration {
     //expire异步执行线程数
     public static int expireAsyncThreadSize() {
         return ConfigurationUtil.getInteger(properties, "expire.async.thread.size", SysUtils.getCpuNum() * 32);
+    }
+
+    //expire异步批量大小
+    public static int expireAsyncBatchSize() {
+        return ConfigurationUtil.getInteger(properties, "expire.async.batch.size", 100);
+    }
+
+    //延长redis注册的间隔，单位：秒
+    public static int registerRenewIntervalSeconds() {
+        return ConfigurationUtil.getInteger(properties, "register.renew.interval.seconds", 3);
+    }
+
+    //注册到redis时的过期时间，单位：秒
+    public static int registerExpireSeconds() {
+        return ConfigurationUtil.getInteger(properties, "register.expire.seconds", 8);
     }
 }

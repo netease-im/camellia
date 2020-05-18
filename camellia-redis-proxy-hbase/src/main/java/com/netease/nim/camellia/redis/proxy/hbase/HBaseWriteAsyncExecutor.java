@@ -5,10 +5,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
 import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
-import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseProxyHostCounter;
+import com.netease.nim.camellia.redis.proxy.hbase.discovery.DiscoverHolder;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
-import com.netease.nim.camellia.redis.proxy.hbase.serialize.HBaseWriteOpeSerializeUtil;
+import com.netease.nim.camellia.redis.proxy.hbase.util.HBaseWriteOpeSerializeUtil;
+import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import com.netease.nim.camellia.redis.toolkit.lock.CamelliaRedisLock;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Put;
@@ -16,6 +18,7 @@ import org.apache.hadoop.hbase.client.Row;
 import org.apache.hadoop.hbase.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.Response;
 
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -68,6 +71,7 @@ public class HBaseWriteAsyncExecutor {
         private final Map<String, FlushThread> flushThreadMap = new HashMap<>();
         private final Object lock = new Object();
         private final AtomicBoolean running = new AtomicBoolean(true);
+        private int lastInstanceCount = -1;
 
         public HBaseAsyncWriteFlushCore(CamelliaRedisTemplate redisTemplate, CamelliaHBaseTemplate hBaseTemplate) {
             this.redisTemplate = redisTemplate;
@@ -83,6 +87,7 @@ public class HBaseWriteAsyncExecutor {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 synchronized (lock) {
                     running.compareAndSet(true, false);
+                    DiscoverHolder.deregisterIfNeed();
                     Set<String> topics = new HashSet<>(lockMap.keySet());
                     logger.warn("stop flush-thread-check, will release lock and close flush thread, size = {}", topics.size());
                     for (String topic : topics) {
@@ -110,7 +115,11 @@ public class HBaseWriteAsyncExecutor {
                 }
                 synchronized (lock) {
                     int topicCount = RedisHBaseConfiguration.hbaseWriteAsyncTopicConsumerCount();
-                    int instanceCount = RedisHBaseProxyHostCounter.redisHBaseProxyInstanceCount;
+                    int instanceCount = DiscoverHolder.instanceCount();
+                    if (instanceCount != lastInstanceCount) {
+                        logger.info("current.instance.count={}, last.instance.count={}", instanceCount, lastInstanceCount);
+                        lastInstanceCount = instanceCount;
+                    }
                     int targetThread;
                     if (topicCount % instanceCount == 0) {
                         targetThread = topicCount / instanceCount;
@@ -181,6 +190,19 @@ public class HBaseWriteAsyncExecutor {
                         }
                     }
                     RedisHBaseMonitor.refreshHBaseAsyncWriteTopics(lockMap.keySet());
+                    try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
+                        Map<String, Response<Long>> responseMap = new HashMap<>();
+                        for (String topic : topics) {
+                            Response<Long> llen = pipeline.llen(topic);
+                            responseMap.put(topic, llen);
+                        }
+                        pipeline.sync();
+                        Map<String, Long> map = new HashMap<>();
+                        for (Map.Entry<String, Response<Long>> entry : responseMap.entrySet()) {
+                            map.put(entry.getKey(), entry.getValue().get());
+                        }
+                        RedisHBaseMonitor.refreshHBaseAsyncWriteTopicLengthMap(map);
+                    }
                 }
             } catch (Exception e) {
                 logger.error("checkFlushThread error", e);
@@ -207,8 +229,11 @@ public class HBaseWriteAsyncExecutor {
             @Override
             public void run() {
                 List<Put> putBuffer = new ArrayList<>();
+                Set<BytesKey> putRowSet = new HashSet<>();
                 List<Delete> deleteBuffer = new ArrayList<>();
-                boolean needFlush = false;
+                Set<BytesKey> deleteRowSet = new HashSet<>();
+                boolean needFlushDelete = false;
+                boolean needFlushPut = false;
                 while (start) {
                     try {
                         String value = redisTemplate.rpop(topic);
@@ -221,36 +246,54 @@ public class HBaseWriteAsyncExecutor {
                             if (type == HBaseWriteOpeSerializeUtil.Type.PUT) {
                                 for (Row row : rows) {
                                     putBuffer.add((Put) row);
+                                    BytesKey rowKey = new BytesKey(row.getRow());
+                                    putRowSet.add(rowKey);
+                                    if (deleteRowSet.contains(rowKey)) {
+                                        needFlushDelete = true;
+                                    }
                                 }
-                                if (!deleteBuffer.isEmpty()) {
+                                if (needFlushDelete) {
                                     hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), new ArrayList<>(deleteBuffer));
                                     if (logger.isDebugEnabled()) {
                                         logger.debug("flush delete for new put, size = {}", deleteBuffer.size());
                                     }
                                     deleteBuffer.clear();
+                                    deleteRowSet.clear();
+                                    needFlushDelete = false;
                                 }
                                 if (putBuffer.size() > RedisHBaseConfiguration.hbaseWriteAsyncBatchSize()) {
-                                    needFlush = true;
+                                    needFlushPut = true;
                                 }
                             } else if (type == HBaseWriteOpeSerializeUtil.Type.DELETE) {
                                 for (Row row : rows) {
                                     deleteBuffer.add((Delete) row);
+                                    BytesKey rowKey = new BytesKey(row.getRow());
+                                    deleteRowSet.add(rowKey);
+                                    if (putRowSet.contains(rowKey)) {
+                                        needFlushPut = true;
+                                    }
                                 }
-                                if (!putBuffer.isEmpty()) {
+                                if (needFlushPut) {
                                     hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), new ArrayList<>(putBuffer));
                                     if (logger.isDebugEnabled()) {
                                         logger.debug("flush put for new delete, size = {}", putBuffer.size());
                                     }
                                     putBuffer.clear();
+                                    putRowSet.clear();
+                                    needFlushPut = false;
                                 }
                                 if (deleteBuffer.size() > RedisHBaseConfiguration.hbaseWriteAsyncBatchSize()) {
-                                    needFlush = true;
+                                    needFlushDelete = true;
                                 }
                             }
                         } else {
-                            if (!deleteBuffer.isEmpty() || !putBuffer.isEmpty()) {
-                                needFlush = true;
-                            } else {
+                            if (!deleteBuffer.isEmpty()) {
+                                needFlushDelete = true;
+                            }
+                            if (!putBuffer.isEmpty()) {
+                                needFlushPut = true;
+                            }
+                            if (!needFlushDelete && !needFlushPut) {
                                 try {
                                     TimeUnit.MILLISECONDS.sleep(RedisHBaseConfiguration.hbaseWriteAsyncConsumeIntervalMillis());
                                 } catch (InterruptedException e) {
@@ -258,32 +301,44 @@ public class HBaseWriteAsyncExecutor {
                                 }
                             }
                         }
-                        if (needFlush) {
-                            flush(putBuffer, deleteBuffer);
-                            needFlush = false;
+                        if (needFlushDelete) {
+                            hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), new ArrayList<>(deleteBuffer));
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("flush delete, size = {}", deleteBuffer.size());
+                            }
+                            deleteBuffer.clear();
+                            deleteRowSet.clear();
+                            needFlushDelete = false;
+                        }
+                        if (needFlushPut) {
+                            hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), new ArrayList<>(putBuffer));
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("flush put, size = {}", putBuffer.size());
+                            }
+                            putBuffer.clear();
+                            putRowSet.clear();
+                            needFlushPut = false;
                         }
                     } catch (Exception e) {
                         logger.error("FlushThread error, id = {}, topic = {}", id, topic, e);
                     }
                 }
-                flush(putBuffer, deleteBuffer);
-                logger.warn("FlushThread close ok, id = {}, topic = {}", id, topic);
-            }
-
-            private void flush(List<Put> putBuffer, List<Delete> deleteBuffer) {
                 if (!deleteBuffer.isEmpty()) {
                     hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), new ArrayList<>(deleteBuffer));
                     if (logger.isDebugEnabled()) {
-                        logger.debug("flush delete, size = {}", deleteBuffer.size());
+                        logger.debug("flush delete all, size = {}", deleteBuffer.size());
                     }
                     deleteBuffer.clear();
+                    deleteRowSet.clear();
                 } else if (!putBuffer.isEmpty()) {
                     hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), new ArrayList<>(putBuffer));
                     if (logger.isDebugEnabled()) {
-                        logger.debug("flush put, size = {}", putBuffer.size());
+                        logger.debug("flush put all, size = {}", putBuffer.size());
                     }
                     putBuffer.clear();
+                    putRowSet.clear();
                 }
+                logger.warn("FlushThread close ok, id = {}, topic = {}", id, topic);
             }
 
             public void close() {

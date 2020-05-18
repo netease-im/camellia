@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.hbase.serialize;
+package com.netease.nim.camellia.redis.proxy.hbase.util;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;

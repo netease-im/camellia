@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
 import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
 import com.netease.nim.camellia.redis.proxy.hbase.model.RedisHBaseType;
+import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import com.netease.nim.camellia.redis.toolkit.localcache.LocalCache;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -172,7 +173,7 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long expire(byte[] key, int seconds) {
-        return pexpireAt(key, System.currentTimeMillis() + seconds * 1000);
+        return pexpireAt(key, System.currentTimeMillis() + seconds * 1000L);
     }
 
     /**
@@ -345,11 +346,27 @@ public class RedisHBaseCommonMixClient {
 
         @Override
         public void run() {
+            List<ExpireTask> buffer = new ArrayList<>();
             while (true) {
                 try {
-                    RedisHBaseCommonMixClient.ExpireTask expireTask = queue.poll(1, TimeUnit.SECONDS);
-                    if (expireTask != null) {
-                        commonMixClient._pexpireAt(expireTask.key, expireTask.millisecondsTimestamp);
+                    if (buffer.isEmpty()) {
+                        RedisHBaseCommonMixClient.ExpireTask expireTask = queue.poll(1, TimeUnit.SECONDS);
+                        if (expireTask != null) {
+                            buffer.add(expireTask);
+                        }
+                    } else {
+                        queue.drainTo(buffer, RedisHBaseConfiguration.expireAsyncBatchSize());
+                        Map<BytesKey, ExpireTask> map = new HashMap<>();
+                        for (ExpireTask expireTask : buffer) {
+                            map.put(new BytesKey(expireTask.key), expireTask);
+                        }
+                        for (ExpireTask expireTask : map.values()) {
+                            commonMixClient._pexpireAt(expireTask.key, expireTask.millisecondsTimestamp);
+                        }
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("flush expireTask, size = {}", buffer.size());
+                        }
+                        buffer.clear();
                     }
                 } catch (Exception e) {
                     logger.error("expireTask error, id = {}", id, e);

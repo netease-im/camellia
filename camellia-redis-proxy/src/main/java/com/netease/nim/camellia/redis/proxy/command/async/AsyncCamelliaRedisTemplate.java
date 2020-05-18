@@ -13,7 +13,7 @@ import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.*;
-import com.netease.nim.camellia.redis.proxy.util.RedisKey;
+import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -205,26 +205,26 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     }
 
     private CompletableFuture<Reply> mget(Command command, CommandFlusher commandFlusher) {
-        List<RedisKey> redisKeys = new ArrayList<>();
-        Map<String, List<RedisKey>> map = new HashMap<>();
+        List<BytesKey> redisKeys = new ArrayList<>();
+        Map<String, List<BytesKey>> map = new HashMap<>();
         byte[][] args = command.getObjects();
         for (int i=1; i<args.length; i++) {
             byte[] key = args[i];
-            RedisKey redisKey = new RedisKey(key);
+            BytesKey redisKey = new BytesKey(key);
             redisKeys.add(redisKey);
             Resource resource = getReadResource(key);
-            List<RedisKey> list = map.computeIfAbsent(resource.getUrl(), k -> new ArrayList<>());
+            List<BytesKey> list = map.computeIfAbsent(resource.getUrl(), k -> new ArrayList<>());
             list.add(redisKey);
         }
         List<String> urlList = new ArrayList<>();
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
-        for (Map.Entry<String, List<RedisKey>> entry : map.entrySet()) {
+        for (Map.Entry<String, List<BytesKey>> entry : map.entrySet()) {
             String url = entry.getKey();
             AsyncClient client = factory.get(url);
-            List<RedisKey> list = entry.getValue();
+            List<BytesKey> list = entry.getValue();
             List<byte[]> subCommandArgs = new ArrayList<>(list.size() + 1);
             subCommandArgs.add(args[0]);
-            for (RedisKey redisKey : list) {
+            for (BytesKey redisKey : list) {
                 subCommandArgs.add(redisKey.getKey());
             }
             urlList.add(url);
@@ -237,17 +237,17 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
         CompletableFuture<Reply> future = new CompletableFuture<>();
         AsyncUtils.allOf(futures).thenAccept(replies -> {
-            Map<RedisKey, Reply> replyMap = new HashMap<>();
+            Map<BytesKey, Reply> replyMap = new HashMap<>();
             for (int i=0; i<urlList.size(); i++) {
                 String url = urlList.get(i);
-                List<RedisKey> keyList = map.get(url);
+                List<BytesKey> keyList = map.get(url);
                 Reply reply = replies.get(i);
                 if (reply instanceof MultiBulkReply) {
                     MultiBulkReply multiBulkReply = (MultiBulkReply) reply;
                     Reply[] subReplies = multiBulkReply.getReplies();
                     for (int j = 0; j < subReplies.length; j++) {
                         Reply subReply = subReplies[j];
-                        RedisKey redisKey = keyList.get(j);
+                        BytesKey redisKey = keyList.get(j);
                         replyMap.put(redisKey, subReply);
                     }
                 } else if (reply instanceof ErrorReply) {
@@ -260,7 +260,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             }
             Reply[] retReplies = new Reply[redisKeys.size()];
             for (int i=0; i<redisKeys.size(); i++) {
-                RedisKey redisKey = redisKeys.get(i);
+                BytesKey redisKey = redisKeys.get(i);
                 retReplies[i] = replyMap.get(redisKey);
             }
             future.complete(new MultiBulkReply(retReplies));
