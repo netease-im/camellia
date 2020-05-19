@@ -18,16 +18,16 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class CamelliaRedisProxyEurekaFactory implements CamelliaRedisProxyFactory {
 
-    private DiscoveryClient discoveryClient;
-    private CamelliaRedisEurekaProperties properties;
+    private final DiscoveryClient discoveryClient;
+    private final CamelliaRedisEurekaProperties properties;
 
     public CamelliaRedisProxyEurekaFactory(DiscoveryClient discoveryClient, CamelliaRedisEurekaProperties properties) {
         this.discoveryClient = discoveryClient;
         this.properties = properties;
     }
 
-    private ConcurrentHashMap<String, JedisPool> poolMap = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<String, ProxyDiscovery> proxyDiscoveryMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, JedisPool> poolMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ProxyDiscovery> proxyDiscoveryMap = new ConcurrentHashMap<>();
 
     @Override
     public JedisPool initOrGet(CamelliaRedisProxyResource resource) {

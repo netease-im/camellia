@@ -137,7 +137,7 @@ public class CamelliaHBaseProperties {
         private String url;
         private Long bid;
         private String bgroup;
-        private boolean monitor = false;
+        private boolean monitor = true;
         private long checkIntervalMillis = 5000;
         private int connectTimeoutMillis = 10000;
         private int readTimeoutMillis = 60000;

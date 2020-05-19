@@ -25,9 +25,9 @@ public class EurekaProxyDiscovery extends ProxyDiscovery {
 
     private static final Logger logger = LoggerFactory.getLogger(EurekaProxyDiscovery.class);
 
-    private String applicationName;
+    private final String applicationName;
     private Set<Proxy> proxySet;
-    private DiscoveryClient discoveryClient;
+    private final DiscoveryClient discoveryClient;
 
     public EurekaProxyDiscovery(DiscoveryClient discoveryClient, String applicationName, int refreshInervalSeconds) {
         this.discoveryClient = discoveryClient;
@@ -62,7 +62,7 @@ public class EurekaProxyDiscovery extends ProxyDiscovery {
 
     private static class RefreshThread implements Runnable {
 
-        private EurekaProxyDiscovery discovery;
+        private final EurekaProxyDiscovery discovery;
 
         RefreshThread(EurekaProxyDiscovery discovery) {
             this.discovery = discovery;

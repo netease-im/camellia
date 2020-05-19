@@ -51,7 +51,7 @@ public class Constants {
 
     public static class Remote {
         public static final boolean dynamic = true;
-        public static final boolean monitorEnable = false;
+        public static final boolean monitorEnable = true;
         public static final long checkIntervalMillis = 5000;
         public static final int connectTimeoutMillis = 10000;
         public static final int readTimeoutMillis = 60000;
