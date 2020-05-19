@@ -32,6 +32,7 @@ public class RedisHBaseMonitor {
     private static final ExecutorService exec = Executors.newFixedThreadPool(1);
     private static final Set<String> hbaseAsyncWriteTopics = new HashSet<>();
     private static final Map<String, Long> hbaseAsyncWriteTopicLengthMap = new HashMap<>();
+    private static final ConcurrentHashMap<String, AtomicLong> hbaseAsyncWriteTopicCountMap = new ConcurrentHashMap<>();
 
     private static RedisHBaseStats redisHBaseStats = new RedisHBaseStats();
 
@@ -42,47 +43,83 @@ public class RedisHBaseMonitor {
     }
 
     public static void incrRead(String method, ReadOpeType type) {
-        if (!RedisHBaseConfiguration.isMonitorEnable()) return;
-        String key = method + "|" + type.name();
-        AtomicLong count = readMap.computeIfAbsent(key, k -> new AtomicLong());
-        count.incrementAndGet();
+        try {
+            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
+            String key = method + "|" + type.name();
+            AtomicLong count = readMap.computeIfAbsent(key, k -> new AtomicLong());
+            count.incrementAndGet();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     public static void incrWrite(String method, WriteOpeType type) {
-        if (!RedisHBaseConfiguration.isMonitorEnable()) return;
-        String key = method + "|" + type.name();
-        AtomicLong count = writeMap.computeIfAbsent(key, k -> new AtomicLong());
-        count.incrementAndGet();
+        try {
+            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
+            String key = method + "|" + type.name();
+            AtomicLong count = writeMap.computeIfAbsent(key, k -> new AtomicLong());
+            count.incrementAndGet();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     public static void zsetValueSize(int size) {
-        if (!RedisHBaseConfiguration.isMonitorEnable()) return;
-        exec.submit(() -> {
-            zsetValueSizeTotal.addAndGet(size);
-            zsetValueSizeCount.incrementAndGet();
-            if (size > zsetValueSizeMax.get()) {
-                zsetValueSizeMax.set(size);
-            }
-        });
+        try {
+            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
+            exec.submit(() -> {
+                zsetValueSizeTotal.addAndGet(size);
+                zsetValueSizeCount.incrementAndGet();
+                if (size > zsetValueSizeMax.get()) {
+                    zsetValueSizeMax.set(size);
+                }
+            });
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     public static void zsetValueHitThreshold(boolean hit) {
-        if (!RedisHBaseConfiguration.isMonitorEnable()) return;
-        if (hit) {
-            zsetValueHitThresholdCount.incrementAndGet();
-        } else {
-            zsetValueNotHitThresholdCount.incrementAndGet();
+        try {
+            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
+            if (hit) {
+                zsetValueHitThresholdCount.incrementAndGet();
+            } else {
+                zsetValueNotHitThresholdCount.incrementAndGet();
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
     }
 
     public static void refreshHBaseAsyncWriteTopics(Set<String> topics) {
-        hbaseAsyncWriteTopics.clear();
-        hbaseAsyncWriteTopics.addAll(topics);
+        try {
+            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
+            hbaseAsyncWriteTopics.clear();
+            hbaseAsyncWriteTopics.addAll(topics);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     public static void refreshHBaseAsyncWriteTopicLengthMap(Map<String, Long> map) {
-        hbaseAsyncWriteTopicLengthMap.clear();
-        hbaseAsyncWriteTopicLengthMap.putAll(map);
+        try {
+            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
+            hbaseAsyncWriteTopicLengthMap.clear();
+            hbaseAsyncWriteTopicLengthMap.putAll(map);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    public static void incrHBaseAsyncWriteTopicCount(String topic) {
+        try {
+            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
+            AtomicLong count = hbaseAsyncWriteTopicCountMap.computeIfAbsent(topic, k -> new AtomicLong(0L));
+            count.incrementAndGet();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     public static RedisHBaseStats getRedisHBaseStats() {
@@ -164,13 +201,34 @@ public class RedisHBaseMonitor {
                 methodCacheHitStatsList.add(methodCacheHitStats);
             }
 
+            Map<String, AtomicLong> hbaseAsyncWriteTopicCountMap = new HashMap<>(RedisHBaseMonitor.hbaseAsyncWriteTopicCountMap);
+            RedisHBaseMonitor.hbaseAsyncWriteTopicCountMap.clear();
+            HashSet<String> topics = new HashSet<>(hbaseAsyncWriteTopics);
+            List<RedisHBaseStats.TopicStats> topicStatsList = new ArrayList<>();
+            for (String topic : topics) {
+                RedisHBaseStats.TopicStats topicStats = new RedisHBaseStats.TopicStats();
+                topicStats.setTopic(topic);
+                AtomicLong topicCount = hbaseAsyncWriteTopicCountMap.get(topic);
+                if (topicCount == null) {
+                    topicStats.setCount(0L);
+                } else {
+                    topicStats.setCount(topicCount.get());
+                }
+                Long length = RedisHBaseMonitor.hbaseAsyncWriteTopicLengthMap.get(topic);
+                if (length == null) {
+                    topicStats.setLength(0L);
+                } else {
+                    topicStats.setLength(length);
+                }
+                topicStatsList.add(topicStats);
+            }
+
             RedisHBaseStats redisHBaseStats = new RedisHBaseStats();
             redisHBaseStats.setReadMethodStatsList(readMethodStatsList);
             redisHBaseStats.setWriteMethodStatsList(writeMethodStatsList);
             redisHBaseStats.setzSetStats(zSetStats);
             redisHBaseStats.setReadMethodCacheHitStatsList(methodCacheHitStatsList);
-            redisHBaseStats.setHbaseAsyncWriteTopics(new HashSet<>(hbaseAsyncWriteTopics));
-            redisHBaseStats.setHbaseAsyncWriteTopicLengthMap(new HashMap<>(hbaseAsyncWriteTopicLengthMap));
+            redisHBaseStats.setTopicStatsList(topicStatsList);
 
             RedisHBaseMonitor.redisHBaseStats = redisHBaseStats;
 
@@ -194,13 +252,9 @@ public class RedisHBaseMonitor {
                     statsLogger.info("write.method={},opeType={},count={}", methodStats.getMethod(), methodStats.getOpeType(), methodStats.getCount());
                 }
                 statsLogger.info("====hbase.async.write.topics====");
-                statsLogger.info("hbase.async.write.topic.count={}", redisHBaseStats.getHbaseAsyncWriteTopics().size());
-                for (String topic : redisHBaseStats.getHbaseAsyncWriteTopics()) {
-                    statsLogger.info("hbase.async.write.topic={}", topic);
-                }
-                statsLogger.info("====hbase.async.write.topic.length====");
-                for (Map.Entry<String, Long> entry : redisHBaseStats.getHbaseAsyncWriteTopicLengthMap().entrySet()) {
-                    statsLogger.info("hbase.async.write.topic={},length={}", entry.getKey(), entry.getValue());
+                statsLogger.info("hbase.async.write.topic.count={}", redisHBaseStats.getTopicStatsList().size());
+                for (RedisHBaseStats.TopicStats topicStats : redisHBaseStats.getTopicStatsList()) {
+                    statsLogger.info("hbase.async.write.topic={},length={},count={}", topicStats.getTopic(), topicStats.getLength(), topicStats.getLength());
                 }
                 statsLogger.info("<<<<<<<END<<<<<<<");
             }

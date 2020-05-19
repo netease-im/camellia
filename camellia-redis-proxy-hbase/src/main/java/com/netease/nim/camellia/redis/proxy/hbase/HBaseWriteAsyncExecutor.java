@@ -238,6 +238,7 @@ public class HBaseWriteAsyncExecutor {
                     try {
                         String value = redisTemplate.rpop(topic);
                         if (value != null) {
+                            RedisHBaseMonitor.incrHBaseAsyncWriteTopicCount(topic);
                             Pair<HBaseWriteOpeSerializeUtil.Type, List<Row>> pair = HBaseWriteOpeSerializeUtil.parse(JSON.parseObject(value));
                             if (pair == null) continue;
                             HBaseWriteOpeSerializeUtil.Type type = pair.getFirst();

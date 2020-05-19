@@ -12,8 +12,7 @@ public class RedisHBaseStats {
     private List<ReadMethodCacheHitStats> readMethodCacheHitStatsList = new ArrayList<>();
     private List<WriteMethodStats> writeMethodStatsList = new ArrayList<>();
     private ZSetStats zSetStats = new ZSetStats();
-    private Set<String> hbaseAsyncWriteTopics = new HashSet<>();
-    private Map<String, Long> hbaseAsyncWriteTopicLengthMap = new HashMap<>();
+    private List<TopicStats> topicStatsList = new ArrayList<>();
 
     public List<ReadMethodStats> getReadMethodStatsList() {
         return readMethodStatsList;
@@ -47,20 +46,12 @@ public class RedisHBaseStats {
         this.zSetStats = zSetStats;
     }
 
-    public Set<String> getHbaseAsyncWriteTopics() {
-        return hbaseAsyncWriteTopics;
+    public List<TopicStats> getTopicStatsList() {
+        return topicStatsList;
     }
 
-    public void setHbaseAsyncWriteTopics(Set<String> hbaseAsyncWriteTopics) {
-        this.hbaseAsyncWriteTopics = hbaseAsyncWriteTopics;
-    }
-
-    public Map<String, Long> getHbaseAsyncWriteTopicLengthMap() {
-        return hbaseAsyncWriteTopicLengthMap;
-    }
-
-    public void setHbaseAsyncWriteTopicLengthMap(Map<String, Long> hbaseAsyncWriteTopicLengthMap) {
-        this.hbaseAsyncWriteTopicLengthMap = hbaseAsyncWriteTopicLengthMap;
+    public void setTopicStatsList(List<TopicStats> topicStatsList) {
+        this.topicStatsList = topicStatsList;
     }
 
     public static class ZSetStats {
@@ -189,6 +180,36 @@ public class RedisHBaseStats {
 
         public void setCacheHitPercent(double cacheHitPercent) {
             this.cacheHitPercent = cacheHitPercent;
+        }
+    }
+
+    public static class TopicStats {
+        private String topic;
+        private long count;
+        private long length;
+
+        public String getTopic() {
+            return topic;
+        }
+
+        public void setTopic(String topic) {
+            this.topic = topic;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+        public void setCount(long count) {
+            this.count = count;
+        }
+
+        public long getLength() {
+            return length;
+        }
+
+        public void setLength(long length) {
+            this.length = length;
         }
     }
 }
