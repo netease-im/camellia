@@ -61,11 +61,11 @@ public interface RedisClientPool {
      */
     class DefaultRedisClientPool implements RedisClientPool {
 
-        private Map<String, Jedis> jedisMap = new ConcurrentHashMap<>();
-        private Map<JedisPool, Jedis> jedisClusterMap = new ConcurrentHashMap<>();
+        private final Map<String, Jedis> jedisMap = new ConcurrentHashMap<>();
+        private final Map<JedisPool, Jedis> jedisClusterMap = new ConcurrentHashMap<>();
 
-        private JedisPoolFactory jedisPoolFactory;
-        private JedisClusterFactory jedisClusterFactory;
+        private final JedisPoolFactory jedisPoolFactory;
+        private final JedisClusterFactory jedisClusterFactory;
 
         public DefaultRedisClientPool(JedisPoolFactory jedisPoolFactory, JedisClusterFactory jedisClusterFactory) {
             this.jedisPoolFactory = jedisPoolFactory;

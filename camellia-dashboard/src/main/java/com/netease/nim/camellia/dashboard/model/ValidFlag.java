@@ -10,7 +10,7 @@ public enum ValidFlag {
     NOT_VALID(0),
     ;
 
-    private int value;
+    private final int value;
 
     ValidFlag(int value) {
         this.value = value;

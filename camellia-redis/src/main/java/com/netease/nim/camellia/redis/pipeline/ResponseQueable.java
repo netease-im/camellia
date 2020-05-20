@@ -20,9 +20,9 @@ import java.util.concurrent.*;
  */
 public class ResponseQueable {
 
-    private Map<Client, Queue<Item>> map = new HashMap<>();
+    private final Map<Client, Queue<Item>> map = new HashMap<>();
     private final List<Item> fallbackList = new ArrayList<>();
-    private CamelliaRedisEnv env;
+    private final CamelliaRedisEnv env;
 
     public ResponseQueable(CamelliaRedisEnv env) {
         this.env = env;
@@ -30,10 +30,10 @@ public class ResponseQueable {
 
     private static class Item {
 
-        private Response<?> response;
-        private Resource resource;
-        private Object key;
-        private Fallback fallback;
+        private final Response<?> response;
+        private final Resource resource;
+        private final Object key;
+        private final Fallback fallback;
         private Exception failReason;
 
         Item(Response<?> response, Resource resource, Object key, Fallback fallback) {

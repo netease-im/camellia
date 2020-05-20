@@ -32,7 +32,7 @@ public class ResourceTableService {
     private DashboardProperties dashboardProperties;
 
     private static final String TAG = "tag";
-    private LocalCache localCache = new LocalCache();
+    private final LocalCache localCache = new LocalCache();
 
     public CamelliaApiResponse get(long bid, String bgroup, String md5) {
         CamelliaApiResponse response = new CamelliaApiResponse();

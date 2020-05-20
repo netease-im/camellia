@@ -10,7 +10,7 @@ import java.util.concurrent.*;
  */
 public class PipelinePool {
 
-    private LinkedBlockingQueue<Item> queue;
+    private final LinkedBlockingQueue<Item> queue;
 
     public PipelinePool(CamelliaRedisEnv env) {
         this.queue = new LinkedBlockingQueue<>(env.getPipelinePoolSize());

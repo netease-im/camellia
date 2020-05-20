@@ -34,12 +34,12 @@ public interface JedisClusterFactory {
     class DefaultJedisClusterFactory implements JedisClusterFactory {
 
         private final Object lock = new Object();
-        private ConcurrentHashMap<String, JedisClusterWrapper> map = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<String, JedisClusterWrapper> map = new ConcurrentHashMap<>();
 
-        private GenericObjectPoolConfig poolConfig;
-        private int connectionTimeout;
-        private int soTimeout;
-        private int maxAttempts;
+        private final GenericObjectPoolConfig poolConfig;
+        private final int connectionTimeout;
+        private final int soTimeout;
+        private final int maxAttempts;
 
         public DefaultJedisClusterFactory() {
             this.poolConfig = new JedisPoolConfig();

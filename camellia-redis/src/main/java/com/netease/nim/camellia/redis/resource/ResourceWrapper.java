@@ -11,7 +11,7 @@ import com.netease.nim.camellia.redis.CamelliaRedisEnv;
 public class ResourceWrapper extends Resource {
 
     private CamelliaRedisEnv env;
-    private Resource resource;
+    private final Resource resource;
 
     public ResourceWrapper(Resource resource) {
         this.resource = resource;

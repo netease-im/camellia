@@ -53,10 +53,10 @@ public interface JedisPoolFactory {
     class DefaultJedisPoolFactory implements JedisPoolFactory {
 
         private final Object lock = new Object();
-        private ConcurrentHashMap<String, JedisPool> map1 = new ConcurrentHashMap<>();
-        private ConcurrentHashMap<String, JedisSentinelPool> map2 = new ConcurrentHashMap<>();
-        private GenericObjectPoolConfig poolConfig;
-        private int timeout;
+        private final ConcurrentHashMap<String, JedisPool> map1 = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<String, JedisSentinelPool> map2 = new ConcurrentHashMap<>();
+        private final GenericObjectPoolConfig poolConfig;
+        private final int timeout;
 
         public DefaultJedisPoolFactory() {
             this.poolConfig = new JedisPoolConfig();

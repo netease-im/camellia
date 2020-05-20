@@ -10,7 +10,7 @@ import java.util.Map;
  * Created by caojiajun on 2018/5/14.
  */
 public class LogBean {
-    private static ThreadLocal<LogBean> logBeanThreadLocal = new ThreadLocal<>();
+    private static final ThreadLocal<LogBean> logBeanThreadLocal = new ThreadLocal<>();
 
     public static LogBean init() {
         LogBean logBean = logBeanThreadLocal.get();

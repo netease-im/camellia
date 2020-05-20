@@ -95,7 +95,7 @@ public class CamelliaIDGenerator<T> {
     }
 
     public static class Builder<T> {
-        private CamelliaIDGenerator<T> generator = new CamelliaIDGenerator<>();
+        private final CamelliaIDGenerator<T> generator = new CamelliaIDGenerator<>();
         public Builder() {
         }
 
@@ -146,6 +146,11 @@ public class CamelliaIDGenerator<T> {
 
         public Builder<T> idLoader(IDLoader<T> idLoader) {
             generator.idLoader = idLoader;
+            return this;
+        }
+
+        public Builder<T> maxRetry(DynamicValueGetter<Integer> maxRetry) {
+            generator.maxRetry = maxRetry;
             return this;
         }
 

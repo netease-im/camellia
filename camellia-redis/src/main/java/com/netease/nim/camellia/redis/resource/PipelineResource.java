@@ -13,7 +13,7 @@ public class PipelineResource extends Resource {
 
     private RedisClientPool clientPool;
     private ResponseQueable queable;
-    private Resource resource;
+    private final Resource resource;
 
     public PipelineResource(Resource resource) {
         this.resource = resource;

@@ -24,7 +24,7 @@ public class CamelliaHBaseTemplate implements ICamelliaHBaseTemplate {
     private static final long defaultCheckIntervalMillis = 5000;
     private static final boolean defaultMonitorEnable = false;
 
-    private ReloadableProxyFactory<CamelliaHBaseClientImpl> factory;
+    private final ReloadableProxyFactory<CamelliaHBaseClientImpl> factory;
 
     public CamelliaHBaseTemplate(CamelliaHBaseEnv env, CamelliaApi service, long bid, String bgroup,
                                  boolean monitorEnable, long checkIntervalMillis) {

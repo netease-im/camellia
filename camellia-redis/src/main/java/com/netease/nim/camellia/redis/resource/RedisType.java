@@ -22,7 +22,7 @@ public enum RedisType {
     CamelliaRedisProxy("camellia-redis-proxy://"),//proxyName是从注册中心获取的
 
     ;
-    private String prefix;
+    private final String prefix;
 
     RedisType(String prefix) {
         this.prefix = prefix;

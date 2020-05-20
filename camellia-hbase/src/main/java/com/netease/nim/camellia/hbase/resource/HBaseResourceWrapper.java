@@ -10,7 +10,7 @@ import com.netease.nim.camellia.hbase.CamelliaHBaseEnv;
 public class HBaseResourceWrapper extends Resource {
 
     private CamelliaHBaseEnv env;
-    private Resource resource;
+    private final Resource resource;
 
     public HBaseResourceWrapper(Resource resource) {
         this.resource = resource;

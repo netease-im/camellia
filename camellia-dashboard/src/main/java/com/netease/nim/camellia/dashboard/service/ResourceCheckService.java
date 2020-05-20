@@ -21,7 +21,7 @@ public class ResourceCheckService implements ApplicationContextAware, Initializi
     private static final Logger logger = LoggerFactory.getLogger(ResourceCheckService.class);
 
     private ApplicationContext applicationContext;
-    private Map<String, IResourceChecker> checkerMap = new HashMap<>();
+    private final Map<String, IResourceChecker> checkerMap = new HashMap<>();
 
     /**
      * 只要有一个check成功，即成功

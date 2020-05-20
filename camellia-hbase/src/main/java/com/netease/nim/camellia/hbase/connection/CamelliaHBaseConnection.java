@@ -24,8 +24,8 @@ public class CamelliaHBaseConnection {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaHBaseConnection.class);
 
-    private HBaseResource hBaseResource;
-    private CamelliaHBaseConf hBaseConf;
+    private final HBaseResource hBaseResource;
+    private final CamelliaHBaseConf hBaseConf;
 
     private Configuration configuration;
 

@@ -13,7 +13,7 @@ public class LocalCache {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalCache.class);
 
-    private ConcurrentLinkedHashMap<String, CacheBean> cache;
+    private final ConcurrentLinkedHashMap<String, CacheBean> cache;
 
     private static final Object nullCache = new Object();
 

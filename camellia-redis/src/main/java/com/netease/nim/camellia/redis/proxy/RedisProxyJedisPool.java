@@ -30,18 +30,19 @@ public class RedisProxyJedisPool extends JedisPool {
 
     private final Object lock = new Object();
 
-    private Map<Proxy, JedisPool> jedisPoolMap = new HashMap<>();
-    private List<Proxy> proxyList = new ArrayList<>();
+    private final Map<Proxy, JedisPool> jedisPoolMap = new HashMap<>();
+    private final List<Proxy> proxyList = new ArrayList<>();
 
-    private long id = idGenerator.incrementAndGet();
-    private long bid = -1;
-    private String bgroup;
-    private IProxyDiscovery proxyDiscovery;
-    private GenericObjectPoolConfig poolConfig = new JedisPoolConfig();
-    private int timeout = defaultTimeout;
-    private String password;
-    private int maxRetry = defaultMaxRetry;
-    private ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(RedisProxyJedisPool.class));
+    private final long id = idGenerator.incrementAndGet();
+    private final long bid;
+    private final String bgroup;
+    private final IProxyDiscovery proxyDiscovery;
+    private final GenericObjectPoolConfig poolConfig;
+    private final int timeout;
+    private final String password;
+    private final int maxRetry;
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(RedisProxyJedisPool.class));
+    private final Set<Proxy> banProxySet = new HashSet<>();
 
     public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery) {
         this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry);
@@ -69,8 +70,15 @@ public class RedisProxyJedisPool extends JedisPool {
                                int timeout, String password, int refreshSeconds, int maxRetry) {
         this.bid = bid;
         this.bgroup = bgroup;
+        if (proxyDiscovery == null) {
+            throw new IllegalArgumentException("proxyDiscovery is null");
+        }
         this.proxyDiscovery = proxyDiscovery;
-        this.poolConfig = poolConfig;
+        if (poolConfig == null) {
+            this.poolConfig = new JedisPoolConfig();
+        } else {
+            this.poolConfig = poolConfig;
+        }
         this.timeout = timeout;
         this.password = password;
         this.maxRetry = maxRetry;
@@ -84,16 +92,35 @@ public class RedisProxyJedisPool extends JedisPool {
     public Jedis getResource() {
         int retry = 0;
         Exception cause = null;
+        Proxy proxy = null;
+        boolean originalProxyList;//是否使用的原始的proxyList
+        List<Proxy> proxyList;
+        if (!banProxySet.isEmpty()) {//如果banProxySet不是为空，则不使用原始的proxyList，copy一份，并且remove掉banProxySet
+            proxyList = new ArrayList<>(this.proxyList);
+            proxyList.removeAll(banProxySet);
+            originalProxyList = false;
+            if (proxyList.isEmpty()) {//如果remove掉banProxySet之后，发现变成了空，则退回到使用原始的proxyList，并且清空banProxySet
+                synchronized (lock) {
+                    banProxySet.clear();
+                }
+                proxyList = this.proxyList;
+                originalProxyList = true;
+            }
+        } else {
+            proxyList = this.proxyList;
+            originalProxyList = true;
+        }
         while (!proxyList.isEmpty() && !jedisPoolMap.isEmpty() && retry < maxRetry) {
             try {
                 int index = ThreadLocalRandom.current().nextInt(proxyList.size());
-                Proxy proxy = proxyList.get(index);
+                proxy = proxyList.get(index);
                 if (proxy == null) {
                     retry ++;
                     continue;
                 }
                 JedisPool jedisPool = jedisPoolMap.get(proxy);
                 if (jedisPool == null) {
+                    proxy = null;
                     retry ++;
                     continue;
                 }
@@ -101,6 +128,22 @@ public class RedisProxyJedisPool extends JedisPool {
             } catch (Exception e) {
                 cause = e;
                 retry ++;
+                if (proxy != null) {//如果获取到了proxy，但是获取Jedis失败了，则把这个proxy放到banProxySet里
+                    synchronized (lock) {
+                        banProxySet.add(proxy);
+                    }
+                    if (!originalProxyList) {//如果没有使用原始的originalProxyList，则从proxyList去掉这个proxy
+                        proxyList.remove(proxy);
+                        if (proxyList.isEmpty()) {//如果去掉之后发现proxyList变成了空，则退回到使用原始的proxyList，并且清空一下banProxySet
+                            proxyList = this.proxyList;
+                            originalProxyList = true;
+                            synchronized (lock) {
+                                banProxySet.clear();
+                            }
+                        }
+                    }
+                    proxy = null;
+                }
             }
         }
         if (cause == null) {
@@ -130,6 +173,7 @@ public class RedisProxyJedisPool extends JedisPool {
         scheduledExecutorService.shutdown();
         this.proxyDiscovery.clearCallback(callback);
         synchronized (lock) {
+            banProxySet.clear();
             proxyList.clear();
             for (Map.Entry<Proxy, JedisPool> entry : jedisPoolMap.entrySet()) {
                 entry.getValue().close();
@@ -138,7 +182,7 @@ public class RedisProxyJedisPool extends JedisPool {
         }
     }
 
-    private IProxyDiscovery.Callback callback = new IProxyDiscovery.Callback() {
+    private final IProxyDiscovery.Callback callback = new IProxyDiscovery.Callback() {
         @Override
         public void add(Proxy proxy) {
             RedisProxyJedisPool.this.add(proxy);
@@ -165,6 +209,7 @@ public class RedisProxyJedisPool extends JedisPool {
         if (proxy == null) return;
         synchronized (lock) {
             try {
+                banProxySet.clear();
                 if (!proxyList.contains(proxy)) {
                     JedisPool jedisPool = initJedisPool(proxy);
                     jedisPoolMap.put(proxy, jedisPool);
@@ -182,6 +227,7 @@ public class RedisProxyJedisPool extends JedisPool {
         if (proxy == null) return;
         synchronized (lock) {
             try {
+                banProxySet.clear();
                 if (proxyList.size() == 1 && proxyList.contains(proxy)) {
                     logger.warn("proxyList.size = 1, skip remove proxy! proxy = {}", proxy.toString());
                     return;
@@ -207,7 +253,7 @@ public class RedisProxyJedisPool extends JedisPool {
 
     //兜底线程
     private static class RefreshThread extends Thread {
-        private RedisProxyJedisPool proxyJedisPool;
+        private final RedisProxyJedisPool proxyJedisPool;
 
         RefreshThread(RedisProxyJedisPool proxyJedisPool) {
             this.proxyJedisPool = proxyJedisPool;
@@ -234,6 +280,7 @@ public class RedisProxyJedisPool extends JedisPool {
                         }
                     }
                 }
+                proxyJedisPool.banProxySet.clear();
             } catch (Exception e) {
                 logger.error("refresh error", e);
             }

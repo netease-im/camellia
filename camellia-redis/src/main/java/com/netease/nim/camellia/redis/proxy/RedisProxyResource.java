@@ -9,7 +9,7 @@ import com.netease.nim.camellia.redis.resource.RedisType;
  */
 public class RedisProxyResource extends Resource {
 
-    private RedisProxyJedisPool pool;
+    private final RedisProxyJedisPool pool;
 
     public RedisProxyResource(RedisProxyJedisPool pool) {
         this.pool = pool;

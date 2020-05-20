@@ -38,7 +38,7 @@ public class CamelliaCounterCache<T> {
     }
 
     public static class Builder<T> {
-        private CamelliaCounterCache<T> counterCache = new CamelliaCounterCache<>();
+        private final CamelliaCounterCache<T> counterCache = new CamelliaCounterCache<>();
         public Builder() {
         }
 

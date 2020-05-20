@@ -13,7 +13,7 @@ import java.util.Set;
 public abstract class ProxyDiscovery implements IProxyDiscovery {
 
     private static final Logger logger = LoggerFactory.getLogger(ProxyDiscovery.class);
-    private Set<Callback> callbackSet = new HashSet<>();
+    private final Set<Callback> callbackSet = new HashSet<>();
 
     public void invokeAddProxyCallback(Proxy proxy) {
         for (Callback callback : callbackSet) {

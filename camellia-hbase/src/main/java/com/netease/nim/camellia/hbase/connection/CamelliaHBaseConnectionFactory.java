@@ -26,7 +26,7 @@ public interface CamelliaHBaseConnectionFactory {
     public static class DefaultHBaseConnectionFactory implements CamelliaHBaseConnectionFactory {
 
         private CamelliaHBaseConf hBaseConf = new CamelliaHBaseConf();
-        private ConcurrentHashMap<String, CamelliaHBaseConnection> map = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<String, CamelliaHBaseConnection> map = new ConcurrentHashMap<>();
 
         private final Object lock = new Object();
 
