@@ -21,6 +21,15 @@
 ## 使用场景
 * 需要大容量redis，使用本插件可以节省内存成本  
 
+## 监控
+除了RedisMonitor，见RedisHBaseMonitor，指标：请求数、缓存命中率、redis队列分布请求、redis队列堆积情况等    
+
+## 关于异步刷hbase模式
+* 默认是关闭的，开关及相关配置见RedisHBaseConfiguration  
+* 写命令时，如果缓存中存在，则先更新缓存，再更新hbase，若开启异步刷hbase模式，则更新hbase操作会异步进行  
+* 异步使用redis队列进行缓冲，会起多个队列（队列数可配，默认1），每个队列有且仅有一个线程进行消费，当起多个proxy实例时，消费线程会在集群中进行自动均衡，且proxy实例增减时会自动rebalance  
+* 特别的，对于expire/pexpire/expireAt/pexpireAt命令，支持单独开启异步（内存队列）      
+
 ## maven依赖
 ```
 <dependency>
