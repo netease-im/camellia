@@ -1,54 +1,65 @@
 package com.netease.nim.camellia.redis.proxy.hbase.util;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 public class ConfigurationUtil {
 
-    public static Integer getInteger(Properties properties, String key, Integer defaultValue) {
+    public static Map<String, String> propertiesToMap(Properties properties) {
+        if (properties == null) return null;
+        Map<String, String> map = new HashMap<>();
+        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+            map.put(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
+        }
+        return map;
+    }
+
+    public static Integer getInteger(Map<String, String> conf, String key, Integer defaultValue) {
         try {
-            Object v = properties.get(key);
+            String v = conf.get(key);
             if (v == null) return defaultValue;
-            return Integer.parseInt(String.valueOf(v));
+            return Integer.parseInt(v);
         } catch (Exception e) {
             return defaultValue;
         }
     }
 
-    public static Double getDouble(Properties properties, String key, Double defaultValue) {
+    public static Double getDouble(Map<String, String> conf, String key, Double defaultValue) {
         try {
-            Object v = properties.get(key);
+            String v = conf.get(key);
             if (v == null) return defaultValue;
-            return Double.parseDouble(String.valueOf(v));
+            return Double.parseDouble(v);
         } catch (Exception e) {
             return defaultValue;
         }
     }
 
-    public static Long getLong(Properties properties, String key, Long defaultValue) {
+    public static Long getLong(Map<String, String> conf, String key, Long defaultValue) {
         try {
-            Object v = properties.get(key);
+            String v = conf.get(key);
             if (v == null) return defaultValue;
-            return Long.parseLong(String.valueOf(v));
+            return Long.parseLong(v);
         } catch (Exception e) {
             return defaultValue;
         }
     }
 
-    public static Boolean getBoolean(Properties properties, String key, Boolean defaultValue) {
+    public static Boolean getBoolean(Map<String, String> conf, String key, Boolean defaultValue) {
         try {
-            Object v = properties.get(key);
+            String v = conf.get(key);
             if (v == null) return defaultValue;
-            return Boolean.parseBoolean(String.valueOf(v));
+            return Boolean.parseBoolean(v);
         } catch (Exception e) {
             return defaultValue;
         }
     }
 
-    public static String get(Properties properties, String key, String defaultValue) {
+    public static String get(Map<String, String> conf, String key, String defaultValue) {
         try {
-            Object v = properties.get(key);
+            String v = conf.get(key);
             if (v == null) return defaultValue;
-            return String.valueOf(v);
+            return v;
         } catch (Exception e) {
             return defaultValue;
         }

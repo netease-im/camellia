@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  *
@@ -21,9 +21,9 @@ public class RedisMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger("stats");
 
-    private static ConcurrentHashMap<String, AtomicLong> map = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, LongAdder> map = new ConcurrentHashMap<>();
     private static Stats stats = new Stats();
-    private static final ConcurrentHashMap<String, AtomicLong> failCountMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, LongAdder> failCountMap = new ConcurrentHashMap<>();
 
     public static void init(int seconds) {
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("monitor"))
@@ -32,13 +32,13 @@ public class RedisMonitor {
 
     public static void incr(Long bid, String bgroup, String command) {
         String key = bid + "|" + bgroup + "|" + command;
-        AtomicLong count = map.computeIfAbsent(key, k -> new AtomicLong());
-        count.incrementAndGet();
+        LongAdder count = map.computeIfAbsent(key, k -> new LongAdder());
+        count.increment();
     }
 
     public static void incrFail(String failReason) {
-        AtomicLong failCount = failCountMap.computeIfAbsent(failReason, k -> new AtomicLong());
-        failCount.incrementAndGet();
+        LongAdder failCount = failCountMap.computeIfAbsent(failReason, k -> new LongAdder());
+        failCount.increment();
     }
 
     public static Stats getStats() {
@@ -51,11 +51,11 @@ public class RedisMonitor {
         Map<String, Stats.BidBgroupStats> bidBgroupStatsMap = new HashMap<>();
         List<Stats.DetailStats> detailStatsList = new ArrayList<>();
 
-        ConcurrentHashMap<String, AtomicLong> map = RedisMonitor.map;
+        ConcurrentHashMap<String, LongAdder> map = RedisMonitor.map;
         RedisMonitor.map = new ConcurrentHashMap<>();
-        for (Map.Entry<String, AtomicLong> entry : map.entrySet()) {
+        for (Map.Entry<String, LongAdder> entry : map.entrySet()) {
             String[] split = entry.getKey().split("\\|");
-            long count = entry.getValue().get();
+            long count = entry.getValue().longValue();
             Long bid = null;
             if (!split[0].equalsIgnoreCase("null")) {
                 bid = Long.parseLong(split[0]);
@@ -86,8 +86,8 @@ public class RedisMonitor {
         stats.setTotalStatsList(new ArrayList<>(totalStatsMap.values()));
         stats.setBidBgroupStatsList(new ArrayList<>(bidBgroupStatsMap.values()));
         Map<String, Long> failMap = new HashMap<>();
-        for (Map.Entry<String, AtomicLong> entry : failCountMap.entrySet()) {
-            long count = entry.getValue().getAndSet(0);
+        for (Map.Entry<String, LongAdder> entry : failCountMap.entrySet()) {
+            long count = entry.getValue().sumThenReset();
             if (count > 0) {
                 failMap.put(entry.getKey(), count);
             }

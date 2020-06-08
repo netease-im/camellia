@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  *
@@ -21,18 +22,18 @@ public class RedisHBaseMonitor {
     private static final Logger logger = LoggerFactory.getLogger(RedisHBaseMonitor.class);
     private static final Logger statsLogger = LoggerFactory.getLogger("redis-hbase-stats");
 
-    private static final ConcurrentHashMap<String, AtomicLong> readMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, AtomicLong> writeMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, LongAdder> readMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, LongAdder> writeMap = new ConcurrentHashMap<>();
 
-    private static final AtomicLong zsetValueSizeTotal = new AtomicLong(0L);
-    private static final AtomicLong zsetValueSizeCount = new AtomicLong(0L);
-    private static final AtomicLong zsetValueSizeMax = new AtomicLong(0L);
-    private static final AtomicLong zsetValueNotHitThresholdCount = new AtomicLong(0L);
-    private static final AtomicLong zsetValueHitThresholdCount = new AtomicLong(0L);
+    private static final LongAdder zsetValueSizeTotal = new LongAdder();
+    private static final LongAdder zsetValueSizeCount = new LongAdder();
+    private static final AtomicLong zsetValueSizeMax = new AtomicLong();
+    private static final LongAdder zsetValueNotHitThresholdCount = new LongAdder();
+    private static final LongAdder zsetValueHitThresholdCount = new LongAdder();
     private static final ExecutorService exec = Executors.newFixedThreadPool(1);
     private static final Set<String> hbaseAsyncWriteTopics = new HashSet<>();
     private static final Map<String, Long> hbaseAsyncWriteTopicLengthMap = new HashMap<>();
-    private static final ConcurrentHashMap<String, AtomicLong> hbaseAsyncWriteTopicCountMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, LongAdder> hbaseAsyncWriteTopicCountMap = new ConcurrentHashMap<>();
 
     private static RedisHBaseStats redisHBaseStats = new RedisHBaseStats();
 
@@ -46,8 +47,8 @@ public class RedisHBaseMonitor {
         try {
             if (!RedisHBaseConfiguration.isMonitorEnable()) return;
             String key = method + "|" + type.name();
-            AtomicLong count = readMap.computeIfAbsent(key, k -> new AtomicLong());
-            count.incrementAndGet();
+            LongAdder count = readMap.computeIfAbsent(key, k -> new LongAdder());
+            count.increment();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -57,8 +58,8 @@ public class RedisHBaseMonitor {
         try {
             if (!RedisHBaseConfiguration.isMonitorEnable()) return;
             String key = method + "|" + type.name();
-            AtomicLong count = writeMap.computeIfAbsent(key, k -> new AtomicLong());
-            count.incrementAndGet();
+            LongAdder count = writeMap.computeIfAbsent(key, k -> new LongAdder());
+            count.increment();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -68,8 +69,8 @@ public class RedisHBaseMonitor {
         try {
             if (!RedisHBaseConfiguration.isMonitorEnable()) return;
             exec.submit(() -> {
-                zsetValueSizeTotal.addAndGet(size);
-                zsetValueSizeCount.incrementAndGet();
+                zsetValueSizeTotal.add(size);
+                zsetValueSizeCount.increment();
                 if (size > zsetValueSizeMax.get()) {
                     zsetValueSizeMax.set(size);
                 }
@@ -83,9 +84,9 @@ public class RedisHBaseMonitor {
         try {
             if (!RedisHBaseConfiguration.isMonitorEnable()) return;
             if (hit) {
-                zsetValueHitThresholdCount.incrementAndGet();
+                zsetValueHitThresholdCount.increment();
             } else {
-                zsetValueNotHitThresholdCount.incrementAndGet();
+                zsetValueNotHitThresholdCount.increment();
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -115,8 +116,8 @@ public class RedisHBaseMonitor {
     public static void incrHBaseAsyncWriteTopicCount(String topic) {
         try {
             if (!RedisHBaseConfiguration.isMonitorEnable()) return;
-            AtomicLong count = hbaseAsyncWriteTopicCountMap.computeIfAbsent(topic, k -> new AtomicLong(0L));
-            count.incrementAndGet();
+            LongAdder count = hbaseAsyncWriteTopicCountMap.computeIfAbsent(topic, k -> new LongAdder());
+            count.increment();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -132,12 +133,12 @@ public class RedisHBaseMonitor {
             Map<String, AtomicLong> cacheMissCountReadMap = new HashMap<>();
             Set<String> methodSet = new HashSet<>();
             List<RedisHBaseStats.ReadMethodStats> readMethodStatsList = new ArrayList<>();
-            for (Map.Entry<String, AtomicLong> entry : readMap.entrySet()) {
+            for (Map.Entry<String, LongAdder> entry : readMap.entrySet()) {
                 String key = entry.getKey();
                 String[] split = key.split("\\|");
                 String method = split[0];
                 ReadOpeType opeType = ReadOpeType.valueOf(split[1]);
-                long count = entry.getValue().getAndSet(0);
+                long count = entry.getValue().sumThenReset();
                 RedisHBaseStats.ReadMethodStats methodStats = new RedisHBaseStats.ReadMethodStats();
                 methodStats.setMethod(method);
                 methodStats.setOpeType(opeType);
@@ -154,12 +155,12 @@ public class RedisHBaseMonitor {
             }
 
             List<RedisHBaseStats.WriteMethodStats> writeMethodStatsList = new ArrayList<>();
-            for (Map.Entry<String, AtomicLong> entry : writeMap.entrySet()) {
+            for (Map.Entry<String, LongAdder> entry : writeMap.entrySet()) {
                 String key = entry.getKey();
                 String[] split = key.split("\\|");
                 String method = split[0];
                 WriteOpeType opeType = WriteOpeType.valueOf(split[1]);
-                long count = entry.getValue().getAndSet(0);
+                long count = entry.getValue().sumThenReset();
 
                 RedisHBaseStats.WriteMethodStats methodStats = new RedisHBaseStats.WriteMethodStats();
                 methodStats.setMethod(method);
@@ -169,10 +170,10 @@ public class RedisHBaseMonitor {
             }
 
             long max = zsetValueSizeMax.getAndSet(0);
-            long count = zsetValueSizeCount.getAndSet(0);
-            long total = zsetValueSizeTotal.getAndSet(0);
-            long hit = zsetValueHitThresholdCount.getAndSet(0);
-            long notHit = zsetValueNotHitThresholdCount.getAndSet(0);
+            long count = zsetValueSizeCount.sumThenReset();
+            long total = zsetValueSizeTotal.sumThenReset();
+            long hit = zsetValueHitThresholdCount.sumThenReset();
+            long notHit = zsetValueNotHitThresholdCount.sumThenReset();
             RedisHBaseStats.ZSetStats zSetStats = new RedisHBaseStats.ZSetStats();
             zSetStats.setZsetValueHitThresholdCount(hit);
             zSetStats.setZsetValueNotHitThresholdCount(notHit);
@@ -201,18 +202,18 @@ public class RedisHBaseMonitor {
                 methodCacheHitStatsList.add(methodCacheHitStats);
             }
 
-            Map<String, AtomicLong> hbaseAsyncWriteTopicCountMap = new HashMap<>(RedisHBaseMonitor.hbaseAsyncWriteTopicCountMap);
+            Map<String, LongAdder> hbaseAsyncWriteTopicCountMap = new HashMap<>(RedisHBaseMonitor.hbaseAsyncWriteTopicCountMap);
             RedisHBaseMonitor.hbaseAsyncWriteTopicCountMap.clear();
             HashSet<String> topics = new HashSet<>(hbaseAsyncWriteTopics);
             List<RedisHBaseStats.TopicStats> topicStatsList = new ArrayList<>();
             for (String topic : topics) {
                 RedisHBaseStats.TopicStats topicStats = new RedisHBaseStats.TopicStats();
                 topicStats.setTopic(topic);
-                AtomicLong topicCount = hbaseAsyncWriteTopicCountMap.get(topic);
+                LongAdder topicCount = hbaseAsyncWriteTopicCountMap.get(topic);
                 if (topicCount == null) {
                     topicStats.setCount(0L);
                 } else {
-                    topicStats.setCount(topicCount.get());
+                    topicStats.setCount(topicCount.longValue());
                 }
                 Long length = RedisHBaseMonitor.hbaseAsyncWriteTopicLengthMap.get(topic);
                 if (length == null) {
