@@ -144,7 +144,7 @@ public class RedisHBaseZSetMixClient {
             if (redisLock != null) {
                 redisLock.release();
             }
-            boolean cacheNull = RedisHBaseConfiguration.isZSetHBaseCacheNull();
+            boolean cacheNull = RedisHBaseConfiguration.isHBaseCacheNull();
             if (cacheNull) {
                 redisTemplate.setex(nullCacheKey(key), RedisHBaseConfiguration.notNullCacheExpireSeconds(), NULL_CACHE_NO);
             }
@@ -500,7 +500,7 @@ public class RedisHBaseZSetMixClient {
             }
         } finally {
             redisLock.release();
-            boolean cacheNull = RedisHBaseConfiguration.isZSetHBaseCacheNull();
+            boolean cacheNull = RedisHBaseConfiguration.isHBaseCacheNull();
             if (cacheNull) {
                 redisTemplate.setex(nullCacheKey(key), RedisHBaseConfiguration.notNullCacheExpireSeconds(), NULL_CACHE_NO);
             }
@@ -835,7 +835,7 @@ public class RedisHBaseZSetMixClient {
 
     //
     private HBase2RedisRebuildResult rebuildZSet(byte[] key) {
-        boolean cacheNull = RedisHBaseConfiguration.isZSetHBaseCacheNull();
+        boolean cacheNull = RedisHBaseConfiguration.isHBaseCacheNull();
         if (cacheNull) {
             byte[] nullCacheValue = redisTemplate.get(nullCacheKey(key));
             if (nullCacheValue != null && Bytes.equals(nullCacheValue, NULL_CACHE_YES)) {

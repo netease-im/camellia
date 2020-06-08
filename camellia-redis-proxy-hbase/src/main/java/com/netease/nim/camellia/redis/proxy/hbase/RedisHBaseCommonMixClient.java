@@ -262,6 +262,13 @@ public class RedisHBaseCommonMixClient {
 
     //
     private RedisHBaseType redisHBaseTypeFromHBase(byte[] key) {
+        boolean cacheNull = RedisHBaseConfiguration.isHBaseCacheNull();
+        if (cacheNull) {
+            byte[] nullCacheValue = redisTemplate.get(nullCacheKey(key));
+            if (nullCacheValue != null && Bytes.equals(nullCacheValue, NULL_CACHE_YES)) {
+                return null;
+            }
+        }
         Get get = new Get(buildRowKey(key));
         get.addColumn(CF_D, COL_TYPE);
         get.addColumn(CF_D, COL_EXPIRE_TIME);
@@ -272,17 +279,26 @@ public class RedisHBaseCommonMixClient {
             if (expireTime < System.currentTimeMillis()) {
                 Delete delete = new Delete(buildRowKey(key));
                 hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), delete);
+                if (cacheNull) {
+                    redisTemplate.set(nullCacheKey(key), NULL_CACHE_YES, NX, EX, RedisHBaseConfiguration.nullCacheExpireSeconds());
+                }
                 return null;
             }
         }
         byte[] typeRaw = result.getValue(CF_D, COL_TYPE);
         if (typeRaw == null) {
+            if (cacheNull) {
+                redisTemplate.set(nullCacheKey(key), NULL_CACHE_YES, NX, EX, RedisHBaseConfiguration.nullCacheExpireSeconds());
+            }
             return null;
         }
         for (RedisHBaseType type : RedisHBaseType.values()) {
             if (Bytes.equals(typeRaw, type.raw())) {
                 return type;
             }
+        }
+        if (cacheNull) {
+            redisTemplate.set(nullCacheKey(key), NULL_CACHE_YES, NX, EX, RedisHBaseConfiguration.nullCacheExpireSeconds());
         }
         return null;
     }
@@ -327,7 +343,7 @@ public class RedisHBaseCommonMixClient {
     private static class ExpireTaskExecutor extends Thread {
 
         private static final AtomicLong idGenerator = new AtomicLong(0L);
-        private final LinkedBlockingQueue<RedisHBaseCommonMixClient.ExpireTask> queue = new LinkedBlockingQueue<>(RedisHBaseConfiguration.expireAsyncQueueSize());
+        private final LinkedBlockingQueue<ExpireTask> queue = new LinkedBlockingQueue<>(RedisHBaseConfiguration.expireAsyncQueueSize());
         private final RedisHBaseCommonMixClient commonMixClient;
         private final long id;
 
@@ -337,7 +353,7 @@ public class RedisHBaseCommonMixClient {
             setName("ExpireTaskExecutor-" + id);
         }
 
-        public void submit(RedisHBaseCommonMixClient.ExpireTask expireTask) {
+        public void submit(ExpireTask expireTask) {
             boolean offer = queue.offer(expireTask);
             if (!offer) {
                 logger.warn("submit ExpireTask fail, key = {}, millisecondsTimestamp = {}", SafeEncoder.encode(expireTask.key), expireTask.millisecondsTimestamp);
@@ -350,7 +366,7 @@ public class RedisHBaseCommonMixClient {
             while (true) {
                 try {
                     if (buffer.isEmpty()) {
-                        RedisHBaseCommonMixClient.ExpireTask expireTask = queue.poll(1, TimeUnit.SECONDS);
+                        ExpireTask expireTask = queue.poll(1, TimeUnit.SECONDS);
                         if (expireTask != null) {
                             buffer.add(expireTask);
                         }

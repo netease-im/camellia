@@ -78,9 +78,9 @@ public class RedisHBaseConfiguration {
         return ConfigurationUtil.getInteger(conf, "zset.valueRef.expire.seconds", 24*3600);
     }
 
-    //是否缓存zset为null
-    public static boolean isZSetHBaseCacheNull() {
-        return ConfigurationUtil.getBoolean(conf, "zset.hbase.cache.null", true);
+    //是否缓存hbase不存在某个key
+    public static boolean isHBaseCacheNull() {
+        return ConfigurationUtil.getBoolean(conf, "hbase.cache.null", true);
     }
 
     //null缓存的前缀
