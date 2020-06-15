@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
 import com.netease.nim.camellia.redis.proxy.hbase.discovery.DiscoverHolder;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
 import com.netease.nim.camellia.redis.proxy.hbase.util.HBaseWriteOpeSerializeUtil;
+import com.netease.nim.camellia.redis.proxy.hbase.util.RedisHBaseUtil;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import com.netease.nim.camellia.redis.toolkit.lock.CamelliaRedisLock;
 import org.apache.hadoop.hbase.client.Delete;
@@ -254,7 +255,10 @@ public class HBaseWriteAsyncExecutor {
                                     }
                                 }
                                 if (needFlushDelete) {
-                                    hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), new ArrayList<>(deleteBuffer));
+                                    List<List<Delete>> split = RedisHBaseUtil.split(new ArrayList<>(deleteBuffer), RedisHBaseConfiguration.hbaseWriteBatchMaxSize());
+                                    for (List<Delete> deleteList : split) {
+                                        hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), deleteList);
+                                    }
                                     if (logger.isDebugEnabled()) {
                                         logger.debug("flush delete for new put, size = {}", deleteBuffer.size());
                                     }
@@ -262,7 +266,7 @@ public class HBaseWriteAsyncExecutor {
                                     deleteRowSet.clear();
                                     needFlushDelete = false;
                                 }
-                                if (putBuffer.size() > RedisHBaseConfiguration.hbaseWriteAsyncBatchSize()) {
+                                if (putBuffer.size() > RedisHBaseConfiguration.hbaseWriteBatchMaxSize()) {
                                     needFlushPut = true;
                                 }
                             } else if (type == HBaseWriteOpeSerializeUtil.Type.DELETE) {
@@ -275,7 +279,10 @@ public class HBaseWriteAsyncExecutor {
                                     }
                                 }
                                 if (needFlushPut) {
-                                    hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), new ArrayList<>(putBuffer));
+                                    List<List<Put>> split = RedisHBaseUtil.split(new ArrayList<>(putBuffer), RedisHBaseConfiguration.hbaseWriteBatchMaxSize());
+                                    for (List<Put> putList : split) {
+                                        hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), putList);
+                                    }
                                     if (logger.isDebugEnabled()) {
                                         logger.debug("flush put for new delete, size = {}", putBuffer.size());
                                     }
@@ -283,7 +290,7 @@ public class HBaseWriteAsyncExecutor {
                                     putRowSet.clear();
                                     needFlushPut = false;
                                 }
-                                if (deleteBuffer.size() > RedisHBaseConfiguration.hbaseWriteAsyncBatchSize()) {
+                                if (deleteBuffer.size() > RedisHBaseConfiguration.hbaseWriteBatchMaxSize()) {
                                     needFlushDelete = true;
                                 }
                             }
@@ -303,7 +310,10 @@ public class HBaseWriteAsyncExecutor {
                             }
                         }
                         if (needFlushDelete) {
-                            hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), new ArrayList<>(deleteBuffer));
+                            List<List<Delete>> split = RedisHBaseUtil.split(new ArrayList<>(deleteBuffer), RedisHBaseConfiguration.hbaseWriteBatchMaxSize());
+                            for (List<Delete> deleteList : split) {
+                                hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), deleteList);
+                            }
                             if (logger.isDebugEnabled()) {
                                 logger.debug("flush delete, size = {}", deleteBuffer.size());
                             }
@@ -312,7 +322,10 @@ public class HBaseWriteAsyncExecutor {
                             needFlushDelete = false;
                         }
                         if (needFlushPut) {
-                            hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), new ArrayList<>(putBuffer));
+                            List<List<Put>> split = RedisHBaseUtil.split(new ArrayList<>(putBuffer), RedisHBaseConfiguration.hbaseWriteBatchMaxSize());
+                            for (List<Put> putList : split) {
+                                hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), putList);
+                            }
                             if (logger.isDebugEnabled()) {
                                 logger.debug("flush put, size = {}", putBuffer.size());
                             }
@@ -325,14 +338,21 @@ public class HBaseWriteAsyncExecutor {
                     }
                 }
                 if (!deleteBuffer.isEmpty()) {
-                    hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), new ArrayList<>(deleteBuffer));
+                    List<List<Delete>> split = RedisHBaseUtil.split(new ArrayList<>(deleteBuffer), RedisHBaseConfiguration.hbaseWriteBatchMaxSize());
+                    for (List<Delete> deleteList : split) {
+                        hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), deleteList);
+                    }
                     if (logger.isDebugEnabled()) {
                         logger.debug("flush delete all, size = {}", deleteBuffer.size());
                     }
                     deleteBuffer.clear();
                     deleteRowSet.clear();
-                } else if (!putBuffer.isEmpty()) {
-                    hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), new ArrayList<>(putBuffer));
+                }
+                if (!putBuffer.isEmpty()) {
+                    List<List<Put>> split = RedisHBaseUtil.split(new ArrayList<>(putBuffer), RedisHBaseConfiguration.hbaseWriteBatchMaxSize());
+                    for (List<Put> putList : split) {
+                        hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), putList);
+                    }
                     if (logger.isDebugEnabled()) {
                         logger.debug("flush put all, size = {}", putBuffer.size());
                     }

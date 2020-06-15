@@ -2,8 +2,10 @@ package com.netease.nim.camellia.redis.proxy.hbase.util;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Durability;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Row;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -66,6 +68,9 @@ public class HBaseWriteOpeSerializeUtil {
         String rowHex = jsonObject.getString(ROW);
         byte[] row = Bytes.fromHex(rowHex);
         Put put = new Put(row);
+        if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+            put.setDurability(Durability.ASYNC_WAL);
+        }
         JSONArray cells = jsonObject.getJSONArray(CELLS);
         for (Object cell : cells) {
             JSONObject cellJson = (JSONObject) cell;
@@ -112,6 +117,9 @@ public class HBaseWriteOpeSerializeUtil {
         String rowHex = jsonObject.getString(ROW);
         byte[] row = Bytes.fromHex(rowHex);
         Delete delete = new Delete(row);
+        if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+            delete.setDurability(Durability.ASYNC_WAL);
+        }
         JSONArray cells = jsonObject.getJSONArray(CELLS);
         for (Object cell : cells) {
             JSONObject cellJson = (JSONObject) cell;

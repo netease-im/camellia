@@ -53,16 +53,32 @@ public class RedisHBaseZSetMixClient {
         Map<BytesKey, List<Delete>> deleteMap = new HashMap<>();
         for (byte[] key : keys) {
             toDeleteRedisKeyList.add(redisKey(key));
-            toDeleteHBaseList.add(new Delete(buildRowKey(key)));
+            Delete delete1 = new Delete(buildRowKey(key));
+            if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+                delete1.setDurability(Durability.ASYNC_WAL);
+            }
+            toDeleteHBaseList.add(delete1);
             List<Delete> list = deleteMap.computeIfAbsent(new BytesKey(key), k -> new ArrayList<>());
-            list.add(new Delete(buildRowKey(key)));
+            Delete delete2 = new Delete(buildRowKey(key));
+            if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+                delete2.setDurability(Durability.ASYNC_WAL);
+            }
+            list.add(delete2);
             Set<byte[]> zrange = zrange(key, 0, -1);
             if (zrange != null && !zrange.isEmpty()) {
                 for (byte[] value : zrange) {
                     byte[] valueRefKey = buildValueRefKey(key, value);
                     toDeleteRedisKeyList.add(redisKey(valueRefKey));
-                    toDeleteHBaseList.add(new Delete(valueRefKey));
-                    list.add(new Delete(valueRefKey));
+                    Delete delete3 = new Delete(valueRefKey);
+                    if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+                        delete3.setDurability(Durability.ASYNC_WAL);
+                    }
+                    toDeleteHBaseList.add(delete3);
+                    Delete delete4 = new Delete(valueRefKey);
+                    if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+                        delete4.setDurability(Durability.ASYNC_WAL);
+                    }
+                    list.add(delete4);
                 }
             }
         }
@@ -81,10 +97,16 @@ public class RedisHBaseZSetMixClient {
                 }
             }
             if (!list.isEmpty()) {
-                hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), list);
+                List<List<Delete>> split = split(list, RedisHBaseConfiguration.hbaseWriteBatchMaxSize());
+                for (List<Delete> deleteList : split) {
+                    hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), deleteList);
+                }
             }
         } else {
-            hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), toDeleteHBaseList);
+            List<List<Delete>> split = split(toDeleteHBaseList, RedisHBaseConfiguration.hbaseWriteBatchMaxSize());
+            for (List<Delete> deleteList : split) {
+                hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), deleteList);
+            }
         }
         return (long) keys.length;
     }
@@ -120,6 +142,9 @@ public class RedisHBaseZSetMixClient {
                 checkZSetExists(key);
             }
             Put put = new Put(buildRowKey(key));
+            if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+                put.setDurability(Durability.ASYNC_WAL);
+            }
             for (Map.Entry<byte[], Double> entry : scoreMembers.entrySet()) {
                 byte[] value = entry.getKey();
                 Double score = entry.getValue();
@@ -130,7 +155,10 @@ public class RedisHBaseZSetMixClient {
             if (cacheExists && RedisHBaseConfiguration.hbaseWriteOpeAsyncEnable()) {
                 hBaseWriteAsyncExecutor.put(key, putList);
             } else {
-                hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), putList);
+                List<List<Put>> split = split(putList, RedisHBaseConfiguration.hbaseWriteBatchMaxSize());
+                for (List<Put> puts : split) {
+                    hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), puts);
+                }
             }
             if (!cacheExists) {
                 redisLock.release();
@@ -212,6 +240,9 @@ public class RedisHBaseZSetMixClient {
             List<byte[]> list = new ArrayList<>(member.length * 2);
             List<Delete> deleteList = new ArrayList<>();
             Delete delete = new Delete(buildRowKey(key));
+            if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+                delete.setDurability(Durability.ASYNC_WAL);
+            }
             for (byte[] bytes : member) {
                 list.add(bytes);
                 delete.addColumns(CF_D, dataQualifier(bytes));
@@ -220,6 +251,9 @@ public class RedisHBaseZSetMixClient {
                     pipelined.del(redisKey(valueRefKey));
                     list.add(valueRefKey);
                     Delete delete1 = new Delete(valueRefKey);
+                    if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+                        delete1.setDurability(Durability.ASYNC_WAL);
+                    }
                     deleteList.add(delete1);
                 }
             }
@@ -229,7 +263,10 @@ public class RedisHBaseZSetMixClient {
             if (RedisHBaseConfiguration.hbaseWriteOpeAsyncEnable() && cacheExists) {
                 hBaseWriteAsyncExecutor.delete(key, deleteList);
             } else {
-                hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), deleteList);
+                List<List<Delete>> split = split(deleteList, RedisHBaseConfiguration.hbaseWriteBatchMaxSize());
+                for (List<Delete> deletes : split) {
+                    hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), deletes);
+                }
             }
             return zrem.get();
         }
@@ -490,10 +527,16 @@ public class RedisHBaseZSetMixClient {
                 scoreMembers.put(member, score);
                 _redis_zadd(key, scoreMembers, putList);
                 Put put = new Put(buildRowKey(key));
+                if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+                    put.setDurability(Durability.ASYNC_WAL);
+                }
                 put.addColumn(CF_D, dataQualifier(member), Bytes.toBytes(score));
                 put.addColumn(CF_D, COL_TYPE, RedisHBaseType.ZSET.raw());
                 putList.add(put);
-                hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), putList);
+                List<List<Put>> split = split(putList, RedisHBaseConfiguration.hbaseWriteBatchMaxSize());
+                for (List<Put> puts : split) {
+                    hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), puts);
+                }
                 return score;
             } else {
                 return _zincrby(key, score, member);
@@ -540,12 +583,18 @@ public class RedisHBaseZSetMixClient {
             _redis_zadd(key, scoreMembers, putList);
         }
         Put put = new Put(buildRowKey(key));
+        if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+            put.setDurability(Durability.ASYNC_WAL);
+        }
         put.addColumn(CF_D, member, Bytes.toBytes(finalScore));
         putList.add(put);
         if (RedisHBaseConfiguration.hbaseWriteOpeAsyncEnable()) {
             hBaseWriteAsyncExecutor.put(key, putList);
         } else {
-            hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), putList);
+            List<List<Put>> split = split(putList, RedisHBaseConfiguration.hbaseWriteBatchMaxSize());
+            for (List<Put> puts : split) {
+                hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), puts);
+            }
         }
         return finalScore;
     }
@@ -884,7 +933,10 @@ public class RedisHBaseZSetMixClient {
             if (RedisHBaseConfiguration.hbaseWriteOpeAsyncEnable()) {
                 hBaseWriteAsyncExecutor.put(key, putList);
             } else {
-                hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), putList);
+                List<List<Put>> split = split(putList, RedisHBaseConfiguration.hbaseWriteBatchMaxSize());
+                for (List<Put> puts : split) {
+                    hBaseTemplate.put(RedisHBaseConfiguration.hbaseTableName(), puts);
+                }
             }
         }
         byte[] expireTimeValue = result.getValue(CF_D, COL_EXPIRE_TIME);
@@ -913,6 +965,9 @@ public class RedisHBaseZSetMixClient {
             long expireTime = Bytes.toLong(value);
             if (System.currentTimeMillis() > expireTime) {
                 Delete delete = new Delete(key);
+                if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+                    delete.setDurability(Durability.ASYNC_WAL);
+                }
                 hBaseTemplate.delete(tableName, delete);
                 return null;
             }
@@ -941,6 +996,9 @@ public class RedisHBaseZSetMixClient {
                     newScoreMembers.put(valueRefKey, score);
                     pipelined.setex(redisKey(valueRefKey), RedisHBaseConfiguration.zsetValueRefExpireSeconds(), value);
                     Put put = new Put(valueRefKey);
+                    if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+                        put.setDurability(Durability.ASYNC_WAL);
+                    }
                     put.addColumn(CF_D, COL_DATA, value);
                     put.addColumn(CF_D, COL_TYPE, RedisHBaseType.INNER.raw());
                     putList.add(put);

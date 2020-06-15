@@ -21,6 +21,27 @@ public class RedisHBaseUtil {
     public static final byte[] NX = SafeEncoder.encode("NX");
     public static final byte[] EX = SafeEncoder.encode("EX");
 
+    public static <T> List<List<T>> split(List<T> list, int maxSplit) {
+        if (list == null) return null;
+        List<List<T>> ret = new ArrayList<>();
+        if (list.size() <= maxSplit) {
+            ret.add(list);
+            return ret;
+        }
+        List<T> subList = new ArrayList<>();
+        for (T t : list) {
+            subList.add(t);
+            if (subList.size() >= maxSplit) {
+                ret.add(subList);
+                subList = new ArrayList<>();
+            }
+        }
+        if (!subList.isEmpty()) {
+            ret.add(subList);
+        }
+        return ret;
+    }
+
     public static byte[] nullCacheKey(byte[] key) {
         byte[] prefix = RedisHBaseConfiguration.nullCachePrefix();
         if (prefix == null) return key;

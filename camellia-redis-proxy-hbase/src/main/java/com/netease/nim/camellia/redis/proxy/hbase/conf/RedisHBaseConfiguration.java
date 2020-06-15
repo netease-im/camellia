@@ -200,9 +200,9 @@ public class RedisHBaseConfiguration {
         return ConfigurationUtil.getInteger(conf, "hbase.write.async.flush.thread.check.interval.seconds", 5);
     }
 
-    //hbase异步写的批量大小
-    public static int hbaseWriteAsyncBatchSize() {
-        return ConfigurationUtil.getInteger(conf, "hbase.write.async.batch.size", 100);
+    //hbase写操作的最大批量大小
+    public static int hbaseWriteBatchMaxSize() {
+        return ConfigurationUtil.getInteger(conf, "hbase.write.batch.max.size", 100);
     }
 
     //hbase异步写线程独占锁的acquire超时时间
@@ -248,5 +248,10 @@ public class RedisHBaseConfiguration {
     //注册到redis时的过期时间，单位：秒
     public static int registerExpireSeconds() {
         return ConfigurationUtil.getInteger(conf, "register.expire.seconds", 8);
+    }
+
+    //hbase的put/delete操作，WAL日志的异步写是否开启
+    public static boolean hbaseWALAsyncEnable() {
+        return ConfigurationUtil.getBoolean(conf, "hbase.wal.async.enable", false);
     }
 }

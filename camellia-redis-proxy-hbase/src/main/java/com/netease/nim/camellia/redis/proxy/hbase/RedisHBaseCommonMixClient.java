@@ -108,6 +108,9 @@ public class RedisHBaseCommonMixClient {
             return 0L;
         }
         Delete delete = new Delete(buildRowKey(key));
+        if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+            delete.setDurability(Durability.ASYNC_WAL);
+        }
         delete.addColumns(CF_D, COL_EXPIRE_TIME);
         if (RedisHBaseConfiguration.hbaseWriteOpeAsyncEnable() && checkRedisKeyExists(redisTemplate, key)) {
             hBaseWriteAsyncExecutor.delete(key, Collections.singletonList(delete));
@@ -145,6 +148,9 @@ public class RedisHBaseCommonMixClient {
         long pttl = Bytes.toLong(value) - System.currentTimeMillis();
         if (pttl < 0) {
             Delete delete = new Delete(buildRowKey(key));
+            if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+                delete.setDurability(Durability.ASYNC_WAL);
+            }
             if (RedisHBaseConfiguration.hbaseWriteOpeAsyncEnable() && checkRedisKeyExists(redisTemplate, key)) {
                 hBaseWriteAsyncExecutor.delete(key, Collections.singletonList(delete));
             } else {
@@ -278,6 +284,9 @@ public class RedisHBaseCommonMixClient {
             long expireTime = Bytes.toLong(expireTimeRaw);
             if (expireTime < System.currentTimeMillis()) {
                 Delete delete = new Delete(buildRowKey(key));
+                if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+                    delete.setDurability(Durability.ASYNC_WAL);
+                }
                 hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), delete);
                 if (cacheNull) {
                     redisTemplate.set(nullCacheKey(key), NULL_CACHE_YES, NX, EX, RedisHBaseConfiguration.nullCacheExpireSeconds());
@@ -322,6 +331,9 @@ public class RedisHBaseCommonMixClient {
             pipeline.sync();
         }
         Put put = new Put(buildRowKey(key));
+        if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+            put.setDurability(Durability.ASYNC_WAL);
+        }
         put.addColumn(CF_D, COL_EXPIRE_TIME, Bytes.toBytes(millisecondsTimestamp));
         if (RedisHBaseConfiguration.hbaseWriteOpeAsyncEnable() && checkRedisKeyExists(redisTemplate, key)) {
             hBaseWriteAsyncExecutor.put(key, Collections.singletonList(put));
