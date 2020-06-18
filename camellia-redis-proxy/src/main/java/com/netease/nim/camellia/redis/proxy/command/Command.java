@@ -5,19 +5,18 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 public class Command {
 
-    private byte[][] objects;
+    private final byte[][] objects;
     private String name;
 
     public Command(byte[][] objects) {
         this.objects = objects;
-        if (objects != null && objects.length > 0) {
-            this.name = new String(objects[0], Utils.utf8Charset).toLowerCase();
-        } else {
-            this.name = null;
-        }
     }
 
     public String getName() {
+        if (name != null) return name;
+        if (objects != null && objects.length > 0) {
+            name = new String(objects[0], Utils.utf8Charset).toLowerCase();
+        }
         return name;
     }
 

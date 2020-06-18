@@ -205,6 +205,11 @@ public class RedisHBaseConfiguration {
         return ConfigurationUtil.getInteger(conf, "hbase.write.batch.max.size", 100);
     }
 
+    //hbase读操作的最大批量大小
+    public static int hbaseReadBatchMaxSize() {
+        return ConfigurationUtil.getInteger(conf, "hbase.read.batch.max.size", 100);
+    }
+
     //hbase异步写线程独占锁的acquire超时时间
     public static int hbaseWriteAsyncLockAcquireTimeoutMillis() {
         return ConfigurationUtil.getInteger(conf, "hbase.write.async.lock.acquire.timeout.millis", 3000);
@@ -253,5 +258,15 @@ public class RedisHBaseConfiguration {
     //hbase的put/delete操作，WAL日志的异步写是否开启
     public static boolean hbaseWALAsyncEnable() {
         return ConfigurationUtil.getBoolean(conf, "hbase.wal.async.enable", false);
+    }
+
+    //redis的mget操作，单次最大批量
+    public static int redisMGetMaxBatchSize() {
+        return ConfigurationUtil.getInteger(conf, "redis.mget.max.batch.size", 200);
+    }
+
+    //redis的pipeline操作，单次最大批量
+    public static int redisPipelineMaxBatchSize() {
+        return ConfigurationUtil.getInteger(conf, "redis.pipeline.max.batch.size", 200);
     }
 }

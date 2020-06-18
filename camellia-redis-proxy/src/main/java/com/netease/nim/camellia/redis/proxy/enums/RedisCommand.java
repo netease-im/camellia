@@ -185,9 +185,9 @@ public enum RedisCommand {
     READONLY(false, null),
     ;
 
-    private boolean support;
-    private byte[] raw;
-    private Type type;
+    private final boolean support;
+    private final byte[] raw;
+    private final Type type;
 
     RedisCommand(boolean support, Type type) {
         this.raw = SafeEncoder.encode(name());
@@ -214,16 +214,23 @@ public enum RedisCommand {
     }
 
     private static final Map<String, RedisCommand> supportCommandMap = new HashMap<>();
+    private static final Map<String, RedisCommand> commandMap = new HashMap<>();
 
     static {
         for (RedisCommand command : RedisCommand.values()) {
             if (command.isSupport() && command.getType() != null) {
                 supportCommandMap.put(command.name().toLowerCase(), command);
             }
+            commandMap.put(command.name().toLowerCase(), command);
         }
+
     }
 
     public static RedisCommand getSupportRedisCommand(Command command) {
         return supportCommandMap.get(command.getName());
+    }
+
+    public static RedisCommand getRedisCommandByName(String command) {
+        return commandMap.get(command);
     }
 }

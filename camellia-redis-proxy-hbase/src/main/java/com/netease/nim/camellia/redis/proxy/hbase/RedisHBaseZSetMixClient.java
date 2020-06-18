@@ -237,6 +237,7 @@ public class RedisHBaseZSetMixClient {
     //
     private Long _zrem(byte[] key, boolean cacheExists, byte[]... member) {
         try (ICamelliaRedisPipeline pipelined = redisTemplate.pipelined()) {
+            int pipelineSize = 0;
             List<byte[]> list = new ArrayList<>(member.length * 2);
             List<Delete> deleteList = new ArrayList<>();
             Delete delete = new Delete(buildRowKey(key));
@@ -249,6 +250,11 @@ public class RedisHBaseZSetMixClient {
                 if (bytes.length > RedisHBaseConfiguration.ZSET_VALUE_REF_THRESHOLD_MIN) {
                     byte[] valueRefKey = buildValueRefKey(key, bytes);
                     pipelined.del(redisKey(valueRefKey));
+                    pipelineSize ++;
+                    if (pipelineSize > RedisHBaseConfiguration.redisPipelineMaxBatchSize()) {
+                        pipelined.sync();
+                        pipelineSize = 0;
+                    }
                     list.add(valueRefKey);
                     Delete delete1 = new Delete(valueRefKey);
                     if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
@@ -759,7 +765,17 @@ public class RedisHBaseZSetMixClient {
             }
         }
         if (!valueRefKeyList.isEmpty()) {
-            List<byte[]> mget = redisTemplate.mget(redisKey(valueRefKeyList.toArray(new byte[0][0])));
+            List<byte[]> mget;
+            if (valueRefKeyList.size() > RedisHBaseConfiguration.redisMGetMaxBatchSize()) {
+                mget = new ArrayList<>(valueRefKeyList.size());
+                List<List<byte[]>> split = split(valueRefKeyList, RedisHBaseConfiguration.redisMGetMaxBatchSize());
+                for (List<byte[]> subList : split) {
+                    List<byte[]> subMGet = redisTemplate.mget(subList.toArray(new byte[0][0]));
+                    mget.addAll(subMGet);
+                }
+            } else {
+                mget = redisTemplate.mget(redisKey(valueRefKeyList.toArray(new byte[0][0])));
+            }
             List<Get> getList = new ArrayList<>();
             for (int i = 0; i < mget.size(); i++) {
                 byte[] valueRefKey = valueRefKeyList.get(i);
@@ -775,12 +791,19 @@ public class RedisHBaseZSetMixClient {
             }
             if (!getList.isEmpty()) {
                 Map<byte[], byte[]> cacheRebuildMap = new HashMap<>(getList.size());
-
-                Result[] results = hBaseTemplate.get(RedisHBaseConfiguration.hbaseTableName(), getList);
-
-                for (int i = 0; i < results.length; i++) {
-                    byte[] originalValue = results[i].getValue(CF_D, COL_DATA);
-                    byte[] valueRefKey = getList.get(i).getRow();
+                List<List<Get>> split = split(getList, RedisHBaseConfiguration.hbaseReadBatchMaxSize());
+                Result[] results = new Result[getList.size()];
+                int index = 0;
+                for (List<Get> gets : split) {
+                    Result[] resultArray = hBaseTemplate.get(RedisHBaseConfiguration.hbaseTableName(), gets);
+                    for (Result result : resultArray) {
+                        results[index] = result;
+                        index ++;
+                    }
+                }
+                for (Result result : results) {
+                    byte[] originalValue = result.getValue(CF_D, COL_DATA);
+                    byte[] valueRefKey = result.getRow();
                     if (originalValue != null) {
                         BytesKey redisKey = new BytesKey(valueRefKey);
                         Tuple tuple = tmpMap.get(redisKey);
@@ -794,10 +817,16 @@ public class RedisHBaseZSetMixClient {
                 }
                 if (!cacheRebuildMap.isEmpty()) {
                     try (ICamelliaRedisPipeline pipelined = redisTemplate.pipelined()) {
+                        int pipelineSize = 0;
                         for (Map.Entry<byte[], byte[]> entry : cacheRebuildMap.entrySet()) {
                             byte[] k = entry.getKey();
                             byte[] v = entry.getValue();
                             pipelined.setex(redisKey(k), RedisHBaseConfiguration.zsetValueRefExpireSeconds(), v);
+                            pipelineSize ++;
+                            if (pipelineSize > RedisHBaseConfiguration.redisPipelineMaxBatchSize()) {
+                                pipelined.sync();
+                                pipelineSize = 0;
+                            }
                         }
                         pipelined.sync();
                     }
@@ -832,7 +861,17 @@ public class RedisHBaseZSetMixClient {
             }
         }
         if (!valueRefKeyList.isEmpty()) {
-            List<byte[]> mget = redisTemplate.mget(redisKey(valueRefKeyList.toArray(new byte[0][0])));
+            List<byte[]> mget;
+            if (valueRefKeyList.size() > RedisHBaseConfiguration.redisMGetMaxBatchSize()) {
+                mget = new ArrayList<>(valueRefKeyList.size());
+                List<List<byte[]>> split = split(valueRefKeyList, RedisHBaseConfiguration.redisMGetMaxBatchSize());
+                for (List<byte[]> subList : split) {
+                    List<byte[]> subMGet = redisTemplate.mget(subList.toArray(new byte[0][0]));
+                    mget.addAll(subMGet);
+                }
+            } else {
+                mget = redisTemplate.mget(redisKey(valueRefKeyList.toArray(new byte[0][0])));
+            }
             List<Get> getList = new ArrayList<>();
             for (int i = 0; i < valueRefKeyList.size(); i++) {
                 byte[] valueRefKey = valueRefKeyList.get(i);
@@ -846,10 +885,21 @@ public class RedisHBaseZSetMixClient {
             }
             if (!getList.isEmpty()) {
                 Map<byte[], byte[]> cacheRebuildMap = new HashMap<>(getList.size());
-                Result[] results = hBaseTemplate.get(RedisHBaseConfiguration.hbaseTableName(), getList);
-                for (int i = 0; i < results.length; i++) {
-                    byte[] originalValue = results[i].getValue(CF_D, COL_DATA);
-                    byte[] valueRefKey = getList.get(i).getRow();
+
+                List<List<Get>> split = split(getList, RedisHBaseConfiguration.hbaseReadBatchMaxSize());
+                Result[] results = new Result[getList.size()];
+                int index = 0;
+                for (List<Get> gets : split) {
+                    Result[] resultArray = hBaseTemplate.get(RedisHBaseConfiguration.hbaseTableName(), gets);
+                    for (Result result : resultArray) {
+                        results[index] = result;
+                        index ++;
+                    }
+                }
+
+                for (Result result : results) {
+                    byte[] originalValue = result.getValue(CF_D, COL_DATA);
+                    byte[] valueRefKey = result.getRow();
                     if (originalValue != null) {
                         map.put(new BytesKey(valueRefKey), originalValue);
                         cacheRebuildMap.put(valueRefKey, originalValue);
@@ -860,8 +910,14 @@ public class RedisHBaseZSetMixClient {
                 }
                 if (!cacheRebuildMap.isEmpty()) {
                     try (ICamelliaRedisPipeline pipelined = redisTemplate.pipelined()) {
+                        int pipelineSize = 0;
                         for (Map.Entry<byte[], byte[]> entry : cacheRebuildMap.entrySet()) {
                             pipelined.setex(redisKey(entry.getKey()), RedisHBaseConfiguration.zsetValueRefExpireSeconds(), entry.getValue());
+                            pipelineSize ++;
+                            if (pipelineSize > RedisHBaseConfiguration.redisPipelineMaxBatchSize()) {
+                                pipelined.sync();
+                                pipelineSize = 0;
+                            }
                         }
                         pipelined.sync();
                     }
@@ -987,6 +1043,7 @@ public class RedisHBaseZSetMixClient {
         if (scoreMembers == null || scoreMembers.isEmpty()) return 0L;
         Map<byte[], Double> newScoreMembers = new HashMap<>();
         try (ICamelliaRedisPipeline pipelined = redisTemplate.pipelined()) {
+            int pipelineSize = 0;
             for (Map.Entry<byte[], Double> entry : scoreMembers.entrySet()) {
                 byte[] value = entry.getKey();
                 Double score = entry.getValue();
@@ -995,6 +1052,11 @@ public class RedisHBaseZSetMixClient {
                     byte[] valueRefKey = buildValueRefKey(key, value);
                     newScoreMembers.put(valueRefKey, score);
                     pipelined.setex(redisKey(valueRefKey), RedisHBaseConfiguration.zsetValueRefExpireSeconds(), value);
+                    pipelineSize ++;
+                    if (pipelineSize > RedisHBaseConfiguration.redisPipelineMaxBatchSize()) {
+                        pipelined.sync();
+                        pipelineSize = 0;
+                    }
                     Put put = new Put(valueRefKey);
                     if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
                         put.setDurability(Durability.ASYNC_WAL);

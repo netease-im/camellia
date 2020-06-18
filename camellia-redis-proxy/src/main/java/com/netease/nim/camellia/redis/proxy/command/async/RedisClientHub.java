@@ -9,6 +9,7 @@ import com.netease.nim.camellia.core.util.SysUtils;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  *
@@ -17,7 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RedisClientHub {
 
     private static final ConcurrentHashMap<String, RedisClient> map = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, AtomicLong> failCountMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, LongAdder> failCountMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, AtomicLong> failTimestampMap = new ConcurrentHashMap<>();
 
     private static final ExecutorService exec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
@@ -144,18 +145,18 @@ public class RedisClientHub {
     }
 
     private static void resetFailCount(String key) {
-        AtomicLong failCount = failCountMap.computeIfAbsent(key, k -> new AtomicLong(0L));
-        failCount.set(0L);
+        LongAdder failCount = failCountMap.computeIfAbsent(key, k -> new LongAdder());
+        failCount.reset();
     }
 
     private static long getFailCount(String key) {
-        AtomicLong failCount = failCountMap.computeIfAbsent(key, k -> new AtomicLong(0L));
-        return failCount.get();
+        LongAdder failCount = failCountMap.computeIfAbsent(key, k -> new LongAdder());
+        return failCount.sum();
     }
 
     private static void incrFail(String key) {
-        AtomicLong failCount = failCountMap.computeIfAbsent(key, k -> new AtomicLong(0L));
-        failCount.incrementAndGet();
+        LongAdder failCount = failCountMap.computeIfAbsent(key, k -> new LongAdder());
+        failCount.increment();
     }
 
     private static void resetFail(String key) {

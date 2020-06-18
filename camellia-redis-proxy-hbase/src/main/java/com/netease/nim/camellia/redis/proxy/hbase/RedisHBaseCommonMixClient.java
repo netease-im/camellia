@@ -59,8 +59,14 @@ public class RedisHBaseCommonMixClient {
         List<byte[]> otherTypeKeyList = new ArrayList<>();
         List<Response<String>> typeList = new ArrayList<>(keys.length);
         try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
+            int pipelineSize = 0;
             for (byte[] key : keys) {
                 Response<String> type = pipeline.type(key);
+                pipelineSize ++;
+                if (pipelineSize > RedisHBaseConfiguration.redisPipelineMaxBatchSize()) {
+                    pipeline.sync();
+                    pipelineSize = 0;
+                }
                 typeList.add(type);
             }
             pipeline.sync();
@@ -205,10 +211,16 @@ public class RedisHBaseCommonMixClient {
             List<byte[]> notExistsKeyList = new ArrayList<>();
             exists = 0L;
             try (ICamelliaRedisPipeline pipelined = redisTemplate.pipelined()) {
+                int pipelineSize = 0;
                 List<Response<Boolean>> list = new ArrayList<>(keys.length);
                 for (byte[] key : keys) {
                     Response<Boolean> response = pipelined.exists(redisKey(key));
                     list.add(response);
+                    pipelineSize ++;
+                    if (pipelineSize > RedisHBaseConfiguration.redisPipelineMaxBatchSize()) {
+                        pipelined.sync();
+                        pipelineSize = 0;
+                    }
                 }
                 pipelined.sync();
                 int index = 0;

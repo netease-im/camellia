@@ -12,6 +12,8 @@ import java.util.Map;
 public class Stats {
 
     private long count;
+    private long totalReadCount;
+    private long totalWriteCount;
     private List<TotalStats> totalStatsList = new ArrayList<>();
     private List<BidBgroupStats> bidBgroupStatsList = new ArrayList<>();
     private List<DetailStats> detailStatsList = new ArrayList<>();
@@ -23,6 +25,22 @@ public class Stats {
 
     public void setCount(long count) {
         this.count = count;
+    }
+
+    public long getTotalReadCount() {
+        return totalReadCount;
+    }
+
+    public void setTotalReadCount(long totalReadCount) {
+        this.totalReadCount = totalReadCount;
+    }
+
+    public long getTotalWriteCount() {
+        return totalWriteCount;
+    }
+
+    public void setTotalWriteCount(long totalWriteCount) {
+        this.totalWriteCount = totalWriteCount;
     }
 
     public List<TotalStats> getTotalStatsList() {

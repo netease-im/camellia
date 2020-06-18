@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +48,8 @@ public class RedisMonitor {
 
     private static void calc() {
         long totalCount = 0;
+        long totalReadCount = 0;
+        long totalWriteCount = 0;
         Map<String, Stats.TotalStats> totalStatsMap = new HashMap<>();
         Map<String, Stats.BidBgroupStats> bidBgroupStatsMap = new HashMap<>();
         List<Stats.DetailStats> detailStatsList = new ArrayList<>();
@@ -78,10 +81,20 @@ public class RedisMonitor {
             detailStatsList.add(new Stats.DetailStats(bid, bgroup, command, count));
 
             totalCount += count;
+            RedisCommand redisCommand = RedisCommand.getRedisCommandByName(command);
+            if (redisCommand != null && redisCommand.getType() != null) {
+                if (redisCommand.getType() == RedisCommand.Type.READ) {
+                    totalReadCount += count;
+                } else {
+                    totalWriteCount += count;
+                }
+            }
         }
 
         Stats stats = new Stats();
         stats.setCount(totalCount);
+        stats.setTotalReadCount(totalReadCount);
+        stats.setTotalWriteCount(totalWriteCount);
         stats.setDetailStatsList(detailStatsList);
         stats.setTotalStatsList(new ArrayList<>(totalStatsMap.values()));
         stats.setBidBgroupStatsList(new ArrayList<>(bidBgroupStatsMap.values()));
@@ -99,6 +112,8 @@ public class RedisMonitor {
         logger.info(">>>>>>>START>>>>>>>");
         logger.info("connect.count={}", ChannelMonitor.getChannelMap().size());
         logger.info("total.count={}", stats.getCount());
+        logger.info("total.read.count={}", stats.getTotalReadCount());
+        logger.info("total.write.count={}", stats.getTotalWriteCount());
         logger.info("====total====");
         for (Stats.TotalStats totalStats : stats.getTotalStatsList()) {
             logger.info("total.command.{}, count={}", totalStats.getCommand(), totalStats.getCount());
