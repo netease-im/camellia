@@ -38,13 +38,6 @@ public class AsyncCamelliaRedisTemplateChooser {
     }
 
     public AsyncCamelliaRedisTemplate choose(ChannelInfo channelInfo) {
-        //根据bid和bgroup选择不同的processor实例
-        Long bid = null;
-        String bgroup = null;
-        if (channelInfo != null) {
-            bid = ClientCommandUtil.getBid(channelInfo);
-            bgroup = ClientCommandUtil.getBgroup(channelInfo);
-        }
         CamelliaTranspondProperties.Type type = properties.getType();
         if (type == CamelliaTranspondProperties.Type.LOCAL) {
             return localInstance;
@@ -56,6 +49,12 @@ public class AsyncCamelliaRedisTemplateChooser {
                 }
                 return remoteInstance;
             }
+            Long bid = null;
+            String bgroup = null;
+            if (channelInfo != null) {
+                bid = ClientCommandUtil.getBid(channelInfo);
+                bgroup = ClientCommandUtil.getBgroup(channelInfo);
+            }
             if (bid == null || bid <= 0 || bgroup == null) {
                 if (logger.isTraceEnabled()) {
                     logger.trace("async, not dynamic, return default remoteInstance");
@@ -64,6 +63,12 @@ public class AsyncCamelliaRedisTemplateChooser {
             }
             return initOrCreateRemoteInstance(bid, bgroup);
         } else if (type == CamelliaTranspondProperties.Type.AUTO) {
+            Long bid = null;
+            String bgroup = null;
+            if (channelInfo != null) {
+                bid = ClientCommandUtil.getBid(channelInfo);
+                bgroup = ClientCommandUtil.getBgroup(channelInfo);
+            }
             if (bid == null || bid <= 0 || bgroup == null) {
                 if (localInstance != null) return localInstance;
                 if (remoteInstance != null) return remoteInstance;

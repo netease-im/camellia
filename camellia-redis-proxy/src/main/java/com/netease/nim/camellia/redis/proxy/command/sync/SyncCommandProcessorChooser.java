@@ -29,8 +29,8 @@ public class SyncCommandProcessorChooser {
 
     private static final Logger logger = LoggerFactory.getLogger(SyncCommandProcessorChooser.class);
 
-    private CamelliaTranspondProperties properties;
-    private Map<String, SyncCommandProcessor> remoteInstanceMap = new HashMap<>();
+    private final CamelliaTranspondProperties properties;
+    private final Map<String, SyncCommandProcessor> remoteInstanceMap = new HashMap<>();
     private final Object lock = new Object();
     private SyncCommandProcessor remoteInstance;
     private SyncCommandProcessor localInstance;
@@ -43,12 +43,6 @@ public class SyncCommandProcessorChooser {
     }
 
     public SyncCommandProcessor choose(ChannelInfo channelInfo) {
-        Long bid = null;
-        String bgroup = null;
-        if (channelInfo != null) {
-            bid = ClientCommandUtil.getBid(channelInfo);
-            bgroup = ClientCommandUtil.getBgroup(channelInfo);
-        }
         CamelliaTranspondProperties.Type type = properties.getType();
         if (type == CamelliaTranspondProperties.Type.LOCAL) {
             return localInstance;
@@ -60,6 +54,12 @@ public class SyncCommandProcessorChooser {
                 }
                 return remoteInstance;
             }
+            Long bid = null;
+            String bgroup = null;
+            if (channelInfo != null) {
+                bid = ClientCommandUtil.getBid(channelInfo);
+                bgroup = ClientCommandUtil.getBgroup(channelInfo);
+            }
             if (bid == null || bid <= 0 || bgroup == null) {
                 if (logger.isTraceEnabled()) {
                     logger.trace("sync, not dynamic, return default remoteInstance");
@@ -68,6 +68,12 @@ public class SyncCommandProcessorChooser {
             }
             return initOrCreateRemoteInstance(bid, bgroup);
         } else if (type == CamelliaTranspondProperties.Type.AUTO) {
+            Long bid = null;
+            String bgroup = null;
+            if (channelInfo != null) {
+                bid = ClientCommandUtil.getBid(channelInfo);
+                bgroup = ClientCommandUtil.getBgroup(channelInfo);
+            }
             if (bid == null || bid <= 0 || bgroup == null) {
                 if (localInstance != null) return localInstance;
                 if (remoteInstance != null) return remoteInstance;

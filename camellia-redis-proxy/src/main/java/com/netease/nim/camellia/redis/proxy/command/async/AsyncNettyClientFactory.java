@@ -23,7 +23,7 @@ public interface AsyncNettyClientFactory {
     public static class Default implements AsyncNettyClientFactory {
 
         private final Object lock = new Object();
-        private Map<String, AsyncClient> map = new HashMap<>();
+        private final Map<String, AsyncClient> map = new HashMap<>();
         private int maxAttempts = Constants.Async.redisClusterMaxAttempts;
 
         public Default() {

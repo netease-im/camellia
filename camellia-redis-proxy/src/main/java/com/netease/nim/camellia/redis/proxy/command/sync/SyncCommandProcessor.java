@@ -17,7 +17,7 @@ import java.util.*;
  */
 public class SyncCommandProcessor implements ISyncCommandProcessor {
 
-    private CamelliaRedisTemplate template;
+    private final CamelliaRedisTemplate template;
 
     public SyncCommandProcessor(CamelliaRedisTemplate template) {
         this.template = template;
