@@ -10,5 +10,6 @@ public enum ReadOpeType {
     HIT_TO_HBASE,//redis没有命中，穿透到hbase，然后返回
     HIT_TO_HBASE_AND_MISS,//redis没有命中，穿透到hbase，发现hbase也没有，然后返回
     HIT_TO_HBASE_NULL_CACHE,//redis没有命中，但是命中了hbase的null缓存，然后返回
+    HIT_TO_HBASE_DEGRADED,//redis没有命中，需要穿透到hbase，但是被降级掉了
     ;
 }

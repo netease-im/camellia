@@ -409,7 +409,8 @@ public class RedisHBaseCommonMixClient {
                         buffer.clear();
                     }
                 } catch (Exception e) {
-                    logger.error("expireTask error, id = {}", id, e);
+                    buffer.clear();
+                    logger.error("expireTask error, id = {}, ex = {}", id, e.toString());
                 }
             }
         }

@@ -23,12 +23,12 @@ public class RemoteMonitor implements Monitor {
 
     private static final Logger logger = LoggerFactory.getLogger(RemoteMonitor.class);
 
-    private ConcurrentHashMap<DetailUniqueKey, AtomicLong> readMap = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<DetailUniqueKey, AtomicLong> writeMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<DetailUniqueKey, AtomicLong> readMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<DetailUniqueKey, AtomicLong> writeMap = new ConcurrentHashMap<>();
 
-    private Long bid;
-    private String bgroup;
-    private CamelliaApi service;
+    private final Long bid;
+    private final String bgroup;
+    private final CamelliaApi service;
 
     public RemoteMonitor(Long bid, String bgroup, CamelliaApi service) {
         this.bid = bid;

@@ -13,6 +13,7 @@ public class RedisHBaseStats {
     private List<WriteMethodStats> writeMethodStatsList = new ArrayList<>();
     private ZSetStats zSetStats = new ZSetStats();
     private List<TopicStats> topicStatsList = new ArrayList<>();
+    private List<HBaseDegradedStats> hBaseDegradedStatsList = new ArrayList<>();
 
     public List<ReadMethodStats> getReadMethodStatsList() {
         return readMethodStatsList;
@@ -52,6 +53,14 @@ public class RedisHBaseStats {
 
     public void setTopicStatsList(List<TopicStats> topicStatsList) {
         this.topicStatsList = topicStatsList;
+    }
+
+    public List<HBaseDegradedStats> gethBaseDegradedStatsList() {
+        return hBaseDegradedStatsList;
+    }
+
+    public void sethBaseDegradedStatsList(List<HBaseDegradedStats> hBaseDegradedStatsList) {
+        this.hBaseDegradedStatsList = hBaseDegradedStatsList;
     }
 
     public static class ZSetStats {
@@ -210,6 +219,27 @@ public class RedisHBaseStats {
 
         public void setLength(long length) {
             this.length = length;
+        }
+    }
+
+    public static class HBaseDegradedStats {
+        private String ope;
+        private long count;
+
+        public String getOpe() {
+            return ope;
+        }
+
+        public void setOpe(String ope) {
+            this.ope = ope;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+        public void setCount(long count) {
+            this.count = count;
         }
     }
 }

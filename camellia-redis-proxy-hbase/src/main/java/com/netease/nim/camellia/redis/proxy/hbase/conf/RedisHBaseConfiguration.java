@@ -269,4 +269,44 @@ public class RedisHBaseConfiguration {
     public static int redisPipelineMaxBatchSize() {
         return ConfigurationUtil.getInteger(conf, "redis.pipeline.max.batch.size", 200);
     }
+
+    //hbase的get操作频控阈值
+    public static int hbaseGetFreqThreshold() {
+        return ConfigurationUtil.getInteger(conf, "hbase.get.freq.threshold", 5);
+    }
+
+    //hbase的get操作频控周期
+    public static long hbaseGetFreqMillis() {
+        return ConfigurationUtil.getLong(conf, "hbase.get.freq.millis", 1000L);
+    }
+
+    //是否开启频控
+    public static boolean freqEnable() {
+        return ConfigurationUtil.getBoolean(conf, "freq.enable", true);
+    }
+
+    //频控操作异常时是否通过
+    public static boolean freqDefaultPass() {
+        return ConfigurationUtil.getBoolean(conf, "freq.default.pass", true);
+    }
+
+    //zset相关的hbase读写操作是否降级为异步，可能导致数据不一致
+    public static boolean zsetHBaseDegradedAsync() {
+        return ConfigurationUtil.getBoolean(conf, "zset.hbase.degraded.async", false);
+    }
+
+    //zset的redis缓存重建任务的最大值
+    public static int zsetRedisRebuildTaskMaxCount() {
+        return ConfigurationUtil.getInteger(conf, "zset.redis.rebuild.task.max.count", 100000);
+    }
+
+    //zset的redis缓存重建延迟任务的延迟秒数
+    public static int zsetRedisRebuildTaskDelaySeconds() {
+        return ConfigurationUtil.getInteger(conf, "zset.redis.rebuild.task.delay.seconds", 30);
+    }
+
+    //zset的redis缓存重建任务完成后，是否打印日志
+    public static boolean zsetRedisRebuildTaskLogEnable() {
+        return ConfigurationUtil.getBoolean(conf, "zset.redis.rebuild.task.log.enable", true);
+    }
 }

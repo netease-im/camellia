@@ -18,7 +18,7 @@ public class ErrorLogCollector {
 
     private static final Logger logger = LoggerFactory.getLogger(ErrorLogCollector.class);
 
-    private static ConcurrentHashMap<String, AtomicLong> logMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, AtomicLong> logMap = new ConcurrentHashMap<>();
     static {
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("error-log-collector"))
                 .scheduleAtFixedRate(ErrorLogCollector::print, 10, 10, TimeUnit.SECONDS);

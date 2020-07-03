@@ -8,5 +8,6 @@ public enum HBase2RedisRebuildResult {
     NONE_RESULT,
     NULL_CACHE_HIT,
     REBUILD_OK,
+    DEGRADED,
     ;
 }

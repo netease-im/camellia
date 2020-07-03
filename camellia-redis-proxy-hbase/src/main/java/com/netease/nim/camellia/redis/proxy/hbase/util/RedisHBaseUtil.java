@@ -21,6 +21,10 @@ public class RedisHBaseUtil {
     public static final byte[] NX = SafeEncoder.encode("NX");
     public static final byte[] EX = SafeEncoder.encode("EX");
 
+    public static byte[] hbaseGetFreqKey(byte[] key) {
+        return Bytes.add(key, SafeEncoder.encode("~camellia_freq"));
+    }
+
     public static <T> List<List<T>> split(List<T> list, int maxSplit) {
         if (list == null) return null;
         List<List<T>> ret = new ArrayList<>();

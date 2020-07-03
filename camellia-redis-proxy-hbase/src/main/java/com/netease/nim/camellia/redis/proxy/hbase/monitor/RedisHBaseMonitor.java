@@ -34,6 +34,7 @@ public class RedisHBaseMonitor {
     private static final Set<String> hbaseAsyncWriteTopics = new HashSet<>();
     private static final Map<String, Long> hbaseAsyncWriteTopicLengthMap = new HashMap<>();
     private static final ConcurrentHashMap<String, LongAdder> hbaseAsyncWriteTopicCountMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, LongAdder> hbaseDegradedCountMap = new ConcurrentHashMap<>();
 
     private static RedisHBaseStats redisHBaseStats = new RedisHBaseStats();
 
@@ -123,6 +124,16 @@ public class RedisHBaseMonitor {
         }
     }
 
+    public static void incrHBaseDegradedCount(String ope) {
+        try {
+            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
+            LongAdder count = hbaseDegradedCountMap.computeIfAbsent(ope, k -> new LongAdder());
+            count.increment();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
     public static RedisHBaseStats getRedisHBaseStats() {
         return redisHBaseStats;
     }
@@ -144,7 +155,7 @@ public class RedisHBaseMonitor {
                 methodStats.setOpeType(opeType);
                 methodStats.setCount(count);
                 readMethodStatsList.add(methodStats);
-                if (opeType == ReadOpeType.HIT_TO_HBASE || opeType == ReadOpeType.HIT_TO_HBASE_AND_MISS) {
+                if (opeType == ReadOpeType.HIT_TO_HBASE || opeType == ReadOpeType.HIT_TO_HBASE_AND_MISS || opeType == ReadOpeType.HIT_TO_HBASE_DEGRADED) {
                     AtomicLong cacheMissCount = cacheMissCountReadMap.computeIfAbsent(method, k -> new AtomicLong(0L));
                     cacheMissCount.addAndGet(count);
                 } else {
@@ -224,12 +235,24 @@ public class RedisHBaseMonitor {
                 topicStatsList.add(topicStats);
             }
 
+            Map<String, LongAdder> hbaseDegradedCountMap = new HashMap<>(RedisHBaseMonitor.hbaseDegradedCountMap);
+            RedisHBaseMonitor.hbaseDegradedCountMap.clear();
+            List<RedisHBaseStats.HBaseDegradedStats> hBaseDegradedStatsList = new ArrayList<>();
+            for (Map.Entry<String, LongAdder> entry : hbaseDegradedCountMap.entrySet()) {
+                String ope = entry.getKey();
+                RedisHBaseStats.HBaseDegradedStats degradedStats = new RedisHBaseStats.HBaseDegradedStats();
+                degradedStats.setOpe(ope);
+                degradedStats.setCount(entry.getValue().sum());
+                hBaseDegradedStatsList.add(degradedStats);
+            }
+
             RedisHBaseStats redisHBaseStats = new RedisHBaseStats();
             redisHBaseStats.setReadMethodStatsList(readMethodStatsList);
             redisHBaseStats.setWriteMethodStatsList(writeMethodStatsList);
             redisHBaseStats.setzSetStats(zSetStats);
             redisHBaseStats.setReadMethodCacheHitStatsList(methodCacheHitStatsList);
             redisHBaseStats.setTopicStatsList(topicStatsList);
+            redisHBaseStats.sethBaseDegradedStatsList(hBaseDegradedStatsList);
 
             RedisHBaseMonitor.redisHBaseStats = redisHBaseStats;
 
@@ -256,6 +279,10 @@ public class RedisHBaseMonitor {
                 statsLogger.info("hbase.async.write.topic.count={}", redisHBaseStats.getTopicStatsList().size());
                 for (RedisHBaseStats.TopicStats topicStats : redisHBaseStats.getTopicStatsList()) {
                     statsLogger.info("hbase.async.write.topic={},length={},count={}", topicStats.getTopic(), topicStats.getLength(), topicStats.getLength());
+                }
+                statsLogger.info("====hbase.degraded.stats====");
+                for (RedisHBaseStats.HBaseDegradedStats degradedStats : redisHBaseStats.gethBaseDegradedStatsList()) {
+                    statsLogger.info("hbase.degraded.ope={},count={}", degradedStats.getOpe(), degradedStats.getCount());
                 }
                 statsLogger.info("<<<<<<<END<<<<<<<");
             }

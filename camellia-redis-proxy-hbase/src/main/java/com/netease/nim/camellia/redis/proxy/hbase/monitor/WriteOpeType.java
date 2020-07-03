@@ -12,5 +12,6 @@ public enum WriteOpeType {
     REDIS_REBUILD_HIT_NULL_CACHE,//redis没有命中，需要重建缓存再写，重建时命中了hbase的null缓存
     REDIS_REBUILD_OK,//redis没有命中，需要重建缓存再写，重建成功
     REDIS_HBASE_ALL,//不检查redis，redis/hbase两边都写一下
+    REDIS_REBUILD_DEGRADED,//redis没有命中，需要重建缓存，但是重建操作被降级掉了
     ;
 }
