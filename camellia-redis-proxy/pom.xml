@@ -24,6 +24,11 @@
 			<version>1.7.7</version>
 		</dependency>
 		<dependency>
+			<groupId>com.lmax</groupId>
+			<artifactId>disruptor</artifactId>
+			<version>3.4.2</version>
+		</dependency>
+		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis</artifactId>
 			<version>1.0.7-SNAPSHOT</version>

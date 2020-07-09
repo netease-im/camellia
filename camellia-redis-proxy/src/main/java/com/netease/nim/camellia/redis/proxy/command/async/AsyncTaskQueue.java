@@ -5,6 +5,8 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -17,7 +19,7 @@ public class AsyncTaskQueue {
     private static final Logger logger = LoggerFactory.getLogger(AsyncTaskQueue.class);
 
     private final ChannelInfo channelInfo;
-    private final LinkedBlockingQueue<AsyncTask> queue = new LinkedBlockingQueue<>(1000000);
+    private final Queue<AsyncTask> queue = new LinkedBlockingQueue<>(100000);
     private final AtomicBoolean callbacking = new AtomicBoolean(false);
 
     public AsyncTaskQueue(ChannelInfo channelInfo) {

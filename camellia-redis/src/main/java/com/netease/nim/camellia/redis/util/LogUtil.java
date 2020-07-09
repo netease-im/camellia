@@ -57,7 +57,7 @@ public class LogUtil {
 
     private static String getClassName() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        if (stackTrace != null && stackTrace.length > 4) {
+        if (stackTrace.length > 4) {
             String className = stackTrace[3].getClassName();
             if (className.contains("$$")) {
                 int index = className.indexOf("$$");
@@ -65,7 +65,7 @@ public class LogUtil {
             }
             int i = className.lastIndexOf(".");
             if (i != -1) {
-                return className.substring(i + 1, className.length());
+                return className.substring(i + 1);
             } else {
                 return className;
             }
@@ -75,7 +75,7 @@ public class LogUtil {
 
     private static String getMethodName() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        if (stackTrace != null && stackTrace.length > 4) {
+        if (stackTrace.length > 4) {
             return stackTrace[3].getMethodName();
         }
         return "null";
