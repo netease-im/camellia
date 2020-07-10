@@ -9,6 +9,7 @@
 ### 更新
 * 优化了部分监控的性能（LongAdder代替AtomicLong）
 * camellia-redis-proxy-hbase的配置使用HashMap代替Properties避免锁竞争  
+* camellia-redis-proxy的若干性能优化
 
 ### fix
 * 无
