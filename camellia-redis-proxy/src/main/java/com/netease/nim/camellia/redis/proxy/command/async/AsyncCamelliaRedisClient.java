@@ -17,17 +17,19 @@ import java.util.concurrent.CompletableFuture;
 public class AsyncCamelliaRedisClient implements AsyncClient {
 
     private final RedisResource redisResource;
+    private final RedisClientAddr addr;
 
     public AsyncCamelliaRedisClient(RedisResource redisResource) {
         this.redisResource = redisResource;
-        RedisClient client = RedisClientHub.get(redisResource.getHost(), redisResource.getPort(), redisResource.getPassword());
+        this.addr = new RedisClientAddr(redisResource.getHost(), redisResource.getPort(), redisResource.getPassword());
+        RedisClient client = RedisClientHub.get(addr);
         if (client == null) {
             throw new CamelliaRedisException("RedisClient init fail");
         }
     }
 
     public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
-        CompletableFuture<RedisClient> future = RedisClientHub.getAsync(redisResource.getHost(), redisResource.getPort(), redisResource.getPassword());
+        CompletableFuture<RedisClient> future = RedisClientHub.getAsync(addr);
         future.thenAccept(client -> {
             if (client != null) {
                 client.sendCommand(commands, completableFutureList);

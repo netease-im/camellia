@@ -14,8 +14,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
@@ -24,10 +22,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class RedisClusterSlotInfo {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisClusterSlotInfo.class);
-
-    private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
-    private final Lock r = rwl.readLock();
-    private final Lock w = rwl.writeLock();
 
     //slot -> master redis node
     private Map<Integer, Node> slotMap = new HashMap<>();
@@ -49,13 +43,9 @@ public class RedisClusterSlotInfo {
      * @return client
      */
     public RedisClient getClient(int slot) {
-        r.lock();
-        try {
-            Node node = slotMap.get(slot);
-            return RedisClientHub.get(node.getHost(), node.getPort(), redisClusterResource.getPassword());
-        } finally {
-            r.unlock();
-        }
+        Node node = slotMap.get(slot);
+        if (node == null) return null;
+        return RedisClientHub.get(node.getAddr());
     }
 
     /**
@@ -70,7 +60,6 @@ public class RedisClusterSlotInfo {
         }
         if (renew.compareAndSet(false, true)) {
             try {
-                w.lock();
                 boolean success = false;
 
                 for (Node node : nodeSet) {
@@ -91,7 +80,6 @@ public class RedisClusterSlotInfo {
                 lastRenewTimestamp = ServerStatus.getCurrentTimeMillis();
                 return success;
             } finally {
-                w.unlock();
                 renew.set(false);
             }
         }
@@ -129,7 +117,7 @@ public class RedisClusterSlotInfo {
                     Reply[] replies2 = master.getReplies();
                     BulkReply host = (BulkReply) replies2[0];
                     IntegerReply port = (IntegerReply)replies2[1];
-                    Node node = new Node(SafeEncoder.encode(host.getRaw()), port.getInteger().intValue());
+                    Node node = new Node(SafeEncoder.encode(host.getRaw()), port.getInteger().intValue(), password);
                     nodeSet.add(node);
                     for (long i=slotStart.getInteger(); i<=slotEnd.getInteger(); i++) {
                         slotMap.put((int) i, node);
@@ -162,51 +150,50 @@ public class RedisClusterSlotInfo {
     }
 
     private static class Node {
-        private String host;
-        private int port;
+        private final String host;
+        private final int port;
+        private final String password;
+        private final RedisClientAddr addr;
 
-        public Node(String host, int port) {
+        public Node(String host, int port, String password) {
             this.host = host;
             this.port = port;
+            this.password = password;
+            this.addr = new RedisClientAddr(host, port, password);
         }
 
         public String getHost() {
             return host;
         }
 
-        public void setHost(String host) {
-            this.host = host;
-        }
-
         public int getPort() {
             return port;
         }
 
-        public void setPort(int port) {
-            this.port = port;
+        public String getPassword() {
+            return password;
+        }
+
+        public RedisClientAddr getAddr() {
+            return addr;
         }
 
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-
             Node node = (Node) o;
-
-            if (port != node.port) return false;
-            return host != null ? host.equals(node.host) : node.host == null;
+            return Objects.equals(addr, node.addr);
         }
 
         @Override
         public int hashCode() {
-            int result = host != null ? host.hashCode() : 0;
-            result = 31 * result + port;
-            return result;
+            return Objects.hash(addr);
         }
 
         @Override
         public String toString() {
-            return host + ":" + port;
+            return addr.getUrl();
         }
     }
 }

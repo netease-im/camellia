@@ -33,20 +33,20 @@ public class RedisClientHub {
     public static int failCountThreshold = Constants.Async.failCountThreshold;
     public static long failBanMillis = Constants.Async.failBanMillis;
 
-    public static CompletableFuture<RedisClient> getAsync(String host, int port, String password) {
-        String key = (password == null ? "" : password) + "@" + host + ":" + port;
-        RedisClient client = map.get(key);
+    public static CompletableFuture<RedisClient> getAsync(RedisClientAddr addr) {
+        String url = addr.getUrl();
+        RedisClient client = map.get(url);
         CompletableFuture<RedisClient> future = new CompletableFuture<>();
         if (client != null && client.isValid()) {
             future.complete(client);
         } else {
             try {
                 exec.submit(() -> {
-                    RedisClient redisClient = get(host, port, password);
+                    RedisClient redisClient = get(addr);
                     future.complete(redisClient);
                 });
             } catch (Exception e) {
-                String log = "submit exec error, key = " + key;
+                String log = "submit exec error, key = " + url;
                 ErrorLogCollector.collect(RedisClientHub.class, log);
                 future.complete(null);
             }
@@ -55,23 +55,28 @@ public class RedisClientHub {
     }
 
     public static RedisClient get(String host, int port, String password) {
-        String key = (password == null ? "" : password) + "@" + host + ":" + port;
-        RedisClient client = map.get(key);
+        RedisClientAddr addr = new RedisClientAddr(host, port, password);
+        return get(addr);
+    }
+
+    public static RedisClient get(RedisClientAddr addr) {
+        String url = addr.getUrl();
+        RedisClient client = map.get(url);
         if (client == null) {
             synchronized (lock) {
-                client = map.get(key);
+                client = map.get(url);
                 if (client == null) {
-                    client = new RedisClient(host, port, password,
+                    client = new RedisClient(addr.getHost(), addr.getPort(), addr.getPassword(),
                             heartbeatIntervalSeconds, heartbeatTimeoutMillis, commandPipelineFlushThreshold, connectTimeoutMillis);
                     client.start();
                     if (client.isValid()) {
-                        RedisClient oldClient = map.put(key, client);
+                        RedisClient oldClient = map.put(url, client);
                         if (oldClient != null) {
                             oldClient.stop();
                         }
-                        resetFail(key);//如果client初始化成功，则重置计数器和错误时间戳
+                        resetFail(url);//如果client初始化成功，则重置计数器和错误时间戳
                     } else {
-                        incrFail(key);//client初始化失败，递增错误计数器
+                        incrFail(url);//client初始化失败，递增错误计数器
                         client.stop();
                     }
                 }
@@ -81,50 +86,50 @@ public class RedisClientHub {
             return client;
         } else {
             //如果client处于不可用状态，检查不可用时长
-            long failTimestamp = getFailTimestamp(key);
+            long failTimestamp = getFailTimestamp(url);
             if (ServerStatus.getCurrentTimeMillis() - failTimestamp < failBanMillis) {
                 //如果错误时间戳在禁用时间范围内，则直接返回null
                 //此时去重置一下计数器，这样确保failBanMillis到期之后failCount从0开始计算
-                resetFailCount(key);
-                String log = "currentTimeMillis - failTimestamp < failBanMillis[" + failBanMillis + "], immediate return null, key = " + key;
+                resetFailCount(url);
+                String log = "currentTimeMillis - failTimestamp < failBanMillis[" + failBanMillis + "], immediate return null, key = " + url;
                 ErrorLogCollector.collect(RedisClientHub.class, log);
                 return null;
             }
-            long failCount = getFailCount(key);
+            long failCount = getFailCount(url);
             if (failCount > failCountThreshold) {
                 //如果错误次数超过了阈值，则设置当前时间为错误时间戳，并重置计数器
                 //接下来的failBanMillis时间内，都会直接返回null
-                setFailTimestamp(key);
-                resetFailCount(key);
-                String log = "failCount > failCountThreshold[" + failCountThreshold + "], immediate return null, key = " + key;
+                setFailTimestamp(url);
+                resetFailCount(url);
+                String log = "failCount > failCountThreshold[" + failCountThreshold + "], immediate return null, key = " + url;
                 ErrorLogCollector.collect(RedisClientHub.class, log);
                 return null;
             }
             synchronized (lock) {
-                client = map.get(key);
+                client = map.get(url);
                 if (client != null && client.isValid()) {
                     return client;
                 }
                 if (client != null && !client.isValid()) {
                     client.stop();
                 }
-                client = new RedisClient(host, port, password,
+                client = new RedisClient(addr.getHost(), addr.getPort(), addr.getPassword(),
                         heartbeatIntervalSeconds, heartbeatTimeoutMillis, commandPipelineFlushThreshold, connectTimeoutMillis);
                 client.start();
                 if (client.isValid()) {
-                    RedisClient oldClient = map.put(key, client);
+                    RedisClient oldClient = map.put(url, client);
                     if (oldClient != null) {
                         oldClient.stop();
                     }
-                    resetFail(key);//如果client初始化成功，则重置计数器和错误时间戳
+                    resetFail(url);//如果client初始化成功，则重置计数器和错误时间戳
                     return client;
                 } else {
-                    incrFail(key);//client初始化失败，递增错误计数器
+                    incrFail(url);//client初始化失败，递增错误计数器
                     client.stop();
                 }
             }
         }
-        String log = "get RedisClient fail, key = " + key;
+        String log = "get RedisClient fail, key = " + url;
         ErrorLogCollector.collect(RedisClientHub.class, log);
         return null;
     }

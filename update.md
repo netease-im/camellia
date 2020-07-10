@@ -4,12 +4,11 @@
 * camellia-redis-proxy-hbase对hbase读写新增单次批量限制（批量GET和批量PUT）  
 * camellia-redis-proxy-hbase的hbase写操作支持设置为ASYNC_WAL  
 * camellia-redis-proxy-hbase的type命令支持缓存null  
-* camellia-redis-proxy-hbase的配置使用HashMap代替Properties避免锁竞争
 * camellia-redis-proxy-hbase新增降级配置，hbase读写操作纯异步化（可能会导致数据不一致）      
 
 ### 更新
-* camellia-redis-proxy的async模式使用Disruptor替代了LinkedBlockingQueue，提高了性能，性能测试报告参见：[v1.0.6/v1.0.7性能测试对比](/camellia-redis-proxy/performance-report-5.md)
-* 优化了部分监控的性能（LongAdder代替AtomicLong）  
+* 优化了部分监控的性能（LongAdder代替AtomicLong）
+* camellia-redis-proxy-hbase的配置使用HashMap代替Properties避免锁竞争  
 
 ### fix
 * 无

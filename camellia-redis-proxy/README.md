@@ -154,5 +154,4 @@ camellia-redis-proxy:
 [代理到redis cluster（v1.0.4）](performance-report-1.md)  
 [分片（v1.0.4）](performance-report-2.md)  
 [双写（v1.0.4）](performance-report-3.md)  
-[异常测试（v1.0.4）](performance-report-4.md)
-[v1.0.6/v1.0.7性能测试对比](performance-report-5.md)  
+[异常测试（v1.0.4）](performance-report-4.md)  
