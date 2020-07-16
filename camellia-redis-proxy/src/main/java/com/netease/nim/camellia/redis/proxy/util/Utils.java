@@ -8,6 +8,7 @@ import io.netty.buffer.ByteBuf;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -23,7 +24,7 @@ public class Utils {
     public static final char CR = '\r';
     public static final char LF = '\n';
     public static final char ZERO = '0';
-    public static Charset utf8Charset = Charset.forName("utf-8");
+    public static Charset utf8Charset = StandardCharsets.UTF_8;
 
     private static final int NUM_MAP_LENGTH = 256;
     private static final byte[][] numMap = new byte[NUM_MAP_LENGTH][];
@@ -123,7 +124,7 @@ public class Utils {
 
     public static IllegalArgumentException illegalArgumentException() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        if (stackTrace != null && stackTrace.length > 4) {
+        if (stackTrace.length > 4) {
             String methodName = stackTrace[3].getMethodName();
             return new IllegalArgumentException("wrong number of arguments for '" + methodName + "' command");
         }

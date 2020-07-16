@@ -28,9 +28,9 @@ public class SyncCommandInvoker implements CommandInvoker {
 
     private static final Logger logger = LoggerFactory.getLogger(SyncCommandInvoker.class);
 
-    private Map<String, Method> methodMap = new HashMap<>();
-    private Map<String, Method> pipelineMethodMap = new HashMap<>();
-    private SyncCommandProcessorChooser chooser;
+    private final Map<String, Method> methodMap = new HashMap<>();
+    private final Map<String, Method> pipelineMethodMap = new HashMap<>();
+    private final SyncCommandProcessorChooser chooser;
 
     public SyncCommandInvoker(CamelliaTranspondProperties transpondProperties) {
         this.chooser = new SyncCommandProcessorChooser(transpondProperties);

@@ -2,21 +2,15 @@ package com.netease.nim.camellia.redis.proxy.command.sync;
 
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiUtil;
-import com.netease.nim.camellia.core.client.env.ProxyEnv;
-import com.netease.nim.camellia.core.client.env.ShadingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
-import com.netease.nim.camellia.core.util.ShadingFuncUtil;
 import com.netease.nim.camellia.redis.CamelliaRedisEnv;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
-import com.netease.nim.camellia.redis.jedis.JedisPoolFactory;
-import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
 import com.netease.nim.camellia.redis.proxy.command.ClientCommandUtil;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.util.JedisRedisEnvUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.JedisPoolConfig;
 
 import java.util.HashMap;
 import java.util.Map;

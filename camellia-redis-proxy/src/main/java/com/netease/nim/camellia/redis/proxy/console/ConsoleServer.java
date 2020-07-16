@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 public class ConsoleServer {
 
     private static final Logger logger = LoggerFactory.getLogger(ConsoleServer.class);
-    private int port;
-    private ConsoleService consoleService;
+    private final int port;
+    private final ConsoleService consoleService;
 
     public ConsoleServer(int port, ConsoleService consoleService) {
         if (port <= 0) {
