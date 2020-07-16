@@ -1,4 +1,4 @@
-# 1.0.7（2020/07/xx）
+# 1.0.7（2020/07/16）
 ### 新增
 * camellia-redis-proxy-hbase新增hbase读请求并发情况下的穿透保护逻辑  
 * camellia-redis-proxy-hbase对hbase读写新增单次批量限制（批量GET和批量PUT）  
