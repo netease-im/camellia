@@ -66,6 +66,9 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                     mget(command, commandFlusher, future);
                     continue;
                 }
+            } else if (command.getName().equalsIgnoreCase(RedisCommand.EVAL.name()) || command.getName().equalsIgnoreCase(RedisCommand.EVALSHA.name())) {
+                evalOrEvalSha(command, commandFlusher, future);
+                continue;
             }
 
             byte[][] args = command.getObjects();
@@ -161,11 +164,40 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
             return response;
         }
 
-        private static String[] extractParts(String from){
+        private static String[] extractParts(String from) {
             int idx     = from.lastIndexOf(":");
             String host = idx != -1 ? from.substring(0, idx)  : from;
             String port = idx != -1 ? from.substring(idx + 1) : "";
             return new String[] { host, port };
+        }
+    }
+
+    private void evalOrEvalSha(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
+        byte[][] objects = command.getObjects();
+        long keyCount = Utils.bytesToNum(objects[2]);
+        if (keyCount == 0) {
+            RedisClient client = getClient(0);
+            CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, future, command);
+            commandFlusher.sendCommand(client, command, futureWrapper);
+        } else if (keyCount == 1) {
+            byte[] key = objects[3];
+            int slot = JedisClusterCRC16.getSlot(key);
+            RedisClient client = getClient(slot);
+            CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, future, command);
+            commandFlusher.sendCommand(client, command, futureWrapper);
+        } else {
+            byte[] key = objects[3];
+            int slot = JedisClusterCRC16.getSlot(key);
+            for (int i=4; i<3+keyCount; i++) {
+                int nextSlot = JedisClusterCRC16.getSlot(objects[i]);
+                if (slot != nextSlot) {
+                    future.complete(new ErrorReply("CROSSSLOT Keys in request don't hash to the same slot"));
+                    return;
+                }
+            }
+            RedisClient client = getClient(slot);
+            CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, future, command);
+            commandFlusher.sendCommand(client, command, futureWrapper);
         }
     }
 

@@ -114,6 +114,8 @@ public enum RedisCommand {
     GEORADIUSBYMEMBER(true, Type.READ),
     BITFIELD(true, Type.READ),
     ECHO(true, Type.READ),
+    EVAL(true, Type.WRITE),
+    EVALSHA(true, Type.WRITE),
 
     /**
      * 这些命令没有实现
@@ -166,8 +168,6 @@ public enum RedisCommand {
     SYNC(false, null),
     DEBUG(false, null),
     BRPOPLPUSH(false, null),
-    EVAL(false, null),
-    EVALSHA(false, null),
     SCRIPT(false, null),
     SLOWLOG(false, null),
     OBJECT(false, null),

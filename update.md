@@ -1,3 +1,7 @@
+# 1.0.8（2020/08/xx）
+### 新增
+* camellia-redis-proxy支持eval和evalsha指令
+
 # 1.0.7（2020/07/16）
 ### 新增
 * camellia-redis-proxy-hbase新增hbase读请求并发情况下的穿透保护逻辑  

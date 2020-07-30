@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.reply;
 
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.buffer.ByteBuf;
 
@@ -25,6 +26,10 @@ public class ErrorReply implements Reply {
 
     public String getError() {
         return error;
+    }
+
+    public static ErrorReply argNumWrong(RedisCommand command) {
+        return new ErrorReply("ERR wrong number of arguments for '" + command.name().toLowerCase() + "' command");
     }
 
     @Override

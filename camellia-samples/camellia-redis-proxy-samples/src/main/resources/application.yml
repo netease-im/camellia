@@ -10,5 +10,5 @@ camellia-redis-proxy:
   transpond:
     type: local
     local:
-      resource: redis://abc@127.0.0.1:6379
+      resource: redis://@127.0.0.1:6379
 
