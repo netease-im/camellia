@@ -25,8 +25,8 @@ import java.util.concurrent.*;
  */
 public class CamelliaJedisCluster implements ICamelliaRedis {
 
-    private JedisClusterWrapper jedisCluster;
-    private CamelliaRedisEnv env;
+    private final JedisClusterWrapper jedisCluster;
+    private final CamelliaRedisEnv env;
 
     public CamelliaJedisCluster(RedisClusterResource resource, CamelliaRedisEnv env) {
         this.jedisCluster = env.getJedisClusterFactory().getJedisCluster(resource);
@@ -1794,5 +1794,15 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     @Override
     public List<Long> bitfield(byte[] key, byte[]... arguments) {
         return jedisCluster.bitfield(key, arguments);
+    }
+
+    @Override
+    public Object eval(byte[] script, int keyCount, byte[]... params) {
+        return jedisCluster.eval(script, keyCount, params);
+    }
+
+    @Override
+    public Object evalsha(byte[] sha1, int keyCount, byte[]... params) {
+        return jedisCluster.evalsha(sha1, keyCount, params);
     }
 }

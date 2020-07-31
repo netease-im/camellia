@@ -18,8 +18,8 @@ import java.util.concurrent.ThreadLocalRandom;
  * Created by caojiajun on 2019/12/13.
  */
 public class ResourceChooser {
-    private ResourceTable resourceTable;
-    private ProxyEnv proxyEnv;
+    private final ResourceTable resourceTable;
+    private final ProxyEnv proxyEnv;
 
     private List<Resource> readResources = null;
     private List<Resource> writeResources = null;

@@ -1,6 +1,8 @@
 # 1.0.8（2020/08/xx）
 ### 新增
 * camellia-redis-proxy支持eval和evalsha指令
+* CamelliaRedisTemplate支持eval/evalsha
+* CamelliaRedisLock使用eval来实现更严格的分布式锁
 
 # 1.0.7（2020/07/16）
 ### 新增

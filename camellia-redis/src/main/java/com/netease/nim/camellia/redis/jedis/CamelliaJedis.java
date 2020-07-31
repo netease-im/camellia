@@ -21,7 +21,7 @@ import java.util.*;
  */
 public class CamelliaJedis implements ICamelliaRedis {
 
-    private Pool<Jedis> jedisPool;
+    private final Pool<Jedis> jedisPool;
 
     public CamelliaJedis(RedisResource resource, CamelliaRedisEnv env) {
         this.jedisPool = env.getJedisPoolFactory().getJedisPool(resource);
@@ -2768,6 +2768,26 @@ public class CamelliaJedis implements ICamelliaRedis {
         Jedis jedis = jedisPool.getResource();
         try {
             return jedis.bitfield(key, arguments);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
+    public Object eval(byte[] script, int keyCount, byte[]... params) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.eval(script, keyCount, params);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
+    public Object evalsha(byte[] sha1, int keyCount, byte[]... params) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.evalsha(sha1, keyCount, params);
         } finally {
             CloseUtil.closeQuietly(jedis);
         }

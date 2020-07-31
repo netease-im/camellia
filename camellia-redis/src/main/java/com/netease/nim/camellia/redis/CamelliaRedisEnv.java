@@ -92,7 +92,7 @@ public class CamelliaRedisEnv {
     }
 
     public static class Builder {
-        private CamelliaRedisEnv redisEnv;
+        private final CamelliaRedisEnv redisEnv;
         public Builder() {
             redisEnv = new CamelliaRedisEnv();
         }

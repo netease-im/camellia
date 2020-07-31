@@ -8,6 +8,7 @@ import com.netease.nim.camellia.core.client.hub.standard.StandardProxyGenerator;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
+import com.netease.nim.camellia.core.util.ResourceChooser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,15 +24,16 @@ public class ReloadableProxyFactory<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(ReloadableProxyFactory.class);
 
-    private Class<T> clazz;
-    private Long bid;//业务类型
-    private String bgroup;//业务分组
-    private CamelliaApi service;
-    private Resource defaultResource;
+    private final Class<T> clazz;
+    private final Long bid;//业务类型
+    private final String bgroup;//业务分组
+    private final CamelliaApi service;
+    private final Resource defaultResource;
     private CamelliaApiResponse response;
     private T proxy;
     private StandardProxyGenerator<T> generator;
-    private ProxyEnv env;
+    private final ProxyEnv env;
+    private ResourceChooser resourceChooser;
 
     private ReloadableProxyFactory(Class<T> clazz, ProxyEnv proxyEnv, Long bid, String bgroup, CamelliaApi service,
                                    Resource defaultResource, long checkIntervalMillis, boolean monitorEnable) {
@@ -80,6 +82,7 @@ public class ReloadableProxyFactory<T> {
                         bid, bgroup, response.getMd5(), ReadableResourceTableUtil.readableResourceTable(response.getResourceTable()));
             }
             this.response = response;
+            this.resourceChooser = new ResourceChooser(response.getResourceTable(), env);
             this.generator = new StandardProxyGenerator<>(clazz, response.getResourceTable(), defaultResource, env);
             T proxy = generator.generate();
             if (logger.isInfoEnabled()) {
@@ -126,6 +129,14 @@ public class ReloadableProxyFactory<T> {
      */
     public CamelliaApiResponse getResponse() {
         return response;
+    }
+
+    /**
+     * 获取ResourceChooser
+     * @return ResourceChooser
+     */
+    public ResourceChooser getResourceChooser() {
+        return resourceChooser;
     }
 
     /**

@@ -590,4 +590,22 @@ public interface ICamelliaRedisTemplate {
 
     long pfcount(String key);
 
+    /**
+     * lua脚本
+     */
+    Object eval(String script, int keyCount, String... params);
+
+    Object eval(String script, List<String> keys, List<String> args);
+
+    Object eval(String script);
+
+    Object evalsha(String sha1);
+
+    Object evalsha(String sha1, List<String> keys, List<String> args);
+
+    Object evalsha(String sha1, int keyCount, String... params);
+
+    Object eval(byte[] script, int keyCount, byte[]... params);
+
+    Object evalsha(byte[] sha1, int keyCount, byte[]... params);
 }

@@ -15,6 +15,10 @@ public class LogUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(LogUtil.class);
 
+    public static boolean isDebugEnabled() {
+        return logger.isDebugEnabled();
+    }
+
     public static void debugLog(Resource resource, Map<byte[], byte[]> keysvalues) {
         if (logger.isDebugEnabled()) {
             String[] keys = new String[keysvalues.size()];
@@ -30,6 +34,12 @@ public class LogUtil {
     public static void debugLog(Resource resource, String... keys) {
         if (logger.isDebugEnabled()) {
             logger.debug("{}.{}, resource = {}, keys = {}", getClassName(), getMethodName(), resource.getUrl(), keys);
+        }
+    }
+
+    public static void debugLog(String className, String methodName, Resource resource, String desc, String... keys) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("{}.{}, resource = {}, desc = {}, keys = {}", className, methodName, resource.getUrl(), desc, keys);
         }
     }
 

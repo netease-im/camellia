@@ -19,12 +19,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class CamelliaRedisPipeline implements ICamelliaRedisPipeline {
 
-    private AtomicBoolean close = new AtomicBoolean(false);
+    private final AtomicBoolean close = new AtomicBoolean(false);
 
-    private ICamelliaRedisPipeline pipeline;
-    private ResponseQueable queable;
-    private RedisClientPool redisClientPool;
-    private PipelinePool pipelinePool;
+    private final ICamelliaRedisPipeline pipeline;
+    private final ResponseQueable queable;
+    private final RedisClientPool redisClientPool;
+    private final PipelinePool pipelinePool;
 
     public CamelliaRedisPipeline(ICamelliaRedisPipeline pipeline,
                                  ResponseQueable queable,

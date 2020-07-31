@@ -4,10 +4,9 @@ import com.netease.nim.camellia.core.client.annotation.ReadOp;
 import com.netease.nim.camellia.core.client.annotation.ShadingParam;
 import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.redis.jedis.CamelliaJedis;
-import com.netease.nim.camellia.redis.jediscluster.CamelliaJedisCluster;
-import com.netease.nim.camellia.redis.proxy.RedisProxyResource;
+import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.resource.*;
+import com.netease.nim.camellia.redis.util.CamelliaRedisInitializr;
 import com.netease.nim.camellia.redis.util.LogUtil;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.geo.GeoRadiusParam;
@@ -36,20 +35,7 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
         } else {
             throw new IllegalArgumentException("not ResourceWrapper");
         }
-        Resource originalResource = RedisResourceUtil.parseResourceByUrl(resource);
-        if (originalResource instanceof RedisResource) {
-            redis = new CamelliaJedis((RedisResource) originalResource, env);
-        } else if (originalResource instanceof RedisSentinelResource) {
-            redis = new CamelliaJedis((RedisSentinelResource) originalResource, env);
-        } else if (originalResource instanceof RedisClusterResource) {
-            redis = new CamelliaJedisCluster((RedisClusterResource) originalResource, env);
-        } else if (originalResource instanceof RedisProxyResource) {
-            redis = new CamelliaJedis((RedisProxyResource) originalResource, env);
-        } else if (originalResource instanceof CamelliaRedisProxyResource) {
-            redis = new CamelliaJedis((CamelliaRedisProxyResource) originalResource, env);
-        } else {
-            throw new UnsupportedOperationException();
-        }
+        redis = CamelliaRedisInitializr.init(resource, env);
     }
 
     @WriteOp
@@ -1943,5 +1929,13 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
         return redis.set(key, value, nxxx);
     }
 
+    @Override
+    public Object eval(byte[] script, int keyCount, byte[]... params) {
+        throw new CamelliaRedisException("not invoke here");
+    }
 
+    @Override
+    public Object evalsha(byte[] sha1, int keyCount, byte[]... params) {
+        throw new CamelliaRedisException("not invoke here");
+    }
 }

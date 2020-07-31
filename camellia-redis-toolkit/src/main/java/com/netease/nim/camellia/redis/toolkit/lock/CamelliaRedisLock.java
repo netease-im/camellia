@@ -1,18 +1,15 @@
 package com.netease.nim.camellia.redis.toolkit.lock;
 
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
-import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.Response;
 import redis.clients.util.SafeEncoder;
 
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
 /**
- * 基于redis的分布式锁（不是严格的）
- * 严格的redis分布式锁请使用lua脚本进行原子操作
+ * 基于redis的分布式锁
  * Created by caojiajun on 2020/4/9.
  */
 public class CamelliaRedisLock {
@@ -187,10 +184,9 @@ public class CamelliaRedisLock {
         }
     }
 
+    private static final byte[] RENEW_SCRIPT = SafeEncoder.encode("if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('pexpire', KEYS[1], ARGV[2]) else return 0 end");
     /**
      * 尝试对锁进行renew，只能renew自己获取到的锁
-     * 边界情况可能renew了别人的锁
-     * 严格的renew请使用lua脚本进行原子操作
      * @return 成功/失败
      */
     public boolean renew() {
@@ -199,23 +195,14 @@ public class CamelliaRedisLock {
                 return false;
             }
             try {
-                byte[] value = template.get(lockKey);
-                if (value != null && SafeEncoder.encode(value).equals(this.lockId)) {
-                    long timestamp = System.currentTimeMillis() + expireTimeoutMillis;
-                    Response<byte[]> response;
-                    try (ICamelliaRedisPipeline pipelined = template.pipelined()) {
-                        pipelined.pexpire(lockKey, expireTimeoutMillis);
-                        response = pipelined.get(lockKey);
-                        pipelined.sync();
-                    }
-                    byte[] bytes = response.get();
-                    if (bytes != null && SafeEncoder.encode(bytes).equalsIgnoreCase(this.lockId)) {
-                        this.expireTimestamp = timestamp;
-                        return true;
-                    }
+                long timestamp = System.currentTimeMillis() + expireTimeoutMillis;
+                Object result = template.eval(RENEW_SCRIPT, 1, lockKey, SafeEncoder.encode(lockId), SafeEncoder.encode(String.valueOf(expireTimeoutMillis)));
+                if (result != null && String.valueOf(result).equals("1")) {
+                    this.expireTimestamp = timestamp;
+                    return true;
                 }
-                lockOk = false;
-                expireTimestamp = -1;
+                this.lockOk = false;
+                this.expireTimestamp = -1;
                 return false;
             } catch (Exception e) {
                 logger.error("renew error, lockKey = {}, lockId = {}", lockKey, lockId, e);
@@ -249,19 +236,17 @@ public class CamelliaRedisLock {
         return lockId;
     }
 
+    private static final byte[] RELEASE_SCRIPT = SafeEncoder.encode("if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end");
     /**
      * 释放锁，只能释放自己获取到的锁
-     * 边界情况下可能释放了别人的锁（拿到value，发现是自己，然后准备去删除的时候ttl到期了）
-     * 严格的release请使用lua脚本进行原子操作
      * @return 成功/失败
      */
     public boolean release() {
         synchronized (lockObj) {
             try {
                 if (!lockOk) return false;
-                byte[] value = template.get(lockKey);
-                if (value != null && SafeEncoder.encode(value).equals(this.lockId)) {
-                    template.del(lockKey);
+                Object eval = template.eval(RELEASE_SCRIPT, 1, lockKey, SafeEncoder.encode(lockId));
+                if (eval != null && String.valueOf(eval).equals("1")) {
                     lockOk = false;
                     expireTimestamp = -1;
                     return true;

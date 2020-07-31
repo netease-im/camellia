@@ -554,4 +554,8 @@ public interface ICamelliaRedis {
     Long exists(String... keys);
 
     Map<String, String> mget(String... keys);
+
+    Object eval(byte[] script, int keyCount, byte[]... params);
+
+    Object evalsha(byte[] sha1, int keyCount, byte[]... params);
 }

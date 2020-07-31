@@ -5,11 +5,14 @@ import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.hub.standard.StandardProxyGenerator;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.core.util.ResourceChooser;
 import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTransferUtil;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.pipeline.*;
 import com.netease.nim.camellia.redis.resource.*;
+import com.netease.nim.camellia.redis.util.CamelliaRedisInitializr;
+import com.netease.nim.camellia.redis.util.LogUtil;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.geo.GeoRadiusParam;
 import redis.clients.jedis.params.sortedset.ZAddParams;
@@ -29,8 +32,8 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     private static final long defaultCheckIntervalMillis = 5000;
     private static final boolean defaultMonitorEnable = false;
 
-    private ReloadableProxyFactory<CamelliaRedisImpl> factory;
-    private CamelliaRedisEnv env;
+    private final ReloadableProxyFactory<CamelliaRedisImpl> factory;
+    private final CamelliaRedisEnv env;
     private String md5;
     private PipelinePool pipelinePool;
 
@@ -1537,10 +1540,131 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         return list;
     }
 
+    @Override
+    public Object eval(String script, int keyCount, String... params) {
+        return eval(SafeEncoder.encode(script), keyCount, SafeEncoder.encodeMany(params));
+    }
+
+    @Override
+    public Object eval(String script, List<String> keys, List<String> args) {
+        return eval(script, keys.size(), getParams(keys, args));
+    }
+
+    private static String[] getParams(List<String> keys, List<String> args) {
+        int keyCount = keys.size();
+        int argCount = args.size();
+        String[] params = new String[keyCount + args.size()];
+        for (int i = 0; i < keyCount; i++) {
+            params[i] = keys.get(i);
+        }
+        for (int i = 0; i < argCount; i++) {
+            params[keyCount + i] = args.get(i);
+        }
+        return params;
+    }
+
+    @Override
+    public Object eval(String script) {
+        return eval(script, 0);
+    }
+
+    @Override
+    public Object evalsha(String sha1) {
+        return evalsha(sha1, 0);
+    }
+
+    @Override
+    public Object evalsha(String sha1, List<String> keys, List<String> args) {
+        return evalsha(sha1, keys.size(), getParams(keys, args));
+    }
+
+    @Override
+    public Object evalsha(String sha1, int keyCount, String... params) {
+        return evalsha(SafeEncoder.encode(sha1), keyCount, SafeEncoder.encodeMany(params));
+    }
+
+    @Override
+    public Object eval(final byte[] script, final int keyCount, final byte[]... params) {
+        return writeInvoke(new WriteInvoker() {
+            @Override
+            public Object invoke(Resource resource, ICamelliaRedis redis) {
+                if (LogUtil.isDebugEnabled()) {
+                    List<String> list = new ArrayList<>();
+                    for (int i=0; i<keyCount; i++) {
+                        list.add(SafeEncoder.encode(params[i]));
+                    }
+                    LogUtil.debugLog(redis.getClass().getSimpleName(), "eval", resource, SafeEncoder.encode(script), list.toArray(new String[0]));
+                }
+                return redis.eval(script, keyCount, params);
+            }
+        }, keyCount, params);
+    }
+
+    @Override
+    public Object evalsha(final byte[] sha1, final int keyCount, final byte[]... params) {
+        return writeInvoke(new WriteInvoker() {
+            @Override
+            public Object invoke(Resource resource, ICamelliaRedis redis) {
+                if (LogUtil.isDebugEnabled()) {
+                    List<String> list = new ArrayList<>();
+                    for (int i=0; i<keyCount; i++) {
+                        list.add(SafeEncoder.encode(params[i]));
+                    }
+                    LogUtil.debugLog(redis.getClass().getSimpleName(), "evalsha", resource, SafeEncoder.encode(sha1), list.toArray(new String[0]));
+                }
+                return redis.evalsha(sha1, keyCount, params);
+            }
+        }, keyCount, params);
+    }
+
+    private interface WriteInvoker {
+        Object invoke(Resource resource, ICamelliaRedis redis);
+    }
+
+    private Object writeInvoke(WriteInvoker writeInvoker, int keyCount, byte[]... params) {
+        if (params.length < keyCount) {
+            throw new CamelliaRedisException("keyCount/params not match");
+        }
+        ResourceChooser chooser = factory.getResourceChooser();
+        List<Resource> writeResources;
+        if (keyCount < 0) {
+            throw new CamelliaRedisException("ERR Number of keys can't be negative");
+        } if (keyCount == 0) {
+            writeResources = chooser.getWriteResources(new byte[0]);
+        } else if (keyCount == 1) {
+            writeResources = chooser.getWriteResources(params[0]);
+        } else {
+            writeResources = chooser.getWriteResources(params[0]);
+            for (int i=1; i<keyCount; i++) {
+                List<Resource> resources = chooser.getWriteResources(params[i]);
+                if (writeResources.size() != resources.size()) {
+                    throw new CamelliaRedisException("ERR keys in request not in same resources");
+                }
+                for (int j=0; j<writeResources.size(); j++) {
+                    Resource resource1 = writeResources.get(j);
+                    Resource resource2 = resources.get(j);
+                    if (!resource1.getUrl().equals(resource2.getUrl())) {
+                        throw new CamelliaRedisException("ERR keys in request not in same resources");
+                    }
+                }
+            }
+        }
+        Object result = null;
+        for (Resource resource : writeResources) {
+            ICamelliaRedis redis = CamelliaRedisInitializr.init(resource, env);
+            if (result == null) {
+                result = writeInvoker.invoke(resource, redis);
+            } else {
+                writeInvoker.invoke(resource, redis);
+            }
+        }
+        return result;
+    }
+
     private static class ApiServiceWrapper implements CamelliaApi {
 
-        private CamelliaApi service;
-        private CamelliaRedisEnv env;
+        private final CamelliaApi service;
+        private final CamelliaRedisEnv env;
 
         ApiServiceWrapper(CamelliaApi service, CamelliaRedisEnv camelliaRedisEnv) {
             this.service = service;

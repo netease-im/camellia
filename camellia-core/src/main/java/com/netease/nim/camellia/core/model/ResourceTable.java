@@ -38,7 +38,7 @@ public class ResourceTable {
         SHADING(2),
         ;
 
-        private int value;
+        private final int value;
 
         Type(int value) {
             this.value = value;
