@@ -87,7 +87,7 @@ public class ProxyEnv {
 
     public static class Builder {
 
-        private ProxyEnv proxyEnv;
+        private final ProxyEnv proxyEnv;
 
         public Builder() {
             proxyEnv = new ProxyEnv();

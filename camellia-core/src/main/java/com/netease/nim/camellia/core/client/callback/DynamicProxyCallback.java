@@ -10,11 +10,11 @@ import java.lang.reflect.Method;
  *
  * Created by caojiajun on 2019/11/25.
  */
-public class DynamicProxyCallback implements MethodInterceptor {
+public class DynamicProxyCallback<T> implements MethodInterceptor {
 
-    private ReloadableProxyFactory factory;
+    private final ReloadableProxyFactory<T> factory;
 
-    public DynamicProxyCallback(ReloadableProxyFactory factory) {
+    public DynamicProxyCallback(ReloadableProxyFactory<T> factory) {
         this.factory = factory;
     }
 

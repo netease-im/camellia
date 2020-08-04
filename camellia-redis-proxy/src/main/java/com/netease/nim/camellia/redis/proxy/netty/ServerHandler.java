@@ -38,7 +38,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, List<Command> commandList) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, List<Command> commandList) {
         try {
             ServerStatus.updateLastUseTime();
             ChannelInfo channelInfo = ChannelInfo.get(ctx);
@@ -52,8 +52,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
                     RedisMonitor.incr(bid, bgroup, command.getName());
                 }
 
+                RedisCommand redisCommand = command.getRedisCommand();
+
                 //鉴权
-                if (command.getName().equalsIgnoreCase(RedisCommand.AUTH.name())) {
+                if (redisCommand == RedisCommand.AUTH) {
                     if (env.getPassword() == null) {
                         ctx.writeAndFlush(new ErrorReply("ERR Client sent AUTH, but no password is set"));
                         continue;
@@ -85,13 +87,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
                 }
 
                 //退出
-                if (command.getName().equalsIgnoreCase(RedisCommand.QUIT.name())) {
+                if (redisCommand == RedisCommand.QUIT) {
                     ctx.close();
                     return;
                 }
 
                 //特殊处理client命令
-                if (command.getName().equalsIgnoreCase(RedisCommand.CLIENT.name())) {
+                if (redisCommand == RedisCommand.CLIENT) {
                     Reply reply = ClientCommandUtil.invokeClientCommand(channelInfo, command);
                     ctx.writeAndFlush(reply);
                     continue;

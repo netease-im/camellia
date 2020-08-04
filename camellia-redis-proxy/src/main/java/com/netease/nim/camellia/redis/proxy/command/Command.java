@@ -1,12 +1,14 @@
 package com.netease.nim.camellia.redis.proxy.command;
 
 
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 public class Command {
 
     private final byte[][] objects;
     private String name;
+    private RedisCommand redisCommand;
 
     public Command(byte[][] objects) {
         this.objects = objects;
@@ -18,6 +20,12 @@ public class Command {
             name = new String(objects[0], Utils.utf8Charset).toLowerCase();
         }
         return name;
+    }
+
+    public RedisCommand getRedisCommand() {
+        if (redisCommand != null) return redisCommand;
+        this.redisCommand = RedisCommand.getSupportRedisCommandByName(getName());
+        return redisCommand;
     }
 
     public byte[][] getObjects() {

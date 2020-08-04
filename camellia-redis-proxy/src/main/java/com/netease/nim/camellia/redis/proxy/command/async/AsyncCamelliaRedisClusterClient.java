@@ -45,31 +45,40 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
         for (int i=0; i<commands.size(); i++) {
             Command command = commands.get(i);
             CompletableFuture<Reply> future = futureList.get(i);
+            RedisCommand redisCommand = command.getRedisCommand();
 
-            if (command.getName().equalsIgnoreCase(RedisCommand.EXISTS.name())) {
-                if (command.getObjects().length > 2) {
-                    simpleIntegerReplyMerge(command, commandFlusher, future);
-                    continue;
+            boolean continueOk = false;
+            switch (redisCommand) {
+                case EXISTS:
+                case DEL: {
+                    if (command.getObjects().length > 2) {
+                        simpleIntegerReplyMerge(command, commandFlusher, future);
+                        continueOk = true;
+                    }
+                    break;
                 }
-            } else if (command.getName().equalsIgnoreCase(RedisCommand.DEL.name())) {
-                if (command.getObjects().length > 2) {
-                    simpleIntegerReplyMerge(command, commandFlusher, future);
-                    continue;
+                case MSET: {
+                    if (command.getObjects().length > 3) {
+                        mset(command, commandFlusher, future);
+                        continueOk = true;
+                    }
+                    break;
                 }
-            } else if (command.getName().equalsIgnoreCase(RedisCommand.MSET.name())) {
-                if (command.getObjects().length > 3) {
-                    mset(command, commandFlusher, future);
-                    continue;
+                case MGET: {
+                    if (command.getObjects().length > 2) {
+                        mget(command, commandFlusher, future);
+                        continueOk = true;
+                    }
+                    break;
                 }
-            } else if (command.getName().equalsIgnoreCase(RedisCommand.MGET.name())) {
-                if (command.getObjects().length > 2) {
-                    mget(command, commandFlusher, future);
-                    continue;
+                case EVAL:
+                case EVALSHA: {
+                    evalOrEvalSha(command, commandFlusher, future);
+                    continueOk = true;
+                    break;
                 }
-            } else if (command.getName().equalsIgnoreCase(RedisCommand.EVAL.name()) || command.getName().equalsIgnoreCase(RedisCommand.EVALSHA.name())) {
-                evalOrEvalSha(command, commandFlusher, future);
-                continue;
             }
+            if (continueOk) continue;
 
             byte[][] args = command.getObjects();
             byte[] key = args[1];

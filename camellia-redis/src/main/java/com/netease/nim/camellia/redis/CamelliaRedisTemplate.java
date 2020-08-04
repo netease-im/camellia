@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis;
 
 import com.netease.nim.camellia.core.api.*;
+import com.netease.nim.camellia.core.client.env.Monitor;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.hub.standard.StandardProxyGenerator;
 import com.netease.nim.camellia.core.model.Resource;
@@ -1595,7 +1596,14 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
                     }
                     LogUtil.debugLog(redis.getClass().getSimpleName(), "eval", resource, SafeEncoder.encode(script), list.toArray(new String[0]));
                 }
-                return redis.eval(script, keyCount, params);
+                try {
+                    return redis.eval(script, keyCount, params);
+                } finally {
+                    Monitor monitor = factory.getEnv().getMonitor();
+                    if (monitor != null) {
+                        monitor.incrWrite(resource.getUrl(), redis.getClass().getName(), "eval(byte[],int,byte[])");
+                    }
+                }
             }
         }, keyCount, params);
     }
@@ -1612,7 +1620,14 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
                     }
                     LogUtil.debugLog(redis.getClass().getSimpleName(), "evalsha", resource, SafeEncoder.encode(sha1), list.toArray(new String[0]));
                 }
-                return redis.evalsha(sha1, keyCount, params);
+                try {
+                    return redis.evalsha(sha1, keyCount, params);
+                } finally {
+                    Monitor monitor = factory.getEnv().getMonitor();
+                    if (monitor != null) {
+                        monitor.incrWrite(resource.getUrl(), redis.getClass().getName(), "evalsha(byte[],int,byte[])");
+                    }
+                }
             }
         }, keyCount, params);
     }

@@ -226,8 +226,8 @@ public enum RedisCommand {
 
     }
 
-    public static RedisCommand getSupportRedisCommand(Command command) {
-        return supportCommandMap.get(command.getName());
+    public static RedisCommand getSupportRedisCommandByName(String command) {
+        return supportCommandMap.get(command);
     }
 
     public static RedisCommand getRedisCommandByName(String command) {

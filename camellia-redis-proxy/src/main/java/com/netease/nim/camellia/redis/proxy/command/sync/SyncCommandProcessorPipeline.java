@@ -18,7 +18,7 @@ import java.util.*;
  */
 public class SyncCommandProcessorPipeline implements ISyncCommandProcessorPipeline {
 
-    private ICamelliaRedisPipeline pipelined;
+    private final ICamelliaRedisPipeline pipelined;
 
     public SyncCommandProcessorPipeline(CamelliaRedisTemplate template) {
         pipelined = template.pipelined();

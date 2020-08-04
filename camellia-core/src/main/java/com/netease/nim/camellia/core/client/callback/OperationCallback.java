@@ -21,9 +21,9 @@ import java.util.concurrent.*;
  */
 public class OperationCallback<T> implements MethodInterceptor {
 
-    private ResourceOperation resourceOperation;
-    private Map<Resource, T> clientMap;
-    private String className;
+    private final ResourceOperation resourceOperation;
+    private final Map<Resource, T> clientMap;
+    private final String className;
     private ProxyEnv env = ProxyEnv.defaultProxyEnv();
 
     public OperationCallback(ResourceOperation resourceOperation, Map<Resource, T> clientMap, Class<T> clazz, ProxyEnv env) {

@@ -111,7 +111,7 @@ public class ReloadableProxyFactory<T> {
      */
     public T getDynamicProxy() {
         return ProxyClientFactory.createProxy(clazz, new Class[] {Resource.class},
-                new Object[] {null}, new DynamicProxyCallback(this));
+                new Object[] {null}, new DynamicProxyCallback<>(this));
     }
 
     /**

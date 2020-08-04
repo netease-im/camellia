@@ -12,6 +12,7 @@ import com.netease.nim.camellia.core.util.ResourceUtil;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.FastRemoteMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -74,7 +75,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(ReloadTask.class))
                     .scheduleAtFixedRate(reloadTask, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
             if (monitorEnable) {
-                Monitor monitor = new RemoteMonitor(bid, bgroup, service);
+                Monitor monitor = new FastRemoteMonitor(bid, bgroup, service);
                 ProxyEnv proxyEnv = new ProxyEnv.Builder(env.getProxyEnv()).monitor(monitor).build();
                 this.env = new AsyncCamelliaRedisEnv.Builder(env).proxyEnv(proxyEnv).build();
             }
@@ -86,7 +87,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
         CommandFlusher commandFlusher = new CommandFlusher();
         for (Command command : commands) {
-            RedisCommand redisCommand = RedisCommand.getSupportRedisCommand(command);
+            RedisCommand redisCommand = command.getRedisCommand();
             if (redisCommand == null || !redisCommand.isSupport()) {
                 CompletableFuture<Reply> future = new CompletableFuture<>();
                 future.complete(ErrorReply.NOT_SUPPORT);
@@ -94,7 +95,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 continue;
             }
 
-            if (command.getName().equalsIgnoreCase(RedisCommand.PING.name())) {
+            if (redisCommand == RedisCommand.PING) {
                 CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
                 completableFuture.complete(StatusReply.PONG);
                 futureList.add(completableFuture);
@@ -103,33 +104,44 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
             //特殊处理多key的命令
             if (resourceChooser.getType() == ResourceTable.Type.SHADING) {
-                if (command.getName().equalsIgnoreCase(RedisCommand.MGET.name())) {
-                    if (command.getObjects().length > 2) {
-                        CompletableFuture<Reply> future = mget(command, commandFlusher);
-                        futureList.add(future);
-                        continue;
+                boolean continueOk = false;
+                switch (redisCommand) {
+                    case MGET: {
+                        if (command.getObjects().length > 2) {
+                            CompletableFuture<Reply> future = mget(command, commandFlusher);
+                            futureList.add(future);
+                            continueOk = true;
+                        }
+                        break;
                     }
-                } else if (command.getName().equalsIgnoreCase(RedisCommand.DEL.name())) {
-                    if (command.getObjects().length > 2) {
-                        CompletableFuture<Reply> future = del(command, commandFlusher);
-                        futureList.add(future);
-                        continue;
+                    case DEL: {
+                        if (command.getObjects().length > 2) {
+                            CompletableFuture<Reply> future = del(command, commandFlusher);
+                            futureList.add(future);
+                            continueOk = true;
+                        }
+                        break;
                     }
-                } else if (command.getName().equalsIgnoreCase(RedisCommand.MSET.name())) {
-                    if (command.getObjects().length > 3) {
-                        CompletableFuture<Reply> future = mset(command, commandFlusher);
-                        futureList.add(future);
-                        continue;
+                    case MSET: {
+                        if (command.getObjects().length > 3) {
+                            CompletableFuture<Reply> future = mset(command, commandFlusher);
+                            futureList.add(future);
+                            continueOk = true;
+                        }
+                        break;
                     }
-                } else if (command.getName().equalsIgnoreCase(RedisCommand.EXISTS.name())) {
-                    if (command.getObjects().length > 2) {
-                        CompletableFuture<Reply> future = exists(command, commandFlusher);
-                        futureList.add(future);
-                        continue;
+                    case EXISTS: {
+                        if (command.getObjects().length > 2) {
+                            CompletableFuture<Reply> future = exists(command, commandFlusher);
+                            futureList.add(future);
+                            continueOk = true;
+                        }
+                        break;
                     }
                 }
+                if (continueOk) continue;
             }
-            if (command.getName().equalsIgnoreCase(RedisCommand.EVAL.name()) || command.getName().equalsIgnoreCase(RedisCommand.EVALSHA.name())) {
+            if (redisCommand == RedisCommand.EVAL || redisCommand == RedisCommand.EVALSHA) {
                 byte[][] objects = command.getObjects();
                 if (objects.length <= 2) {
                     CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
