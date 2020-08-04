@@ -1,4 +1,4 @@
-# 1.0.8（2020/08/xx）
+# 1.0.8（2020/08/04）
 ### 新增
 * camellia-redis-proxy支持eval和evalsha指令
 * CamelliaRedisTemplate支持eval/evalsha
