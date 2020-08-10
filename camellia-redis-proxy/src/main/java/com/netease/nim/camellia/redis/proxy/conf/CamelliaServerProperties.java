@@ -11,15 +11,18 @@ public class CamelliaServerProperties {
     private int port = Constants.Server.severPort;
     private String password;
     private boolean monitorEnable = Constants.Server.monitorEnable;
+    private boolean commandSpendTimeMonitorEnable = Constants.Server.commandSpendTimeMonitorEnable;
+    private long slowCommandThresholdMillisTime = Constants.Server.slowCommandThresholdMillisTime;
     private int monitorIntervalSeconds = Constants.Server.monitorIntervalSeconds;
     private int bossThread = 1;
     private int workThread = SysUtils.getCpuNum();
-    private int soBacklog = 1024;
-    private int soSndbuf = 1048576;
-    private int soRcvbuf = 1048576;
-    private int writeBufferWaterMarkLow = 128 * 1024;
-    private int writeBufferWaterMarkHigh = 512 * 1024;
+    private int soBacklog = Constants.Server.soBacklog;
+    private int soSndbuf = Constants.Server.soSndbuf;
+    private int soRcvbuf = Constants.Server.soRcvbuf;
+    private int writeBufferWaterMarkLow = Constants.Server.writeBufferWaterMarkLow;
+    private int writeBufferWaterMarkHigh = Constants.Server.writeBufferWaterMarkHigh;
     private int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
+    private String commandFilterClassName;
 
     public int getPort() {
         return port;
@@ -43,6 +46,22 @@ public class CamelliaServerProperties {
 
     public void setMonitorEnable(boolean monitorEnable) {
         this.monitorEnable = monitorEnable;
+    }
+
+    public boolean isCommandSpendTimeMonitorEnable() {
+        return commandSpendTimeMonitorEnable;
+    }
+
+    public void setCommandSpendTimeMonitorEnable(boolean commandSpendTimeMonitorEnable) {
+        this.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
+    }
+
+    public long getSlowCommandThresholdMillisTime() {
+        return slowCommandThresholdMillisTime;
+    }
+
+    public void setSlowCommandThresholdMillisTime(long slowCommandThresholdMillisTime) {
+        this.slowCommandThresholdMillisTime = slowCommandThresholdMillisTime;
     }
 
     public int getMonitorIntervalSeconds() {
@@ -115,5 +134,13 @@ public class CamelliaServerProperties {
 
     public void setCommandDecodeMaxBatchSize(int commandDecodeMaxBatchSize) {
         this.commandDecodeMaxBatchSize = commandDecodeMaxBatchSize;
+    }
+
+    public String getCommandFilterClassName() {
+        return commandFilterClassName;
+    }
+
+    public void setCommandFilterClassName(String commandFilterClassName) {
+        this.commandFilterClassName = commandFilterClassName;
     }
 }

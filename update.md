@@ -1,6 +1,18 @@
+# 1.0.9（2020/08/xx）
+### 新增
+* camellia-redis-proxy的async模式支持redis sentinel
+* camellia-redis-proxy的async模式支持统计命令的执行时间
+* camellia-redis-proxy的async模式支持CommandFilter，自定义拦截规则
+
+### 更新
+* 调整camellia-redis-proxy的sendbuf和rcvbuf的默认值，且在回包时不判断channel是否writable，避免超大包+pipeline场景下可能channel not writeable而回包失败
+
+### fix
+* 无
+
 # 1.0.8（2020/08/04）
 ### 新增
-* camellia-redis-proxy支持eval和evalsha指令
+* camellia-redis-proxy的async模式支持eval和evalsha指令
 * CamelliaRedisTemplate支持eval/evalsha
 * CamelliaRedisLock使用lua脚本来实现更严格的分布式锁
 

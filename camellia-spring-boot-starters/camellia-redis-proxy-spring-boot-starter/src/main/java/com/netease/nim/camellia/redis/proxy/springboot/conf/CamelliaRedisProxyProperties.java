@@ -44,6 +44,24 @@ public class CamelliaRedisProxyProperties {
     private int monitorIntervalSeconds = Constants.Server.monitorIntervalSeconds;
 
     /**
+     * 是否开启监控命令执行时间的监控，需要同时开启monitorEnable和commandSpendTimeMonitorEnable才能生效，see @RedisMonitor
+     * 只有async模式才有效
+     */
+    private boolean commandSpendTimeMonitorEnable = Constants.Server.commandSpendTimeMonitorEnable;
+
+    /**
+     * 开启监控命令执行时间的监控的前提下，慢查询的阈值，单位ms
+     * 只有async模式才有效
+     */
+    private long slowCommandThresholdMillisTime = Constants.Server.slowCommandThresholdMillisTime;
+
+    /**
+     * 命令过滤器，see @CommandFilter
+     * 只有async模式才有效
+     */
+    private String commandFilterClassName;
+
+    /**
      * netty相关参数
      */
     private NettyProperties netty = new NettyProperties();
@@ -99,6 +117,30 @@ public class CamelliaRedisProxyProperties {
 
     public void setMonitorIntervalSeconds(int monitorIntervalSeconds) {
         this.monitorIntervalSeconds = monitorIntervalSeconds;
+    }
+
+    public boolean isCommandSpendTimeMonitorEnable() {
+        return commandSpendTimeMonitorEnable;
+    }
+
+    public void setCommandSpendTimeMonitorEnable(boolean commandSpendTimeMonitorEnable) {
+        this.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
+    }
+
+    public long getSlowCommandThresholdMillisTime() {
+        return slowCommandThresholdMillisTime;
+    }
+
+    public void setSlowCommandThresholdMillisTime(long slowCommandThresholdMillisTime) {
+        this.slowCommandThresholdMillisTime = slowCommandThresholdMillisTime;
+    }
+
+    public String getCommandFilterClassName() {
+        return commandFilterClassName;
+    }
+
+    public void setCommandFilterClassName(String commandFilterClassName) {
+        this.commandFilterClassName = commandFilterClassName;
     }
 
     public NettyProperties getNetty() {

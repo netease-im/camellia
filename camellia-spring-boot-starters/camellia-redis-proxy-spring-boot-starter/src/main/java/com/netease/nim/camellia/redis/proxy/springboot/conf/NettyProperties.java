@@ -11,12 +11,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class NettyProperties {
     private int bossThread = 1;
     private int workThread = -1;
+    private int soBacklog = Constants.Server.soBacklog;
+    private int soSndbuf = Constants.Server.soSndbuf;
+    private int soRcvbuf = Constants.Server.soRcvbuf;
+    private int writeBufferWaterMarkLow = Constants.Server.writeBufferWaterMarkLow;
+    private int writeBufferWaterMarkHigh = Constants.Server.writeBufferWaterMarkHigh;
     private int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
-    private int soBacklog = 1024;
-    private int soSndbuf = 1048576;
-    private int soRcvbuf = 1048576;
-    private int writeBufferWaterMarkLow = 128 * 1024;
-    private int writeBufferWaterMarkHigh = 512 * 1024;
 
     public int getBossThread() {
         return bossThread;

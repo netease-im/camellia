@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.springboot;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.command.async.AsyncCommandInvoker;
 import com.netease.nim.camellia.redis.proxy.command.sync.SyncCommandInvoker;
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleService;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleServiceAdaptor;
@@ -36,6 +37,8 @@ public class CamelliaRedisProxyConfiguration {
     @ConditionalOnMissingBean(value = {CommandInvoker.class})
     public CommandInvoker commandInvoker(CamelliaRedisProxyProperties properties) throws Exception {
 
+        CamelliaServerProperties serverProperties = CamelliaRedisProxyUtil.parse(properties, port);
+
         CamelliaRedisProxyProperties.Type type = properties.getType();
 
         CamelliaTranspondProperties transpondProperties = new CamelliaTranspondProperties();
@@ -48,17 +51,17 @@ public class CamelliaRedisProxyConfiguration {
 
         CommandInvoker commandInvoker;
         if (type == CamelliaRedisProxyProperties.Type.sync) {
-            commandInvoker = new SyncCommandInvoker(transpondProperties);
+            commandInvoker = new SyncCommandInvoker(serverProperties, transpondProperties);
         } else if (type == CamelliaRedisProxyProperties.Type.async) {
-            commandInvoker = new AsyncCommandInvoker(transpondProperties);
+            commandInvoker = new AsyncCommandInvoker(serverProperties, transpondProperties);
         } else if (type == CamelliaRedisProxyProperties.Type.custom) {
             String className = properties.getCustomCommandInvokerClassName();
             if (className == null) {
                 throw new IllegalArgumentException("custom type should provide customCommandInvokerClassName");
             }
             Class<?> clazz = Class.forName(className);
-            Constructor<?> constructor = clazz.getConstructor(CamelliaTranspondProperties.class);
-            commandInvoker = (CommandInvoker) constructor.newInstance(transpondProperties);
+            Constructor<?> constructor = clazz.getConstructor(CamelliaServerProperties.class, CamelliaTranspondProperties.class);
+            commandInvoker = (CommandInvoker) constructor.newInstance(serverProperties, transpondProperties);
         } else {
             throw new IllegalArgumentException("only support sync/async/custom type");
         }
@@ -68,7 +71,11 @@ public class CamelliaRedisProxyConfiguration {
     @Bean
     public CamelliaRedisProxyBoot redisProxyBoot(CamelliaRedisProxyProperties properties) throws Exception {
         CommandInvoker commandInvoker = commandInvoker(properties);
-        return new CamelliaRedisProxyBoot(properties, commandInvoker, applicationName, port);
+        if (commandInvoker instanceof AsyncCommandInvoker) {
+            properties.setType(CamelliaRedisProxyProperties.Type.async);
+        }
+        CamelliaServerProperties serverProperties = CamelliaRedisProxyUtil.parse(properties, port);
+        return new CamelliaRedisProxyBoot(serverProperties, commandInvoker, applicationName);
     }
 
     @Bean

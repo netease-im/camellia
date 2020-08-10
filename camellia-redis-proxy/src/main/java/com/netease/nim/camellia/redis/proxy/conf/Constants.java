@@ -12,11 +12,19 @@ public class Constants {
         public static final int severPort = 6379;
         public static final int consolePort = 16379;
         public static final boolean monitorEnable = false;
+        public static final boolean commandSpendTimeMonitorEnable = false;
+        public static final long slowCommandThresholdMillisTime = 2000L;
         public static final int monitorIntervalSeconds = 60;
 
         public static final int asyncWorkThread = SysUtils.getCpuNum();
         public static final int syncWorkThread = SysUtils.getCpuNum() * 32;
         public static final int commandDecodeMaxBatchSize = 256;
+
+        public static final int soBacklog = 1024;
+        public static final int soSndbuf = 10 * 1024 * 1024;
+        public static final int soRcvbuf = 10 * 1024 * 1024;
+        public static final int writeBufferWaterMarkLow = 128 * 1024;
+        public static final int writeBufferWaterMarkHigh = 512 * 1024;
     }
 
     public static class Sync {

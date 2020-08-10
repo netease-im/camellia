@@ -10,8 +10,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -20,15 +22,35 @@ import java.util.concurrent.atomic.LongAdder;
  */
 public class RedisMonitor {
 
-    private static final Logger logger = LoggerFactory.getLogger("stats");
+    private static final Logger logger = LoggerFactory.getLogger(RedisMonitor.class);
+    private static final Logger statsLogger = LoggerFactory.getLogger("stats");
 
     private static ConcurrentHashMap<String, LongAdder> map = new ConcurrentHashMap<>();
     private static Stats stats = new Stats();
     private static final ConcurrentHashMap<String, LongAdder> failCountMap = new ConcurrentHashMap<>();
 
-    public static void init(int seconds) {
+    private static boolean commandSpendTimeMonitorEnable;
+    private static final ConcurrentLinkedQueue<CommandSpendItem> queue = new ConcurrentLinkedQueue<>();
+    private static final ConcurrentHashMap<String, LongAdder> commandSpendCountMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, LongAdder> commandSpendTotalMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, AtomicLong> commandSpendMaxMap = new ConcurrentHashMap<>();
+
+    private static class CommandSpendItem {
+        private final String command;
+        private final long spendNanoTime;
+        public CommandSpendItem(String command, long spendNanoTime) {
+            this.command = command;
+            this.spendNanoTime = spendNanoTime;
+        }
+    }
+
+    public static void init(int seconds, boolean commandSpendTimeMonitorEnable) {
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("monitor"))
                 .scheduleAtFixedRate(RedisMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
+        RedisMonitor.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
+        if (commandSpendTimeMonitorEnable) {
+            new Thread(RedisMonitor::calcCommandSpendTime, "command-spend-time-calc").start();
+        }
     }
 
     public static void incr(Long bid, String bgroup, String command) {
@@ -42,96 +64,156 @@ public class RedisMonitor {
         failCount.increment();
     }
 
+    public static void incrCommandSpendTime(String command, long spendNanoTime) {
+        if (commandSpendTimeMonitorEnable) {
+            queue.offer(new CommandSpendItem(command, spendNanoTime));
+        }
+    }
+
+    private static void calcCommandSpendTime() {
+        while (true) {
+            try {
+                CommandSpendItem item = queue.poll();
+                if (item == null) {
+                    TimeUnit.MILLISECONDS.sleep(100);
+                    continue;
+                }
+                LongAdder count = commandSpendCountMap.computeIfAbsent(item.command, k -> new LongAdder());
+                count.increment();
+                LongAdder total = commandSpendTotalMap.computeIfAbsent(item.command, k -> new LongAdder());
+                total.add(item.spendNanoTime);
+                AtomicLong max = commandSpendMaxMap.computeIfAbsent(item.command, k -> new AtomicLong(0));
+                if (item.spendNanoTime > max.get()) {
+                    max.set(item.spendNanoTime);
+                }
+            } catch (Exception e) {
+                logger.error("calc command spend time error", e);
+            }
+        }
+    }
+
     public static Stats getStats() {
         return stats;
     }
 
     private static void calc() {
-        long totalCount = 0;
-        long totalReadCount = 0;
-        long totalWriteCount = 0;
-        Map<String, Stats.TotalStats> totalStatsMap = new HashMap<>();
-        Map<String, Stats.BidBgroupStats> bidBgroupStatsMap = new HashMap<>();
-        List<Stats.DetailStats> detailStatsList = new ArrayList<>();
+        try {
+            long totalCount = 0;
+            long totalReadCount = 0;
+            long totalWriteCount = 0;
+            Map<String, Stats.TotalStats> totalStatsMap = new HashMap<>();
+            Map<String, Stats.BidBgroupStats> bidBgroupStatsMap = new HashMap<>();
+            List<Stats.DetailStats> detailStatsList = new ArrayList<>();
 
-        ConcurrentHashMap<String, LongAdder> map = RedisMonitor.map;
-        RedisMonitor.map = new ConcurrentHashMap<>();
-        for (Map.Entry<String, LongAdder> entry : map.entrySet()) {
-            String[] split = entry.getKey().split("\\|");
-            long count = entry.getValue().longValue();
-            Long bid = null;
-            if (!split[0].equalsIgnoreCase("null")) {
-                bid = Long.parseLong(split[0]);
-            }
-            String bgroup = null;
-            if (!split[1].equalsIgnoreCase("null")) {
-                bgroup = split[1];
-            }
-            String command = split[2];
+            ConcurrentHashMap<String, LongAdder> map = RedisMonitor.map;
+            RedisMonitor.map = new ConcurrentHashMap<>();
+            for (Map.Entry<String, LongAdder> entry : map.entrySet()) {
+                String[] split = entry.getKey().split("\\|");
+                long count = entry.getValue().longValue();
+                Long bid = null;
+                if (!split[0].equalsIgnoreCase("null")) {
+                    bid = Long.parseLong(split[0]);
+                }
+                String bgroup = null;
+                if (!split[1].equalsIgnoreCase("null")) {
+                    bgroup = split[1];
+                }
+                String command = split[2];
 
-            Stats.TotalStats totalStats = totalStatsMap.computeIfAbsent(command, Stats.TotalStats::new);
-            totalStats.setCount(totalStats.getCount() + count);
+                Stats.TotalStats totalStats = totalStatsMap.computeIfAbsent(command, Stats.TotalStats::new);
+                totalStats.setCount(totalStats.getCount() + count);
 
-            String key = bid + "|" + bgroup;
-            Stats.BidBgroupStats bidBgroupStats = bidBgroupStatsMap.computeIfAbsent(key, k -> new Stats.BidBgroupStats());
-            bidBgroupStats.setBid(bid);
-            bidBgroupStats.setBgroup(bgroup);
-            bidBgroupStats.setCount(bidBgroupStats.getCount() + count);
+                String key = bid + "|" + bgroup;
+                Stats.BidBgroupStats bidBgroupStats = bidBgroupStatsMap.computeIfAbsent(key, k -> new Stats.BidBgroupStats());
+                bidBgroupStats.setBid(bid);
+                bidBgroupStats.setBgroup(bgroup);
+                bidBgroupStats.setCount(bidBgroupStats.getCount() + count);
 
-            detailStatsList.add(new Stats.DetailStats(bid, bgroup, command, count));
+                detailStatsList.add(new Stats.DetailStats(bid, bgroup, command, count));
 
-            totalCount += count;
-            RedisCommand redisCommand = RedisCommand.getRedisCommandByName(command);
-            if (redisCommand != null && redisCommand.getType() != null) {
-                if (redisCommand.getType() == RedisCommand.Type.READ) {
-                    totalReadCount += count;
-                } else {
-                    totalWriteCount += count;
+                totalCount += count;
+                RedisCommand redisCommand = RedisCommand.getRedisCommandByName(command);
+                if (redisCommand != null && redisCommand.getType() != null) {
+                    if (redisCommand.getType() == RedisCommand.Type.READ) {
+                        totalReadCount += count;
+                    } else {
+                        totalWriteCount += count;
+                    }
                 }
             }
-        }
 
-        Stats stats = new Stats();
-        stats.setCount(totalCount);
-        stats.setTotalReadCount(totalReadCount);
-        stats.setTotalWriteCount(totalWriteCount);
-        stats.setDetailStatsList(detailStatsList);
-        stats.setTotalStatsList(new ArrayList<>(totalStatsMap.values()));
-        stats.setBidBgroupStatsList(new ArrayList<>(bidBgroupStatsMap.values()));
-        Map<String, Long> failMap = new HashMap<>();
-        for (Map.Entry<String, LongAdder> entry : failCountMap.entrySet()) {
-            long count = entry.getValue().sumThenReset();
-            if (count > 0) {
-                failMap.put(entry.getKey(), count);
+            List<Stats.SpendStats> spendStatsList = new ArrayList<>();
+            for (Map.Entry<String, LongAdder> entry : commandSpendCountMap.entrySet()) {
+                String command = entry.getKey();
+                long count = entry.getValue().sumThenReset();
+                if (count == 0) continue;
+                AtomicLong nanoMax = commandSpendMaxMap.get(command);
+                double maxSpendMs = 0;
+                if (nanoMax != null) {
+                    maxSpendMs = nanoMax.getAndSet(0) / 1000000.0;
+                }
+                double avgSpendMs = 0;
+                LongAdder nanoSum = commandSpendTotalMap.get(command);
+                if (nanoSum != null) {
+                    avgSpendMs = nanoSum.sumThenReset() / (1000000.0 * count);
+                }
+                Stats.SpendStats spendStats = new Stats.SpendStats();
+                spendStats.setCommand(command);
+                spendStats.setAvgSpendMs(avgSpendMs);
+                spendStats.setMaxSpendMs(maxSpendMs);
+                spendStats.setCount(count);
+                spendStatsList.add(spendStats);
             }
-        }
-        stats.setFailMap(failMap);
 
-        RedisMonitor.stats = stats;
+            Stats stats = new Stats();
+            stats.setCount(totalCount);
+            stats.setTotalReadCount(totalReadCount);
+            stats.setTotalWriteCount(totalWriteCount);
+            stats.setDetailStatsList(detailStatsList);
+            stats.setTotalStatsList(new ArrayList<>(totalStatsMap.values()));
+            stats.setBidBgroupStatsList(new ArrayList<>(bidBgroupStatsMap.values()));
+            Map<String, Long> failMap = new HashMap<>();
+            for (Map.Entry<String, LongAdder> entry : failCountMap.entrySet()) {
+                long count = entry.getValue().sumThenReset();
+                if (count > 0) {
+                    failMap.put(entry.getKey(), count);
+                }
+            }
+            stats.setFailMap(failMap);
+            stats.setSpendStatsList(spendStatsList);
 
-        logger.info(">>>>>>>START>>>>>>>");
-        logger.info("connect.count={}", ChannelMonitor.getChannelMap().size());
-        logger.info("total.count={}", stats.getCount());
-        logger.info("total.read.count={}", stats.getTotalReadCount());
-        logger.info("total.write.count={}", stats.getTotalWriteCount());
-        logger.info("====total====");
-        for (Stats.TotalStats totalStats : stats.getTotalStatsList()) {
-            logger.info("total.command.{}, count={}", totalStats.getCommand(), totalStats.getCount());
+            RedisMonitor.stats = stats;
+
+            statsLogger.info(">>>>>>>START>>>>>>>");
+            statsLogger.info("connect.count={}", ChannelMonitor.getChannelMap().size());
+            statsLogger.info("total.count={}", stats.getCount());
+            statsLogger.info("total.read.count={}", stats.getTotalReadCount());
+            statsLogger.info("total.write.count={}", stats.getTotalWriteCount());
+            statsLogger.info("====total====");
+            for (Stats.TotalStats totalStats : stats.getTotalStatsList()) {
+                statsLogger.info("total.command.{}, count={}", totalStats.getCommand(), totalStats.getCount());
+            }
+            statsLogger.info("====bidbgroup====");
+            for (Stats.BidBgroupStats bgroupStats : stats.getBidBgroupStatsList()) {
+                statsLogger.info("bidbgroup.{}.{}, count={}", bgroupStats.getBid() == null ? "default" : bgroupStats.getBid(),
+                        bgroupStats.getBgroup() == null ? "default" : bgroupStats.getBgroup(), bgroupStats.getCount());
+            }
+            statsLogger.info("====detail====");
+            for (Stats.DetailStats detailStats : stats.getDetailStatsList()) {
+                statsLogger.info("detail.{}.{}.{}, count={}", detailStats.getBid() == null ? "default" : detailStats.getBid(),
+                        detailStats.getBgroup() == null ? "default" : detailStats.getBgroup(), detailStats.getCommand(), detailStats.getCount());
+            }
+            statsLogger.info("====fail====");
+            for (Map.Entry<String, Long> entry : stats.getFailMap().entrySet()) {
+                statsLogger.info("fail[{}], count = {}", entry.getKey(), entry.getValue());
+            }
+            statsLogger.info("====spend.stats====");
+            for (Stats.SpendStats spendStats : stats.getSpendStatsList()) {
+                statsLogger.info("command={},count={},avgSpendMs={},maxSpendMs={}", spendStats.getCommand(), spendStats.getCount(), spendStats.getAvgSpendMs(), spendStats.getMaxSpendMs());
+            }
+            statsLogger.info("<<<<<<<END<<<<<<<");
+        } catch (Exception e) {
+            logger.error("calc error", e);
         }
-        logger.info("====bidbgroup====");
-        for (Stats.BidBgroupStats bgroupStats : stats.getBidBgroupStatsList()) {
-            logger.info("bidbgroup.{}.{}, count={}", bgroupStats.getBid() == null ? "default" : bgroupStats.getBid(),
-                    bgroupStats.getBgroup() == null ? "default" : bgroupStats.getBgroup(), bgroupStats.getCount());
-        }
-        logger.info("====detail====");
-        for (Stats.DetailStats detailStats : stats.getDetailStatsList()) {
-            logger.info("detail.{}.{}.{}, count={}", detailStats.getBid() == null ? "default" : detailStats.getBid(),
-                    detailStats.getBgroup() == null ? "default" : detailStats.getBgroup(), detailStats.getCommand(), detailStats.getCount());
-        }
-        logger.info("====fail====");
-        for (Map.Entry<String, Long> entry : stats.getFailMap().entrySet()) {
-            logger.info("fail[{}], count = {}", entry.getKey(), entry.getValue());
-        }
-        logger.info("<<<<<<<END<<<<<<<");
     }
 }

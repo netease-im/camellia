@@ -23,7 +23,7 @@ public class ReplyEncoder extends MessageToByteEncoder<Reply> {
 
     @Override
     public void encode(ChannelHandlerContext ctx, Reply msg, ByteBuf out) throws Exception {
-        if (ctx.channel().isWritable()) {
+        if (ctx.channel().isActive()) {
             if (serverProperties.isMonitorEnable()) {
                 if (msg instanceof ErrorReply) {
                     RedisMonitor.incrFail(((ErrorReply) msg).getError());
@@ -32,9 +32,9 @@ public class ReplyEncoder extends MessageToByteEncoder<Reply> {
             msg.write(out);
         } else {
             if (serverProperties.isMonitorEnable()) {
-                RedisMonitor.incrFail("ChannelNotWriteable");
+                RedisMonitor.incrFail("ChannelNotActive");
             }
-            ErrorLogCollector.collect(ReplyEncoder.class, "channel not writeable");
+            ErrorLogCollector.collect(ReplyEncoder.class, "channel not active, remote.ip=" + ctx.channel().remoteAddress());
         }
     }
 }

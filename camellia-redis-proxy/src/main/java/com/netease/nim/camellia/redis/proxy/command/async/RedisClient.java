@@ -6,9 +6,7 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.ClientHandler;
 import com.netease.nim.camellia.redis.proxy.netty.ReplyDecoder;
-import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
-import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
+import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.CommandsEncodeUtil;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.bootstrap.Bootstrap;
@@ -141,6 +139,17 @@ public class RedisClient implements AsyncClient {
                     return true;
                 }
             }
+            if (reply instanceof MultiBulkReply) {
+                Reply[] replies = ((MultiBulkReply) reply).getReplies();
+                if (replies.length > 0) {
+                    Reply reply1 = replies[0];
+                    if (reply1 instanceof BulkReply) {
+                        if (SafeEncoder.encode(((BulkReply) reply1).getRaw()).equalsIgnoreCase(StatusReply.PONG.getStatus())) {
+                            return true;
+                        }
+                    }
+                }
+            }
             logger.error("{} ping fail, response = {}", clientName, reply);
             return false;
         } catch (Exception e) {
@@ -150,11 +159,17 @@ public class RedisClient implements AsyncClient {
     }
 
     public void stop() {
-        String log = clientName + " stopping, command return NOT_AVAILABLE";
-        ErrorLogCollector.collect(RedisClient.class, log);
+        stop(false);
+    }
+
+    public void stop(boolean grace) {
         if (!valid && queue.isEmpty() && commandQueue.isEmpty()
                 && channel == null && loopGroup == null && scheduledFuture == null) {
             return;
+        }
+        if (!grace) {
+            String log = clientName + " stopping, command return NOT_AVAILABLE";
+            ErrorLogCollector.collect(RedisClient.class, log);
         }
         synchronized (lock) {
             try {

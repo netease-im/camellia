@@ -18,6 +18,7 @@ public class Stats {
     private List<BidBgroupStats> bidBgroupStatsList = new ArrayList<>();
     private List<DetailStats> detailStatsList = new ArrayList<>();
     private Map<String, Long> failMap = new HashMap<>();
+    private List<SpendStats> spendStatsList = new ArrayList<>();
 
     public long getCount() {
         return count;
@@ -73,6 +74,14 @@ public class Stats {
 
     public void setFailMap(Map<String, Long> failMap) {
         this.failMap = failMap;
+    }
+
+    public List<SpendStats> getSpendStatsList() {
+        return spendStatsList;
+    }
+
+    public void setSpendStatsList(List<SpendStats> spendStatsList) {
+        this.spendStatsList = spendStatsList;
     }
 
     public static class BidBgroupStats {
@@ -173,6 +182,45 @@ public class Stats {
 
         public void setCount(long count) {
             this.count = count;
+        }
+    }
+
+    public static class SpendStats {
+        private String command;
+        private long count;
+        private double avgSpendMs;
+        private double maxSpendMs;
+
+        public String getCommand() {
+            return command;
+        }
+
+        public void setCommand(String command) {
+            this.command = command;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+        public void setCount(long count) {
+            this.count = count;
+        }
+
+        public double getAvgSpendMs() {
+            return avgSpendMs;
+        }
+
+        public void setAvgSpendMs(double avgSpendMs) {
+            this.avgSpendMs = avgSpendMs;
+        }
+
+        public double getMaxSpendMs() {
+            return maxSpendMs;
+        }
+
+        public void setMaxSpendMs(double maxSpendMs) {
+            this.maxSpendMs = maxSpendMs;
         }
     }
 }

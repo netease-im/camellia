@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command.sync;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.util.CommandInvokerUtil;
 import com.netease.nim.camellia.redis.proxy.util.CommandMethodUtil;
 import com.netease.nim.camellia.redis.proxy.util.ErrorHandlerUtil;
@@ -31,8 +32,10 @@ public class SyncCommandInvoker implements CommandInvoker {
     private final Map<String, Method> methodMap = new HashMap<>();
     private final Map<String, Method> pipelineMethodMap = new HashMap<>();
     private final SyncCommandProcessorChooser chooser;
+    private final CamelliaServerProperties serverProperties;
 
-    public SyncCommandInvoker(CamelliaTranspondProperties transpondProperties) {
+    public SyncCommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
+        this.serverProperties = serverProperties;
         this.chooser = new SyncCommandProcessorChooser(transpondProperties);
         init();
     }

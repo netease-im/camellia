@@ -33,7 +33,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
         this.invoker = invoker;
         this.env = env;
         if (env.isMonitorEnable()) {
-            RedisMonitor.init(env.getMonitorIntervalSeconds());
+            RedisMonitor.init(env.getMonitorIntervalSeconds(), env.isCommandSpendTimeMonitorEnable());
         }
     }
 

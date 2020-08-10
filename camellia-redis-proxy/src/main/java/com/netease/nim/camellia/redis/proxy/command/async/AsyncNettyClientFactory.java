@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.resource.RedisClusterResource;
 import com.netease.nim.camellia.redis.resource.RedisResource;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.resource.RedisSentinelResource;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,6 +52,15 @@ public interface AsyncNettyClientFactory {
             return client;
         }
 
+        public AsyncClient get(RedisSentinelResource redisSentinelResource) {
+            AsyncClient client = map.get(redisSentinelResource.getUrl());
+            if (client == null) {
+                client = map.computeIfAbsent(redisSentinelResource.getUrl(),
+                        k -> new AsyncCamelliaRedisSentinelClient(redisSentinelResource));
+            }
+            return client;
+        }
+
         @Override
         public AsyncClient get(String url) {
             AsyncClient client = map.get(url);
@@ -63,6 +73,8 @@ public interface AsyncNettyClientFactory {
                             client = get((RedisResource) resource);
                         } else if (resource instanceof RedisClusterResource) {
                             client = get((RedisClusterResource) resource);
+                        } else if (resource instanceof RedisSentinelResource) {
+                            client = get((RedisSentinelResource) resource);
                         } else {
                             throw new CamelliaRedisException("not support resource");
                         }

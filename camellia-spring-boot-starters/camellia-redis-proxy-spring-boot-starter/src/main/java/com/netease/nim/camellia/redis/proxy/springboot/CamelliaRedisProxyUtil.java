@@ -3,7 +3,11 @@ package com.netease.nim.camellia.redis.proxy.springboot;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.*;
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
+import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
+import com.netease.nim.camellia.redis.proxy.springboot.conf.NettyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.TranspondProperties;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
 
@@ -15,6 +19,36 @@ import java.util.Set;
  * Created by caojiajun on 2020/4/3.
  */
 public class CamelliaRedisProxyUtil {
+
+    public static CamelliaServerProperties parse(CamelliaRedisProxyProperties properties, int port) {
+        CamelliaServerProperties serverProperties = new CamelliaServerProperties();
+        serverProperties.setPort(port);
+        serverProperties.setPassword(properties.getPassword());
+        serverProperties.setMonitorEnable(properties.isMonitorEnable());
+        serverProperties.setMonitorIntervalSeconds(properties.getMonitorIntervalSeconds());
+        serverProperties.setCommandSpendTimeMonitorEnable(properties.isCommandSpendTimeMonitorEnable());
+        serverProperties.setSlowCommandThresholdMillisTime(properties.getSlowCommandThresholdMillisTime());
+        serverProperties.setCommandFilterClassName(properties.getCommandFilterClassName());
+        NettyProperties netty = properties.getNetty();
+        serverProperties.setBossThread(netty.getBossThread());
+        if (netty.getWorkThread() > 0) {
+            serverProperties.setWorkThread(netty.getWorkThread());
+        } else {
+            CamelliaRedisProxyProperties.Type type = properties.getType();
+            if (type == CamelliaRedisProxyProperties.Type.async) {
+                serverProperties.setWorkThread(Constants.Server.asyncWorkThread);
+            } else {
+                serverProperties.setWorkThread(Constants.Server.syncWorkThread);
+            }
+        }
+        serverProperties.setCommandDecodeMaxBatchSize(netty.getCommandDecodeMaxBatchSize());
+        serverProperties.setSoBacklog(netty.getSoBacklog());
+        serverProperties.setSoRcvbuf(netty.getSoRcvbuf());
+        serverProperties.setSoSndbuf(netty.getSoSndbuf());
+        serverProperties.setWriteBufferWaterMarkLow(netty.getWriteBufferWaterMarkLow());
+        serverProperties.setWriteBufferWaterMarkHigh(netty.getWriteBufferWaterMarkHigh());
+        return serverProperties;
+    }
 
     public static CamelliaTranspondProperties.Type parseType(TranspondProperties properties) {
         CamelliaTranspondProperties.Type type = null;

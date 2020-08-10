@@ -1,12 +1,13 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
-import com.netease.nim.camellia.redis.proxy.command.ClientCommandUtil;
-import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
+import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.proxy.command.*;
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
@@ -26,9 +27,25 @@ public class AsyncCommandInvoker implements CommandInvoker {
     private static final Logger logger = LoggerFactory.getLogger(AsyncCommandInvoker.class);
 
     private final AsyncCamelliaRedisTemplateChooser chooser;
+    private final boolean commandSpendTimeMonitorEnable;
+    private final long slowCommandThresholdMillisTime;
+    private CommandFilter commandFilter = null;
 
-    public AsyncCommandInvoker(CamelliaTranspondProperties transpondProperties) {
-        chooser = new AsyncCamelliaRedisTemplateChooser(transpondProperties);
+    public AsyncCommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
+        this.slowCommandThresholdMillisTime = serverProperties.getSlowCommandThresholdMillisTime();
+        this.commandSpendTimeMonitorEnable = serverProperties.isMonitorEnable() && serverProperties.isCommandSpendTimeMonitorEnable();
+        this.chooser = new AsyncCamelliaRedisTemplateChooser(transpondProperties);
+        String commandFilterClassName = serverProperties.getCommandFilterClassName();
+        if (commandFilterClassName != null) {
+            try {
+                Class<?> clazz = Class.forName(commandFilterClassName);
+                commandFilter = (CommandFilter) clazz.newInstance();
+                logger.info("init CommandFilter success, CommandFilter = {}", clazz);
+            } catch (Exception e) {
+                logger.error("init CommandFilter error, class = {}", commandFilterClassName, e);
+                throw new CamelliaRedisException(e);
+            }
+        }
     }
 
     @Override
@@ -48,8 +65,14 @@ public class AsyncCommandInvoker implements CommandInvoker {
 
             List<AsyncTask> tasks = new ArrayList<>(commands.size());
 
-            for (int i=0; i<commands.size(); i++) {
-                AsyncTask task = new AsyncTask(taskQueue);
+            boolean needFilter = commandFilter != null;
+            List<Command> list = null;
+            if (needFilter) {
+                list = new ArrayList<>();
+            }
+
+            for (Command command : commands) {
+                AsyncTask task = new AsyncTask(taskQueue, command, commandSpendTimeMonitorEnable, slowCommandThresholdMillisTime);
                 boolean add = taskQueue.add(task);
                 if (!add) {
                     taskQueue.clear();
@@ -58,13 +81,43 @@ public class AsyncCommandInvoker implements CommandInvoker {
                     return;
                 }
                 tasks.add(task);
+
+                if (needFilter) {
+                    CommandFilterResponse response;
+                    try {
+                        response = commandFilter.check(command);
+                    } catch (Exception e) {
+                        String errorMsg = "ERR command filter error [" + e.getMessage() + "]";
+                        ErrorLogCollector.collect(AsyncCommandInvoker.class, errorMsg);
+                        response = new CommandFilterResponse(false, errorMsg);
+                    }
+                    if (!response.isPass()) {
+                        String errorMsg = response.getErrorMsg();
+                        if (errorMsg == null) {
+                            errorMsg = CommandFilterResponse.DEFAULT_FAIL.getErrorMsg();
+                        }
+                        task.replyCompleted(new ErrorReply(errorMsg));
+                    } else {
+                        list.add(command);
+                    }
+                }
             }
-            AsyncCamelliaRedisTemplate template = null;
-            try {
-                template = chooser.choose(channelInfo);
-            } catch (Exception e) {
-                logger.error("AsyncCamelliaRedisTemplateChooser choose error, bid = {}, bgroup = {}",
-                        ClientCommandUtil.getBid(channelInfo), ClientCommandUtil.getBgroup(channelInfo), e);
+
+            if (needFilter) {
+                commands = list;
+                if (commands.isEmpty()) {
+                    return;
+                }
+            }
+
+            AsyncCamelliaRedisTemplate template = channelInfo.getTemplate();
+            if (template == null) {
+                try {
+                    template = chooser.choose(channelInfo);
+                } catch (Exception e) {
+                    logger.error("AsyncCamelliaRedisTemplateChooser choose error, bid = {}, bgroup = {}",
+                            ClientCommandUtil.getBid(channelInfo), ClientCommandUtil.getBgroup(channelInfo), e);
+                }
             }
             if (template == null) {
                 for (int i = 0; i < commands.size(); i++) {
@@ -75,6 +128,7 @@ public class AsyncCommandInvoker implements CommandInvoker {
                     task.replyCompleted(ErrorReply.NOT_AVAILABLE);
                 }
             } else {
+                channelInfo.setTemplate(template);
                 List<CompletableFuture<Reply>> futureList = template.sendCommand(commands);
                 for (int i = 0; i < commands.size(); i++) {
                     AsyncTask task = tasks.get(i);
