@@ -48,4 +48,9 @@ public class RedisClientAddr {
     public int hashCode() {
         return Objects.hash(url);
     }
+
+    @Override
+    public String toString() {
+        return url;
+    }
 }

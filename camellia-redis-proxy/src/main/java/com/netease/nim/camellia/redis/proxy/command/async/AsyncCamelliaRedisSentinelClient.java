@@ -120,7 +120,7 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
                             redisClient.stop();
                         }
                         redisClient = new RedisClient(node.getHost(), node.getPort(), null,
-                                RedisClientHub.heartbeatIntervalSeconds, RedisClientHub.heartbeatTimeoutMillis,
+                                -1, -1,
                                 RedisClientHub.commandPipelineFlushThreshold, RedisClientHub.connectTimeoutMillis);
                         redisClient.start();
                     }
@@ -134,14 +134,34 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
                         Reply subscribeReply = future2.get();
                         processMasterSwitch(subscribeReply);
                         while (running) {
-                            CompletableFuture<Reply> future = new CompletableFuture<>();
+                            CompletableFuture<Reply> future01 = new CompletableFuture<>();
+                            CompletableFuture<Reply> future02 = new CompletableFuture<>();
                             List<Command> commands = Collections.singletonList(new Command(new byte[][] {RedisCommand.PING.raw()}));
                             List<CompletableFuture<Reply>> futures = new ArrayList<>();
-                            futures.add(new CompletableFuture<>());
-                            futures.add(future);
+                            futures.add(future01);
+                            futures.add(future02);
                             redisClient.sendCommand(commands, futures);
-                            Reply reply = future.get();
-                            processMasterSwitch(reply);
+
+                            for (CompletableFuture<Reply> future : futures) {
+                                Reply reply = null;
+                                while (true) {
+                                    try {
+                                        reply = future.get(10, TimeUnit.SECONDS);
+                                        break;
+                                    } catch (Exception ignore) {
+                                        if (!redisClient.isValid()) {
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (!redisClient.isValid()) {
+                                    break;
+                                }
+                                processMasterSwitch(reply);
+                            }
+                            if (!redisClient.isValid()) {
+                                break;
+                            }
                         }
                     }
                 } catch (Exception e) {
@@ -164,6 +184,7 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
         }
 
         private void processMasterSwitch(Reply reply) {
+            if (reply == null) return;
             if (reply instanceof MultiBulkReply) {
                 Reply[] replies = ((MultiBulkReply) reply).getReplies();
                 if (replies.length == 3) {
@@ -178,9 +199,10 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
                                 RedisClientAddr newNode = new RedisClientAddr(switchMasterMsg[3], Integer.parseInt(switchMasterMsg[4]),
                                         redisSentinelResource.getPassword());
                                 if (!Objects.equals(oldNode, newNode)) {
+                                    RedisClientHub.get(newNode);
                                     redisSentinelClient.redisClientAddr = newNode;
                                     if (logger.isInfoEnabled()) {
-                                        logger.info("sentinel redis master node update, resource = {}, old = {}, new = {}", redisSentinelResource.getUrl(), oldNode.getUrl(), newNode.getUrl());
+                                        logger.info("sentinel redis master node update, resource = {}, old = {}, new = {}", redisSentinelResource.getUrl(), oldNode, newNode);
                                     }
                                 }
                             }
@@ -202,9 +224,10 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
                 RedisClientAddr newNode = new RedisClientAddr(redisHost, redisPort, redisSentinelResource.getPassword());
                 RedisClientAddr oldNode = redisClientAddr;
                 if (!Objects.equals(newNode, oldNode)) {
+                    RedisClientHub.get(newNode);
                     redisClientAddr = newNode;
                     if (logger.isInfoEnabled()) {
-                        logger.info("sentinel redis master node refresh, resource = {}, old = {}, new = {}", redisSentinelResource.getUrl(), oldNode.getUrl(), newNode.getUrl());
+                        logger.info("sentinel redis master node refresh, resource = {}, old = {}, new = {}", redisSentinelResource.getUrl(), oldNode, newNode);
                     }
                 }
                 return true;

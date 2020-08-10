@@ -30,7 +30,7 @@ public class RedisResourceUtil {
 
                 int index = substring.lastIndexOf("@");
                 String password = substring.substring(0, index);
-                String split = substring.substring(index + 1, substring.length());
+                String split = substring.substring(index + 1);
                 String[] split2 = split.split(":");
                 String host = split2[0];
                 int port = Integer.parseInt(split2[1]);
@@ -53,11 +53,14 @@ public class RedisResourceUtil {
 
                 int index = substring.lastIndexOf("@");
                 String password = substring.substring(0, index);
-                String split = substring.substring(index + 1, substring.length());
+                if (password.length() == 0) {
+                    password = null;
+                }
+                String split = substring.substring(index + 1);
 
                 int index2 = split.indexOf("/");
                 String hostPorts = split.substring(0, index2);
-                String master = split.substring(index2 + 1, split.length());
+                String master = split.substring(index2 + 1);
 
                 String[] split2 = hostPorts.split(",");
                 List<RedisSentinelResource.Node> nodeList = new ArrayList<>();
@@ -80,7 +83,7 @@ public class RedisResourceUtil {
 
                 int index = substring.lastIndexOf("@");
                 String password = substring.substring(0, index);
-                String split = substring.substring(index + 1, substring.length());
+                String split = substring.substring(index + 1);
 
                 String[] split2 = split.split(",");
                 List<RedisClusterResource.Node> nodeList = new ArrayList<>();
@@ -117,7 +120,7 @@ public class RedisResourceUtil {
                 }
                 int index = substring.lastIndexOf("@");
                 String password = substring.substring(0, index);
-                String proxyName = substring.substring(index + 1, substring.length());
+                String proxyName = substring.substring(index + 1);
                 if (password.length() == 0) {
                     password = null;
                 }

@@ -10,7 +10,7 @@ camellia-redis-proxy:
   transpond:
     type: local
     local:
-      resource: redis://@127.0.0.1:6379
+      resource: redis-sentinel://@127.0.0.1:26379/master1
   monitor-enable: true
   command-spend-time-monitor-enable: true
   monitor-interval-seconds: 10
