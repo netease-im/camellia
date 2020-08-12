@@ -32,7 +32,7 @@ public class ZkProxyDiscovery extends ProxyDiscovery {
     }
 
     public ZkProxyDiscovery(String zkUrl, String basePath, String applicationName) {
-        this(ZkClientFactory.DEFAULT.getClient(zkUrl), basePath, applicationName, 600);
+        this(ZkClientFactory.DEFAULT.getClient(zkUrl), basePath, applicationName, ZkConstants.reloadIntervalSeconds);
     }
 
     public ZkProxyDiscovery(ZkClientFactory factory, String zkUrl, String basePath, String applicationName, long reloadIntervalSeconds) {

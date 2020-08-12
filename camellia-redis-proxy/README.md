@@ -31,13 +31,17 @@ redis-proxy本身无状态，可以水平扩展，为了实现高可用和负载
 可以通过前端添加四层代理（如LVS等）来统一访问入口，此时使用方式跟单节点redis没有区别    
 <img src="doc/1.png" width="80%" height="80%">  
 #### 部署方式二
-可以通过eureka、zk等注册中心进行注册，在客户端进行负载均衡   
+对于proxy侧，可以通过eureka、zk等注册中心进行注册，在客户端进行负载均衡   
 如果要使用eureka作为注册中心，引入spring-cloud-starter-netflix-eureka-client即可  
 如果要使用zk作为注册中心，引入camellia-redis-proxy-zk-registry-spring-boot-starter即可(参见camellia-redis-proxy-samples)    
 
 对于客户端侧，如果是Java，则使用RedisProxyJedisPool代替JedisPool即可使用标准Jedis访问代理服务    
-如果使用eureka作为注册中心，使用EurekaProxyDiscovery传入RedisProxyJedisPool即可      
-如果使用zk作为注册中心，使用ZkProxyDiscovery传入RedisProxyJedisPool即可    
+如果使用zk作为注册中心，使用ZkProxyDiscovery传入RedisProxyJedisPool即可  
+    
+特别的，如果客户端使用CamelliaRedisTemplate并且使用spring boot构建服务，此时的使用方式是：  
+如果使用zk作为注册中心，则引入camellia-redis-spring-boot-starter和camellia-redis-zk-spring-boot-starter即可  
+如果使用eureka作为注册中心，则引入camellia-redis-spring-boot-starter和camellia-redis-eureka-spring-boot-starter即可   
+上述方式下，会自动初始化一个使用了camellia-redis-proxy的CamelliaRedisTemplate对象，业务可以使用Autowired的方式获取到该对象      
 <img src="doc/2.png" width="80%" height="80%">  
 
 ## maven依赖

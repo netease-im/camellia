@@ -10,4 +10,5 @@ public class ZkConstants {
     public static int baseSleepTimeMs = 1000;
     public static int maxRetries = 3;
     public static final String basePath = "/camellia";
+    public static int reloadIntervalSeconds = 600;
 }
