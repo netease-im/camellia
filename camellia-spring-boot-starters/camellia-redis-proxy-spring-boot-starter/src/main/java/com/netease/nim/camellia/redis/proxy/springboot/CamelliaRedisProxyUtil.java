@@ -28,7 +28,7 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setMonitorIntervalSeconds(properties.getMonitorIntervalSeconds());
         serverProperties.setCommandSpendTimeMonitorEnable(properties.isCommandSpendTimeMonitorEnable());
         serverProperties.setSlowCommandThresholdMillisTime(properties.getSlowCommandThresholdMillisTime());
-        serverProperties.setCommandFilterClassName(properties.getCommandFilterClassName());
+        serverProperties.setCommandInterceptorClassName(properties.getCommandInterceptorClassName());
         NettyProperties netty = properties.getNetty();
         serverProperties.setBossThread(netty.getBossThread());
         if (netty.getWorkThread() > 0) {

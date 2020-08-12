@@ -2,7 +2,7 @@
 ### 新增
 * camellia-redis-proxy的async模式支持redis sentinel
 * camellia-redis-proxy的async模式支持统计命令的执行时间
-* camellia-redis-proxy的async模式支持CommandFilter，自定义拦截规则
+* camellia-redis-proxy的async模式支持CommandInterceptor，自定义拦截规则
 * 新增camellia-redis-zk注册发现组件，提供一个使用注册中心模式使用camellia-redis-proxy的默认实现
 
 ### 更新

@@ -22,7 +22,7 @@ public class CamelliaServerProperties {
     private int writeBufferWaterMarkLow = Constants.Server.writeBufferWaterMarkLow;
     private int writeBufferWaterMarkHigh = Constants.Server.writeBufferWaterMarkHigh;
     private int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
-    private String commandFilterClassName;
+    private String commandInterceptorClassName;
 
     public int getPort() {
         return port;
@@ -136,11 +136,11 @@ public class CamelliaServerProperties {
         this.commandDecodeMaxBatchSize = commandDecodeMaxBatchSize;
     }
 
-    public String getCommandFilterClassName() {
-        return commandFilterClassName;
+    public String getCommandInterceptorClassName() {
+        return commandInterceptorClassName;
     }
 
-    public void setCommandFilterClassName(String commandFilterClassName) {
-        this.commandFilterClassName = commandFilterClassName;
+    public void setCommandInterceptorClassName(String commandInterceptorClassName) {
+        this.commandInterceptorClassName = commandInterceptorClassName;
     }
 }

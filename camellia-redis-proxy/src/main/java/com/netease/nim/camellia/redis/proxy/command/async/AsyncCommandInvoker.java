@@ -29,20 +29,20 @@ public class AsyncCommandInvoker implements CommandInvoker {
     private final AsyncCamelliaRedisTemplateChooser chooser;
     private final boolean commandSpendTimeMonitorEnable;
     private final long slowCommandThresholdMillisTime;
-    private CommandFilter commandFilter = null;
+    private CommandInterceptor commandInterceptor = null;
 
     public AsyncCommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
         this.slowCommandThresholdMillisTime = serverProperties.getSlowCommandThresholdMillisTime();
         this.commandSpendTimeMonitorEnable = serverProperties.isMonitorEnable() && serverProperties.isCommandSpendTimeMonitorEnable();
         this.chooser = new AsyncCamelliaRedisTemplateChooser(transpondProperties);
-        String commandFilterClassName = serverProperties.getCommandFilterClassName();
-        if (commandFilterClassName != null) {
+        String commandInterceptorClassName = serverProperties.getCommandInterceptorClassName();
+        if (commandInterceptorClassName != null) {
             try {
-                Class<?> clazz = Class.forName(commandFilterClassName);
-                commandFilter = (CommandFilter) clazz.newInstance();
-                logger.info("init CommandFilter success, CommandFilter = {}", clazz);
+                Class<?> clazz = Class.forName(commandInterceptorClassName);
+                commandInterceptor = (CommandInterceptor) clazz.newInstance();
+                logger.info("CommandInterceptor init success, class = {}", commandInterceptorClassName);
             } catch (Exception e) {
-                logger.error("init CommandFilter error, class = {}", commandFilterClassName, e);
+                logger.error("CommandInterceptor init error, class = {}", commandInterceptorClassName, e);
                 throw new CamelliaRedisException(e);
             }
         }
@@ -65,9 +65,9 @@ public class AsyncCommandInvoker implements CommandInvoker {
 
             List<AsyncTask> tasks = new ArrayList<>(commands.size());
 
-            boolean needFilter = commandFilter != null;
+            boolean needIntercept = commandInterceptor != null;
             List<Command> list = null;
-            if (needFilter) {
+            if (needIntercept) {
                 list = new ArrayList<>();
             }
 
@@ -82,19 +82,20 @@ public class AsyncCommandInvoker implements CommandInvoker {
                 }
                 tasks.add(task);
 
-                if (needFilter) {
-                    CommandFilterResponse response;
+                if (needIntercept) {
+                    CommandInterceptResponse response;
                     try {
-                        response = commandFilter.check(command);
+                        response = commandInterceptor.check(ClientCommandUtil.getBid(channelInfo),
+                                ClientCommandUtil.getBgroup(channelInfo), command);
                     } catch (Exception e) {
-                        String errorMsg = "ERR command filter error [" + e.getMessage() + "]";
+                        String errorMsg = "ERR command intercept error [" + e.getMessage() + "]";
                         ErrorLogCollector.collect(AsyncCommandInvoker.class, errorMsg);
-                        response = new CommandFilterResponse(false, errorMsg);
+                        response = new CommandInterceptResponse(false, errorMsg);
                     }
                     if (!response.isPass()) {
                         String errorMsg = response.getErrorMsg();
                         if (errorMsg == null) {
-                            errorMsg = CommandFilterResponse.DEFAULT_FAIL.getErrorMsg();
+                            errorMsg = CommandInterceptResponse.DEFAULT_FAIL.getErrorMsg();
                         }
                         task.replyCompleted(new ErrorReply(errorMsg));
                     } else {
@@ -103,7 +104,7 @@ public class AsyncCommandInvoker implements CommandInvoker {
                 }
             }
 
-            if (needFilter) {
+            if (needIntercept) {
                 commands = list;
                 if (commands.isEmpty()) {
                     return;

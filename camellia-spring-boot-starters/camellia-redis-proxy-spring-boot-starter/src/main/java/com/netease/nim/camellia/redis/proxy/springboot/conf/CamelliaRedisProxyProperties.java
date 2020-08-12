@@ -56,10 +56,10 @@ public class CamelliaRedisProxyProperties {
     private long slowCommandThresholdMillisTime = Constants.Server.slowCommandThresholdMillisTime;
 
     /**
-     * 命令过滤器，see @CommandFilter
+     * 命令拦截器，see @CommandInterceptor
      * 只有async模式才有效
      */
-    private String commandFilterClassName;
+    private String commandInterceptorClassName;
 
     /**
      * netty相关参数
@@ -135,12 +135,12 @@ public class CamelliaRedisProxyProperties {
         this.slowCommandThresholdMillisTime = slowCommandThresholdMillisTime;
     }
 
-    public String getCommandFilterClassName() {
-        return commandFilterClassName;
+    public String getCommandInterceptorClassName() {
+        return commandInterceptorClassName;
     }
 
-    public void setCommandFilterClassName(String commandFilterClassName) {
-        this.commandFilterClassName = commandFilterClassName;
+    public void setCommandInterceptorClassName(String commandInterceptorClassName) {
+        this.commandInterceptorClassName = commandInterceptorClassName;
     }
 
     public NettyProperties getNetty() {

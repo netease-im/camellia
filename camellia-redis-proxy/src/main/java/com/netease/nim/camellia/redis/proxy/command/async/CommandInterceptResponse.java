@@ -4,15 +4,15 @@ package com.netease.nim.camellia.redis.proxy.command.async;
  *
  * Created by caojiajun on 2020/8/10
  */
-public class CommandFilterResponse {
+public class CommandInterceptResponse {
 
-    public static final CommandFilterResponse SUCCESS = new CommandFilterResponse(true, null);
-    public static final CommandFilterResponse DEFAULT_FAIL = new CommandFilterResponse(false, "ERR command filter no pass");
+    public static final CommandInterceptResponse SUCCESS = new CommandInterceptResponse(true, null);
+    public static final CommandInterceptResponse DEFAULT_FAIL = new CommandInterceptResponse(false, "ERR command intercept no pass");
 
     private final boolean pass;
     private final String errorMsg;
 
-    public CommandFilterResponse(boolean pass, String errorMsg) {
+    public CommandInterceptResponse(boolean pass, String errorMsg) {
         this.pass = pass;
         this.errorMsg = errorMsg;
     }
