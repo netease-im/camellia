@@ -31,6 +31,7 @@ Camellia是网易云信内部开发使用的一个公共组件库，以下模块
 │ ├─`camellia-redis-proxy-zk-registry-spring-boot-starter`   
 │ ├─`camellia-redis-proxy-hbase-spring-boot-starter`    
 │ ├─`camellia-hbase-spring-boot-starter`  
+│ ├─`camellia-redis-zk-spring-boot-starter`  
               
 ## 模块简介
 ### 1、camellia-core  
