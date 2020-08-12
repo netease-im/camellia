@@ -7,21 +7,23 @@
 
 ## 特性
 * 支持设置密码
-* 支持代理到普通redis，也支持代理到redis cluster
-* 支持配置自定义的分片逻辑（可以代理到多个redis/redis-cluster集群）
-* 支持配置自定义的双写逻辑（服务器会识别命令的读写属性，配置双写之后写命令会同时发往多个后端）
-* 支持外部插件，从而可以复用协议解析模块（当前包括camellia-redis-proxy-hbase插件，实现了zset命令的冷热分离存储）
-* 支持在线变更配置（需引入camellia-dashboard）
+* 支持代理到redis、redis sentinel、redis cluster  
+* 支持配置自定义的分片逻辑（可以代理到多个redis/redis-sentinel/redis-cluster集群）  
+* 支持配置自定义的双写逻辑（服务器会识别命令的读写属性，配置双写之后写命令会同时发往多个后端）  
+* 支持外部插件，从而可以复用协议解析模块（当前包括camellia-redis-proxy-hbase插件，实现了zset命令的冷热分离存储）  
+* 支持在线变更配置（需引入camellia-dashboard）  
 * 支持多个业务逻辑共享一套proxy集群，如：A业务配置转发规则1，B业务配置转发规则2（需要在建立redis连接时通过client命令设置业务类型）      
+* 支持自定义CommandInterceptor，拦截非法请求（如key/value不规范等）  
 * 提供了一个spring-boot-starter，3行代码快速搭建camellia-redis-proxy集群  
 
 ## 使用场景
 * 需要从redis迁移到redis cluster，但是客户端代码不方便修改  
 * 客户端直连redis cluster，导致cluster服务器连接过多  
 * 需要使用camellia-redis的多读多写和分片功能，但是客户端代码不方便修改  
+* 想要对redis操作进行一定的控制（如命名规范性、key/value规范性等），可以使用proxy的CommandInterceptor进行自定义拦截  
 
 ## 监控
-* 参见RedisMonitor，指标：客户端连接数、请求量、异常等  
+* 参见RedisMonitor，指标：客户端连接数、请求量、异常、请求耗时等  
 
 ## 部署架构
 redis-proxy本身无状态，可以水平扩展，为了实现高可用和负载均衡，有如下两种部署方式：     
@@ -30,8 +32,12 @@ redis-proxy本身无状态，可以水平扩展，为了实现高可用和负载
 <img src="doc/1.png" width="80%" height="80%">  
 #### 部署方式二
 可以通过eureka、zk等注册中心进行注册，在客户端进行负载均衡   
-此时客户端可以使用RedisProxyJedisPool代替JedisPool即可使用标准Jedis访问代理服务  
-特别的，对于Java客户，特别是使用了SpringCloudEureka，camellia提供了camellia-redis-eureka-spring-boot-starter，结合camellia-redis-spring-boot-starter使用，即可直接接入使用客户端负载均衡模式的proxy  
+如果要使用eureka作为注册中心，引入spring-cloud-starter-netflix-eureka-client即可  
+如果要使用zk作为注册中心，引入camellia-redis-proxy-zk-registry-spring-boot-starter即可(参见camellia-redis-proxy-samples)    
+
+对于客户端侧，如果是Java，则使用RedisProxyJedisPool代替JedisPool即可使用标准Jedis访问代理服务    
+如果使用eureka作为注册中心，使用EurekaProxyDiscovery传入RedisProxyJedisPool即可      
+如果使用zk作为注册中心，使用ZkProxyDiscovery传入RedisProxyJedisPool即可    
 <img src="doc/2.png" width="80%" height="80%">  
 
 ## maven依赖
