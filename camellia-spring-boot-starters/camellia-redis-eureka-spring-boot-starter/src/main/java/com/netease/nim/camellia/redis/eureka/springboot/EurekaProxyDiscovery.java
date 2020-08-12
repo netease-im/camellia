@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  *
- * Created by yuanyuanjun on 2019/11/26.
+ * Created by caojiajun on 2019/11/26.
  */
 public class EurekaProxyDiscovery extends ProxyDiscovery {
 
@@ -29,12 +29,12 @@ public class EurekaProxyDiscovery extends ProxyDiscovery {
     private Set<Proxy> proxySet;
     private final DiscoveryClient discoveryClient;
 
-    public EurekaProxyDiscovery(DiscoveryClient discoveryClient, String applicationName, int refreshInervalSeconds) {
+    public EurekaProxyDiscovery(DiscoveryClient discoveryClient, String applicationName, int refreshIntervalSeconds) {
         this.discoveryClient = discoveryClient;
         this.applicationName = applicationName;
         this.proxySet = refreshProxySet();
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(EurekaProxyDiscovery.class))
-                .scheduleAtFixedRate(new RefreshThread(this), refreshInervalSeconds, refreshInervalSeconds, TimeUnit.SECONDS);
+                .scheduleAtFixedRate(new RefreshThread(this), refreshIntervalSeconds, refreshIntervalSeconds, TimeUnit.SECONDS);
     }
 
     @Override

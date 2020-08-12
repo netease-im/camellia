@@ -2,8 +2,10 @@ package com.netease.nim.camellia.redis.proxy.samples;
 
 import com.netease.nim.camellia.redis.proxy.console.ConsoleResult;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleServiceAdaptor;
+import com.netease.nim.camellia.redis.proxy.springboot.CamelliaRedisProxyBoot;
+import com.netease.nim.camellia.redis.zk.registry.springboot.CamelliaRedisProxyZkRegisterBoot;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 
@@ -14,26 +16,28 @@ import org.springframework.stereotype.Component;
 @Component
 public class MyConsoleService extends ConsoleServiceAdaptor implements InitializingBean {
 
-    @Value("${server.port:6379}")
-    private int port;
+    @Autowired
+    private CamelliaRedisProxyBoot redisProxyBoot;
 
-    @Value("${spring.application.name:camellia-redis-proxy}")
-    private String applicationName;
+    @Autowired
+    private CamelliaRedisProxyZkRegisterBoot zkRegisterBoot;
 
     @Override
     public ConsoleResult online() {
         //TODO register to 注册中心，或者挂载到负载均衡服务器
+        zkRegisterBoot.register();
         return super.online();
     }
 
     @Override
     public ConsoleResult offline() {
         //TODO deregister from 注册中心，或者从负载均衡服务器上摘掉
+        zkRegisterBoot.deregister();
         return super.offline();
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        setServerPort(port);
+        setServerPort(redisProxyBoot.getPort());
     }
 }

@@ -10,9 +10,12 @@ camellia-redis-proxy:
   transpond:
     type: local
     local:
-      resource: redis-sentinel://@127.0.0.1:26379/master1
-  monitor-enable: true
+      resource: redis://@127.0.0.1:6379
+  monitor-enable: false
   command-spend-time-monitor-enable: true
   monitor-interval-seconds: 10
 #  command-filter-class-name: com.netease.nim.camellia.redis.proxy.command.async.DummyCommandFilter
-
+camellia-zk:
+  enable: true
+  zk-url: 127.0.0.1:2181
+  base-path: /camellia

@@ -11,10 +11,23 @@ import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
  */
 public class CamelliaRedisProxyBoot {
 
+    private final String applicationName;
+    private final int port;
+
     public CamelliaRedisProxyBoot(CamelliaServerProperties serverProperties,
                                   CommandInvoker commandInvoker, String applicationName) throws Exception {
         CamelliaApiEnv.source = applicationName;
+        this.applicationName = applicationName;
+        this.port = serverProperties.getPort();
         CamelliaRedisProxyServer server = new CamelliaRedisProxyServer(serverProperties, commandInvoker);
         server.start();
+    }
+
+    public String getApplicationName() {
+        return applicationName;
+    }
+
+    public int getPort() {
+        return port;
     }
 }

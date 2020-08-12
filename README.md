@@ -11,6 +11,10 @@ Camellia是网易云信内部开发使用的一个公共组件库，以下模块
 ├─`camellia-redis-proxy`   
 ├─`camellia-redis-proxy-hbase`  
 ├─`camellia-redis-toolkit`  
+├─`camellia-redis-zk`  
+│ ├─`camellia-redis-zk-common`  
+│ ├─`camellia-redis-zk-discovery`  
+│ ├─`camellia-redis-zk-registry`    
 ├─`camellia-samples`               
 │ ├─`camellia-core-samples`  
 │ ├─`camellia-dashboard-samples`  
@@ -36,17 +40,20 @@ Camellia是网易云信内部开发使用的一个公共组件库，以下模块
 [详情和示例](/camellia-dashboard/README.md)  
 ### 3、camellia-redis  
 一个基于camellia-core和jedis开发的CamelliaRedisTemplate，支持redis、redis sentinel、redis cluster，支持pipeline，对外暴露统一的api（方法和参数同jedis）  
-[详情和示例](/camellia-redis/README.md)  
-### 4、camellia-redis-proxy  
+[详情和示例](/camellia-redis/README.md)
+### 4、camellia-redis-zk  
+一个基于zk和curator实现的camellia-redis-proxy的一个注册发现组件  
+[详情和示例](/camellia-redis-zk/README.md)  
+### 5、camellia-redis-proxy  
 一个基于netty和camellia-redis开发的redis代理服务，实现了redis协议，可以使用标准redis客户端连接，从而可以让不方便修改业务端代码的服务能够使用camellia-redis  
 [详情和示例](/camellia-redis-proxy/README.md)  
-### 5、camellia-hbase  
+### 6、camellia-hbase  
 一个基于camellia-core和hbase-client封装的hbase客户端，支持双写、读写分离等  
 [详情和示例](/camellia-hbase/README.md)  
-### 6、camellia-redis-proxy-hbase    
+### 7、camellia-redis-proxy-hbase    
 一个基于camellia-redis、camellia-hbase的camellia-redis-proxy插件，用于构建冷热分离存储的redis-proxy服务，当前实现了zset相关的命令  
 [详情和示例](/camellia-redis-proxy-hbase/README.md)  
-### 7、camellia-redis-toolkit  
+### 8、camellia-redis-toolkit  
 一个基于camellia-redis的工具集，包括分布式锁、id生成、计数器等组件  
 [详情和示例](/camellia-redis-toolkit/README.md)  
 
