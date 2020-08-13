@@ -47,7 +47,7 @@ Camellia是网易云信内部开发使用的一个公共组件库，以下模块
 一个基于zk和curator实现的camellia-redis-proxy的一个注册发现组件  
 [详情和示例](/camellia-redis-zk/README.md)  
 ### 5、camellia-redis-proxy  
-一个基于netty和camellia-redis开发的redis代理服务，实现了redis协议，可以使用标准redis客户端连接，从而可以让不方便修改业务端代码的服务能够使用camellia-redis  
+一个基于netty4开发的redis代理服务，实现了redis协议，支持代理到redis、redis-sentinel、redis-cluster；支持在proxy层进行分片、读写分离、双写等；支持设置自定义拦截规则；支持多个业务共享（A业务代理到redis1，B业务代理到redis2）等  
 [详情和示例](/camellia-redis-proxy/README.md)  
 ### 6、camellia-hbase  
 一个基于camellia-core和hbase-client封装的hbase客户端，支持双写、读写分离等  
