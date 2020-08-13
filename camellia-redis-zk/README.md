@@ -12,7 +12,7 @@
 ```
 并且在application.yml添加如下配置（更多详细配置参考CamelliaRedisProxyZkRegistryProperties）  
 ```
-camellia-zk:
+camellia-redis-zk-registry:
   enable: true
   zk-url: 127.0.0.1:2181
   base-path: /camellia

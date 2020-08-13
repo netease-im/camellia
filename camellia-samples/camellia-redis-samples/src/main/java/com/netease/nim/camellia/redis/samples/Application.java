@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.samples;
 
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,7 +16,7 @@ import java.util.Map;
  * Created by caojiajun on 2019/11/13.
  */
 @SpringBootApplication
-public class Application {
+public class Application implements InitializingBean {
 
     @Autowired
     private CamelliaRedisTemplate template;
@@ -46,5 +47,10 @@ public class Application {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        test();
     }
 }

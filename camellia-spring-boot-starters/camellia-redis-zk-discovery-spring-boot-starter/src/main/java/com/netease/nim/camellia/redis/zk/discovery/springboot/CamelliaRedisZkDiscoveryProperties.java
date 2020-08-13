@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * Created by caojiajun on 2020/8/12
  */
-@ConfigurationProperties(prefix = "camellia-redis-zk")
+@ConfigurationProperties(prefix = "camellia-redis-zk-discovery")
 public class CamelliaRedisZkDiscoveryProperties {
 
     /**

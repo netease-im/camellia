@@ -39,7 +39,7 @@ redis-proxy本身无状态，可以水平扩展，为了实现高可用和负载
 如果使用zk作为注册中心，使用ZkProxyDiscovery传入RedisProxyJedisPool即可  
     
 特别的，如果客户端使用CamelliaRedisTemplate并且使用spring boot构建服务，此时的使用方式是：  
-如果使用zk作为注册中心，则引入camellia-redis-spring-boot-starter和camellia-redis-zk-spring-boot-starter即可  
+如果使用zk作为注册中心，则引入camellia-redis-spring-boot-starter和camellia-redis-zk-discovery-spring-boot-starter即可  
 如果使用eureka作为注册中心，则引入camellia-redis-spring-boot-starter和camellia-redis-eureka-spring-boot-starter即可   
 上述方式下，会自动初始化一个使用了camellia-redis-proxy的CamelliaRedisTemplate对象，业务可以使用Autowired的方式获取到该对象      
 <img src="doc/2.png" width="80%" height="80%">  

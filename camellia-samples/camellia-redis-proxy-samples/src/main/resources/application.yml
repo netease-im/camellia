@@ -15,7 +15,7 @@ camellia-redis-proxy:
   command-spend-time-monitor-enable: true
   monitor-interval-seconds: 10
   command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.command.async.DummyCommandInterceptor
-camellia-zk:
+camellia-redis-zk-registry:
   enable: true
   zk-url: 127.0.0.1:2181
   base-path: /camellia

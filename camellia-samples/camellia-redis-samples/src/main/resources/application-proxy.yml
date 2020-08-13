@@ -3,7 +3,7 @@
 camellia-redis:
   type: local
   local:
-    resource: redis://@127.0.0.1:6379
+    resource: camellia-redis-proxy://@camellia-redis-proxy-server
   redis-conf:
     jedis:
       timeout: 2000

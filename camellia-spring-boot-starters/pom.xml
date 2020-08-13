@@ -23,7 +23,7 @@
         <module>camellia-hbase-spring-boot-starter</module>
         <module>camellia-redis-proxy-hbase-spring-boot-starter</module>
         <module>camellia-redis-proxy-zk-registry-spring-boot-starter</module>
-        <module>camellia-redis-zk-spring-boot-starter</module>
+        <module>camellia-redis-zk-discovery-spring-boot-starter</module>
     </modules>
 
 </project>
