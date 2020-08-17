@@ -106,8 +106,8 @@ public class ZkProxyRegistry {
 
     public void register() {
         if (running.compareAndSet(false, true)) {
-            if (registerOk) return;
             try {
+                if (registerOk) return;
                 while (true) {
                     try {
                         instanceInfo.setRegisterTime(System.currentTimeMillis());
@@ -144,8 +144,8 @@ public class ZkProxyRegistry {
 
     public void deregister() {
         if (running.compareAndSet(false, true)) {
-            if (!registerOk) return;
             try {
+                if (!registerOk) return;
                 client.delete().forPath(registerPath());
                 registerOk = false;
                 instanceInfo.setRegisterTime(-1);
