@@ -157,7 +157,7 @@ public class ZkProxyRegistry {
             } catch (Exception e) {
                 throw new ZkRegistryException(e);
             } finally {
-                running.compareAndSet(false, true);
+                running.compareAndSet(true, false);
             }
         }
     }
