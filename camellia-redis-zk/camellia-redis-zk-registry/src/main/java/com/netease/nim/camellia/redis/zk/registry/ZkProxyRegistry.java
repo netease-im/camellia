@@ -91,6 +91,13 @@ public class ZkProxyRegistry {
                 }
             }
         });
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                deregister();
+            } catch (Exception e) {
+                logger.error("deregister error, zk = {}, path = {}, instanceInfo = {}", zkUrl, registerPath(),  JSONObject.toJSONString(instanceInfo));
+            }
+        }));
     }
 
     private String registerPath() {
