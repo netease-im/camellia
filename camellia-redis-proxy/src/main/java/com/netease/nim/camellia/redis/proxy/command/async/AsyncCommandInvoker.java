@@ -85,8 +85,7 @@ public class AsyncCommandInvoker implements CommandInvoker {
                 if (needIntercept) {
                     CommandInterceptResponse response;
                     try {
-                        response = commandInterceptor.check(ClientCommandUtil.getBid(channelInfo),
-                                ClientCommandUtil.getBgroup(channelInfo), command);
+                        response = commandInterceptor.check(channelInfo.getBid(), channelInfo.getBgroup(), command);
                     } catch (Exception e) {
                         String errorMsg = "ERR command intercept error [" + e.getMessage() + "]";
                         ErrorLogCollector.collect(AsyncCommandInvoker.class, errorMsg);
@@ -117,14 +116,14 @@ public class AsyncCommandInvoker implements CommandInvoker {
                     template = chooser.choose(channelInfo);
                 } catch (Exception e) {
                     logger.error("AsyncCamelliaRedisTemplateChooser choose error, bid = {}, bgroup = {}",
-                            ClientCommandUtil.getBid(channelInfo), ClientCommandUtil.getBgroup(channelInfo), e);
+                            channelInfo.getBid(), channelInfo.getBgroup(), e);
                 }
             }
             if (template == null) {
                 for (int i = 0; i < commands.size(); i++) {
                     Command command = commands.get(i);
                     logger.warn("AsyncCamelliaRedisTemplate choose fail, command return NOT_AVAILABLE, consid = {}, bid = {}, bgroup = {}, command = {}",
-                            channelInfo.getConsid(), ClientCommandUtil.getBid(channelInfo), ClientCommandUtil.getBgroup(channelInfo), command.getName());
+                            channelInfo.getConsid(), channelInfo.getBid(), channelInfo.getBgroup(), command.getName());
                     AsyncTask task = tasks.get(i);
                     task.replyCompleted(ErrorReply.NOT_AVAILABLE);
                 }

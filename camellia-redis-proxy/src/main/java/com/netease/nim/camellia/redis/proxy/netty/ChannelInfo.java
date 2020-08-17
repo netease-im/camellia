@@ -6,8 +6,6 @@ import com.netease.nim.camellia.redis.proxy.command.async.AsyncTaskQueue;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -19,11 +17,14 @@ public class ChannelInfo {
     private static final AttributeKey<ChannelInfo> ATTRIBUTE_KEY = AttributeKey.valueOf("CI");
 
     private final String consid;
-    private final Map<String, Object> map = new HashMap<>();
     private ChannelStats channelStats = ChannelStats.NO_AUTH;
     private final ChannelHandlerContext ctx;
     private final AsyncTaskQueue asyncTaskQueue;
     private AsyncCamelliaRedisTemplate template;
+
+    private String clientName;
+    private Long bid;
+    private String bgroup;
 
     private ChannelInfo(ChannelHandlerContext ctx) {
         this.ctx = ctx;
@@ -81,16 +82,28 @@ public class ChannelInfo {
         this.channelStats = channelStats;
     }
 
-    public void setKV(String key, Object value) {
-        map.put(key, value);
+    public String getClientName() {
+        return clientName;
     }
 
-    public Object getKV(String key) {
-        return map.get(key);
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
     }
 
-    public boolean containsKV(String key) {
-        return map.containsKey(key);
+    public Long getBid() {
+        return bid;
+    }
+
+    public void setBid(Long bid) {
+        this.bid = bid;
+    }
+
+    public String getBgroup() {
+        return bgroup;
+    }
+
+    public void setBgroup(String bgroup) {
+        this.bgroup = bgroup;
     }
 
     public static enum ChannelStats {

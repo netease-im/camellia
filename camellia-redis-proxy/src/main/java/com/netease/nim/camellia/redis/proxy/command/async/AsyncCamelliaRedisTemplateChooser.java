@@ -6,7 +6,6 @@ import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.env.ShadingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ShadingFuncUtil;
-import com.netease.nim.camellia.redis.proxy.command.ClientCommandUtil;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import org.slf4j.Logger;
@@ -52,8 +51,8 @@ public class AsyncCamelliaRedisTemplateChooser {
             Long bid = null;
             String bgroup = null;
             if (channelInfo != null) {
-                bid = ClientCommandUtil.getBid(channelInfo);
-                bgroup = ClientCommandUtil.getBgroup(channelInfo);
+                bid = channelInfo.getBid();
+                bgroup = channelInfo.getBgroup();
             }
             if (bid == null || bid <= 0 || bgroup == null) {
                 if (logger.isTraceEnabled()) {
@@ -66,8 +65,8 @@ public class AsyncCamelliaRedisTemplateChooser {
             Long bid = null;
             String bgroup = null;
             if (channelInfo != null) {
-                bid = ClientCommandUtil.getBid(channelInfo);
-                bgroup = ClientCommandUtil.getBgroup(channelInfo);
+                bid = channelInfo.getBid();
+                bgroup = channelInfo.getBgroup();
             }
             if (bid == null || bid <= 0 || bgroup == null) {
                 if (localInstance != null) return localInstance;

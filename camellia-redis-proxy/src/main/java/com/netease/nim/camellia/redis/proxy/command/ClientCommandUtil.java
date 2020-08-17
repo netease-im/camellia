@@ -18,17 +18,13 @@ public class ClientCommandUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientCommandUtil.class);
 
-    private static final String BID = "BID";
-    private static final String BGROUP = "BGROUP";
-    private static final String CLIENT_NAME = "CLIENT_NAME";
-
     public static Reply invokeClientCommand(ChannelInfo channelInfo, Command client) {
         byte[][] objects = client.getObjects();
         if (objects.length == 2) {
             boolean getname = Utils.checkStringIgnoreCase(objects[1], RedisKeyword.GETNAME.name());
             if (getname) {
                 if (channelInfo != null) {
-                    String clientName = (String) channelInfo.getKV(CLIENT_NAME);
+                    String clientName = channelInfo.getClientName();
                     return new StatusReply(clientName);
                 }
             }
@@ -38,15 +34,15 @@ public class ClientCommandUtil {
                 String clienName = Utils.bytesToString(objects[2]);
                 if (channelInfo != null) {
                     //不允许变更clientname
-                    if (channelInfo.containsKV(CLIENT_NAME)) {
+                    if (channelInfo.getClientName() != null) {
                         return ErrorReply.REPEAT_OPERATION;
                     }
-                    channelInfo.setKV(CLIENT_NAME, clienName);
+                    channelInfo.setClientName(clienName);
                     Long bid = ProxyUtil.parseBid(clienName);
                     String bgroup = ProxyUtil.parseBgroup(clienName);
                     if (bid != null && bgroup != null) {
-                        channelInfo.setKV(BID, bid);
-                        channelInfo.setKV(BGROUP, bgroup);
+                        channelInfo.setBid(bid);
+                        channelInfo.setBgroup(bgroup);
                         if (logger.isDebugEnabled()) {
                             logger.debug("channel init with bid/bgroup = {}/{}, consid = {}", bid, bgroup, channelInfo.getConsid());
                         }
@@ -56,13 +52,5 @@ public class ClientCommandUtil {
             }
         }
         return ErrorReply.SYNTAX_ERROR;
-    }
-
-    public static Long getBid(ChannelInfo channelInfo) {
-        return (Long) channelInfo.getKV(BID);
-    }
-
-    public static String getBgroup(ChannelInfo channelInfo) {
-        return (String) channelInfo.getKV(BGROUP);
     }
 }

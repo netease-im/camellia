@@ -47,8 +47,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
             for (Command command : commandList) {
                 //监控
                 if (env.isMonitorEnable()) {
-                    Long bid = ClientCommandUtil.getBid(channelInfo);
-                    String bgroup = ClientCommandUtil.getBgroup(channelInfo);
+                    Long bid = channelInfo.getBid();
+                    String bgroup = channelInfo.getBgroup();
                     RedisMonitor.incr(bid, bgroup, command.getName());
                 }
 

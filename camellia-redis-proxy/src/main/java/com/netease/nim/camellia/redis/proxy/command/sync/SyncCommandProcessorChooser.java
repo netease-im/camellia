@@ -5,7 +5,6 @@ import com.netease.nim.camellia.core.api.CamelliaApiUtil;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.redis.CamelliaRedisEnv;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
-import com.netease.nim.camellia.redis.proxy.command.ClientCommandUtil;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.util.JedisRedisEnvUtil;
@@ -51,8 +50,8 @@ public class SyncCommandProcessorChooser {
             Long bid = null;
             String bgroup = null;
             if (channelInfo != null) {
-                bid = ClientCommandUtil.getBid(channelInfo);
-                bgroup = ClientCommandUtil.getBgroup(channelInfo);
+                bid = channelInfo.getBid();
+                bgroup = channelInfo.getBgroup();
             }
             if (bid == null || bid <= 0 || bgroup == null) {
                 if (logger.isTraceEnabled()) {
@@ -65,8 +64,8 @@ public class SyncCommandProcessorChooser {
             Long bid = null;
             String bgroup = null;
             if (channelInfo != null) {
-                bid = ClientCommandUtil.getBid(channelInfo);
-                bgroup = ClientCommandUtil.getBgroup(channelInfo);
+                bid = channelInfo.getBid();
+                bgroup = channelInfo.getBgroup();
             }
             if (bid == null || bid <= 0 || bgroup == null) {
                 if (localInstance != null) return localInstance;
