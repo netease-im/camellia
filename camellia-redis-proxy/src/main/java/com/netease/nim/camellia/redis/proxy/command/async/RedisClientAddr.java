@@ -13,6 +13,8 @@ public class RedisClientAddr {
 
     private final String url;
 
+    private RedisClient cache;
+
     public RedisClientAddr(String host, int port, String password) {
         this.host = host;
         this.port = port;
@@ -34,6 +36,14 @@ public class RedisClientAddr {
 
     public String getUrl() {
         return url;
+    }
+
+    public RedisClient getCache() {
+        return cache;
+    }
+
+    public void setCache(RedisClient cache) {
+        this.cache = cache;
     }
 
     @Override

@@ -34,16 +34,28 @@ public class RedisClientHub {
     public static long failBanMillis = Constants.Async.failBanMillis;
 
     public static CompletableFuture<RedisClient> getAsync(RedisClientAddr addr) {
+        CompletableFuture<RedisClient> future = new CompletableFuture<>();
+        RedisClient cache = addr.getCache();
+        if (cache != null && cache.isValid()) {
+            future.complete(cache);
+            return future;
+        }
         String url = addr.getUrl();
         RedisClient client = map.get(url);
-        CompletableFuture<RedisClient> future = new CompletableFuture<>();
         if (client != null && client.isValid()) {
+            addr.setCache(client);
             future.complete(client);
         } else {
             try {
                 exec.submit(() -> {
-                    RedisClient redisClient = get(addr);
-                    future.complete(redisClient);
+                    try {
+                        RedisClient redisClient = get(addr);
+                        future.complete(redisClient);
+                    } catch (Exception e) {
+                        String log = "get redisClient in exec pool error, key = " + url;
+                        ErrorLogCollector.collect(RedisClientHub.class, log);
+                        future.complete(null);
+                    }
                 });
             } catch (Exception e) {
                 String log = "submit exec error, key = " + url;
@@ -60,6 +72,10 @@ public class RedisClientHub {
     }
 
     public static RedisClient get(RedisClientAddr addr) {
+        RedisClient cache = addr.getCache();
+        if (cache != null && cache.isValid()) {
+            return cache;
+        }
         String url = addr.getUrl();
         RedisClient client = map.get(url);
         if (client == null) {
@@ -83,6 +99,7 @@ public class RedisClientHub {
             }
         }
         if (client.isValid()) {
+            addr.setCache(client);
             return client;
         } else {
             //如果client处于不可用状态，检查不可用时长
@@ -122,6 +139,7 @@ public class RedisClientHub {
                         oldClient.stop();
                     }
                     resetFail(url);//如果client初始化成功，则重置计数器和错误时间戳
+                    addr.setCache(client);
                     return client;
                 } else {
                     incrFail(url);//client初始化失败，递增错误计数器

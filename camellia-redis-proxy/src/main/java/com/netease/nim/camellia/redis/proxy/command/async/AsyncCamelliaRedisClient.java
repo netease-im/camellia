@@ -34,7 +34,7 @@ public class AsyncCamelliaRedisClient implements AsyncClient {
             if (client != null) {
                 client.sendCommand(commands, completableFutureList);
             } else {
-                String log = "RedisClient[" + redisResource.getUrl() + "] is null, command return NOT_AVAILABLE";
+                String log = "RedisClient[" + addr + "] is null, command return NOT_AVAILABLE, RedisResource = " + redisResource.getUrl();
                 for (CompletableFuture<Reply> completableFuture : completableFutureList) {
                     completableFuture.complete(ErrorReply.NOT_AVAILABLE);
                     ErrorLogCollector.collect(AsyncCamelliaRedisClient.class, log);

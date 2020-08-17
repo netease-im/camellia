@@ -35,6 +35,7 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
 
     private final RedisSentinelResource redisSentinelResource;
     private volatile RedisClientAddr redisClientAddr;
+    private final Object lock = new Object();
 
     public AsyncCamelliaRedisSentinelClient(RedisSentinelResource redisSentinelResource) {
         this.redisSentinelResource = redisSentinelResource;
@@ -46,7 +47,7 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
                 String host = node.getHost();
                 int port = node.getPort();
                 redisClient = new RedisClient(host, port, null,
-                        RedisClientHub.heartbeatIntervalSeconds, RedisClientHub.heartbeatTimeoutMillis,
+                        -1, -1,
                         RedisClientHub.commandPipelineFlushThreshold, RedisClientHub.connectTimeoutMillis);
                 redisClient.start();
                 if (redisClient.isValid()) {
@@ -87,10 +88,10 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
             if (client != null) {
                 client.sendCommand(commands, completableFutureList);
             } else {
-                String log = "RedisClient[" + redisClientAddr.getUrl() + "] is null, command return NOT_AVAILABLE";
+                String log = "RedisClient[" + redisClientAddr + "] is null, command return NOT_AVAILABLE, RedisSentinelResource = " + redisSentinelResource.getUrl();
                 for (CompletableFuture<Reply> completableFuture : completableFutureList) {
                     completableFuture.complete(ErrorReply.NOT_AVAILABLE);
-                    ErrorLogCollector.collect(AsyncCamelliaRedisClient.class, log);
+                    ErrorLogCollector.collect(AsyncCamelliaRedisSentinelClient.class, log);
                 }
             }
         });
@@ -195,14 +196,16 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
                         String[] switchMasterMsg = msg.split(" ");
                         if (switchMasterMsg.length > 3) {
                             if (master.equals(switchMasterMsg[0])) {
-                                RedisClientAddr oldNode = redisSentinelClient.redisClientAddr;
-                                RedisClientAddr newNode = new RedisClientAddr(switchMasterMsg[3], Integer.parseInt(switchMasterMsg[4]),
-                                        redisSentinelResource.getPassword());
-                                if (!Objects.equals(oldNode, newNode)) {
-                                    RedisClientHub.get(newNode);
-                                    redisSentinelClient.redisClientAddr = newNode;
-                                    if (logger.isInfoEnabled()) {
-                                        logger.info("sentinel redis master node update, resource = {}, old = {}, new = {}", redisSentinelResource.getUrl(), oldNode, newNode);
+                                synchronized (lock) {
+                                    RedisClientAddr oldNode = redisSentinelClient.redisClientAddr;
+                                    RedisClientAddr newNode = new RedisClientAddr(switchMasterMsg[3], Integer.parseInt(switchMasterMsg[4]),
+                                            redisSentinelResource.getPassword());
+                                    if (!Objects.equals(oldNode, newNode)) {
+                                        RedisClientHub.get(newNode);
+                                        redisSentinelClient.redisClientAddr = newNode;
+                                        if (logger.isInfoEnabled()) {
+                                            logger.info("sentinel redis master node update, resource = {}, old = {}, new = {}", redisSentinelResource.getUrl(), oldNode, newNode);
+                                        }
                                     }
                                 }
                             }
@@ -221,13 +224,15 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
                 BulkReply portReply = (BulkReply) replies[1];
                 String redisHost = SafeEncoder.encode(hostReply.getRaw());
                 int redisPort = Integer.parseInt(SafeEncoder.encode(portReply.getRaw()));
-                RedisClientAddr newNode = new RedisClientAddr(redisHost, redisPort, redisSentinelResource.getPassword());
-                RedisClientAddr oldNode = redisClientAddr;
-                if (!Objects.equals(newNode, oldNode)) {
-                    RedisClientHub.get(newNode);
-                    redisClientAddr = newNode;
-                    if (logger.isInfoEnabled()) {
-                        logger.info("sentinel redis master node refresh, resource = {}, old = {}, new = {}", redisSentinelResource.getUrl(), oldNode, newNode);
+                synchronized (lock) {
+                    RedisClientAddr newNode = new RedisClientAddr(redisHost, redisPort, redisSentinelResource.getPassword());
+                    RedisClientAddr oldNode = redisClientAddr;
+                    if (!Objects.equals(newNode, oldNode)) {
+                        RedisClientHub.get(newNode);
+                        redisClientAddr = newNode;
+                        if (logger.isInfoEnabled()) {
+                            logger.info("sentinel redis master node refresh, resource = {}, old = {}, new = {}", redisSentinelResource.getUrl(), oldNode, newNode);
+                        }
                     }
                 }
                 return true;
