@@ -145,7 +145,7 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
 
                             for (CompletableFuture<Reply> future : futures) {
                                 Reply reply = null;
-                                while (true) {
+                                while (running) {
                                     try {
                                         reply = future.get(10, TimeUnit.SECONDS);
                                         break;

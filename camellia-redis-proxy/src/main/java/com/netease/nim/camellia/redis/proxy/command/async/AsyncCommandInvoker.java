@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.util.ErrorHandlerUtil;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -88,7 +89,7 @@ public class AsyncCommandInvoker implements CommandInvoker {
                         response = commandInterceptor.check(channelInfo.getBid(), channelInfo.getBgroup(), command);
                     } catch (Exception e) {
                         String errorMsg = "ERR command intercept error [" + e.getMessage() + "]";
-                        ErrorLogCollector.collect(AsyncCommandInvoker.class, errorMsg);
+                        ErrorLogCollector.collect(AsyncCommandInvoker.class, errorMsg, e);
                         response = new CommandInterceptResponse(false, errorMsg);
                     }
                     if (!response.isPass()) {
@@ -115,15 +116,18 @@ public class AsyncCommandInvoker implements CommandInvoker {
                 try {
                     template = chooser.choose(channelInfo);
                 } catch (Exception e) {
-                    logger.error("AsyncCamelliaRedisTemplateChooser choose error, bid = {}, bgroup = {}",
-                            channelInfo.getBid(), channelInfo.getBgroup(), e);
+                    Throwable ex = ErrorHandlerUtil.handler(e);
+                    String log = "AsyncCamelliaRedisTemplateChooser choose error, consid = " + channelInfo.getConsid()
+                            + ", bid = " + channelInfo.getBid() + ", bgroup = " + channelInfo.getBgroup() + ", ex = " + ex.toString();
+                    ErrorLogCollector.collect(AsyncCommandInvoker.class, log, e);
                 }
             }
             if (template == null) {
                 for (int i = 0; i < commands.size(); i++) {
                     Command command = commands.get(i);
-                    logger.warn("AsyncCamelliaRedisTemplate choose fail, command return NOT_AVAILABLE, consid = {}, bid = {}, bgroup = {}, command = {}",
-                            channelInfo.getConsid(), channelInfo.getBid(), channelInfo.getBgroup(), command.getName());
+                    String log = "AsyncCamelliaRedisTemplate choose fail, command return NOT_AVAILABLE, consid = " + channelInfo.getConsid()
+                            + ", bid = " + channelInfo.getBid() + ", bgroup = " + channelInfo.getBgroup() + ", command = " + command.getName();
+                    ErrorLogCollector.collect(AsyncCommandInvoker.class, log);
                     AsyncTask task = tasks.get(i);
                     task.replyCompleted(ErrorReply.NOT_AVAILABLE);
                 }
@@ -138,7 +142,10 @@ public class AsyncCommandInvoker implements CommandInvoker {
             }
         } catch (Exception e) {
             ctx.close();
-            logger.error("AsyncCommandInvoker error", e);
+            Throwable ex = ErrorHandlerUtil.handler(e);
+            String log = "AsyncCommandInvoker error, consid = " + channelInfo.getConsid()
+                    + ", bid = " + channelInfo.getBid() + ", bgroup = " + channelInfo.getBgroup() + ", ex = " + ex.toString();
+            ErrorLogCollector.collect(AsyncCommandInvoker.class, log, e);
         }
     }
 }

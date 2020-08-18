@@ -15,6 +15,8 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.FastRemoteMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
+import com.netease.nim.camellia.redis.proxy.util.ErrorHandlerUtil;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -481,12 +483,14 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                                 ReadableResourceTableUtil.readableResourceTable(response.getResourceTable()));
                     }
                 } catch (Exception e) {
-                    logger.error("reload error, bid = {}, bgroup = {}, md5 = {}", bid, bgroup, md5);
+                    Throwable ex = ErrorHandlerUtil.handler(e);
+                    String log = "reload error, bid = " + bid + ", bgroup = " + bgroup + ", md5 = " + md5 + ", ex = " + ex.toString();
+                    ErrorLogCollector.collect(AsyncCamelliaRedisTemplate.class, log, e);
                 } finally {
                     running.set(false);
                 }
             } else {
-                logger.warn("ReloadTask is running, skip run");
+                logger.warn("ReloadTask is running, skip run, bid = {}, bgroup = {}, md5 = {}", bid, bgroup, md5);
             }
         }
     }
