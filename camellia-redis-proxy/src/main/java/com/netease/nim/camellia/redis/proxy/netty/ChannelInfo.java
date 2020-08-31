@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 
-import com.netease.nim.camellia.redis.proxy.command.async.AsyncCamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.proxy.command.async.AsyncTaskQueue;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
@@ -20,7 +19,6 @@ public class ChannelInfo {
     private ChannelStats channelStats = ChannelStats.NO_AUTH;
     private final ChannelHandlerContext ctx;
     private final AsyncTaskQueue asyncTaskQueue;
-    private AsyncCamelliaRedisTemplate template;
 
     private String clientName;
     private Long bid;
@@ -52,14 +50,6 @@ public class ChannelInfo {
 
     public AsyncTaskQueue getAsyncTaskQueue() {
         return asyncTaskQueue;
-    }
-
-    public AsyncCamelliaRedisTemplate getTemplate() {
-        return template;
-    }
-
-    public void setTemplate(AsyncCamelliaRedisTemplate template) {
-        this.template = template;
     }
 
     public void clear() {

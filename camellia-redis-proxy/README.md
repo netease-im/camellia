@@ -1,9 +1,8 @@
 
 # camellia-redis-proxy
 ## 简介  
-基于netty和camellia-core开发的redis代理服务，实现了redis协议，可以使用标准redis客户端连接  
-提供sync和async两种转发模式，sync使用camellia-redis进行转发，是同步的；async使用netty进行转发，是异步的，建议使用默认的async模式    
-区别：对于双（N）写场景，sync模式会等待配置的两（N）个地址均响应之后再返回给客户端（并发双写，取决于慢的那个），而async模式会在配置的第一个双（N）写地址响应之后就返回（async模式会保证来自于同一个连接的命令的执行顺序在双写场景下是一致的）
+基于netty和camellia-core开发的redis代理服务，实现了redis协议，可以使用标准redis客户端连接      
+区别：对于双（N）写场景，proxy会在配置的第一个双（N）写地址响应之后就返回（proxy会保证来自于同一个连接的命令的执行顺序在双写场景下是一致的）
 
 ## 特性
 * 支持设置密码
@@ -92,7 +91,6 @@ spring:
 
 camellia-redis-proxy:
   password: pass123
-  type: async #支持两种转发模式（sync和async，分别使用jedis和netty转发）
   monitor-enable: true
   monitor-interval-seconds: 30
   transpond:
@@ -158,6 +156,54 @@ camellia-redis-proxy:
       dynamic: true
       url: http://127.0.0.1:8080
 ```
+### 对于1.0.9及以上的版本，proxy提供了一个关于性能的参数，即转发模块使用哪种队列，默认不使用队列，可选的是LinkedBlockingQueue和Disruptor
+```
+默认不使用队列的选项下，性能比较中庸，而对于使用队列的参数下，会更耗CPU，如果机器配置较高可以选择，否则可能反而因为proxy层CPU消耗较高引起端侧RT上升，按需选择  
+性能：Disruptor > LinkedBlockingQueue > None（不使用队列）   
+CPU消耗：Disruptor > LinkedBlockingQueue > None（不使用队列）  
+性能相关具体可见文末的[云主机环境测试（v1.0.8 vs v1.0.9）]   
+``` 
+使用LinkedBlockingQueue的配置示例：    
+```
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  monitor-enable: true
+  monitor-interval-seconds: 30
+  transpond:
+    type: local
+    local:
+      type: simple
+      resource: redis-cluster://@127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381
+    redis-conf:
+      queue-type: linkedblockingqueue
+```
+使用Disruptor的配置示例：    
+```
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  monitor-enable: true
+  monitor-interval-seconds: 30
+  transpond:
+    type: local
+    local:
+      type: simple
+      resource: redis-cluster://@127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381
+    redis-conf:
+      queue-type: disruptor
+```
+
 ### 更多示例和源码
 [示例源码](/camellia-samples/camellia-redis-proxy-samples)
   
@@ -167,4 +213,5 @@ camellia-redis-proxy:
 [分片（v1.0.4）](performance-report-2.md)  
 [双写（v1.0.4）](performance-report-3.md)  
 [异常测试（v1.0.4）](performance-report-4.md)  
-[云主机环境测试（v1.0.7）](performance-report-5.md)    
+[云主机环境测试（v1.0.7）](performance-report-5.md)  
+[云主机环境测试（v1.0.8 vs v1.0.9）](performance-report-6.md)    

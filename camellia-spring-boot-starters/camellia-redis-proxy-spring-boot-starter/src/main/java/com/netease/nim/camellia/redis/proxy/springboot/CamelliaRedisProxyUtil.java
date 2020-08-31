@@ -6,6 +6,7 @@ import com.netease.nim.camellia.core.util.*;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.conf.QueueType;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.NettyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.TranspondProperties;
@@ -34,12 +35,7 @@ public class CamelliaRedisProxyUtil {
         if (netty.getWorkThread() > 0) {
             serverProperties.setWorkThread(netty.getWorkThread());
         } else {
-            CamelliaRedisProxyProperties.Type type = properties.getType();
-            if (type == CamelliaRedisProxyProperties.Type.async) {
-                serverProperties.setWorkThread(Constants.Server.asyncWorkThread);
-            } else {
-                serverProperties.setWorkThread(Constants.Server.syncWorkThread);
-            }
+            serverProperties.setWorkThread(Constants.Server.workThread);
         }
         serverProperties.setCommandDecodeMaxBatchSize(netty.getCommandDecodeMaxBatchSize());
         serverProperties.setSoBacklog(netty.getSoBacklog());
@@ -122,32 +118,25 @@ public class CamelliaRedisProxyUtil {
     public static CamelliaTranspondProperties.RedisConfProperties parse(TranspondProperties.RedisConfProperties properties) {
         if (properties == null) return null;
         CamelliaTranspondProperties.RedisConfProperties redisConfProperties = new CamelliaTranspondProperties.RedisConfProperties();
-        TranspondProperties.RedisConfProperties.Jedis jedis = properties.getJedis();
-        if (jedis != null) {
-            redisConfProperties.setJedis(new CamelliaTranspondProperties.RedisConfProperties.Jedis(jedis.getMaxIdle(), jedis.getMinIdle(),
-                    jedis.getMaxActive(), jedis.getMaxWait(), jedis.getTimeout()));
-        }
-
-        TranspondProperties.RedisConfProperties.JedisCluster jedisCluster = properties.getJedisCluster();
-        if (jedisCluster != null) {
-            redisConfProperties.setJedisCluster(new CamelliaTranspondProperties.RedisConfProperties.JedisCluster(jedisCluster.getMaxIdle(), jedisCluster.getMinIdle(),
-                    jedisCluster.getMaxActive(), jedisCluster.getMaxWait(), jedisCluster.getTimeout(), jedisCluster.getMaxAttempts()));
-        }
-
-        TranspondProperties.RedisConfProperties.Netty netty = properties.getNetty();
-        if (netty != null) {
-            redisConfProperties.setNetty(new CamelliaTranspondProperties.RedisConfProperties.Netty(netty.getRedisClusterMaxAttempts(),
-                    netty.getHeartbeatIntervalSeconds(), netty.getHeartbeatTimeoutMillis(), netty.getCommandPipelineFlushThreshold(),
-                    netty.getConnectTimeoutMillis(), netty.getFailCountThreshold(), netty.getFailBanMillis()));
-        }
-
         redisConfProperties.setShadingFunc(properties.getShadingFunc());
-        redisConfProperties.setPipelinePoolSize(properties.getPipelinePoolSize());
-        redisConfProperties.setConcurrentExecPoolSize(properties.getConcurrentExecPoolSize());
-        redisConfProperties.setShadingConcurrentExecPoolSize(properties.getShadingConcurrentExecPoolSize());
-        redisConfProperties.setMultiWriteConcurrentExecPoolSize(properties.getMultiWriteConcurrentExecPoolSize());
-        redisConfProperties.setShadingConcurrentEnable(properties.isShadingConcurrentEnable());
-        redisConfProperties.setMultiWriteConcurrentEnable(properties.isMultiWriteConcurrentEnable());
+        redisConfProperties.setCommandPipelineFlushThreshold(properties.getCommandPipelineFlushThreshold());
+        redisConfProperties.setConnectTimeoutMillis(properties.getConnectTimeoutMillis());
+        redisConfProperties.setFailBanMillis(properties.getFailBanMillis());
+        redisConfProperties.setFailCountThreshold(properties.getFailCountThreshold());
+        redisConfProperties.setHeartbeatIntervalSeconds(properties.getHeartbeatIntervalSeconds());
+        redisConfProperties.setHeartbeatTimeoutMillis(properties.getHeartbeatTimeoutMillis());
+        redisConfProperties.setRedisClusterMaxAttempts(properties.getRedisClusterMaxAttempts());
+        QueueType queueType = properties.getQueueType();
+        if (queueType != null) {
+            redisConfProperties.setQueueType(queueType);
+        }
+        TranspondProperties.RedisConfProperties.DisruptorConf disruptorConf = properties.getDisruptorConf();
+        if (disruptorConf != null) {
+            CamelliaTranspondProperties.RedisConfProperties.DisruptorConf disruptorConf1 = new CamelliaTranspondProperties.RedisConfProperties.DisruptorConf();
+            disruptorConf1.setWaitStrategyClassName(disruptorConf.getWaitStrategyClassName());
+            redisConfProperties.setDisruptorConf(disruptorConf1);
+        }
+        redisConfProperties.setDefaultTranspondWorkThread(properties.getDefaultTranspondWorkThread());
         return redisConfProperties;
     }
 }

@@ -1,8 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
 
-import com.netease.nim.camellia.core.util.SysUtils;
-
 /**
  *
  * Created by caojiajun on 2019/11/11.
@@ -15,7 +13,7 @@ public class CamelliaServerProperties {
     private long slowCommandThresholdMillisTime = Constants.Server.slowCommandThresholdMillisTime;
     private int monitorIntervalSeconds = Constants.Server.monitorIntervalSeconds;
     private int bossThread = 1;
-    private int workThread = SysUtils.getCpuNum();
+    private int workThread = Constants.Server.workThread;
     private int soBacklog = Constants.Server.soBacklog;
     private int soSndbuf = Constants.Server.soSndbuf;
     private int soRcvbuf = Constants.Server.soRcvbuf;

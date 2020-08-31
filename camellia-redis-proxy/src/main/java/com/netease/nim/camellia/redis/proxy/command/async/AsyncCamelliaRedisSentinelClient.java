@@ -46,9 +46,8 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
             try {
                 String host = node.getHost();
                 int port = node.getPort();
-                redisClient = new RedisClient(host, port, null,
-                        -1, -1,
-                        RedisClientHub.commandPipelineFlushThreshold, RedisClientHub.connectTimeoutMillis);
+                redisClient = new RedisClient(host, port, null, RedisClientHub.eventLoopGroup,
+                        -1, -1, RedisClientHub.connectTimeoutMillis);
                 redisClient.start();
                 if (redisClient.isValid()) {
                     sentinelAvailable = true;
@@ -72,10 +71,6 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
                 throw new CamelliaRedisException("All sentinels down, cannot determine where is " + master + " master is running...");
             }
         }
-        RedisClient client = RedisClientHub.get(redisClientAddr);
-        if (client == null) {
-            throw new CamelliaRedisException("RedisClient init fail");
-        }
         for (RedisSentinelResource.Node node : redisSentinelResource.getNodes()) {
             MasterListener masterListener = new MasterListener(this, master, node);
             masterListener.start();
@@ -83,18 +78,16 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
     }
 
     public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
-        CompletableFuture<RedisClient> future = RedisClientHub.getAsync(redisClientAddr);
-        future.thenAccept(client -> {
-            if (client != null) {
-                client.sendCommand(commands, completableFutureList);
-            } else {
-                String log = "RedisClient[" + redisClientAddr + "] is null, command return NOT_AVAILABLE, RedisSentinelResource = " + redisSentinelResource.getUrl();
-                for (CompletableFuture<Reply> completableFuture : completableFutureList) {
-                    completableFuture.complete(ErrorReply.NOT_AVAILABLE);
-                    ErrorLogCollector.collect(AsyncCamelliaRedisSentinelClient.class, log);
-                }
+        RedisClient client = RedisClientHub.get(redisClientAddr);
+        if (client != null) {
+            client.sendCommand(commands, completableFutureList);
+        } else {
+            String log = "RedisClient[" + redisClientAddr + "] is null, command return NOT_AVAILABLE, RedisSentinelResource = " + redisSentinelResource.getUrl();
+            for (CompletableFuture<Reply> completableFuture : completableFutureList) {
+                completableFuture.complete(ErrorReply.NOT_AVAILABLE);
+                ErrorLogCollector.collect(AsyncCamelliaRedisSentinelClient.class, log);
             }
-        });
+        }
     }
 
     private class MasterListener extends Thread {
@@ -120,9 +113,8 @@ public class AsyncCamelliaRedisSentinelClient implements AsyncClient {
                         if (redisClient != null && !redisClient.isValid()) {
                             redisClient.stop();
                         }
-                        redisClient = new RedisClient(node.getHost(), node.getPort(), null,
-                                -1, -1,
-                                RedisClientHub.commandPipelineFlushThreshold, RedisClientHub.connectTimeoutMillis);
+                        redisClient = new RedisClient(node.getHost(), node.getPort(), null, RedisClientHub.eventLoopGroup,
+                                -1, -1, RedisClientHub.connectTimeoutMillis);
                         redisClient.start();
                     }
 

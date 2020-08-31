@@ -25,7 +25,7 @@ public interface AsyncNettyClientFactory {
 
         private final Object lock = new Object();
         private final Map<String, AsyncClient> map = new HashMap<>();
-        private int maxAttempts = Constants.Async.redisClusterMaxAttempts;
+        private int maxAttempts = Constants.Transpond.redisClusterMaxAttempts;
 
         public Default() {
         }

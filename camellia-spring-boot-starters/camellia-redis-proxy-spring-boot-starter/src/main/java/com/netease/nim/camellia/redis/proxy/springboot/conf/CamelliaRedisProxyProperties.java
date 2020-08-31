@@ -21,14 +21,6 @@ public class CamelliaRedisProxyProperties {
     private int consolePort = Constants.Server.consolePort;
 
     /**
-     * 转发类型
-     * sync使用jedis进行转发，支持redis、redis sentinel、redis cluster
-     * async使用netty封装的client进行转发，支持redis、redis cluster
-     * custom自定义，此时需要指定customCommandInvokerClassName，该类需要实现CommandInvoker接口，并且有参数为CamelliaTranspondProperties的构造方法
-     */
-    private Type type = Type.async;
-
-    /**
      *
      */
     private String customCommandInvokerClassName;
@@ -85,14 +77,6 @@ public class CamelliaRedisProxyProperties {
 
     public void setConsolePort(int consolePort) {
         this.consolePort = consolePort;
-    }
-
-    public Type getType() {
-        return type;
-    }
-
-    public void setType(Type type) {
-        this.type = type;
     }
 
     public String getCustomCommandInvokerClassName() {
@@ -158,12 +142,4 @@ public class CamelliaRedisProxyProperties {
     public void setTranspond(TranspondProperties transpond) {
         this.transpond = transpond;
     }
-
-    public static enum Type {
-        sync,
-        async,
-        custom,
-        ;
-    }
-
 }

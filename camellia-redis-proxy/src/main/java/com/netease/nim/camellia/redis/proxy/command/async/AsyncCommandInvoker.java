@@ -1,22 +1,24 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
+import com.lmax.disruptor.WaitStrategy;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.*;
+import com.netease.nim.camellia.redis.proxy.command.async.queue.CommandsEventHandler;
+import com.netease.nim.camellia.redis.proxy.command.async.queue.disruptor.DisruptorCommandsEventHandler;
+import com.netease.nim.camellia.redis.proxy.command.async.queue.lbq.LbqCommandsEventHandler;
+import com.netease.nim.camellia.redis.proxy.command.async.queue.none.NoneQueueCommandsEventHandler;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
+import com.netease.nim.camellia.redis.proxy.conf.QueueType;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
-import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.util.ErrorHandlerUtil;
-import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.util.concurrent.FastThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 
 /**
@@ -30,12 +32,19 @@ public class AsyncCommandInvoker implements CommandInvoker {
     private final AsyncCamelliaRedisTemplateChooser chooser;
     private final boolean commandSpendTimeMonitorEnable;
     private final long slowCommandThresholdMillisTime;
+    private final int commandPipelineFlushThreshold;
     private CommandInterceptor commandInterceptor = null;
+    private final QueueType queueType;
+    private final CamelliaTranspondProperties transpondProperties;
 
     public AsyncCommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
+        this.transpondProperties = transpondProperties;
         this.slowCommandThresholdMillisTime = serverProperties.getSlowCommandThresholdMillisTime();
         this.commandSpendTimeMonitorEnable = serverProperties.isMonitorEnable() && serverProperties.isCommandSpendTimeMonitorEnable();
         this.chooser = new AsyncCamelliaRedisTemplateChooser(transpondProperties);
+        this.queueType = transpondProperties.getRedisConf().getQueueType();
+        CamelliaTranspondProperties.RedisConfProperties redisConf = transpondProperties.getRedisConf();
+        this.commandPipelineFlushThreshold = redisConf.getCommandPipelineFlushThreshold();
         String commandInterceptorClassName = serverProperties.getCommandInterceptorClassName();
         if (commandInterceptorClassName != null) {
             try {
@@ -47,105 +56,62 @@ public class AsyncCommandInvoker implements CommandInvoker {
                 throw new CamelliaRedisException(e);
             }
         }
+        if (queueType == QueueType.Disruptor) {
+            CamelliaTranspondProperties.RedisConfProperties.DisruptorConf disruptorConf = transpondProperties.getRedisConf().getDisruptorConf();
+            if (disruptorConf != null) {
+                String waitStrategyClassName = disruptorConf.getWaitStrategyClassName();
+                if (waitStrategyClassName != null) {
+                    try {
+                        Class<?> clazz = Class.forName(waitStrategyClassName);
+                        Object o = clazz.newInstance();
+                        if (!(o instanceof WaitStrategy)) {
+                            throw new CamelliaRedisException("not instance of com.lmax.disruptor.WaitStrategy");
+                        }
+                    } catch (CamelliaRedisException e) {
+                        throw e;
+                    } catch (Exception e) {
+                        logger.error("CommandInterceptor init error, class = {}", commandInterceptorClassName, e);
+                        throw new CamelliaRedisException(e);
+                    }
+                }
+            }
+        }
     }
+
+    private static final FastThreadLocal<CommandsEventHandler> threadLocal = new FastThreadLocal<>();
 
     @Override
     public void invoke(ChannelHandlerContext ctx, ChannelInfo channelInfo, List<Command> commands) {
         if (commands.isEmpty()) return;
         try {
-            AsyncTaskQueue taskQueue = channelInfo.getAsyncTaskQueue();
-
-            if (logger.isDebugEnabled()) {
-                List<String> commandNameList = new ArrayList<>(commands.size());
-                for (Command command : commands) {
-                    commandNameList.add(command.getName());
+            CommandsEventHandler handler = threadLocal.get();
+            if (handler == null) {
+                if (queueType == QueueType.LinkedBlockingQueue) {
+                    handler = new LbqCommandsEventHandler(chooser, commandInterceptor,
+                            commandPipelineFlushThreshold, commandSpendTimeMonitorEnable, slowCommandThresholdMillisTime);
+                    logger.info("LbqCommandsEventHandler init success");
+                } else if (queueType == QueueType.Disruptor) {
+                    CamelliaTranspondProperties.RedisConfProperties.DisruptorConf disruptorConf = transpondProperties.getRedisConf().getDisruptorConf();
+                    handler = new DisruptorCommandsEventHandler(disruptorConf, chooser, commandInterceptor,
+                            commandPipelineFlushThreshold, commandSpendTimeMonitorEnable, slowCommandThresholdMillisTime);
+                    logger.info("DisruptorCommandsEventHandler init success");
+                } else if (queueType == QueueType.None) {
+                    handler = new NoneQueueCommandsEventHandler(chooser, commandInterceptor,
+                            commandPipelineFlushThreshold, commandSpendTimeMonitorEnable, slowCommandThresholdMillisTime);
+                    logger.info("NoneQueueCommandsEventHandler init success");
+                } else {
+                    throw new CamelliaRedisException("unknown queueType");
                 }
-                logger.debug("receive commands, commands.size = {}, consid = {}, commands = {}",
-                        commands.size(), taskQueue.getChannelInfo().getConsid(), commandNameList);
+                threadLocal.set(handler);
             }
-
-            List<AsyncTask> tasks = new ArrayList<>(commands.size());
-
-            boolean needIntercept = commandInterceptor != null;
-            List<Command> list = null;
-            if (needIntercept) {
-                list = new ArrayList<>();
-            }
-
-            for (Command command : commands) {
-                AsyncTask task = new AsyncTask(taskQueue, command, commandSpendTimeMonitorEnable, slowCommandThresholdMillisTime);
-                boolean add = taskQueue.add(task);
-                if (!add) {
-                    taskQueue.clear();
-                    logger.warn("AsyncTaskQueue full, client connect will be disconnect, consid = {}", channelInfo.getConsid());
-                    ctx.writeAndFlush(ErrorReply.TOO_BUSY).addListener((ChannelFutureListener) future -> ctx.close());
-                    return;
-                }
-                tasks.add(task);
-
-                if (needIntercept) {
-                    CommandInterceptResponse response;
-                    try {
-                        response = commandInterceptor.check(channelInfo.getBid(), channelInfo.getBgroup(), command);
-                    } catch (Exception e) {
-                        String errorMsg = "ERR command intercept error [" + e.getMessage() + "]";
-                        ErrorLogCollector.collect(AsyncCommandInvoker.class, errorMsg, e);
-                        response = new CommandInterceptResponse(false, errorMsg);
-                    }
-                    if (!response.isPass()) {
-                        String errorMsg = response.getErrorMsg();
-                        if (errorMsg == null) {
-                            errorMsg = CommandInterceptResponse.DEFAULT_FAIL.getErrorMsg();
-                        }
-                        task.replyCompleted(new ErrorReply(errorMsg));
-                    } else {
-                        list.add(command);
-                    }
-                }
-            }
-
-            if (needIntercept) {
-                commands = list;
-                if (commands.isEmpty()) {
-                    return;
-                }
-            }
-
-            AsyncCamelliaRedisTemplate template = channelInfo.getTemplate();
-            if (template == null) {
-                try {
-                    template = chooser.choose(channelInfo);
-                } catch (Exception e) {
-                    Throwable ex = ErrorHandlerUtil.handler(e);
-                    String log = "AsyncCamelliaRedisTemplateChooser choose error, consid = " + channelInfo.getConsid()
-                            + ", bid = " + channelInfo.getBid() + ", bgroup = " + channelInfo.getBgroup() + ", ex = " + ex.toString();
-                    ErrorLogCollector.collect(AsyncCommandInvoker.class, log, e);
-                }
-            }
-            if (template == null) {
-                for (int i = 0; i < commands.size(); i++) {
-                    Command command = commands.get(i);
-                    String log = "AsyncCamelliaRedisTemplate choose fail, command return NOT_AVAILABLE, consid = " + channelInfo.getConsid()
-                            + ", bid = " + channelInfo.getBid() + ", bgroup = " + channelInfo.getBgroup() + ", command = " + command.getName();
-                    ErrorLogCollector.collect(AsyncCommandInvoker.class, log);
-                    AsyncTask task = tasks.get(i);
-                    task.replyCompleted(ErrorReply.NOT_AVAILABLE);
-                }
-            } else {
-                channelInfo.setTemplate(template);
-                List<CompletableFuture<Reply>> futureList = template.sendCommand(commands);
-                for (int i = 0; i < commands.size(); i++) {
-                    AsyncTask task = tasks.get(i);
-                    CompletableFuture<Reply> completableFuture = futureList.get(i);
-                    completableFuture.thenAccept(task::replyCompleted);
-                }
+            boolean success = handler.getProducer().publishEvent(channelInfo, commands);
+            if (!success) {
+                logger.error("CommandsEventProducer publishEvent fail");
+                ctx.writeAndFlush(ErrorReply.TOO_BUSY).addListener((ChannelFutureListener) future -> ctx.close());
             }
         } catch (Exception e) {
             ctx.close();
-            Throwable ex = ErrorHandlerUtil.handler(e);
-            String log = "AsyncCommandInvoker error, consid = " + channelInfo.getConsid()
-                    + ", bid = " + channelInfo.getBid() + ", bgroup = " + channelInfo.getBgroup() + ", ex = " + ex.toString();
-            ErrorLogCollector.collect(AsyncCommandInvoker.class, log, e);
+            logger.error(e.getMessage(), e);
         }
     }
 }

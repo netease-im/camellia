@@ -7,6 +7,8 @@
 
 ### 更新
 * 调整camellia-redis-proxy的sendbuf和rcvbuf的默认值，且在回包时不判断channel是否writable，避免超大包+pipeline场景下可能channel not writeable而回包失败
+* 移除了camellia-redis-proxy的sync模式
+* camellia-redis-proxy的async模式性能优化，具体可见性能报告
 
 ### fix
 * 无

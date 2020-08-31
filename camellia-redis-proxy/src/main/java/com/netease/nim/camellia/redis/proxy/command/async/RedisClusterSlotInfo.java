@@ -24,7 +24,7 @@ public class RedisClusterSlotInfo {
     private static final Logger logger = LoggerFactory.getLogger(RedisClusterSlotInfo.class);
 
     //slot -> master redis node
-    private Map<Integer, Node> slotMap = new HashMap<>();
+    private Node[] slotArray = new Node[16384];
     private Set<Node> nodeSet = new HashSet<>();
 
     private final RedisClusterResource redisClusterResource;
@@ -43,7 +43,7 @@ public class RedisClusterSlotInfo {
      * @return client
      */
     public RedisClient getClient(int slot) {
-        Node node = slotMap.get(slot);
+        Node node = slotArray[slot];
         if (node == null) return null;
         return RedisClientHub.get(node.getAddr());
     }
@@ -87,8 +87,9 @@ public class RedisClusterSlotInfo {
     }
 
     private boolean tryRenew(String host, int port, String password) {
+        RedisClient client = null;
         try {
-            RedisClient client = RedisClientHub.get(host, port, password);
+            client = RedisClientHub.newClient(host, port, password);
             if (client == null || !client.isValid()) return false;
             CompletableFuture<Reply> future = client.sendCommand(RedisCommand.CLUSTER.raw(), SafeEncoder.encode("slots"));
             logger.info("tryRenew, client=" + client.getClientName());
@@ -97,12 +98,16 @@ public class RedisClusterSlotInfo {
         } catch (Exception e) {
             logger.error("tryRenew error", e);
             return false;
+        } finally {
+            if (client != null) {
+                client.stop(true);
+            }
         }
     }
 
     private boolean clusterNodes(Reply reply) {
         try {
-            Map<Integer, Node> slotMap = new HashMap<>();
+            Node[] slotArray = new Node[16384];
             Set<Node> nodeSet = new HashSet<>();
 
             if (reply instanceof MultiBulkReply) {
@@ -120,7 +125,7 @@ public class RedisClusterSlotInfo {
                     Node node = new Node(SafeEncoder.encode(host.getRaw()), port.getInteger().intValue(), password);
                     nodeSet.add(node);
                     for (long i=slotStart.getInteger(); i<=slotEnd.getInteger(); i++) {
-                        slotMap.put((int) i, node);
+                        slotArray[(int)i] = node;
                     }
                 }
             } else if (reply instanceof ErrorReply) {
@@ -129,18 +134,18 @@ public class RedisClusterSlotInfo {
                 throw new CamelliaRedisException("decode clusterNodes error");
             }
             boolean success = true;
-            for (Node node : nodeSet) {
-                RedisClient client = RedisClientHub.get(node.getHost(), node.getPort(), password);
-                if (client == null) {
-                    success = false;
-                }
-            }
+//            for (Node node : nodeSet) {
+//                RedisClient client = RedisClientHub.get(node.getHost(), node.getPort(), password);
+//                if (client == null) {
+//                    success = false;
+//                }
+//            }
 
             if (logger.isDebugEnabled()) {
-                logger.debug("node.size = {}, slotMap.size = {}", nodeSet.size(), slotMap.size());
+                logger.debug("node.size = {}", nodeSet.size());
             }
             this.nodeSet = nodeSet;
-            this.slotMap = slotMap;
+            this.slotArray = slotArray;
             return success;
         } catch (CamelliaRedisException e) {
             throw e;

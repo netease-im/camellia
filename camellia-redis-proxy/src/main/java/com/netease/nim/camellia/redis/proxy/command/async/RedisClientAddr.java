@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
+import io.netty.util.concurrent.FastThreadLocal;
+
 import java.util.Objects;
 
 /**
@@ -13,7 +15,7 @@ public class RedisClientAddr {
 
     private final String url;
 
-    private RedisClient cache;
+    private final FastThreadLocal<RedisClient> cache = new FastThreadLocal<>();
 
     public RedisClientAddr(String host, int port, String password) {
         this.host = host;
@@ -39,11 +41,11 @@ public class RedisClientAddr {
     }
 
     public RedisClient getCache() {
-        return cache;
+        return cache.get();
     }
 
     public void setCache(RedisClient cache) {
-        this.cache = cache;
+        this.cache.set(cache);
     }
 
     @Override

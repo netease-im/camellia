@@ -442,7 +442,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         Set<Resource> allResources = ResourceUtil.getAllResources(resourceTable);
         for (Resource resource : allResources) {
             //初始化一下
-            factory.get(resource.getUrl());
+//            factory.get(resource.getUrl());
         }
         this.resourceChooser = new ResourceChooser(resourceTable, env.getProxyEnv());
     }

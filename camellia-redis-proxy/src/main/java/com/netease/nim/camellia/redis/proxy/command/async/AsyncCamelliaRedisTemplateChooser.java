@@ -6,8 +6,10 @@ import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.env.ShadingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ShadingFuncUtil;
+import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
-import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +38,7 @@ public class AsyncCamelliaRedisTemplateChooser {
         init();
     }
 
-    public AsyncCamelliaRedisTemplate choose(ChannelInfo channelInfo) {
+    public AsyncCamelliaRedisTemplate choose(Long bid, String bgroup) {
         CamelliaTranspondProperties.Type type = properties.getType();
         if (type == CamelliaTranspondProperties.Type.LOCAL) {
             return localInstance;
@@ -44,34 +46,22 @@ public class AsyncCamelliaRedisTemplateChooser {
             CamelliaTranspondProperties.RemoteProperties remote = properties.getRemote();
             if (!remote.isDynamic()) {
                 if (logger.isTraceEnabled()) {
-                    logger.trace("async, not dynamic, return default remoteInstance");
+                    logger.trace("not dynamic, return default remoteInstance");
                 }
                 return remoteInstance;
             }
-            Long bid = null;
-            String bgroup = null;
-            if (channelInfo != null) {
-                bid = channelInfo.getBid();
-                bgroup = channelInfo.getBgroup();
-            }
             if (bid == null || bid <= 0 || bgroup == null) {
                 if (logger.isTraceEnabled()) {
-                    logger.trace("async, not dynamic, return default remoteInstance");
+                    logger.trace("not dynamic, return default remoteInstance");
                 }
                 return remoteInstance;
             }
             return initOrCreateRemoteInstance(bid, bgroup);
         } else if (type == CamelliaTranspondProperties.Type.AUTO) {
-            Long bid = null;
-            String bgroup = null;
-            if (channelInfo != null) {
-                bid = channelInfo.getBid();
-                bgroup = channelInfo.getBgroup();
-            }
             if (bid == null || bid <= 0 || bgroup == null) {
                 if (localInstance != null) return localInstance;
                 if (remoteInstance != null) return remoteInstance;
-                logger.warn("async, no bid/bgroup, return null");
+                logger.warn("no bid/bgroup, return null");
                 return null;
             }
             return initOrCreateRemoteInstance(bid, bgroup);
@@ -85,14 +75,12 @@ public class AsyncCamelliaRedisTemplateChooser {
             throw new IllegalArgumentException();
         }
         initEnv();
+        logger.info("CamelliaRedisProxy init, type = {}", type);
         if (type == CamelliaTranspondProperties.Type.LOCAL) {
-            logger.info("CamelliaRedisProxy.async init, type = {}", type);
             initLocal(true);
         } else if (type == CamelliaTranspondProperties.Type.REMOTE) {
-            logger.info("CamelliaRedisProxy.async init, type = {}", type);
             initRemote(true);
         } else if (type == CamelliaTranspondProperties.Type.AUTO) {
-            logger.info("CamelliaRedisProxy.async init, type = {}", type);
             initLocal(false);
             initRemote(false);
         }
@@ -102,7 +90,7 @@ public class AsyncCamelliaRedisTemplateChooser {
         CamelliaTranspondProperties.RemoteProperties remote = properties.getRemote();
         if (remote == null) {
             if (throwError) {
-                throw new IllegalArgumentException("async.remote is null");
+                throw new IllegalArgumentException("remote is null");
             } else {
                 return;
             }
@@ -110,15 +98,15 @@ public class AsyncCamelliaRedisTemplateChooser {
         String url = remote.getUrl();
         if (url == null) {
             if (throwError) {
-                throw new IllegalArgumentException("async.remote.url is null");
+                throw new IllegalArgumentException("remote.url is null");
             } else {
                 return;
             }
         }
         apiService = CamelliaApiUtil.init(url, remote.getConnectTimeoutMillis(), remote.getReadTimeoutMillis());
-        logger.info("ApiService init, async.url = {}", url);
+        logger.info("ApiService init, url = {}", url);
         boolean dynamic = remote.isDynamic();
-        logger.info("async.Remote dynamic = {}", dynamic);
+        logger.info("Remote dynamic = {}", dynamic);
         if (remote.getBid() > 0 && remote.getBgroup() != null) {
             remoteInstance = initOrCreateRemoteInstance(remote.getBid(), remote.getBgroup());
         }
@@ -166,21 +154,20 @@ public class AsyncCamelliaRedisTemplateChooser {
     private void initEnv() {
         CamelliaTranspondProperties.RedisConfProperties redisConf = properties.getRedisConf();
 
-        AsyncNettyClientFactory clientFactory = new AsyncNettyClientFactory.Default(redisConf.getNetty().getRedisClusterMaxAttempts());
+        AsyncNettyClientFactory clientFactory = new AsyncNettyClientFactory.Default(redisConf.getRedisClusterMaxAttempts());
 
-        RedisClientHub.heartbeatIntervalSeconds = redisConf.getNetty().getHeartbeatIntervalSeconds();
-        RedisClientHub.heartbeatTimeoutMillis = redisConf.getNetty().getHeartbeatTimeoutMillis();
-        RedisClientHub.commandPipelineFlushThreshold = redisConf.getNetty().getCommandPipelineFlushThreshold();
-        RedisClientHub.connectTimeoutMillis = redisConf.getNetty().getConnectTimeoutMillis();
-        logger.info("RedisClient heartbeatIntervalSeconds = {}, heartbeatTimeoutMillis = {}, commandPipelineFlushThreshold = {}, connectTimeoutMillis = {}",
-                RedisClientHub.heartbeatIntervalSeconds, RedisClientHub.heartbeatTimeoutMillis, RedisClientHub.commandPipelineFlushThreshold, RedisClientHub.connectTimeoutMillis);
+        RedisClientHub.connectTimeoutMillis = redisConf.getConnectTimeoutMillis();
+        RedisClientHub.heartbeatIntervalSeconds = redisConf.getHeartbeatIntervalSeconds();
+        RedisClientHub.heartbeatTimeoutMillis = redisConf.getHeartbeatTimeoutMillis();
+        logger.info("RedisClient, connectTimeoutMillis = {}, heartbeatIntervalSeconds = {}, heartbeatTimeoutMillis = {}",
+                RedisClientHub.connectTimeoutMillis, RedisClientHub.heartbeatIntervalSeconds, RedisClientHub.heartbeatTimeoutMillis);
+        RedisClientHub.failCountThreshold = redisConf.getFailCountThreshold();
+        RedisClientHub.failBanMillis = redisConf.getFailBanMillis();
+        RedisClientHub.eventLoopGroup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("redis-client"));
+        logger.info("RedisClient, failCountThreshold = {}, failBanMillis = {}",
+                RedisClientHub.failCountThreshold, RedisClientHub.failBanMillis);
 
-        ProxyEnv.Builder builder = new ProxyEnv.Builder()
-                .multiWriteConcurrentExecPoolSize(redisConf.getMultiWriteConcurrentExecPoolSize())
-                .shadingConcurrentExecPoolSize(redisConf.getShadingConcurrentExecPoolSize())
-                .multiWriteConcurrentEnable(redisConf.isMultiWriteConcurrentEnable())
-                .shadingConcurrentEnable(redisConf.isShadingConcurrentEnable());
-
+        ProxyEnv.Builder builder = new ProxyEnv.Builder();
         String className = redisConf.getShadingFunc();
         if (className != null) {
             ShadingFunc shadingFunc = ShadingFuncUtil.forName(className);

@@ -1,9 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.springboot.conf;
 
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.conf.QueueType;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import java.time.Duration;
 
 /**
  *
@@ -240,214 +239,29 @@ public class TranspondProperties {
 
         //分片函数
         private String shadingFunc;
+        private int redisClusterMaxAttempts = Constants.Transpond.redisClusterMaxAttempts;
+        private int heartbeatIntervalSeconds = Constants.Transpond.heartbeatIntervalSeconds;//若小于等于0则不发心跳
+        private long heartbeatTimeoutMillis = Constants.Transpond.heartbeatTimeoutMillis;
+        private int connectTimeoutMillis = Constants.Transpond.connectTimeoutMillis;
+        private int failCountThreshold = Constants.Transpond.failCountThreshold;
+        private long failBanMillis = Constants.Transpond.failBanMillis;
+        private int commandPipelineFlushThreshold = Constants.Transpond.commandPipelineFlushThreshold;
+        private int defaultTranspondWorkThread = Constants.Transpond.defaultTranspondWorkThread;
+        private QueueType queueType = Constants.Transpond.queueType;
+        private DisruptorConf disruptorConf;
 
-        //sync转发时的配置
-        private Jedis jedis = new Jedis();
-        private JedisCluster jedisCluster = new JedisCluster();
-        private int pipelinePoolSize = Constants.Sync.pipelinePoolSize;
-        private int concurrentExecPoolSize = Constants.Sync.concurrentExecPoolSize;
-        private boolean shadingConcurrentEnable = Constants.Sync.shadingConcurrentEnable;
-        private int shadingConcurrentExecPoolSize = Constants.Sync.shadingConcurrentExecPoolSize;
-        private boolean multiWriteConcurrentEnable = Constants.Sync.multiWriteConcurrentEnable;
-        private int multiWriteConcurrentExecPoolSize = Constants.Sync.multiWriteConcurrentExecPoolSize;
+        public static class DisruptorConf {
+            private String waitStrategyClassName;
 
-        //async转发时的配置
-        private Netty netty = new Netty();
-
-        public static class Netty {
-            private int redisClusterMaxAttempts = Constants.Async.redisClusterMaxAttempts;
-            private int heartbeatIntervalSeconds = Constants.Async.heartbeatIntervalSeconds;//若小于等于0则不发心跳
-            private long heartbeatTimeoutMillis = Constants.Async.heartbeatTimeoutMillis;
-            private int commandPipelineFlushThreshold = Constants.Async.commandPipelineFlushThreshold;
-            private int connectTimeoutMillis = Constants.Async.connectTimeoutMillis;
-            private int failCountThreshold = Constants.Async.failCountThreshold;
-            private long failBanMillis = Constants.Async.failBanMillis;
-
-            public int getRedisClusterMaxAttempts() {
-                return redisClusterMaxAttempts;
+            public String getWaitStrategyClassName() {
+                return waitStrategyClassName;
             }
 
-            public void setRedisClusterMaxAttempts(int redisClusterMaxAttempts) {
-                this.redisClusterMaxAttempts = redisClusterMaxAttempts;
-            }
-
-            public int getHeartbeatIntervalSeconds() {
-                return heartbeatIntervalSeconds;
-            }
-
-            public void setHeartbeatIntervalSeconds(int heartbeatIntervalSeconds) {
-                this.heartbeatIntervalSeconds = heartbeatIntervalSeconds;
-            }
-
-            public long getHeartbeatTimeoutMillis() {
-                return heartbeatTimeoutMillis;
-            }
-
-            public void setHeartbeatTimeoutMillis(long heartbeatTimeoutMillis) {
-                this.heartbeatTimeoutMillis = heartbeatTimeoutMillis;
-            }
-
-            public int getCommandPipelineFlushThreshold() {
-                return commandPipelineFlushThreshold;
-            }
-
-            public void setCommandPipelineFlushThreshold(int commandPipelineFlushThreshold) {
-                this.commandPipelineFlushThreshold = commandPipelineFlushThreshold;
-            }
-
-            public int getConnectTimeoutMillis() {
-                return connectTimeoutMillis;
-            }
-
-            public void setConnectTimeoutMillis(int connectTimeoutMillis) {
-                this.connectTimeoutMillis = connectTimeoutMillis;
-            }
-
-            public int getFailCountThreshold() {
-                return failCountThreshold;
-            }
-
-            public void setFailCountThreshold(int failCountThreshold) {
-                this.failCountThreshold = failCountThreshold;
-            }
-
-            public long getFailBanMillis() {
-                return failBanMillis;
-            }
-
-            public void setFailBanMillis(long failBanMillis) {
-                this.failBanMillis = failBanMillis;
+            public void setWaitStrategyClassName(String waitStrategyClassName) {
+                this.waitStrategyClassName = waitStrategyClassName;
             }
         }
 
-        public static class Jedis {
-            private int maxIdle = Constants.Sync.jedisPoolMaxIdle;
-            private int minIdle = Constants.Sync.jedisPoolMinIdle;
-            private int maxActive = Constants.Sync.jedisPoolMaxActive;
-            private Duration maxWait = Duration.ofMillis(Constants.Sync.jedisMaxWaitMillis);
-            private Duration timeout = Duration.ofMillis(Constants.Sync.jedisTimeoutMillis);
-
-            public int getMaxIdle() {
-                return maxIdle;
-            }
-
-            public void setMaxIdle(int maxIdle) {
-                this.maxIdle = maxIdle;
-            }
-
-            public int getMinIdle() {
-                return minIdle;
-            }
-
-            public void setMinIdle(int minIdle) {
-                this.minIdle = minIdle;
-            }
-
-            public int getMaxActive() {
-                return maxActive;
-            }
-
-            public void setMaxActive(int maxActive) {
-                this.maxActive = maxActive;
-            }
-
-            public Duration getMaxWait() {
-                return maxWait;
-            }
-
-            public void setMaxWait(Duration maxWait) {
-                this.maxWait = maxWait;
-            }
-
-            public Duration getTimeout() {
-                return timeout;
-            }
-
-            public void setTimeout(Duration timeout) {
-                this.timeout = timeout;
-            }
-        }
-
-        public static class JedisCluster {
-            private int maxIdle = Constants.Sync.jedisClusterPoolMaxIdle;
-            private int minIdle = Constants.Sync.jedisClusterPoolMinIdle;
-            private int maxActive = Constants.Sync.jedisClusterPoolMaxActive;
-            private Duration maxWait = Duration.ofMillis(Constants.Sync.jedisClusterMaxWaitMillis);
-            private Duration timeout = Duration.ofMillis(Constants.Sync.jedisClusterTimeoutMillis);
-            private int maxAttempts = Constants.Sync.jedisClusterMaxAttempts;
-
-            public int getMaxIdle() {
-                return maxIdle;
-            }
-
-            public void setMaxIdle(int maxIdle) {
-                this.maxIdle = maxIdle;
-            }
-
-            public int getMinIdle() {
-                return minIdle;
-            }
-
-            public void setMinIdle(int minIdle) {
-                this.minIdle = minIdle;
-            }
-
-            public int getMaxActive() {
-                return maxActive;
-            }
-
-            public void setMaxActive(int maxActive) {
-                this.maxActive = maxActive;
-            }
-
-            public Duration getMaxWait() {
-                return maxWait;
-            }
-
-            public void setMaxWait(Duration maxWait) {
-                this.maxWait = maxWait;
-            }
-
-            public Duration getTimeout() {
-                return timeout;
-            }
-
-            public void setTimeout(Duration timeout) {
-                this.timeout = timeout;
-            }
-
-            public int getMaxAttempts() {
-                return maxAttempts;
-            }
-
-            public void setMaxAttempts(int maxAttempts) {
-                this.maxAttempts = maxAttempts;
-            }
-        }
-
-        public Netty getNetty() {
-            return netty;
-        }
-
-        public void setNetty(Netty netty) {
-            this.netty = netty;
-        }
-
-        public Jedis getJedis() {
-            return jedis;
-        }
-
-        public void setJedis(Jedis jedis) {
-            this.jedis = jedis;
-        }
-
-        public JedisCluster getJedisCluster() {
-            return jedisCluster;
-        }
-
-        public void setJedisCluster(JedisCluster jedisCluster) {
-            this.jedisCluster = jedisCluster;
-        }
 
         public String getShadingFunc() {
             return shadingFunc;
@@ -457,52 +271,84 @@ public class TranspondProperties {
             this.shadingFunc = shadingFunc;
         }
 
-        public int getPipelinePoolSize() {
-            return pipelinePoolSize;
+        public int getRedisClusterMaxAttempts() {
+            return redisClusterMaxAttempts;
         }
 
-        public void setPipelinePoolSize(int pipelinePoolSize) {
-            this.pipelinePoolSize = pipelinePoolSize;
+        public void setRedisClusterMaxAttempts(int redisClusterMaxAttempts) {
+            this.redisClusterMaxAttempts = redisClusterMaxAttempts;
         }
 
-        public int getConcurrentExecPoolSize() {
-            return concurrentExecPoolSize;
+        public int getHeartbeatIntervalSeconds() {
+            return heartbeatIntervalSeconds;
         }
 
-        public void setConcurrentExecPoolSize(int concurrentExecPoolSize) {
-            this.concurrentExecPoolSize = concurrentExecPoolSize;
+        public void setHeartbeatIntervalSeconds(int heartbeatIntervalSeconds) {
+            this.heartbeatIntervalSeconds = heartbeatIntervalSeconds;
         }
 
-        public int getShadingConcurrentExecPoolSize() {
-            return shadingConcurrentExecPoolSize;
+        public long getHeartbeatTimeoutMillis() {
+            return heartbeatTimeoutMillis;
         }
 
-        public void setShadingConcurrentExecPoolSize(int shadingConcurrentExecPoolSize) {
-            this.shadingConcurrentExecPoolSize = shadingConcurrentExecPoolSize;
+        public void setHeartbeatTimeoutMillis(long heartbeatTimeoutMillis) {
+            this.heartbeatTimeoutMillis = heartbeatTimeoutMillis;
         }
 
-        public int getMultiWriteConcurrentExecPoolSize() {
-            return multiWriteConcurrentExecPoolSize;
+        public int getConnectTimeoutMillis() {
+            return connectTimeoutMillis;
         }
 
-        public void setMultiWriteConcurrentExecPoolSize(int multiWriteConcurrentExecPoolSize) {
-            this.multiWriteConcurrentExecPoolSize = multiWriteConcurrentExecPoolSize;
+        public void setConnectTimeoutMillis(int connectTimeoutMillis) {
+            this.connectTimeoutMillis = connectTimeoutMillis;
         }
 
-        public boolean isShadingConcurrentEnable() {
-            return shadingConcurrentEnable;
+        public int getFailCountThreshold() {
+            return failCountThreshold;
         }
 
-        public void setShadingConcurrentEnable(boolean shadingConcurrentEnable) {
-            this.shadingConcurrentEnable = shadingConcurrentEnable;
+        public void setFailCountThreshold(int failCountThreshold) {
+            this.failCountThreshold = failCountThreshold;
         }
 
-        public boolean isMultiWriteConcurrentEnable() {
-            return multiWriteConcurrentEnable;
+        public long getFailBanMillis() {
+            return failBanMillis;
         }
 
-        public void setMultiWriteConcurrentEnable(boolean multiWriteConcurrentEnable) {
-            this.multiWriteConcurrentEnable = multiWriteConcurrentEnable;
+        public void setFailBanMillis(long failBanMillis) {
+            this.failBanMillis = failBanMillis;
+        }
+
+        public int getCommandPipelineFlushThreshold() {
+            return commandPipelineFlushThreshold;
+        }
+
+        public void setCommandPipelineFlushThreshold(int commandPipelineFlushThreshold) {
+            this.commandPipelineFlushThreshold = commandPipelineFlushThreshold;
+        }
+
+        public QueueType getQueueType() {
+            return queueType;
+        }
+
+        public void setQueueType(QueueType queueType) {
+            this.queueType = queueType;
+        }
+
+        public DisruptorConf getDisruptorConf() {
+            return disruptorConf;
+        }
+
+        public void setDisruptorConf(DisruptorConf disruptorConf) {
+            this.disruptorConf = disruptorConf;
+        }
+
+        public int getDefaultTranspondWorkThread() {
+            return defaultTranspondWorkThread;
+        }
+
+        public void setDefaultTranspondWorkThread(int defaultTranspondWorkThread) {
+            this.defaultTranspondWorkThread = defaultTranspondWorkThread;
         }
     }
 }

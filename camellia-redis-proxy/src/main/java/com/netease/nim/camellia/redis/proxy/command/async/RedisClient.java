@@ -5,22 +5,19 @@ import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.ClientHandler;
+import com.netease.nim.camellia.redis.proxy.netty.CommandPack;
+import com.netease.nim.camellia.redis.proxy.netty.CommandPackEncoder;
 import com.netease.nim.camellia.redis.proxy.netty.ReplyDecoder;
 import com.netease.nim.camellia.redis.proxy.reply.*;
-import com.netease.nim.camellia.redis.proxy.util.CommandsEncodeUtil;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.util.SafeEncoder;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
@@ -39,30 +36,29 @@ public class RedisClient implements AsyncClient {
 
     private static final ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("redis-heart-beat"));
 
-    private EventLoopGroup loopGroup = new NioEventLoopGroup(1, new DefaultThreadFactory("redis"));
     private final String host;
     private final int port;
     private final String password;
     private Channel channel;
     private volatile boolean valid = true;
     private ScheduledFuture<?> scheduledFuture;
-    private final Queue<CompletableFuture<Reply>> queue = new LinkedBlockingQueue<>(100000);
-    private final LinkedBlockingQueue<CommandWrapper> commandQueue = new LinkedBlockingQueue<>(100000);
     private final int heartbeatIntervalSeconds;
     private final long heartbeatTimeoutMillis;
-    private final int commandPipelineFlushThreshold;
     private final int connectTimeoutMillis;
     private final String clientName;
     private final Object lock = new Object();
+    private final EventLoopGroup eventLoopGroup;
 
-    public RedisClient(String host, int port, String password,
-                       int heartbeatIntervalSeconds, long heartbeatTimeoutMillis, int commandPipelineFlushThreshold, int connectTimeoutMillis) {
+    private final Queue<CompletableFuture<Reply>> queue = new ConcurrentLinkedQueue<>();
+
+    public RedisClient(String host, int port, String password, EventLoopGroup eventLoopGroup,
+                       int heartbeatIntervalSeconds, long heartbeatTimeoutMillis, int connectTimeoutMillis) {
         this.host = host;
         this.port = port;
         this.password = password;
+        this.eventLoopGroup = eventLoopGroup;
         this.heartbeatIntervalSeconds = heartbeatIntervalSeconds;
         this.heartbeatTimeoutMillis = heartbeatTimeoutMillis;
-        this.commandPipelineFlushThreshold = commandPipelineFlushThreshold;
         this.connectTimeoutMillis = connectTimeoutMillis;
         this.clientName = "RedisClient[" + (password == null ? "" : password) + "@" + host + ":" + port + "][id=" + id.incrementAndGet() + "]";
     }
@@ -70,12 +66,12 @@ public class RedisClient implements AsyncClient {
     public void start() {
         try {
             Bootstrap bootstrap = new Bootstrap();
-            bootstrap.group(loopGroup)
+            bootstrap.group(eventLoopGroup)
                     .channel(NioSocketChannel.class)
                     .option(ChannelOption.SO_KEEPALIVE, true)
                     .option(ChannelOption.TCP_NODELAY, true)
-                    .option(ChannelOption.SO_SNDBUF, 1048576)
-                    .option(ChannelOption.SO_RCVBUF, 1048576)
+                    .option(ChannelOption.SO_SNDBUF, 10485760)
+                    .option(ChannelOption.SO_RCVBUF, 10485760)
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
                     .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(128 * 1024, 512 * 1024))
                     .handler(new ChannelInitializer<Channel>() {
@@ -84,6 +80,7 @@ public class RedisClient implements AsyncClient {
                             ChannelPipeline pipeline = channel.pipeline();
                             pipeline.addLast(new ReplyDecoder());
                             pipeline.addLast(new ClientHandler(queue, clientName));
+                            pipeline.addLast(new CommandPackEncoder(RedisClient.this, queue));
                         }
                     });
             logger.info("{} try connect...", clientName);
@@ -91,7 +88,6 @@ public class RedisClient implements AsyncClient {
             this.channel = channelFuture.channel();
             logger.info("{} connect success", clientName);
             valid = true;
-            startFlushThread();
             if (password != null) {
                 logger.info("{} need password, try auth", clientName);
                 boolean authSuccess = false;
@@ -108,7 +104,7 @@ public class RedisClient implements AsyncClient {
                 }
             }
             this.channel.closeFuture().addListener(future -> {
-                logger.error("{} connect close, will stop", clientName);
+                logger.warn("{} connect close, will stop", clientName);
                 stop();
             });
             //建完连接先ping一下，确保连接此时是可用的
@@ -163,8 +159,8 @@ public class RedisClient implements AsyncClient {
     }
 
     public void stop(boolean grace) {
-        if (!valid && queue.isEmpty() && commandQueue.isEmpty()
-                && channel == null && loopGroup == null && scheduledFuture == null) {
+        if (!valid && queue.isEmpty()
+                && channel == null && scheduledFuture == null) {
             return;
         }
         if (!grace) {
@@ -183,14 +179,6 @@ public class RedisClient implements AsyncClient {
                     logger.error("{}, channel close error", clientName, e);
                 }
                 try {
-                    if (loopGroup != null) {
-                        loopGroup.shutdownGracefully();
-                        loopGroup = null;
-                    }
-                } catch (Exception e) {
-                    logger.error("{}, loopGroup shutdownGracefully error", clientName, e);
-                }
-                try {
                     if (scheduledFuture != null) {
                         scheduledFuture.cancel(false);
                         scheduledFuture = null;
@@ -199,17 +187,9 @@ public class RedisClient implements AsyncClient {
                     logger.error("{}, heart-beat schedule cancel error", clientName, e);
                 }
                 while (!queue.isEmpty()) {
-                    CompletableFuture<Reply> completableFuture = queue.poll();
-                    if (completableFuture != null) {
-                        completableFuture.complete(ErrorReply.NOT_AVAILABLE);
-                    }
-                }
-                while (!commandQueue.isEmpty()) {
-                    CommandWrapper wrapper = commandQueue.poll();
-                    if (wrapper != null) {
-                        for (CompletableFuture<Reply> future : wrapper.completableFutureList) {
-                            future.complete(ErrorReply.NOT_AVAILABLE);
-                        }
+                    CompletableFuture<Reply> future = queue.poll();
+                    if (future != null) {
+                        future.complete(ErrorReply.NOT_AVAILABLE);
                     }
                 }
             } catch (Exception e) {
@@ -241,106 +221,10 @@ public class RedisClient implements AsyncClient {
             }
             return;
         }
-        CommandWrapper wrapper = new CommandWrapper();
-        wrapper.commands = commands;
-        wrapper.completableFutureList = completableFutureList;
-
-        boolean offer = commandQueue.offer(wrapper);
+        CommandPack pack = new CommandPack(commands, completableFutureList);
         if (logger.isDebugEnabled()) {
-            logger.debug("{} sendCommands to commandQueue, commands.size = {}", clientName, commands.size());
+            logger.debug("{} sendCommands, commands.size = {}", clientName, commands.size());
         }
-        if (!offer) {
-            String log = clientName + ", commandQueue is full, command return NOT_AVAILABLE";
-            for (CompletableFuture<Reply> future : completableFutureList) {
-                future.complete(ErrorReply.NOT_AVAILABLE);
-                ErrorLogCollector.collect(RedisClient.class, log);
-            }
-        }
-    }
-
-    private static class CommandWrapper {
-        private List<Command> commands;
-        private List<CompletableFuture<Reply>> completableFutureList;
-    }
-    private void startFlushThread() {
-        new Thread(() -> {
-            List<CommandWrapper> buffer = new ArrayList<>();
-            List<Command> flushCommands = new ArrayList<>(commandPipelineFlushThreshold);
-            while (valid) {
-                try {
-                    if (buffer.isEmpty()) {
-                        //第一个CommandWrapper需要阻塞功能
-                        CommandWrapper wrapper = commandQueue.poll(10, TimeUnit.SECONDS);
-                        if (wrapper == null) {
-                            continue;
-                        }
-                        buffer.add(wrapper);
-                        continue;
-                    } else {
-                        //之后的不需要阻塞
-                        //使用drainTo减少循环次数
-                        commandQueue.drainTo(buffer, commandPipelineFlushThreshold);
-                    }
-                    if (!valid) continue;
-                    boolean fail = false;
-                    for (CommandWrapper wrapper : buffer) {
-                        if (fail) {
-                            for (CompletableFuture<Reply> future : wrapper.completableFutureList) {
-                                future.complete(ErrorReply.NOT_AVAILABLE);
-                            }
-                            continue;
-                        }
-                        flushCommands.addAll(wrapper.commands);
-                        for (CompletableFuture<Reply> future : wrapper.completableFutureList) {
-                            if (fail) {
-                                String log = clientName + " queue full, command return NOT_AVAILABLE";
-                                ErrorLogCollector.collect(RedisClient.class, log);
-                                future.complete(ErrorReply.NOT_AVAILABLE);
-                                continue;
-                            }
-                            boolean offer = queue.offer(future);
-                            if (!offer) {
-                                String log = clientName + " queue full, command return NOT_AVAILABLE";
-                                ErrorLogCollector.collect(RedisClient.class, log);
-                                stop();
-                                fail = true;
-                                future.complete(ErrorReply.NOT_AVAILABLE);
-                            }
-                        }
-                    }
-                    buffer.clear();
-                    if (fail) {
-                        continue;
-                    }
-                    ByteBufAllocator allocator = channel.alloc();
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("ByteBufAllocator = {}", allocator.getClass().getName());
-                    }
-                    ByteBuf buf = CommandsEncodeUtil.encode(allocator, flushCommands);
-                    try {
-                        channel.writeAndFlush(buf);
-                    } catch (Exception e) {
-                        buf.release();
-                        throw e;
-                    }
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("{} flush commands, commands.size = {}", clientName, flushCommands.size());
-                    }
-                    flushCommands.clear();
-                } catch (Exception e) {
-                    logger.error("{}, flush error", clientName, e);
-                    stop();
-                }
-            }
-            if (!buffer.isEmpty()) {
-                String log = clientName + " stopping, command return NOT_AVAILABLE";
-                for (CommandWrapper wrapper : buffer) {
-                    for (CompletableFuture<Reply> future : wrapper.completableFutureList) {
-                        future.complete(ErrorReply.NOT_AVAILABLE);
-                        ErrorLogCollector.collect(RedisClient.class, log);
-                    }
-                }
-            }
-        }, "redis-commands-flush-" + clientName).start();
+        channel.writeAndFlush(pack);
     }
 }

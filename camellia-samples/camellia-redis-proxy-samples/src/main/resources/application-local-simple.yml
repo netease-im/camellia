@@ -7,7 +7,6 @@ spring:
 
 camellia-redis-proxy:
   password: pass123
-  type: async #支持两种转发模式（sync和async，分别使用jedis和netty转发）
   transpond:
     type: local
     local:

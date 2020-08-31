@@ -1,11 +1,13 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
 
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.netty.ServerStatus;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.core.util.SysUtils;
+import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.concurrent.FastThreadLocal;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -18,52 +20,24 @@ import java.util.concurrent.atomic.LongAdder;
 public class RedisClientHub {
 
     private static final ConcurrentHashMap<String, RedisClient> map = new ConcurrentHashMap<>();
+    public static NioEventLoopGroup eventLoopGroup = null;
+
+    private static final FastThreadLocal<ConcurrentHashMap<String, RedisClient>> threadLocalMap = new FastThreadLocal<>();
+    private static final FastThreadLocal<EventLoop> eventLoopThreadLocal = new FastThreadLocal<>();
+
     private static final ConcurrentHashMap<String, LongAdder> failCountMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, AtomicLong> failTimestampMap = new ConcurrentHashMap<>();
 
-    private static final ExecutorService exec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(1024), new CamelliaThreadFactory(RedisClientHub.class));
+    public static int heartbeatIntervalSeconds = Constants.Transpond.heartbeatIntervalSeconds;
+    public static long heartbeatTimeoutMillis = Constants.Transpond.heartbeatTimeoutMillis;
+    public static int connectTimeoutMillis = Constants.Transpond.connectTimeoutMillis;
+    public static int failCountThreshold = Constants.Transpond.failCountThreshold;
+    public static long failBanMillis = Constants.Transpond.failBanMillis;
 
     private static final Object lock = new Object();
 
-    public static int heartbeatIntervalSeconds = Constants.Async.heartbeatIntervalSeconds;
-    public static long heartbeatTimeoutMillis = Constants.Async.heartbeatTimeoutMillis;
-    public static int commandPipelineFlushThreshold = Constants.Async.commandPipelineFlushThreshold;
-    public static int connectTimeoutMillis = Constants.Async.connectTimeoutMillis;
-    public static int failCountThreshold = Constants.Async.failCountThreshold;
-    public static long failBanMillis = Constants.Async.failBanMillis;
-
-    public static CompletableFuture<RedisClient> getAsync(RedisClientAddr addr) {
-        CompletableFuture<RedisClient> future = new CompletableFuture<>();
-        RedisClient cache = addr.getCache();
-        if (cache != null && cache.isValid()) {
-            future.complete(cache);
-            return future;
-        }
-        String url = addr.getUrl();
-        RedisClient client = map.get(url);
-        if (client != null && client.isValid()) {
-            addr.setCache(client);
-            future.complete(client);
-        } else {
-            try {
-                exec.submit(() -> {
-                    try {
-                        RedisClient redisClient = get(addr);
-                        future.complete(redisClient);
-                    } catch (Exception e) {
-                        String log = "get redisClient in exec pool error, key = " + url;
-                        ErrorLogCollector.collect(RedisClientHub.class, log);
-                        future.complete(null);
-                    }
-                });
-            } catch (Exception e) {
-                String log = "submit exec error, key = " + url;
-                ErrorLogCollector.collect(RedisClientHub.class, log);
-                future.complete(null);
-            }
-        }
-        return future;
+    public static void updateEventLoop(EventLoop eventLoop) {
+        eventLoopThreadLocal.set(eventLoop);
     }
 
     public static RedisClient get(String host, int port, String password) {
@@ -71,19 +45,51 @@ public class RedisClientHub {
         return get(addr);
     }
 
+    public static RedisClient newClient(String host, int port, String password) {
+        return newClient(new RedisClientAddr(host, port, password));
+    }
+
+    public static RedisClient newClient(RedisClientAddr addr) {
+        RedisClient client = new RedisClient(addr.getHost(), addr.getPort(), addr.getPassword(),
+                eventLoopGroup, -1, -1, connectTimeoutMillis);
+        client.start();
+        if (client.isValid()) {
+            return client;
+        } else {
+            client.stop();
+            return null;
+        }
+    }
+
     public static RedisClient get(RedisClientAddr addr) {
         RedisClient cache = addr.getCache();
         if (cache != null && cache.isValid()) {
             return cache;
         }
+
+        EventLoopGroup loopGroup;
+        ConcurrentHashMap<String, RedisClient> map;
+
+        if (eventLoopThreadLocal.get().inEventLoop()) {
+            loopGroup = eventLoopGroup;
+            map = RedisClientHub.map;
+        } else {
+            loopGroup = eventLoopThreadLocal.get();
+            map = threadLocalMap.get();
+            if (map == null) {
+                map = new ConcurrentHashMap<>();
+                threadLocalMap.set(map);
+            }
+        }
+
         String url = addr.getUrl();
         RedisClient client = map.get(url);
         if (client == null) {
             synchronized (lock) {
                 client = map.get(url);
                 if (client == null) {
-                    client = new RedisClient(addr.getHost(), addr.getPort(), addr.getPassword(),
-                            heartbeatIntervalSeconds, heartbeatTimeoutMillis, commandPipelineFlushThreshold, connectTimeoutMillis);
+                    client = new RedisClient(addr.getHost(), addr.getPort(), addr.getPassword(), loopGroup,
+                            heartbeatIntervalSeconds, heartbeatTimeoutMillis, connectTimeoutMillis);
                     client.start();
                     if (client.isValid()) {
                         RedisClient oldClient = map.put(url, client);
@@ -130,8 +136,8 @@ public class RedisClientHub {
                 if (client != null && !client.isValid()) {
                     client.stop();
                 }
-                client = new RedisClient(addr.getHost(), addr.getPort(), addr.getPassword(),
-                        heartbeatIntervalSeconds, heartbeatTimeoutMillis, commandPipelineFlushThreshold, connectTimeoutMillis);
+                client = new RedisClient(addr.getHost(), addr.getPort(), addr.getPassword(), loopGroup,
+                        heartbeatIntervalSeconds, heartbeatTimeoutMillis, connectTimeoutMillis);
                 client.start();
                 if (client.isValid()) {
                     RedisClient oldClient = map.put(url, client);
