@@ -138,6 +138,11 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
                 }
             }
 
+            if (endOfBatch && taskMap.isEmpty()) {
+                flush(channelInfo.getBid(), channelInfo.getBgroup(), tasks);
+                return;
+            }
+
             ChannelType channelType = new ChannelType(channelInfo.getBid(), channelInfo.getBgroup());
             List<AsyncTask> taskBuffer = taskMap.computeIfAbsent(channelType, k -> new ArrayList<>());
             taskBuffer.addAll(tasks);
@@ -146,7 +151,7 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
                 flushAll();
             } else {
                 if (taskBuffer.size() > commandPipelineFlushThreshold) {
-                    flush(channelType, taskBuffer);
+                    flush(channelType.bid, channelType.bgroup, taskBuffer);
                 }
             }
         } catch (Exception e) {
@@ -158,17 +163,17 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
         for (Map.Entry<ChannelType, List<AsyncTask>> entry : taskMap.entrySet()) {
             ChannelType key = entry.getKey();
             List<AsyncTask> taskList = entry.getValue();
-            flush(key, taskList);
+            flush(key.bid, key.bgroup, taskList);
         }
     }
 
-    private void flush(ChannelType channelType, List<AsyncTask> taskList) {
+    private void flush(Long bid, String bgroup, List<AsyncTask> taskList) {
         AsyncCamelliaRedisTemplate template = null;
         try {
-            template = chooser.choose(channelType.bid, channelType.bgroup);
+            template = chooser.choose(bid, bgroup);
         } catch (Exception e) {
             String log = "AsyncCamelliaRedisTemplateChooser choose error"
-                    + ", bid = " + channelType.getBid() + ", bgroup = " + channelType.getBgroup() + ", ex = " + e.toString();
+                    + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e.toString();
             ErrorLogCollector.collect(DisruptorCommandsEventConsumer.class, log, e);
         }
         if (template == null) {
