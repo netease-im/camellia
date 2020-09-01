@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.enums;
 
-import com.netease.nim.camellia.redis.proxy.command.Command;
 import redis.clients.util.SafeEncoder;
 
 import java.util.HashMap;

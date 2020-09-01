@@ -12,7 +12,6 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

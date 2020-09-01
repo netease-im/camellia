@@ -23,12 +23,15 @@ public enum Marker {
         return ch;
     }
 
-    public static Marker byValue(byte c) {
+    private static final Marker[] index = new Marker[128];
+    static {
         for (Marker marker : Marker.values()) {
-            if (marker.ch == c) {
-                return marker;
-            }
+            index[marker.ch] = marker;
         }
-        return null;
+    }
+
+    public static Marker byValue(byte c) {
+        if (c < 0) return null;
+        return index[c];
     }
 }

@@ -99,10 +99,6 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
             ChannelHandlerContext ctx = channelInfo.getCtx();
 
             boolean needIntercept = commandInterceptor != null;
-            List<Command> list = null;
-            if (needIntercept) {
-                list = new ArrayList<>();
-            }
 
             for (Command command : commands) {
                 AsyncTask task = new AsyncTask(taskQueue, command, commandSpendTimeMonitorEnable, slowCommandThresholdMillisTime);
@@ -130,7 +126,6 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
                         }
                         task.replyCompleted(new ErrorReply(errorMsg));
                     } else {
-                        list.add(command);
                         tasks.add(task);
                     }
                 } else {

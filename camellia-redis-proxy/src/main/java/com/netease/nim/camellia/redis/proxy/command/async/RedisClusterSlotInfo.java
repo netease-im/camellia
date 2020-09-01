@@ -23,8 +23,10 @@ public class RedisClusterSlotInfo {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisClusterSlotInfo.class);
 
+    private static final int SLOT_SIZE = 16384;
+
     //slot -> master redis node
-    private Node[] slotArray = new Node[16384];
+    private Node[] slotArray = new Node[SLOT_SIZE];
     private Set<Node> nodeSet = new HashSet<>();
 
     private final RedisClusterResource redisClusterResource;
@@ -38,7 +40,7 @@ public class RedisClusterSlotInfo {
     }
 
     /**
-     * 根据slot获取client
+     * get client by slot
      * @param slot slot
      * @return client
      */
@@ -49,7 +51,7 @@ public class RedisClusterSlotInfo {
     }
 
     /**
-     * 刷新slot信息
+     * renew slot info
      */
     private long lastRenewTimestamp = 0L;
     private final AtomicBoolean renew = new AtomicBoolean(false);
@@ -107,9 +109,10 @@ public class RedisClusterSlotInfo {
 
     private boolean clusterNodes(Reply reply) {
         try {
-            Node[] slotArray = new Node[16384];
+            Node[] slotArray = new Node[SLOT_SIZE];
             Set<Node> nodeSet = new HashSet<>();
 
+            int size = 0;
             if (reply instanceof MultiBulkReply) {
                 Reply[] replies = ((MultiBulkReply) reply).getReplies();
                 for (Reply reply1 : replies) {
@@ -126,6 +129,7 @@ public class RedisClusterSlotInfo {
                     nodeSet.add(node);
                     for (long i=slotStart.getInteger(); i<=slotEnd.getInteger(); i++) {
                         slotArray[(int)i] = node;
+                        size ++;
                     }
                 }
             } else if (reply instanceof ErrorReply) {
@@ -133,19 +137,16 @@ public class RedisClusterSlotInfo {
             } else {
                 throw new CamelliaRedisException("decode clusterNodes error");
             }
-            boolean success = true;
-//            for (Node node : nodeSet) {
-//                RedisClient client = RedisClientHub.get(node.getHost(), node.getPort(), password);
-//                if (client == null) {
-//                    success = false;
-//                }
-//            }
-
+            boolean success = size == SLOT_SIZE;
             if (logger.isDebugEnabled()) {
                 logger.debug("node.size = {}", nodeSet.size());
             }
-            this.nodeSet = nodeSet;
-            this.slotArray = slotArray;
+            if (success) {
+                this.nodeSet = nodeSet;
+                this.slotArray = slotArray;
+            } else {
+                logger.error("slot size is {}, not {}", size, SLOT_SIZE);
+            }
             return success;
         } catch (CamelliaRedisException e) {
             throw e;
