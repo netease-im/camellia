@@ -4,6 +4,7 @@
 * camellia-redis-proxy的async模式支持统计命令的执行时间
 * camellia-redis-proxy的async模式支持CommandInterceptor，自定义拦截规则
 * 新增camellia-redis-zk注册发现组件，提供一个使用注册中心模式使用camellia-redis-proxy的默认实现
+* camellia-redis-proxy-hbase新增hbase读穿透的单机流控
 
 ### 更新
 * 调整camellia-redis-proxy的sendbuf和rcvbuf的默认值，且在回包时不判断channel是否writable，避免超大包+pipeline场景下可能channel not writeable而回包失败

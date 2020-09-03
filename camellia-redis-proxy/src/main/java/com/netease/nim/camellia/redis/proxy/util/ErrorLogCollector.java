@@ -52,15 +52,19 @@ public class ErrorLogCollector {
     }
 
     private static void print() {
-        ConcurrentHashMap<String, AtomicLong> printMap = logMap;
-        logMap = new ConcurrentHashMap<>();
-        for (Map.Entry<String, AtomicLong> entry : printMap.entrySet()) {
-            String log = entry.getKey();
-            long count = entry.getValue().getAndSet(0L);
-            if (count > 0) {
-                logger.error("{}, count = {}", log, count);
+        try {
+            ConcurrentHashMap<String, AtomicLong> printMap = logMap;
+            logMap = new ConcurrentHashMap<>();
+            for (Map.Entry<String, AtomicLong> entry : printMap.entrySet()) {
+                String log = entry.getKey();
+                long count = entry.getValue().getAndSet(0L);
+                if (count > 0) {
+                    logger.error("{}, count = {}", log, count);
+                }
             }
+            lastPrintStackTraceMap.clear();
+        } catch (Exception e) {
+            logger.error("error log print error", e);
         }
-        lastPrintStackTraceMap.clear();
     }
 }

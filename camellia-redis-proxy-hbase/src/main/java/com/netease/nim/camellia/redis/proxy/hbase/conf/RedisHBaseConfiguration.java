@@ -285,6 +285,16 @@ public class RedisHBaseConfiguration {
         return ConfigurationUtil.getBoolean(conf, "freq.enable", true);
     }
 
+    //hbase get单机频控周期
+    public static long hbaseGetStandaloneFreqMillis() {
+        return ConfigurationUtil.getLong(conf, "hbase.get.standalone.freq.millis", 1000*10L);
+    }
+
+    //hbase get单机频控阈值
+    public static int hbaseGetStandaloneFreqThreshold() {
+        return ConfigurationUtil.getInteger(conf, "hbase.get.standalone.freq.threshold", 1500);
+    }
+
     //频控操作异常时是否通过
     public static boolean freqDefaultPass() {
         return ConfigurationUtil.getBoolean(conf, "freq.default.pass", true);

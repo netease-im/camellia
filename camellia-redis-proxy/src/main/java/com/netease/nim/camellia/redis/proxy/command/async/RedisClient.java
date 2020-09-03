@@ -162,11 +162,15 @@ public class RedisClient implements AsyncClient {
                 && channel == null && scheduledFuture == null) {
             return;
         }
-        if (!grace) {
-            String log = clientName + " stopping, command return NOT_AVAILABLE";
-            ErrorLogCollector.collect(RedisClient.class, log);
-        }
         synchronized (lock) {
+            if (!valid && queue.isEmpty()
+                    && channel == null && scheduledFuture == null) {
+                return;
+            }
+            if (!grace) {
+                String log = clientName + " stopping, command return NOT_AVAILABLE";
+                ErrorLogCollector.collect(RedisClient.class, log);
+            }
             try {
                 valid = false;
                 try {
