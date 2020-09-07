@@ -213,5 +213,6 @@ camellia-redis-proxy:
 [分片（v1.0.4）](performance-report-2.md)  
 [双写（v1.0.4）](performance-report-3.md)  
 [异常测试（v1.0.4）](performance-report-4.md)  
-[云主机环境测试（v1.0.7）](performance-report-5.md)  
-[云主机环境测试（v1.0.8 vs v1.0.9）](performance-report-6.md)    
+[云主机环境性能测试（v1.0.7）](performance-report-5.md)  
+[云主机环境性能测试（基于redis-benchmark）（v1.0.8 vs v1.0.9）](performance-report-6.md)    
+[云主机环境性能测试（基于npt平台）（v1.0.8 vs v1.0.9）](performance-report-7.md)
