@@ -1,4 +1,4 @@
-# 1.0.9（2020/08/xx）
+# 1.0.9（2020/09/08）
 ### 新增
 * camellia-redis-proxy的async模式支持redis sentinel
 * camellia-redis-proxy的async模式支持统计命令的执行时间
