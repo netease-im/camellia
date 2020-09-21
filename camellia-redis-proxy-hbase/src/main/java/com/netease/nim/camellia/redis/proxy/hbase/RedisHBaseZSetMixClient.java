@@ -169,7 +169,7 @@ public class RedisHBaseZSetMixClient {
                     boolean pass = FreqUtil.freq(redisTemplate, freqKey,
                             RedisHBaseConfiguration.hbaseGetFreqThreshold(), RedisHBaseConfiguration.hbaseGetFreqMillis());
                     if (pass) {
-                        if (FreqUtil.hbaseGetStandaloneFreq()) {
+                        if (FreqUtil.hbaseGetStandaloneFreqOfWrite()) {
                             checkZSetExists(key);
                         } else {
                             logger.warn("zadd hbaseGetStandaloneFreq fail, will submit cache rebuild delay task, key = {}", SafeEncoder.encode(key));
@@ -255,7 +255,7 @@ public class RedisHBaseZSetMixClient {
                 RedisHBaseMonitor.incrRead(zcount_method, ReadOpeType.REDIS_ONLY);
                 return 0L;
             } else {
-                HBase2RedisRebuildResult rebuildResult = rebuildZSet(key, false, false);
+                HBase2RedisRebuildResult rebuildResult = rebuildZSet(key, false, false, true);
                 if (rebuildFail4Read(rebuildResult, zcount_method)) {
                     return 0L;
                 }
@@ -983,7 +983,7 @@ public class RedisHBaseZSetMixClient {
     }
 
     //
-    private HBase2RedisRebuildResult rebuildZSet(byte[] key, boolean strictConcurrent, boolean forceRebuild) {
+    private HBase2RedisRebuildResult rebuildZSet(byte[] key, boolean strictConcurrent, boolean forceRebuild, boolean forRead) {
         boolean cacheNull = RedisHBaseConfiguration.isHBaseCacheNull();
         if (cacheNull) {
             byte[] nullCacheValue = redisTemplate.get(nullCacheKey(key));
@@ -995,11 +995,11 @@ public class RedisHBaseZSetMixClient {
         if (!redisLock.tryLock()) {
             boolean lock = redisLock.lock();
             if (!lock) {
-                logger.warn("rebuildZSet lock fail, key = {}", SafeEncoder.encode(key));
+                logger.warn("rebuildZSet lock fail, forRead = {}, key = {}", forRead, SafeEncoder.encode(key));
                 if (strictConcurrent || RedisHBaseConfiguration.errorIfLockFail()) {
                     throw new CamelliaRedisException("rebuildZSet lock fail, please retry");
                 }
-                RedisHBaseMonitor.incrHBaseDegradedCount("zset_rebuild_lock_fail");
+                RedisHBaseMonitor.incrHBaseDegradedCount(forRead ? "zset_rebuild_lock_fail_4_read" : "zset_rebuild_lock_fail_4_write");
             }
             if (lock) {
                 if (!forceRebuild) {
@@ -1020,24 +1020,30 @@ public class RedisHBaseZSetMixClient {
         try {
             if (RedisHBaseConfiguration.zsetHBaseDegradedAsync()) {
                 submitCacheRebuildDelayTask(key);
-                RedisHBaseMonitor.incrHBaseDegradedCount("zset_rebuild_delay_task");
+                RedisHBaseMonitor.incrHBaseDegradedCount(forRead ? "zset_rebuild_delay_task_4_read" : "zset_rebuild_delay_task_4_write");
                 return HBase2RedisRebuildResult.DEGRADED;
             }
             byte[] freqKey = hbaseGetFreqKey(key);
             boolean pass = FreqUtil.freq(redisTemplate, freqKey, RedisHBaseConfiguration.hbaseGetFreqThreshold(), RedisHBaseConfiguration.hbaseGetFreqMillis());
             if (pass) {
-                if (FreqUtil.hbaseGetStandaloneFreq()) {
+                boolean standaloneFreqPass;
+                if (forRead) {
+                    standaloneFreqPass = FreqUtil.hbaseGetStandaloneFreqOfRead();
+                } else {
+                    standaloneFreqPass = FreqUtil.hbaseGetStandaloneFreqOfWrite();
+                }
+                if (standaloneFreqPass) {
                     result = checkZSetExists(key);
                 } else {
-                    logger.warn("zset rebuild hbaseGetStandaloneFreq fail, will submit cache rebuild delay task, key = {}", SafeEncoder.encode(key));
+                    logger.warn("zset rebuild hbaseGetStandaloneFreq fail, will submit cache rebuild delay task, forRead = {}, key = {}", forRead, SafeEncoder.encode(key));
                     submitCacheRebuildDelayTask(key);
-                    RedisHBaseMonitor.incrHBaseDegradedCount("zset_rebuild_hbase_get_standalone_freq");
+                    RedisHBaseMonitor.incrHBaseDegradedCount(forRead ? "zset_rebuild_hbase_get_standalone_freq_4_read" : "zset_rebuild_hbase_get_standalone_freq_4_write");
                     return HBase2RedisRebuildResult.DEGRADED;
                 }
             } else {
-                logger.warn("zset rebuild freq fail, will submit cache rebuild delay task, key = {}", SafeEncoder.encode(key));
+                logger.warn("zset rebuild freq fail, will submit cache rebuild delay task, forRead = {}, key = {}", forRead, SafeEncoder.encode(key));
                 submitCacheRebuildDelayTask(key);
-                RedisHBaseMonitor.incrHBaseDegradedCount("zset_rebuild_freq_fail_delay_task");
+                RedisHBaseMonitor.incrHBaseDegradedCount(forRead ? "zset_rebuild_freq_fail_delay_task_4_read" : "zset_rebuild_freq_fail_delay_task_4_write");
                 return HBase2RedisRebuildResult.DEGRADED;
             }
             if (result == null) {
@@ -1163,7 +1169,7 @@ public class RedisHBaseZSetMixClient {
             RedisHBaseMonitor.incrWrite(method, WriteOpeType.REDIS_HIT);
             return KeyStatus.CACHE_OK;
         } else {
-            HBase2RedisRebuildResult rebuildResult = rebuildZSet(key, false, false);
+            HBase2RedisRebuildResult rebuildResult = rebuildZSet(key, false, false, false);
             switch (rebuildResult) {
                 case REBUILD_OK:
                     RedisHBaseMonitor.incrWrite(method, WriteOpeType.REDIS_REBUILD_OK);
@@ -1187,7 +1193,7 @@ public class RedisHBaseZSetMixClient {
         if (checkRedisKeyExists(redisTemplate, key)) {
             RedisHBaseMonitor.incrRead(method, ReadOpeType.REDIS_ONLY);
         } else {
-            HBase2RedisRebuildResult rebuildResult = rebuildZSet(key, false, false);
+            HBase2RedisRebuildResult rebuildResult = rebuildZSet(key, false, false, true);
             if (rebuildFail4Read(rebuildResult, method)) {
                 return KeyStatus.NULL;
             }
@@ -1232,7 +1238,7 @@ public class RedisHBaseZSetMixClient {
             try {
                 exec.submit(() -> {
                     try {
-                        rebuildZSet(key, true, true);
+                        rebuildZSet(key, true, true, false);
                         if (RedisHBaseConfiguration.zsetRedisRebuildTaskLogEnable()) {
                             logger.info("cache rebuild delay task success, key = {}", SafeEncoder.encode(key));
                         }

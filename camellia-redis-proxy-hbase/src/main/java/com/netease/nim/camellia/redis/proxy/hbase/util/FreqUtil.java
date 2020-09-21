@@ -42,19 +42,36 @@ public class FreqUtil {
         }
     }
 
-    private static final Counter counter = new Counter();
+    private static final Counter counterOfWrite = new Counter();
+    private static final Counter counterOfRead = new Counter();
 
-    public static boolean hbaseGetStandaloneFreq() {
+    public static boolean hbaseGetStandaloneFreqOfWrite() {
         try {
             if (!RedisHBaseConfiguration.freqEnable()) {
                 return true;
             }
-            counter.freshIfNeed(RedisHBaseConfiguration.hbaseGetStandaloneFreqMillis());
-            long current = counter.incrementAndGet();
-            return current <= RedisHBaseConfiguration.hbaseGetStandaloneFreqThreshold();
+            counterOfWrite.freshIfNeed(RedisHBaseConfiguration.hbaseGetStandaloneFreqOfWriteMillis());
+            long current = counterOfWrite.incrementAndGet();
+            return current <= RedisHBaseConfiguration.hbaseGetStandaloneFreqOfWriteThreshold();
         } catch (Exception e) {
             logger.error("hbaseGetStandaloneFreq error, threshold = {}, expireMillis = {}, default.pass = {}, ex = {}",
-                    RedisHBaseConfiguration.hbaseGetStandaloneFreqThreshold(), RedisHBaseConfiguration.hbaseGetStandaloneFreqMillis(),
+                    RedisHBaseConfiguration.hbaseGetStandaloneFreqOfWriteThreshold(), RedisHBaseConfiguration.hbaseGetStandaloneFreqOfWriteMillis(),
+                    RedisHBaseConfiguration.freqDefaultPass(), e.toString());
+            return RedisHBaseConfiguration.freqDefaultPass();
+        }
+    }
+
+    public static boolean hbaseGetStandaloneFreqOfRead() {
+        try {
+            if (!RedisHBaseConfiguration.freqEnable()) {
+                return true;
+            }
+            counterOfRead.freshIfNeed(RedisHBaseConfiguration.hbaseGetStandaloneFreqOfReadMillis());
+            long current = counterOfRead.incrementAndGet();
+            return current <= RedisHBaseConfiguration.hbaseGetStandaloneFreqOfReadThreshold();
+        } catch (Exception e) {
+            logger.error("hbaseGetStandaloneFreq error, threshold = {}, expireMillis = {}, default.pass = {}, ex = {}",
+                    RedisHBaseConfiguration.hbaseGetStandaloneFreqOfReadThreshold(), RedisHBaseConfiguration.hbaseGetStandaloneFreqOfReadMillis(),
                     RedisHBaseConfiguration.freqDefaultPass(), e.toString());
             return RedisHBaseConfiguration.freqDefaultPass();
         }
@@ -65,7 +82,7 @@ public class FreqUtil {
         new Thread(() -> {
             while (true) {
                 try {
-                    TimeUnit.MILLISECONDS.sleep(1000);
+                    TimeUnit.MILLISECONDS.sleep(500);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 }

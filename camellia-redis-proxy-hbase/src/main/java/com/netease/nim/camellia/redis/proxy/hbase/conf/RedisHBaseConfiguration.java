@@ -286,13 +286,23 @@ public class RedisHBaseConfiguration {
     }
 
     //hbase get单机频控周期
-    public static long hbaseGetStandaloneFreqMillis() {
-        return ConfigurationUtil.getLong(conf, "hbase.get.standalone.freq.millis", 1000*10L);
+    public static long hbaseGetStandaloneFreqOfWriteMillis() {
+        return ConfigurationUtil.getLong(conf, "hbase.get.standalone.freq.of.write.millis", 1000*10L);
     }
 
     //hbase get单机频控阈值
-    public static int hbaseGetStandaloneFreqThreshold() {
-        return ConfigurationUtil.getInteger(conf, "hbase.get.standalone.freq.threshold", 1500);
+    public static int hbaseGetStandaloneFreqOfWriteThreshold() {
+        return ConfigurationUtil.getInteger(conf, "hbase.get.standalone.freq.of.write.threshold", 1500);
+    }
+
+    //hbase get单机频控周期
+    public static long hbaseGetStandaloneFreqOfReadMillis() {
+        return ConfigurationUtil.getLong(conf, "hbase.get.standalone.freq.of.read.millis", 1000*10L);
+    }
+
+    //hbase get单机频控阈值
+    public static int hbaseGetStandaloneFreqOfReadThreshold() {
+        return ConfigurationUtil.getInteger(conf, "hbase.get.standalone.freq.of.read.threshold", 1500);
     }
 
     //频控操作异常时是否通过
