@@ -1,21 +1,20 @@
 
 server:
-  port: 6381
+  port: 6380
 spring:
   application:
     name: camellia-redis-proxy-server
 
 camellia-redis-proxy:
-#  password: pass123
+  password: pass123
   transpond:
     type: local
     local:
       resource: redis://@127.0.0.1:6379
-  monitor-enable: false
-  command-spend-time-monitor-enable: true
-  monitor-interval-seconds: 10
-  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.command.async.DummyCommandInterceptor
-camellia-redis-zk-registry:
-  enable: false
-  zk-url: 127.0.0.1:2181
-  base-path: /camellia
+    redis-conf:
+      queue-type: linkedblockingqueue
+
+#camellia-redis-zk-registry:
+#  enable: false
+#  zk-url: 127.0.0.1:2181
+#  base-path: /camellia

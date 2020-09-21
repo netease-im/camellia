@@ -1,9 +1,9 @@
-# camellia框架  
-Camellia是网易云信内部开发使用的一个公共组件库，以下模块均已应用于云信线上环境  
+# camellia framework（[中文版](README-zh.md)）
+Camellia is originally develop as basic architecture for netease-yunxin's servers，all the modules is running in netease-yunxin's online-env.
 
 ![GitHub](https://img.shields.io/badge/license-MIT-green.svg)  
 
-## 目录结构
+## Catalog
 ├─`camellia-core`   
 ├─`camellia-dashboard`    
 ├─`camellia-hbase`  
@@ -33,37 +33,36 @@ Camellia是网易云信内部开发使用的一个公共组件库，以下模块
 │ ├─`camellia-hbase-spring-boot-starter`  
 │ ├─`camellia-redis-zk-discovery-spring-boot-starter`  
               
-## 模块简介
+## Instruction
 ### 1、camellia-core  
-一个基于cglib开发的支持**客户端多读多写**和**客户端分片**的代理框架  
-[详情和示例](/camellia-core/README.md)  
+base on cglib, support client shading/read-write-separate/double-write  
+[QUICK START](/docs/core/core.md)  
 ### 2、camellia-dashboard  
-一个web服务，可以管理和下发camellia-core的代理配置，从而可以**动态**更新代理配置  
-[详情和示例](/camellia-dashboard/README.md)  
+a web service, depends on mysql/redis，manage camellia-core's config，client can get and update config from dashboard  
+[QUICK START](/docs/dashboard/dashboard.md)  
 ### 3、camellia-redis  
-一个基于camellia-core和jedis开发的CamelliaRedisTemplate，支持redis、redis sentinel、redis cluster，支持pipeline，对外暴露统一的api（方法和参数同jedis）  
-[详情和示例](/camellia-redis/README.md)
-### 4、camellia-redis-zk  
-一个基于zk和curator实现的camellia-redis-proxy的一个注册发现组件  
-[详情和示例](/camellia-redis-zk/README.md)  
-### 5、camellia-redis-proxy  
-一个基于netty4开发的redis代理服务，实现了redis协议，支持代理到redis、redis-sentinel、redis-cluster；支持在proxy层进行分片、读写分离、双写等；支持设置自定义拦截规则；支持多个业务共享（A业务代理到redis1，B业务代理到redis2）等  
-[详情和示例](/camellia-redis-proxy/README.md)  
-### 6、camellia-hbase  
-一个基于camellia-core和hbase-client封装的hbase客户端，支持双写、读写分离等  
-[详情和示例](/camellia-hbase/README.md)  
-### 7、camellia-redis-proxy-hbase    
-一个基于camellia-redis、camellia-hbase的camellia-redis-proxy插件，用于构建冷热分离存储的redis-proxy服务，当前实现了zset相关的命令  
-[详情和示例](/camellia-redis-proxy-hbase/README.md)  
-### 8、camellia-redis-toolkit  
-一个基于camellia-redis的工具集，包括分布式锁、id生成、计数器等组件  
-[详情和示例](/camellia-redis-toolkit/README.md)  
+base on camellia-core and jedis，main class is CamelliaRedisTemplate, can invoke redis/redis-sentinel/redis-cluster in identical way，support pipeline    
+support client shading/read-write-separate/double-write  
+[QUICK START](/docs/redis-template/redis-template.md)
+### 4、camellia-redis-proxy  
+base on netty4 and camellia-core, support redis/redis-sentinel/redis-cluster  
+support shading/read-write-separate/double-write on proxy, support custom command interceptor，and so on  
+[QUICK START](/docs/redis-proxy/redis-proxy.md)  
+### 5、camellia-hbase  
+base on camellia-core and hbase-client，main class is CamelliaHBaseTemplate    
+support client read-write-separate/double-write  
+[QUICK START](/docs/hbase-template/hbase-template.md)  
+### 6、camellia-redis-proxy-hbase    
+base on camellia-redis-proxy、CamelliaRedisTemplate、CamelliaHBaseTemplate, support hot-code-sepatation on redis zset commands  
+[QUICK START](/docs/redis-proxy-hbase/redis-proxy-hbase.md)  
+### 7、camellia-redis-toolkit  
+base on CamelliaRedisTemplate，provide some toolkit of redis, such as redis-lock  
+[QUICK START](/docs/toolkit/toolkit.md)  
 
-## 版本
-当前最新版本1.0.9，已经发布到maven中央仓库（2020/09/08）  
-[更新日志](/update.md)  
+## Version
+latest version is 1.0.9，have deploy to maven central repository on 2020/09/08  
+[CHANGE_LOG](/update.md)  
 
-## 交流
-* 遇到问题：欢迎查看各个模块的详情和示例来帮助你解决疑惑  
-* 提交缺陷：在确保使用最新版本依然存在问题时请尽量以简洁的语言描述清楚复现该问题的步骤并提交issue            
-* 功能建议：如果你有什么好的想法或者提案，欢迎提交 issue 与我们交流  
+## Contact
+wechat-id: hdnxttl  
+email: zj_caojiajun@163.com  

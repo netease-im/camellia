@@ -24,6 +24,6 @@ bid+bgroup唯一确定了一份配置
 </dependency>
 ```
 ## 示例
-[数据库建表语句](/camellia-dashboard/doc/table.sql)  
+[数据库建表语句](table.sql)  
 [示例源码](/camellia-samples/camellia-dashboard-samples)  
 [配置示例](/camellia-samples/camellia-dashboard-samples/src/main/resources/samples.txt)  

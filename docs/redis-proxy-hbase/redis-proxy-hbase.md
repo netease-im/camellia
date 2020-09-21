@@ -11,9 +11,9 @@
 考虑到zset的很多查询是增量的（如zrangeByScore），因此如果zset的value较大，则缓存中只会保留value的一个引用，以减少缓存的开销  
 整体的数据结构图如下：  
 1、冷热分层结构  
-<img src="doc/1.png" width="40%" height="40%">  
+<img src="1.png" width="40%" height="40%">  
 2、数据结构图  
-<img src="doc/2.png" width="50%" height="50%">
+<img src="2.png" width="50%" height="50%">
 
 ## 注意事项
 如果所有的业务数据均有ttl，则建议在hbase建表时加上ttl，此时要确保hbase表的ttl大于业务ttl（建议2倍以上）
@@ -114,5 +114,5 @@ redis.hbase.monitor.interval.seconds=60
 ```
 
 ### 更多示例和源码
-[hbase建表语句](/camellia-redis-proxy-hbase/doc/table.txt)  
+[hbase建表语句](table.txt)  
 [示例源码](/camellia-samples/camellia-redis-proxy-hbase-samples)
