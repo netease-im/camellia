@@ -545,8 +545,8 @@ camellia-redis-proxy:
 above config means RedisMonitor will collect metrics, and will collect each command's spend time.  
 every 10s, metrics bean com.netease.nim.camellia.redis.proxy.monitor.Stats will be refreshed.  
 ### remote monitor
-if proxy use camellia-dashboard to manage config, then proxy will report metics to dashboard every minute.   
-then you can get the aggregate metics in dashboard.  
+if proxy use camellia-dashboard to manage config, then proxy will report metrics to dashboard every minute.   
+then you can get the aggregate metrics in dashboard.  
 remote monitor is default open when use camellia-dashboard in proxy, if you want close remote monitor, you can config like this:  
 ```yaml
 server:
