@@ -535,7 +535,7 @@ spring:
 camellia-redis-proxy:
   monitor-enable: true
   command-spend-time-monitor-enable: true
-  monitor-interval-seconds: 10s
+  monitor-interval-seconds: 10
   password: pass123
   transpond:
     type: local
