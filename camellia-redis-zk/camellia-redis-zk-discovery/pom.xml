@@ -4,19 +4,19 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis-zk-discovery</artifactId>
-	<version>1.0.9</version>
+	<version>1.0.10-SNAPHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-redis-zk</artifactId>
-		<version>1.0.9</version>
+		<version>1.0.10-SNAPHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-zk-common</artifactId>
-			<version>1.0.9</version>
+			<version>1.0.10-SNAPHOT</version>
 		</dependency>
 	</dependencies>
 	<build>

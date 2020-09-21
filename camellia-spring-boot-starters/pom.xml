@@ -5,14 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>camellia-spring-boot-starters</artifactId>
-    <version>1.0.9</version>
+    <version>1.0.10-SNAPHOT</version>
 
     <packaging>pom</packaging>
 
     <parent>
         <groupId>com.netease.nim</groupId>
         <artifactId>camellia</artifactId>
-        <version>1.0.9</version>
+        <version>1.0.10-SNAPHOT</version>
     </parent>
 
     <modules>
