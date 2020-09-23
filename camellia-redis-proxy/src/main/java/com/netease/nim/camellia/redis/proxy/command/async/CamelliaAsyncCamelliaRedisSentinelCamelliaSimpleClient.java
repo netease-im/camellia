@@ -25,9 +25,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * Created by caojiajun on 2020/08/07.
  */
-public class AsyncCamelliaRedisSentinelClient extends AsyncCamelliaSimpleClient {
+public class CamelliaAsyncCamelliaRedisSentinelCamelliaSimpleClient extends AsyncCamelliaSimpleClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(AsyncCamelliaRedisSentinelClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaAsyncCamelliaRedisSentinelCamelliaSimpleClient.class);
     private static final byte[] SENTINEL_GET_MASTER_ADDR_BY_NAME = SafeEncoder.encode("get-master-addr-by-name");
     private static final byte[] MASTER_SWITCH = SafeEncoder.encode("+switch-master");
     private static final AtomicInteger id = new AtomicInteger(0);
@@ -36,7 +36,7 @@ public class AsyncCamelliaRedisSentinelClient extends AsyncCamelliaSimpleClient 
     private volatile RedisClientAddr redisClientAddr;
     private final Object lock = new Object();
 
-    public AsyncCamelliaRedisSentinelClient(RedisSentinelResource redisSentinelResource) {
+    public CamelliaAsyncCamelliaRedisSentinelCamelliaSimpleClient(RedisSentinelResource redisSentinelResource) {
         this.redisSentinelResource = redisSentinelResource;
         String master = redisSentinelResource.getMaster();
         boolean sentinelAvailable = false;
@@ -88,12 +88,12 @@ public class AsyncCamelliaRedisSentinelClient extends AsyncCamelliaSimpleClient 
 
     private class MasterListener extends Thread {
 
-        private final AsyncCamelliaRedisSentinelClient redisSentinelClient;
+        private final CamelliaAsyncCamelliaRedisSentinelCamelliaSimpleClient redisSentinelClient;
         private final RedisSentinelResource.Node node;
         private final String master;
         private boolean running = true;
 
-        public MasterListener(AsyncCamelliaRedisSentinelClient redisSentinelClient, String master, RedisSentinelResource.Node node) {
+        public MasterListener(CamelliaAsyncCamelliaRedisSentinelCamelliaSimpleClient redisSentinelClient, String master, RedisSentinelResource.Node node) {
             this.redisSentinelClient = redisSentinelClient;
             this.master = master;
             this.node = node;

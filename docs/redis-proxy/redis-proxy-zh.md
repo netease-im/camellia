@@ -17,6 +17,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4和camellia-c
 * 提供了一个默认的注册发现实现组件（依赖zookeeper），如果端侧是java，则可以很简单的将JedisPool替换为RedisProxyJedisPool，即可接入redis proxy 
 
 ## 支持的命令
+* 完整支持
 ```
 ##DataBase
 PING,AUTH,ECHO,CLIENT,QUIT,EXISTS,DEL,TYPE,EXPIRE,
@@ -39,10 +40,35 @@ ZREMRANGEBYRANK,ZREMRANGEBYSCORE,ZREMRANGEBYLEX,ZLEXCOUNT,ZSCAN,
 SETBIT,GETBIT,BITPOS,BITCOUNT,BITFIELD,
 ##Geo
 GEOADD,GEODIST,GEOHASH,GEOPOS,GEORADIUS,GEORADIUSBYMEMBER,
+##HyperLogLog
+PFADD
+```
+
+* 限制性支持（当前仅当以下命令涉及的key被分在相同分片，或者被分在redis cluster的相同slot下）  
+```
+##DataBase
+RENAME,RENAMENX,
+##String
+MSETNX,
+##Set
+SINTER,SINTERSTORE,SUNION,SUNIONSTORE,SDIFF,SDIFFSTORE,SMOVE,
+##List
+BLPOP,BRPOP,RPOPLPUSH,BRPOPLPUSH,
+##ZSet
+ZUNIONSTORE,ZINTERSTORE,
+##HyperLogLog
+PFCOUNT,PFMERGE,
+##BitMap
+BITOP,
 ##Script
 EVAL,EVALSHA,
-
 ```
+
+* 部分支持（当前仅当路由后端是单个redis或者单个redis-sentinel）  
+```
+##DataBase
+KEYS,SCAN,
+``` 
 
 ## 快速开始
 1) 首先创建一个spring-boot的工程，然后添加以下依赖，如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   

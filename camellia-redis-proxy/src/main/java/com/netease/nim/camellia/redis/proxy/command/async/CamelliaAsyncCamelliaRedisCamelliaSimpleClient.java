@@ -7,12 +7,12 @@ import com.netease.nim.camellia.redis.resource.RedisResource;
  *
  * Created by caojiajun on 2019/12/18.
  */
-public class AsyncCamelliaRedisClient extends AsyncCamelliaSimpleClient {
+public class CamelliaAsyncCamelliaRedisCamelliaSimpleClient extends AsyncCamelliaSimpleClient {
 
     private final RedisResource redisResource;
     private final RedisClientAddr addr;
 
-    public AsyncCamelliaRedisClient(RedisResource redisResource) {
+    public CamelliaAsyncCamelliaRedisCamelliaSimpleClient(RedisResource redisResource) {
         this.redisResource = redisResource;
         this.addr = new RedisClientAddr(redisResource.getHost(), redisResource.getPort(), redisResource.getPassword());
     }

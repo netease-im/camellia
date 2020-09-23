@@ -17,6 +17,7 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * provide a default register/discovery component depends on zookeeper, if client's language is java, then you can adjust slightly by use RedisProxyJedisPool instead of JedisPool 
 
 ## Supported Commands
+* Full Supported
 ```
 ##DataBase
 PING,AUTH,ECHO,CLIENT,QUIT,EXISTS,DEL,TYPE,EXPIRE,
@@ -39,10 +40,35 @@ ZREMRANGEBYRANK,ZREMRANGEBYSCORE,ZREMRANGEBYLEX,ZLEXCOUNT,ZSCAN,
 SETBIT,GETBIT,BITPOS,BITCOUNT,BITFIELD,
 ##Geo
 GEOADD,GEODIST,GEOHASH,GEOPOS,GEORADIUS,GEORADIUSBYMEMBER,
+##HyperLogLog
+PFADD
+```
+
+* Restrictive Support(support only when all the keys in these commands route to same redis-server or same redis-cluster slot)  
+```
+##DataBase
+RENAME,RENAMENX,
+##String
+MSETNX,
+##Set
+SINTER,SINTERSTORE,SUNION,SUNIONSTORE,SDIFF,SDIFFSTORE,SMOVE,
+##List
+BLPOP,BRPOP,RPOPLPUSH,BRPOPLPUSH,
+##ZSet
+ZUNIONSTORE,ZINTERSTORE,
+##HyperLogLog
+PFCOUNT,PFMERGE,
+##BitMap
+BITOP,
 ##Script
 EVAL,EVALSHA,
-
 ```
+
+* Partially Support(support only when route to singleton redis or redis-sentinel)  
+```
+##DataBase
+KEYS,SCAN,
+``` 
 
 ## Quick Start
 1) you need a spring-boot project first, then add dependency in your pom.xml，like this（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   

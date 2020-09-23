@@ -19,6 +19,8 @@ public class Utils {
 
     public static final String syntaxError = "syntax error";
 
+    public static final byte[] EMPTY_ARRAY = new byte[0];
+
     public static final byte[] NEG_ONE = convert(-1, false);
     public static final byte[] NEG_ONE_WITH_CRLF = convert(-1, true);
     public static final char CR = '\r';

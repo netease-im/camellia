@@ -7,10 +7,7 @@ import com.netease.nim.camellia.core.model.operation.ResourceOperation;
 import com.netease.nim.camellia.core.model.operation.ResourceReadOperation;
 import com.netease.nim.camellia.core.model.operation.ResourceWriteOperation;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -26,6 +23,8 @@ public class ResourceChooser {
 
     private boolean bucketSizeIs2Power = false;
 
+    private final Set<Resource> allResources;
+
     public ResourceChooser(ResourceTable resourceTable, ProxyEnv proxyEnv) {
         this.resourceTable = resourceTable;
         this.proxyEnv = proxyEnv;
@@ -34,10 +33,15 @@ public class ResourceChooser {
             int bucketSize = resourceTable.getShadingTable().getBucketSize();
             bucketSizeIs2Power = MathUtil.is2Power(bucketSize);
         }
+        this.allResources = ResourceUtil.getAllResources(resourceTable);
     }
 
     public ResourceTable.Type getType() {
         return resourceTable.getType();
+    }
+
+    public Set<Resource> getAllResources() {
+        return allResources;
     }
 
     public List<Resource> getReadResources(byte[]... shadingParam) {

@@ -51,6 +51,15 @@ public class RedisClusterSlotInfo {
     }
 
     /**
+     * get node by slot
+     * @param slot slot
+     * @return node
+     */
+    public Node getNode(int slot) {
+        return slotArray[slot];
+    }
+
+    /**
      * renew slot info
      */
     private long lastRenewTimestamp = 0L;
@@ -155,7 +164,7 @@ public class RedisClusterSlotInfo {
         }
     }
 
-    private static class Node {
+    public static class Node {
         private final String host;
         private final int port;
         private final String password;
