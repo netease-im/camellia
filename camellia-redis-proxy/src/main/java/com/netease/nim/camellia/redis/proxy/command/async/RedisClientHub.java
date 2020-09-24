@@ -7,7 +7,10 @@ import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.HashedWheelTimer;
 import io.netty.util.concurrent.FastThreadLocal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -18,6 +21,8 @@ import java.util.concurrent.atomic.LongAdder;
  * Created by caojiajun on 2019/12/18.
  */
 public class RedisClientHub {
+
+    private static final Logger logger = LoggerFactory.getLogger(RedisClientHub.class);
 
     private static final ConcurrentHashMap<String, RedisClient> map = new ConcurrentHashMap<>();
     public static NioEventLoopGroup eventLoopGroup = null;
@@ -156,6 +161,54 @@ public class RedisClientHub {
         String log = "get RedisClient fail, key = " + url;
         ErrorLogCollector.collect(RedisClientHub.class, log);
         return null;
+    }
+
+    private static final HashedWheelTimer timer = new HashedWheelTimer();
+    public static void delayStopIfIdle(RedisClient redisClient) {
+        try {
+            IdleCheckTask task = new IdleCheckTask(redisClient);
+            submitIdleCheckTask(task);
+        } catch (Exception e) {
+            logger.error("delayStopIfIdle error, client = {}", redisClient.getClientName(), e);
+        }
+    }
+
+    private static void submitIdleCheckTask(IdleCheckTask task) {
+        timer.newTimeout(timeout -> {
+            try {
+                Boolean success = task.call();
+                if (!success) {
+                    submitIdleCheckTask(task);
+                }
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+        }, 1, TimeUnit.MINUTES);
+    }
+
+    private static class IdleCheckTask implements Callable<Boolean> {
+        private final RedisClient redisClient;
+        public IdleCheckTask(RedisClient redisClient) {
+            this.redisClient = redisClient;
+        }
+        @Override
+        public Boolean call() {
+            try {
+                if (!redisClient.isValid()) {
+                    redisClient.stop();
+                    return true;
+                }
+                if (redisClient.isIdle()) {
+                    redisClient.stop(true);
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                return true;
+            }
+        }
     }
 
     private static long getFailTimestamp(String key) {

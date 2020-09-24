@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -34,6 +35,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncCamelliaRedisTemplate.class);
+
+    private static final ScheduledExecutorService scheduleExecutor
+            = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(ReloadTask.class));
 
     private static final long defaultBid = -1;
     private static final String defaultBgroup = "local";
@@ -76,8 +80,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
         if (bid > 0) {
             ReloadTask reloadTask = new ReloadTask(this, service, bid, bgroup, md5);
-            Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(ReloadTask.class))
-                    .scheduleAtFixedRate(reloadTask, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
+            scheduleExecutor.scheduleAtFixedRate(reloadTask, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
             if (monitorEnable) {
                 Monitor monitor = new FastRemoteMonitor(bid, bgroup, service);
                 ProxyEnv proxyEnv = new ProxyEnv.Builder(env.getProxyEnv()).monitor(monitor).build();

@@ -32,6 +32,7 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
                 if (client != null) {
                     CompletableFuture<Reply> future = completableFutureList.get(i);
                     client.sendCommand(Collections.singletonList(command), Collections.singletonList(future));
+                    RedisClientHub.delayStopIfIdle(client);
                 } else {
                     String log = "RedisClient[" + getAddr() + "] is null, command return NOT_AVAILABLE, RedisResource = " + getResource().getUrl();
                     for (CompletableFuture<Reply> completableFuture : completableFutureList) {
@@ -54,7 +55,9 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
                 }
             }
         }
-        if (hasBlockingCommands && filterCommands != null) {
+
+        if (hasBlockingCommands) {
+            if (filterCommands == null) return;
             commands = filterCommands;
             completableFutureList = filterFutures;
         }

@@ -153,6 +153,10 @@ public class RedisClient implements AsyncClient {
         }
     }
 
+    public boolean isIdle() {
+        return queue.isEmpty();
+    }
+
     public void stop() {
         stop(false);
     }
