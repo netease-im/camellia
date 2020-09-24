@@ -48,7 +48,12 @@ public class AsyncCommandInvoker implements CommandInvoker {
         String commandInterceptorClassName = serverProperties.getCommandInterceptorClassName();
         if (commandInterceptorClassName != null) {
             try {
-                Class<?> clazz = Class.forName(commandInterceptorClassName);
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(commandInterceptorClassName);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(commandInterceptorClassName);
+                }
                 commandInterceptor = (CommandInterceptor) clazz.newInstance();
                 logger.info("CommandInterceptor init success, class = {}", commandInterceptorClassName);
             } catch (Exception e) {

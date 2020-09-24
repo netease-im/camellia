@@ -10,8 +10,13 @@ public class ShadingFuncUtil {
 
     public static ShadingFunc forName(String className) {
         try {
-            Class<?> aClass = Class.forName(className);
-            Object shadingFuncObj = aClass.newInstance();
+            Class<?> clazz;
+            try {
+                clazz = Class.forName(className);
+            } catch (ClassNotFoundException e) {
+                clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+            }
+            Object shadingFuncObj = clazz.newInstance();
             if (shadingFuncObj instanceof ShadingFunc) {
                 return (ShadingFunc) shadingFuncObj;
             } else {
