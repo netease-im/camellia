@@ -77,6 +77,38 @@ public class FreqUtil {
         }
     }
 
+    public static boolean zmemberHbaseGetStandaloneFreqOfWrite() {
+        try {
+            if (!RedisHBaseConfiguration.freqEnable()) {
+                return true;
+            }
+            counterOfWrite.freshIfNeed(RedisHBaseConfiguration.zmemberHbaseGetStandaloneFreqOfWriteMillis());
+            long current = counterOfWrite.incrementAndGet();
+            return current <= RedisHBaseConfiguration.zmemeberHbaseGetStandaloneFreqOfWriteThreshold();
+        } catch (Exception e) {
+            logger.error("hbaseGetStandaloneFreq error, threshold = {}, expireMillis = {}, default.pass = {}, ex = {}",
+                    RedisHBaseConfiguration.zmemeberHbaseGetStandaloneFreqOfWriteThreshold(), RedisHBaseConfiguration.zmemberHbaseGetStandaloneFreqOfWriteMillis(),
+                    RedisHBaseConfiguration.freqDefaultPass(), e.toString());
+            return RedisHBaseConfiguration.freqDefaultPass();
+        }
+    }
+
+    public static boolean zmemberHbaseGetStandaloneFreqOfRead() {
+        try {
+            if (!RedisHBaseConfiguration.freqEnable()) {
+                return true;
+            }
+            counterOfRead.freshIfNeed(RedisHBaseConfiguration.zmemberHbaseGetStandaloneFreqOfReadMillis());
+            long current = counterOfRead.incrementAndGet();
+            return current <= RedisHBaseConfiguration.zmemeberHbaseGetStandaloneFreqOfReadThreshold();
+        } catch (Exception e) {
+            logger.error("hbaseGetStandaloneFreq error, threshold = {}, expireMillis = {}, default.pass = {}, ex = {}",
+                    RedisHBaseConfiguration.zmemeberHbaseGetStandaloneFreqOfReadThreshold(), RedisHBaseConfiguration.zmemberHbaseGetStandaloneFreqOfReadMillis(),
+                    RedisHBaseConfiguration.freqDefaultPass(), e.toString());
+            return RedisHBaseConfiguration.freqDefaultPass();
+        }
+    }
+
     private static volatile long currentTimeMillis = System.currentTimeMillis();
     static {
         new Thread(() -> {

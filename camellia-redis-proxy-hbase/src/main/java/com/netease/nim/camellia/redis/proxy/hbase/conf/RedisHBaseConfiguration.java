@@ -329,4 +329,25 @@ public class RedisHBaseConfiguration {
     public static boolean zsetRedisRebuildTaskLogEnable() {
         return ConfigurationUtil.getBoolean(conf, "zset.redis.rebuild.task.log.enable", true);
     }
+
+    //zmemeber二级引用穿透到hbase的单机频控周期（读）
+    public static int zmemberHbaseGetStandaloneFreqOfReadMillis() {
+        return ConfigurationUtil.getInteger(conf, "zmember.hbase.get.standalone.freq.of.read.millis", 10000);
+    }
+
+    //zmemeber二级引用穿透到hbase的单机频控阈值（读）
+    public static int zmemeberHbaseGetStandaloneFreqOfReadThreshold() {
+        return ConfigurationUtil.getInteger(conf, "zmember.hbase.get.standalone.freq.of.read.threshold", 2000);
+    }
+
+    //zmemeber二级引用穿透到hbase的单机频控周期（写）
+    public static int zmemberHbaseGetStandaloneFreqOfWriteMillis() {
+        return ConfigurationUtil.getInteger(conf, "zmember.hbase.get.standalone.freq.of.write.millis", 10000);
+    }
+
+    //zmemeber二级引用穿透到hbase的单机频控阈值（写）
+    public static int zmemeberHbaseGetStandaloneFreqOfWriteThreshold() {
+        return ConfigurationUtil.getInteger(conf, "zmember.hbase.get.standalone.freq.of.write.threshold", 2000);
+    }
+
 }

@@ -343,7 +343,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<byte[]> set = redisTemplate.zrange(redisKey(key), start, end);
-        return checkAndGetOriginalSet(key, set);
+        return checkAndGetOriginalSet(key, set, true);
     }
 
     /**
@@ -356,7 +356,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<byte[]> set = redisTemplate.zrevrange(redisKey(key), start, end);
-        return checkAndGetOriginalSet(key, set);
+        return checkAndGetOriginalSet(key, set, true);
     }
 
     /**
@@ -369,7 +369,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<Tuple> set = redisTemplate.zrevrangeByScoreWithScores(redisKey(key), max, min, offset, count);
-        return checkAndGetOriginalTupleSet(key, set);
+        return checkAndGetOriginalTupleSet(key, set, true);
     }
 
     /**
@@ -382,7 +382,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<byte[]> set = redisTemplate.zrangeByLex(redisKey(key), min, max, offset, count);
-        return checkAndGetOriginalSet(key, set);
+        return checkAndGetOriginalSet(key, set, true);
     }
 
     /**
@@ -395,7 +395,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<byte[]> set = redisTemplate.zrangeByLex(redisKey(key), min, max);
-        return checkAndGetOriginalSet(key, set);
+        return checkAndGetOriginalSet(key, set, true);
     }
 
     /**
@@ -408,7 +408,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<byte[]> set = redisTemplate.zrevrangeByLex(redisKey(key), max, min);
-        return checkAndGetOriginalSet(key, set);
+        return checkAndGetOriginalSet(key, set, true);
     }
 
     /**
@@ -421,7 +421,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<byte[]> set = redisTemplate.zrevrangeByLex(redisKey(key), max, min, offset, count);
-        return checkAndGetOriginalSet(key, set);
+        return checkAndGetOriginalSet(key, set, true);
     }
 
     /**
@@ -434,7 +434,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<Tuple> set = redisTemplate.zrevrangeByScoreWithScores(redisKey(key), max, min);
-        return checkAndGetOriginalTupleSet(key, set);
+        return checkAndGetOriginalTupleSet(key, set, true);
     }
 
     /**
@@ -447,7 +447,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<byte[]> set = redisTemplate.zrevrangeByScore(redisKey(key), max, min, offset, count);
-        return checkAndGetOriginalSet(key, set);
+        return checkAndGetOriginalSet(key, set, true);
     }
 
     /**
@@ -460,7 +460,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<byte[]> set = redisTemplate.zrevrangeByScore(redisKey(key), max, min);
-        return checkAndGetOriginalSet(key, set);
+        return checkAndGetOriginalSet(key, set, true);
     }
 
     /**
@@ -473,7 +473,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<Tuple> set = redisTemplate.zrevrangeWithScores(redisKey(key), start, end);
-        return checkAndGetOriginalTupleSet(key, set);
+        return checkAndGetOriginalTupleSet(key, set, true);
     }
 
     /**
@@ -486,7 +486,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<Tuple> set = redisTemplate.zrangeWithScores(redisKey(key), start, end);
-        return checkAndGetOriginalTupleSet(key, set);
+        return checkAndGetOriginalTupleSet(key, set, true);
     }
 
     /**
@@ -499,7 +499,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<byte[]> set = redisTemplate.zrangeByScore(redisKey(key), min, max);
-        return checkAndGetOriginalSet(key, set);
+        return checkAndGetOriginalSet(key, set, true);
     }
 
     /**
@@ -512,7 +512,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<byte[]> set = redisTemplate.zrangeByScore(redisKey(key), min, max, offset, count);
-        return checkAndGetOriginalSet(key, set);
+        return checkAndGetOriginalSet(key, set, true);
     }
 
     /**
@@ -525,7 +525,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<Tuple> set = redisTemplate.zrangeByScoreWithScores(redisKey(key), min, max);
-        return checkAndGetOriginalTupleSet(key, set);
+        return checkAndGetOriginalTupleSet(key, set, true);
     }
 
     /**
@@ -659,7 +659,7 @@ public class RedisHBaseZSetMixClient {
             return new HashSet<>();
         }
         Set<Tuple> set = redisTemplate.zrangeByScoreWithScores(redisKey(key), min, max, offset, count);
-        return checkAndGetOriginalTupleSet(key, set);
+        return checkAndGetOriginalTupleSet(key, set, true);
     }
 
     /**
@@ -677,7 +677,7 @@ public class RedisHBaseZSetMixClient {
     //
     private long _zremrangeByRank(byte[] key, long start, long stop) {
         Set<byte[]> set = redisTemplate.zrange(redisKey(key), start, stop);
-        set = checkAndGetOriginalSet(key, set);
+        set = checkAndGetOriginalSet(key, set, false);
         if (!set.isEmpty()) {
             _zrem(key, true, set.toArray(new byte[0][0]));
         }
@@ -699,7 +699,7 @@ public class RedisHBaseZSetMixClient {
     //
     private long _zremrangeByScore(byte[] key, byte[] start, byte[] end) {
         Set<byte[]> set = redisTemplate.zrangeByScore(redisKey(key), start, end);
-        set = checkAndGetOriginalSet(key, set);
+        set = checkAndGetOriginalSet(key, set, false);
         if (!set.isEmpty()) {
             _zrem(key, true, set.toArray(new byte[0][0]));
         }
@@ -721,7 +721,7 @@ public class RedisHBaseZSetMixClient {
     //
     private long _zremrangeByLex(byte[] key, byte[] min, byte[] max) {
         Set<byte[]> set = redisTemplate.zrangeByLex(redisKey(key), min, max);
-        set = checkAndGetOriginalSet(key, set);
+        set = checkAndGetOriginalSet(key, set, false);
         if (!set.isEmpty()) {
             _zrem(key, true, set.toArray(new byte[0][0]));
         }
@@ -791,8 +791,9 @@ public class RedisHBaseZSetMixClient {
     }
 
     //
-    private static final String zmember_valueRef_method = "zmember_valueRef";
-    private Set<Tuple> checkAndGetOriginalTupleSet(byte[] key, Set<Tuple> tupleSet) {
+    private static final String zmember_valueRef_4_read = "zmember_valueRef_4_read";
+    private static final String zmember_valueRef_4_write = "zmember_valueRef_4_write";
+    private Set<Tuple> checkAndGetOriginalTupleSet(byte[] key, Set<Tuple> tupleSet, boolean forRead) {
         if (tupleSet.isEmpty()) return tupleSet;
         Map<BytesKey, Tuple> map = new HashMap<>();
         List<byte[]> valueRefKeyList = new ArrayList<>();
@@ -820,6 +821,7 @@ public class RedisHBaseZSetMixClient {
             } else {
                 mget = redisTemplate.mget(redisKey(valueRefKeyList.toArray(new byte[0][0])));
             }
+            String zmember_valueRef_method = forRead ? zmember_valueRef_4_read : zmember_valueRef_4_write;
             List<Get> getList = new ArrayList<>();
             for (int i = 0; i < mget.size(); i++) {
                 byte[] valueRefKey = valueRefKeyList.get(i);
@@ -834,46 +836,56 @@ public class RedisHBaseZSetMixClient {
                 }
             }
             if (!getList.isEmpty()) {
-                Map<byte[], byte[]> cacheRebuildMap = new HashMap<>(getList.size());
-                List<List<Get>> split = split(getList, RedisHBaseConfiguration.hbaseReadBatchMaxSize());
-                Result[] results = new Result[getList.size()];
-                int index = 0;
-                for (List<Get> gets : split) {
-                    Result[] resultArray = hBaseTemplate.get(RedisHBaseConfiguration.hbaseTableName(), gets);
-                    for (Result result : resultArray) {
-                        results[index] = result;
-                        index ++;
-                    }
+                boolean pass;
+                if (forRead) {
+                    pass = FreqUtil.zmemberHbaseGetStandaloneFreqOfRead();
+                } else {
+                    pass = FreqUtil.zmemberHbaseGetStandaloneFreqOfWrite();
                 }
-                for (Result result : results) {
-                    byte[] originalValue = result.getValue(CF_D, COL_DATA);
-                    byte[] valueRefKey = result.getRow();
-                    if (originalValue != null) {
-                        BytesKey redisKey = new BytesKey(valueRefKey);
-                        Tuple tuple = tmpMap.get(redisKey);
-                        map.put(redisKey, new Tuple(originalValue, tuple.getScore()));
-
-                        cacheRebuildMap.put(valueRefKey, originalValue);
-                        RedisHBaseMonitor.incrRead(zmember_valueRef_method, ReadOpeType.HIT_TO_HBASE);
-                    } else {
-                        RedisHBaseMonitor.incrRead(zmember_valueRef_method, ReadOpeType.HIT_TO_HBASE_AND_MISS);
-                    }
-                }
-                if (!cacheRebuildMap.isEmpty()) {
-                    try (ICamelliaRedisPipeline pipelined = redisTemplate.pipelined()) {
-                        int pipelineSize = 0;
-                        for (Map.Entry<byte[], byte[]> entry : cacheRebuildMap.entrySet()) {
-                            byte[] k = entry.getKey();
-                            byte[] v = entry.getValue();
-                            pipelined.setex(redisKey(k), RedisHBaseConfiguration.zsetValueRefExpireSeconds(), v);
-                            pipelineSize ++;
-                            if (pipelineSize > RedisHBaseConfiguration.redisPipelineMaxBatchSize()) {
-                                pipelined.sync();
-                                pipelineSize = 0;
-                            }
+                if (pass) {
+                    Map<byte[], byte[]> cacheRebuildMap = new HashMap<>(getList.size());
+                    List<List<Get>> split = split(getList, RedisHBaseConfiguration.hbaseReadBatchMaxSize());
+                    Result[] results = new Result[getList.size()];
+                    int index = 0;
+                    for (List<Get> gets : split) {
+                        Result[] resultArray = hBaseTemplate.get(RedisHBaseConfiguration.hbaseTableName(), gets);
+                        for (Result result : resultArray) {
+                            results[index] = result;
+                            index++;
                         }
-                        pipelined.sync();
                     }
+                    for (Result result : results) {
+                        byte[] originalValue = result.getValue(CF_D, COL_DATA);
+                        byte[] valueRefKey = result.getRow();
+                        if (originalValue != null) {
+                            BytesKey redisKey = new BytesKey(valueRefKey);
+                            Tuple tuple = tmpMap.get(redisKey);
+                            map.put(redisKey, new Tuple(originalValue, tuple.getScore()));
+
+                            cacheRebuildMap.put(valueRefKey, originalValue);
+                            RedisHBaseMonitor.incrRead(zmember_valueRef_method, ReadOpeType.HIT_TO_HBASE);
+                        } else {
+                            RedisHBaseMonitor.incrRead(zmember_valueRef_method, ReadOpeType.HIT_TO_HBASE_AND_MISS);
+                        }
+                    }
+                    if (!cacheRebuildMap.isEmpty()) {
+                        try (ICamelliaRedisPipeline pipelined = redisTemplate.pipelined()) {
+                            int pipelineSize = 0;
+                            for (Map.Entry<byte[], byte[]> entry : cacheRebuildMap.entrySet()) {
+                                byte[] k = entry.getKey();
+                                byte[] v = entry.getValue();
+                                pipelined.setex(redisKey(k), RedisHBaseConfiguration.zsetValueRefExpireSeconds(), v);
+                                pipelineSize++;
+                                if (pipelineSize > RedisHBaseConfiguration.redisPipelineMaxBatchSize()) {
+                                    pipelined.sync();
+                                    pipelineSize = 0;
+                                }
+                            }
+                            pipelined.sync();
+                        }
+                    }
+                } else {
+                    RedisHBaseMonitor.incrRead(zmember_valueRef_method, ReadOpeType.HIT_TO_HBASE_DEGRADED);
                 }
             }
         }
@@ -892,7 +904,7 @@ public class RedisHBaseZSetMixClient {
     }
 
     //
-    private Set<byte[]> checkAndGetOriginalSet(byte[] key, Set<byte[]> set) {
+    private Set<byte[]> checkAndGetOriginalSet(byte[] key, Set<byte[]> set, boolean forRead) {
         if (set.isEmpty()) return set;
         Map<BytesKey, byte[]> map = new HashMap<>();
         List<byte[]> valueRefKeyList = new ArrayList<>();
@@ -916,6 +928,7 @@ public class RedisHBaseZSetMixClient {
             } else {
                 mget = redisTemplate.mget(redisKey(valueRefKeyList.toArray(new byte[0][0])));
             }
+            String zmember_valueRef_method = forRead ? zmember_valueRef_4_read : zmember_valueRef_4_write;
             List<Get> getList = new ArrayList<>();
             for (int i = 0; i < valueRefKeyList.size(); i++) {
                 byte[] valueRefKey = valueRefKeyList.get(i);
@@ -928,43 +941,53 @@ public class RedisHBaseZSetMixClient {
                 }
             }
             if (!getList.isEmpty()) {
-                Map<byte[], byte[]> cacheRebuildMap = new HashMap<>(getList.size());
-
-                List<List<Get>> split = split(getList, RedisHBaseConfiguration.hbaseReadBatchMaxSize());
-                Result[] results = new Result[getList.size()];
-                int index = 0;
-                for (List<Get> gets : split) {
-                    Result[] resultArray = hBaseTemplate.get(RedisHBaseConfiguration.hbaseTableName(), gets);
-                    for (Result result : resultArray) {
-                        results[index] = result;
-                        index ++;
-                    }
+                boolean pass;
+                if (forRead) {
+                    pass = FreqUtil.zmemberHbaseGetStandaloneFreqOfRead();
+                } else {
+                    pass = FreqUtil.zmemberHbaseGetStandaloneFreqOfWrite();
                 }
+                if (pass) {
+                    Map<byte[], byte[]> cacheRebuildMap = new HashMap<>(getList.size());
 
-                for (Result result : results) {
-                    byte[] originalValue = result.getValue(CF_D, COL_DATA);
-                    byte[] valueRefKey = result.getRow();
-                    if (originalValue != null) {
-                        map.put(new BytesKey(valueRefKey), originalValue);
-                        cacheRebuildMap.put(valueRefKey, originalValue);
-                        RedisHBaseMonitor.incrRead(zmember_valueRef_method, ReadOpeType.HIT_TO_HBASE);
-                    } else {
-                        RedisHBaseMonitor.incrRead(zmember_valueRef_method, ReadOpeType.HIT_TO_HBASE_AND_MISS);
-                    }
-                }
-                if (!cacheRebuildMap.isEmpty()) {
-                    try (ICamelliaRedisPipeline pipelined = redisTemplate.pipelined()) {
-                        int pipelineSize = 0;
-                        for (Map.Entry<byte[], byte[]> entry : cacheRebuildMap.entrySet()) {
-                            pipelined.setex(redisKey(entry.getKey()), RedisHBaseConfiguration.zsetValueRefExpireSeconds(), entry.getValue());
-                            pipelineSize ++;
-                            if (pipelineSize > RedisHBaseConfiguration.redisPipelineMaxBatchSize()) {
-                                pipelined.sync();
-                                pipelineSize = 0;
-                            }
+                    List<List<Get>> split = split(getList, RedisHBaseConfiguration.hbaseReadBatchMaxSize());
+                    Result[] results = new Result[getList.size()];
+                    int index = 0;
+                    for (List<Get> gets : split) {
+                        Result[] resultArray = hBaseTemplate.get(RedisHBaseConfiguration.hbaseTableName(), gets);
+                        for (Result result : resultArray) {
+                            results[index] = result;
+                            index++;
                         }
-                        pipelined.sync();
                     }
+
+                    for (Result result : results) {
+                        byte[] originalValue = result.getValue(CF_D, COL_DATA);
+                        byte[] valueRefKey = result.getRow();
+                        if (originalValue != null) {
+                            map.put(new BytesKey(valueRefKey), originalValue);
+                            cacheRebuildMap.put(valueRefKey, originalValue);
+                            RedisHBaseMonitor.incrRead(zmember_valueRef_method, ReadOpeType.HIT_TO_HBASE);
+                        } else {
+                            RedisHBaseMonitor.incrRead(zmember_valueRef_method, ReadOpeType.HIT_TO_HBASE_AND_MISS);
+                        }
+                    }
+                    if (!cacheRebuildMap.isEmpty()) {
+                        try (ICamelliaRedisPipeline pipelined = redisTemplate.pipelined()) {
+                            int pipelineSize = 0;
+                            for (Map.Entry<byte[], byte[]> entry : cacheRebuildMap.entrySet()) {
+                                pipelined.setex(redisKey(entry.getKey()), RedisHBaseConfiguration.zsetValueRefExpireSeconds(), entry.getValue());
+                                pipelineSize++;
+                                if (pipelineSize > RedisHBaseConfiguration.redisPipelineMaxBatchSize()) {
+                                    pipelined.sync();
+                                    pipelineSize = 0;
+                                }
+                            }
+                            pipelined.sync();
+                        }
+                    }
+                } else {
+                    RedisHBaseMonitor.incrRead(zmember_valueRef_method, ReadOpeType.HIT_TO_HBASE_DEGRADED);
                 }
             }
         }
