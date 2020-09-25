@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -58,9 +59,10 @@ public class CamelliaHBaseClientImpl {
 
     @WriteOp
     public void put(String tableName, List<Put> puts) {
+        List<Put> list = new ArrayList<>(puts);
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                table.put(puts);
+                table.put(list);
             }
         } catch (IOException e) {
             throw new CamelliaHBaseException(e);
@@ -89,9 +91,10 @@ public class CamelliaHBaseClientImpl {
 
     @WriteOp
     public void delete(String tableName, List<Delete> deletes) {
+        List<Delete> list = new ArrayList<>(deletes);
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                table.delete(deletes);
+                table.delete(list);
             }
         } catch (IOException e) {
             throw new CamelliaHBaseException(e);
@@ -104,14 +107,15 @@ public class CamelliaHBaseClientImpl {
 
     @WriteOp
     public void batchWriteOpe(String tableName, List<? extends Row> actions, Object[] results) {
-        try {
-            for (Row action : actions) {
-                if (action instanceof Get) {
-                    throw new CamelliaHBaseException("not support GET");
-                }
+        for (Row action : actions) {
+            if (action instanceof Get) {
+                throw new CamelliaHBaseException("not support GET");
             }
+        }
+        List<? extends Row> list = new ArrayList<>(actions);
+        try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                table.batch(actions, results);
+                table.batch(list, results);
             }
         } catch (IOException | InterruptedException e) {
             throw new CamelliaHBaseException(e);
@@ -173,9 +177,10 @@ public class CamelliaHBaseClientImpl {
 
     @ReadOp
     public Result[] get(String tableName, List<Get> gets) {
+        List<Get> list = new ArrayList<>(gets);
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                return table.get(gets);
+                return table.get(list);
             }
         } catch (IOException e) {
             throw new CamelliaHBaseException(e);
@@ -253,9 +258,10 @@ public class CamelliaHBaseClientImpl {
 
     @ReadOp
     public boolean[] existsAll(String tableName, List<Get> gets) {
+        ArrayList<Get> list = new ArrayList<>(gets);
         try {
             try (Table table = connectionFactory.getHBaseConnection(resource).getTable(tableName)) {
-                return table.existsAll(gets);
+                return table.existsAll(list);
             }
         } catch (IOException e) {
             throw new CamelliaHBaseException(e);
