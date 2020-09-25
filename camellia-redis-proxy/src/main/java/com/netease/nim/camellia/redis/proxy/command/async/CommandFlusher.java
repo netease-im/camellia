@@ -48,4 +48,9 @@ public class CommandFlusher {
             }
         }
     }
+
+    public void clear() {
+        commandMap.clear();
+        futureMap.clear();
+    }
 }

@@ -83,7 +83,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                     case BLPOP:
                     case BRPOP:
                     case BRPOPLPUSH:
-                        blockingCommand(command, future);
+                        blockingCommand(command, commandFlusher, future);
                         break;
                     default:
                         future.complete(ErrorReply.NOT_SUPPORT);
@@ -389,7 +389,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
         AsyncUtils.allOf(futureList).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
     }
 
-    private void blockingCommand(Command command, CompletableFuture<Reply> future) {
+    private void blockingCommand(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
         int slot = checkSlot(command, 1, command.getObjects().length - 1);
         if (slot < 0) {
             future.complete(new ErrorReply("CROSSSLOT Keys in request don't hash to the same slot"));
@@ -405,6 +405,8 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
             future.complete(ErrorReply.NOT_AVAILABLE);
             return;
         }
+        commandFlusher.flush();
+        commandFlusher.clear();
         client.sendCommand(Collections.singletonList(command), Collections.singletonList(future));
         RedisClientHub.delayStopIfIdle(client);
     }
