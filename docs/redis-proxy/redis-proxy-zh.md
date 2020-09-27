@@ -421,6 +421,91 @@ camellia-redis-proxy:
 ```
 上面的配置表示如果一个set命令过来，那么key的长度不得超过256，value的长度不得超过1M，否则会返回指定的错误信息
 
+
+## 双（多）写
+proxy支持设置双（多）写的类型，有三个可选项：  
+### first_resource_only
+表示如果配置的第一个写地址返回了，则立即返回给客户端，这是默认的模式
+### all_resources_no_check
+表示需要配置的所有写地址都返回了，才返回给给客户端，返回的是第一个地址的返回结果，你可以这样配置来生效这种模式：  
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      resource: redis://@127.0.0.1:6379
+    redis-conf:
+      multi-write-type: all_resources_no_check
+```
+### all_resources_check_error
+表示需要配置的所有写地址都返回了，才返回给客户端，并且会校验是否所有地址都是返回的非error结果，如果是，则返回第一个地址的返回结果；否则返回第一个错误结果，你可以这样配置来生效这种模式：  
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      resource: redis://@127.0.0.1:6379
+    redis-conf:
+      multi-write-type: all_resources_check_error
+```  
+
+## 自定义分片函数
+你可以自定义分片函数，分片函数会计算出一个key的哈希值，和分片大小（bucketSize）取余后，得到该key所属的分片。  
+默认的分片函数是com.netease.nim.camellia.core.client.env.DefaultShadingFunc  
+你可以继承com.netease.nim.camellia.core.client.env.AbstractSimpleShadingFunc实现自己想要的分片函数，类似于这样：  
+```java
+package com.netease.nim.camellia.redis.proxy.samples;
+
+import com.netease.nim.camellia.core.client.env.AbstractSimpleShadingFunc;
+
+public class CustomShadingFunc extends AbstractSimpleShadingFunc {
+    
+    @Override
+    public int shadingCode(byte[] key) {
+        if (key == null) return 0;
+        if (key.length == 0) return 0;
+        int h = 0;
+        for (byte d : key) {
+            h = 31 * h + d;
+        }
+        return (h < 0) ? -h : h;
+    }
+}
+```  
+然后在application.yml配置即可，类似于这样：
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      type: complex
+      json-file: resource-table.json
+    redis-conf:
+      shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc
+```
+
+
 ## 部署架构
 在生产环境，需要部署至少2个proxy实例来保证高可用，并且proxy是可以水平扩展的   
 此时有两种方式来部署多实例的架构：  

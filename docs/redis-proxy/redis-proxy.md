@@ -417,7 +417,91 @@ camellia-redis-proxy:
       resource: redis://@127.0.0.1:6379
   command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor
 ```
-it means if the command is SET, then key.length should not greater than 256, value.length should not greater than 1M.  
+it means if the command is SET, then key.length should not greater than 256, value.length should not greater than 1M.
+
+## Multi Write
+proxy support setting multi write type, there are three multi write type to choose: 
+### first_resource_only
+it means, when first redis reply, then reply to client, it is the default mode.
+### all_resources_no_check
+it means, all multi-write redis reply, then reply first redis's reply, you can config like this:  
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      resource: redis://@127.0.0.1:6379
+    redis-conf:
+      multi-write-type: all_resources_no_check
+```
+### all_resources_check_error
+it means, all multi-write redis reply, and none of replies is error, then reply first redis's reply, else reply the first error reply
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      resource: redis://@127.0.0.1:6379
+    redis-conf:
+      multi-write-type: all_resources_check_error
+```  
+
+## Custom Shading
+you can define custom ShadingFunc, the func will calc the shading hash code of the key, then calc hashcode % bucket.size to resolve location bucket of the key.  
+the default ShadingFunc is com.netease.nim.camellia.core.client.env.DefaultShadingFunc.  
+you can implements abstract class of com.netease.nim.camellia.core.client.env.AbstractSimpleShadingFunc, such like this:
+```java
+package com.netease.nim.camellia.redis.proxy.samples;
+
+import com.netease.nim.camellia.core.client.env.AbstractSimpleShadingFunc;
+
+public class CustomShadingFunc extends AbstractSimpleShadingFunc {
+    
+    @Override
+    public int shadingCode(byte[] key) {
+        if (key == null) return 0;
+        if (key.length == 0) return 0;
+        int h = 0;
+        for (byte d : key) {
+            h = 31 * h + d;
+        }
+        return (h < 0) ? -h : h;
+    }
+}
+```  
+then config it in application.yml, like this:  
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      type: complex
+      json-file: resource-table.json
+    redis-conf:
+      shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc
+```
+
 
 ## Deployment Architecture
 in production environment, we need more than one instance of redis proxy to ensure service high availability and horizontal expansion.                                                    

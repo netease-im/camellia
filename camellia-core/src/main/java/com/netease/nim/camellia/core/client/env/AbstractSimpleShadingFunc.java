@@ -9,7 +9,7 @@ public abstract class AbstractSimpleShadingFunc implements ShadingFunc {
     @Override
     public final int shadingCode(byte[]... data) {
         if (data.length == 0) return 0;
-        if (data.length == 1) return shadingIndex(data[0]);
+        if (data.length == 1) return shadingCode(data[0]);
         int len = 0;
         for (byte[] datum : data) {
             len += datum.length;
@@ -20,8 +20,8 @@ public abstract class AbstractSimpleShadingFunc implements ShadingFunc {
             System.arraycopy(datum, 0, key, destPos, datum.length);
             destPos += datum.length;
         }
-        return shadingIndex(key);
+        return shadingCode(key);
     }
 
-    public abstract int shadingIndex(byte[] key);
+    public abstract int shadingCode(byte[] key);
 }
