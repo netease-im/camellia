@@ -114,6 +114,17 @@ public enum RedisCommand {
     BITFIELD(CommandSupportType.FULL_SUPPORT, Type.READ, false),
     ECHO(CommandSupportType.FULL_SUPPORT, Type.READ, false),
     PFADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, false),
+    XACK(CommandSupportType.FULL_SUPPORT, Type.WRITE, false),
+    XADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, false),
+    XCLAIM(CommandSupportType.FULL_SUPPORT, Type.WRITE, false),
+    XDEL(CommandSupportType.FULL_SUPPORT, Type.WRITE, false),
+    XLEN(CommandSupportType.FULL_SUPPORT, Type.READ, false),
+    XPENDING(CommandSupportType.FULL_SUPPORT, Type.READ, false),
+    XRANGE(CommandSupportType.FULL_SUPPORT, Type.READ, false),
+    XREVRANGE(CommandSupportType.FULL_SUPPORT, Type.READ, false),
+    XTRIM(CommandSupportType.FULL_SUPPORT, Type.WRITE, false),
+    XGROUP(CommandSupportType.FULL_SUPPORT, Type.WRITE, false),
+    XINFO(CommandSupportType.FULL_SUPPORT, Type.READ, false),
 
     /**
      * Restrictive Support(support only when all the keys in these command route to same redis-serve or same redis-cluster slot)
@@ -139,6 +150,8 @@ public enum RedisCommand {
     BRPOP(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, true),
     RPOPLPUSH(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, false),
     BRPOPLPUSH(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, true),
+    XREADGROUP(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, false),
+    XREAD(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, false),
 
     /**
      * Partially Support(support only when route to singleton redis or redis-sentinel)

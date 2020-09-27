@@ -6,6 +6,8 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4和camellia-c
 ## 特性
 * 支持代理到redis、redis sentinel、redis cluster
 * 支持设置密码
+* 支持阻塞式命令，如BLPOP/BRPOP/BRPOPLPUSH等
+* 支持redis5.0的Streams
 * 支持自定义分片
 * 支持读写分离
 * 支持双（多）写

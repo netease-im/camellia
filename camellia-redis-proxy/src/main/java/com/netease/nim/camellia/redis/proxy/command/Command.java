@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command;
 
 
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
@@ -11,6 +12,8 @@ public class Command {
     private String name;
     private RedisCommand redisCommand;
     private ChannelInfo channelInfo;
+    private boolean hasCheckBlocking = false;
+    private boolean blocking = false;
 
     public Command(byte[][] objects) {
         this.objects = objects;
@@ -32,6 +35,27 @@ public class Command {
 
     public byte[][] getObjects() {
         return objects;
+    }
+
+    public boolean isBlocking() {
+        RedisCommand redisCommand = getRedisCommand();
+        if (redisCommand.isBlocking()) {
+            return true;
+        }
+        if (hasCheckBlocking) {
+            return blocking;
+        }
+        if (redisCommand == RedisCommand.XREAD || redisCommand == RedisCommand.XREADGROUP) {
+            for (byte[] object : getObjects()) {
+                String string = new String(object, Utils.utf8Charset);
+                if (string.equalsIgnoreCase(RedisKeyword.BLOCK.name())) {
+                    blocking = true;
+                    break;
+                }
+            }
+        }
+        hasCheckBlocking = true;
+        return blocking;
     }
 
     public ChannelInfo getChannelInfo() {

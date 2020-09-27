@@ -16,6 +16,7 @@ public enum RedisKeyword {
     LIST, MATCH, COUNT, PING, PONG,
     NX, XX, EX, PX, CH,
     BEFORE, AFTER,
-    WITHCOORD, WITHDIST, WITHHASH
+    WITHCOORD, WITHDIST, WITHHASH,
+    STREAMS,BLOCK,
     ;
 }

@@ -22,7 +22,7 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
     public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
         boolean hasBlockingCommands = false;
         for (Command command : commands) {
-            if (command.getRedisCommand().isBlocking()) {
+            if (command.isBlocking()) {
                 hasBlockingCommands = true;
                 break;
             }
@@ -44,7 +44,7 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
             CompletableFuture<Reply> future = completableFutureList.get(i);
             commands1.add(command);
             completableFutureList1.add(future);
-            if (command.getRedisCommand().isBlocking()) {
+            if (command.isBlocking()) {
                 flushBlockingCommands(commands1, completableFutureList1);
                 commands1 = new ArrayList<>(commands.size());
                 completableFutureList1 = new ArrayList<>(commands.size());

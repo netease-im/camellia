@@ -12,6 +12,7 @@ import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.MultiWriteType;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.FastRemoteMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
@@ -188,6 +189,10 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     case BRPOPLPUSH:
                         future = writeCommandWithDynamicKeyCount(command, commandFlusher, 1, command.getObjects().length - 2);
                         break;
+                    case XREAD:
+                    case XREADGROUP:
+                        future = xreadOrXreadgroup(command, commandFlusher);
+                        break;
                     default:
                         future = new CompletableFuture<>();
                         future.complete(ErrorReply.NOT_SUPPORT);
@@ -244,6 +249,21 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 if (continueOk) continue;
             }
 
+            CompletableFuture<Reply> completableFuture1 = null;
+            switch (redisCommand) {
+                case XGROUP:
+                    completableFuture1 = xgroup(command, commandFlusher);
+                    break;
+                case XINFO:
+                    completableFuture1 = xinfo(command, commandFlusher);
+                    break;
+            }
+            if (completableFuture1 != null) {
+                futureList.add(completableFuture1);
+                futureList.add(completableFuture1);
+                continue;
+            }
+
             RedisCommand.Type type = redisCommand.getType();
             if (type == RedisCommand.Type.READ) {
                 Resource resource = getReadResource(command);
@@ -261,6 +281,63 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
         commandFlusher.flush();
         return futureList;
+    }
+
+    private CompletableFuture<Reply> xreadOrXreadgroup(Command command, CommandFlusher commandFlusher) {
+        byte[][] objects = command.getObjects();
+        int index = -1;
+        for (int i=1; i<objects.length; i++) {
+            String string = new String(objects[i], Utils.utf8Charset);
+            if (string.equalsIgnoreCase(RedisKeyword.STREAMS.name())) {
+                index = i;
+                break;
+            }
+        }
+        if (index == -1) {
+            CompletableFuture<Reply> future = new CompletableFuture<>();
+            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
+            return future;
+        }
+        int last = objects.length - index - 1;
+        if (last <= 0) {
+            CompletableFuture<Reply> future = new CompletableFuture<>();
+            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
+            return future;
+        }
+        if (last % 2 != 0) {
+            CompletableFuture<Reply> future = new CompletableFuture<>();
+            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
+            return future;
+        }
+        int keyCount = last / 2;
+        return writeCommandWithDynamicKeyCount(command, commandFlusher, index + 1, index + keyCount);
+    }
+
+    private CompletableFuture<Reply> xgroup(Command command, CommandFlusher commandFlusher) {
+        byte[][] objects = command.getObjects();
+        if (objects.length < 3) {
+            CompletableFuture<Reply> future = new CompletableFuture<>();
+            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
+            return future;
+        }
+        byte[] key = objects[2];
+        List<Resource> writeResources = resourceChooser.getWriteResources(key);
+        return doWrite(writeResources, commandFlusher, command);
+    }
+
+    private CompletableFuture<Reply> xinfo(Command command, CommandFlusher commandFlusher) {
+        byte[][] objects = command.getObjects();
+        if (objects.length < 3) {
+            CompletableFuture<Reply> future = new CompletableFuture<>();
+            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
+            return future;
+        }
+        byte[] key = objects[2];
+        Resource resource = resourceChooser.getFirstReadResource(key);
+        AsyncClient client = factory.get(resource.getUrl());
+        CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
+        incrRead(resource, command);
+        return future;
     }
 
     private CompletableFuture<Reply> doEvalOrEvalSha(Command command, CommandFlusher commandFlusher) {

@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -83,7 +84,12 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                     case BLPOP:
                     case BRPOP:
                     case BRPOPLPUSH:
-                        blockingCommand(command, commandFlusher, future);
+                        int slot = checkSlot(command, 1, command.getObjects().length - 2);
+                        blockingCommand(slot, command, commandFlusher, future);
+                        break;
+                    case XREAD:
+                    case XREADGROUP:
+                        xreadOrXreadgroup(command, commandFlusher, future);
                         break;
                     default:
                         future.complete(ErrorReply.NOT_SUPPORT);
@@ -116,6 +122,11 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                     }
                     break;
                 }
+                case XINFO:
+                case XGROUP:
+                    xinfoOrXgroup(command, commandFlusher, future);
+                    continueOk = true;
+                    break;
             }
             if (continueOk) continue;
 
@@ -389,8 +400,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
         AsyncUtils.allOf(futureList).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
     }
 
-    private void blockingCommand(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
-        int slot = checkSlot(command, 1, command.getObjects().length - 2);
+    private void blockingCommand(int slot, Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
         if (slot < 0) {
             future.complete(new ErrorReply("CROSSSLOT Keys in request don't hash to the same slot"));
             return;
@@ -407,8 +417,43 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
         }
         commandFlusher.flush();
         commandFlusher.clear();
-        client.sendCommand(Collections.singletonList(command), Collections.singletonList(future));
+        CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, future, command);
+        client.sendCommand(Collections.singletonList(command), Collections.singletonList(futureWrapper));
         RedisClientHub.delayStopIfIdle(client);
         command.getChannelInfo().addRedisClientForBlockingCommand(client);
+    }
+
+    private void xreadOrXreadgroup(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
+        byte[][] objects = command.getObjects();
+        int index = -1;
+        for (int i=1; i<objects.length; i++) {
+            String string = new String(objects[i], Utils.utf8Charset);
+            if (string.equalsIgnoreCase(RedisKeyword.STREAMS.name())) {
+                index = i;
+                break;
+            }
+        }
+        int last = objects.length - index - 1;
+        int keyCount = last / 2;
+        int slot = checkSlot(command, index + 1, index + keyCount);
+        if (command.isBlocking()) {
+            blockingCommand(slot, command, commandFlusher, future);
+        } else {
+            if (slot < 0) {
+                future.complete(new ErrorReply("CROSSSLOT Keys in request don't hash to the same slot"));
+                return;
+            }
+            RedisClient client = clusterSlotInfo.getClient(slot);
+            CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, future, command);
+            commandFlusher.sendCommand(client, command, futureWrapper);
+        }
+    }
+
+    private void xinfoOrXgroup(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
+        byte[] key = command.getObjects()[2];
+        int slot = RedisClusterCRC16Utils.getSlot(key);
+        RedisClient client = clusterSlotInfo.getClient(slot);
+        CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, future, command);
+        commandFlusher.sendCommand(client, command, futureWrapper);
     }
 }
