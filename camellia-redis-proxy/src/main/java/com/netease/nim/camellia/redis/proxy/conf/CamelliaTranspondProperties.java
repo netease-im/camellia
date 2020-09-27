@@ -152,6 +152,7 @@ public class CamelliaTranspondProperties {
         private int commandPipelineFlushThreshold = Constants.Transpond.commandPipelineFlushThreshold;
         private int defaultTranspondWorkThread = Constants.Transpond.defaultTranspondWorkThread;
         private QueueType queueType = Constants.Transpond.queueType;
+        private MultiWriteType multiWriteType = Constants.Transpond.multiWriteType;
         private DisruptorConf disruptorConf;
 
         public static class DisruptorConf {
@@ -252,6 +253,14 @@ public class CamelliaTranspondProperties {
 
         public void setDefaultTranspondWorkThread(int defaultTranspondWorkThread) {
             this.defaultTranspondWorkThread = defaultTranspondWorkThread;
+        }
+
+        public MultiWriteType getMultiWriteType() {
+            return multiWriteType;
+        }
+
+        public void setMultiWriteType(MultiWriteType multiWriteType) {
+            this.multiWriteType = multiWriteType;
         }
     }
 }

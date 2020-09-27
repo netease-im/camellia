@@ -179,6 +179,7 @@ public class AsyncCamelliaRedisTemplateChooser {
         env = new AsyncCamelliaRedisEnv.Builder()
                 .proxyEnv(proxyEnv)
                 .clientFactory(clientFactory)
+                .multiWriteType(redisConf.getMultiWriteType())
                 .build();
     }
 }

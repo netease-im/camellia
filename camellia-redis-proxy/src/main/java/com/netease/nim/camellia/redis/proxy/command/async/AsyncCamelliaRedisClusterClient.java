@@ -409,6 +409,6 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
         commandFlusher.clear();
         client.sendCommand(Collections.singletonList(command), Collections.singletonList(future));
         RedisClientHub.delayStopIfIdle(client);
-        command.getChannelInfo().setRedisClientForBlockingCommand(client);
+        command.getChannelInfo().addRedisClientForBlockingCommand(client);
     }
 }

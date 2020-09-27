@@ -36,6 +36,7 @@ public class Constants {
         public static final int commandPipelineFlushThreshold = 256;
         public static final QueueType queueType = QueueType.None;
         public static final int defaultTranspondWorkThread = SysUtils.getCpuHalfNum();//if queueType is None, then effective
+        public static final MultiWriteType multiWriteType = MultiWriteType.FIRST_RESOURCE_ONLY;
     }
 
     public static class Remote {

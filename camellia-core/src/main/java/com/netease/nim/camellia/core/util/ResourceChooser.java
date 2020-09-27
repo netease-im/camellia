@@ -19,6 +19,7 @@ public class ResourceChooser {
     private final ProxyEnv proxyEnv;
 
     private List<Resource> readResources = null;
+    private Resource firstReadResource = null;
     private List<Resource> writeResources = null;
 
     private boolean bucketSizeIs2Power = false;
@@ -44,8 +45,16 @@ public class ResourceChooser {
         return allResources;
     }
 
+    public Resource getFirstReadResource(byte[]... shadingParam) {
+        if (firstReadResource != null) return firstReadResource;
+        return getReadResources(shadingParam).get(0);
+    }
+
     public List<Resource> getReadResources(byte[]... shadingParam) {
-        if (readResources != null) return readResources;
+        if (readResources != null) {
+            firstReadResource = readResources.get(0);
+            return readResources;
+        }
         ResourceTable.Type type = resourceTable.getType();
         if (type == ResourceTable.Type.SIMPLE) {
             ResourceTable.SimpleTable simpleTable = resourceTable.getSimpleTable();

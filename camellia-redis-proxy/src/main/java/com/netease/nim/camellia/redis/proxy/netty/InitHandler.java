@@ -8,6 +8,8 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Queue;
+
 /**
  *
  * Created by caojiajun on 2019/11/7.
@@ -34,13 +36,17 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
         if (channelInfo != null) {
             channelInfo.clear();
             ChannelMonitor.remove(channelInfo);
-            RedisClient redisClient = channelInfo.getRedisClientForBlockingCommand();
-            if (redisClient != null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("client will close for blocking command interrupt by client, consid = {}, client.addr = {}, upstream.redis.client = {}",
-                            channelInfo.getConsid(), ctx.channel().remoteAddress(), redisClient.getClientName());
+            Queue<RedisClient> queue = channelInfo.getRedisClientsForBlockingCommand();
+            if (queue != null) {
+                while (!queue.isEmpty()) {
+                    RedisClient redisClient = queue.poll();
+                    if (redisClient == null || !redisClient.isValid()) continue;
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("client will close for blocking command interrupt by client, consid = {}, client.addr = {}, upstream.redis.client = {}",
+                                channelInfo.getConsid(), ctx.channel().remoteAddress(), redisClient.getClientName());
+                    }
+                    redisClient.stop(true);
                 }
-                redisClient.stop(true);
             }
         }
         if (logger.isDebugEnabled()) {

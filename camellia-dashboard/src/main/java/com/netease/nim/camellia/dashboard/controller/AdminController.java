@@ -249,7 +249,7 @@ public class AdminController {
             int bucketSize = shadingTable.getBucketSize();
             DefaultShadingFunc shadingFunc = new DefaultShadingFunc();
             int shadingCode = shadingFunc.shadingCode(key.getBytes("utf-8"));
-            int index = shadingCode % bucketSize;
+            int index = Math.abs(shadingCode) % bucketSize;
             ResourceOperation resourceOperation = shadingTable.getResourceOperationMap().get(index);
             Object ret = ReadableResourceTableUtil.readableResourceOperation(resourceOperation);
             LogBean.get().addProps("ret", ret);

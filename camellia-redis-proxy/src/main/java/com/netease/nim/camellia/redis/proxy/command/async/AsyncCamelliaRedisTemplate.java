@@ -10,6 +10,7 @@ import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceChooser;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.MultiWriteType;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.FastRemoteMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
@@ -53,6 +54,8 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
     private boolean isRedisServerSingleton;
 
+    private final MultiWriteType multiWriteType;
+
     public AsyncCamelliaRedisTemplate(ResourceTable resourceTable) {
         this(AsyncCamelliaRedisEnv.defaultRedisEnv(), resourceTable);
     }
@@ -67,6 +70,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         this.bid = bid;
         this.bgroup = bgroup;
         this.factory = env.getClientFactory();
+        this.multiWriteType = env.getMultiWriteType();
         CamelliaApiResponse response = service.getResourceTable(bid, bgroup, null);
         String md5 = response.getMd5();
         if (response.getResourceTable() == null) {
@@ -113,8 +117,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 switch (redisCommand) {
                     case KEYS:
                     case SCAN:
-                        List<Resource> resources = resourceChooser.getReadResources(Utils.EMPTY_ARRAY);
-                        Resource resource = resources.get(0);
+                        Resource resource = resourceChooser.getFirstReadResource(Utils.EMPTY_ARRAY);
                         String url = resource.getUrl();
                         AsyncClient client = factory.get(url);
                         future = commandFlusher.sendCommand(client, command);
@@ -277,17 +280,14 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     }
 
     private CompletableFuture<Reply> doWrite(List<Resource> writeResources, CommandFlusher commandFlusher, Command command) {
-        CompletableFuture<Reply> completableFuture = null;
-        for (int i=0; i<writeResources.size(); i++) {
-            Resource resource = writeResources.get(i);
+        List<CompletableFuture<Reply>> list = new ArrayList<>(writeResources.size());
+        for (Resource resource : writeResources) {
             AsyncClient client = factory.get(resource.getUrl());
             CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
             incrWrite(resource, command);
-            if (i == 0) {
-                completableFuture = future;
-            }
+            list.add(future);
         }
-        return completableFuture;
+        return AsyncUtils.finalReply(list, multiWriteType);
     }
 
     private CompletableFuture<Reply> evalOrEvalSha(RedisCommand redisCommand, Command command, CommandFlusher commandFlusher) {
@@ -339,7 +339,6 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
     private CompletableFuture<Reply> mset(Command command, CommandFlusher commandFlusher) {
         byte[][] args = command.getObjects();
-
         if ((args.length - 1) % 2 != 0) {
             CompletableFuture<Reply> future = new CompletableFuture<>();
             future.complete(new ErrorReply("wrong number of arguments for 'mset' command"));
@@ -347,11 +346,11 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
         Set<String> firstWriteResourceUrls = new HashSet<>();
         Map<String, List<byte[]>> map = new HashMap<>();
-        for (int i=1; i<args.length; i++, i++) {
+        for (int i = 1; i < args.length; i++, i++) {
             byte[] key = args[i];
-            byte[] value = args[i+1];
+            byte[] value = args[i + 1];
             List<Resource> resources = getWriteResources(key);
-            for (int j=0; j<resources.size(); j++) {
+            for (int j = 0; j < resources.size(); j++) {
                 Resource resource = resources.get(j);
                 List<byte[]> list = map.get(resource.getUrl());
                 if (list == null) {
@@ -367,6 +366,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             }
         }
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
+        List<CompletableFuture<Reply>> allFutures = new ArrayList<>();
         for (Map.Entry<String, List<byte[]>> entry : map.entrySet()) {
             String url = entry.getKey();
             List<byte[]> list = entry.getValue();
@@ -376,13 +376,35 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             if (firstWriteResourceUrls.contains(url)) {
                 futures.add(future);
             }
+            allFutures.add(future);
         }
-        if (futures.size() == 1) {
-            return futures.get(0);
+        if (multiWriteType == MultiWriteType.FIRST_RESOURCE_ONLY) {
+            if (futures.size() == 1) {
+                return futures.get(0);
+            }
+            CompletableFuture<Reply> future = new CompletableFuture<>();
+            AsyncUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeStatusReply(replies)));
+            return future;
         }
-        CompletableFuture<Reply> future = new CompletableFuture<>();
-        AsyncUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeStatusReply(replies)));
-        return future;
+        CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
+        AsyncUtils.allOf(allFutures).thenAccept(replies -> {
+            if (multiWriteType == MultiWriteType.ALL_RESOURCES_CHECK_ERROR) {
+                for (Reply reply : replies) {
+                    if (reply instanceof ErrorReply) {
+                        completableFuture.complete(reply);
+                        return;
+                    }
+                }
+            }
+            if (futures.size() == 1) {
+                futures.get(0).thenAccept(completableFuture::complete);
+                return;
+            }
+            CompletableFuture<Reply> future = new CompletableFuture<>();
+            AsyncUtils.allOf(futures).thenAccept(replies1 -> future.complete(Utils.mergeStatusReply(replies1)));
+            future.thenAccept(completableFuture::complete);
+        });
+        return completableFuture;
     }
 
     private CompletableFuture<Reply> mget(Command command, CommandFlusher commandFlusher) {
@@ -450,43 +472,26 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     }
 
     private CompletableFuture<Reply> del(Command command, CommandFlusher commandFlusher) {
-        ResourceChooser resourceChooser = this.resourceChooser;//避免过程中resourceChooser被替换
-        ResourceTable.Type type = resourceChooser.getType();
-        if (type == ResourceTable.Type.SIMPLE) {//如果不是分片，则可以直接转发
-            CompletableFuture<Reply> completableFuture = null;
-            List<Resource> resources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
-            for (int i=0; i<resources.size(); i++) {
-                Resource resource = resources.get(i);
+        byte[][] args = command.getObjects();
+        List<CompletableFuture<Reply>> futures = new ArrayList<>();
+        List<CompletableFuture<Reply>> allFutures = new ArrayList<>();
+        //拆成N个命令进行投递，不做聚合，因为如果分片逻辑下，可能某个resource同时为双写的第1个地址和第2个地址
+        for (int i = 1; i < args.length; i++) {
+            byte[] key = args[i];
+            List<Resource> resources = getWriteResources(key);
+            for (int j = 0; j < resources.size(); j++) {
+                Resource resource = resources.get(j);
                 AsyncClient client = factory.get(resource.getUrl());
-                CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
-                if (i == 0) {
-                    completableFuture = future;
+                byte[][] subCommand = new byte[][]{args[0], key};
+                CompletableFuture<Reply> future = commandFlusher.sendCommand(client, new Command(subCommand));
+                incrWrite(resource, command);
+                if (j == 0) {
+                    futures.add(future);
                 }
+                allFutures.add(future);
             }
-            if (completableFuture == null) {
-                //走不到这里
-                completableFuture = new CompletableFuture<>();
-                completableFuture.complete(ErrorReply.NOT_AVAILABLE);
-            }
-            return completableFuture;
-        } else if (type == ResourceTable.Type.SHADING) {
-            byte[][] args = command.getObjects();
-            List<CompletableFuture<Reply>> futures = new ArrayList<>();
-            //拆成N个命令进行投递，不做聚合，因为如果分片逻辑下，可能某个resource同时为双写的第1个地址和第2个地址
-            for (int i = 1; i < args.length; i++) {
-                byte[] key = args[i];
-                List<Resource> resources = getWriteResources(key);
-                for (int j = 0; j < resources.size(); j++) {
-                    Resource resource = resources.get(j);
-                    AsyncClient client = factory.get(resource.getUrl());
-                    byte[][] subCommand = new byte[][]{args[0], key};
-                    CompletableFuture<Reply> future = commandFlusher.sendCommand(client, new Command(subCommand));
-                    incrWrite(resource, command);
-                    if (j == 0) {
-                        futures.add(future);
-                    }
-                }
-            }
+        }
+        if (multiWriteType == MultiWriteType.FIRST_RESOURCE_ONLY) {
             if (futures.size() == 1) {
                 return futures.get(0);
             }
@@ -494,8 +499,26 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             AsyncUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
             return future;
         } else {
+            CompletableFuture<List<Reply>> all = AsyncUtils.allOf(allFutures);
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-            completableFuture.complete(ErrorReply.NOT_SUPPORT);
+            all.thenAccept(replies -> {
+                if (multiWriteType == MultiWriteType.ALL_RESOURCES_CHECK_ERROR) {
+                    for (Reply reply : replies) {
+                        if (reply instanceof ErrorReply) {
+                            completableFuture.complete(reply);
+                            return;
+                        }
+                    }
+                }
+                if (futures.size() == 1) {
+                    CompletableFuture<Reply> future1 = futures.get(0);
+                    future1.thenAccept(completableFuture::complete);
+                    return;
+                }
+                CompletableFuture<Reply> future = new CompletableFuture<>();
+                AsyncUtils.allOf(futures).thenAccept(replies1 -> future.complete(Utils.mergeIntegerReply(replies1)));
+                future.thenAccept(completableFuture::complete);
+            });
             return completableFuture;
         }
     }
@@ -539,8 +562,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             String url = null;
             for (int i=start; i<=end; i++) {
                 byte[] key = objects[i];
-                List<Resource> readResources = resourceChooser.getReadResources(key);
-                Resource resource = readResources.get(0);
+                Resource resource = resourceChooser.getFirstReadResource(key);
                 if (url != null && !url.equals(resource.getUrl())) {
                     CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
                     completableFuture.complete(new ErrorReply("ERR keys in request not in same resources"));
@@ -552,8 +574,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             incrRead(url, command);
             return commandFlusher.sendCommand(client, command);
         } else {
-            List<Resource> resources = resourceChooser.getReadResources(Utils.EMPTY_ARRAY);
-            Resource resource = resources.get(0);
+            Resource resource = resourceChooser.getFirstReadResource(Utils.EMPTY_ARRAY);
             AsyncClient client = factory.get(resource.getUrl());
             incrRead(resource.getUrl(), command);
             return commandFlusher.sendCommand(client, command);
@@ -567,21 +588,30 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             future = new CompletableFuture<>();
             future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
         } else {
-            List<Resource> writeResources = null;
-            for (int i=1; i<objects.length; i+=2) {
-                byte[] key = objects[i];
-                List<Resource> resources = resourceChooser.getWriteResources(key);
-                if (writeResources != null) {
-                    boolean writeResourcesEqual = checkWriteResourcesEqual(writeResources, resources);
-                    if (!writeResourcesEqual) {
-                        future = new CompletableFuture<>();
-                        future.complete(new ErrorReply("ERR keys in request not in same resources"));
-                        return future;
+            ResourceTable.Type type = resourceChooser.getType();
+            if (type == ResourceTable.Type.SIMPLE) {
+                List<Resource> writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
+                future = doWrite(writeResources, commandFlusher, command);
+            } else if (type == ResourceTable.Type.SHADING) {
+                List<Resource> writeResources = null;
+                for (int i = 1; i < objects.length; i += 2) {
+                    byte[] key = objects[i];
+                    List<Resource> resources = resourceChooser.getWriteResources(key);
+                    if (writeResources != null) {
+                        boolean writeResourcesEqual = checkWriteResourcesEqual(writeResources, resources);
+                        if (!writeResourcesEqual) {
+                            future = new CompletableFuture<>();
+                            future.complete(new ErrorReply("ERR keys in request not in same resources"));
+                            return future;
+                        }
                     }
+                    writeResources = resources;
                 }
-                writeResources = resources;
+                future = doWrite(writeResources, commandFlusher, command);
+            } else {
+                future = new CompletableFuture<>();
+                future.complete(ErrorReply.NOT_SUPPORT);
             }
-            future = doWrite(writeResources, commandFlusher, command);
         }
         return future;
     }
@@ -618,7 +648,11 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
     private CompletableFuture<Reply> writeCommandWithDynamicKeyCount(Command command, CommandFlusher commandFlusher, int start, int end, byte[]... otherKeys) {
         byte[][] objects = command.getObjects();
-        if (resourceChooser.getType() == ResourceTable.Type.SHADING) {
+        ResourceTable.Type type = resourceChooser.getType();
+        if (type == ResourceTable.Type.SIMPLE) {
+            List<Resource> writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
+            return doWrite(writeResources, commandFlusher, command);
+        } else if (type == ResourceTable.Type.SHADING) {
             List<Resource> writeResources = null;
             for (int i=start; i<=end; i++) {
                 byte[] key = objects[i];
@@ -652,8 +686,9 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             }
             return doWrite(writeResources, commandFlusher, command);
         } else {
-            List<Resource> writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
-            return doWrite(writeResources, commandFlusher, command);
+            CompletableFuture<Reply> future = new CompletableFuture<>();
+            future.complete(ErrorReply.NOT_SUPPORT);
+            return future;
         }
     }
 
@@ -746,7 +781,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     }
 
     private Resource getReadResource(byte[] key) {
-        return resourceChooser.getReadResources(key).get(0);
+        return resourceChooser.getFirstReadResource(key);
     }
 
     private List<Resource> getWriteResources(byte[] key) {
@@ -755,7 +790,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
     private Resource getReadResource(Command command) {
         byte[] key = command.getObjects()[1];
-        return resourceChooser.getReadResources(key).get(0);
+        return resourceChooser.getFirstReadResource(key);
     }
 
     private List<Resource> getWriteResources(Command command) {

@@ -137,6 +137,7 @@ public class CamelliaRedisProxyUtil {
             redisConfProperties.setDisruptorConf(disruptorConf1);
         }
         redisConfProperties.setDefaultTranspondWorkThread(properties.getDefaultTranspondWorkThread());
+        redisConfProperties.setMultiWriteType(properties.getMultiWriteType());
         return redisConfProperties;
     }
 }

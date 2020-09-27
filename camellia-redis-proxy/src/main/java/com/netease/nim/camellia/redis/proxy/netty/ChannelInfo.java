@@ -6,7 +6,9 @@ import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 
+import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  *
@@ -20,7 +22,7 @@ public class ChannelInfo {
     private ChannelStats channelStats = ChannelStats.NO_AUTH;
     private final ChannelHandlerContext ctx;
     private final AsyncTaskQueue asyncTaskQueue;
-    private RedisClient redisClientForBlockingCommand = null;
+    private LinkedBlockingQueue<RedisClient> redisClientsForBlockingCommand = null;
 
     private String clientName;
     private Long bid;
@@ -54,12 +56,23 @@ public class ChannelInfo {
         return asyncTaskQueue;
     }
 
-    public void setRedisClientForBlockingCommand(RedisClient redisClient) {
-        this.redisClientForBlockingCommand = redisClient;
+    public void addRedisClientForBlockingCommand(RedisClient redisClient) {
+        if (redisClientsForBlockingCommand == null) {
+            synchronized (this) {
+                if (redisClientsForBlockingCommand == null) {
+                    redisClientsForBlockingCommand = new LinkedBlockingQueue<>(100);
+                }
+            }
+        }
+        boolean offer = redisClientsForBlockingCommand.offer(redisClient);
+        while (!offer) {
+            redisClientsForBlockingCommand.poll();
+            offer = redisClientsForBlockingCommand.offer(redisClient);
+        }
     }
 
-    public RedisClient getRedisClientForBlockingCommand() {
-        return redisClientForBlockingCommand;
+    public Queue<RedisClient> getRedisClientsForBlockingCommand() {
+        return redisClientsForBlockingCommand;
     }
 
     public void clear() {

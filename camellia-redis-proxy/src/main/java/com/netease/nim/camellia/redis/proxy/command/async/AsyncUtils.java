@@ -1,6 +1,10 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
 
+import com.netease.nim.camellia.redis.proxy.conf.MultiWriteType;
+import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
+import com.netease.nim.camellia.redis.proxy.reply.Reply;
+
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -22,5 +26,30 @@ public class AsyncUtils {
                         map(CompletableFuture::join).
                         collect(Collectors.toList())
         );
+    }
+
+    public static CompletableFuture<Reply> finalReply(List<CompletableFuture<Reply>> futureList, MultiWriteType multiWriteType) {
+        if (multiWriteType == MultiWriteType.FIRST_RESOURCE_ONLY) {
+            return futureList.get(0);
+        }
+        if (futureList.size() == 1) {
+            return futureList.get(0);
+        }
+        final CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
+        CompletableFuture<List<Reply>> listCompletableFuture = allOf(futureList);
+        listCompletableFuture.thenAccept(replies -> {
+            if (multiWriteType == MultiWriteType.ALL_RESOURCES_NO_CHECK) {
+                completableFuture.complete(replies.get(0));
+            } else if (multiWriteType == MultiWriteType.ALL_RESOURCES_CHECK_ERROR) {
+                for (Reply reply : replies) {
+                    if (reply instanceof ErrorReply) {
+                        completableFuture.complete(reply);
+                        return;
+                    }
+                }
+                completableFuture.complete(replies.get(0));
+            }
+        });
+        return completableFuture;
     }
 }
