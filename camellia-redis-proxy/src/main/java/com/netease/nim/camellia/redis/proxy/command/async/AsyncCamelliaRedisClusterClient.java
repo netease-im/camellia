@@ -62,7 +62,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                     case SUNIONSTORE:
                     case SDIFFSTORE:
                     case RPOPLPUSH:
-                        checkSlotCommandsAndSend(command, commandFlusher, future, 1, command.getObjects().length);
+                        checkSlotCommandsAndSend(command, commandFlusher, future, 1, command.getObjects().length - 1);
                         break;
                     case RENAME:
                     case RENAMENX:
@@ -75,7 +75,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                         checkSlotCommandsAndSend(command, commandFlusher, future, 3, 3 + keyCount, command.getObjects()[1]);
                         break;
                     case BITOP:
-                        checkSlotCommandsAndSend(command, commandFlusher, future, 2, command.getObjects().length);
+                        checkSlotCommandsAndSend(command, commandFlusher, future, 2, command.getObjects().length - 1);
                         break;
                     case MSETNX:
                         msetnx(command, commandFlusher, future);
@@ -390,7 +390,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
     }
 
     private void blockingCommand(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
-        int slot = checkSlot(command, 1, command.getObjects().length - 1);
+        int slot = checkSlot(command, 1, command.getObjects().length - 2);
         if (slot < 0) {
             future.complete(new ErrorReply("CROSSSLOT Keys in request don't hash to the same slot"));
             return;

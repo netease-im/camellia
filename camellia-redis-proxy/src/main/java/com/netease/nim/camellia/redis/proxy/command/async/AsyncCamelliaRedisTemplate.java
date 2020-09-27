@@ -148,7 +148,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                             future = new CompletableFuture<>();
                             future.complete(ErrorReply.argNumWrong(redisCommand));
                         } else {
-                            future = readCommandWithDynamicKeyCount(command, commandFlusher, 1, command.getObjects().length);
+                            future = readCommandWithDynamicKeyCount(command, commandFlusher, 1, command.getObjects().length - 1);
                         }
                         break;
                     case PFMERGE:
@@ -160,7 +160,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                             future = new CompletableFuture<>();
                             future.complete(ErrorReply.argNumWrong(redisCommand));
                         } else {
-                            future = writeCommandWithDynamicKeyCount(command, commandFlusher, 1, command.getObjects().length);
+                            future = writeCommandWithDynamicKeyCount(command, commandFlusher, 1, command.getObjects().length - 1);
                         }
                         break;
                     case RENAME:
@@ -186,7 +186,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     case BLPOP:
                     case BRPOP:
                     case BRPOPLPUSH:
-                        future = writeCommandWithDynamicKeyCount(command, commandFlusher, 1, command.getObjects().length - 1);
+                        future = writeCommandWithDynamicKeyCount(command, commandFlusher, 1, command.getObjects().length - 2);
                         break;
                     default:
                         future = new CompletableFuture<>();
@@ -623,7 +623,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             future = new CompletableFuture<>();
             future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
         } else {
-            future = writeCommandWithDynamicKeyCount(command, commandFlusher, 2, objects.length);
+            future = writeCommandWithDynamicKeyCount(command, commandFlusher, 2, objects.length - 1);
         }
         return future;
     }
