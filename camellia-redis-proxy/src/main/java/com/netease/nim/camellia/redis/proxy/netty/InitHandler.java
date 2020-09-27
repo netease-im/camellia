@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
+import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
 import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -33,6 +34,14 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
         if (channelInfo != null) {
             channelInfo.clear();
             ChannelMonitor.remove(channelInfo);
+            RedisClient redisClient = channelInfo.getRedisClientForBlockingCommand();
+            if (redisClient != null) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("client will close for blocking command interrupt by client, consid = {}, client.addr = {}, upstream.redis.client = {}",
+                            channelInfo.getConsid(), ctx.channel().remoteAddress(), redisClient.getClientName());
+                }
+                redisClient.stop(true);
+            }
         }
         if (logger.isDebugEnabled()) {
             logger.debug("channel close, consid = {}", channelInfo == null ? "null" : channelInfo.getConsid());

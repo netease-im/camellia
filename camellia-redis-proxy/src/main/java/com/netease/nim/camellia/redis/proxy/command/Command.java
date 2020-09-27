@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command;
 
 
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 public class Command {
@@ -9,6 +10,7 @@ public class Command {
     private final byte[][] objects;
     private String name;
     private RedisCommand redisCommand;
+    private ChannelInfo channelInfo;
 
     public Command(byte[][] objects) {
         this.objects = objects;
@@ -30,6 +32,14 @@ public class Command {
 
     public byte[][] getObjects() {
         return objects;
+    }
+
+    public ChannelInfo getChannelInfo() {
+        return channelInfo;
+    }
+
+    public void setChannelInfo(ChannelInfo channelInfo) {
+        this.channelInfo = channelInfo;
     }
 
     public void fillParameters(Class<?>[] parameterTypes, Object[] parameters) {

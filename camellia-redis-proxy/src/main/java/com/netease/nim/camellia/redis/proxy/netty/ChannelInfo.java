@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.netty;
 
 
 import com.netease.nim.camellia.redis.proxy.command.async.AsyncTaskQueue;
+import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 
@@ -19,6 +20,7 @@ public class ChannelInfo {
     private ChannelStats channelStats = ChannelStats.NO_AUTH;
     private final ChannelHandlerContext ctx;
     private final AsyncTaskQueue asyncTaskQueue;
+    private RedisClient redisClientForBlockingCommand = null;
 
     private String clientName;
     private Long bid;
@@ -50,6 +52,14 @@ public class ChannelInfo {
 
     public AsyncTaskQueue getAsyncTaskQueue() {
         return asyncTaskQueue;
+    }
+
+    public void setRedisClientForBlockingCommand(RedisClient redisClient) {
+        this.redisClientForBlockingCommand = redisClient;
+    }
+
+    public RedisClient getRedisClientForBlockingCommand() {
+        return redisClientForBlockingCommand;
     }
 
     public void clear() {

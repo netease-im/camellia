@@ -98,7 +98,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
                     ctx.writeAndFlush(reply);
                     continue;
                 }
-
+                command.setChannelInfo(channelInfo);
                 commands.add(command);
             }
             if (!commands.isEmpty()) {
