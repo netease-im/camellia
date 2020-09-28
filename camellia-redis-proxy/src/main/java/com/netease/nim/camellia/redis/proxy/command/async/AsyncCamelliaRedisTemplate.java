@@ -221,9 +221,11 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         }
                         break;
                     }
+                    case TOUCH:
+                    case UNLINK:
                     case DEL: {
                         if (command.getObjects().length > 2) {
-                            CompletableFuture<Reply> future = del(command, commandFlusher);
+                            CompletableFuture<Reply> future = delOrUnlinkOrTouch(command, commandFlusher);
                             futureList.add(future);
                             continueOk = true;
                         }
@@ -548,7 +550,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         return future;
     }
 
-    private CompletableFuture<Reply> del(Command command, CommandFlusher commandFlusher) {
+    private CompletableFuture<Reply> delOrUnlinkOrTouch(Command command, CommandFlusher commandFlusher) {
         byte[][] args = command.getObjects();
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
         List<CompletableFuture<Reply>> allFutures = new ArrayList<>();

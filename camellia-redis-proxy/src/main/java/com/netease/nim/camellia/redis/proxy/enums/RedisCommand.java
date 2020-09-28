@@ -125,6 +125,8 @@ public enum RedisCommand {
     XTRIM(CommandSupportType.FULL_SUPPORT, Type.WRITE, false),
     XGROUP(CommandSupportType.FULL_SUPPORT, Type.WRITE, false),
     XINFO(CommandSupportType.FULL_SUPPORT, Type.READ, false),
+    UNLINK(CommandSupportType.FULL_SUPPORT, Type.WRITE, false),
+    TOUCH(CommandSupportType.FULL_SUPPORT, Type.WRITE, false),
 
     /**
      * Restrictive Support(support only when all the keys in these command route to same redis-serve or same redis-cluster slot)

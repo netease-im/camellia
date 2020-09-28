@@ -101,6 +101,8 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
             boolean continueOk = false;
             switch (redisCommand) {
                 case EXISTS:
+                case UNLINK:
+                case TOUCH:
                 case DEL: {
                     if (command.getObjects().length > 2) {
                         simpleIntegerReplyMerge(command, commandFlusher, future);
