@@ -92,9 +92,8 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
         if (client != null) {
             client.sendCommand(commands, completableFutureList);
             RedisClientHub.delayStopIfIdle(client);
-            for (Command command : commands) {
-                command.getChannelInfo().addRedisClientForBlockingCommand(client);
-            }
+            Command lastBlockingCommand = commands.get(commands.size() - 1);
+            lastBlockingCommand.getChannelInfo().addRedisClientForBlockingCommand(client);
         } else {
             String log = "RedisClient[" + getAddr() + "] is null, command return NOT_AVAILABLE, RedisResource = " + getResource().getUrl();
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
