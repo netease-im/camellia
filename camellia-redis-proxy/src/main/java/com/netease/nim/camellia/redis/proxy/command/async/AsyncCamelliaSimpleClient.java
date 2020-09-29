@@ -2,11 +2,14 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -20,13 +23,42 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
     public abstract Resource getResource();
 
     public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
+        List<Command> filterCommands = new ArrayList<>(commands.size());
+        List<CompletableFuture<Reply>> filterFutures = new ArrayList<>(completableFutureList.size());
         boolean hasBlockingCommands = false;
-        for (Command command : commands) {
-            if (command.isBlocking()) {
-                hasBlockingCommands = true;
-                break;
+
+        for (int i=0; i<commands.size(); i++) {
+            Command command = commands.get(i);
+            CompletableFuture<Reply> future = completableFutureList.get(i);
+            ChannelInfo channelInfo = command.getChannelInfo();
+            RedisClient bindClient = channelInfo.getBindClient();
+            if (command.getRedisCommand() == RedisCommand.SUBSCRIBE || command.getRedisCommand() == RedisCommand.PSUBSCRIBE) {
+                if (bindClient == null) {
+                    bindClient = RedisClientHub.newClient(getAddr());
+                    channelInfo.setBindClient(bindClient);
+                }
+                if (bindClient != null) {
+                    AsyncTaskQueue asyncTaskQueue = command.getChannelInfo().getAsyncTaskQueue();
+                    PubSubUtils.sendByBindClient(bindClient, asyncTaskQueue, command, future);
+                } else {
+                    future.complete(ErrorReply.NOT_AVAILABLE);
+                }
+            } else {
+                if (bindClient != null) {
+                    bindClient.sendCommand(Collections.singletonList(command), Collections.singletonList(future));
+                } else {
+                    filterCommands.add(command);
+                    filterFutures.add(future);
+                    if (command.isBlocking()) {
+                        hasBlockingCommands = true;
+                    }
+                }
             }
         }
+        if (filterCommands.isEmpty()) return;
+        commands = filterCommands;
+        completableFutureList = filterFutures;
+
         if (!hasBlockingCommands) {
             flushNoBlockingCommands(commands, completableFutureList);
             return;

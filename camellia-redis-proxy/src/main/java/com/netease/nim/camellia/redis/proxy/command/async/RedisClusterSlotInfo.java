@@ -23,7 +23,7 @@ public class RedisClusterSlotInfo {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisClusterSlotInfo.class);
 
-    private static final int SLOT_SIZE = 16384;
+    public static final int SLOT_SIZE = 16384;
 
     //slot -> master redis node
     private Node[] slotArray = new Node[SLOT_SIZE];

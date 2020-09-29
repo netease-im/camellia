@@ -54,6 +54,7 @@ public class CommandPackEncoder extends MessageToMessageEncoder<CommandPack> {
             if (!redisClient.isValid()) {
                 return;
             }
+            if (commands.isEmpty()) return;
             ByteBufAllocator allocator = ctx.channel().alloc();
             ByteBuf buf = CommandsEncodeUtil.encode(allocator, commands);
             if (logger.isDebugEnabled()) {

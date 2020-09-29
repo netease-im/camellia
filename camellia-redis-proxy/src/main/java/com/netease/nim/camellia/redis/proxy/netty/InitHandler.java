@@ -42,11 +42,19 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
                     RedisClient redisClient = queue.poll();
                     if (redisClient == null || !redisClient.isValid()) continue;
                     if (logger.isDebugEnabled()) {
-                        logger.debug("client will close for blocking command interrupt by client, consid = {}, client.addr = {}, upstream.redis.client = {}",
+                        logger.debug("redis client will close for blocking command interrupt by client, consid = {}, client.addr = {}, upstream.redis.client = {}",
                                 channelInfo.getConsid(), ctx.channel().remoteAddress(), redisClient.getClientName());
                     }
                     redisClient.stop(true);
                 }
+            }
+            RedisClient bindClient = channelInfo.getBindClient();
+            if (bindClient != null) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("bind redis client will close for disconnect, consid = {}, client.addr = {}, upstream.redis.client = {}",
+                            channelInfo.getConsid(), ctx.channel().remoteAddress(), bindClient.getClientName());
+                }
+                bindClient.stop(true);
             }
         }
         if (logger.isDebugEnabled()) {

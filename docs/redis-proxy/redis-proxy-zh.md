@@ -7,6 +7,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4和camellia-c
 * 支持代理到redis、redis sentinel、redis cluster
 * 支持设置密码
 * 支持阻塞式命令，如BLPOP/BRPOP/BRPOPLPUSH等
+* 支持pubsub命令
 * 支持redis5.0的Streams
 * 支持自定义分片
 * 支持读写分离
@@ -46,7 +47,8 @@ GEOADD,GEODIST,GEOHASH,GEOPOS,GEORADIUS,GEORADIUSBYMEMBER,
 PFADD
 ```
 
-* 限制性支持（当前仅当以下命令涉及的key被分在相同分片，或者被分在redis cluster的相同slot下）  
+* 限制性支持
+当前仅当以下命令涉及的key被分在相同分片，或者被分在redis cluster的相同slot下  
 ```
 ##DataBase
 RENAME,RENAMENX,
@@ -66,7 +68,15 @@ BITOP,
 EVAL,EVALSHA,
 ```
 
-* 部分支持（当前仅当路由后端是单个redis或者单个redis-sentinel）  
+* 部分支持1
+当前仅当路由后端是单个redis或者单个redis-sentinel或者单个redis-cluster  
+```
+##PUBSUB
+SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
+```
+
+* 部分支持2
+当前仅当路由后端是单个redis或者单个redis-sentinel  
 ```
 ##DataBase
 KEYS,SCAN,

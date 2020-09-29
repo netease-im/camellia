@@ -23,6 +23,7 @@ public class ChannelInfo {
     private final ChannelHandlerContext ctx;
     private final AsyncTaskQueue asyncTaskQueue;
     private LinkedBlockingQueue<RedisClient> redisClientsForBlockingCommand = null;
+    private RedisClient bindClient = null;
 
     private String clientName;
     private Long bid;
@@ -117,6 +118,14 @@ public class ChannelInfo {
 
     public void setBgroup(String bgroup) {
         this.bgroup = bgroup;
+    }
+
+    public RedisClient getBindClient() {
+        return bindClient;
+    }
+
+    public void setBindClient(RedisClient bindClient) {
+        this.bindClient = bindClient;
     }
 
     public static enum ChannelStats {

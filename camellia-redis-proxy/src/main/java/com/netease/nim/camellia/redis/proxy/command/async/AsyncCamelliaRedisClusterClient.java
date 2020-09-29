@@ -17,6 +17,7 @@ import redis.clients.util.SafeEncoder;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  *
@@ -47,6 +48,33 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
             Command command = commands.get(i);
             CompletableFuture<Reply> future = futureList.get(i);
             RedisCommand redisCommand = command.getRedisCommand();
+
+            RedisClient bindClient = command.getChannelInfo().getBindClient();
+            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1) {
+                if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
+                    if (bindClient == null) {
+                        int randomSlot = ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE);
+                        bindClient = RedisClientHub.newClient(clusterSlotInfo.getNode(randomSlot).getAddr());
+                        command.getChannelInfo().setBindClient(bindClient);
+                    }
+                    if (bindClient != null) {
+                        AsyncTaskQueue asyncTaskQueue = command.getChannelInfo().getAsyncTaskQueue();
+                        commandFlusher.flush();
+                        commandFlusher.clear();
+                        PubSubUtils.sendByBindClient(bindClient, asyncTaskQueue, command, future);
+                    } else {
+                        future.complete(ErrorReply.NOT_AVAILABLE);
+                    }
+                    continue;
+                }
+            }
+
+            if (bindClient != null) {
+                commandFlusher.flush();
+                commandFlusher.clear();
+                bindClient.sendCommand(Collections.singletonList(command), Collections.singletonList(future));
+                continue;
+            }
 
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.RESTRICTIVE_SUPPORT) {
                 switch (redisCommand) {

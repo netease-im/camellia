@@ -129,7 +129,8 @@ public enum RedisCommand {
     TOUCH(CommandSupportType.FULL_SUPPORT, Type.WRITE, false),
 
     /**
-     * Restrictive Support(support only when all the keys in these command route to same redis-serve or same redis-cluster slot)
+     * Restrictive Support
+     * support only when all the keys in these command route to same redis-serve or same redis-cluster slot
      */
     EVAL(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, false),
     EVALSHA(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, false),
@@ -156,10 +157,22 @@ public enum RedisCommand {
     XREAD(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, false),
 
     /**
-     * Partially Support(support only when route to singleton redis or redis-sentinel)
+     * Partially Support
+     * only support while have singleton-upstream(no custom shading) (standalone-redis or redis-sentinel or redis-cluster)
      */
-    KEYS(CommandSupportType.PARTIALLY_SUPPORT, Type.READ, false),
-    SCAN(CommandSupportType.PARTIALLY_SUPPORT, Type.READ, false),
+    SUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, true),
+    PUBLISH(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, false),
+    UNSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, false),
+    PSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, true),
+    PUNSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, false),
+    PUBSUB(CommandSupportType.PARTIALLY_SUPPORT_1, Type.READ, false),
+
+    /**
+     * Partially Support
+     * only support while have singleton-upstream(no custom shading) (standalone-redis or redis-sentinel)
+     */
+    KEYS(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, false),
+    SCAN(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, false),
 
     /**
      * NOT_SUPPORT
@@ -175,12 +188,6 @@ public enum RedisCommand {
     EXEC(CommandSupportType.NOT_SUPPORT, null, false),
     WATCH(CommandSupportType.NOT_SUPPORT, null, false),
     UNWATCH(CommandSupportType.NOT_SUPPORT, null, false),
-    SUBSCRIBE(CommandSupportType.NOT_SUPPORT, null, false),
-    PUBLISH(CommandSupportType.NOT_SUPPORT, null, false),
-    UNSUBSCRIBE(CommandSupportType.NOT_SUPPORT, null, false),
-    PSUBSCRIBE(CommandSupportType.NOT_SUPPORT, null, false),
-    PUNSUBSCRIBE(CommandSupportType.NOT_SUPPORT, null, false),
-    PUBSUB(CommandSupportType.NOT_SUPPORT, null, false),
     SAVE(CommandSupportType.NOT_SUPPORT, null, false),
     BGSAVE(CommandSupportType.NOT_SUPPORT, null, false),
     BGREWRITEAOF(CommandSupportType.NOT_SUPPORT, null, false),
@@ -248,8 +255,11 @@ public enum RedisCommand {
         //only support while keys in this command location at the same server or same slot.
         RESTRICTIVE_SUPPORT(2),
 
-        //only support while have singleton upstream redis server
-        PARTIALLY_SUPPORT(3),
+        //only support while have singleton-upstream(no custom shading) [standalone-redis or redis-sentinel or redis-cluster]
+        PARTIALLY_SUPPORT_1(3),
+
+        //only support while have singleton-upstream(no custom shading) [standalone-redis or redis-sentinel]
+        PARTIALLY_SUPPORT_2(4),
 
         //not support
         NOT_SUPPORT(Integer.MAX_VALUE),

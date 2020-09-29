@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -20,7 +20,7 @@ public class AsyncTaskQueue {
     private static final Logger logger = LoggerFactory.getLogger(AsyncTaskQueue.class);
 
     private final ChannelInfo channelInfo;
-    private final Queue<AsyncTask> queue = new ConcurrentLinkedQueue<>();
+    private final Queue<AsyncTask> queue = new LinkedBlockingQueue<>(1024*32);
     private final AtomicBoolean callbacking = new AtomicBoolean(false);
     private final AtomicLong id = new AtomicLong(0);
 
@@ -38,6 +38,10 @@ public class AsyncTaskQueue {
             logger.warn("AsyncTaskQueue full, consid = {}", channelInfo.getConsid());
         }
         return offer;
+    }
+
+    public int size() {
+        return queue.size();
     }
 
     public void clear() {

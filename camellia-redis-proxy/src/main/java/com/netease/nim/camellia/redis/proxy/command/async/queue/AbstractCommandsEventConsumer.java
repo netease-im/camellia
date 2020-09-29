@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public abstract class AbstractCommandsEventConsumer implements CommandsEventConsumer {
 
-    private static final Logger logger = LoggerFactory.getLogger(DisruptorCommandsEventConsumer.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractCommandsEventConsumer.class);
 
     private final Map<ChannelType, List<AsyncTask>> taskMap = new HashMap<>();
 

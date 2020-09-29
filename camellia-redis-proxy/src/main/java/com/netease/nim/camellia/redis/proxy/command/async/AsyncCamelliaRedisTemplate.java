@@ -53,7 +53,8 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     private AsyncCamelliaRedisEnv env;
     private ResourceChooser resourceChooser;
 
-    private boolean isRedisServerSingleton;
+    private boolean isSingletonStandaloneRedisOrRedisSentinel;
+    private boolean isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster;
 
     private final MultiWriteType multiWriteType;
 
@@ -107,8 +108,41 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 continue;
             }
 
-            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT) {
-                if (!isRedisServerSingleton) {
+            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1) {
+                if (!isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster) {
+                    CompletableFuture<Reply> future = new CompletableFuture<>();
+                    future.complete(ErrorReply.NOT_SUPPORT);
+                    futureList.add(future);
+                    continue;
+                }
+                Resource resource = resourceChooser.getFirstReadResource(Utils.EMPTY_ARRAY);
+                AsyncClient client = factory.get(resource.getUrl());
+                CompletableFuture<Reply> future;
+                switch (redisCommand) {
+                    case PUBSUB:
+                        future = commandFlusher.sendCommand(client, command);
+                        incrRead(resource, command);
+                        break;
+                    case PUBLISH:
+                    case SUBSCRIBE:
+                    case PSUBSCRIBE:
+                    case UNSUBSCRIBE:
+                    case PUNSUBSCRIBE:
+                        future = commandFlusher.sendCommand(client, command);
+                        incrWrite(resource, command);
+                        break;
+                    default:
+                        future = new CompletableFuture<>();
+                        future.complete(ErrorReply.NOT_SUPPORT);
+                        futureList.add(future);
+                        break;
+                }
+                futureList.add(future);
+                continue;
+            }
+
+            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2) {
+                if (!isSingletonStandaloneRedisOrRedisSentinel) {
                     CompletableFuture<Reply> future = new CompletableFuture<>();
                     future.complete(ErrorReply.NOT_SUPPORT);
                     futureList.add(future);
@@ -123,16 +157,17 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         AsyncClient client = factory.get(url);
                         future = commandFlusher.sendCommand(client, command);
                         incrRead(resource, command);
-                        futureList.add(future);
                         break;
                     default:
                         future = new CompletableFuture<>();
                         future.complete(ErrorReply.NOT_SUPPORT);
-                        futureList.add(future);
                         break;
                 }
+                futureList.add(future);
                 continue;
             }
+
+
 
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.RESTRICTIVE_SUPPORT) {
                 CompletableFuture<Reply> future;
@@ -793,22 +828,25 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
         ResourceTable.Type type = resourceChooser.getType();
         if (type == ResourceTable.Type.SHADING) {
-            isRedisServerSingleton = false;
+            isSingletonStandaloneRedisOrRedisSentinel = false;
+            isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster = false;
             return;
         }
         Set<Resource> allResources = resourceChooser.getAllResources();
         if (allResources.size() != 1) {
-            isRedisServerSingleton = false;
+            isSingletonStandaloneRedisOrRedisSentinel = false;
+            isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster = false;
             return;
         }
+        isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster = true;
         for (Resource resource : allResources) {
             String url = resource.getUrl();
             if (url.startsWith(RedisType.Redis.getPrefix()) || url.startsWith(RedisType.RedisSentinel.getPrefix())) {
-                isRedisServerSingleton = true;
+                isSingletonStandaloneRedisOrRedisSentinel = true;
                 return;
             }
         }
-        isRedisServerSingleton = false;
+        isSingletonStandaloneRedisOrRedisSentinel = false;
     }
 
     private static class ReloadTask implements Runnable {
