@@ -1,3 +1,19 @@
+# 1.0.10（2020/10/xx）
+### add
+* camellia-redis-proxy support blocking commands, such as BLPOP/BRPOP/BRPOPLPUSH and so on
+* camellia-redis-proxy support stream commands of redis5.0，include blocking XREAD/XREADGROUP
+* camellia-redis-proxy support pub-sub commands
+* camellia-redis-proxy support set calc commands, such as SINTER/SINTERSTORE/SUNION/SUNIONSTORE/SDIFF/SDIFFSTORE and so on
+* camellia-redis-proxy support setting multi-type, provider three options, see com.netease.nim.camellia.redis.proxy.conf.MultiWriteType
+* camellia-redis-proxy provider AbstractSimpleShadingFunc to easily define custom shading func
+* camellia-redis-proxy-hbase support standalone freq of hbase get hit of zmemeber
+
+### update
+* none
+
+### fix
+* fix CamelliaHBaseTemplate multi-write bug of batch-delete
+
 # 1.0.9（2020/09/08）
 ### add
 * camellia-redis-proxy-async support redis sentinel

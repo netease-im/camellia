@@ -1,3 +1,19 @@
+# 1.0.10（2020/10/xx）
+### 新增
+* camellia-redis-proxy支持阻塞式命令，如BLPOP/BRPOP/BRPOPLPUSH等
+* camellia-redis-proxy支持redis5.0的stream命令，包括阻塞式的XREAD/XREADGROUP
+* camellia-redis-proxy支持pub-sub命令
+* camellia-redis-proxy支持集合运算命令，如SINTER/SINTERSTORE/SUNION/SUNIONSTORE/SDIFF/SDIFFSTORE等
+* camellia-redis-proxy支持设置双（多）写的类型，提供了三种方式供选择, 参考com.netease.nim.camellia.redis.proxy.conf.MultiWriteType以及相关文档
+* camellia-redis-proxy提供了抽象类AbstractSimpleShadingFunc用于自定义分片函数
+* camellia-redis-proxy-hbase支持了针对zmember到hbase的读穿透的单机频控
+
+### update
+* none
+
+### fix
+* 修复了CamelliaHBaseTemplate在双（多）写时执行批量删除时的bug
+
 # 1.0.9（2020/09/08）
 ### 新增
 * camellia-redis-proxy的async模式支持redis sentinel
