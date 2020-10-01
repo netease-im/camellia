@@ -4,7 +4,7 @@
 * camellia-redis-proxy support stream commands of redis5.0，include blocking XREAD/XREADGROUP
 * camellia-redis-proxy support pub-sub commands
 * camellia-redis-proxy support set calc commands, such as SINTER/SINTERSTORE/SUNION/SUNIONSTORE/SDIFF/SDIFFSTORE and so on
-* camellia-redis-proxy support setting multi-type, provider three options, see com.netease.nim.camellia.redis.proxy.conf.MultiWriteType
+* camellia-redis-proxy support setting multi-write-type, provider three options, see com.netease.nim.camellia.redis.proxy.conf.MultiWriteType
 * camellia-redis-proxy provider AbstractSimpleShadingFunc to easily define custom shading func
 * camellia-redis-proxy-hbase support standalone freq of hbase get hit of zmemeber
 
