@@ -6,7 +6,6 @@ import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.env.ShadingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ShadingFuncUtil;
-import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -174,12 +173,13 @@ public class AsyncCamelliaRedisTemplateChooser {
             builder.shadingFunc(shadingFunc);
             logger.info("ShadingFunc, className = {}", className);
         }
+        logger.info("multi write mode = {}", redisConf.getMultiWriteMode());
         ProxyEnv proxyEnv = builder.build();
 
         env = new AsyncCamelliaRedisEnv.Builder()
                 .proxyEnv(proxyEnv)
                 .clientFactory(clientFactory)
-                .multiWriteType(redisConf.getMultiWriteType())
+                .multiWriteMode(redisConf.getMultiWriteMode())
                 .build();
     }
 }

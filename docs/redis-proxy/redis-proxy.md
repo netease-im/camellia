@@ -436,7 +436,7 @@ camellia-redis-proxy:
 it means if the command is SET, then key.length should not greater than 256, value.length should not greater than 1M.
 
 ## Multi Write
-proxy support setting multi write type, there are three multi write type to choose: 
+proxy support setting multi write mode, there are three multi write mode to choose: 
 ### first_resource_only
 it means, when first redis reply, then reply to client, it is the default mode.
 ### all_resources_no_check
@@ -455,7 +455,7 @@ camellia-redis-proxy:
     local:
       resource: redis://@127.0.0.1:6379
     redis-conf:
-      multi-write-type: all_resources_no_check
+      multi-write-mode: all_resources_no_check
 ```
 ### all_resources_check_error
 it means, all multi-write redis reply, and none of replies is error, then reply first redis's reply, else reply the first error reply
@@ -473,7 +473,7 @@ camellia-redis-proxy:
     local:
       resource: redis://@127.0.0.1:6379
     redis-conf:
-      multi-write-type: all_resources_check_error
+      multi-write-mode: all_resources_check_error
 ```  
 
 ## Custom Shading

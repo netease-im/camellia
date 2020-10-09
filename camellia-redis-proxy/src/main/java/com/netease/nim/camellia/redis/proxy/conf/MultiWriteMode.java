@@ -4,7 +4,7 @@ package com.netease.nim.camellia.redis.proxy.conf;
  * policy of multi-write
  * Created by caojiajun on 2020/9/27
  */
-public enum MultiWriteType {
+public enum MultiWriteMode {
 
     /**
      * first redis reply, then reply to client

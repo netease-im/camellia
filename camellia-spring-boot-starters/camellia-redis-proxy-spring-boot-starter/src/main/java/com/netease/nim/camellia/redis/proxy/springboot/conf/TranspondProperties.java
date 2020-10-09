@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.springboot.conf;
 
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
-import com.netease.nim.camellia.redis.proxy.conf.MultiWriteType;
+import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 import com.netease.nim.camellia.redis.proxy.conf.QueueType;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -249,7 +249,7 @@ public class TranspondProperties {
         private int commandPipelineFlushThreshold = Constants.Transpond.commandPipelineFlushThreshold;
         private int defaultTranspondWorkThread = Constants.Transpond.defaultTranspondWorkThread;
         private QueueType queueType = Constants.Transpond.queueType;
-        private MultiWriteType multiWriteType = Constants.Transpond.multiWriteType;
+        private MultiWriteMode multiWriteMode = Constants.Transpond.multiWriteMode;
         private DisruptorConf disruptorConf;
 
         public static class DisruptorConf {
@@ -353,12 +353,12 @@ public class TranspondProperties {
             this.defaultTranspondWorkThread = defaultTranspondWorkThread;
         }
 
-        public MultiWriteType getMultiWriteType() {
-            return multiWriteType;
+        public MultiWriteMode getMultiWriteMode() {
+            return multiWriteMode;
         }
 
-        public void setMultiWriteType(MultiWriteType multiWriteType) {
-            this.multiWriteType = multiWriteType;
+        public void setMultiWriteMode(MultiWriteMode multiWriteMode) {
+            this.multiWriteMode = multiWriteMode;
         }
     }
 }

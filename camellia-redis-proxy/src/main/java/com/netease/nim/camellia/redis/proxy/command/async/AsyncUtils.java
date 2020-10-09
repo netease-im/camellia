@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
 
-import com.netease.nim.camellia.redis.proxy.conf.MultiWriteType;
+import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 
@@ -28,8 +28,8 @@ public class AsyncUtils {
         );
     }
 
-    public static CompletableFuture<Reply> finalReply(List<CompletableFuture<Reply>> futureList, MultiWriteType multiWriteType) {
-        if (multiWriteType == MultiWriteType.FIRST_RESOURCE_ONLY) {
+    public static CompletableFuture<Reply> finalReply(List<CompletableFuture<Reply>> futureList, MultiWriteMode multiWriteMode) {
+        if (multiWriteMode == MultiWriteMode.FIRST_RESOURCE_ONLY) {
             return futureList.get(0);
         }
         if (futureList.size() == 1) {
@@ -38,9 +38,9 @@ public class AsyncUtils {
         final CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
         CompletableFuture<List<Reply>> listCompletableFuture = allOf(futureList);
         listCompletableFuture.thenAccept(replies -> {
-            if (multiWriteType == MultiWriteType.ALL_RESOURCES_NO_CHECK) {
+            if (multiWriteMode == MultiWriteMode.ALL_RESOURCES_NO_CHECK) {
                 completableFuture.complete(replies.get(0));
-            } else if (multiWriteType == MultiWriteType.ALL_RESOURCES_CHECK_ERROR) {
+            } else if (multiWriteMode == MultiWriteMode.ALL_RESOURCES_CHECK_ERROR) {
                 for (Reply reply : replies) {
                     if (reply instanceof ErrorReply) {
                         completableFuture.complete(reply);

@@ -435,7 +435,7 @@ camellia-redis-proxy:
 
 
 ## 双（多）写
-proxy支持设置双（多）写的类型，有三个可选项：  
+proxy支持设置双（多）写的模式，有三个可选项：  
 ### first_resource_only
 表示如果配置的第一个写地址返回了，则立即返回给客户端，这是默认的模式
 ### all_resources_no_check
@@ -454,7 +454,7 @@ camellia-redis-proxy:
     local:
       resource: redis://@127.0.0.1:6379
     redis-conf:
-      multi-write-type: all_resources_no_check
+      multi-write-mode: all_resources_no_check
 ```
 ### all_resources_check_error
 表示需要配置的所有写地址都返回了，才返回给客户端，并且会校验是否所有地址都是返回的非error结果，如果是，则返回第一个地址的返回结果；否则返回第一个错误结果，你可以这样配置来生效这种模式：  
@@ -472,7 +472,7 @@ camellia-redis-proxy:
     local:
       resource: redis://@127.0.0.1:6379
     redis-conf:
-      multi-write-type: all_resources_check_error
+      multi-write-mode: all_resources_check_error
 ```  
 
 ## 自定义分片函数

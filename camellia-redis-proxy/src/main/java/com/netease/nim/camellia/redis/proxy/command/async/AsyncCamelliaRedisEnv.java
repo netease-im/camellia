@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
-import com.netease.nim.camellia.redis.proxy.conf.MultiWriteType;
+import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 
 /**
  *
@@ -12,7 +12,7 @@ public class AsyncCamelliaRedisEnv {
     private AsyncNettyClientFactory clientFactory = AsyncNettyClientFactory.DEFAULT;
 
     private ProxyEnv proxyEnv = ProxyEnv.defaultProxyEnv();
-    private MultiWriteType multiWriteType = MultiWriteType.FIRST_RESOURCE_ONLY;
+    private MultiWriteMode multiWriteMode = MultiWriteMode.FIRST_RESOURCE_ONLY;
 
     private AsyncCamelliaRedisEnv() {
     }
@@ -34,8 +34,8 @@ public class AsyncCamelliaRedisEnv {
         return proxyEnv;
     }
 
-    public MultiWriteType getMultiWriteType() {
-        return multiWriteType;
+    public MultiWriteMode getMultiWriteMode() {
+        return multiWriteMode;
     }
 
     public static class Builder {
@@ -62,9 +62,9 @@ public class AsyncCamelliaRedisEnv {
             return this;
         }
 
-        public Builder multiWriteType(MultiWriteType multiWriteType) {
-            if (multiWriteType != null) {
-                redisEnv.multiWriteType = multiWriteType;
+        public Builder multiWriteMode(MultiWriteMode multiWriteMode) {
+            if (multiWriteMode != null) {
+                redisEnv.multiWriteMode = multiWriteMode;
             }
             return this;
         }

@@ -10,7 +10,7 @@ import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceChooser;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.conf.MultiWriteType;
+import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.FastRemoteMonitor;
@@ -56,7 +56,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     private boolean isSingletonStandaloneRedisOrRedisSentinel;
     private boolean isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster;
 
-    private final MultiWriteType multiWriteType;
+    private final MultiWriteMode multiWriteMode;
 
     public AsyncCamelliaRedisTemplate(ResourceTable resourceTable) {
         this(AsyncCamelliaRedisEnv.defaultRedisEnv(), resourceTable);
@@ -72,7 +72,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         this.bid = bid;
         this.bgroup = bgroup;
         this.factory = env.getClientFactory();
-        this.multiWriteType = env.getMultiWriteType();
+        this.multiWriteMode = env.getMultiWriteMode();
         CamelliaApiResponse response = service.getResourceTable(bid, bgroup, null);
         String md5 = response.getMd5();
         if (response.getResourceTable() == null) {
@@ -401,7 +401,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             incrWrite(resource, command);
             list.add(future);
         }
-        return AsyncUtils.finalReply(list, multiWriteType);
+        return AsyncUtils.finalReply(list, multiWriteMode);
     }
 
     private CompletableFuture<Reply> evalOrEvalSha(RedisCommand redisCommand, Command command, CommandFlusher commandFlusher) {
@@ -492,7 +492,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             }
             allFutures.add(future);
         }
-        if (multiWriteType == MultiWriteType.FIRST_RESOURCE_ONLY) {
+        if (multiWriteMode == MultiWriteMode.FIRST_RESOURCE_ONLY) {
             if (futures.size() == 1) {
                 return futures.get(0);
             }
@@ -502,7 +502,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
         CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
         AsyncUtils.allOf(allFutures).thenAccept(replies -> {
-            if (multiWriteType == MultiWriteType.ALL_RESOURCES_CHECK_ERROR) {
+            if (multiWriteMode == MultiWriteMode.ALL_RESOURCES_CHECK_ERROR) {
                 for (Reply reply : replies) {
                     if (reply instanceof ErrorReply) {
                         completableFuture.complete(reply);
@@ -605,7 +605,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 allFutures.add(future);
             }
         }
-        if (multiWriteType == MultiWriteType.FIRST_RESOURCE_ONLY) {
+        if (multiWriteMode == MultiWriteMode.FIRST_RESOURCE_ONLY) {
             if (futures.size() == 1) {
                 return futures.get(0);
             }
@@ -616,7 +616,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             CompletableFuture<List<Reply>> all = AsyncUtils.allOf(allFutures);
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
             all.thenAccept(replies -> {
-                if (multiWriteType == MultiWriteType.ALL_RESOURCES_CHECK_ERROR) {
+                if (multiWriteMode == MultiWriteMode.ALL_RESOURCES_CHECK_ERROR) {
                     for (Reply reply : replies) {
                         if (reply instanceof ErrorReply) {
                             completableFuture.complete(reply);
