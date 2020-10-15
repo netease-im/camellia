@@ -6,6 +6,7 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.CheckUtil;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
+import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceUtil;
 import com.netease.nim.camellia.dashboard.daowrapper.ResourceInfoDaoWrapper;
 import com.netease.nim.camellia.dashboard.daowrapper.TableDaoWrapper;
@@ -139,7 +140,7 @@ public class TableService {
         }
         int delete = tableDao.delete(table);
         LogBean.get().addProps("delete", delete);
-        ResourceTable resourceTable = JSONObject.parseObject(table.getDetail(), ResourceTable.class);
+        ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(table.getDetail());
         Set<Resource> allResources = ResourceUtil.getAllResources(resourceTable);
         for (Resource resource : allResources) {
             ResourceInfo resourceInfo = resourceInfoDaoWrapper.getByUrl(resource.getUrl());
