@@ -189,10 +189,7 @@ public class RedisHBaseConfiguration {
 
     //hbase异步写的redis的topic数量（消费端）
     public static int hbaseWriteAsyncTopicConsumerCount() {
-        int producerCount = hbaseWriteAsyncTopicProducerCount();
-        Integer consumerCount = ConfigurationUtil.getInteger(conf, "hbase.write.async.topic.consumer.count", 1);
-        if (producerCount > consumerCount) return producerCount;
-        return consumerCount;
+        return ConfigurationUtil.getInteger(conf, "hbase.write.async.topic.consumer.count", 1);
     }
 
     //hbase异步写的flush线程的检查间隔秒数（用于检查消费端flush线程的启动和负载均衡）
@@ -305,6 +302,16 @@ public class RedisHBaseConfiguration {
         return ConfigurationUtil.getInteger(conf, "hbase.get.standalone.freq.of.read.threshold", 1500);
     }
 
+    //hbase get单机频控周期
+    public static long hbaseGetStandaloneFreqOfRebuildMillis() {
+        return ConfigurationUtil.getLong(conf, "hbase.get.standalone.freq.of.rebuild.millis", 1000*10L);
+    }
+
+    //hbase get单机频控阈值
+    public static int hbaseGetStandaloneFreqOfRebuildThreshold() {
+        return ConfigurationUtil.getInteger(conf, "hbase.get.standalone.freq.of.rebuild.threshold", 1500);
+    }
+
     //频控操作异常时是否通过
     public static boolean freqDefaultPass() {
         return ConfigurationUtil.getBoolean(conf, "freq.default.pass", true);
@@ -330,6 +337,26 @@ public class RedisHBaseConfiguration {
         return ConfigurationUtil.getBoolean(conf, "zset.redis.rebuild.task.log.enable", true);
     }
 
+    //zset的缓存重建任务重试间隔，单位毫秒
+    public static long zsetRebuildRetryIntervalMillis() {
+        return ConfigurationUtil.getLong(conf, "zset.redis.rebuild.task.retry.interval.millis", 500L);
+    }
+
+    //zset的缓存重建任务最大重试次数
+    public static int zsetRebuildMaxRetry() {
+        return ConfigurationUtil.getInteger(conf, "zset.redis.rebuild.task.max.retry", 5);
+    }
+
+    //zset的缓存重建任务最大重试次数
+    public static int zsetRebuildErrorMaxRetry() {
+        return ConfigurationUtil.getInteger(conf, "zset.redis.rebuild.task.error.max.retry", 5);
+    }
+
+    //zset的缓存重建任务异常情况下的最大重试次数
+    public static boolean zsetRebuildClearIfErrorTooMany() {
+        return ConfigurationUtil.getBoolean(conf, "zset.redis.rebuild.clear.if.error.too.many", false);
+    }
+
     //zmemeber二级引用穿透到hbase的单机频控周期（读）
     public static int zmemberHbaseGetStandaloneFreqOfReadMillis() {
         return ConfigurationUtil.getInteger(conf, "zmember.hbase.get.standalone.freq.of.read.millis", 10000);
@@ -350,4 +377,8 @@ public class RedisHBaseConfiguration {
         return ConfigurationUtil.getInteger(conf, "zmember.hbase.get.standalone.freq.of.write.threshold", 2000);
     }
 
+    //zset最大的member size
+    public static int zsetMaxMemberSize() {
+        return ConfigurationUtil.getInteger(conf, "zset.max.member.size", 2000);
+    }
 }

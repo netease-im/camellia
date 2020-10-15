@@ -19,6 +19,17 @@ public class FreqUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(FreqUtil.class);
 
+    public static void releaseFreqKey(CamelliaRedisTemplate redisTemplate, byte[] key) {
+        if (!RedisHBaseConfiguration.freqEnable()) {
+            return;
+        }
+        try {
+            redisTemplate.del(key);
+        } catch (Exception e) {
+            logger.error("releaseFreqKey error, key = {}", SafeEncoder.encode(key));
+        }
+    }
+
     public static boolean freq(CamelliaRedisTemplate redisTemplate, byte[] key, int threshold, long expireMillis) {
         if (!RedisHBaseConfiguration.freqEnable()) {
             return true;
@@ -72,6 +83,22 @@ public class FreqUtil {
         } catch (Exception e) {
             logger.error("hbaseGetStandaloneFreq error, threshold = {}, expireMillis = {}, default.pass = {}, ex = {}",
                     RedisHBaseConfiguration.hbaseGetStandaloneFreqOfReadThreshold(), RedisHBaseConfiguration.hbaseGetStandaloneFreqOfReadMillis(),
+                    RedisHBaseConfiguration.freqDefaultPass(), e.toString());
+            return RedisHBaseConfiguration.freqDefaultPass();
+        }
+    }
+
+    public static boolean hbaseGetStandaloneFreqOfRebuild() {
+        try {
+            if (!RedisHBaseConfiguration.freqEnable()) {
+                return true;
+            }
+            counterOfRead.freshIfNeed(RedisHBaseConfiguration.hbaseGetStandaloneFreqOfRebuildMillis());
+            long current = counterOfRead.incrementAndGet();
+            return current <= RedisHBaseConfiguration.hbaseGetStandaloneFreqOfRebuildThreshold();
+        } catch (Exception e) {
+            logger.error("hbaseGetStandaloneFreq error, threshold = {}, expireMillis = {}, default.pass = {}, ex = {}",
+                    RedisHBaseConfiguration.hbaseGetStandaloneFreqOfRebuildThreshold(), RedisHBaseConfiguration.hbaseGetStandaloneFreqOfRebuildMillis(),
                     RedisHBaseConfiguration.freqDefaultPass(), e.toString());
             return RedisHBaseConfiguration.freqDefaultPass();
         }

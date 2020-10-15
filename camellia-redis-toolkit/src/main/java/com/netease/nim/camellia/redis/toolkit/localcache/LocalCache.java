@@ -73,6 +73,31 @@ public class LocalCache {
     }
 
     /**
+     * 添加缓存（检查是否第一次）
+     */
+    public boolean putIfAbsent(String tag, Object key, Object value, int expireSeconds) {
+        String uniqueKey = CacheUtil.buildCacheKey(tag, key);
+        CacheBean bean;
+        if (value == null) {
+            value = nullCache;
+        }
+        if (expireSeconds <= 0) {
+            bean = new CacheBean(value, Long.MAX_VALUE);
+        } else {
+            bean = new CacheBean(value, System.currentTimeMillis() + expireSeconds * 1000);
+        }
+        CacheBean oldBean = cache.get(uniqueKey);
+        if (oldBean != null && oldBean.isExpire()) {
+            cache.remove(uniqueKey);
+        }
+        CacheBean cacheBean = cache.putIfAbsent(uniqueKey, bean);
+        if (logger.isDebugEnabled()) {
+            logger.debug("local cache put, tag = {}, key = {}, expireSeconds = {}", tag, key, expireSeconds);
+        }
+        return cacheBean == null;
+    }
+
+    /**
      * 获取缓存
      */
     public ValueWrapper get(String tag, Object key) {

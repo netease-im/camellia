@@ -16,6 +16,7 @@ import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.WriteOpeType;
 import com.netease.nim.camellia.redis.proxy.hbase.util.FreqUtil;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
+import com.netease.nim.camellia.redis.proxy.util.ErrorHandlerUtil;
 import com.netease.nim.camellia.redis.toolkit.localcache.LocalCache;
 import com.netease.nim.camellia.redis.toolkit.lock.CamelliaRedisLock;
 import io.netty.util.HashedWheelTimer;
@@ -75,22 +76,26 @@ public class RedisHBaseZSetMixClient {
                 delete2.setDurability(Durability.ASYNC_WAL);
             }
             list.add(delete2);
-            Set<byte[]> zrange = zrange(key, 0, -1);
-            if (zrange != null && !zrange.isEmpty()) {
-                for (byte[] value : zrange) {
-                    byte[] valueRefKey = buildValueRefKey(key, value);
-                    toDeleteRedisKeyList.add(redisKey(valueRefKey));
-                    Delete delete3 = new Delete(valueRefKey);
-                    if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
-                        delete3.setDurability(Durability.ASYNC_WAL);
+            try {
+                Set<byte[]> zrange = zrange(key, 0, -1);
+                if (zrange != null && !zrange.isEmpty()) {
+                    for (byte[] value : zrange) {
+                        byte[] valueRefKey = buildValueRefKey(key, value);
+                        toDeleteRedisKeyList.add(redisKey(valueRefKey));
+                        Delete delete3 = new Delete(valueRefKey);
+                        if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+                            delete3.setDurability(Durability.ASYNC_WAL);
+                        }
+                        toDeleteHBaseList.add(delete3);
+                        Delete delete4 = new Delete(valueRefKey);
+                        if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
+                            delete4.setDurability(Durability.ASYNC_WAL);
+                        }
+                        list.add(delete4);
                     }
-                    toDeleteHBaseList.add(delete3);
-                    Delete delete4 = new Delete(valueRefKey);
-                    if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
-                        delete4.setDurability(Durability.ASYNC_WAL);
-                    }
-                    list.add(delete4);
                 }
+            } catch (Exception e) {
+                logger.error("zrange for delete error, key = {}, ex = {}", SafeEncoder.encode(key), e.toString());
             }
         }
         if (!toDeleteRedisKeyList.isEmpty()) {
@@ -1008,10 +1013,12 @@ public class RedisHBaseZSetMixClient {
     //
     private HBase2RedisRebuildResult rebuildZSet(byte[] key, boolean strictConcurrent, boolean forceRebuild, boolean forRead) {
         boolean cacheNull = RedisHBaseConfiguration.isHBaseCacheNull();
-        if (cacheNull) {
-            byte[] nullCacheValue = redisTemplate.get(nullCacheKey(key));
-            if (nullCacheValue != null && Bytes.equals(nullCacheValue, NULL_CACHE_YES)) {
-                return HBase2RedisRebuildResult.NULL_CACHE_HIT;
+        if (!forceRebuild) {
+            if (cacheNull) {
+                byte[] nullCacheValue = redisTemplate.get(nullCacheKey(key));
+                if (nullCacheValue != null && Bytes.equals(nullCacheValue, NULL_CACHE_YES)) {
+                    return HBase2RedisRebuildResult.NULL_CACHE_HIT;
+                }
             }
         }
         CamelliaRedisLock redisLock = CamelliaRedisLock.newLock(redisTemplate, lockKey(key), RedisHBaseConfiguration.lockAcquireTimeoutMillis(), RedisHBaseConfiguration.lockExpireMillis());
@@ -1050,10 +1057,14 @@ public class RedisHBaseZSetMixClient {
             boolean pass = FreqUtil.freq(redisTemplate, freqKey, RedisHBaseConfiguration.hbaseGetFreqThreshold(), RedisHBaseConfiguration.hbaseGetFreqMillis());
             if (pass) {
                 boolean standaloneFreqPass;
-                if (forRead) {
-                    standaloneFreqPass = FreqUtil.hbaseGetStandaloneFreqOfRead();
+                if (forceRebuild) {
+                    standaloneFreqPass = FreqUtil.hbaseGetStandaloneFreqOfRebuild();
                 } else {
-                    standaloneFreqPass = FreqUtil.hbaseGetStandaloneFreqOfWrite();
+                    if (forRead) {
+                        standaloneFreqPass = FreqUtil.hbaseGetStandaloneFreqOfRead();
+                    } else {
+                        standaloneFreqPass = FreqUtil.hbaseGetStandaloneFreqOfWrite();
+                    }
                 }
                 if (standaloneFreqPass) {
                     result = checkZSetExists(key);
@@ -1061,6 +1072,7 @@ public class RedisHBaseZSetMixClient {
                     logger.warn("zset rebuild hbaseGetStandaloneFreq fail, will submit cache rebuild delay task, forRead = {}, key = {}", forRead, SafeEncoder.encode(key));
                     submitCacheRebuildDelayTask(key);
                     RedisHBaseMonitor.incrHBaseDegradedCount(forRead ? "zset_rebuild_hbase_get_standalone_freq_4_read" : "zset_rebuild_hbase_get_standalone_freq_4_write");
+                    FreqUtil.releaseFreqKey(redisTemplate, freqKey);
                     return HBase2RedisRebuildResult.DEGRADED;
                 }
             } else {
@@ -1082,14 +1094,67 @@ public class RedisHBaseZSetMixClient {
                 }
                 return HBase2RedisRebuildResult.NONE_RESULT;
             }
+            boolean needClear = map.size() > RedisHBaseConfiguration.zsetMaxMemberSize();
             Map<byte[], Double> scoreMembers = new HashMap<>();
+            Map<BytesKey, byte[]> mappingMap = new HashMap<>();
             for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
                 byte[] value = entry.getKey();
                 byte[] score = entry.getValue();
                 if (isDataQualifier(value)) {
-                    scoreMembers.put(data(value), Bytes.toDouble(score));
+                    byte[] data = data(value);
+                    scoreMembers.put(data, Bytes.toDouble(score));
+                    if (needClear) {
+                        mappingMap.put(new BytesKey(data), value);
+                    }
                 }
             }
+            if (needClear) {
+                logger.error("hbase rebuild size too large, size = {}, key = {}", map.size(), SafeEncoder.encode(key));
+                try {
+                    Map<byte[], Double> scoreMembers1 = scoreMembers;
+                    scoreMembers = new HashMap<>();
+                    List<Delete> deleteList = new ArrayList<>();
+                    List<Map.Entry<byte[], Double>> entries = new ArrayList<>(scoreMembers1.entrySet());
+                    entries.sort(Comparator.comparingDouble(Map.Entry::getValue));
+                    for (int i = entries.size() - 1; i >= 0; i--) {
+                        Map.Entry<byte[], Double> entry = entries.get(i);
+                        if (scoreMembers.size() < RedisHBaseConfiguration.zsetMaxMemberSize()) {
+                            scoreMembers.put(entry.getKey(), entry.getValue());
+                        } else {
+                            byte[] qualifier = mappingMap.get(new BytesKey(entry.getKey()));
+                            if (qualifier != null) {
+                                Delete delete = new Delete(result.getRow());
+                                delete.addColumns(CF_D, qualifier);
+                                deleteList.add(delete);
+                                if (deleteList.size() >= RedisHBaseConfiguration.hbaseWriteBatchMaxSize()) {
+                                    List<Delete> finalDeleteList = deleteList;
+                                    exec.submit(() -> {
+                                        try {
+                                            hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), finalDeleteList);
+                                        } catch (Exception e) {
+                                            logger.error("clear hbase error, key = {}", SafeEncoder.encode(key), e);
+                                        }
+                                    });
+                                    deleteList = new ArrayList<>();
+                                }
+                            }
+                        }
+                    }
+                    if (!deleteList.isEmpty()) {
+                        List<Delete> finalDeleteList1 = deleteList;
+                        exec.submit(() -> {
+                            try {
+                                hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), finalDeleteList1);
+                            } catch (Exception e) {
+                                logger.error("clear hbase error, key = {}", SafeEncoder.encode(key), e);
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    logger.error("clear hbase error, key = {}", SafeEncoder.encode(key), e);
+                }
+            }
+
             putList = new ArrayList<>();
             _redis_zadd(key, scoreMembers, putList);
         } finally {
@@ -1243,9 +1308,12 @@ public class RedisHBaseZSetMixClient {
         throw new IllegalArgumentException("unknown HBase2RedisRebuildResult");
     }
 
+    private static final String CACHE_REBUILD_TASK = "cache_rebuild_delay_task";
     private final LocalCache localCache = new LocalCache();
     private void submitCacheRebuildDelayTask(byte[] key) {
-        if (timerCount.sum() > RedisHBaseConfiguration.zsetRedisRebuildTaskMaxCount()) {
+        long sum = timerCount.sum();
+        if (sum > RedisHBaseConfiguration.zsetRedisRebuildTaskMaxCount()) {
+            logger.error("cache rebuild task too many, size = {}", sum);
             return;
         }
         String hex = Bytes.toHex(key);
@@ -1255,25 +1323,77 @@ public class RedisHBaseZSetMixClient {
             return;
         }
         int delaySeconds = RedisHBaseConfiguration.zsetRedisRebuildTaskDelaySeconds();
-        localCache.put(tag, hex, "", delaySeconds * 3);
+        boolean success = localCache.putIfAbsent(tag, hex, "", delaySeconds * 3);
+        if (!success) {
+            return;
+        }
         timerCount.increment();
         timer.newTimeout(timeout -> {
             try {
                 exec.submit(() -> {
                     try {
-                        rebuildZSet(key, true, true, false);
-                        if (RedisHBaseConfiguration.zsetRedisRebuildTaskLogEnable()) {
-                            logger.info("cache rebuild delay task success, key = {}", SafeEncoder.encode(key));
+                        HBase2RedisRebuildResult result = null;
+                        int index = 0;
+                        int errorCount = 0;
+                        while (result == null || result == HBase2RedisRebuildResult.DEGRADED) {
+                            try {
+                                result = rebuildZSet(key, true, true, false);
+                                if (RedisHBaseConfiguration.zsetRedisRebuildTaskLogEnable()) {
+                                    logger.info("cache rebuild delay task exec success, key = {}, index = {}, result = {}", SafeEncoder.encode(key), index + 1, result);
+                                }
+                                switch (result) {
+                                    case REBUILD_OK:
+                                        RedisHBaseMonitor.incrWrite(CACHE_REBUILD_TASK, WriteOpeType.REDIS_REBUILD_OK);
+                                        break;
+                                    case NONE_RESULT:
+                                        RedisHBaseMonitor.incrWrite(CACHE_REBUILD_TASK, WriteOpeType.REDIS_REBUILD_NONE_RESULT);
+                                        break;
+                                    case NULL_CACHE_HIT:
+                                        RedisHBaseMonitor.incrWrite(CACHE_REBUILD_TASK, WriteOpeType.REDIS_REBUILD_HIT_NULL_CACHE);
+                                        break;
+                                    case DEGRADED:
+                                        RedisHBaseMonitor.incrWrite(CACHE_REBUILD_TASK, WriteOpeType.REDIS_REBUILD_DEGRADED);
+                                        TimeUnit.MILLISECONDS.sleep(RedisHBaseConfiguration.zsetRebuildRetryIntervalMillis());
+                                        break;
+                                }
+                            } catch (CamelliaRedisException e) {
+                                logger.warn("cache rebuild delay task exec error, key = {}, index = {}, ex = {}", SafeEncoder.encode(key), index + 1, e.toString());
+                                break;
+                            } catch (Exception e) {
+                                Throwable t = ErrorHandlerUtil.handler(e);
+                                logger.error("cache rebuild delay task exec error, key = {}, index = {}, ex = {}", SafeEncoder.encode(key), index + 1, t.toString());
+                                errorCount ++;
+                            }
+                            index ++;
+                            if (index > 1 && index == RedisHBaseConfiguration.zsetRebuildErrorMaxRetry() - 1) {
+                                FreqUtil.releaseFreqKey(redisTemplate, hbaseGetFreqKey(key));
+                            }
+                            if (index >= RedisHBaseConfiguration.zsetRebuildMaxRetry()) {
+                                logger.error("cache rebuild delay task exec too many, index = {}, key = {}", index, SafeEncoder.encode(key));
+                                break;
+                            }
+                            if (errorCount >= RedisHBaseConfiguration.zsetRebuildErrorMaxRetry()) {
+                                logger.error("cache rebuild delay task exec too many error, errorCount = {}, key = {}", errorCount, SafeEncoder.encode(key));
+                                if (RedisHBaseConfiguration.zsetRebuildClearIfErrorTooMany()) {
+                                    try {
+                                        hBaseTemplate.delete(RedisHBaseConfiguration.hbaseTableName(), new Delete(buildRowKey(key)));
+                                        logger.error("clear key in hbase, key = {}", SafeEncoder.encode(key));
+                                    } catch (Exception e) {
+                                        Throwable t = ErrorHandlerUtil.handler(e);
+                                        logger.error("clear key in hbase error, key = {}, ex = {}", SafeEncoder.encode(key), t.toString());
+                                    }
+                                }
+                                break;
+                            }
                         }
-                    } catch (Exception e) {
-                        logger.warn("cache rebuild delay task error, key = {}, ex = {}", SafeEncoder.encode(key), e.toString());
                     } finally {
                         localCache.evict(tag, hex);
                     }
                 });
             } catch (Exception e) {
                 localCache.evict(tag, hex);
-                logger.warn("submit cache rebuild delay task error, key = {}, ex = {}", SafeEncoder.encode(key), e.toString());
+                Throwable t = ErrorHandlerUtil.handler(e);
+                logger.error("submit cache rebuild delay task error, key = {}, ex = {}", SafeEncoder.encode(key), t.toString());
             } finally {
                 timerCount.decrement();
             }
