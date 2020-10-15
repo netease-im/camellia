@@ -49,8 +49,8 @@ PFADD
 XACK,XADD,XCLAIM,XDEL,XLEN,XPENDING,XRANGE,XREVRANGE,XTRIM,XGROUP,XINFO,
 ```
 
-* Restrictive Support  
-support only when all the keys in these command route to same redis-serve or same redis-cluster slot  
+* Restrictive Supported  
+support only when all the keys in these command route to same redis-server or same redis-cluster slot  
 ```
 ##DataBase
 RENAME,RENAMENX,
@@ -72,14 +72,14 @@ EVAL,EVALSHA,
 XREADGROUP,XREAD,
 ```
 
-* Partially Support 1   
+* Partially Supported 1   
 only support while have singleton-upstream(no custom shading) (standalone-redis or redis-sentinel or redis-cluster)
 ```
 ##PUBSUB
 SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
 ```
 
-* Partially Support 2   
+* Partially Supported 2   
 only support while have singleton-upstream(no custom shading) (standalone-redis or redis-sentinel)   
 ```
 ##DataBase
