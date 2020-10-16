@@ -1,4 +1,4 @@
-# 1.0.10（2020/10/xx）
+# 1.0.10（2020/10/16）
 ### 新增
 * camellia-redis-proxy支持阻塞式命令，如BLPOP/BRPOP/BRPOPLPUSH等
 * camellia-redis-proxy支持redis5.0的stream命令，包括阻塞式的XREAD/XREADGROUP
@@ -9,7 +9,7 @@
 * camellia-redis-proxy-hbase支持了针对zmember到hbase的读穿透的单机频控
 
 ### update
-* none
+* camellia-redis-proxy-hbase增加了对zset从hbase重建缓存时的保护逻辑
 
 ### fix
 * 修复了CamelliaHBaseTemplate在双（多）写时执行批量删除时的bug

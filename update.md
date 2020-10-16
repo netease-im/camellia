@@ -1,4 +1,4 @@
-# 1.0.10（2020/10/xx）
+# 1.0.10（2020/10/16）
 ### add
 * camellia-redis-proxy support blocking commands, such as BLPOP/BRPOP/BRPOPLPUSH and so on
 * camellia-redis-proxy support stream commands of redis5.0，include blocking XREAD/XREADGROUP
@@ -9,7 +9,7 @@
 * camellia-redis-proxy-hbase support standalone freq of hbase get hit of zmemeber
 
 ### update
-* none
+* camellia-redis-proxy-hbase add prevent when rebuild zset from hbase
 
 ### fix
 * fix CamelliaHBaseTemplate multi-write bug of batch-delete
