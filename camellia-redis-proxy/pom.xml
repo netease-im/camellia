@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis-proxy</artifactId>
-	<version>1.0.10</version>
+	<version>1.0.11-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia</artifactId>
-		<version>1.0.10</version>
+		<version>1.0.11-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -31,7 +31,7 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis</artifactId>
-			<version>1.0.10</version>
+			<version>1.0.11-SNAPSHOT</version>
 		</dependency>
     </dependencies>
 	<build>
