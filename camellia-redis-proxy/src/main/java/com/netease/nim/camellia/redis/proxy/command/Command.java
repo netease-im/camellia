@@ -4,7 +4,10 @@ package com.netease.nim.camellia.redis.proxy.command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
+import com.netease.nim.camellia.redis.proxy.util.KeyParser;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+
+import java.util.List;
 
 public class Command {
 
@@ -14,6 +17,7 @@ public class Command {
     private ChannelInfo channelInfo;
     private boolean hasCheckBlocking = false;
     private boolean blocking = false;
+    private List<byte[]> keys = null;
 
     public Command(byte[][] objects) {
         this.objects = objects;
@@ -37,8 +41,15 @@ public class Command {
         return objects;
     }
 
+    public List<byte[]> getKeys() {
+        if (keys != null) return keys;
+        keys = KeyParser.findKeys(this);
+        return keys;
+    }
+
     public boolean isBlocking() {
         RedisCommand redisCommand = getRedisCommand();
+        if (redisCommand == null) return false;
         if (redisCommand.isBlocking()) {
             return true;
         }

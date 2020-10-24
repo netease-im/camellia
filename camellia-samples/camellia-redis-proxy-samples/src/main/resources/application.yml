@@ -7,12 +7,21 @@ spring:
 
 camellia-redis-proxy:
   password: pass123
+  monitor-enable: true
+  command-spend-time-monitor-enable: true
+  slow-command-threshold-millis-time: 1000
+  monitor-interval-seconds: 10
+  hot-key-monitor-enable: true
+  hot-key-monitor-config:
+    check-period-millis: 1000
+    check-threshold: 10
   transpond:
     type: local
     local:
       resource: redis://@127.0.0.1:6379
     redis-conf:
       queue-type: linkedblockingqueue
+
 
 #camellia-redis-zk-registry:
 #  enable: false

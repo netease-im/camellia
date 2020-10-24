@@ -7,7 +7,7 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.async.AsyncCamelliaRedisTemplateChooser;
-import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
+import com.netease.nim.camellia.redis.proxy.command.async.CommandInvokeConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.CommandsEvent;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.CommandsEventConsumer;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.CommandsEventHandler;
@@ -28,11 +28,11 @@ public class DisruptorCommandsEventHandler implements CommandsEventHandler {
     private final DisruptorCommandsEventConsumer consumer;
     private final DisruptorCommandsEventProducer producer;
 
-    public DisruptorCommandsEventHandler(CamelliaTranspondProperties.RedisConfProperties.DisruptorConf disruptorConf, AsyncCamelliaRedisTemplateChooser chooser, CommandInterceptor commandInterceptor, int commandPipelineFlushThreshold,
-                                         boolean commandSpendTimeMonitorEnable, long slowCommandThresholdMillisTime) {
+    public DisruptorCommandsEventHandler(CamelliaTranspondProperties.RedisConfProperties.DisruptorConf disruptorConf,
+                                         AsyncCamelliaRedisTemplateChooser chooser,
+                                         CommandInvokeConfig commandInvokeConfig) {
         try {
-            consumer = new DisruptorCommandsEventConsumer(chooser, commandInterceptor,
-                    commandPipelineFlushThreshold, commandSpendTimeMonitorEnable, slowCommandThresholdMillisTime);
+            consumer = new DisruptorCommandsEventConsumer(chooser, commandInvokeConfig);
 
             WaitStrategy waitStrategy = new SleepingWaitStrategy();
             if (disruptorConf != null) {

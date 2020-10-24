@@ -37,21 +37,34 @@ public class CamelliaRedisProxyProperties {
 
     /**
      * 是否开启监控命令执行时间的监控，需要同时开启monitorEnable和commandSpendTimeMonitorEnable才能生效，see @RedisMonitor
-     * 只有async模式才有效
      */
     private boolean commandSpendTimeMonitorEnable = Constants.Server.commandSpendTimeMonitorEnable;
 
     /**
      * 开启监控命令执行时间的监控的前提下，慢查询的阈值，单位ms
-     * 只有async模式才有效
      */
     private long slowCommandThresholdMillisTime = Constants.Server.slowCommandThresholdMillisTime;
+
+    /**
+     * 慢查询的回调方法
+     */
+    private String slowCommandCallbackClassName = Constants.Server.slowCommandCallbackClassName;
 
     /**
      * 命令拦截器，see @CommandInterceptor
      * 只有async模式才有效
      */
     private String commandInterceptorClassName;
+
+    /**
+     * hot-key监控开关
+     */
+    private boolean hotKeyMonitorEnable = Constants.Server.hotKeyMonitorEnable;
+
+    /**
+     * hot-key监控配置
+     */
+    private HotKeyMonitorConfig hotKeyMonitorConfig = new HotKeyMonitorConfig();
 
     /**
      * netty相关参数
@@ -141,5 +154,78 @@ public class CamelliaRedisProxyProperties {
 
     public void setTranspond(TranspondProperties transpond) {
         this.transpond = transpond;
+    }
+
+    public String getSlowCommandCallbackClassName() {
+        return slowCommandCallbackClassName;
+    }
+
+    public void setSlowCommandCallbackClassName(String slowCommandCallbackClassName) {
+        this.slowCommandCallbackClassName = slowCommandCallbackClassName;
+    }
+
+    public boolean isHotKeyMonitorEnable() {
+        return hotKeyMonitorEnable;
+    }
+
+    public void setHotKeyMonitorEnable(boolean hotKeyMonitorEnable) {
+        this.hotKeyMonitorEnable = hotKeyMonitorEnable;
+    }
+
+    public HotKeyMonitorConfig getHotKeyMonitorConfig() {
+        return hotKeyMonitorConfig;
+    }
+
+    public void setHotKeyMonitorConfig(HotKeyMonitorConfig hotKeyMonitorConfig) {
+        this.hotKeyMonitorConfig = hotKeyMonitorConfig;
+    }
+
+    public static class HotKeyMonitorConfig {
+
+        private long checkPeriodMillis = Constants.Server.hotKeyCheckPeriodMillis;
+        private long checkCacheMaxCapacity = Constants.Server.hotKeyCheckCacheMaxCapacity;
+        private long checkThreshold = Constants.Server.hotKeyCheckThreshold;
+        private int maxHotKeyCount = Constants.Server.hotKeyMaxHotKeyCount;
+        private String hotKeyCallbackClassName = Constants.Server.hotKeyCallbackClassName;
+
+        public long getCheckPeriodMillis() {
+            return checkPeriodMillis;
+        }
+
+        public void setCheckPeriodMillis(long checkPeriodMillis) {
+            this.checkPeriodMillis = checkPeriodMillis;
+        }
+
+        public long getCheckCacheMaxCapacity() {
+            return checkCacheMaxCapacity;
+        }
+
+        public void setCheckCacheMaxCapacity(long checkCacheMaxCapacity) {
+            this.checkCacheMaxCapacity = checkCacheMaxCapacity;
+        }
+
+        public long getCheckThreshold() {
+            return checkThreshold;
+        }
+
+        public void setCheckThreshold(long checkThreshold) {
+            this.checkThreshold = checkThreshold;
+        }
+
+        public int getMaxHotKeyCount() {
+            return maxHotKeyCount;
+        }
+
+        public void setMaxHotKeyCount(int maxHotKeyCount) {
+            this.maxHotKeyCount = maxHotKeyCount;
+        }
+
+        public String getHotKeyCallbackClassName() {
+            return hotKeyCallbackClassName;
+        }
+
+        public void setHotKeyCallbackClassName(String hotKeyCallbackClassName) {
+            this.hotKeyCallbackClassName = hotKeyCallbackClassName;
+        }
     }
 }

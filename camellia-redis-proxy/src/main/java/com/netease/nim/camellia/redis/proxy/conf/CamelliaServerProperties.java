@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
 
+
 /**
  *
  * Created by caojiajun on 2019/11/11.
@@ -9,9 +10,15 @@ public class CamelliaServerProperties {
     private int port = Constants.Server.severPort;
     private String password;
     private boolean monitorEnable = Constants.Server.monitorEnable;
+    private int monitorIntervalSeconds = Constants.Server.monitorIntervalSeconds;
+    private String monitorCallbackClassName = Constants.Server.monitorCallbackClassName;
     private boolean commandSpendTimeMonitorEnable = Constants.Server.commandSpendTimeMonitorEnable;
     private long slowCommandThresholdMillisTime = Constants.Server.slowCommandThresholdMillisTime;
-    private int monitorIntervalSeconds = Constants.Server.monitorIntervalSeconds;
+    private String slowCommandCallbackClassName = Constants.Server.slowCommandCallbackClassName;
+    private String commandInterceptorClassName;
+    private boolean hotKeyMonitorEnable = Constants.Server.hotKeyMonitorEnable;
+    private HotKeyMonitorConfig hotKeyMonitorConfig;
+
     private int bossThread = 1;
     private int workThread = Constants.Server.workThread;
     private int soBacklog = Constants.Server.soBacklog;
@@ -20,7 +27,7 @@ public class CamelliaServerProperties {
     private int writeBufferWaterMarkLow = Constants.Server.writeBufferWaterMarkLow;
     private int writeBufferWaterMarkHigh = Constants.Server.writeBufferWaterMarkHigh;
     private int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
-    private String commandInterceptorClassName;
+
 
     public int getPort() {
         return port;
@@ -60,6 +67,14 @@ public class CamelliaServerProperties {
 
     public void setSlowCommandThresholdMillisTime(long slowCommandThresholdMillisTime) {
         this.slowCommandThresholdMillisTime = slowCommandThresholdMillisTime;
+    }
+
+    public String getMonitorCallbackClassName() {
+        return monitorCallbackClassName;
+    }
+
+    public void setMonitorCallbackClassName(String monitorCallbackClassName) {
+        this.monitorCallbackClassName = monitorCallbackClassName;
     }
 
     public int getMonitorIntervalSeconds() {
@@ -140,5 +155,77 @@ public class CamelliaServerProperties {
 
     public void setCommandInterceptorClassName(String commandInterceptorClassName) {
         this.commandInterceptorClassName = commandInterceptorClassName;
+    }
+
+    public String getSlowCommandCallbackClassName() {
+        return slowCommandCallbackClassName;
+    }
+
+    public void setSlowCommandCallbackClassName(String slowCommandCallbackClassName) {
+        this.slowCommandCallbackClassName = slowCommandCallbackClassName;
+    }
+
+    public HotKeyMonitorConfig getHotKeyMonitorConfig() {
+        return hotKeyMonitorConfig;
+    }
+
+    public void setHotKeyMonitorConfig(HotKeyMonitorConfig hotKeyMonitorConfig) {
+        this.hotKeyMonitorConfig = hotKeyMonitorConfig;
+    }
+
+    public boolean isHotKeyMonitorEnable() {
+        return hotKeyMonitorEnable;
+    }
+
+    public void setHotKeyMonitorEnable(boolean hotKeyMonitorEnable) {
+        this.hotKeyMonitorEnable = hotKeyMonitorEnable;
+    }
+
+    public static class HotKeyMonitorConfig {
+        private long checkPeriodMillis = Constants.Server.hotKeyCheckPeriodMillis;
+        private long checkCacheMaxCapacity = Constants.Server.hotKeyCheckCacheMaxCapacity;
+        private long checkThreshold = Constants.Server.hotKeyCheckThreshold;
+        private int maxHotKeyCount = Constants.Server.hotKeyMaxHotKeyCount;
+        private String hotKeyCallbackClassName = Constants.Server.hotKeyCallbackClassName;
+
+        public long getCheckPeriodMillis() {
+            return checkPeriodMillis;
+        }
+
+        public void setCheckPeriodMillis(long checkPeriodMillis) {
+            this.checkPeriodMillis = checkPeriodMillis;
+        }
+
+        public long getCheckCacheMaxCapacity() {
+            return checkCacheMaxCapacity;
+        }
+
+        public void setCheckCacheMaxCapacity(long checkCacheMaxCapacity) {
+            this.checkCacheMaxCapacity = checkCacheMaxCapacity;
+        }
+
+        public long getCheckThreshold() {
+            return checkThreshold;
+        }
+
+        public void setCheckThreshold(long checkThreshold) {
+            this.checkThreshold = checkThreshold;
+        }
+
+        public int getMaxHotKeyCount() {
+            return maxHotKeyCount;
+        }
+
+        public void setMaxHotKeyCount(int maxHotKeyCount) {
+            this.maxHotKeyCount = maxHotKeyCount;
+        }
+
+        public String getHotKeyCallbackClassName() {
+            return hotKeyCallbackClassName;
+        }
+
+        public void setHotKeyCallbackClassName(String hotKeyCallbackClassName) {
+            this.hotKeyCallbackClassName = hotKeyCallbackClassName;
+        }
     }
 }

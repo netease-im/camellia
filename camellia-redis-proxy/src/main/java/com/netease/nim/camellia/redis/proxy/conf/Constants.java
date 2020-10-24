@@ -1,6 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.core.util.SysUtils;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyCallback;
+import com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandCallback;
+import com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback;
 
 /**
  * 一些默认配置项
@@ -13,7 +16,9 @@ public class Constants {
         public static final int consolePort = 16379;
         public static final boolean monitorEnable = false;
         public static final boolean commandSpendTimeMonitorEnable = false;
+        public static final String monitorCallbackClassName = LoggingMonitorCallback.class.getName();
         public static final long slowCommandThresholdMillisTime = 2000L;
+        public static final String slowCommandCallbackClassName = LoggingSlowCommandCallback.class.getName();
         public static final int monitorIntervalSeconds = 60;
 
         public static final int workThread = SysUtils.getCpuHalfNum();
@@ -24,6 +29,13 @@ public class Constants {
         public static final int soRcvbuf = 10 * 1024 * 1024;
         public static final int writeBufferWaterMarkLow = 128 * 1024;
         public static final int writeBufferWaterMarkHigh = 512 * 1024;
+
+        public static final boolean hotKeyMonitorEnable = false;
+        public static final long hotKeyCheckPeriodMillis = 1000L;
+        public static final long hotKeyCheckCacheMaxCapacity = 10000L;
+        public static final long hotKeyCheckThreshold = 32;
+        public static final int hotKeyMaxHotKeyCount = 32;
+        public static final String hotKeyCallbackClassName = LoggingHoyKeyCallback.class.getName();
     }
 
     public static class Transpond {

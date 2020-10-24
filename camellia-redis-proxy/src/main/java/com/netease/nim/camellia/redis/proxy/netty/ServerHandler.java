@@ -5,10 +5,12 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
+import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -26,14 +28,15 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
     private static final Logger logger = LoggerFactory.getLogger(ServerHandler.class);
 
     private final CommandInvoker invoker;
-    private final CamelliaServerProperties env;
+    private final CamelliaServerProperties properties;
 
-    public ServerHandler(CamelliaServerProperties env, CommandInvoker invoker) {
+    public ServerHandler(CamelliaServerProperties properties, CommandInvoker invoker) {
         super();
         this.invoker = invoker;
-        this.env = env;
-        if (env.isMonitorEnable()) {
-            RedisMonitor.init(env.getMonitorIntervalSeconds(), env.isCommandSpendTimeMonitorEnable());
+        this.properties = properties;
+        if (properties.isMonitorEnable()) {
+            MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(properties);
+            RedisMonitor.init(properties.getMonitorIntervalSeconds(), properties.isCommandSpendTimeMonitorEnable(), monitorCallback);
         }
     }
 
@@ -46,7 +49,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
             List<Command> commands = new ArrayList<>();
             for (Command command : commandList) {
                 //监控
-                if (env.isMonitorEnable()) {
+                if (properties.isMonitorEnable()) {
                     Long bid = channelInfo.getBid();
                     String bgroup = channelInfo.getBgroup();
                     RedisMonitor.incr(bid, bgroup, command.getName());
@@ -56,7 +59,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
 
                 //鉴权
                 if (redisCommand == RedisCommand.AUTH) {
-                    if (env.getPassword() == null) {
+                    if (properties.getPassword() == null) {
                         ctx.writeAndFlush(new ErrorReply("ERR Client sent AUTH, but no password is set"));
                         continue;
                     } else {
@@ -66,7 +69,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
                             continue;
                         }
                         String password = Utils.bytesToString(objects[1]);
-                        if (password.equals(env.getPassword())) {
+                        if (password.equals(properties.getPassword())) {
                             channelInfo.setChannelStats(ChannelInfo.ChannelStats.AUTH_OK);
                             ctx.writeAndFlush(StatusReply.OK);
                             continue;
@@ -79,7 +82,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
                 }
 
                 //如果需要密码，则后续的操作都需要连接处于密码已经校验的状态
-                if (env.getPassword() != null) {
+                if (properties.getPassword() != null) {
                     if (channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK) {
                         ctx.writeAndFlush(ErrorReply.NO_AUTH);
                         continue;

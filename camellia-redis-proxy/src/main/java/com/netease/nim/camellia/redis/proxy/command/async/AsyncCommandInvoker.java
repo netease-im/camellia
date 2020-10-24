@@ -1,17 +1,19 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
-import com.lmax.disruptor.WaitStrategy;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.*;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkey.CommandHotKeyMonitorConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.CommandsEventHandler;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.disruptor.DisruptorCommandsEventHandler;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.lbq.LbqCommandsEventHandler;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.none.NoneQueueCommandsEventHandler;
+import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.conf.QueueType;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
+import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.FastThreadLocal;
@@ -30,57 +32,27 @@ public class AsyncCommandInvoker implements CommandInvoker {
     private static final Logger logger = LoggerFactory.getLogger(AsyncCommandInvoker.class);
 
     private final AsyncCamelliaRedisTemplateChooser chooser;
-    private final boolean commandSpendTimeMonitorEnable;
-    private final long slowCommandThresholdMillisTime;
-    private final int commandPipelineFlushThreshold;
-    private CommandInterceptor commandInterceptor = null;
     private final QueueType queueType;
     private final CamelliaTranspondProperties transpondProperties;
+    private final CommandInvokeConfig commandInvokeConfig;
 
     public AsyncCommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
         this.transpondProperties = transpondProperties;
-        this.slowCommandThresholdMillisTime = serverProperties.getSlowCommandThresholdMillisTime();
-        this.commandSpendTimeMonitorEnable = serverProperties.isMonitorEnable() && serverProperties.isCommandSpendTimeMonitorEnable();
         this.chooser = new AsyncCamelliaRedisTemplateChooser(transpondProperties);
         this.queueType = transpondProperties.getRedisConf().getQueueType();
-        CamelliaTranspondProperties.RedisConfProperties redisConf = transpondProperties.getRedisConf();
-        this.commandPipelineFlushThreshold = redisConf.getCommandPipelineFlushThreshold();
-        String commandInterceptorClassName = serverProperties.getCommandInterceptorClassName();
-        if (commandInterceptorClassName != null) {
-            try {
-                Class<?> clazz;
-                try {
-                    clazz = Class.forName(commandInterceptorClassName);
-                } catch (ClassNotFoundException e) {
-                    clazz = Thread.currentThread().getContextClassLoader().loadClass(commandInterceptorClassName);
-                }
-                commandInterceptor = (CommandInterceptor) clazz.newInstance();
-                logger.info("CommandInterceptor init success, class = {}", commandInterceptorClassName);
-            } catch (Exception e) {
-                logger.error("CommandInterceptor init error, class = {}", commandInterceptorClassName, e);
-                throw new CamelliaRedisException(e);
-            }
-        }
         if (queueType == QueueType.Disruptor) {
-            CamelliaTranspondProperties.RedisConfProperties.DisruptorConf disruptorConf = transpondProperties.getRedisConf().getDisruptorConf();
-            if (disruptorConf != null) {
-                String waitStrategyClassName = disruptorConf.getWaitStrategyClassName();
-                if (waitStrategyClassName != null) {
-                    try {
-                        Class<?> clazz = Class.forName(waitStrategyClassName);
-                        Object o = clazz.newInstance();
-                        if (!(o instanceof WaitStrategy)) {
-                            throw new CamelliaRedisException("not instance of com.lmax.disruptor.WaitStrategy");
-                        }
-                    } catch (CamelliaRedisException e) {
-                        throw e;
-                    } catch (Exception e) {
-                        logger.error("CommandInterceptor init error, class = {}", commandInterceptorClassName, e);
-                        throw new CamelliaRedisException(e);
-                    }
-                }
-            }
+            ConfigInitUtil.checkDisruptorWaitStrategyClassName(transpondProperties);
         }
+
+        CamelliaTranspondProperties.RedisConfProperties redisConf = transpondProperties.getRedisConf();
+        int commandPipelineFlushThreshold = redisConf.getCommandPipelineFlushThreshold();
+
+        CommandInterceptor commandInterceptor = ConfigInitUtil.initCommandInterceptor(serverProperties);
+        CommandHotKeyMonitorConfig commandHotKeyMonitorConfig = ConfigInitUtil.initCommandHotKeyMonitorConfig(serverProperties);
+        CommandSpendTimeConfig commandSpendTimeConfig = ConfigInitUtil.initCommandSpendTimeConfig(serverProperties);
+
+        this.commandInvokeConfig = new CommandInvokeConfig(commandPipelineFlushThreshold,
+                commandInterceptor, commandSpendTimeConfig, commandHotKeyMonitorConfig);
     }
 
     private static final FastThreadLocal<CommandsEventHandler> threadLocal = new FastThreadLocal<>();
@@ -92,17 +64,14 @@ public class AsyncCommandInvoker implements CommandInvoker {
             CommandsEventHandler handler = threadLocal.get();
             if (handler == null) {
                 if (queueType == QueueType.LinkedBlockingQueue) {
-                    handler = new LbqCommandsEventHandler(chooser, commandInterceptor,
-                            commandPipelineFlushThreshold, commandSpendTimeMonitorEnable, slowCommandThresholdMillisTime);
+                    handler = new LbqCommandsEventHandler(chooser, commandInvokeConfig);
                     logger.info("LbqCommandsEventHandler init success");
                 } else if (queueType == QueueType.Disruptor) {
                     CamelliaTranspondProperties.RedisConfProperties.DisruptorConf disruptorConf = transpondProperties.getRedisConf().getDisruptorConf();
-                    handler = new DisruptorCommandsEventHandler(disruptorConf, chooser, commandInterceptor,
-                            commandPipelineFlushThreshold, commandSpendTimeMonitorEnable, slowCommandThresholdMillisTime);
+                    handler = new DisruptorCommandsEventHandler(disruptorConf, chooser, commandInvokeConfig);
                     logger.info("DisruptorCommandsEventHandler init success");
                 } else if (queueType == QueueType.None) {
-                    handler = new NoneQueueCommandsEventHandler(chooser, commandInterceptor,
-                            commandPipelineFlushThreshold, commandSpendTimeMonitorEnable, slowCommandThresholdMillisTime);
+                    handler = new NoneQueueCommandsEventHandler(chooser, commandInvokeConfig);
                     logger.info("NoneQueueCommandsEventHandler init success");
                 } else {
                     throw new CamelliaRedisException("unknown queueType");

@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command.async.queue.lbq;
 
 import com.netease.nim.camellia.redis.proxy.command.async.AsyncCamelliaRedisTemplateChooser;
-import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
+import com.netease.nim.camellia.redis.proxy.command.async.CommandInvokeConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.CommandsEvent;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.CommandsEventConsumer;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.CommandsEventHandler;
@@ -18,11 +18,9 @@ public class LbqCommandsEventHandler implements CommandsEventHandler {
     private final LbqCommandsEventConsumer consumer;
     private final LbqCommandsEventProducer producer;
 
-    public LbqCommandsEventHandler(AsyncCamelliaRedisTemplateChooser chooser, CommandInterceptor commandInterceptor, int commandPipelineFlushThreshold,
-                                   boolean commandSpendTimeMonitorEnable, long slowCommandThresholdMillisTime) {
+    public LbqCommandsEventHandler(AsyncCamelliaRedisTemplateChooser chooser, CommandInvokeConfig commandInvokeConfig) {
         LinkedBlockingQueue<CommandsEvent> queue = new LinkedBlockingQueue<>(1024 * 128);
-        consumer = new LbqCommandsEventConsumer(queue, chooser, commandInterceptor,
-                commandPipelineFlushThreshold, commandSpendTimeMonitorEnable, slowCommandThresholdMillisTime);
+        consumer = new LbqCommandsEventConsumer(queue, chooser, commandInvokeConfig);
         consumer.start();
         producer = new LbqCommandsEventProducer(queue);
     }

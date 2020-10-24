@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.command.async.queue.disruptor;
 
 import com.lmax.disruptor.EventHandler;
 import com.netease.nim.camellia.redis.proxy.command.async.AsyncCamelliaRedisTemplateChooser;
-import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
+import com.netease.nim.camellia.redis.proxy.command.async.CommandInvokeConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.AbstractCommandsEventConsumer;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.CommandsEvent;
 
@@ -13,9 +13,8 @@ import com.netease.nim.camellia.redis.proxy.command.async.queue.CommandsEvent;
  */
 public class DisruptorCommandsEventConsumer extends AbstractCommandsEventConsumer implements EventHandler<CommandsEvent> {
 
-    public DisruptorCommandsEventConsumer(AsyncCamelliaRedisTemplateChooser chooser, CommandInterceptor commandInterceptor, int commandPipelineFlushThreshold,
-                                          boolean commandSpendTimeMonitorEnable, long slowCommandThresholdMillisTime) {
-        super(chooser, commandInterceptor, commandPipelineFlushThreshold, commandSpendTimeMonitorEnable, slowCommandThresholdMillisTime);
+    public DisruptorCommandsEventConsumer(AsyncCamelliaRedisTemplateChooser chooser, CommandInvokeConfig commandInvokeConfig) {
+        super(chooser, commandInvokeConfig);
     }
 
     @Override

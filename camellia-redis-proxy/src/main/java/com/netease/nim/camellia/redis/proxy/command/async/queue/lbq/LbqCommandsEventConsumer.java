@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command.async.queue.lbq;
 
 import com.netease.nim.camellia.redis.proxy.command.async.AsyncCamelliaRedisTemplateChooser;
-import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
+import com.netease.nim.camellia.redis.proxy.command.async.CommandInvokeConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.AbstractCommandsEventConsumer;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.CommandsEvent;
 import io.netty.util.concurrent.FastThreadLocalThread;
@@ -28,9 +28,11 @@ public class LbqCommandsEventConsumer extends AbstractCommandsEventConsumer {
     private boolean start = true;
 
 
-    public LbqCommandsEventConsumer(LinkedBlockingQueue<CommandsEvent> queue, AsyncCamelliaRedisTemplateChooser chooser, CommandInterceptor commandInterceptor, int commandPipelineFlushThreshold, boolean commandSpendTimeMonitorEnable, long slowCommandThresholdMillisTime) {
-        super(chooser, commandInterceptor, commandPipelineFlushThreshold, commandSpendTimeMonitorEnable, slowCommandThresholdMillisTime);
-        this.commandPipelineFlushThreshold = commandPipelineFlushThreshold;
+    public LbqCommandsEventConsumer(LinkedBlockingQueue<CommandsEvent> queue,
+                                    AsyncCamelliaRedisTemplateChooser chooser,
+                                    CommandInvokeConfig commandInvokeConfig) {
+        super(chooser, commandInvokeConfig);
+        this.commandPipelineFlushThreshold = commandInvokeConfig.getCommandPipelineFlushThreshold();
         this.queue = queue;
     }
 

@@ -23,7 +23,8 @@ import java.util.concurrent.atomic.LongAdder;
 public class RedisMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisMonitor.class);
-    private static final Logger statsLogger = LoggerFactory.getLogger("stats");
+
+    private static MonitorCallback monitorCallback;
 
     private static ConcurrentHashMap<String, LongAdder> map = new ConcurrentHashMap<>();
     private static Stats stats = new Stats();
@@ -44,13 +45,14 @@ public class RedisMonitor {
         }
     }
 
-    public static void init(int seconds, boolean commandSpendTimeMonitorEnable) {
+    public static void init(int seconds, boolean commandSpendTimeMonitorEnable, MonitorCallback monitorCallback) {
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("monitor"))
                 .scheduleAtFixedRate(RedisMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
         RedisMonitor.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
         if (commandSpendTimeMonitorEnable) {
             new Thread(RedisMonitor::calcCommandSpendTime, "command-spend-time-calc").start();
         }
+        RedisMonitor.monitorCallback = monitorCallback;
     }
 
     public static void incr(Long bid, String bgroup, String command) {
@@ -166,6 +168,7 @@ public class RedisMonitor {
             }
 
             Stats stats = new Stats();
+            stats.setClientConnectCount(ChannelMonitor.getChannelMap().size());
             stats.setCount(totalCount);
             stats.setTotalReadCount(totalReadCount);
             stats.setTotalWriteCount(totalWriteCount);
@@ -184,34 +187,9 @@ public class RedisMonitor {
 
             RedisMonitor.stats = stats;
 
-            statsLogger.info(">>>>>>>START>>>>>>>");
-            statsLogger.info("connect.count={}", ChannelMonitor.getChannelMap().size());
-            statsLogger.info("total.count={}", stats.getCount());
-            statsLogger.info("total.read.count={}", stats.getTotalReadCount());
-            statsLogger.info("total.write.count={}", stats.getTotalWriteCount());
-            statsLogger.info("====total====");
-            for (Stats.TotalStats totalStats : stats.getTotalStatsList()) {
-                statsLogger.info("total.command.{}, count={}", totalStats.getCommand(), totalStats.getCount());
+            if (monitorCallback != null) {
+                monitorCallback.callback(stats);
             }
-            statsLogger.info("====bidbgroup====");
-            for (Stats.BidBgroupStats bgroupStats : stats.getBidBgroupStatsList()) {
-                statsLogger.info("bidbgroup.{}.{}, count={}", bgroupStats.getBid() == null ? "default" : bgroupStats.getBid(),
-                        bgroupStats.getBgroup() == null ? "default" : bgroupStats.getBgroup(), bgroupStats.getCount());
-            }
-            statsLogger.info("====detail====");
-            for (Stats.DetailStats detailStats : stats.getDetailStatsList()) {
-                statsLogger.info("detail.{}.{}.{}, count={}", detailStats.getBid() == null ? "default" : detailStats.getBid(),
-                        detailStats.getBgroup() == null ? "default" : detailStats.getBgroup(), detailStats.getCommand(), detailStats.getCount());
-            }
-            statsLogger.info("====fail====");
-            for (Map.Entry<String, Long> entry : stats.getFailMap().entrySet()) {
-                statsLogger.info("fail[{}], count = {}", entry.getKey(), entry.getValue());
-            }
-            statsLogger.info("====spend.stats====");
-            for (Stats.SpendStats spendStats : stats.getSpendStatsList()) {
-                statsLogger.info("command={},count={},avgSpendMs={},maxSpendMs={}", spendStats.getCommand(), spendStats.getCount(), spendStats.getAvgSpendMs(), spendStats.getMaxSpendMs());
-            }
-            statsLogger.info("<<<<<<<END<<<<<<<");
         } catch (Exception e) {
             logger.error("calc error", e);
         }

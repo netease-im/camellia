@@ -30,6 +30,7 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setCommandSpendTimeMonitorEnable(properties.isCommandSpendTimeMonitorEnable());
         serverProperties.setSlowCommandThresholdMillisTime(properties.getSlowCommandThresholdMillisTime());
         serverProperties.setCommandInterceptorClassName(properties.getCommandInterceptorClassName());
+        serverProperties.setSlowCommandCallbackClassName(properties.getSlowCommandCallbackClassName());
         NettyProperties netty = properties.getNetty();
         serverProperties.setBossThread(netty.getBossThread());
         if (netty.getWorkThread() > 0) {
@@ -43,6 +44,16 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setSoSndbuf(netty.getSoSndbuf());
         serverProperties.setWriteBufferWaterMarkLow(netty.getWriteBufferWaterMarkLow());
         serverProperties.setWriteBufferWaterMarkHigh(netty.getWriteBufferWaterMarkHigh());
+
+        CamelliaRedisProxyProperties.HotKeyMonitorConfig hotKeyMonitorConfig = properties.getHotKeyMonitorConfig();
+        CamelliaServerProperties.HotKeyMonitorConfig config = new CamelliaServerProperties.HotKeyMonitorConfig();
+        config.setCheckCacheMaxCapacity(hotKeyMonitorConfig.getCheckCacheMaxCapacity());
+        config.setCheckPeriodMillis(hotKeyMonitorConfig.getCheckPeriodMillis());
+        config.setCheckThreshold(hotKeyMonitorConfig.getCheckThreshold());
+        config.setHotKeyCallbackClassName(hotKeyMonitorConfig.getHotKeyCallbackClassName());
+        config.setMaxHotKeyCount(hotKeyMonitorConfig.getMaxHotKeyCount());
+        serverProperties.setHotKeyMonitorConfig(config);
+        serverProperties.setHotKeyMonitorEnable(properties.isHotKeyMonitorEnable());
         return serverProperties;
     }
 

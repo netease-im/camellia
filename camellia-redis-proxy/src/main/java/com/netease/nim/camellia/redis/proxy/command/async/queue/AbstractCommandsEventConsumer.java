@@ -2,7 +2,10 @@ package com.netease.nim.camellia.redis.proxy.command.async.queue;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.*;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunter;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterManager;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.disruptor.DisruptorCommandsEventConsumer;
+import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -58,19 +61,20 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
     }
 
     private final AsyncCamelliaRedisTemplateChooser chooser;
-    private final boolean commandSpendTimeMonitorEnable;
-    private final long slowCommandThresholdMillisTime;
+    private final CommandSpendTimeConfig commandSpendTimeConfig;
     private final CommandInterceptor commandInterceptor;
+    private HotKeyHunterManager hotKeyHunterManager;
     private final int commandPipelineFlushThreshold;
     private boolean eventLoopSetSuccess = false;
 
-    public AbstractCommandsEventConsumer(AsyncCamelliaRedisTemplateChooser chooser, CommandInterceptor commandInterceptor, int commandPipelineFlushThreshold,
-                                boolean commandSpendTimeMonitorEnable, long slowCommandThresholdMillisTime) {
+    public AbstractCommandsEventConsumer(AsyncCamelliaRedisTemplateChooser chooser, CommandInvokeConfig commandInvokeConfig) {
         this.chooser = chooser;
-        this.commandPipelineFlushThreshold = commandPipelineFlushThreshold;
-        this.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
-        this.slowCommandThresholdMillisTime = slowCommandThresholdMillisTime;
-        this.commandInterceptor = commandInterceptor;
+        this.commandPipelineFlushThreshold = commandInvokeConfig.getCommandPipelineFlushThreshold();
+        this.commandSpendTimeConfig = commandInvokeConfig.getCommandSpendTimeConfig();
+        this.commandInterceptor = commandInvokeConfig.getCommandInterceptor();
+        if (commandInvokeConfig.getCommandHotKeyMonitorConfig() != null) {
+            hotKeyHunterManager = new HotKeyHunterManager(commandInvokeConfig.getCommandHotKeyMonitorConfig());
+        }
     }
 
     @Override
@@ -101,7 +105,16 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
             boolean needIntercept = commandInterceptor != null;
 
             for (Command command : commands) {
-                AsyncTask task = new AsyncTask(taskQueue, command, commandSpendTimeMonitorEnable, slowCommandThresholdMillisTime);
+                if (hotKeyHunterManager != null) {
+                    HotKeyHunter hotKeyHunter = hotKeyHunterManager.get(channelInfo.getBid(), channelInfo.getBgroup());
+                    if (hotKeyHunter != null) {
+                        List<byte[]> keys = command.getKeys();
+                        if (keys != null) {
+                            hotKeyHunter.incr(keys);
+                        }
+                    }
+                }
+                AsyncTask task = new AsyncTask(taskQueue, command, commandSpendTimeConfig);
                 boolean add = taskQueue.add(task);
                 if (!add) {
                     taskQueue.clear();
