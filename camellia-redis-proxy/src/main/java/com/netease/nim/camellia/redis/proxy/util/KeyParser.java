@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.util;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +37,7 @@ public class KeyParser {
             return keys;
         } else if (commandKeyType == RedisCommand.CommandKeyType.COMPLEX) {
             List<byte[]> keys = new ArrayList<>();
+            byte[][] objects = command.getObjects();
             switch (redisCommand) {
                 case MSET:
                 case MSETNX:
@@ -45,25 +47,52 @@ public class KeyParser {
                 case EVALSHA:
                     evalOrEvalSha(command, keys);
                     break;
-                case PFCOUNT:
-                case SDIFF:
-                case SINTER:
-                case SUNION:
-                case PFMERGE:
-                case SINTERSTORE:
-                case SUNIONSTORE:
-                case SDIFFSTORE:
-                case RPOPLPUSH:
-                    if (command.getObjects().length >= 2) {
-                        dynamicKey(command, keys, 1, command.getObjects().length - 1);
-                    }
-                    break;
-                case RENAME:
-                case RENAMENX:
                 case SMOVE:
                     if (command.getObjects().length >= 3) {
                         dynamicKey(command, keys, 1, 2);
                     }
+                    break;
+                case ZINTERSTORE:
+                case ZUNIONSTORE:
+                    if (objects.length >= 4) {
+                        int keyCount = (int) Utils.bytesToNum(objects[2]);
+                        if (keyCount > 0) {
+                            keys.add(objects[1]);
+                            dynamicKey(command, keys, 3, 3 + keyCount);
+                        }
+                    }
+                    break;
+                case BITOP:
+                    if (objects.length >= 4) {
+                        dynamicKey(command, keys, 2, objects.length - 1);
+                    }
+                    break;
+                case BLPOP:
+                case BRPOP:
+                case BRPOPLPUSH:
+                    dynamicKey(command, keys, 1, objects.length - 2);
+                case XREAD:
+                case XREADGROUP:
+                    int index = -1;
+                    for (int i=1; i<objects.length; i++) {
+                        String string = new String(objects[i], Utils.utf8Charset);
+                        if (string.equalsIgnoreCase(RedisKeyword.STREAMS.name())) {
+                            index = i;
+                            break;
+                        }
+                    }
+                    if (index == -1) {
+                        break;
+                    }
+                    int last = objects.length - index - 1;
+                    if (last <= 0) {
+                        break;
+                    }
+                    if (last % 2 != 0) {
+                        break;
+                    }
+                    int keyCount = last / 2;
+                    dynamicKey(command, keys, index + 1, index + keyCount);
                     break;
                 default:
                     logger.warn("unknown keys of {}", redisCommand);
