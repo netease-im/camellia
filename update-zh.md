@@ -1,3 +1,18 @@
+# 1.0.11（2020/11/xx）
+### 新增
+* camellia-redis-proxy支持监控回调MonitorCallback
+* camellia-redis-proxy支持慢查询回调SlowCommandCallback
+* camellia-redis-proxy支持热key回调HotKeyCallback
+* camellia-redis-proxy支持热key在proxy层的本地缓存（TODO）
+* camellia-redis-proxy支持key/value等的自定义转换，可以用于透明的数据加密（TODO）
+* CamelliaRedisTemplate支持获取原始Jedis
+
+### 更新
+无
+
+### fix
+无
+
 # 1.0.10（2020/10/16）
 ### 新增
 * camellia-redis-proxy支持阻塞式命令，如BLPOP/BRPOP/BRPOPLPUSH等
@@ -8,7 +23,7 @@
 * camellia-redis-proxy提供了抽象类AbstractSimpleShadingFunc用于自定义分片函数
 * camellia-redis-proxy-hbase支持了针对zmember到hbase的读穿透的单机频控
 
-### update
+### 更新
 * camellia-redis-proxy-hbase增加了对zset从hbase重建缓存时的保护逻辑
 
 ### fix

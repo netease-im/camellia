@@ -1,3 +1,18 @@
+# 1.0.11（2020/11/xx）
+### add
+* camellia-redis-proxy support MonitorCallback
+* camellia-redis-proxy support SlowCommandCallback
+* camellia-redis-proxy support HotKeyCallback
+* camellia-redis-proxy support hot key cache in proxy(TODO)
+* camellia-redis-proxy support key/value custom transfer, you can use this feature in data encryption(TODO)
+* CamelliaRedisTemplate support get original Jedis
+
+### update
+none
+
+### fix
+none
+
 # 1.0.10（2020/10/16）
 ### add
 * camellia-redis-proxy support blocking commands, such as BLPOP/BRPOP/BRPOPLPUSH and so on
