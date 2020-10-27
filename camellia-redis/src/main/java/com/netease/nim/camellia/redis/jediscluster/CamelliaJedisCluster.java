@@ -34,6 +34,11 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     }
 
     @Override
+    public Jedis getJedis(byte[] key) {
+        return jedisCluster.getJedisPool(key).getResource();
+    }
+
+    @Override
     public String set(byte[] key, byte[] value) {
         return jedisCluster.set(key, value);
     }

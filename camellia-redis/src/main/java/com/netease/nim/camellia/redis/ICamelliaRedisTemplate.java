@@ -608,4 +608,15 @@ public interface ICamelliaRedisTemplate {
     Object eval(byte[] script, int keyCount, byte[]... params);
 
     Object evalsha(byte[] sha1, int keyCount, byte[]... params);
+
+    /**
+     * 获取原始的Jedis
+     */
+    Jedis getWriteJedis(byte[]... keys);
+
+    Jedis getReadJedis(byte[]... keys);
+
+    Jedis getWriteJedis(String... keys);
+
+    Jedis getReadJedis(String... keys);
 }

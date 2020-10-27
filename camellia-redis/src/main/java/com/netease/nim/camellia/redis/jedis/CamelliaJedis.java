@@ -1484,6 +1484,11 @@ public class CamelliaJedis implements ICamelliaRedis {
     }
 
     @Override
+    public Jedis getJedis(byte[] key) {
+        return jedisPool.getResource();
+    }
+
+    @Override
     public String set(byte[] key, byte[] value) {
         Jedis jedis = jedisPool.getResource();
         try {

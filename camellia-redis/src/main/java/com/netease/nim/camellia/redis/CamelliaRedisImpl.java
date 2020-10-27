@@ -38,6 +38,11 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
         redis = CamelliaRedisInitializr.init(resource, env);
     }
 
+    @Override
+    public Jedis getJedis(byte[] key) {
+        return redis.getJedis(key);
+    }
+
     @WriteOp
     @Override
     public String set(@ShadingParam byte[] key, byte[] value) {

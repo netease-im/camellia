@@ -1632,6 +1632,58 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         }, keyCount, params);
     }
 
+    @Override
+    public Jedis getWriteJedis(byte[]... keys) {
+        if (keys == null || keys.length == 0) {
+            throw new CamelliaRedisException("keys is null or empty");
+        }
+        ResourceChooser chooser = factory.getResourceChooser();
+        String url = null;
+        for (byte[] key : keys) {
+            List<Resource> writeResources = chooser.getWriteResources(key);
+            if (writeResources == null || writeResources.size() > 1) {
+                throw new CamelliaRedisException("not support while in multi-write mode");
+            }
+            if (url != null && !url.equalsIgnoreCase(writeResources.get(0).getUrl())) {
+                throw new CamelliaRedisException("ERR keys in request not in same resources");
+            }
+            url = writeResources.get(0).getUrl();
+        }
+        ICamelliaRedis redis = CamelliaRedisInitializr.init(new Resource(url), env);
+        return redis.getJedis(keys[0]);
+    }
+
+    @Override
+    public Jedis getReadJedis(byte[]... keys) {
+        if (keys == null || keys.length == 0) {
+            throw new CamelliaRedisException("keys is null or empty");
+        }
+        ResourceChooser chooser = factory.getResourceChooser();
+        String url = null;
+        for (byte[] key : keys) {
+            List<Resource> readResources = chooser.getReadResources(key);
+            if (readResources == null || readResources.size() > 1) {
+                throw new CamelliaRedisException("not support while in multi-write mode");
+            }
+            if (url != null && !url.equalsIgnoreCase(readResources.get(0).getUrl())) {
+                throw new CamelliaRedisException("ERR keys in request not in same resources");
+            }
+            url = readResources.get(0).getUrl();
+        }
+        ICamelliaRedis redis = CamelliaRedisInitializr.init(new Resource(url), env);
+        return redis.getJedis(keys[0]);
+    }
+
+    @Override
+    public Jedis getWriteJedis(String... keys) {
+        return getWriteJedis(SafeEncoder.encodeMany(keys));
+    }
+
+    @Override
+    public Jedis getReadJedis(String... keys) {
+        return getReadJedis(SafeEncoder.encodeMany(keys));
+    }
+
     private interface WriteInvoker {
         Object invoke(Resource resource, ICamelliaRedis redis);
     }
