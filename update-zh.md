@@ -5,6 +5,7 @@
 * camellia-redis-proxy支持热key回调HotKeyCallback
 * camellia-redis-proxy支持热key在proxy层的本地缓存（TODO）
 * camellia-redis-proxy支持key/value等的自定义转换，可以用于透明的数据加密（TODO）
+* camellia-redis-proxy支持配置读写分离时设置多个读地址
 * CamelliaRedisTemplate支持获取原始Jedis
 
 ### 更新

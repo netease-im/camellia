@@ -115,7 +115,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     futureList.add(future);
                     continue;
                 }
-                Resource resource = resourceChooser.getFirstReadResource(Utils.EMPTY_ARRAY);
+                Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
                 AsyncClient client = factory.get(resource.getUrl());
                 CompletableFuture<Reply> future;
                 switch (redisCommand) {
@@ -152,7 +152,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 switch (redisCommand) {
                     case KEYS:
                     case SCAN:
-                        Resource resource = resourceChooser.getFirstReadResource(Utils.EMPTY_ARRAY);
+                        Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
                         String url = resource.getUrl();
                         AsyncClient client = factory.get(url);
                         future = commandFlusher.sendCommand(client, command);
@@ -370,7 +370,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             return future;
         }
         byte[] key = objects[2];
-        Resource resource = resourceChooser.getFirstReadResource(key);
+        Resource resource = resourceChooser.getReadResource(key);
         AsyncClient client = factory.get(resource.getUrl());
         CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
         incrRead(resource, command);
@@ -676,7 +676,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             String url = null;
             for (int i=start; i<=end; i++) {
                 byte[] key = objects[i];
-                Resource resource = resourceChooser.getFirstReadResource(key);
+                Resource resource = resourceChooser.getReadResource(key);
                 if (url != null && !url.equals(resource.getUrl())) {
                     CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
                     completableFuture.complete(new ErrorReply("ERR keys in request not in same resources"));
@@ -688,7 +688,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             incrRead(url, command);
             return commandFlusher.sendCommand(client, command);
         } else {
-            Resource resource = resourceChooser.getFirstReadResource(Utils.EMPTY_ARRAY);
+            Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
             AsyncClient client = factory.get(resource.getUrl());
             incrRead(resource.getUrl(), command);
             return commandFlusher.sendCommand(client, command);
@@ -898,7 +898,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     }
 
     private Resource getReadResource(byte[] key) {
-        return resourceChooser.getFirstReadResource(key);
+        return resourceChooser.getReadResource(key);
     }
 
     private List<Resource> getWriteResources(byte[] key) {
@@ -907,7 +907,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
     private Resource getReadResource(Command command) {
         byte[] key = command.getObjects()[1];
-        return resourceChooser.getFirstReadResource(key);
+        return resourceChooser.getReadResource(key);
     }
 
     private List<Resource> getWriteResources(Command command) {

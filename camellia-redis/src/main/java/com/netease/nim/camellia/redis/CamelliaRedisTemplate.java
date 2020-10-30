@@ -1661,14 +1661,11 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         ResourceChooser chooser = factory.getResourceChooser();
         String url = null;
         for (byte[] key : keys) {
-            List<Resource> readResources = chooser.getReadResources(key);
-            if (readResources == null || readResources.size() > 1) {
-                throw new CamelliaRedisException("not support while in multi-write mode");
-            }
-            if (url != null && !url.equalsIgnoreCase(readResources.get(0).getUrl())) {
+            Resource readResource = chooser.getReadResource(key);
+            if (url != null && !url.equalsIgnoreCase(readResource.getUrl())) {
                 throw new CamelliaRedisException("ERR keys in request not in same resources");
             }
-            url = readResources.get(0).getUrl();
+            url = readResource.getUrl();
         }
         ICamelliaRedis redis = CamelliaRedisInitializr.init(new Resource(url), env);
         return redis.getJedis(keys[0]);

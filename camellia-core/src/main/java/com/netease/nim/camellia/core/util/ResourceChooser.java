@@ -18,8 +18,8 @@ public class ResourceChooser {
     private final ResourceTable resourceTable;
     private final ProxyEnv proxyEnv;
 
-    private List<Resource> readResources = null;
-    private Resource firstReadResource = null;
+    private CamelliaPair<Boolean, List<Resource>> readResources = null;
+    private Resource readResource = null;
     private List<Resource> writeResources = null;
 
     private boolean bucketSizeIs2Power = false;
@@ -45,37 +45,43 @@ public class ResourceChooser {
         return allResources;
     }
 
-    public Resource getFirstReadResource(byte[]... shadingParam) {
-        if (firstReadResource != null) return firstReadResource;
-        return getReadResources(shadingParam).get(0);
+    public Resource getReadResource(byte[]... shadingParam) {
+        if (readResource != null) return readResource;
+        ResourceTable.Type type = resourceTable.getType();
+        if (type == ResourceTable.Type.SIMPLE) {
+            CamelliaPair<Boolean, List<Resource>> readResources = _getReadResources(shadingParam);
+            if (readResources == null) return null;
+            List<Resource> list = readResources.getSecond();
+            if (readResources.getFirst() && list.size() > 1) {
+                int index = ThreadLocalRandom.current().nextInt(list.size());
+                return list.get(index);
+            } else {
+                readResource = list.get(0);
+                return readResource;
+            }
+        } else {
+            CamelliaPair<Boolean, List<Resource>> readResources = _getReadResources(shadingParam);
+            if (readResources == null) return null;
+            List<Resource> list = readResources.getSecond();
+            if (readResources.getFirst() && list.size() > 1) {
+                int index = ThreadLocalRandom.current().nextInt(list.size());
+                return list.get(index);
+            } else {
+                return list.get(0);
+            }
+        }
     }
 
-    public List<Resource> getReadResources(byte[]... shadingParam) {
+    private CamelliaPair<Boolean, List<Resource>> _getReadResources(byte[]... shadingParam) {
         if (readResources != null) {
-            firstReadResource = readResources.get(0);
             return readResources;
         }
         ResourceTable.Type type = resourceTable.getType();
         if (type == ResourceTable.Type.SIMPLE) {
             ResourceTable.SimpleTable simpleTable = resourceTable.getSimpleTable();
             ResourceOperation resourceOperation = simpleTable.getResourceOperation();
-            List<Resource> readResources = getReadResourcesFromOperation(resourceOperation);
-            if (simpleTable.getResourceOperation().getType() == ResourceOperation.Type.SIMPLE) {
-                this.readResources = readResources;
-            }
-            if (simpleTable.getResourceOperation().getType() == ResourceOperation.Type.RW_SEPARATE) {
-                ResourceReadOperation readOperation = simpleTable.getResourceOperation().getReadOperation();
-                if (readOperation.getType() == ResourceReadOperation.Type.SIMPLE) {
-                    this.readResources = readResources;
-                } else if (readOperation.getType() == ResourceReadOperation.Type.RANDOM) {
-                    if (readOperation.getReadResources().size() == 1) {
-                        this.readResources = readResources;
-                    }
-                } else if (readOperation.getType() == ResourceReadOperation.Type.ORDER) {
-                    this.readResources = readResources;
-                }
-            }
-            return readResources;
+            this.readResources = getReadResourcesFromOperation(resourceOperation);
+            return this.readResources;
         } else {
             int shadingCode = proxyEnv.getShadingFunc().shadingCode(shadingParam);
             ResourceTable.ShadingTable shadingTable = resourceTable.getShadingTable();
@@ -106,25 +112,21 @@ public class ResourceChooser {
         }
     }
 
-    private List<Resource> getReadResourcesFromOperation(ResourceOperation resourceOperation) {
+    private CamelliaPair<Boolean, List<Resource>> getReadResourcesFromOperation(ResourceOperation resourceOperation) {
         ResourceOperation.Type resourceOperationType = resourceOperation.getType();
         if (resourceOperationType == ResourceOperation.Type.SIMPLE) {
-            return Collections.singletonList(resourceOperation.getResource());
+            return new CamelliaPair<>(false, Collections.singletonList(resourceOperation.getResource()));
         } else if (resourceOperationType == ResourceOperation.Type.RW_SEPARATE) {
             ResourceReadOperation readOperation = resourceOperation.getReadOperation();
             ResourceReadOperation.Type readOperationType = readOperation.getType();
             if (readOperationType == ResourceReadOperation.Type.SIMPLE) {
-                return Collections.singletonList(readOperation.getReadResource());
-            } else if (readOperationType == ResourceReadOperation.Type.RANDOM) {
-                int size = readOperation.getReadResources().size();
-                if (size == 1) {
-                    return Collections.singletonList(readOperation.getReadResources().get(0));
-                }
-                int index = ThreadLocalRandom.current().nextInt(size);
-                return Collections.singletonList(readOperation.getReadResources().get(index));
+                return new CamelliaPair<>(false, Collections.singletonList(readOperation.getReadResource()));
             } else if (readOperationType == ResourceReadOperation.Type.ORDER) {
                 List<Resource> readResources = readOperation.getReadResources();
-                return new ArrayList<>(readResources);
+                return new CamelliaPair<>(false, readResources);
+            } else if (readOperationType == ResourceReadOperation.Type.RANDOM) {
+                List<Resource> readResources = readOperation.getReadResources();
+                return new CamelliaPair<>(true, readResources);
             }
         }
         throw new IllegalArgumentException();

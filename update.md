@@ -5,6 +5,7 @@
 * camellia-redis-proxy support HotKeyCallback
 * camellia-redis-proxy support hot key cache in proxy(TODO)
 * camellia-redis-proxy support key/value custom transfer, you can use this feature in data encryption(TODO)
+* camellia-redis-proxy support multi-read-resources while rw_separate
 * CamelliaRedisTemplate support get original Jedis
 
 ### update
