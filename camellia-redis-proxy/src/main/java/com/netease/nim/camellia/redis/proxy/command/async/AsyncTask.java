@@ -1,8 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCache;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
+import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
@@ -22,6 +25,7 @@ public class AsyncTask {
     private final CommandSpendTimeConfig commandSpendTimeConfig;
     private long startTime;
     private Reply reply;
+    private HotKeyCache hotKeyCache;
 
     public AsyncTask(AsyncTaskQueue taskQueue, Command command, CommandSpendTimeConfig commandSpendTimeConfig) {
         this.command = command;
@@ -32,7 +36,11 @@ public class AsyncTask {
         }
     }
 
-    public void replyCompleted(Reply reply) {
+    public void setHotKeyCache(HotKeyCache hotKeyCache) {
+        this.hotKeyCache = hotKeyCache;
+    }
+
+    public void replyCompleted(Reply reply, boolean fromCache) {
         try {
             if (commandSpendTimeConfig != null) {
                 long spendNanoTime = System.nanoTime() - startTime;
@@ -51,6 +59,15 @@ public class AsyncTask {
             if (logger.isDebugEnabled()) {
                 logger.debug("AsyncTask replyCompleted, reply = {}, consid = {}", reply.getClass().getSimpleName(), taskQueue.getChannelInfo().getConsid());
             }
+            if (!fromCache) {
+                if (hotKeyCache != null && command.getRedisCommand() == RedisCommand.GET) {
+                    if (reply instanceof BulkReply) {
+                        byte[] key = command.getObjects()[1];
+                        byte[] value = ((BulkReply) reply).getRaw();
+                        hotKeyCache.tryBuildHotKeyCache(key, value);
+                    }
+                }
+            }
             this.reply = reply;
             this.taskQueue.callback();
         } catch (Exception e) {
@@ -58,6 +75,10 @@ public class AsyncTask {
             this.reply = new ErrorReply(e.getMessage());
             this.taskQueue.callback();
         }
+    }
+
+    public void replyCompleted(Reply reply) {
+        replyCompleted(reply, false);
     }
 
     public Command getCommand() {

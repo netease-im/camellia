@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.*;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.CommandHotKeyMonitorConfig;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.CommandHotKeyCacheConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.CommandsEventHandler;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.disruptor.DisruptorCommandsEventHandler;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.lbq.LbqCommandsEventHandler;
@@ -50,9 +51,10 @@ public class AsyncCommandInvoker implements CommandInvoker {
         CommandInterceptor commandInterceptor = ConfigInitUtil.initCommandInterceptor(serverProperties);
         CommandHotKeyMonitorConfig commandHotKeyMonitorConfig = ConfigInitUtil.initCommandHotKeyMonitorConfig(serverProperties);
         CommandSpendTimeConfig commandSpendTimeConfig = ConfigInitUtil.initCommandSpendTimeConfig(serverProperties);
+        CommandHotKeyCacheConfig commandHotKeyCacheConfig = ConfigInitUtil.initHotKeyCacheConfig(serverProperties);
 
         this.commandInvokeConfig = new CommandInvokeConfig(commandPipelineFlushThreshold,
-                commandInterceptor, commandSpendTimeConfig, commandHotKeyMonitorConfig);
+                commandInterceptor, commandSpendTimeConfig, commandHotKeyMonitorConfig, commandHotKeyCacheConfig);
     }
 
     private static final FastThreadLocal<CommandsEventHandler> threadLocal = new FastThreadLocal<>();

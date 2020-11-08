@@ -67,6 +67,16 @@ public class CamelliaRedisProxyProperties {
     private HotKeyMonitorConfig hotKeyMonitorConfig = new HotKeyMonitorConfig();
 
     /**
+     * hot-key缓存开关
+     */
+    private boolean hotKeyCacheEnable = Constants.Server.hotKeyCacheEnable;
+
+    /**
+     * hot-key缓存配置
+     */
+    private HotKeyCacheConfig hotKeyCacheConfig = new HotKeyCacheConfig();
+
+    /**
      * netty相关参数
      */
     private NettyProperties netty = new NettyProperties();
@@ -180,20 +190,36 @@ public class CamelliaRedisProxyProperties {
         this.hotKeyMonitorConfig = hotKeyMonitorConfig;
     }
 
+    public boolean isHotKeyCacheEnable() {
+        return hotKeyCacheEnable;
+    }
+
+    public void setHotKeyCacheEnable(boolean hotKeyCacheEnable) {
+        this.hotKeyCacheEnable = hotKeyCacheEnable;
+    }
+
+    public HotKeyCacheConfig getHotKeyCacheConfig() {
+        return hotKeyCacheConfig;
+    }
+
+    public void setHotKeyCacheConfig(HotKeyCacheConfig hotKeyCacheConfig) {
+        this.hotKeyCacheConfig = hotKeyCacheConfig;
+    }
+
     public static class HotKeyMonitorConfig {
 
-        private long checkPeriodMillis = Constants.Server.hotKeyCheckPeriodMillis;
-        private long checkCacheMaxCapacity = Constants.Server.hotKeyCheckCacheMaxCapacity;
-        private long checkThreshold = Constants.Server.hotKeyCheckThreshold;
-        private int maxHotKeyCount = Constants.Server.hotKeyMaxHotKeyCount;
-        private String hotKeyCallbackClassName = Constants.Server.hotKeyCallbackClassName;
+        private long checkMillis = Constants.Server.hotKeyMonitorCheckMillis;
+        private long checkCacheMaxCapacity = Constants.Server.hotKeyMonitorCheckCacheMaxCapacity;
+        private long checkThreshold = Constants.Server.hotKeyMonitorCheckThreshold;
+        private int maxHotKeyCount = Constants.Server.hotKeyMonitorMaxHotKeyCount;
+        private String hotKeyMonitorCallbackClassName = Constants.Server.hotKeyMonitorCallbackClassName;
 
-        public long getCheckPeriodMillis() {
-            return checkPeriodMillis;
+        public long getCheckMillis() {
+            return checkMillis;
         }
 
-        public void setCheckPeriodMillis(long checkPeriodMillis) {
-            this.checkPeriodMillis = checkPeriodMillis;
+        public void setCheckMillis(long checkMillis) {
+            this.checkMillis = checkMillis;
         }
 
         public long getCheckCacheMaxCapacity() {
@@ -220,12 +246,90 @@ public class CamelliaRedisProxyProperties {
             this.maxHotKeyCount = maxHotKeyCount;
         }
 
-        public String getHotKeyCallbackClassName() {
-            return hotKeyCallbackClassName;
+        public String getHotKeyMonitorCallbackClassName() {
+            return hotKeyMonitorCallbackClassName;
         }
 
-        public void setHotKeyCallbackClassName(String hotKeyCallbackClassName) {
-            this.hotKeyCallbackClassName = hotKeyCallbackClassName;
+        public void setHotKeyMonitorCallbackClassName(String hotKeyMonitorCallbackClassName) {
+            this.hotKeyMonitorCallbackClassName = hotKeyMonitorCallbackClassName;
+        }
+    }
+
+    public static class HotKeyCacheConfig {
+        private long hotKeyCacheExpireMillis = Constants.Server.hotKeyCacheExpireMillis;
+        private long hotKeyCacheMaxCapacity = Constants.Server.hotKeyCacheMaxCapacity;
+
+        private long hotKeyCacheCounterCheckMillis = Constants.Server.hotKeyCacheCounterCheckMillis;
+        private long hotKeyCacheCounterMaxCapacity = Constants.Server.hotKeyCacheCounterMaxCapacity;
+        private long hotKeyCacheCounterCheckThreshold = Constants.Server.hotKeyCacheCounterCheckThreshold;
+
+        private String hotKeyCacheKeyCheckerClassName = Constants.Server.hotKeyCacheKeyCheckerClassName;
+
+        private long hotKeyCacheStatsCallbackIntervalSeconds = Constants.Server.hotKeyCacheStatsCallbackIntervalSeconds;
+        private String hotKeyCacheStatsCallbackClassName = Constants.Server.hotKeyCacheStatsCallbackClassName;
+
+        public long getHotKeyCacheExpireMillis() {
+            return hotKeyCacheExpireMillis;
+        }
+
+        public void setHotKeyCacheExpireMillis(long hotKeyCacheExpireMillis) {
+            this.hotKeyCacheExpireMillis = hotKeyCacheExpireMillis;
+        }
+
+        public long getHotKeyCacheMaxCapacity() {
+            return hotKeyCacheMaxCapacity;
+        }
+
+        public void setHotKeyCacheMaxCapacity(long hotKeyCacheMaxCapacity) {
+            this.hotKeyCacheMaxCapacity = hotKeyCacheMaxCapacity;
+        }
+
+        public long getHotKeyCacheCounterCheckMillis() {
+            return hotKeyCacheCounterCheckMillis;
+        }
+
+        public void setHotKeyCacheCounterCheckMillis(long hotKeyCacheCounterCheckMillis) {
+            this.hotKeyCacheCounterCheckMillis = hotKeyCacheCounterCheckMillis;
+        }
+
+        public long getHotKeyCacheCounterMaxCapacity() {
+            return hotKeyCacheCounterMaxCapacity;
+        }
+
+        public void setHotKeyCacheCounterMaxCapacity(long hotKeyCacheCounterMaxCapacity) {
+            this.hotKeyCacheCounterMaxCapacity = hotKeyCacheCounterMaxCapacity;
+        }
+
+        public long getHotKeyCacheCounterCheckThreshold() {
+            return hotKeyCacheCounterCheckThreshold;
+        }
+
+        public void setHotKeyCacheCounterCheckThreshold(long hotKeyCacheCounterCheckThreshold) {
+            this.hotKeyCacheCounterCheckThreshold = hotKeyCacheCounterCheckThreshold;
+        }
+
+        public String getHotKeyCacheKeyCheckerClassName() {
+            return hotKeyCacheKeyCheckerClassName;
+        }
+
+        public void setHotKeyCacheKeyCheckerClassName(String hotKeyCacheKeyCheckerClassName) {
+            this.hotKeyCacheKeyCheckerClassName = hotKeyCacheKeyCheckerClassName;
+        }
+
+        public long getHotKeyCacheStatsCallbackIntervalSeconds() {
+            return hotKeyCacheStatsCallbackIntervalSeconds;
+        }
+
+        public void setHotKeyCacheStatsCallbackIntervalSeconds(long hotKeyCacheStatsCallbackIntervalSeconds) {
+            this.hotKeyCacheStatsCallbackIntervalSeconds = hotKeyCacheStatsCallbackIntervalSeconds;
+        }
+
+        public String getHotKeyCacheStatsCallbackClassName() {
+            return hotKeyCacheStatsCallbackClassName;
+        }
+
+        public void setHotKeyCacheStatsCallbackClassName(String hotKeyCacheStatsCallbackClassName) {
+            this.hotKeyCacheStatsCallbackClassName = hotKeyCacheStatsCallbackClassName;
         }
     }
 }

@@ -48,12 +48,25 @@ public class CamelliaRedisProxyUtil {
         CamelliaRedisProxyProperties.HotKeyMonitorConfig hotKeyMonitorConfig = properties.getHotKeyMonitorConfig();
         CamelliaServerProperties.HotKeyMonitorConfig config = new CamelliaServerProperties.HotKeyMonitorConfig();
         config.setCheckCacheMaxCapacity(hotKeyMonitorConfig.getCheckCacheMaxCapacity());
-        config.setCheckPeriodMillis(hotKeyMonitorConfig.getCheckPeriodMillis());
+        config.setCheckMillis(hotKeyMonitorConfig.getCheckMillis());
         config.setCheckThreshold(hotKeyMonitorConfig.getCheckThreshold());
-        config.setHotKeyCallbackClassName(hotKeyMonitorConfig.getHotKeyCallbackClassName());
+        config.setHotKeyMonitorCallbackClassName(hotKeyMonitorConfig.getHotKeyMonitorCallbackClassName());
         config.setMaxHotKeyCount(hotKeyMonitorConfig.getMaxHotKeyCount());
         serverProperties.setHotKeyMonitorConfig(config);
         serverProperties.setHotKeyMonitorEnable(properties.isHotKeyMonitorEnable());
+
+        CamelliaRedisProxyProperties.HotKeyCacheConfig hotKeyCacheConfig = properties.getHotKeyCacheConfig();
+        CamelliaServerProperties.HotKeyCacheConfig cacheConfig = new CamelliaServerProperties.HotKeyCacheConfig();
+        cacheConfig.setHotKeyCacheCounterCheckThreshold(hotKeyCacheConfig.getHotKeyCacheCounterCheckThreshold());
+        cacheConfig.setHotKeyCacheCounterCheckMillis(hotKeyCacheConfig.getHotKeyCacheCounterCheckMillis());
+        cacheConfig.setHotKeyCacheCounterMaxCapacity(hotKeyCacheConfig.getHotKeyCacheCounterMaxCapacity());
+        cacheConfig.setHotKeyCacheExpireMillis(hotKeyCacheConfig.getHotKeyCacheExpireMillis());
+        cacheConfig.setHotKeyCacheKeyCheckerClassName(hotKeyCacheConfig.getHotKeyCacheKeyCheckerClassName());
+        cacheConfig.setHotKeyCacheMaxCapacity(hotKeyCacheConfig.getHotKeyCacheMaxCapacity());
+        cacheConfig.setHotKeyCacheStatsCallbackClassName(hotKeyCacheConfig.getHotKeyCacheStatsCallbackClassName());
+        cacheConfig.setHotKeyCacheStatsCallbackIntervalSeconds(hotKeyCacheConfig.getHotKeyCacheStatsCallbackIntervalSeconds());
+        serverProperties.setHotKeyCacheConfig(cacheConfig);
+        serverProperties.setHotKeyCacheEnable(properties.isHotKeyCacheEnable());
         return serverProperties;
     }
 

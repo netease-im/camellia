@@ -65,11 +65,15 @@ public class CamelliaRedisProxyZkRegisterBoot {
     }
 
     public void register() {
-        registry.register();
+        if (registry != null) {
+            registry.register();
+        }
     }
 
     public void deregister() {
-        registry.deregister();
+        if (registry != null) {
+            registry.deregister();
+        }
     }
 
     public ZkProxyRegistry getRegistry() {

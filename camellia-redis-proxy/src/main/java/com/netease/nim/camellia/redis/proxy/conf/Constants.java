@@ -1,7 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.core.util.SysUtils;
-import com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyCallback;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.DummyHotKeyCacheKeyChecker;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.LoggingHotKeyCacheStatsCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandCallback;
 import com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback;
 
@@ -31,11 +33,21 @@ public class Constants {
         public static final int writeBufferWaterMarkHigh = 512 * 1024;
 
         public static final boolean hotKeyMonitorEnable = false;
-        public static final long hotKeyCheckPeriodMillis = 1000L;
-        public static final long hotKeyCheckCacheMaxCapacity = 10000L;
-        public static final long hotKeyCheckThreshold = 32;
-        public static final int hotKeyMaxHotKeyCount = 32;
-        public static final String hotKeyCallbackClassName = LoggingHoyKeyCallback.class.getName();
+        public static final long hotKeyMonitorCheckMillis = 1000L;
+        public static final long hotKeyMonitorCheckCacheMaxCapacity = 10000L;
+        public static final long hotKeyMonitorCheckThreshold = 100;
+        public static final int hotKeyMonitorMaxHotKeyCount = 32;
+        public static final String hotKeyMonitorCallbackClassName = LoggingHoyKeyMonitorCallback.class.getName();
+
+        public static final boolean hotKeyCacheEnable = false;
+        public static final long hotKeyCacheExpireMillis = 10000;
+        public static final long hotKeyCacheMaxCapacity = 1000;
+        public static final long hotKeyCacheCounterCheckMillis = 1000;
+        public static final long hotKeyCacheCounterMaxCapacity = 1000;
+        public static final long hotKeyCacheCounterCheckThreshold = 100;
+        public static final String hotKeyCacheKeyCheckerClassName = DummyHotKeyCacheKeyChecker.class.getName();
+        public static final long hotKeyCacheStatsCallbackIntervalSeconds = 60;
+        public static final String hotKeyCacheStatsCallbackClassName = LoggingHotKeyCacheStatsCallback.class.getName();
     }
 
     public static class Transpond {

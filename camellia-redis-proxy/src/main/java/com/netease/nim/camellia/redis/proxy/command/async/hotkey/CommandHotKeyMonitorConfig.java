@@ -7,9 +7,9 @@ package com.netease.nim.camellia.redis.proxy.command.async.hotkey;
 public class CommandHotKeyMonitorConfig {
 
     private final HotKeyConfig hotKeyConfig;
-    private final HotKeyCallback callback;
+    private final HotKeyMonitorCallback callback;
 
-    public CommandHotKeyMonitorConfig(HotKeyConfig hotKeyConfig, HotKeyCallback callback) {
+    public CommandHotKeyMonitorConfig(HotKeyConfig hotKeyConfig, HotKeyMonitorCallback callback) {
         this.hotKeyConfig = hotKeyConfig;
         this.callback = callback;
     }
@@ -18,7 +18,7 @@ public class CommandHotKeyMonitorConfig {
         return hotKeyConfig;
     }
 
-    public HotKeyCallback getCallback() {
+    public HotKeyMonitorCallback getCallback() {
         return callback;
     }
 }

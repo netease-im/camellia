@@ -4,9 +4,14 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.*;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunter;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterManager;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCache;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheManager;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotValue;
 import com.netease.nim.camellia.redis.proxy.command.async.queue.disruptor.DisruptorCommandsEventConsumer;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
+import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
@@ -64,6 +69,7 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
     private final CommandSpendTimeConfig commandSpendTimeConfig;
     private final CommandInterceptor commandInterceptor;
     private HotKeyHunterManager hotKeyHunterManager;
+    private HotKeyCacheManager hotKeyCacheManager;
     private final int commandPipelineFlushThreshold;
     private boolean eventLoopSetSuccess = false;
 
@@ -74,6 +80,9 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
         this.commandInterceptor = commandInvokeConfig.getCommandInterceptor();
         if (commandInvokeConfig.getCommandHotKeyMonitorConfig() != null) {
             hotKeyHunterManager = new HotKeyHunterManager(commandInvokeConfig.getCommandHotKeyMonitorConfig());
+        }
+        if (commandInvokeConfig.getCommandHotKeyCacheConfig() != null) {
+            hotKeyCacheManager = new HotKeyCacheManager(commandInvokeConfig.getCommandHotKeyCacheConfig());
         }
     }
 
@@ -138,12 +147,25 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
                             errorMsg = CommandInterceptResponse.DEFAULT_FAIL.getErrorMsg();
                         }
                         task.replyCompleted(new ErrorReply(errorMsg));
-                    } else {
-                        tasks.add(task);
+                        continue;
                     }
-                } else {
-                    tasks.add(task);
                 }
+
+                if (command.getRedisCommand() == RedisCommand.GET && hotKeyCacheManager != null) {
+                    if (command.getObjects().length >= 2) {
+                        byte[] key = command.getObjects()[1];
+                        HotKeyCache hotKeyCache = hotKeyCacheManager.get(channelInfo.getBid(), channelInfo.getBgroup());
+                        if (hotKeyCache != null) {
+                            task.setHotKeyCache(hotKeyCache);
+                            HotValue cache = hotKeyCache.getCache(key);
+                            if (cache != null) {
+                                task.replyCompleted(new BulkReply(cache.getValue()), true);
+                                continue;
+                            }
+                        }
+                    }
+                }
+                tasks.add(task);
             }
 
             if (endOfBatch && taskMap.isEmpty()) {

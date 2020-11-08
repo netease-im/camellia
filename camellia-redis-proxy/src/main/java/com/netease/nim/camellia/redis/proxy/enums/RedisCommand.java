@@ -211,6 +211,7 @@ public enum RedisCommand {
     CLUSTER(CommandSupportType.NOT_SUPPORT, null, false, null),
     ASKING(CommandSupportType.NOT_SUPPORT, null, false, null),
     READONLY(CommandSupportType.NOT_SUPPORT, null, false, null),
+
     ;
 
     private final CommandSupportType supportType;

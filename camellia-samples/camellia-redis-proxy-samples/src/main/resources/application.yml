@@ -10,17 +10,24 @@ camellia-redis-proxy:
   monitor-enable: true
   command-spend-time-monitor-enable: true
   slow-command-threshold-millis-time: 1000
-  monitor-interval-seconds: 10
+  monitor-interval-seconds: 1000
   hot-key-monitor-enable: true
   hot-key-monitor-config:
-    check-period-millis: 1000
+    check-millis: 1000
     check-threshold: 10
+  hot-key-cache-enable: true
+  hot-key-cache-config:
+    hot-key-cache-counter-check-millis: 1000
+    hot-key-cache-counter-check-threshold: 5
+    hot-key-cache-expire-millis: 5000
+    hot-key-cache-stats-callback-interval-seconds: 60
   transpond:
     type: local
     local:
       resource: redis://@127.0.0.1:6379
     redis-conf:
       queue-type: linkedblockingqueue
+
 
 
 #camellia-redis-zk-registry:

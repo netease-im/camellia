@@ -4,8 +4,11 @@ import com.lmax.disruptor.WaitStrategy;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.CommandHotKeyMonitorConfig;
-import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyCallback;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyConfig;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.CommandHotKeyCacheConfig;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheKeyChecker;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheStatsCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.SlowCommandCallback;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
@@ -113,8 +116,8 @@ public class ConfigInitUtil {
         CommandHotKeyMonitorConfig commandHotKeyMonitorConfig = null;
         CamelliaServerProperties.HotKeyMonitorConfig config = serverProperties.getHotKeyMonitorConfig();
         if (config != null && serverProperties.isHotKeyMonitorEnable()) {
-            HotKeyCallback hotKeyCallback = null;
-            String hotKeyCallbackClassName = config.getHotKeyCallbackClassName();
+            HotKeyMonitorCallback hotKeyMonitorCallback = null;
+            String hotKeyCallbackClassName = config.getHotKeyMonitorCallbackClassName();
             if (hotKeyCallbackClassName != null) {
                 try {
                     Class<?> clazz;
@@ -123,17 +126,65 @@ public class ConfigInitUtil {
                     } catch (ClassNotFoundException e) {
                         clazz = Thread.currentThread().getContextClassLoader().loadClass(hotKeyCallbackClassName);
                     }
-                    hotKeyCallback = (HotKeyCallback) clazz.newInstance();
-                    logger.info("HotKeyCallback init success, class = {}", hotKeyCallbackClassName);
+                    hotKeyMonitorCallback = (HotKeyMonitorCallback) clazz.newInstance();
+                    logger.info("HotKeyMonitorCallback init success, class = {}", hotKeyCallbackClassName);
                 } catch (Exception e) {
-                    logger.error("HotKeyCallback init error, class = {}", hotKeyCallbackClassName, e);
+                    logger.error("HotKeyMonitorCallback init error, class = {}", hotKeyCallbackClassName, e);
                     throw new CamelliaRedisException(e);
                 }
             }
-            HotKeyConfig hotKeyConfig = new HotKeyConfig(config.getCheckPeriodMillis(), config.getCheckCacheMaxCapacity(),
+            HotKeyConfig hotKeyConfig = new HotKeyConfig(config.getCheckMillis(), config.getCheckCacheMaxCapacity(),
                     config.getCheckThreshold(), config.getMaxHotKeyCount());
-            commandHotKeyMonitorConfig = new CommandHotKeyMonitorConfig(hotKeyConfig, hotKeyCallback);
+            commandHotKeyMonitorConfig = new CommandHotKeyMonitorConfig(hotKeyConfig, hotKeyMonitorCallback);
         }
         return commandHotKeyMonitorConfig;
+    }
+
+    public static CommandHotKeyCacheConfig initHotKeyCacheConfig(CamelliaServerProperties serverProperties) {
+        if (!serverProperties.isHotKeyCacheEnable()) return null;
+        CamelliaServerProperties.HotKeyCacheConfig cacheConfig = serverProperties.getHotKeyCacheConfig();
+        CommandHotKeyCacheConfig commandHotKeyCacheConfig = new CommandHotKeyCacheConfig();
+        commandHotKeyCacheConfig.setHotKeyCacheCounterCheckThreshold(cacheConfig.getHotKeyCacheCounterCheckThreshold());
+        commandHotKeyCacheConfig.setHotKeyCacheCounterCheckMillis(cacheConfig.getHotKeyCacheCounterCheckMillis());
+        commandHotKeyCacheConfig.setHotKeyCacheCounterMaxCapacity(cacheConfig.getHotKeyCacheCounterMaxCapacity());
+        commandHotKeyCacheConfig.setHotKeyCacheExpireMillis(cacheConfig.getHotKeyCacheExpireMillis());
+        String hotKeyCacheKeyCheckerClassName = cacheConfig.getHotKeyCacheKeyCheckerClassName();
+        HotKeyCacheKeyChecker hotKeyCacheKeyChecker = null;
+        if (hotKeyCacheKeyCheckerClassName != null) {
+            try {
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(hotKeyCacheKeyCheckerClassName);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(hotKeyCacheKeyCheckerClassName);
+                }
+                hotKeyCacheKeyChecker = (HotKeyCacheKeyChecker) clazz.newInstance();
+                logger.info("HotKeyCacheKeyChecker init success, class = {}", hotKeyCacheKeyCheckerClassName);
+            } catch (Exception e) {
+                logger.error("HotKeyCacheKeyChecker init error, class = {}", hotKeyCacheKeyCheckerClassName, e);
+                throw new CamelliaRedisException(e);
+            }
+        }
+        commandHotKeyCacheConfig.setHotKeyCacheKeyChecker(hotKeyCacheKeyChecker);
+        commandHotKeyCacheConfig.setHotKeyCacheStatsCallbackIntervalSeconds(cacheConfig.getHotKeyCacheStatsCallbackIntervalSeconds());
+        String hotKeyCacheStatsCallbackClassName = cacheConfig.getHotKeyCacheStatsCallbackClassName();
+        HotKeyCacheStatsCallback hotKeyCacheStatsCallback = null;
+        if (hotKeyCacheStatsCallbackClassName != null) {
+            try {
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(hotKeyCacheStatsCallbackClassName);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(hotKeyCacheStatsCallbackClassName);
+                }
+                hotKeyCacheStatsCallback = (HotKeyCacheStatsCallback) clazz.newInstance();
+                logger.info("HotKeyCacheStatsCallback init success, class = {}", hotKeyCacheStatsCallbackClassName);
+            } catch (Exception e) {
+                logger.error("HotKeyCacheStatsCallback init error, class = {}", hotKeyCacheStatsCallbackClassName, e);
+                throw new CamelliaRedisException(e);
+            }
+        }
+        commandHotKeyCacheConfig.setHotKeyCacheStatsCallback(hotKeyCacheStatsCallback);
+        return commandHotKeyCacheConfig;
     }
 }

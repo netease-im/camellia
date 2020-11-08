@@ -10,7 +10,7 @@ import java.util.List;
  *
  * Created by caojiajun on 2020/10/22
  */
-public class LoggingHoyKeyCallback implements HotKeyCallback {
+public class LoggingHoyKeyMonitorCallback implements HotKeyMonitorCallback {
 
     private static final Logger logger = LoggerFactory.getLogger("hotKeyStats");
 
@@ -20,7 +20,7 @@ public class LoggingHoyKeyCallback implements HotKeyCallback {
             logger.warn("====hot-key====");
             for (HotKeyInfo hotKey : hotKeys) {
                 logger.warn("hot-key, key = {}, count = {}, checkPeriodMillis = {}",
-                        SafeEncoder.encode(hotKey.getKey()), hotKey.getCount(), hotKeyConfig.getCheckPeriodMillis());
+                        SafeEncoder.encode(hotKey.getKey()), hotKey.getCount(), hotKeyConfig.getCheckMillis());
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

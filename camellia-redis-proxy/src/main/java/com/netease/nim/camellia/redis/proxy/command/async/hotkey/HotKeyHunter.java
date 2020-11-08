@@ -23,18 +23,18 @@ public class HotKeyHunter {
     private static final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(HotKeyHunter.class));
 
     private final HotKeyConfig hotKeyConfig;
-    private final HotKeyCallback callback;
+    private final HotKeyMonitorCallback callback;
     private final Cache<BytesKey, AtomicLong> cache;
 
-    public HotKeyHunter(HotKeyConfig hotKeyConfig, HotKeyCallback callback) {
+    public HotKeyHunter(HotKeyConfig hotKeyConfig, HotKeyMonitorCallback callback) {
         this.hotKeyConfig = hotKeyConfig;
         this.callback = callback;
         this.cache = Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofMillis(hotKeyConfig.getCheckPeriodMillis()))
+                .expireAfterWrite(Duration.ofMillis(hotKeyConfig.getCheckMillis()))
                 .maximumSize(hotKeyConfig.getCheckCacheMaxCapacity())
                 .build();
-        scheduledExecutor.scheduleAtFixedRate(this::calc, hotKeyConfig.getCheckPeriodMillis(),
-                        hotKeyConfig.getCheckPeriodMillis(), TimeUnit.MILLISECONDS);
+        scheduledExecutor.scheduleAtFixedRate(this::callback, hotKeyConfig.getCheckMillis(),
+                        hotKeyConfig.getCheckMillis(), TimeUnit.MILLISECONDS);
     }
 
     public void incr(byte[]... keys) {
@@ -56,7 +56,7 @@ public class HotKeyHunter {
         }
     }
 
-    private void calc() {
+    private void callback() {
         try {
             ConcurrentMap<BytesKey, AtomicLong> map = cache.asMap();
             TreeSet<SortedBytesKey> treeSet = new TreeSet<>();

@@ -6,7 +6,7 @@ import java.util.List;
  *
  * Created by caojiajun on 2020/10/22
  */
-public interface HotKeyCallback {
+public interface HotKeyMonitorCallback {
 
     void callback(List<HotKeyInfo> hotKeys, HotKeyConfig hotKeyConfig);
 }
