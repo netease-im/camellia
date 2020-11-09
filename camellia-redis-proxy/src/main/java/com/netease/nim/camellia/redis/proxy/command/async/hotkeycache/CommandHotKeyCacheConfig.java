@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command.async.hotkeycache;
 
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 
+
 /**
  *
  * Created by caojiajun on 2020/11/5
@@ -14,6 +15,7 @@ public class CommandHotKeyCacheConfig {
     private long hotKeyCacheCounterCheckMillis = Constants.Server.hotKeyCacheCounterCheckMillis;
     private long hotKeyCacheCounterMaxCapacity = Constants.Server.hotKeyCacheCounterMaxCapacity;
     private long hotKeyCacheCounterCheckThreshold = Constants.Server.hotKeyCacheCounterCheckThreshold;
+    private boolean hotKeyCacheNeedCacheNull = Constants.Server.hotKeyCacheNeedCacheNull;
 
     private HotKeyCacheKeyChecker hotKeyCacheKeyChecker;
 
@@ -82,5 +84,13 @@ public class CommandHotKeyCacheConfig {
 
     public void setHotKeyCacheKeyChecker(HotKeyCacheKeyChecker hotKeyCacheKeyChecker) {
         this.hotKeyCacheKeyChecker = hotKeyCacheKeyChecker;
+    }
+
+    public boolean isHotKeyCacheNeedCacheNull() {
+        return hotKeyCacheNeedCacheNull;
+    }
+
+    public void setHotKeyCacheNeedCacheNull(boolean hotKeyCacheNeedCacheNull) {
+        this.hotKeyCacheNeedCacheNull = hotKeyCacheNeedCacheNull;
     }
 }

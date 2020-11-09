@@ -148,6 +148,7 @@ public class ConfigInitUtil {
         commandHotKeyCacheConfig.setHotKeyCacheCounterCheckMillis(cacheConfig.getHotKeyCacheCounterCheckMillis());
         commandHotKeyCacheConfig.setHotKeyCacheCounterMaxCapacity(cacheConfig.getHotKeyCacheCounterMaxCapacity());
         commandHotKeyCacheConfig.setHotKeyCacheExpireMillis(cacheConfig.getHotKeyCacheExpireMillis());
+        commandHotKeyCacheConfig.setHotKeyCacheNeedCacheNull(cacheConfig.isHotKeyCacheNeedCacheNull());
         String hotKeyCacheKeyCheckerClassName = cacheConfig.getHotKeyCacheKeyCheckerClassName();
         HotKeyCacheKeyChecker hotKeyCacheKeyChecker = null;
         if (hotKeyCacheKeyCheckerClassName != null) {

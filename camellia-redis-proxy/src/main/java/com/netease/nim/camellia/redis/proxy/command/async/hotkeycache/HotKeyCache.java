@@ -40,6 +40,8 @@ public class HotKeyCache {
     private final HotKeyCacheKeyChecker keyChecker;
     private final HotKeyCacheStatsCallback callback;
 
+    private final boolean cacheNull;
+
     private ConcurrentHashMap<BytesKey, AtomicLong> statsMap = new ConcurrentHashMap<>();
 
     public HotKeyCache(CommandHotKeyCacheConfig commandHotKeyCacheConfig) {
@@ -47,6 +49,7 @@ public class HotKeyCache {
         this.callback = commandHotKeyCacheConfig.getHotKeyCacheStatsCallback();
         this.cacheExpireMillis = commandHotKeyCacheConfig.getHotKeyCacheExpireMillis();
         this.hotKeyCheckThreshold = commandHotKeyCacheConfig.getHotKeyCacheCounterCheckThreshold();
+        this.cacheNull = commandHotKeyCacheConfig.isHotKeyCacheNeedCacheNull();
         this.cache = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofMillis(cacheExpireMillis))
                 .maximumSize(commandHotKeyCacheConfig.getHotKeyCacheMaxCapacity())
@@ -125,6 +128,9 @@ public class HotKeyCache {
     }
 
     public void tryBuildHotKeyCache(byte[] key, byte[] value) {
+        if (value == null && !cacheNull) {
+            return;
+        }
         BytesKey bytesKey = new BytesKey(key);
         if (keyChecker != null && !keyChecker.needCache(bytesKey.getKey())) {
             return;

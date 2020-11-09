@@ -45,6 +45,7 @@ public class Constants {
         public static final long hotKeyCacheCounterCheckMillis = 1000;
         public static final long hotKeyCacheCounterMaxCapacity = 1000;
         public static final long hotKeyCacheCounterCheckThreshold = 100;
+        public static final boolean hotKeyCacheNeedCacheNull = true;
         public static final String hotKeyCacheKeyCheckerClassName = DummyHotKeyCacheKeyChecker.class.getName();
         public static final long hotKeyCacheStatsCallbackIntervalSeconds = 60;
         public static final String hotKeyCacheStatsCallbackClassName = LoggingHotKeyCacheStatsCallback.class.getName();

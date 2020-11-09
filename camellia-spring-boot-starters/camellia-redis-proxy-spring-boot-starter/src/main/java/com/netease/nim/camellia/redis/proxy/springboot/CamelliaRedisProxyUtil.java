@@ -65,6 +65,7 @@ public class CamelliaRedisProxyUtil {
         cacheConfig.setHotKeyCacheMaxCapacity(hotKeyCacheConfig.getHotKeyCacheMaxCapacity());
         cacheConfig.setHotKeyCacheStatsCallbackClassName(hotKeyCacheConfig.getHotKeyCacheStatsCallbackClassName());
         cacheConfig.setHotKeyCacheStatsCallbackIntervalSeconds(hotKeyCacheConfig.getHotKeyCacheStatsCallbackIntervalSeconds());
+        cacheConfig.setHotKeyCacheNeedCacheNull(hotKeyCacheConfig.isHotKeyCacheNeedCacheNull());
         serverProperties.setHotKeyCacheConfig(cacheConfig);
         serverProperties.setHotKeyCacheEnable(properties.isHotKeyCacheEnable());
         return serverProperties;

@@ -254,6 +254,7 @@ public class CamelliaServerProperties {
         private long hotKeyCacheCounterCheckMillis = Constants.Server.hotKeyCacheCounterCheckMillis;
         private long hotKeyCacheCounterMaxCapacity = Constants.Server.hotKeyCacheCounterMaxCapacity;
         private long hotKeyCacheCounterCheckThreshold = Constants.Server.hotKeyCacheCounterCheckThreshold;
+        private boolean hotKeyCacheNeedCacheNull = Constants.Server.hotKeyCacheNeedCacheNull;
 
         private String hotKeyCacheKeyCheckerClassName = Constants.Server.hotKeyCacheKeyCheckerClassName;
 
@@ -322,6 +323,14 @@ public class CamelliaServerProperties {
 
         public void setHotKeyCacheStatsCallbackClassName(String hotKeyCacheStatsCallbackClassName) {
             this.hotKeyCacheStatsCallbackClassName = hotKeyCacheStatsCallbackClassName;
+        }
+
+        public boolean isHotKeyCacheNeedCacheNull() {
+            return hotKeyCacheNeedCacheNull;
+        }
+
+        public void setHotKeyCacheNeedCacheNull(boolean hotKeyCacheNeedCacheNull) {
+            this.hotKeyCacheNeedCacheNull = hotKeyCacheNeedCacheNull;
         }
     }
 }
