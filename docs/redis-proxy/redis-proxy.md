@@ -737,6 +737,7 @@ camellia-redis-proxy:
 * support setting how long will the hot key will be cached
 * support setting which key need to cache
 * support setting max size of the hot key cache collection
+* only support GET command
 * support setting callback, so you can dock to your monitoring system, default callback will print monitor info in log
 * sample yml conf:  
 
