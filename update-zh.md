@@ -1,11 +1,12 @@
 # 1.0.11（2020/11/xx）
 ### 新增
-* camellia-redis-proxy支持监控回调MonitorCallback
-* camellia-redis-proxy支持慢查询回调SlowCommandCallback
-* camellia-redis-proxy支持热key回调HotKeyCallback
-* camellia-redis-proxy支持热key在proxy层的本地缓存（TODO）
-* camellia-redis-proxy支持key/value等的自定义转换，可以用于透明的数据加密（TODO）
-* camellia-redis-proxy支持配置读写分离时设置多个读地址
+* camellia-redis-proxy支持设置监控回调MonitorCallback
+* camellia-redis-proxy支持慢查询监控，支持设置SlowCommandMonitorCallback
+* camellia-redis-proxy支持热key监控，支持设置HotKeyMonitorCallback
+* camellia-redis-proxy支持热key在proxy层的本地缓存（仅支持GET命令），支持设置HotKeyCacheStatsCallback
+* camellia-redis-proxy支持大key监控，支持设置BigKeyMonitorCallback
+* camellia-redis-proxy支持key/value等的自定义转换，可以用于透明的数据加密/数据压缩等（TODO）
+* camellia-redis-proxy支持配置读写分离时设置多个读地址（随机选择一个地址读）
 * CamelliaRedisTemplate支持获取原始Jedis
 
 ### 更新

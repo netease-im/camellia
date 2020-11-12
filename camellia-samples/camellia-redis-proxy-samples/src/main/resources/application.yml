@@ -35,10 +35,10 @@ camellia-redis-proxy:
   big-key-monitor-enable: true #大key检测
   big-key-monitor-config:
     string-size-threshold: 10 #字符串类型，value大小超过多少认为是大key
-    hash-size-threshold: 10 #hash类型，集合大小超过多少任务是大key
-    zset-size-threshold: 10 #zset类型，集合大小超过多少任务是大key
-    list-size-threshold: 10 #list类型，集合大小超过多少任务是大key
-    set-size-threshold: 10 #set类型，集合大小超过多少任务是大key
+    hash-size-threshold: 10 #hash类型，集合大小超过多少认为是大key
+    zset-size-threshold: 10 #zset类型，集合大小超过多少认为是大key
+    list-size-threshold: 10 #list类型，集合大小超过多少认为是大key
+    set-size-threshold: 10 #set类型，集合大小超过多少认为是大key
     big-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.bigkey.LoggingBigKeyMonitorCallback #大key的回调类
   transpond:
     type: local #使用本地配置

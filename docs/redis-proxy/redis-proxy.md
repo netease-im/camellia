@@ -11,11 +11,16 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support stream commands of redis5.0
 * support custom shading
 * support read write separation
-* support double(multi) write 
+* support double(multi) write
+* support double(multi) read 
 * support config refresh online(need camellia-dashboard)
 * support multi-config(need camellia-dashboard), then proxy will route business-A to redis1, business-B to redis2 
 * support custom CommandInterceptor, then you can intercept illegal command, such as too long key/value、lack of standardization of key
-* support monitor, such as commands request count、commands spend time
+* support monitor, such as commands request count、commands spend time, support setting MonitorCallback
+* support monitor slow command, support setting SlowCommandMonitorCallback
+* support monitor hot key, support setting HotKeyMonitorCallback
+* support hot key local cache(only support GET command), support setting HotKeyCacheStatsCallback
+* support monitor big key, support setting BigKeyMonitorCallback
 * provide a spring-boot-starter，you can quick start a proxy cluster
 * provide a default register/discovery component depends on zookeeper, if client's language is java, then you can adjust slightly by use RedisProxyJedisPool instead of JedisPool 
 
@@ -650,6 +655,7 @@ in
 com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor
 ```
 to get the monitor metrics.  
+otherwise, you can set MonitorCallback to get the monitor metrics   
 you can open the monitor in application.yml, like this:  
 ```yaml
 server:
@@ -691,6 +697,80 @@ camellia-redis-proxy:
       dynamic: true
       url: http://127.0.0.1:8080
       monitor: false
+```
+
+## slow command monitor and callback
+* depends on monitor-enable=true and command-spend-time-monitor-enable=true
+* support setting slow command threshold of spend millis
+* support setting callback, so you can dock to your monitoring system, default callback will print monitor info in log
+* sample yml conf:    
+
+```yaml
+camellia-redis-proxy:
+  monitor-enable: true
+  monitor-interval-seconds: 60
+  command-spend-time-monitor-enable: true
+  slow-command-threshold-millis-time: 1000
+  slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback
+```
+
+## hot key monitor and callback
+* independent switch, default false
+* support setting threshold of hot key, such as a key will consider as hot key if has N request in M millis
+* support setting callback, so you can dock to your monitoring system, default callback will print monitor info in log
+* sample yml conf:    
+
+```yaml
+camellia-redis-proxy:
+  hot-key-monitor-enable: true
+  hot-key-monitor-config:
+    check-millis: 1000
+    check-threshold: 10
+    check-cache-max-capacity: 1000
+    max-hot-key-count: 100
+    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback
+```
+
+## hot key cache and callback
+* independent switch, default false
+* support setting threshold of hot key, such as a key will consider as hot key if has N request in M millis
+* support setting how long will the hot key will be cached
+* support setting which key need to cache
+* support setting max size of the hot key cache collection
+* support setting callback, so you can dock to your monitoring system, default callback will print monitor info in log
+* sample yml conf:  
+
+```yaml
+camellia-redis-proxy:
+  hot-key-cache-enable: true
+  hot-key-cache-config:
+    counter-check-millis: 1000 
+    counter-check-threshold: 5
+    counter-max-capacity: 1000
+    need-cache-null: true
+    cache-max-capacity: 1000 
+    cache-expire-millis: 5000 
+    hot-key-cache-stats-callback-interval-seconds: 20 
+    hot-key-cache-stats-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.LoggingHotKeyCacheStatsCallback 
+    hot-key-cache-key-checker-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.DummyHotKeyCacheKeyChecker 
+```
+
+## big key monitor and callback
+* independent switch, default false
+* support setting threshold of big key in different data struct
+* support setting callback, so you can dock to your monitoring system, default callback will print monitor info in log
+* sample yml conf:
+
+```yaml
+camellia-redis-proxy:
+  big-key-monitor-enable: true
+  big-key-monitor-config:
+    string-size-threshold: 10
+    hash-size-threshold: 10
+    zset-size-threshold: 10
+    list-size-threshold: 10
+    set-size-threshold: 10
+    big-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.bigkey.LoggingBigKeyMonitorCallback
 ```
 
 ## Console Server
@@ -759,7 +839,65 @@ a custom api, you can override it, and use different params to distinguish diffe
 in the sample code above, MyConsoleService autoWired CamelliaRedisProxyZkRegisterBoot,  
 if we call /online, then CamelliaRedisProxyZkRegisterBoot will register to zk,  
 if we call /offline, then CamelliaRedisProxyZkRegisterBoot will deregister to zk, and if proxy is not idle, will return http.code=500, so you can call /offline repeatedly until return 200.  
-after /offline return http.code=200, then you can shutdown proxy gracefully.  
+after /offline return http.code=200, then you can shutdown proxy gracefully.
+
+## sample of application.yml
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  monitor-enable: true
+  monitor-interval-seconds: 60
+  monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback
+  command-spend-time-monitor-enable: true
+  slow-command-threshold-millis-time: 1000
+  slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback
+  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor
+  hot-key-monitor-enable: true
+  hot-key-monitor-config:
+    check-millis: 1000
+    check-threshold: 10
+    check-cache-max-capacity: 1000
+    max-hot-key-count: 100
+    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback
+  hot-key-cache-enable: true
+  hot-key-cache-config:
+    counter-check-millis: 1000
+    counter-check-threshold: 5
+    counter-max-capacity: 1000
+    need-cache-null: true
+    cache-max-capacity: 1000
+    cache-expire-millis: 5000
+    hot-key-cache-stats-callback-interval-seconds: 20
+    hot-key-cache-stats-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.LoggingHotKeyCacheStatsCallback
+    hot-key-cache-key-checker-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.DummyHotKeyCacheKeyChecker
+  big-key-monitor-enable: true
+  big-key-monitor-config:
+    string-size-threshold: 10
+    hash-size-threshold: 10
+    zset-size-threshold: 10
+    list-size-threshold: 10
+    set-size-threshold: 10
+    big-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.bigkey.LoggingBigKeyMonitorCallback
+  transpond:
+    type: local
+    local:
+      resource: redis://@127.0.0.1:6379
+    redis-conf:
+      queue-type: disruptor
+      multi-write-mode: first_resource_only
+      shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc
+
+camellia-redis-zk-registry:
+  enable: false
+  zk-url: 127.0.0.1:2181
+  base-path: /camellia
+```  
 
 ## Performance
 redis proxy have 3 work mode(since v1.0.9)

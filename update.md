@@ -1,11 +1,12 @@
 # 1.0.11（2020/11/xx）
 ### add
-* camellia-redis-proxy support MonitorCallback
-* camellia-redis-proxy support SlowCommandCallback
-* camellia-redis-proxy support HotKeyCallback
-* camellia-redis-proxy support hot key cache in proxy(TODO)
-* camellia-redis-proxy support key/value custom transfer, you can use this feature in data encryption(TODO)
-* camellia-redis-proxy support multi-read-resources while rw_separate
+* camellia-redis-proxy support setting MonitorCallback
+* camellia-redis-proxy support monitor slow command, support setting SlowCommandMonitorCallback
+* camellia-redis-proxy support monitor hot key, support setting HotKeyMonitorCallback
+* camellia-redis-proxy support hot key local cache(only support GET command), support setting HotKeyCacheStatsCallback 
+* camellia-redis-proxy support monitor big key, support setting BigKeyMonitorCallback 
+* camellia-redis-proxy support key/value custom transfer, you can use this feature in data-encryption/data-compress(TODO)
+* camellia-redis-proxy support multi-read-resources while rw_separate(will random choose a redis to read)
 * CamelliaRedisTemplate support get original Jedis
 
 ### update
