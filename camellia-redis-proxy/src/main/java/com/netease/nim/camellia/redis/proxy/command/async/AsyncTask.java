@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunter;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCache;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -26,14 +27,17 @@ public class AsyncTask {
     private long startTime;
     private Reply reply;
     private HotKeyCache hotKeyCache;
+    private final BigKeyHunter bigKeyHunter;
 
-    public AsyncTask(AsyncTaskQueue taskQueue, Command command, CommandSpendTimeConfig commandSpendTimeConfig) {
+    public AsyncTask(AsyncTaskQueue taskQueue, Command command,
+                     CommandSpendTimeConfig commandSpendTimeConfig, BigKeyHunter bigKeyHunter) {
         this.command = command;
         this.taskQueue = taskQueue;
         this.commandSpendTimeConfig = commandSpendTimeConfig;
         if (this.commandSpendTimeConfig != null) {
             startTime = System.nanoTime();
         }
+        this.bigKeyHunter = bigKeyHunter;
     }
 
     public void setHotKeyCache(HotKeyCache hotKeyCache) {
@@ -45,10 +49,11 @@ public class AsyncTask {
             if (commandSpendTimeConfig != null) {
                 long spendNanoTime = System.nanoTime() - startTime;
                 if (!command.isBlocking() && spendNanoTime > commandSpendTimeConfig.getSlowCommandThresholdMillisTime() * 1000000L) {
-                    if (commandSpendTimeConfig.getSlowCommandCallback() != null) {
+                    if (commandSpendTimeConfig.getSlowCommandMonitorCallback() != null) {
                         try {
-                            commandSpendTimeConfig.getSlowCommandCallback().callback(taskQueue.getChannelInfo().getBid(),
-                                    taskQueue.getChannelInfo().getBgroup(), command, spendNanoTime / 1000000.0);
+                            CommandContext commandContext = new CommandContext(taskQueue.getChannelInfo().getBid(), taskQueue.getChannelInfo().getBgroup());
+                            commandSpendTimeConfig.getSlowCommandMonitorCallback().callback(commandContext, command, reply,
+                                    spendNanoTime / 1000000.0, commandSpendTimeConfig.getSlowCommandThresholdMillisTime());
                         } catch (Exception e) {
                             ErrorLogCollector.collect(AsyncTask.class, "SlowCommandCallback error", e);
                         }
@@ -69,6 +74,9 @@ public class AsyncTask {
                 }
             }
             this.reply = reply;
+            if (bigKeyHunter != null) {
+                bigKeyHunter.checkDownstream(command, reply);
+            }
             this.taskQueue.callback();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

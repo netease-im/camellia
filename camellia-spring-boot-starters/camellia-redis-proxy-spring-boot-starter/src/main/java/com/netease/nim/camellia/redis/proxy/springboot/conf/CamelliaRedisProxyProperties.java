@@ -36,6 +36,11 @@ public class CamelliaRedisProxyProperties {
     private int monitorIntervalSeconds = Constants.Server.monitorIntervalSeconds;
 
     /**
+     * 监控数据的回调
+     */
+    private String monitorCallbackClassName = Constants.Server.monitorCallbackClassName;
+
+    /**
      * 是否开启监控命令执行时间的监控，需要同时开启monitorEnable和commandSpendTimeMonitorEnable才能生效，see @RedisMonitor
      */
     private boolean commandSpendTimeMonitorEnable = Constants.Server.commandSpendTimeMonitorEnable;
@@ -48,7 +53,7 @@ public class CamelliaRedisProxyProperties {
     /**
      * 慢查询的回调方法
      */
-    private String slowCommandCallbackClassName = Constants.Server.slowCommandCallbackClassName;
+    private String slowCommandCallbackClassName = Constants.Server.slowCommandMonitorCallbackClassName;
 
     /**
      * 命令拦截器，see @CommandInterceptor
@@ -77,6 +82,16 @@ public class CamelliaRedisProxyProperties {
     private HotKeyCacheConfig hotKeyCacheConfig = new HotKeyCacheConfig();
 
     /**
+     * big-key监控开关
+     */
+    private boolean bigKeyMonitorEnable = Constants.Server.bigKeyMonitorEnable;
+
+    /**
+     * big-key监控配置
+     */
+    private BigKeyMonitorConfig bigKeyMonitorConfig = new BigKeyMonitorConfig();
+
+    /**
      * netty相关参数
      */
     private NettyProperties netty = new NettyProperties();
@@ -100,6 +115,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setConsolePort(int consolePort) {
         this.consolePort = consolePort;
+    }
+
+    public String getMonitorCallbackClassName() {
+        return monitorCallbackClassName;
+    }
+
+    public void setMonitorCallbackClassName(String monitorCallbackClassName) {
+        this.monitorCallbackClassName = monitorCallbackClassName;
     }
 
     public String getCustomCommandInvokerClassName() {
@@ -206,6 +229,22 @@ public class CamelliaRedisProxyProperties {
         this.hotKeyCacheConfig = hotKeyCacheConfig;
     }
 
+    public boolean isBigKeyMonitorEnable() {
+        return bigKeyMonitorEnable;
+    }
+
+    public void setBigKeyMonitorEnable(boolean bigKeyMonitorEnable) {
+        this.bigKeyMonitorEnable = bigKeyMonitorEnable;
+    }
+
+    public BigKeyMonitorConfig getBigKeyMonitorConfig() {
+        return bigKeyMonitorConfig;
+    }
+
+    public void setBigKeyMonitorConfig(BigKeyMonitorConfig bigKeyMonitorConfig) {
+        this.bigKeyMonitorConfig = bigKeyMonitorConfig;
+    }
+
     public static class HotKeyMonitorConfig {
 
         private long checkMillis = Constants.Server.hotKeyMonitorCheckMillis;
@@ -256,57 +295,57 @@ public class CamelliaRedisProxyProperties {
     }
 
     public static class HotKeyCacheConfig {
-        private long hotKeyCacheExpireMillis = Constants.Server.hotKeyCacheExpireMillis;
-        private long hotKeyCacheMaxCapacity = Constants.Server.hotKeyCacheMaxCapacity;
+        private long cacheExpireMillis = Constants.Server.hotKeyCacheExpireMillis;
+        private long cacheMaxCapacity = Constants.Server.hotKeyCacheMaxCapacity;
 
-        private long hotKeyCacheCounterCheckMillis = Constants.Server.hotKeyCacheCounterCheckMillis;
-        private long hotKeyCacheCounterMaxCapacity = Constants.Server.hotKeyCacheCounterMaxCapacity;
-        private long hotKeyCacheCounterCheckThreshold = Constants.Server.hotKeyCacheCounterCheckThreshold;
-        private boolean hotKeyCacheNeedCacheNull = Constants.Server.hotKeyCacheNeedCacheNull;
+        private long counterCheckMillis = Constants.Server.hotKeyCacheCounterCheckMillis;
+        private long counterMaxCapacity = Constants.Server.hotKeyCacheCounterMaxCapacity;
+        private long counterCheckThreshold = Constants.Server.hotKeyCacheCounterCheckThreshold;
+        private boolean needCacheNull = Constants.Server.hotKeyCacheNeedCacheNull;
 
         private String hotKeyCacheKeyCheckerClassName = Constants.Server.hotKeyCacheKeyCheckerClassName;
 
         private long hotKeyCacheStatsCallbackIntervalSeconds = Constants.Server.hotKeyCacheStatsCallbackIntervalSeconds;
         private String hotKeyCacheStatsCallbackClassName = Constants.Server.hotKeyCacheStatsCallbackClassName;
 
-        public long getHotKeyCacheExpireMillis() {
-            return hotKeyCacheExpireMillis;
+        public long getCacheExpireMillis() {
+            return cacheExpireMillis;
         }
 
-        public void setHotKeyCacheExpireMillis(long hotKeyCacheExpireMillis) {
-            this.hotKeyCacheExpireMillis = hotKeyCacheExpireMillis;
+        public void setCacheExpireMillis(long cacheExpireMillis) {
+            this.cacheExpireMillis = cacheExpireMillis;
         }
 
-        public long getHotKeyCacheMaxCapacity() {
-            return hotKeyCacheMaxCapacity;
+        public long getCacheMaxCapacity() {
+            return cacheMaxCapacity;
         }
 
-        public void setHotKeyCacheMaxCapacity(long hotKeyCacheMaxCapacity) {
-            this.hotKeyCacheMaxCapacity = hotKeyCacheMaxCapacity;
+        public void setCacheMaxCapacity(long cacheMaxCapacity) {
+            this.cacheMaxCapacity = cacheMaxCapacity;
         }
 
-        public long getHotKeyCacheCounterCheckMillis() {
-            return hotKeyCacheCounterCheckMillis;
+        public long getCounterCheckMillis() {
+            return counterCheckMillis;
         }
 
-        public void setHotKeyCacheCounterCheckMillis(long hotKeyCacheCounterCheckMillis) {
-            this.hotKeyCacheCounterCheckMillis = hotKeyCacheCounterCheckMillis;
+        public void setCounterCheckMillis(long counterCheckMillis) {
+            this.counterCheckMillis = counterCheckMillis;
         }
 
-        public long getHotKeyCacheCounterMaxCapacity() {
-            return hotKeyCacheCounterMaxCapacity;
+        public long getCounterMaxCapacity() {
+            return counterMaxCapacity;
         }
 
-        public void setHotKeyCacheCounterMaxCapacity(long hotKeyCacheCounterMaxCapacity) {
-            this.hotKeyCacheCounterMaxCapacity = hotKeyCacheCounterMaxCapacity;
+        public void setCounterMaxCapacity(long counterMaxCapacity) {
+            this.counterMaxCapacity = counterMaxCapacity;
         }
 
-        public long getHotKeyCacheCounterCheckThreshold() {
-            return hotKeyCacheCounterCheckThreshold;
+        public long getCounterCheckThreshold() {
+            return counterCheckThreshold;
         }
 
-        public void setHotKeyCacheCounterCheckThreshold(long hotKeyCacheCounterCheckThreshold) {
-            this.hotKeyCacheCounterCheckThreshold = hotKeyCacheCounterCheckThreshold;
+        public void setCounterCheckThreshold(long counterCheckThreshold) {
+            this.counterCheckThreshold = counterCheckThreshold;
         }
 
         public String getHotKeyCacheKeyCheckerClassName() {
@@ -333,12 +372,69 @@ public class CamelliaRedisProxyProperties {
             this.hotKeyCacheStatsCallbackClassName = hotKeyCacheStatsCallbackClassName;
         }
 
-        public boolean isHotKeyCacheNeedCacheNull() {
-            return hotKeyCacheNeedCacheNull;
+        public boolean isNeedCacheNull() {
+            return needCacheNull;
         }
 
-        public void setHotKeyCacheNeedCacheNull(boolean hotKeyCacheNeedCacheNull) {
-            this.hotKeyCacheNeedCacheNull = hotKeyCacheNeedCacheNull;
+        public void setNeedCacheNull(boolean needCacheNull) {
+            this.needCacheNull = needCacheNull;
+        }
+    }
+
+    public static class BigKeyMonitorConfig {
+        private int stringSizeThreshold = Constants.Server.bigKeyStringSizeThreshold;
+        private int listSizeThreshold = Constants.Server.bigKeyListSizeThreshold;
+        private int zsetSizeThreshold = Constants.Server.bigKeyZsetSizeThreshold;
+        private int hashSizeThreshold = Constants.Server.bigKeyHashSizeThreshold;
+        private int setSizeThreshold = Constants.Server.bigKeySetSizeThreshold;
+        private String bigKeyMonitorCallbackClassName = Constants.Server.bigKeyMonitorCallbackClassName;
+
+        public int getStringSizeThreshold() {
+            return stringSizeThreshold;
+        }
+
+        public void setStringSizeThreshold(int stringSizeThreshold) {
+            this.stringSizeThreshold = stringSizeThreshold;
+        }
+
+        public int getListSizeThreshold() {
+            return listSizeThreshold;
+        }
+
+        public void setListSizeThreshold(int listSizeThreshold) {
+            this.listSizeThreshold = listSizeThreshold;
+        }
+
+        public int getZsetSizeThreshold() {
+            return zsetSizeThreshold;
+        }
+
+        public void setZsetSizeThreshold(int zsetSizeThreshold) {
+            this.zsetSizeThreshold = zsetSizeThreshold;
+        }
+
+        public int getHashSizeThreshold() {
+            return hashSizeThreshold;
+        }
+
+        public void setHashSizeThreshold(int hashSizeThreshold) {
+            this.hashSizeThreshold = hashSizeThreshold;
+        }
+
+        public int getSetSizeThreshold() {
+            return setSizeThreshold;
+        }
+
+        public void setSetSizeThreshold(int setSizeThreshold) {
+            this.setSizeThreshold = setSizeThreshold;
+        }
+
+        public String getBigKeyMonitorCallbackClassName() {
+            return bigKeyMonitorCallbackClassName;
+        }
+
+        public void setBigKeyMonitorCallbackClassName(String bigKeyMonitorCallbackClassName) {
+            this.bigKeyMonitorCallbackClassName = bigKeyMonitorCallbackClassName;
         }
     }
 }

@@ -1,10 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.core.util.SysUtils;
+import com.netease.nim.camellia.redis.proxy.command.async.bigkey.LoggingBigKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.DummyHotKeyCacheKeyChecker;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.LoggingHotKeyCacheStatsCallback;
-import com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandCallback;
+import com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback;
 
 /**
@@ -20,7 +21,7 @@ public class Constants {
         public static final boolean commandSpendTimeMonitorEnable = false;
         public static final String monitorCallbackClassName = LoggingMonitorCallback.class.getName();
         public static final long slowCommandThresholdMillisTime = 2000L;
-        public static final String slowCommandCallbackClassName = LoggingSlowCommandCallback.class.getName();
+        public static final String slowCommandMonitorCallbackClassName = LoggingSlowCommandMonitorCallback.class.getName();
         public static final int monitorIntervalSeconds = 60;
 
         public static final int workThread = SysUtils.getCpuHalfNum();
@@ -49,6 +50,14 @@ public class Constants {
         public static final String hotKeyCacheKeyCheckerClassName = DummyHotKeyCacheKeyChecker.class.getName();
         public static final long hotKeyCacheStatsCallbackIntervalSeconds = 60;
         public static final String hotKeyCacheStatsCallbackClassName = LoggingHotKeyCacheStatsCallback.class.getName();
+
+        public static final boolean bigKeyMonitorEnable = false;
+        public static final int bigKeyStringSizeThreshold = 1024 * 1024 * 2;
+        public static final int bigKeyListSizeThreshold = 10000;
+        public static final int bigKeyZsetSizeThreshold = 10000;
+        public static final int bigKeyHashSizeThreshold = 10000;
+        public static final int bigKeySetSizeThreshold = 10000;
+        public static final String bigKeyMonitorCallbackClassName = LoggingBigKeyMonitorCallback.class.getName();
     }
 
     public static class Transpond {

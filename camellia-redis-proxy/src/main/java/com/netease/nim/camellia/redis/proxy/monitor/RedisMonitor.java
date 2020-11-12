@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
@@ -46,8 +45,7 @@ public class RedisMonitor {
     }
 
     public static void init(int seconds, boolean commandSpendTimeMonitorEnable, MonitorCallback monitorCallback) {
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("monitor"))
-                .scheduleAtFixedRate(RedisMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
+        ScheduledExecutorUtils.scheduleAtFixedRate(RedisMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
         RedisMonitor.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
         if (commandSpendTimeMonitorEnable) {
             new Thread(RedisMonitor::calcCommandSpendTime, "command-spend-time-calc").start();

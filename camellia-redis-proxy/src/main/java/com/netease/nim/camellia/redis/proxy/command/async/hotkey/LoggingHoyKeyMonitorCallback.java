@@ -1,8 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.command.async.hotkey;
 
+import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.util.SafeEncoder;
 
 import java.util.List;
 
@@ -15,12 +16,12 @@ public class LoggingHoyKeyMonitorCallback implements HotKeyMonitorCallback {
     private static final Logger logger = LoggerFactory.getLogger("hotKeyStats");
 
     @Override
-    public void callback(List<HotKeyInfo> hotKeys, HotKeyConfig hotKeyConfig) {
+    public void callback(CommandContext commandContext, List<HotKeyInfo> hotKeys, HotKeyConfig hotKeyConfig) {
         try {
-            logger.warn("====hot-key====");
+            logger.warn("====hot-key-stats====");
             for (HotKeyInfo hotKey : hotKeys) {
-                logger.warn("hot-key, key = {}, count = {}, checkPeriodMillis = {}",
-                        SafeEncoder.encode(hotKey.getKey()), hotKey.getCount(), hotKeyConfig.getCheckMillis());
+                logger.warn("hot-key, key = {}, count = {}, checkMillis = {}, checkThreshold = {}, command.context = {}",
+                        Utils.bytesToString(hotKey.getKey()), hotKey.getCount(), hotKeyConfig.getCheckMillis(), hotKeyConfig.getCheckThreshold(), commandContext);
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

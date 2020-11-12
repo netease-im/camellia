@@ -18,7 +18,7 @@ public class CustomCommandInterceptor implements CommandInterceptor {
                 return KEY_TOO_LONG;
             }
             byte[] value = command.getObjects()[2];
-            if (value.length > 1024 * 1024) {
+            if (value.length > 1024 * 1024 * 5) {
                 return VALUE_TOO_LONG;
             }
         }

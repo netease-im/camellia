@@ -7,19 +7,19 @@ package com.netease.nim.camellia.redis.proxy.command.async.spendtime;
 public class CommandSpendTimeConfig {
 
     private final long slowCommandThresholdMillisTime;
-    private final SlowCommandCallback slowCommandCallback;
+    private final SlowCommandMonitorCallback slowCommandMonitorCallback;
 
     public CommandSpendTimeConfig(long slowCommandThresholdMillisTime,
-                                  SlowCommandCallback slowCommandCallback) {
+                                  SlowCommandMonitorCallback slowCommandMonitorCallback) {
         this.slowCommandThresholdMillisTime = slowCommandThresholdMillisTime;
-        this.slowCommandCallback = slowCommandCallback;
+        this.slowCommandMonitorCallback = slowCommandMonitorCallback;
     }
 
     public long getSlowCommandThresholdMillisTime() {
         return slowCommandThresholdMillisTime;
     }
 
-    public SlowCommandCallback getSlowCommandCallback() {
-        return slowCommandCallback;
+    public SlowCommandMonitorCallback getSlowCommandMonitorCallback() {
+        return slowCommandMonitorCallback;
     }
 }

@@ -20,7 +20,7 @@ public class PubSubUtils {
             futures.add(future);
         }
         for (int j=0; j<16; j++) {
-            AsyncTask task = new AsyncTask(asyncTaskQueue, command, null);
+            AsyncTask task = new AsyncTask(asyncTaskQueue, command, null, null);
             asyncTaskQueue.add(task);
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
             completableFuture.thenAccept(reply -> {

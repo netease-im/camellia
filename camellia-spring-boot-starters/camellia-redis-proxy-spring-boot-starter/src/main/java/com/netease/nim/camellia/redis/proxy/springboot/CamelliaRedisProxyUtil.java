@@ -27,6 +27,7 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setPassword(properties.getPassword());
         serverProperties.setMonitorEnable(properties.isMonitorEnable());
         serverProperties.setMonitorIntervalSeconds(properties.getMonitorIntervalSeconds());
+        serverProperties.setMonitorCallbackClassName(properties.getMonitorCallbackClassName());
         serverProperties.setCommandSpendTimeMonitorEnable(properties.isCommandSpendTimeMonitorEnable());
         serverProperties.setSlowCommandThresholdMillisTime(properties.getSlowCommandThresholdMillisTime());
         serverProperties.setCommandInterceptorClassName(properties.getCommandInterceptorClassName());
@@ -57,17 +58,28 @@ public class CamelliaRedisProxyUtil {
 
         CamelliaRedisProxyProperties.HotKeyCacheConfig hotKeyCacheConfig = properties.getHotKeyCacheConfig();
         CamelliaServerProperties.HotKeyCacheConfig cacheConfig = new CamelliaServerProperties.HotKeyCacheConfig();
-        cacheConfig.setHotKeyCacheCounterCheckThreshold(hotKeyCacheConfig.getHotKeyCacheCounterCheckThreshold());
-        cacheConfig.setHotKeyCacheCounterCheckMillis(hotKeyCacheConfig.getHotKeyCacheCounterCheckMillis());
-        cacheConfig.setHotKeyCacheCounterMaxCapacity(hotKeyCacheConfig.getHotKeyCacheCounterMaxCapacity());
-        cacheConfig.setHotKeyCacheExpireMillis(hotKeyCacheConfig.getHotKeyCacheExpireMillis());
-        cacheConfig.setHotKeyCacheKeyCheckerClassName(hotKeyCacheConfig.getHotKeyCacheKeyCheckerClassName());
-        cacheConfig.setHotKeyCacheMaxCapacity(hotKeyCacheConfig.getHotKeyCacheMaxCapacity());
+        cacheConfig.setCounterCheckThreshold(hotKeyCacheConfig.getCounterCheckThreshold());
+        cacheConfig.setCounterCheckMillis(hotKeyCacheConfig.getCounterCheckMillis());
+        cacheConfig.setCounterMaxCapacity(hotKeyCacheConfig.getCounterMaxCapacity());
+        cacheConfig.setCacheExpireMillis(hotKeyCacheConfig.getCacheExpireMillis());
+        cacheConfig.setCacheKeyCheckerClassName(hotKeyCacheConfig.getHotKeyCacheKeyCheckerClassName());
+        cacheConfig.setCacheMaxCapacity(hotKeyCacheConfig.getCacheMaxCapacity());
         cacheConfig.setHotKeyCacheStatsCallbackClassName(hotKeyCacheConfig.getHotKeyCacheStatsCallbackClassName());
         cacheConfig.setHotKeyCacheStatsCallbackIntervalSeconds(hotKeyCacheConfig.getHotKeyCacheStatsCallbackIntervalSeconds());
-        cacheConfig.setHotKeyCacheNeedCacheNull(hotKeyCacheConfig.isHotKeyCacheNeedCacheNull());
+        cacheConfig.setNeedCacheNull(hotKeyCacheConfig.isNeedCacheNull());
         serverProperties.setHotKeyCacheConfig(cacheConfig);
         serverProperties.setHotKeyCacheEnable(properties.isHotKeyCacheEnable());
+
+        CamelliaRedisProxyProperties.BigKeyMonitorConfig bigKeyMonitorConfig = properties.getBigKeyMonitorConfig();
+        CamelliaServerProperties.BigKeyMonitorConfig config1 = new CamelliaServerProperties.BigKeyMonitorConfig();
+        config1.setBigKeyMonitorCallbackClassName(bigKeyMonitorConfig.getBigKeyMonitorCallbackClassName());
+        config1.setHashSizeThreshold(bigKeyMonitorConfig.getHashSizeThreshold());
+        config1.setListSizeThreshold(bigKeyMonitorConfig.getListSizeThreshold());
+        config1.setZsetSizeThreshold(bigKeyMonitorConfig.getZsetSizeThreshold());
+        config1.setSetSizeThreshold(bigKeyMonitorConfig.getSetSizeThreshold());
+        config1.setStringSizeThreshold(bigKeyMonitorConfig.getStringSizeThreshold());
+        serverProperties.setBigKeyMonitorConfig(config1);
+        serverProperties.setBigKeyMonitorEnable(properties.isBigKeyMonitorEnable());
         return serverProperties;
     }
 

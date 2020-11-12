@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
+import com.netease.nim.camellia.redis.proxy.command.async.bigkey.CommandBigKeyMonitorConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.CommandHotKeyMonitorConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.CommandHotKeyCacheConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
@@ -14,15 +15,17 @@ public class CommandInvokeConfig {
     private final CommandInterceptor commandInterceptor;
     private final int commandPipelineFlushThreshold;
     private final CommandHotKeyCacheConfig commandHotKeyCacheConfig;
+    private final CommandBigKeyMonitorConfig commandBigKeyMonitorConfig;
 
     public CommandInvokeConfig(int commandPipelineFlushThreshold, CommandInterceptor commandInterceptor,
                                CommandSpendTimeConfig commandSpendTimeConfig, CommandHotKeyMonitorConfig commandHotKeyMonitorConfig,
-                               CommandHotKeyCacheConfig commandHotKeyCacheConfig) {
+                               CommandHotKeyCacheConfig commandHotKeyCacheConfig, CommandBigKeyMonitorConfig commandBigKeyMonitorConfig) {
         this.commandSpendTimeConfig = commandSpendTimeConfig;
         this.commandHotKeyMonitorConfig = commandHotKeyMonitorConfig;
         this.commandInterceptor = commandInterceptor;
         this.commandPipelineFlushThreshold = commandPipelineFlushThreshold;
         this.commandHotKeyCacheConfig = commandHotKeyCacheConfig;
+        this.commandBigKeyMonitorConfig = commandBigKeyMonitorConfig;
     }
 
     public CommandSpendTimeConfig getCommandSpendTimeConfig() {
@@ -43,5 +46,9 @@ public class CommandInvokeConfig {
 
     public CommandHotKeyCacheConfig getCommandHotKeyCacheConfig() {
         return commandHotKeyCacheConfig;
+    }
+
+    public CommandBigKeyMonitorConfig getCommandBigKeyMonitorConfig() {
+        return commandBigKeyMonitorConfig;
     }
 }

@@ -77,6 +77,17 @@ public class Command {
         this.channelInfo = channelInfo;
     }
 
+    public String toParamsStr() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("[");
+        for (byte[] object : objects) {
+            builder.append(Utils.bytesToString(object)).append(" ");
+        }
+        builder.deleteCharAt(builder.length() - 1);
+        builder.append("]");
+        return builder.toString();
+    }
+
     public void fillParameters(Class<?>[] parameterTypes, Object[] parameters) {
         int position = 0;
         for (Class<?> type : parameterTypes) {

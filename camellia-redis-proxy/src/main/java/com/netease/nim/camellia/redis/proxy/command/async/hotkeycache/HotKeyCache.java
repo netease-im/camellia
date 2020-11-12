@@ -3,8 +3,9 @@ package com.netease.nim.camellia.redis.proxy.command.async.hotkeycache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
+import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +26,7 @@ public class HotKeyCache {
 
     private static final Logger logger = LoggerFactory.getLogger(HotKeyCache.class);
 
-    private static final ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("hot-key-cache-stats"));
-
+    private final CommandContext commandContext;
     private final Object lockObj = new Object();
     private final ConcurrentLinkedHashMap<BytesKey, Object> refreshLockMap;
     private final ConcurrentLinkedHashMap<BytesKey, Long> lastRefreshTimeMap;
@@ -44,22 +44,23 @@ public class HotKeyCache {
 
     private ConcurrentHashMap<BytesKey, AtomicLong> statsMap = new ConcurrentHashMap<>();
 
-    public HotKeyCache(CommandHotKeyCacheConfig commandHotKeyCacheConfig) {
+    public HotKeyCache(CommandContext commandContext, CommandHotKeyCacheConfig commandHotKeyCacheConfig) {
+        this.commandContext = commandContext;
         this.keyChecker = commandHotKeyCacheConfig.getHotKeyCacheKeyChecker();
         this.callback = commandHotKeyCacheConfig.getHotKeyCacheStatsCallback();
-        this.cacheExpireMillis = commandHotKeyCacheConfig.getHotKeyCacheExpireMillis();
-        this.hotKeyCheckThreshold = commandHotKeyCacheConfig.getHotKeyCacheCounterCheckThreshold();
-        this.cacheNull = commandHotKeyCacheConfig.isHotKeyCacheNeedCacheNull();
+        this.cacheExpireMillis = commandHotKeyCacheConfig.getCacheExpireMillis();
+        this.hotKeyCheckThreshold = commandHotKeyCacheConfig.getCounterCheckThreshold();
+        this.cacheNull = commandHotKeyCacheConfig.isNeedCacheNull();
         this.cache = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofMillis(cacheExpireMillis))
-                .maximumSize(commandHotKeyCacheConfig.getHotKeyCacheMaxCapacity())
+                .maximumSize(commandHotKeyCacheConfig.getCacheMaxCapacity())
                 .build();
         this.hotKeyCounter = Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofMillis(commandHotKeyCacheConfig.getHotKeyCacheCounterCheckMillis()))
-                .maximumSize(commandHotKeyCacheConfig.getHotKeyCacheCounterMaxCapacity())
+                .expireAfterWrite(Duration.ofMillis(commandHotKeyCacheConfig.getCounterCheckMillis()))
+                .maximumSize(commandHotKeyCacheConfig.getCounterMaxCapacity())
                 .build();
-        int refreshMapMaxCapacity = (int) Math.max(commandHotKeyCacheConfig.getHotKeyCacheMaxCapacity(),
-                commandHotKeyCacheConfig.getHotKeyCacheCounterMaxCapacity());
+        int refreshMapMaxCapacity = (int) Math.max(commandHotKeyCacheConfig.getCacheMaxCapacity(),
+                commandHotKeyCacheConfig.getCounterMaxCapacity());
         if (refreshMapMaxCapacity < 0) {
             refreshMapMaxCapacity = 1024;
         }
@@ -70,7 +71,7 @@ public class HotKeyCache {
 
         if (callback != null) {
             long callbackIntervalSeconds = commandHotKeyCacheConfig.getHotKeyCacheStatsCallbackIntervalSeconds();
-            scheduled.scheduleAtFixedRate(() -> {
+            ScheduledExecutorUtils.scheduleAtFixedRate(() -> {
                 try {
                     if (HotKeyCache.this.statsMap.isEmpty()) return;
                     ConcurrentHashMap<BytesKey, AtomicLong> statsMap = HotKeyCache.this.statsMap;
@@ -86,7 +87,7 @@ public class HotKeyCache {
                     if (!list.isEmpty()) {
                         HotKeyCacheStats hotKeyCacheStats = new HotKeyCacheStats();
                         hotKeyCacheStats.setStatsList(list);
-                        callback.callback(hotKeyCacheStats);
+                        callback.callback(commandContext, hotKeyCacheStats, commandHotKeyCacheConfig);
                     }
                 } catch (Exception e) {
                     logger.error("hot key cache stats callback error", e);
@@ -96,10 +97,10 @@ public class HotKeyCache {
     }
 
     public HotValue getCache(byte[] key) {
-        BytesKey bytesKey = new BytesKey(key);
-        if (keyChecker != null && !keyChecker.needCache(bytesKey.getKey())) {
+        if (keyChecker != null && !keyChecker.needCache(commandContext, key)) {
             return null;
         }
+        BytesKey bytesKey = new BytesKey(key);
         AtomicLong count = this.hotKeyCounter.get(bytesKey, k -> new AtomicLong());
         if (count != null) {
             count.incrementAndGet();
@@ -131,10 +132,10 @@ public class HotKeyCache {
         if (value == null && !cacheNull) {
             return;
         }
-        BytesKey bytesKey = new BytesKey(key);
-        if (keyChecker != null && !keyChecker.needCache(bytesKey.getKey())) {
+        if (keyChecker != null && !keyChecker.needCache(commandContext, key)) {
             return;
         }
+        BytesKey bytesKey = new BytesKey(key);
         AtomicLong count = this.hotKeyCounter.getIfPresent(bytesKey);
         if (count == null || count.get() < hotKeyCheckThreshold) {
             return;

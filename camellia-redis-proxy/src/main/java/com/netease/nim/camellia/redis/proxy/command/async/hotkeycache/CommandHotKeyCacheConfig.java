@@ -9,13 +9,13 @@ import com.netease.nim.camellia.redis.proxy.conf.Constants;
  */
 public class CommandHotKeyCacheConfig {
 
-    private long hotKeyCacheExpireMillis = Constants.Server.hotKeyCacheExpireMillis;
-    private long hotKeyCacheMaxCapacity = Constants.Server.hotKeyCacheMaxCapacity;
+    private long cacheExpireMillis = Constants.Server.hotKeyCacheExpireMillis;
+    private long cacheMaxCapacity = Constants.Server.hotKeyCacheMaxCapacity;
 
-    private long hotKeyCacheCounterCheckMillis = Constants.Server.hotKeyCacheCounterCheckMillis;
-    private long hotKeyCacheCounterMaxCapacity = Constants.Server.hotKeyCacheCounterMaxCapacity;
-    private long hotKeyCacheCounterCheckThreshold = Constants.Server.hotKeyCacheCounterCheckThreshold;
-    private boolean hotKeyCacheNeedCacheNull = Constants.Server.hotKeyCacheNeedCacheNull;
+    private long counterCheckMillis = Constants.Server.hotKeyCacheCounterCheckMillis;
+    private long counterMaxCapacity = Constants.Server.hotKeyCacheCounterMaxCapacity;
+    private long counterCheckThreshold = Constants.Server.hotKeyCacheCounterCheckThreshold;
+    private boolean needCacheNull = Constants.Server.hotKeyCacheNeedCacheNull;
 
     private HotKeyCacheKeyChecker hotKeyCacheKeyChecker;
 
@@ -38,44 +38,44 @@ public class CommandHotKeyCacheConfig {
         this.hotKeyCacheStatsCallback = hotKeyCacheStatsCallback;
     }
 
-    public long getHotKeyCacheExpireMillis() {
-        return hotKeyCacheExpireMillis;
+    public long getCacheExpireMillis() {
+        return cacheExpireMillis;
     }
 
-    public void setHotKeyCacheExpireMillis(long hotKeyCacheExpireMillis) {
-        this.hotKeyCacheExpireMillis = hotKeyCacheExpireMillis;
+    public void setCacheExpireMillis(long cacheExpireMillis) {
+        this.cacheExpireMillis = cacheExpireMillis;
     }
 
-    public long getHotKeyCacheMaxCapacity() {
-        return hotKeyCacheMaxCapacity;
+    public long getCacheMaxCapacity() {
+        return cacheMaxCapacity;
     }
 
-    public void setHotKeyCacheMaxCapacity(long hotKeyCacheMaxCapacity) {
-        this.hotKeyCacheMaxCapacity = hotKeyCacheMaxCapacity;
+    public void setCacheMaxCapacity(long cacheMaxCapacity) {
+        this.cacheMaxCapacity = cacheMaxCapacity;
     }
 
-    public long getHotKeyCacheCounterCheckMillis() {
-        return hotKeyCacheCounterCheckMillis;
+    public long getCounterCheckMillis() {
+        return counterCheckMillis;
     }
 
-    public void setHotKeyCacheCounterCheckMillis(long hotKeyCacheCounterCheckMillis) {
-        this.hotKeyCacheCounterCheckMillis = hotKeyCacheCounterCheckMillis;
+    public void setCounterCheckMillis(long counterCheckMillis) {
+        this.counterCheckMillis = counterCheckMillis;
     }
 
-    public long getHotKeyCacheCounterMaxCapacity() {
-        return hotKeyCacheCounterMaxCapacity;
+    public long getCounterMaxCapacity() {
+        return counterMaxCapacity;
     }
 
-    public void setHotKeyCacheCounterMaxCapacity(long hotKeyCacheCounterMaxCapacity) {
-        this.hotKeyCacheCounterMaxCapacity = hotKeyCacheCounterMaxCapacity;
+    public void setCounterMaxCapacity(long counterMaxCapacity) {
+        this.counterMaxCapacity = counterMaxCapacity;
     }
 
-    public long getHotKeyCacheCounterCheckThreshold() {
-        return hotKeyCacheCounterCheckThreshold;
+    public long getCounterCheckThreshold() {
+        return counterCheckThreshold;
     }
 
-    public void setHotKeyCacheCounterCheckThreshold(long hotKeyCacheCounterCheckThreshold) {
-        this.hotKeyCacheCounterCheckThreshold = hotKeyCacheCounterCheckThreshold;
+    public void setCounterCheckThreshold(long counterCheckThreshold) {
+        this.counterCheckThreshold = counterCheckThreshold;
     }
 
     public HotKeyCacheKeyChecker getHotKeyCacheKeyChecker() {
@@ -86,11 +86,11 @@ public class CommandHotKeyCacheConfig {
         this.hotKeyCacheKeyChecker = hotKeyCacheKeyChecker;
     }
 
-    public boolean isHotKeyCacheNeedCacheNull() {
-        return hotKeyCacheNeedCacheNull;
+    public boolean isNeedCacheNull() {
+        return needCacheNull;
     }
 
-    public void setHotKeyCacheNeedCacheNull(boolean hotKeyCacheNeedCacheNull) {
-        this.hotKeyCacheNeedCacheNull = hotKeyCacheNeedCacheNull;
+    public void setNeedCacheNull(boolean needCacheNull) {
+        this.needCacheNull = needCacheNull;
     }
 }

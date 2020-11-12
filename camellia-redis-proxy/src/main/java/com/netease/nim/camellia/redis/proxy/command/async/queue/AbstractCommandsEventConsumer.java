@@ -2,6 +2,8 @@ package com.netease.nim.camellia.redis.proxy.command.async.queue;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.*;
+import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunter;
+import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunterManager;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunter;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterManager;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCache;
@@ -70,6 +72,7 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
     private final CommandInterceptor commandInterceptor;
     private HotKeyHunterManager hotKeyHunterManager;
     private HotKeyCacheManager hotKeyCacheManager;
+    private BigKeyHunterManager bigKeyHunterManager;
     private final int commandPipelineFlushThreshold;
     private boolean eventLoopSetSuccess = false;
 
@@ -83,6 +86,9 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
         }
         if (commandInvokeConfig.getCommandHotKeyCacheConfig() != null) {
             hotKeyCacheManager = new HotKeyCacheManager(commandInvokeConfig.getCommandHotKeyCacheConfig());
+        }
+        if (commandInvokeConfig.getCommandBigKeyMonitorConfig() != null) {
+            bigKeyHunterManager = new BigKeyHunterManager(commandInvokeConfig.getCommandBigKeyMonitorConfig());
         }
     }
 
@@ -123,7 +129,11 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
                         }
                     }
                 }
-                AsyncTask task = new AsyncTask(taskQueue, command, commandSpendTimeConfig);
+                BigKeyHunter bigKeyHunter = null;
+                if (bigKeyHunterManager != null) {
+                    bigKeyHunter = bigKeyHunterManager.get(channelInfo.getBid(), channelInfo.getBgroup());
+                }
+                AsyncTask task = new AsyncTask(taskQueue, command, commandSpendTimeConfig, bigKeyHunter);
                 boolean add = taskQueue.add(task);
                 if (!add) {
                     taskQueue.clear();
@@ -165,6 +175,11 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
                         }
                     }
                 }
+
+                if (bigKeyHunter != null) {
+                    bigKeyHunter.checkUpstream(command);
+                }
+
                 tasks.add(task);
             }
 

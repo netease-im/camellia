@@ -2,8 +2,9 @@ package com.netease.nim.camellia.redis.proxy.command.async.hotkey;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
+import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,20 +21,20 @@ public class HotKeyHunter {
 
     private static final Logger logger = LoggerFactory.getLogger(HotKeyHunter.class);
 
-    private static final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(HotKeyHunter.class));
-
     private final HotKeyConfig hotKeyConfig;
     private final HotKeyMonitorCallback callback;
     private final Cache<BytesKey, AtomicLong> cache;
+    private final CommandContext commandContext;
 
-    public HotKeyHunter(HotKeyConfig hotKeyConfig, HotKeyMonitorCallback callback) {
+    public HotKeyHunter(CommandContext commandContext, HotKeyConfig hotKeyConfig, HotKeyMonitorCallback callback) {
+        this.commandContext = commandContext;
         this.hotKeyConfig = hotKeyConfig;
         this.callback = callback;
         this.cache = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofMillis(hotKeyConfig.getCheckMillis()))
                 .maximumSize(hotKeyConfig.getCheckCacheMaxCapacity())
                 .build();
-        scheduledExecutor.scheduleAtFixedRate(this::callback, hotKeyConfig.getCheckMillis(),
+        ScheduledExecutorUtils.scheduleAtFixedRate(this::callback, hotKeyConfig.getCheckMillis(),
                         hotKeyConfig.getCheckMillis(), TimeUnit.MILLISECONDS);
     }
 
@@ -59,6 +60,7 @@ public class HotKeyHunter {
     private void callback() {
         try {
             ConcurrentMap<BytesKey, AtomicLong> map = cache.asMap();
+            if (map.isEmpty()) return;
             TreeSet<SortedBytesKey> treeSet = new TreeSet<>();
             for (Map.Entry<BytesKey, AtomicLong> entry : map.entrySet()) {
                 long count = entry.getValue().get();
@@ -76,7 +78,7 @@ public class HotKeyHunter {
                 }
             }
             if (!hotKeys.isEmpty()) {
-                callback.callback(hotKeys, hotKeyConfig);
+                callback.callback(commandContext, hotKeys, hotKeyConfig);
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
