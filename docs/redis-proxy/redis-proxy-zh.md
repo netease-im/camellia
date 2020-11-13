@@ -273,7 +273,44 @@ camellia-redis-proxy:
 上面的配置表示：
 所有的写命令（如setex/zadd/hset）代理到redis://passwd1@127.0.0.1:6379和redis://passwd2@127.0.0.1:6380（即双写），特别的，客户端的回包是看的配置的第一个写地址代理到redis://passwd1@127.0.0.1:6379
 所有的读命令（如get/zrange/mget）代理到redis://passwd1@127.0.0.1:6379.
-### 6) 混合配置分片、双写、读写（需要单独的json文件）
+### 6）配置多读（需要单独的json文件）
+* application.yml  
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      type: complex
+      json-file: resource-table.json
+```
+* resource-table.json  
+```json
+{
+  "type": "simple",
+  "operation": {
+    "read": {
+      "resources": [
+        "redis://password1@127.0.0.1:6379",
+        "redis://password2@127.0.0.1:6380"
+      ],
+      "type": "random"
+    },
+    "type": "rw_separate",
+    "write": "redis://passwd1@127.0.0.1:6379"
+  }
+}
+```
+上面的配置表示：
+所有的写命令（如setex/zadd/hset）代理到redis://passwd1@127.0.0.1:6379
+所有的读命令（如get/zrange/mget）随机代理到redis://passwd1@127.0.0.1:6379或者redis://password2@127.0.0.1:6380
+### 7) 混合配置分片、双写、多读（需要单独的json文件）
 * application.yml  
 ```yaml
 server:
@@ -307,14 +344,31 @@ camellia-redis-proxy:
           "type": "multi"
         }
       },
+      "5": {
+        "read": {
+          "resources": [
+            "redis://password1@127.0.0.1:6379",
+            "redis://password2@127.0.0.1:6380"
+          ],
+          "type": "random"
+        },
+        "type": "rw_separate",
+        "write": {
+          "resources": [
+            "redis://password1@127.0.0.1:6379",
+            "redis://password2@127.0.0.1:6380"
+          ],
+          "type": "multi"
+        }
+      },
       "0-2": "redis://password1@127.0.0.1:6379",
-      "1-3-5": "redis://password2@127.0.0.1:6380"
+      "1-3": "redis://password2@127.0.0.1:6380"
     },
     "bucketSize": 6
   }
 }
 ```
-上面的配置表示key被话费为6个分片，其中分片4配置了读写分离和双写的逻辑
+上面的配置表示key被话费为6个分片，其中分片4配置了读写分离和双写的逻辑，分片5设置了读写分离和双写多读的逻辑
 ### 7) 配置为从camellia-dashboard读取  
 * application.yml  
 ```yaml

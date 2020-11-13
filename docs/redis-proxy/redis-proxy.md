@@ -274,8 +274,45 @@ camellia-redis-proxy:
 ```
 it means:  
 all the write-commands(like setex/zadd/hset and so on) will route to both redis://passwd1@127.0.0.1:6379 and redis://passwd2@127.0.0.1:6380, specially redis-cli wll get the command reply from first config write resource=redis://passwd1@127.0.0.1:6379;   
-all the read-commands(like get/zrange/mget and so on) will route to redis://passwd1@127.0.0.1:6379.  
-### 6) proxy with shading/read-write-separation/double-write(need two files)  
+all the read-commands(like get/zrange/mget and so on) will route to redis://passwd1@127.0.0.1:6379.
+### 6）route with multi read(need two files)  
+* application.yml  
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      type: complex
+      json-file: resource-table.json
+```
+* resource-table.json  
+```json
+{
+  "type": "simple",
+  "operation": {
+    "read": {
+      "resources": [
+        "redis://password1@127.0.0.1:6379",
+        "redis://password2@127.0.0.1:6380"
+      ],
+      "type": "random"
+    },
+    "type": "rw_separate",
+    "write": "redis://passwd1@127.0.0.1:6379"
+  }
+}
+```
+it means:  
+all the write-commands(like setex/zadd/hset and so on) will route to redis://passwd1@127.0.0.1:6379   
+all the read-commands(like get/zrange/mget and so on) will route to redis://passwd1@127.0.0.1:6379 or redis://password2@127.0.0.1:6380 in random
+### 7) proxy with shading/read-write-separation/double-write/multi-read(need two files)  
 * application.yml  
 ```yaml
 server:
@@ -309,14 +346,31 @@ camellia-redis-proxy:
           "type": "multi"
         }
       },
+      "5": {
+        "read": {
+          "resources": [
+            "redis://password1@127.0.0.1:6379",
+            "redis://password2@127.0.0.1:6380"
+          ],
+          "type": "random"
+        },
+        "type": "rw_separate",
+        "write": {
+          "resources": [
+            "redis://password1@127.0.0.1:6379",
+            "redis://password2@127.0.0.1:6380"
+          ],
+          "type": "multi"
+        }
+      },
       "0-2": "redis://password1@127.0.0.1:6379",
-      "1-3-5": "redis://password2@127.0.0.1:6380"
+      "1-3": "redis://password2@127.0.0.1:6380"
     },
     "bucketSize": 6
   }
 }
 ```
-it means keys shading in 6 buckets, and bucket.index=4 is read-write-separation and double-write.
+it means keys shading in 6 buckets, and bucket.index=4 is read-write-separation and double-write, bucket.index=5 is read-write-separation and double-write/multi-read 
 ### 7) config from camellia-dashboard  
 * application.yml  
 ```yaml
