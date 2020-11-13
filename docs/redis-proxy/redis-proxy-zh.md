@@ -270,9 +270,9 @@ camellia-redis-proxy:
   }
 }
 ```
-上面的配置表示：
-所有的写命令（如setex/zadd/hset）代理到redis://passwd1@127.0.0.1:6379和redis://passwd2@127.0.0.1:6380（即双写），特别的，客户端的回包是看的配置的第一个写地址代理到redis://passwd1@127.0.0.1:6379
-所有的读命令（如get/zrange/mget）代理到redis://passwd1@127.0.0.1:6379.
+上面的配置表示：  
+所有的写命令（如setex/zadd/hset）代理到redis://passwd1@127.0.0.1:6379和redis://passwd2@127.0.0.1:6380（即双写），特别的，客户端的回包是看的配置的第一个写地址  
+所有的读命令（如get/zrange/mget）代理到redis://passwd1@127.0.0.1:6379.  
 ### 6）配置多读（需要单独的json文件）
 * application.yml  
 ```yaml
@@ -307,9 +307,9 @@ camellia-redis-proxy:
   }
 }
 ```
-上面的配置表示：
-所有的写命令（如setex/zadd/hset）代理到redis://passwd1@127.0.0.1:6379
-所有的读命令（如get/zrange/mget）随机代理到redis://passwd1@127.0.0.1:6379或者redis://password2@127.0.0.1:6380
+上面的配置表示：  
+所有的写命令（如setex/zadd/hset）代理到redis://passwd1@127.0.0.1:6379  
+所有的读命令（如get/zrange/mget）随机代理到redis://passwd1@127.0.0.1:6379或者redis://password2@127.0.0.1:6380  
 ### 7) 混合配置分片、双写、多读（需要单独的json文件）
 * application.yml  
 ```yaml
