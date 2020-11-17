@@ -381,4 +381,9 @@ public class RedisHBaseConfiguration {
     public static int zsetMaxMemberSize() {
         return ConfigurationUtil.getInteger(conf, "zset.max.member.size", 2000);
     }
+
+    //zset缓存重建时是否校验ttl
+    public static boolean zetRebuildCheckExpire() {
+        return ConfigurationUtil.getBoolean(conf, "zset.rebuild.check.expire", true);
+    }
 }

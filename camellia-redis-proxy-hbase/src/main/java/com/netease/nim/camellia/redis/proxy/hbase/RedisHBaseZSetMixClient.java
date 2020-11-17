@@ -175,7 +175,7 @@ public class RedisHBaseZSetMixClient {
                             RedisHBaseConfiguration.hbaseGetFreqThreshold(), RedisHBaseConfiguration.hbaseGetFreqMillis());
                     if (pass) {
                         if (FreqUtil.hbaseGetStandaloneFreqOfWrite()) {
-                            checkZSetExists(key);
+                            checkZSetExists(key, true);
                         } else {
                             logger.warn("zadd hbaseGetStandaloneFreq fail, will submit cache rebuild delay task, key = {}", SafeEncoder.encode(key));
                             submitCacheRebuildDelayTask(key);
@@ -1067,7 +1067,11 @@ public class RedisHBaseZSetMixClient {
                     }
                 }
                 if (standaloneFreqPass) {
-                    result = checkZSetExists(key);
+                    if (forceRebuild) {
+                        result = checkZSetExists(key, false);
+                    } else {
+                        result = checkZSetExists(key, true);
+                    }
                 } else {
                     logger.warn("zset rebuild hbaseGetStandaloneFreq fail, will submit cache rebuild delay task, forRead = {}, key = {}", forRead, SafeEncoder.encode(key));
                     submitCacheRebuildDelayTask(key);
@@ -1177,7 +1181,11 @@ public class RedisHBaseZSetMixClient {
             if (seconds > RedisHBaseConfiguration.zsetExpireSeconds()) {
                 seconds = RedisHBaseConfiguration.zsetExpireSeconds();
             }
-            redisTemplate.expire(redisKey(key), seconds);
+            if (seconds <= 0) {
+                redisTemplate.expire(redisKey(key), RedisHBaseConfiguration.zsetExpireSeconds());
+            } else {
+                redisTemplate.expire(redisKey(key), seconds);
+            }
         } else {
             redisTemplate.expire(redisKey(key), RedisHBaseConfiguration.zsetExpireSeconds());
         }
@@ -1185,7 +1193,10 @@ public class RedisHBaseZSetMixClient {
     }
 
     //
-    private Result checkZSetExists(byte[] key) {
+    private Result checkZSetExists(byte[] key, boolean checkExpire) {
+        if (checkExpire) {
+            checkExpire = RedisHBaseConfiguration.zetRebuildCheckExpire();
+        }
         key = buildRowKey(key);
         Get get = new Get(key);
         String tableName = RedisHBaseConfiguration.hbaseTableName();
@@ -1194,7 +1205,7 @@ public class RedisHBaseZSetMixClient {
         byte[] value = result.getValue(CF_D, COL_EXPIRE_TIME);
         if (value != null) {
             long expireTime = Bytes.toLong(value);
-            if (System.currentTimeMillis() > expireTime) {
+            if (checkExpire && System.currentTimeMillis() > expireTime) {
                 Delete delete = new Delete(key);
                 if (RedisHBaseConfiguration.hbaseWALAsyncEnable()) {
                     delete.setDurability(Durability.ASYNC_WAL);
