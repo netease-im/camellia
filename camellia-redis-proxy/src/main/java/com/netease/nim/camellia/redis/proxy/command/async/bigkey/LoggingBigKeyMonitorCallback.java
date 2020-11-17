@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.command.async.bigkey;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -39,9 +38,9 @@ public class LoggingBigKeyMonitorCallback implements BigKeyMonitorCallback {
     }
 
     @Override
-    public void callbackUpstream(CommandContext commandContext, Command command, byte[] key, long size, long threshold) {
+    public void callbackUpstream(Command command, byte[] key, long size, long threshold) {
         try {
-            String log = "big key for upstream, command.context = " + commandContext + ", command = " + command.getRedisCommand()
+            String log = "big key for upstream, command.context = " + command.getCommandContext() + ", command = " + command.getRedisCommand()
                     + ", key = " + Utils.bytesToString(key) + ", size = " + size + ", threshold = " + threshold + ", params = " + command.toParamsStr();
             AtomicLong count = logMap.computeIfAbsent(log, k -> new AtomicLong());
             count.incrementAndGet();
@@ -51,9 +50,9 @@ public class LoggingBigKeyMonitorCallback implements BigKeyMonitorCallback {
     }
 
     @Override
-    public void callbackDownstream(CommandContext commandContext, Command command, Reply reply, byte[] key, long size, long threshold) {
+    public void callbackDownstream(Command command, Reply reply, byte[] key, long size, long threshold) {
         try {
-            String log = "big key for downstream, command.context = " + commandContext + ", command = " + command.getRedisCommand()
+            String log = "big key for downstream, command.context = " + command.getCommandContext() + ", command = " + command.getRedisCommand()
                     + ", key = " + Utils.bytesToString(key) + ", size = " + size + ", threshold = " + threshold + ", params = " + command.toParamsStr();
             AtomicLong count = logMap.computeIfAbsent(log, k -> new AtomicLong());
             count.incrementAndGet();

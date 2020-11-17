@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 
+import java.net.SocketAddress;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -24,6 +25,7 @@ public class ChannelInfo {
     private final AsyncTaskQueue asyncTaskQueue;
     private LinkedBlockingQueue<RedisClient> redisClientsForBlockingCommand = null;
     private RedisClient bindClient = null;
+    private final SocketAddress clientSocketAddress;
 
     private String clientName;
     private Long bid;
@@ -32,7 +34,7 @@ public class ChannelInfo {
     private ChannelInfo(ChannelHandlerContext ctx) {
         this.ctx = ctx;
         this.consid = UUID.randomUUID().toString();
-
+        this.clientSocketAddress = ctx.channel().remoteAddress();
         this.asyncTaskQueue = new AsyncTaskQueue(this);
     }
 
@@ -114,6 +116,10 @@ public class ChannelInfo {
 
     public String getBgroup() {
         return bgroup;
+    }
+
+    public SocketAddress getClientSocketAddress() {
+        return clientSocketAddress;
     }
 
     public void setBgroup(String bgroup) {

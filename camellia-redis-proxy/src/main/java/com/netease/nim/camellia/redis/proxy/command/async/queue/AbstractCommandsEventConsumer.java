@@ -3,7 +3,6 @@ package com.netease.nim.camellia.redis.proxy.command.async.queue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.*;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunter;
-import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunterManager;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunter;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterManager;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCache;
@@ -72,7 +71,7 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
     private final CommandInterceptor commandInterceptor;
     private HotKeyHunterManager hotKeyHunterManager;
     private HotKeyCacheManager hotKeyCacheManager;
-    private BigKeyHunterManager bigKeyHunterManager;
+    private BigKeyHunter bigKeyHunter;
     private final int commandPipelineFlushThreshold;
     private boolean eventLoopSetSuccess = false;
 
@@ -88,7 +87,7 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
             hotKeyCacheManager = new HotKeyCacheManager(commandInvokeConfig.getCommandHotKeyCacheConfig());
         }
         if (commandInvokeConfig.getCommandBigKeyMonitorConfig() != null) {
-            bigKeyHunterManager = new BigKeyHunterManager(commandInvokeConfig.getCommandBigKeyMonitorConfig());
+            bigKeyHunter = new BigKeyHunter(commandInvokeConfig.getCommandBigKeyMonitorConfig());
         }
     }
 
@@ -129,10 +128,6 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
                         }
                     }
                 }
-                BigKeyHunter bigKeyHunter = null;
-                if (bigKeyHunterManager != null) {
-                    bigKeyHunter = bigKeyHunterManager.get(channelInfo.getBid(), channelInfo.getBgroup());
-                }
                 AsyncTask task = new AsyncTask(taskQueue, command, commandSpendTimeConfig, bigKeyHunter);
                 boolean add = taskQueue.add(task);
                 if (!add) {
@@ -145,7 +140,7 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
                 if (needIntercept) {
                     CommandInterceptResponse response;
                     try {
-                        response = commandInterceptor.check(channelInfo.getBid(), channelInfo.getBgroup(), command);
+                        response = commandInterceptor.check(command);
                     } catch (Exception e) {
                         String errorMsg = "ERR command intercept error [" + e.getMessage() + "]";
                         ErrorLogCollector.collect(DisruptorCommandsEventConsumer.class, errorMsg, e);

@@ -17,7 +17,7 @@ public class HotKeyHunterManager {
 
     public HotKeyHunterManager(CommandHotKeyMonitorConfig commandHotKeyMonitorConfig) {
         this.commandHotKeyMonitorConfig = commandHotKeyMonitorConfig;
-        this.hotKeyHunter = new HotKeyHunter(new CommandContext(null, null),
+        this.hotKeyHunter = new HotKeyHunter(new CommandContext(null, null, null),
                 commandHotKeyMonitorConfig.getHotKeyConfig(), commandHotKeyMonitorConfig.getCallback());
     }
 
@@ -31,7 +31,7 @@ public class HotKeyHunterManager {
                 synchronized (HotKeyHunterManager.class) {
                     hotKeyHunter = map.get(key);
                     if (hotKeyHunter == null) {
-                        hotKeyHunter = new HotKeyHunter(new CommandContext(bid, bgroup),
+                        hotKeyHunter = new HotKeyHunter(new CommandContext(bid, bgroup, null),
                                 commandHotKeyMonitorConfig.getHotKeyConfig(), commandHotKeyMonitorConfig.getCallback());
                         map.put(key, hotKeyHunter);
                     }

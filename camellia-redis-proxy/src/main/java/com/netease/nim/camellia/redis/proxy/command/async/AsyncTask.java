@@ -51,8 +51,7 @@ public class AsyncTask {
                 if (!command.isBlocking() && spendNanoTime > commandSpendTimeConfig.getSlowCommandThresholdMillisTime() * 1000000L) {
                     if (commandSpendTimeConfig.getSlowCommandMonitorCallback() != null) {
                         try {
-                            CommandContext commandContext = new CommandContext(taskQueue.getChannelInfo().getBid(), taskQueue.getChannelInfo().getBgroup());
-                            commandSpendTimeConfig.getSlowCommandMonitorCallback().callback(commandContext, command, reply,
+                            commandSpendTimeConfig.getSlowCommandMonitorCallback().callback(command, reply,
                                     spendNanoTime / 1000000.0, commandSpendTimeConfig.getSlowCommandThresholdMillisTime());
                         } catch (Exception e) {
                             ErrorLogCollector.collect(AsyncTask.class, "SlowCommandCallback error", e);

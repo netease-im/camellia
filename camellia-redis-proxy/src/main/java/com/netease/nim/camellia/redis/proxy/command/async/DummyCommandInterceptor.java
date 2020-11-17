@@ -10,7 +10,7 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 public class DummyCommandInterceptor implements CommandInterceptor {
 
     @Override
-    public CommandInterceptResponse check(Long bid, String bgroup, Command command) {
+    public CommandInterceptResponse check(Command command) {
         return CommandInterceptResponse.SUCCESS;
     }
 }

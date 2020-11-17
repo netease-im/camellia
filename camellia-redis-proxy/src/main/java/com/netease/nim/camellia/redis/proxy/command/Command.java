@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command;
 
 
+import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
@@ -18,6 +19,7 @@ public class Command {
     private boolean hasCheckBlocking = false;
     private boolean blocking = false;
     private List<byte[]> keys = null;
+    private CommandContext commandContext;
 
     public Command(byte[][] objects) {
         this.objects = objects;
@@ -71,6 +73,16 @@ public class Command {
 
     public ChannelInfo getChannelInfo() {
         return channelInfo;
+    }
+
+    public CommandContext getCommandContext() {
+        if (commandContext != null) return commandContext;
+        if (channelInfo != null) {
+            commandContext = new CommandContext(channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getClientSocketAddress());
+        } else {
+            commandContext = new CommandContext(null, null, null);
+        }
+        return commandContext;
     }
 
     public void setChannelInfo(ChannelInfo channelInfo) {

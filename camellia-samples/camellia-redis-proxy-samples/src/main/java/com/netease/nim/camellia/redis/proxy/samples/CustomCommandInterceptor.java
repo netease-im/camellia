@@ -11,7 +11,7 @@ public class CustomCommandInterceptor implements CommandInterceptor {
     private static final CommandInterceptResponse VALUE_TOO_LONG = new CommandInterceptResponse(false, "value too long");
 
     @Override
-    public CommandInterceptResponse check(Long bid, String bgroup, Command command) {
+    public CommandInterceptResponse check(Command command) {
         if (command.getRedisCommand() == RedisCommand.SET) {
             byte[] key = command.getObjects()[1];
             if (key.length > 256) {

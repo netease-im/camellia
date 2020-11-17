@@ -16,7 +16,7 @@ public class HotKeyCacheManager {
 
     public HotKeyCacheManager(CommandHotKeyCacheConfig commandHotKeyCacheConfig) {
         this.commandHotKeyCacheConfig = commandHotKeyCacheConfig;
-        this.hotKeyCache = new HotKeyCache(new CommandContext(null, null), commandHotKeyCacheConfig);
+        this.hotKeyCache = new HotKeyCache(new CommandContext(null, null, null), commandHotKeyCacheConfig);
     }
 
     public HotKeyCache get(Long bid, String bgroup) {
@@ -29,7 +29,7 @@ public class HotKeyCacheManager {
                 synchronized (HotKeyCacheManager.class) {
                     hotKeyCache = map.get(key);
                     if (hotKeyCache == null) {
-                        hotKeyCache = new HotKeyCache(new CommandContext(bid, bgroup),commandHotKeyCacheConfig);
+                        hotKeyCache = new HotKeyCache(new CommandContext(bid, bgroup, null),commandHotKeyCacheConfig);
                         map.put(key, hotKeyCache);
                     }
                 }

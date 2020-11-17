@@ -40,9 +40,9 @@ public class LoggingSlowCommandMonitorCallback implements SlowCommandMonitorCall
     }
 
     @Override
-    public void callback(CommandContext commandContext, Command command, Reply reply, double spendMillis, long thresholdMillis) {
+    public void callback(Command command, Reply reply, double spendMillis, long thresholdMillis) {
         try {
-            String log = "slow command, command.context = " + commandContext + ", spendMs = " + spendMillis + ", thresholdMs = " + thresholdMillis
+            String log = "slow command, command.context = " + command.getCommandContext() + ", spendMs = " + spendMillis + ", thresholdMs = " + thresholdMillis
                     + ", command = " + command.getRedisCommand() + ", params = " + command.toParamsStr();
             AtomicLong count = logMap.computeIfAbsent(log, k -> new AtomicLong());
             count.incrementAndGet();
