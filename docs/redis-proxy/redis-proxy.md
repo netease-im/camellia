@@ -391,7 +391,7 @@ camellia-redis-proxy:
       check-interval-millis: 5000
 ```
 it means config will get from camellia-dashboard, config named bid=1 and bgroup=default will be used.   
-furthermore, config will reload if config changed in camellia-dashboard, redis proxy use http protocol to check config if change, default check interval is 5000ms.  
+furthermore, config will reload if config changed in camellia-dashboard, redis proxy use http protocol to check config if change, default check interval is 5s.  
 
 ### 8) config from camellia-dashboard with multi-config  
 * application.yml  

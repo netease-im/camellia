@@ -1,3 +1,13 @@
+# 1.0.12（2020/12/xx）
+### add
+* camellia-redis-proxy support key/value custom transfer, you can use this feature in data-encryption/data-compress(TODO)
+
+### update
+无
+
+### fix
+无
+
 # 1.0.11（2020/11/xx）
 ### add
 * camellia-redis-proxy support setting MonitorCallback
@@ -5,12 +15,11 @@
 * camellia-redis-proxy support monitor hot key, support setting HotKeyMonitorCallback
 * camellia-redis-proxy support hot key local cache(only support GET command), support setting HotKeyCacheStatsCallback 
 * camellia-redis-proxy support monitor big key, support setting BigKeyMonitorCallback 
-* camellia-redis-proxy support key/value custom transfer, you can use this feature in data-encryption/data-compress(TODO)
 * camellia-redis-proxy support multi-read-resources while rw_separate(will random choose a redis to read)
 * CamelliaRedisTemplate support get original Jedis
 
 ### update
-none
+* update CommandInterceptor define
 
 ### fix
 none

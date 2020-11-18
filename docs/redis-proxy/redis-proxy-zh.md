@@ -368,7 +368,7 @@ camellia-redis-proxy:
   }
 }
 ```
-上面的配置表示key被话费为6个分片，其中分片4配置了读写分离和双写的逻辑，分片5设置了读写分离和双写多读的逻辑
+上面的配置表示key被划分为6个分片，其中分片4配置了读写分离和双写的逻辑，分片5设置了读写分离和双写多读的逻辑
 ### 7) 配置为从camellia-dashboard读取  
 * application.yml  
 ```yaml
@@ -389,7 +389,7 @@ camellia-redis-proxy:
       check-interval-millis: 5000
 ```
 上面的配置表示proxy的路由配置会从camellia-dashboard获取，获取的是bid=1以及bgroup=default的那份配置  
-此外，proxy会定时检查camellia-dashboard上的配置是否更新了，若更新了，则为更新本地配置，检查的间隔是5000ms
+此外，proxy会定时检查camellia-dashboard上的配置是否更新了，若更新了，则会更新本地配置，默认检查的间隔是5s
 
 ### 8) 从camellia-dashboard获取多份config  
 * application.yml  
