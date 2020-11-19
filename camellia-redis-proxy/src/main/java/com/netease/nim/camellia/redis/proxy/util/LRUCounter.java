@@ -98,8 +98,12 @@ public class LRUCounter {
 
         void reset() {
             if (lock.compareAndSet(false, true)) {
-                timestamp = TimeCache.currentMillis;
-                count.set(0);
+                try {
+                    timestamp = TimeCache.currentMillis;
+                    count.set(0);
+                } finally {
+                    lock.compareAndSet(true, false);
+                }
             }
         }
     }
