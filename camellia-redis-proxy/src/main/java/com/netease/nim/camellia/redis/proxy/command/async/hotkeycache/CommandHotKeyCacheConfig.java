@@ -10,10 +10,10 @@ import com.netease.nim.camellia.redis.proxy.conf.Constants;
 public class CommandHotKeyCacheConfig {
 
     private long cacheExpireMillis = Constants.Server.hotKeyCacheExpireMillis;
-    private long cacheMaxCapacity = Constants.Server.hotKeyCacheMaxCapacity;
+    private int cacheMaxCapacity = Constants.Server.hotKeyCacheMaxCapacity;
 
     private long counterCheckMillis = Constants.Server.hotKeyCacheCounterCheckMillis;
-    private long counterMaxCapacity = Constants.Server.hotKeyCacheCounterMaxCapacity;
+    private int counterMaxCapacity = Constants.Server.hotKeyCacheCounterMaxCapacity;
     private long counterCheckThreshold = Constants.Server.hotKeyCacheCounterCheckThreshold;
     private boolean needCacheNull = Constants.Server.hotKeyCacheNeedCacheNull;
 
@@ -46,11 +46,11 @@ public class CommandHotKeyCacheConfig {
         this.cacheExpireMillis = cacheExpireMillis;
     }
 
-    public long getCacheMaxCapacity() {
+    public int getCacheMaxCapacity() {
         return cacheMaxCapacity;
     }
 
-    public void setCacheMaxCapacity(long cacheMaxCapacity) {
+    public void setCacheMaxCapacity(int cacheMaxCapacity) {
         this.cacheMaxCapacity = cacheMaxCapacity;
     }
 
@@ -62,11 +62,11 @@ public class CommandHotKeyCacheConfig {
         this.counterCheckMillis = counterCheckMillis;
     }
 
-    public long getCounterMaxCapacity() {
+    public int getCounterMaxCapacity() {
         return counterMaxCapacity;
     }
 
-    public void setCounterMaxCapacity(long counterMaxCapacity) {
+    public void setCounterMaxCapacity(int counterMaxCapacity) {
         this.counterMaxCapacity = counterMaxCapacity;
     }
 

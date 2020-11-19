@@ -35,16 +35,16 @@ public class Constants {
 
         public static final boolean hotKeyMonitorEnable = false;
         public static final long hotKeyMonitorCheckMillis = 1000L;
-        public static final long hotKeyMonitorCheckCacheMaxCapacity = 10000L;
+        public static final int hotKeyMonitorCheckCacheMaxCapacity = 100000;
         public static final long hotKeyMonitorCheckThreshold = 100;
         public static final int hotKeyMonitorMaxHotKeyCount = 32;
         public static final String hotKeyMonitorCallbackClassName = LoggingHoyKeyMonitorCallback.class.getName();
 
         public static final boolean hotKeyCacheEnable = false;
         public static final long hotKeyCacheExpireMillis = 10000;
-        public static final long hotKeyCacheMaxCapacity = 1000;
+        public static final int hotKeyCacheMaxCapacity = 1000;
         public static final long hotKeyCacheCounterCheckMillis = 1000;
-        public static final long hotKeyCacheCounterMaxCapacity = 1000;
+        public static final int hotKeyCacheCounterMaxCapacity = 100000;
         public static final long hotKeyCacheCounterCheckThreshold = 100;
         public static final boolean hotKeyCacheNeedCacheNull = true;
         public static final String hotKeyCacheKeyCheckerClassName = DummyHotKeyCacheKeyChecker.class.getName();

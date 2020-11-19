@@ -248,7 +248,7 @@ public class CamelliaRedisProxyProperties {
     public static class HotKeyMonitorConfig {
 
         private long checkMillis = Constants.Server.hotKeyMonitorCheckMillis;
-        private long checkCacheMaxCapacity = Constants.Server.hotKeyMonitorCheckCacheMaxCapacity;
+        private int checkCacheMaxCapacity = Constants.Server.hotKeyMonitorCheckCacheMaxCapacity;
         private long checkThreshold = Constants.Server.hotKeyMonitorCheckThreshold;
         private int maxHotKeyCount = Constants.Server.hotKeyMonitorMaxHotKeyCount;
         private String hotKeyMonitorCallbackClassName = Constants.Server.hotKeyMonitorCallbackClassName;
@@ -261,11 +261,11 @@ public class CamelliaRedisProxyProperties {
             this.checkMillis = checkMillis;
         }
 
-        public long getCheckCacheMaxCapacity() {
+        public int getCheckCacheMaxCapacity() {
             return checkCacheMaxCapacity;
         }
 
-        public void setCheckCacheMaxCapacity(long checkCacheMaxCapacity) {
+        public void setCheckCacheMaxCapacity(int checkCacheMaxCapacity) {
             this.checkCacheMaxCapacity = checkCacheMaxCapacity;
         }
 
@@ -296,10 +296,10 @@ public class CamelliaRedisProxyProperties {
 
     public static class HotKeyCacheConfig {
         private long cacheExpireMillis = Constants.Server.hotKeyCacheExpireMillis;
-        private long cacheMaxCapacity = Constants.Server.hotKeyCacheMaxCapacity;
+        private int cacheMaxCapacity = Constants.Server.hotKeyCacheMaxCapacity;
 
         private long counterCheckMillis = Constants.Server.hotKeyCacheCounterCheckMillis;
-        private long counterMaxCapacity = Constants.Server.hotKeyCacheCounterMaxCapacity;
+        private int counterMaxCapacity = Constants.Server.hotKeyCacheCounterMaxCapacity;
         private long counterCheckThreshold = Constants.Server.hotKeyCacheCounterCheckThreshold;
         private boolean needCacheNull = Constants.Server.hotKeyCacheNeedCacheNull;
 
@@ -316,11 +316,11 @@ public class CamelliaRedisProxyProperties {
             this.cacheExpireMillis = cacheExpireMillis;
         }
 
-        public long getCacheMaxCapacity() {
+        public int getCacheMaxCapacity() {
             return cacheMaxCapacity;
         }
 
-        public void setCacheMaxCapacity(long cacheMaxCapacity) {
+        public void setCacheMaxCapacity(int cacheMaxCapacity) {
             this.cacheMaxCapacity = cacheMaxCapacity;
         }
 
@@ -332,11 +332,11 @@ public class CamelliaRedisProxyProperties {
             this.counterCheckMillis = counterCheckMillis;
         }
 
-        public long getCounterMaxCapacity() {
+        public int getCounterMaxCapacity() {
             return counterMaxCapacity;
         }
 
-        public void setCounterMaxCapacity(long counterMaxCapacity) {
+        public void setCounterMaxCapacity(int counterMaxCapacity) {
             this.counterMaxCapacity = counterMaxCapacity;
         }
 

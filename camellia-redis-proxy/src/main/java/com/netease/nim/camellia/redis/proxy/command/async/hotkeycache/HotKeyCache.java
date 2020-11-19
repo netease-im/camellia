@@ -1,17 +1,15 @@
 package com.netease.nim.camellia.redis.proxy.command.async.hotkeycache;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
+import com.netease.nim.camellia.redis.proxy.util.LRUCounter;
 import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.util.SafeEncoder;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +29,8 @@ public class HotKeyCache {
     private final ConcurrentLinkedHashMap<BytesKey, Object> refreshLockMap;
     private final ConcurrentLinkedHashMap<BytesKey, Long> lastRefreshTimeMap;
 
-    private final Cache<BytesKey, HotValue> cache;
-    private final Cache<BytesKey, AtomicLong> hotKeyCounter;
+    private final ConcurrentLinkedHashMap<BytesKey, HotValueWrapper> cache;
+    private final LRUCounter hotKeyCounter;
 
     private final long cacheExpireMillis;
     private final long hotKeyCheckThreshold;
@@ -51,19 +49,13 @@ public class HotKeyCache {
         this.cacheExpireMillis = commandHotKeyCacheConfig.getCacheExpireMillis();
         this.hotKeyCheckThreshold = commandHotKeyCacheConfig.getCounterCheckThreshold();
         this.cacheNull = commandHotKeyCacheConfig.isNeedCacheNull();
-        this.cache = Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofMillis(cacheExpireMillis))
-                .maximumSize(commandHotKeyCacheConfig.getCacheMaxCapacity())
+        this.cache = new ConcurrentLinkedHashMap.Builder<BytesKey, HotValueWrapper>()
+                .initialCapacity(commandHotKeyCacheConfig.getCacheMaxCapacity())
+                .maximumWeightedCapacity(commandHotKeyCacheConfig.getCacheMaxCapacity())
                 .build();
-        this.hotKeyCounter = Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofMillis(commandHotKeyCacheConfig.getCounterCheckMillis()))
-                .maximumSize(commandHotKeyCacheConfig.getCounterMaxCapacity())
-                .build();
-        int refreshMapMaxCapacity = (int) Math.max(commandHotKeyCacheConfig.getCacheMaxCapacity(),
-                commandHotKeyCacheConfig.getCounterMaxCapacity());
-        if (refreshMapMaxCapacity < 0) {
-            refreshMapMaxCapacity = 1024;
-        }
+        this.hotKeyCounter = new LRUCounter(commandHotKeyCacheConfig.getCounterMaxCapacity(),
+                commandHotKeyCacheConfig.getCounterMaxCapacity(), commandHotKeyCacheConfig.getCounterCheckMillis());
+        int refreshMapMaxCapacity = commandHotKeyCacheConfig.getCacheMaxCapacity() * 2;
         this.lastRefreshTimeMap = new ConcurrentLinkedHashMap.Builder<BytesKey, Long>()
                 .initialCapacity(refreshMapMaxCapacity).maximumWeightedCapacity(refreshMapMaxCapacity).build();
         this.refreshLockMap = new ConcurrentLinkedHashMap.Builder<BytesKey, Object>()
@@ -94,6 +86,7 @@ public class HotKeyCache {
                 }
             }, callbackIntervalSeconds, callbackIntervalSeconds, TimeUnit.SECONDS);
         }
+        logger.info("HotKeyCache init success, commandContext = {}", commandContext);
     }
 
     public HotValue getCache(byte[] key) {
@@ -101,31 +94,36 @@ public class HotKeyCache {
             return null;
         }
         BytesKey bytesKey = new BytesKey(key);
-        AtomicLong count = this.hotKeyCounter.get(bytesKey, k -> new AtomicLong());
-        if (count != null) {
-            count.incrementAndGet();
-        }
-        HotValue value = cache.getIfPresent(bytesKey);
-        if (value != null) {
-            Long lastRefreshTime = lastRefreshTimeMap.get(bytesKey);
-            if (lastRefreshTime != null && TimeCache.currentMillis - lastRefreshTime > cacheExpireMillis / 2) {
-                Object old = refreshLockMap.putIfAbsent(bytesKey, lockObj);
-                if (old == null) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("try refresh hotKey's value, key = {}", SafeEncoder.encode(bytesKey.getKey()));
+        this.hotKeyCounter.incrementAndGet(bytesKey);
+        HotValueWrapper wrapper = cache.get(bytesKey);
+        if (wrapper != null) {
+            if (TimeCache.currentMillis - wrapper.timestamp > cacheExpireMillis) {
+                cache.remove(bytesKey);
+                return null;
+            }
+            HotValue value = wrapper.hotValue;
+            if (value != null) {
+                Long lastRefreshTime = lastRefreshTimeMap.get(bytesKey);
+                if (lastRefreshTime != null && TimeCache.currentMillis - lastRefreshTime > cacheExpireMillis / 2) {
+                    Object old = refreshLockMap.putIfAbsent(bytesKey, lockObj);
+                    if (old == null) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("try refresh hotKey's value, key = {}", SafeEncoder.encode(bytesKey.getKey()));
+                        }
+                        return null;
                     }
-                    return null;
+                }
+                if (logger.isDebugEnabled()) {
+                    logger.debug("getCache of hotKey = {}", SafeEncoder.encode(bytesKey.getKey()));
+                }
+                if (callback != null) {
+                    AtomicLong hit = statsMap.computeIfAbsent(bytesKey, k -> new AtomicLong());
+                    hit.incrementAndGet();
                 }
             }
-            if (logger.isDebugEnabled()) {
-                logger.debug("getCache of hotKey = {}", SafeEncoder.encode(bytesKey.getKey()));
-            }
-            if (callback != null) {
-                AtomicLong hit = statsMap.computeIfAbsent(bytesKey, k -> new AtomicLong());
-                hit.incrementAndGet();
-            }
+            return value;
         }
-        return value;
+        return null;
     }
 
     public void tryBuildHotKeyCache(byte[] key, byte[] value) {
@@ -136,15 +134,24 @@ public class HotKeyCache {
             return;
         }
         BytesKey bytesKey = new BytesKey(key);
-        AtomicLong count = this.hotKeyCounter.getIfPresent(bytesKey);
-        if (count == null || count.get() < hotKeyCheckThreshold) {
+        Long count = this.hotKeyCounter.get(bytesKey);
+        if (count == null || count < hotKeyCheckThreshold) {
             return;
         }
-        cache.put(bytesKey, new HotValue(value));
+        cache.put(bytesKey, new HotValueWrapper(new HotValue(value)));
         lastRefreshTimeMap.put(bytesKey, TimeCache.currentMillis);
         refreshLockMap.remove(bytesKey);
         if (logger.isDebugEnabled()) {
             logger.debug("refresh hotKey's value success, key = {}", SafeEncoder.encode(bytesKey.getKey()));
+        }
+    }
+
+    private static class HotValueWrapper {
+        private final long timestamp = TimeCache.currentMillis;
+        private final HotValue hotValue;
+
+        public HotValueWrapper(HotValue hotValue) {
+            this.hotValue = hotValue;
         }
     }
 

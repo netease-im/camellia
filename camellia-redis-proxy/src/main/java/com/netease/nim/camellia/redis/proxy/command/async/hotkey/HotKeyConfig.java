@@ -6,11 +6,11 @@ package com.netease.nim.camellia.redis.proxy.command.async.hotkey;
  */
 public class HotKeyConfig {
     private final long checkMillis;
-    private final long checkCacheMaxCapacity;
+    private final int checkCacheMaxCapacity;
     private final long checkThreshold;
     private final int maxHotKeyCount;
 
-    public HotKeyConfig(long checkMillis, long checkCacheMaxCapacity, long checkThreshold, int maxHotKeyCount) {
+    public HotKeyConfig(long checkMillis, int checkCacheMaxCapacity, long checkThreshold, int maxHotKeyCount) {
         this.checkMillis = checkMillis;
         this.checkCacheMaxCapacity = checkCacheMaxCapacity;
         this.checkThreshold = checkThreshold;
@@ -21,7 +21,7 @@ public class HotKeyConfig {
         return checkMillis;
     }
 
-    public long getCheckCacheMaxCapacity() {
+    public int getCheckCacheMaxCapacity() {
         return checkCacheMaxCapacity;
     }
 

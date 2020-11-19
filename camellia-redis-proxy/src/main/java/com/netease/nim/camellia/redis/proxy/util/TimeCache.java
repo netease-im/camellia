@@ -24,7 +24,7 @@ public class TimeCache implements Runnable {
         while (true) {
             currentMillis = System.currentTimeMillis();
             try {
-                TimeUnit.MILLISECONDS.sleep(50);
+                TimeUnit.MILLISECONDS.sleep(5);
             } catch (InterruptedException e) {
                 logger.error(e.getMessage(), e);
             }

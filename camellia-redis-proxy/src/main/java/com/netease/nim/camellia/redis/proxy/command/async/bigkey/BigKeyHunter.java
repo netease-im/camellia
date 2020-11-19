@@ -156,7 +156,7 @@ public class BigKeyHunter {
                         if (reply instanceof IntegerReply) {
                             Long integer = ((IntegerReply) reply).getInteger();
                             int threshold = monitorConfig.getStringSizeThreshold();
-                            if (integer != null && integer > monitorConfig.getStringSizeThreshold()) {
+                            if (integer != null && integer > threshold) {
                                 bigKeyMonitorCallback.callbackDownstream(command, reply, objects[1], integer, threshold);
                             }
                         }
