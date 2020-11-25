@@ -45,7 +45,7 @@ public class CamelliaRedisProxyEurekaFactory implements CamelliaRedisProxyFactor
                     }
                     GenericObjectPoolConfig poolConfig = poolConfig();
                     int timeout = timeout();
-                    jedisPool = new RedisProxyJedisPool(proxyDiscovery, poolConfig, timeout, password);
+                    jedisPool = new RedisProxyJedisPool(proxyDiscovery, poolConfig, timeout, password, properties.isSidCarFirst());
                     poolMap.put(resource.getUrl(), jedisPool);
                 }
             }

@@ -11,4 +11,5 @@ public class ZkConstants {
     public static int maxRetries = 3;
     public static final String basePath = "/camellia";
     public static int reloadIntervalSeconds = 600;
+    public static boolean sidCarFirst = false;
 }
