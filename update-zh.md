@@ -20,7 +20,7 @@
 * RedisProxyJedisPool支持sid-car模式，开启后优先访问同机部署的redis-proxy
 
 ### 更新
-修改了CommandInterceptor接口的定义
+* 修改了CommandInterceptor接口的定义
 
 ### fix
 无
