@@ -7,21 +7,21 @@ spring:
 
 camellia-redis-proxy:
   password: pass123   #proxy的密码
-  monitor-enable: true  #是否开启监控
+  monitor-enable: false  #是否开启监控
   monitor-interval-seconds: 60 #监控回调的间隔
   monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback #监控回调类
-  command-spend-time-monitor-enable: true #是否开启请求耗时的监控，只有monitor-enable=true才有效
+  command-spend-time-monitor-enable: false #是否开启请求耗时的监控，只有monitor-enable=true才有效
   slow-command-threshold-millis-time: 1000 #慢查询的阈值，单位毫秒，只有command-spend-time-monitor-enable=true才有效
   slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback #慢查询的回调类
   command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor #方法拦截器
-  hot-key-monitor-enable: true #是否监控热key
+  hot-key-monitor-enable: false #是否监控热key
   hot-key-monitor-config:
     check-millis: 1000 #热key的检查周期
     check-threshold: 10 #热key的阈值，检查周期内请求次数超过该阈值被判定为热key
     check-cache-max-capacity: 1000 #检查的计数器集合的size，本身是LRU的
     max-hot-key-count: 100 #每次回调的热key个数的最大值（前N个）
     hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback #热key的回调类
-  hot-key-cache-enable: true #热key缓存开关
+  hot-key-cache-enable: false #热key缓存开关
   hot-key-cache-config:
     counter-check-millis: 1000 #检查周期，单位毫秒
     counter-check-threshold: 5 #检查阈值，超过才算热key，才触发热key的缓存
@@ -32,7 +32,7 @@ camellia-redis-proxy:
     hot-key-cache-stats-callback-interval-seconds: 20 #热key缓存的统计数据回调周期
     hot-key-cache-stats-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.LoggingHotKeyCacheStatsCallback #热key缓存的回调类
     hot-key-cache-key-checker-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.DummyHotKeyCacheKeyChecker #判断这个key是否需要缓存的接口
-  big-key-monitor-enable: true #大key检测
+  big-key-monitor-enable: false #大key检测
   big-key-monitor-config:
     string-size-threshold: 10 #字符串类型，value大小超过多少认为是大key
     hash-size-threshold: 10 #hash类型，集合大小超过多少认为是大key
