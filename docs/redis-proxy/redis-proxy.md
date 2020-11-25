@@ -455,26 +455,47 @@ import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptRespon
 import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.List;
+
 public class CustomCommandInterceptor implements CommandInterceptor {
-    
+
     private static final CommandInterceptResponse KEY_TOO_LONG = new CommandInterceptResponse(false, "key too long");
     private static final CommandInterceptResponse VALUE_TOO_LONG = new CommandInterceptResponse(false, "value too long");
+    private static final CommandInterceptResponse FORBIDDEN = new CommandInterceptResponse(false, "forbidden");
 
     @Override
     public CommandInterceptResponse check(Command command) {
-        if (command.getRedisCommand() == RedisCommand.SET) {
-            byte[] key = command.getObjects()[1];
-            if (key.length > 256) {
-                return KEY_TOO_LONG;
+        SocketAddress clientSocketAddress = command.getCommandContext().getClientSocketAddress();
+        if (clientSocketAddress instanceof InetSocketAddress) {
+            String hostAddress = ((InetSocketAddress) clientSocketAddress).getAddress().getHostAddress();
+            if (hostAddress != null && hostAddress.equals("10.128.1.1")) {
+                return FORBIDDEN;
             }
-            byte[] value = command.getObjects()[2];
-            if (value.length > 1024 * 1024) {
-                return VALUE_TOO_LONG;
+        }
+        List<byte[]> keys = command.getKeys();
+        if (keys != null && !keys.isEmpty()) {
+            for (byte[] key : keys) {
+                if (key.length > 256) {
+                    return KEY_TOO_LONG;
+                }
+            }
+        }
+        if (command.getRedisCommand() == RedisCommand.SET) {
+            byte[][] objects = command.getObjects();
+            if (objects.length > 3) {
+                byte[] value = objects[2];
+                if (value.length > 1024 * 1024 * 5) {
+                    return VALUE_TOO_LONG;
+                }
             }
         }
         return CommandInterceptResponse.SUCCESS;
     }
 }
+
+
 ```
 then, you should config it in application.yml, like this: 
 ```
@@ -492,7 +513,10 @@ camellia-redis-proxy:
       resource: redis://@127.0.0.1:6379
   command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor
 ```
-it means if the command is SET, then key.length should not greater than 256, value.length should not greater than 1M.
+it means  
+client with ip=10.128.1.1 is forbidden  
+the key's length should not greater than 256  
+if the command is SET, then value.length should not greater than 5M.  
 
 ## Multi Write
 proxy support setting multi write mode, there are three multi write mode to choose: 
@@ -650,7 +674,8 @@ public class TestClient {
         
         int timeout = 2000;
         String password = "pass123";
-        RedisProxyJedisPool jedisPool = new RedisProxyJedisPool(zkProxyDiscovery, new JedisPoolConfig(), timeout, password);
+        boolean sidCarFirst = true;//if setting true, then RedisProxyJedisPool will request sid-car proxy firsrt
+        RedisProxyJedisPool jedisPool = new RedisProxyJedisPool(zkProxyDiscovery, new JedisPoolConfig(), timeout, password, sidCarFirst);
         
         Jedis jedis = null;
         try {
@@ -683,7 +708,8 @@ public class TestClient {
         String bgroup = "default";
         int timeout = 2000;
         String password = "pass123";
-        RedisProxyJedisPool jedisPool = new RedisProxyJedisPool(bid, bgroup, zkProxyDiscovery, new JedisPoolConfig(), timeout, password);
+        boolean sidCarFirst = true;//if setting true, then RedisProxyJedisPool will request sid-car proxy firsrt
+        RedisProxyJedisPool jedisPool = new RedisProxyJedisPool(bid, bgroup, zkProxyDiscovery, new JedisPoolConfig(), timeout, password, sidCarFirst);
         
         Jedis jedis = null;
         try {

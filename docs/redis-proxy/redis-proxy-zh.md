@@ -444,7 +444,7 @@ public class Test {
 ```
 
 ## 自定义CommandInterceptor
-如果你想添加一个自定义的方法拦截器，则应该实现CommandInterceptor接口，如下：
+如果你想添加一个自定义的方法拦截器，则应该实现CommandInterceptor接口，类似于这样：
 ```java
 package com.netease.nim.camellia.redis.proxy.samples;
 
@@ -453,26 +453,47 @@ import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptRespon
 import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.List;
+
 public class CustomCommandInterceptor implements CommandInterceptor {
-    
+
     private static final CommandInterceptResponse KEY_TOO_LONG = new CommandInterceptResponse(false, "key too long");
     private static final CommandInterceptResponse VALUE_TOO_LONG = new CommandInterceptResponse(false, "value too long");
+    private static final CommandInterceptResponse FORBIDDEN = new CommandInterceptResponse(false, "forbidden");
 
     @Override
     public CommandInterceptResponse check(Command command) {
-        if (command.getRedisCommand() == RedisCommand.SET) {
-            byte[] key = command.getObjects()[1];
-            if (key.length > 256) {
-                return KEY_TOO_LONG;
+        SocketAddress clientSocketAddress = command.getCommandContext().getClientSocketAddress();
+        if (clientSocketAddress instanceof InetSocketAddress) {
+            String hostAddress = ((InetSocketAddress) clientSocketAddress).getAddress().getHostAddress();
+            if (hostAddress != null && hostAddress.equals("10.128.1.1")) {
+                return FORBIDDEN;
             }
-            byte[] value = command.getObjects()[2];
-            if (value.length > 1024 * 1024) {
-                return VALUE_TOO_LONG;
+        }
+        List<byte[]> keys = command.getKeys();
+        if (keys != null && !keys.isEmpty()) {
+            for (byte[] key : keys) {
+                if (key.length > 256) {
+                    return KEY_TOO_LONG;
+                }
+            }
+        }
+        if (command.getRedisCommand() == RedisCommand.SET) {
+            byte[][] objects = command.getObjects();
+            if (objects.length > 3) {
+                byte[] value = objects[2];
+                if (value.length > 1024 * 1024 * 5) {
+                    return VALUE_TOO_LONG;
+                }
             }
         }
         return CommandInterceptResponse.SUCCESS;
     }
 }
+
+
 ```
 随后，在application.yml里这样配置：
 ```
@@ -490,7 +511,10 @@ camellia-redis-proxy:
       resource: redis://@127.0.0.1:6379
   command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor
 ```
-上面的配置表示如果一个set命令过来，那么key的长度不得超过256，value的长度不得超过1M，否则会返回指定的错误信息
+上面的配置表示：  
+限制特定ip不得访问  
+key的长度不得超过256  
+如果是一个set命令过来，value的长度不得超过5M  
 
 
 ## 双（多）写
@@ -648,7 +672,8 @@ public class TestClient {
         
         int timeout = 2000;
         String password = "pass123";
-        RedisProxyJedisPool jedisPool = new RedisProxyJedisPool(zkProxyDiscovery, new JedisPoolConfig(), timeout, password);
+        boolean sidCarFirst = true;//如果true，则RedisProxyJedisPool会优先访问本机部署的proxy，若不通则访问其余proxy; 若false，则所有proxy一视同仁
+        RedisProxyJedisPool jedisPool = new RedisProxyJedisPool(zkProxyDiscovery, new JedisPoolConfig(), timeout, password, sidCarFirst);
         
         Jedis jedis = null;
         try {
@@ -681,7 +706,8 @@ public class TestClient {
         String bgroup = "default";
         int timeout = 2000;
         String password = "pass123";
-        RedisProxyJedisPool jedisPool = new RedisProxyJedisPool(bid, bgroup, zkProxyDiscovery, new JedisPoolConfig(), timeout, password);
+        boolean sidCarFirst = true;//如果true，则RedisProxyJedisPool会优先访问本机部署的proxy，若不通则访问其余proxy; 若false，则所有proxy一视同仁
+        RedisProxyJedisPool jedisPool = new RedisProxyJedisPool(bid, bgroup, zkProxyDiscovery, new JedisPoolConfig(), timeout, password, sidCarFirst);
         
         Jedis jedis = null;
         try {
