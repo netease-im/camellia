@@ -1,4 +1,4 @@
-# 1.0.12（2020/12/xx）
+# 未来
 ### 新增
 * camellia-redis-proxy支持key/value等的自定义转换，可以用于透明的数据加密/数据压缩等（TODO）
 
@@ -17,6 +17,7 @@
 * camellia-redis-proxy支持大key监控，支持设置BigKeyMonitorCallback
 * camellia-redis-proxy支持配置读写分离时设置多个读地址（随机选择一个地址读）
 * CamelliaRedisTemplate支持获取原始Jedis
+* RedisProxyJedisPool支持sid-car模式，开启后优先访问同机部署的redis-proxy
 
 ### 更新
 修改了CommandInterceptor接口的定义

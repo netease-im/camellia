@@ -1,4 +1,4 @@
-# 1.0.12（2020/12/xx）
+# future  
 ### add
 * camellia-redis-proxy support key/value custom transfer, you can use this feature in data-encryption/data-compress(TODO)
 
@@ -17,6 +17,7 @@
 * camellia-redis-proxy support monitor big key, support setting BigKeyMonitorCallback 
 * camellia-redis-proxy support multi-read-resources while rw_separate(will random choose a redis to read)
 * CamelliaRedisTemplate support get original Jedis
+* RedisProxyJedisPool support sid-car mode, if setting true, RedisProxyJedisPool will use sid-car-proxy first
 
 ### update
 * update CommandInterceptor define
