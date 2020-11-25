@@ -25,6 +25,10 @@ public class CommandContext {
         return bgroup;
     }
 
+    public SocketAddress getClientSocketAddress() {
+        return clientSocketAddress;
+    }
+
     @Override
     public String toString() {
         return "CommandContext{" +
