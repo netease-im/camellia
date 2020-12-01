@@ -11,6 +11,7 @@ import java.util.Map;
  */
 public class Stats {
 
+    private int intervalSeconds;
     private long clientConnectCount;
     private long count;
     private long totalReadCount;
@@ -20,6 +21,14 @@ public class Stats {
     private List<DetailStats> detailStatsList = new ArrayList<>();
     private Map<String, Long> failMap = new HashMap<>();
     private List<SpendStats> spendStatsList = new ArrayList<>();
+
+    public int getIntervalSeconds() {
+        return intervalSeconds;
+    }
+
+    public void setIntervalSeconds(int intervalSeconds) {
+        this.intervalSeconds = intervalSeconds;
+    }
 
     public long getClientConnectCount() {
         return clientConnectCount;

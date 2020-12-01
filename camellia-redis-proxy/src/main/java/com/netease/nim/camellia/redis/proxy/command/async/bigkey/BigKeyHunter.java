@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.command.async.bigkey;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
+import com.netease.nim.camellia.redis.proxy.monitor.BigKeyMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
@@ -37,6 +38,7 @@ public class BigKeyHunter {
                             byte[] value = objects[2];
                             int threshold = monitorConfig.getStringSizeThreshold();
                             if (value != null && value.length > threshold) {
+                                BigKeyMonitor.bigKey(command, objects[1], value.length, threshold);
                                 bigKeyMonitorCallback.callbackUpstream(command, objects[1], value.length, threshold);
                             }
                         }
@@ -47,6 +49,7 @@ public class BigKeyHunter {
                             byte[] value = objects[3];
                             int threshold = monitorConfig.getStringSizeThreshold();
                             if (value != null && value.length > threshold) {
+                                BigKeyMonitor.bigKey(command, objects[1], value.length, threshold);
                                 bigKeyMonitorCallback.callbackUpstream(command, objects[1], value.length, threshold);
                             }
                         }
@@ -58,6 +61,7 @@ public class BigKeyHunter {
                             byte[] value = objects[i];
                             int threshold = monitorConfig.getStringSizeThreshold();
                             if (value != null && value.length > threshold) {
+                                BigKeyMonitor.bigKey(command, objects[i-1], value.length, threshold);
                                 bigKeyMonitorCallback.callbackUpstream(command, objects[i-1], value.length, threshold);
                             }
                         }
@@ -72,6 +76,7 @@ public class BigKeyHunter {
                         int size = ((objects.length - 2) / 2);
                         int threshold = monitorConfig.getHashSizeThreshold();
                         if (size > threshold) {
+                            BigKeyMonitor.bigKey(command, objects[1], size, threshold);
                             bigKeyMonitorCallback.callbackUpstream(command, objects[1], size, threshold);
                         }
                         break;
@@ -83,6 +88,7 @@ public class BigKeyHunter {
                     int size = ((objects.length - 2) / 2);
                     int threshold = monitorConfig.getZsetSizeThreshold();
                     if (size > threshold) {
+                        BigKeyMonitor.bigKey(command, objects[1], size, threshold);
                         bigKeyMonitorCallback.callbackUpstream(command, objects[1], size, threshold);
                     }
                 }
@@ -96,6 +102,7 @@ public class BigKeyHunter {
                         int size = objects.length - 2;
                         int threshold = monitorConfig.getListSizeThreshold();
                         if (size > threshold) {
+                            BigKeyMonitor.bigKey(command, objects[1], size, threshold);
                             bigKeyMonitorCallback.callbackUpstream(command, objects[1], size, threshold);
                         }
                         break;
@@ -106,6 +113,7 @@ public class BigKeyHunter {
                     int size = objects.length - 2;
                     int threshold = monitorConfig.getSetSizeThreshold();
                     if (size > threshold) {
+                        BigKeyMonitor.bigKey(command, objects[1], size, threshold);
                         bigKeyMonitorCallback.callbackUpstream(command, objects[1], size, threshold);
                     }
                 }
@@ -130,6 +138,7 @@ public class BigKeyHunter {
                             byte[] raw = ((BulkReply) reply).getRaw();
                             int threshold = monitorConfig.getStringSizeThreshold();
                             if (raw != null && raw.length > threshold) {
+                                BigKeyMonitor.bigKey(command, objects[1], raw.length, threshold);
                                 bigKeyMonitorCallback.callbackDownstream(command, reply, objects[1], raw.length, threshold);
                             }
                         }
@@ -144,6 +153,7 @@ public class BigKeyHunter {
                                     if (reply1 instanceof BulkReply) {
                                         byte[] raw = ((BulkReply) reply1).getRaw();
                                         if (raw != null && raw.length > threshold) {
+                                            BigKeyMonitor.bigKey(command, objects[i], raw.length, threshold);
                                             bigKeyMonitorCallback.callbackDownstream(command, reply, objects[i], raw.length, threshold);
                                         }
                                     }
@@ -157,6 +167,7 @@ public class BigKeyHunter {
                             Long integer = ((IntegerReply) reply).getInteger();
                             int threshold = monitorConfig.getStringSizeThreshold();
                             if (integer != null && integer > threshold) {
+                                BigKeyMonitor.bigKey(command, objects[1], integer, threshold);
                                 bigKeyMonitorCallback.callbackDownstream(command, reply, objects[1], integer, threshold);
                             }
                         }
@@ -170,6 +181,7 @@ public class BigKeyHunter {
                             Long integer = ((IntegerReply) reply).getInteger();
                             int threshold = monitorConfig.getHashSizeThreshold();
                             if (integer != null && integer > threshold) {
+                                BigKeyMonitor.bigKey(command, objects[1], integer, threshold);
                                 bigKeyMonitorCallback.callbackDownstream(command, reply, objects[1], integer, threshold);
                             }
                         }
@@ -182,6 +194,7 @@ public class BigKeyHunter {
                                 int size = replies.length;
                                 int threshold = monitorConfig.getHashSizeThreshold();
                                 if (size > threshold) {
+                                    BigKeyMonitor.bigKey(command, objects[1], size, threshold);
                                     bigKeyMonitorCallback.callbackDownstream(command, reply, objects[1], size, threshold);
                                 }
                             }
@@ -194,6 +207,7 @@ public class BigKeyHunter {
                                 int size = replies.length / 2;
                                 int threshold = monitorConfig.getHashSizeThreshold();
                                 if (size > threshold) {
+                                    BigKeyMonitor.bigKey(command, objects[1], size, threshold);
                                     bigKeyMonitorCallback.callbackDownstream(command, reply, objects[1], size, threshold);
                                 }
                             }
@@ -210,6 +224,7 @@ public class BigKeyHunter {
                             Long integer = ((IntegerReply) reply).getInteger();
                             int threshold = monitorConfig.getZsetSizeThreshold();
                             if (integer != null && integer > threshold) {
+                                BigKeyMonitor.bigKey(command, objects[1], integer, threshold);
                                 bigKeyMonitorCallback.callbackDownstream(command, reply, objects[1], integer, threshold);
                             }
                         }
@@ -222,6 +237,7 @@ public class BigKeyHunter {
                                 int size = replies.length;
                                 int threshold = monitorConfig.getZsetSizeThreshold();
                                 if (size > threshold) {
+                                    BigKeyMonitor.bigKey(command, objects[1], size, threshold);
                                     bigKeyMonitorCallback.callbackDownstream(command, reply, objects[1], size, threshold);
                                 }
                             }
@@ -242,6 +258,7 @@ public class BigKeyHunter {
                                 int size = withScores ? replies.length / 2 : replies.length;
                                 int threshold = monitorConfig.getZsetSizeThreshold();
                                 if (size > threshold) {
+                                    BigKeyMonitor.bigKey(command, objects[1], size, threshold);
                                     bigKeyMonitorCallback.callbackDownstream(command, reply, objects[1], size, threshold);
                                 }
                             }
@@ -256,6 +273,7 @@ public class BigKeyHunter {
                             Long integer = ((IntegerReply) reply).getInteger();
                             int threshold = monitorConfig.getListSizeThreshold();
                             if (integer != null && integer > threshold) {
+                                BigKeyMonitor.bigKey(command, objects[1], integer, threshold);
                                 bigKeyMonitorCallback.callbackDownstream(command, reply, objects[1], integer, threshold);
                             }
                         }
@@ -267,6 +285,7 @@ public class BigKeyHunter {
                                 int size = replies.length;
                                 int threshold = monitorConfig.getListSizeThreshold();
                                 if (size > threshold) {
+                                    BigKeyMonitor.bigKey(command, objects[1], size, threshold);
                                     bigKeyMonitorCallback.callbackDownstream(command, reply, objects[1], size, threshold);
                                 }
                             }
@@ -281,6 +300,7 @@ public class BigKeyHunter {
                             Long integer = ((IntegerReply) reply).getInteger();
                             int threshold = monitorConfig.getSetSizeThreshold();
                             if (integer != null && integer > threshold) {
+                                BigKeyMonitor.bigKey(command, objects[1], integer, threshold);
                                 bigKeyMonitorCallback.callbackDownstream(command, reply, objects[1], integer, threshold);
                             }
                         }
@@ -292,6 +312,7 @@ public class BigKeyHunter {
                                 int size = replies.length;
                                 int threshold = monitorConfig.getSetSizeThreshold();
                                 if (size > threshold) {
+                                    BigKeyMonitor.bigKey(command, objects[1], size, threshold);
                                     bigKeyMonitorCallback.callbackDownstream(command, reply, objects[1], size, threshold);
                                 }
                             }

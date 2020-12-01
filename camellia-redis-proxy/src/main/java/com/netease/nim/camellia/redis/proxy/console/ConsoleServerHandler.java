@@ -39,6 +39,8 @@ public class ConsoleServerHandler extends SimpleChannelInboundHandler<Object> {
             return consoleService.check();
         } else if (uri.equalsIgnoreCase("/status")) {
             return consoleService.status();
+        } else if (uri.equalsIgnoreCase("/monitor")) {
+            return consoleService.monitor();
         } else if (uri.equalsIgnoreCase("/custom")) {
             return consoleService.custom(requestObject.getParams());
         }

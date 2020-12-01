@@ -13,6 +13,10 @@ import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpend
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.conf.QueueType;
+import com.netease.nim.camellia.redis.proxy.monitor.BigKeyMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.HotKeyCacheMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.HotKeyMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.SlowCommandMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
@@ -49,11 +53,24 @@ public class AsyncCommandInvoker implements CommandInvoker {
         CamelliaTranspondProperties.RedisConfProperties redisConf = transpondProperties.getRedisConf();
         int commandPipelineFlushThreshold = redisConf.getCommandPipelineFlushThreshold();
 
+        int monitorIntervalSeconds = serverProperties.getMonitorIntervalSeconds();
         CommandInterceptor commandInterceptor = ConfigInitUtil.initCommandInterceptor(serverProperties);
-        CommandHotKeyMonitorConfig commandHotKeyMonitorConfig = ConfigInitUtil.initCommandHotKeyMonitorConfig(serverProperties);
         CommandSpendTimeConfig commandSpendTimeConfig = ConfigInitUtil.initCommandSpendTimeConfig(serverProperties);
+        if (commandSpendTimeConfig != null) {
+            SlowCommandMonitor.init(monitorIntervalSeconds);
+        }
+        CommandHotKeyMonitorConfig commandHotKeyMonitorConfig = ConfigInitUtil.initCommandHotKeyMonitorConfig(serverProperties);
+        if (commandHotKeyMonitorConfig != null) {
+            HotKeyMonitor.init(monitorIntervalSeconds);
+        }
         CommandHotKeyCacheConfig commandHotKeyCacheConfig = ConfigInitUtil.initHotKeyCacheConfig(serverProperties);
+        if (commandHotKeyCacheConfig != null) {
+            HotKeyCacheMonitor.init(monitorIntervalSeconds);
+        }
         CommandBigKeyMonitorConfig commandBigKeyMonitorConfig = ConfigInitUtil.initBigKeyMonitorConfig(serverProperties);
+        if (commandBigKeyMonitorConfig != null) {
+            BigKeyMonitor.init(monitorIntervalSeconds);
+        }
 
         this.commandInvokeConfig = new CommandInvokeConfig(commandPipelineFlushThreshold,
                 commandInterceptor, commandSpendTimeConfig, commandHotKeyMonitorConfig, commandHotKeyCacheConfig, commandBigKeyMonitorConfig);

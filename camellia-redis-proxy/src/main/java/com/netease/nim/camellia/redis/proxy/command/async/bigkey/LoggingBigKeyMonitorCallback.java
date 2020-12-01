@@ -41,7 +41,7 @@ public class LoggingBigKeyMonitorCallback implements BigKeyMonitorCallback {
     public void callbackUpstream(Command command, byte[] key, long size, long threshold) {
         try {
             String log = "big key for upstream, command.context = " + command.getCommandContext() + ", command = " + command.getRedisCommand()
-                    + ", key = " + Utils.bytesToString(key) + ", size = " + size + ", threshold = " + threshold + ", params = " + command.toParamsStr();
+                    + ", key = " + Utils.bytesToString(key) + ", size = " + size + ", threshold = " + threshold;
             AtomicLong count = logMap.computeIfAbsent(log, k -> new AtomicLong());
             count.incrementAndGet();
         } catch (Exception e) {
@@ -53,7 +53,7 @@ public class LoggingBigKeyMonitorCallback implements BigKeyMonitorCallback {
     public void callbackDownstream(Command command, Reply reply, byte[] key, long size, long threshold) {
         try {
             String log = "big key for downstream, command.context = " + command.getCommandContext() + ", command = " + command.getRedisCommand()
-                    + ", key = " + Utils.bytesToString(key) + ", size = " + size + ", threshold = " + threshold + ", params = " + command.toParamsStr();
+                    + ", key = " + Utils.bytesToString(key) + ", size = " + size + ", threshold = " + threshold;
             AtomicLong count = logMap.computeIfAbsent(log, k -> new AtomicLong());
             count.incrementAndGet();
         } catch (Exception e) {

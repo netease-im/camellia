@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
 import org.slf4j.Logger;
@@ -25,6 +27,7 @@ public class RedisMonitor {
 
     private static MonitorCallback monitorCallback;
 
+    private static int intervalSeconds;
     private static ConcurrentHashMap<String, LongAdder> map = new ConcurrentHashMap<>();
     private static Stats stats = new Stats();
     private static final ConcurrentHashMap<String, LongAdder> failCountMap = new ConcurrentHashMap<>();
@@ -45,6 +48,7 @@ public class RedisMonitor {
     }
 
     public static void init(int seconds, boolean commandSpendTimeMonitorEnable, MonitorCallback monitorCallback) {
+        intervalSeconds = seconds;
         ScheduledExecutorUtils.scheduleAtFixedRate(RedisMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
         RedisMonitor.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
         if (commandSpendTimeMonitorEnable) {
@@ -94,6 +98,87 @@ public class RedisMonitor {
 
     public static Stats getStats() {
         return stats;
+    }
+
+    public static JSONObject getStatsJson() {
+        JSONObject monitorJson = new JSONObject();
+        JSONArray connectJsonArray = new JSONArray();
+        JSONObject connectJson = new JSONObject();
+        connectJson.put("connect", stats.getClientConnectCount());
+        connectJsonArray.add(connectJson);
+        monitorJson.put("connectStats", connectJsonArray);
+
+        JSONArray countJsonArray = new JSONArray();
+        JSONObject countJson = new JSONObject();
+        countJson.put("count", stats.getCount());
+        countJson.put("totalReadCount", stats.getTotalReadCount());
+        countJson.put("totalWriteCount", stats.getTotalWriteCount());
+        countJsonArray.add(countJson);
+        monitorJson.put("countStats", countJsonArray);
+
+        JSONArray qpsJsonArray = new JSONArray();
+        JSONObject qpsJson = new JSONObject();
+        qpsJson.put("qps", stats.getCount() / (stats.getIntervalSeconds() * 1.0));
+        qpsJson.put("readQps", stats.getTotalReadCount() / (stats.getIntervalSeconds() * 1.0));
+        qpsJson.put("writeQps", stats.getTotalWriteCount() / (stats.getIntervalSeconds() * 1.0));
+        qpsJsonArray.add(qpsJson);
+        monitorJson.put("qpsStats", qpsJsonArray);
+
+        JSONArray totalJsonArray = new JSONArray();
+        for (Stats.TotalStats totalStats : stats.getTotalStatsList()) {
+            JSONObject totalJson = new JSONObject();
+            totalJson.put("command", totalStats.getCommand());
+            totalJson.put("count", totalStats.getCount());
+            totalJson.put("qps", totalStats.getCount() / (stats.getIntervalSeconds() * 1.0));
+            totalJsonArray.add(totalJson);
+        }
+        monitorJson.put("total", totalJsonArray);
+
+        JSONArray bigBgroupJsonArray = new JSONArray();
+        for (Stats.BidBgroupStats bidBgroupStats : stats.getBidBgroupStatsList()) {
+            JSONObject bidBgroupJson = new JSONObject();
+            bidBgroupJson.put("bid", bidBgroupStats.getBid() == null ? "default" : String.valueOf(bidBgroupStats.getBid()));
+            bidBgroupJson.put("bgroup", bidBgroupStats.getBgroup() == null ? "default" : bidBgroupStats.getBgroup());
+            bidBgroupJson.put("count", bidBgroupStats.getCount());
+            bidBgroupJson.put("qps", bidBgroupStats.getCount() / (stats.getIntervalSeconds() * 1.0));
+            bigBgroupJsonArray.add(bidBgroupJson);
+        }
+        monitorJson.put("bidbgroup", bigBgroupJsonArray);
+
+        JSONArray detailJsonArray = new JSONArray();
+        for (Stats.DetailStats detailStats : stats.getDetailStatsList()) {
+            JSONObject detailJson = new JSONObject();
+            detailJson.put("bid", detailStats.getBid() == null ? "default" : String.valueOf(detailStats.getBid()));
+            detailJson.put("bgroup", detailStats.getBgroup() == null ? "default" : detailStats.getBgroup());
+            detailJson.put("command", detailStats.getCommand());
+            detailJson.put("count", detailStats.getCount());
+            detailJson.put("qps", detailStats.getCount() / (stats.getIntervalSeconds() * 1.0));
+            detailJsonArray.add(detailJson);
+        }
+        monitorJson.put("detail", detailJsonArray);
+
+        JSONArray failJsonArray = new JSONArray();
+        for (Map.Entry<String, Long> entry : stats.getFailMap().entrySet()) {
+            String failReason = entry.getKey();
+            Long count = entry.getValue();
+            JSONObject failJson = new JSONObject();
+            failJson.put("reason", failReason);
+            failJson.put("count", count);
+            failJsonArray.add(failJson);
+        }
+        monitorJson.put("failStats", failJsonArray);
+
+        JSONArray spendJsonArray = new JSONArray();
+        for (Stats.SpendStats spendStats : stats.getSpendStatsList()) {
+            JSONObject spendJson = new JSONObject();
+            spendJson.put("command", spendStats.getCommand());
+            spendJson.put("count", spendStats.getCount());
+            spendJson.put("avgSpendMs", spendStats.getAvgSpendMs());
+            spendJson.put("maxSpendMs", spendStats.getMaxSpendMs());
+            spendJsonArray.add(spendJson);
+        }
+        monitorJson.put("spendStats", spendJsonArray);
+        return monitorJson;
     }
 
     private static void calc() {
@@ -182,6 +267,7 @@ public class RedisMonitor {
             }
             stats.setFailMap(failMap);
             stats.setSpendStatsList(spendStatsList);
+            stats.setIntervalSeconds(intervalSeconds);
 
             RedisMonitor.stats = stats;
 

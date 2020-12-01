@@ -485,7 +485,9 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             String url = entry.getKey();
             List<byte[]> list = entry.getValue();
             AsyncClient client = factory.get(url);
-            CompletableFuture<Reply> future = commandFlusher.sendCommand(client, new Command(list.toArray(new byte[0][0])));
+            Command subCommand = new Command(list.toArray(new byte[0][0]));
+            subCommand.setChannelInfo(command.getChannelInfo());
+            CompletableFuture<Reply> future = commandFlusher.sendCommand(client, subCommand);
             incrWrite(url, command);
             if (firstWriteResourceUrls.contains(url)) {
                 futures.add(future);
@@ -545,7 +547,9 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 subCommandArgs.add(redisKey.getKey());
             }
             urlList.add(url);
-            CompletableFuture<Reply> future = commandFlusher.sendCommand(client, new Command(subCommandArgs.toArray(new byte[0][0])));
+            Command subCommand = new Command(subCommandArgs.toArray(new byte[0][0]));
+            subCommand.setChannelInfo(command.getChannelInfo());
+            CompletableFuture<Reply> future = commandFlusher.sendCommand(client, subCommand);
             incrRead(url, command);
             futures.add(future);
         }
@@ -596,8 +600,10 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             for (int j = 0; j < resources.size(); j++) {
                 Resource resource = resources.get(j);
                 AsyncClient client = factory.get(resource.getUrl());
-                byte[][] subCommand = new byte[][]{args[0], key};
-                CompletableFuture<Reply> future = commandFlusher.sendCommand(client, new Command(subCommand));
+                byte[][] subCommandArg = new byte[][]{args[0], key};
+                Command subCommand = new Command(subCommandArg);
+                subCommand.setChannelInfo(command.getChannelInfo());
+                CompletableFuture<Reply> future = commandFlusher.sendCommand(client, subCommand);
                 incrWrite(resource, command);
                 if (j == 0) {
                     futures.add(future);
@@ -658,6 +664,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             AsyncClient client = factory.get(url);
 
             Command subCommand = new Command(list.toArray(new byte[0][0]));
+            subCommand.setChannelInfo(command.getChannelInfo());
             CompletableFuture<Reply> future = commandFlusher.sendCommand(client, subCommand);
             incrRead(url, command);
             futures.add(future);

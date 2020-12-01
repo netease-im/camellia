@@ -19,6 +19,7 @@ public class Command {
     private boolean hasCheckBlocking = false;
     private boolean blocking = false;
     private List<byte[]> keys = null;
+    private String keysStr = null;
     private CommandContext commandContext;
 
     public Command(byte[][] objects) {
@@ -47,6 +48,25 @@ public class Command {
         if (keys != null) return keys;
         keys = KeyParser.findKeys(this);
         return keys;
+    }
+
+    public String getKeysStr() {
+        if (keysStr != null) return keysStr;
+        List<byte[]> keys = getKeys();
+        if (keys.isEmpty()) {
+            keysStr = "";
+        } else {
+            StringBuilder builder = new StringBuilder();
+            for (int i=0; i<keys.size(); i++) {
+                if (i == keys.size() - 1) {
+                    builder.append(Utils.bytesToString(keys.get(i)));
+                } else {
+                    builder.append(Utils.bytesToString(keys.get(i))).append(",");
+                }
+            }
+            keysStr = builder.toString();
+        }
+        return keysStr;
     }
 
     public boolean isBlocking() {
@@ -87,17 +107,6 @@ public class Command {
 
     public void setChannelInfo(ChannelInfo channelInfo) {
         this.channelInfo = channelInfo;
-    }
-
-    public String toParamsStr() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("[");
-        for (byte[] object : objects) {
-            builder.append(Utils.bytesToString(object)).append(" ");
-        }
-        builder.deleteCharAt(builder.length() - 1);
-        builder.append("]");
-        return builder.toString();
     }
 
     public void fillParameters(Class<?>[] parameterTypes, Object[] parameters) {

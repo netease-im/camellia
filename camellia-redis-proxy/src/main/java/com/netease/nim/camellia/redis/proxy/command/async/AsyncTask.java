@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCach
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.SlowCommandMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -51,8 +52,10 @@ public class AsyncTask {
                 if (!command.isBlocking() && spendNanoTime > commandSpendTimeConfig.getSlowCommandThresholdMillisTime() * 1000000L) {
                     if (commandSpendTimeConfig.getSlowCommandMonitorCallback() != null) {
                         try {
+                            double spendMs = spendNanoTime / 1000000.0;
+                            SlowCommandMonitor.slowCommand(command, spendMs, commandSpendTimeConfig.getSlowCommandThresholdMillisTime());
                             commandSpendTimeConfig.getSlowCommandMonitorCallback().callback(command, reply,
-                                    spendNanoTime / 1000000.0, commandSpendTimeConfig.getSlowCommandThresholdMillisTime());
+                                    spendMs, commandSpendTimeConfig.getSlowCommandThresholdMillisTime());
                         } catch (Exception e) {
                             ErrorLogCollector.collect(AsyncTask.class, "SlowCommandCallback error", e);
                         }
@@ -74,7 +77,11 @@ public class AsyncTask {
             }
             this.reply = reply;
             if (bigKeyHunter != null) {
-                bigKeyHunter.checkDownstream(command, reply);
+                try {
+                    bigKeyHunter.checkDownstream(command, reply);
+                } catch (Exception e) {
+                    ErrorLogCollector.collect(AsyncTask.class, e.getMessage(), e);
+                }
             }
             this.taskQueue.callback();
         } catch (Exception e) {

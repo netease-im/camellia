@@ -8,7 +8,6 @@ import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterMan
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCache;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheManager;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotValue;
-import com.netease.nim.camellia.redis.proxy.command.async.queue.disruptor.DisruptorCommandsEventConsumer;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
@@ -143,7 +142,7 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
                         response = commandInterceptor.check(command);
                     } catch (Exception e) {
                         String errorMsg = "ERR command intercept error [" + e.getMessage() + "]";
-                        ErrorLogCollector.collect(DisruptorCommandsEventConsumer.class, errorMsg, e);
+                        ErrorLogCollector.collect(AbstractCommandsEventConsumer.class, errorMsg, e);
                         response = new CommandInterceptResponse(false, errorMsg);
                     }
                     if (!response.isPass()) {
@@ -172,7 +171,11 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
                 }
 
                 if (bigKeyHunter != null) {
-                    bigKeyHunter.checkUpstream(command);
+                    try {
+                        bigKeyHunter.checkUpstream(command);
+                    } catch (Exception e) {
+                        ErrorLogCollector.collect(AbstractCommandsEventConsumer.class, e.getMessage(), e);
+                    }
                 }
 
                 tasks.add(task);
@@ -214,7 +217,7 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
         } catch (Exception e) {
             String log = "AsyncCamelliaRedisTemplateChooser choose error"
                     + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e.toString();
-            ErrorLogCollector.collect(DisruptorCommandsEventConsumer.class, log, e);
+            ErrorLogCollector.collect(AbstractCommandsEventConsumer.class, log, e);
         }
         if (template == null) {
             for (AsyncTask task : taskList) {

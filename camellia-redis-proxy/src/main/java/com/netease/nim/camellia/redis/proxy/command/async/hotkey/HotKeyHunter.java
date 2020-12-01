@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command.async.hotkey;
 
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
+import com.netease.nim.camellia.redis.proxy.monitor.HotKeyMonitor;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import com.netease.nim.camellia.redis.proxy.util.LRUCounter;
 import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
@@ -63,6 +64,7 @@ public class HotKeyHunter {
                 }
             }
             if (!hotKeys.isEmpty()) {
+                HotKeyMonitor.hotKey(commandContext, hotKeys, hotKeyConfig);
                 callback.callback(commandContext, hotKeys, hotKeyConfig);
             }
         } catch (Exception e) {

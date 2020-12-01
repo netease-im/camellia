@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.console;
 
+import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ServerStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +82,22 @@ public class ConsoleServiceAdaptor implements ConsoleService {
                 logger.error("close error", e);
             }
         }
+    }
+
+    @Override
+    public ConsoleResult monitor() {
+        JSONObject monitorJson = new JSONObject();
+        JSONObject statsJson = RedisMonitor.getStatsJson();
+        monitorJson.putAll(statsJson);
+        JSONObject slowCommandStatsJson = SlowCommandMonitor.getSlowCommandStatsJson();
+        monitorJson.putAll(slowCommandStatsJson);
+        JSONObject hotKeyStatsJson = HotKeyMonitor.getHotKeyStatsJson();
+        monitorJson.putAll(hotKeyStatsJson);
+        JSONObject bigKeyStatsJson = BigKeyMonitor.getBigKeyStatsJson();
+        monitorJson.putAll(bigKeyStatsJson);
+        JSONObject hotKeyCacheStatsJson = HotKeyCacheMonitor.getHotKeyCacheStatsJson();
+        monitorJson.putAll(hotKeyCacheStatsJson);
+        return ConsoleResult.success(monitorJson.toJSONString());
     }
 
     @Override
