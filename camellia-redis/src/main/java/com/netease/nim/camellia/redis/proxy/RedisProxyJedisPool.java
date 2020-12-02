@@ -103,6 +103,11 @@ public class RedisProxyJedisPool extends JedisPool {
     }
 
     public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
+                               int timeout, String password, boolean sidCarFirst) {
+        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, sidCarFirst, defaultLocalHost);
+    }
+
+    public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
                                int timeout, String password, int refreshSeconds, int maxRetry) {
         this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, refreshSeconds, maxRetry, defaultSidCarFirst, defaultLocalHost);
     }
