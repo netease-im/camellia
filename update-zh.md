@@ -1,12 +1,8 @@
-# 未来
-### 新增
-* camellia-redis-proxy支持key/value等的自定义转换，可以用于透明的数据加密/数据压缩等（TODO）
-
-### 更新
-无
-
-### fix
-无
+# 未来(TODO)
+* camellia-redis-proxy支持key/value等的自定义转换，可以用于透明的数据加密/数据压缩等
+* 支持基于注册中心的SpringRedisTemplate/Lettuce的接入方案
+* 支持redis6.0的client-cache特性
+* 支持redis事务，multi/watch/exec等
 
 # 1.0.11（2020/11/xx）
 ### 新增
@@ -18,12 +14,13 @@
 * camellia-redis-proxy支持配置读写分离时设置多个读地址（随机选择一个地址读）
 * CamelliaRedisTemplate支持获取原始Jedis
 * RedisProxyJedisPool支持sid-car模式，开启后优先访问同机部署的redis-proxy
+* camellia-redis-proxy的console支持根据api（默认是http://127.0.0.1:16379/monitor）获取监控数据（包括tps/rt/慢查询/热key/大key/热key缓存等）
 
 ### 更新
 * 修改了CommandInterceptor接口的定义
 
 ### fix
-无
+* fix自定义分片时mget的NPE问题（1.0.10引入的bug）
 
 # 1.0.10（2020/10/16）
 ### 新增

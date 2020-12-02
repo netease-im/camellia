@@ -1,12 +1,9 @@
-# future  
-### add
-* camellia-redis-proxy support key/value custom transfer, you can use this feature in data-encryption/data-compress(TODO)
+# future(TODO)  
+* camellia-redis-proxy support key/value custom transfer, you can use this feature in data-encryption/data-compress
+* support a way for SpringRedisTemplate/Lettuce to use camellia-redis-proxy depends on register-discovery mode easily
+* support client-cache feature of redis6.0
+* support redis transaction of multi/watch/exec commands
 
-### update
-无
-
-### fix
-无
 
 # 1.0.11（2020/11/xx）
 ### add
@@ -18,12 +15,13 @@
 * camellia-redis-proxy support multi-read-resources while rw_separate(will random choose a redis to read)
 * CamelliaRedisTemplate support get original Jedis
 * RedisProxyJedisPool support sid-car mode, if setting true, RedisProxyJedisPool will use sid-car-proxy first
+* camellia-redis-proxy console support http api(default http://127.0.0.1:16379/monitor) to get metrics（tps、rt、slow command、hot key、big key、hot key cache）
 
 ### update
 * update CommandInterceptor define
 
 ### fix
-none
+* fix NPE for mget when use custom shading(from 1.0.10)
 
 # 1.0.10（2020/10/16）
 ### add

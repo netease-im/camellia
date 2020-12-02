@@ -900,7 +900,7 @@ public class MyConsoleService extends ConsoleServiceAdaptor implements Initializ
     }
 }
 ```
-the console server have five http api:    
+the console server have six http api:    
 * /online
 will set a global var to ONLINE
 * /offline
@@ -914,6 +914,8 @@ else return http.code=500
 * /check
 if server.port is reachable, return http.code=200,  
 else return http.code=500
+* /monitor
+get the metrics（tps、rt、slow command、hot key、big key、hot key cache），response is a json，the metrics' refresh interval seconds is same as RedisMonitor
 * /custom
 a custom api, you can override it, and use different params to distinguish different request type.  
 
