@@ -111,4 +111,4 @@ try (ICamelliaRedisPipeline pipelined = template.pipelined()) {
 }
 ```
 ### 示例源码
-[示例源码](/camellia-samples/camellia-hbase-samples)
+[示例源码](/camellia-samples/camellia-redis-samples)

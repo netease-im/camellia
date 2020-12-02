@@ -104,4 +104,4 @@ for (Result result1 : resultScanner) {
 }
 ```
 ### 示例源码
-[示例源码](/camellia-samples/camellia-redis-samples)
+[示例源码](/camellia-samples/camellia-hbase-samples)
