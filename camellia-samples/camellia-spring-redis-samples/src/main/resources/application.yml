@@ -1,0 +1,16 @@
+
+camellia-spring-redis-zk-discovery:
+  application-name: camellia-redis-proxy-server
+  #bid: 1
+  #bgroup: default
+  password: pass123
+  zk-conf:
+    zk-url: 127.0.0.1:2181
+    base-path: /camellia
+  redis-conf:
+    min-idle: 0
+    max-active: 8
+    max-idle: 8
+    max-wait-millis: 2000
+    timeout: 2000
+

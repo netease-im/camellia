@@ -332,6 +332,14 @@ public class RedisProxyJedisPool extends JedisPool {
         return new JedisPool(poolConfig, proxy.getHost(), proxy.getPort(), timeout, password, 0, clientName);
     }
 
+    public String getClientName() {
+        String clientName = null;
+        if (bid > 0 && bgroup != null) {
+            clientName = ProxyUtil.buildClientName(bid, bgroup);
+        }
+        return clientName;
+    }
+
     //兜底线程
     private static class RefreshThread extends Thread {
         private final RedisProxyJedisPool proxyJedisPool;
