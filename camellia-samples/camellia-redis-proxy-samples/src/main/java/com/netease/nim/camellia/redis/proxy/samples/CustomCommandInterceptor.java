@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.samples;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptResponse;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -17,7 +18,13 @@ public class CustomCommandInterceptor implements CommandInterceptor {
 
     @Override
     public CommandInterceptResponse check(Command command) {
-        SocketAddress clientSocketAddress = command.getCommandContext().getClientSocketAddress();
+        CommandContext commandContext = command.getCommandContext();
+        Long bid = commandContext.getBid();
+        String bgroup = commandContext.getBgroup();
+        if (bid != null && bid != 1 && bgroup != null && !bgroup.equals("default")) {
+            return CommandInterceptResponse.SUCCESS;
+        }
+        SocketAddress clientSocketAddress = commandContext.getClientSocketAddress();
         if (clientSocketAddress instanceof InetSocketAddress) {
             String hostAddress = ((InetSocketAddress) clientSocketAddress).getAddress().getHostAddress();
             if (hostAddress != null && hostAddress.equals("10.128.1.1")) {
