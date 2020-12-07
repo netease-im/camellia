@@ -189,7 +189,6 @@ public class AsyncCamelliaRedisSentinelClient extends AsyncCamelliaSimpleClient 
                                     RedisClientAddr newNode = new RedisClientAddr(switchMasterMsg[3], Integer.parseInt(switchMasterMsg[4]),
                                             redisSentinelResource.getPassword());
                                     if (!Objects.equals(oldNode, newNode)) {
-                                        RedisClientHub.get(newNode);
                                         redisSentinelClient.redisClientAddr = newNode;
                                         if (logger.isInfoEnabled()) {
                                             logger.info("sentinel redis master node update, resource = {}, old = {}, new = {}", redisSentinelResource.getUrl(), oldNode, newNode);
@@ -216,7 +215,6 @@ public class AsyncCamelliaRedisSentinelClient extends AsyncCamelliaSimpleClient 
                     RedisClientAddr newNode = new RedisClientAddr(redisHost, redisPort, redisSentinelResource.getPassword());
                     RedisClientAddr oldNode = redisClientAddr;
                     if (!Objects.equals(newNode, oldNode)) {
-                        RedisClientHub.get(newNode);
                         redisClientAddr = newNode;
                         if (logger.isInfoEnabled()) {
                             logger.info("sentinel redis master node refresh, resource = {}, old = {}, new = {}", redisSentinelResource.getUrl(), oldNode, newNode);

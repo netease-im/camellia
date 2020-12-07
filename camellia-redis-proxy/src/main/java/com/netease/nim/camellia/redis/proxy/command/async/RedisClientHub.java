@@ -75,16 +75,17 @@ public class RedisClientHub {
         EventLoopGroup loopGroup;
         ConcurrentHashMap<String, RedisClient> map;
 
-        if (eventLoopThreadLocal.get().inEventLoop()) {
+        EventLoop eventLoop = eventLoopThreadLocal.get();
+        if (eventLoop == null || eventLoop.inEventLoop()) {
             loopGroup = eventLoopGroup;
             map = RedisClientHub.map;
         } else {
-            loopGroup = eventLoopThreadLocal.get();
             map = threadLocalMap.get();
             if (map == null) {
                 map = new ConcurrentHashMap<>();
                 threadLocalMap.set(map);
             }
+            loopGroup = eventLoop;
         }
 
         String url = addr.getUrl();
