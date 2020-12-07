@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
-import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
@@ -20,6 +19,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
@@ -45,10 +45,8 @@ public class AsyncCamelliaRedisSentinelClient extends AsyncCamelliaSimpleClient 
             try {
                 String host = node.getHost();
                 int port = node.getPort();
-                redisClient = new RedisClient(host, port, null, RedisClientHub.eventLoopGroup,
-                        -1, -1, RedisClientHub.connectTimeoutMillis);
-                redisClient.start();
-                if (redisClient.isValid()) {
+                redisClient = RedisClientHub.newClient(host, port, null);
+                if (redisClient != null && redisClient.isValid()) {
                     sentinelAvailable = true;
                     CompletableFuture<Reply> future = redisClient.sendCommand(RedisCommand.SENTINEL.raw(), SENTINEL_GET_MASTER_ADDR_BY_NAME, SafeEncoder.encode(master));
                     Reply reply = future.get(10, TimeUnit.SECONDS);
@@ -92,6 +90,8 @@ public class AsyncCamelliaRedisSentinelClient extends AsyncCamelliaSimpleClient 
         private final RedisSentinelResource.Node node;
         private final String master;
         private boolean running = true;
+        private final AtomicLong futureCount = new AtomicLong();
+        private final int futureBuffer = 32;
 
         public MasterListener(AsyncCamelliaRedisSentinelClient redisSentinelClient, String master, RedisSentinelResource.Node node) {
             this.redisSentinelClient = redisSentinelClient;
@@ -103,54 +103,37 @@ public class AsyncCamelliaRedisSentinelClient extends AsyncCamelliaSimpleClient 
         @Override
         public void run() {
             RedisClient redisClient = null;
+            logger.info("redis sentinel master listener thread start, resource = {}, node = {}", redisSentinelResource.getUrl(), node.getHost() + ":" + node.getPort());
             while (running) {
                 try {
                     if (redisClient == null || !redisClient.isValid()) {
                         if (redisClient != null && !redisClient.isValid()) {
                             redisClient.stop();
                         }
-                        redisClient = new RedisClient(node.getHost(), node.getPort(), null, RedisClientHub.eventLoopGroup,
-                                -1, -1, RedisClientHub.connectTimeoutMillis);
-                        redisClient.start();
+                        redisClient = RedisClientHub.newClient(node.getHost(), node.getPort(), null);
+                        while (redisClient == null || !redisClient.isValid()) {
+                            logger.error("connect to sentinel fail, addr = {}. sleeping 5000ms and retrying.", node.getHost() + ":" + node.getPort());
+                            try {
+                                TimeUnit.MILLISECONDS.sleep(5000);
+                            } catch (InterruptedException e) {
+                                logger.error(e.getMessage(), e);
+                            }
+                            redisClient = RedisClientHub.newClient(node.getHost(), node.getPort(), null);
+                        }
                     }
-
                     if (redisClient.isValid()) {
                         CompletableFuture<Reply> future1 = redisClient.sendCommand(RedisCommand.SENTINEL.raw(), SENTINEL_GET_MASTER_ADDR_BY_NAME, SafeEncoder.encode(master));
                         Reply getMasterReply = future1.get(10, TimeUnit.SECONDS);
                         processMasterGet(getMasterReply);
 
                         CompletableFuture<Reply> future2 = redisClient.sendCommand(RedisCommand.SUBSCRIBE.raw(), MASTER_SWITCH);
-                        Reply subscribeReply = future2.get();
-                        processMasterSwitch(subscribeReply);
+                        future2.thenAccept(this::_processMasterSwitch);
+                        sendFutures(redisClient);
                         while (running) {
-                            CompletableFuture<Reply> future01 = new CompletableFuture<>();
-                            CompletableFuture<Reply> future02 = new CompletableFuture<>();
-                            List<Command> commands = Collections.singletonList(new Command(new byte[][] {RedisCommand.PING.raw()}));
-                            List<CompletableFuture<Reply>> futures = new ArrayList<>();
-                            futures.add(future01);
-                            futures.add(future02);
-                            redisClient.sendCommand(commands, futures);
-
-                            for (CompletableFuture<Reply> future : futures) {
-                                Reply reply = null;
-                                while (running) {
-                                    try {
-                                        reply = future.get(10, TimeUnit.SECONDS);
-                                        break;
-                                    } catch (Exception ignore) {
-                                        if (!redisClient.isValid()) {
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (!redisClient.isValid()) {
-                                    break;
-                                }
-                                processMasterSwitch(reply);
-                            }
                             if (!redisClient.isValid()) {
                                 break;
                             }
+                            TimeUnit.SECONDS.sleep(10);
                         }
                     }
                 } catch (Exception e) {
@@ -172,7 +155,19 @@ public class AsyncCamelliaRedisSentinelClient extends AsyncCamelliaSimpleClient 
             running = false;
         }
 
-        private void processMasterSwitch(Reply reply) {
+        private void sendFutures(RedisClient redisClient) {
+            if (!redisClient.isValid()) return;
+            List<CompletableFuture<Reply>> futureList = new ArrayList<>();
+            for (int i=0; i<futureBuffer; i++) {
+                CompletableFuture<Reply> future = new CompletableFuture<>();
+                future.thenAccept(reply -> processMasterSwitch(redisClient, reply));
+                futureList.add(future);
+            }
+            futureCount.addAndGet(futureList.size());
+            redisClient.sendCommand(Collections.emptyList(), futureList);
+        }
+
+        private void _processMasterSwitch(Reply reply) {
             if (reply == null) return;
             if (reply instanceof MultiBulkReply) {
                 Reply[] replies = ((MultiBulkReply) reply).getReplies();
@@ -198,6 +193,17 @@ public class AsyncCamelliaRedisSentinelClient extends AsyncCamelliaSimpleClient 
                             }
                         }
                     }
+                }
+            }
+        }
+
+        private void processMasterSwitch(RedisClient redisClient, Reply reply) {
+            futureCount.decrementAndGet();
+            try {
+                _processMasterSwitch(reply);
+            } finally {
+                if (futureCount.get() < futureBuffer / 2) {
+                    sendFutures(redisClient);
                 }
             }
         }
