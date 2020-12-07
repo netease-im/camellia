@@ -22,7 +22,8 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4和camellia-c
 * 支持热key在proxy层的本地缓存（仅支持GET命令），支持设置HotKeyCacheStatsCallback
 * 支持大key监控，支持设置BigKeyMonitorCallback
 * 提供了一个spring-boot-starter，可以快速搭建proxy集群
-* 提供了一个默认的注册发现实现组件（依赖zookeeper），如果端侧是java，则可以很简单的将JedisPool替换为RedisProxyJedisPool，即可接入redis proxy 
+* 提供了一个默认的注册发现实现组件（依赖zookeeper），如果端侧是java，则可以很简单的将JedisPool替换为RedisProxyJedisPool，即可接入redis proxy  
+* 提供了一个spring-boot-starter用于SpringRedisTemplate以注册发现模式接入proxy   
 
 ## 支持的命令
 * 完整支持
