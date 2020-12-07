@@ -451,6 +451,7 @@ if you want to add a custom CommandInterceptor to intercept illegal commands, th
 package com.netease.nim.camellia.redis.proxy.samples;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptResponse;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -467,7 +468,13 @@ public class CustomCommandInterceptor implements CommandInterceptor {
 
     @Override
     public CommandInterceptResponse check(Command command) {
-        SocketAddress clientSocketAddress = command.getCommandContext().getClientSocketAddress();
+        CommandContext commandContext = command.getCommandContext();
+        Long bid = commandContext.getBid();
+        String bgroup = commandContext.getBgroup();
+        if (bid != null && bid != 1 && bgroup != null && !bgroup.equals("default")) {
+            return CommandInterceptResponse.SUCCESS;
+        }
+        SocketAddress clientSocketAddress = commandContext.getClientSocketAddress();
         if (clientSocketAddress instanceof InetSocketAddress) {
             String hostAddress = ((InetSocketAddress) clientSocketAddress).getAddress().getHostAddress();
             if (hostAddress != null && hostAddress.equals("10.128.1.1")) {
@@ -494,6 +501,7 @@ public class CustomCommandInterceptor implements CommandInterceptor {
         return CommandInterceptResponse.SUCCESS;
     }
 }
+
 
 
 ```
@@ -650,7 +658,7 @@ if you want to register/deregister, you can use console server
 3) client  
 you should get proxy address list from zk, and use client-loadbalancer policy to invoke proxy.  
 if client language is java, camellia provider RedisProxyJedisPool to connect redis proxy easily.  
-first, add maven dependecny in your project, like this:  
+first, add maven dependency in your project, like this:  
 ```
 <dependency>
     <groupId>com.netease.nim</groupId>
@@ -723,6 +731,49 @@ public class TestClient {
     }
 }
 ```
+if you use Spring RedisTemplate，and you want use proxy in discovery mode(zk), you should add maven dependency, like this:  
+```
+<dependency>
+    <groupId>com.netease.nim</groupId>
+    <artifactId>camellia-spring-redis-zk-discovery-spring-boot-starter</artifactId>
+    <version>a.b.c</version>
+</dependency>
+```
+and add config in application.yml, like this:    
+```yaml
+camellia-spring-redis-zk-discovery:
+  application-name: camellia-redis-proxy-server
+  password: pass123
+  zk-conf:
+    zk-url: 127.0.0.1:2181
+    base-path: /camellia
+  redis-conf:
+    min-idle: 0
+    max-active: 8
+    max-idle: 8
+    max-wait-millis: 2000
+    timeout: 2000
+```
+then the default Spring RedisTemplate will call redis proxy in zk discovery mode(zk)  
+future more, if redis proxy use multi-config with camellia-dashboard, then, you should config like this:   
+```yaml
+camellia-spring-redis-zk-discovery:
+  application-name: camellia-redis-proxy-server
+  bid: 1
+  bgroup: default
+  password: pass123
+  zk-conf:
+    zk-url: 127.0.0.1:2181
+    base-path: /camellia
+  redis-conf:
+    min-idle: 0
+    max-active: 8
+    max-idle: 8
+    max-wait-millis: 2000
+    timeout: 2000
+
+```
+sample code here：[sample code](/camellia-samples/camellia-spring-redis-samples)  
 
 ## Monitor
 ### local monitor
