@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import redis.clients.jedis.JedisPoolConfig;
 
 /**
  *
@@ -37,7 +38,7 @@ public class SpringRedisZkDiscoveryConfiguration {
 
         boolean sidCarFirst = zkConf.isSidCarFirst();
         SpringRedisZkDiscoveryProperties.RedisConf redisConf = properties.getRedisConf();
-        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+        GenericObjectPoolConfig poolConfig = new JedisPoolConfig();
         poolConfig.setMaxIdle(redisConf.getMaxIdle());
         poolConfig.setMinIdle(redisConf.getMinIdle());
         poolConfig.setMaxTotal(redisConf.getMaxActive());
