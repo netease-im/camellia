@@ -225,12 +225,16 @@ public class RedisProxyJedisPool extends JedisPool {
 
     @Override
     public void returnBrokenResource(Jedis resource) {
-        throw new UnsupportedOperationException();
+        if (resource != null) {
+            resource.close();
+        }
     }
 
     @Override
     public void returnResource(Jedis resource) {
-        throw new UnsupportedOperationException();
+        if (resource != null) {
+            resource.close();
+        }
     }
 
     @Override
