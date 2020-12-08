@@ -3,7 +3,7 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-spring-redis-zk-discovery-spring-boot-starter</artifactId>
+	<artifactId>camellia-redis-eureka-base</artifactId>
 	<version>1.0.11-SNAPSHOT</version>
 
 	<parent>
@@ -11,7 +11,6 @@
 		<artifactId>camellia-spring-boot-starters</artifactId>
 		<version>1.0.11-SNAPSHOT</version>
 	</parent>
-
 
 	<dependencyManagement>
 		<dependencies>
@@ -34,38 +33,25 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-autoconfigure</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-configuration-processor</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-redis</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-spring-redis-base</artifactId>
+			<artifactId>camellia-redis</artifactId>
 			<version>1.0.11-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-zk-discovery</artifactId>
-			<version>1.0.11-SNAPSHOT</version>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
-	</dependencies>
-
+    </dependencies>
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.0.2</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
+					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -84,16 +70,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<repositories>
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-
 </project>

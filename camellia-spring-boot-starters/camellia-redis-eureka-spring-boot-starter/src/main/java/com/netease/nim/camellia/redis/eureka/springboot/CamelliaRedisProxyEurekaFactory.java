@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.eureka.springboot;
 
+import com.netease.nim.camellia.redis.eureka.base.EurekaProxyDiscovery;
 import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyFactory;
 import com.netease.nim.camellia.redis.proxy.Proxy;
 import com.netease.nim.camellia.redis.proxy.ProxyDiscovery;
@@ -8,6 +9,7 @@ import com.netease.nim.camellia.redis.resource.CamelliaRedisProxyResource;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,7 +70,7 @@ public class CamelliaRedisProxyEurekaFactory implements CamelliaRedisProxyFactor
     }
 
     private GenericObjectPoolConfig poolConfig() {
-        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+        GenericObjectPoolConfig poolConfig = new JedisPoolConfig();
         CamelliaRedisEurekaProperties.RedisConf redisConf = properties.getRedisConf();
         poolConfig.setMaxIdle(redisConf.getMaxIdle());
         poolConfig.setMinIdle(redisConf.getMinIdle());

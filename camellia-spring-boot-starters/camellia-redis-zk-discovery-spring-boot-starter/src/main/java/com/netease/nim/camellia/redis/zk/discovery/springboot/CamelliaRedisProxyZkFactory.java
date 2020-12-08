@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.zk.discovery.ZkClientFactory;
 import com.netease.nim.camellia.redis.zk.discovery.ZkProxyDiscovery;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -71,7 +72,7 @@ public class CamelliaRedisProxyZkFactory implements CamelliaRedisProxyFactory {
     }
 
     private GenericObjectPoolConfig poolConfig() {
-        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+        GenericObjectPoolConfig poolConfig = new JedisPoolConfig();
         CamelliaRedisZkDiscoveryProperties.RedisConf redisConf = properties.getRedisConf();
         poolConfig.setMaxIdle(redisConf.getMaxIdle());
         poolConfig.setMinIdle(redisConf.getMinIdle());
