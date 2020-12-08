@@ -26,14 +26,18 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 │ ├─`camellia-spring-redis-samples`   
 ├─`camellia-spring-boot-starters`               
 │ ├─`camellia-dashboard-spring-boot-starter`  
-│ ├─`camellia-redis-spring-boot-starter`  
-│ ├─`camellia-redis-eureka-spring-boot-starter`      
-│ ├─`camellia-redis-proxy-spring-boot-starter`   
-│ ├─`camellia-redis-proxy-zk-registry-spring-boot-starter`   
-│ ├─`camellia-redis-proxy-hbase-spring-boot-starter`    
 │ ├─`camellia-hbase-spring-boot-starter`  
-│ ├─`camellia-redis-zk-discovery-spring-boot-starter`  
-│ ├─`camellia-spring-redis-zk-discovery-spring-boot-starter`  
+│ ├─`camellia-redis-eureka-base`  
+│ ├─`camellia-redis-eureka-spring-boot-starter`  
+│ ├─`camellia-redis-proxy-hbase-spring-boot-starter`  
+│ ├─`camellia-redis-proxy-spring-boot-starter`  
+│ ├─`camellia-redis-proxy-zk-registry-spring-boot-starter`                     
+│ ├─`camellia-redis-spring-boot-starter`  
+│ ├─`camellia-redis-spring-boot-starter`  
+│ ├─`camellia-redis-zk-discovery-spring-boot-starter`    
+│ ├─`camellia-spring-redis-base`         
+│ ├─`camellia-spring-redis-eureka-discovery-spring-boot-starter`     
+│ ├─`camellia-spring-redis-zk-discovery-spring-boot-starter`    
               
 ## Instruction
 ### 1、camellia-core  
