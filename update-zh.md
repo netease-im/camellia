@@ -4,7 +4,7 @@
 * 支持redis6.0的client-cache特性
 * 支持redis事务，multi/watch/exec等
 
-# 1.0.11（2020/11/xx）
+# 1.0.11（2020/12/09）
 ### 新增
 * camellia-redis-proxy支持设置监控回调MonitorCallback
 * camellia-redis-proxy支持慢查询监控，支持设置SlowCommandMonitorCallback

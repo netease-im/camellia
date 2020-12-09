@@ -5,7 +5,7 @@
 * support redis transaction of multi/watch/exec commands
 
 
-# 1.0.11（2020/11/xx）
+# 1.0.11（2020/12/09）
 ### add
 * camellia-redis-proxy support setting MonitorCallback
 * camellia-redis-proxy support monitor slow command, support setting SlowCommandMonitorCallback
