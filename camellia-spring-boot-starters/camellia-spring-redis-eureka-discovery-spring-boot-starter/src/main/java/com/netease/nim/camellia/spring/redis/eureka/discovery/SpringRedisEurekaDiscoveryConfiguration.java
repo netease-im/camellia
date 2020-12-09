@@ -30,7 +30,7 @@ public class SpringRedisEurekaDiscoveryConfiguration {
     @Bean
     @ConditionalOnMissingBean(RedisProxyJedisPool.class)
     public RedisProxyJedisPool redisProxyJedisPool(SpringRedisEurekaDiscoveryProperties properties) {
-        EurekaProxyDiscovery eurekaProxyDiscovery = new EurekaProxyDiscovery(discoveryClient, properties.getApplicationName(), properties.getReloadIntervalSeconds());
+        EurekaProxyDiscovery eurekaProxyDiscovery = new EurekaProxyDiscovery(discoveryClient, properties.getApplicationName(), properties.getRefreshIntervalSeconds());
         boolean sidCarFirst = properties.isSidCarFirst();
         SpringRedisEurekaDiscoveryProperties.RedisConf redisConf = properties.getRedisConf();
         GenericObjectPoolConfig poolConfig = new JedisPoolConfig();

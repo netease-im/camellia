@@ -13,7 +13,7 @@ public class SpringRedisEurekaDiscoveryProperties {
     private String bgroup;
     private String password;
     private boolean sidCarFirst;
-    private int reloadIntervalSeconds = 5;
+    private int refreshIntervalSeconds = 5;
     private RedisConf redisConf = new RedisConf();
 
     public String getApplicationName() {
@@ -48,12 +48,12 @@ public class SpringRedisEurekaDiscoveryProperties {
         this.password = password;
     }
 
-    public int getReloadIntervalSeconds() {
-        return reloadIntervalSeconds;
+    public int getRefreshIntervalSeconds() {
+        return refreshIntervalSeconds;
     }
 
-    public void setReloadIntervalSeconds(int reloadIntervalSeconds) {
-        this.reloadIntervalSeconds = reloadIntervalSeconds;
+    public void setRefreshIntervalSeconds(int refreshIntervalSeconds) {
+        this.refreshIntervalSeconds = refreshIntervalSeconds;
     }
 
     public boolean isSidCarFirst() {
