@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command.async.spendtime;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +22,7 @@ public class LoggingSlowCommandMonitorCallback implements SlowCommandMonitorCall
     private static ConcurrentHashMap<String, AtomicLong> logMap = new ConcurrentHashMap<>();
 
     static {
-        ScheduledExecutorUtils.scheduleAtFixedRate(LoggingSlowCommandMonitorCallback::printLog, 5, 5, TimeUnit.SECONDS);
+        ExecutorUtils.scheduleAtFixedRate(LoggingSlowCommandMonitorCallback::printLog, 5, 5, TimeUnit.SECONDS);
     }
 
     private static void printLog() {

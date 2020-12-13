@@ -3,12 +3,10 @@ package com.netease.nim.camellia.redis.proxy.monitor;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -23,7 +21,7 @@ public class SlowCommandMonitor {
     private static final LinkedBlockingQueue<SlowCommandStats> queue = new LinkedBlockingQueue<>(100);
 
     public static void init(int seconds) {
-        ScheduledExecutorUtils.scheduleAtFixedRate(SlowCommandMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
+        ExecutorUtils.scheduleAtFixedRate(SlowCommandMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
     }
 
     public static void slowCommand(Command command, double spendMillis, long thresholdMillis) {

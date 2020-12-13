@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.monitor;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +49,7 @@ public class RedisMonitor {
 
     public static void init(int seconds, boolean commandSpendTimeMonitorEnable, MonitorCallback monitorCallback) {
         intervalSeconds = seconds;
-        ScheduledExecutorUtils.scheduleAtFixedRate(RedisMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
+        ExecutorUtils.scheduleAtFixedRate(RedisMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
         RedisMonitor.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
         if (commandSpendTimeMonitorEnable) {
             new Thread(RedisMonitor::calcCommandSpendTime, "command-spend-time-calc").start();

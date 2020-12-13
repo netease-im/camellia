@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.CommandHotKeyCacheConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheStats;
-import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +25,7 @@ public class HotKeyCacheMonitor {
     private static ConcurrentHashMap<String, HotKeyCacheStatsBean> statsMap = new ConcurrentHashMap<>();
 
     public static void init(int seconds) {
-        ScheduledExecutorUtils.scheduleAtFixedRate(HotKeyCacheMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
+        ExecutorUtils.scheduleAtFixedRate(HotKeyCacheMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
     }
 
     public static void hotKeyCache(CommandContext commandContext, HotKeyCacheStats hotKeyCacheStats,

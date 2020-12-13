@@ -17,6 +17,7 @@ import redis.clients.util.SafeEncoder;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -35,9 +36,13 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
         this.redisClusterResource = redisClusterResource;
         this.maxAttempts = maxAttempts;
         this.clusterSlotInfo = new RedisClusterSlotInfo(redisClusterResource);
-        boolean renew = this.clusterSlotInfo.renew();
-        if (!renew) {
-            throw new CamelliaRedisException("RedisClusterSlotInfo init fail");
+        Future<Boolean> future = this.clusterSlotInfo.renew();
+        try {
+            if (future == null || !future.get()) {
+                throw new CamelliaRedisException("RedisClusterSlotInfo init fail");
+            }
+        } catch (Exception e) {
+            throw new CamelliaRedisException("RedisClusterSlotInfo init fail", e);
         }
     }
 
@@ -54,7 +59,12 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                 if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
                     if (bindClient == null) {
                         int randomSlot = ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE);
-                        bindClient = RedisClientHub.newClient(clusterSlotInfo.getNode(randomSlot).getAddr());
+                        RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(randomSlot);
+                        if (node == null) {
+                            future.complete(ErrorReply.NOT_AVAILABLE);
+                            continue;
+                        }
+                        bindClient = RedisClientHub.newClient(node.getAddr());
                         command.getChannelInfo().setBindClient(bindClient);
                     }
                     if (bindClient != null) {
@@ -473,7 +483,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                 future.complete(new ErrorReply("CROSSSLOT Keys in request don't hash to the same slot"));
                 return;
             }
-            RedisClient client = clusterSlotInfo.getClient(slot);
+            RedisClient client = getClient(slot);
             CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, future, command);
             commandFlusher.sendCommand(client, command, futureWrapper);
         }
@@ -482,7 +492,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
     private void xinfoOrXgroup(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
         byte[] key = command.getObjects()[2];
         int slot = RedisClusterCRC16Utils.getSlot(key);
-        RedisClient client = clusterSlotInfo.getClient(slot);
+        RedisClient client = getClient(slot);
         CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, future, command);
         commandFlusher.sendCommand(client, command, futureWrapper);
     }

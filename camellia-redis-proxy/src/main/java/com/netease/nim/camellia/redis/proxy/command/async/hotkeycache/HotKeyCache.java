@@ -5,7 +5,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.monitor.HotKeyCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import com.netease.nim.camellia.redis.proxy.util.LRUCounter;
-import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +64,7 @@ public class HotKeyCache {
 
         if (callback != null) {
             long callbackIntervalSeconds = commandHotKeyCacheConfig.getHotKeyCacheStatsCallbackIntervalSeconds();
-            ScheduledExecutorUtils.scheduleAtFixedRate(() -> {
+            ExecutorUtils.scheduleAtFixedRate(() -> {
                 try {
                     if (HotKeyCache.this.statsMap.isEmpty()) return;
                     ConcurrentHashMap<BytesKey, AtomicLong> statsMap = HotKeyCache.this.statsMap;

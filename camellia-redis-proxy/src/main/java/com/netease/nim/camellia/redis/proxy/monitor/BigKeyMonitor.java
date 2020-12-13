@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +24,7 @@ public class BigKeyMonitor {
     private static ConcurrentHashMap<String, BigKeyStats> statsMap = new ConcurrentHashMap<>();
 
     public static void init(int seconds) {
-        ScheduledExecutorUtils.scheduleAtFixedRate(BigKeyMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
+        ExecutorUtils.scheduleAtFixedRate(BigKeyMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
     }
 
     public static void bigKey(Command command, byte[] key, long size, long threshold) {

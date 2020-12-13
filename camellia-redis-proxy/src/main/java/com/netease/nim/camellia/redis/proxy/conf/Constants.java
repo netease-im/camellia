@@ -65,7 +65,7 @@ public class Constants {
         public static final int heartbeatIntervalSeconds = 60;//若小于等于0则不发心跳
         public static final long heartbeatTimeoutMillis = 10000L;
         public static final int connectTimeoutMillis = 500;
-        public static final int failCountThreshold = 10;
+        public static final int failCountThreshold = 5;
         public static final long failBanMillis = 5000L;
         public static final int commandPipelineFlushThreshold = 256;
         public static final QueueType queueType = QueueType.None;

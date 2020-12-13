@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyInfo;
-import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +25,7 @@ public class HotKeyMonitor {
     private static ConcurrentHashMap<String, HotKeyStats> statsMap = new ConcurrentHashMap<>();
 
     public static void init(int seconds) {
-        ScheduledExecutorUtils.scheduleAtFixedRate(HotKeyMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
+        ExecutorUtils.scheduleAtFixedRate(HotKeyMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
     }
 
     public static void hotKey(CommandContext commandContext, List<HotKeyInfo> hotKeys, HotKeyConfig hotKeyConfig) {

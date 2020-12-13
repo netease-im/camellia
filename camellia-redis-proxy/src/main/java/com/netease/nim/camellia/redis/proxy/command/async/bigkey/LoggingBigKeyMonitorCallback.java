@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command.async.bigkey;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +21,7 @@ public class LoggingBigKeyMonitorCallback implements BigKeyMonitorCallback {
     private static ConcurrentHashMap<String, AtomicLong> logMap = new ConcurrentHashMap<>();
 
     static {
-        ScheduledExecutorUtils.scheduleAtFixedRate(LoggingBigKeyMonitorCallback::printLog, 5, 5, TimeUnit.SECONDS);
+        ExecutorUtils.scheduleAtFixedRate(LoggingBigKeyMonitorCallback::printLog, 5, 5, TimeUnit.SECONDS);
     }
 
     private static void printLog() {

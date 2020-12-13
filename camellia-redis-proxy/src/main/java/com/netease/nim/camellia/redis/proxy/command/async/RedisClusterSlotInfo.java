@@ -2,9 +2,10 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.netty.ServerStatus;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import com.netease.nim.camellia.redis.resource.RedisClusterResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import redis.clients.util.SafeEncoder;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -64,37 +66,43 @@ public class RedisClusterSlotInfo {
      */
     private long lastRenewTimestamp = 0L;
     private final AtomicBoolean renew = new AtomicBoolean(false);
-    public boolean renew() {
+    public Future<Boolean> renew() {
         //限制1s内最多renew一次
-        if (ServerStatus.getCurrentTimeMillis() - lastRenewTimestamp < 1000) {
-            return false;
+        if (TimeCache.currentMillis - lastRenewTimestamp < 1000) {
+            return null;
         }
         if (renew.compareAndSet(false, true)) {
             try {
-                boolean success = false;
-
-                for (Node node : nodeSet) {
-                    success = tryRenew(node.getHost(), node.getPort(), password);
-                    if (success) break;
-                }
-                if (!success) {
-                    for (RedisClusterResource.Node node : redisClusterResource.getNodes()) {
-                        success = tryRenew(node.getHost(), node.getPort(), password);
-                        if (success) break;
+                return ExecutorUtils.submit(() -> {
+                    try {
+                        boolean success = false;
+                        for (Node node : nodeSet) {
+                            success = tryRenew(node.getHost(), node.getPort(), password);
+                            if (success) break;
+                        }
+                        if (!success) {
+                            for (RedisClusterResource.Node node : redisClusterResource.getNodes()) {
+                                success = tryRenew(node.getHost(), node.getPort(), password);
+                                if (success) break;
+                            }
+                        }
+                        if (success) {
+                            logger.info("renew success, url = {}", redisClusterResource.getUrl());
+                        } else {
+                            ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew fail, url = " + redisClusterResource.getUrl());
+                        }
+                        lastRenewTimestamp = TimeCache.currentMillis;
+                        return success;
+                    } finally {
+                        renew.set(false);
                     }
-                }
-                if (success) {
-                    logger.info("renew success");
-                } else {
-                    ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew fail");
-                }
-                lastRenewTimestamp = ServerStatus.getCurrentTimeMillis();
-                return success;
-            } finally {
+                });
+            } catch (Exception e) {
+                ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew error, url = " + redisClusterResource.getUrl(), e);
                 renew.set(false);
             }
         }
-        return true;
+        return null;
     }
 
     private boolean tryRenew(String host, int port, String password) {
@@ -103,11 +111,11 @@ public class RedisClusterSlotInfo {
             client = RedisClientHub.newClient(host, port, password);
             if (client == null || !client.isValid()) return false;
             CompletableFuture<Reply> future = client.sendCommand(RedisCommand.CLUSTER.raw(), SafeEncoder.encode("slots"));
-            logger.info("tryRenew, client=" + client.getClientName());
+            logger.info("tryRenew, client = {}, url = {}", client.getClientName(), redisClusterResource.getUrl());
             Reply reply = future.get(10000, TimeUnit.MILLISECONDS);
             return clusterNodes(reply);
         } catch (Exception e) {
-            logger.error("tryRenew error", e);
+            logger.error("tryRenew error, host = {}, port = {}, url = {}", host, port, redisClusterResource.getUrl(), e);
             return false;
         } finally {
             if (client != null) {
@@ -148,13 +156,16 @@ public class RedisClusterSlotInfo {
             }
             boolean success = size == SLOT_SIZE;
             if (logger.isDebugEnabled()) {
-                logger.debug("node.size = {}", nodeSet.size());
+                logger.debug("node.size = {}, url = {}", nodeSet.size(), redisClusterResource.getUrl());
             }
-            if (success) {
+            if (!nodeSet.isEmpty()) {
                 this.nodeSet = nodeSet;
+            }
+            if (size > 0) {
                 this.slotArray = slotArray;
-            } else {
-                logger.error("slot size is {}, not {}", size, SLOT_SIZE);
+            }
+            if (!success) {
+                logger.error("slot size is {}, not {}, url = {}", size, SLOT_SIZE, redisClusterResource.getUrl());
             }
             return success;
         } catch (CamelliaRedisException e) {

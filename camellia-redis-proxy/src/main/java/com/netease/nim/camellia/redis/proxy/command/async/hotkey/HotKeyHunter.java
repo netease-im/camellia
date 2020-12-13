@@ -4,7 +4,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.monitor.HotKeyMonitor;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import com.netease.nim.camellia.redis.proxy.util.LRUCounter;
-import com.netease.nim.camellia.redis.proxy.util.ScheduledExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +30,7 @@ public class HotKeyHunter {
         this.callback = callback;
         this.counter = new LRUCounter(hotKeyConfig.getCheckCacheMaxCapacity(),
                 hotKeyConfig.getCheckCacheMaxCapacity(), hotKeyConfig.getCheckMillis());
-        ScheduledExecutorUtils.scheduleAtFixedRate(this::callback, hotKeyConfig.getCheckMillis(),
+        ExecutorUtils.scheduleAtFixedRate(this::callback, hotKeyConfig.getCheckMillis(),
                 hotKeyConfig.getCheckMillis(), TimeUnit.MILLISECONDS);
         logger.info("HotKeyHunter init success, commandContext = {}", commandContext);
     }

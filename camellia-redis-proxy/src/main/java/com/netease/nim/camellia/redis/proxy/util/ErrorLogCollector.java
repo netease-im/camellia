@@ -42,8 +42,8 @@ public class ErrorLogCollector {
         if (lastPrintStackTraceMap.size() < MAX_MAP_SIZE) {
             AtomicLong lastPrintStackTraceTime = lastPrintStackTraceMap.computeIfAbsent(clazz.getName() + ":" + log, k -> new AtomicLong(0L));
             long lastTime = lastPrintStackTraceTime.get();
-            if (ServerStatus.getCurrentTimeMillis() - lastTime > PRINT_ERROR_TRACE_MIN_INTERVAL_MILLIS) {
-                boolean printTrace = lastPrintStackTraceTime.compareAndSet(lastTime, ServerStatus.getCurrentTimeMillis());
+            if (TimeCache.currentMillis - lastTime > PRINT_ERROR_TRACE_MIN_INTERVAL_MILLIS) {
+                boolean printTrace = lastPrintStackTraceTime.compareAndSet(lastTime, TimeCache.currentMillis);
                 if (printTrace) {
                     logger.error(clazz.getName() + ":" + log, e);
                 }
