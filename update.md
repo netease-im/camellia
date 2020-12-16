@@ -4,6 +4,17 @@
 * support client-cache feature of redis6.0
 * support redis transaction of multi/watch/exec commands
 
+# 1.0.12（2020/12/xx）
+### add
+* RedisProxyJedisPool allow setting custom policy of proxy choose: IProxySelector. default use RandomProxySelector，if you enable sid-car-first, then use SidCarFirstProxySelector
+* if RedisProxyJedisPool setting sid-car-first，RedisProxyJedisPool will use sid-car-proxy first，and you can set custom RegionResolver, then RedisProxyJedisPool will request the proxy in same region
+
+### update
+* optimize the fast fail policy when redis-cluster nodes down in camellia-redis-proxy
+* camellia-redis-proxy renew slot-node in async
+
+### fix
+* 无
 
 # 1.0.11（2020/12/09）
 ### add

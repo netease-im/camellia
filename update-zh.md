@@ -4,6 +4,18 @@
 * 支持redis6.0的client-cache特性
 * 支持redis事务，multi/watch/exec等
 
+# 1.0.12（2020/12/xx）
+### 新增
+* RedisProxyJedisPool允许设置自定义的proxy选择策略IProxySelector，默认使用RandomProxySelector，若开启sid-car优先，则使用SidCarFirstProxySelector
+* RedisProxyJedisPool在设置sid-car优先时，除了优先使用sid-car的proxy，你还可以传入自定义的RegionResolver，那么RedisProxyJedisPool会优先访问相同region的proxy，具体可见SidCarFirstProxySelector
+
+### 更新
+* 优化了camellia-redis-proxy在代理redis-cluster时后端redis宕机时的快速失败策略
+* camellia-redis-proxy刷新后端slot分布信息的操作改成异步执行
+
+### fix
+* 无
+
 # 1.0.11（2020/12/09）
 ### 新增
 * camellia-redis-proxy支持设置监控回调MonitorCallback
