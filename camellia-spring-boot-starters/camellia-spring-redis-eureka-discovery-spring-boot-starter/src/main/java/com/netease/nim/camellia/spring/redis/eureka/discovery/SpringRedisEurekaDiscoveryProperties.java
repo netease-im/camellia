@@ -13,6 +13,8 @@ public class SpringRedisEurekaDiscoveryProperties {
     private String bgroup;
     private String password;
     private boolean sidCarFirst;
+    private String regionResolveConf = "";//例子 10.189.0.0/20:region1,10.189.208.0/21:region2
+    private String defaultRegion = "default";
     private int refreshIntervalSeconds = 5;
     private RedisConf redisConf = new RedisConf();
 
@@ -70,6 +72,22 @@ public class SpringRedisEurekaDiscoveryProperties {
 
     public void setRedisConf(RedisConf redisConf) {
         this.redisConf = redisConf;
+    }
+
+    public String getRegionResolveConf() {
+        return regionResolveConf;
+    }
+
+    public void setRegionResolveConf(String regionResolveConf) {
+        this.regionResolveConf = regionResolveConf;
+    }
+
+    public String getDefaultRegion() {
+        return defaultRegion;
+    }
+
+    public void setDefaultRegion(String defaultRegion) {
+        this.defaultRegion = defaultRegion;
     }
 
     public static class RedisConf {

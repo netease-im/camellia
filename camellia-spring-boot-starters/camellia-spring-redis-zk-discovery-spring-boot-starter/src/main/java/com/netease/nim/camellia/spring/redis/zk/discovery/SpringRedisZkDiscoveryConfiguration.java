@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.spring.redis.zk.discovery;
 
 import com.netease.nim.camellia.redis.proxy.RedisProxyJedisPool;
+import com.netease.nim.camellia.redis.proxy.RegionResolver;
 import com.netease.nim.camellia.redis.zk.discovery.ZkClientFactory;
 import com.netease.nim.camellia.redis.zk.discovery.ZkProxyDiscovery;
 import com.netease.nim.camellia.spring.redis.base.RedisProxyRedisConnectionFactory;
@@ -38,6 +39,10 @@ public class SpringRedisZkDiscoveryConfiguration {
                 zkConf.getZkUrl(), zkConf.getBasePath(), properties.getApplicationName(), zkConf.getReloadIntervalSeconds());
 
         boolean sidCarFirst = zkConf.isSidCarFirst();
+        String regionResolveConf = zkConf.getRegionResolveConf();
+        String defaultRegion = zkConf.getDefaultRegion();
+        RegionResolver regionResolver = new RegionResolver.IpSegmentRegionResolver(regionResolveConf, defaultRegion);
+
         SpringRedisZkDiscoveryProperties.RedisConf redisConf = properties.getRedisConf();
         GenericObjectPoolConfig poolConfig = new JedisPoolConfig();
         poolConfig.setMaxIdle(redisConf.getMaxIdle());
@@ -47,9 +52,9 @@ public class SpringRedisZkDiscoveryConfiguration {
         Long bid = properties.getBid();
         String bgroup = properties.getBgroup();
         if (bid == null || bid < 0 || bgroup == null) {
-            return new RedisProxyJedisPool(zkProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sidCarFirst);
+            return new RedisProxyJedisPool(zkProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sidCarFirst, regionResolver);
         } else {
-            return new RedisProxyJedisPool(bid, bgroup, zkProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sidCarFirst);
+            return new RedisProxyJedisPool(bid, bgroup, zkProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sidCarFirst, regionResolver);
         }
     }
 

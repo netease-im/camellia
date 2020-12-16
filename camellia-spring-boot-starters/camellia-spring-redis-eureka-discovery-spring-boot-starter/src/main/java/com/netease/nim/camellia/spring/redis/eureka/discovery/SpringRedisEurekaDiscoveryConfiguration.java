@@ -2,6 +2,7 @@ package com.netease.nim.camellia.spring.redis.eureka.discovery;
 
 import com.netease.nim.camellia.redis.eureka.base.EurekaProxyDiscovery;
 import com.netease.nim.camellia.redis.proxy.RedisProxyJedisPool;
+import com.netease.nim.camellia.redis.proxy.RegionResolver;
 import com.netease.nim.camellia.spring.redis.base.RedisProxyRedisConnectionFactory;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
@@ -32,6 +33,9 @@ public class SpringRedisEurekaDiscoveryConfiguration {
     public RedisProxyJedisPool redisProxyJedisPool(SpringRedisEurekaDiscoveryProperties properties) {
         EurekaProxyDiscovery eurekaProxyDiscovery = new EurekaProxyDiscovery(discoveryClient, properties.getApplicationName(), properties.getRefreshIntervalSeconds());
         boolean sidCarFirst = properties.isSidCarFirst();
+        String defaultRegion = properties.getDefaultRegion();
+        String regionResolveConf = properties.getRegionResolveConf();
+        RegionResolver regionResolver = new RegionResolver.IpSegmentRegionResolver(regionResolveConf, defaultRegion);
         SpringRedisEurekaDiscoveryProperties.RedisConf redisConf = properties.getRedisConf();
         GenericObjectPoolConfig poolConfig = new JedisPoolConfig();
         poolConfig.setMaxIdle(redisConf.getMaxIdle());
@@ -41,9 +45,9 @@ public class SpringRedisEurekaDiscoveryConfiguration {
         Long bid = properties.getBid();
         String bgroup = properties.getBgroup();
         if (bid == null || bid < 0 || bgroup == null) {
-            return new RedisProxyJedisPool(eurekaProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sidCarFirst);
+            return new RedisProxyJedisPool(eurekaProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sidCarFirst, regionResolver);
         } else {
-            return new RedisProxyJedisPool(bid, bgroup, eurekaProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sidCarFirst);
+            return new RedisProxyJedisPool(bid, bgroup, eurekaProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sidCarFirst, regionResolver);
         }
     }
 

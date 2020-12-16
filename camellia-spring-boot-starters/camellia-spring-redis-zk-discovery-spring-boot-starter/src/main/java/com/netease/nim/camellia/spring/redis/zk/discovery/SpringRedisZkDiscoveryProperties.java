@@ -83,6 +83,8 @@ public class SpringRedisZkDiscoveryProperties {
         private int maxRetries = ZkConstants.maxRetries;
         private int reloadIntervalSeconds = ZkConstants.reloadIntervalSeconds;
         private boolean sidCarFirst = ZkConstants.sidCarFirst;
+        private String regionResolveConf = "";//例子 10.189.0.0/20:region1,10.189.208.0/21:region2
+        private String defaultRegion = "default";
 
         public String getBasePath() {
             return basePath;
@@ -146,6 +148,22 @@ public class SpringRedisZkDiscoveryProperties {
 
         public void setSidCarFirst(boolean sidCarFirst) {
             this.sidCarFirst = sidCarFirst;
+        }
+
+        public String getRegionResolveConf() {
+            return regionResolveConf;
+        }
+
+        public void setRegionResolveConf(String regionResolveConf) {
+            this.regionResolveConf = regionResolveConf;
+        }
+
+        public String getDefaultRegion() {
+            return defaultRegion;
+        }
+
+        public void setDefaultRegion(String defaultRegion) {
+            this.defaultRegion = defaultRegion;
         }
     }
 
