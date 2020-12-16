@@ -93,6 +93,9 @@ public class RedisClusterSlotInfo {
                         }
                         lastRenewTimestamp = TimeCache.currentMillis;
                         return success;
+                    } catch (Exception e) {
+                        ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew error, url = " + redisClusterResource.getUrl(), e);
+                        return false;
                     } finally {
                         renew.set(false);
                     }
