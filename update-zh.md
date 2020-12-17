@@ -7,7 +7,7 @@
 # 1.0.12（2020/12/xx）
 ### 新增
 * RedisProxyJedisPool允许设置自定义的proxy选择策略IProxySelector，默认使用RandomProxySelector，若开启sid-car优先，则使用SidCarFirstProxySelector
-* RedisProxyJedisPool在设置sid-car优先时，proxy的访问优先级：同机部署的proxy -> 相同region的proxy -> 其他proxy，声明proxy属于哪个region，需要你传入RegionResolver
+* RedisProxyJedisPool在使用SidCarFirstProxySelector时，proxy的访问优先级：同机部署的proxy -> 相同region的proxy -> 其他proxy，声明proxy属于哪个region，需要你传入RegionResolver，默认提供了一个基于ip段划分region的IpSegmentRegionResolver
 * 新增LocalConfProxyDiscovery
 
 ### 更新

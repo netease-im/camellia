@@ -7,7 +7,7 @@
 # 1.0.12（2020/12/xx）
 ### add
 * RedisProxyJedisPool allow setting custom policy of proxy choose: IProxySelector. default use RandomProxySelector，if you enable sid-car-first, then use SidCarFirstProxySelector
-* if RedisProxyJedisPool setting sid-car-first，proxy priority is: sid-car-proxy -> same-region-proxy -> other-proxy, for setting a proxy belongs to which region, you need define RegionResolver
+* if RedisProxyJedisPool use SidCarFirstProxySelector，proxy priority is: sid-car-proxy -> same-region-proxy -> other-proxy, for setting a proxy belongs to which region, you need define RegionResolver(provider IpSegmentRegionResolver which divide region by ip-segment)
 * provider LocalConfProxyDiscovery
 
 ### update
