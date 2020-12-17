@@ -4,7 +4,7 @@
 * support client-cache feature of redis6.0
 * support redis transaction of multi/watch/exec commands
 
-# 1.0.12（2020/12/xx）
+# 1.0.12（2020/12/17）
 ### add
 * RedisProxyJedisPool allow setting custom policy of proxy choose: IProxySelector. default use RandomProxySelector，if you enable side-car-first, then use SideCarFirstProxySelector
 * if RedisProxyJedisPool use SideCarFirstProxySelector，proxy priority is: side-car-proxy -> same-region-proxy -> other-proxy, for setting a proxy belongs to which region, you need define RegionResolver(provider IpSegmentRegionResolver which divide region by ip-segment)
