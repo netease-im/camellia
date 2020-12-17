@@ -667,8 +667,8 @@ camellia-redis-zk-registry:
 ``` 
 然后你就可以使用RedisProxyJedisPool代替你原先使用的JedisPool，其他的操作都一样。   
 RedisProxyJedisPool使用IProxySelector来定义proxy的负载均衡策略，默认使用的是RandomProxySelector，也即随机选择proxy。  
-如果设置了sidCarFirst=true，则会使用SidCarFirstProxySelector，该策略下会优先选择同机部署的proxy（即sid-car-proxy）   
-对于其他proxy，SidCarFirstProxySelector也会优先访问相同region的proxy（从而有更小的延迟），但是需要实现RegionResolver接口，默认提供了根据ip端来设置region的IpSegmentRegionResolver      
+如果设置了sideCarFirst=true，则会使用SideCarFirstProxySelector，该策略下会优先选择同机部署的proxy（即sid-car-proxy）   
+对于其他proxy，SideCarFirstProxySelector也会优先访问相同region的proxy（从而有更小的延迟），但是需要实现RegionResolver接口，默认提供了根据ip端来设置region的IpSegmentRegionResolver      
 当然，你也可以自己实现IProxySelector来自定义proxy的负载均衡策略  
 此外，如果redis-proxy使用了camellia-dashboard，且使用了动态的多组配置，那么RedisProxyJedisPool需要声明一下自己的bid和bgroup  
 下面是一个例子：  
@@ -694,7 +694,7 @@ public class TestRedisProxyJedisPool {
                 .proxyDiscovery(zkProxyDiscovery)
                 .password("pass123")
                 .timeout(2000)
-                .sidCarFirst(true)
+                .sideCarFirst(true)
                 .regionResolver(new RegionResolver.IpSegmentRegionResolver("10.189.0.0/20:region1,10.189.208.0/21:region2", "default"))
 //                .proxySelector(new CustomProxySelector())
                 .build();
@@ -730,7 +730,7 @@ camellia-spring-redis-zk-discovery:
   zk-conf:
     zk-url: 127.0.0.1:2181
     base-path: /camellia
-    sid-car-first: true
+    side-car-first: true
     region-resolve-conf: 10.189.0.0/20:region1,10.189.208.0/21:region2
     default-region: default
   redis-conf:

@@ -12,7 +12,7 @@ public class SpringRedisEurekaDiscoveryProperties {
     private Long bid;
     private String bgroup;
     private String password;
-    private boolean sidCarFirst;
+    private boolean sideCarFirst;
     private String regionResolveConf = "";//例子 10.189.0.0/20:region1,10.189.208.0/21:region2
     private String defaultRegion = "default";
     private int refreshIntervalSeconds = 5;
@@ -58,12 +58,12 @@ public class SpringRedisEurekaDiscoveryProperties {
         this.refreshIntervalSeconds = refreshIntervalSeconds;
     }
 
-    public boolean isSidCarFirst() {
-        return sidCarFirst;
+    public boolean isSideCarFirst() {
+        return sideCarFirst;
     }
 
-    public void setSidCarFirst(boolean sidCarFirst) {
-        this.sidCarFirst = sidCarFirst;
+    public void setSideCarFirst(boolean sideCarFirst) {
+        this.sideCarFirst = sideCarFirst;
     }
 
     public RedisConf getRedisConf() {

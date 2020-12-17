@@ -21,7 +21,7 @@ public class TestRedisProxyJedisPool {
                 .proxyDiscovery(zkProxyDiscovery)
                 .password("pass123")
                 .timeout(2000)
-                .sidCarFirst(true)
+                .sideCarFirst(true)
                 .regionResolver(new RegionResolver.IpSegmentRegionResolver("10.189.0.0/20:region1,10.189.208.0/21:region2", "default"))
 //                .proxySelector(new CustomProxySelector())
                 .build();

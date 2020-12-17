@@ -32,7 +32,7 @@ public class SpringRedisEurekaDiscoveryConfiguration {
     @ConditionalOnMissingBean(RedisProxyJedisPool.class)
     public RedisProxyJedisPool redisProxyJedisPool(SpringRedisEurekaDiscoveryProperties properties) {
         EurekaProxyDiscovery eurekaProxyDiscovery = new EurekaProxyDiscovery(discoveryClient, properties.getApplicationName(), properties.getRefreshIntervalSeconds());
-        boolean sidCarFirst = properties.isSidCarFirst();
+        boolean sideCarFirst = properties.isSideCarFirst();
         String defaultRegion = properties.getDefaultRegion();
         String regionResolveConf = properties.getRegionResolveConf();
         RegionResolver regionResolver = new RegionResolver.IpSegmentRegionResolver(regionResolveConf, defaultRegion);
@@ -45,9 +45,9 @@ public class SpringRedisEurekaDiscoveryConfiguration {
         Long bid = properties.getBid();
         String bgroup = properties.getBgroup();
         if (bid == null || bid < 0 || bgroup == null) {
-            return new RedisProxyJedisPool(eurekaProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sidCarFirst, regionResolver);
+            return new RedisProxyJedisPool(eurekaProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sideCarFirst, regionResolver);
         } else {
-            return new RedisProxyJedisPool(bid, bgroup, eurekaProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sidCarFirst, regionResolver);
+            return new RedisProxyJedisPool(bid, bgroup, eurekaProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sideCarFirst, regionResolver);
         }
     }
 

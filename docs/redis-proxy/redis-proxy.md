@@ -669,8 +669,8 @@ first, add maven dependency in your project, like this:
 ``` 
 then you can use RedisProxyJedisPool instead of JedisPool.  
 RedisProxyJedisPool use IProxySelector to define load balance policy, default use RandomProxySelector.  
-if you set sidCarFirst=true, then RedisProxyJedisPool will use SidCarFirstProxySelector, in this policy, RedisProxyJedisPool will use sid-car-proxy first.  
-further more, SidCarFirstProxySelector policy will use same-region-proxy priority if you implement RegionResolver, camellia provide a IpSegmentRegionResolver implement which define region by ip-segment.  
+if you set sideCarFirst=true, then RedisProxyJedisPool will use SideCarFirstProxySelector, in this policy, RedisProxyJedisPool will use side-car-proxy first.  
+further more, SideCarFirstProxySelector policy will use same-region-proxy priority if you implement RegionResolver, camellia provide a IpSegmentRegionResolver implement which define region by ip-segment.  
 certainly, you can implement custom IProxySelector to define your load balance policy.    
 otherwise, if redis-proxy use camellia-dashboard and multi-config, then RedisProxyJedisPool should setting bid/bgroup.  
 this is a sample:  
@@ -696,7 +696,7 @@ public class TestRedisProxyJedisPool {
                 .proxyDiscovery(zkProxyDiscovery)
                 .password("pass123")
                 .timeout(2000)
-                .sidCarFirst(true)
+                .sideCarFirst(true)
                 .regionResolver(new RegionResolver.IpSegmentRegionResolver("10.189.0.0/20:region1,10.189.208.0/21:region2", "default"))
 //                .proxySelector(new CustomProxySelector())
                 .build();
@@ -732,7 +732,7 @@ camellia-spring-redis-zk-discovery:
   zk-conf:
     zk-url: 127.0.0.1:2181
     base-path: /camellia
-    sid-car-first: true
+    side-car-first: true
     region-resolve-conf: 10.189.0.0/20:region1,10.189.208.0/21:region2
     default-region: default
   redis-conf:

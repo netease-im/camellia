@@ -6,8 +6,8 @@
 
 # 1.0.12（2020/12/xx）
 ### add
-* RedisProxyJedisPool allow setting custom policy of proxy choose: IProxySelector. default use RandomProxySelector，if you enable sid-car-first, then use SidCarFirstProxySelector
-* if RedisProxyJedisPool use SidCarFirstProxySelector，proxy priority is: sid-car-proxy -> same-region-proxy -> other-proxy, for setting a proxy belongs to which region, you need define RegionResolver(provider IpSegmentRegionResolver which divide region by ip-segment)
+* RedisProxyJedisPool allow setting custom policy of proxy choose: IProxySelector. default use RandomProxySelector，if you enable side-car-first, then use SideCarFirstProxySelector
+* if RedisProxyJedisPool use SideCarFirstProxySelector，proxy priority is: side-car-proxy -> same-region-proxy -> other-proxy, for setting a proxy belongs to which region, you need define RegionResolver(provider IpSegmentRegionResolver which divide region by ip-segment)
 * provider LocalConfProxyDiscovery
 
 ### update
@@ -26,7 +26,7 @@
 * camellia-redis-proxy support monitor big key, support setting BigKeyMonitorCallback 
 * camellia-redis-proxy support multi-read-resources while rw_separate(will random choose a redis to read)
 * CamelliaRedisTemplate support get original Jedis
-* RedisProxyJedisPool support sid-car mode, if setting true, RedisProxyJedisPool will use sid-car-proxy first
+* RedisProxyJedisPool support side-car mode, if setting true, RedisProxyJedisPool will use side-car-proxy first
 * camellia-redis-proxy console support http api(default http://127.0.0.1:16379/monitor) to get metrics（tps、rt、slow command、hot key、big key、hot key cache）
 * provide camellia-spring-redis-zk-discovery-spring-boot-starter，so you can use proxy in discovery way easily when your client is SpringRedisTemplate
 

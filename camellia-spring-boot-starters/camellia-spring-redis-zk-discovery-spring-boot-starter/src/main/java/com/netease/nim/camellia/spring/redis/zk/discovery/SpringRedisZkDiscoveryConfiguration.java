@@ -38,7 +38,7 @@ public class SpringRedisZkDiscoveryConfiguration {
         ZkProxyDiscovery zkProxyDiscovery = new ZkProxyDiscovery(zkClientFactory(properties),
                 zkConf.getZkUrl(), zkConf.getBasePath(), properties.getApplicationName(), zkConf.getReloadIntervalSeconds());
 
-        boolean sidCarFirst = zkConf.isSidCarFirst();
+        boolean sideCarFirst = zkConf.isSideCarFirst();
         String regionResolveConf = zkConf.getRegionResolveConf();
         String defaultRegion = zkConf.getDefaultRegion();
         RegionResolver regionResolver = new RegionResolver.IpSegmentRegionResolver(regionResolveConf, defaultRegion);
@@ -52,9 +52,9 @@ public class SpringRedisZkDiscoveryConfiguration {
         Long bid = properties.getBid();
         String bgroup = properties.getBgroup();
         if (bid == null || bid < 0 || bgroup == null) {
-            return new RedisProxyJedisPool(zkProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sidCarFirst, regionResolver);
+            return new RedisProxyJedisPool(zkProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sideCarFirst, regionResolver);
         } else {
-            return new RedisProxyJedisPool(bid, bgroup, zkProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sidCarFirst, regionResolver);
+            return new RedisProxyJedisPool(bid, bgroup, zkProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sideCarFirst, regionResolver);
         }
     }
 

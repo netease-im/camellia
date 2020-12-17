@@ -27,7 +27,7 @@ public class RedisProxyJedisPool extends JedisPool {
     private static final int defaultRefreshSeconds = 60;
     private static final int defaultTimeout = 2000;
     private static final int defaultMaxRetry = 5;
-    private static final boolean defaultSidCarFirst = false;
+    private static final boolean defaultSideCarFirst = false;
     private static String defaultLocalHost = "";
     static {
         try {
@@ -52,120 +52,120 @@ public class RedisProxyJedisPool extends JedisPool {
     private final IProxySelector proxySelector;
 
     public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery) {
-        this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry, defaultSidCarFirst, defaultLocalHost);
+        this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry, defaultSideCarFirst, defaultLocalHost);
     }
 
     public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, IProxySelector proxySelector) {
-        this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry, defaultSidCarFirst, defaultLocalHost, null, proxySelector);
+        this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry, defaultSideCarFirst, defaultLocalHost, null, proxySelector);
     }
 
-    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, boolean sidCarFirst) {
-        this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry, sidCarFirst, defaultLocalHost);
+    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, boolean sideCarFirst) {
+        this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry, sideCarFirst, defaultLocalHost);
     }
 
-    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, boolean sidCarFirst, RegionResolver regionResolver) {
-        this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry, sidCarFirst, defaultLocalHost, regionResolver, null);
+    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, boolean sideCarFirst, RegionResolver regionResolver) {
+        this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry, sideCarFirst, defaultLocalHost, regionResolver, null);
     }
 
-    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, boolean sidCarFirst, String localhost) {
-        this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry, sidCarFirst, localhost);
+    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, boolean sideCarFirst, String localhost) {
+        this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry, sideCarFirst, localhost);
     }
 
-    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, boolean sidCarFirst, String localhost, RegionResolver regionResolver) {
-        this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry, sidCarFirst, localhost, regionResolver, null);
+    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, boolean sideCarFirst, String localhost, RegionResolver regionResolver) {
+        this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry, sideCarFirst, localhost, regionResolver, null);
     }
 
     public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout) {
-        this(-1, null, proxyDiscovery, poolConfig, timeout, null, defaultRefreshSeconds, defaultMaxRetry, defaultSidCarFirst);
+        this(-1, null, proxyDiscovery, poolConfig, timeout, null, defaultRefreshSeconds, defaultMaxRetry, defaultSideCarFirst);
     }
 
     public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, IProxySelector proxySelector) {
-        this(-1, null, proxyDiscovery, poolConfig, timeout, null, defaultRefreshSeconds, defaultMaxRetry, defaultSidCarFirst, defaultLocalHost, null, proxySelector);
+        this(-1, null, proxyDiscovery, poolConfig, timeout, null, defaultRefreshSeconds, defaultMaxRetry, defaultSideCarFirst, defaultLocalHost, null, proxySelector);
     }
 
-    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, boolean sidCarFirst) {
-        this(-1, null, proxyDiscovery, poolConfig, timeout, null, defaultRefreshSeconds, defaultMaxRetry, sidCarFirst, defaultLocalHost);
+    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, boolean sideCarFirst) {
+        this(-1, null, proxyDiscovery, poolConfig, timeout, null, defaultRefreshSeconds, defaultMaxRetry, sideCarFirst, defaultLocalHost);
     }
 
-    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, boolean sidCarFirst, RegionResolver regionResolver) {
-        this(-1, null, proxyDiscovery, poolConfig, timeout, null, defaultRefreshSeconds, defaultMaxRetry, sidCarFirst, defaultLocalHost, regionResolver, null);
+    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, boolean sideCarFirst, RegionResolver regionResolver) {
+        this(-1, null, proxyDiscovery, poolConfig, timeout, null, defaultRefreshSeconds, defaultMaxRetry, sideCarFirst, defaultLocalHost, regionResolver, null);
     }
 
-    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, boolean sidCarFirst, String localhost) {
-        this(-1, null, proxyDiscovery, poolConfig, timeout, null, defaultRefreshSeconds, defaultMaxRetry, sidCarFirst, localhost);
+    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, boolean sideCarFirst, String localhost) {
+        this(-1, null, proxyDiscovery, poolConfig, timeout, null, defaultRefreshSeconds, defaultMaxRetry, sideCarFirst, localhost);
     }
 
     public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, String password) {
-        this(-1, null, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, defaultSidCarFirst, defaultLocalHost);
+        this(-1, null, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, defaultSideCarFirst, defaultLocalHost);
     }
 
-    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, String password, boolean sidCarFirst) {
-        this(-1, null, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, sidCarFirst, defaultLocalHost);
+    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, String password, boolean sideCarFirst) {
+        this(-1, null, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, sideCarFirst, defaultLocalHost);
     }
 
-    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, String password, boolean sidCarFirst, RegionResolver regionResolver) {
-        this(-1, null, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, sidCarFirst, defaultLocalHost, regionResolver, null);
+    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, String password, boolean sideCarFirst, RegionResolver regionResolver) {
+        this(-1, null, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, sideCarFirst, defaultLocalHost, regionResolver, null);
     }
 
     public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, String password, IProxySelector proxySelector) {
-        this(-1, null, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, defaultSidCarFirst, defaultLocalHost, null, proxySelector);
+        this(-1, null, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, defaultSideCarFirst, defaultLocalHost, null, proxySelector);
     }
 
-    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, String password, boolean sidCarFirst, String localhost) {
-        this(-1, null, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, sidCarFirst, localhost);
+    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, String password, boolean sideCarFirst, String localhost) {
+        this(-1, null, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, sideCarFirst, localhost);
     }
 
-    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, String password, boolean sidCarFirst, String localhost, RegionResolver regionResolver) {
-        this(-1, null, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, sidCarFirst, localhost, regionResolver, null);
+    public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig, int timeout, String password, boolean sideCarFirst, String localhost, RegionResolver regionResolver) {
+        this(-1, null, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, sideCarFirst, localhost, regionResolver, null);
     }
 
     public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
                                int timeout, String password, int refreshSeconds, int maxRetry) {
-        this(-1, null, proxyDiscovery, poolConfig, timeout, password, refreshSeconds, maxRetry, defaultSidCarFirst, defaultLocalHost);
+        this(-1, null, proxyDiscovery, poolConfig, timeout, password, refreshSeconds, maxRetry, defaultSideCarFirst, defaultLocalHost);
     }
 
     public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
                                int timeout, String password) {
-        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, defaultSidCarFirst, defaultLocalHost);
+        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, defaultSideCarFirst, defaultLocalHost);
     }
 
     public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
-                               int timeout, String password, boolean sidCarFirst, RegionResolver regionResolver) {
-        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, sidCarFirst, defaultLocalHost, regionResolver, null);
+                               int timeout, String password, boolean sideCarFirst, RegionResolver regionResolver) {
+        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, sideCarFirst, defaultLocalHost, regionResolver, null);
     }
 
     public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
-                               int timeout, String password, boolean sidCarFirst) {
-        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, sidCarFirst, defaultLocalHost);
+                               int timeout, String password, boolean sideCarFirst) {
+        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, sideCarFirst, defaultLocalHost);
     }
 
     public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
                                int timeout, String password, IProxySelector proxySelector) {
-        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, defaultSidCarFirst, defaultLocalHost, null, proxySelector);
+        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, defaultRefreshSeconds, defaultMaxRetry, defaultSideCarFirst, defaultLocalHost, null, proxySelector);
     }
 
     public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
                                int timeout, String password, int refreshSeconds, int maxRetry) {
-        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, refreshSeconds, maxRetry, defaultSidCarFirst, defaultLocalHost);
+        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, refreshSeconds, maxRetry, defaultSideCarFirst, defaultLocalHost);
     }
 
     public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
-                               int timeout, String password, int refreshSeconds, int maxRetry, boolean sidCarFirst) {
-        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, refreshSeconds, maxRetry, sidCarFirst, defaultLocalHost);
+                               int timeout, String password, int refreshSeconds, int maxRetry, boolean sideCarFirst) {
+        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, refreshSeconds, maxRetry, sideCarFirst, defaultLocalHost);
     }
 
     public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
-                               int timeout, String password, int refreshSeconds, int maxRetry, boolean sidCarFirst, String localhost) {
-        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, refreshSeconds, maxRetry, sidCarFirst, localhost, null, null);
+                               int timeout, String password, int refreshSeconds, int maxRetry, boolean sideCarFirst, String localhost) {
+        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, refreshSeconds, maxRetry, sideCarFirst, localhost, null, null);
     }
 
     public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
-                               int timeout, String password, int refreshSeconds, int maxRetry, boolean sidCarFirst, String localhost, RegionResolver regionResolver) {
-        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, refreshSeconds, maxRetry, sidCarFirst, localhost, regionResolver, null);
+                               int timeout, String password, int refreshSeconds, int maxRetry, boolean sideCarFirst, String localhost, RegionResolver regionResolver) {
+        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, refreshSeconds, maxRetry, sideCarFirst, localhost, regionResolver, null);
     }
 
     public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
-                               int timeout, String password, int refreshSeconds, int maxRetry, boolean sidCarFirst, String localhost,
+                               int timeout, String password, int refreshSeconds, int maxRetry, boolean sideCarFirst, String localhost,
                                RegionResolver regionResolver, IProxySelector proxySelector) {
         this.bid = bid;
         this.bgroup = bgroup;
@@ -181,11 +181,11 @@ public class RedisProxyJedisPool extends JedisPool {
         if (proxySelector != null) {
             this.proxySelector = proxySelector;
         } else {
-            if (sidCarFirst) {
+            if (sideCarFirst) {
                 if (regionResolver == null) {
                     regionResolver = new RegionResolver.DummyRegionResolver();
                 }
-                this.proxySelector = new SidCarFirstProxySelector(localhost, regionResolver);
+                this.proxySelector = new SideCarFirstProxySelector(localhost, regionResolver);
             } else {
                 this.proxySelector = new RandomProxySelector();
             }
@@ -209,7 +209,7 @@ public class RedisProxyJedisPool extends JedisPool {
         private String password;
         private int refreshSeconds = defaultRefreshSeconds;
         private int maxRetry = defaultMaxRetry;
-        private boolean sidCarFirst = defaultSidCarFirst;
+        private boolean sideCarFirst = defaultSideCarFirst;
         private String localhost = defaultLocalHost;
         private RegionResolver regionResolver;
         private IProxySelector proxySelector;
@@ -257,8 +257,8 @@ public class RedisProxyJedisPool extends JedisPool {
             return this;
         }
 
-        public Builder sidCarFirst(boolean sidCarFirst) {
-            this.sidCarFirst = sidCarFirst;
+        public Builder sideCarFirst(boolean sideCarFirst) {
+            this.sideCarFirst = sideCarFirst;
             return this;
         }
 
@@ -279,7 +279,7 @@ public class RedisProxyJedisPool extends JedisPool {
 
         public RedisProxyJedisPool build() {
             return new RedisProxyJedisPool(bid, bgroup, proxyDiscovery, poolConfig, timeout, password,
-                    refreshSeconds, maxRetry, sidCarFirst, localhost, regionResolver, proxySelector);
+                    refreshSeconds, maxRetry, sideCarFirst, localhost, regionResolver, proxySelector);
         }
     }
 

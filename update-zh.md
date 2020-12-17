@@ -6,8 +6,8 @@
 
 # 1.0.12（2020/12/xx）
 ### 新增
-* RedisProxyJedisPool允许设置自定义的proxy选择策略IProxySelector，默认使用RandomProxySelector，若开启sid-car优先，则使用SidCarFirstProxySelector
-* RedisProxyJedisPool在使用SidCarFirstProxySelector时，proxy的访问优先级：同机部署的proxy -> 相同region的proxy -> 其他proxy，声明proxy属于哪个region，需要你传入RegionResolver，默认提供了一个基于ip段划分region的IpSegmentRegionResolver
+* RedisProxyJedisPool允许设置自定义的proxy选择策略IProxySelector，默认使用RandomProxySelector，若开启side-car优先，则使用SideCarFirstProxySelector
+* RedisProxyJedisPool在使用SideCarFirstProxySelector时，proxy的访问优先级：同机部署的proxy -> 相同region的proxy -> 其他proxy，声明proxy属于哪个region，需要你传入RegionResolver，默认提供了一个基于ip段划分region的IpSegmentRegionResolver
 * 新增LocalConfProxyDiscovery
 
 ### 更新
@@ -26,7 +26,7 @@
 * camellia-redis-proxy支持大key监控，支持设置BigKeyMonitorCallback
 * camellia-redis-proxy支持配置读写分离时设置多个读地址（随机选择一个地址读）
 * CamelliaRedisTemplate支持获取原始Jedis
-* RedisProxyJedisPool支持sid-car模式，开启后优先访问同机部署的redis-proxy
+* RedisProxyJedisPool支持side-car模式，开启后优先访问同机部署的redis-proxy
 * camellia-redis-proxy的console支持根据api（默认是http://127.0.0.1:16379/monitor）获取监控数据（包括tps/rt/慢查询/热key/大key/热key缓存等）
 * 新增camellia-spring-redis-zk-discovery-spring-boot-starter，方便使用SpringRedisTemplate的客户端以注册中心模式接入proxy
 
