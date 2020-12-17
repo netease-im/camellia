@@ -8,6 +8,7 @@
 ### 新增
 * RedisProxyJedisPool允许设置自定义的proxy选择策略IProxySelector，默认使用RandomProxySelector，若开启sid-car优先，则使用SidCarFirstProxySelector
 * RedisProxyJedisPool在设置sid-car优先时，proxy的访问优先级：同机部署的proxy -> 相同region的proxy -> 其他proxy，声明proxy属于哪个region，需要你传入RegionResolver
+* 新增LocalConfProxyDiscovery
 
 ### 更新
 * 优化了camellia-redis-proxy在代理redis-cluster时后端redis宕机时的快速失败策略

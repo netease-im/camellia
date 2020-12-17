@@ -8,6 +8,7 @@
 ### add
 * RedisProxyJedisPool allow setting custom policy of proxy choose: IProxySelector. default use RandomProxySelector，if you enable sid-car-first, then use SidCarFirstProxySelector
 * if RedisProxyJedisPool setting sid-car-first，proxy priority is: sid-car-proxy -> same-region-proxy -> other-proxy, for setting a proxy belongs to which region, you need define RegionResolver
+* provider LocalConfProxyDiscovery
 
 ### update
 * optimize the fast fail policy when redis-cluster nodes down in camellia-redis-proxy
