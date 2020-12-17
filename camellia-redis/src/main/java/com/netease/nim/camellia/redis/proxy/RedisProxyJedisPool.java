@@ -199,6 +199,90 @@ public class RedisProxyJedisPool extends JedisPool {
         RedisProxyJedisPoolContext.init(this);
     }
 
+    public static class Builder {
+
+        private long bid = -1;
+        private String bgroup = null;
+        private IProxyDiscovery proxyDiscovery;
+        private GenericObjectPoolConfig poolConfig = new JedisPoolConfig();
+        private int timeout = defaultTimeout;
+        private String password;
+        private int refreshSeconds = defaultRefreshSeconds;
+        private int maxRetry = defaultMaxRetry;
+        private boolean sidCarFirst = defaultSidCarFirst;
+        private String localhost = defaultLocalHost;
+        private RegionResolver regionResolver;
+        private IProxySelector proxySelector;
+
+        public Builder() {
+        }
+
+        public Builder bid(long bid) {
+            this.bid = bid;
+            return this;
+        }
+
+        public Builder bgroup(String bgroup) {
+            this.bgroup = bgroup;
+            return this;
+        }
+
+        public Builder proxyDiscovery(IProxyDiscovery proxyDiscovery) {
+            this.proxyDiscovery = proxyDiscovery;
+            return this;
+        }
+
+        public Builder poolConfig(GenericObjectPoolConfig poolConfig) {
+            this.poolConfig = poolConfig;
+            return this;
+        }
+
+        public Builder timeout(int timeout) {
+            this.timeout = timeout;
+            return this;
+        }
+
+        public Builder password(String password) {
+            this.password = password;
+            return this;
+        }
+
+        public Builder refreshSeconds(int refreshSeconds) {
+            this.refreshSeconds = refreshSeconds;
+            return this;
+        }
+
+        public Builder maxRetry(int maxRetry) {
+            this.maxRetry = maxRetry;
+            return this;
+        }
+
+        public Builder sidCarFirst(boolean sidCarFirst) {
+            this.sidCarFirst = sidCarFirst;
+            return this;
+        }
+
+        public Builder localhost(String localhost) {
+            this.localhost = localhost;
+            return this;
+        }
+
+        public Builder regionResolver(RegionResolver regionResolver) {
+            this.regionResolver = regionResolver;
+            return this;
+        }
+
+        public Builder proxySelector(IProxySelector proxySelector) {
+            this.proxySelector = proxySelector;
+            return this;
+        }
+
+        public RedisProxyJedisPool build() {
+            return new RedisProxyJedisPool(bid, bgroup, proxyDiscovery, poolConfig, timeout, password,
+                    refreshSeconds, maxRetry, sidCarFirst, localhost, regionResolver, proxySelector);
+        }
+    }
+
     @Override
     public Jedis getResource() {
         int retry = 0;
