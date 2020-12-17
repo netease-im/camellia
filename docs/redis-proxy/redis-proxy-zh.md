@@ -665,25 +665,40 @@ camellia-redis-zk-registry:
     <version>a.b.c</version>
 </dependency>
 ``` 
-然后你就可以使用RedisProxyJedisPool代替你原先使用的JedisPool，其他的操作都一样：  
+然后你就可以使用RedisProxyJedisPool代替你原先使用的JedisPool，其他的操作都一样。   
+RedisProxyJedisPool使用IProxySelector来定义proxy的负载均衡策略，默认使用的是RandomProxySelector，也即随机选择proxy。  
+如果设置了sidCarFirst=true，则会使用SidCarFirstProxySelector，该策略下会优先选择同机部署的proxy（即sid-car-proxy）   
+对于其他proxy，SidCarFirstProxySelector也会优先访问相同region的proxy（从而有更小的延迟），但是需要实现RegionResolver接口，默认提供了根据ip端来设置region的IpSegmentRegionResolver      
+当然，你也可以自己实现IProxySelector来自定义proxy的负载均衡策略  
+此外，如果redis-proxy使用了camellia-dashboard，且使用了动态的多组配置，那么RedisProxyJedisPool需要声明一下自己的bid和bgroup  
+下面是一个例子：  
 ```java
 import com.netease.nim.camellia.redis.proxy.RedisProxyJedisPool;
+import com.netease.nim.camellia.redis.proxy.RegionResolver;
+import com.netease.nim.camellia.redis.zk.discovery.ZkProxyDiscovery;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPoolConfig;
 
-public class TestClient {
+public class TestRedisProxyJedisPool {
 
     public static void main(String[] args) {
         String zkUrl = "127.0.0.1:2181,127.0.0.2:2181";
         String basePath = "/camellia";
         String applicationName = "camellia-redis-proxy-server";
         ZkProxyDiscovery zkProxyDiscovery = new ZkProxyDiscovery(zkUrl, basePath, applicationName);
-        
-        int timeout = 2000;
-        String password = "pass123";
-        boolean sidCarFirst = true;//如果true，则RedisProxyJedisPool会优先访问本机部署的proxy，若不通则访问其余proxy; 若false，则所有proxy一视同仁
-        RedisProxyJedisPool jedisPool = new RedisProxyJedisPool(zkProxyDiscovery, new JedisPoolConfig(), timeout, password, sidCarFirst);
-        
+
+        RedisProxyJedisPool jedisPool = new RedisProxyJedisPool.Builder()
+                .poolConfig(new JedisPoolConfig())
+//                .bid(1)
+//                .bgroup("default")
+                .proxyDiscovery(zkProxyDiscovery)
+                .password("pass123")
+                .timeout(2000)
+                .sidCarFirst(true)
+                .regionResolver(new RegionResolver.IpSegmentRegionResolver("10.189.0.0/20:region1,10.189.208.0/21:region2", "default"))
+//                .proxySelector(new CustomProxySelector())
+                .build();
+
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
@@ -697,40 +712,7 @@ public class TestClient {
 }
 
 ```
-如果redis proxy使用了camellia-dashboard，且使用了动态的多组配置，那么客户端侧可以这样写：  
-```java
-import com.netease.nim.camellia.redis.proxy.RedisProxyJedisPool;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPoolConfig;
-
-public class TestClient {
-
-    public static void main(String[] args) {
-        String zkUrl = "127.0.0.1:2181,127.0.0.2:2181";
-        String basePath = "/camellia";
-        String applicationName = "camellia-redis-proxy-server";
-        ZkProxyDiscovery zkProxyDiscovery = new ZkProxyDiscovery(zkUrl, basePath, applicationName);
-        
-        long bid = 10;
-        String bgroup = "default";
-        int timeout = 2000;
-        String password = "pass123";
-        boolean sidCarFirst = true;//如果true，则RedisProxyJedisPool会优先访问本机部署的proxy，若不通则访问其余proxy; 若false，则所有proxy一视同仁
-        RedisProxyJedisPool jedisPool = new RedisProxyJedisPool(bid, bgroup, zkProxyDiscovery, new JedisPoolConfig(), timeout, password, sidCarFirst);
-        
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            jedis.setex("k1", 10, "v1");
-        } finally {
-            if (jedis != null) {
-                jedis.close();
-            }
-        }
-    }
-}
-```
-如果你使用了Spring的RedisTemplate，为了以注册中心的方式接入redis proxy，可以引入如下依赖：  
+如果你使用了Spring的RedisTemplate，为了以zk注册中心的方式接入redis-proxy，可以引入如下依赖：    
 ```
 <dependency>
     <groupId>com.netease.nim</groupId>
@@ -738,14 +720,19 @@ public class TestClient {
     <version>a.b.c</version>
 </dependency>
 ```
-并且在application.yml添加如下依赖：  
+并且在application.yml添加如下依赖（类似的，如果redis-proxy使用了camellia-dashboard，且使用了动态的多组配置，那么需要声明一下bid和bgroup）：  
 ```yaml
 camellia-spring-redis-zk-discovery:
   application-name: camellia-redis-proxy-server
+  #bid: 1
+  #bgroup: default
   password: pass123
   zk-conf:
     zk-url: 127.0.0.1:2181
     base-path: /camellia
+    sid-car-first: true
+    region-resolve-conf: 10.189.0.0/20:region1,10.189.208.0/21:region2
+    default-region: default
   redis-conf:
     min-idle: 0
     max-active: 8
@@ -753,24 +740,7 @@ camellia-spring-redis-zk-discovery:
     max-wait-millis: 2000
     timeout: 2000
 ```
-则默认生成的RedisTemplate即会访问proxy，类似的，如果要指定bid和bgroup，则如下方式配置：  
-```yaml
-camellia-spring-redis-zk-discovery:
-  application-name: camellia-redis-proxy-server
-  bid: 1
-  bgroup: default
-  password: pass123
-  zk-conf:
-    zk-url: 127.0.0.1:2181
-    base-path: /camellia
-  redis-conf:
-    min-idle: 0
-    max-active: 8
-    max-idle: 8
-    max-wait-millis: 2000
-    timeout: 2000
-
-```
+那么自动生成的SpringRedisTemplate就是访问redis-proxy了   
 上述的示例代码见：[示例](/camellia-samples/camellia-spring-redis-samples)  
 
 

@@ -667,25 +667,40 @@ first, add maven dependency in your project, like this:
     <version>a.b.c</version>
 </dependency>
 ``` 
-then, you can use RedisProxyJedisPool instead of JedisPool, like this: 
+then you can use RedisProxyJedisPool instead of JedisPool.  
+RedisProxyJedisPool use IProxySelector to define load balance policy, default use RandomProxySelector.  
+if you set sidCarFirst=true, then RedisProxyJedisPool will use SidCarFirstProxySelector, in this policy, RedisProxyJedisPool will use sid-car-proxy first.  
+further more, SidCarFirstProxySelector policy will use same-region-proxy priority if you implement RegionResolver, camellia provide a IpSegmentRegionResolver implement which define region by ip-segment.  
+certainly, you can implement custom IProxySelector to define your load balance policy.    
+otherwise, if redis-proxy use camellia-dashboard and multi-config, then RedisProxyJedisPool should setting bid/bgroup.  
+this is a sample:  
 ```java
 import com.netease.nim.camellia.redis.proxy.RedisProxyJedisPool;
+import com.netease.nim.camellia.redis.proxy.RegionResolver;
+import com.netease.nim.camellia.redis.zk.discovery.ZkProxyDiscovery;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPoolConfig;
 
-public class TestClient {
+public class TestRedisProxyJedisPool {
 
     public static void main(String[] args) {
         String zkUrl = "127.0.0.1:2181,127.0.0.2:2181";
         String basePath = "/camellia";
         String applicationName = "camellia-redis-proxy-server";
         ZkProxyDiscovery zkProxyDiscovery = new ZkProxyDiscovery(zkUrl, basePath, applicationName);
-        
-        int timeout = 2000;
-        String password = "pass123";
-        boolean sidCarFirst = true;//if setting true, then RedisProxyJedisPool will request sid-car proxy firsrt
-        RedisProxyJedisPool jedisPool = new RedisProxyJedisPool(zkProxyDiscovery, new JedisPoolConfig(), timeout, password, sidCarFirst);
-        
+
+        RedisProxyJedisPool jedisPool = new RedisProxyJedisPool.Builder()
+                .poolConfig(new JedisPoolConfig())
+//                .bid(1)
+//                .bgroup("default")
+                .proxyDiscovery(zkProxyDiscovery)
+                .password("pass123")
+                .timeout(2000)
+                .sidCarFirst(true)
+                .regionResolver(new RegionResolver.IpSegmentRegionResolver("10.189.0.0/20:region1,10.189.208.0/21:region2", "default"))
+//                .proxySelector(new CustomProxySelector())
+                .build();
+
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
@@ -699,40 +714,7 @@ public class TestClient {
 }
 
 ```
-if redis proxy use multi-config with camellia-dashboard, then, you should invoke redis proxy like this:
-```java
-import com.netease.nim.camellia.redis.proxy.RedisProxyJedisPool;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPoolConfig;
-
-public class TestClient {
-
-    public static void main(String[] args) {
-        String zkUrl = "127.0.0.1:2181,127.0.0.2:2181";
-        String basePath = "/camellia";
-        String applicationName = "camellia-redis-proxy-server";
-        ZkProxyDiscovery zkProxyDiscovery = new ZkProxyDiscovery(zkUrl, basePath, applicationName);
-        
-        long bid = 10;
-        String bgroup = "default";
-        int timeout = 2000;
-        String password = "pass123";
-        boolean sidCarFirst = true;//if setting true, then RedisProxyJedisPool will request sid-car proxy firsrt
-        RedisProxyJedisPool jedisPool = new RedisProxyJedisPool(bid, bgroup, zkProxyDiscovery, new JedisPoolConfig(), timeout, password, sidCarFirst);
-        
-        Jedis jedis = null;
-        try {
-            jedis = jedisPool.getResource();
-            jedis.setex("k1", 10, "v1");
-        } finally {
-            if (jedis != null) {
-                jedis.close();
-            }
-        }
-    }
-}
-```
-if you use Spring RedisTemplate，and you want use proxy in discovery mode(zk), you should add maven dependency, like this:  
+if you use Spring RedisTemplate，and you want use proxy in discovery mode(zk), you should add maven dependency, like this:    
 ```
 <dependency>
     <groupId>com.netease.nim</groupId>
@@ -740,14 +722,19 @@ if you use Spring RedisTemplate，and you want use proxy in discovery mode(zk), 
     <version>a.b.c</version>
 </dependency>
 ```
-and add config in application.yml, like this:    
+and add config in application.yml, like this（similar, if redis-proxy use camellia-dashboard and multi-config, you should setting bid/bgroup）:    
 ```yaml
 camellia-spring-redis-zk-discovery:
   application-name: camellia-redis-proxy-server
+  #bid: 1
+  #bgroup: default
   password: pass123
   zk-conf:
     zk-url: 127.0.0.1:2181
     base-path: /camellia
+    sid-car-first: true
+    region-resolve-conf: 10.189.0.0/20:region1,10.189.208.0/21:region2
+    default-region: default
   redis-conf:
     min-idle: 0
     max-active: 8
@@ -755,25 +742,7 @@ camellia-spring-redis-zk-discovery:
     max-wait-millis: 2000
     timeout: 2000
 ```
-then the default Spring RedisTemplate will call redis proxy in zk discovery mode(zk)  
-future more, if redis proxy use multi-config with camellia-dashboard, then, you should config like this:   
-```yaml
-camellia-spring-redis-zk-discovery:
-  application-name: camellia-redis-proxy-server
-  bid: 1
-  bgroup: default
-  password: pass123
-  zk-conf:
-    zk-url: 127.0.0.1:2181
-    base-path: /camellia
-  redis-conf:
-    min-idle: 0
-    max-active: 8
-    max-idle: 8
-    max-wait-millis: 2000
-    timeout: 2000
-
-```
+then the default Spring RedisTemplate will call redis proxy in zk discovery mode(zk)    
 sample code here：[sample code](/camellia-samples/camellia-spring-redis-samples)  
 
 ## Monitor
