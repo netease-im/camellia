@@ -12,13 +12,15 @@ import java.util.Map;
  */
 public interface RegionResolver {
 
+    static final String DEFAULT_REGION = "default";
+
     String resolve(String host);
 
     public static class DummyRegionResolver implements RegionResolver {
 
         @Override
         public String resolve(String host) {
-            return "default";
+            return DEFAULT_REGION;
         }
     }
 
@@ -33,20 +35,26 @@ public interface RegionResolver {
          * @param defaultRegion default region if not match
          */
         public IpSegmentRegionResolver(String configStr, String defaultRegion) {
-            String[] split = configStr.split(",");
-            if (split.length > 0) {
-                for (String str : split) {
-                    String[] split1 = str.split(":");
-                    String ipWithMask = split1[0];
-                    String region = split1[1];
-                    String[] split3 = ipWithMask.split("/");
-                    String ip = split3[0];
-                    String mask = split3[1];
-                    IPMatcher matcher = new IPMatcher(ip, mask);
-                    list.add(new IpSegmentRegion(matcher, region));
+            if (configStr != null && configStr.length() > 0) {
+                String[] split = configStr.split(",");
+                if (split.length > 0) {
+                    for (String str : split) {
+                        String[] split1 = str.split(":");
+                        String ipWithMask = split1[0];
+                        String region = split1[1];
+                        String[] split3 = ipWithMask.split("/");
+                        String ip = split3[0];
+                        String mask = split3[1];
+                        IPMatcher matcher = new IPMatcher(ip, mask);
+                        list.add(new IpSegmentRegion(matcher, region));
+                    }
                 }
             }
-            this.defaultRegion = defaultRegion;
+            if (defaultRegion != null && defaultRegion.length() > 0) {
+                this.defaultRegion = defaultRegion;
+            } else {
+                this.defaultRegion = DEFAULT_REGION;
+            }
         }
 
         /**
@@ -56,16 +64,22 @@ public interface RegionResolver {
          * @param defaultRegion default region if not match
          */
         public IpSegmentRegionResolver(Map<String, String> config, String defaultRegion) {
-            for (Map.Entry<String, String> entry : config.entrySet()) {
-                String ipWithMask = entry.getKey();
-                String region = entry.getValue();
-                String[] split = ipWithMask.split("/");
-                String ip = split[0];
-                String mask = split[1];
-                IPMatcher matcher = new IPMatcher(ip, mask);
-                list.add(new IpSegmentRegion(matcher, region));
+            if (config != null) {
+                for (Map.Entry<String, String> entry : config.entrySet()) {
+                    String ipWithMask = entry.getKey();
+                    String region = entry.getValue();
+                    String[] split = ipWithMask.split("/");
+                    String ip = split[0];
+                    String mask = split[1];
+                    IPMatcher matcher = new IPMatcher(ip, mask);
+                    list.add(new IpSegmentRegion(matcher, region));
+                }
             }
-            this.defaultRegion = defaultRegion;
+            if (defaultRegion != null && defaultRegion.trim().length() > 0) {
+                this.defaultRegion = defaultRegion;
+            } else {
+                this.defaultRegion = DEFAULT_REGION;
+            }
         }
 
         private static class IpSegmentRegion {
