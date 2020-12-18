@@ -4,6 +4,16 @@
 * 支持redis6.0的client-cache特性
 * 支持redis事务，multi/watch/exec等
 
+# 1.0.13（2020/12/xx）
+### 新增
+* 无
+
+### 更新
+* IpSegmentRegionResolver允许设置空的config，从而camellia-spring-redis-eureka-discovery-spring-boot-starter和camellia-spring-redis-zk-discovery-spring-boot-starter启动时regionResolveConf参数可以缺省
+
+### fix
+* 无
+
 # 1.0.12（2020/12/17）
 ### 新增
 * RedisProxyJedisPool允许设置自定义的proxy选择策略IProxySelector，默认使用RandomProxySelector，若开启side-car优先，则使用SideCarFirstProxySelector

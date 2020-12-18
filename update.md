@@ -4,6 +4,16 @@
 * support client-cache feature of redis6.0
 * support redis transaction of multi/watch/exec commands
 
+# 1.0.13（2020/12/xx）
+### add
+* none
+
+### update
+* IpSegmentRegionResolver allow null/empty config，so camellia-spring-redis-eureka-discovery-spring-boot-starter and camellia-spring-redis-zk-discovery-spring-boot-starter can ignore configure of regionResolveConf
+
+### fix
+* none
+
 # 1.0.12（2020/12/17）
 ### add
 * RedisProxyJedisPool allow setting custom policy of proxy choose: IProxySelector. default use RandomProxySelector，if you enable side-car-first, then use SideCarFirstProxySelector
@@ -15,7 +25,7 @@
 * camellia-redis-proxy renew slot-node in async
 
 ### fix
-* 无
+* none
 
 # 1.0.11（2020/12/09）
 ### add
