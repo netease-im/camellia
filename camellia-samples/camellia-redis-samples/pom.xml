@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis-samples</artifactId>
-	<version>1.0.13-SNAPSHOT</version>
+	<version>1.0.13</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-samples</artifactId>
-		<version>1.0.13-SNAPSHOT</version>
+		<version>1.0.13</version>
 	</parent>
 
 	<dependencyManagement>
@@ -28,12 +28,12 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-spring-boot-starter</artifactId>
-			<version>1.0.13-SNAPSHOT</version>
+			<version>1.0.13</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-zk-discovery-spring-boot-starter</artifactId>
-			<version>1.0.13-SNAPSHOT</version>
+			<version>1.0.13</version>
 		</dependency>
 	</dependencies>
 	<build>
