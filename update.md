@@ -4,7 +4,7 @@
 * support client-cache feature of redis6.0
 * support redis transaction of multi/watch/exec commands
 
-# 1.0.14（2020/12/xx）
+# 1.0.14（2020/12/28）
 ### add
 * none
 
