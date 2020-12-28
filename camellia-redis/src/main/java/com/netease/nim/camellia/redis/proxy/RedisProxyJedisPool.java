@@ -434,12 +434,8 @@ public class RedisProxyJedisPool extends JedisPool {
                 List<Proxy> list = proxyJedisPool.proxyDiscovery.findAll();
                 if (list != null && !list.isEmpty()) {
                     Set<Proxy> proxySet = proxyJedisPool.proxySelector.getAll();
-                    Set<Proxy> newSet = new HashSet<>(list);
-                    newSet.removeAll(proxySet);
-                    if (!newSet.isEmpty()) {
-                        for (Proxy proxy : newSet) {
-                            proxyJedisPool.add(proxy);
-                        }
+                    for (Proxy proxy : list) {
+                        proxyJedisPool.proxySelector.add(proxy);
                     }
                     Set<Proxy> oldSet = new HashSet<>(proxySet);
                     oldSet.removeAll(list);
