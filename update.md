@@ -4,6 +4,16 @@
 * support client-cache feature of redis6.0
 * support redis transaction of multi/watch/exec commands
 
+# 1.0.14（2020/12/xx）
+### add
+* none
+
+### update
+* when RedisProxyJedisPool's RefreshThread refresh proxy set, event ProxySelector hold this proxy, RefreshThread still call add method, avoid some times' timeout of proxy cause proxy not load balance
+
+### fix
+* none
+
 # 1.0.13（2020/12/18）
 ### add
 * none

@@ -4,6 +4,16 @@
 * 支持redis6.0的client-cache特性
 * 支持redis事务，multi/watch/exec等
 
+# 1.0.14（2020/12/xx）
+### 新增
+* 无
+
+### 更新
+* RedisProxyJedisPool的兜底线程在刷新proxy列表时，即使ProxySelector已经持有了该proxy，仍然调用add方法，避免偶尔的超时等异常导致proxy负载不均衡
+
+### fix
+* 无
+
 # 1.0.13（2020/12/18）
 ### 新增
 * 无
