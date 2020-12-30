@@ -40,6 +40,10 @@ public class HotKeyMonitor {
                 hotKeyStats.bgroup = bgroup;
                 hotKeyStats.key = key;
                 hotKeyStats.count.addAndGet(hotKey.getCount());
+                hotKeyStats.times.incrementAndGet();
+                if (hotKeyStats.max < hotKey.getCount()) {
+                    hotKeyStats.max = hotKey.getCount();
+                }
                 hotKeyStats.checkMillis = hotKeyConfig.getCheckMillis();
                 hotKeyStats.checkThreshold = hotKeyConfig.getCheckThreshold();
             }
@@ -65,7 +69,10 @@ public class HotKeyMonitor {
                 hotKeyJson.put("bid", hotKeyStats.bid);
                 hotKeyJson.put("bgroup", hotKeyStats.bgroup);
                 hotKeyJson.put("key", hotKeyStats.key);
-                hotKeyJson.put("count", hotKeyStats.count.get());
+                hotKeyJson.put("count", hotKeyStats.count.get());//total count of callback
+                hotKeyJson.put("times", hotKeyStats.times.get());//callback times
+                hotKeyJson.put("avg", hotKeyStats.count.get() * 1.0 / hotKeyStats.times.get());//avg count of every callback
+                hotKeyJson.put("max", hotKeyStats.max);//max count of every callback
                 hotKeyJson.put("checkMillis", hotKeyStats.checkMillis);
                 hotKeyJson.put("checkThreshold", hotKeyStats.checkThreshold);
                 hotKeyJsonArray.add(hotKeyJson);
@@ -86,6 +93,8 @@ public class HotKeyMonitor {
         String bgroup;
         String key;
         AtomicLong count = new AtomicLong();
+        AtomicLong times = new AtomicLong();
+        long max;
         long checkMillis;
         long checkThreshold;
     }

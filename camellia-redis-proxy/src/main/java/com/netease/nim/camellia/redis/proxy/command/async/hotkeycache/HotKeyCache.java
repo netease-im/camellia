@@ -96,7 +96,7 @@ public class HotKeyCache {
             return null;
         }
         BytesKey bytesKey = new BytesKey(key);
-        this.hotKeyCounter.incrementAndGet(bytesKey);
+        this.hotKeyCounter.increment(bytesKey);
         HotValueWrapper wrapper = cache.get(bytesKey);
         if (wrapper != null) {
             if (TimeCache.currentMillis - wrapper.timestamp > cacheExpireMillis) {

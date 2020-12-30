@@ -49,7 +49,7 @@ public class HotKeyHunter {
 
     public void incr(byte[] key) {
         BytesKey bytesKey = new BytesKey(key);
-        counter.incrementAndGet(bytesKey);
+        counter.increment(bytesKey);
     }
 
     private void callback() {

@@ -5,7 +5,7 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  *
@@ -22,12 +22,10 @@ public class LRUCounter {
         this.expireMillis = expireMillis;
     }
 
-    public long incrementAndGet(BytesKey bytesKey) {
+    public void increment(BytesKey bytesKey) {
         Counter counter = cache.get(bytesKey);
         if (counter != null) {
-            if (TimeCache.currentMillis - counter.timestamp > expireMillis) {
-                counter.reset();
-            }
+            counter.checkExpireAndReset(expireMillis);
         }
         if (counter == null) {
             counter = new Counter();
@@ -36,7 +34,7 @@ public class LRUCounter {
                 counter = old;
             }
         }
-        return counter.count.incrementAndGet();
+        counter.count.increment();
     }
 
     public Long get(BytesKey bytesKey) {
@@ -46,7 +44,7 @@ public class LRUCounter {
                 cache.remove(bytesKey);
                 return null;
             }
-            return counter.count.get();
+            return counter.count.sum();
         }
         return null;
     }
@@ -59,7 +57,7 @@ public class LRUCounter {
                 cache.remove(entry.getKey());
                 continue;
             }
-            long count = entry.getValue().count.get();
+            long count = entry.getValue().count.sum();
             if (count >= threshold) {
                 byte[] key = entry.getKey().getKey();
                 treeSet.add(new SortedBytesKey(key, count));
@@ -92,17 +90,21 @@ public class LRUCounter {
     }
 
     private static class Counter {
-        private long timestamp = TimeCache.currentMillis;
-        private final AtomicLong count = new AtomicLong();
+        private volatile long timestamp = TimeCache.currentMillis;
+        private final LongAdder count = new LongAdder();
         private final AtomicBoolean lock = new AtomicBoolean();
 
-        void reset() {
-            if (lock.compareAndSet(false, true)) {
-                try {
-                    timestamp = TimeCache.currentMillis;
-                    count.set(0);
-                } finally {
-                    lock.compareAndSet(true, false);
+        void checkExpireAndReset(long expireMillis) {
+            if (TimeCache.currentMillis - timestamp > expireMillis) {
+                if (lock.compareAndSet(false, true)) {
+                    try {
+                        if (TimeCache.currentMillis - timestamp > expireMillis) {
+                            timestamp = TimeCache.currentMillis;
+                            count.reset();
+                        }
+                    } finally {
+                        lock.compareAndSet(true, false);
+                    }
                 }
             }
         }
