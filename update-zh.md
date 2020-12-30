@@ -4,7 +4,7 @@
 * 支持redis6.0的client-cache特性
 * 支持redis事务，multi/watch/exec等
 
-# 1.0.15（2020/12/xx）
+# 1.0.15（2020/12/30）
 ### 新增
 * 无
 
