@@ -4,6 +4,17 @@
 * 支持redis6.0的client-cache特性
 * 支持redis事务，multi/watch/exec等
 
+# 1.0.15（2020/12/xx）
+### 新增
+* 无
+
+### 更新
+* HotKeyMonitor的json新增字段times/avg/max
+* LRUCounter更新，使用LongAdder替换AtomicLong
+
+### fix
+* 无
+
 # 1.0.14（2020/12/28）
 ### 新增
 * 无

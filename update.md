@@ -4,6 +4,17 @@
 * support client-cache feature of redis6.0
 * support redis transaction of multi/watch/exec commands
 
+# 1.0.15（2020/12/xx）
+### add
+* none
+
+### update
+* HotKeyMonitor json add fields times/avg/max
+* LRUCounter update, use LongAdder instead of AtomicLong
+
+### fix
+* none
+
 # 1.0.14（2020/12/28）
 ### add
 * none
