@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.console;
 
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ServerStatus;
 import org.slf4j.Logger;
@@ -98,6 +99,13 @@ public class ConsoleServiceAdaptor implements ConsoleService {
         JSONObject hotKeyCacheStatsJson = HotKeyCacheMonitor.getHotKeyCacheStatsJson();
         monitorJson.putAll(hotKeyCacheStatsJson);
         return ConsoleResult.success(monitorJson.toJSONString());
+    }
+
+    @Override
+    public ConsoleResult reload() {
+        ProxyDynamicConf.reload();
+        logger.info("proxy dynamic conf reload success");
+        return ConsoleResult.success();
     }
 
     @Override

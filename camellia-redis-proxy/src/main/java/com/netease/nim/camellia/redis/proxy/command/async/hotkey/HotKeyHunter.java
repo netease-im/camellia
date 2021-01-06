@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command.async.hotkey;
 
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.HotKeyMonitor;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import com.netease.nim.camellia.redis.proxy.util.LRUCounter;
@@ -19,7 +20,8 @@ public class HotKeyHunter {
 
     private static final Logger logger = LoggerFactory.getLogger(HotKeyHunter.class);
 
-    private final HotKeyConfig hotKeyConfig;
+    private boolean enable;
+    private HotKeyConfig hotKeyConfig;
     private final HotKeyMonitorCallback callback;
     private final LRUCounter counter;
     private final CommandContext commandContext;
@@ -27,6 +29,9 @@ public class HotKeyHunter {
     public HotKeyHunter(CommandContext commandContext, HotKeyConfig hotKeyConfig, HotKeyMonitorCallback callback) {
         this.commandContext = commandContext;
         this.hotKeyConfig = hotKeyConfig;
+        this.enable = true;
+        ProxyDynamicConf.registerCallback(this::reloadHotKeyConfig);
+        reloadHotKeyConfig();
         this.callback = callback;
         this.counter = new LRUCounter(hotKeyConfig.getCheckCacheMaxCapacity(),
                 hotKeyConfig.getCheckCacheMaxCapacity(), hotKeyConfig.getCheckMillis());
@@ -35,19 +40,29 @@ public class HotKeyHunter {
         logger.info("HotKeyHunter init success, commandContext = {}", commandContext);
     }
 
+    private void reloadHotKeyConfig() {
+        Long bid = commandContext.getBid();
+        String bgroup = commandContext.getBgroup();
+        long threshold = ProxyDynamicConf.hotKeyMonitorThreshold(bid, bgroup, this.hotKeyConfig.getCheckThreshold());
+        this.hotKeyConfig = new HotKeyConfig(this.hotKeyConfig.getCheckMillis(), this.hotKeyConfig.getCheckCacheMaxCapacity(), threshold, this.hotKeyConfig.getMaxHotKeyCount());
+        this.enable = ProxyDynamicConf.hotKeyMonitorEnable(bid, bgroup, this.enable);
+    }
+
     public void incr(byte[]... keys) {
+        if (!enable) return;
         for (byte[] key : keys) {
             incr(key);
         }
     }
 
     public void incr(List<byte[]> keys) {
+        if (!enable) return;
         for (byte[] key : keys) {
             incr(key);
         }
     }
 
-    public void incr(byte[] key) {
+    private void incr(byte[] key) {
         BytesKey bytesKey = new BytesKey(key);
         counter.increment(bytesKey);
     }

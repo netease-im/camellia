@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command.async.hotkeycache;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.HotKeyCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import com.netease.nim.camellia.redis.proxy.util.LRUCounter;
@@ -34,12 +35,13 @@ public class HotKeyCache {
     private final LRUCounter hotKeyCounter;
 
     private final long cacheExpireMillis;
-    private final long hotKeyCheckThreshold;
+    private long hotKeyCheckThreshold;
 
     private final HotKeyCacheKeyChecker keyChecker;
     private final HotKeyCacheStatsCallback callback;
 
-    private final boolean cacheNull;
+    private boolean cacheNull;
+    private boolean enable;
 
     private ConcurrentHashMap<BytesKey, AtomicLong> statsMap = new ConcurrentHashMap<>();
 
@@ -50,6 +52,9 @@ public class HotKeyCache {
         this.cacheExpireMillis = commandHotKeyCacheConfig.getCacheExpireMillis();
         this.hotKeyCheckThreshold = commandHotKeyCacheConfig.getCounterCheckThreshold();
         this.cacheNull = commandHotKeyCacheConfig.isNeedCacheNull();
+        this.enable = true;
+        ProxyDynamicConf.registerCallback(this::reloadHotKeyCacheConfig);
+        reloadHotKeyCacheConfig();
         this.cache = new ConcurrentLinkedHashMap.Builder<BytesKey, HotValueWrapper>()
                 .initialCapacity(commandHotKeyCacheConfig.getCacheMaxCapacity())
                 .maximumWeightedCapacity(commandHotKeyCacheConfig.getCacheMaxCapacity())
@@ -92,6 +97,7 @@ public class HotKeyCache {
     }
 
     public HotValue getCache(byte[] key) {
+        if (!enable) return null;
         if (keyChecker != null && !keyChecker.needCache(commandContext, key)) {
             return null;
         }
@@ -129,6 +135,7 @@ public class HotKeyCache {
     }
 
     public void tryBuildHotKeyCache(byte[] key, byte[] value) {
+        if (!enable) return;
         if (value == null && !cacheNull) {
             return;
         }
@@ -146,6 +153,14 @@ public class HotKeyCache {
         if (logger.isDebugEnabled()) {
             logger.debug("refresh hotKey's value success, key = {}", SafeEncoder.encode(bytesKey.getKey()));
         }
+    }
+
+    private void reloadHotKeyCacheConfig() {
+        Long bid = commandContext.getBid();
+        String bgroup = commandContext.getBgroup();
+        this.hotKeyCheckThreshold = ProxyDynamicConf.hotKeyCacheThreshold(bid, bgroup, this.hotKeyCheckThreshold);
+        this.enable = ProxyDynamicConf.hotKeyCacheEnable(bid, bgroup, this.enable);
+        this.cacheNull = ProxyDynamicConf.hotKeyCacheNeedCacheNull(bid, bgroup, this.cacheNull);
     }
 
     private static class HotValueWrapper {

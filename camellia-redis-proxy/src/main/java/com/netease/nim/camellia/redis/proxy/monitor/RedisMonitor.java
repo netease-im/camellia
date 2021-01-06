@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.monitor;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -25,6 +27,9 @@ public class RedisMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisMonitor.class);
 
+    private static final AtomicBoolean initOk = new AtomicBoolean(false);
+    private static final AtomicBoolean calcCommandSpendTimeThreadStart = new AtomicBoolean(false);
+
     private static MonitorCallback monitorCallback;
 
     private static int intervalSeconds;
@@ -32,7 +37,9 @@ public class RedisMonitor {
     private static Stats stats = new Stats();
     private static final ConcurrentHashMap<String, LongAdder> failCountMap = new ConcurrentHashMap<>();
 
+    private static boolean monitorEnable;
     private static boolean commandSpendTimeMonitorEnable;
+
     private static final ConcurrentLinkedQueue<CommandSpendItem> queue = new ConcurrentLinkedQueue<>();
     private static final ConcurrentHashMap<String, LongAdder> commandSpendCountMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, LongAdder> commandSpendTotalMap = new ConcurrentHashMap<>();
@@ -48,30 +55,59 @@ public class RedisMonitor {
     }
 
     public static void init(int seconds, boolean commandSpendTimeMonitorEnable, MonitorCallback monitorCallback) {
-        intervalSeconds = seconds;
-        ExecutorUtils.scheduleAtFixedRate(RedisMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
-        RedisMonitor.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
-        if (commandSpendTimeMonitorEnable) {
-            new Thread(RedisMonitor::calcCommandSpendTime, "command-spend-time-calc").start();
+        if (initOk.compareAndSet(false, true)) {
+            intervalSeconds = seconds;
+            ExecutorUtils.scheduleAtFixedRate(RedisMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
+            RedisMonitor.monitorEnable = true;
+            RedisMonitor.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
+            if (commandSpendTimeMonitorEnable) {
+                startCalcCommandSpendTimeThread();
+            }
+            RedisMonitor.monitorCallback = monitorCallback;
+            ProxyDynamicConf.registerCallback(RedisMonitor::reloadConf);
+            reloadConf();
         }
-        RedisMonitor.monitorCallback = monitorCallback;
     }
 
+    private static void startCalcCommandSpendTimeThread() {
+        if (calcCommandSpendTimeThreadStart.compareAndSet(false, true)) {
+            new Thread(RedisMonitor::calcCommandSpendTime, "command-spend-time-calc").start();
+        }
+    }
+
+    private static void reloadConf() {
+        RedisMonitor.monitorEnable = ProxyDynamicConf.monitorEnable(RedisMonitor.monitorEnable);
+        boolean commandSpendTimeMonitorEnable = ProxyDynamicConf.commandSpendTimeMonitorEnable(RedisMonitor.commandSpendTimeMonitorEnable);
+        if (commandSpendTimeMonitorEnable) {
+            startCalcCommandSpendTimeThread();
+        }
+        RedisMonitor.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
+    }
+
+    /**
+     * command count incr
+     */
     public static void incr(Long bid, String bgroup, String command) {
+        if (!monitorEnable) return;
         String key = bid + "|" + bgroup + "|" + command;
         LongAdder count = map.computeIfAbsent(key, k -> new LongAdder());
         count.increment();
     }
 
+    /**
+     * command fail incr
+     */
     public static void incrFail(String failReason) {
         LongAdder failCount = failCountMap.computeIfAbsent(failReason, k -> new LongAdder());
         failCount.increment();
     }
 
+    /**
+     * command spend time incr
+     */
     public static void incrCommandSpendTime(String command, long spendNanoTime) {
-        if (commandSpendTimeMonitorEnable) {
-            queue.offer(new CommandSpendItem(command, spendNanoTime));
-        }
+        if (!commandSpendTimeMonitorEnable || !monitorEnable) return;
+        queue.offer(new CommandSpendItem(command, spendNanoTime));
     }
 
     private static void calcCommandSpendTime() {
@@ -96,10 +132,16 @@ public class RedisMonitor {
         }
     }
 
+    /**
+     * get Stats
+     */
     public static Stats getStats() {
         return stats;
     }
 
+    /**
+     * get stats json
+     */
     public static JSONObject getStatsJson() {
         JSONObject monitorJson = new JSONObject();
         JSONArray connectJsonArray = new JSONArray();

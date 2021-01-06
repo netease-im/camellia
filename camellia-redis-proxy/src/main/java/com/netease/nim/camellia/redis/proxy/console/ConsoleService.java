@@ -19,5 +19,7 @@ public interface ConsoleService {
 
     ConsoleResult monitor();
 
+    ConsoleResult reload();
+
     ConsoleResult custom(Map<String, List<String>> params);
 }

@@ -49,13 +49,14 @@ public class AsyncTask {
         try {
             if (commandSpendTimeConfig != null) {
                 long spendNanoTime = System.nanoTime() - startTime;
-                if (!command.isBlocking() && spendNanoTime > commandSpendTimeConfig.getSlowCommandThresholdMillisTime() * 1000000L) {
+                long slowCommandThresholdMillisTime = commandSpendTimeConfig.getSlowCommandThresholdMillisTime();
+                if (!command.isBlocking() && spendNanoTime > slowCommandThresholdMillisTime * 1000000L) {
                     if (commandSpendTimeConfig.getSlowCommandMonitorCallback() != null) {
                         try {
                             double spendMs = spendNanoTime / 1000000.0;
-                            SlowCommandMonitor.slowCommand(command, spendMs, commandSpendTimeConfig.getSlowCommandThresholdMillisTime());
+                            SlowCommandMonitor.slowCommand(command, spendMs, slowCommandThresholdMillisTime);
                             commandSpendTimeConfig.getSlowCommandMonitorCallback().callback(command, reply,
-                                    spendMs, commandSpendTimeConfig.getSlowCommandThresholdMillisTime());
+                                    spendMs, slowCommandThresholdMillisTime);
                         } catch (Exception e) {
                             ErrorLogCollector.collect(AsyncTask.class, "SlowCommandCallback error", e);
                         }
