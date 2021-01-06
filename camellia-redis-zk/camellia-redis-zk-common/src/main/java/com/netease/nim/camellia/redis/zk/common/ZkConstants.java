@@ -12,4 +12,5 @@ public class ZkConstants {
     public static final String basePath = "/camellia";
     public static int reloadIntervalSeconds = 600;
     public static boolean sideCarFirst = false;
+    public static boolean preferredHostName = false;
 }

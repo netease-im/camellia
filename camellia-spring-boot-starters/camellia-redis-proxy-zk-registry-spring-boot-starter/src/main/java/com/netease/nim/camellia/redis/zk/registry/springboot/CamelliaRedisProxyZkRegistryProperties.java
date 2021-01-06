@@ -39,6 +39,11 @@ public class CamelliaRedisProxyZkRegistryProperties {
     private String host;
 
     /**
+     * 自动获取的情况下是否偏好使用hostname注册，若true，则ignoredInterfaces和preferredNetworks参数无效
+     */
+    private boolean preferredHostName = ZkConstants.preferredHostName;
+
+    /**
      * host字段为空的情况下，自动获取host，此时，忽略哪些网卡，逗号分隔
      */
     private String ignoredInterfaces;
@@ -110,6 +115,14 @@ public class CamelliaRedisProxyZkRegistryProperties {
 
     public void setHost(String host) {
         this.host = host;
+    }
+
+    public boolean isPreferredHostName() {
+        return preferredHostName;
+    }
+
+    public void setPreferredHostName(boolean preferredHostName) {
+        this.preferredHostName = preferredHostName;
     }
 
     public String getIgnoredInterfaces() {

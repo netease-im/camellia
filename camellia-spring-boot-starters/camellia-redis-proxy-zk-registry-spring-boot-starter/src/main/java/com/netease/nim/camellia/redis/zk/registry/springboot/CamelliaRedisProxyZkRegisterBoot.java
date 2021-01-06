@@ -37,21 +37,26 @@ public class CamelliaRedisProxyZkRegisterBoot {
             if (host != null && host.length() > 0) {
                 proxy.setHost(host);
             } else {
-                String ignoredInterfaces = properties.getIgnoredInterfaces();
-                if (ignoredInterfaces != null) {
-                    String[] interfaces = ignoredInterfaces.split(",");
-                    Collections.addAll(InetUtils.ignoredInterfaces, interfaces);
-                }
-                String preferredNetworks = properties.getPreferredNetworks();
-                if (preferredNetworks != null) {
-                    String[] networks = preferredNetworks.split(",");
-                    Collections.addAll(InetUtils.preferredNetworks, networks);
-                }
-                InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress();
-                if (inetAddress != null) {
-                    proxy.setHost(inetAddress.getHostAddress());
+                boolean preferredHostName = properties.isPreferredHostName();
+                if (preferredHostName) {
+                    proxy.setHost(InetAddress.getLocalHost().getHostName());
                 } else {
-                    proxy.setHost(InetAddress.getLocalHost().getHostAddress());
+                    String ignoredInterfaces = properties.getIgnoredInterfaces();
+                    if (ignoredInterfaces != null) {
+                        String[] interfaces = ignoredInterfaces.split(",");
+                        Collections.addAll(InetUtils.ignoredInterfaces, interfaces);
+                    }
+                    String preferredNetworks = properties.getPreferredNetworks();
+                    if (preferredNetworks != null) {
+                        String[] networks = preferredNetworks.split(",");
+                        Collections.addAll(InetUtils.preferredNetworks, networks);
+                    }
+                    InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress();
+                    if (inetAddress != null) {
+                        proxy.setHost(inetAddress.getHostAddress());
+                    } else {
+                        proxy.setHost(InetAddress.getLocalHost().getHostAddress());
+                    }
                 }
             }
         } catch (UnknownHostException e) {
