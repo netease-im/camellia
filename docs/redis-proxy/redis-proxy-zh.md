@@ -712,6 +712,33 @@ public class TestRedisProxyJedisPool {
 }
 
 ```
+RedisProxyJedisPool.Builder的所有参数及其介绍如下：  
+```
+    public static class Builder {
+
+        private long bid = -1;//业务id，小于等于0表示不指定
+        private String bgroup = null;//业务分组
+        private IProxyDiscovery proxyDiscovery;//proxy discovery，用于获取proxy列表以及获取proxy的变更通知，默认提供了基于zk的实现，你也可以自己实现
+        private GenericObjectPoolConfig poolConfig = new JedisPoolConfig();//jedis pool config
+        private int timeout = defaultTimeout;//超时
+        private String password;//密码
+        private int refreshSeconds = defaultRefreshSeconds;//兜底的从proxyDiscovery刷新proxy列表的间隔
+        private int maxRetry = defaultMaxRetry;//获取jedis时的重试次数
+        //以下参数用于设置proxy的选择策略
+        //当显式的指定了proxySelector
+        //--则使用自定义的proxy选择策略
+        //若没有显示指定：
+        //--当以下参数均未设置时，则会从所有proxy里随机挑选proxy发起请求，此时，实际使用的proxySelector是RandomProxySelector
+        //--当设置了sideCarFirst=true，则会优先使用同机部署的proxy，即side-car-proxy，此时实际使用的proxySelector是SideCarFirstProxySelector
+        //--localhost用于判断proxy是否是side-car-proxy，若缺失该参数，则会自动获取本机ip
+        //--当设置了sideCarFirst=true，但是又找不到side-car-proxy，SideCarFirstProxySelector会优先使用相同region下的proxy，用于判断proxy归属于哪个region的方法是RegionResolver
+        //-----当regionResolver未设置时，默认使用DummyRegionResolver，即认为所有proxy都归属于同一个proxy
+        //-----我们还提供了一个IpSegmentRegionResolver的实现，该实现用ip段的方式来划分proxy的region，当然你也可以实现一个自定义的IpSegmentRegionResolver
+        private boolean sideCarFirst = defaultSideCarFirst;
+        private String localhost = defaultLocalHost;
+        private RegionResolver regionResolver;
+        private IProxySelector proxySelector;
+```
 如果你使用了Spring的RedisTemplate，为了以zk注册中心的方式接入redis-proxy，可以引入如下依赖：    
 ```
 <dependency>
