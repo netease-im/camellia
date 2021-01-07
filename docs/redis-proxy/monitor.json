@@ -1,0 +1,151 @@
+{
+  "total": [
+    {
+      "qps": 2389.483333333333,
+      "count": 143369,
+      "command": "hgetall"
+    },
+    {
+      "qps": 0.03333333333333333,
+      "count": 2,
+      "command": "auth"
+    }
+  ],
+  "bidbgroup": [
+    {
+      "qps": 0.05,
+      "bgroup": "default",
+      "count": 3,
+      "bid": "35"
+    },
+    {
+      "qps": 0.06666666666666667,
+      "bgroup": "default",
+      "count": 4,
+      "bid": "default"
+    }
+  ],
+  "countStats": [
+    {
+      "count": 422214,
+      "totalReadCount": 207582,
+      "totalWriteCount": 214632
+    }
+  ],
+  "slowCommandStats": [
+    {
+      "bgroup": "default",
+      "bid": "1",
+      "command": "mget",
+      "keys": "k1,k2,k3",
+      "spendMillis": 10200,
+      "thresholdMillis":1000
+    },
+    {
+      "bgroup": "default",
+      "bid": "1",
+      "command": "hgetall",
+      "keys": "kkk",
+      "spendMillis": 10200,
+      "thresholdMillis":1000
+    }],
+  "hotKeyCacheStats": [
+    {
+      "bid": "1",
+      "bgroup": "default",
+      "key": "xxxx",
+      "hitCount": 49,
+      "checkMillis": 1000,
+      "checkThreshold": 100
+    },
+    {
+      "hitCount": 459,
+      "bgroup": "default",
+      "checkMillis": 1000,
+      "bid": "1",
+      "key": "yyyy",
+      "checkThreshold": 100
+    }
+  ],
+  "hotKeyStats": [
+    {
+      "times": 1,
+      "avg": 101.0,
+      "max": 101,
+      "bgroup": "default",
+      "count": 101,
+      "checkMillis": 1000,
+      "bid": "1",
+      "key": "dao_c|kfk_tpc_.23380.",
+      "checkThreshold": 100
+    }
+  ],
+  "bigKeyStats": [
+    {
+      "commandType": "ZSET",
+      "size": 1903,
+      "bgroup": "default",
+      "threshold": 1000,
+      "bid": "16",
+      "command": "zrangebyscore",
+      "key": "saaaaa"
+    },
+    {
+      "commandType": "SET",
+      "size": 2912,
+      "bgroup": "default",
+      "threshold": 1000,
+      "bid": "16",
+      "command": "scard",
+      "key": "ssasas"
+    }
+  ],
+  "failStats": [
+    {
+      "reason": "xxx",
+      "count": 2
+    }
+  ],
+  "qpsStats": [
+    {
+      "qps": 7036.9,
+      "writeQps": 3577.2,
+      "readQps": 3459.7
+    }
+  ],
+  "connectStats": [
+    {
+      "connect": 53
+    }
+  ],
+  "detail": [
+    {
+      "qps": 180.18333333333334,
+      "bgroup": "default",
+      "count": 10811,
+      "bid": "3",
+      "command": "hget"
+    },
+    {
+      "qps": 0.016666666666666666,
+      "bgroup": "default",
+      "count": 1,
+      "bid": "35",
+      "command": "zrangebyscore"
+    }
+  ],
+  "spendStats": [
+    {
+      "maxSpendMs": 16.464333,
+      "count": 143565,
+      "avgSpendMs": 1.1236299562985408,
+      "command": "hgetall"
+    },
+    {
+      "maxSpendMs": 0.041476,
+      "count": 206,
+      "avgSpendMs": 0.0021440485436893205,
+      "command": "ping"
+    }
+  ]
+}

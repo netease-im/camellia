@@ -947,7 +947,7 @@ ps: 当且仅当最后一个命令执行完成已经超过10s了，才会处于i
 * /check
 如果服务器端口可达（指的是proxy的服务端口），则返回200，否则返回500
 * /monitor
-获取监控数据（包括tps/rt/慢查询/热key/大key/热key缓存等），json格式，数据的刷新间隔同RedisMonitor
+获取监控数据（包括tps/rt/慢查询/热key/大key/热key缓存等），json格式，数据的刷新间隔同RedisMonitor，[示例](monitor.json)
 * /custom
 一个自定义接口，可以通过设置不同的http参数来表示不同的请求类型
 
