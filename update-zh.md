@@ -4,6 +4,7 @@
 * 支持基于注册中心的Lettuce的简单的接入方案
 * 支持redis6.0的client-cache特性
 * 支持redis事务，multi/watch/exec等
+* 支持监控数据可视化到prometheus等平台
 
 # 1.0.16（2020/01/xx）
 ### 新增

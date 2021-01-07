@@ -4,6 +4,7 @@
 * support a way for Lettuce to use camellia-redis-proxy depends on register-discovery mode easily
 * support client-cache feature of redis6.0
 * support redis transaction of multi/watch/exec commands
+* support monitor data visualization in prometheus
 
 # 1.0.16（2020/01/xx）
 ### add
