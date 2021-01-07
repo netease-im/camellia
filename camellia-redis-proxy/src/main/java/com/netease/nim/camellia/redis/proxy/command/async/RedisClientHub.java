@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 
 
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import io.netty.channel.EventLoop;
@@ -242,6 +243,24 @@ public class RedisClientHub {
                 logger.error(e.getMessage(), e);
                 return true;
             }
+        }
+    }
+
+    public static void initDynamicConf() {
+        ProxyDynamicConf.registerCallback(RedisClientHub::reloadConf);
+        reloadConf();
+    }
+
+    private static void reloadConf() {
+        long failBanMillis = ProxyDynamicConf.failBanMillis(RedisClientHub.failBanMillis);
+        if (failBanMillis != RedisClientHub.failBanMillis) {
+            logger.info("RedisClientHub failBanMillis, {} -> {}", RedisClientHub.failBanMillis, failBanMillis);
+            RedisClientHub.failBanMillis = failBanMillis;
+        }
+        int failCountThreshold = ProxyDynamicConf.failCountThreshold(RedisClientHub.failCountThreshold);
+        if (failCountThreshold != RedisClientHub.failCountThreshold) {
+            logger.info("RedisClientHub failCountThreshold, {} -> {}", RedisClientHub.failCountThreshold, failCountThreshold);
+            RedisClientHub.failCountThreshold = failCountThreshold;
         }
     }
 

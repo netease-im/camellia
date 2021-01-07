@@ -26,7 +26,8 @@ public class ProxyDynamicConf {
 
     static {
         reload();
-        ExecutorUtils.scheduleAtFixedRate(ProxyDynamicConf::reload, 10, 10, TimeUnit.MINUTES);
+        int reloadIntervalSeconds = confReloadIntervalSeconds();
+        ExecutorUtils.scheduleAtFixedRate(ProxyDynamicConf::reload, reloadIntervalSeconds, reloadIntervalSeconds, TimeUnit.SECONDS);
     }
 
     public static void reload() {
@@ -74,6 +75,21 @@ public class ProxyDynamicConf {
         if (callback != null) {
             callbackSet.add(callback);
         }
+    }
+
+    //配置reload间隔，只有启动时设置有效
+    public static int confReloadIntervalSeconds() {
+        return ConfigurationUtil.getInteger(conf, "dynamic.conf.reload.interval.seconds", 600);
+    }
+
+    //某个redis后端连续几次连不上后触发熔断
+    public static int failCountThreshold(int defaultValue) {
+        return ConfigurationUtil.getInteger(conf, "redis.client.fail.count.threshold", defaultValue);
+    }
+
+    //某个redis后端连不上触发熔断后，熔断多少ms
+    public static long failBanMillis(long defaultValue) {
+        return ConfigurationUtil.getLong(conf, "redis.client.fail.ban.millis", defaultValue);
     }
 
     //monitor enable，当前仅当application.yml里的monitor-enable=true，才能通过本配置在进程运行期间进行动态的执行开启关闭的操作

@@ -166,6 +166,7 @@ public class AsyncCamelliaRedisTemplateChooser {
         RedisClientHub.eventLoopGroupBackup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("redis-client-backup"));
         logger.info("RedisClient, failCountThreshold = {}, failBanMillis = {}",
                 RedisClientHub.failCountThreshold, RedisClientHub.failBanMillis);
+        RedisClientHub.initDynamicConf();
 
         ProxyEnv.Builder builder = new ProxyEnv.Builder();
         String className = redisConf.getShadingFunc();
