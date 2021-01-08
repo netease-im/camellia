@@ -23,7 +23,8 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support monitor big key, support setting BigKeyMonitorCallback
 * provide a spring-boot-starter，you can quick start a proxy cluster
 * provide a default register/discovery component depends on zookeeper, if client's language is java, then you can adjust slightly by use RedisProxyJedisPool instead of JedisPool  
-* provide a spring-boot-starter, then you can use proxy in register/discovery mode when client is SpringRedisTemplate  
+* provide a spring-boot-starter, then you can use proxy in register/discovery mode when client is SpringRedisTemplate
+* some conf support dynamic reload, see[dynamic-conf](dynamic-conf.md)  
 
 ## Supported Commands
 * Full Supported

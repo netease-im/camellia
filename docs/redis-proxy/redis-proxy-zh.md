@@ -23,7 +23,8 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4和camellia-c
 * 支持大key监控，支持设置BigKeyMonitorCallback
 * 提供了一个spring-boot-starter，可以快速搭建proxy集群
 * 提供了一个默认的注册发现实现组件（依赖zookeeper），如果端侧是java，则可以很简单的将JedisPool替换为RedisProxyJedisPool，即可接入redis proxy  
-* 提供了一个spring-boot-starter用于SpringRedisTemplate以注册发现模式接入proxy   
+* 提供了一个spring-boot-starter用于SpringRedisTemplate以注册发现模式接入proxy
+* 部分参数支持动态变更，参见：[动态配置](dynamic-conf.md)
 
 ## 支持的命令
 * 完整支持
@@ -947,7 +948,7 @@ ps: 当且仅当最后一个命令执行完成已经超过10s了，才会处于i
 * /check
 如果服务器端口可达（指的是proxy的服务端口），则返回200，否则返回500
 * /monitor
-获取监控数据（包括tps/rt/慢查询/热key/大key/热key缓存等），json格式，数据的刷新间隔同RedisMonitor，[示例](monitor.json)
+获取监控数据（包括tps/rt/慢查询/热key/大key/热key缓存等），json格式，数据的刷新间隔同RedisMonitor，[详情](monitor.md)
 * /custom
 一个自定义接口，可以通过设置不同的http参数来表示不同的请求类型
 
@@ -1012,6 +1013,7 @@ camellia-redis-zk-registry:
   zk-url: 127.0.0.1:2181 #zk地址
   base-path: /camellia #注册到zk的base-path
 ```
+application.yml中的部分配置支持进程启动期间进行动态修改，详见[动态配置](dynamic-conf.md)
 
 ## 性能
 redis proxy有3种工作模式(since v1.0.9)

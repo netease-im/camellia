@@ -8,10 +8,10 @@
 
 # 1.0.16（2020/01/xx）
 ### add
-* some conf properties support reload
+* some conf properties support dynamic reload
 
 ### update
-* none
+* optimize lock of some concurrent initializer
 
 ### fix
 * none
