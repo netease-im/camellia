@@ -7,6 +7,7 @@ import com.netease.nim.camellia.core.client.env.ShadingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ShadingFuncUtil;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
+import com.netease.nim.camellia.redis.proxy.util.LockMap;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
@@ -27,7 +28,7 @@ public class AsyncCamelliaRedisTemplateChooser {
     private AsyncCamelliaRedisEnv env;
     private CamelliaApi apiService;
 
-    private final Object lock = new Object();
+    private final LockMap lockMap = new LockMap();
     private AsyncCamelliaRedisTemplate remoteInstance;
     private AsyncCamelliaRedisTemplate localInstance;
     private final Map<String, AsyncCamelliaRedisTemplate> remoteInstanceMap = new HashMap<>();
@@ -136,7 +137,7 @@ public class AsyncCamelliaRedisTemplateChooser {
         String key = bid + "|" + bgroup;
         AsyncCamelliaRedisTemplate template = remoteInstanceMap.get(key);
         if (template == null) {
-            synchronized (lock) {
+            synchronized (lockMap.getLockObj(key)) {
                 template = remoteInstanceMap.get(key);
                 if (template == null) {
                     boolean monitorEnable = properties.getRemote().isMonitorEnable();

@@ -4,6 +4,7 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.LockMap;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
@@ -40,7 +41,7 @@ public class RedisClientHub {
     public static int failCountThreshold = Constants.Transpond.failCountThreshold;
     public static long failBanMillis = Constants.Transpond.failBanMillis;
 
-    private static final Object lock = new Object();
+    private static final LockMap lockMap = new LockMap();
 
     public static void updateEventLoop(EventLoop eventLoop) {
         eventLoopThreadLocal.set(eventLoop);
@@ -118,7 +119,7 @@ public class RedisClientHub {
             if (fastFail(url)) {
                 return null;
             }
-            synchronized (lock) {
+            synchronized (lockMap.getLockObj(url)) {
                 client = map.get(url);
                 if (client == null) {
                     client = new RedisClient(addr.getHost(), addr.getPort(), addr.getPassword(), loopGroup,
@@ -144,7 +145,7 @@ public class RedisClientHub {
             if (fastFail(url)) {
                 return null;
             }
-            synchronized (lock) {
+            synchronized (lockMap.getLockObj(url)) {
                 client = map.get(url);
                 if (client != null && client.isValid()) {
                     return client;

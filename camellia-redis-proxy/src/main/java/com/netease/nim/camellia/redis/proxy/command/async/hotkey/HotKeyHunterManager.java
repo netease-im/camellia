@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command.async.hotkey;
 
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
+import com.netease.nim.camellia.redis.proxy.util.LockMap;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -12,6 +13,7 @@ public class HotKeyHunterManager {
 
     private final ConcurrentHashMap<String, HotKeyHunter> map = new ConcurrentHashMap<>();
     private final HotKeyHunter hotKeyHunter;
+    private final LockMap lockMap = new LockMap();
 
     private final CommandHotKeyMonitorConfig commandHotKeyMonitorConfig;
 
@@ -28,7 +30,7 @@ public class HotKeyHunterManager {
             String key = bid + "|" + bgroup;
             HotKeyHunter hotKeyHunter = map.get(key);
             if (hotKeyHunter == null) {
-                synchronized (HotKeyHunterManager.class) {
+                synchronized (lockMap.getLockObj(key)) {
                     hotKeyHunter = map.get(key);
                     if (hotKeyHunter == null) {
                         hotKeyHunter = new HotKeyHunter(new CommandContext(bid, bgroup, null),
