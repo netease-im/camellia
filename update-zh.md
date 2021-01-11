@@ -6,7 +6,7 @@
 * 支持redis事务，multi/watch/exec等
 * 支持监控数据可视化到prometheus等平台
 
-# 1.0.16（2020/01/xx）
+# 1.0.16（2020/01/11）
 ### 新增
 * 部分参数支持动态变更
 * camellia-redis-zk-registry支持注册主机名
