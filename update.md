@@ -9,6 +9,7 @@
 # 1.0.16（2020/01/xx）
 ### add
 * some conf properties support dynamic reload
+* camellia-redis-zk-registry support register hostname
 
 ### update
 * optimize lock of some concurrent initializer
