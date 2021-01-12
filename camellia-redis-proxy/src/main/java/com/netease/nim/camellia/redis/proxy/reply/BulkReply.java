@@ -43,6 +43,7 @@ public class BulkReply implements Reply {
     }
 
     public String toString() {
+        if (raw == null) return null;
         return new String(raw, Utils.utf8Charset);
     }
 }

@@ -25,6 +25,7 @@ public class ChannelInfo {
     private final AsyncTaskQueue asyncTaskQueue;
     private LinkedBlockingQueue<RedisClient> redisClientsForBlockingCommand = null;
     private RedisClient bindClient = null;
+    private boolean inTransaction = false;
     private final SocketAddress clientSocketAddress;
 
     private String clientName;
@@ -128,6 +129,14 @@ public class ChannelInfo {
 
     public RedisClient getBindClient() {
         return bindClient;
+    }
+
+    public boolean isInTransaction() {
+        return inTransaction;
+    }
+
+    public void setInTransaction(boolean inTransaction) {
+        this.inTransaction = inTransaction;
     }
 
     public void setBindClient(RedisClient bindClient) {

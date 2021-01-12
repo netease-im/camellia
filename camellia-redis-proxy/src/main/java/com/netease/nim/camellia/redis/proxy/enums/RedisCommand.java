@@ -130,7 +130,7 @@ public enum RedisCommand {
 
     /**
      * Restrictive Support
-     * support only when all the keys in these command route to same redis-serve or same redis-cluster slot
+     * support only when all the keys in these command route to same redis-server or same redis-cluster slot
      */
     EVAL(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SCRIPT,  false, CommandKeyType.COMPLEX),
     EVALSHA(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SCRIPT, false, CommandKeyType.COMPLEX),
@@ -173,6 +173,11 @@ public enum RedisCommand {
      */
     KEYS(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, false, CommandKeyType.None),
     SCAN(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, false, CommandKeyType.None),
+    MULTI(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, false, CommandKeyType.None),
+    DISCARD(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, false, CommandKeyType.None),
+    EXEC(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, false, CommandKeyType.None),
+    WATCH(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TRANSACTION, false, CommandKeyType.SIMPLE_MULTI),
+    UNWATCH(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TRANSACTION, false, CommandKeyType.None),
 
     /**
      * NOT_SUPPORT
@@ -183,11 +188,6 @@ public enum RedisCommand {
     SELECT(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     MOVE(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     FLUSHALL(CommandSupportType.NOT_SUPPORT, Type.WRITE, null, false, null),
-    MULTI(CommandSupportType.NOT_SUPPORT, null, null, false, null),
-    DISCARD(CommandSupportType.NOT_SUPPORT, null, null, false, null),
-    EXEC(CommandSupportType.NOT_SUPPORT, null, null, false, null),
-    WATCH(CommandSupportType.NOT_SUPPORT, null, null, false, null),
-    UNWATCH(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     SAVE(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     BGSAVE(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     BGREWRITEAOF(CommandSupportType.NOT_SUPPORT, null, null, false, null),
@@ -272,6 +272,7 @@ public enum RedisCommand {
         HYPER_LOG_LOG,
         SCRIPT,
         GE0,
+        TRANSACTION,
         ;
     }
 

@@ -32,7 +32,8 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
             CompletableFuture<Reply> future = completableFutureList.get(i);
             ChannelInfo channelInfo = command.getChannelInfo();
             RedisClient bindClient = channelInfo.getBindClient();
-            if (command.getRedisCommand() == RedisCommand.SUBSCRIBE || command.getRedisCommand() == RedisCommand.PSUBSCRIBE) {
+            RedisCommand redisCommand = command.getRedisCommand();
+            if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
                 if (bindClient == null) {
                     bindClient = RedisClientHub.newClient(getAddr());
                     channelInfo.setBindClient(bindClient);
@@ -42,6 +43,28 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
                     PubSubUtils.sendByBindClient(bindClient, asyncTaskQueue, command, future);
                 } else {
                     future.complete(ErrorReply.NOT_AVAILABLE);
+                }
+            } else if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
+                if (bindClient == null) {
+                    bindClient = RedisClientHub.newClient(getAddr());
+                    channelInfo.setBindClient(bindClient);
+                }
+                if (bindClient == null) {
+                    future.complete(ErrorReply.NOT_AVAILABLE);
+                } else {
+                    bindClient.sendCommand(Collections.singletonList(command), Collections.singletonList(future));
+                    if (redisCommand == RedisCommand.MULTI) {
+                        channelInfo.setInTransaction(true);
+                    } else if (redisCommand == RedisCommand.EXEC || redisCommand == RedisCommand.DISCARD) {
+                        channelInfo.setInTransaction(false);
+                        channelInfo.setBindClient(null);
+                        RedisClientHub.delayStopIfIdle(bindClient);
+                    } else if (redisCommand == RedisCommand.UNWATCH) {
+                        if (!channelInfo.isInTransaction()) {
+                            channelInfo.setBindClient(null);
+                            RedisClientHub.delayStopIfIdle(bindClient);
+                        }
+                    }
                 }
             } else {
                 if (bindClient != null) {

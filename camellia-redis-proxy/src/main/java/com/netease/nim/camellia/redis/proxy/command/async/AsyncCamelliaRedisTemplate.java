@@ -152,6 +152,11 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 switch (redisCommand) {
                     case KEYS:
                     case SCAN:
+                    case WATCH:
+                    case UNWATCH:
+                    case MULTI:
+                    case EXEC:
+                    case DISCARD:
                         Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
                         String url = resource.getUrl();
                         AsyncClient client = factory.get(url);

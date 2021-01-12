@@ -90,7 +90,7 @@ public class ReplyDecoder extends ReplayingDecoder<Void> {
             case MultiBulkReply://可能存在大包，使用checkpoint做一下优化
                 int size = (int) Utils.readLong(in);
                 if (size == -1) {
-                    return MultiBulkReply.EMPTY;
+                    return MultiBulkReply.NIL_REPLY;
                 } else {
                     if (level == 0) {
                         checkpoint();

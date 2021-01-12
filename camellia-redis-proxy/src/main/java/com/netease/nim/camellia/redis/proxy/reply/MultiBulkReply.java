@@ -11,6 +11,7 @@ import java.io.IOException;
  */
 public class MultiBulkReply implements Reply {
 
+    public static final MultiBulkReply NIL_REPLY = new MultiBulkReply(null);
     public static final MultiBulkReply EMPTY = new MultiBulkReply(new Reply[0]);
 
     private static final char MARKER = Marker.MultiBulkReply.getMarker();
