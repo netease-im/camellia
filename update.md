@@ -3,8 +3,18 @@
 * camellia-redis-proxy support key/value custom transfer, you can use this feature in data-encryption/data-compress
 * support a way for Lettuce to use camellia-redis-proxy depends on register-discovery mode easily
 * support client-cache feature of redis6.0
-* support redis transaction of multi/watch/exec commands
 * support monitor data visualization in prometheus
+
+# 1.0.17（2020/01/xx）
+### add
+* camellia-redis-proxy support transaction command, only when proxy route to redis/redis-sentinel with no-shading/no-read-write-separate
+
+### update
+* none
+
+### fix
+* fix ReplyDecoder bug of camellia-redis-proxy，proxy will modify nil-MultiBulkReply to empty-MultiBulkReply, find this bug when realize transaction command's support
+* fix NPE when ProxyDynamicConf init, this bug does not affect the use of ProxyDynamicConf, only print the error log once when proxy start 
 
 # 1.0.16（2020/01/11）
 ### add

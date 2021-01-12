@@ -3,8 +3,18 @@
 * camellia-redis-proxy支持key/value等的自定义转换，可以用于透明的数据加密/数据压缩等
 * 支持基于注册中心的Lettuce的简单的接入方案
 * 支持redis6.0的client-cache特性
-* 支持redis事务，multi/watch/exec等
 * 支持监控数据可视化到prometheus等平台
+
+# 1.0.17（2020/01/xx）
+### 新增
+* 代理到redis/redis-sentinel，且无分片/无读写分离时，支持事务命令（WATCH/UNWATCH/MULTI/EXEC/DISCARD）
+
+### 更新
+* 无
+
+### fix
+* 修复ReplyDecoder的一个bug，proxy将nil的MultiBulkReply改成了empty的MultiBulkReply返回的问题（实现事务命令时发现）
+* 修复了ProxyDynamicConf初始化时的一个NPE，该报错不影响ProxyDynamicConf的功能，只是会在proxy（v1.0.16）启动时打印一次错误日志
 
 # 1.0.16（2020/01/11）
 ### 新增

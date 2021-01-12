@@ -8,6 +8,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4和camellia-c
 * 支持设置密码
 * 支持阻塞式命令，如BLPOP/BRPOP/BRPOPLPUSH等
 * 支持pubsub命令
+* 支持事务命令（MULTI/EXEC/DISCARD/WATCH/UNWATCH），当前仅当代理到redis/redis-sentinel且无分片/无读写分离时支持
 * 支持redis5.0的Streams
 * 支持自定义分片
 * 支持读写分离
@@ -87,6 +88,7 @@ SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
 ```
 ##DataBase
 KEYS,SCAN,
+MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ``` 
 
 ## 快速开始
