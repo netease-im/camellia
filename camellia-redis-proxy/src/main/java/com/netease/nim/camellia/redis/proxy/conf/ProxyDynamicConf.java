@@ -24,6 +24,11 @@ public class ProxyDynamicConf {
     private static final Set<DynamicConfCallback> callbackSet = new HashSet<>();
     private static final String fileName = "camellia-redis-proxy.properties";
 
+    private static final ConcurrentHashMap<String, Integer> intCache = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Long> longCache = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Boolean> booleanCache = new ConcurrentHashMap<>();
+    private static final Map<String, Set<String>> setCache = new HashMap<>();
+
     static {
         reload();
         int reloadIntervalSeconds = confReloadIntervalSeconds();
@@ -133,7 +138,6 @@ public class ProxyDynamicConf {
     }
 
     //hot key cache key prefix，当前仅当application.yml里的hot-key-cache-key-checker-class-name设置为com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.PrefixMatchHotKeyCacheKeyChecker才有效
-    private static final Map<String, Set<String>> setCache = new HashMap<>();
     public static Set<String> hotKeyCacheKeyPrefix(Long bid, String bgroup) {
         if (conf.isEmpty()) return Collections.emptySet();
         String key = buildConfKey("hot.key.cache.key.prefix", bid, bgroup);
@@ -184,7 +188,6 @@ public class ProxyDynamicConf {
         return getInt("big.key.monitor.list.threshold", bid, bgroup, defaultValue);
     }
 
-    private static final ConcurrentHashMap<String, Integer> intCache = new ConcurrentHashMap<>();
     private static int getInt(String key, Long bid, String bgroup, int defaultValue) {
         if (conf.isEmpty()) return defaultValue;
         String confKey = buildConfKey(key, bid, bgroup);
@@ -203,7 +206,6 @@ public class ProxyDynamicConf {
         return value;
     }
 
-    private static final ConcurrentHashMap<String, Long> longCache = new ConcurrentHashMap<>();
     private static long getLong(String key, Long bid, String bgroup, long defaultValue) {
         if (conf.isEmpty()) return defaultValue;
         String confKey = buildConfKey(key, bid, bgroup);
@@ -222,7 +224,6 @@ public class ProxyDynamicConf {
         return value;
     }
 
-    private static final ConcurrentHashMap<String, Boolean> booleanCache = new ConcurrentHashMap<>();
     private static boolean getBoolean(String key, Long bid, String bgroup, boolean defaultValue) {
         if (conf.isEmpty()) return defaultValue;
         String confKey = buildConfKey(key, bid, bgroup);
