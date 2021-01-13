@@ -227,6 +227,8 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     case BLPOP:
                     case BRPOP:
                     case BRPOPLPUSH:
+                    case BZPOPMAX:
+                    case BZPOPMIN:
                         future = writeCommandWithDynamicKeyCount(command, commandFlusher, 1, command.getObjects().length - 2);
                         break;
                     case XREAD:

@@ -122,6 +122,8 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                     case BLPOP:
                     case BRPOP:
                     case BRPOPLPUSH:
+                    case BZPOPMAX:
+                    case BZPOPMIN:
                         int slot = checkSlot(command, 1, command.getObjects().length - 2);
                         blockingCommand(slot, command, commandFlusher, future);
                         break;

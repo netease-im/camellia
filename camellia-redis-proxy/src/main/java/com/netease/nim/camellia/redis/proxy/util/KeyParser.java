@@ -70,6 +70,8 @@ public class KeyParser {
                 case BLPOP:
                 case BRPOP:
                 case BRPOPLPUSH:
+                case BZPOPMAX:
+                case BZPOPMIN:
                     dynamicKey(command, keys, 1, objects.length - 2);
                 case XREAD:
                 case XREADGROUP:
