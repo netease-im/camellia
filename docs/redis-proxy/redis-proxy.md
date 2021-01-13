@@ -6,7 +6,7 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 ## Features
 * support redis、redis sentinel、redis cluster
 * support set password
-* support blocking commands, such as BLPOP/BRPOP/BRPOPLPUSH and so on
+* support blocking commands, such as BLPOP/BRPOP/BRPOPLPUSH/BZPOPMIN/BZPOPMAX and so on
 * support pub-sub commands
 * support transaction command, only when proxy route to redis/redis-sentinel with no-shading/no-read-write-separate
 * support stream commands of redis5.0
@@ -47,6 +47,7 @@ SADD,SMEMBERS,SREM,SPOP,SCARD,SISMEMBER,SRANDMEMBER,SSCAN,
 ZADD,ZINCRBY,ZRANK,ZCARD,ZSCORE,ZCOUNT,ZRANGE,ZRANGEBYSCORE,ZRANGEBYLEX,
 ZREVRANK,ZREVRANGE,ZREVRANGEBYSCORE,ZREVRANGEBYLEX,ZREM,
 ZREMRANGEBYRANK,ZREMRANGEBYSCORE,ZREMRANGEBYLEX,ZLEXCOUNT,ZSCAN,
+ZPOPMAX,ZPOPMIN,
 ##BitMap
 SETBIT,GETBIT,BITPOS,BITCOUNT,BITFIELD,
 ##Geo
@@ -70,6 +71,7 @@ SINTER,SINTERSTORE,SUNION,SUNIONSTORE,SDIFF,SDIFFSTORE,SMOVE,
 BLPOP,BRPOP,RPOPLPUSH,BRPOPLPUSH,
 ##ZSet
 ZUNIONSTORE,ZINTERSTORE,
+BZPOPMAX,BZPOPMIN,
 ##HyperLogLog
 PFCOUNT,PFMERGE,
 ##BitMap

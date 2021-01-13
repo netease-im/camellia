@@ -8,6 +8,7 @@
 # 1.0.17（2020/01/xx）
 ### add
 * camellia-redis-proxy support transaction command, only when proxy route to redis/redis-sentinel with no-shading/no-read-write-separate
+* support ZPOPMIN/ZPOPMAX/BZPOPMIN/BZPOPMAX
 
 ### update
 * none

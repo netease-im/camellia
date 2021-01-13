@@ -8,6 +8,7 @@
 # 1.0.17（2020/01/xx）
 ### 新增
 * 代理到redis/redis-sentinel，且无分片/无读写分离时，支持事务命令（WATCH/UNWATCH/MULTI/EXEC/DISCARD）
+* 支持ZPOPMIN/ZPOPMAX/BZPOPMIN/BZPOPMAX
 
 ### 更新
 * 无
