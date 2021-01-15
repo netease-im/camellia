@@ -5,7 +5,7 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
-# 1.0.17（2020/01/xx）
+# 1.0.17（2020/01/15）
 ### 新增
 * 代理到redis/redis-sentinel，且无分片/无读写分离时，支持事务命令（WATCH/UNWATCH/MULTI/EXEC/DISCARD）
 * 支持ZPOPMIN/ZPOPMAX/BZPOPMIN/BZPOPMAX
