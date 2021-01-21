@@ -207,6 +207,10 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     case RENAME:
                     case RENAMENX:
                     case SMOVE:
+                    case LMOVE:
+                    case GEOSEARCHSTORE:
+                    case ZRANGESTORE:
+                    case BLMOVE:
                         if (command.getObjects().length < 3) {
                             future = new CompletableFuture<>();
                             future.complete(ErrorReply.argNumWrong(redisCommand));
@@ -216,6 +220,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         break;
                     case ZINTERSTORE:
                     case ZUNIONSTORE:
+                    case ZDIFFSTORE:
                         future = zinterstoreOrZunionstore(command, commandFlusher);
                         break;
                     case BITOP:
@@ -234,6 +239,17 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     case XREAD:
                     case XREADGROUP:
                         future = xreadOrXreadgroup(command, commandFlusher);
+                        break;
+                    case ZDIFF:
+                    case ZUNION:
+                    case ZINTER:
+                        if (command.getObjects().length < 3) {
+                            future = new CompletableFuture<>();
+                            future.complete(ErrorReply.argNumWrong(redisCommand));
+                        } else {
+                            int keyCount = (int) Utils.bytesToNum(command.getObjects()[1]);
+                            future = writeCommandWithDynamicKeyCount(command, commandFlusher, 2, 1 + keyCount);
+                        }
                         break;
                     default:
                         future = new CompletableFuture<>();
@@ -781,6 +797,11 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             List<Resource> writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
             return doWrite(writeResources, commandFlusher, command);
         } else if (type == ResourceTable.Type.SHADING) {
+            if (objects.length <= end) {
+                CompletableFuture<Reply> future = new CompletableFuture<>();
+                future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
+                return future;
+            }
             List<Resource> writeResources = null;
             for (int i=start; i<=end; i++) {
                 byte[] key = objects[i];
@@ -810,6 +831,11 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             if (writeResources == null || writeResources.isEmpty()) {
                 CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
                 completableFuture.complete(new ErrorReply("ERR keys in request not in same resources"));
+                return completableFuture;
+            }
+            if (writeResources.size() > 1 && command.isBlocking()) {
+                CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
+                completableFuture.complete(new ErrorReply("ERR blocking command do not support multi-write"));
                 return completableFuture;
             }
             return doWrite(writeResources, commandFlusher, command);

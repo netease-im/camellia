@@ -47,18 +47,35 @@ public class KeyParser {
                 case EVALSHA:
                     evalOrEvalSha(command, keys);
                     break;
+                case RENAME:
+                case RENAMENX:
+                case GEOSEARCHSTORE:
                 case SMOVE:
+                case LMOVE:
+                case ZRANGESTORE:
+                case BLMOVE:
                     if (command.getObjects().length >= 3) {
                         dynamicKey(command, keys, 1, 2);
                     }
                     break;
                 case ZINTERSTORE:
                 case ZUNIONSTORE:
+                case ZDIFFSTORE:
                     if (objects.length >= 4) {
                         int keyCount = (int) Utils.bytesToNum(objects[2]);
                         if (keyCount > 0) {
                             keys.add(objects[1]);
                             dynamicKey(command, keys, 3, 3 + keyCount);
+                        }
+                    }
+                    break;
+                case ZDIFF:
+                case ZUNION:
+                case ZINTER:
+                    if (objects.length >= 3) {
+                        int keyCount = (int) Utils.bytesToNum(objects[1]);
+                        if (keyCount > 0) {
+                            dynamicKey(command, keys, 2, 1 + keyCount);
                         }
                     }
                     break;
@@ -73,6 +90,7 @@ public class KeyParser {
                 case BZPOPMAX:
                 case BZPOPMIN:
                     dynamicKey(command, keys, 1, objects.length - 2);
+                    break;
                 case XREAD:
                 case XREADGROUP:
                     int index = -1;

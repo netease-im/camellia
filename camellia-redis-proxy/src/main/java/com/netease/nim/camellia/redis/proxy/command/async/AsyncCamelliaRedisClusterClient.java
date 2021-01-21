@@ -106,12 +106,22 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                     case RENAME:
                     case RENAMENX:
                     case SMOVE:
+                    case LMOVE:
+                    case GEOSEARCHSTORE:
+                    case ZRANGESTORE:
                         checkSlotCommandsAndSend(command, commandFlusher, future, 1, 2);
                         break;
                     case ZINTERSTORE:
                     case ZUNIONSTORE:
+                    case ZDIFFSTORE:
                         int keyCount = (int) Utils.bytesToNum(command.getObjects()[2]);
                         checkSlotCommandsAndSend(command, commandFlusher, future, 3, 3 + keyCount, command.getObjects()[1]);
+                        break;
+                    case ZDIFF:
+                    case ZUNION:
+                    case ZINTER:
+                        int keyCount1 = (int) Utils.bytesToNum(command.getObjects()[1]);
+                        checkSlotCommandsAndSend(command, commandFlusher, future, 2, 1 + keyCount1);
                         break;
                     case BITOP:
                         checkSlotCommandsAndSend(command, commandFlusher, future, 2, command.getObjects().length - 1);
@@ -126,6 +136,10 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                     case BZPOPMIN:
                         int slot = checkSlot(command, 1, command.getObjects().length - 2);
                         blockingCommand(slot, command, commandFlusher, future);
+                        break;
+                    case BLMOVE:
+                        int slot1 = checkSlot(command, 1, 2);
+                        blockingCommand(slot1, command, commandFlusher, future);
                         break;
                     case XREAD:
                     case XREADGROUP:

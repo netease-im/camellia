@@ -84,6 +84,7 @@ public enum RedisCommand {
     ZREMRANGEBYSCORE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.ZSET, false, CommandKeyType.SIMPLE_SINGLE),
     ZREMRANGEBYLEX(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.ZSET, false, CommandKeyType.SIMPLE_SINGLE),
     ZLEXCOUNT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ZSET, false, CommandKeyType.SIMPLE_SINGLE),
+    ZMSCORE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ZSET, false, CommandKeyType.SIMPLE_SINGLE),
     ZPOPMAX(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.ZSET, false, CommandKeyType.SIMPLE_SINGLE),
     ZPOPMIN(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.ZSET, false, CommandKeyType.SIMPLE_SINGLE),
     STRLEN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
@@ -113,6 +114,7 @@ public enum RedisCommand {
     GEOPOS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.GE0, false, CommandKeyType.SIMPLE_SINGLE),
     GEORADIUS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.GE0, false, CommandKeyType.SIMPLE_SINGLE),
     GEORADIUSBYMEMBER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.GE0, false, CommandKeyType.SIMPLE_SINGLE),
+    GEOSEARCH(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.GE0, false, CommandKeyType.SIMPLE_SINGLE),
     BITFIELD(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
     ECHO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
     PFADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.HYPER_LOG_LOG, false, CommandKeyType.SIMPLE_SINGLE),
@@ -129,10 +131,14 @@ public enum RedisCommand {
     XINFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STREAM,  false, CommandKeyType.SIMPLE_SINGLE),
     UNLINK(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, false, CommandKeyType.SIMPLE_MULTI),
     TOUCH(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, false, CommandKeyType.SIMPLE_MULTI),
+    LPOS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.LIST, false, CommandKeyType.SIMPLE_SINGLE),
+    SMISMEMBER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.SET, false, CommandKeyType.SIMPLE_SINGLE),
+    HSTRLEN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.HASH, false, CommandKeyType.SIMPLE_SINGLE),
 
     /**
      * Restrictive Support
      * support only when all the keys in these command route to same redis-server or same redis-cluster slot
+     * especially, blocking command don't support multi-write
      */
     EVAL(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SCRIPT,  false, CommandKeyType.COMPLEX),
     EVALSHA(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SCRIPT, false, CommandKeyType.COMPLEX),
@@ -159,6 +165,14 @@ public enum RedisCommand {
     BRPOPLPUSH(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.LIST, true, CommandKeyType.COMPLEX),
     XREADGROUP(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.STREAM, false, CommandKeyType.COMPLEX),
     XREAD(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.STREAM, false, CommandKeyType.COMPLEX),
+    GEOSEARCHSTORE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.GE0, false, CommandKeyType.COMPLEX),
+    ZDIFFSTORE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.ZSET, false, CommandKeyType.COMPLEX),
+    ZDIFF(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.ZSET, false, CommandKeyType.COMPLEX),
+    ZINTER(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.ZSET, false, CommandKeyType.COMPLEX),
+    ZUNION(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.ZSET, false, CommandKeyType.COMPLEX),
+    ZRANGESTORE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.ZSET, false, CommandKeyType.COMPLEX),
+    LMOVE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.LIST, false, CommandKeyType.COMPLEX),
+    BLMOVE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.LIST, true, CommandKeyType.COMPLEX),
 
     /**
      * Partially Support
@@ -285,7 +299,7 @@ public enum RedisCommand {
         //full support commands
         FULL_SUPPORT(1),
 
-        //only support while keys in this command location at the same server or same slot.
+        //only support while keys in this command location at the same server or same slot, especially, blocking command don't support multi-write
         RESTRICTIVE_SUPPORT(2),
 
         //only support while have singleton-upstream(no custom shading) [standalone-redis or redis-sentinel or redis-cluster]

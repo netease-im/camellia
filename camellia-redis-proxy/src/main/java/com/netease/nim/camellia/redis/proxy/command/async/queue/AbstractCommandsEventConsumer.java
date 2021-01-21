@@ -121,9 +121,13 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
                 if (hotKeyHunterManager != null) {
                     HotKeyHunter hotKeyHunter = hotKeyHunterManager.get(channelInfo.getBid(), channelInfo.getBgroup());
                     if (hotKeyHunter != null) {
-                        List<byte[]> keys = command.getKeys();
-                        if (keys != null) {
-                            hotKeyHunter.incr(keys);
+                        try {
+                            List<byte[]> keys = command.getKeys();
+                            if (keys != null) {
+                                hotKeyHunter.incr(keys);
+                            }
+                        } catch (Exception e) {
+                            ErrorLogCollector.collect(AbstractCommandsEventConsumer.class, "hot key hunter error", e);
                         }
                     }
                 }
