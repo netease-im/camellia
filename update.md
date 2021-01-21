@@ -8,7 +8,8 @@
 # 1.0.18（2020/01/xx）
 ### add
 * add console http api of /reload, so you can reload ProxyDynamicConf by 'curl http://127.0.0.1:16379/reload'
-* support HSTRLEN/SMISMEMBER/LPOS/LMOVE/BLMOVE/ZMSCORE/ZDIFF/ZINTER/ZUNION/ZRANGESTORE/GEOSEARCH/GEOSEARCHSTORE
+* support HSTRLEN/SMISMEMBER/LPOS/LMOVE/BLMOVE
+* support ZMSCORE/ZDIFF/ZINTER/ZUNION/ZRANGESTORE/GEOSEARCH/GEOSEARCHSTORE
 
 ### update
 * if proxy setting multi-write, then blocking command will return not support
