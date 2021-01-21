@@ -5,6 +5,17 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
+# 1.0.18（2020/01/xx）
+### 新增
+* 新增console的http-api接口/reload去重新加载ProxyDynamicConf
+* 支持HSTRLEN/SMISMEMBER/LPOS/LMOVE/BLMOVE/ZMSCORE/ZDIFF/ZINTER/ZUNION/ZRANGESTORE/GEOSEARCH/GEOSEARCHSTORE
+
+### 更新
+* 若配置了双（多）写，阻塞式命令直接返回不支持
+
+### fix
+* 无
+
 # 1.0.17（2020/01/15）
 ### 新增
 * 代理到redis/redis-sentinel，且无分片/无读写分离时，支持事务命令（WATCH/UNWATCH/MULTI/EXEC/DISCARD）

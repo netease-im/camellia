@@ -5,6 +5,17 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
+# 1.0.18（2020/01/xx）
+### add
+* add console http api of /reload, so you can reload ProxyDynamicConf by 'curl http://127.0.0.1:16379/reload'
+* support HSTRLEN/SMISMEMBER/LPOS/LMOVE/BLMOVE/ZMSCORE/ZDIFF/ZINTER/ZUNION/ZRANGESTORE/GEOSEARCH/GEOSEARCHSTORE
+
+### update
+* if proxy setting multi-write, then blocking command will return not support
+
+### fix
+* none
+
 # 1.0.17（2020/01/15）
 ### add
 * camellia-redis-proxy support transaction command, only when proxy route to redis/redis-sentinel with no-shading/no-read-write-separate
