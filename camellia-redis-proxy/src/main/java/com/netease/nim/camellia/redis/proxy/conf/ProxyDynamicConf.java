@@ -27,6 +27,8 @@ public class ProxyDynamicConf {
     private static final ConcurrentHashMap<String, Integer> intCache = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Long> longCache = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Boolean> booleanCache = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Double> doubleCache = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, String> stringCache = new ConcurrentHashMap<>();
     private static final Map<String, Set<String>> setCache = new HashMap<>();
 
     static {
@@ -73,6 +75,8 @@ public class ProxyDynamicConf {
         longCache.clear();
         intCache.clear();
         booleanCache.clear();
+        doubleCache.clear();
+        stringCache.clear();
         setCache.clear();
     }
 
@@ -188,58 +192,134 @@ public class ProxyDynamicConf {
         return getInt("big.key.monitor.list.threshold", bid, bgroup, defaultValue);
     }
 
-    private static int getInt(String key, Long bid, String bgroup, int defaultValue) {
-        if (conf.isEmpty()) return defaultValue;
-        String confKey = buildConfKey(key, bid, bgroup);
-        Integer value;
-        Integer cacheValue = intCache.get(confKey);
-        if (cacheValue != null) return cacheValue;
-        value = ConfigurationUtil.getInteger(conf, confKey, null);
-        if (value == null) {
-            value = ConfigurationUtil.getInteger(conf, key, null);
-        }
-        if (value == null) {
-            intCache.put(confKey, defaultValue);
-            return defaultValue;
-        }
-        intCache.put(confKey, value);
-        return value;
+    public static int getInt(String key, int defaultValue) {
+        return ConfigurationUtil.getInteger(conf, key, defaultValue);
     }
 
-    private static long getLong(String key, Long bid, String bgroup, long defaultValue) {
-        if (conf.isEmpty()) return defaultValue;
-        String confKey = buildConfKey(key, bid, bgroup);
-        Long value;
-        Long cacheValue = longCache.get(confKey);
-        if (cacheValue != null) return cacheValue;
-        value = ConfigurationUtil.getLong(conf, confKey, null);
-        if (value == null) {
-            value = ConfigurationUtil.getLong(conf, key, null);
-        }
-        if (value == null) {
-            longCache.put(confKey, defaultValue);
+    public static int getInt(String key, Long bid, String bgroup, int defaultValue) {
+        try {
+            if (conf.isEmpty()) return defaultValue;
+            String confKey = buildConfKey(key, bid, bgroup);
+            Integer value;
+            Integer cacheValue = intCache.get(confKey);
+            if (cacheValue != null) return cacheValue;
+            value = ConfigurationUtil.getInteger(conf, confKey, null);
+            if (value == null) {
+                value = ConfigurationUtil.getInteger(conf, key, null);
+            }
+            if (value == null) {
+                intCache.put(confKey, defaultValue);
+                return defaultValue;
+            }
+            intCache.put(confKey, value);
+            return value;
+        } catch (Exception e) {
             return defaultValue;
         }
-        longCache.put(confKey, value);
-        return value;
     }
 
-    private static boolean getBoolean(String key, Long bid, String bgroup, boolean defaultValue) {
-        if (conf.isEmpty()) return defaultValue;
-        String confKey = buildConfKey(key, bid, bgroup);
-        Boolean value;
-        Boolean cacheValue = booleanCache.get(confKey);
-        if (cacheValue != null) return cacheValue;
-        value = ConfigurationUtil.getBoolean(conf, confKey, null);
-        if (value == null) {
-            value = ConfigurationUtil.getBoolean(conf, key, null);
-        }
-        if (value == null) {
-            booleanCache.put(confKey, defaultValue);
+    public static long getLong(String key, long defaultValue) {
+        return ConfigurationUtil.getLong(conf, key, defaultValue);
+    }
+
+    public static long getLong(String key, Long bid, String bgroup, long defaultValue) {
+        try {
+            if (conf.isEmpty()) return defaultValue;
+            String confKey = buildConfKey(key, bid, bgroup);
+            Long value;
+            Long cacheValue = longCache.get(confKey);
+            if (cacheValue != null) return cacheValue;
+            value = ConfigurationUtil.getLong(conf, confKey, null);
+            if (value == null) {
+                value = ConfigurationUtil.getLong(conf, key, null);
+            }
+            if (value == null) {
+                longCache.put(confKey, defaultValue);
+                return defaultValue;
+            }
+            longCache.put(confKey, value);
+            return value;
+        } catch (Exception e) {
             return defaultValue;
         }
-        booleanCache.put(confKey, value);
-        return value;
+    }
+
+    public static boolean getBoolean(String key, boolean defaultValue) {
+        return ConfigurationUtil.getBoolean(conf, key, defaultValue);
+    }
+
+    public static boolean getBoolean(String key, Long bid, String bgroup, boolean defaultValue) {
+        try {
+            if (conf.isEmpty()) return defaultValue;
+            String confKey = buildConfKey(key, bid, bgroup);
+            Boolean value;
+            Boolean cacheValue = booleanCache.get(confKey);
+            if (cacheValue != null) return cacheValue;
+            value = ConfigurationUtil.getBoolean(conf, confKey, null);
+            if (value == null) {
+                value = ConfigurationUtil.getBoolean(conf, key, null);
+            }
+            if (value == null) {
+                booleanCache.put(confKey, defaultValue);
+                return defaultValue;
+            }
+            booleanCache.put(confKey, value);
+            return value;
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    public static double getDouble(String key, double defaultValue) {
+        return ConfigurationUtil.getDouble(conf, key, defaultValue);
+    }
+
+    public static double getDouble(String key, Long bid, String bgroup, double defaultValue) {
+        try {
+            if (conf.isEmpty()) return defaultValue;
+            String confKey = buildConfKey(key, bid, bgroup);
+            Double value;
+            Double cacheValue = doubleCache.get(confKey);
+            if (cacheValue != null) return cacheValue;
+            value = ConfigurationUtil.getDouble(conf, confKey, null);
+            if (value == null) {
+                value = ConfigurationUtil.getDouble(conf, key, null);
+            }
+            if (value == null) {
+                doubleCache.put(confKey, defaultValue);
+                return defaultValue;
+            }
+            doubleCache.put(confKey, value);
+            return value;
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    public static String getString(String key, String defaultValue) {
+        return ConfigurationUtil.get(conf, key, defaultValue);
+    }
+
+    public static String getString(String key, Long bid, String bgroup, String defaultValue) {
+        try {
+            if (conf.isEmpty()) return defaultValue;
+            String confKey = buildConfKey(key, bid, bgroup);
+            String value;
+            String cacheValue = stringCache.get(confKey);
+            if (cacheValue != null) return cacheValue;
+            value = ConfigurationUtil.get(conf, confKey, null);
+            if (value == null) {
+                value = ConfigurationUtil.get(conf, key, null);
+            }
+            if (value == null) {
+                stringCache.put(confKey, defaultValue);
+                return defaultValue;
+            }
+            stringCache.put(confKey, value);
+            return value;
+        } catch (Exception e) {
+            return defaultValue;
+        }
     }
 
     private static String buildConfKey(String key, Long bid, String bgroup) {
