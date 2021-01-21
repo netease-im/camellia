@@ -10,6 +10,7 @@
 * 新增console的http-api接口/reload去重新加载ProxyDynamicConf
 * 支持HSTRLEN/SMISMEMBER/LPOS/LMOVE/BLMOVE
 * 支持ZMSCORE/ZDIFF/ZINTER/ZUNION/ZRANGESTORE/GEOSEARCH/GEOSEARCHSTORE
+* 开放ProxyDynamicConf的动态配置功能，例子：你在camellia-redis-proxy.properties添加了"k=v"，则你可以调用ProxyDynamicConf.getString("k")获取到"v"，具体详见ProxyDynamicConf类
 
 ### 更新
 * 若配置了双（多）写，阻塞式命令直接返回不支持

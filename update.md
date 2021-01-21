@@ -10,6 +10,7 @@
 * add console http api of /reload, so you can reload ProxyDynamicConf by 'curl http://127.0.0.1:16379/reload'
 * support HSTRLEN/SMISMEMBER/LPOS/LMOVE/BLMOVE
 * support ZMSCORE/ZDIFF/ZINTER/ZUNION/ZRANGESTORE/GEOSEARCH/GEOSEARCHSTORE
+* open the dynamic conf function of ProxyDynamicConf, if you setting 'k=v' in file camellia-redis-proxy.properties, then you can call ProxyDynamicConf.getString("k") to get 'v'  
 
 ### update
 * if proxy setting multi-write, then blocking command will return not support

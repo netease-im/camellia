@@ -2,6 +2,7 @@
 * 动态配置文件camellia-redis-proxy.properties，所有参数参见ProxyDynamicConf
 * 修改配置文件后，默认10分钟reload一次，或者你可以调用console接口去reload，console默认端口是16379，接口是http://127.0.0.1:16379/reload
 * 或者你也可以调用ProxyDynamicConf.reload()方法来reload配置
+* 此外你可以使用ProxyDynamicConf来设置和获取自定义的其他配置，例子：你在camellia-redis-proxy.properties添加了"k=v"，则你可以调用ProxyDynamicConf.getString("k")获取到"v"，具体详见ProxyDynamicConf类
 ```
 #自动reload的间隔，默认600s，服务启动时会读取改配置
 dynamic.conf.reload.interval.seconds=600
