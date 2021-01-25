@@ -5,7 +5,7 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
-# 1.0.18（2020/01/xx）
+# 1.0.18（2020/01/25）
 ### add
 * add console http api of /reload, so you can reload ProxyDynamicConf by 'curl http://127.0.0.1:16379/reload'
 * support HSTRLEN/SMISMEMBER/LPOS/LMOVE/BLMOVE

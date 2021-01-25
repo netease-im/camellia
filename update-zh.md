@@ -5,7 +5,7 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
-# 1.0.18（2020/01/xx）
+# 1.0.18（2020/01/25）
 ### 新增
 * 新增console的http-api接口/reload去重新加载ProxyDynamicConf
 * 支持HSTRLEN/SMISMEMBER/LPOS/LMOVE/BLMOVE
