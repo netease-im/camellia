@@ -11,17 +11,22 @@ import java.util.List;
 
 public class CommandDecoder extends ReplayingDecoder<Void> {
 
-    private List<Command> commands = new ArrayList<>();
+    private List<Command> commands;
     private byte[][] bytes;
     private int index = 0;
 
     private int commandMaxBatchSize = 256;
+    private int commandDecodeBufferInitializerSize = 32;
 
-    public CommandDecoder(int commandDecodeMaxBatchSize) {
+    public CommandDecoder(int commandDecodeMaxBatchSize, int commandDecodeBufferInitializerSize) {
         super();
         if (commandDecodeMaxBatchSize > 0) {
             this.commandMaxBatchSize = commandDecodeMaxBatchSize;
         }
+        if (commandDecodeBufferInitializerSize > 0) {
+            this.commandDecodeBufferInitializerSize = commandDecodeBufferInitializerSize;
+        }
+        this.commands = new ArrayList<>(this.commandDecodeBufferInitializerSize);
     }
 
     @Override
@@ -53,7 +58,7 @@ public class CommandDecoder extends ReplayingDecoder<Void> {
                     commands.add(command);
                     if (commands.size() >= commandMaxBatchSize) {
                         out.add(commands);
-                        commands = new ArrayList<>();
+                        commands = new ArrayList<>(commandDecodeBufferInitializerSize);
                     }
                 } finally {
                     bytes = null;
@@ -78,7 +83,7 @@ public class CommandDecoder extends ReplayingDecoder<Void> {
         } catch (Throwable e) {
             if (!commands.isEmpty()) {
                 out.add(commands);
-                commands = new ArrayList<>();
+                commands = new ArrayList<>(commandDecodeBufferInitializerSize);
             }
             throw e;
         }

@@ -13,7 +13,7 @@ public class ExecutorUtils {
 
     private static final ScheduledExecutorService scheduleService = Executors.newScheduledThreadPool(SysUtils.getCpuNum(), new DefaultThreadFactory("camellia-schedule"));
     private static final ExecutorService asyncService = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(1024), new DefaultThreadFactory("camellia-async"), new ThreadPoolExecutor.AbortPolicy());
+            new LinkedBlockingQueue<>(4096), new DefaultThreadFactory("camellia-async"), new ThreadPoolExecutor.AbortPolicy());
 
     public static ScheduledFuture<?> scheduleAtFixedRate(Runnable command,
                                                          long initialDelay,

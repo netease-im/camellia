@@ -98,7 +98,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     public List<CompletableFuture<Reply>> sendCommand(List<Command> commands) {
         List<CompletableFuture<Reply>> futureList = new ArrayList<>(commands.size());
 
-        CommandFlusher commandFlusher = new CommandFlusher();
+        CommandFlusher commandFlusher = new CommandFlusher(commands.size());
         for (Command command : commands) {
             RedisCommand redisCommand = command.getRedisCommand();
             if (redisCommand == null || redisCommand.getSupportType() == RedisCommand.CommandSupportType.NOT_SUPPORT) {
@@ -309,19 +309,20 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 if (continueOk) continue;
             }
 
-            CompletableFuture<Reply> completableFuture1 = null;
-            switch (redisCommand) {
-                case XGROUP:
-                    completableFuture1 = xgroup(command, commandFlusher);
-                    break;
-                case XINFO:
-                    completableFuture1 = xinfo(command, commandFlusher);
-                    break;
-            }
-            if (completableFuture1 != null) {
-                futureList.add(completableFuture1);
-                futureList.add(completableFuture1);
-                continue;
+            if (redisCommand.getCommandKeyType() != RedisCommand.CommandKeyType.SIMPLE_SINGLE) {
+                CompletableFuture<Reply> completableFuture1 = null;
+                switch (redisCommand) {
+                    case XGROUP:
+                        completableFuture1 = xgroup(command, commandFlusher);
+                        break;
+                    case XINFO:
+                        completableFuture1 = xinfo(command, commandFlusher);
+                        break;
+                }
+                if (completableFuture1 != null) {
+                    futureList.add(completableFuture1);
+                    continue;
+                }
             }
 
             RedisCommand.Type type = redisCommand.getType();

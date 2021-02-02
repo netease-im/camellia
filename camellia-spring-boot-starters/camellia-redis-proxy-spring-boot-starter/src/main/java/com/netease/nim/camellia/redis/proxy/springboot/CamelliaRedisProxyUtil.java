@@ -5,7 +5,6 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.*;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
-import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.QueueType;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.NettyProperties;
@@ -37,9 +36,15 @@ public class CamelliaRedisProxyUtil {
         if (netty.getWorkThread() > 0) {
             serverProperties.setWorkThread(netty.getWorkThread());
         } else {
-            serverProperties.setWorkThread(Constants.Server.workThread);
+            QueueType queueType = properties.getTranspond().getRedisConf().getQueueType();
+            if (queueType == QueueType.None) {
+                serverProperties.setWorkThread(SysUtils.getCpuNum());
+            } else {
+                serverProperties.setWorkThread(SysUtils.getCpuHalfNum());
+            }
         }
         serverProperties.setCommandDecodeMaxBatchSize(netty.getCommandDecodeMaxBatchSize());
+        serverProperties.setCommandDecodeBufferInitializerSize(netty.getCommandDecodeBufferInitializerSize());
         serverProperties.setSoBacklog(netty.getSoBacklog());
         serverProperties.setSoRcvbuf(netty.getSoRcvbuf());
         serverProperties.setSoSndbuf(netty.getSoSndbuf());

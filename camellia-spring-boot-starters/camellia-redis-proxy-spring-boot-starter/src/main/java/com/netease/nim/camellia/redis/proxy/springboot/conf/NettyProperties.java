@@ -10,13 +10,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "camellia-redis-proxy.netty")
 public class NettyProperties {
     private int bossThread = 1;
-    private int workThread = Constants.Server.workThread;
+    private int workThread = -1;
     private int soBacklog = Constants.Server.soBacklog;
     private int soSndbuf = Constants.Server.soSndbuf;
     private int soRcvbuf = Constants.Server.soRcvbuf;
     private int writeBufferWaterMarkLow = Constants.Server.writeBufferWaterMarkLow;
     private int writeBufferWaterMarkHigh = Constants.Server.writeBufferWaterMarkHigh;
     private int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
+    private int commandDecodeBufferInitializerSize = Constants.Server.commandDecodeBufferInitializerSize;
 
     public int getBossThread() {
         return bossThread;
@@ -40,6 +41,14 @@ public class NettyProperties {
 
     public void setCommandDecodeMaxBatchSize(int commandDecodeMaxBatchSize) {
         this.commandDecodeMaxBatchSize = commandDecodeMaxBatchSize;
+    }
+
+    public int getCommandDecodeBufferInitializerSize() {
+        return commandDecodeBufferInitializerSize;
+    }
+
+    public void setCommandDecodeBufferInitializerSize(int commandDecodeBufferInitializerSize) {
+        this.commandDecodeBufferInitializerSize = commandDecodeBufferInitializerSize;
     }
 
     public int getSoBacklog() {

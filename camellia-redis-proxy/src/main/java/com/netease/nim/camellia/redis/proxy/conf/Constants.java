@@ -24,8 +24,9 @@ public class Constants {
         public static final String slowCommandMonitorCallbackClassName = LoggingSlowCommandMonitorCallback.class.getName();
         public static final int monitorIntervalSeconds = 60;
 
-        public static final int workThread = SysUtils.getCpuHalfNum();
+        public static final int workThread = SysUtils.getCpuNum();
         public static final int commandDecodeMaxBatchSize = 256;
+        public static final int commandDecodeBufferInitializerSize = 32;
 
         public static final int soBacklog = 1024;
         public static final int soSndbuf = 10 * 1024 * 1024;

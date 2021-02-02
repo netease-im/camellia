@@ -114,6 +114,12 @@ public class KeyParser {
                     int keyCount = last / 2;
                     dynamicKey(command, keys, index + 1, index + keyCount);
                     break;
+                case XINFO:
+                case XGROUP:
+                    if (objects.length > 3) {
+                        keys.add(objects[2]);
+                    }
+                    break;
                 default:
                     logger.warn("unknown keys of {}", redisCommand);
                     break;

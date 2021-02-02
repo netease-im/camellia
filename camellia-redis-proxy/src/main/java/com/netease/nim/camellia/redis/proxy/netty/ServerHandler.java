@@ -46,7 +46,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
             ServerStatus.updateLastUseTime();
             ChannelInfo channelInfo = ChannelInfo.get(ctx);
 
-            List<Command> commands = new ArrayList<>();
+            List<Command> commands = new ArrayList<>(commandList.size());
             for (Command command : commandList) {
                 //监控
                 if (properties.isMonitorEnable()) {

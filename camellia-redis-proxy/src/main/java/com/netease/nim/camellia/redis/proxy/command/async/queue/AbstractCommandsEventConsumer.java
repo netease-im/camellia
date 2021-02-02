@@ -191,7 +191,7 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
             }
 
             ChannelType channelType = new ChannelType(channelInfo.getBid(), channelInfo.getBgroup());
-            List<AsyncTask> taskBuffer = taskMap.computeIfAbsent(channelType, k -> new ArrayList<>());
+            List<AsyncTask> taskBuffer = taskMap.computeIfAbsent(channelType, k -> new ArrayList<>(tasks.size()));
             taskBuffer.addAll(tasks);
 
             if (endOfBatch) {

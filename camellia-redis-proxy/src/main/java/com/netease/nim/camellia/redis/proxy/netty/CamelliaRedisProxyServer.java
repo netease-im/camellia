@@ -47,7 +47,7 @@ public class CamelliaRedisProxyServer {
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
                         ChannelPipeline p = ch.pipeline();
-                        p.addLast(new CommandDecoder(serverProperties.getCommandDecodeMaxBatchSize()));
+                        p.addLast(new CommandDecoder(serverProperties.getCommandDecodeMaxBatchSize(), serverProperties.getCommandDecodeBufferInitializerSize()));
                         p.addLast(new ReplyEncoder(serverProperties));
                         p.addLast(initHandler);
                         p.addLast(serverHandler);

@@ -41,6 +41,8 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
             if (future == null || !future.get()) {
                 throw new CamelliaRedisException("RedisClusterSlotInfo init fail");
             }
+        } catch (CamelliaRedisException e) {
+            throw e;
         } catch (Exception e) {
             throw new CamelliaRedisException("RedisClusterSlotInfo init fail", e);
         }
@@ -48,7 +50,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
 
     public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> futureList) {
         if (commands.isEmpty()) return;
-        CommandFlusher commandFlusher = new CommandFlusher();
+        CommandFlusher commandFlusher = new CommandFlusher(commands.size());
         for (int i=0; i<commands.size(); i++) {
             Command command = commands.get(i);
             CompletableFuture<Reply> future = futureList.get(i);
@@ -152,39 +154,41 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                 continue;
             }
 
-            boolean continueOk = false;
-            switch (redisCommand) {
-                case EXISTS:
-                case UNLINK:
-                case TOUCH:
-                case DEL: {
-                    if (command.getObjects().length > 2) {
-                        simpleIntegerReplyMerge(command, commandFlusher, future);
-                        continueOk = true;
+            if (command.getRedisCommand().getCommandKeyType() != RedisCommand.CommandKeyType.SIMPLE_SINGLE) {
+                boolean continueOk = false;
+                switch (redisCommand) {
+                    case MGET: {
+                        if (command.getObjects().length > 2) {
+                            mget(command, commandFlusher, future);
+                            continueOk = true;
+                        }
+                        break;
                     }
-                    break;
-                }
-                case MSET: {
-                    if (command.getObjects().length > 3) {
-                        mset(command, commandFlusher, future);
-                        continueOk = true;
+                    case EXISTS:
+                    case UNLINK:
+                    case TOUCH:
+                    case DEL: {
+                        if (command.getObjects().length > 2) {
+                            simpleIntegerReplyMerge(command, commandFlusher, future);
+                            continueOk = true;
+                        }
+                        break;
                     }
-                    break;
-                }
-                case MGET: {
-                    if (command.getObjects().length > 2) {
-                        mget(command, commandFlusher, future);
-                        continueOk = true;
+                    case MSET: {
+                        if (command.getObjects().length > 3) {
+                            mset(command, commandFlusher, future);
+                            continueOk = true;
+                        }
+                        break;
                     }
-                    break;
+                    case XINFO:
+                    case XGROUP:
+                        xinfoOrXgroup(command, commandFlusher, future);
+                        continueOk = true;
+                        break;
                 }
-                case XINFO:
-                case XGROUP:
-                    xinfoOrXgroup(command, commandFlusher, future);
-                    continueOk = true;
-                    break;
+                if (continueOk) continue;
             }
-            if (continueOk) continue;
 
             byte[][] args = command.getObjects();
             byte[] key = args[1];
