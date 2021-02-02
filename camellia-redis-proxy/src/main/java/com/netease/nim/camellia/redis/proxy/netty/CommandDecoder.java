@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -15,13 +16,13 @@ public class CommandDecoder extends ReplayingDecoder<Void> {
     private byte[][] bytes;
     private int index = 0;
 
-    private int commandMaxBatchSize = 256;
-    private int commandDecodeBufferInitializerSize = 32;
+    private int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
+    private int commandDecodeBufferInitializerSize = Constants.Server.commandDecodeBufferInitializerSize;
 
     public CommandDecoder(int commandDecodeMaxBatchSize, int commandDecodeBufferInitializerSize) {
         super();
         if (commandDecodeMaxBatchSize > 0) {
-            this.commandMaxBatchSize = commandDecodeMaxBatchSize;
+            this.commandDecodeMaxBatchSize = commandDecodeMaxBatchSize;
         }
         if (commandDecodeBufferInitializerSize > 0) {
             this.commandDecodeBufferInitializerSize = commandDecodeBufferInitializerSize;
@@ -56,7 +57,7 @@ public class CommandDecoder extends ReplayingDecoder<Void> {
                 try {
                     Command command = new Command(bytes);
                     commands.add(command);
-                    if (commands.size() >= commandMaxBatchSize) {
+                    if (commands.size() >= commandDecodeMaxBatchSize) {
                         out.add(commands);
                         commands = new ArrayList<>(commandDecodeBufferInitializerSize);
                     }
