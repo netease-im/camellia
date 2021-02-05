@@ -3,14 +3,12 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
-import com.netease.nim.camellia.redis.proxy.util.LockMap;
 import com.netease.nim.camellia.redis.resource.RedisClusterResource;
 import com.netease.nim.camellia.redis.resource.RedisResource;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
 import com.netease.nim.camellia.redis.resource.RedisSentinelResource;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -24,8 +22,8 @@ public interface AsyncNettyClientFactory {
 
     public static class Default implements AsyncNettyClientFactory {
 
-        private final LockMap lockMap = new LockMap();
-        private final Map<String, AsyncClient> map = new HashMap<>();
+        private final Object lock = new Object();
+        private final ConcurrentHashMap<String, AsyncClient> map = new ConcurrentHashMap<>();
         private int maxAttempts = Constants.Transpond.redisClusterMaxAttempts;
 
         public Default() {
@@ -66,7 +64,7 @@ public interface AsyncNettyClientFactory {
         public AsyncClient get(String url) {
             AsyncClient client = map.get(url);
             if (client == null) {
-                synchronized (lockMap.getLockObj(url)) {
+                synchronized (lock) {
                     client = map.get(url);
                     if (client == null) {
                         Resource resource = RedisResourceUtil.parseResourceByUrl(new Resource(url));

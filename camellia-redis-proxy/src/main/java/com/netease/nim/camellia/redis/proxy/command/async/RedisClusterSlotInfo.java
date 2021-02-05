@@ -1,20 +1,19 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
+import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import com.netease.nim.camellia.redis.resource.RedisClusterResource;
+import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.util.SafeEncoder;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -24,6 +23,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class RedisClusterSlotInfo {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisClusterSlotInfo.class);
+
+    private static final ExecutorService redisClusterRenewExec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(1024), new DefaultThreadFactory("redis-cluster-renew"), new ThreadPoolExecutor.AbortPolicy());
 
     public static final int SLOT_SIZE = 16384;
 
@@ -73,7 +75,7 @@ public class RedisClusterSlotInfo {
         }
         if (renew.compareAndSet(false, true)) {
             try {
-                return ExecutorUtils.submit(() -> {
+                return redisClusterRenewExec.submit(() -> {
                     try {
                         boolean success = false;
                         for (Node node : nodeSet) {

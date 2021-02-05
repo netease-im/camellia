@@ -148,7 +148,7 @@ public class RedisClient implements AsyncClient {
             logger.error("{} ping fail, response = {}", clientName, reply);
             return false;
         } catch (Exception e) {
-            logger.error("{} ping timeout, timeoutMillis = {}", clientName, heartbeatTimeoutMillis);
+            logger.error("{} ping timeout, timeoutMillis = {}", clientName, heartbeatTimeoutMillis, e);
             return false;
         }
     }

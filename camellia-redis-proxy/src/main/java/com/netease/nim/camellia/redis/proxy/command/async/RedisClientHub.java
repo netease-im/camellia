@@ -1,15 +1,16 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
 
+import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.LockMap;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import io.netty.channel.EventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.HashedWheelTimer;
+import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.FastThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,9 @@ public class RedisClientHub {
     private static final ConcurrentHashMap<String, RedisClient> map = new ConcurrentHashMap<>();
     public static NioEventLoopGroup eventLoopGroup = null;
     public static NioEventLoopGroup eventLoopGroupBackup = null;
+
+    private static final ExecutorService redisClientAsyncInitExec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(4096), new DefaultThreadFactory("redis-client-async-init"), new ThreadPoolExecutor.AbortPolicy());
 
     private static final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, RedisClient>> eventLoopMap = new ConcurrentHashMap<>();
 
@@ -150,7 +154,7 @@ public class RedisClientHub {
             AtomicBoolean status = statusMap.computeIfAbsent(addr.getUrl(), k -> new AtomicBoolean(false));
             if (status.compareAndSet(false, true)) {
                 try {
-                    ExecutorUtils.submit(() -> {
+                    redisClientAsyncInitExec.submit(() -> {
                         try {
                             LockMap lockMap = RedisClientHub.lockMapMap.computeIfAbsent(eventLoop, k -> new LockMap());
                             tryInitRedisClient(map, lockMap, eventLoop, addr);
