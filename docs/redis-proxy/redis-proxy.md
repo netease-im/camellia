@@ -1013,50 +1013,8 @@ camellia-redis-zk-registry:
   base-path: /camellia
 ```  
 
-## Performance
-redis proxy have 3 work mode(since v1.0.9)
-### NoneQueue
-this is default work mode, commands will direct transpond to upstream redis server. 
-### LinkedBlockingQueue
-in this mode, commands will first deliver into local queue, commands will be merged if possible before transpond to upstream redis server.
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      resource: redis://@127.0.0.1:6379
-    redis-conf:
-      queue-type: linkedblockingqueue
-```
-### Disruptor
-it is same to LinkedBlockingQueue, but use none-lock Disruptor instead of LinkedBlockingQueue. in this mode, redis proxy performance best, but cpu will use more.
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      resource: redis://@127.0.0.1:6379
-    redis-conf:
-      queue-type: disruptor
-```
-
-### performance report(comparison of 3 mode)
-[use redis-benchmark（v1.0.8 vs v1.0.9）](performance-report-6.md)    
-[use netease npt platform（v1.0.8 vs v1.0.9）](performance-report-7.md)
+### performance report
+[v1.0.19](performance-report-8.md)
 
 history performance report  
 [route to redis cluster（v1.0.4）](performance-report-1.md)  
@@ -1064,3 +1022,5 @@ history performance report
 [double write（v1.0.4）](performance-report-3.md)  
 [negative tests（v1.0.4）](performance-report-4.md)  
 [virtual machine（v1.0.7）](performance-report-5.md)  
+[use redis-benchmark（v1.0.8 vs v1.0.9）](performance-report-6.md)    
+[use netease npt platform（v1.0.8 vs v1.0.9）](performance-report-7.md)

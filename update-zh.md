@@ -5,6 +5,16 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
+# 1.0.19（2020/02/xx）
+### 新增
+* 无  
+
+### update
+* camellia-redis-proxy性能提升，见 [v1.0.19](/docs/redis-proxy/performance-report-8.md)
+
+### fix
+* 修复调用KeyParser获取xinfo/xgroup的key时的错误返回，修复使用pipeline方式调用xinfo/xgroup时可能出现的bug
+
 # 1.0.18（2020/01/25）
 ### 新增
 * 新增console的http-api接口/reload去重新加载ProxyDynamicConf

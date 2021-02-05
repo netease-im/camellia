@@ -5,6 +5,16 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
+# 1.0.19（2020/02/xx）
+### add
+* none  
+
+### update
+* performance update of camellia-redis-proxy, see [v1.0.19](/docs/redis-proxy/performance-report-8.md)
+
+### fix
+* fix xinfo/xgroup in KeyParser/pipeline
+
 # 1.0.18（2020/01/25）
 ### add
 * add console http api of /reload, so you can reload ProxyDynamicConf by 'curl http://127.0.0.1:16379/reload'

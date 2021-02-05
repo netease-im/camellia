@@ -1028,54 +1028,14 @@ camellia-redis-zk-registry:
 ```
 application.yml中的部分配置支持进程启动期间进行动态修改，详见[动态配置](dynamic-conf.md)
 
-## 性能
-redis proxy有3种工作模式(since v1.0.9)
-### NoneQueue
-这是默认的模式，此时命令会被proxy直接转发给目标的后端redis
-### LinkedBlockingQueue
-在这种模式下，命令首先会进入一个本地队列，然后再转发给后端，转发前会尽可能的将命令进行合并转发，以便减少网络io次数，提高性能  
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
+### 性能测试报告
+[v1.0.19](performance-report-8.md)
 
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      resource: redis://@127.0.0.1:6379
-    redis-conf:
-      queue-type: linkedblockingqueue
-```
-### Disruptor
-这种模式的工作流程和LinkedBlockingQueue是一样的，只是队列使用了无锁的Disruptor，这种模式有最高的性能，但是CPU开销也是最大的
-```yaml
-server:
-  port: 6380
-spring:
-  application:
-    name: camellia-redis-proxy-server
-
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      resource: redis://@127.0.0.1:6379
-    redis-conf:
-      queue-type: disruptor
-```
-
-### 性能测试报告(比较三种模式)
-[使用redis-benchmark（v1.0.8 vs v1.0.9）](performance-report-6-zh.md)    
-[使用网易NPT性能测试平台（v1.0.8 vs v1.0.9）](performance-report-7.md)
-
-历史性能测试报告  
+历史性能测试报告
 [代理到redis cluster（v1.0.4）](performance-report-1.md)  
 [分片（v1.0.4）](performance-report-2.md)  
 [双写（v1.0.4）](performance-report-3.md)  
 [异常测试（v1.0.4）](performance-report-4.md)  
 [云主机环境测试（v1.0.7）](performance-report-5.md)  
+[使用redis-benchmark（v1.0.8 vs v1.0.9）](performance-report-6-zh.md)    
+[使用网易NPT性能测试平台（v1.0.8 vs v1.0.9）](performance-report-7.md)  
