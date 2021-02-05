@@ -56,7 +56,7 @@ camellia-redis-proxy:
 |proxy类型|语言|版本|redis-cluster|redis-sentinel|阻塞式命令|pubsub命令|streams命令|读写分离|自定义分片|双写|动态配置|管控/监控相关|
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 |camellia|java|1.0.19|支持|支持|支持|支持|支持|支持|redis-cluster/redis-sentinel/redis-standalone任意组合|支持|支持|连接数<br>请求量（tps）<br>请求rt<br>热key监控<br>大key监控<br>慢查询监控<br>命令拦截<br>密码|
-|predixy|c++|1.0.5|支持|支持|支持|支持|不支持|支持|redis-sentinel或redis-standalone支持分片|不支持|不支持|CPU<br>Memory<br>Requests/Responses<br>Latency<br>readonly/readwrite/admin permission<br>密码|
+|predixy|c++|1.0.5|支持|支持|支持|支持|不支持|支持|redis-sentinel或redis-standalone支持分片|不支持|不支持|CPU<br>Memory<br>Requests/Responses<br>Latency<br>readonly/readwrite/admin<br>密码|
 |官方redis-cluster-proxy|c|1.0-beta2|支持|不支持|支持|支持|支持|不支持|不支持|不支持|不支持|ACL|
 |bilibili-overlord|go|1.9.4|支持|支持|不支持|不支持|不支持|不支持|redis-sentinel或redis-standalone支持分片|不支持|支持|慢查询监控|
 
@@ -151,10 +151,10 @@ servers = [
 
 * 测试结果
 
-|proxy类型|语言|setex||get||mget||pipelineGet||
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-|||tps|比例|tps|比例|tps|比例|tps|比例|
-|camellia-redis-proxy v1.0.19无监控|java|79379.84|-|83256.5|-|20703.62|-|8239.85|-|
-|predixy|c++|96532.42|21.6%|101165.94|21.5%|29582.98|42.9%|31087.22|277.3%|
-|官方redis-cluster-proxy|c|87203.55|9.9%|90314.03|8.5%|6898.63|-66.7%|7512.78|-8.8%|
-|bilibili-overlord|go|69815|-12.0%|74328.19|-10.7%|15971.57|-22.9%|11909.06|44.5%|
+|proxy类型|setex||get||mget||pipelineGet||
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+||tps|比例|tps|比例|tps|比例|tps|比例|
+|camellia-redis-proxy|79379.84|-|83256.5|-|20703.62|-|8239.85|-|
+|predixy|96532.42|21.6%|101165.94|21.5%|29582.98|42.9%|31087.22|277.3%|
+|官方redis-cluster-proxy|87203.55|9.9%|90314.03|8.5%|6898.63|-66.7%|7512.78|-8.8%|
+|bilibili-overlord|69815|-12.0%|74328.19|-10.7%|15971.57|-22.9%|11909.06|44.5%|
