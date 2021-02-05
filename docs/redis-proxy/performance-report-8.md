@@ -10,10 +10,10 @@
 
 ### 测试方法
 * key是固定前缀+数字，长度范围9字符到14字符，value是固定的30字符的随机串
-* setex，1w个key，随机选择1个key进行写入
-* get，1w个key，随机选择1个key读取，每个key都有value结果返回
-* mget，1w个key，随机选择30个key读取，每个key都有value结果返回
-* pipelineGet，1w个key，随机选择30个key读取，每个key都有value结果返回
+* setex，1w个key，随机选择1个key进行写入，连续运行5分钟
+* get，1w个key，随机选择1个key读取，每个key都有value结果返回，连续运行5分钟
+* mget，1w个key，随机选择30个key读取，每个key都有value结果返回，连续运行5分钟
+* pipelineGet，1w个key，随机选择30个key读取，每个key都有value结果返回，连续运行5分钟
 
 ### proxy配置
 ```yml
