@@ -5,7 +5,7 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
-# 1.0.19（2020/02/05）
+# 1.0.19（2020/02/07）
 ### add
 * none  
 
