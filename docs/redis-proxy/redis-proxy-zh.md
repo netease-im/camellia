@@ -1017,7 +1017,6 @@ camellia-redis-proxy:
     local:
       resource: redis://@127.0.0.1:6379 #转发的redis地址
     redis-conf:
-      queue-type: disruptor #使用disruptor作为内存队列
       multi-write-mode: first_resource_only #双写的模式，默认第一个地址返回就返回
       shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc #分片函数
 
@@ -1031,7 +1030,7 @@ application.yml中的部分配置支持进程启动期间进行动态修改，�
 ### 性能测试报告
 [v1.0.19](performance-report-8.md)
 
-历史性能测试报告
+历史性能测试报告  
 [代理到redis cluster（v1.0.4）](performance-report-1.md)  
 [分片（v1.0.4）](performance-report-2.md)  
 [双写（v1.0.4）](performance-report-3.md)  

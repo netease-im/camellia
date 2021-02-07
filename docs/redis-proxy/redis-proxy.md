@@ -1003,7 +1003,6 @@ camellia-redis-proxy:
     local:
       resource: redis://@127.0.0.1:6379
     redis-conf:
-      queue-type: disruptor
       multi-write-mode: first_resource_only
       shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc
 
