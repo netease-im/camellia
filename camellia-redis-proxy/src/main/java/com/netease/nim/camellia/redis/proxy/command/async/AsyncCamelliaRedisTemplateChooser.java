@@ -13,8 +13,7 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -31,7 +30,7 @@ public class AsyncCamelliaRedisTemplateChooser {
     private final LockMap lockMap = new LockMap();
     private AsyncCamelliaRedisTemplate remoteInstance;
     private AsyncCamelliaRedisTemplate localInstance;
-    private final Map<String, AsyncCamelliaRedisTemplate> remoteInstanceMap = new HashMap<>();
+    private final ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> remoteInstanceMap = new ConcurrentHashMap<>();
 
     public AsyncCamelliaRedisTemplateChooser(CamelliaTranspondProperties properties) {
         this.properties = properties;

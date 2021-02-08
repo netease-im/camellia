@@ -40,6 +40,8 @@ public interface ICamelliaRedisTemplate {
 
     Long ttl(byte[] key);
 
+    Long pttl(byte[] key);
+
     Long del(byte[] key);
 
     Boolean exists(String key);

@@ -1,293 +1,140 @@
 package com.netease.nim.camellia.redis.proxy.hbase.monitor;
 
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
-import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.LongAdder;
 
 /**
  *
- * Created by caojiajun on 2020/3/5.
+ * Created by caojiajun on 2020/12/22
  */
 public class RedisHBaseMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisHBaseMonitor.class);
-    private static final Logger statsLogger = LoggerFactory.getLogger("redis-hbase-stats");
-
-    private static final ConcurrentHashMap<String, LongAdder> readMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, LongAdder> writeMap = new ConcurrentHashMap<>();
-
-    private static final LongAdder zsetValueSizeTotal = new LongAdder();
-    private static final LongAdder zsetValueSizeCount = new LongAdder();
-    private static final AtomicLong zsetValueSizeMax = new AtomicLong();
-    private static final LongAdder zsetValueNotHitThresholdCount = new LongAdder();
-    private static final LongAdder zsetValueHitThresholdCount = new LongAdder();
-    private static final ExecutorService exec = Executors.newFixedThreadPool(1);
-    private static final Set<String> hbaseAsyncWriteTopics = new HashSet<>();
-    private static final Map<String, Long> hbaseAsyncWriteTopicLengthMap = new HashMap<>();
-    private static final ConcurrentHashMap<String, LongAdder> hbaseAsyncWriteTopicCountMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, LongAdder> hbaseDegradedCountMap = new ConcurrentHashMap<>();
-
+    private static ConcurrentHashMap<String, AtomicLong> map = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Queue> queueMap = new ConcurrentHashMap<>();
     private static RedisHBaseStats redisHBaseStats = new RedisHBaseStats();
-
     static {
-        int seconds = RedisHBaseConfiguration.monitorIntervalSeconds();
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(RedisHBaseMonitor.class))
-                .scheduleAtFixedRate(RedisHBaseMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
+        ExecutorUtils.scheduleAtFixedRate(RedisHBaseMonitor::calc, 1, 1, TimeUnit.MINUTES);
     }
 
-    public static void incrRead(String method, ReadOpeType type) {
-        try {
-            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
-            String key = method + "|" + type.name();
-            LongAdder count = readMap.computeIfAbsent(key, k -> new LongAdder());
-            count.increment();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
+    public static void incr(String method, String desc) {
+        String uniqueKey = method + "|" + desc;
+        AtomicLong count = map.computeIfAbsent(uniqueKey, k -> new AtomicLong());
+        count.incrementAndGet();
     }
 
-    public static void incrWrite(String method, WriteOpeType type) {
-        try {
-            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
-            String key = method + "|" + type.name();
-            LongAdder count = writeMap.computeIfAbsent(key, k -> new LongAdder());
-            count.increment();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    public static void zsetValueSize(int size) {
-        try {
-            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
-            exec.submit(() -> {
-                zsetValueSizeTotal.add(size);
-                zsetValueSizeCount.increment();
-                if (size > zsetValueSizeMax.get()) {
-                    zsetValueSizeMax.set(size);
-                }
-            });
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    public static void zsetValueHitThreshold(boolean hit) {
-        try {
-            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
-            if (hit) {
-                zsetValueHitThresholdCount.increment();
-            } else {
-                zsetValueNotHitThresholdCount.increment();
-            }
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    public static void refreshHBaseAsyncWriteTopics(Set<String> topics) {
-        try {
-            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
-            hbaseAsyncWriteTopics.clear();
-            hbaseAsyncWriteTopics.addAll(topics);
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    public static void refreshHBaseAsyncWriteTopicLengthMap(Map<String, Long> map) {
-        try {
-            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
-            hbaseAsyncWriteTopicLengthMap.clear();
-            hbaseAsyncWriteTopicLengthMap.putAll(map);
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    public static void incrHBaseAsyncWriteTopicCount(String topic) {
-        try {
-            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
-            LongAdder count = hbaseAsyncWriteTopicCountMap.computeIfAbsent(topic, k -> new LongAdder());
-            count.increment();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    public static void incrHBaseDegradedCount(String ope) {
-        try {
-            if (!RedisHBaseConfiguration.isMonitorEnable()) return;
-            LongAdder count = hbaseDegradedCountMap.computeIfAbsent(ope, k -> new LongAdder());
-            count.increment();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
+    public static void register(String name, Queue queue) {
+        queueMap.put(name, queue);
     }
 
     public static RedisHBaseStats getRedisHBaseStats() {
         return redisHBaseStats;
     }
 
+    public static JSONObject getStatsJson() {
+        JSONObject monitorJson = new JSONObject();
+
+        JSONArray statsJsonArray = new JSONArray();
+        for (RedisHBaseStats.Stats stats : redisHBaseStats.getStatsList()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("method", stats.getMethod());
+            jsonObject.put("desc", stats.getDesc());
+            jsonObject.put("count", stats.getCount());
+            statsJsonArray.add(jsonObject);
+        }
+        monitorJson.put("countStats", statsJsonArray);
+
+        JSONArray statsJson2Array = new JSONArray();
+        for (RedisHBaseStats.Stats2 stats2 : redisHBaseStats.getStats2List()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("method", stats2.getMethod());
+            jsonObject.put("cacheHitPercent", stats2.getCacheHitPercent());
+            jsonObject.put("count", stats2.getCount());
+            statsJson2Array.add(jsonObject);
+        }
+        monitorJson.put("cacheHitStats", statsJson2Array);
+
+        JSONArray queueStatsJsonArray = new JSONArray();
+        for (RedisHBaseStats.QueueStats queueStats : redisHBaseStats.getQueueStatsList()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("queueName", queueStats.getQueueName());
+            jsonObject.put("queueSize", queueStats.getQueueSize());
+            queueStatsJsonArray.add(jsonObject);
+        }
+        monitorJson.put("queueStats", queueStatsJsonArray);
+        return monitorJson;
+    }
+
     private static void calc() {
         try {
-            Map<String, AtomicLong> cacheHitCountReadMap = new HashMap<>();
-            Map<String, AtomicLong> cacheMissCountReadMap = new HashMap<>();
+            ConcurrentHashMap<String, AtomicLong> map = RedisHBaseMonitor.map;
+            RedisHBaseMonitor.map = new ConcurrentHashMap<>();
+
+            Map<String, Long> cacheHitMap = new HashMap<>();
+            Map<String, Long> cacheMissMap = new HashMap<>();
+            List<RedisHBaseStats.Stats> statsList = new ArrayList<>();
+            for (Map.Entry<String, AtomicLong> entry : map.entrySet()) {
+                RedisHBaseStats.Stats stats = new RedisHBaseStats.Stats();
+                String[] split = entry.getKey().split("\\|");
+                String method = split[0];
+                String desc = split[1];
+                stats.setMethod(method);
+                stats.setDesc(desc);
+                stats.setCount(entry.getValue().get());
+                statsList.add(stats);
+                if (desc.equals(OperationType.REDIS_ONLY.name())) {
+                    cacheHitMap.put(method, entry.getValue().get());
+                } else {
+                    cacheMissMap.put(method, entry.getValue().get());
+                }
+            }
+            List<RedisHBaseStats.Stats2> stats2List = new ArrayList<>();
             Set<String> methodSet = new HashSet<>();
-            List<RedisHBaseStats.ReadMethodStats> readMethodStatsList = new ArrayList<>();
-            for (Map.Entry<String, LongAdder> entry : readMap.entrySet()) {
-                String key = entry.getKey();
-                String[] split = key.split("\\|");
-                String method = split[0];
-                ReadOpeType opeType = ReadOpeType.valueOf(split[1]);
-                long count = entry.getValue().sumThenReset();
-                RedisHBaseStats.ReadMethodStats methodStats = new RedisHBaseStats.ReadMethodStats();
-                methodStats.setMethod(method);
-                methodStats.setOpeType(opeType);
-                methodStats.setCount(count);
-                readMethodStatsList.add(methodStats);
-                if (opeType == ReadOpeType.HIT_TO_HBASE || opeType == ReadOpeType.HIT_TO_HBASE_AND_MISS || opeType == ReadOpeType.HIT_TO_HBASE_DEGRADED) {
-                    AtomicLong cacheMissCount = cacheMissCountReadMap.computeIfAbsent(method, k -> new AtomicLong(0L));
-                    cacheMissCount.addAndGet(count);
-                } else {
-                    AtomicLong cacheHitCount = cacheHitCountReadMap.computeIfAbsent(method, k -> new AtomicLong(0L));
-                    cacheHitCount.addAndGet(count);
-                }
-                methodSet.add(method);
-            }
-
-            List<RedisHBaseStats.WriteMethodStats> writeMethodStatsList = new ArrayList<>();
-            for (Map.Entry<String, LongAdder> entry : writeMap.entrySet()) {
-                String key = entry.getKey();
-                String[] split = key.split("\\|");
-                String method = split[0];
-                WriteOpeType opeType = WriteOpeType.valueOf(split[1]);
-                long count = entry.getValue().sumThenReset();
-
-                RedisHBaseStats.WriteMethodStats methodStats = new RedisHBaseStats.WriteMethodStats();
-                methodStats.setMethod(method);
-                methodStats.setOpeType(opeType);
-                methodStats.setCount(count);
-                writeMethodStatsList.add(methodStats);
-            }
-
-            long max = zsetValueSizeMax.getAndSet(0);
-            long count = zsetValueSizeCount.sumThenReset();
-            long total = zsetValueSizeTotal.sumThenReset();
-            long hit = zsetValueHitThresholdCount.sumThenReset();
-            long notHit = zsetValueNotHitThresholdCount.sumThenReset();
-            RedisHBaseStats.ZSetStats zSetStats = new RedisHBaseStats.ZSetStats();
-            zSetStats.setZsetValueHitThresholdCount(hit);
-            zSetStats.setZsetValueNotHitThresholdCount(notHit);
-            if (count != 0) {
-                zSetStats.setZsetValueSizeAvg(((double) total) / count);
-            }
-            zSetStats.setZsetValueSizeMax(max);
-
-            List<RedisHBaseStats.ReadMethodCacheHitStats> methodCacheHitStatsList = new ArrayList<>();
+            methodSet.addAll(cacheHitMap.keySet());
+            methodSet.addAll(cacheMissMap.keySet());
             for (String method : methodSet) {
-                RedisHBaseStats.ReadMethodCacheHitStats methodCacheHitStats = new RedisHBaseStats.ReadMethodCacheHitStats();
-                methodCacheHitStats.setMethod(method);
-                AtomicLong cacheHitCount = cacheHitCountReadMap.get(method);
-                AtomicLong cacheMissCount = cacheMissCountReadMap.get(method);
-                if (cacheHitCount == null) {
-                    cacheHitCount = new AtomicLong(0L);
+                RedisHBaseStats.Stats2 stats2 = new RedisHBaseStats.Stats2();
+                stats2.setMethod(method);
+                Long cacheHit = cacheHitMap.get(method);
+                cacheHit = cacheHit == null ? 0 : cacheHit;
+                Long cacheMiss = cacheMissMap.get(method);
+                cacheMiss = cacheMiss == null ? 0 : cacheMiss;
+                long total = cacheHit + cacheMiss;
+                double cacheHitPercent;
+                if (total == 0) {
+                    cacheHitPercent = 0.0;
+                } else {
+                    cacheHitPercent = cacheHit / (total * 1.0);
                 }
-                if (cacheMissCount == null) {
-                    cacheMissCount = new AtomicLong(0L);
-                }
-                long totalCount = cacheHitCount.get() + cacheMissCount.get();
-                if (totalCount <= 0) continue;
-                double cacheHitPercent = ((double) cacheHitCount.get()) / totalCount;
-                methodCacheHitStats.setCount(totalCount);
-                methodCacheHitStats.setCacheHitPercent(cacheHitPercent);
-                methodCacheHitStatsList.add(methodCacheHitStats);
+                stats2.setCount(total);
+                stats2.setCacheHitPercent(cacheHitPercent);
+                stats2List.add(stats2);
             }
 
-            Map<String, LongAdder> hbaseAsyncWriteTopicCountMap = new HashMap<>(RedisHBaseMonitor.hbaseAsyncWriteTopicCountMap);
-            RedisHBaseMonitor.hbaseAsyncWriteTopicCountMap.clear();
-            HashSet<String> topics = new HashSet<>(hbaseAsyncWriteTopics);
-            List<RedisHBaseStats.TopicStats> topicStatsList = new ArrayList<>();
-            for (String topic : topics) {
-                RedisHBaseStats.TopicStats topicStats = new RedisHBaseStats.TopicStats();
-                topicStats.setTopic(topic);
-                LongAdder topicCount = hbaseAsyncWriteTopicCountMap.get(topic);
-                if (topicCount == null) {
-                    topicStats.setCount(0L);
-                } else {
-                    topicStats.setCount(topicCount.longValue());
-                }
-                Long length = RedisHBaseMonitor.hbaseAsyncWriteTopicLengthMap.get(topic);
-                if (length == null) {
-                    topicStats.setLength(0L);
-                } else {
-                    topicStats.setLength(length);
-                }
-                topicStatsList.add(topicStats);
-            }
-
-            Map<String, LongAdder> hbaseDegradedCountMap = new HashMap<>(RedisHBaseMonitor.hbaseDegradedCountMap);
-            RedisHBaseMonitor.hbaseDegradedCountMap.clear();
-            List<RedisHBaseStats.HBaseDegradedStats> hBaseDegradedStatsList = new ArrayList<>();
-            for (Map.Entry<String, LongAdder> entry : hbaseDegradedCountMap.entrySet()) {
-                String ope = entry.getKey();
-                RedisHBaseStats.HBaseDegradedStats degradedStats = new RedisHBaseStats.HBaseDegradedStats();
-                degradedStats.setOpe(ope);
-                degradedStats.setCount(entry.getValue().sum());
-                hBaseDegradedStatsList.add(degradedStats);
+            List<RedisHBaseStats.QueueStats> queueStatsList = new ArrayList<>();
+            for (Map.Entry<String, Queue> entry : queueMap.entrySet()) {
+                RedisHBaseStats.QueueStats queueStats = new RedisHBaseStats.QueueStats();
+                queueStats.setQueueName(entry.getKey());
+                queueStats.setQueueSize(entry.getValue().size());
+                queueStatsList.add(queueStats);
             }
 
             RedisHBaseStats redisHBaseStats = new RedisHBaseStats();
-            redisHBaseStats.setReadMethodStatsList(readMethodStatsList);
-            redisHBaseStats.setWriteMethodStatsList(writeMethodStatsList);
-            redisHBaseStats.setzSetStats(zSetStats);
-            redisHBaseStats.setReadMethodCacheHitStatsList(methodCacheHitStatsList);
-            redisHBaseStats.setTopicStatsList(topicStatsList);
-            redisHBaseStats.sethBaseDegradedStatsList(hBaseDegradedStatsList);
+            redisHBaseStats.setStatsList(statsList);
+            redisHBaseStats.setStats2List(stats2List);
+            redisHBaseStats.setQueueStatsList(queueStatsList);
 
             RedisHBaseMonitor.redisHBaseStats = redisHBaseStats;
-
-            if (RedisHBaseConfiguration.isMonitorEnable()) {
-                statsLogger.info(">>>>>>>START>>>>>>>");
-                statsLogger.info("====zset====");
-                statsLogger.info("zset.value.size.avg={}", zSetStats.getZsetValueSizeAvg());
-                statsLogger.info("zset.value.size.max={}", zSetStats.getZsetValueSizeMax());
-                statsLogger.info("zset.value.hit.threshold.count={}", zSetStats.getZsetValueHitThresholdCount());
-                statsLogger.info("zset.value.not.hit.threshold.count={}", zSetStats.getZsetValueNotHitThresholdCount());
-                statsLogger.info("====read.method====");
-                for (RedisHBaseStats.ReadMethodStats methodStats : redisHBaseStats.getReadMethodStatsList()) {
-                    statsLogger.info("read.method={},opeType={},count={}", methodStats.getMethod(), methodStats.getOpeType(), methodStats.getCount());
-                }
-                statsLogger.info("====read.method.cache.hit====");
-                for (RedisHBaseStats.ReadMethodCacheHitStats methodCacheHitStats : redisHBaseStats.getReadMethodCacheHitStatsList()) {
-                    statsLogger.info("read.method={},count={},cacheHitPercent={}", methodCacheHitStats.getMethod(), methodCacheHitStats.getCount(), methodCacheHitStats.getCacheHitPercent());
-                }
-                statsLogger.info("====write.method====");
-                for (RedisHBaseStats.WriteMethodStats methodStats : redisHBaseStats.getWriteMethodStatsList()) {
-                    statsLogger.info("write.method={},opeType={},count={}", methodStats.getMethod(), methodStats.getOpeType(), methodStats.getCount());
-                }
-                statsLogger.info("====hbase.async.write.topics====");
-                statsLogger.info("hbase.async.write.topic.count={}", redisHBaseStats.getTopicStatsList().size());
-                for (RedisHBaseStats.TopicStats topicStats : redisHBaseStats.getTopicStatsList()) {
-                    statsLogger.info("hbase.async.write.topic={},length={},count={}", topicStats.getTopic(), topicStats.getLength(), topicStats.getLength());
-                }
-                statsLogger.info("====hbase.degraded.stats====");
-                for (RedisHBaseStats.HBaseDegradedStats degradedStats : redisHBaseStats.gethBaseDegradedStatsList()) {
-                    statsLogger.info("hbase.degraded.ope={},count={}", degradedStats.getOpe(), degradedStats.getCount());
-                }
-                statsLogger.info("<<<<<<<END<<<<<<<");
-            }
         } catch (Exception e) {
-            logger.error("calc error", e);
+            logger.error(e.getMessage(), e);
         }
     }
 }

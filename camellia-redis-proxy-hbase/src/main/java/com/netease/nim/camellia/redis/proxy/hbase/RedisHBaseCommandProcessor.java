@@ -30,12 +30,11 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
             redisTemplate.exists("warm");
             hBaseTemplate.get(RedisHBaseConfiguration.hbaseTableName(), new Get(Bytes.toBytes("warm")));
         } catch (Exception e) {
-            throw new IllegalArgumentException("warm fail, please check");
+            throw new IllegalArgumentException("warm fail, please check", e);
         }
-        HBaseWriteAsyncExecutor hBaseWriteAsyncExecutor = new HBaseWriteAsyncExecutor(redisTemplate, hBaseTemplate);
         //
-        this.zSetMixClient = new RedisHBaseZSetMixClient(redisTemplate, hBaseTemplate, hBaseWriteAsyncExecutor);
-        this.commonMixClient = new RedisHBaseCommonMixClient(redisTemplate, hBaseTemplate, hBaseWriteAsyncExecutor, this.zSetMixClient);
+        this.zSetMixClient = new RedisHBaseZSetMixClient(redisTemplate, hBaseTemplate);
+        this.commonMixClient = new RedisHBaseCommonMixClient(redisTemplate, this.zSetMixClient);
     }
 
     @Override
@@ -103,12 +102,6 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
     public IntegerReply pttl(byte[] key) {
         Long pttl = commonMixClient.pttl(key);
         return new IntegerReply(pttl);
-    }
-
-    @Override
-    public IntegerReply persist(byte[] key) {
-        Long persist = commonMixClient.persist(key);
-        return new IntegerReply(persist);
     }
 
     @Override

@@ -47,9 +47,6 @@ public interface IRedisHBaseCommandProcessor {
     @CommandFinder(RedisCommand.PTTL)
     IntegerReply pttl(byte[] key);
 
-    @CommandFinder(RedisCommand.PERSIST)
-    IntegerReply persist(byte[] key);
-
     /**
      * 有序集合
      */

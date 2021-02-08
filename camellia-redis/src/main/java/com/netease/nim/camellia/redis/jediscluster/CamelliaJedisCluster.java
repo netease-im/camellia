@@ -1203,6 +1203,11 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     }
 
     @Override
+    public Long pttl(byte[] key) {
+        return jedisCluster.pttl(key);
+    }
+
+    @Override
     public Boolean setbit(byte[] key, long offset, boolean value) {
         return jedisCluster.setbit(key, offset, value);
     }

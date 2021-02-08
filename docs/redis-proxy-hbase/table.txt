@@ -1,2 +1,0 @@
-
-create 'nim:nim_camellia_redis_hbase',{NAME=>'d',VERSIONS=>1,BLOCKCACHE=>true,BLOOMFILTER=>'ROW',COMPRESSION=>'LZO',TTL=>'5184000'},{NUMREGIONS => 12 , SPLITALGO => 'UniformSplit'}

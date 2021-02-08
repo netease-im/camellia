@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.hbase.model;
+package com.netease.nim.camellia.redis.proxy.hbase.util;
 
 
 import java.io.Serializable;

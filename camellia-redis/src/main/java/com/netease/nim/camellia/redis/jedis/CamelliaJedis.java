@@ -1599,6 +1599,16 @@ public class CamelliaJedis implements ICamelliaRedis {
     }
 
     @Override
+    public Long pttl(byte[] key) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.pttl(key);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
     public Boolean setbit(byte[] key, long offset, boolean value) {
         Jedis jedis = jedisPool.getResource();
         try {

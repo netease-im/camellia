@@ -195,6 +195,11 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     @Override
+    public Long pttl(byte[] key) {
+        return factory.getProxy().pttl(key);
+    }
+
+    @Override
     public Boolean setbit(byte[] key, long offset, boolean value) {
         return factory.getProxy().setbit(key, offset, value);
     }

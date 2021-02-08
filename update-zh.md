@@ -5,6 +5,16 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
+# 1.0.20（2020/02/xx）
+### 新增
+* 无
+
+### 更新
+* 重构camellia-redis-proxy-hbase，和老版本不兼容，见 [文档](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
+
+### fix
+* 无
+
 # 1.0.19（2020/02/07）
 ### 新增
 * 无  

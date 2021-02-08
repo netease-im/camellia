@@ -2,9 +2,13 @@ package com.netease.nim.camellia.redis.proxy.samples;
 
 import com.netease.nim.camellia.redis.proxy.console.ConsoleResult;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleServiceAdaptor;
+import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -30,6 +34,14 @@ public class MyConsoleService extends ConsoleServiceAdaptor implements Initializ
     public ConsoleResult offline() {
         //TODO deregister from 注册中心，或者从负载均衡服务器上摘掉
         return super.offline();
+    }
+
+    @Override
+    public ConsoleResult custom(Map<String, List<String>> params) {
+        if (params.containsKey("redisHBaseNss")) {
+            return ConsoleResult.success(RedisHBaseMonitor.getStatsJson().toJSONString());
+        }
+        return super.custom(params);
     }
 
     @Override

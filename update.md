@@ -5,6 +5,17 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
+# 1.0.20（2020/02/xx）
+### add
+* none
+
+### update
+* refactor camellia-redis-proxy-hbase, inconsistent to the old version, see [doc](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
+
+### fix
+* none
+
+
 # 1.0.19（2020/02/07）
 ### add
 * none  

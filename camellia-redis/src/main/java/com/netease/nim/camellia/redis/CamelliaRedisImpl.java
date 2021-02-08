@@ -1093,6 +1093,13 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
         return redis.ttl(key);
     }
 
+    @ReadOp
+    @Override
+    public Long pttl(@ShadingParam byte[] key) {
+        LogUtil.debugLog(resource, key);
+        return redis.pttl(key);
+    }
+
     @WriteOp
     @Override
     public Boolean setbit(@ShadingParam byte[] key, long offset, boolean value) {

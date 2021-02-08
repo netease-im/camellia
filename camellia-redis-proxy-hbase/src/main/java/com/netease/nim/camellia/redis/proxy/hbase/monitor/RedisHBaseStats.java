@@ -1,110 +1,45 @@
 package com.netease.nim.camellia.redis.proxy.hbase.monitor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
- * Created by caojiajun on 2020/3/5.
+ * Created by caojiajun on 2020/12/22
  */
 public class RedisHBaseStats {
 
-    private List<ReadMethodStats> readMethodStatsList = new ArrayList<>();
-    private List<ReadMethodCacheHitStats> readMethodCacheHitStatsList = new ArrayList<>();
-    private List<WriteMethodStats> writeMethodStatsList = new ArrayList<>();
-    private ZSetStats zSetStats = new ZSetStats();
-    private List<TopicStats> topicStatsList = new ArrayList<>();
-    private List<HBaseDegradedStats> hBaseDegradedStatsList = new ArrayList<>();
+    private List<Stats> statsList = new ArrayList<>();
+    private List<Stats2> stats2List = new ArrayList<>();
+    private List<QueueStats> queueStatsList = new ArrayList<>();
 
-    public List<ReadMethodStats> getReadMethodStatsList() {
-        return readMethodStatsList;
+    public List<Stats> getStatsList() {
+        return statsList;
     }
 
-    public void setReadMethodStatsList(List<ReadMethodStats> readMethodStatsList) {
-        this.readMethodStatsList = readMethodStatsList;
+    public void setStatsList(List<Stats> statsList) {
+        this.statsList = statsList;
     }
 
-    public List<ReadMethodCacheHitStats> getReadMethodCacheHitStatsList() {
-        return readMethodCacheHitStatsList;
+    public List<Stats2> getStats2List() {
+        return stats2List;
     }
 
-    public void setReadMethodCacheHitStatsList(List<ReadMethodCacheHitStats> readMethodCacheHitStatsList) {
-        this.readMethodCacheHitStatsList = readMethodCacheHitStatsList;
+    public void setStats2List(List<Stats2> stats2List) {
+        this.stats2List = stats2List;
     }
 
-    public List<WriteMethodStats> getWriteMethodStatsList() {
-        return writeMethodStatsList;
+    public List<QueueStats> getQueueStatsList() {
+        return queueStatsList;
     }
 
-    public void setWriteMethodStatsList(List<WriteMethodStats> writeMethodStatsList) {
-        this.writeMethodStatsList = writeMethodStatsList;
+    public void setQueueStatsList(List<QueueStats> queueStatsList) {
+        this.queueStatsList = queueStatsList;
     }
 
-    public ZSetStats getzSetStats() {
-        return zSetStats;
-    }
-
-    public void setzSetStats(ZSetStats zSetStats) {
-        this.zSetStats = zSetStats;
-    }
-
-    public List<TopicStats> getTopicStatsList() {
-        return topicStatsList;
-    }
-
-    public void setTopicStatsList(List<TopicStats> topicStatsList) {
-        this.topicStatsList = topicStatsList;
-    }
-
-    public List<HBaseDegradedStats> gethBaseDegradedStatsList() {
-        return hBaseDegradedStatsList;
-    }
-
-    public void sethBaseDegradedStatsList(List<HBaseDegradedStats> hBaseDegradedStatsList) {
-        this.hBaseDegradedStatsList = hBaseDegradedStatsList;
-    }
-
-    public static class ZSetStats {
-        private double zsetValueSizeAvg;
-        private long zsetValueSizeMax;
-        private long zsetValueHitThresholdCount;
-        private long zsetValueNotHitThresholdCount;
-
-        public double getZsetValueSizeAvg() {
-            return zsetValueSizeAvg;
-        }
-
-        public void setZsetValueSizeAvg(double zsetValueSizeAvg) {
-            this.zsetValueSizeAvg = zsetValueSizeAvg;
-        }
-
-        public long getZsetValueSizeMax() {
-            return zsetValueSizeMax;
-        }
-
-        public void setZsetValueSizeMax(long zsetValueSizeMax) {
-            this.zsetValueSizeMax = zsetValueSizeMax;
-        }
-
-        public long getZsetValueHitThresholdCount() {
-            return zsetValueHitThresholdCount;
-        }
-
-        public void setZsetValueHitThresholdCount(long zsetValueHitThresholdCount) {
-            this.zsetValueHitThresholdCount = zsetValueHitThresholdCount;
-        }
-
-        public long getZsetValueNotHitThresholdCount() {
-            return zsetValueNotHitThresholdCount;
-        }
-
-        public void setZsetValueNotHitThresholdCount(long zsetValueNotHitThresholdCount) {
-            this.zsetValueNotHitThresholdCount = zsetValueNotHitThresholdCount;
-        }
-    }
-
-    public static class WriteMethodStats {
+    public static class Stats {
         private String method;
-        private WriteOpeType opeType;
+        private String desc;
         private long count;
 
         public String getMethod() {
@@ -115,12 +50,12 @@ public class RedisHBaseStats {
             this.method = method;
         }
 
-        public WriteOpeType getOpeType() {
-            return opeType;
+        public String getDesc() {
+            return desc;
         }
 
-        public void setOpeType(WriteOpeType opeType) {
-            this.opeType = opeType;
+        public void setDesc(String desc) {
+            this.desc = desc;
         }
 
         public long getCount() {
@@ -132,55 +67,25 @@ public class RedisHBaseStats {
         }
     }
 
-    public static class ReadMethodStats {
-        private String method;
-        private ReadOpeType opeType;
-        private long count;
-
-        public String getMethod() {
-            return method;
-        }
-
-        public void setMethod(String method) {
-            this.method = method;
-        }
-
-        public ReadOpeType getOpeType() {
-            return opeType;
-        }
-
-        public void setOpeType(ReadOpeType opeType) {
-            this.opeType = opeType;
-        }
-
-        public long getCount() {
-            return count;
-        }
-
-        public void setCount(long count) {
-            this.count = count;
-        }
-    }
-
-    public static class ReadMethodCacheHitStats {
+    public static class Stats2 {
         private String method;
         private long count;
         private double cacheHitPercent;
 
-        public String getMethod() {
-            return method;
-        }
-
-        public void setMethod(String method) {
-            this.method = method;
-        }
-
         public long getCount() {
             return count;
         }
 
         public void setCount(long count) {
             this.count = count;
+        }
+
+        public String getMethod() {
+            return method;
+        }
+
+        public void setMethod(String method) {
+            this.method = method;
         }
 
         public double getCacheHitPercent() {
@@ -192,54 +97,24 @@ public class RedisHBaseStats {
         }
     }
 
-    public static class TopicStats {
-        private String topic;
-        private long count;
-        private long length;
+    public static class QueueStats {
+        private String queueName;
+        private int queueSize;
 
-        public String getTopic() {
-            return topic;
+        public String getQueueName() {
+            return queueName;
         }
 
-        public void setTopic(String topic) {
-            this.topic = topic;
+        public void setQueueName(String queueName) {
+            this.queueName = queueName;
         }
 
-        public long getCount() {
-            return count;
+        public int getQueueSize() {
+            return queueSize;
         }
 
-        public void setCount(long count) {
-            this.count = count;
-        }
-
-        public long getLength() {
-            return length;
-        }
-
-        public void setLength(long length) {
-            this.length = length;
-        }
-    }
-
-    public static class HBaseDegradedStats {
-        private String ope;
-        private long count;
-
-        public String getOpe() {
-            return ope;
-        }
-
-        public void setOpe(String ope) {
-            this.ope = ope;
-        }
-
-        public long getCount() {
-            return count;
-        }
-
-        public void setCount(long count) {
-            this.count = count;
+        public void setQueueSize(int queueSize) {
+            this.queueSize = queueSize;
         }
     }
 }
