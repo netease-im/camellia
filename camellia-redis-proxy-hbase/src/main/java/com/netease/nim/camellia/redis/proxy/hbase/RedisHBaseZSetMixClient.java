@@ -213,6 +213,7 @@ public class RedisHBaseZSetMixClient {
                         if (!success) {
                             if (RedisHBaseConfiguration.hbaseDegradedIfAsyncWriteSubmitFail()) {
                                 logger.error("hBaseAsyncWriteExecutor submit fail for zadd, degraded hbase write, key = {}", Utils.bytesToString(key));
+                                RedisHBaseMonitor.incrDegraded("zadd|async_write_submit_fail");
                             } else {
                                 logger.warn("hBaseAsyncWriteExecutor submit fail, write sync for zadd, key = {}", Utils.bytesToString(key));
                                 hBaseTemplate.put(hbaseTableName(), puts);
@@ -282,6 +283,7 @@ public class RedisHBaseZSetMixClient {
                         if (!sucess) {
                             if (RedisHBaseConfiguration.hbaseDegradedIfAsyncWriteSubmitFail()) {
                                 logger.error("hBaseAsyncWriteExecutor submit fail for zrem, degraded for hbase write, key = {}", Utils.bytesToString(key));
+                                RedisHBaseMonitor.incrDegraded("zrem|async_write_submit_fail");
                             } else {
                                 logger.warn("hBaseAsyncWriteExecutor submit fail, write sync for zrem, key = {}", Utils.bytesToString(key));
                                 hBaseTemplate.delete(hbaseTableName(), list);
@@ -610,6 +612,7 @@ public class RedisHBaseZSetMixClient {
                     if (!success) {
                         if (RedisHBaseConfiguration.hbaseDegradedIfAsyncWriteSubmitFail()) {
                             logger.error("hBaseAsyncWriteExecutor submit fail for {}, degraded for hbase write, key = {}", method, Utils.bytesToString(key));
+                            RedisHBaseMonitor.incrDegraded(method + "|async_write_submit_fail");
                         } else {
                             logger.warn("hBaseAsyncWriteExecutor submit fail, write sync for {}, key = {}", method, Utils.bytesToString(key));
                             hBaseTemplate.delete(hbaseTableName(), list);
@@ -675,6 +678,7 @@ public class RedisHBaseZSetMixClient {
         for (List<Get> gets : split) {
             if (RedisHBaseConfiguration.hbaseReadDegraded()) {
                 logger.warn("get original zset member from hbase degraded, key = {}", SafeEncoder.encode(key));
+                RedisHBaseMonitor.incrDegraded("hbase_read_batch_degraded");
             } else {
                 if (FreqUtils.hbaseReadFreq()) {
                     Result[] results = hBaseTemplate.get(hbaseTableName(), gets);
@@ -684,6 +688,8 @@ public class RedisHBaseZSetMixClient {
                             hbaseMap.put(new BytesKey(result.getRow()), originalValue);
                         }
                     }
+                } else {
+                    RedisHBaseMonitor.incrDegraded("hbase_read_batch_freq_degraded");
                 }
             }
         }
@@ -704,6 +710,7 @@ public class RedisHBaseZSetMixClient {
                     } else {
                         logger.warn("get original zset member from hbase fail, key = {}, member-ref-key = {}",
                                 SafeEncoder.encode(key), Bytes.toHex(bytes));
+                        RedisHBaseMonitor.incrDegraded("hbase_read_missing");
                     }
                 } else {
                     ret.add(bytes);
@@ -757,6 +764,7 @@ public class RedisHBaseZSetMixClient {
                         if (RedisHBaseConfiguration.hbaseReadDegraded()) {
                             logger.warn("get original zset member tuple from hbase degraded, key = {}, member-ref-key = {}",
                                     SafeEncoder.encode(key), Bytes.toHex(bytes));
+                            RedisHBaseMonitor.incrDegraded("hbase_read_degraded");
                         } else {
                             if (FreqUtils.hbaseReadFreq()) {
                                 Result result = hBaseTemplate.get(hbaseTableName(), new Get(bytes));
@@ -772,7 +780,10 @@ public class RedisHBaseZSetMixClient {
                                 } else {
                                     logger.warn("get original zset member tuple from hbase fail, key = {}, member-ref-key = {}",
                                             SafeEncoder.encode(key), Bytes.toHex(bytes));
+                                    RedisHBaseMonitor.incrDegraded("hbase_read_missing");
                                 }
+                            } else {
+                                RedisHBaseMonitor.incrDegraded("hbase_read_freq_degraded");
                             }
                         }
                     }

@@ -41,7 +41,7 @@ public class RedisHBaseConfiguration {
 
     //hbase是否开启异步写
     public static boolean hbaseAsyncWriteEnable() {
-        return ProxyDynamicConf.getBoolean("hbase.async.write.enable", false);
+        return ProxyDynamicConf.getBoolean("hbase.async.write.enable", true);
     }
 
     //hbase异步写线程数量

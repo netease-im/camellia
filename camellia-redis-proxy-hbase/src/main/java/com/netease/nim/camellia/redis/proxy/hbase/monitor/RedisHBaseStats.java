@@ -12,6 +12,7 @@ public class RedisHBaseStats {
     private List<Stats> statsList = new ArrayList<>();
     private List<Stats2> stats2List = new ArrayList<>();
     private List<QueueStats> queueStatsList = new ArrayList<>();
+    private List<DegradedStats> degradedStatsList = new ArrayList<>();
 
     public List<Stats> getStatsList() {
         return statsList;
@@ -35,6 +36,14 @@ public class RedisHBaseStats {
 
     public void setQueueStatsList(List<QueueStats> queueStatsList) {
         this.queueStatsList = queueStatsList;
+    }
+
+    public List<DegradedStats> getDegradedStatsList() {
+        return degradedStatsList;
+    }
+
+    public void setDegradedStatsList(List<DegradedStats> degradedStatsList) {
+        this.degradedStatsList = degradedStatsList;
     }
 
     public static class Stats {
@@ -115,6 +124,27 @@ public class RedisHBaseStats {
 
         public void setQueueSize(int queueSize) {
             this.queueSize = queueSize;
+        }
+    }
+
+    public static class DegradedStats {
+        private String desc;
+        private long count;
+
+        public String getDesc() {
+            return desc;
+        }
+
+        public void setDesc(String desc) {
+            this.desc = desc;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+        public void setCount(long count) {
+            this.count = count;
         }
     }
 }
