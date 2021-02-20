@@ -36,11 +36,16 @@ public class CamelliaRedisProxyUtil {
         if (netty.getWorkThread() > 0) {
             serverProperties.setWorkThread(netty.getWorkThread());
         } else {
-            QueueType queueType = properties.getTranspond().getRedisConf().getQueueType();
-            if (queueType == QueueType.None) {
-                serverProperties.setWorkThread(SysUtils.getCpuNum());
+            TranspondProperties transpond = properties.getTranspond();
+            if (transpond != null) {
+                QueueType queueType = transpond.getRedisConf().getQueueType();
+                if (queueType == QueueType.None) {
+                    serverProperties.setWorkThread(SysUtils.getCpuNum());
+                } else {
+                    serverProperties.setWorkThread(SysUtils.getCpuHalfNum());
+                }
             } else {
-                serverProperties.setWorkThread(SysUtils.getCpuHalfNum());
+                serverProperties.setWorkThread(SysUtils.getCpuNum());
             }
         }
         serverProperties.setCommandDecodeMaxBatchSize(netty.getCommandDecodeMaxBatchSize());

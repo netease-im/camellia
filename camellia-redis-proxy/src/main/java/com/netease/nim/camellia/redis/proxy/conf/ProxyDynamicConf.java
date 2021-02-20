@@ -29,7 +29,7 @@ public class ProxyDynamicConf {
     private static final ConcurrentHashMap<String, Boolean> booleanCache = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Double> doubleCache = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, String> stringCache = new ConcurrentHashMap<>();
-    private static final Map<String, Set<String>> setCache = new HashMap<>();
+    private static final ConcurrentHashMap<String, Set<String>> setCache = new ConcurrentHashMap<>();
 
     static {
         reload();
