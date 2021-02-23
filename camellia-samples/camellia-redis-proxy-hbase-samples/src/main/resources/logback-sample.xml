@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+
+       <property name="LOG_HOME" value="/xxx/xxx/camellia-redis-proxy-hbase"/>
+
+       <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+              <encoder>
+                     <pattern>%d %-5p %t %X %c{1}:%L - %m%n</pattern>
+              </encoder>
+       </appender>
+
+       <appender name="APP" class="ch.qos.logback.core.rolling.RollingFileAppender">
+              <file>${LOG_HOME}/app.log</file>
+              <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+                     <fileNamePattern>${LOG_HOME}/app.log.%i</fileNamePattern>
+                     <maxIndex>2</maxIndex>
+              </rollingPolicy>
+              <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                     <maxFileSize>300MB</maxFileSize>
+              </triggeringPolicy>
+              <encoder>
+                     <pattern>%d %-5p %t %X %c{1}:%L - %m%n</pattern>
+              </encoder>
+       </appender>
+
+       <appender name="STATS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+              <file>${LOG_HOME}/stats.log</file>
+              <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+                     <fileNamePattern>${LOG_HOME}/stats.log.%i</fileNamePattern>
+                     <maxIndex>2</maxIndex>
+              </rollingPolicy>
+              <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                     <maxFileSize>300MB</maxFileSize>
+              </triggeringPolicy>
+              <encoder>
+                     <pattern>%d %-5p %t %X %c{1}:%L - %m%n</pattern>
+              </encoder>
+       </appender>
+
+       <appender name="SLOW-COMMAND-STATS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+              <file>${LOG_HOME}/slow-command-stats.log</file>
+              <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+                     <fileNamePattern>${LOG_HOME}/slow-command-stats.log.%i</fileNamePattern>
+                     <maxIndex>2</maxIndex>
+              </rollingPolicy>
+              <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                     <maxFileSize>300MB</maxFileSize>
+              </triggeringPolicy>
+              <encoder>
+                     <pattern>%d %-5p %t %X %c{1}:%L - %m%n</pattern>
+              </encoder>
+       </appender>
+
+       <appender name="HOT-KEY-STATS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+              <file>${LOG_HOME}/hot-key-stats.log</file>
+              <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+                     <fileNamePattern>${LOG_HOME}/hot-key-stats.log.%i</fileNamePattern>
+                     <maxIndex>2</maxIndex>
+              </rollingPolicy>
+              <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                     <maxFileSize>300MB</maxFileSize>
+              </triggeringPolicy>
+              <encoder>
+                     <pattern>%d %-5p %t %X %c{1}:%L - %m%n</pattern>
+              </encoder>
+       </appender>
+
+       <appender name="BIG-KEY-STATS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+              <file>${LOG_HOME}/big-key-stats.log</file>
+              <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+                     <fileNamePattern>${LOG_HOME}/big-key-stats.%i</fileNamePattern>
+                     <maxIndex>2</maxIndex>
+              </rollingPolicy>
+              <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                     <maxFileSize>300MB</maxFileSize>
+              </triggeringPolicy>
+              <encoder>
+                     <pattern>%d %-5p %t %X %c{1}:%L - %m%n</pattern>
+              </encoder>
+       </appender>
+
+       <logger name="com.netease.nim.camellia" level="INFO"/>
+
+       <logger name="stats" level="INFO" additivity="false" >
+              <appender-ref ref="STATS" />
+       </logger>
+
+       <logger name="slowCommandStats" level="INFO" additivity="false" >
+              <appender-ref ref="SLOW-COMMAND-STATS" />
+       </logger>
+
+       <logger name="hotKeyStats" level="INFO" additivity="false" >
+              <appender-ref ref="HOT-KEY-STATS" />
+       </logger>
+
+       <logger name="bigKeyStats" level="INFO" additivity="false" >
+              <appender-ref ref="BIG-KEY-STATS" />
+       </logger>
+
+       <root level="INFO">
+              <appender-ref ref="APP" />
+       </root>
+</configuration>

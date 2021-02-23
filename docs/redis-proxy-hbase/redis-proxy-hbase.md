@@ -25,6 +25,7 @@ zset作为redis中的有序集合，由key、score、value三部分组成，其�
 
 ### 监控
 * 监控数据通过RedisHBaseMonitor类进行获取
+* camellia-redis-proxy-hbase支持camellia-redis-proxy的通用监控（连接数、请求量、请求tps、请求RT、慢查询、大key、热key等）
 
 ### 服务依赖
 * 依赖redis（支持redis-standalone/redis-sentinel/redis-cluster）和hbase  
@@ -52,6 +53,57 @@ ZADD,ZINCRBY,ZRANK,ZCARD,ZSCORE,ZCOUNT,ZRANGE,ZRANGEBYSCORE,ZRANGEBYLEX,
 ZREVRANK,ZREVRANGE,ZREVRANGEBYSCORE,ZREVRANGEBYLEX,ZREM,
 ZREMRANGEBYRANK,ZREMRANGEBYSCORE,ZREMRANGEBYLEX,ZLEXCOUNT,
 
+```
+
+## 配置示例
+```yaml
+server:
+  port: 6381
+spring:
+  application:
+    name: camellia-redis-proxy-hbase
+
+#see CamelliaRedisProxyProperties
+camellia-redis-proxy:
+  console-port: 16379
+#  password: xxxx
+  netty:
+    boss-thread: 1
+    work-thread: 64   #由于camellia-redis-proxy-hbase使用的是同步模型，因此work-thread设置的大一些，而不是默认的cpu核数
+  monitor-enable: true
+  monitor-interval-seconds: 60
+  monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback #监控回调类
+  command-spend-time-monitor-enable: true #是否开启请求耗时的监控，只有monitor-enable=true才有效
+  slow-command-threshold-millis-time: 2000 #慢查询的阈值，单位毫秒，只有command-spend-time-monitor-enable=true才有效
+  slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback #慢查询的回调类
+  hot-key-monitor-enable: true #是否监控热key
+  hot-key-monitor-config:
+    check-millis: 1000 #热key的检查周期
+    check-threshold: 100 #热key的阈值，检查周期内请求次数超过该阈值被判定为热key
+    check-cache-max-capacity: 1000 #检查的计数器集合的size，本身是LRU的
+    max-hot-key-count: 100 #每次回调的热key个数的最大值（前N个）
+    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback #热key的回调类
+  big-key-monitor-enable: true #大key检测
+  big-key-monitor-config:
+    string-size-threshold: 2097152 #字符串类型，value大小超过多少认为是大key
+    hash-size-threshold: 2000 #hash类型，集合大小超过多少认为是大key
+    zset-size-threshold: 2000 #zset类型，集合大小超过多少认为是大key
+    list-size-threshold: 2000 #list类型，集合大小超过多少认为是大key
+    set-size-threshold: 2000 #set类型，集合大小超过多少认为是大key
+    big-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.bigkey.LoggingBigKeyMonitorCallback #大key的回调类
+
+#see CamelliaHBaseProperties
+camellia-hbase:
+  type: local
+  local:
+    xml:
+      xml-file: hbase.xml
+
+#see CamelliaRedisProperties
+camellia-redis:
+  type: local
+  local:
+    resource: redis://abc@127.0.0.1:6379
 ```
 
 
