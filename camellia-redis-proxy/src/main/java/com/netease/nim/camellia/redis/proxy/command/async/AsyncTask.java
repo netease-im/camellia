@@ -51,10 +51,10 @@ public class AsyncTask {
                 long spendNanoTime = System.nanoTime() - startTime;
                 long slowCommandThresholdMillisTime = commandSpendTimeConfig.getSlowCommandThresholdMillisTime();
                 if (!command.isBlocking() && spendNanoTime > slowCommandThresholdMillisTime * 1000000L) {
+                    double spendMs = spendNanoTime / 1000000.0;
+                    SlowCommandMonitor.slowCommand(command, spendMs, slowCommandThresholdMillisTime);
                     if (commandSpendTimeConfig.getSlowCommandMonitorCallback() != null) {
                         try {
-                            double spendMs = spendNanoTime / 1000000.0;
-                            SlowCommandMonitor.slowCommand(command, spendMs, slowCommandThresholdMillisTime);
                             commandSpendTimeConfig.getSlowCommandMonitorCallback().callback(command, reply,
                                     spendMs, slowCommandThresholdMillisTime);
                         } catch (Exception e) {

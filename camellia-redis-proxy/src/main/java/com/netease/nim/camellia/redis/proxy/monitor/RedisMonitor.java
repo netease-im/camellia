@@ -69,6 +69,14 @@ public class RedisMonitor {
         }
     }
 
+    public static boolean isMonitorEnable() {
+        return monitorEnable;
+    }
+
+    public static boolean isCommandSpendTimeMonitorEnable() {
+        return monitorEnable && commandSpendTimeMonitorEnable;
+    }
+
     private static void startCalcCommandSpendTimeThread() {
         if (calcCommandSpendTimeThreadStart.compareAndSet(false, true)) {
             new Thread(RedisMonitor::calcCommandSpendTime, "command-spend-time-calc").start();
