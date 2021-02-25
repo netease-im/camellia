@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.hbase;
 
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
 import com.netease.nim.camellia.redis.proxy.util.ParamUtils;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
@@ -146,12 +147,14 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
     @Override
     public IntegerReply zcard(byte[] key) {
         Long zcard = zSetMixClient.zcard(key);
+        RedisHBaseMonitor.incrZSetSize("zcard", zcard == null ? 0 : zcard);
         return new IntegerReply(zcard);
     }
 
     @Override
     public IntegerReply zcount(byte[] key, byte[] min, byte[] max) {
         Long zcount = zSetMixClient.zcount(key, min, max);
+        RedisHBaseMonitor.incrZSetSize("zcount", zcount == null ? 0 : zcount);
         return new IntegerReply(zcount);
     }
 
@@ -160,11 +163,13 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
         if (withscores != null) {
             if (Utils.checkStringIgnoreCase(withscores, RedisKeyword.WITHSCORES.name())) {
                 Set<Tuple> tuples = zSetMixClient.zrangeWithScores(key, Utils.bytesToNum(start), Utils.bytesToNum(stop));
+                RedisHBaseMonitor.incrZSetSize("zrangeWithScores", tuples == null ? 0 : tuples.size());
                 return ParamUtils.tuples2MultiBulkReply(tuples);
             }
             throw new IllegalArgumentException(Utils.syntaxError);
         } else {
             Set<byte[]> zrange = zSetMixClient.zrange(key, Utils.bytesToNum(start), Utils.bytesToNum(stop));
+            RedisHBaseMonitor.incrZSetSize("zrange", zrange == null ? 0 : zrange.size());
             return ParamUtils.collection2MultiBulkReply(zrange);
         }
     }
@@ -174,11 +179,13 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
         if (withscores != null) {
             if (Utils.checkStringIgnoreCase(withscores, RedisKeyword.WITHSCORES.name())) {
                 Set<Tuple> tuples = zSetMixClient.zrevrangeWithScores(key, Utils.bytesToNum(start), Utils.bytesToNum(stop));
+                RedisHBaseMonitor.incrZSetSize("zrevrangeWithScores", tuples == null ? 0 : tuples.size());
                 return ParamUtils.tuples2MultiBulkReply(tuples);
             }
             throw new IllegalArgumentException(Utils.syntaxError);
         } else {
             Set<byte[]> zrange = zSetMixClient.zrevrange(key, Utils.bytesToNum(start), Utils.bytesToNum(stop));
+            RedisHBaseMonitor.incrZSetSize("zrevrange", zrange == null ? 0 : zrange.size());
             return ParamUtils.collection2MultiBulkReply(zrange);
         }
     }
@@ -187,15 +194,22 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
     public MultiBulkReply zrangebyscore(byte[] key, byte[] min, byte[] max, byte[][] args) {
         ParamUtils.ZRangeParams params = ParamUtils.parseZRangeParams(args);
         if (!params.withLimit && !params.withScores) {
-            return ParamUtils.collection2MultiBulkReply(zSetMixClient.zrangeByScore(key, min, max));
+            Set<byte[]> set = zSetMixClient.zrangeByScore(key, min, max);
+            RedisHBaseMonitor.incrZSetSize("zrangeByScore", set == null ? 0 : set.size());
+            return ParamUtils.collection2MultiBulkReply(set);
         }
         if (params.withScores && !params.withLimit) {
-            return ParamUtils.tuples2MultiBulkReply(zSetMixClient.zrangeByScoreWithScores(key, min, max));
+            Set<Tuple> tuples = zSetMixClient.zrangeByScoreWithScores(key, min, max);
+            RedisHBaseMonitor.incrZSetSize("zrangeByScoreWithScores", tuples == null ? 0 : tuples.size());
+            return ParamUtils.tuples2MultiBulkReply(tuples);
         }
         if (!params.withScores) {
-            return ParamUtils.collection2MultiBulkReply(zSetMixClient.zrangeByScore(key, min, max, params.offset, params.count));
+            Set<byte[]> set = zSetMixClient.zrangeByScore(key, min, max, params.offset, params.count);
+            RedisHBaseMonitor.incrZSetSize("zrangeByScore", set == null ? 0 : set.size());
+            return ParamUtils.collection2MultiBulkReply(set);
         }
         Set<Tuple> tuples = zSetMixClient.zrangeByScoreWithScores(key, min, max, params.offset, params.count);
+        RedisHBaseMonitor.incrZSetSize("zrangeByScoreWithScores", tuples == null ? 0 : tuples.size());
         return ParamUtils.tuples2MultiBulkReply(tuples);
     }
 
@@ -203,15 +217,22 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
     public MultiBulkReply zrevrangebyscore(byte[] key, byte[] min, byte[] max, byte[][] args) {
         ParamUtils.ZRangeParams params = ParamUtils.parseZRangeParams(args);
         if (!params.withLimit && !params.withScores) {
-            return ParamUtils.collection2MultiBulkReply(zSetMixClient.zrevrangeByScore(key, min, max));
+            Set<byte[]> set = zSetMixClient.zrevrangeByScore(key, min, max);
+            RedisHBaseMonitor.incrZSetSize("zrevrangeByScore", set == null ? 0 : set.size());
+            return ParamUtils.collection2MultiBulkReply(set);
         }
         if (params.withScores && !params.withLimit) {
-            return ParamUtils.tuples2MultiBulkReply(zSetMixClient.zrevrangeByScoreWithScores(key, min, max));
+            Set<Tuple> tuples = zSetMixClient.zrevrangeByScoreWithScores(key, min, max);
+            RedisHBaseMonitor.incrZSetSize("zrevrangeByScoreWithScores", tuples == null ? 0 : tuples.size());
+            return ParamUtils.tuples2MultiBulkReply(tuples);
         }
         if (!params.withScores) {
-            return ParamUtils.collection2MultiBulkReply(zSetMixClient.zrevrangeByScore(key, min, max, params.offset, params.count));
+            Set<byte[]> set = zSetMixClient.zrevrangeByScore(key, min, max, params.offset, params.count);
+            RedisHBaseMonitor.incrZSetSize("zrevrangeByScore", set == null ? 0 : set.size());
+            return ParamUtils.collection2MultiBulkReply(set);
         }
         Set<Tuple> tuples = zSetMixClient.zrevrangeByScoreWithScores(key, min, max, params.offset, params.count);
+        RedisHBaseMonitor.incrZSetSize("zrevrangeByScoreWithScores", tuples == null ? 0 : tuples.size());
         return ParamUtils.tuples2MultiBulkReply(tuples);
     }
 
@@ -219,10 +240,13 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
     public MultiBulkReply zrangebylex(byte[] key, byte[] min, byte[] max, byte[][] args) {
         ParamUtils.ZRangeParams params = ParamUtils.parseZRangeParams(args);
         if (params.withLimit) {
-            Set<byte[]> bytes = zSetMixClient.zrangeByLex(key, min, max, params.offset, params.count);
-            return ParamUtils.collection2MultiBulkReply(bytes);
+            Set<byte[]> set = zSetMixClient.zrangeByLex(key, min, max, params.offset, params.count);
+            RedisHBaseMonitor.incrZSetSize("zrangeByLex", set == null ? 0 : set.size());
+            return ParamUtils.collection2MultiBulkReply(set);
         } else {
-            return ParamUtils.collection2MultiBulkReply(zSetMixClient.zrangeByLex(key, min, max));
+            Set<byte[]> set = zSetMixClient.zrangeByLex(key, min, max);
+            RedisHBaseMonitor.incrZSetSize("zrangeByLex", set == null ? 0 : set.size());
+            return ParamUtils.collection2MultiBulkReply(set);
         }
     }
 
@@ -230,40 +254,48 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
     public MultiBulkReply zrevrangebylex(byte[] key, byte[] min, byte[] max, byte[][] args) {
         ParamUtils.ZRangeParams params = ParamUtils.parseZRangeParams(args);
         if (!params.withLimit) {
-            return ParamUtils.collection2MultiBulkReply(zSetMixClient.zrevrangeByLex(key, min, max));
+            Set<byte[]> set = zSetMixClient.zrevrangeByLex(key, min, max);
+            RedisHBaseMonitor.incrZSetSize("zrevrangeByLex", set == null ? 0 : set.size());
+            return ParamUtils.collection2MultiBulkReply(set);
         } else {
-            Set<byte[]> bytes = zSetMixClient.zrevrangeByLex(key, min, max, params.offset, params.count);
-            return ParamUtils.collection2MultiBulkReply(bytes);
+            Set<byte[]> set = zSetMixClient.zrevrangeByLex(key, min, max, params.offset, params.count);
+            RedisHBaseMonitor.incrZSetSize("zrevrangeByLex", set == null ? 0 : set.size());
+            return ParamUtils.collection2MultiBulkReply(set);
         }
     }
 
     @Override
     public IntegerReply zremrangebyrank(byte[] key, byte[] start, byte[] stop) {
         Long zremrangeByRank = zSetMixClient.zremrangeByRank(key, Utils.bytesToNum(start), Utils.bytesToNum(stop));
+        RedisHBaseMonitor.incrZSetSize("zremrangeByRank", zremrangeByRank == null ? 0 : zremrangeByRank);
         return new IntegerReply(zremrangeByRank);
     }
 
     @Override
     public IntegerReply zremrangebyscore(byte[] key, byte[] min, byte[] max) {
         Long zremrangeByScore = zSetMixClient.zremrangeByScore(key, min, max);
+        RedisHBaseMonitor.incrZSetSize("zremrangeByScore", zremrangeByScore == null ? 0 : zremrangeByScore);
         return new IntegerReply(zremrangeByScore);
     }
 
     @Override
     public IntegerReply zremrangebylex(byte[] key, byte[] min, byte[] max) {
         Long zremrangeByLex = zSetMixClient.zremrangeByLex(key, min, max);
+        RedisHBaseMonitor.incrZSetSize("zremrangeByLex", zremrangeByLex == null ? 0 : zremrangeByLex);
         return new IntegerReply(zremrangeByLex);
     }
 
     @Override
     public IntegerReply zrank(byte[] key, byte[] member) {
         Long zrank = zSetMixClient.zrank(key, member);
+        RedisHBaseMonitor.incrZSetSize("zrank", zrank == null ? 0 : zrank);
         return new IntegerReply(zrank);
     }
 
     @Override
     public IntegerReply zrevrank(byte[] key, byte[] member) {
         Long zrevrank = zSetMixClient.zrevrank(key, member);
+        RedisHBaseMonitor.incrZSetSize("zrevrank", zrevrank == null ? 0 : zrevrank);
         return new IntegerReply(zrevrank);
     }
 
@@ -276,6 +308,7 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
     @Override
     public IntegerReply zlexcount(byte[] key, byte[] min, byte[] max) {
         Long zlexcount = zSetMixClient.zlexcount(key, min, max);
+        RedisHBaseMonitor.incrZSetSize("zlexcount", zlexcount == null ? 0 : zlexcount);
         return new IntegerReply(zlexcount);
     }
 }

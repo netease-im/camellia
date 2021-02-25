@@ -13,6 +13,8 @@ public class RedisHBaseStats {
     private List<Stats2> stats2List = new ArrayList<>();
     private List<QueueStats> queueStatsList = new ArrayList<>();
     private List<DegradedStats> degradedStatsList = new ArrayList<>();
+    private ZSetMemberSizeStats zSetMemberSizeStats = new ZSetMemberSizeStats();
+    private List<ZSetSizeStats> zSetSizeStatsList = new ArrayList<>();
 
     public List<Stats> getStatsList() {
         return statsList;
@@ -44,6 +46,22 @@ public class RedisHBaseStats {
 
     public void setDegradedStatsList(List<DegradedStats> degradedStatsList) {
         this.degradedStatsList = degradedStatsList;
+    }
+
+    public ZSetMemberSizeStats getzSetMemberSizeStats() {
+        return zSetMemberSizeStats;
+    }
+
+    public void setzSetMemberSizeStats(ZSetMemberSizeStats zSetMemberSizeStats) {
+        this.zSetMemberSizeStats = zSetMemberSizeStats;
+    }
+
+    public List<ZSetSizeStats> getzSetSizeStatsList() {
+        return zSetSizeStatsList;
+    }
+
+    public void setzSetSizeStatsList(List<ZSetSizeStats> zSetSizeStatsList) {
+        this.zSetSizeStatsList = zSetSizeStatsList;
     }
 
     public static class Stats {
@@ -137,6 +155,84 @@ public class RedisHBaseStats {
 
         public void setDesc(String desc) {
             this.desc = desc;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+        public void setCount(long count) {
+            this.count = count;
+        }
+    }
+
+    public static class ZSetMemberSizeStats {
+        private long thresholdExceededCount;
+        private long thresholdNotExceededCount;
+        private long maxSize;
+        private double avgSize;
+
+        public long getThresholdExceededCount() {
+            return thresholdExceededCount;
+        }
+
+        public void setThresholdExceededCount(long thresholdExceededCount) {
+            this.thresholdExceededCount = thresholdExceededCount;
+        }
+
+        public long getThresholdNotExceededCount() {
+            return thresholdNotExceededCount;
+        }
+
+        public void setThresholdNotExceededCount(long thresholdNotExceededCount) {
+            this.thresholdNotExceededCount = thresholdNotExceededCount;
+        }
+
+        public long getMaxSize() {
+            return maxSize;
+        }
+
+        public void setMaxSize(long maxSize) {
+            this.maxSize = maxSize;
+        }
+
+        public double getAvgSize() {
+            return avgSize;
+        }
+
+        public void setAvgSize(double avgSize) {
+            this.avgSize = avgSize;
+        }
+    }
+
+    public static class ZSetSizeStats {
+        private String method;
+        private long maxSize;
+        private double avgSize;
+        private long count;
+
+        public String getMethod() {
+            return method;
+        }
+
+        public void setMethod(String method) {
+            this.method = method;
+        }
+
+        public long getMaxSize() {
+            return maxSize;
+        }
+
+        public void setMaxSize(long maxSize) {
+            this.maxSize = maxSize;
+        }
+
+        public double getAvgSize() {
+            return avgSize;
+        }
+
+        public void setAvgSize(double avgSize) {
+            this.avgSize = avgSize;
         }
 
         public long getCount() {
