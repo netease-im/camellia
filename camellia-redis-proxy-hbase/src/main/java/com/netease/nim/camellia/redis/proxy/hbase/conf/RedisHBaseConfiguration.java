@@ -14,6 +14,11 @@ public class RedisHBaseConfiguration {
         return ProxyDynamicConf.getString("hbase.table.name", "nim:nim_camellia");
     }
 
+    //是否开启监控，RedisHBaseMonitor
+    public static boolean monitorEnable() {
+        return ProxyDynamicConf.getBoolean("camellia.redis.proxy.hbase.monitor.enable", true);
+    }
+
     //redis key前缀
     public static String redisKeyPrefix() {
         return ProxyDynamicConf.getString("redis.key.prefix", "c_");

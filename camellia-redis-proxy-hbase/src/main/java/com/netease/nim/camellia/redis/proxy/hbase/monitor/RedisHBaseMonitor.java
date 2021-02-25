@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.hbase.monitor;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.MaxValue;
 import org.slf4j.Logger;
@@ -10,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  *
@@ -19,48 +20,52 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RedisHBaseMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisHBaseMonitor.class);
-    private static ConcurrentHashMap<String, AtomicLong> map = new ConcurrentHashMap<>();
-    private static ConcurrentHashMap<String, AtomicLong> degradedMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, LongAdder> map = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, LongAdder> degradedMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Queue> queueMap = new ConcurrentHashMap<>();
     private static RedisHBaseStats redisHBaseStats = new RedisHBaseStats();
-    private static final AtomicLong thresholdExceededCount = new AtomicLong();
-    private static final AtomicLong thresholdNotExceededCount = new AtomicLong();
-    private static final AtomicLong zsetMemberSizeTotal = new AtomicLong();
+    private static final LongAdder thresholdExceededCount = new LongAdder();
+    private static final LongAdder thresholdNotExceededCount = new LongAdder();
+    private static final LongAdder zsetMemberSizeTotal = new LongAdder();
     private static final MaxValue zsetMemberMaxSize = new MaxValue();
 
     private static ConcurrentHashMap<String, MaxValue> zsetMaxSize = new ConcurrentHashMap<>();
-    private static ConcurrentHashMap<String, AtomicLong> zsetTotalSize = new ConcurrentHashMap<>();
-    private static ConcurrentHashMap<String, AtomicLong> zsetSizeCount = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, LongAdder> zsetTotalSize = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, LongAdder> zsetSizeCount = new ConcurrentHashMap<>();
 
     static {
         ExecutorUtils.scheduleAtFixedRate(RedisHBaseMonitor::calc, 1, 1, TimeUnit.MINUTES);
     }
 
     public static void incrZSetMemberSize(int size, boolean thresholdExceeded) {
+        if (!RedisHBaseConfiguration.monitorEnable()) return;
         if (thresholdExceeded) {
-            thresholdExceededCount.incrementAndGet();
+            thresholdExceededCount.increment();
         } else {
-            thresholdNotExceededCount.incrementAndGet();
+            thresholdNotExceededCount.increment();
         }
-        zsetMemberSizeTotal.addAndGet(size);
+        zsetMemberSizeTotal.add(size);
         zsetMemberMaxSize.update(size);
     }
 
     public static void incrZSetSize(String method, long size) {
-        zsetSizeCount.computeIfAbsent(method, k -> new AtomicLong()).incrementAndGet();
-        zsetTotalSize.computeIfAbsent(method, k -> new AtomicLong()).addAndGet(size);
+        if (!RedisHBaseConfiguration.monitorEnable()) return;
+        zsetSizeCount.computeIfAbsent(method, k -> new LongAdder()).increment();
+        zsetTotalSize.computeIfAbsent(method, k -> new LongAdder()).add(size);
         MaxValue maxSize = zsetMaxSize.computeIfAbsent(method, k -> new MaxValue());
         maxSize.update(size);
     }
 
     public static void incr(String method, String desc) {
+        if (!RedisHBaseConfiguration.monitorEnable()) return;
         String uniqueKey = method + "|" + desc;
-        AtomicLong count = map.computeIfAbsent(uniqueKey, k -> new AtomicLong());
-        count.incrementAndGet();
+        LongAdder count = map.computeIfAbsent(uniqueKey, k -> new LongAdder());
+        count.increment();
     }
 
     public static void incrDegraded(String desc) {
-        degradedMap.computeIfAbsent(desc, k -> new AtomicLong()).incrementAndGet();
+        if (!RedisHBaseConfiguration.monitorEnable()) return;
+        degradedMap.computeIfAbsent(desc, k -> new LongAdder()).increment();
     }
 
     public static void register(String name, Queue queue) {
@@ -138,27 +143,27 @@ public class RedisHBaseMonitor {
 
     private static void calc() {
         try {
-            ConcurrentHashMap<String, AtomicLong> map = RedisHBaseMonitor.map;
-            ConcurrentHashMap<String, AtomicLong> degradedMap = RedisHBaseMonitor.degradedMap;
+            ConcurrentHashMap<String, LongAdder> map = RedisHBaseMonitor.map;
+            ConcurrentHashMap<String, LongAdder> degradedMap = RedisHBaseMonitor.degradedMap;
             RedisHBaseMonitor.map = new ConcurrentHashMap<>();
             RedisHBaseMonitor.degradedMap = new ConcurrentHashMap<>();
 
             Map<String, Long> cacheHitMap = new HashMap<>();
             Map<String, Long> cacheMissMap = new HashMap<>();
             List<RedisHBaseStats.Stats> statsList = new ArrayList<>();
-            for (Map.Entry<String, AtomicLong> entry : map.entrySet()) {
+            for (Map.Entry<String, LongAdder> entry : map.entrySet()) {
                 RedisHBaseStats.Stats stats = new RedisHBaseStats.Stats();
                 String[] split = entry.getKey().split("\\|");
                 String method = split[0];
                 String desc = split[1];
                 stats.setMethod(method);
                 stats.setDesc(desc);
-                stats.setCount(entry.getValue().get());
+                stats.setCount(entry.getValue().sum());
                 statsList.add(stats);
                 if (desc.equals(OperationType.REDIS_ONLY.name())) {
-                    cacheHitMap.put(method, entry.getValue().get());
+                    cacheHitMap.put(method, entry.getValue().sum());
                 } else {
-                    cacheMissMap.put(method, entry.getValue().get());
+                    cacheMissMap.put(method, entry.getValue().sum());
                 }
             }
             List<RedisHBaseStats.Stats2> stats2List = new ArrayList<>();
@@ -193,27 +198,27 @@ public class RedisHBaseMonitor {
             }
 
             List<RedisHBaseStats.DegradedStats> degradedStatsList = new ArrayList<>();
-            for (Map.Entry<String, AtomicLong> entry : degradedMap.entrySet()) {
+            for (Map.Entry<String, LongAdder> entry : degradedMap.entrySet()) {
                 RedisHBaseStats.DegradedStats degradedStats = new RedisHBaseStats.DegradedStats();
                 degradedStats.setDesc(entry.getKey());
-                degradedStats.setCount(entry.getValue().get());
+                degradedStats.setCount(entry.getValue().sum());
                 degradedStatsList.add(degradedStats);
             }
 
             RedisHBaseStats.ZSetMemberSizeStats zSetMemberSizeStats = new RedisHBaseStats.ZSetMemberSizeStats();
-            zSetMemberSizeStats.setThresholdExceededCount(thresholdExceededCount.getAndSet(0L));
-            zSetMemberSizeStats.setThresholdNotExceededCount(thresholdNotExceededCount.getAndSet(0L));
+            zSetMemberSizeStats.setThresholdExceededCount(thresholdExceededCount.sumThenReset());
+            zSetMemberSizeStats.setThresholdNotExceededCount(thresholdNotExceededCount.sumThenReset());
             zSetMemberSizeStats.setMaxSize(zsetMemberMaxSize.getAndSet(0L));
             long totalCount = zSetMemberSizeStats.getThresholdExceededCount() + zSetMemberSizeStats.getThresholdNotExceededCount();
             if (totalCount > 0) {
-                zSetMemberSizeStats.setAvgSize(zsetMemberSizeTotal.getAndSet(0) * 1.0 / totalCount);
+                zSetMemberSizeStats.setAvgSize(zsetMemberSizeTotal.sumThenReset() * 1.0 / totalCount);
             } else {
                 zSetMemberSizeStats.setAvgSize(0.0);
             }
 
-            ConcurrentHashMap<String, AtomicLong> zrangeTotalSize = RedisHBaseMonitor.zsetTotalSize;
+            ConcurrentHashMap<String, LongAdder> zrangeTotalSize = RedisHBaseMonitor.zsetTotalSize;
             RedisHBaseMonitor.zsetTotalSize = new ConcurrentHashMap<>();
-            ConcurrentHashMap<String, AtomicLong> zrangeCount = RedisHBaseMonitor.zsetSizeCount;
+            ConcurrentHashMap<String, LongAdder> zrangeCount = RedisHBaseMonitor.zsetSizeCount;
             RedisHBaseMonitor.zsetSizeCount = new ConcurrentHashMap<>();
             ConcurrentHashMap<String, MaxValue> zrangeMaxSize = RedisHBaseMonitor.zsetMaxSize;
             RedisHBaseMonitor.zsetMaxSize = new ConcurrentHashMap<>();
@@ -225,19 +230,18 @@ public class RedisHBaseMonitor {
             for (String method : zrangeMethodSet) {
                 RedisHBaseStats.ZSetSizeStats zsetSizeStats = new RedisHBaseStats.ZSetSizeStats();
                 zsetSizeStats.setMethod(method);
-                AtomicLong total = zrangeTotalSize.get(method);
+                LongAdder total = zrangeTotalSize.get(method);
                 MaxValue max = zrangeMaxSize.get(method);
-                AtomicLong count = zrangeCount.get(method);
-                if (count == null || total == null || count.get() == 0) {
+                LongAdder count = zrangeCount.get(method);
+                if (count == null || total == null || count.sum() == 0) {
                     zsetSizeStats.setAvgSize(0);
                 } else {
-                    zsetSizeStats.setAvgSize(total.get() * 1.0 / count.get());
+                    zsetSizeStats.setAvgSize(total.sum() * 1.0 / count.sum());
                 }
                 zsetSizeStats.setMaxSize(max == null ? 0 : max.get());
-                zsetSizeStats.setCount(count == null ? 0 : count.get());
+                zsetSizeStats.setCount(count == null ? 0 : count.sum());
                 zSetSizeStatsList.add(zsetSizeStats);
             }
-
 
             RedisHBaseStats redisHBaseStats = new RedisHBaseStats();
             redisHBaseStats.setStatsList(statsList);
