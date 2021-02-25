@@ -11,6 +11,7 @@
 
 ### update
 * refactor camellia-redis-proxy-hbase, inconsistent to the old version, see [doc](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
+* optimize camellia-redis-proxy when open command spend time monitor
 
 ### fix
 * none

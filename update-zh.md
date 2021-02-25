@@ -11,6 +11,7 @@
 
 ### 更新
 * 重构camellia-redis-proxy-hbase，和老版本不兼容，见 [文档](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
+* 优化了camellia-redis-proxy开启命令耗时监控下的性能
 
 ### fix
 * 无
