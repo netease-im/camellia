@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.util.MaxValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,10 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -28,7 +27,6 @@ public class RedisMonitor {
     private static final Logger logger = LoggerFactory.getLogger(RedisMonitor.class);
 
     private static final AtomicBoolean initOk = new AtomicBoolean(false);
-    private static final AtomicBoolean calcCommandSpendTimeThreadStart = new AtomicBoolean(false);
 
     private static MonitorCallback monitorCallback;
 
@@ -40,19 +38,9 @@ public class RedisMonitor {
     private static boolean monitorEnable;
     private static boolean commandSpendTimeMonitorEnable;
 
-    private static final ConcurrentLinkedQueue<CommandSpendItem> queue = new ConcurrentLinkedQueue<>();
     private static final ConcurrentHashMap<String, LongAdder> commandSpendCountMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, LongAdder> commandSpendTotalMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, AtomicLong> commandSpendMaxMap = new ConcurrentHashMap<>();
-
-    private static class CommandSpendItem {
-        private final String command;
-        private final long spendNanoTime;
-        public CommandSpendItem(String command, long spendNanoTime) {
-            this.command = command;
-            this.spendNanoTime = spendNanoTime;
-        }
-    }
+    private static final ConcurrentHashMap<String, MaxValue> commandSpendMaxMap = new ConcurrentHashMap<>();
 
     public static void init(int seconds, boolean commandSpendTimeMonitorEnable, MonitorCallback monitorCallback) {
         if (initOk.compareAndSet(false, true)) {
@@ -60,9 +48,6 @@ public class RedisMonitor {
             ExecutorUtils.scheduleAtFixedRate(RedisMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
             RedisMonitor.monitorEnable = true;
             RedisMonitor.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
-            if (commandSpendTimeMonitorEnable) {
-                startCalcCommandSpendTimeThread();
-            }
             RedisMonitor.monitorCallback = monitorCallback;
             ProxyDynamicConf.registerCallback(RedisMonitor::reloadConf);
             reloadConf();
@@ -77,19 +62,9 @@ public class RedisMonitor {
         return monitorEnable && commandSpendTimeMonitorEnable;
     }
 
-    private static void startCalcCommandSpendTimeThread() {
-        if (calcCommandSpendTimeThreadStart.compareAndSet(false, true)) {
-            new Thread(RedisMonitor::calcCommandSpendTime, "command-spend-time-calc").start();
-        }
-    }
-
     private static void reloadConf() {
         RedisMonitor.monitorEnable = ProxyDynamicConf.monitorEnable(RedisMonitor.monitorEnable);
-        boolean commandSpendTimeMonitorEnable = ProxyDynamicConf.commandSpendTimeMonitorEnable(RedisMonitor.commandSpendTimeMonitorEnable);
-        if (commandSpendTimeMonitorEnable) {
-            startCalcCommandSpendTimeThread();
-        }
-        RedisMonitor.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
+        RedisMonitor.commandSpendTimeMonitorEnable = ProxyDynamicConf.commandSpendTimeMonitorEnable(RedisMonitor.commandSpendTimeMonitorEnable);
     }
 
     /**
@@ -114,29 +89,14 @@ public class RedisMonitor {
      * command spend time incr
      */
     public static void incrCommandSpendTime(String command, long spendNanoTime) {
-        if (!commandSpendTimeMonitorEnable || !monitorEnable) return;
-        queue.offer(new CommandSpendItem(command, spendNanoTime));
-    }
-
-    private static void calcCommandSpendTime() {
-        while (true) {
-            try {
-                CommandSpendItem item = queue.poll();
-                if (item == null) {
-                    TimeUnit.MILLISECONDS.sleep(100);
-                    continue;
-                }
-                LongAdder count = commandSpendCountMap.computeIfAbsent(item.command, k -> new LongAdder());
-                count.increment();
-                LongAdder total = commandSpendTotalMap.computeIfAbsent(item.command, k -> new LongAdder());
-                total.add(item.spendNanoTime);
-                AtomicLong max = commandSpendMaxMap.computeIfAbsent(item.command, k -> new AtomicLong(0));
-                if (item.spendNanoTime > max.get()) {
-                    max.set(item.spendNanoTime);
-                }
-            } catch (Exception e) {
-                logger.error("calc command spend time error", e);
-            }
+        try {
+            if (!commandSpendTimeMonitorEnable || !monitorEnable) return;
+            commandSpendCountMap.computeIfAbsent(command, k -> new LongAdder()).increment();
+            commandSpendTotalMap.computeIfAbsent(command, k -> new LongAdder()).add(spendNanoTime);
+            MaxValue maxValue = commandSpendMaxMap.computeIfAbsent(command, k -> new MaxValue());
+            maxValue.update(spendNanoTime);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -282,7 +242,7 @@ public class RedisMonitor {
                 String command = entry.getKey();
                 long count = entry.getValue().sumThenReset();
                 if (count == 0) continue;
-                AtomicLong nanoMax = commandSpendMaxMap.get(command);
+                MaxValue nanoMax = commandSpendMaxMap.get(command);
                 double maxSpendMs = 0;
                 if (nanoMax != null) {
                     maxSpendMs = nanoMax.getAndSet(0) / 1000000.0;
