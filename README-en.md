@@ -51,7 +51,7 @@ base on camellia-core and jedis，main class is CamelliaRedisTemplate, can invok
 support client shading/read-write-separate/double-write  
 [QUICK START](/docs/redis-template/redis-template.md)
 ### 4、camellia-redis-proxy  
-base on netty4 and camellia-core, support redis/redis-sentinel/redis-cluster  
+base on netty4, support redis/redis-sentinel/redis-cluster  
 support shading/read-write-separate/double-write on proxy, support custom command interceptor，big-key/hot-key/slow-command monitor, and so on  
 [QUICK START](/docs/redis-proxy/redis-proxy-en.md)  
 ### 5、camellia-hbase  

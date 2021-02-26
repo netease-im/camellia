@@ -51,7 +51,7 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 支持客户端分片/读写分离/双写  
 [快速开始](/docs/redis-template/redis-template.md)
 ### 4、camellia-redis-proxy  
-基于netty4和camellia-core，支持redis/redis-sentinel/redis-cluster  
+基于netty4开发，支持redis/redis-sentinel/redis-cluster  
 支持分片/读写分离/双写，支持自定义方法拦截、热key/大key/慢查询监控等  
 [快速开始](/docs/redis-proxy/redis-proxy-zh.md)  
 ### 5、camellia-hbase  
