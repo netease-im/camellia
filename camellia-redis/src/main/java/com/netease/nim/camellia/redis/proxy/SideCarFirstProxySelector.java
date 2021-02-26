@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * pick sid-car proxy first, other wise, will return the nearest proxy
+ * pick side-car proxy first, other wise, will return the nearest proxy
  * Created by caojiajun on 2020/12/16
  */
 public class SideCarFirstProxySelector implements IProxySelector {
