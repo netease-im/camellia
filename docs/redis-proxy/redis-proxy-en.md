@@ -1,7 +1,7 @@
 
 # camellia-redis-proxy([中文版](redis-proxy-zh.md))
 ## Instruction  
-camellia-redis-proxy is a high performance proxy for redis, which base on netty4 and camellia-core.  
+camellia-redis-proxy is a high performance proxy for redis, which base on netty4.  
 
 ## Features
 * support redis、redis sentinel、redis cluster

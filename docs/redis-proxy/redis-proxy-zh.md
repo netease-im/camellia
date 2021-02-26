@@ -1,7 +1,7 @@
 
-# camellia-redis-proxy([English](redis-proxy.md))
+# camellia-redis-proxy([English](redis-proxy-en.md))
 ## 介绍  
-camellia-redis-proxy是一款高性能的redis代理，使用netty4和camellia-core开发
+camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 
 ## 特性
 * 支持代理到redis、redis sentinel、redis cluster
