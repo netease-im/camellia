@@ -1,5 +1,64 @@
+## 配置示例
+所有配置均可在application.yml进行配置
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123   #proxy的密码
+  monitor-enable: true  #是否开启监控
+  monitor-interval-seconds: 60 #监控回调的间隔
+  monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback #监控回调类
+  command-spend-time-monitor-enable: true #是否开启请求耗时的监控，只有monitor-enable=true才有效
+  slow-command-threshold-millis-time: 1000 #慢查询的阈值，单位毫秒，只有command-spend-time-monitor-enable=true才有效
+  slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback #慢查询的回调类
+  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor #方法拦截器
+  hot-key-monitor-enable: true #是否监控热key
+  hot-key-monitor-config:
+    check-millis: 1000 #热key的检查周期
+    check-threshold: 10 #热key的阈值，检查周期内请求次数超过该阈值被判定为热key
+    check-cache-max-capacity: 1000 #检查的计数器集合的size，本身是LRU的
+    max-hot-key-count: 100 #每次回调的热key个数的最大值（前N个）
+    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback #热key的回调类
+  hot-key-cache-enable: true #热key缓存开关
+  hot-key-cache-config:
+    counter-check-millis: 1000 #检查周期，单位毫秒
+    counter-check-threshold: 5 #检查阈值，超过才算热key，才触发热key的缓存
+    counter-max-capacity: 1000 #检查计数器集合的size，本身是LRU的
+    need-cache-null: true #是否缓存null
+    cache-max-capacity: 1000 #缓存集合的size，本身是LRU的
+    cache-expire-millis: 5000 #缓存时间，单位毫秒
+    hot-key-cache-stats-callback-interval-seconds: 20 #热key缓存的统计数据回调周期
+    hot-key-cache-stats-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.LoggingHotKeyCacheStatsCallback #热key缓存的回调类
+    hot-key-cache-key-checker-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.DummyHotKeyCacheKeyChecker #判断这个key是否需要缓存的接口
+  big-key-monitor-enable: true #大key检测
+  big-key-monitor-config:
+    string-size-threshold: 10 #字符串类型，value大小超过多少认为是大key
+    hash-size-threshold: 10 #hash类型，集合大小超过多少认为是大key
+    zset-size-threshold: 10 #zset类型，集合大小超过多少认为是大key
+    list-size-threshold: 10 #list类型，集合大小超过多少认为是大key
+    set-size-threshold: 10 #set类型，集合大小超过多少认为是大key
+    big-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.bigkey.LoggingBigKeyMonitorCallback #大key的回调类
+  transpond:
+    type: local #使用本地配置
+    local:
+      resource: redis://@127.0.0.1:6379 #转发的redis地址
+    redis-conf:
+      multi-write-mode: first_resource_only #双写的模式，默认第一个地址返回就返回
+      shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc #分片函数
+
+camellia-redis-zk-registry: #需要引入相关依赖才有效
+  enable: false #是否注册到zk
+  zk-url: 127.0.0.1:2181 #zk地址
+  base-path: /camellia #注册到zk的base-path
+```
+
 ## 支持的动态配置及其含义
-* 动态配置文件camellia-redis-proxy.properties，所有参数参见ProxyDynamicConf
+* application.yml的配置在服务启动后加载，且加载后不可变；对于其中部分配置，可以使用动态配置的方式进行复写，从而做到配置的动态变更
+* 动态配置文件camellia-redis-proxy.properties，所有参数参见ProxyDynamicConf.java
 * 修改配置文件后，默认10分钟reload一次，或者你可以调用console接口去reload，console默认端口是16379，接口是http://127.0.0.1:16379/reload
 * 或者你也可以调用ProxyDynamicConf.reload()方法来reload配置
 * 此外你可以使用ProxyDynamicConf来设置和获取自定义的其他配置，例子：你在camellia-redis-proxy.properties添加了"k=v"，则你可以调用ProxyDynamicConf.getString("k")获取到"v"，具体详见ProxyDynamicConf类
