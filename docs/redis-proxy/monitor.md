@@ -1,6 +1,6 @@
 ## 监控数据的获取
-* 你可以自己实现各项监控对外的callback来获取到监控数据
-* 此外你也可以请求console来获取，默认端口是16379，接口是http://127.0.0.1:16379/monitor   
+* 你可以自己通过实现各项监控功能对外暴露的callback来获取到监控数据
+* 此外你也可以请求proxy的console（一个简单的http-server）来获取，默认端口是16379，具体接口是http://127.0.0.1:16379/monitor   
 * /monitor获取的监控数据的刷新周期取决于application.yml里的monitor-interval-seconds配置  
 * /monitor获取到的监控数据是一个json，如[示例](monitor.json)
 ## monitor.json字段含义解析

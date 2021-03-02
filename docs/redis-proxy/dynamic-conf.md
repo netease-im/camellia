@@ -4,7 +4,7 @@
 * 或者你也可以调用ProxyDynamicConf.reload()方法来reload配置
 * 此外你可以使用ProxyDynamicConf来设置和获取自定义的其他配置，例子：你在camellia-redis-proxy.properties添加了"k=v"，则你可以调用ProxyDynamicConf.getString("k")获取到"v"，具体详见ProxyDynamicConf类
 ```
-#自动reload的间隔，默认600s，服务启动时会读取改配置
+#自动reload的间隔，默认600s，服务启动时会读取该配置
 dynamic.conf.reload.interval.seconds=600
 
 

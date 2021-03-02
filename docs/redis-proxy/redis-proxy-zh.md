@@ -9,7 +9,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持阻塞式命令，如BLPOP/BRPOP/BRPOPLPUSH/BZPOPMIN/BZPOPMAX等
 * 支持pubsub命令
 * 支持事务命令（MULTI/EXEC/DISCARD/WATCH/UNWATCH），当前仅当代理到redis/redis-sentinel且无分片/无读写分离时支持
-* 支持redis5.0的Streams
+* 支持redis5.0的Streams命令
 * 支持自定义分片
 * 支持读写分离
 * 支持双（多）写
@@ -22,10 +22,14 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持热key监控，支持设置HotKeyMonitorCallback
 * 支持热key在proxy层的本地缓存（仅支持GET命令），支持设置HotKeyCacheStatsCallback
 * 支持大key监控，支持设置BigKeyMonitorCallback
+* 提供了一个httpAPI用于获取监控数据，参见：[监控](monitor.md)
 * 提供了一个spring-boot-starter，可以快速搭建proxy集群
 * 提供了一个默认的注册发现实现组件（依赖zookeeper），如果端侧是java，则可以很简单的将JedisPool替换为RedisProxyJedisPool，即可接入redis proxy  
 * 提供了一个spring-boot-starter用于SpringRedisTemplate以注册发现模式接入proxy
 * 部分参数支持动态变更，参见：[动态配置](dynamic-conf.md)
+
+## 性能测试报告
+[基于v1.0.19的性能测试报告](performance-report-8.md)
 
 ## 支持的命令
 * 完整支持
