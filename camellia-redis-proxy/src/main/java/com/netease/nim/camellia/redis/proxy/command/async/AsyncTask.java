@@ -35,7 +35,7 @@ public class AsyncTask {
         this.command = command;
         this.taskQueue = taskQueue;
         this.commandSpendTimeConfig = commandSpendTimeConfig;
-        if (this.commandSpendTimeConfig != null) {
+        if (RedisMonitor.isCommandSpendTimeMonitorEnable()) {
             startTime = System.nanoTime();
         }
         this.bigKeyHunter = bigKeyHunter;
@@ -47,10 +47,12 @@ public class AsyncTask {
 
     public void replyCompleted(Reply reply, boolean fromCache) {
         try {
-            if (commandSpendTimeConfig != null) {
+            if (startTime > 0) {
                 long spendNanoTime = System.nanoTime() - startTime;
-                long slowCommandThresholdMillisTime = commandSpendTimeConfig.getSlowCommandThresholdMillisTime();
-                if (!command.isBlocking() && spendNanoTime > slowCommandThresholdMillisTime * 1000000L) {
+                RedisMonitor.incrCommandSpendTime(command.getName(), spendNanoTime);
+                if (commandSpendTimeConfig != null && spendNanoTime > commandSpendTimeConfig.getSlowCommandThresholdNanoTime()
+                        && !command.isBlocking()) {
+                    long slowCommandThresholdMillisTime = commandSpendTimeConfig.getSlowCommandThresholdMillisTime();
                     double spendMs = spendNanoTime / 1000000.0;
                     SlowCommandMonitor.slowCommand(command, spendMs, slowCommandThresholdMillisTime);
                     if (commandSpendTimeConfig.getSlowCommandMonitorCallback() != null) {
@@ -62,7 +64,6 @@ public class AsyncTask {
                         }
                     }
                 }
-                RedisMonitor.incrCommandSpendTime(command.getName(), spendNanoTime);
             }
             if (logger.isDebugEnabled()) {
                 logger.debug("AsyncTask replyCompleted, reply = {}, consid = {}", reply.getClass().getSimpleName(), taskQueue.getChannelInfo().getConsid());

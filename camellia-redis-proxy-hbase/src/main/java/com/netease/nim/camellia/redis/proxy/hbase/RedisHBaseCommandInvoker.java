@@ -103,18 +103,16 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
                 if (startTime > 0) {
                     long spendNanoTime = System.nanoTime() - startTime;
                     RedisMonitor.incrCommandSpendTime(command.getName(), spendNanoTime);
-                    if (this.commandSpendTimeConfig != null) {
+                    if (this.commandSpendTimeConfig != null && spendNanoTime > this.commandSpendTimeConfig.getSlowCommandThresholdNanoTime()) {
                         double spendMillis = spendNanoTime / 1000000.0;
                         long slowCommandThresholdMillisTime = this.commandSpendTimeConfig.getSlowCommandThresholdMillisTime();
-                        if (spendMillis > slowCommandThresholdMillisTime) {
-                            SlowCommandMonitor.slowCommand(command, spendMillis, slowCommandThresholdMillisTime);
-                            if (this.commandSpendTimeConfig.getSlowCommandMonitorCallback() != null) {
-                                try {
-                                    this.commandSpendTimeConfig.getSlowCommandMonitorCallback().callback(command, reply,
-                                            spendMillis, slowCommandThresholdMillisTime);
-                                } catch (Exception e) {
-                                    ErrorLogCollector.collect(RedisHBaseCommandInvoker.class, "SlowCommandCallback error", e);
-                                }
+                        SlowCommandMonitor.slowCommand(command, spendMillis, slowCommandThresholdMillisTime);
+                        if (this.commandSpendTimeConfig.getSlowCommandMonitorCallback() != null) {
+                            try {
+                                this.commandSpendTimeConfig.getSlowCommandMonitorCallback().callback(command, reply,
+                                        spendMillis, slowCommandThresholdMillisTime);
+                            } catch (Exception e) {
+                                ErrorLogCollector.collect(RedisHBaseCommandInvoker.class, "SlowCommandCallback error", e);
                             }
                         }
                     }

@@ -35,9 +35,7 @@ public class SlowCommandMonitor {
             slowCommandStats.keys = command.getKeysStr();
             slowCommandStats.spendMillis = spendMillis;
             slowCommandStats.thresholdMillis = thresholdMillis;
-            while (!queue.offer(slowCommandStats)) {
-                queue.poll();
-            }
+            queue.offer(slowCommandStats);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
