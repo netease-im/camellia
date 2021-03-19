@@ -5,6 +5,17 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
+# 1.0.21（2020/03/xx）
+### 新增
+* 无
+
+### 更新
+* camellia-redis-proxy通过动态配置文件关闭RT监控时同步关闭慢查询监控，和yml配置逻辑保持一致
+* camellia-spring-redis-{zk,eureka}-discovery-spring-boot-starter增加开关（默认开启）
+
+### fix
+* 无
+
 # 1.0.20（2020/02/26）
 ### 新增
 * 无

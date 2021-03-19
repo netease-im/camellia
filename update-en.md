@@ -5,6 +5,17 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
+# 1.0.21（2020/03/xx）
+### add
+* none
+
+### update
+* when camellia-redis-proxy close RT monitor by DynamicConf, slow-command-monitor will close either, same logic to yml
+* camellia-spring-redis-{zk,eureka}-discovery-spring-boot-starter add open-off config, default open
+
+### fix
+* none
+
 # 1.0.20（2020/02/26）
 ### add
 * none
