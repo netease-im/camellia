@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "camellia-spring-redis-eureka-discovery")
 public class SpringRedisEurekaDiscoveryProperties {
+    private boolean enable = true;
     private String applicationName;
     private Long bid;
     private String bgroup;
@@ -17,6 +18,14 @@ public class SpringRedisEurekaDiscoveryProperties {
     private String defaultRegion = "default";
     private int refreshIntervalSeconds = 5;
     private RedisConf redisConf = new RedisConf();
+
+    public boolean isEnable() {
+        return enable;
+    }
+
+    public void setEnable(boolean enable) {
+        this.enable = enable;
+    }
 
     public String getApplicationName() {
         return applicationName;

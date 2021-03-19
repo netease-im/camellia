@@ -8,6 +8,7 @@ import com.netease.nim.camellia.spring.redis.base.RedisProxyRedisConnectionFacto
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -20,6 +21,7 @@ import redis.clients.jedis.JedisPoolConfig;
  */
 @Configuration
 @EnableConfigurationProperties({SpringRedisZkDiscoveryProperties.class})
+@ConditionalOnExpression("${camellia-spring-redis-zk-discovery.enable:true}")
 public class SpringRedisZkDiscoveryConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(SpringRedisZkDiscoveryConfiguration.class);
 

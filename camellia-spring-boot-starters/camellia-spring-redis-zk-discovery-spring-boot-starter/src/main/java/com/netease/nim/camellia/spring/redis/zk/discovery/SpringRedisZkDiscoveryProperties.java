@@ -10,12 +10,21 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "camellia-spring-redis-zk-discovery")
 public class SpringRedisZkDiscoveryProperties {
 
+    private boolean enable = true;
     private String applicationName;
     private Long bid;
     private String bgroup;
     private String password;
     private ZkConf zkConf = new ZkConf();
     private RedisConf redisConf = new RedisConf();
+
+    public boolean isEnable() {
+        return enable;
+    }
+
+    public void setEnable(boolean enable) {
+        this.enable = enable;
+    }
 
     public String getApplicationName() {
         return applicationName;

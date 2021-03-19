@@ -8,6 +8,7 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -21,6 +22,7 @@ import redis.clients.jedis.JedisPoolConfig;
  */
 @Configuration
 @EnableConfigurationProperties({SpringRedisEurekaDiscoveryProperties.class})
+@ConditionalOnExpression("${camellia-spring-redis-eureka-discovery.enable:true}")
 public class SpringRedisEurekaDiscoveryConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(SpringRedisEurekaDiscoveryConfiguration.class);
