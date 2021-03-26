@@ -114,10 +114,10 @@
 
 ### update
 * optimize the fast fail policy when redis-cluster nodes down in camellia-redis-proxy
-* camellia-redis-proxy renew slot-node in async，fix a bug when redis-cluster renew slot-node (from 1.0.9)
+* camellia-redis-proxy renew slot-node in async
 
 ### fix
-* none
+* fix a bug when redis-cluster renew slot-node (from 1.0.9)
 
 # 1.0.11（2020/12/09）
 ### add

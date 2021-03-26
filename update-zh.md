@@ -113,10 +113,10 @@
 
 ### 更新
 * 优化了camellia-redis-proxy在代理redis-cluster时后端redis宕机时的快速失败策略
-* camellia-redis-proxy刷新后端slot分布信息的操作改成异步执行，同时fix了一个redis-cluster刷新slot信息的一个bug（1.0.9时引入）
+* camellia-redis-proxy刷新后端slot分布信息的操作改成异步执行
 
 ### fix
-* 无
+* 修复了一个redis-cluster刷新slot信息的一个bug（1.0.9时引入）
 
 # 1.0.11（2020/12/09）
 ### 新增
