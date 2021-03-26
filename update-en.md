@@ -12,6 +12,7 @@
 ### update
 * when camellia-redis-proxy close RT monitor by DynamicConf, slow-command-monitor will close either, same logic to yml
 * camellia-spring-redis-{zk,eureka}-discovery-spring-boot-starter add open-off config, default open
+* RedisProxyJedisPool add param of jedisPoolLazyInit to lazy init jedisPool of proxy, to reduce initial time of RedisProxyJedisPool, default open, default init 16 jedisPool of proxy first
 
 ### fix
 * none

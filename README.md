@@ -1,7 +1,7 @@
 # camellia framework（[ENGLISH](README-en.md)）
 Camellia是网易云信开发的服务器基础组件，所有模块均已应用于网易云信线上环境
 
-<img src="/docs/logo.png" width = "500"/>
+<img src="/docs/img/logo.png" width = "500"/>
  
 ![GitHub](https://img.shields.io/badge/license-MIT-green.svg)
 ![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.netease.nim/camellia/badge.svg)

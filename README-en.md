@@ -1,7 +1,7 @@
 # camellia framework（[中文版](README.md)）
 Camellia is originally develop as basic architecture for netease-yunxin's servers，all the modules is running in netease-yunxin's online-env.
 
-<img src="/docs/logo.png" width = "500"/>
+<img src="/docs/img/logo.png" width = "500"/>
  
 ![GitHub](https://img.shields.io/badge/license-MIT-green.svg)
 ![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.netease.nim/camellia/badge.svg)

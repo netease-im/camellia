@@ -12,6 +12,7 @@
 ### 更新
 * camellia-redis-proxy通过动态配置文件关闭RT监控时同步关闭慢查询监控，和yml配置逻辑保持一致
 * camellia-spring-redis-{zk,eureka}-discovery-spring-boot-starter增加开关（默认开启）
+* RedisProxyJedisPool增加jedisPoolLazyInit参数用于延迟初始化jedisPool，以提高RedisProxyJedisPool的初始化速度，默认开启，默认先初始化优先级最高的16个proxy的jedisPool
 
 ### fix
 * 无
