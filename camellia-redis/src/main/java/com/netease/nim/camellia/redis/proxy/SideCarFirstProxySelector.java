@@ -165,4 +165,26 @@ public class SideCarFirstProxySelector implements IProxySelector {
         proxySet.addAll(proxySetOtherRegion);
         return proxySet;
     }
+
+    @Override
+    public List<Proxy> sort(List<Proxy> list) {
+        List<Proxy> shuffleList = new ArrayList<>(list);
+        SideCarFirstProxySelector selector = new SideCarFirstProxySelector(localhost, regionResolver);
+        for (Proxy proxy : shuffleList) {
+            selector.add(proxy);
+        }
+        List<Proxy> ret = new ArrayList<>(list.size());
+        if (selector.sideCarProxy != null) {
+            ret.add(selector.sideCarProxy);
+        }
+        List<Proxy> proxySetSameRegion = new ArrayList<>(selector.proxySetSameRegion);
+        Collections.shuffle(proxySetSameRegion);
+        List<Proxy> proxySetOtherRegion = new ArrayList<>(selector.proxySetOtherRegion);
+        Collections.shuffle(proxySetOtherRegion);
+        ret.addAll(proxySetSameRegion);
+        ret.addAll(proxySetOtherRegion);
+        return ret;
+    }
+
+
 }

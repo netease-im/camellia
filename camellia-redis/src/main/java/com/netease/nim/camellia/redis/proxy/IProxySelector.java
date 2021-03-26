@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -17,4 +18,6 @@ public interface IProxySelector {
     void remove(Proxy proxy);
 
     Set<Proxy> getAll();
+
+    List<Proxy> sort(List<Proxy> list);
 }

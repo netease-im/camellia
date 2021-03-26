@@ -54,9 +54,29 @@ public class SpringRedisZkDiscoveryConfiguration {
         Long bid = properties.getBid();
         String bgroup = properties.getBgroup();
         if (bid == null || bid < 0 || bgroup == null) {
-            return new RedisProxyJedisPool(zkProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sideCarFirst, regionResolver);
+            return new RedisProxyJedisPool.Builder()
+                    .proxyDiscovery(zkProxyDiscovery)
+                    .poolConfig(poolConfig)
+                    .timeout(redisConf.getTimeout())
+                    .password(properties.getPassword())
+                    .sideCarFirst(sideCarFirst)
+                    .regionResolver(regionResolver)
+                    .jedisPoolLazyInit(zkConf.isJedisPoolLazyInit())
+                    .jedisPoolInitialSize(zkConf.getJedisPoolInitialSize())
+                    .build();
         } else {
-            return new RedisProxyJedisPool(bid, bgroup, zkProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sideCarFirst, regionResolver);
+            return new RedisProxyJedisPool.Builder()
+                    .bid(bid)
+                    .bgroup(bgroup)
+                    .proxyDiscovery(zkProxyDiscovery)
+                    .poolConfig(poolConfig)
+                    .timeout(redisConf.getTimeout())
+                    .password(properties.getPassword())
+                    .sideCarFirst(sideCarFirst)
+                    .regionResolver(regionResolver)
+                    .jedisPoolLazyInit(zkConf.isJedisPoolLazyInit())
+                    .jedisPoolInitialSize(zkConf.getJedisPoolInitialSize())
+                    .build();
         }
     }
 

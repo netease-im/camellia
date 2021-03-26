@@ -47,9 +47,29 @@ public class SpringRedisEurekaDiscoveryConfiguration {
         Long bid = properties.getBid();
         String bgroup = properties.getBgroup();
         if (bid == null || bid < 0 || bgroup == null) {
-            return new RedisProxyJedisPool(eurekaProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sideCarFirst, regionResolver);
+            return new RedisProxyJedisPool.Builder()
+                    .proxyDiscovery(eurekaProxyDiscovery)
+                    .poolConfig(poolConfig)
+                    .timeout(redisConf.getTimeout())
+                    .password(properties.getPassword())
+                    .sideCarFirst(sideCarFirst)
+                    .regionResolver(regionResolver)
+                    .jedisPoolInitialSize(properties.getJedisPoolInitialSize())
+                    .jedisPoolLazyInit(properties.isJedisPoolLazyInit())
+                    .build();
         } else {
-            return new RedisProxyJedisPool(bid, bgroup, eurekaProxyDiscovery, poolConfig, redisConf.getTimeout(), properties.getPassword(), sideCarFirst, regionResolver);
+            return new RedisProxyJedisPool.Builder()
+                    .bid(bid)
+                    .bgroup(bgroup)
+                    .proxyDiscovery(eurekaProxyDiscovery)
+                    .poolConfig(poolConfig)
+                    .timeout(redisConf.getTimeout())
+                    .password(properties.getPassword())
+                    .sideCarFirst(sideCarFirst)
+                    .regionResolver(regionResolver)
+                    .jedisPoolInitialSize(properties.getJedisPoolInitialSize())
+                    .jedisPoolLazyInit(properties.isJedisPoolLazyInit())
+                    .build();
         }
     }
 

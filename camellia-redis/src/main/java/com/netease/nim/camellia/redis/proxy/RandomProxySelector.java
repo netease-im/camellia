@@ -3,10 +3,7 @@ package com.netease.nim.camellia.redis.proxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -74,5 +71,12 @@ public class RandomProxySelector implements IProxySelector {
     @Override
     public Set<Proxy> getAll() {
         return new HashSet<>(proxySet);
+    }
+
+    @Override
+    public List<Proxy> sort(List<Proxy> list) {
+        List<Proxy> ret = new ArrayList<>(list);
+        Collections.shuffle(ret);
+        return ret;
     }
 }

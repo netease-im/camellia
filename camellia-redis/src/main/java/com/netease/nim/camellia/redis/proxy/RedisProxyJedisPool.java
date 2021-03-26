@@ -25,6 +25,8 @@ public class RedisProxyJedisPool extends JedisPool {
     private static final Logger logger = LoggerFactory.getLogger(RedisProxyJedisPool.class);
     private static final AtomicLong idGenerator = new AtomicLong(0);
     private static final int defaultRefreshSeconds = 60;
+    private static final boolean defaultJedisPoolLazyInit = true;
+    private static final int defaultJedisPoolInitialSize = 16;
     private static final int defaultTimeout = 2000;
     private static final int defaultMaxRetry = 5;
     private static final boolean defaultSideCarFirst = false;
@@ -50,6 +52,8 @@ public class RedisProxyJedisPool extends JedisPool {
     private final int maxRetry;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(RedisProxyJedisPool.class));
     private final IProxySelector proxySelector;
+    private final boolean jedisPoolLazyInit;
+    private final int jedisPoolInitialSize;
 
     public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery) {
         this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry, defaultSideCarFirst, defaultLocalHost);
@@ -167,8 +171,17 @@ public class RedisProxyJedisPool extends JedisPool {
     public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
                                int timeout, String password, int refreshSeconds, int maxRetry, boolean sideCarFirst, String localhost,
                                RegionResolver regionResolver, IProxySelector proxySelector) {
+        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, refreshSeconds, maxRetry, sideCarFirst, localhost, regionResolver,
+                proxySelector, defaultJedisPoolLazyInit, defaultJedisPoolInitialSize);
+    }
+
+    public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
+                               int timeout, String password, int refreshSeconds, int maxRetry, boolean sideCarFirst, String localhost,
+                               RegionResolver regionResolver, IProxySelector proxySelector, boolean jedisPoolLazyInit, int jedisPoolInitialSize) {
         this.bid = bid;
         this.bgroup = bgroup;
+        this.jedisPoolLazyInit = jedisPoolLazyInit;
+        this.jedisPoolInitialSize = jedisPoolInitialSize;
         if (proxyDiscovery == null) {
             throw new IllegalArgumentException("proxyDiscovery is null");
         }
@@ -194,8 +207,13 @@ public class RedisProxyJedisPool extends JedisPool {
         this.password = password;
         this.maxRetry = maxRetry;
         init();
-        scheduledExecutorService.scheduleAtFixedRate(new RefreshThread(this),
-                refreshSeconds, refreshSeconds, TimeUnit.SECONDS);
+        if (jedisPoolLazyInit) {
+            scheduledExecutorService.scheduleAtFixedRate(new RefreshThread(this),
+                    5, refreshSeconds, TimeUnit.SECONDS);
+        } else {
+            scheduledExecutorService.scheduleAtFixedRate(new RefreshThread(this),
+                    refreshSeconds, refreshSeconds, TimeUnit.SECONDS);
+        }
         RedisProxyJedisPoolContext.init(this);
     }
 
@@ -209,6 +227,10 @@ public class RedisProxyJedisPool extends JedisPool {
         private String password;//密码
         private int refreshSeconds = defaultRefreshSeconds;//兜底的从proxyDiscovery刷新proxy列表的间隔
         private int maxRetry = defaultMaxRetry;//获取jedis时的重试次数
+        //因为每个proxy都要初始化一个JedisPool，当proxy数量很多的时候，可能会引起RedisProxyJedisPool初始化过慢
+        //若开启jedisPoolLazyInit，则会根据proxySelector策略优先初始化jedisPoolInitialSize个proxy，剩余proxy会延迟初始化，从而加快RedisProxyJedisPool的初始化过程
+        private boolean jedisPoolLazyInit = defaultJedisPoolLazyInit;//是否需要延迟初始化jedisPool，默认false，如果延迟初始化，则一开始会初始化少量的proxy对应的jedisPool，等兜底线程扫码到时再初始化所有proxy对应的jedisPool
+        private int jedisPoolInitialSize = defaultJedisPoolInitialSize;//延迟初始化jedisPool时，一开始初始化的proxy个数
         //以下参数用于设置proxy的选择策略
         //当显式的指定了proxySelector
         //--则使用自定义的proxy选择策略
@@ -287,9 +309,19 @@ public class RedisProxyJedisPool extends JedisPool {
             return this;
         }
 
+        public Builder jedisPoolLazyInit(boolean jedisPoolLazyInit) {
+            this.jedisPoolLazyInit = jedisPoolLazyInit;
+            return this;
+        }
+
+        public Builder jedisPoolInitialSize(int jedisPoolInitialSize) {
+            this.jedisPoolInitialSize = jedisPoolInitialSize;
+            return this;
+        }
+
         public RedisProxyJedisPool build() {
             return new RedisProxyJedisPool(bid, bgroup, proxyDiscovery, poolConfig, timeout, password,
-                    refreshSeconds, maxRetry, sideCarFirst, localhost, regionResolver, proxySelector);
+                    refreshSeconds, maxRetry, sideCarFirst, localhost, regionResolver, proxySelector, jedisPoolLazyInit, jedisPoolInitialSize);
         }
     }
 
@@ -377,8 +409,20 @@ public class RedisProxyJedisPool extends JedisPool {
         if (list == null || list.isEmpty()) {
             throw new IllegalArgumentException("proxy list is empty");
         }
-        for (Proxy proxy : list) {
-            add(proxy);
+        if (jedisPoolLazyInit && list.size() > jedisPoolInitialSize) {
+            List<Proxy> sortedList = proxySelector.sort(list);
+            int i = 0;
+            for (Proxy proxy : sortedList) {
+                add(proxy);
+                i ++;
+                if (i >= jedisPoolInitialSize) {
+                    break;
+                }
+            }
+        } else {
+            for (Proxy proxy : list) {
+                add(proxy);
+            }
         }
         this.proxyDiscovery.setCallback(callback);
     }
