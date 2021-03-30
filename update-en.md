@@ -94,7 +94,7 @@
 * when RedisProxyJedisPool's RefreshThread refresh proxy set, event ProxySelector hold this proxy, RefreshThread still call add method, avoid some times' timeout of proxy cause proxy not load balance
 
 ### fix
-* none
+* fix a bug of RedisProxyJedisPool, low probability, may cause error of 'Could not get a resource from the pool'(from v1.0.14)
 
 # 1.0.13（2020/12/18）
 ### add

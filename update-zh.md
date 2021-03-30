@@ -15,7 +15,7 @@
 * RedisProxyJedisPool增加jedisPoolLazyInit参数用于延迟初始化jedisPool，以提高RedisProxyJedisPool的初始化速度，默认开启，默认先初始化优先级最高的16个proxy的jedisPool
 
 ### fix
-* 无
+* fix了RedisProxyJedisPool一个bug，概率极低，会导致异常"Could not get a resource from the pool"（1.0.14时引入）
 
 # 1.0.20（2020/02/26）
 ### 新增
