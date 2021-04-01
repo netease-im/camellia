@@ -126,7 +126,7 @@ public class AsyncCamelliaRedisTemplateChooser {
         } else {
             String resourceTableFilePath = local.getResourceTableFilePath();
             if (resourceTableFilePath != null) {
-                localInstance = new AsyncCamelliaRedisTemplate(env, resourceTableFilePath);
+                localInstance = new AsyncCamelliaRedisTemplate(env, resourceTableFilePath, local.getCheckIntervalMillis());
             }
         }
         if (localInstance == null && throwError) {

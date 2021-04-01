@@ -55,6 +55,7 @@ public class CamelliaTranspondProperties {
     public static class LocalProperties {
         private ResourceTable resourceTable;
         private String resourceTableFilePath;
+        private long checkIntervalMillis = Constants.Remote.checkIntervalMillis;
 
         public ResourceTable getResourceTable() {
             return resourceTable;
@@ -70,6 +71,14 @@ public class CamelliaTranspondProperties {
 
         public void setResourceTableFilePath(String resourceTableFilePath) {
             this.resourceTableFilePath = resourceTableFilePath;
+        }
+
+        public long getCheckIntervalMillis() {
+            return checkIntervalMillis;
+        }
+
+        public void setCheckIntervalMillis(long checkIntervalMillis) {
+            this.checkIntervalMillis = checkIntervalMillis;
         }
     }
 

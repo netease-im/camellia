@@ -68,7 +68,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         this(env, new LocalCamelliaApi(resourceTable), defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis, false);
     }
 
-    public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, String resourceTableFilePath) {
+    public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, String resourceTableFilePath, long checkIntervalMillis) {
         this(env, new ReloadableLocalFileCamelliaApi(resourceTableFilePath, resourceTable -> {
             try {
                 Set<Resource> allResources = ResourceUtil.getAllResources(resourceTable);
@@ -80,7 +80,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             } catch (Exception e) {
                 return false;
             }
-        }), defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis, true);
+        }), defaultBid, defaultBgroup, defaultMonitorEnable, checkIntervalMillis, true);
     }
 
     public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, CamelliaApi service, long bid, String bgroup,

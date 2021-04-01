@@ -93,6 +93,11 @@ public class TranspondProperties {
          */
         private boolean dynamic = false;
 
+        /**
+         * 当dynamic=true时，检查文件变更的间隔，单位ms
+         */
+        private long checkIntervalMillis = Constants.Remote.checkIntervalMillis;
+
         public Type getType() {
             return type;
         }
@@ -123,6 +128,14 @@ public class TranspondProperties {
 
         public void setDynamic(boolean dynamic) {
             this.dynamic = dynamic;
+        }
+
+        public long getCheckIntervalMillis() {
+            return checkIntervalMillis;
+        }
+
+        public void setCheckIntervalMillis(long checkIntervalMillis) {
+            this.checkIntervalMillis = checkIntervalMillis;
         }
 
         public static enum Type {

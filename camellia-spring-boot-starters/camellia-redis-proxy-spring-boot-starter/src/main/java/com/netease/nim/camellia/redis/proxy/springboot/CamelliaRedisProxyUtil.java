@@ -154,6 +154,11 @@ public class CamelliaRedisProxyUtil {
             boolean dynamic = properties.isDynamic();
             if (dynamic && filePath != null) {
                 localProperties.setResourceTableFilePath(filePath);
+                long checkIntervalMillis = properties.getCheckIntervalMillis();
+                if (checkIntervalMillis <= 0) {
+                    throw new IllegalArgumentException("local.checkIntervalMillis <= 0");
+                }
+                localProperties.setCheckIntervalMillis(checkIntervalMillis);
             } else {
                 localProperties.setResourceTable(resourceTable);
             }
