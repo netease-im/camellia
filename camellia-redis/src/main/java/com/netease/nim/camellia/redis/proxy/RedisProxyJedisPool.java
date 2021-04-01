@@ -229,8 +229,8 @@ public class RedisProxyJedisPool extends JedisPool {
         private int maxRetry = defaultMaxRetry;//获取jedis时的重试次数
         //因为每个proxy都要初始化一个JedisPool，当proxy数量很多的时候，可能会引起RedisProxyJedisPool初始化过慢
         //若开启jedisPoolLazyInit，则会根据proxySelector策略优先初始化jedisPoolInitialSize个proxy，剩余proxy会延迟初始化，从而加快RedisProxyJedisPool的初始化过程
-        private boolean jedisPoolLazyInit = defaultJedisPoolLazyInit;//是否需要延迟初始化jedisPool，默认false，如果延迟初始化，则一开始会初始化少量的proxy对应的jedisPool，等兜底线程扫码到时再初始化所有proxy对应的jedisPool
-        private int jedisPoolInitialSize = defaultJedisPoolInitialSize;//延迟初始化jedisPool时，一开始初始化的proxy个数
+        private boolean jedisPoolLazyInit = defaultJedisPoolLazyInit;//是否需要延迟初始化jedisPool，默认true，如果延迟初始化，则一开始会初始化少量的proxy对应的jedisPool，随后兜底线程会初始化剩余的proxy对应的jedisPool
+        private int jedisPoolInitialSize = defaultJedisPoolInitialSize;//延迟初始化jedisPool时，一开始初始化的proxy个数，默认16个
         //以下参数用于设置proxy的选择策略
         //当显式的指定了proxySelector
         //--则使用自定义的proxy选择策略
@@ -240,7 +240,7 @@ public class RedisProxyJedisPool extends JedisPool {
         //--localhost用于判断proxy是否是side-car-proxy，若缺失该参数，则会自动获取本机ip
         //--当设置了sideCarFirst=true，但是又找不到side-car-proxy，SideCarFirstProxySelector会优先使用相同region下的proxy，用于判断proxy归属于哪个region的方法是RegionResolver
         //-----当regionResolver未设置时，默认使用DummyRegionResolver，即认为所有proxy都归属于同一个proxy
-        //-----我们还提供了一个IpSegmentRegionResolver的实现，该实现用ip段的方式来划分proxy的region，当然你也可以实现一个自定义的IpSegmentRegionResolver
+        //-----我们还提供了一个IpSegmentRegionResolver的实现，该实现用ip段的方式来划分proxy的region，当然你也可以实现一个自定义的RegionResolver
         private boolean sideCarFirst = defaultSideCarFirst;
         private String localhost = defaultLocalHost;
         private RegionResolver regionResolver;
