@@ -167,6 +167,23 @@ OK
 3) (nil)
 ```
 
+## 快速开始（基于fatJar和sample-code)
+下载源码
+```
+git clone https://github.com/netease-im/camellia.git
+```
+修改[sample-code](/camellia-samples/camellia-redis-proxy-samples) 中的application.yml文件中的配置项  
+使用maven编译
+```
+cd camellia
+mvn clean install
+```
+找到可执行jar包，使用java -jar命令运行即可(注意设置内存和GC）
+```
+cd camellia-samples/camellia-redis-proxy-samples/target
+java -jar camellia-redis-proxy-samples-1.0.21-SNAPSHOT.jar -XX:+UseG1GC -Xms2048m -Xmx2048m
+```
+
 ## 路由配置
 路由配置表示了camellia-redis-proxy在收到客户端的redis命令之后的转发规则，包括：
 * 支持的后端redis类型
