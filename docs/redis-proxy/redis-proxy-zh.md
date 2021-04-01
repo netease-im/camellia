@@ -168,7 +168,7 @@ OK
 ```
 
 ## 路由配置
-路由配置表示了camellia-redis-proxy在收到客户端的redis命令之后的转发规则，涉及如下：
+路由配置表示了camellia-redis-proxy在收到客户端的redis命令之后的转发规则，包括：
 * 支持的后端redis类型
 * 动态配置
 * json-file配置示例（双写、读写分离、分片等）
