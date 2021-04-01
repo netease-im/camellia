@@ -176,7 +176,7 @@ git clone https://github.com/netease-im/camellia.git
 使用maven编译
 ```
 cd camellia
-mvn clean package
+mvn clean install
 ```
 找到可执行jar包，使用java -jar命令运行即可(注意设置内存和GC）
 ```
