@@ -7,7 +7,7 @@
 
 # 1.0.21（2020/03/xx）
 ### 新增
-* camellia-redis-proxy在使用本地配置时，支持动态修改后端redis地址
+* camellia-redis-proxy在使用本地配置时，支持动态修改路由转发规则，见：[路由配置](route.md)
 
 ### 更新
 * camellia-redis-proxy通过动态配置文件关闭RT监控时同步关闭慢查询监控，和yml配置逻辑保持一致
@@ -16,7 +16,7 @@
 
 ### fix
 * fix了RedisProxyJedisPool一个bug，概率极低，会导致异常"Could not get a resource from the pool"（1.0.14时引入）
-* fix了camellia-redis-proxy打成fat-jar运行时配置文件找不到的问题
+* fix了camellia-redis-proxy使用fat-jar运行时配置文件找不到的问题
 
 # 1.0.20（2020/02/26）
 ### 新增
