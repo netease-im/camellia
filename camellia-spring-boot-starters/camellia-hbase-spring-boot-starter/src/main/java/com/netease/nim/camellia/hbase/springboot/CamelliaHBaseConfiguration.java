@@ -21,7 +21,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.net.URL;
 import java.util.Map;
 import java.util.Set;
 
@@ -61,12 +60,7 @@ public class CamelliaHBaseConfiguration {
                     if (jsonFile == null) {
                         throw new IllegalArgumentException("missing jsonFile");
                     }
-                    URL resource = Thread.currentThread().getContextClassLoader().getResource(jsonFile);
-                    if (resource == null) {
-                        throw new IllegalArgumentException("not found " + jsonFile);
-                    }
-                    String path = resource.getPath();
-                    String fileContent = FileUtil.readFile(path);
+                    String fileContent = FileUtil.readFileByName(jsonFile);
                     if (fileContent == null) {
                         throw new IllegalArgumentException(jsonFile + " read fail");
                     }

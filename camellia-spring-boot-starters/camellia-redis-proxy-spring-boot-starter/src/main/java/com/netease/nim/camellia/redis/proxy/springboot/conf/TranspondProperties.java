@@ -84,9 +84,14 @@ public class TranspondProperties {
         private String resource;
 
         /**
-         * 复杂配置下的后端资源配置（是一个json文件）
+         * 复杂配置下的后端资源配置（是一个json文件），优先当做一个配置文件名，到classpath下找，如果不存在则会尝试作为一个绝对路径去找
          */
         private String jsonFile;
+
+        /**
+         * 使用复杂配置下，即使用jsonFile时，是否动态检查配置文件的变更
+         */
+        private boolean dynamic = false;
 
         public Type getType() {
             return type;
@@ -110,6 +115,14 @@ public class TranspondProperties {
 
         public void setJsonFile(String jsonFile) {
             this.jsonFile = jsonFile;
+        }
+
+        public boolean isDynamic() {
+            return dynamic;
+        }
+
+        public void setDynamic(boolean dynamic) {
+            this.dynamic = dynamic;
         }
 
         public static enum Type {

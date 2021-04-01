@@ -11,8 +11,8 @@ import java.util.UUID;
  */
 public class LocalCamelliaApi implements CamelliaApi {
 
-    private ResourceTable resourceTable;
-    private String md5;
+    private final ResourceTable resourceTable;
+    private final String md5;
 
     public LocalCamelliaApi(ResourceTable resourceTable) {
         this.resourceTable = resourceTable;

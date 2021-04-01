@@ -121,14 +121,17 @@ public class AsyncCamelliaRedisTemplateChooser {
             }
         }
         ResourceTable resourceTable = local.getResourceTable();
-        if (resourceTable == null) {
-            if (throwError) {
-                throw new IllegalArgumentException("local.resourceTable is null");
-            } else {
-                return;
+        if (resourceTable != null) {
+            localInstance = new AsyncCamelliaRedisTemplate(env, resourceTable);
+        } else {
+            String resourceTableFilePath = local.getResourceTableFilePath();
+            if (resourceTableFilePath != null) {
+                localInstance = new AsyncCamelliaRedisTemplate(env, resourceTableFilePath);
             }
         }
-        localInstance = new AsyncCamelliaRedisTemplate(env, resourceTable);
+        if (localInstance == null && throwError) {
+            throw new IllegalArgumentException("local.resourceTable/local.resourceTableFilePath is null");
+        }
     }
 
     private AsyncCamelliaRedisTemplate initOrCreateRemoteInstance(long bid, String bgroup) {

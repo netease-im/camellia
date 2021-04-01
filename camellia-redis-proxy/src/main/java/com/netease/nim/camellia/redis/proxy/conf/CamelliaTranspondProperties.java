@@ -54,6 +54,7 @@ public class CamelliaTranspondProperties {
 
     public static class LocalProperties {
         private ResourceTable resourceTable;
+        private String resourceTableFilePath;
 
         public ResourceTable getResourceTable() {
             return resourceTable;
@@ -61,6 +62,14 @@ public class CamelliaTranspondProperties {
 
         public void setResourceTable(ResourceTable resourceTable) {
             this.resourceTable = resourceTable;
+        }
+
+        public String getResourceTableFilePath() {
+            return resourceTableFilePath;
+        }
+
+        public void setResourceTableFilePath(String resourceTableFilePath) {
+            this.resourceTableFilePath = resourceTableFilePath;
         }
     }
 

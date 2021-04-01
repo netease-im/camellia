@@ -8,6 +8,7 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceChooser;
+import com.netease.nim.camellia.core.util.ResourceUtil;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
@@ -19,6 +20,7 @@ import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import com.netease.nim.camellia.redis.proxy.util.ErrorHandlerUtil;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
 import com.netease.nim.camellia.redis.resource.RedisType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,11 +65,31 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     }
 
     public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, ResourceTable resourceTable) {
-        this(env, new LocalCamelliaApi(resourceTable), defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
+        this(env, new LocalCamelliaApi(resourceTable), defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis, false);
+    }
+
+    public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, String resourceTableFilePath) {
+        this(env, new ReloadableLocalFileCamelliaApi(resourceTableFilePath, resourceTable -> {
+            try {
+                Set<Resource> allResources = ResourceUtil.getAllResources(resourceTable);
+                if (allResources == null || allResources.isEmpty()) return false;
+                for (Resource resource : allResources) {
+                    RedisResourceUtil.parseResourceByUrl(resource);
+                }
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }), defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis, true);
     }
 
     public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, CamelliaApi service, long bid, String bgroup,
-                                        boolean monitorEnable, long checkIntervalMillis) {
+                                      boolean monitorEnable, long checkIntervalMillis) {
+        this(env, service, bid, bgroup, monitorEnable, checkIntervalMillis, true);
+    }
+
+    public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, CamelliaApi service, long bid, String bgroup,
+                                        boolean monitorEnable, long checkIntervalMillis, boolean reload) {
         this.env = env;
         this.bid = bid;
         this.bgroup = bgroup;
@@ -84,7 +106,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
         this.init(response.getResourceTable());
 
-        if (bid > 0) {
+        if (reload) {
             ReloadTask reloadTask = new ReloadTask(this, service, bid, bgroup, md5);
             scheduleExecutor.scheduleAtFixedRate(reloadTask, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
             if (monitorEnable) {

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,7 +48,11 @@ public class ProxyDynamicConf {
         }
         try {
             Properties props = new Properties();
-            props.load(new FileInputStream(new File(url.getPath())));
+            try {
+                props.load(new FileInputStream(new File(url.getPath())));
+            } catch (IOException e) {
+                props.load(ProxyDynamicConf.class.getClassLoader().getResourceAsStream(fileName));
+            }
             Map<String, String> conf = ConfigurationUtil.propertiesToMap(props);
 
             if (conf.equals(new HashMap<>(ProxyDynamicConf.conf))) {

@@ -113,29 +113,57 @@ public class CamelliaRedisProxyUtil {
         if (properties == null) return null;
         CamelliaTranspondProperties.LocalProperties localProperties = new CamelliaTranspondProperties.LocalProperties();
         ResourceTable resourceTable;
-
         if (properties.getType() == TranspondProperties.LocalProperties.Type.SIMPLE) {
             String resource = properties.getResource();
-            if (resource == null) return localProperties;
+            if (resource == null) {
+                throw new IllegalArgumentException("missing 'resource' of local");
+            }
             resourceTable = ResourceTableUtil.simpleTable(new Resource(resource));
+            checkRedisResourceTable(resourceTable);
+            localProperties.setResourceTable(resourceTable);
+            return localProperties;
         } else if (properties.getType() == TranspondProperties.LocalProperties.Type.COMPLEX) {
             String jsonFile = properties.getJsonFile();
             if (jsonFile == null) {
-                throw new IllegalArgumentException("missing jsonFile");
+                throw new IllegalArgumentException("missing 'jsonFile' of local");
             }
+            String filePath = null;
+            String fileContent;
+            //先去classpath下找
             URL resource = Thread.currentThread().getContextClassLoader().getResource(jsonFile);
-            if (resource == null) {
-                throw new IllegalArgumentException("not found " + jsonFile);
+            if (resource != null) {
+                filePath = resource.getPath();
+                fileContent = FileUtil.readFileByPath(filePath);//尝试用文件路径的方式去加载
+                if (fileContent == null) {
+                    filePath = null;
+                    fileContent = FileUtil.readFileByNameInStream(jsonFile);//尝试用流的方式去加载
+                }
+            } else {
+                fileContent = FileUtil.readFileByNameInStream(jsonFile);//尝试用文件路径的方式去加载
             }
-            String path = resource.getPath();
-            String fileContent = FileUtil.readFile(path);
+            if (fileContent == null) {
+                filePath = jsonFile;
+                fileContent = FileUtil.readFileByPath(filePath);//尝试当做绝对路径去加载
+            }
             if (fileContent == null) {
                 throw new IllegalArgumentException(jsonFile + " read fail");
             }
+            fileContent = fileContent.trim();
             resourceTable = ReadableResourceTableUtil.parseTable(fileContent);
+            checkRedisResourceTable(resourceTable);
+            boolean dynamic = properties.isDynamic();
+            if (dynamic && filePath != null) {
+                localProperties.setResourceTableFilePath(filePath);
+            } else {
+                localProperties.setResourceTable(resourceTable);
+            }
+            return localProperties;
         } else {
             throw new IllegalArgumentException("not support type");
         }
+    }
+
+    public static void checkRedisResourceTable(ResourceTable resourceTable) {
         boolean check = CheckUtil.checkResourceTable(resourceTable);
         if (!check) {
             throw new IllegalArgumentException("resourceTable check fail");
@@ -144,8 +172,6 @@ public class CamelliaRedisProxyUtil {
         for (Resource resource : allResources) {
             RedisResourceUtil.parseResourceByUrl(resource);
         }
-        localProperties.setResourceTable(resourceTable);
-        return localProperties;
     }
 
     public static CamelliaTranspondProperties.RemoteProperties parse(TranspondProperties.RemoteProperties properties) {
