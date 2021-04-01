@@ -7,7 +7,7 @@
 
 # 1.0.21（2020/03/xx）
 ### add
-* none
+* camellia-redis-proxy support dynamic reload of redis address conf when use local conf
 
 ### update
 * when camellia-redis-proxy close RT monitor by DynamicConf, slow-command-monitor will close either, same logic to yml
@@ -15,7 +15,8 @@
 * RedisProxyJedisPool add param of jedisPoolLazyInit to lazy init jedisPool of proxy, to reduce initial time of RedisProxyJedisPool, default open, default init 16 jedisPool of proxy first
 
 ### fix
-* none
+* fix a bug of RedisProxyJedisPool may cause 'Could not get a resource from the pool', very low probability(from 1.0.14) 
+* fix conf not found error when camellia-redis-proxy build/run in fat-jar 
 
 # 1.0.20（2020/02/26）
 ### add
