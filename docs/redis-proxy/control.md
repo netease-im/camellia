@@ -77,6 +77,6 @@ camellia-redis-proxy:
   command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor
 ```
 上面的配置表示：  
-限制特定ip不得访问  
-key的长度不得超过256  
-如果是一个set命令过来，value的长度不得超过5M  
+* 限制特定ip不得访问  
+* key的长度不得超过256  
+* 如果是一个set命令过来，value的长度不得超过5M  
