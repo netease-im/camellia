@@ -51,6 +51,8 @@ public class CamelliaRedisProperties {
         private Type type = Type.SIMPLE;
         private String resource;
         private String jsonFile;
+        private boolean dynamic;
+        private long checkIntervalMillis = 5000;
 
         public String getResource() {
             return resource;
@@ -74,6 +76,22 @@ public class CamelliaRedisProperties {
 
         public void setJsonFile(String jsonFile) {
             this.jsonFile = jsonFile;
+        }
+
+        public boolean isDynamic() {
+            return dynamic;
+        }
+
+        public void setDynamic(boolean dynamic) {
+            this.dynamic = dynamic;
+        }
+
+        public long getCheckIntervalMillis() {
+            return checkIntervalMillis;
+        }
+
+        public void setCheckIntervalMillis(long checkIntervalMillis) {
+            this.checkIntervalMillis = checkIntervalMillis;
         }
 
         public static enum Type {

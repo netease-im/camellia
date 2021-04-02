@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.springboot;
 
+import com.netease.nim.camellia.core.api.ReloadableLocalFileCamelliaApi;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
@@ -72,11 +73,27 @@ public class CamelliaRedisConfiguration {
                     throw new IllegalArgumentException(jsonFile + " read fail");
                 }
                 ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(fileContent);
-                Set<Resource> allResources = ResourceUtil.getAllResources(resourceTable);
-                for (Resource redisResource : allResources) {
-                    RedisResourceUtil.parseResourceByUrl(redisResource);
+                RedisResourceUtil.checkResourceTable(resourceTable);
+                if (!local.isDynamic()) {
+                    return new CamelliaRedisTemplate(redisEnv, resourceTable);
                 }
-                return new CamelliaRedisTemplate(redisEnv, resourceTable);
+                String filePath = FileUtil.getAbsoluteFilePath(jsonFile);
+                if (filePath == null) {
+                    return new CamelliaRedisTemplate(redisEnv, resourceTable);
+                }
+                ReloadableLocalFileCamelliaApi camelliaApi = new ReloadableLocalFileCamelliaApi(filePath, table -> {
+                    try {
+                        RedisResourceUtil.checkResourceTable(table);
+                        return true;
+                    } catch (Exception e) {
+                        return false;
+                    }
+                });
+                long checkIntervalMillis = local.getCheckIntervalMillis();
+                if (checkIntervalMillis <= 0) {
+                    throw new IllegalArgumentException("checkIntervalMillis <= 0");
+                }
+                return new CamelliaRedisTemplate(redisEnv, camelliaApi, -1, "default", false, checkIntervalMillis);
             } else {
                 throw new UnsupportedOperationException("only support simple/complex");
             }

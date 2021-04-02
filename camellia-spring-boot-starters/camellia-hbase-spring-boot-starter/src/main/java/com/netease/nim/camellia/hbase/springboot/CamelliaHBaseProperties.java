@@ -85,6 +85,8 @@ public class CamelliaHBaseProperties {
             private CamelliaHBaseProperties.Local.YML.Type type = Type.SIMPLE;
             private String resource;
             private String jsonFile;
+            private boolean dynamic;
+            private long checkIntervalMillis = 5000;
             private Map<String, String> conf = new HashMap<>();
 
             public Type getType() {
@@ -117,6 +119,22 @@ public class CamelliaHBaseProperties {
 
             public void setConf(Map<String, String> conf) {
                 this.conf = conf;
+            }
+
+            public boolean isDynamic() {
+                return dynamic;
+            }
+
+            public void setDynamic(boolean dynamic) {
+                this.dynamic = dynamic;
+            }
+
+            public long getCheckIntervalMillis() {
+                return checkIntervalMillis;
+            }
+
+            public void setCheckIntervalMillis(long checkIntervalMillis) {
+                this.checkIntervalMillis = checkIntervalMillis;
             }
 
             public static enum Type {

@@ -15,6 +15,24 @@ public class FileUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
 
+    public static String getAbsoluteFilePath(String file) {
+        URL resource = Thread.currentThread().getContextClassLoader().getResource(file);
+        if (resource == null) {
+            String content = readFileByPath(file);
+            if (content != null) {
+                return file;
+            }
+            return null;
+        } else {
+            String path = resource.getPath();
+            String content = readFileByPath(path);
+            if (content != null) {
+                return path;
+            }
+            return null;
+        }
+    }
+
     public static String readFileByName(String fileName) {
         URL resource = Thread.currentThread().getContextClassLoader().getResource(fileName);
         if (resource == null) {

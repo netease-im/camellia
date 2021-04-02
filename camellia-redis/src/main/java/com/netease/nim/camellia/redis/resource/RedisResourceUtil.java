@@ -1,18 +1,33 @@
 package com.netease.nim.camellia.redis.resource;
 
 import com.netease.nim.camellia.core.model.Resource;
+import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.core.util.CheckUtil;
+import com.netease.nim.camellia.core.util.ResourceUtil;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.*;
 import redis.clients.jedis.JedisPool;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
  * Created by caojiajun on 2019/11/8.
  */
 public class RedisResourceUtil {
+
+    public static void checkResourceTable(ResourceTable resourceTable) {
+        boolean check = CheckUtil.checkResourceTable(resourceTable);
+        if (!check) {
+            throw new IllegalArgumentException("resourceTable check fail");
+        }
+        Set<Resource> allResources = ResourceUtil.getAllResources(resourceTable);
+        for (Resource redisResource : allResources) {
+            RedisResourceUtil.parseResourceByUrl(redisResource);
+        }
+    }
 
     public static Resource parseResourceByUrl(Resource resource) {
         try {

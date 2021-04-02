@@ -119,7 +119,7 @@ public class CamelliaRedisProxyUtil {
                 return localProperties;
             }
             resourceTable = ResourceTableUtil.simpleTable(new Resource(resource));
-            checkRedisResourceTable(resourceTable);
+            RedisResourceUtil.checkResourceTable(resourceTable);
             localProperties.setResourceTable(resourceTable);
             return localProperties;
         } else if (properties.getType() == TranspondProperties.LocalProperties.Type.COMPLEX) {
@@ -150,7 +150,7 @@ public class CamelliaRedisProxyUtil {
             }
             fileContent = fileContent.trim();
             resourceTable = ReadableResourceTableUtil.parseTable(fileContent);
-            checkRedisResourceTable(resourceTable);
+            RedisResourceUtil.checkResourceTable(resourceTable);
             boolean dynamic = properties.isDynamic();
             if (dynamic && filePath != null) {
                 localProperties.setResourceTableFilePath(filePath);
@@ -165,17 +165,6 @@ public class CamelliaRedisProxyUtil {
             return localProperties;
         } else {
             throw new IllegalArgumentException("not support type");
-        }
-    }
-
-    public static void checkRedisResourceTable(ResourceTable resourceTable) {
-        boolean check = CheckUtil.checkResourceTable(resourceTable);
-        if (!check) {
-            throw new IllegalArgumentException("resourceTable check fail");
-        }
-        Set<Resource> allResources = ResourceUtil.getAllResources(resourceTable);
-        for (Resource resource : allResources) {
-            RedisResourceUtil.parseResourceByUrl(resource);
         }
     }
 

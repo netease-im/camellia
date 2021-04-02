@@ -1,13 +1,29 @@
 package com.netease.nim.camellia.hbase.util;
 
 import com.netease.nim.camellia.core.model.Resource;
+import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.core.util.CheckUtil;
+import com.netease.nim.camellia.core.util.ResourceUtil;
 import com.netease.nim.camellia.hbase.resource.HBaseResource;
+
+import java.util.Set;
 
 /**
  *
  * Created by caojiajun on 2020/3/20.
  */
 public class HBaseResourceUtil {
+
+    public static void checkResourceTable(ResourceTable resourceTable) {
+        boolean check = CheckUtil.checkResourceTable(resourceTable);
+        if (!check) {
+            throw new IllegalArgumentException("resourceTable check fail");
+        }
+        Set<Resource> allResources = ResourceUtil.getAllResources(resourceTable);
+        for (Resource allResource : allResources) {
+            HBaseResourceUtil.parseResourceByUrl(allResource);
+        }
+    }
 
     public static HBaseResource parseResourceByUrl(Resource resource) {
         if (!resource.getUrl().startsWith(HBaseResource.prefix)) {

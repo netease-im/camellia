@@ -2,6 +2,7 @@ package com.netease.nim.camellia.hbase.springboot;
 
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiUtil;
+import com.netease.nim.camellia.core.api.ReloadableLocalFileCamelliaApi;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
@@ -51,10 +52,21 @@ public class CamelliaHBaseConfiguration {
             } else if (confType == CamelliaHBaseProperties.Local.ConfType.YML) {
                 CamelliaHBaseProperties.Local.YML yml = local.getYml();
                 CamelliaHBaseProperties.Local.YML.Type subType = yml.getType();
+                Map<String, String> conf = yml.getConf();
+                CamelliaHBaseConf camelliaHBaseConf = new CamelliaHBaseConf();
+                for (Map.Entry<String, String> entry : conf.entrySet()) {
+                    camelliaHBaseConf.addConf(entry.getKey(), entry.getValue());
+                }
+                CamelliaHBaseEnv env = new CamelliaHBaseEnv.Builder()
+                        .connectionFactory(new CamelliaHBaseConnectionFactory.DefaultHBaseConnectionFactory(camelliaHBaseConf))
+                        .proxyEnv(proxyEnv())
+                        .build();
                 ResourceTable resourceTable;
                 if (subType == CamelliaHBaseProperties.Local.YML.Type.SIMPLE) {
                     HBaseResource hBaseResource = HBaseResourceUtil.parseResourceByUrl(new Resource(yml.getResource()));
                     resourceTable = ResourceTableUtil.simpleTable(hBaseResource);
+                    HBaseResourceUtil.checkResourceTable(resourceTable);
+                    return new CamelliaHBaseTemplate(env, resourceTable);
                 } else if (subType == CamelliaHBaseProperties.Local.YML.Type.COMPLEX) {
                     String jsonFile = yml.getJsonFile();
                     if (jsonFile == null) {
@@ -65,23 +77,32 @@ public class CamelliaHBaseConfiguration {
                         throw new IllegalArgumentException(jsonFile + " read fail");
                     }
                     resourceTable = ReadableResourceTableUtil.parseTable(fileContent);
+                    HBaseResourceUtil.checkResourceTable(resourceTable);
+                    if (!yml.isDynamic()) {
+                        return new CamelliaHBaseTemplate(env, resourceTable);
+                    } else {
+                        String filePath = FileUtil.getAbsoluteFilePath(jsonFile);
+                        if (filePath == null) {
+                            return new CamelliaHBaseTemplate(env, resourceTable);
+                        }
+                        long checkIntervalMillis = yml.getCheckIntervalMillis();
+                        if (checkIntervalMillis <= 0) {
+                            throw new IllegalArgumentException("checkIntervalMillis <= 0");
+                        }
+                        ReloadableLocalFileCamelliaApi camelliaApi = new ReloadableLocalFileCamelliaApi(filePath, table -> {
+                            try {
+                                HBaseResourceUtil.checkResourceTable(table);
+                                return true;
+                            } catch (Exception e) {
+                                return false;
+                            }
+                        });
+                        return new CamelliaHBaseTemplate(env, camelliaApi, -1, "default", false, checkIntervalMillis);
+                    }
                 } else {
                     throw new IllegalArgumentException("only support simple/complex");
                 }
-                Set<Resource> allResources = ResourceUtil.getAllResources(resourceTable);
-                for (Resource allResource : allResources) {
-                    HBaseResourceUtil.parseResourceByUrl(allResource);
-                }
-                Map<String, String> conf = yml.getConf();
-                CamelliaHBaseConf camelliaHBaseConf = new CamelliaHBaseConf();
-                for (Map.Entry<String, String> entry : conf.entrySet()) {
-                    camelliaHBaseConf.addConf(entry.getKey(), entry.getValue());
-                }
-                CamelliaHBaseEnv env = new CamelliaHBaseEnv.Builder()
-                        .connectionFactory(new CamelliaHBaseConnectionFactory.DefaultHBaseConnectionFactory(camelliaHBaseConf))
-                        .proxyEnv(proxyEnv())
-                        .build();
-                return new CamelliaHBaseTemplate(env, resourceTable);
+
             } else {
                 throw new IllegalArgumentException("only support xml/yml");
             }
