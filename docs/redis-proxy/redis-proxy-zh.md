@@ -181,7 +181,7 @@ mvn clean install
 找到可执行jar包，使用java -jar命令运行即可(注意设置内存和GC）
 ```
 cd camellia-samples/camellia-redis-proxy-samples/target
-java -jar -server camellia-redis-proxy-samples-1.0.21-SNAPSHOT.jar -XX:+UseG1GC -Xms2048m -Xmx2048m
+java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy-samples-1.0.21-SNAPSHOT.jar 
 ```
 
 ## 路由配置
@@ -208,6 +208,7 @@ camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访
 * 客户端接入（java之jedis）
 * 客户端接入（java之SpringRedisTemplate)
 * 客户端接入（其他语言）
+* 注意事项
 
 具体可见：[部署和接入](deploy.md)
 

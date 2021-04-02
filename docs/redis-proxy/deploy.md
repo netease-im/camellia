@@ -8,6 +8,7 @@
 * 客户端接入（java之jedis）
 * 客户端接入（java之SpringRedisTemplate)
 * 客户端接入（其他语言）
+* 注意事项
 
 ### 部署模式
 此时有两种方式来部署多实例的架构：  
@@ -232,3 +233,20 @@ camellia-spring-redis-zk-discovery:
 ### 客户端接入（其他语言)
 * 如果proxy使用前置四层代理来组成一个集群，那么你可以用各自语言的标准redis客户端sdk，然后像访问单节点redis一样访问proxy集群
 * 如果proxy使用了zookeeper等注册中心的模式来组成一个集群，那么需要你自己实现一套从注册中心获取所有proxy节点地址的逻辑，并且实现想要的负载均衡策略，而且当proxy节点发生上下线时，你需要自己处理来自注册中心的变更通知；除此之外，对于每个proxy节点，你都可以像访问单节点redis一样访问
+
+### 注意事项
+#### docker部署
+camellia-redis-proxy启动时默认会去读取操作系统的cpu核数，并开启对应数量的work线程，如果部署在docker里，请注意设置合理的workThread数：
+```yaml
+camellia-redis-proxy:
+  password: pass123
+  netty:
+    boss-thread: 1
+    work-thread: 4
+  transpond:
+    type: local
+    local:
+      type: simple
+      resource: redis-cluster://@127.0.0.1:6379,127.0.0.1:6378,127.0.0.1:6377
+```
+或者使用高版本的jdk（jdk8u191之后），并在启动参数里添加-XX:+UseContainerSupport来让proxy自动获取到正确的可用cpu核数
