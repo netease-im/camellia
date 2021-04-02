@@ -4,7 +4,7 @@
 ## 大纲
 * 部署模式
 * 集成Zookeeper
-* 上下线
+* 优雅上下线
 * 客户端接入（java之jedis）
 * 客户端接入（java之SpringRedisTemplate)
 * 客户端接入（其他语言）
@@ -55,7 +55,7 @@ camellia-redis-zk-registry:
 则启动后redis proxy会注册到zk(127.0.0.1:2181,127.0.0.2:2181)  
 此时你需要自己从zk上获取proxy的地址列表，然后自己实现以下客户端侧的负载均衡策略，但是如果你客户端是java，则camellia帮你做了一个实现，参考下节
 
-### 上下线
+### 优雅上下线
 当redis proxy启动的时候，会同时启动一个http服务器console server，默认端口是16379  
 我们可以用console server做一些监控指标采集、优雅上下线等操作，使用方法是自己实现一个ConsoleService（继承自ConsoleServiceAdaptor）即可，如下所示：  
 ```java
@@ -106,7 +106,7 @@ reload动态配置ProxyDynamicConf
 一个自定义接口，可以通过设置不同的http参数来表示不同的请求类型
 
 在上面的例子中，MyConsoleService注入了CamelliaRedisProxyZkRegisterBoot，  
-如果我们调用/online，则CamelliaRedisProxyZkRegisterBoot会注册到zk  
+如果我们调用/online，则CamelliaRedisProxyZkRegisterBoot会注册到zk（启动后会自动去注册；此外，不用担心重复注册，内部会处理掉）      
 如果我们调用/offline，则CamelliaRedisProxyZkRegisterBoot会从zk上摘除，因为如果proxy没有idle，offline会返回500，因此我们可以反复调用offline直到返回200，此时我们就可以shutdown掉proxy了而不用担心命令执行中被打断了  
 
 ### 客户端接入（java之jedis）

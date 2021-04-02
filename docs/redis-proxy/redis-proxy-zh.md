@@ -204,7 +204,7 @@ camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访
 在生产环境，需要部署至少2个proxy实例来保证高可用，并且proxy是可以水平扩展的，包括：
 * 部署模式
 * 集成Zookeeper
-* 上下线
+* 优雅上下线
 * 客户端接入（java之jedis）
 * 客户端接入（java之SpringRedisTemplate)
 * 客户端接入（其他语言）
