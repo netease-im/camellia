@@ -8,7 +8,8 @@
 # 1.0.21（2020/03/xx）
 ### add
 * camellia-redis-proxy support dynamic reload of redis address route conf when use local conf
-* camellia-redis-proxy's ProxyDynamicConf(camellia-redis-proxy.properties) support use standalone absolute-path conf file to merge classpath:camellia-redis-proxy.properties 
+* camellia-redis-proxy's ProxyDynamicConf(camellia-redis-proxy.properties) support use standalone absolute-path conf file to merge classpath:camellia-redis-proxy.properties
+* camellia-redis-proxy support preheat(default true), if true, proxy will connect to upstream redis when proxy start, rather than connect to upstream redis until command from redis-cli arrive proxy 
 
 ### update
 * when camellia-redis-proxy close RT monitor by DynamicConf, slow-command-monitor will close either, same logic to yml
