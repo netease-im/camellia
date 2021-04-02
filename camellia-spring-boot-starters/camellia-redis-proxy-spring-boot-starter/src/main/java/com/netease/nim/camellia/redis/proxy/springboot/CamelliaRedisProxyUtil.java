@@ -116,7 +116,7 @@ public class CamelliaRedisProxyUtil {
         if (properties.getType() == TranspondProperties.LocalProperties.Type.SIMPLE) {
             String resource = properties.getResource();
             if (resource == null) {
-                throw new IllegalArgumentException("missing 'resource' of local");
+                return localProperties;
             }
             resourceTable = ResourceTableUtil.simpleTable(new Resource(resource));
             checkRedisResourceTable(resourceTable);
