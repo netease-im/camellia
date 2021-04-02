@@ -55,13 +55,37 @@ public class ProxyDynamicConf {
             }
             Map<String, String> conf = ConfigurationUtil.propertiesToMap(props);
 
+            //如果想用另外一个文件来配置，可以在camellia-redis-proxy.properties中配置dynamic.conf.file.path=xxx
+            //xxx需要是文件的绝对路径
+            String filePath = conf.get("dynamic.conf.file.path");
+            if (filePath != null) {
+                try {
+                    Properties props1 = new Properties();
+                    props1.load(new FileInputStream(new File(filePath)));
+                    Map<String, String> conf1 = ConfigurationUtil.propertiesToMap(props1);
+                    if (conf1 != null) {
+                        conf.putAll(conf1);
+                    }
+                } catch (Exception e) {
+                    logger.error("dynamic.conf.file.path={} load error, use classpath:{} default", filePath, fileName, e);
+                }
+            }
+
             if (conf.equals(new HashMap<>(ProxyDynamicConf.conf))) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("{} not modify", fileName);
+                    if (filePath != null) {
+                        logger.debug("classpath:{} and {} not modify", fileName, filePath);
+                    } else {
+                        logger.debug("classpath:{} not modify", fileName);
+                    }
                 }
             } else {
                 ProxyDynamicConf.conf = conf;
-                logger.info("{} reload success", fileName);
+                if (filePath != null) {
+                    logger.info("classpath:{} and {} reload success", fileName, filePath);
+                } else {
+                    logger.info("classpath:{} reload success", fileName);
+                }
                 clearCache();
                 for (DynamicConfCallback callback : callbackSet) {
                     try {

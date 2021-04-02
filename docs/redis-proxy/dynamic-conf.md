@@ -62,7 +62,13 @@ camellia-redis-zk-registry: #需要引入相关依赖才有效
 * 修改配置文件后，默认10分钟reload一次，或者你可以调用console接口去reload，console默认端口是16379，接口是http://127.0.0.1:16379/reload
 * 或者你也可以调用ProxyDynamicConf.reload()方法来reload配置
 * 此外你可以使用ProxyDynamicConf来设置和获取自定义的其他配置，例子：你在camellia-redis-proxy.properties添加了"k=v"，则你可以调用ProxyDynamicConf.getString("k")获取到"v"，具体详见ProxyDynamicConf类
+* 因为camellia-redis-proxy.properties必须在classpath下，因此如果你想使用另外的配置文件，则可以在camellia-redis-proxy.properties中配置dynamic.conf.file.path=xxx，xxx表示的是目标文件的绝对路径，则proxy会优先使用xxx的配置
 ```
+
+#外部配置文件的绝对路径，优先级高于camellia-redis-proxy.properties
+#ProxyDynamicConf会将xxx文件里的k-v配置和camellia-redis-proxy.properties里的k-v配置进行merge，xxx优先级更高
+#dynamic.conf.file.path=xxx
+
 #自动reload的间隔，默认600s，服务启动时会读取该配置
 dynamic.conf.reload.interval.seconds=600
 
