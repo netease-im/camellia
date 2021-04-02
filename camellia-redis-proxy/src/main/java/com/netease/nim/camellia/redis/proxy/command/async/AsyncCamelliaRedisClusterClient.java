@@ -48,6 +48,18 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
         }
     }
 
+    @Override
+    public void preheat() {
+        logger.info("try preheat, url = {}", redisClusterResource.getUrl());
+        Set<RedisClusterSlotInfo.Node> nodes = this.clusterSlotInfo.getNodes();
+        for (RedisClusterSlotInfo.Node node : nodes) {
+            logger.info("try preheat, url = {}, node = {}", redisClusterResource.getUrl(), node.getAddr().getUrl());
+            boolean result = RedisClientHub.preheat(node.getHost(), node.getPort(), node.getPassword());
+            logger.info("preheat result = {}, url = {}, node = {}", result, redisClusterResource.getUrl(), node.getAddr().getUrl());
+        }
+        logger.info("preheat ok, url = {}", redisClusterResource.getUrl());
+    }
+
     public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> futureList) {
         if (commands.isEmpty()) return;
         CommandFlusher commandFlusher = new CommandFlusher(commands.size());

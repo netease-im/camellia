@@ -21,7 +21,7 @@ public class CustomCommandInterceptor implements CommandInterceptor {
         CommandContext commandContext = command.getCommandContext();
         Long bid = commandContext.getBid();
         String bgroup = commandContext.getBgroup();
-        if (bid != null && bid != 1 && bgroup != null && !bgroup.equals("default")) {
+        if (bid == null || bgroup == null || bid != 100000 || !bgroup.equals("default")) {
             return CommandInterceptResponse.SUCCESS;
         }
         SocketAddress clientSocketAddress = commandContext.getClientSocketAddress();

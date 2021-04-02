@@ -234,4 +234,9 @@ public class RedisClient implements AsyncClient {
         }
         channel.writeAndFlush(pack);
     }
+
+    @Override
+    public void preheat() {
+        //do nothing
+    }
 }

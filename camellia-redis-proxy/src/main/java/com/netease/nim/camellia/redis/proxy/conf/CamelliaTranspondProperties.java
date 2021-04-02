@@ -172,6 +172,7 @@ public class CamelliaTranspondProperties {
         private QueueType queueType = Constants.Transpond.queueType;
         private MultiWriteMode multiWriteMode = Constants.Transpond.multiWriteMode;
         private DisruptorConf disruptorConf;
+        private boolean preheat = Constants.Transpond.preheat;
 
         public static class DisruptorConf {
             private String waitStrategyClassName;
@@ -279,6 +280,14 @@ public class CamelliaTranspondProperties {
 
         public void setMultiWriteMode(MultiWriteMode multiWriteMode) {
             this.multiWriteMode = multiWriteMode;
+        }
+
+        public boolean isPreheat() {
+            return preheat;
+        }
+
+        public void setPreheat(boolean preheat) {
+            this.preheat = preheat;
         }
     }
 }

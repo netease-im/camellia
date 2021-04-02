@@ -4,6 +4,7 @@ import com.netease.nim.camellia.core.api.CamelliaApiEnv;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
+import io.netty.channel.EventLoopGroup;
 
 /**
  *
@@ -14,12 +15,12 @@ public class CamelliaRedisProxyBoot {
     private final String applicationName;
     private final int port;
 
-    public CamelliaRedisProxyBoot(CamelliaServerProperties serverProperties,
+    public CamelliaRedisProxyBoot(CamelliaServerProperties serverProperties, EventLoopGroup bossGroup, EventLoopGroup workGroup,
                                   CommandInvoker commandInvoker, String applicationName) throws Exception {
         CamelliaApiEnv.source = applicationName;
         this.applicationName = applicationName;
         this.port = serverProperties.getPort();
-        CamelliaRedisProxyServer server = new CamelliaRedisProxyServer(serverProperties, commandInvoker);
+        CamelliaRedisProxyServer server = new CamelliaRedisProxyServer(serverProperties, bossGroup, workGroup, commandInvoker);
         server.start();
     }
 

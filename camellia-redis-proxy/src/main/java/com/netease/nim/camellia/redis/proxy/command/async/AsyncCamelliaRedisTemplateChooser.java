@@ -83,6 +83,14 @@ public class AsyncCamelliaRedisTemplateChooser {
             initLocal(false);
             initRemote(false);
         }
+        if (properties.getRedisConf().isPreheat()) {
+            if (localInstance != null) {
+                localInstance.preheat();
+            }
+            if (remoteInstance != null) {
+                remoteInstance.preheat();
+            }
+        }
     }
 
     private void initRemote(boolean throwError) {

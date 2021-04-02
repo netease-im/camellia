@@ -7,6 +7,8 @@ import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,8 +21,18 @@ import java.util.concurrent.CompletableFuture;
  */
 public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
 
+    private static final Logger logger = LoggerFactory.getLogger(AsyncCamelliaSimpleClient.class);
+
     public abstract RedisClientAddr getAddr();
     public abstract Resource getResource();
+
+    @Override
+    public void preheat() {
+        logger.info("try preheat, url = {}", getResource().getUrl());
+        RedisClientAddr addr = getAddr();
+        boolean result = RedisClientHub.preheat(addr.getHost(), addr.getPort(), addr.getPassword());
+        logger.info("preheat result = {}, url = {}", result, getResource().getUrl());
+    }
 
     public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
         List<Command> filterCommands = new ArrayList<>(commands.size());

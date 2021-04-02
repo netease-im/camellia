@@ -6,9 +6,16 @@ import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleService;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleServiceAdaptor;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.NettyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.TranspondProperties;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.concurrent.DefaultThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -23,6 +30,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties({CamelliaRedisProxyProperties.class, NettyProperties.class, TranspondProperties.class})
 public class CamelliaRedisProxyConfiguration {
+
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyConfiguration.class);
 
     @Value("${server.port:6379}")
     private int port;
@@ -43,14 +52,38 @@ public class CamelliaRedisProxyConfiguration {
         transpondProperties.setRemote(CamelliaRedisProxyUtil.parse(transpond.getRemote()));
         transpondProperties.setRedisConf(CamelliaRedisProxyUtil.parse(transpond.getRedisConf()));
 
+        GlobalRedisProxyEnv.bossGroup = bossGroup(properties);
+        GlobalRedisProxyEnv.workGroup = workGroup(properties);
         return new AsyncCommandInvoker(serverProperties, transpondProperties);
+    }
+
+    @Bean
+    @Qualifier("bossGroup")
+    public EventLoopGroup bossGroup(CamelliaRedisProxyProperties properties) {
+        CamelliaServerProperties serverProperties = CamelliaRedisProxyUtil.parse(properties, port);
+        int bossThread = serverProperties.getBossThread();
+        logger.info("CamelliaRedisProxyServer init, bossThread = {}", bossThread);
+        GlobalRedisProxyEnv.bossThread = bossThread;
+        return new NioEventLoopGroup(bossThread, new DefaultThreadFactory("boss-group"));
+    }
+
+    @Bean
+    @Qualifier("workGroup")
+    public EventLoopGroup workGroup(CamelliaRedisProxyProperties properties) {
+        CamelliaServerProperties serverProperties = CamelliaRedisProxyUtil.parse(properties, port);
+        int workThread = serverProperties.getWorkThread();
+        logger.info("CamelliaRedisProxyServer init, workThread = {}", workThread);
+        GlobalRedisProxyEnv.workThread = workThread;
+        return new NioEventLoopGroup(workThread, new DefaultThreadFactory("work-group"));
     }
 
     @Bean
     public CamelliaRedisProxyBoot redisProxyBoot(CamelliaRedisProxyProperties properties) throws Exception {
         CommandInvoker commandInvoker = commandInvoker(properties);
         CamelliaServerProperties serverProperties = CamelliaRedisProxyUtil.parse(properties, port);
-        return new CamelliaRedisProxyBoot(serverProperties, commandInvoker, applicationName);
+        GlobalRedisProxyEnv.bossGroup = bossGroup(properties);
+        GlobalRedisProxyEnv.workGroup = workGroup(properties);
+        return new CamelliaRedisProxyBoot(serverProperties, GlobalRedisProxyEnv.bossGroup, GlobalRedisProxyEnv.workGroup, commandInvoker, applicationName);
     }
 
     @Bean

@@ -117,6 +117,14 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
     }
 
+    public void preheat() {
+        Set<Resource> allResources = this.resourceChooser.getAllResources();
+        for (Resource resource : allResources) {
+            AsyncClient client = factory.get(resource.getUrl());
+            client.preheat();
+        }
+    }
+
     public List<CompletableFuture<Reply>> sendCommand(List<Command> commands) {
         List<CompletableFuture<Reply>> futureList = new ArrayList<>(commands.size());
 

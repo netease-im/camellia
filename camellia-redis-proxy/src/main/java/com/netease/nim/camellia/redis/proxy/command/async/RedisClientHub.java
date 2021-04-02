@@ -4,10 +4,12 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.LockMap;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.HashedWheelTimer;
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -100,6 +102,23 @@ public class RedisClientHub {
             ErrorLogCollector.collect(RedisClientHub.class, "new RedisClient error, addr = " + addr.getUrl(), e);
             return null;
         }
+    }
+
+    public static boolean preheat(String host, int port, String password) {
+        EventLoopGroup workGroup = GlobalRedisProxyEnv.workGroup;
+        int workThread = GlobalRedisProxyEnv.workThread;
+        RedisClientAddr addr = new RedisClientAddr(host, port, password);
+        if (workGroup != null && workThread > 0) {
+            logger.info("try preheat, addr = {}", addr.getUrl());
+            for (int i = 0; i < GlobalRedisProxyEnv.workThread; i++) {
+                EventLoop eventLoop = workGroup.next();
+                updateEventLoop(eventLoop);
+                get(new RedisClientAddr(host, port, password));
+            }
+            logger.info("preheat success, addr = {}", addr.getUrl());
+            return true;
+        }
+        return false;
     }
 
     public static RedisClient get(RedisClientAddr addr) {

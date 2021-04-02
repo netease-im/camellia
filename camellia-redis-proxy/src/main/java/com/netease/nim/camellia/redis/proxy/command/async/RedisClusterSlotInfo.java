@@ -64,6 +64,14 @@ public class RedisClusterSlotInfo {
     }
 
     /**
+     * get all nodes
+     * @return nodes
+     */
+    public Set<Node> getNodes() {
+        return nodeSet;
+    }
+
+    /**
      * renew slot info
      */
     private long lastRenewTimestamp = 0L;

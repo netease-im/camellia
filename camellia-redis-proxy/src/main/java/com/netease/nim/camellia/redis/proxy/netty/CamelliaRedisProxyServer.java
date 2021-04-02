@@ -22,18 +22,31 @@ public class CamelliaRedisProxyServer {
     private final CamelliaServerProperties serverProperties;
     private final ServerHandler serverHandler;
     private final InitHandler initHandler = new InitHandler();
+    private final EventLoopGroup bossGroup;
+    private final EventLoopGroup workGroup;
+
+    public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, EventLoopGroup bossGroup, EventLoopGroup workGroup, CommandInvoker invoker) {
+        this.serverProperties = serverProperties;
+        this.serverHandler = new ServerHandler(serverProperties, invoker);
+        this.bossGroup = bossGroup;
+        this.workGroup = workGroup;
+    }
 
     public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, CommandInvoker invoker) {
         this.serverProperties = serverProperties;
         this.serverHandler = new ServerHandler(serverProperties, invoker);
-    }
-
-    public void start() throws Exception {
         int bossThread = serverProperties.getBossThread();
         int workThread = serverProperties.getWorkThread();
         logger.info("CamelliaRedisProxyServer init, bossThread = {}, workThread = {}", bossThread, workThread);
-        EventLoopGroup bossGroup = new NioEventLoopGroup(bossThread, new DefaultThreadFactory("boss-group"));
-        EventLoopGroup workGroup = new NioEventLoopGroup(workThread, new DefaultThreadFactory("work-group"));
+        this.bossGroup = new NioEventLoopGroup(bossThread, new DefaultThreadFactory("boss-group"));
+        this.workGroup = new NioEventLoopGroup(workThread, new DefaultThreadFactory("work-group"));
+        GlobalRedisProxyEnv.workThread = workThread;
+        GlobalRedisProxyEnv.bossThread = bossThread;
+        GlobalRedisProxyEnv.workGroup = workGroup;
+        GlobalRedisProxyEnv.bossGroup = bossGroup;
+    }
+
+    public void start() throws Exception {
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         serverBootstrap.group(bossGroup, workGroup)
                 .channel(NioServerSocketChannel.class)
