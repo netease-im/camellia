@@ -28,18 +28,6 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 提供了一个spring-boot-starter用于SpringRedisTemplate以注册发现模式接入proxy
 * 部分参数支持动态变更，参见：[动态配置](dynamic-conf.md)
 
-## 性能测试报告
-[基于v1.0.19的性能测试报告](performance-report-8.md)
-
-历史性能测试报告  
-[代理到redis cluster（v1.0.4）](performance-report-1.md)  
-[分片（v1.0.4）](performance-report-2.md)  
-[双写（v1.0.4）](performance-report-3.md)  
-[异常测试（v1.0.4）](performance-report-4.md)  
-[云主机环境测试（v1.0.7）](performance-report-5.md)  
-[使用redis-benchmark（v1.0.8 vs v1.0.9）](performance-report-6-zh.md)    
-[使用网易NPT性能测试平台（v1.0.8 vs v1.0.9）](performance-report-7.md)  
-
 ## 支持的命令
 * 完整支持
 ```
@@ -234,3 +222,15 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 使用热key缓存功能来应对突发流量
 * 使用双读功能来扩展集群的读能力上限
 * 等等
+
+## 性能测试报告
+[基于v1.0.19的性能测试报告](performance-report-8.md)
+
+历史性能测试报告  
+[代理到redis cluster（v1.0.4）](performance-report-1.md)  
+[分片（v1.0.4）](performance-report-2.md)  
+[双写（v1.0.4）](performance-report-3.md)  
+[异常测试（v1.0.4）](performance-report-4.md)  
+[云主机环境测试（v1.0.7）](performance-report-5.md)  
+[使用redis-benchmark（v1.0.8 vs v1.0.9）](performance-report-6-zh.md)    
+[使用网易NPT性能测试平台（v1.0.8 vs v1.0.9）](performance-report-7.md)
