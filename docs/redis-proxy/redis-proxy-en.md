@@ -14,7 +14,7 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support read write separation
 * support double(multi) write
 * support double(multi) read 
-* support config refresh online(need camellia-dashboard)
+* support config refresh online
 * support multi-config(need camellia-dashboard), then proxy will route business-A to redis1, business-B to redis2 
 * support custom CommandInterceptor, then you can intercept illegal command, such as too long key/value、lack of standardization of key
 * support monitor, such as commands request count、commands spend time, support setting MonitorCallback
