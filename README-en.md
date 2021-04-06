@@ -71,7 +71,7 @@ base on CamelliaRedisTemplate，provide some toolkit of redis, such as redis-loc
 [QUICK START](/docs/toolkit/toolkit.md)  
 
 ## Version
-latest version is 1.0.20，have deploy to maven central repository on 2020/02/26  
+latest version is 1.0.21，have deploy to maven central repository on 2020/04/06  
 [CHANGE_LOG](/update-en.md)  
 
 ## Contact

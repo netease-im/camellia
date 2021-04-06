@@ -5,7 +5,7 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
-# 1.0.21（2020/03/xx）
+# 1.0.21（2020/04/06）
 ### add
 * camellia-redis-proxy support dynamic reload of redis address route conf when use local conf
 * camellia-redis-proxy's ProxyDynamicConf(camellia-redis-proxy.properties) support use standalone absolute-path conf file to merge classpath:camellia-redis-proxy.properties
