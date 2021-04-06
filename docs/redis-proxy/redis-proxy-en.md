@@ -14,7 +14,7 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support read write separation
 * support double(multi) write
 * support double(multi) read 
-* support config refresh online
+* support route config refresh online
 * support multi-config(need camellia-dashboard), then proxy will route business-A to redis1, business-B to redis2 
 * support custom CommandInterceptor, then you can intercept illegal command, such as too long key/value、lack of standardization of key
 * support monitor, such as commands request count、commands spend time, support setting MonitorCallback
@@ -22,11 +22,12 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support monitor hot key, support setting HotKeyMonitorCallback
 * support hot key local cache(only support GET command), support setting HotKeyCacheStatsCallback
 * support monitor big key, support setting BigKeyMonitorCallback
-* provider a http api to get monitor data, see: [monitor](monitor.md)
+* provider monitor config(such as on-off、threshold) refresh online 
+* provider a http api to get monitor metric data
 * provide a spring-boot-starter，you can quick start a proxy cluster
 * provide a default register/discovery component depends on zookeeper, if client's language is java, then you can adjust slightly by use RedisProxyJedisPool instead of JedisPool  
 * provide a spring-boot-starter, then you can use proxy in register/discovery mode when client is SpringRedisTemplate
-* some conf support dynamic reload, see: [dynamic-conf](dynamic-conf.md)  
+  
 
 ## Supported Commands
 * Full Supported
