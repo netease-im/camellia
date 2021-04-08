@@ -126,7 +126,7 @@ public class JedisSentinelSlavesPool extends JedisPool {
     private synchronized void updateMaster(HostAndPort master) {
         initPool(master);
         if (this.master == null || !this.master.getUrl().equals(master.getUrl())) {
-            logger.info("master update, url = {}, old = {}, new = {}", redisSentinelSlavesResource.getUrl(), this.master, master);
+            logger.info("master update, url = {}, oldMaster = {}, newMaster = {}", redisSentinelSlavesResource.getUrl(), this.master, master);
         }
         this.master = master;
     }
@@ -136,7 +136,7 @@ public class JedisSentinelSlavesPool extends JedisPool {
             initPool(slave);
         }
         if (this.slaves == null) {
-            logger.info("slaves update, url = {}, old = {}, new = {}", redisSentinelSlavesResource.getUrl(), this.slaves, slaves);
+            logger.info("slaves update, url = {}, oldSlaves = {}, newSlaves = {}", redisSentinelSlavesResource.getUrl(), this.slaves, slaves);
         } else {
             List<String> oldSlaves = new ArrayList<>();
             for (HostAndPort slave : this.slaves) {
@@ -149,7 +149,7 @@ public class JedisSentinelSlavesPool extends JedisPool {
             }
             Collections.sort(newSlaves);
             if (!oldSlaves.toString().equals(newSlaves.toString())) {
-                logger.info("slaves update, url = {}, old = {}, new = {}", redisSentinelSlavesResource.getUrl(), this.slaves, slaves);
+                logger.info("slaves update, url = {}, oldSlaves = {}, newSlaves = {}", redisSentinelSlavesResource.getUrl(), this.slaves, slaves);
             }
         }
         this.slaves = slaves;
