@@ -7,10 +7,7 @@ import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
 import com.netease.nim.camellia.redis.jediscluster.JedisClusterWrapper;
 import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyContext;
 import com.netease.nim.camellia.redis.proxy.RedisProxyResource;
-import com.netease.nim.camellia.redis.resource.CamelliaRedisProxyResource;
-import com.netease.nim.camellia.redis.resource.RedisClusterResource;
-import com.netease.nim.camellia.redis.resource.RedisResource;
-import com.netease.nim.camellia.redis.resource.RedisSentinelResource;
+import com.netease.nim.camellia.redis.resource.*;
 import com.netease.nim.camellia.redis.util.CloseUtil;
 import redis.clients.jedis.*;
 import redis.clients.jedis.exceptions.JedisClusterException;
@@ -119,6 +116,14 @@ public interface RedisClientPool {
                     jedis5 = jedisPool.getResource();
                     jedisMap.put(resource.getUrl(), jedis5);
                     return jedis5.getClient();
+                } else if (resource instanceof RedisSentinelSlavesResource) {
+                    Jedis jedis6 = jedisMap.get(resource.getUrl());
+                    if (jedis6 != null) {
+                        return jedis6.getClient();
+                    }
+                    jedis6 = jedisPoolFactory.getJedisSentinelSlavesPool((RedisSentinelSlavesResource) resource).getResource();
+                    jedisMap.put(resource.getUrl(), jedis6);
+                    return jedis6.getClient();
                 }
                 throw new UnsupportedOperationException();
             } catch (Exception e) {

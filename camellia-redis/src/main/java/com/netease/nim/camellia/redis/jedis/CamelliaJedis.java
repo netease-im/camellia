@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.RedisProxyResource;
 import com.netease.nim.camellia.redis.resource.CamelliaRedisProxyResource;
 import com.netease.nim.camellia.redis.resource.RedisResource;
 import com.netease.nim.camellia.redis.resource.RedisSentinelResource;
+import com.netease.nim.camellia.redis.resource.RedisSentinelSlavesResource;
 import com.netease.nim.camellia.redis.util.CloseUtil;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.geo.GeoRadiusParam;
@@ -37,6 +38,10 @@ public class CamelliaJedis implements ICamelliaRedis {
 
     public CamelliaJedis(CamelliaRedisProxyResource resource, CamelliaRedisEnv env) {
         this.jedisPool = env.getJedisPoolFactory().getCamelliaJedisPool(resource);
+    }
+
+    public CamelliaJedis(RedisSentinelSlavesResource resource, CamelliaRedisEnv env) {
+        this.jedisPool = env.getJedisPoolFactory().getJedisSentinelSlavesPool(resource);
     }
 
     @Override

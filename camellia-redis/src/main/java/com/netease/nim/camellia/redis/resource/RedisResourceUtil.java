@@ -152,6 +152,56 @@ public class RedisResourceUtil {
                     throw new CamelliaRedisException("CamelliaRedisProxyFactory initOrGet JedisPool fail");
                 }
                 return camelliaRedisProxyResource;
+            } else if (url.startsWith(RedisType.RedisSentinelSlaves.getPrefix())) {
+                String substring = url.substring(RedisType.RedisSentinelSlaves.getPrefix().length());
+                if (!substring.contains("@")) {
+                    throw new CamelliaRedisException("missing @");
+                }
+                if (!substring.contains("/")) {
+                    throw new CamelliaRedisException("missing /");
+                }
+
+                int index = substring.lastIndexOf("@");
+                String password = substring.substring(0, index);
+                if (password.length() == 0) {
+                    password = null;
+                }
+                String split = substring.substring(index + 1);
+
+                int index2 = split.indexOf("/");
+                String hostPorts = split.substring(0, index2);
+                String masterWithParams = split.substring(index2 + 1);
+
+                String[] split2 = hostPorts.split(",");
+                List<RedisSentinelResource.Node> nodeList = new ArrayList<>();
+                for (String node : split2) {
+                    String[] split3 = node.split(":");
+                    String host = split3[0];
+                    int port = Integer.parseInt(split3[1]);
+                    nodeList.add(new RedisSentinelResource.Node(host, port));
+                }
+                String master;
+                boolean withMaster = false;
+                if (masterWithParams.contains("?")) {
+                    int i = masterWithParams.indexOf("?");
+                    master = masterWithParams.substring(0, i);
+                    String[] split1 = masterWithParams.substring(i+1).split("&");
+                    for (String s : split1) {
+                        String[] split3 = s.split("=");
+                        if (split3.length != 2) continue;
+                        String k = split3[0];
+                        String v = split3[1];
+                        if (k.equals("withMaster")) {
+                            if (!v.equalsIgnoreCase("true") && !v.equalsIgnoreCase("false")) {
+                                throw new CamelliaRedisException("withMaster only support true/false");
+                            }
+                            withMaster = Boolean.parseBoolean(v);
+                        }
+                    }
+                } else {
+                    master = masterWithParams;
+                }
+                return new RedisSentinelSlavesResource(master, nodeList, password, withMaster);
             }
             throw new CamelliaRedisException("not redis resource");
         } catch (CamelliaRedisException e) {

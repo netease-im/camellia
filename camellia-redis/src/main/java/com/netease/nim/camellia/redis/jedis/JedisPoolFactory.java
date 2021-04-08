@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyContext;
 import com.netease.nim.camellia.redis.resource.CamelliaRedisProxyResource;
 import com.netease.nim.camellia.redis.resource.RedisResource;
 import com.netease.nim.camellia.redis.resource.RedisSentinelResource;
+import com.netease.nim.camellia.redis.resource.RedisSentinelSlavesResource;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -43,6 +44,13 @@ public interface JedisPoolFactory {
     JedisPool getCamelliaJedisPool(CamelliaRedisProxyResource camelliaRedisProxyResource);
 
     /**
+     * 获取JedisSentinelSlavesPool对象
+     * @param redisSentinelSlavesResource RedisSentinelSlaves资源定义
+     * @return JedisSentinelSlavesPool对象
+     */
+    JedisPool getJedisSentinelSlavesPool(RedisSentinelSlavesResource redisSentinelSlavesResource);
+
+    /**
      * 一个默认实现
      */
     JedisPoolFactory DEFAULT = new DefaultJedisPoolFactory();
@@ -55,8 +63,10 @@ public interface JedisPoolFactory {
         private final Object lock = new Object();
         private final ConcurrentHashMap<String, JedisPool> map1 = new ConcurrentHashMap<>();
         private final ConcurrentHashMap<String, JedisSentinelPool> map2 = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<String, JedisSentinelSlavesPool> map3 = new ConcurrentHashMap<>();
         private final GenericObjectPoolConfig poolConfig;
         private final int timeout;
+        private final long redisSentinelSlavesCheckIntervalMillis;
 
         public DefaultJedisPoolFactory() {
             this.poolConfig = new JedisPoolConfig();
@@ -65,11 +75,19 @@ public interface JedisPoolFactory {
             this.poolConfig.setMaxIdle(CamelliaRedisConstants.Jedis.maxIdle);
             this.poolConfig.setMaxWaitMillis(CamelliaRedisConstants.Jedis.maxWaitMillis);
             this.timeout = CamelliaRedisConstants.Jedis.timeoutMillis;
+            this.redisSentinelSlavesCheckIntervalMillis = CamelliaRedisConstants.Jedis.redisSentinelSlavesCheckIntervalMillis;
         }
 
         public DefaultJedisPoolFactory(GenericObjectPoolConfig poolConfig, int timeout) {
             this.poolConfig = poolConfig;
             this.timeout = timeout;
+            this.redisSentinelSlavesCheckIntervalMillis = CamelliaRedisConstants.Jedis.redisSentinelSlavesCheckIntervalMillis;
+        }
+
+        public DefaultJedisPoolFactory(GenericObjectPoolConfig poolConfig, int timeout, int redisSentinelSlavesCheckIntervalMillis) {
+            this.poolConfig = poolConfig;
+            this.timeout = timeout;
+            this.redisSentinelSlavesCheckIntervalMillis = redisSentinelSlavesCheckIntervalMillis;
         }
 
         @Override
@@ -124,6 +142,21 @@ public interface JedisPoolFactory {
         @Override
         public JedisPool getCamelliaJedisPool(CamelliaRedisProxyResource camelliaRedisProxyResource) {
             return CamelliaRedisProxyContext.getFactory().initOrGet(camelliaRedisProxyResource);
+        }
+
+        @Override
+        public JedisPool getJedisSentinelSlavesPool(RedisSentinelSlavesResource redisSentinelSlavesResource) {
+            JedisSentinelSlavesPool jedisSentinelSlavesPool = map3.get(redisSentinelSlavesResource.getUrl());
+            if (jedisSentinelSlavesPool == null) {
+                synchronized (lock) {
+                    jedisSentinelSlavesPool = map3.get(redisSentinelSlavesResource.getUrl());
+                    if (jedisSentinelSlavesPool == null) {
+                        jedisSentinelSlavesPool = new JedisSentinelSlavesPool(redisSentinelSlavesResource, poolConfig, timeout, redisSentinelSlavesCheckIntervalMillis);
+                        map3.put(redisSentinelSlavesResource.getUrl(), jedisSentinelSlavesPool);
+                    }
+                }
+            }
+            return jedisSentinelSlavesPool;
         }
     }
 

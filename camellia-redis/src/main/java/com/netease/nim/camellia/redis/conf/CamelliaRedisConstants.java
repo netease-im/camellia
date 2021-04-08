@@ -14,6 +14,7 @@ public class CamelliaRedisConstants {
         public static final int maxTotal = SysUtils.getCpuNum() * 8;
         public static final int maxWaitMillis = 2000;
         public static final int timeoutMillis = 2000;
+        public static final long redisSentinelSlavesCheckIntervalMillis = 5000;
     }
 
     public static class JedisCluster {
