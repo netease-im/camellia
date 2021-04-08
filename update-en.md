@@ -5,6 +5,16 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
+# 1.0.22（2020/04/xx）
+### add
+* CamelliaRedisTemplate support read from slaves in redis-sentinel cluster(will automatic process node-down/master-switch/node-expansion)
+
+### update
+* none
+
+### fix
+* none
+
 # 1.0.21（2020/04/06）
 ### add
 * camellia-redis-proxy support dynamic reload of redis address route conf when use local conf

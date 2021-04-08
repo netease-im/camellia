@@ -5,6 +5,16 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
+# 1.0.22（2020/04/xx）
+### 新增
+* CamelliaRedisTemplate支持从redis-sentinel集群集群中的从节点读数据（会自动感知从节点的宕机、切换和扩容）
+
+### 更新
+* 无
+
+### fix
+* 无
+
 # 1.0.21（2020/04/06）
 ### 新增
 * camellia-redis-proxy在使用本地配置时，支持动态修改路由转发规则，见：[路由配置](/docs/redis-proxy/route.md)
