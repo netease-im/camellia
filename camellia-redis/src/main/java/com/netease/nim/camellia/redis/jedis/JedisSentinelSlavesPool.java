@@ -76,7 +76,12 @@ public class JedisSentinelSlavesPool extends JedisPool {
             retry --;
             try {
                 if (master == null) {
-                    int index = ThreadLocalRandom.current().nextInt(slaves.size());
+                    int size = slaves.size();
+                    if (size == 0) {
+                        cause = new CamelliaRedisException("all slaves down");
+                        continue;
+                    }
+                    int index = ThreadLocalRandom.current().nextInt(size);
                     HostAndPort slave = slaves.get(index);
                     JedisPool jedisPool = poolMap.get(slave.getUrl());
                     if (jedisPool != null) {
