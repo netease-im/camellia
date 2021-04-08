@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,6 +28,8 @@ public class JedisSentinelSlavesPool extends JedisPool {
 
     private final ConcurrentHashMap<String, JedisPool> poolMap = new ConcurrentHashMap<>();
 
+    private final RedisSentinelSlavesResource redisSentinelSlavesResource;
+
     private final GenericObjectPoolConfig poolConfig;
     private final int timeout;
     private final String password;
@@ -43,6 +46,7 @@ public class JedisSentinelSlavesPool extends JedisPool {
         this.poolConfig = poolConfig;
         this.timeout = timeout;
         this.password = redisSentinelSlavesResource.getPassword();
+        this.redisSentinelSlavesResource = redisSentinelSlavesResource;
         for (RedisSentinelResource.Node node : redisSentinelSlavesResource.getNodes()) {
             if (redisSentinelSlavesResource.isWithMaster()) {
                 MasterListener masterListener = new MasterListener(this, redisSentinelSlavesResource.getMaster(), node.getHost(), node.getPort());
@@ -121,12 +125,32 @@ public class JedisSentinelSlavesPool extends JedisPool {
 
     private synchronized void updateMaster(HostAndPort master) {
         initPool(master);
+        if (this.master == null || !this.master.getUrl().equals(master.getUrl())) {
+            logger.info("master update, url = {}, old = {}, new = {}", redisSentinelSlavesResource.getUrl(), this.master, master);
+        }
         this.master = master;
     }
 
     private synchronized void updateSlaves(List<HostAndPort> slaves) {
         for (HostAndPort slave : slaves) {
             initPool(slave);
+        }
+        if (this.slaves == null) {
+            logger.info("slaves update, url = {}, old = {}, new = {}", redisSentinelSlavesResource.getUrl(), this.slaves, slaves);
+        } else {
+            List<String> oldSlaves = new ArrayList<>();
+            for (HostAndPort slave : this.slaves) {
+                oldSlaves.add(slave.toString());
+            }
+            Collections.sort(oldSlaves);
+            List<String> newSlaves = new ArrayList<>();
+            for (HostAndPort slave : slaves) {
+                newSlaves.add(slave.toString());
+            }
+            Collections.sort(newSlaves);
+            if (!oldSlaves.toString().equals(newSlaves.toString())) {
+                logger.info("slaves update, url = {}, old = {}, new = {}", redisSentinelSlavesResource.getUrl(), this.slaves, slaves);
+            }
         }
         this.slaves = slaves;
     }
@@ -151,6 +175,11 @@ public class JedisSentinelSlavesPool extends JedisPool {
         }
 
         public String getUrl() {
+            return url;
+        }
+
+        @Override
+        public String toString() {
             return url;
         }
     }
@@ -286,6 +315,8 @@ public class JedisSentinelSlavesPool extends JedisPool {
                             String[] switchMasterMsg = message.split(" ");
                             if (switchMasterMsg.length > 3) {
                                 if (masterName.equals(switchMasterMsg[0])) {
+                                    String host = switchMasterMsg[3];
+                                    int port = Integer.parseInt(switchMasterMsg[4]);
                                     HostAndPort hostAndPort = new HostAndPort(host, port);
                                     jedisSentinelSlavesPool.updateMaster(hostAndPort);
                                 } else {
