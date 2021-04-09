@@ -12,6 +12,7 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support stream commands of redis5.0
 * support custom shading
 * support read write separation
+* support read from slave(in redis-sentinel master-slave mode，support read slave, and proxy will automatic process node-down/master-switch/node-expansion）
 * support double(multi) write
 * support double(multi) read 
 * support route config refresh online

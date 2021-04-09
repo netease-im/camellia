@@ -12,6 +12,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持redis5.0的Streams命令
 * 支持自定义分片
 * 支持读写分离
+* 支持读slave（redis-sentinel的主从模式下，支持配置读slave，且proxy能自动感知节点宕机、主从切换和从节点扩容）
 * 支持双（多）写
 * 支持双（多）读
 * 支持路由配置在线变更

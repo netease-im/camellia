@@ -8,6 +8,7 @@
 # 1.0.22（2020/04/xx）
 ### add
 * CamelliaRedisTemplate support read from slaves in redis-sentinel cluster(will automatic process node-down/master-switch/node-expansion)
+* camellia-redis-proxy support read from slaves in redis-sentinel cluster(will automatic process node-down/master-switch/node-expansion)
 
 ### update
 * none

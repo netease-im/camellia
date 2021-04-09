@@ -56,6 +56,25 @@ redis-cluster://passwd@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
 redis-cluster://@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
 ```
 
+* redis-sentinel-slaves
+```
+##本类型的后端只能配置为读写分离模式下的读地址
+
+##不读master，此时proxy会从slave集合中随机挑选一个slave进行命令的转发
+##有密码
+redis-sentinel-slaves://passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=false
+##没有密码
+redis-sentinel-slaves://@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=false
+
+##读master，此时proxy会从master+slave集合中随机挑选一个节点进行命令的转发（可能是master也可能是slave，所有节点概率相同）
+##有密码
+redis-sentinel-slaves://passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true
+##没有密码
+redis-sentinel-slaves://@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true
+
+##redis-sentinel-slaves会自动感知：节点宕机、主从切换和节点扩容
+```
+
 ### 动态配置
 如果你希望你的proxy的路由配置可以动态变更，比如本来路由到redisA，然后动态的切换成redisB，那么你需要一个额外的配置文件，并且在application.yml中引用，如下：
 ```yaml
@@ -108,7 +127,7 @@ redis://passwd@127.0.0.1:6379
 配置文件里只有一行数据，就是一个后端redis地址，表示proxy的路由转发规则是最简单的形式，也就是直接转发给该redis实例  
 此时的配置效果和在application.yml里直接配置resource地址url效果是一样的，但是区别在于使用独立配置文件时，该地址是支持动态更新的
 
-#### 配置读写分离
+#### 配置读写分离一
 ```json
 {
   "type": "simple",
@@ -124,6 +143,21 @@ redis://passwd@127.0.0.1:6379
 * 读命令会代理到redis://passwd123@127.0.0.1:6379
 
 可以看到json里可以混用redis、redis-sentinel、redis-cluster  
+
+#### 配置读写分离二
+```json
+{
+  "type": "simple",
+  "operation": {
+    "read": "redis-sentinel-slaves://passwd123@127.0.0.1:26379/master?withMaster=true",
+    "type": "rw_separate",
+    "write": "redis-sentinel://passwd123@127.0.0.1:26379/master"
+  }
+}
+```
+上面的配置表示：  
+* 写命令会代理到redis-sentinel://passwd123@127.0.0.1:26379/master  
+* 读命令会代理到redis-sentinel-slaves://passwd123@127.0.0.1:26379/master?withMaster=true，也就是redis-sentinel://passwd123@127.0.0.1:26379/master的主节点和所有从节点
 
 #### 配置分片
 ```json
