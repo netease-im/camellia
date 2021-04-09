@@ -143,18 +143,22 @@ public class JedisSentinelSlavesPool extends JedisPool {
         if (this.slaves == null) {
             logger.info("slaves update, url = {}, oldSlaves = {}, newSlaves = {}", redisSentinelSlavesResource.getUrl(), this.slaves, slaves);
         } else {
-            List<String> oldSlaves = new ArrayList<>();
-            for (HostAndPort slave : this.slaves) {
-                oldSlaves.add(slave.toString());
-            }
-            Collections.sort(oldSlaves);
-            List<String> newSlaves = new ArrayList<>();
-            for (HostAndPort slave : slaves) {
-                newSlaves.add(slave.toString());
-            }
-            Collections.sort(newSlaves);
-            if (!oldSlaves.toString().equals(newSlaves.toString())) {
+            if (slaves.size() != this.slaves.size()) {
                 logger.info("slaves update, url = {}, oldSlaves = {}, newSlaves = {}", redisSentinelSlavesResource.getUrl(), this.slaves, slaves);
+            } else {
+                List<String> oldSlaves = new ArrayList<>();
+                for (HostAndPort slave : this.slaves) {
+                    oldSlaves.add(slave.toString());
+                }
+                Collections.sort(oldSlaves);
+                List<String> newSlaves = new ArrayList<>();
+                for (HostAndPort slave : slaves) {
+                    newSlaves.add(slave.toString());
+                }
+                Collections.sort(newSlaves);
+                if (!oldSlaves.toString().equals(newSlaves.toString())) {
+                    logger.info("slaves update, url = {}, oldSlaves = {}, newSlaves = {}", redisSentinelSlavesResource.getUrl(), this.slaves, slaves);
+                }
             }
         }
         this.slaves = slaves;

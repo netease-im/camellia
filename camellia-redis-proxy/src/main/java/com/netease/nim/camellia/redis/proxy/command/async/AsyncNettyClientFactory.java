@@ -3,10 +3,7 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
-import com.netease.nim.camellia.redis.resource.RedisClusterResource;
-import com.netease.nim.camellia.redis.resource.RedisResource;
-import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
-import com.netease.nim.camellia.redis.resource.RedisSentinelResource;
+import com.netease.nim.camellia.redis.resource.*;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -60,6 +57,15 @@ public interface AsyncNettyClientFactory {
             return client;
         }
 
+        public AsyncClient get(RedisSentinelSlavesResource redisSentinelSlavesResource) {
+            AsyncClient client = map.get(redisSentinelSlavesResource.getUrl());
+            if (client == null) {
+                client = map.computeIfAbsent(redisSentinelSlavesResource.getUrl(),
+                        k -> new AsyncCamelliaRedisSentinelSlavesClient(redisSentinelSlavesResource));
+            }
+            return client;
+        }
+
         @Override
         public AsyncClient get(String url) {
             AsyncClient client = map.get(url);
@@ -74,6 +80,8 @@ public interface AsyncNettyClientFactory {
                             client = get((RedisClusterResource) resource);
                         } else if (resource instanceof RedisSentinelResource) {
                             client = get((RedisSentinelResource) resource);
+                        } else if (resource instanceof RedisSentinelSlavesResource) {
+                            client = get((RedisSentinelSlavesResource) resource);
                         } else {
                             throw new CamelliaRedisException("not support resource");
                         }

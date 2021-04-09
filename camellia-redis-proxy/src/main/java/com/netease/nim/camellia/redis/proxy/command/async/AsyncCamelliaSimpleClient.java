@@ -123,14 +123,23 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
     }
 
     private void flushBlockingCommands(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
-        RedisClient client = RedisClientHub.newClient(getAddr());
+        RedisClientAddr addr = getAddr();
+        if (addr == null) {
+            String log = "addr is null, command return NOT_AVAILABLE, RedisResource = " + getResource().getUrl();
+            for (CompletableFuture<Reply> completableFuture : completableFutureList) {
+                completableFuture.complete(ErrorReply.NOT_AVAILABLE);
+                ErrorLogCollector.collect(AsyncCamelliaRedisClient.class, log);
+            }
+            return;
+        }
+        RedisClient client = RedisClientHub.newClient(addr);
         if (client != null) {
             client.sendCommand(commands, completableFutureList);
             RedisClientHub.delayStopIfIdle(client);
             Command lastBlockingCommand = commands.get(commands.size() - 1);
             lastBlockingCommand.getChannelInfo().addRedisClientForBlockingCommand(client);
         } else {
-            String log = "RedisClient[" + getAddr() + "] is null, command return NOT_AVAILABLE, RedisResource = " + getResource().getUrl();
+            String log = "RedisClient[" + addr + "] is null, command return NOT_AVAILABLE, RedisResource = " + getResource().getUrl();
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
                 completableFuture.complete(ErrorReply.NOT_AVAILABLE);
                 ErrorLogCollector.collect(AsyncCamelliaRedisClient.class, log);
@@ -139,11 +148,20 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
     }
 
     private void flushNoBlockingCommands(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
-        RedisClient client = RedisClientHub.get(getAddr());
+        RedisClientAddr addr = getAddr();
+        if (addr == null) {
+            String log = "addr is null, command return NOT_AVAILABLE, RedisResource = " + getResource().getUrl();
+            for (CompletableFuture<Reply> completableFuture : completableFutureList) {
+                completableFuture.complete(ErrorReply.NOT_AVAILABLE);
+                ErrorLogCollector.collect(AsyncCamelliaRedisClient.class, log);
+            }
+            return;
+        }
+        RedisClient client = RedisClientHub.get(addr);
         if (client != null) {
             client.sendCommand(commands, completableFutureList);
         } else {
-            String log = "RedisClient[" + getAddr() + "] is null, command return NOT_AVAILABLE, RedisResource = " + getResource().getUrl();
+            String log = "RedisClient[" + addr + "] is null, command return NOT_AVAILABLE, RedisResource = " + getResource().getUrl();
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
                 completableFuture.complete(ErrorReply.NOT_AVAILABLE);
                 ErrorLogCollector.collect(AsyncCamelliaRedisClient.class, log);
