@@ -11,7 +11,7 @@
 * camellia-redis-proxy support read from slaves in redis-sentinel cluster(will automatic process node-down/master-switch/node-expansion)
 
 ### update
-* none
+* camellia-redis-proxy do not start if preheat fail
 
 ### fix
 * none
