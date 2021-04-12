@@ -15,8 +15,8 @@ public class HBaseChecker implements IResourceChecker {
     @Override
     public boolean check(String url) {
         try {
-            HBaseResource hBaseResource = HBaseResourceUtil.parseResourceByUrl(new Resource(url));
-            return hBaseResource.getUrl().equals(url);
+            HBaseResourceUtil.parseResourceByUrl(new Resource(url));
+            return true;
         } catch (Exception e) {
             return false;
         }

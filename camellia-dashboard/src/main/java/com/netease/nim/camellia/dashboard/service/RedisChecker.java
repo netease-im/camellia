@@ -14,8 +14,8 @@ public class RedisChecker implements IResourceChecker {
     @Override
     public boolean check(String url) {
         try {
-            Resource resource = RedisResourceUtil.parseResourceByUrl(new Resource(url));
-            return resource != null && resource.getUrl().equals(url);
+            RedisResourceUtil.parseResourceByUrl(new Resource(url));
+            return true;
         } catch (Exception e) {
             return false;
         }
