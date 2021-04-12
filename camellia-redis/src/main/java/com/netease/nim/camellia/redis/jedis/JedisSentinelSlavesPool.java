@@ -75,33 +75,38 @@ public class JedisSentinelSlavesPool extends JedisPool {
         while (retry > 0) {
             retry --;
             try {
+                String url;
                 if (master == null) {
                     int size = slaves.size();
                     if (size == 0) {
                         cause = new CamelliaRedisException("all slaves down");
                         continue;
                     }
-                    int index = ThreadLocalRandom.current().nextInt(size);
-                    HostAndPort slave = slaves.get(index);
-                    JedisPool jedisPool = poolMap.get(slave.getUrl());
-                    if (jedisPool != null) {
-                        return jedisPool.getResource();
-                    }
-                } else {
-                    int size = slaves.size() + 1;
-                    int index = ThreadLocalRandom.current().nextInt(size);
-                    if (index == 0) {
-                        JedisPool jedisPool = poolMap.get(master.getUrl());
-                        if (jedisPool != null) {
-                            return jedisPool.getResource();
-                        }
+                    int index;
+                    if (size == 1) {
+                        index = 0;
                     } else {
-                        HostAndPort slave = slaves.get(index - 1);
-                        JedisPool jedisPool = poolMap.get(slave.getUrl());
-                        if (jedisPool != null) {
-                            return jedisPool.getResource();
+                        index = ThreadLocalRandom.current().nextInt(size);
+                    }
+                    HostAndPort slave = slaves.get(index);
+                    url = slave.getUrl();
+                } else {
+                    if (slaves.isEmpty()) {
+                        url = master.getUrl();
+                    } else {
+                        int size = slaves.size() + 1;
+                        int index = ThreadLocalRandom.current().nextInt(size);
+                        if (index == 0) {
+                            url = master.getUrl();
+                        } else {
+                            HostAndPort slave = slaves.get(index - 1);
+                            url = slave.getUrl();
                         }
                     }
+                }
+                JedisPool jedisPool = poolMap.get(url);
+                if (jedisPool != null) {
+                    return jedisPool.getResource();
                 }
             } catch (Exception e) {
                 cause = e;

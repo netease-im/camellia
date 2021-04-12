@@ -181,6 +181,7 @@ public class AsyncCamelliaRedisSentinelSlavesClient extends AsyncCamelliaSimpleC
             retry --;
             try {
                 if (master != null) {
+                    if (slaves.isEmpty()) return master;
                     int index = ThreadLocalRandom.current().nextInt(slaves.size() + 1);
                     if (index == 0) {
                         return master;
@@ -188,6 +189,7 @@ public class AsyncCamelliaRedisSentinelSlavesClient extends AsyncCamelliaSimpleC
                     return slaves.get(index - 1);
                 } else {
                     if (slaves.isEmpty()) return null;
+                    if (slaves.size() == 1) return slaves.get(0);
                     int index = ThreadLocalRandom.current().nextInt(slaves.size());
                     return slaves.get(index);
                 }
