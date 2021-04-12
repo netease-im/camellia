@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 
 
 import com.netease.nim.camellia.core.util.SysUtils;
+import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
@@ -113,7 +114,11 @@ public class RedisClientHub {
             for (int i = 0; i < GlobalRedisProxyEnv.workThread; i++) {
                 EventLoop eventLoop = workGroup.next();
                 updateEventLoop(eventLoop);
-                get(new RedisClientAddr(host, port, password));
+                RedisClient redisClient = get(new RedisClientAddr(host, port, password));
+                if (redisClient == null) {
+                    logger.error("preheat fail, addr = {}", addr.getUrl());
+                    throw new CamelliaRedisException("preheat fail, addr = " + addr.getUrl());
+                }
             }
             logger.info("preheat success, addr = {}", addr.getUrl());
             return true;
