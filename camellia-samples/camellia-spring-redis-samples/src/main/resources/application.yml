@@ -7,9 +7,6 @@ camellia-spring-redis-zk-discovery:
   zk-conf:
     zk-url: 127.0.0.1:2181
     base-path: /camellia
-    side-car-first: true
-    region-resolve-conf: 10.189.0.0/20:JD_DX,10.189.208.0/21:JD_LT
-    default-region: default
   redis-conf:
     min-idle: 0
     max-active: 8
