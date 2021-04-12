@@ -23,7 +23,7 @@ public class CamelliaRedisZkDiscoveryProperties {
     private int baseSleepTimeMs = ZkConstants.baseSleepTimeMs;
     private int maxRetries = ZkConstants.maxRetries;
     private int reloadIntervalSeconds = ZkConstants.reloadIntervalSeconds;
-    private boolean sidCarFirst = ZkConstants.sideCarFirst;
+    private boolean sideCarFirst = ZkConstants.sideCarFirst;
 
     /**
      * 注册到zk时的根路径
@@ -80,12 +80,12 @@ public class CamelliaRedisZkDiscoveryProperties {
         this.basePath = basePath;
     }
 
-    public boolean isSidCarFirst() {
-        return sidCarFirst;
+    public boolean isSideCarFirst() {
+        return sideCarFirst;
     }
 
-    public void setSidCarFirst(boolean sidCarFirst) {
-        this.sidCarFirst = sidCarFirst;
+    public void setSideCarFirst(boolean sideCarFirst) {
+        this.sideCarFirst = sideCarFirst;
     }
 
     public int getReloadIntervalSeconds() {

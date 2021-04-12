@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class CamelliaRedisEurekaProperties {
 
     private int refreshIntervalSeconds = 5;
-    private boolean sidCarFirst = false;
+    private boolean sideCarFirst = false;
     private RedisConf redisConf = new RedisConf();
 
     public int getRefreshIntervalSeconds() {
@@ -29,12 +29,12 @@ public class CamelliaRedisEurekaProperties {
         this.redisConf = redisConf;
     }
 
-    public boolean isSidCarFirst() {
-        return sidCarFirst;
+    public boolean isSideCarFirst() {
+        return sideCarFirst;
     }
 
-    public void setSidCarFirst(boolean sidCarFirst) {
-        this.sidCarFirst = sidCarFirst;
+    public void setSideCarFirst(boolean sideCarFirst) {
+        this.sideCarFirst = sideCarFirst;
     }
 
     public static class RedisConf {
