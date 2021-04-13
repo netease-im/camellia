@@ -7,13 +7,11 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.FileUtil;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTableUtil;
-import com.netease.nim.camellia.core.util.ResourceUtil;
 import com.netease.nim.camellia.redis.CamelliaRedisEnv;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.jedis.JedisPoolFactory;
 import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
-import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyContext;
-import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyFactory;
+import com.netease.nim.camellia.redis.proxy.*;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +21,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import redis.clients.jedis.JedisPoolConfig;
-
-import java.util.Set;
 
 
 /**
@@ -46,13 +42,19 @@ public class CamelliaRedisConfiguration {
     @Autowired(required = false)
     private CamelliaRedisProxyFactory proxyFactory;
 
+    @Autowired(required = false)
+    private ProxyJedisPoolConfig proxyJedisPoolConfig;
+
     @Bean
     public CamelliaRedisTemplate camelliaRedisTemplate(CamelliaRedisProperties properties) {
         if (proxyFactory != null) {
             CamelliaRedisProxyContext.register(proxyFactory);
             logger.info("CamelliaRedisProxyFactory register success, type = {}", proxyFactory.getClass().getName());
         }
-
+        if (proxyJedisPoolConfig != null) {
+            proxyJedisPoolConfig.setJedisPoolConfig(jedisPoolConfig(properties.getRedisConf()));
+            proxyJedisPoolConfig.setTimeout(properties.getRedisConf().getJedis().getTimeout());
+        }
         CamelliaRedisProperties.Type type = properties.getType();
         CamelliaRedisProperties.RedisConf redisConf = properties.getRedisConf();
         CamelliaRedisEnv redisEnv = camelliaRedisEnv(redisConf);
@@ -112,17 +114,40 @@ public class CamelliaRedisConfiguration {
         }
     }
 
-    private CamelliaRedisEnv camelliaRedisEnv(CamelliaRedisProperties.RedisConf redisConf) {
+    private JedisPoolConfig jedisPoolConfig(CamelliaRedisProperties.RedisConf redisConf) {
         CamelliaRedisProperties.RedisConf.Jedis jedis = redisConf.getJedis();
-        JedisPoolFactory jedisPoolFactory;
         if (jedis != null) {
-            int timeout = jedis.getTimeout();
             JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
             jedisPoolConfig.setMaxIdle(jedis.getMaxIdle());
             jedisPoolConfig.setMinIdle(jedis.getMinIdle());
             jedisPoolConfig.setMaxTotal(jedis.getMaxActive());
             jedisPoolConfig.setMaxWaitMillis(jedis.getMaxWaitMillis());
-            jedisPoolFactory = new JedisPoolFactory.DefaultJedisPoolFactory(jedisPoolConfig, timeout);
+            return jedisPoolConfig;
+        } else {
+            return new JedisPoolConfig();
+        }
+    }
+
+    private JedisPoolConfig jedisClusterPoolConfig(CamelliaRedisProperties.RedisConf redisConf) {
+        CamelliaRedisProperties.RedisConf.JedisCluster jedisCluster = redisConf.getJedisCluster();
+        if (jedisCluster != null) {
+            JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+            jedisPoolConfig.setMaxIdle(jedisCluster.getMaxIdle());
+            jedisPoolConfig.setMinIdle(jedisCluster.getMinIdle());
+            jedisPoolConfig.setMaxTotal(jedisCluster.getMaxActive());
+            jedisPoolConfig.setMaxWaitMillis(jedisCluster.getMaxWaitMillis());
+            return jedisPoolConfig;
+        } else {
+            return new JedisPoolConfig();
+        }
+    }
+
+    private CamelliaRedisEnv camelliaRedisEnv(CamelliaRedisProperties.RedisConf redisConf) {
+        CamelliaRedisProperties.RedisConf.Jedis jedis = redisConf.getJedis();
+        JedisPoolFactory jedisPoolFactory;
+        if (jedis != null) {
+            int timeout = jedis.getTimeout();
+            jedisPoolFactory = new JedisPoolFactory.DefaultJedisPoolFactory(jedisPoolConfig(redisConf), timeout);
         } else {
             jedisPoolFactory = new JedisPoolFactory.DefaultJedisPoolFactory();
         }
@@ -131,12 +156,7 @@ public class CamelliaRedisConfiguration {
         if (jedisCluster != null) {
             int timeout = jedisCluster.getTimeout();
             int maxAttempts = jedisCluster.getMaxAttempts();
-            JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
-            jedisPoolConfig.setMaxIdle(jedisCluster.getMaxIdle());
-            jedisPoolConfig.setMinIdle(jedisCluster.getMinIdle());
-            jedisPoolConfig.setMaxTotal(jedisCluster.getMaxActive());
-            jedisPoolConfig.setMaxWaitMillis(jedisCluster.getMaxWaitMillis());
-            jedisClusterFactory = new JedisClusterFactory.DefaultJedisClusterFactory(jedisPoolConfig, timeout, timeout, maxAttempts);
+            jedisClusterFactory = new JedisClusterFactory.DefaultJedisClusterFactory(jedisClusterPoolConfig(redisConf), timeout, timeout, maxAttempts);
         } else {
             jedisClusterFactory = new JedisClusterFactory.DefaultJedisClusterFactory();
         }

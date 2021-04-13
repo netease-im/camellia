@@ -13,10 +13,10 @@ import java.util.List;
  */
 public class RedisSentinelSlavesResource extends Resource {
 
-    private String master;
-    private List<RedisSentinelResource.Node> nodes;
-    private String password;
-    private boolean withMaster;
+    private final String master;
+    private final List<RedisSentinelResource.Node> nodes;
+    private final String password;
+    private final boolean withMaster;
 
     public RedisSentinelSlavesResource(String master, List<RedisSentinelResource.Node> nodes, String password, boolean withMaster) {
         this.master = master;
@@ -44,37 +44,21 @@ public class RedisSentinelSlavesResource extends Resource {
         return master;
     }
 
-    public void setMaster(String master) {
-        this.master = master;
-    }
-
     public List<RedisSentinelResource.Node> getNodes() {
         return nodes;
-    }
-
-    public void setNodes(List<RedisSentinelResource.Node> nodes) {
-        this.nodes = nodes;
     }
 
     public String getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public boolean isWithMaster() {
         return withMaster;
     }
 
-    public void setWithMaster(boolean withMaster) {
-        this.withMaster = withMaster;
-    }
-
     public static class Node {
-        private String host;
-        private int port;
+        private final String host;
+        private final int port;
 
         public Node(String host, int port) {
             this.host = host;
@@ -85,16 +69,8 @@ public class RedisSentinelSlavesResource extends Resource {
             return host;
         }
 
-        public void setHost(String host) {
-            this.host = host;
-        }
-
         public int getPort() {
             return port;
-        }
-
-        public void setPort(int port) {
-            this.port = port;
         }
     }
 }

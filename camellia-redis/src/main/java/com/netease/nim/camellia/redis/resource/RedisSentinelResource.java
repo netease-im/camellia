@@ -11,9 +11,9 @@ import java.util.List;
  * Created by caojiajun on 2019/10/15.
  */
 public class RedisSentinelResource extends Resource {
-    private String master;
-    private List<Node> nodes;
-    private String password;
+    private final String master;
+    private final List<Node> nodes;
+    private final String password;
 
     public RedisSentinelResource(String master, List<Node> nodes, String password) {
         this.master = master;
@@ -39,29 +39,17 @@ public class RedisSentinelResource extends Resource {
         return master;
     }
 
-    public void setMaster(String master) {
-        this.master = master;
-    }
-
     public List<Node> getNodes() {
         return nodes;
-    }
-
-    public void setNodes(List<Node> nodes) {
-        this.nodes = nodes;
     }
 
     public String getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public static class Node {
-        private String host;
-        private int port;
+        private final String host;
+        private final int port;
 
         public Node(String host, int port) {
             this.host = host;
@@ -72,16 +60,8 @@ public class RedisSentinelResource extends Resource {
             return host;
         }
 
-        public void setHost(String host) {
-            this.host = host;
-        }
-
         public int getPort() {
             return port;
-        }
-
-        public void setPort(int port) {
-            this.port = port;
         }
     }
 }

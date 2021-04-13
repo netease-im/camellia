@@ -11,7 +11,10 @@ public class CamelliaRedisEurekaProperties {
 
     private int refreshIntervalSeconds = 5;
     private boolean sideCarFirst = false;
-    private RedisConf redisConf = new RedisConf();
+    private String regionResolveConf = "";//例子 10.189.0.0/20:region1,10.189.208.0/21:region2
+    private String defaultRegion = "default";
+    private boolean jedisPoolLazyInit = true;
+    private int jedisPoolInitialSize = 16;
 
     public int getRefreshIntervalSeconds() {
         return refreshIntervalSeconds;
@@ -19,14 +22,6 @@ public class CamelliaRedisEurekaProperties {
 
     public void setRefreshIntervalSeconds(int refreshIntervalSeconds) {
         this.refreshIntervalSeconds = refreshIntervalSeconds;
-    }
-
-    public RedisConf getRedisConf() {
-        return redisConf;
-    }
-
-    public void setRedisConf(RedisConf redisConf) {
-        this.redisConf = redisConf;
     }
 
     public boolean isSideCarFirst() {
@@ -37,52 +32,35 @@ public class CamelliaRedisEurekaProperties {
         this.sideCarFirst = sideCarFirst;
     }
 
-    public static class RedisConf {
-        private int maxIdle = 8;
-        private int minIdle = 0;
-        private int maxActive = 8;
-        private int maxWaitMillis = 2000;
-        private int timeout = 2000;
-
-        public int getMaxIdle() {
-            return maxIdle;
-        }
-
-        public void setMaxIdle(int maxIdle) {
-            this.maxIdle = maxIdle;
-        }
-
-        public int getMinIdle() {
-            return minIdle;
-        }
-
-        public void setMinIdle(int minIdle) {
-            this.minIdle = minIdle;
-        }
-
-        public int getMaxActive() {
-            return maxActive;
-        }
-
-        public void setMaxActive(int maxActive) {
-            this.maxActive = maxActive;
-        }
-
-        public int getMaxWaitMillis() {
-            return maxWaitMillis;
-        }
-
-        public void setMaxWaitMillis(int maxWaitMillis) {
-            this.maxWaitMillis = maxWaitMillis;
-        }
-
-        public int getTimeout() {
-            return timeout;
-        }
-
-        public void setTimeout(int timeout) {
-            this.timeout = timeout;
-        }
+    public String getRegionResolveConf() {
+        return regionResolveConf;
     }
 
+    public void setRegionResolveConf(String regionResolveConf) {
+        this.regionResolveConf = regionResolveConf;
+    }
+
+    public String getDefaultRegion() {
+        return defaultRegion;
+    }
+
+    public void setDefaultRegion(String defaultRegion) {
+        this.defaultRegion = defaultRegion;
+    }
+
+    public boolean isJedisPoolLazyInit() {
+        return jedisPoolLazyInit;
+    }
+
+    public void setJedisPoolLazyInit(boolean jedisPoolLazyInit) {
+        this.jedisPoolLazyInit = jedisPoolLazyInit;
+    }
+
+    public int getJedisPoolInitialSize() {
+        return jedisPoolInitialSize;
+    }
+
+    public void setJedisPoolInitialSize(int jedisPoolInitialSize) {
+        this.jedisPoolInitialSize = jedisPoolInitialSize;
+    }
 }

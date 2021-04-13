@@ -12,8 +12,8 @@ import java.util.List;
  */
 public class RedisClusterResource extends Resource {
 
-    private List<Node> nodes;
-    private String password;
+    private final List<Node> nodes;
+    private final String password;
 
     public RedisClusterResource(List<Node> nodes, String password) {
 
@@ -37,21 +37,13 @@ public class RedisClusterResource extends Resource {
         return nodes;
     }
 
-    public void setNodes(List<Node> nodes) {
-        this.nodes = nodes;
-    }
-
     public String getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public static class Node {
-        private String host;
-        private int port;
+        private final String host;
+        private final int port;
 
         public Node(String host, int port) {
             this.host = host;
@@ -62,16 +54,8 @@ public class RedisClusterResource extends Resource {
             return host;
         }
 
-        public void setHost(String host) {
-            this.host = host;
-        }
-
         public int getPort() {
             return port;
-        }
-
-        public void setPort(int port) {
-            this.port = port;
         }
     }
 }

@@ -2,6 +2,7 @@ package com.netease.nim.camellia.dashboard.service;
 
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.resource.RedisType;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,7 +18,7 @@ public class RedisChecker implements IResourceChecker {
             RedisResourceUtil.parseResourceByUrl(new Resource(url));
             return true;
         } catch (Exception e) {
-            return false;
+            return url != null && url.startsWith(RedisType.CamelliaRedisProxy.getPrefix()) && url.contains("@");
         }
     }
 }

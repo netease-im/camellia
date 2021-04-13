@@ -2,6 +2,8 @@ package com.netease.nim.camellia.redis.eureka.springboot;
 
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyFactory;
+import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
+import com.netease.nim.camellia.redis.proxy.ProxyJedisPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,24 @@ public class CamelliaRedisEurekaConfiguration {
     @Bean
     public CamelliaRedisProxyFactory redisProxyFactory(CamelliaRedisEurekaProperties properties) {
         logger.info("CamelliaRedisProxyEurekaFactory init success");
-        return new CamelliaRedisProxyEurekaFactory(discoveryClient, properties);
+        return new CamelliaRedisProxyEurekaFactory(proxyJedisPoolConfig(properties), proxyDiscoveryFactory(properties));
+    }
+
+    @Bean
+    public ProxyDiscoveryFactory proxyDiscoveryFactory(CamelliaRedisEurekaProperties properties) {
+        logger.info("EurekaProxyDiscoveryFactory init success");
+        return new EurekaProxyDiscoveryFactory(discoveryClient, properties.getRefreshIntervalSeconds());
+    }
+
+    @Bean
+    public ProxyJedisPoolConfig proxyJedisPoolConfig(CamelliaRedisEurekaProperties properties) {
+        ProxyJedisPoolConfig proxyJedisPoolConfig = new ProxyJedisPoolConfig();
+        proxyJedisPoolConfig.setSideCarFirst(properties.isSideCarFirst());
+        proxyJedisPoolConfig.setDefaultRegion(properties.getDefaultRegion());
+        proxyJedisPoolConfig.setRegionResolveConf(properties.getRegionResolveConf());
+        proxyJedisPoolConfig.setJedisPoolInitialSize(proxyJedisPoolConfig.getJedisPoolInitialSize());
+        proxyJedisPoolConfig.setJedisPoolLazyInit(proxyJedisPoolConfig.isJedisPoolLazyInit());
+        logger.info("ProxyJedisPoolConfig init success");
+        return proxyJedisPoolConfig;
     }
 }

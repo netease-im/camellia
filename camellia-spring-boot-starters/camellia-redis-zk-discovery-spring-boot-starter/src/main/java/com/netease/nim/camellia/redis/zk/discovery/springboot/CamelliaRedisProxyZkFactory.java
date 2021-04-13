@@ -1,15 +1,10 @@
 package com.netease.nim.camellia.redis.zk.discovery.springboot;
 
-import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyFactory;
-import com.netease.nim.camellia.redis.proxy.Proxy;
-import com.netease.nim.camellia.redis.proxy.ProxyDiscovery;
-import com.netease.nim.camellia.redis.proxy.RedisProxyJedisPool;
+import com.netease.nim.camellia.redis.proxy.*;
 import com.netease.nim.camellia.redis.resource.CamelliaRedisProxyResource;
-import com.netease.nim.camellia.redis.zk.discovery.ZkClientFactory;
-import com.netease.nim.camellia.redis.zk.discovery.ZkProxyDiscovery;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,69 +15,47 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class CamelliaRedisProxyZkFactory implements CamelliaRedisProxyFactory {
 
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyZkFactory.class);
+
     private final ConcurrentHashMap<String, JedisPool> poolMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, ProxyDiscovery> proxyDiscoveryMap = new ConcurrentHashMap<>();
 
-    private final CamelliaRedisZkDiscoveryProperties properties;
-    private final ZkClientFactory factory;
+    private final ZkProxyDiscoveryFactory zkProxyDiscoveryFactory;
+    private final ProxyJedisPoolConfig proxyJedisPoolConfig;
 
-    public CamelliaRedisProxyZkFactory(CamelliaRedisZkDiscoveryProperties properties) {
-        this.properties = properties;
-        this.factory = new ZkClientFactory(properties.getSessionTimeoutMs(), properties.getConnectionTimeoutMs(),
-                properties.getBaseSleepTimeMs(), properties.getMaxRetries());
+    public CamelliaRedisProxyZkFactory(ProxyJedisPoolConfig proxyJedisPoolConfig, ZkProxyDiscoveryFactory zkProxyDiscoveryFactory) {
+        this.zkProxyDiscoveryFactory = zkProxyDiscoveryFactory;
+        this.proxyJedisPoolConfig = proxyJedisPoolConfig;
     }
 
     @Override
     public JedisPool initOrGet(CamelliaRedisProxyResource resource) {
         JedisPool jedisPool = poolMap.get(resource.getUrl());
         if (jedisPool == null) {
-            synchronized (CamelliaRedisProxyZkFactory.class) {
+            synchronized (poolMap) {
                 jedisPool = poolMap.get(resource.getUrl());
                 if (jedisPool == null) {
                     String proxyName = resource.getProxyName();
                     String password = resource.getPassword();
-                    ProxyDiscovery proxyDiscovery = getProxyDiscovery(proxyName);
+                    ProxyDiscovery proxyDiscovery = zkProxyDiscoveryFactory.getProxyDiscovery(proxyName);
                     List<Proxy> proxyList = proxyDiscovery.findAll();
                     if (proxyList == null || proxyList.isEmpty()) {
                         throw new IllegalArgumentException("proxyList is empty, proxyName=" + proxyName);
                     }
-                    GenericObjectPoolConfig poolConfig = poolConfig();
-                    int timeout = timeout();
-                    jedisPool = new RedisProxyJedisPool(proxyDiscovery, poolConfig, timeout, password, properties.isSideCarFirst());
+                    jedisPool = new RedisProxyJedisPool.Builder()
+                            .proxyDiscovery(proxyDiscovery)
+                            .poolConfig(proxyJedisPoolConfig.getJedisPoolConfig())
+                            .timeout(proxyJedisPoolConfig.getTimeout())
+                            .password(password)
+                            .sideCarFirst(proxyJedisPoolConfig.isSideCarFirst())
+                            .regionResolver(new RegionResolver.IpSegmentRegionResolver(proxyJedisPoolConfig.getRegionResolveConf(), proxyJedisPoolConfig.getDefaultRegion()))
+                            .jedisPoolLazyInit(proxyJedisPoolConfig.isJedisPoolLazyInit())
+                            .jedisPoolInitialSize(proxyJedisPoolConfig.getJedisPoolInitialSize())
+                            .build();
+                    logger.info("RedisProxyJedisPool init success, resource = {}, proxyJedisPoolConfig = {}", resource.getUrl(), proxyJedisPoolConfig);
                     poolMap.put(resource.getUrl(), jedisPool);
                 }
             }
         }
         return jedisPool;
-    }
-
-    private ProxyDiscovery getProxyDiscovery(String proxyName) {
-        ProxyDiscovery proxyDiscovery = proxyDiscoveryMap.get(proxyName);
-        if (proxyDiscovery == null) {
-            synchronized (ProxyDiscovery.class) {
-                proxyDiscovery = proxyDiscoveryMap.get(proxyName);
-                if (proxyDiscovery == null) {
-                    proxyDiscovery = new ZkProxyDiscovery(factory, properties.getZkUrl(),
-                            properties.getBasePath(), proxyName, properties.getReloadIntervalSeconds());
-                    proxyDiscoveryMap.putIfAbsent(proxyName, proxyDiscovery);
-                }
-            }
-        }
-        return proxyDiscovery;
-    }
-
-    private GenericObjectPoolConfig poolConfig() {
-        GenericObjectPoolConfig poolConfig = new JedisPoolConfig();
-        CamelliaRedisZkDiscoveryProperties.RedisConf redisConf = properties.getRedisConf();
-        poolConfig.setMaxIdle(redisConf.getMaxIdle());
-        poolConfig.setMinIdle(redisConf.getMinIdle());
-        poolConfig.setMaxTotal(redisConf.getMaxActive());
-        poolConfig.setMaxWaitMillis(redisConf.getMaxWaitMillis());
-        return poolConfig;
-    }
-
-    private int timeout() {
-        CamelliaRedisZkDiscoveryProperties.RedisConf redisConf = properties.getRedisConf();
-        return redisConf.getTimeout();
     }
 }

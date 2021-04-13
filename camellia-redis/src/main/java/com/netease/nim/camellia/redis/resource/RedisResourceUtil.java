@@ -8,9 +8,7 @@ import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.*;
 import redis.clients.jedis.JedisPool;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  *
@@ -135,13 +133,27 @@ public class RedisResourceUtil {
                 }
                 int index = substring.lastIndexOf("@");
                 String password = substring.substring(0, index);
-                String proxyName = substring.substring(index + 1);
                 if (password.length() == 0) {
                     password = null;
                 }
-                CamelliaRedisProxyResource camelliaRedisProxyResource = new CamelliaRedisProxyResource(password, proxyName);
-                if (!camelliaRedisProxyResource.getUrl().equals(resource.getUrl())) {
-                    throw new CamelliaRedisException("resource url not equals");
+
+                CamelliaRedisProxyResource camelliaRedisProxyResource;
+                String proxyName;
+                if (!substring.contains("?")) {
+                    proxyName = substring.substring(index + 1);
+                    camelliaRedisProxyResource = new CamelliaRedisProxyResource(password, proxyName);
+                } else {
+                    int i = substring.lastIndexOf("?");
+                    proxyName = substring.substring(index + 1, i);
+                    String queryString = substring.substring(i + 1);
+                    Map<String, String> params = getParams(queryString);
+                    String bid = params.get("bid");
+                    String bgroup = params.get("bgroup");
+                    if (bid != null && bgroup != null) {
+                        camelliaRedisProxyResource = new CamelliaRedisProxyResource(password, proxyName, Long.parseLong(bid), bgroup);
+                    } else {
+                        camelliaRedisProxyResource = new CamelliaRedisProxyResource(password, proxyName);
+                    }
                 }
                 CamelliaRedisProxyFactory factory = CamelliaRedisProxyContext.getFactory();
                 if (factory == null) {
@@ -185,18 +197,14 @@ public class RedisResourceUtil {
                 if (masterWithParams.contains("?")) {
                     int i = masterWithParams.indexOf("?");
                     master = masterWithParams.substring(0, i);
-                    String[] split1 = masterWithParams.substring(i+1).split("&");
-                    for (String s : split1) {
-                        String[] split3 = s.split("=");
-                        if (split3.length != 2) continue;
-                        String k = split3[0];
-                        String v = split3[1];
-                        if (k.equals("withMaster")) {
-                            if (!v.equalsIgnoreCase("true") && !v.equalsIgnoreCase("false")) {
-                                throw new CamelliaRedisException("withMaster only support true/false");
-                            }
-                            withMaster = Boolean.parseBoolean(v);
+                    String queryString = masterWithParams.substring(i + 1);
+                    Map<String, String> params = getParams(queryString);
+                    String withMasterStr = params.get("withMaster");
+                    if (withMasterStr != null && withMasterStr.trim().length() > 0) {
+                        if (!withMasterStr.equals("true") && !withMasterStr.equals("false")) {
+                            throw new CamelliaRedisException("withMaster only support true/false");
                         }
+                        withMaster = Boolean.parseBoolean(withMasterStr);
                     }
                 } else {
                     master = masterWithParams;
@@ -209,5 +217,18 @@ public class RedisResourceUtil {
         } catch (Exception e) {
             throw new CamelliaRedisException(e);
         }
+    }
+
+    private static Map<String, String> getParams(String queryString) {
+        String[] split1 = queryString.split("&");
+        Map<String, String> map = new HashMap<>();
+        for (String s : split1) {
+            String[] split3 = s.split("=");
+            if (split3.length != 2) continue;
+            String k = split3[0];
+            String v = split3[1];
+            map.put(k, v);
+        }
+        return map;
     }
 }

@@ -10,8 +10,8 @@ public class HBaseResource extends Resource {
 
     public static final String prefix = "hbase://";
 
-    private String zk;
-    private String zkParent;
+    private final String zk;
+    private final String zkParent;
 
     public HBaseResource(String zk, String zkParent) {
         this.zk = zk;
@@ -23,15 +23,8 @@ public class HBaseResource extends Resource {
         return zk;
     }
 
-    public void setZk(String zk) {
-        this.zk = zk;
-    }
-
     public String getZkParent() {
         return zkParent;
     }
 
-    public void setZkParent(String zkParent) {
-        this.zkParent = zkParent;
-    }
 }

@@ -10,9 +10,9 @@ import com.netease.nim.camellia.core.model.Resource;
  */
 public class RedisResource extends Resource {
 
-    private String host;
-    private int port;
-    private String password;
+    private final String host;
+    private final int port;
+    private final String password;
 
     public RedisResource(String host, int port, String password) {
         this.host = host;
@@ -32,24 +32,12 @@ public class RedisResource extends Resource {
         return host;
     }
 
-    public void setHost(String host) {
-        this.host = host;
-    }
-
     public int getPort() {
         return port;
     }
 
-    public void setPort(int port) {
-        this.port = port;
-    }
-
     public String getPassword() {
         return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
 }
