@@ -102,7 +102,7 @@ KEYS,SCAN,
 MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ``` 
 
-## 快速开始
+## 快速开始一
 1) 首先创建一个spring-boot的工程，然后添加以下依赖，如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
 ```
 <dependency>
@@ -156,7 +156,28 @@ OK
 3) (nil)
 ```
 
-## 快速开始（基于fatJar和sample-code)
+## 快速开始二
+下载安装包：
+```
+wget https://github.com/netease-im/camellia/releases/download/v1.0.22/camellia-redis-proxy-1.0.22.tar.gz
+tar zxvf camellia-redis-proxy-1.0.22.tar.gz
+cd camellia-redis-proxy-1.0.22/
+```
+按需修改BOOT-INF/classes/下的配置文件：
+* application.yml
+* logback.xml
+* camellia-redis-proxy.properties
+* resource-table.json
+按需调整start.sh的启动参数（主要是JVM参数），默认参数如下（确保已经安装了jdk8或以上，并添加到path）：
+```
+java -XX:+UseG1GC -Xms2048m -Xmx2048m -server org.springframework.boot.loader.JarLauncher
+```
+直接启动即可：
+```
+./start.sh
+```
+
+## 快速开始三（基于fatJar和sample-code)
 下载源码
 ```
 git clone https://github.com/netease-im/camellia.git
@@ -167,7 +188,7 @@ git clone https://github.com/netease-im/camellia.git
 cd camellia
 mvn clean install
 ```
-找到可执行jar包，使用java -jar命令运行即可(注意设置内存和GC）
+找到可执行jar包，使用java -jar命令运行即可(注意设置内存和GC，并确保已经安装了jdk8或以上，并添加到path）：
 ```
 cd camellia-samples/camellia-redis-proxy-samples/target
 java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy-samples-1.0.23-SNAPSHOT.jar 
