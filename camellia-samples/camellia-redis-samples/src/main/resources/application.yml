@@ -21,9 +21,3 @@ camellia-redis:
 camellia-redis-zk-discovery:
   base-path: /camellia
   zk-url: 127.0.0.1:2181
-  redis-conf:
-    max-idle: 8
-    min-idle: 0
-    max-active: 8
-    max-wait-millis: 2000
-    timeout: 2000
