@@ -170,7 +170,7 @@ mvn clean install
 找到可执行jar包，使用java -jar命令运行即可(注意设置内存和GC）
 ```
 cd camellia-samples/camellia-redis-proxy-samples/target
-java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy-samples-1.0.22-SNAPSHOT.jar 
+java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy-samples-1.0.23-SNAPSHOT.jar 
 ```
 
 ## 路由配置
