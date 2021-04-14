@@ -17,7 +17,7 @@
 ### fix
 * none
 
-# 1.0.21（2020/04/06）
+# 1.0.21（2020/04/14）
 ### add
 * camellia-redis-proxy support dynamic reload of redis address route conf when use local conf
 * camellia-redis-proxy's ProxyDynamicConf(camellia-redis-proxy.properties) support use standalone absolute-path conf file to merge classpath:camellia-redis-proxy.properties
