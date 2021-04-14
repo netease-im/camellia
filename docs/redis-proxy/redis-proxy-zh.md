@@ -168,6 +168,7 @@ cd camellia-redis-proxy-1.0.22/
 * logback.xml
 * camellia-redis-proxy.properties
 * resource-table.json
+
 按需调整start.sh的启动参数（主要是JVM参数），默认参数如下（确保已经安装了jdk8或以上，并添加到path）：
 ```
 java -XX:+UseG1GC -Xms2048m -Xmx2048m -server org.springframework.boot.loader.JarLauncher
