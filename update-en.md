@@ -5,6 +5,16 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
+# 1.0.23（2020/04/xx）
+### add
+* none
+
+### update
+* update netty version to 4.1.63
+
+### fix
+* fix jdk8 ConcurrentHashMap's computeIfAbsent performance bug，fix see: CamelliaMapUtils，bug see: https://bugs.openjdk.java.net/browse/JDK-8161372
+
 # 1.0.22（2020/04/xx）
 ### add
 * CamelliaRedisTemplate support read from slaves in redis-sentinel cluster(will automatic process node-down/master-switch/node-expansion)
