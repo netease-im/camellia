@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyInfo;
+import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ public class HotKeyMonitor {
             for (HotKeyInfo hotKey : hotKeys) {
                 String key = Utils.bytesToString(hotKey.getKey());
                 String uniqueKey = bid + "|" + bgroup + "|" + key;
-                HotKeyStats hotKeyStats = statsMap.computeIfAbsent(uniqueKey, k -> new HotKeyStats());
+                HotKeyStats hotKeyStats = CamelliaMapUtils.computeIfAbsent(statsMap, uniqueKey, k -> new HotKeyStats());
                 hotKeyStats.bid = bid;
                 hotKeyStats.bgroup = bgroup;
                 hotKeyStats.key = key;

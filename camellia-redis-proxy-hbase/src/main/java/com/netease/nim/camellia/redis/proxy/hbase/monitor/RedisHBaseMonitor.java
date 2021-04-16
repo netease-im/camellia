@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.MaxValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,22 +51,22 @@ public class RedisHBaseMonitor {
 
     public static void incrZSetSize(String method, long size) {
         if (!RedisHBaseConfiguration.monitorEnable()) return;
-        zsetSizeCount.computeIfAbsent(method, k -> new LongAdder()).increment();
-        zsetTotalSize.computeIfAbsent(method, k -> new LongAdder()).add(size);
-        MaxValue maxSize = zsetMaxSize.computeIfAbsent(method, k -> new MaxValue());
+        CamelliaMapUtils.computeIfAbsent(zsetSizeCount, method, k -> new LongAdder()).increment();
+        CamelliaMapUtils.computeIfAbsent(zsetTotalSize, method, k -> new LongAdder()).add(size);
+        MaxValue maxSize = CamelliaMapUtils.computeIfAbsent(zsetMaxSize, method, k -> new MaxValue());
         maxSize.update(size);
     }
 
     public static void incr(String method, String desc) {
         if (!RedisHBaseConfiguration.monitorEnable()) return;
         String uniqueKey = method + "|" + desc;
-        LongAdder count = map.computeIfAbsent(uniqueKey, k -> new LongAdder());
+        LongAdder count = CamelliaMapUtils.computeIfAbsent(map, uniqueKey, k -> new LongAdder());
         count.increment();
     }
 
     public static void incrDegraded(String desc) {
         if (!RedisHBaseConfiguration.monitorEnable()) return;
-        degradedMap.computeIfAbsent(desc, k -> new LongAdder()).increment();
+        CamelliaMapUtils.computeIfAbsent(degradedMap, desc, k -> new LongAdder()).increment();
     }
 
     public static void register(String name, Queue queue) {

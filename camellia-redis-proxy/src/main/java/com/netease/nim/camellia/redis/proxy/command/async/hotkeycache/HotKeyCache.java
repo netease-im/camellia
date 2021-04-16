@@ -4,10 +4,7 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.HotKeyCacheMonitor;
-import com.netease.nim.camellia.redis.proxy.util.BytesKey;
-import com.netease.nim.camellia.redis.proxy.util.LRUCounter;
-import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
-import com.netease.nim.camellia.redis.proxy.util.TimeCache;
+import com.netease.nim.camellia.redis.proxy.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.util.SafeEncoder;
@@ -125,7 +122,7 @@ public class HotKeyCache {
                     logger.debug("getCache of hotKey = {}", SafeEncoder.encode(bytesKey.getKey()));
                 }
                 if (callback != null) {
-                    AtomicLong hit = statsMap.computeIfAbsent(bytesKey, k -> new AtomicLong());
+                    AtomicLong hit = CamelliaMapUtils.computeIfAbsent(statsMap, bytesKey, k -> new AtomicLong());
                     hit.incrementAndGet();
                 }
             }

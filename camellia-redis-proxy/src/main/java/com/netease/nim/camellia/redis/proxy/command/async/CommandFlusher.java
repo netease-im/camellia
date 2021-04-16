@@ -31,9 +31,15 @@ public class CommandFlusher {
     }
 
     public void sendCommand(AsyncClient client, Command command, CompletableFuture<Reply> future) {
-        List<Command> commands = commandMap.computeIfAbsent(client, k -> new ArrayList<>(initializerSize));
+        List<Command> commands = commandMap.get(client);
+        if (commands == null) {
+            commands = commandMap.computeIfAbsent(client, k -> new ArrayList<>(initializerSize));
+        }
         commands.add(command);
-        List<CompletableFuture<Reply>> futures = futureMap.computeIfAbsent(client, k -> new ArrayList<>(initializerSize));
+        List<CompletableFuture<Reply>> futures = futureMap.get(client);
+        if (futures == null) {
+            futures = futureMap.computeIfAbsent(client, k -> new ArrayList<>(initializerSize));
+        }
         futures.add(future);
     }
 

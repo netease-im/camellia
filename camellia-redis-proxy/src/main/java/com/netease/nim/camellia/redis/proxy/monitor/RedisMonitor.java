@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.MaxValue;
 import org.slf4j.Logger;
@@ -73,7 +74,7 @@ public class RedisMonitor {
     public static void incr(Long bid, String bgroup, String command) {
         if (!monitorEnable) return;
         String key = bid + "|" + bgroup + "|" + command;
-        LongAdder count = map.computeIfAbsent(key, k -> new LongAdder());
+        LongAdder count = CamelliaMapUtils.computeIfAbsent(map, key, k -> new LongAdder());
         count.increment();
     }
 
@@ -81,7 +82,7 @@ public class RedisMonitor {
      * command fail incr
      */
     public static void incrFail(String failReason) {
-        LongAdder failCount = failCountMap.computeIfAbsent(failReason, k -> new LongAdder());
+        LongAdder failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, failReason, k -> new LongAdder());
         failCount.increment();
     }
 
@@ -91,9 +92,9 @@ public class RedisMonitor {
     public static void incrCommandSpendTime(String command, long spendNanoTime) {
         try {
             if (!commandSpendTimeMonitorEnable || !monitorEnable) return;
-            commandSpendCountMap.computeIfAbsent(command, k -> new LongAdder()).increment();
-            commandSpendTotalMap.computeIfAbsent(command, k -> new LongAdder()).add(spendNanoTime);
-            MaxValue maxValue = commandSpendMaxMap.computeIfAbsent(command, k -> new MaxValue());
+            CamelliaMapUtils.computeIfAbsent(commandSpendCountMap, command, k -> new LongAdder()).increment();
+            CamelliaMapUtils.computeIfAbsent(commandSpendTotalMap, command, k -> new LongAdder()).add(spendNanoTime);
+            MaxValue maxValue = CamelliaMapUtils.computeIfAbsent(commandSpendMaxMap, command, k -> new MaxValue());
             maxValue.update(spendNanoTime);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -215,11 +216,17 @@ public class RedisMonitor {
                 }
                 String command = split[2];
 
-                Stats.TotalStats totalStats = totalStatsMap.computeIfAbsent(command, Stats.TotalStats::new);
+                Stats.TotalStats totalStats = totalStatsMap.get(command);
+                if (totalStats == null) {
+                    totalStats = totalStatsMap.computeIfAbsent(command, Stats.TotalStats::new);
+                }
                 totalStats.setCount(totalStats.getCount() + count);
 
                 String key = bid + "|" + bgroup;
-                Stats.BidBgroupStats bidBgroupStats = bidBgroupStatsMap.computeIfAbsent(key, k -> new Stats.BidBgroupStats());
+                Stats.BidBgroupStats bidBgroupStats = bidBgroupStatsMap.get(key);
+                if (bidBgroupStats == null) {
+                    bidBgroupStats = bidBgroupStatsMap.computeIfAbsent(key, k -> new Stats.BidBgroupStats());
+                }
                 bidBgroupStats.setBid(bid);
                 bidBgroupStats.setBgroup(bgroup);
                 bidBgroupStats.setCount(bidBgroupStats.getCount() + count);

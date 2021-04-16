@@ -11,6 +11,6 @@ public class LockMap {
     private final ConcurrentHashMap<String, Object> lockMap = new ConcurrentHashMap<>();
 
     public Object getLockObj(String key) {
-        return lockMap.computeIfAbsent(key, k -> new Object());
+        return CamelliaMapUtils.computeIfAbsent(lockMap, key, k -> new Object());
     }
 }

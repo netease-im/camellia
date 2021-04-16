@@ -30,7 +30,7 @@ public class ErrorLogCollector {
 
     public static void collect(Class clazz, String log) {
         if (logMap.size() < MAX_MAP_SIZE) {
-            AtomicLong count = logMap.computeIfAbsent(clazz.getName() + ":" + log, k -> new AtomicLong(0L));
+            AtomicLong count = CamelliaMapUtils.computeIfAbsent(logMap, clazz.getName() + ":" + log, k -> new AtomicLong(0L));
             count.incrementAndGet();
         } else {
             logger.error(clazz.getName() + ":" + log);
@@ -40,7 +40,7 @@ public class ErrorLogCollector {
     public static void collect(Class clazz, String log, Throwable e) {
         collect(clazz, log);
         if (lastPrintStackTraceMap.size() < MAX_MAP_SIZE) {
-            AtomicLong lastPrintStackTraceTime = lastPrintStackTraceMap.computeIfAbsent(clazz.getName() + ":" + log, k -> new AtomicLong(0L));
+            AtomicLong lastPrintStackTraceTime = CamelliaMapUtils.computeIfAbsent(lastPrintStackTraceMap, clazz.getName() + ":" + log, k -> new AtomicLong(0L));
             long lastTime = lastPrintStackTraceTime.get();
             if (TimeCache.currentMillis - lastTime > PRINT_ERROR_TRACE_MIN_INTERVAL_MILLIS) {
                 boolean printTrace = lastPrintStackTraceTime.compareAndSet(lastTime, TimeCache.currentMillis);

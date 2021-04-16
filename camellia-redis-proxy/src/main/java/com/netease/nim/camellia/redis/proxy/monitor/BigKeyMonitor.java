@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ public class BigKeyMonitor {
             RedisCommand redisCommand = command.getRedisCommand();
             String keyStr = Utils.bytesToString(key);
             String uniqueKey = bid + "|" + bgroup + "|" + redisCommand + "|" + keyStr;
-            BigKeyStats bigKeyStats = statsMap.computeIfAbsent(uniqueKey, k -> new BigKeyStats());
+            BigKeyStats bigKeyStats = CamelliaMapUtils.computeIfAbsent(statsMap, uniqueKey, k -> new BigKeyStats());
             bigKeyStats.bid = bid;
             bigKeyStats.bgroup = bgroup;
             bigKeyStats.commandType = redisCommand.getCommandType().name();

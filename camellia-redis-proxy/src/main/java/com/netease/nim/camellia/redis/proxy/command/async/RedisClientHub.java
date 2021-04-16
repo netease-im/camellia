@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.LockMap;
+import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
@@ -150,7 +151,7 @@ public class RedisClientHub {
                 if (eventLoop.inEventLoop()) {
                     eventLoop = eventLoopGroupBackup.next();
                 }
-                LockMap lockMap = RedisClientHub.lockMapMap.computeIfAbsent(addr.getUrl(), k -> new LockMap());
+                LockMap lockMap = CamelliaMapUtils.computeIfAbsent(RedisClientHub.lockMapMap, addr.getUrl(), k -> new LockMap());
                 client = tryInitRedisClient(map, lockMap, eventLoop, addr);
             }
             if (client != null && client.isValid()) {
@@ -167,20 +168,20 @@ public class RedisClientHub {
     }
 
     private static RedisClient tryGetRedisClient(EventLoop eventLoop, RedisClientAddr addr) {
-        ConcurrentHashMap<String, RedisClient> map = eventLoopMap.computeIfAbsent(eventLoop, k -> new ConcurrentHashMap<>());
+        ConcurrentHashMap<String, RedisClient> map = CamelliaMapUtils.computeIfAbsent(eventLoopMap, eventLoop, k -> new ConcurrentHashMap<>());
         String url = addr.getUrl();
         RedisClient client = map.get(url);
         if (client != null && client.isValid()) {
             return client;
         }
         if (eventLoop.inEventLoop()) {
-            ConcurrentHashMap<String, AtomicBoolean> statusMap = initializerStatusMap.computeIfAbsent(eventLoop, k -> new ConcurrentHashMap<>());
-            AtomicBoolean status = statusMap.computeIfAbsent(addr.getUrl(), k -> new AtomicBoolean(false));
+            ConcurrentHashMap<String, AtomicBoolean> statusMap = CamelliaMapUtils.computeIfAbsent(initializerStatusMap, eventLoop, k -> new ConcurrentHashMap<>());
+            AtomicBoolean status = CamelliaMapUtils.computeIfAbsent(statusMap, addr.getUrl(), k -> new AtomicBoolean(false));
             if (status.compareAndSet(false, true)) {
                 try {
                     redisClientAsyncInitExec.submit(() -> {
                         try {
-                            LockMap lockMap = RedisClientHub.lockMapMap.computeIfAbsent(eventLoop, k -> new LockMap());
+                            LockMap lockMap = CamelliaMapUtils.computeIfAbsent(RedisClientHub.lockMapMap, eventLoop, k -> new LockMap());
                             tryInitRedisClient(map, lockMap, eventLoop, addr);
                         } catch (Exception e) {
                             ErrorLogCollector.collect(RedisClientHub.class, "tryInitRedisClient error", e);
@@ -195,7 +196,7 @@ public class RedisClientHub {
             }
             return null;
         } else {
-            LockMap lockMap = RedisClientHub.lockMapMap.computeIfAbsent(eventLoop, k -> new LockMap());
+            LockMap lockMap = CamelliaMapUtils.computeIfAbsent(RedisClientHub.lockMapMap, eventLoop, k -> new LockMap());
             return tryInitRedisClient(map, lockMap, eventLoop, addr);
         }
     }
@@ -323,32 +324,32 @@ public class RedisClientHub {
     }
 
     private static long getFailTimestamp(String key) {
-        AtomicLong failTimestamp = failTimestampMap.computeIfAbsent(key, k -> new AtomicLong(0L));
+        AtomicLong failTimestamp = CamelliaMapUtils.computeIfAbsent(failTimestampMap, key, k -> new AtomicLong(0L));
         return failTimestamp.get();
     }
 
     private static void setFailTimestamp(String key) {
-        AtomicLong failTimestamp = failTimestampMap.computeIfAbsent(key, k -> new AtomicLong(0L));
+        AtomicLong failTimestamp = CamelliaMapUtils.computeIfAbsent(failTimestampMap, key, k -> new AtomicLong(0L));
         failTimestamp.set(TimeCache.currentMillis);
     }
 
     private static void resetFailTimestamp(String key) {
-        AtomicLong failCount = failTimestampMap.computeIfAbsent(key, k -> new AtomicLong(0L));
+        AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failTimestampMap, key, k -> new AtomicLong(0L));
         failCount.set(0L);
     }
 
     private static void resetFailCount(String key) {
-        AtomicLong failCount = failCountMap.computeIfAbsent(key, k -> new AtomicLong());
+        AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, key, k -> new AtomicLong());
         failCount.set(0L);
     }
 
     private static long getFailCount(String key) {
-        AtomicLong failCount = failCountMap.computeIfAbsent(key, k -> new AtomicLong());
+        AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, key, k -> new AtomicLong());
         return failCount.get();
     }
 
     private static void incrFail(String key) {
-        AtomicLong failCount = failCountMap.computeIfAbsent(key, k -> new AtomicLong());
+        AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, key, k -> new AtomicLong());
         failCount.incrementAndGet();
     }
 

@@ -115,15 +115,18 @@ public class StatsService {
                     String bid = split2[2];
                     String bgroup = split2[3];
                     String businessKey = bid + "|" + bgroup + "|" + resource + "|" + ope;
-                    RwStats.BusinessTotal businessTotal = map1.computeIfAbsent(businessKey, s -> {
-                        RwStats.BusinessTotal instance = new RwStats.BusinessTotal();
-                        instance.setBid(bid);
-                        instance.setBgroup(bgroup);
-                        instance.setResource(resource);
-                        instance.setOpe(ope);
-                        instance.setCount(0);
-                        return instance;
-                    });
+                    RwStats.BusinessTotal businessTotal = map1.get(businessKey);
+                    if (businessTotal == null) {
+                        businessTotal = map1.computeIfAbsent(businessKey, s -> {
+                            RwStats.BusinessTotal instance = new RwStats.BusinessTotal();
+                            instance.setBid(bid);
+                            instance.setBgroup(bgroup);
+                            instance.setResource(resource);
+                            instance.setOpe(ope);
+                            instance.setCount(0);
+                            return instance;
+                        });
+                    }
                     businessTotal.setCount(count + businessTotal.getCount());
                     map1.put(businessKey, businessTotal);
                 }
@@ -165,17 +168,20 @@ public class StatsService {
                     String bgroup = split2[3];
                     String bid = split2[2];
                     String businessKey = bid + "|" + bgroup + "|" + resource + "|" + className + "|" + methodName + "|" + ope;
-                    RwStats.BusinessDetail businessDetail = map2.computeIfAbsent(businessKey, s -> {
-                        RwStats.BusinessDetail instance = new RwStats.BusinessDetail();
-                        instance.setBid(bid);
-                        instance.setBgroup(bgroup);
-                        instance.setResource(resource);
-                        instance.setClassName(className);
-                        instance.setMethodName(methodName);
-                        instance.setOpe(ope);
-                        instance.setCount(0);
-                        return instance;
-                    });
+                    RwStats.BusinessDetail businessDetail = map2.get(businessKey);
+                    if (businessDetail == null) {
+                        businessDetail = map2.computeIfAbsent(businessKey, s -> {
+                            RwStats.BusinessDetail instance = new RwStats.BusinessDetail();
+                            instance.setBid(bid);
+                            instance.setBgroup(bgroup);
+                            instance.setResource(resource);
+                            instance.setClassName(className);
+                            instance.setMethodName(methodName);
+                            instance.setOpe(ope);
+                            instance.setCount(0);
+                            return instance;
+                        });
+                    }
                     businessDetail.setCount(count + businessDetail.getCount());
                     map2.put(businessKey, businessDetail);
                 }

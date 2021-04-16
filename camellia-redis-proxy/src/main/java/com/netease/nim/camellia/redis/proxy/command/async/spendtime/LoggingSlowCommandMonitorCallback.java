@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command.async.spendtime;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,7 @@ public class LoggingSlowCommandMonitorCallback implements SlowCommandMonitorCall
         try {
             String log = "slow command, command.context = " + command.getCommandContext() + ", spendMs = " + spendMillis + ", thresholdMs = " + thresholdMillis
                     + ", command = " + command.getRedisCommand() + ", keys = " + command.getKeysStr();
-            AtomicLong count = logMap.computeIfAbsent(log, k -> new AtomicLong());
+            AtomicLong count = CamelliaMapUtils.computeIfAbsent(logMap, log, k -> new AtomicLong());
             count.incrementAndGet();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

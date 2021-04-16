@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command.async.bigkey;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
@@ -42,7 +43,7 @@ public class LoggingBigKeyMonitorCallback implements BigKeyMonitorCallback {
         try {
             String log = "big key for upstream, command.context = " + command.getCommandContext() + ", command = " + command.getRedisCommand()
                     + ", key = " + Utils.bytesToString(key) + ", size = " + size + ", threshold = " + threshold;
-            AtomicLong count = logMap.computeIfAbsent(log, k -> new AtomicLong());
+            AtomicLong count = CamelliaMapUtils.computeIfAbsent(logMap, log, k -> new AtomicLong());
             count.incrementAndGet();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -54,7 +55,7 @@ public class LoggingBigKeyMonitorCallback implements BigKeyMonitorCallback {
         try {
             String log = "big key for downstream, command.context = " + command.getCommandContext() + ", command = " + command.getRedisCommand()
                     + ", key = " + Utils.bytesToString(key) + ", size = " + size + ", threshold = " + threshold;
-            AtomicLong count = logMap.computeIfAbsent(log, k -> new AtomicLong());
+            AtomicLong count = CamelliaMapUtils.computeIfAbsent(logMap, log, k -> new AtomicLong());
             count.incrementAndGet();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

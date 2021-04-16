@@ -16,10 +16,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.FastRemoteMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
-import com.netease.nim.camellia.redis.proxy.util.BytesKey;
-import com.netease.nim.camellia.redis.proxy.util.ErrorHandlerUtil;
-import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.redis.proxy.util.*;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
 import com.netease.nim.camellia.redis.resource.RedisType;
 import org.slf4j.Logger;
@@ -586,7 +583,10 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             BytesKey redisKey = new BytesKey(key);
             redisKeys.add(redisKey);
             Resource resource = getReadResource(key);
-            List<BytesKey> list = map.computeIfAbsent(resource.getUrl(), k -> new ArrayList<>());
+            List<BytesKey> list = map.get(resource.getUrl());
+            if (list == null) {
+                list = map.computeIfAbsent(resource.getUrl(), k -> new ArrayList<>(args.length - 1));
+            }
             list.add(redisKey);
         }
         List<String> urlList = new ArrayList<>();
