@@ -25,6 +25,18 @@
 	</dependencyManagement>
 
 	<dependencies>
+		<!--避免被spring-boot-dependencies给覆盖了版本-->
+		<dependency>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+			<version>2.9.3</version>
+		</dependency>
+		<!--避免被spring-boot-dependencies给覆盖了版本-->
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-all</artifactId>
+			<version>4.1.63.Final</version>
+		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
