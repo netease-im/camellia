@@ -157,11 +157,11 @@ OK
 ```
 
 ## 快速开始二
-下载安装包并解压：
+下载最新版安装包并解压（v1.0.23）：
 ```
-wget https://github.com/netease-im/camellia/releases/download/v1.0.22/camellia-redis-proxy-1.0.22.tar.gz
-tar zxvf camellia-redis-proxy-1.0.22.tar.gz
-cd camellia-redis-proxy-1.0.22/
+wget https://github.com/netease-im/camellia/releases/download/v1.0.22/camellia-redis-proxy-1.0.23.tar.gz
+tar zxvf camellia-redis-proxy-1.0.23.tar.gz
+cd camellia-redis-proxy-1.0.23/
 ```
 按需修改BOOT-INF/classes/下的配置文件：
 * application.yml
@@ -189,15 +189,16 @@ git clone https://github.com/netease-im/camellia.git
 * camellia-redis-proxy.properties
 * resource-table.json
 
-使用maven编译
+切到最新稳定分支（v1.0.23），使用maven编译
 ```
 cd camellia
+git checkout v1.0.23
 mvn clean install
 ```
 找到可执行jar包，使用java -jar命令运行即可(注意设置内存和GC，并确保已经安装了jdk8或以上，并添加到path）：
 ```
 cd camellia-samples/camellia-redis-proxy-samples/target
-java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy-samples-1.0.23-SNAPSHOT.jar 
+java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy-samples-1.0.23.jar 
 ```
 
 ## 路由配置
