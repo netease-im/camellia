@@ -183,13 +183,13 @@ java -XX:+UseG1GC -Xms2048m -Xmx2048m -server org.springframework.boot.loader.Ja
 ```
 git clone https://github.com/netease-im/camellia.git
 ```
-按需修改[sample-code](/camellia-samples/camellia-redis-proxy-samples) 中的配置文件：
+切到最新稳定分支（v1.0.23），按需修改[sample-code](/camellia-samples/camellia-redis-proxy-samples) 中的配置文件：
 * application.yml
 * logback.xml
 * camellia-redis-proxy.properties
 * resource-table.json
 
-切到最新稳定分支（v1.0.23），使用maven编译
+使用maven编译
 ```
 cd camellia
 git checkout v1.0.23
