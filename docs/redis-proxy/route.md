@@ -30,7 +30,7 @@ camellia-redis-proxy:
 上面的配置表示proxy的端口=6380，proxy的密码=pass123，代理到后端redis-cluster集群，地址串=127.0.0.1:6379,127.0.0.1:6378,127.0.0.1:6377
 
 ### 支持的后端redis类型
-我们通过url的方式来描述后端redis服务器，支持普通单点redis、redis-sentinel、redis-cluster三种类型，具体的url格式如下：
+我们通过url的方式来描述后端redis服务器，支持普通单点redis、redis-sentinel、redis-cluster三种类型，此外还支持将读命令代理到redis-sentinel的从节点，具体的url格式如下：
 
 * 普通单点redis
 ```
