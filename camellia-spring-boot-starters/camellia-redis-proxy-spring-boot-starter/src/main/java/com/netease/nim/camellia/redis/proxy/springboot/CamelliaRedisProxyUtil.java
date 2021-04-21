@@ -3,13 +3,18 @@ package com.netease.nim.camellia.redis.proxy.springboot;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.*;
+import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.conf.QueueType;
+import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.NettyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.TranspondProperties;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.util.Set;
@@ -19,6 +24,8 @@ import java.util.Set;
  * Created by caojiajun on 2020/4/3.
  */
 public class CamelliaRedisProxyUtil {
+
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyUtil.class);
 
     public static CamelliaServerProperties parse(CamelliaRedisProxyProperties properties, int port) {
         CamelliaServerProperties serverProperties = new CamelliaServerProperties();
@@ -105,6 +112,9 @@ public class CamelliaRedisProxyUtil {
             case REMOTE:
                 type = CamelliaTranspondProperties.Type.REMOTE;
                 break;
+            case CUSTOM:
+                type = CamelliaTranspondProperties.Type.CUSTOM;
+                break;
         }
         return type;
     }
@@ -180,6 +190,34 @@ public class CamelliaRedisProxyUtil {
         remoteProperties.setConnectTimeoutMillis(properties.getConnectTimeoutMillis());
         remoteProperties.setReadTimeoutMillis(properties.getReadTimeoutMillis());
         return remoteProperties;
+    }
+
+    public static CamelliaTranspondProperties.CustomProperties parse(TranspondProperties.CustomProperties properties) {
+        if (properties == null) return null;
+        CamelliaTranspondProperties.CustomProperties customProperties = new CamelliaTranspondProperties.CustomProperties();
+        customProperties.setBid(properties.getBid());
+        customProperties.setBgroup(properties.getBgroup());
+        customProperties.setDynamic(properties.isDynamic());
+        String className = properties.getProxyRouteConfUpdaterClassName();
+        if (className == null) {
+            throw new IllegalArgumentException("proxyRouteConfUpdaterClassName missing");
+        }
+        ProxyRouteConfUpdater proxyRouteConfUpdater;
+        try {
+            Class<?> clazz;
+            try {
+                clazz = Class.forName(className);
+            } catch (ClassNotFoundException e) {
+                clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+            }
+            proxyRouteConfUpdater = (ProxyRouteConfUpdater) clazz.newInstance();
+            logger.info("ProxyRouteConfUpdater init success, class = {}", className);
+        } catch (Exception e) {
+            logger.error("ProxyRouteConfUpdater init error, class = {}", className, e);
+            throw new CamelliaRedisException(e);
+        }
+        customProperties.setProxyRouteConfUpdater(proxyRouteConfUpdater);
+        return customProperties;
     }
 
     public static CamelliaTranspondProperties.RedisConfProperties parse(TranspondProperties.RedisConfProperties properties) {

@@ -28,6 +28,11 @@ public class TranspondProperties {
     private RemoteProperties remote;
 
     /**
+     * 自定义配置
+     */
+    private CustomProperties custom;
+
+    /**
      * 一些配置项
      */
     private RedisConfProperties redisConf = new RedisConfProperties();
@@ -35,6 +40,7 @@ public class TranspondProperties {
     public static enum Type {
         LOCAL,
         REMOTE,
+        CUSTOM,
         AUTO,
         ;
     }
@@ -61,6 +67,14 @@ public class TranspondProperties {
 
     public void setRemote(RemoteProperties remote) {
         this.remote = remote;
+    }
+
+    public CustomProperties getCustom() {
+        return custom;
+    }
+
+    public void setCustom(CustomProperties custom) {
+        this.custom = custom;
     }
 
     public RedisConfProperties getRedisConf() {
@@ -150,6 +164,63 @@ public class TranspondProperties {
              */
             COMPLEX,
             ;
+        }
+    }
+
+    public static class CustomProperties {
+
+        /**
+         * 继承com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater的子类的全类名
+         */
+        private String proxyRouteConfUpdaterClassName;
+
+        /**
+         * 是否动态判断
+         * 如果false，则只取默认bid和默认bgroup的配置
+         * 如果是true，则会根据客户端连接传上来的bid和bgroup取配置，若没有传，则走默认bid和默认bgroup的配置
+         */
+        private boolean dynamic = Constants.Custom.dynamic;
+
+        /**
+         * 默认的bid
+         */
+        private long bid;
+
+        /**
+         * 默认的bgroup
+         */
+        private String bgroup;
+
+        public String getProxyRouteConfUpdaterClassName() {
+            return proxyRouteConfUpdaterClassName;
+        }
+
+        public void setProxyRouteConfUpdaterClassName(String proxyRouteConfUpdaterClassName) {
+            this.proxyRouteConfUpdaterClassName = proxyRouteConfUpdaterClassName;
+        }
+
+        public boolean isDynamic() {
+            return dynamic;
+        }
+
+        public void setDynamic(boolean dynamic) {
+            this.dynamic = dynamic;
+        }
+
+        public long getBid() {
+            return bid;
+        }
+
+        public void setBid(long bid) {
+            this.bid = bid;
+        }
+
+        public String getBgroup() {
+            return bgroup;
+        }
+
+        public void setBgroup(String bgroup) {
+            this.bgroup = bgroup;
         }
     }
 

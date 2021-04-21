@@ -82,4 +82,8 @@ public class Constants {
         public static final int connectTimeoutMillis = 10000;
         public static final int readTimeoutMillis = 60000;
     }
+
+    public static class Custom {
+        public static final boolean dynamic = true;
+    }
 }

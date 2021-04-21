@@ -6,6 +6,7 @@ import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.env.ShadingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ShadingFuncUtil;
+import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.util.LockMap;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -30,7 +31,9 @@ public class AsyncCamelliaRedisTemplateChooser {
     private final LockMap lockMap = new LockMap();
     private AsyncCamelliaRedisTemplate remoteInstance;
     private AsyncCamelliaRedisTemplate localInstance;
+    private AsyncCamelliaRedisTemplate customInstance;
     private final ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> remoteInstanceMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> customInstanceMap = new ConcurrentHashMap<>();
 
     public AsyncCamelliaRedisTemplateChooser(CamelliaTranspondProperties properties) {
         this.properties = properties;
@@ -56,14 +59,32 @@ public class AsyncCamelliaRedisTemplateChooser {
                 return remoteInstance;
             }
             return initOrCreateRemoteInstance(bid, bgroup);
+        } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
+            CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
+            if (!custom.isDynamic()) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("not dynamic, return default customInstance");
+                }
+                return customInstance;
+            }
+            if (bid == null || bid <= 0 || bgroup == null) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("not dynamic, return default customInstance");
+                }
+                return customInstance;
+            }
+            return initOrCreateCustomInstance(bid, bgroup);
         } else if (type == CamelliaTranspondProperties.Type.AUTO) {
             if (bid == null || bid <= 0 || bgroup == null) {
                 if (localInstance != null) return localInstance;
                 if (remoteInstance != null) return remoteInstance;
+                if (customInstance != null) return customInstance;
                 logger.warn("no bid/bgroup, return null");
                 return null;
             }
-            return initOrCreateRemoteInstance(bid, bgroup);
+            AsyncCamelliaRedisTemplate template = initOrCreateRemoteInstance(bid, bgroup);
+            if (template != null) return template;
+            return initOrCreateCustomInstance(bid, bgroup);
         }
         return null;
     }
@@ -79,9 +100,12 @@ public class AsyncCamelliaRedisTemplateChooser {
             initLocal(true);
         } else if (type == CamelliaTranspondProperties.Type.REMOTE) {
             initRemote(true);
+        } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
+            initCustom(true);
         } else if (type == CamelliaTranspondProperties.Type.AUTO) {
             initLocal(false);
             initRemote(false);
+            initCustom(false);
         }
         if (properties.getRedisConf().isPreheat()) {
             if (localInstance != null) {
@@ -89,6 +113,9 @@ public class AsyncCamelliaRedisTemplateChooser {
             }
             if (remoteInstance != null) {
                 remoteInstance.preheat();
+            }
+            if (customInstance != null) {
+                customInstance.preheat();
             }
         }
     }
@@ -140,6 +167,50 @@ public class AsyncCamelliaRedisTemplateChooser {
         if (localInstance == null && throwError) {
             throw new IllegalArgumentException("local.resourceTable/local.resourceTableFilePath is null");
         }
+    }
+
+    private void initCustom(boolean throwError) {
+        CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
+        if (custom == null) {
+            if (throwError) {
+                throw new IllegalArgumentException("custom is null");
+            } else {
+                return;
+            }
+        }
+        ProxyRouteConfUpdater proxyRouteConfUpdater = custom.getProxyRouteConfUpdater();
+        if (proxyRouteConfUpdater == null) {
+            if (throwError) {
+                throw new IllegalArgumentException("proxyRouteConfUpdater is null");
+            } else {
+                return;
+            }
+        }
+        boolean dynamic = custom.isDynamic();
+        logger.info("Custom dynamic = {}", dynamic);
+        if (custom.getBid() > 0 && custom.getBgroup() != null) {
+            customInstance = initOrCreateCustomInstance(custom.getBid(), custom.getBgroup());
+        }
+    }
+
+    private AsyncCamelliaRedisTemplate initOrCreateCustomInstance(long bid, String bgroup) {
+        CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
+        if (custom == null) return null;
+        String key = bid + "|" + bgroup;
+        AsyncCamelliaRedisTemplate template = customInstanceMap.get(key);
+        if (template == null) {
+            synchronized (lockMap.getLockObj(key)) {
+                template = customInstanceMap.get(key);
+                if (template == null) {
+                    ProxyRouteConfUpdater updater = custom.getProxyRouteConfUpdater();
+                    template = new AsyncCamelliaRedisTemplate(env, bid, bgroup, updater);
+                    updater.addAsyncCamelliaRedisTemplate(bid, bgroup, template);
+                    customInstanceMap.put(key, template);
+                    logger.info("AsyncCamelliaRedisTemplate init, bid = {}, bgroup = {}", bid, bgroup);
+                }
+            }
+        }
+        return template;
     }
 
     private AsyncCamelliaRedisTemplate initOrCreateRemoteInstance(long bid, String bgroup) {

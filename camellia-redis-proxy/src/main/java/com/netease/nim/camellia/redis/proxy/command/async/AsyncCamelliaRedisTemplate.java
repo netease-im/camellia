@@ -11,6 +11,7 @@ import com.netease.nim.camellia.core.util.ResourceChooser;
 import com.netease.nim.camellia.core.util.ResourceUtil;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
@@ -56,6 +57,12 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     private boolean isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster;
 
     private final MultiWriteMode multiWriteMode;
+
+    public static interface Callback {
+        void callback(ResourceTable resourceTable);
+    }
+
+    private final Callback callback = AsyncCamelliaRedisTemplate.this::init;
 
     public AsyncCamelliaRedisTemplate(ResourceTable resourceTable) {
         this(AsyncCamelliaRedisEnv.defaultRedisEnv(), resourceTable);
@@ -112,6 +119,24 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 this.env = new AsyncCamelliaRedisEnv.Builder(env).proxyEnv(proxyEnv).build();
             }
         }
+    }
+
+    public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, long bid, String bgroup, ProxyRouteConfUpdater updater) {
+        this.env = env;
+        this.bid = bid;
+        this.bgroup = bgroup;
+        this.factory = env.getClientFactory();
+        this.multiWriteMode = env.getMultiWriteMode();
+        ResourceTable resourceTable = updater.getResourceTable(bid, bgroup);
+        if (logger.isInfoEnabled()) {
+            logger.info("AsyncCamelliaRedisTemplate init success, bid = {}, bgroup = {}, resourceTable = {}, ProxyRouteConfUpdater = {}", bid, bgroup,
+                    ReadableResourceTableUtil.readableResourceTable(resourceTable), updater.getClass().getName());
+        }
+        this.init(resourceTable);
+    }
+
+    public Callback getCallback() {
+        return callback;
     }
 
     public void preheat() {
@@ -894,7 +919,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         return true;
     }
 
-    private void init(ResourceTable resourceTable) {
+    private synchronized void init(ResourceTable resourceTable) {
         this.resourceChooser = new ResourceChooser(resourceTable, env.getProxyEnv());
 
         ResourceTable.Type type = resourceChooser.getType();

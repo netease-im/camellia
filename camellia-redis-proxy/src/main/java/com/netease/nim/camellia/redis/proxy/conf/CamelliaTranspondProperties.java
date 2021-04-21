@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
 
 /**
  *
@@ -11,12 +12,14 @@ public class CamelliaTranspondProperties {
     private Type type = Type.LOCAL;
     private LocalProperties local = new LocalProperties();
     private RemoteProperties remote;
+    private CustomProperties custom;
     private RedisConfProperties redisConf = new RedisConfProperties();
 
     public static enum Type {
         LOCAL,
         REMOTE,
         AUTO,
+        CUSTOM,
         ;
     }
 
@@ -42,6 +45,14 @@ public class CamelliaTranspondProperties {
 
     public void setRemote(RemoteProperties remote) {
         this.remote = remote;
+    }
+
+    public CustomProperties getCustom() {
+        return custom;
+    }
+
+    public void setCustom(CustomProperties custom) {
+        this.custom = custom;
     }
 
     public RedisConfProperties getRedisConf() {
@@ -155,6 +166,45 @@ public class CamelliaTranspondProperties {
 
         public void setReadTimeoutMillis(int readTimeoutMillis) {
             this.readTimeoutMillis = readTimeoutMillis;
+        }
+    }
+
+    public static class CustomProperties {
+        private ProxyRouteConfUpdater proxyRouteConfUpdater;
+        private long bid;
+        private String bgroup;
+        private boolean dynamic = Constants.Custom.dynamic;
+
+        public ProxyRouteConfUpdater getProxyRouteConfUpdater() {
+            return proxyRouteConfUpdater;
+        }
+
+        public void setProxyRouteConfUpdater(ProxyRouteConfUpdater proxyRouteConfUpdater) {
+            this.proxyRouteConfUpdater = proxyRouteConfUpdater;
+        }
+
+        public long getBid() {
+            return bid;
+        }
+
+        public void setBid(long bid) {
+            this.bid = bid;
+        }
+
+        public String getBgroup() {
+            return bgroup;
+        }
+
+        public void setBgroup(String bgroup) {
+            this.bgroup = bgroup;
+        }
+
+        public boolean isDynamic() {
+            return dynamic;
+        }
+
+        public void setDynamic(boolean dynamic) {
+            this.dynamic = dynamic;
         }
     }
 
