@@ -9,7 +9,6 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.FileUtil;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTableUtil;
-import com.netease.nim.camellia.core.util.ResourceUtil;
 import com.netease.nim.camellia.hbase.CamelliaHBaseEnv;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.hbase.conf.CamelliaHBaseConf;
@@ -23,7 +22,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -89,14 +87,7 @@ public class CamelliaHBaseConfiguration {
                         if (checkIntervalMillis <= 0) {
                             throw new IllegalArgumentException("checkIntervalMillis <= 0");
                         }
-                        ReloadableLocalFileCamelliaApi camelliaApi = new ReloadableLocalFileCamelliaApi(filePath, table -> {
-                            try {
-                                HBaseResourceUtil.checkResourceTable(table);
-                                return true;
-                            } catch (Exception e) {
-                                return false;
-                            }
-                        });
+                        ReloadableLocalFileCamelliaApi camelliaApi = new ReloadableLocalFileCamelliaApi(filePath, HBaseResourceUtil.HBaseResourceTableChecker);
                         return new CamelliaHBaseTemplate(env, camelliaApi, -1, "default", false, checkIntervalMillis);
                     }
                 } else {

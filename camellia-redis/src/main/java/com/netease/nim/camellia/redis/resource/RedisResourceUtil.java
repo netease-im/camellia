@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.resource;
 
+import com.netease.nim.camellia.core.api.ReloadableLocalFileCamelliaApi;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.CheckUtil;
@@ -15,6 +16,18 @@ import java.util.*;
  * Created by caojiajun on 2019/11/8.
  */
 public class RedisResourceUtil {
+
+    public static final ReloadableLocalFileCamelliaApi.ResourceTableChecker RedisResourceTableChecker = new ReloadableLocalFileCamelliaApi.ResourceTableChecker() {
+        @Override
+        public boolean check(ResourceTable resourceTable) {
+            try {
+                checkResourceTable(resourceTable);
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+    };
 
     public static void checkResourceTable(ResourceTable resourceTable) {
         boolean check = CheckUtil.checkResourceTable(resourceTable);

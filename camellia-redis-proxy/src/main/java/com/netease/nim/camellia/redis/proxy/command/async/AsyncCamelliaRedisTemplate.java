@@ -8,7 +8,6 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceChooser;
-import com.netease.nim.camellia.core.util.ResourceUtil;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
@@ -73,18 +72,8 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     }
 
     public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, String resourceTableFilePath, long checkIntervalMillis) {
-        this(env, new ReloadableLocalFileCamelliaApi(resourceTableFilePath, resourceTable -> {
-            try {
-                Set<Resource> allResources = ResourceUtil.getAllResources(resourceTable);
-                if (allResources == null || allResources.isEmpty()) return false;
-                for (Resource resource : allResources) {
-                    RedisResourceUtil.parseResourceByUrl(resource);
-                }
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
-        }), defaultBid, defaultBgroup, defaultMonitorEnable, checkIntervalMillis, true);
+        this(env, new ReloadableLocalFileCamelliaApi(resourceTableFilePath, RedisResourceUtil.RedisResourceTableChecker),
+                defaultBid, defaultBgroup, defaultMonitorEnable, checkIntervalMillis, true);
     }
 
     public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, CamelliaApi service, long bid, String bgroup,

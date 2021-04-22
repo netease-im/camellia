@@ -83,14 +83,7 @@ public class CamelliaRedisConfiguration {
                 if (filePath == null) {
                     return new CamelliaRedisTemplate(redisEnv, resourceTable);
                 }
-                ReloadableLocalFileCamelliaApi camelliaApi = new ReloadableLocalFileCamelliaApi(filePath, table -> {
-                    try {
-                        RedisResourceUtil.checkResourceTable(table);
-                        return true;
-                    } catch (Exception e) {
-                        return false;
-                    }
-                });
+                ReloadableLocalFileCamelliaApi camelliaApi = new ReloadableLocalFileCamelliaApi(filePath, RedisResourceUtil.RedisResourceTableChecker);
                 long checkIntervalMillis = local.getCheckIntervalMillis();
                 if (checkIntervalMillis <= 0) {
                     throw new IllegalArgumentException("checkIntervalMillis <= 0");
