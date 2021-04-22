@@ -21,11 +21,6 @@ public class CamelliaRedisProxyProperties {
     private int consolePort = Constants.Server.consolePort;
 
     /**
-     *
-     */
-    private String customCommandInvokerClassName;
-
-    /**
      * 是否开启监控，会记录每个命令的调用次数，see @RedisMonitor
      */
     private boolean monitorEnable = Constants.Server.monitorEnable;
@@ -92,6 +87,11 @@ public class CamelliaRedisProxyProperties {
     private BigKeyMonitorConfig bigKeyMonitorConfig = new BigKeyMonitorConfig();
 
     /**
+     * 动态配置的hook
+     */
+    private String proxyDynamicConfHookClassName;
+
+    /**
      * netty相关参数
      */
     private NettyProperties netty = new NettyProperties();
@@ -123,14 +123,6 @@ public class CamelliaRedisProxyProperties {
 
     public void setMonitorCallbackClassName(String monitorCallbackClassName) {
         this.monitorCallbackClassName = monitorCallbackClassName;
-    }
-
-    public String getCustomCommandInvokerClassName() {
-        return customCommandInvokerClassName;
-    }
-
-    public void setCustomCommandInvokerClassName(String customCommandInvokerClassName) {
-        this.customCommandInvokerClassName = customCommandInvokerClassName;
     }
 
     public boolean isMonitorEnable() {
@@ -243,6 +235,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setBigKeyMonitorConfig(BigKeyMonitorConfig bigKeyMonitorConfig) {
         this.bigKeyMonitorConfig = bigKeyMonitorConfig;
+    }
+
+    public String getProxyDynamicConfHookClassName() {
+        return proxyDynamicConfHookClassName;
+    }
+
+    public void setProxyDynamicConfHookClassName(String proxyDynamicConfHookClassName) {
+        this.proxyDynamicConfHookClassName = proxyDynamicConfHookClassName;
     }
 
     public static class HotKeyMonitorConfig {

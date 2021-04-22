@@ -97,6 +97,7 @@ public class CamelliaRedisProxyUtil {
         config1.setStringSizeThreshold(bigKeyMonitorConfig.getStringSizeThreshold());
         serverProperties.setBigKeyMonitorConfig(config1);
         serverProperties.setBigKeyMonitorEnable(properties.isBigKeyMonitorEnable());
+        serverProperties.setProxyDynamicConfHookClassName(properties.getProxyDynamicConfHookClassName());
         return serverProperties;
     }
 

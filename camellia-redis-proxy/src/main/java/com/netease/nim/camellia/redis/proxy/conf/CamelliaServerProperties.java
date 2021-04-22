@@ -22,6 +22,7 @@ public class CamelliaServerProperties {
     private HotKeyCacheConfig hotKeyCacheConfig;
     private boolean bigKeyMonitorEnable = Constants.Server.bigKeyMonitorEnable;
     private BigKeyMonitorConfig bigKeyMonitorConfig;
+    private String proxyDynamicConfHookClassName;
 
     private int bossThread = 1;
     private int workThread = Constants.Server.workThread;
@@ -223,6 +224,14 @@ public class CamelliaServerProperties {
 
     public void setBigKeyMonitorConfig(BigKeyMonitorConfig bigKeyMonitorConfig) {
         this.bigKeyMonitorConfig = bigKeyMonitorConfig;
+    }
+
+    public String getProxyDynamicConfHookClassName() {
+        return proxyDynamicConfHookClassName;
+    }
+
+    public void setProxyDynamicConfHookClassName(String proxyDynamicConfHookClassName) {
+        this.proxyDynamicConfHookClassName = proxyDynamicConfHookClassName;
     }
 
     public static class HotKeyMonitorConfig {

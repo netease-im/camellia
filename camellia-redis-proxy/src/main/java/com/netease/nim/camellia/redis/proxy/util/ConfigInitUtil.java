@@ -15,6 +15,8 @@ import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpend
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.SlowCommandMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfHook;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +28,27 @@ import org.slf4j.LoggerFactory;
 public class ConfigInitUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(ConfigInitUtil.class);
+
+    public static void initProxyDynamicConfHook(CamelliaServerProperties serverProperties) {
+        String proxyDynamicConfHookClassName = serverProperties.getProxyDynamicConfHookClassName();
+        ProxyDynamicConfHook hook;
+        if (proxyDynamicConfHookClassName != null) {
+            try {
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(proxyDynamicConfHookClassName);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(proxyDynamicConfHookClassName);
+                }
+                hook = (ProxyDynamicConfHook) clazz.newInstance();
+                logger.info("ProxyDynamicConfHook init success, class = {}", proxyDynamicConfHookClassName);
+                ProxyDynamicConf.updateProxyDynamicConfHook(hook);
+            } catch (Exception e) {
+                logger.error("ProxyDynamicConfHook init error, class = {}", proxyDynamicConfHookClassName, e);
+                throw new CamelliaRedisException(e);
+            }
+        }
+    }
 
     public static MonitorCallback initMonitorCallback(CamelliaServerProperties serverProperties) {
         MonitorCallback monitorCallback = null;

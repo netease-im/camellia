@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
+import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -30,6 +31,7 @@ public class CamelliaRedisProxyServer {
         this.serverHandler = new ServerHandler(serverProperties, invoker);
         this.bossGroup = bossGroup;
         this.workGroup = workGroup;
+        ConfigInitUtil.initProxyDynamicConfHook(serverProperties);
     }
 
     public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, CommandInvoker invoker) {
@@ -44,6 +46,7 @@ public class CamelliaRedisProxyServer {
         GlobalRedisProxyEnv.bossThread = bossThread;
         GlobalRedisProxyEnv.workGroup = workGroup;
         GlobalRedisProxyEnv.bossGroup = bossGroup;
+        ConfigInitUtil.initProxyDynamicConfHook(serverProperties);
     }
 
     public void start() throws Exception {

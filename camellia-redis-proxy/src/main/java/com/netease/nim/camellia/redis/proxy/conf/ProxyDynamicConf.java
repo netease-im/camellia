@@ -32,10 +32,17 @@ public class ProxyDynamicConf {
     private static final ConcurrentHashMap<String, String> stringCache = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Set<String>> setCache = new ConcurrentHashMap<>();
 
+    private static ProxyDynamicConfHook hook;
+
     static {
         reload();
         int reloadIntervalSeconds = confReloadIntervalSeconds();
         ExecutorUtils.scheduleAtFixedRate(ProxyDynamicConf::reload, reloadIntervalSeconds, reloadIntervalSeconds, TimeUnit.SECONDS);
+    }
+
+    public static void updateProxyDynamicConfHook(ProxyDynamicConfHook hook) {
+        ProxyDynamicConf.hook = hook;
+        logger.info("proxyDynamicConfHook update, hook = {}", hook.getClass().getName());
     }
 
     public static void reload() {
@@ -122,56 +129,100 @@ public class ProxyDynamicConf {
 
     //某个redis后端连续几次连不上后触发熔断
     public static int failCountThreshold(int defaultValue) {
+        if (hook != null) {
+            Integer value = hook.failCountThreshold();
+            if (value != null) return value;
+        }
         return ConfigurationUtil.getInteger(conf, "redis.client.fail.count.threshold", defaultValue);
     }
 
     //某个redis后端连不上触发熔断后，熔断多少ms
     public static long failBanMillis(long defaultValue) {
+        if (hook != null) {
+            Long value = hook.failBanMillis();
+            if (value != null) return value;
+        }
         return ConfigurationUtil.getLong(conf, "redis.client.fail.ban.millis", defaultValue);
     }
 
     //monitor enable，当前仅当application.yml里的monitor-enable=true，才能通过本配置在进程运行期间进行动态的执行开启关闭的操作
     public static boolean monitorEnable(boolean defaultValue) {
+        if (hook != null) {
+            Boolean value = hook.monitorEnable();
+            if (value != null) return value;
+        }
         return ConfigurationUtil.getBoolean(conf, "monitor.enable", defaultValue);
     }
 
     //command spend time monitor enable，当前仅当application.yml里的command-spend-time-monitor-enable=true，才能通过本配置在进程运行期间进行动态的执行开启关闭的操作
     public static boolean commandSpendTimeMonitorEnable(boolean defaultValue) {
+        if (hook != null) {
+            Boolean value = hook.commandSpendTimeMonitorEnable();
+            if (value != null) return value;
+        }
         return ConfigurationUtil.getBoolean(conf, "command.spend.time.monitor.enable", defaultValue);
     }
 
     //slow command threshold, ms
     public static long slowCommandThresholdMillisTime(long millis) {
+        if (hook != null) {
+            Long value = hook.slowCommandThresholdMillisTime();
+            if (value != null) return value;
+        }
         return ConfigurationUtil.getLong(conf, "slow.command.threshold.millis", millis);
     }
 
     //hot key monitor enable，当前仅当application.yml里的hot-key-monitor-enable=true，才能通过本配置在进程运行期间进行动态的执行开启关闭的操作
     public static boolean hotKeyMonitorEnable(Long bid, String bgroup, boolean defaultValue) {
+        if (hook != null) {
+            Boolean value = hook.hotKeyMonitorEnable(bid, bgroup);
+            if (value != null) return value;
+        }
         return getBoolean("hot.key.monitor.enable", bid, bgroup, defaultValue);
     }
 
     //hot key monitor threshold
     public static long hotKeyMonitorThreshold(Long bid, String bgroup, long defaultValue) {
+        if (hook != null) {
+            Long value = hook.hotKeyMonitorThreshold(bid, bgroup);
+            if (value != null) return value;
+        }
         return getLong("hot.key.monitor.threshold", bid, bgroup, defaultValue);
     }
 
     //hot key cache enable，当前仅当application.yml里的hot-key-cache-enable=true，才能通过本配置在进程运行期间进行动态的执行开启关闭的操作
     public static boolean hotKeyCacheEnable(Long bid, String bgroup, boolean enable) {
+        if (hook != null) {
+            Boolean value = hook.hotKeyCacheEnable(bid, bgroup);
+            if (value != null) return value;
+        }
         return getBoolean("hot.key.cache.enable", bid, bgroup, enable);
     }
 
     //hot key cache need cache null
     public static boolean hotKeyCacheNeedCacheNull(Long bid, String bgroup, boolean enable) {
+        if (hook != null) {
+            Boolean value = hook.hotKeyCacheNeedCacheNull(bid, bgroup);
+            if (value != null) return value;
+        }
         return getBoolean("hot.key.cache.need.cache.null", bid, bgroup, enable);
     }
 
     //hot key cache threshold
     public static long hotKeyCacheThreshold(Long bid, String bgroup, long defaultValue) {
+        if (hook != null) {
+            Long value = hook.hotKeyCacheThreshold(bid, bgroup);
+            if (value != null) return value;
+        }
         return getLong("hot.key.cache.threshold", bid, bgroup, defaultValue);
     }
 
     //hot key cache key prefix，当前仅当application.yml里的hot-key-cache-key-checker-class-name设置为com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.PrefixMatchHotKeyCacheKeyChecker才有效
     public static Set<String> hotKeyCacheKeyPrefix(Long bid, String bgroup) {
+        if (hook != null) {
+            Set<String> value = hook.hotKeyCacheKeyPrefix(bid, bgroup);
+            if (value != null) return value;
+        }
         if (conf.isEmpty()) return Collections.emptySet();
         String key = buildConfKey("hot.key.cache.key.prefix", bid, bgroup);
         Set<String> cache = setCache.get(key);
@@ -193,31 +244,55 @@ public class ProxyDynamicConf {
 
     //big key monitor enable，当前仅当application.yml里的big-key-monitor-enable=true，才能通过本配置在进程运行期间进行动态的执行开启关闭的操作
     public static boolean bigKeyMonitorEnable(Long bid, String bgroup, boolean defaultValue) {
+        if (hook != null) {
+            Boolean value = hook.bigKeyMonitorEnable(bid, bgroup);
+            if (value != null) return value;
+        }
         return getBoolean("big.key.monitor.enable", bid, bgroup, defaultValue);
     }
 
     //big key monitor hash threshold
     public static int bigKeyMonitorHashThreshold(Long bid, String bgroup, int defaultValue) {
+        if (hook != null) {
+            Integer value = hook.bigKeyMonitorHashThreshold(bid, bgroup);
+            if (value != null) return value;
+        }
         return getInt("big.key.monitor.hash.threshold", bid, bgroup, defaultValue);
     }
 
     //big key monitor string threshold
     public static int bigKeyMonitorStringThreshold(Long bid, String bgroup, int defaultValue) {
+        if (hook != null) {
+            Integer value = hook.bigKeyMonitorStringThreshold(bid, bgroup);
+            if (value != null) return value;
+        }
         return getInt("big.key.monitor.string.threshold", bid, bgroup, defaultValue);
     }
 
     //big key monitor set threshold
     public static int bigKeyMonitorSetThreshold(Long bid, String bgroup, int defaultValue) {
+        if (hook != null) {
+            Integer value = hook.bigKeyMonitorSetThreshold(bid, bgroup);
+            if (value != null) return value;
+        }
         return getInt("big.key.monitor.set.threshold", bid, bgroup, defaultValue);
     }
 
     //big key monitor zset threshold
     public static int bigKeyMonitorZSetThreshold(Long bid, String bgroup, int defaultValue) {
+        if (hook != null) {
+            Integer value = hook.bigKeyMonitorZSetThreshold(bid, bgroup);
+            if (value != null) return value;
+        }
         return getInt("big.key.monitor.zset.threshold", bid, bgroup, defaultValue);
     }
 
     //big key monitor list threshold
     public static int bigKeyMonitorListThreshold(Long bid, String bgroup, int defaultValue) {
+        if (hook != null) {
+            Integer value = hook.bigKeyMonitorListThreshold(bid, bgroup);
+            if (value != null) return value;
+        }
         return getInt("big.key.monitor.list.threshold", bid, bgroup, defaultValue);
     }
 
