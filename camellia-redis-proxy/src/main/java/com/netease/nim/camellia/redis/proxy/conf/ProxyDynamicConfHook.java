@@ -4,8 +4,8 @@ import java.util.Set;
 
 /**
  * 相关动态配置参数是从ProxyDynamicConf去拿的，ProxyDynamicConf默认会从本地配置文件中去取
- * 如果设置了本hook，那么会优先使用hook中的配置，如果hook返回了null，那么仍然使用本地配置文件为
- * 如果想要自定义，那么自定义一个继承本类的实现，并在启动时把hook设置进来即可
+ * 如果设置了本hook，那么会优先使用hook中的配置，如果hook返回了null，那么仍然以本地配置文件中的配置为准
+ * 如果想要自定义，那么自定义类，继承本类，并在启动时把hook设置进来即可
  * 对于某些参数，业务调用方是存在缓存的，因此当配置产生变更时，请务必调用reload方法来更新缓存
  * Created by caojiajun on 2021/4/22
  */
@@ -97,7 +97,7 @@ public class ProxyDynamicConfHook {
     }
 
     /**
-     * 触发一下所有配置
+     * 触发一下所有配置的重新加载
      */
     public final void reload() {
         ProxyDynamicConf.reload();
