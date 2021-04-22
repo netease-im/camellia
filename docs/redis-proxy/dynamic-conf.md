@@ -156,3 +156,52 @@ big.key.list.string.threshold=10000
 
 
 ```
+
+## 通过ProxyDynamicConfHook进行配置的动态修改
+如果你不想通过camellia-redis-proxy.properties这样的本地配置文件的方式进行配置的动态修改，那么你可以使用ProxyDynamicConfHook   
+你需要自己实现一个ProxyDynamicConfHook的子类，并在启动时设置进去，示例如下：  
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123   #proxy的密码
+  monitor-enable: true  #是否开启监控
+  monitor-interval-seconds: 60 #监控回调的间隔
+  monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback #监控回调类
+  command-spend-time-monitor-enable: true #是否开启请求耗时的监控，只有monitor-enable=true才有效
+  slow-command-threshold-millis-time: 1000 #慢查询的阈值，单位毫秒，只有command-spend-time-monitor-enable=true才有效
+  slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback #慢查询的回调类
+  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor #方法拦截器
+  hot-key-monitor-enable: true #是否监控热key
+  hot-key-monitor-config:
+    check-millis: 1000 #热key的检查周期
+    check-threshold: 10 #热key的阈值，检查周期内请求次数超过该阈值被判定为热key
+    check-cache-max-capacity: 1000 #检查的计数器集合的size，本身是LRU的
+    max-hot-key-count: 100 #每次回调的热key个数的最大值（前N个）
+    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback #热key的回调类
+  proxy-dynamic-conf-hook-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomProxyDynamicConfHook #设置动态配置变更的hook
+  transpond:
+    type: local #使用本地配置
+    local:
+      resource: redis://@127.0.0.1:6379 #转发的redis地址  
+
+```
+如上，设置了CustomProxyDynamicConfHook作为动态配置的hook类  
+你可以在CustomProxyDynamicConfHook类需要继承自ProxyDynamicConfHook，并在里面重写相关方法，每个方法代表了某些配置，如热key监控的开关、热key监控的阈值等等   
+如果有些方法你没有重写，或者方法返回了null，那么proxy仍然会去camellia-redis-proxy.properties尝试获取该配置  
+特别的，因为proxy可能会缓存某一些配置项，当你的某些配置项发生了变更，务必调用ProxyDynamicConfHook.reload()方法去告诉proxy重新来获取相关配置   
+
+## 配置优先级
+优先级从高到低依次是：  
+```
+ProxyDynamicConfHook -> camellia-redis-proxy.properties中设置的filePath -> camellia-redis-proxy.properties -> application.yml
+```  
+特别的，对于开关类型的配置，比如热key监控开关，只有application.yml里设置为true，对应的热key监控相关的动态配置才能生效  
+也就是说，你可以在application.yml把hot-key-monitor-enable设置成true，然后在ProxyDynamicConfHook或者camellia-redis-proxy.properties设置为false，那么应用启动时，热key监控功能是关闭的，但是你可以在运行期间动态打开  
+相反，如果application.yml把hot-key-monitor-enable设置成false，那么不管ProxyDynamicConfHook还是camellia-redis-proxy.properties，不管设置成true还是false，都不能开启热key监控相关的功能了  
+一言以蔽之，application.yml的开关配置控制了proxy启动时相关功能模块的加载，如果没有加载，那么动态配置不管怎么设置都无法生效了    
+   
