@@ -99,7 +99,8 @@ public class ProxyDynamicConfHook {
     /**
      * 触发一下所有配置的重新加载
      */
-    public final void reload() {
+    public final void invokeUpdate() {
         ProxyDynamicConf.reload();
+        ProxyDynamicConf.triggerCallback();
     }
 }

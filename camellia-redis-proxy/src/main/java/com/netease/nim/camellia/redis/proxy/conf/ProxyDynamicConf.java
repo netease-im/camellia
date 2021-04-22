@@ -45,6 +45,9 @@ public class ProxyDynamicConf {
         logger.info("proxyDynamicConfHook update, hook = {}", hook.getClass().getName());
     }
 
+    /**
+     * 检查本地配置文件是否有变更，如果有，则重新加载，并且会清空缓存，并触发监听者的回调
+     */
     public static void reload() {
         URL url = ProxyDynamicConf.class.getClassLoader().getResource(fileName);
         if (url == null) {
@@ -94,19 +97,27 @@ public class ProxyDynamicConf {
                     logger.info("classpath:{} reload success", fileName);
                 }
                 clearCache();
-                for (DynamicConfCallback callback : callbackSet) {
-                    try {
-                        callback.callback();
-                    } catch (Exception e) {
-                        logger.error("DynamicConfCallback callback error", e);
-                    }
-                }
+                triggerCallback();
             }
         } catch (Exception e) {
             logger.error("reload error", e);
         }
     }
 
+    /**
+     * 触发一下监听者的回调
+     */
+    public static void triggerCallback() {
+        for (DynamicConfCallback callback : callbackSet) {
+            try {
+                callback.callback();
+            } catch (Exception e) {
+                logger.error("DynamicConfCallback callback error", e);
+            }
+        }
+    }
+
+    //清空缓存
     private static void clearCache() {
         longCache.clear();
         intCache.clear();
@@ -116,6 +127,10 @@ public class ProxyDynamicConf {
         setCache.clear();
     }
 
+    /**
+     * 注册回调，对于ProxyDynamicConf的调用者，可以注册该回调，从而当ProxyDynamicConf发生配置变更时可以第一时间重新加载
+     * @param callback 回调
+     */
     public static void registerCallback(DynamicConfCallback callback) {
         if (callback != null) {
             callbackSet.add(callback);
