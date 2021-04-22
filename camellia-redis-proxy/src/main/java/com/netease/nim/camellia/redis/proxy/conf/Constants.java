@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.bigkey.LoggingBigKeyMo
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.DummyHotKeyCacheKeyChecker;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.LoggingHotKeyCacheStatsCallback;
+import com.netease.nim.camellia.redis.proxy.command.async.route.DynamicConfProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback;
 
@@ -84,6 +85,7 @@ public class Constants {
     }
 
     public static class Custom {
+        public static final String proxyRouteConfUpdaterClassName = DynamicConfProxyRouteConfUpdater.class.getName();
         public static final boolean dynamic = true;
     }
 }

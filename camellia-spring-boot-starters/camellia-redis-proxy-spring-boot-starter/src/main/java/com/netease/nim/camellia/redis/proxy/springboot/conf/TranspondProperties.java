@@ -171,8 +171,9 @@ public class TranspondProperties {
 
         /**
          * 继承com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater的子类的全类名
+         * 默认是DynamicConfProxyRouteConfUpdater这个实现
          */
-        private String proxyRouteConfUpdaterClassName;
+        private String proxyRouteConfUpdaterClassName = Constants.Custom.proxyRouteConfUpdaterClassName;
 
         /**
          * 是否动态判断

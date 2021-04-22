@@ -128,6 +128,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         this.factory = env.getClientFactory();
         this.multiWriteMode = env.getMultiWriteMode();
         ResourceTable resourceTable = updater.getResourceTable(bid, bgroup);
+        RedisResourceUtil.checkResourceTable(resourceTable);
         if (logger.isInfoEnabled()) {
             logger.info("AsyncCamelliaRedisTemplate init success, bid = {}, bgroup = {}, resourceTable = {}, ProxyRouteConfUpdater = {}", bid, bgroup,
                     ReadableResourceTableUtil.readableResourceTable(resourceTable), updater.getClass().getName());
