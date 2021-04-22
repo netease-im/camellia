@@ -193,7 +193,7 @@ camellia-redis-proxy:
 * 如上，设置了CustomProxyDynamicConfHook作为动态配置的hook类  
 * CustomProxyDynamicConfHook类继承自ProxyDynamicConfHook，并在里面重写了相关方法，每个方法代表了某个配置，如热key监控的开关、热key监控的阈值等等   
 * 如果有些方法你没有重写，或者方法返回了null，那么proxy仍然会尝试去camellia-redis-proxy.properties中获取该配置，如果还是获取不到，则以application.yml里的配置为准    
-* 特别的，因为proxy可能会缓存某一些配置项，当你的某些配置项发生了变更，务必调用ProxyDynamicConfHook.reload()方法去告诉proxy重新来获取相关配置   
+* 特别的，因为proxy可能会缓存某一些配置项，当你的某些配置项发生了变更，务必调用ProxyDynamicConfHook.invokeUpdate()方法去告诉proxy重新来获取相关配置   
 
 ## 配置优先级
 优先级从高到低依次是：  
