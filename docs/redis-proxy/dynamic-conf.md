@@ -190,18 +190,18 @@ camellia-redis-proxy:
       resource: redis://@127.0.0.1:6379 #转发的redis地址  
 
 ```
-如上，设置了CustomProxyDynamicConfHook作为动态配置的hook类  
-CustomProxyDynamicConfHook类继承自ProxyDynamicConfHook，并在里面重写了相关方法，每个方法代表了某个配置，如热key监控的开关、热key监控的阈值等等   
-如果有些方法你没有重写，或者方法返回了null，那么proxy仍然会尝试去camellia-redis-proxy.properties中获取该配置，如果还是获取不到，则以application.yml里的配置为准    
-特别的，因为proxy可能会缓存某一些配置项，当你的某些配置项发生了变更，务必调用ProxyDynamicConfHook.reload()方法去告诉proxy重新来获取相关配置   
+* 如上，设置了CustomProxyDynamicConfHook作为动态配置的hook类  
+* CustomProxyDynamicConfHook类继承自ProxyDynamicConfHook，并在里面重写了相关方法，每个方法代表了某个配置，如热key监控的开关、热key监控的阈值等等   
+* 如果有些方法你没有重写，或者方法返回了null，那么proxy仍然会尝试去camellia-redis-proxy.properties中获取该配置，如果还是获取不到，则以application.yml里的配置为准    
+* 特别的，因为proxy可能会缓存某一些配置项，当你的某些配置项发生了变更，务必调用ProxyDynamicConfHook.reload()方法去告诉proxy重新来获取相关配置   
 
 ## 配置优先级
 优先级从高到低依次是：  
 ```
 ProxyDynamicConfHook -> camellia-redis-proxy.properties中设置的filePath -> camellia-redis-proxy.properties -> application.yml
 ```  
-特别的，对于开关类型的配置，比如热key监控开关，只有application.yml里设置为true，对应的热key监控相关的动态配置才能生效  
-也就是说，你可以在application.yml把hot-key-monitor-enable设置成true，然后在ProxyDynamicConfHook或者camellia-redis-proxy.properties设置为false，那么应用启动时，热key监控功能是关闭的，但是你可以在运行期间动态打开  
-相反，如果application.yml把hot-key-monitor-enable设置成false，那么不管ProxyDynamicConfHook还是camellia-redis-proxy.properties，不管设置成true还是false，都不能开启热key监控相关的功能了  
-一言以蔽之，application.yml的开关配置控制了proxy启动时相关功能模块的加载，如果没有加载，那么动态配置不管怎么设置都无法生效了    
+* 特别的，对于开关类型的配置，比如热key监控开关，只有application.yml里设置为true，对应的热key监控相关的动态配置才能生效  
+* 也就是说，你可以在application.yml把hot-key-monitor-enable设置成true，然后在ProxyDynamicConfHook或者camellia-redis-proxy.properties设置为false，那么应用启动时，热key监控功能是关闭的，但是你可以在运行期间动态打开  
+* 相反，如果application.yml把hot-key-monitor-enable设置成false，那么不管ProxyDynamicConfHook还是camellia-redis-proxy.properties，不管设置成true还是false，都不能开启热key监控相关的功能了  
+* 一言以蔽之，application.yml的开关配置控制了proxy启动时相关功能模块的加载，如果没有加载，那么动态配置不管怎么设置都无法生效了    
    
