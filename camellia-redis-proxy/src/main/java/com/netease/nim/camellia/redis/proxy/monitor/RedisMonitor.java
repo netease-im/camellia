@@ -82,6 +82,7 @@ public class RedisMonitor {
      * command fail incr
      */
     public static void incrFail(String failReason) {
+        if (!monitorEnable) return;
         LongAdder failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, failReason, k -> new LongAdder());
         failCount.increment();
     }
