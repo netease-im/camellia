@@ -62,7 +62,10 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         void callback(ResourceTable resourceTable);
     }
 
-    private final Callback callback = AsyncCamelliaRedisTemplate.this::init;
+    private final Callback callback = resourceTable -> {
+        RedisResourceUtil.checkResourceTable(resourceTable);
+        init(resourceTable);
+    };
 
     public AsyncCamelliaRedisTemplate(ResourceTable resourceTable) {
         this(AsyncCamelliaRedisEnv.defaultRedisEnv(), resourceTable);
