@@ -198,6 +198,7 @@ public class CamelliaRedisProxyUtil {
         customProperties.setBid(properties.getBid());
         customProperties.setBgroup(properties.getBgroup());
         customProperties.setDynamic(properties.isDynamic());
+        customProperties.setReloadIntervalMillis(properties.getReloadIntervalMillis());
         String className = properties.getProxyRouteConfUpdaterClassName();
         if (className == null) {
             throw new IllegalArgumentException("proxyRouteConfUpdaterClassName missing");

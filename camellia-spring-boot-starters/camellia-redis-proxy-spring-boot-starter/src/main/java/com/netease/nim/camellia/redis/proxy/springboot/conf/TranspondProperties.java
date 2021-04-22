@@ -192,6 +192,11 @@ public class TranspondProperties {
          */
         private String bgroup;
 
+        /**
+         * 避免ProxyRouteConfUpdater更新丢失，兜底轮询的间隔
+         */
+        private long reloadIntervalMillis = Constants.Custom.reloadIntervalMillis;
+
         public String getProxyRouteConfUpdaterClassName() {
             return proxyRouteConfUpdaterClassName;
         }
@@ -222,6 +227,14 @@ public class TranspondProperties {
 
         public void setBgroup(String bgroup) {
             this.bgroup = bgroup;
+        }
+
+        public long getReloadIntervalMillis() {
+            return reloadIntervalMillis;
+        }
+
+        public void setReloadIntervalMillis(long reloadIntervalMillis) {
+            this.reloadIntervalMillis = reloadIntervalMillis;
         }
     }
 

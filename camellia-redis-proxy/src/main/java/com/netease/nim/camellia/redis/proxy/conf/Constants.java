@@ -87,5 +87,6 @@ public class Constants {
     public static class Custom {
         public static final String proxyRouteConfUpdaterClassName = DynamicConfProxyRouteConfUpdater.class.getName();
         public static final boolean dynamic = true;
+        public static final long reloadIntervalMillis = 10 * 60 * 1000;//避免ProxyRouteConfUpdater更新丢失，兜底轮询的间隔
     }
 }

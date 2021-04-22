@@ -174,6 +174,7 @@ public class CamelliaTranspondProperties {
         private long bid;
         private String bgroup;
         private boolean dynamic = Constants.Custom.dynamic;
+        private long reloadIntervalMillis = Constants.Custom.reloadIntervalMillis;
 
         public ProxyRouteConfUpdater getProxyRouteConfUpdater() {
             return proxyRouteConfUpdater;
@@ -205,6 +206,14 @@ public class CamelliaTranspondProperties {
 
         public void setDynamic(boolean dynamic) {
             this.dynamic = dynamic;
+        }
+
+        public long getReloadIntervalMillis() {
+            return reloadIntervalMillis;
+        }
+
+        public void setReloadIntervalMillis(long reloadIntervalMillis) {
+            this.reloadIntervalMillis = reloadIntervalMillis;
         }
     }
 

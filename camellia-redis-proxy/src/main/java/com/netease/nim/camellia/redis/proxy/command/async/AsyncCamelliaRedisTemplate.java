@@ -50,6 +50,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     private final long bid;
     private final String bgroup;
     private AsyncCamelliaRedisEnv env;
+    private Monitor monitor;
     private ResourceChooser resourceChooser;
 
     private boolean isSingletonStandaloneRedisOrRedisSentinel;
@@ -106,11 +107,12 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 Monitor monitor = new FastRemoteMonitor(bid, bgroup, service);
                 ProxyEnv proxyEnv = new ProxyEnv.Builder(env.getProxyEnv()).monitor(monitor).build();
                 this.env = new AsyncCamelliaRedisEnv.Builder(env).proxyEnv(proxyEnv).build();
+                this.monitor = monitor;
             }
         }
     }
 
-    public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, long bid, String bgroup, ProxyRouteConfUpdater updater) {
+    public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, long bid, String bgroup, ProxyRouteConfUpdater updater, long reloadIntervalMillis) {
         this.env = env;
         this.bid = bid;
         this.bgroup = bgroup;
@@ -123,6 +125,10 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     ReadableResourceTableUtil.readableResourceTable(resourceTable), updater.getClass().getName());
         }
         this.init(resourceTable);
+        if (reloadIntervalMillis > 0) {
+            ProxyRouteConfUpdaterReloadTask reloadTask = new ProxyRouteConfUpdaterReloadTask(this, resourceTable, bid, bgroup, updater);
+            scheduleExecutor.scheduleAtFixedRate(reloadTask, reloadIntervalMillis, reloadIntervalMillis, TimeUnit.MILLISECONDS);
+        }
     }
 
     public Callback getCallback() {
@@ -935,6 +941,59 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         isSingletonStandaloneRedisOrRedisSentinel = false;
     }
 
+    private static class ProxyRouteConfUpdaterReloadTask implements Runnable {
+
+        private final AtomicBoolean running = new AtomicBoolean(false);
+        private final AsyncCamelliaRedisTemplate template;
+        private final long bid;
+        private final String bgroup;
+        private final ProxyRouteConfUpdater updater;
+        private ResourceTable resourceTable;
+
+        public ProxyRouteConfUpdaterReloadTask(AsyncCamelliaRedisTemplate template, ResourceTable resourceTable, long bid, String bgroup,
+                                               ProxyRouteConfUpdater updater) {
+            this.template = template;
+            this.resourceTable = resourceTable;
+            this.bid = bid;
+            this.bgroup = bgroup;
+            this.updater = updater;
+        }
+
+        @Override
+        public void run() {
+            if (running.compareAndSet(false, true)) {
+                try {
+                    ResourceTable resourceTable = updater.getResourceTable(bid, bgroup);
+                    try {
+                        RedisResourceUtil.checkResourceTable(resourceTable);
+                    } catch (Exception e) {
+                        logger.error("resourceTable check error, skip reload, bid = {}, bgroup = {}, resourceTable = {}",
+                                bid, bgroup, ReadableResourceTableUtil.readableResourceTable(resourceTable), e);
+                        return;
+                    }
+                    String newJson = ReadableResourceTableUtil.readableResourceTable(resourceTable);
+                    String oldJson = ReadableResourceTableUtil.readableResourceTable(this.resourceTable);
+                    if (!newJson.equals(oldJson)) {
+                        template.init(resourceTable);
+                        this.resourceTable = resourceTable;
+                        if (logger.isInfoEnabled()) {
+                            logger.info("reload success, bid = {}, bgroup = {}, resourceTable = {}", bid, bgroup,
+                                    ReadableResourceTableUtil.readableResourceTable(resourceTable));
+                        }
+                    }
+                } catch (Exception e) {
+                    Throwable ex = ErrorHandlerUtil.handler(e);
+                    String log = "reload error, bid = " + bid + ", bgroup = " + bgroup + ", updater = " + updater.getClass().getName() + ", ex = " + ex.toString();
+                    ErrorLogCollector.collect(AsyncCamelliaRedisTemplate.class, log, e);
+                } finally {
+                    running.set(false);
+                }
+            } else {
+                logger.warn("ProxyRouteConfUpdaterReloadTask is running, skip run, bid = {}, bgroup = {}, updater = {}", bid, bgroup, updater.getClass().getName());
+            }
+        }
+    }
+
     private static class ReloadTask implements Runnable {
 
         private final AtomicBoolean running = new AtomicBoolean(false);
@@ -962,6 +1021,13 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         if (logger.isTraceEnabled()) {
                             logger.trace("not modify, bid = {}, bgroup = {}, md5 = {}", bid, bgroup, md5);
                         }
+                        return;
+                    }
+                    try {
+                        RedisResourceUtil.checkResourceTable(response.getResourceTable());
+                    } catch (Exception e) {
+                        logger.error("resourceTable check error, skip reload, bid = {}, bgroup = {}, resourceTable = {}",
+                                bid, bgroup, ReadableResourceTableUtil.readableResourceTable(response.getResourceTable()), e);
                         return;
                     }
                     template.init(response.getResourceTable());
@@ -1003,16 +1069,16 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
     private static final String className = AsyncCamelliaRedisTemplate.class.getSimpleName();
     private void incrRead(String url, Command command) {
-        if (env.getProxyEnv().getMonitor() != null) {
-            env.getProxyEnv().getMonitor().incrRead(url, className, command.getName());
+        if (monitor != null) {
+            monitor.incrRead(url, className, command.getName());
         }
         if (logger.isDebugEnabled()) {
             logger.debug("read command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, url);
         }
     }
     private void incrRead(Resource resource, Command command) {
-        if (env.getProxyEnv().getMonitor() != null) {
-            env.getProxyEnv().getMonitor().incrRead(resource.getUrl(), className, command.getName());
+        if (monitor != null) {
+            monitor.incrRead(resource.getUrl(), className, command.getName());
         }
         if (logger.isDebugEnabled()) {
             logger.debug("read command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, resource.getUrl());
@@ -1020,16 +1086,16 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     }
 
     private void incrWrite(String url, Command command) {
-        if (env.getProxyEnv().getMonitor() != null) {
-            env.getProxyEnv().getMonitor().incrWrite(url, className, command.getName());
+        if (monitor != null) {
+            monitor.incrWrite(url, className, command.getName());
         }
         if (logger.isDebugEnabled()) {
             logger.debug("write command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, url);
         }
     }
     private void incrWrite(Resource resource, Command command) {
-        if (env.getProxyEnv().getMonitor() != null) {
-            env.getProxyEnv().getMonitor().incrWrite(resource.getUrl(), className, command.getName());
+        if (monitor != null) {
+            monitor.incrWrite(resource.getUrl(), className, command.getName());
         }
         if (logger.isDebugEnabled()) {
             logger.debug("write command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, resource.getUrl());
