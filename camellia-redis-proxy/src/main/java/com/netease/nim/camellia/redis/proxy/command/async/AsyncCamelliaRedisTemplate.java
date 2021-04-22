@@ -950,7 +950,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         private final ProxyRouteConfUpdater updater;
         private ResourceTable resourceTable;
 
-        public ProxyRouteConfUpdaterReloadTask(AsyncCamelliaRedisTemplate template, ResourceTable resourceTable, long bid, String bgroup,
+        ProxyRouteConfUpdaterReloadTask(AsyncCamelliaRedisTemplate template, ResourceTable resourceTable, long bid, String bgroup,
                                                ProxyRouteConfUpdater updater) {
             this.template = template;
             this.resourceTable = resourceTable;
@@ -979,6 +979,10 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         if (logger.isInfoEnabled()) {
                             logger.info("reload success, bid = {}, bgroup = {}, resourceTable = {}", bid, bgroup,
                                     ReadableResourceTableUtil.readableResourceTable(resourceTable));
+                        }
+                    } else {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("not modify, skip reload, bid = {}, bgroup = {}", bid, bgroup);
                         }
                     }
                 } catch (Exception e) {
