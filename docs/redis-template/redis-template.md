@@ -7,7 +7,7 @@
 * 支持redis、redis-sentinel、redis-cluster，对外暴露统一的api（方法和参数同普通jedis）
 * 支持pipeline（原生JedisCluster不支持）
 * 支持mget/mset等multiKey的命令（原生JedisCluster不支持）    
-* 支持配置客户端分片，从而可以多个redis/redis-cluster当做一个使用
+* 支持配置客户端分片，从而可以多个redis/redis-sentinel/redis-cluster当做一个使用
 * 支持配置多读多写（如：双写/读写分离）
 * 支持读redis-sentinel的从节点，并自动感知主从切换、从节点扩容、从节点宕机等
 * 支持配置在线修改
@@ -16,7 +16,8 @@
 ## 使用场景
 * 需要从redis/redis-sentinel迁移到redis-cluster，CamelliaRedisTemplate的接口定义和Jedis一致，并且支持了mget/mset/pipeline等批量命令    
 * 需要让数据在redis/redis-sentinel/redis-cluster之间进行迁移，可以使用CamelliaRedisTemplate的双写功能    
-* 单个集群容量不够（比如redis-cluster单集群容量超过1T可能会崩溃），可以使用分片和双写，逐步迁移到N个集群进行客户端分片  
+* 单个集群容量不够（比如redis-cluster单集群容量超过1T可能会崩溃），可以使用分片和双写，逐步迁移到N个集群进行客户端分片
+* 需要读写分离提升整体读写能力的，可以使用CamelliaRedisTemplate的读写分离功能  
 
 ## 支持的命令
 参考ICamelliaRedisTemplate和ICamelliaRedisPipeline两个接口定义
