@@ -105,6 +105,14 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         this(RedisResourceUtil.parseResourceByUrl(new Resource(url)));
     }
 
+    public CamelliaRedisTemplate(CamelliaRedisEnv env, ReloadableLocalFileCamelliaApi reloadableLocalFileCamelliaApi, long checkIntervalMillis) {
+        this(env, reloadableLocalFileCamelliaApi, defaultBid, defaultBgroup, defaultMonitorEnable, checkIntervalMillis);
+    }
+
+    public CamelliaRedisTemplate(ReloadableLocalFileCamelliaApi reloadableLocalFileCamelliaApi) {
+        this(CamelliaRedisEnv.defaultRedisEnv(), reloadableLocalFileCamelliaApi, defaultCheckIntervalMillis);
+    }
+
     @Override
     public ICamelliaRedisPipeline pipelined() {
         PipelinePool pipelinePool = this.pipelinePool;
