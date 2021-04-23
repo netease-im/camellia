@@ -17,7 +17,7 @@
 * 需要从redis/redis-sentinel迁移到redis-cluster，CamelliaRedisTemplate的接口定义和Jedis一致，并且支持了mget/mset/pipeline等批量命令    
 * 需要让数据在redis/redis-sentinel/redis-cluster之间进行迁移，可以使用CamelliaRedisTemplate的双写功能    
 * 单个集群容量不够（比如redis-cluster单集群容量超过1T可能会崩溃），可以使用分片和双写，逐步迁移到N个集群进行客户端分片
-* 需要读写分离提升整体读写能力的，可以使用CamelliaRedisTemplate的读写分离功能  
+* 可以使用CamelliaRedisTemplate的读写分离功能/双（多）读功能来提升整体的读写能力，特别是存在热点的场景  
 
 ## 支持的命令
 参考ICamelliaRedisTemplate和ICamelliaRedisPipeline两个接口定义
@@ -249,7 +249,8 @@ public class TestJsonFile {
         ReloadableLocalFileCamelliaApi localFileCamelliaApi = new ReloadableLocalFileCamelliaApi(resource.getPath());
 
         CamelliaRedisEnv redisEnv = CamelliaRedisEnv.defaultRedisEnv();
-        CamelliaRedisTemplate template = new CamelliaRedisTemplate(redisEnv, localFileCamelliaApi, -1, "default", false, 5000);
+        long checkIntervalMillis = 5000;//检查文件是否产生变更的检查周期，单位ms
+        CamelliaRedisTemplate template = new CamelliaRedisTemplate(redisEnv, localFileCamelliaApi, checkIntervalMillis);
 
         String k1 = template.get("k1");
         System.out.println(k1);
@@ -259,6 +260,7 @@ public class TestJsonFile {
         test();
     }
 }
+
 
 ```
 上面的例子中CamelliaRedisTemplate引用了classpath下一个叫resource-table.json的文件中的ResourceTable配置，并且当文件发生变更的时候，CamelliaRedisTemplate会在5000ms之内感知到并自动reloadResourceTable配置  

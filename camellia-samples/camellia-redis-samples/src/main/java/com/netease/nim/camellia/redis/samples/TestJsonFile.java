@@ -23,7 +23,8 @@ public class TestJsonFile {
         ReloadableLocalFileCamelliaApi localFileCamelliaApi = new ReloadableLocalFileCamelliaApi(resource.getPath());
 
         CamelliaRedisEnv redisEnv = CamelliaRedisEnv.defaultRedisEnv();
-        CamelliaRedisTemplate template = new CamelliaRedisTemplate(redisEnv, localFileCamelliaApi, -1, "default", false, 5000);
+        long checkIntervalMillis = 5000;//检查文件是否产生变更的检查周期，单位ms
+        CamelliaRedisTemplate template = new CamelliaRedisTemplate(redisEnv, localFileCamelliaApi, checkIntervalMillis);
 
         String k1 = template.get("k1");
         System.out.println(k1);
