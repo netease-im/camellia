@@ -97,12 +97,12 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         if (response.getResourceTable() == null) {
             throw new CamelliaRedisException("resourceTable is null");
         }
+        RedisResourceUtil.checkResourceTable(response.getResourceTable());
+        this.init(response.getResourceTable());
         if (logger.isInfoEnabled()) {
             logger.info("AsyncCamelliaRedisTemplate init success, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}", bid, bgroup, md5,
                     ReadableResourceTableUtil.readableResourceTable(response.getResourceTable()));
         }
-        this.init(response.getResourceTable());
-
         if (reload) {
             ReloadTask reloadTask = new ReloadTask(this, service, bid, bgroup, md5);
             scheduleExecutor.scheduleAtFixedRate(reloadTask, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
@@ -123,11 +123,11 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         this.multiWriteMode = env.getMultiWriteMode();
         ResourceTable resourceTable = updater.getResourceTable(bid, bgroup);
         RedisResourceUtil.checkResourceTable(resourceTable);
+        this.init(resourceTable);
         if (logger.isInfoEnabled()) {
             logger.info("AsyncCamelliaRedisTemplate init success, bid = {}, bgroup = {}, resourceTable = {}, ProxyRouteConfUpdater = {}", bid, bgroup,
                     ReadableResourceTableUtil.readableResourceTable(resourceTable), updater.getClass().getName());
         }
-        this.init(resourceTable);
         if (reloadIntervalMillis > 0) {
             ProxyRouteConfUpdaterReloadTask reloadTask = new ProxyRouteConfUpdaterReloadTask(this, resourceTable, bid, bgroup, updater);
             scheduleExecutor.scheduleAtFixedRate(reloadTask, reloadIntervalMillis, reloadIntervalMillis, TimeUnit.MILLISECONDS);
