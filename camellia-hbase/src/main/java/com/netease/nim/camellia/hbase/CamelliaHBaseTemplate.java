@@ -82,10 +82,18 @@ public class CamelliaHBaseTemplate implements ICamelliaHBaseTemplate {
         this(CamelliaHBaseInitUtil.initHBaseEnvFromHBaseFile(hbaseXmlFile), CamelliaHBaseInitUtil.initHBaseResourceFromFile(hbaseXmlFile));
     }
 
+    public CamelliaHBaseTemplate(CamelliaHBaseEnv env, ReloadableLocalFileCamelliaApi reloadableLocalFileCamelliaApi, long checkIntervalMillis) {
+        this(env, reloadableLocalFileCamelliaApi, defaultBid, defaultBgroup, defaultMonitorEnable, checkIntervalMillis);
+    }
+
+    public CamelliaHBaseTemplate(ReloadableLocalFileCamelliaApi reloadableLocalFileCamelliaApi) {
+        this(CamelliaHBaseEnv.defaultHBaseEnv(), reloadableLocalFileCamelliaApi, defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
+    }
+
     private static class ApiServiceWrapper implements CamelliaApi {
 
-        private CamelliaApi service;
-        private CamelliaHBaseEnv env;
+        private final CamelliaApi service;
+        private final CamelliaHBaseEnv env;
 
         ApiServiceWrapper(CamelliaApi service, CamelliaHBaseEnv env) {
             this.service = service;

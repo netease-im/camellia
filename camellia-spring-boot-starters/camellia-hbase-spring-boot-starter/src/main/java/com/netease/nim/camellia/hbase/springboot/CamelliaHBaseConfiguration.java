@@ -88,7 +88,7 @@ public class CamelliaHBaseConfiguration {
                             throw new IllegalArgumentException("checkIntervalMillis <= 0");
                         }
                         ReloadableLocalFileCamelliaApi camelliaApi = new ReloadableLocalFileCamelliaApi(filePath, HBaseResourceUtil.HBaseResourceTableChecker);
-                        return new CamelliaHBaseTemplate(env, camelliaApi, -1, "default", false, checkIntervalMillis);
+                        return new CamelliaHBaseTemplate(env, camelliaApi, checkIntervalMillis);
                     }
                 } else {
                     throw new IllegalArgumentException("only support simple/complex");

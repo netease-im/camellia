@@ -88,7 +88,7 @@ public class CamelliaRedisConfiguration {
                 if (checkIntervalMillis <= 0) {
                     throw new IllegalArgumentException("checkIntervalMillis <= 0");
                 }
-                return new CamelliaRedisTemplate(redisEnv, camelliaApi, -1, "default", false, checkIntervalMillis);
+                return new CamelliaRedisTemplate(redisEnv, camelliaApi, checkIntervalMillis);
             } else {
                 throw new UnsupportedOperationException("only support simple/complex");
             }
