@@ -10,6 +10,7 @@
 * camellia-redis-proxy support ProxyRouteConfUpdater, so you can use multi-route-conf exclude camellia-dashboard
 * support a default implements of ProxyRouteConfUpdater, named DynamicConfProxyRouteConfUpdater, it uses DynamicConfProxy(camellia-redis-proxy.properties) to manager multi-route-conf
 * camellia-redis-proxy support ProxyDynamicConfHook，so you can dynamic update conf by hook
+* camellia-redis-proxy add dummy callback implements of monitor
 
 ### update
 * none
