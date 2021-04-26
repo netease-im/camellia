@@ -19,14 +19,14 @@ camellia-redis-proxy:
   hot-key-monitor-enable: true #是否监控热key
   hot-key-monitor-config:
     check-millis: 1000 #热key的检查周期
-    check-threshold: 10 #热key的阈值，检查周期内请求次数超过该阈值被判定为热key
+    check-threshold: 100 #热key的阈值，检查周期内请求次数超过该阈值被判定为热key
     check-cache-max-capacity: 1000 #检查的计数器集合的size，本身是LRU的
     max-hot-key-count: 100 #每次回调的热key个数的最大值（前N个）
     hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback #热key的回调类
   hot-key-cache-enable: true #热key缓存开关
   hot-key-cache-config:
     counter-check-millis: 1000 #检查周期，单位毫秒
-    counter-check-threshold: 5 #检查阈值，超过才算热key，才触发热key的缓存
+    counter-check-threshold: 100 #检查阈值，超过才算热key，才触发热key的缓存
     counter-max-capacity: 1000 #检查计数器集合的size，本身是LRU的
     need-cache-null: true #是否缓存null
     cache-max-capacity: 1000 #缓存集合的size，本身是LRU的
@@ -36,11 +36,11 @@ camellia-redis-proxy:
     hot-key-cache-key-checker-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.DummyHotKeyCacheKeyChecker #判断这个key是否需要缓存的接口
   big-key-monitor-enable: true #大key检测
   big-key-monitor-config:
-    string-size-threshold: 10 #字符串类型，value大小超过多少认为是大key
-    hash-size-threshold: 10 #hash类型，集合大小超过多少认为是大key
-    zset-size-threshold: 10 #zset类型，集合大小超过多少认为是大key
-    list-size-threshold: 10 #list类型，集合大小超过多少认为是大key
-    set-size-threshold: 10 #set类型，集合大小超过多少认为是大key
+    string-size-threshold: 2097152 #字符串类型，value大小超过多少认为是大key
+    hash-size-threshold: 2000 #hash类型，集合大小超过多少认为是大key
+    zset-size-threshold: 2000 #zset类型，集合大小超过多少认为是大key
+    list-size-threshold: 2000 #list类型，集合大小超过多少认为是大key
+    set-size-threshold: 2000 #set类型，集合大小超过多少认为是大key
     big-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.bigkey.LoggingBigKeyMonitorCallback #大key的回调类
   transpond:
     type: local #使用本地配置
@@ -50,8 +50,8 @@ camellia-redis-proxy:
       multi-write-mode: first_resource_only #双写的模式，默认第一个地址返回就返回
       shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc #分片函数
 
-camellia-redis-zk-registry: #需要引入相关依赖才有效
-  enable: false #是否注册到zk
+camellia-redis-zk-registry: #需要引入相关的依赖才有效
+  enable: false #是否注册到zk 
   zk-url: 127.0.0.1:2181 #zk地址
   base-path: /camellia #注册到zk的base-path
 ```
