@@ -149,6 +149,10 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         return resourceChooser.getResourceTable();
     }
 
+    public long getResourceTableUpdateTime() {
+        return resourceChooser.getCreateTime();
+    }
+
     public Callback getCallback() {
         return callback;
     }

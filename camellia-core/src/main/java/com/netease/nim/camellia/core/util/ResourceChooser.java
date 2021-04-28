@@ -26,6 +26,8 @@ public class ResourceChooser {
 
     private final Set<Resource> allResources;
 
+    private final long createTime = System.currentTimeMillis();
+
     public ResourceChooser(ResourceTable resourceTable, ProxyEnv proxyEnv) {
         this.resourceTable = resourceTable;
         this.proxyEnv = proxyEnv;
@@ -39,6 +41,10 @@ public class ResourceChooser {
 
     public ResourceTable getResourceTable() {
         return resourceTable;
+    }
+
+    public long getCreateTime() {
+        return createTime;
     }
 
     public ResourceTable.Type getType() {

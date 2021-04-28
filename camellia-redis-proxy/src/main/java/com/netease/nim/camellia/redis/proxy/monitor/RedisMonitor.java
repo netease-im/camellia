@@ -12,10 +12,8 @@ import com.netease.nim.camellia.redis.proxy.util.MaxValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -130,6 +128,8 @@ public class RedisMonitor {
     public static Stats getStats() {
         return stats;
     }
+
+    private static final ThreadLocal<SimpleDateFormat> dataFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
     /**
      * get stats json
@@ -278,6 +278,7 @@ public class RedisMonitor {
             json.put("bid", routeConf.getBid() == null ? "default" : routeConf.getBid());
             json.put("bgroup", routeConf.getBgroup() == null ? "default" : routeConf.getBgroup());
             json.put("resourceTable", routeConf.getResourceTable());
+            json.put("updateTime", dataFormat.get().format(new Date(routeConf.getUpdateTime())));
             routeConfJsonArray.add(json);
         }
         monitorJson.put("routeConf", routeConfJsonArray);
@@ -477,6 +478,7 @@ public class RedisMonitor {
                 routeConf.setBid(bid);
                 routeConf.setBgroup(bgroup);
                 routeConf.setResourceTable(resourceTable);
+                routeConf.setUpdateTime(entry.getValue().getResourceTableUpdateTime());
                 routeConfList.add(routeConf);
             }
 

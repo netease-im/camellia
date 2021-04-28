@@ -63,8 +63,8 @@ public class LoggingMonitorCallback implements MonitorCallback {
             }
             logger.info("====route.conf====");
             for (Stats.RouteConf routeConf : stats.getRouteConfList()) {
-                logger.info("bid={},bgroup={},routeConf={}", routeConf.getBid() == null ? "default" : routeConf.getBid(),
-                        routeConf.getBgroup() == null ? "default" : routeConf.getBgroup(), routeConf.getResourceTable());
+                logger.info("bid={},bgroup={},routeConf={},updateTime={}", routeConf.getBid() == null ? "default" : routeConf.getBid(),
+                        routeConf.getBgroup() == null ? "default" : routeConf.getBgroup(), routeConf.getResourceTable(), routeConf.getUpdateTime());
             }
             logger.info("<<<<<<<END<<<<<<<");
         } catch (Exception e) {

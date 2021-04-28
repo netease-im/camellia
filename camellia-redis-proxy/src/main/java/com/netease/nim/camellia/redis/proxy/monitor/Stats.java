@@ -496,6 +496,7 @@ public class Stats {
         private Long bid;
         private String bgroup;
         private String resourceTable;
+        private long updateTime;
 
         public Long getBid() {
             return bid;
@@ -519,6 +520,14 @@ public class Stats {
 
         public void setResourceTable(String resourceTable) {
             this.resourceTable = resourceTable;
+        }
+
+        public long getUpdateTime() {
+            return updateTime;
+        }
+
+        public void setUpdateTime(long updateTime) {
+            this.updateTime = updateTime;
         }
     }
 }
