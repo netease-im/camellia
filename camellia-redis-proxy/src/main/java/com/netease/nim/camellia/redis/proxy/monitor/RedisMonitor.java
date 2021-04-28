@@ -231,6 +231,7 @@ public class RedisMonitor {
             JSONObject json = new JSONObject();
             json.put("resource", resourceStats.getResource());
             json.put("count", resourceStats.getCount());
+            json.put("qps", resourceStats.getCount() / (stats.getIntervalSeconds() * 1.0));
             resourceStatsJsonArray.add(json);
         }
         monitorJson.put("resourceStats", resourceStatsJsonArray);
@@ -241,6 +242,7 @@ public class RedisMonitor {
             json.put("resource", resourceCommandStats.getResource());
             json.put("command", resourceCommandStats.getCommand());
             json.put("count", resourceCommandStats.getCount());
+            json.put("qps", resourceCommandStats.getCount() / (stats.getIntervalSeconds() * 1.0));
             resourceCommandStatsJsonArray.add(json);
         }
         monitorJson.put("resourceCommandStats", resourceCommandStatsJsonArray);
@@ -252,6 +254,7 @@ public class RedisMonitor {
             json.put("bgroup", resourceBidBgroupStats.getBgroup() == null ? "default" : resourceBidBgroupStats.getBgroup());
             json.put("resource", resourceBidBgroupStats.getResource());
             json.put("count", resourceBidBgroupStats.getCount());
+            json.put("qps", resourceBidBgroupStats.getCount() / (stats.getIntervalSeconds() * 1.0));
             resourceBidBgroupStatsJsonArray.add(json);
         }
         monitorJson.put("resourceBidBgroupStats", resourceBidBgroupStatsJsonArray);
@@ -264,6 +267,7 @@ public class RedisMonitor {
             json.put("resource", resourceBidBgroupCommandStats.getResource());
             json.put("command", resourceBidBgroupCommandStats.getCommand());
             json.put("count", resourceBidBgroupCommandStats.getCount());
+            json.put("qps", resourceBidBgroupCommandStats.getCount() / (stats.getIntervalSeconds() * 1.0));
             resourceBidBgroupCommandStatsJsonArray.add(json);
         }
         monitorJson.put("resourceBidBgroupCommandStats", resourceBidBgroupCommandStatsJsonArray);
