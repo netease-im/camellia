@@ -102,7 +102,7 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
             } finally {
                 if (startTime > 0) {
                     long spendNanoTime = System.nanoTime() - startTime;
-                    RedisMonitor.incrCommandSpendTime(command.getName(), spendNanoTime);
+                    RedisMonitor.incrCommandSpendTime(null, null, command.getName(), spendNanoTime);
                     if (this.commandSpendTimeConfig != null && spendNanoTime > this.commandSpendTimeConfig.getSlowCommandThresholdNanoTime()) {
                         double spendMillis = spendNanoTime / 1000000.0;
                         long slowCommandThresholdMillisTime = this.commandSpendTimeConfig.getSlowCommandThresholdMillisTime();

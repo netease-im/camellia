@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +22,12 @@ public class Stats {
     private List<DetailStats> detailStatsList = new ArrayList<>();
     private Map<String, Long> failMap = new HashMap<>();
     private List<SpendStats> spendStatsList = new ArrayList<>();
+    private List<BidBgroupSpendStats> bidBgroupSpendStatsList = new ArrayList<>();
+    private List<ResourceStats> resourceStatsList = new ArrayList<>();
+    private List<ResourceCommandStats> resourceCommandStatsList = new ArrayList<>();
+    private List<ResourceBidBgroupStats> resourceBidBgroupStatsList = new ArrayList<>();
+    private List<ResourceBidBgroupCommandStats> resourceBidBgroupCommandStatsList = new ArrayList<>();
+    private List<RouteConf> routeConfList = new ArrayList<>();
 
     public int getIntervalSeconds() {
         return intervalSeconds;
@@ -100,6 +107,54 @@ public class Stats {
 
     public void setSpendStatsList(List<SpendStats> spendStatsList) {
         this.spendStatsList = spendStatsList;
+    }
+
+    public List<BidBgroupSpendStats> getBidBgroupSpendStatsList() {
+        return bidBgroupSpendStatsList;
+    }
+
+    public void setBidBgroupSpendStatsList(List<BidBgroupSpendStats> bidBgroupSpendStatsList) {
+        this.bidBgroupSpendStatsList = bidBgroupSpendStatsList;
+    }
+
+    public List<ResourceCommandStats> getResourceCommandStatsList() {
+        return resourceCommandStatsList;
+    }
+
+    public void setResourceCommandStatsList(List<ResourceCommandStats> resourceCommandStatsList) {
+        this.resourceCommandStatsList = resourceCommandStatsList;
+    }
+
+    public List<ResourceBidBgroupCommandStats> getResourceBidBgroupCommandStatsList() {
+        return resourceBidBgroupCommandStatsList;
+    }
+
+    public void setResourceBidBgroupCommandStatsList(List<ResourceBidBgroupCommandStats> resourceBidBgroupCommandStatsList) {
+        this.resourceBidBgroupCommandStatsList = resourceBidBgroupCommandStatsList;
+    }
+
+    public List<ResourceStats> getResourceStatsList() {
+        return resourceStatsList;
+    }
+
+    public void setResourceStatsList(List<ResourceStats> resourceStatsList) {
+        this.resourceStatsList = resourceStatsList;
+    }
+
+    public List<ResourceBidBgroupStats> getResourceBidBgroupStatsList() {
+        return resourceBidBgroupStatsList;
+    }
+
+    public void setResourceBidBgroupStatsList(List<ResourceBidBgroupStats> resourceBidBgroupStatsList) {
+        this.resourceBidBgroupStatsList = resourceBidBgroupStatsList;
+    }
+
+    public List<RouteConf> getRouteConfList() {
+        return routeConfList;
+    }
+
+    public void setRouteConfList(List<RouteConf> routeConfList) {
+        this.routeConfList = routeConfList;
     }
 
     public static class BidBgroupStats {
@@ -239,6 +294,231 @@ public class Stats {
 
         public void setMaxSpendMs(double maxSpendMs) {
             this.maxSpendMs = maxSpendMs;
+        }
+    }
+
+    public static class BidBgroupSpendStats {
+        private Long bid;
+        private String bgroup;
+        private String command;
+        private long count;
+        private double avgSpendMs;
+        private double maxSpendMs;
+
+        public Long getBid() {
+            return bid;
+        }
+
+        public void setBid(Long bid) {
+            this.bid = bid;
+        }
+
+        public String getBgroup() {
+            return bgroup;
+        }
+
+        public void setBgroup(String bgroup) {
+            this.bgroup = bgroup;
+        }
+
+        public String getCommand() {
+            return command;
+        }
+
+        public void setCommand(String command) {
+            this.command = command;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+        public void setCount(long count) {
+            this.count = count;
+        }
+
+        public double getAvgSpendMs() {
+            return avgSpendMs;
+        }
+
+        public void setAvgSpendMs(double avgSpendMs) {
+            this.avgSpendMs = avgSpendMs;
+        }
+
+        public double getMaxSpendMs() {
+            return maxSpendMs;
+        }
+
+        public void setMaxSpendMs(double maxSpendMs) {
+            this.maxSpendMs = maxSpendMs;
+        }
+    }
+
+    public static class ResourceStats {
+        private String resource;
+        private long count;
+
+        public String getResource() {
+            return resource;
+        }
+
+        public void setResource(String resource) {
+            this.resource = resource;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+        public void setCount(long count) {
+            this.count = count;
+        }
+    }
+
+    public static class ResourceCommandStats {
+        private String resource;
+        private String command;
+        private long count;
+
+        public String getResource() {
+            return resource;
+        }
+
+        public void setResource(String resource) {
+            this.resource = resource;
+        }
+
+        public String getCommand() {
+            return command;
+        }
+
+        public void setCommand(String command) {
+            this.command = command;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+        public void setCount(long count) {
+            this.count = count;
+        }
+    }
+
+    public static class ResourceBidBgroupStats {
+        private Long bid;
+        private String bgroup;
+        private String resource;
+        private long count;
+
+        public Long getBid() {
+            return bid;
+        }
+
+        public void setBid(Long bid) {
+            this.bid = bid;
+        }
+
+        public String getBgroup() {
+            return bgroup;
+        }
+
+        public void setBgroup(String bgroup) {
+            this.bgroup = bgroup;
+        }
+
+        public String getResource() {
+            return resource;
+        }
+
+        public void setResource(String resource) {
+            this.resource = resource;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+        public void setCount(long count) {
+            this.count = count;
+        }
+    }
+
+    public static class ResourceBidBgroupCommandStats {
+        private Long bid;
+        private String bgroup;
+        private String resource;
+        private String command;
+        private long count;
+
+        public Long getBid() {
+            return bid;
+        }
+
+        public void setBid(Long bid) {
+            this.bid = bid;
+        }
+
+        public String getBgroup() {
+            return bgroup;
+        }
+
+        public void setBgroup(String bgroup) {
+            this.bgroup = bgroup;
+        }
+
+        public String getResource() {
+            return resource;
+        }
+
+        public void setResource(String resource) {
+            this.resource = resource;
+        }
+
+        public String getCommand() {
+            return command;
+        }
+
+        public void setCommand(String command) {
+            this.command = command;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+        public void setCount(long count) {
+            this.count = count;
+        }
+    }
+
+    public static class RouteConf {
+        private Long bid;
+        private String bgroup;
+        private String resourceTable;
+
+        public Long getBid() {
+            return bid;
+        }
+
+        public void setBid(Long bid) {
+            this.bid = bid;
+        }
+
+        public String getBgroup() {
+            return bgroup;
+        }
+
+        public void setBgroup(String bgroup) {
+            this.bgroup = bgroup;
+        }
+
+        public String getResourceTable() {
+            return resourceTable;
+        }
+
+        public void setResourceTable(String resourceTable) {
+            this.resourceTable = resourceTable;
         }
     }
 }

@@ -15,6 +15,7 @@ import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.FastRemoteMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
@@ -113,6 +114,11 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 this.monitor = monitor;
             }
         }
+        if (bid == -1) {
+            RedisMonitor.register(null, null, this);
+        } else {
+            RedisMonitor.register(bid, bgroup, this);
+        }
     }
 
     public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, long bid, String bgroup, ProxyRouteConfUpdater updater, long reloadIntervalMillis) {
@@ -132,6 +138,15 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             ProxyRouteConfUpdaterReloadTask reloadTask = new ProxyRouteConfUpdaterReloadTask(this, resourceTable, bid, bgroup, updater);
             scheduleExecutor.scheduleAtFixedRate(reloadTask, reloadIntervalMillis, reloadIntervalMillis, TimeUnit.MILLISECONDS);
         }
+        if (bid == -1) {
+            RedisMonitor.register(null, null, this);
+        } else {
+            RedisMonitor.register(bid, bgroup, this);
+        }
+    }
+
+    public ResourceTable getResourceTable() {
+        return resourceChooser.getResourceTable();
     }
 
     public Callback getCallback() {
@@ -1079,6 +1094,11 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         if (monitor != null) {
             monitor.incrRead(url, className, command.getName());
         }
+        if (bid == -1) {
+            RedisMonitor.incr(null, null, url, command.getName());
+        } else {
+            RedisMonitor.incr(bid, bgroup, url, command.getName());
+        }
         if (logger.isDebugEnabled()) {
             logger.debug("read command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, url);
         }
@@ -1086,6 +1106,11 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     private void incrRead(Resource resource, Command command) {
         if (monitor != null) {
             monitor.incrRead(resource.getUrl(), className, command.getName());
+        }
+        if (bid == -1) {
+            RedisMonitor.incr(null, null, resource.getUrl(), command.getName());
+        } else {
+            RedisMonitor.incr(bid, bgroup, resource.getUrl(), command.getName());
         }
         if (logger.isDebugEnabled()) {
             logger.debug("read command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, resource.getUrl());
@@ -1096,6 +1121,11 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         if (monitor != null) {
             monitor.incrWrite(url, className, command.getName());
         }
+        if (bid == -1) {
+            RedisMonitor.incr(null, null, url, command.getName());
+        } else {
+            RedisMonitor.incr(bid, bgroup, url, command.getName());
+        }
         if (logger.isDebugEnabled()) {
             logger.debug("write command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, url);
         }
@@ -1103,6 +1133,11 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     private void incrWrite(Resource resource, Command command) {
         if (monitor != null) {
             monitor.incrWrite(resource.getUrl(), className, command.getName());
+        }
+        if (bid == -1) {
+            RedisMonitor.incr(null, null, resource.getUrl(), command.getName());
+        } else {
+            RedisMonitor.incr(bid, bgroup, resource.getUrl(), command.getName());
         }
         if (logger.isDebugEnabled()) {
             logger.debug("write command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, resource.getUrl());

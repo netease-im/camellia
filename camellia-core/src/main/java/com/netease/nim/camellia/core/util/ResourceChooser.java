@@ -37,6 +37,10 @@ public class ResourceChooser {
         this.allResources = ResourceUtil.getAllResources(resourceTable);
     }
 
+    public ResourceTable getResourceTable() {
+        return resourceTable;
+    }
+
     public ResourceTable.Type getType() {
         return resourceTable.getType();
     }

@@ -49,7 +49,7 @@ public class AsyncTask {
         try {
             if (startTime > 0) {
                 long spendNanoTime = System.nanoTime() - startTime;
-                RedisMonitor.incrCommandSpendTime(command.getName(), spendNanoTime);
+                RedisMonitor.incrCommandSpendTime(command.getChannelInfo().getBid(), command.getChannelInfo().getBgroup(), command.getName(), spendNanoTime);
                 if (commandSpendTimeConfig != null && spendNanoTime > commandSpendTimeConfig.getSlowCommandThresholdNanoTime()
                         && !command.isBlocking()) {
                     long slowCommandThresholdMillisTime = commandSpendTimeConfig.getSlowCommandThresholdMillisTime();

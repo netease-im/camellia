@@ -43,6 +43,29 @@ public class LoggingMonitorCallback implements MonitorCallback {
             for (Stats.SpendStats spendStats : stats.getSpendStatsList()) {
                 logger.info("command={},count={},avgSpendMs={},maxSpendMs={}", spendStats.getCommand(), spendStats.getCount(), spendStats.getAvgSpendMs(), spendStats.getMaxSpendMs());
             }
+            logger.info("====bidbgroup.spend.stats====");
+            for (Stats.BidBgroupSpendStats spendStats : stats.getBidBgroupSpendStatsList()) {
+                logger.info("bid={},bgroup={},command={},count={},avgSpendMs={},maxSpendMs={}", spendStats.getBid() == null ? "default" : spendStats.getBid(),
+                        spendStats.getBgroup() == null ? "default" : spendStats.getBgroup(), spendStats.getCommand(), spendStats.getCount(), spendStats.getAvgSpendMs(), spendStats.getMaxSpendMs());
+            }
+            logger.info("====resource.stats====");
+            for (Stats.ResourceStats resourceStats : stats.getResourceStatsList()) {
+                logger.info("resource={},count={}", resourceStats.getResource(), resourceStats.getCount());
+            }
+            logger.info("====resource.command.stats====");
+            for (Stats.ResourceCommandStats resourceCommandStats : stats.getResourceCommandStatsList()) {
+                logger.info("resource={},command={},count={}", resourceCommandStats.getResource(), resourceCommandStats.getCommand(), resourceCommandStats.getCount());
+            }
+            logger.info("====bidbgroup.resource.command.stats====");
+            for (Stats.ResourceBidBgroupCommandStats commandStats : stats.getResourceBidBgroupCommandStatsList()) {
+                logger.info("bid={},bgroup={},resource={},command={},count={}", commandStats.getBid() == null ? "default" : commandStats.getBid(),
+                        commandStats.getBgroup() == null ? "default" : commandStats.getBgroup(), commandStats.getResource(), commandStats.getCommand(), commandStats.getCount());
+            }
+            logger.info("====route.conf====");
+            for (Stats.RouteConf routeConf : stats.getRouteConfList()) {
+                logger.info("bid={},bgroup={},routeConf={}", routeConf.getBid() == null ? "default" : routeConf.getBid(),
+                        routeConf.getBgroup() == null ? "default" : routeConf.getBgroup(), routeConf.getResourceTable());
+            }
             logger.info("<<<<<<<END<<<<<<<");
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
