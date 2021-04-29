@@ -5,13 +5,13 @@ import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiEnv;
 import com.netease.nim.camellia.core.api.ResourceStats;
 import com.netease.nim.camellia.core.client.env.Monitor;
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -23,8 +23,8 @@ public class FastRemoteMonitor implements Monitor {
 
     private static final Logger logger = LoggerFactory.getLogger(FastRemoteMonitor.class);
 
-    private final ConcurrentHashMap<DetailUniqueKey, LongAdder> readMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<DetailUniqueKey, LongAdder> writeMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, LongAdder> readMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, LongAdder> writeMap = new ConcurrentHashMap<>();
 
     private final Long bid;
     private final String bgroup;
@@ -34,7 +34,7 @@ public class FastRemoteMonitor implements Monitor {
         this.bid = bid;
         this.bgroup = bgroup;
         this.service = service;
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(FastRemoteMonitor.class)).scheduleAtFixedRate(() -> {
+        ExecutorUtils.scheduleAtFixedRate(() -> {
             try {
                 calcAndReport();
             } catch (Exception e) {
@@ -46,8 +46,8 @@ public class FastRemoteMonitor implements Monitor {
     @Override
     public void incrWrite(String resource, String className, String methodName) {
         try {
-            DetailUniqueKey uniqueKey = new DetailUniqueKey(resource, className, methodName, ResourceStats.OPE_WRITE);
-            LongAdder count = getOrInit(writeMap, uniqueKey);
+            String key = resource + "|" + className + "|" + methodName + "|" + ResourceStats.OPE_WRITE;
+            LongAdder count = CamelliaMapUtils.computeIfAbsent(writeMap, key, k -> new LongAdder());
             count.increment();
         } catch (Exception e) {
             logger.error("incrWrite error", e);
@@ -59,23 +59,11 @@ public class FastRemoteMonitor implements Monitor {
         }
     }
 
-    private LongAdder getOrInit(ConcurrentHashMap<DetailUniqueKey, LongAdder> map, DetailUniqueKey uniqueKey) {
-        LongAdder count = map.get(uniqueKey);
-        if (count == null) {
-            count = new LongAdder();
-            LongAdder oldCount = map.putIfAbsent(uniqueKey, count);
-            if (oldCount != null) {
-                count = oldCount;
-            }
-        }
-        return count;
-    }
-
     @Override
     public void incrRead(String resource, String className, String methodName) {
         try {
-            DetailUniqueKey uniqueKey = new DetailUniqueKey(resource, className, methodName, ResourceStats.OPE_READ);
-            LongAdder count = getOrInit(readMap, uniqueKey);
+            String key = resource + "|" + className + "|" + methodName + "|" + ResourceStats.OPE_READ;
+            LongAdder count = CamelliaMapUtils.computeIfAbsent(readMap, key, k -> new LongAdder());
             count.increment();
         } catch (Exception e) {
             logger.error("incrRead error", e);
@@ -91,8 +79,14 @@ public class FastRemoteMonitor implements Monitor {
         ResourceStats resourceStats = new ResourceStats();
         Map<UniqueKey, ResourceStats.Stats> map = new HashMap<>();
         Map<DetailUniqueKey, ResourceStats.StatsDetail> detailMap = new HashMap<>();
-        for (Map.Entry<DetailUniqueKey, LongAdder> entry : readMap.entrySet()) {
-            DetailUniqueKey key = entry.getKey();
+        for (Map.Entry<String, LongAdder> entry : readMap.entrySet()) {
+            String[] split = entry.getKey().split("\\|");
+            String resource = split[0];
+            String className = split[1];
+            String methodName = split[2];
+            String ope = split[3];
+            DetailUniqueKey key = new DetailUniqueKey(resource, className, methodName, ope);
+
             long read = entry.getValue().sumThenReset();
             UniqueKey uniqueKey = new UniqueKey(key.getResource(), key.getOpe());
             ResourceStats.Stats stats = map.get(uniqueKey);
@@ -110,8 +104,14 @@ public class FastRemoteMonitor implements Monitor {
             detail.setCount(read);
         }
 
-        for (Map.Entry<DetailUniqueKey, LongAdder> entry : writeMap.entrySet()) {
-            DetailUniqueKey key = entry.getKey();
+        for (Map.Entry<String, LongAdder> entry : writeMap.entrySet()) {
+            String[] split = entry.getKey().split("\\|");
+            String resource = split[0];
+            String className = split[1];
+            String methodName = split[2];
+            String ope = split[3];
+            DetailUniqueKey key = new DetailUniqueKey(resource, className, methodName, ope);
+
             long write = entry.getValue().sumThenReset();
             UniqueKey uniqueKey = new UniqueKey(key.getResource(), key.getOpe());
             ResourceStats.Stats stats = map.get(uniqueKey);

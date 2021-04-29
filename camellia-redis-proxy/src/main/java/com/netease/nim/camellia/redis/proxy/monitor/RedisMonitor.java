@@ -28,6 +28,8 @@ public class RedisMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisMonitor.class);
 
+    private static final ThreadLocal<SimpleDateFormat> dataFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+
     private static final AtomicBoolean initOk = new AtomicBoolean(false);
 
     private static MonitorCallback monitorCallback;
@@ -82,9 +84,13 @@ public class RedisMonitor {
      */
     public static void incr(Long bid, String bgroup, String url, String command) {
         if (!monitorEnable) return;
-        String key = bid + "|" + bgroup + "|" + url + "|" + command;
-        LongAdder count = CamelliaMapUtils.computeIfAbsent(resourceCommandBidBgroupMap, key, k -> new LongAdder());
-        count.increment();
+        try {
+            String key = bid + "|" + bgroup + "|" + url + "|" + command;
+            LongAdder count = CamelliaMapUtils.computeIfAbsent(resourceCommandBidBgroupMap, key, k -> new LongAdder());
+            count.increment();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     /**
@@ -92,9 +98,13 @@ public class RedisMonitor {
      */
     public static void incr(Long bid, String bgroup, String command) {
         if (!monitorEnable) return;
-        String key = bid + "|" + bgroup + "|" + command;
-        LongAdder count = CamelliaMapUtils.computeIfAbsent(map, key, k -> new LongAdder());
-        count.increment();
+        try {
+            String key = bid + "|" + bgroup + "|" + command;
+            LongAdder count = CamelliaMapUtils.computeIfAbsent(map, key, k -> new LongAdder());
+            count.increment();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     /**
@@ -102,8 +112,12 @@ public class RedisMonitor {
      */
     public static void incrFail(String failReason) {
         if (!monitorEnable) return;
-        LongAdder failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, failReason, k -> new LongAdder());
-        failCount.increment();
+        try {
+            LongAdder failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, failReason, k -> new LongAdder());
+            failCount.increment();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     /**
@@ -129,7 +143,6 @@ public class RedisMonitor {
         return stats;
     }
 
-    private static final ThreadLocal<SimpleDateFormat> dataFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
     /**
      * get stats json
