@@ -81,6 +81,24 @@
       "command": "ping"
     }
   ],
+  "bidBgroupSpendStats": [//按照业务统计的耗时监控
+    {
+      "bgroup": "default",  
+      "maxSpendMs": 7.929259,
+      "count": 263,
+      "bid": 9,
+      "avgSpendMs": 0.7394532509505704,
+      "command": "incrby"
+    },
+    {
+      "bgroup": "default",
+      "maxSpendMs": 1.668735,
+      "count": 21,
+      "bid": 9,
+      "avgSpendMs": 0.7418927142857142,
+      "command": "hget"
+    }
+  ],
   "failStats": [ //失败监控
     {
       "reason": "xxx",  //原因
@@ -153,6 +171,80 @@
       "bid": "1",
       "key": "yyyy",
       "checkThreshold": 100
+    }
+  ],
+  "routeConf": [ //当前路由表
+    {
+      "bgroup": "default",
+      "updateTime": "2021-04-29 10:52:01",  //若重启proxy，updateTime会重置为当前时间
+      "bid": 1,
+      "resourceTable": "{\"type\":\"simple\",\"operation\":{\"read\":\"redis-sentinel-slaves://passwd123@127.0.0.1:26379/master?withMaster=true\",\"type\":\"rw_separate\",\"write\":\"redis-sentinel://passwd123@127.0.0.1:26379/master\"}}"
+    },
+    {
+      "bgroup": "default",
+      "updateTime": "2021-04-29 10:52:32",
+      "bid": 2,
+      "resourceTable": "redis://passwd123@127.0.0.1:6379"
+    }
+  ],
+  "resourceBidBgroupCommandStats": [  //根据业务统计的命令级别的路由统计
+    {
+      "resource": "redis://passwd123@127.0.0.1:6379",
+      "qps": 0.4,
+      "bgroup": "default",
+      "count": 24,
+      "bid": 2,
+      "command": "smembers"
+    },
+    {
+      "resource": "redis-sentinel-slaves://passwd123@127.0.0.1:26379/master?withMaster=true",
+      "qps": 0.35,
+      "bgroup": "default",
+      "count": 21,
+      "bid": 1,
+      "command": "hget"
+    }
+  ],
+  "resourceCommandStats": [  //路由统计（命令）
+    {
+      "resource": "redis-sentinel-slaves://passwd123@127.0.0.1:26379/master?withMaster=true",
+      "qps": 238.61666666666667,
+      "count": 14317,
+      "command": "get"
+    }, 
+    {
+      "resource": "redis://passwd123@127.0.0.1:6379",
+      "qps": 63.9,
+      "count": 3834,
+      "command": "setex"
+    }
+  ],
+  "resourceStats": [  //路由统计
+    {
+      "resource": "redis://passwd123@127.0.0.1:6379",
+      "qps": 196.28333333333333,
+      "count": 11777
+    },
+    {
+      "resource": "redis-sentinel-slaves://passwd123@127.0.0.1:26379/master?withMaster=true",
+      "qps": 404.31666666666666,
+      "count": 24259
+    }
+  ],
+  "resourceBidBgroupStats": [ //业务路由统计
+    {
+      "resource": "redis-sentinel-slaves://passwd123@127.0.0.1:26379/master?withMaster=true",
+      "qps": 404.31666666666666,
+      "bgroup": "default",
+      "count": 24259,
+      "bid": 9
+    },
+    {
+      "resource": "redis://passwd123@127.0.0.1:6379",
+      "qps": 196.28333333333333,
+      "bgroup": "default",
+      "count": 11777,
+      "bid": 1
     }
   ]
 }

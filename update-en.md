@@ -11,6 +11,8 @@
 * support a default implements of ProxyRouteConfUpdater, named DynamicConfProxyRouteConfUpdater, it uses DynamicConfProxy(camellia-redis-proxy.properties) to manager multi-route-conf
 * camellia-redis-proxy support ProxyDynamicConfHook，so you can dynamic update conf by hook
 * camellia-redis-proxy add dummy callback implements of monitor
+* camellia-redis-proxy monitor add route metrics: request of upstream redis, current route-conf
+* camellia-redis-proxy add spend stats metric of bid/bgroup
 
 ### update
 * none
