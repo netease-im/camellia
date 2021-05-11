@@ -50,7 +50,7 @@ public class CommandsEncodeUtil {
 
     public static ByteBuf encode(ByteBufAllocator alloc, byte[]... args) {
         int serializedSize = serializedSize(args);
-        ByteBuf buf = alloc.buffer(serializedSize, serializedSize);
+        ByteBuf buf = alloc.ioBuffer(serializedSize, serializedSize);
         writeParamCount(buf, args.length);
         for (byte[] arg : args) {
             writeParam(buf, arg);
@@ -63,7 +63,7 @@ public class CommandsEncodeUtil {
         for (Command command : commands) {
             serializedSize += serializedSize(command.getObjects());
         }
-        ByteBuf buf = alloc.buffer(serializedSize, serializedSize);
+        ByteBuf buf = alloc.ioBuffer(serializedSize, serializedSize);
         for (Command command : commands) {
             byte[][] args = command.getObjects();
             writeParamCount(buf, args.length);
