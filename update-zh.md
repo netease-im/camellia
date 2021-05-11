@@ -5,7 +5,7 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
-# 1.0.24（2020/04/xx）
+# 1.0.24（2020/05/11）
 ### 新增
 * camellia-redis-proxy新增ProxyRouteConfUpdater，用户可以自定义实现基于bid/bgroup的多组动态路由配置（比如对接到自己的配置中心，这样就不用依赖camellia-dashboard了），具体见：[路由配置](/docs/redis-proxy/route.md)
 * 提供了ProxyRouteConfUpdater的一个默认实现DynamicConfProxyRouteConfUpdater，该实现使用DynamicConfProxy（camellia-redis-proxy.properties）来管理多组路由配置以及配置的动态更新

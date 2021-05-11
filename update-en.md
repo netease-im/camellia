@@ -5,7 +5,7 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
-# 1.0.24（2020/04/xx）
+# 1.0.24（2020/05/11）
 ### add
 * camellia-redis-proxy support ProxyRouteConfUpdater, so you can use multi-route-conf exclude camellia-dashboard
 * support a default implements of ProxyRouteConfUpdater, named DynamicConfProxyRouteConfUpdater, it uses DynamicConfProxy(camellia-redis-proxy.properties) to manager multi-route-conf
