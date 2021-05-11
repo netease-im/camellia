@@ -29,7 +29,7 @@
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis</artifactId>
-  <version>1.0.23</version>
+  <version>1.0.24</version>
 </dependency>
 ```
 
