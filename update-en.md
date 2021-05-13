@@ -5,7 +5,7 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
-# 1.0.24（2020/05/11）
+# 1.0.24（2021/05/11）
 ### add
 * camellia-redis-proxy support ProxyRouteConfUpdater, so you can use multi-route-conf exclude camellia-dashboard
 * support a default implements of ProxyRouteConfUpdater, named DynamicConfProxyRouteConfUpdater, it uses DynamicConfProxy(camellia-redis-proxy.properties) to manager multi-route-conf
@@ -21,7 +21,7 @@
 * none
 
 
-# 1.0.23（2020/04/16）
+# 1.0.23（2021/04/16）
 ### add
 * none
 
@@ -31,7 +31,7 @@
 ### fix
 * fix jdk8 ConcurrentHashMap's computeIfAbsent performance bug，fix see: CamelliaMapUtils，bug see: https://bugs.openjdk.java.net/browse/JDK-8161372
 
-# 1.0.22（2020/04/xx）
+# 1.0.22（2021/04/xx）
 ### add
 * CamelliaRedisTemplate support read from slaves in redis-sentinel cluster(will automatic process node-down/master-switch/node-expansion)
 * camellia-redis-proxy support read from slaves in redis-sentinel cluster(will automatic process node-down/master-switch/node-expansion)
@@ -43,7 +43,7 @@
 ### fix
 * none
 
-# 1.0.21（2020/04/14）
+# 1.0.21（2021/04/14）
 ### add
 * camellia-redis-proxy support dynamic reload of redis address route conf when use local conf
 * camellia-redis-proxy's ProxyDynamicConf(camellia-redis-proxy.properties) support use standalone absolute-path conf file to merge classpath:camellia-redis-proxy.properties
@@ -59,7 +59,7 @@
 * fix a bug of RedisProxyJedisPool may cause 'Could not get a resource from the pool', very low probability(from 1.0.14) 
 * fix conf not found error when camellia-redis-proxy build/run in fat-jar 
 
-# 1.0.20（2020/02/26）
+# 1.0.20（2021/02/26）
 ### add
 * none
 
@@ -71,7 +71,7 @@
 * none
 
 
-# 1.0.19（2020/02/07）
+# 1.0.19（2021/02/07）
 ### add
 * none  
 
@@ -81,7 +81,7 @@
 ### fix
 * fix xinfo/xgroup in KeyParser/pipeline
 
-# 1.0.18（2020/01/25）
+# 1.0.18（2021/01/25）
 ### add
 * add console http api of /reload, so you can reload ProxyDynamicConf by 'curl http://127.0.0.1:16379/reload'
 * support HSTRLEN/SMISMEMBER/LPOS/LMOVE/BLMOVE
@@ -94,7 +94,7 @@
 ### fix
 * none
 
-# 1.0.17（2020/01/15）
+# 1.0.17（2021/01/15）
 ### add
 * camellia-redis-proxy support transaction command, only when proxy route to redis/redis-sentinel with no-shading/no-read-write-separate
 * support ZPOPMIN/ZPOPMAX/BZPOPMIN/BZPOPMAX
@@ -106,7 +106,7 @@
 * fix ReplyDecoder bug of camellia-redis-proxy，proxy will modify nil-MultiBulkReply to empty-MultiBulkReply, find this bug when realize transaction command's support
 * fix NPE when ProxyDynamicConf init, this bug does not affect the use of ProxyDynamicConf, only print the error log once when proxy start 
 
-# 1.0.16（2020/01/11）
+# 1.0.16（2021/01/11）
 ### add
 * some conf properties support dynamic reload
 * camellia-redis-zk-registry support register hostname

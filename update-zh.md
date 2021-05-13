@@ -5,7 +5,7 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
-# 1.0.24（2020/05/11）
+# 1.0.24（2021/05/11）
 ### 新增
 * camellia-redis-proxy新增ProxyRouteConfUpdater，用户可以自定义实现基于bid/bgroup的多组动态路由配置（比如对接到自己的配置中心，这样就不用依赖camellia-dashboard了），具体见：[路由配置](/docs/redis-proxy/route.md)
 * 提供了ProxyRouteConfUpdater的一个默认实现DynamicConfProxyRouteConfUpdater，该实现使用DynamicConfProxy（camellia-redis-proxy.properties）来管理多组路由配置以及配置的动态更新
@@ -21,7 +21,7 @@
 * 无
 
 
-# 1.0.23（2020/04/16）
+# 1.0.23（2021/04/16）
 ### 新增
 * 无
 
@@ -31,7 +31,7 @@
 ### fix
 * 修复jdk8下ConcurrentHashMap的computeIfAbsent方法的一个性能bug，修复见：CamelliaMapUtils，bug见：https://bugs.openjdk.java.net/browse/JDK-8161372
 
-# 1.0.22（2020/04/14）
+# 1.0.22（2021/04/14）
 ### 新增
 * CamelliaRedisTemplate支持从redis-sentinel集群中的从节点读数据（会自动感知节点宕机、主从切换和节点扩容），具体见：RedisSentinelResource和JedisSentinelSlavesPool
 * camellia-redis-proxy支持从redis-sentinel集群中的从节点读数据（会自动感知节点宕机、主从切换和节点扩容），具体见：[路由配置](/docs/redis-proxy/route.md)
@@ -43,7 +43,7 @@
 ### fix
 * 无
 
-# 1.0.21（2020/04/06）
+# 1.0.21（2021/04/06）
 ### 新增
 * camellia-redis-proxy在使用本地配置时，支持动态修改路由转发规则，见：[路由配置](/docs/redis-proxy/route.md)
 * camellia-redis-proxy的ProxyDynamicConf(camellia-redis-proxy.properties)支持使用外部独立的配置文件进行覆盖，见[动态配置](/docs/redis-proxy/dynamic-conf.md)
@@ -59,7 +59,7 @@
 * fix了RedisProxyJedisPool一个bug，概率极低，会导致异常"Could not get a resource from the pool"（1.0.14时引入）
 * fix了camellia-redis-proxy使用fat-jar运行时配置文件找不到的问题
 
-# 1.0.20（2020/02/26）
+# 1.0.20（2021/02/26）
 ### 新增
 * 无
 
@@ -70,7 +70,7 @@
 ### fix
 * 无
 
-# 1.0.19（2020/02/07）
+# 1.0.19（2021/02/07）
 ### 新增
 * 无  
 
@@ -80,7 +80,7 @@
 ### fix
 * 修复调用KeyParser获取xinfo/xgroup的key时的错误返回，修复使用pipeline方式调用xinfo/xgroup时可能出现的bug
 
-# 1.0.18（2020/01/25）
+# 1.0.18（2021/01/25）
 ### 新增
 * 新增console的http-api接口/reload去重新加载ProxyDynamicConf
 * 支持HSTRLEN/SMISMEMBER/LPOS/LMOVE/BLMOVE
@@ -93,7 +93,7 @@
 ### fix
 * 无
 
-# 1.0.17（2020/01/15）
+# 1.0.17（2021/01/15）
 ### 新增
 * 代理到redis/redis-sentinel，且无分片/无读写分离时，支持事务命令（WATCH/UNWATCH/MULTI/EXEC/DISCARD）
 * 支持ZPOPMIN/ZPOPMAX/BZPOPMIN/BZPOPMAX
@@ -105,7 +105,7 @@
 * 修复ReplyDecoder的一个bug，proxy将nil的MultiBulkReply改成了empty的MultiBulkReply返回的问题（实现事务命令时发现）
 * 修复了ProxyDynamicConf初始化时的一个NPE，该报错不影响ProxyDynamicConf的功能，只是会在proxy（v1.0.16）启动时打印一次错误日志
 
-# 1.0.16（2020/01/11）
+# 1.0.16（2021/01/11）
 ### 新增
 * 部分参数支持动态变更
 * camellia-redis-zk-registry支持注册主机名
