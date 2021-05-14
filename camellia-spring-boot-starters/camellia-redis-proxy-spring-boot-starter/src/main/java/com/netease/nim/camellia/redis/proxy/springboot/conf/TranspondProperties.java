@@ -363,6 +363,9 @@ public class TranspondProperties {
         private MultiWriteMode multiWriteMode = Constants.Transpond.multiWriteMode;
         private DisruptorConf disruptorConf;
         private boolean preheat = Constants.Transpond.preheat;
+        public boolean closeIdleConnection = Constants.Transpond.closeIdleConnection;//是否关闭空闲连接（到后端redis的）
+        public long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;//判断一个连接空闲的阈值，单位秒
+        public int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;//判断一个连接空闲后，再过多少秒去执行关闭操作
 
         public static class DisruptorConf {
             private String waitStrategyClassName;
@@ -479,6 +482,30 @@ public class TranspondProperties {
 
         public void setPreheat(boolean preheat) {
             this.preheat = preheat;
+        }
+
+        public boolean isCloseIdleConnection() {
+            return closeIdleConnection;
+        }
+
+        public void setCloseIdleConnection(boolean closeIdleConnection) {
+            this.closeIdleConnection = closeIdleConnection;
+        }
+
+        public long getCheckIdleConnectionThresholdSeconds() {
+            return checkIdleConnectionThresholdSeconds;
+        }
+
+        public void setCheckIdleConnectionThresholdSeconds(long checkIdleConnectionThresholdSeconds) {
+            this.checkIdleConnectionThresholdSeconds = checkIdleConnectionThresholdSeconds;
+        }
+
+        public int getCloseIdleConnectionDelaySeconds() {
+            return closeIdleConnectionDelaySeconds;
+        }
+
+        public void setCloseIdleConnectionDelaySeconds(int closeIdleConnectionDelaySeconds) {
+            this.closeIdleConnectionDelaySeconds = closeIdleConnectionDelaySeconds;
         }
     }
 }

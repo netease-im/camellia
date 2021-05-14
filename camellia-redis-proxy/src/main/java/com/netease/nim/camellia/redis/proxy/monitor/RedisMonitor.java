@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.monitor;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
-import com.netease.nim.camellia.redis.proxy.command.async.AsyncCamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.proxy.command.async.*;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
@@ -49,6 +49,7 @@ public class RedisMonitor {
     private static ConcurrentHashMap<String, LongAdder> resourceCommandBidBgroupMap = new ConcurrentHashMap<>();
 
     private static final ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> templateMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> redisClientMap = new ConcurrentHashMap<>();
 
     public static void init(int seconds, boolean commandSpendTimeMonitorEnable, MonitorCallback monitorCallback) {
         if (initOk.compareAndSet(false, true)) {
@@ -62,21 +63,69 @@ public class RedisMonitor {
         }
     }
 
-    public static boolean isMonitorEnable() {
-        return monitorEnable;
-    }
-
-    public static boolean isCommandSpendTimeMonitorEnable() {
-        return monitorEnable && commandSpendTimeMonitorEnable;
-    }
-
     private static void reloadConf() {
         RedisMonitor.monitorEnable = ProxyDynamicConf.monitorEnable(RedisMonitor.monitorEnable);
         RedisMonitor.commandSpendTimeMonitorEnable = ProxyDynamicConf.commandSpendTimeMonitorEnable(RedisMonitor.commandSpendTimeMonitorEnable);
     }
 
-    public static void register(Long bid, String bgroup, AsyncCamelliaRedisTemplate template) {
+    /**
+     * monitorEnable
+     * @return monitorEnable
+     */
+    public static boolean isMonitorEnable() {
+        return monitorEnable;
+    }
+
+    /**
+     * 命令耗时开关
+     */
+    public static boolean isCommandSpendTimeMonitorEnable() {
+        return monitorEnable && commandSpendTimeMonitorEnable;
+    }
+
+    /**
+     * 统计 AsyncCamelliaRedisTemplate
+     */
+    public static void registerRedisTemplate(Long bid, String bgroup, AsyncCamelliaRedisTemplate template) {
         templateMap.put(bid + "|" + bgroup, template);
+    }
+
+    /**
+     * 统计RedisClient，增加
+     */
+    public static void addRedisClient(RedisClient redisClient) {
+        try {
+            ConcurrentHashMap<String, RedisClient> subMap = getRedisClientSubMap(redisClient);
+            subMap.put(redisClient.getClientName(), redisClient);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 统计RedisClient，减少
+     */
+    public static void removeRedisClient(RedisClient redisClient) {
+        try {
+            ConcurrentHashMap<String, RedisClient> subMap = getRedisClientSubMap(redisClient);
+            subMap.remove(redisClient.getClientName());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    private static ConcurrentHashMap<String, RedisClient> getRedisClientSubMap(RedisClient redisClient) {
+        RedisClientConfig config = redisClient.getRedisClientConfig();
+        RedisClientAddr addr = new RedisClientAddr(config.getHost(), config.getPort(), config.getPassword());
+        ConcurrentHashMap<String, RedisClient> subMap = redisClientMap.get(addr);
+        if (subMap == null) {
+            subMap = new ConcurrentHashMap<>();
+            ConcurrentHashMap<String, RedisClient> oldMap = redisClientMap.putIfAbsent(addr, subMap);
+            if (oldMap != null) {
+                subMap = oldMap;
+            }
+        }
+        return subMap;
     }
 
     /**
@@ -295,6 +344,22 @@ public class RedisMonitor {
             routeConfJsonArray.add(json);
         }
         monitorJson.put("routeConf", routeConfJsonArray);
+
+        Stats.RedisConnectStats redisConnectStats = stats.getRedisConnectStats();
+        JSONArray redisConnectTotalStatsJsonArray = new JSONArray();
+        JSONObject redisConnectTotalStatsJson = new JSONObject();
+        redisConnectTotalStatsJson.put("connect", redisConnectStats.getConnectCount());
+        redisConnectTotalStatsJsonArray.add(redisConnectTotalStatsJson);
+        monitorJson.put("redisConnectStats", redisConnectTotalStatsJsonArray);
+
+        JSONArray redisConnectDetailStatsJsonArray = new JSONArray();
+        for (Stats.RedisConnectStats.Detail detail : redisConnectStats.getDetailList()) {
+            JSONObject json = new JSONObject();
+            json.put("addr", detail.getAddr());
+            json.put("connect", detail.getConnectCount());
+            redisConnectDetailStatsJsonArray.add(json);
+        }
+        monitorJson.put("redisConnectDetailStats", redisConnectDetailStatsJsonArray);
         return monitorJson;
     }
 
@@ -495,6 +560,20 @@ public class RedisMonitor {
                 routeConfList.add(routeConf);
             }
 
+            Stats.RedisConnectStats redisConnectStats = new Stats.RedisConnectStats();
+            List<Stats.RedisConnectStats.Detail> detailList = new ArrayList<>();
+            for (Map.Entry<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> entry : redisClientMap.entrySet()) {
+                RedisClientAddr key = entry.getKey();
+                ConcurrentHashMap<String, RedisClient> subMap = entry.getValue();
+                if (subMap.isEmpty()) continue;
+                redisConnectStats.setConnectCount(redisConnectStats.getConnectCount() + subMap.size());
+                Stats.RedisConnectStats.Detail detail = new Stats.RedisConnectStats.Detail();
+                detail.setAddr(key.getUrl());
+                detail.setConnectCount(subMap.size());
+                detailList.add(detail);
+            }
+            redisConnectStats.setDetailList(detailList);
+
             Stats stats = new Stats();
             stats.setClientConnectCount(ChannelMonitor.getChannelMap().size());
             stats.setCount(totalCount);
@@ -519,6 +598,7 @@ public class RedisMonitor {
             stats.setResourceBidBgroupStatsList(new ArrayList<>(resourceBidBgroupStatsMap.values()));
             stats.setResourceBidBgroupCommandStatsList(resourceBidBgroupCommandStatsList);
             stats.setRouteConfList(routeConfList);
+            stats.setRedisConnectStats(redisConnectStats);
 
             RedisMonitor.stats = stats;
 

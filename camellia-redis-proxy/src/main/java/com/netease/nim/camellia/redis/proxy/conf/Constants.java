@@ -74,6 +74,10 @@ public class Constants {
         public static final int defaultTranspondWorkThread = SysUtils.getCpuHalfNum();//if queueType is None, then effective
         public static final MultiWriteMode multiWriteMode = MultiWriteMode.FIRST_RESOURCE_ONLY;
         public static final boolean preheat = true;//预热，若开启，则启动proxy时会预先建立好到后端redis的连接
+
+        public static final boolean closeIdleConnection = true;//是否关闭空闲连接（到后端redis的）
+        public static final long checkIdleConnectionThresholdSeconds = 60 * 10;//判断一个连接空闲的阈值，单位秒
+        public static final int closeIdleConnectionDelaySeconds = 60;//判断一个连接空闲后，再过多少秒去执行关闭操作
     }
 
     public static class Remote {

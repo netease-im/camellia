@@ -66,6 +66,12 @@ public class LoggingMonitorCallback implements MonitorCallback {
                 logger.info("bid={},bgroup={},routeConf={},updateTime={}", routeConf.getBid() == null ? "default" : routeConf.getBid(),
                         routeConf.getBgroup() == null ? "default" : routeConf.getBgroup(), routeConf.getResourceTable(), routeConf.getUpdateTime());
             }
+            logger.info("====redis.connect.stats====");
+            Stats.RedisConnectStats redisConnectStats = stats.getRedisConnectStats();
+            logger.info("redis.total.connect.count={}", redisConnectStats.getConnectCount());
+            for (Stats.RedisConnectStats.Detail detail : redisConnectStats.getDetailList()) {
+                logger.info("redis.addr={},connect.count={}", detail.getAddr(), detail.getConnectCount());
+            }
             logger.info("<<<<<<<END<<<<<<<");
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

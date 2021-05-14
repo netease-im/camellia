@@ -28,6 +28,7 @@ public class Stats {
     private List<ResourceBidBgroupStats> resourceBidBgroupStatsList = new ArrayList<>();
     private List<ResourceBidBgroupCommandStats> resourceBidBgroupCommandStatsList = new ArrayList<>();
     private List<RouteConf> routeConfList = new ArrayList<>();
+    private RedisConnectStats redisConnectStats = new RedisConnectStats();
 
     public int getIntervalSeconds() {
         return intervalSeconds;
@@ -155,6 +156,14 @@ public class Stats {
 
     public void setRouteConfList(List<RouteConf> routeConfList) {
         this.routeConfList = routeConfList;
+    }
+
+    public RedisConnectStats getRedisConnectStats() {
+        return redisConnectStats;
+    }
+
+    public void setRedisConnectStats(RedisConnectStats redisConnectStats) {
+        this.redisConnectStats = redisConnectStats;
     }
 
     public static class BidBgroupStats {
@@ -529,5 +538,48 @@ public class Stats {
         public void setUpdateTime(long updateTime) {
             this.updateTime = updateTime;
         }
+    }
+
+    public static class RedisConnectStats {
+        private int connectCount;
+        private List<Detail> detailList = new ArrayList<>();
+
+        public int getConnectCount() {
+            return connectCount;
+        }
+
+        public void setConnectCount(int connectCount) {
+            this.connectCount = connectCount;
+        }
+
+        public List<Detail> getDetailList() {
+            return detailList;
+        }
+
+        public void setDetailList(List<Detail> detailList) {
+            this.detailList = detailList;
+        }
+
+        public static class Detail {
+            private String addr;
+            private int connectCount;
+
+            public String getAddr() {
+                return addr;
+            }
+
+            public void setAddr(String addr) {
+                this.addr = addr;
+            }
+
+            public int getConnectCount() {
+                return connectCount;
+            }
+
+            public void setConnectCount(int connectCount) {
+                this.connectCount = connectCount;
+            }
+        }
+
     }
 }

@@ -248,6 +248,11 @@ public class AsyncCamelliaRedisTemplateChooser {
         RedisClientHub.eventLoopGroupBackup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("redis-client-backup"));
         logger.info("RedisClient, failCountThreshold = {}, failBanMillis = {}",
                 RedisClientHub.failCountThreshold, RedisClientHub.failBanMillis);
+        RedisClientHub.closeIdleConnection = redisConf.isCloseIdleConnection();
+        RedisClientHub.checkIdleConnectionThresholdSeconds = redisConf.getCheckIdleConnectionThresholdSeconds();
+        RedisClientHub.closeIdleConnectionDelaySeconds = redisConf.getCloseIdleConnectionDelaySeconds();
+        logger.info("RedisClient, closeIdleConnection = {}, checkIdleConnectionThresholdSeconds = {}, closeIdleConnectionDelaySeconds = {}",
+                RedisClientHub.closeIdleConnection, RedisClientHub.checkIdleConnectionThresholdSeconds, RedisClientHub.closeIdleConnectionDelaySeconds);
         RedisClientHub.initDynamicConf();
 
         ProxyEnv.Builder builder = new ProxyEnv.Builder();

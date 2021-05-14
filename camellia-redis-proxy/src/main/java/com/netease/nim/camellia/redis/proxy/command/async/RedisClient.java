@@ -4,15 +4,18 @@ import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.ClientHandler;
 import com.netease.nim.camellia.redis.proxy.netty.CommandPack;
 import com.netease.nim.camellia.redis.proxy.netty.CommandPackEncoder;
 import com.netease.nim.camellia.redis.proxy.netty.ReplyDecoder;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.HashedWheelTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.util.SafeEncoder;
@@ -33,37 +36,55 @@ public class RedisClient implements AsyncClient {
     private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
     private static final AtomicLong id = new AtomicLong(0);
 
-    private static final ScheduledExecutorService scheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("redis-heart-beat"));
+    private static final ScheduledExecutorService heartBeatScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("redis-heart-beat"));
+    private static final HashedWheelTimer delayCloseTimer = new HashedWheelTimer();
+
+    private RedisClientConfig redisClientConfig;
 
     private final String host;
     private final int port;
     private final String password;
-    private Channel channel;
-    private volatile boolean valid = true;
-    private ScheduledFuture<?> scheduledFuture;
+
+    private final EventLoopGroup eventLoopGroup;
+    private final String clientName;
+    private final Object lock = new Object();
+
     private final int heartbeatIntervalSeconds;
     private final long heartbeatTimeoutMillis;
     private final int connectTimeoutMillis;
-    private final String clientName;
-    private final Object lock = new Object();
-    private final EventLoopGroup eventLoopGroup;
+
+    private final boolean closeIdleConnection;
+    private final long checkIdleThresholdSeconds;
+    private final int closeIdleConnectionDelaySeconds;
+
+    private Channel channel;
+    private ScheduledFuture<?> scheduledFuture;
+
+    //status
+    private volatile boolean valid = true;
+    private volatile boolean closing = false;
+    private long lastCommandTime = TimeCache.currentMillis;
 
     private final Queue<CompletableFuture<Reply>> queue = new ConcurrentLinkedQueue<>();
 
-    public RedisClient(String host, int port, String password, EventLoopGroup eventLoopGroup,
-                       int heartbeatIntervalSeconds, long heartbeatTimeoutMillis, int connectTimeoutMillis) {
-        this.host = host;
-        this.port = port;
-        this.password = password;
-        this.eventLoopGroup = eventLoopGroup;
-        this.heartbeatIntervalSeconds = heartbeatIntervalSeconds;
-        this.heartbeatTimeoutMillis = heartbeatTimeoutMillis;
-        this.connectTimeoutMillis = connectTimeoutMillis;
+    public RedisClient(RedisClientConfig config) {
+        this.redisClientConfig = config;
+        this.host = config.getHost();
+        this.port = config.getPort();
+        this.password = config.getPassword();
+        this.eventLoopGroup = config.getEventLoopGroup();
+        this.heartbeatIntervalSeconds = config.getHeartbeatIntervalSeconds();
+        this.heartbeatTimeoutMillis = config.getHeartbeatTimeoutMillis();
+        this.connectTimeoutMillis = config.getConnectTimeoutMillis();
+        this.closeIdleConnection = config.isCloseIdleConnection();
+        this.checkIdleThresholdSeconds = config.getCheckIdleConnectionThresholdSeconds();
+        this.closeIdleConnectionDelaySeconds = config.getCloseIdleConnectionDelaySeconds();
         this.clientName = "RedisClient[" + (password == null ? "" : password) + "@" + host + ":" + port + "][id=" + id.incrementAndGet() + "]";
     }
 
     public void start() {
         try {
+            RedisMonitor.addRedisClient(this);
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(eventLoopGroup)
                     .channel(NioSocketChannel.class)
@@ -112,12 +133,8 @@ public class RedisClient implements AsyncClient {
             }
             if (heartbeatIntervalSeconds > 0 && heartbeatTimeoutMillis > 0) {
                 //默认60s发送一个心跳，心跳超时时间10s，如果超时了，则关闭当前连接
-                this.scheduledFuture = scheduled.scheduleAtFixedRate(() -> {
-                    if (!valid) return;
-                    if (!ping(heartbeatTimeoutMillis)) {
-                        new Thread(this::stop, "redis-client-stop-" + clientName).start();
-                    }
-                }, heartbeatIntervalSeconds, heartbeatIntervalSeconds, TimeUnit.SECONDS);
+                this.scheduledFuture = heartBeatScheduled.scheduleAtFixedRate(this::heartbeat,
+                        heartbeatIntervalSeconds, heartbeatIntervalSeconds, TimeUnit.SECONDS);
             }
         } catch (Exception e) {
             stop();
@@ -125,8 +142,37 @@ public class RedisClient implements AsyncClient {
         }
     }
 
+    private void heartbeat() {
+        if (!valid) return;
+        if (closing) return;
+        if (!ping(heartbeatTimeoutMillis)) {
+            stop();
+            return;
+        }
+        if (isIdle() && closeIdleConnection) {
+            if (TimeCache.currentMillis - lastCommandTime > checkIdleThresholdSeconds * 1000L) {
+                closing = true;
+                logger.info("{} will close after {} seconds because connection is idle, idle.seconds = {}",
+                        clientName, closeIdleConnectionDelaySeconds, checkIdleThresholdSeconds);
+                try {
+                    delayCloseTimer.newTimeout(timeout -> {
+                        try {
+                            logger.info("{} will close because connection is idle", clientName);
+                            _stop(true);
+                        } catch (Exception e) {
+                            logger.error("{} delay close error", clientName, e);
+                        }
+                    }, closeIdleConnectionDelaySeconds, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    logger.error("submit delay close task error, stop right now, client = {}", clientName, e);
+                    _stop(false);
+                }
+            }
+        }
+    }
+
     private boolean ping(long timeoutMillis) {
-        CompletableFuture<Reply> future = sendCommand(RedisCommand.PING.raw());
+        CompletableFuture<Reply> future = sendPing();
         try {
             Reply reply = future.get(timeoutMillis, TimeUnit.MILLISECONDS);
             if (reply instanceof StatusReply) {
@@ -162,6 +208,14 @@ public class RedisClient implements AsyncClient {
     }
 
     public void stop(boolean grace) {
+        if (closing) {
+            return;
+        }
+        _stop(grace);
+    }
+
+    private void _stop(boolean grace) {
+        RedisMonitor.removeRedisClient(this);
         if (!valid && queue.isEmpty()
                 && channel == null && scheduledFuture == null) {
             return;
@@ -206,11 +260,28 @@ public class RedisClient implements AsyncClient {
     }
 
     public boolean isValid() {
+        if (closing) return false;
         return valid;
     }
 
     public String getClientName() {
         return clientName;
+    }
+
+    public RedisClientConfig getRedisClientConfig() {
+        return redisClientConfig;
+    }
+
+    private CompletableFuture<Reply> sendPing() {
+        List<Command> commands = Collections.singletonList(new Command(new byte[][]{RedisCommand.PING.raw()}));
+        CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
+        List<CompletableFuture<Reply>> futures = Collections.singletonList(completableFuture);
+        CommandPack pack = new CommandPack(commands, futures);
+        if (logger.isDebugEnabled()) {
+            logger.debug("{} send ping for heart-beat", clientName);
+        }
+        channel.writeAndFlush(pack);
+        return completableFuture;
     }
 
     public CompletableFuture<Reply> sendCommand(byte[]... args) {
@@ -233,6 +304,9 @@ public class RedisClient implements AsyncClient {
             logger.debug("{} sendCommands, commands.size = {}", clientName, commands.size());
         }
         channel.writeAndFlush(pack);
+        if (closeIdleConnection) {
+            lastCommandTime = TimeCache.currentMillis;
+        }
     }
 
     @Override

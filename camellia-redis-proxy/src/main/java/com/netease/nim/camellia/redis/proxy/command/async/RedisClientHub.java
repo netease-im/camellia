@@ -51,6 +51,10 @@ public class RedisClientHub {
     public static int failCountThreshold = Constants.Transpond.failCountThreshold;
     public static long failBanMillis = Constants.Transpond.failBanMillis;
 
+    public static boolean closeIdleConnection = Constants.Transpond.closeIdleConnection;
+    public static long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;
+    public static int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;
+
     private static final ConcurrentHashMap<Object, LockMap> lockMapMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, AtomicBoolean>> initializerStatusMap = new ConcurrentHashMap<>();
 
@@ -89,8 +93,16 @@ public class RedisClientHub {
             if (loopGroup.inEventLoop()) {
                 loopGroup = eventLoopGroupBackup.next();
             }
-            RedisClient client = new RedisClient(addr.getHost(), addr.getPort(), addr.getPassword(),
-                    loopGroup, -1, -1, connectTimeoutMillis);
+            RedisClientConfig config = new RedisClientConfig();
+            config.setHost(addr.getHost());
+            config.setPort(addr.getPort());
+            config.setPassword(addr.getPassword());
+            config.setEventLoopGroup(loopGroup);
+            config.setHeartbeatTimeoutMillis(-1);
+            config.setHeartbeatIntervalSeconds(-1);
+            config.setConnectTimeoutMillis(connectTimeoutMillis);
+            config.setCloseIdleConnection(false);
+            RedisClient client = new RedisClient(config);
             client.start();
             if (client.isValid()) {
                 resetFail(url);//如果client初始化成功，则重置计数器和错误时间戳
@@ -211,8 +223,18 @@ public class RedisClientHub {
             synchronized (lockMap.getLockObj(url)) {
                 client = map.get(url);
                 if (client == null || !client.isValid()) {
-                    client = new RedisClient(addr.getHost(), addr.getPort(), addr.getPassword(), eventLoop,
-                            heartbeatIntervalSeconds, heartbeatTimeoutMillis, connectTimeoutMillis);
+                    RedisClientConfig config = new RedisClientConfig();
+                    config.setHost(addr.getHost());
+                    config.setPort(addr.getPort());
+                    config.setPassword(addr.getPassword());
+                    config.setEventLoopGroup(eventLoop);
+                    config.setHeartbeatTimeoutMillis(heartbeatTimeoutMillis);
+                    config.setHeartbeatIntervalSeconds(heartbeatIntervalSeconds);
+                    config.setConnectTimeoutMillis(connectTimeoutMillis);
+                    config.setCloseIdleConnection(closeIdleConnection);
+                    config.setCheckIdleConnectionThresholdSeconds(checkIdleConnectionThresholdSeconds);
+                    config.setCloseIdleConnectionDelaySeconds(closeIdleConnectionDelaySeconds);
+                    client = new RedisClient(config);
                     client.start();
                     if (client.isValid()) {
                         RedisClient oldClient = map.put(url, client);

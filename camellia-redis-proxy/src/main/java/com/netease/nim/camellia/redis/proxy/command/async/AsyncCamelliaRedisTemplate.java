@@ -115,9 +115,9 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             }
         }
         if (bid == -1) {
-            RedisMonitor.register(null, null, this);
+            RedisMonitor.registerRedisTemplate(null, null, this);
         } else {
-            RedisMonitor.register(bid, bgroup, this);
+            RedisMonitor.registerRedisTemplate(bid, bgroup, this);
         }
     }
 
@@ -139,9 +139,9 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             scheduleExecutor.scheduleAtFixedRate(reloadTask, reloadIntervalMillis, reloadIntervalMillis, TimeUnit.MILLISECONDS);
         }
         if (bid == -1) {
-            RedisMonitor.register(null, null, this);
+            RedisMonitor.registerRedisTemplate(null, null, this);
         } else {
-            RedisMonitor.register(bid, bgroup, this);
+            RedisMonitor.registerRedisTemplate(bid, bgroup, this);
         }
     }
 
