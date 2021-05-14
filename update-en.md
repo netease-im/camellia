@@ -5,6 +5,17 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
+# 1.0.25（2021/05/xx）
+### add
+* camellia-redis-proxy support close idle upstream redis connection, default setting true
+* camellia-redis-proxy support monitor connect count of upstream redis
+
+### update
+* none
+
+### fix
+* none
+
 # 1.0.24（2021/05/11）
 ### add
 * camellia-redis-proxy support ProxyRouteConfUpdater, so you can use multi-route-conf exclude camellia-dashboard

@@ -246,6 +246,21 @@
       "count": 11777,
       "bid": 1
     }
+  ],
+  "redisConnectStats": [ //到后端redis的总连接数
+    {
+      "connect": 16
+    }
+  ],
+  "redisConnectDetailStats": [//到后端各个redis的连接数
+    {
+      "addr": "@10.177.0.69:8803",
+      "connect": 4
+    },
+    {
+      "addr": "abc@10.201.48.171:6379",
+      "connect": 4
+    }
   ]
 }
 ```
