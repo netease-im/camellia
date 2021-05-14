@@ -6,14 +6,10 @@ import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
-import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.util.LockMap;
-import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
-import com.netease.nim.camellia.redis.proxy.util.TimeCache;
+import com.netease.nim.camellia.redis.proxy.util.*;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.util.HashedWheelTimer;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.FastThreadLocal;
 import org.slf4j.Logger;
@@ -255,18 +251,16 @@ public class RedisClientHub {
         return null;
     }
 
-    private static final HashedWheelTimer timer = new HashedWheelTimer();
-    public static void delayStopIfIdle(RedisClient redisClient) {
+    public static void checkIdleAndStop(RedisClient redisClient) {
         try {
-            IdleCheckTask task = new IdleCheckTask(redisClient);
-            submitIdleCheckTask(task);
+            submitIdleCheckTask(new CheckIdleAndStopTask(redisClient));
         } catch (Exception e) {
-            logger.error("delayStopIfIdle error, client = {}", redisClient.getClientName(), e);
+            logger.error("checkIdleAndStop error, client = {}", redisClient.getClientName(), e);
         }
     }
 
-    private static void submitIdleCheckTask(IdleCheckTask task) {
-        timer.newTimeout(timeout -> {
+    private static void submitIdleCheckTask(CheckIdleAndStopTask task) {
+        ExecutorUtils.newTimeout(timeout -> {
             try {
                 Boolean success = task.call();
                 if (!success) {
@@ -278,9 +272,9 @@ public class RedisClientHub {
         }, 1, TimeUnit.MINUTES);
     }
 
-    private static class IdleCheckTask implements Callable<Boolean> {
+    private static class CheckIdleAndStopTask implements Callable<Boolean> {
         private final RedisClient redisClient;
-        public IdleCheckTask(RedisClient redisClient) {
+        public CheckIdleAndStopTask(RedisClient redisClient) {
             this.redisClient = redisClient;
         }
         @Override
@@ -291,7 +285,7 @@ public class RedisClientHub {
                     return true;
                 }
                 if (redisClient.isIdle()) {
-                    redisClient.stop(true);
+                    ExecutorUtils.newTimeout(timeout -> redisClient.stop(true), 1, TimeUnit.MINUTES);
                     return true;
                 } else {
                     return false;

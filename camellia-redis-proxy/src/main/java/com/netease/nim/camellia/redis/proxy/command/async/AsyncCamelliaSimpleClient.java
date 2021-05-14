@@ -70,11 +70,11 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
                     } else if (redisCommand == RedisCommand.EXEC || redisCommand == RedisCommand.DISCARD) {
                         channelInfo.setInTransaction(false);
                         channelInfo.setBindClient(null);
-                        RedisClientHub.delayStopIfIdle(bindClient);
+                        RedisClientHub.checkIdleAndStop(bindClient);
                     } else if (redisCommand == RedisCommand.UNWATCH) {
                         if (!channelInfo.isInTransaction()) {
                             channelInfo.setBindClient(null);
-                            RedisClientHub.delayStopIfIdle(bindClient);
+                            RedisClientHub.checkIdleAndStop(bindClient);
                         }
                     }
                 }
@@ -135,7 +135,7 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
         RedisClient client = RedisClientHub.newClient(addr);
         if (client != null) {
             client.sendCommand(commands, completableFutureList);
-            RedisClientHub.delayStopIfIdle(client);
+            RedisClientHub.checkIdleAndStop(client);
             Command lastBlockingCommand = commands.get(commands.size() - 1);
             lastBlockingCommand.getChannelInfo().addRedisClientForBlockingCommand(client);
         } else {

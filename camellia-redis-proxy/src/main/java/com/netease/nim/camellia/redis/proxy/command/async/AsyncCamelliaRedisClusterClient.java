@@ -491,7 +491,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
         commandFlusher.clear();
         CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, future, command);
         client.sendCommand(Collections.singletonList(command), Collections.singletonList(futureWrapper));
-        RedisClientHub.delayStopIfIdle(client);
+        RedisClientHub.checkIdleAndStop(client);
         command.getChannelInfo().addRedisClientForBlockingCommand(client);
     }
 

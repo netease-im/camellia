@@ -11,11 +11,11 @@ import com.netease.nim.camellia.redis.proxy.netty.CommandPackEncoder;
 import com.netease.nim.camellia.redis.proxy.netty.ReplyDecoder;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.util.HashedWheelTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.util.SafeEncoder;
@@ -36,10 +36,9 @@ public class RedisClient implements AsyncClient {
     private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
     private static final AtomicLong id = new AtomicLong(0);
 
-    private static final ScheduledExecutorService heartBeatScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("redis-heart-beat"));
-    private static final HashedWheelTimer delayCloseTimer = new HashedWheelTimer();
+    private static final ScheduledExecutorService heartBeatScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("redis-client-heart-beat"));
 
-    private RedisClientConfig redisClientConfig;
+    private final RedisClientConfig redisClientConfig;
 
     private final String host;
     private final int port;
@@ -143,31 +142,35 @@ public class RedisClient implements AsyncClient {
     }
 
     private void heartbeat() {
-        if (!valid) return;
-        if (closing) return;
-        if (!ping(heartbeatTimeoutMillis)) {
-            stop();
-            return;
-        }
-        if (isIdle() && closeIdleConnection) {
-            if (TimeCache.currentMillis - lastCommandTime > checkIdleThresholdSeconds * 1000L) {
-                closing = true;
-                logger.info("{} will close after {} seconds because connection is idle, idle.seconds = {}",
-                        clientName, closeIdleConnectionDelaySeconds, checkIdleThresholdSeconds);
-                try {
-                    delayCloseTimer.newTimeout(timeout -> {
-                        try {
-                            logger.info("{} will close because connection is idle", clientName);
-                            _stop(true);
-                        } catch (Exception e) {
-                            logger.error("{} delay close error", clientName, e);
-                        }
-                    }, closeIdleConnectionDelaySeconds, TimeUnit.SECONDS);
-                } catch (Exception e) {
-                    logger.error("submit delay close task error, stop right now, client = {}", clientName, e);
-                    _stop(false);
+        try {
+            if (!valid) return;
+            if (closing) return;
+            if (!ping(heartbeatTimeoutMillis)) {
+                stop();
+                return;
+            }
+            if (isIdle() && closeIdleConnection) {
+                if (TimeCache.currentMillis - lastCommandTime > checkIdleThresholdSeconds * 1000L) {
+                    closing = true;
+                    logger.info("{} will close after {} seconds because connection is idle, idle.seconds = {}",
+                            clientName, closeIdleConnectionDelaySeconds, checkIdleThresholdSeconds);
+                    try {
+                        ExecutorUtils.newTimeout(timeout -> {
+                            try {
+                                logger.info("{} will close because connection is idle", clientName);
+                                _stop(true);
+                            } catch (Exception e) {
+                                logger.error("{} delay close error", clientName, e);
+                            }
+                        }, closeIdleConnectionDelaySeconds, TimeUnit.SECONDS);
+                    } catch (Exception e) {
+                        logger.error("submit delay close task error, stop right now, client = {}", clientName, e);
+                        _stop(false);
+                    }
                 }
             }
+        } catch (Exception e) {
+            logger.error("{} heartbeat error", clientName, e);
         }
     }
 
