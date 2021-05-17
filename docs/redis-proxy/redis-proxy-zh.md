@@ -157,7 +157,7 @@ OK
 ```
 
 ## 快速开始二
-下载最新版安装包并解压（v1.0.24）：
+下载最新版安装包并解压（v1.0.25）：
 ```
 wget https://github.com/netease-im/camellia/releases/download/v1.0.25/camellia-redis-proxy-1.0.25.tar.gz
 tar zxvf camellia-redis-proxy-1.0.25.tar.gz
