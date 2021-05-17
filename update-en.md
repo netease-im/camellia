@@ -14,7 +14,7 @@
 * none
 
 ### fix
-* none
+* when camellia-redis-proxy proxy to redis-cluster, fix a deadlock bug in some extreme case
 
 # 1.0.24（2021/05/11）
 ### add

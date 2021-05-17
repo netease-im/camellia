@@ -14,7 +14,7 @@
 * 无
 
 ### fix
-* 无
+* camellia-redis-proxy代理redis-cluster时，fix在极端边界情况下可能触发的死锁问题
 
 # 1.0.24（2021/05/11）
 ### 新增
