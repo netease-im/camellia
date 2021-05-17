@@ -5,7 +5,7 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
-# 1.0.25（2021/05/xx）
+# 1.0.25（2021/05/17）
 ### 新增
 * camellia-redis-proxy支持关闭到后端redis的空闲连接，默认开启
 * camellia-redis-proxy支持监控到后端redis的连接数，具体见：[监控数据](/docs/redis-proxy/monitor-data.md)
