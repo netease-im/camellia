@@ -255,25 +255,65 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                             ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class, log);
                             clusterClient.clusterSlotInfo.renew();
                             String[] strings = parseTargetHostAndSlot(error);
-                            RedisClient redisClient = RedisClientHub.get(strings[1], Integer.parseInt(strings[2]), clusterClient.redisClusterResource.getPassword());
+                            RedisClient redisClient = RedisClientHub.tryGet(strings[1], Integer.parseInt(strings[2]), clusterClient.redisClusterResource.getPassword());
                             if (redisClient != null) {
+                                ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                        "MOVED, [RedisClient tryGet success], command = " + command.getName() + ", attempts = " + attempts);
                                 redisClient.sendCommand(Collections.singletonList(command), Collections.singletonList(this));
-                                return true;
                             } else {
-                                clusterClient.clusterSlotInfo.renew();
+                                CompletableFuture<RedisClient> future = RedisClientHub.getAsync(strings[1], Integer.parseInt(strings[2]), clusterClient.redisClusterResource.getPassword());
+                                future.thenAccept(client -> {
+                                    try {
+                                        if (client == null) {
+                                            ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                    "MOVED, [RedisClient getAsync fail], command = " + command.getName() + ", attempts = " + attempts);
+                                            clusterClient.clusterSlotInfo.renew();
+                                            CompletableFutureWrapper.this.future.complete(reply);
+                                        } else {
+                                            ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                    "MOVED, [RedisClient getAsync success], command = " + command.getName() + ", attempts = " + attempts);
+                                            client.sendCommand(Collections.singletonList(command), Collections.singletonList(CompletableFutureWrapper.this));
+                                        }
+                                    } catch (Exception e) {
+                                        ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                "MOVED, [RedisClient getAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
+                                        CompletableFutureWrapper.this.future.complete(reply);
+                                    }
+                                });
                             }
+                            return true;
                         } else if (error.startsWith("ASK")) {
                             attempts++;
                             String log = "ASK, command = " + command.getName() + ", attempts = " + attempts;
                             ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class, log);
                             String[] strings = parseTargetHostAndSlot(error);
-                            RedisClient redisClient = RedisClientHub.get(strings[1], Integer.parseInt(strings[2]), clusterClient.redisClusterResource.getPassword());
+                            RedisClient redisClient = RedisClientHub.tryGet(strings[1], Integer.parseInt(strings[2]), clusterClient.redisClusterResource.getPassword());
                             if (redisClient != null) {
+                                ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                        "ASK, [RedisClient tryGet success], command = " + command.getName() + ", attempts = " + attempts);
                                 redisClient.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), this));
-                                return true;
                             } else {
-                                clusterClient.clusterSlotInfo.renew();
+                                CompletableFuture<RedisClient> future = RedisClientHub.getAsync(strings[1], Integer.parseInt(strings[2]), clusterClient.redisClusterResource.getPassword());
+                                future.thenAccept(client -> {
+                                    try {
+                                        if (client == null) {
+                                            ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                    "ASK, [RedisClient getAsync fail], command = " + command.getName() + ", attempts = " + attempts);
+                                            clusterClient.clusterSlotInfo.renew();
+                                            CompletableFutureWrapper.this.future.complete(reply);
+                                        } else {
+                                            ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                    "ASK, [RedisClient getAsync success], command = " + command.getName() + ", attempts = " + attempts);
+                                            client.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), CompletableFutureWrapper.this));
+                                        }
+                                    } catch (Exception e) {
+                                        ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                "ASK, [RedisClient getAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
+                                        CompletableFutureWrapper.this.future.complete(reply);
+                                    }
+                                });
                             }
+                            return true;
                         }
                     }
                 }

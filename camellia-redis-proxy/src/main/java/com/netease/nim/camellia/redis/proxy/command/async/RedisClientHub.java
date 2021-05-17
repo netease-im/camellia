@@ -58,6 +58,53 @@ public class RedisClientHub {
         eventLoopThreadLocal.set(eventLoop);
     }
 
+    public static RedisClient tryGet(String host, int port, String password) {
+        try {
+            RedisClientAddr addr = new RedisClientAddr(host, port, password);
+            EventLoop eventLoop = eventLoopThreadLocal.get();
+            if (eventLoop != null) {
+                ConcurrentHashMap<String, RedisClient> map = CamelliaMapUtils.computeIfAbsent(eventLoopMap, eventLoop, k -> new ConcurrentHashMap<>());
+                String url = addr.getUrl();
+                RedisClient client = map.get(url);
+                if (client != null && client.isValid()) {
+                    return client;
+                }
+            }
+            String url = addr.getUrl();
+            RedisClient client = map.get(url);
+            if (client != null && client.isValid()) {
+                return client;
+            }
+            return null;
+        } catch (Exception e) {
+            ErrorLogCollector.collect(RedisClientHub.class,
+                    "try get RedisClient error, host = " + host + ",port=" + port + ",password=" + password, e);
+            return null;
+        }
+    }
+
+    public static CompletableFuture<RedisClient> getAsync(String host, int port, String password) {
+        CompletableFuture<RedisClient> future = new CompletableFuture<>();
+        try {
+            redisClientAsyncInitExec.submit(() -> {
+                try {
+                    RedisClient redisClient = get(host, port, password);
+                    future.complete(redisClient);
+                } catch (Exception e) {
+                    ErrorLogCollector.collect(RedisClientHub.class,
+                            "get RedisClient async error, host = " + host + ",port=" + port + ",password=" + password, e);
+                    future.complete(null);
+                }
+            });
+            return future;
+        } catch (Exception e) {
+            ErrorLogCollector.collect(RedisClientHub.class,
+                    "get RedisClient async error, host = " + host + ",port=" + port + ",password=" + password, e);
+            future.complete(null);
+            return future;
+        }
+    }
+
     public static RedisClient get(String host, int port, String password) {
         try {
             RedisClientAddr addr = new RedisClientAddr(host, port, password);
