@@ -8,7 +8,6 @@ import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUp
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.conf.QueueType;
-import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.NettyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.TranspondProperties;
@@ -17,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
-import java.util.Set;
 
 /**
  *
@@ -27,9 +25,18 @@ public class CamelliaRedisProxyUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyUtil.class);
 
-    public static CamelliaServerProperties parse(CamelliaRedisProxyProperties properties, int port) {
+    public static CamelliaServerProperties parse(CamelliaRedisProxyProperties properties, String applicationName, int port) {
         CamelliaServerProperties serverProperties = new CamelliaServerProperties();
-        serverProperties.setPort(port);
+        if (properties.getPort() <= 0) {
+            serverProperties.setPort(port);
+        } else {
+            serverProperties.setPort(properties.getPort());
+        }
+        if (properties.getApplicationName() != null && properties.getApplicationName().trim().length() == 0) {
+            serverProperties.setApplicationName(applicationName);
+        } else {
+            serverProperties.setApplicationName(properties.getApplicationName());
+        }
         serverProperties.setPassword(properties.getPassword());
         serverProperties.setMonitorEnable(properties.isMonitorEnable());
         serverProperties.setMonitorIntervalSeconds(properties.getMonitorIntervalSeconds());

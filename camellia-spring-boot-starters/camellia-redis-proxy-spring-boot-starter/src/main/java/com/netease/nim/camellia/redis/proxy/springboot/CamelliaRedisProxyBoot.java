@@ -16,9 +16,9 @@ public class CamelliaRedisProxyBoot {
     private final int port;
 
     public CamelliaRedisProxyBoot(CamelliaServerProperties serverProperties, EventLoopGroup bossGroup, EventLoopGroup workGroup,
-                                  CommandInvoker commandInvoker, String applicationName) throws Exception {
-        CamelliaApiEnv.source = applicationName;
-        this.applicationName = applicationName;
+                                  CommandInvoker commandInvoker) throws Exception {
+        CamelliaApiEnv.source = serverProperties.getApplicationName();
+        this.applicationName = serverProperties.getApplicationName();
         this.port = serverProperties.getPort();
         CamelliaRedisProxyServer server = new CamelliaRedisProxyServer(serverProperties, bossGroup, workGroup, commandInvoker);
         server.start();

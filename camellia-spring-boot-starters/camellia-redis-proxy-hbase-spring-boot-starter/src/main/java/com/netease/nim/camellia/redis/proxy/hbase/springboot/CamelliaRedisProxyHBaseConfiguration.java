@@ -31,11 +31,14 @@ public class CamelliaRedisProxyHBaseConfiguration {
     @Value("${server.port:6379}")
     private int port;
 
+    @Value("${spring.application.name:camellia-redis-proxy}")
+    private String applicationName;
+
     @Bean
     public CommandInvoker commandInvoker(CamelliaRedisTemplate redisTemplate,
                                          CamelliaHBaseTemplate hBaseTemplate,
                                          CamelliaRedisProxyProperties properties) {
-        CamelliaServerProperties serverProperties = CamelliaRedisProxyUtil.parse(properties, port);
+        CamelliaServerProperties serverProperties = CamelliaRedisProxyUtil.parse(properties, applicationName, port);
         return new RedisHBaseCommandInvoker(redisTemplate, hBaseTemplate, serverProperties);
     }
 }

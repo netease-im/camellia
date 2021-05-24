@@ -16,6 +16,16 @@ public class CamelliaRedisProxyProperties {
     private String password;
 
     /**
+     * proxy的port，如果没有指定，则使用server.port
+     */
+    private int port = -1;
+
+    /**
+     * proxy的名字，用于注册到注册中心，如果没有指定，则使用spring.application.name
+     */
+    private String applicationName = "";
+
+    /**
      * proxy的console port，会起一个console http server，可以自己实现一些自定义指令
      */
     private int consolePort = Constants.Server.consolePort;
@@ -107,6 +117,22 @@ public class CamelliaRedisProxyProperties {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public String getApplicationName() {
+        return applicationName;
+    }
+
+    public void setApplicationName(String applicationName) {
+        this.applicationName = applicationName;
     }
 
     public int getConsolePort() {

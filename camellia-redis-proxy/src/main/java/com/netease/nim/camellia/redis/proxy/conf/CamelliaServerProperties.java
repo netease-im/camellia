@@ -8,6 +8,7 @@ package com.netease.nim.camellia.redis.proxy.conf;
  */
 public class CamelliaServerProperties {
     private int port = Constants.Server.severPort;
+    private String applicationName;
     private String password;
     private boolean monitorEnable = Constants.Server.monitorEnable;
     private int monitorIntervalSeconds = Constants.Server.monitorIntervalSeconds;
@@ -40,6 +41,14 @@ public class CamelliaServerProperties {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public String getApplicationName() {
+        return applicationName;
+    }
+
+    public void setApplicationName(String applicationName) {
+        this.applicationName = applicationName;
     }
 
     public String getPassword() {
