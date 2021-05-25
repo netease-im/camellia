@@ -105,6 +105,27 @@ public class ProxyDynamicConf {
     }
 
     /**
+     * 直接把配置设置进来（k-v的map）
+     */
+    public static void reload(Map<String, String> conf) {
+        try {
+            HashMap<String, String> newConf = new HashMap<>(conf);
+            if (ProxyDynamicConf.conf.equals(newConf)) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("conf not modify");
+                }
+            } else {
+                ProxyDynamicConf.conf = newConf;
+                logger.info("conf reload success");
+                clearCache();
+                triggerCallback();
+            }
+        } catch (Exception e) {
+            logger.error("reload error");
+        }
+    }
+
+    /**
      * 触发一下监听者的回调
      */
     public static void triggerCallback() {
