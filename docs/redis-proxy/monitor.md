@@ -18,6 +18,8 @@ spring:
     name: camellia-redis-proxy-server
 
 camellia-redis-proxy:
+  #port: 6380 #优先级高于server.port，如果缺失，则使用server.port
+  #application-name: camellia-redis-proxy-server  #优先级高于spring.application.name，如果缺失，则使用spring.application.name
   password: pass123   #proxy的密码
   monitor-enable: true  #是否开启监控
   command-spend-time-monitor-enable: true #是否开启请求耗时的监控，只有monitor-enable=true才有效
@@ -67,7 +69,7 @@ camellia-redis-proxy:
     check-threshold: 2097152 #热key的阈值，检查周期内请求次数超过该阈值被判定为热key
     check-cache-max-capacity: 1000 #检查的计数器集合的size，本身是LRU的
     max-hot-key-count: 100 #每次回调的热key个数的最大值（前N个）
-    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback #热key的回调类
+    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHotKeyMonitorCallback #热key的回调类
 ```
 
 ## 大key的监控及相关回调
@@ -131,6 +133,8 @@ spring:
     name: camellia-redis-proxy-server
 
 camellia-redis-proxy:
+  #port: 6380 #优先级高于server.port，如果缺失，则使用server.port
+  #application-name: camellia-redis-proxy-server  #优先级高于spring.application.name，如果缺失，则使用spring.application.name
   password: pass123   #proxy的密码
   monitor-enable: true  #是否开启监控
   monitor-interval-seconds: 60 #监控回调的间隔
@@ -145,7 +149,7 @@ camellia-redis-proxy:
     check-threshold: 100 #热key的阈值，检查周期内请求次数超过该阈值被判定为热key
     check-cache-max-capacity: 1000 #检查的计数器集合的size，本身是LRU的
     max-hot-key-count: 100 #每次回调的热key个数的最大值（前N个）
-    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback #热key的回调类
+    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHotKeyMonitorCallback #热key的回调类
   hot-key-cache-enable: true #热key缓存开关
   hot-key-cache-config:
     counter-check-millis: 1000 #检查周期，单位毫秒

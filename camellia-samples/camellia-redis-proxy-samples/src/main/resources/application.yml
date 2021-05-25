@@ -22,7 +22,7 @@ camellia-redis-proxy:
     check-threshold: 100 #热key的阈值，检查周期内请求次数超过该阈值被判定为热key
     check-cache-max-capacity: 1000 #检查的计数器集合的size，本身是LRU的
     max-hot-key-count: 100 #每次回调的热key个数的最大值（前N个）
-    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback #热key的回调类
+    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHotKeyMonitorCallback #热key的回调类
   hot-key-cache-enable: false #热key缓存开关
   hot-key-cache-config:
     counter-check-millis: 1000 #检查周期，单位毫秒

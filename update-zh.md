@@ -5,6 +5,18 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
+# 1.0.26（2021/05/xxx）
+### 新增
+* camellia-redis-proxy支持单独配置端口和applicationName（不使用spring的server.port/spring.application.name）
+* ProxyDynamicConf支持直接把k-v的配置项map设置进去（之前只能从指定某个文件去读取），具体见：[监控](/docs/redis-proxy/monitor.md)
+
+### 更新
+* 重命名LoggingHoyKeyMonitorCallback为LoggingHotKeyMonitorCallback
+
+### fix
+* 无
+
+
 # 1.0.25（2021/05/17）
 ### 新增
 * camellia-redis-proxy支持关闭到后端redis的空闲连接，默认开启

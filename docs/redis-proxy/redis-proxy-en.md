@@ -840,7 +840,7 @@ camellia-redis-proxy:
     check-threshold: 10
     check-cache-max-capacity: 1000
     max-hot-key-count: 100
-    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback
+    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHotKeyMonitorCallback
 ```
 
 ## hot key cache and callback
@@ -981,7 +981,7 @@ camellia-redis-proxy:
     check-threshold: 10
     check-cache-max-capacity: 1000
     max-hot-key-count: 100
-    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback
+    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHotKeyMonitorCallback
   hot-key-cache-enable: true
   hot-key-cache-config:
     counter-check-millis: 1000
