@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.LoggingBigKeyMonitorCallback;
-import com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHoyKeyMonitorCallback;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHotKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.DummyHotKeyCacheKeyChecker;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.LoggingHotKeyCacheStatsCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.route.DynamicConfProxyRouteConfUpdater;
@@ -40,7 +40,7 @@ public class Constants {
         public static final int hotKeyMonitorCheckCacheMaxCapacity = 100000;
         public static final long hotKeyMonitorCheckThreshold = 100;
         public static final int hotKeyMonitorMaxHotKeyCount = 32;
-        public static final String hotKeyMonitorCallbackClassName = LoggingHoyKeyMonitorCallback.class.getName();
+        public static final String hotKeyMonitorCallbackClassName = LoggingHotKeyMonitorCallback.class.getName();
 
         public static final boolean hotKeyCacheEnable = false;
         public static final long hotKeyCacheExpireMillis = 10000;
