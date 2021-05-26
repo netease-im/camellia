@@ -14,7 +14,7 @@
 * camellia-redis-proxy重命名LoggingHoyKeyMonitorCallback为LoggingHotKeyMonitorCallback
 * camellia-redis-proxy删除基于Disruptor/LinkedBlockingQueue的命令转发模式，仅保留直接转发的模式
 * camellia-redis-proxy统计日志的logger名字变更（增加camellia.redis.proxy.前缀），如LoggingMonitorCallback.java
-* camellia-redis-proxy重命名BigKeyMonitorCallback的回调方法，callbackUpstream/callbackDownstream为callbackRequest/callbackReply
+* camellia-redis-proxy重命名BigKeyMonitorCallback的回调方法，callbackUpstream/callbackDownstream变更为callbackRequest/callbackReply
 
 ### fix
 * 无
