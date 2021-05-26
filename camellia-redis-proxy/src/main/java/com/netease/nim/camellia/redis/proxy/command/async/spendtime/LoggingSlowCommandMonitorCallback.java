@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class LoggingSlowCommandMonitorCallback implements SlowCommandMonitorCallback {
 
-    private static final Logger logger = LoggerFactory.getLogger("slowCommandStats");
+    private static final Logger logger = LoggerFactory.getLogger("camellia.redis.proxy.slowCommandStats");
 
     private static ConcurrentHashMap<String, AtomicLong> logMap = new ConcurrentHashMap<>();
 

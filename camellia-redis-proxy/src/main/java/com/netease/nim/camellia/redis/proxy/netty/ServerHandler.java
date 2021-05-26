@@ -18,7 +18,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -46,8 +45,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
             ServerStatus.updateLastUseTime();
             ChannelInfo channelInfo = ChannelInfo.get(ctx);
 
-            List<Command> commands = new ArrayList<>(commandList.size());
+            int index = -1;
+            int startIndex = -1;
             for (Command command : commandList) {
+                index ++;
                 //监控
                 if (properties.isMonitorEnable()) {
                     Long bid = channelInfo.getBid();
@@ -97,15 +98,27 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
 
                 //特殊处理client命令
                 if (redisCommand == RedisCommand.CLIENT) {
+                    if (startIndex >= 0) {//不允许和client命令同时提交一批命令，并且还在client命令之前
+                        ctx.writeAndFlush(ErrorReply.SYNTAX_ERROR).addListener(future -> ctx.close());
+                        return;
+                    }
                     Reply reply = ClientCommandUtil.invokeClientCommand(channelInfo, command);
                     ctx.writeAndFlush(reply);
                     continue;
                 }
                 command.setChannelInfo(channelInfo);
-                commands.add(command);
+                if (startIndex < 0) {
+                    startIndex = index;
+                }
             }
-            if (!commands.isEmpty()) {
-                invoker.invoke(ctx, channelInfo, commands);
+            //减少内存拷贝
+            if (startIndex == 0) {
+                invoker.invoke(ctx, channelInfo, commandList);
+            } else {
+                if (startIndex > 0) {
+                    List<Command> commands = commandList.subList(startIndex, commandList.size());
+                    invoker.invoke(ctx, channelInfo, commands);
+                }
             }
         } catch (Exception e) {
             ctx.close();

@@ -1,7 +1,6 @@
-package com.netease.nim.camellia.redis.proxy.command.async.queue;
+package com.netease.nim.camellia.redis.proxy.command.async;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.command.async.*;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunter;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunter;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterManager;
@@ -20,86 +19,40 @@ import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
  *
- * Created by caojiajun on 2020/8/27
+ * Created by caojiajun on 2021/5/26
  */
-public abstract class AbstractCommandsEventConsumer implements CommandsEventConsumer {
-
-    private static final Logger logger = LoggerFactory.getLogger(AbstractCommandsEventConsumer.class);
-
-    private final Map<ChannelType, List<AsyncTask>> taskMap = new HashMap<>();
-
-    private static class ChannelType {
-        private final Long bid;
-        private final String bgroup;
-
-        public ChannelType(Long bid, String bgroup) {
-            this.bid = bid;
-            this.bgroup = bgroup;
-        }
-
-        public Long getBid() {
-            return bid;
-        }
-
-        public String getBgroup() {
-            return bgroup;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ChannelType that = (ChannelType) o;
-            return Objects.equals(bid, that.bid) &&
-                    Objects.equals(bgroup, that.bgroup);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(bid, bgroup);
-        }
-    }
+public class CommandsTransponder {
+    
+    private static final Logger logger = LoggerFactory.getLogger(CommandsTransponder.class);
 
     private final AsyncCamelliaRedisTemplateChooser chooser;
     private final CommandSpendTimeConfig commandSpendTimeConfig;
     private final CommandInterceptor commandInterceptor;
-    private HotKeyHunterManager hotKeyHunterManager;
-    private HotKeyCacheManager hotKeyCacheManager;
-    private BigKeyHunter bigKeyHunter;
-    private final int commandPipelineFlushThreshold;
+    private final HotKeyHunterManager hotKeyHunterManager;
+    private final HotKeyCacheManager hotKeyCacheManager;
+    private final BigKeyHunter bigKeyHunter;
     private boolean eventLoopSetSuccess = false;
 
-    public AbstractCommandsEventConsumer(AsyncCamelliaRedisTemplateChooser chooser, CommandInvokeConfig commandInvokeConfig) {
+    public CommandsTransponder(AsyncCamelliaRedisTemplateChooser chooser, CommandInvokeConfig commandInvokeConfig) {
         this.chooser = chooser;
-        this.commandPipelineFlushThreshold = commandInvokeConfig.getCommandPipelineFlushThreshold();
         this.commandSpendTimeConfig = commandInvokeConfig.getCommandSpendTimeConfig();
         this.commandInterceptor = commandInvokeConfig.getCommandInterceptor();
-        if (commandInvokeConfig.getCommandHotKeyMonitorConfig() != null) {
-            hotKeyHunterManager = new HotKeyHunterManager(commandInvokeConfig.getCommandHotKeyMonitorConfig());
-        }
-        if (commandInvokeConfig.getCommandHotKeyCacheConfig() != null) {
-            hotKeyCacheManager = new HotKeyCacheManager(commandInvokeConfig.getCommandHotKeyCacheConfig());
-        }
-        if (commandInvokeConfig.getCommandBigKeyMonitorConfig() != null) {
-            bigKeyHunter = new BigKeyHunter(commandInvokeConfig.getCommandBigKeyMonitorConfig());
-        }
+        this.hotKeyHunterManager = commandInvokeConfig.getHotKeyHunterManager();
+        this.hotKeyCacheManager = commandInvokeConfig.getHotKeyCacheManager();
+        this.bigKeyHunter = commandInvokeConfig.getBigKeyHunter();
     }
 
-    @Override
-    public void onEvent(CommandsEvent commandsEvent, boolean endOfBatch) {
+    public void transpond(ChannelInfo channelInfo, List<Command> commands) {
         if (!eventLoopSetSuccess) {
-            RedisClientHub.updateEventLoop(commandsEvent.getChannelInfo().getCtx().channel().eventLoop());
+            RedisClientHub.updateEventLoop(channelInfo.getCtx().channel().eventLoop());
             eventLoopSetSuccess = true;
         }
-        ChannelInfo channelInfo = commandsEvent.getChannelInfo();
-        List<Command> commands = commandsEvent.getCommands();
-        commandsEvent.setChannelInfo(null);
-        commandsEvent.setCommands(null);
         try {
             AsyncTaskQueue taskQueue = channelInfo.getAsyncTaskQueue();
 
@@ -127,7 +80,7 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
                                 hotKeyHunter.incr(keys);
                             }
                         } catch (Exception e) {
-                            ErrorLogCollector.collect(AbstractCommandsEventConsumer.class, "hot key hunter error", e);
+                            ErrorLogCollector.collect(CommandsTransponder.class, "hot key hunter error", e);
                         }
                     }
                 }
@@ -137,7 +90,6 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
                     taskQueue.clear();
                     logger.warn("AsyncTaskQueue full, client connect will be disconnect, remote.ip = {}", ctx.channel().remoteAddress());
                     ctx.writeAndFlush(ErrorReply.TOO_BUSY).addListener((ChannelFutureListener) future -> ctx.close());
-                    flushAll();
                     return;
                 }
                 if (needIntercept) {
@@ -146,7 +98,7 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
                         response = commandInterceptor.check(command);
                     } catch (Exception e) {
                         String errorMsg = "ERR command intercept error [" + e.getMessage() + "]";
-                        ErrorLogCollector.collect(AbstractCommandsEventConsumer.class, errorMsg, e);
+                        ErrorLogCollector.collect(CommandsTransponder.class, errorMsg, e);
                         response = new CommandInterceptResponse(false, errorMsg);
                     }
                     if (!response.isPass()) {
@@ -176,46 +128,20 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
 
                 if (bigKeyHunter != null) {
                     try {
-                        bigKeyHunter.checkUpstream(command);
+                        bigKeyHunter.checkRequest(command);
                     } catch (Exception e) {
-                        ErrorLogCollector.collect(AbstractCommandsEventConsumer.class, e.getMessage(), e);
+                        ErrorLogCollector.collect(CommandsTransponder.class, e.getMessage(), e);
                     }
                 }
-
                 tasks.add(task);
             }
-
-            if (endOfBatch && taskMap.isEmpty()) {
-                flush(channelInfo.getBid(), channelInfo.getBgroup(), tasks);
-                return;
-            }
-
-            ChannelType channelType = new ChannelType(channelInfo.getBid(), channelInfo.getBgroup());
-            List<AsyncTask> taskBuffer = taskMap.get(channelType);
-            if (taskBuffer == null) {
-                taskBuffer = taskMap.computeIfAbsent(channelType, k -> new ArrayList<>(tasks.size()));
-            }
-            taskBuffer.addAll(tasks);
-
-            if (endOfBatch) {
-                flushAll();
-            } else {
-                if (taskBuffer.size() > commandPipelineFlushThreshold) {
-                    flush(channelType.bid, channelType.bgroup, taskBuffer);
-                }
-            }
+            flush(channelInfo.getBid(), channelInfo.getBgroup(), tasks);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
+            channelInfo.getCtx().close();
         }
     }
 
-    private void flushAll() {
-        for (Map.Entry<ChannelType, List<AsyncTask>> entry : taskMap.entrySet()) {
-            ChannelType key = entry.getKey();
-            List<AsyncTask> taskList = entry.getValue();
-            flush(key.bid, key.bgroup, taskList);
-        }
-    }
 
     private void flush(Long bid, String bgroup, List<AsyncTask> taskList) {
         AsyncCamelliaRedisTemplate template = null;
@@ -224,7 +150,7 @@ public abstract class AbstractCommandsEventConsumer implements CommandsEventCons
         } catch (Exception e) {
             String log = "AsyncCamelliaRedisTemplateChooser choose error"
                     + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e.toString();
-            ErrorLogCollector.collect(AbstractCommandsEventConsumer.class, log, e);
+            ErrorLogCollector.collect(CommandsTransponder.class, log, e);
         }
         if (template == null) {
             for (AsyncTask task : taskList) {

@@ -12,6 +12,9 @@
 
 ### update
 * rename LoggingHoyKeyMonitorCallback to LoggingHotKeyMonitorCallback
+* camellia-redis-proxy delete transpond mode of Disruptor/LinkedBlockingQueue, only support direct transpond mode
+* camellia-redis-proxy stats log rename logger, add prefix of camellia.redis.proxy., e.g LoggingMonitorCallback.java
+* camellia-redis-proxy rename BigKeyMonitorCallback callback method, callbackUpstream/callbackDownstream rename to callbackRequest/callbackReply
 
 ### fix
 * none

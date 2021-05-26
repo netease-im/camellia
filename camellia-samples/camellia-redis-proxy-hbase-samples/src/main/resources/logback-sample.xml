@@ -81,19 +81,19 @@
 
        <logger name="com.netease.nim.camellia" level="INFO"/>
 
-       <logger name="stats" level="INFO" additivity="false" >
+       <logger name="camellia.redis.proxy.stats" level="INFO" additivity="false" >
               <appender-ref ref="STATS" />
        </logger>
 
-       <logger name="slowCommandStats" level="INFO" additivity="false" >
+       <logger name="camellia.redis.proxy.slowCommandStats" level="INFO" additivity="false" >
               <appender-ref ref="SLOW-COMMAND-STATS" />
        </logger>
 
-       <logger name="hotKeyStats" level="INFO" additivity="false" >
+       <logger name="camellia.redis.proxy.hotKeyStats" level="INFO" additivity="false" >
               <appender-ref ref="HOT-KEY-STATS" />
        </logger>
 
-       <logger name="bigKeyStats" level="INFO" additivity="false" >
+       <logger name="camellia.redis.proxy.bigKeyStats" level="INFO" additivity="false" >
               <appender-ref ref="BIG-KEY-STATS" />
        </logger>
 

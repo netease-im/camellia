@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
-import com.netease.nim.camellia.redis.proxy.command.async.bigkey.CommandBigKeyMonitorConfig;
-import com.netease.nim.camellia.redis.proxy.command.async.hotkey.CommandHotKeyMonitorConfig;
-import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.CommandHotKeyCacheConfig;
+import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunter;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterManager;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheManager;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 
 /**
@@ -11,44 +11,38 @@ import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpend
  */
 public class CommandInvokeConfig {
     private final CommandSpendTimeConfig commandSpendTimeConfig;
-    private final CommandHotKeyMonitorConfig commandHotKeyMonitorConfig;
     private final CommandInterceptor commandInterceptor;
-    private final int commandPipelineFlushThreshold;
-    private final CommandHotKeyCacheConfig commandHotKeyCacheConfig;
-    private final CommandBigKeyMonitorConfig commandBigKeyMonitorConfig;
+    private final HotKeyCacheManager hotKeyCacheManager;
+    private final HotKeyHunterManager hotKeyHunterManager;
+    private final BigKeyHunter bigKeyHunter;
 
-    public CommandInvokeConfig(int commandPipelineFlushThreshold, CommandInterceptor commandInterceptor,
-                               CommandSpendTimeConfig commandSpendTimeConfig, CommandHotKeyMonitorConfig commandHotKeyMonitorConfig,
-                               CommandHotKeyCacheConfig commandHotKeyCacheConfig, CommandBigKeyMonitorConfig commandBigKeyMonitorConfig) {
-        this.commandSpendTimeConfig = commandSpendTimeConfig;
-        this.commandHotKeyMonitorConfig = commandHotKeyMonitorConfig;
+    public CommandInvokeConfig(CommandInterceptor commandInterceptor,
+                               CommandSpendTimeConfig commandSpendTimeConfig, HotKeyCacheManager hotKeyCacheManager,
+                               HotKeyHunterManager hotKeyHunterManager, BigKeyHunter bigKeyHunter) {
         this.commandInterceptor = commandInterceptor;
-        this.commandPipelineFlushThreshold = commandPipelineFlushThreshold;
-        this.commandHotKeyCacheConfig = commandHotKeyCacheConfig;
-        this.commandBigKeyMonitorConfig = commandBigKeyMonitorConfig;
-    }
-
-    public CommandSpendTimeConfig getCommandSpendTimeConfig() {
-        return commandSpendTimeConfig;
-    }
-
-    public CommandHotKeyMonitorConfig getCommandHotKeyMonitorConfig() {
-        return commandHotKeyMonitorConfig;
+        this.commandSpendTimeConfig = commandSpendTimeConfig;
+        this.hotKeyCacheManager = hotKeyCacheManager;
+        this.hotKeyHunterManager = hotKeyHunterManager;
+        this.bigKeyHunter = bigKeyHunter;
     }
 
     public CommandInterceptor getCommandInterceptor() {
         return commandInterceptor;
     }
 
-    public int getCommandPipelineFlushThreshold() {
-        return commandPipelineFlushThreshold;
+    public CommandSpendTimeConfig getCommandSpendTimeConfig() {
+        return commandSpendTimeConfig;
     }
 
-    public CommandHotKeyCacheConfig getCommandHotKeyCacheConfig() {
-        return commandHotKeyCacheConfig;
+    public HotKeyCacheManager getHotKeyCacheManager() {
+        return hotKeyCacheManager;
     }
 
-    public CommandBigKeyMonitorConfig getCommandBigKeyMonitorConfig() {
-        return commandBigKeyMonitorConfig;
+    public HotKeyHunterManager getHotKeyHunterManager() {
+        return hotKeyHunterManager;
+    }
+
+    public BigKeyHunter getBigKeyHunter() {
+        return bigKeyHunter;
     }
 }

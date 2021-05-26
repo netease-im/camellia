@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public class LoggingMonitorCallback implements MonitorCallback {
 
-    private static final Logger logger = LoggerFactory.getLogger("stats");
+    private static final Logger logger = LoggerFactory.getLogger("camellia.redis.proxy.stats");
 
     @Override
     public void callback(Stats stats) {

@@ -69,8 +69,6 @@ public class Constants {
         public static final int connectTimeoutMillis = 500;
         public static final int failCountThreshold = 5;
         public static final long failBanMillis = 5000L;
-        public static final int commandPipelineFlushThreshold = 256;
-        public static final QueueType queueType = QueueType.None;
         public static final int defaultTranspondWorkThread = SysUtils.getCpuHalfNum();//if queueType is None, then effective
         public static final MultiWriteMode multiWriteMode = MultiWriteMode.FIRST_RESOURCE_ONLY;
         public static final boolean preheat = true;//预热，若开启，则启动proxy时会预先建立好到后端redis的连接

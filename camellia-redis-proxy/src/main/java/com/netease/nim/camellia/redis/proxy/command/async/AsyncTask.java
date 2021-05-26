@@ -80,7 +80,7 @@ public class AsyncTask {
             this.reply = reply;
             if (bigKeyHunter != null) {
                 try {
-                    bigKeyHunter.checkDownstream(command, reply);
+                    bigKeyHunter.checkReply(command, reply);
                 } catch (Exception e) {
                     ErrorLogCollector.collect(AsyncTask.class, e.getMessage(), e);
                 }

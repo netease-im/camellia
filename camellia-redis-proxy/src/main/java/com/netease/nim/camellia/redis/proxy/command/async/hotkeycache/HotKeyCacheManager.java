@@ -31,7 +31,7 @@ public class HotKeyCacheManager {
                 synchronized (lockMap.getLockObj(key)) {
                     hotKeyCache = map.get(key);
                     if (hotKeyCache == null) {
-                        hotKeyCache = new HotKeyCache(new CommandContext(bid, bgroup, null),commandHotKeyCacheConfig);
+                        hotKeyCache = new HotKeyCache(new CommandContext(bid, bgroup, null), commandHotKeyCacheConfig);
                         map.put(key, hotKeyCache);
                     }
                 }

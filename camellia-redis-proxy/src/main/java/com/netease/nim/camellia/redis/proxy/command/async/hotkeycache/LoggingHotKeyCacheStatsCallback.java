@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class LoggingHotKeyCacheStatsCallback implements HotKeyCacheStatsCallback {
 
-    private static final Logger logger = LoggerFactory.getLogger("hotKeyCacheStats");
+    private static final Logger logger = LoggerFactory.getLogger("camellia.redis.proxy.hotKeyCacheStats");
 
     @Override
     public void callback(CommandContext commandContext, HotKeyCacheStats hotKeyCacheStats, CommandHotKeyCacheConfig config) {

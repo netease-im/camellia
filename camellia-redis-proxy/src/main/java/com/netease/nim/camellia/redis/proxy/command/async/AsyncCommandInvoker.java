@@ -1,26 +1,21 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.*;
+import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunter;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.CommandBigKeyMonitorConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.CommandHotKeyMonitorConfig;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterManager;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.CommandHotKeyCacheConfig;
-import com.netease.nim.camellia.redis.proxy.command.async.queue.CommandsEventHandler;
-import com.netease.nim.camellia.redis.proxy.command.async.queue.disruptor.DisruptorCommandsEventHandler;
-import com.netease.nim.camellia.redis.proxy.command.async.queue.lbq.LbqCommandsEventHandler;
-import com.netease.nim.camellia.redis.proxy.command.async.queue.none.NoneQueueCommandsEventHandler;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheManager;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
-import com.netease.nim.camellia.redis.proxy.conf.QueueType;
 import com.netease.nim.camellia.redis.proxy.monitor.BigKeyMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.HotKeyCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.HotKeyMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.SlowCommandMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
-import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.FastThreadLocal;
 import org.slf4j.Logger;
@@ -38,72 +33,53 @@ public class AsyncCommandInvoker implements CommandInvoker {
     private static final Logger logger = LoggerFactory.getLogger(AsyncCommandInvoker.class);
 
     private final AsyncCamelliaRedisTemplateChooser chooser;
-    private final QueueType queueType;
-    private final CamelliaTranspondProperties transpondProperties;
     private final CommandInvokeConfig commandInvokeConfig;
 
     public AsyncCommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
-        this.transpondProperties = transpondProperties;
         this.chooser = new AsyncCamelliaRedisTemplateChooser(transpondProperties);
-        this.queueType = transpondProperties.getRedisConf().getQueueType();
-        if (queueType == QueueType.Disruptor) {
-            ConfigInitUtil.checkDisruptorWaitStrategyClassName(transpondProperties);
-        }
-
-        CamelliaTranspondProperties.RedisConfProperties redisConf = transpondProperties.getRedisConf();
-        int commandPipelineFlushThreshold = redisConf.getCommandPipelineFlushThreshold();
-
         int monitorIntervalSeconds = serverProperties.getMonitorIntervalSeconds();
         CommandInterceptor commandInterceptor = ConfigInitUtil.initCommandInterceptor(serverProperties);
         CommandSpendTimeConfig commandSpendTimeConfig = ConfigInitUtil.initCommandSpendTimeConfig(serverProperties);
         if (commandSpendTimeConfig != null) {
             SlowCommandMonitor.init(monitorIntervalSeconds);
         }
+
+        HotKeyHunterManager hotKeyHunterManager = null;
         CommandHotKeyMonitorConfig commandHotKeyMonitorConfig = ConfigInitUtil.initCommandHotKeyMonitorConfig(serverProperties);
         if (commandHotKeyMonitorConfig != null) {
             HotKeyMonitor.init(monitorIntervalSeconds);
+            hotKeyHunterManager = new HotKeyHunterManager(commandHotKeyMonitorConfig);
         }
+
+        HotKeyCacheManager hotKeyCacheManager = null;
         CommandHotKeyCacheConfig commandHotKeyCacheConfig = ConfigInitUtil.initHotKeyCacheConfig(serverProperties);
         if (commandHotKeyCacheConfig != null) {
             HotKeyCacheMonitor.init(monitorIntervalSeconds);
+            hotKeyCacheManager = new HotKeyCacheManager(commandHotKeyCacheConfig);
         }
+
+        BigKeyHunter bigKeyHunter = null;
         CommandBigKeyMonitorConfig commandBigKeyMonitorConfig = ConfigInitUtil.initBigKeyMonitorConfig(serverProperties);
         if (commandBigKeyMonitorConfig != null) {
             BigKeyMonitor.init(monitorIntervalSeconds);
+            bigKeyHunter = new BigKeyHunter(commandBigKeyMonitorConfig);
         }
-
-        this.commandInvokeConfig = new CommandInvokeConfig(commandPipelineFlushThreshold,
-                commandInterceptor, commandSpendTimeConfig, commandHotKeyMonitorConfig, commandHotKeyCacheConfig, commandBigKeyMonitorConfig);
+        this.commandInvokeConfig = new CommandInvokeConfig(commandInterceptor, commandSpendTimeConfig, hotKeyCacheManager, hotKeyHunterManager, bigKeyHunter);
     }
 
-    private static final FastThreadLocal<CommandsEventHandler> threadLocal = new FastThreadLocal<>();
+    private static final FastThreadLocal<CommandsTransponder> threadLocal = new FastThreadLocal<>();
 
     @Override
     public void invoke(ChannelHandlerContext ctx, ChannelInfo channelInfo, List<Command> commands) {
         if (commands.isEmpty()) return;
         try {
-            CommandsEventHandler handler = threadLocal.get();
-            if (handler == null) {
-                if (queueType == QueueType.LinkedBlockingQueue) {
-                    handler = new LbqCommandsEventHandler(chooser, commandInvokeConfig);
-                    logger.info("LbqCommandsEventHandler init success");
-                } else if (queueType == QueueType.Disruptor) {
-                    CamelliaTranspondProperties.RedisConfProperties.DisruptorConf disruptorConf = transpondProperties.getRedisConf().getDisruptorConf();
-                    handler = new DisruptorCommandsEventHandler(disruptorConf, chooser, commandInvokeConfig);
-                    logger.info("DisruptorCommandsEventHandler init success");
-                } else if (queueType == QueueType.None) {
-                    handler = new NoneQueueCommandsEventHandler(chooser, commandInvokeConfig);
-                    logger.info("NoneQueueCommandsEventHandler init success");
-                } else {
-                    throw new CamelliaRedisException("unknown queueType");
-                }
-                threadLocal.set(handler);
+            CommandsTransponder trandponder = threadLocal.get();
+            if (trandponder == null) {
+                trandponder = new CommandsTransponder(chooser, commandInvokeConfig);
+                logger.info("CommandsTransponder init success");
+                threadLocal.set(trandponder);
             }
-            boolean success = handler.getProducer().publishEvent(channelInfo, commands);
-            if (!success) {
-                logger.error("CommandsEventProducer publishEvent fail");
-                ctx.writeAndFlush(ErrorReply.TOO_BUSY).addListener((ChannelFutureListener) future -> ctx.close());
-            }
+            trandponder.transpond(channelInfo, commands);
         } catch (Exception e) {
             ctx.close();
             logger.error(e.getMessage(), e);

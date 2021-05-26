@@ -10,12 +10,12 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 public class DummyBigKeyMonitorCallback implements BigKeyMonitorCallback {
 
     @Override
-    public void callbackUpstream(Command command, byte[] key, long size, long threshold) {
+    public void callbackRequest(Command command, byte[] key, long size, long threshold) {
 
     }
 
     @Override
-    public void callbackDownstream(Command command, Reply reply, byte[] key, long size, long threshold) {
+    public void callbackReply(Command command, Reply reply, byte[] key, long size, long threshold) {
 
     }
 }

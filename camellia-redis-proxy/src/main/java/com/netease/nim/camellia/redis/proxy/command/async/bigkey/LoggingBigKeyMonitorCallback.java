@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class LoggingBigKeyMonitorCallback implements BigKeyMonitorCallback {
 
-    private static final Logger logger = LoggerFactory.getLogger("bigKeyStats");
+    private static final Logger logger = LoggerFactory.getLogger("camellia.redis.proxy.bigKeyStats");
     private static ConcurrentHashMap<String, AtomicLong> logMap = new ConcurrentHashMap<>();
 
     static {
@@ -39,9 +39,9 @@ public class LoggingBigKeyMonitorCallback implements BigKeyMonitorCallback {
     }
 
     @Override
-    public void callbackUpstream(Command command, byte[] key, long size, long threshold) {
+    public void callbackRequest(Command command, byte[] key, long size, long threshold) {
         try {
-            String log = "big key for upstream, command.context = " + command.getCommandContext() + ", command = " + command.getRedisCommand()
+            String log = "big key for request, command.context = " + command.getCommandContext() + ", command = " + command.getRedisCommand()
                     + ", key = " + Utils.bytesToString(key) + ", size = " + size + ", threshold = " + threshold;
             AtomicLong count = CamelliaMapUtils.computeIfAbsent(logMap, log, k -> new AtomicLong());
             count.incrementAndGet();
@@ -51,9 +51,9 @@ public class LoggingBigKeyMonitorCallback implements BigKeyMonitorCallback {
     }
 
     @Override
-    public void callbackDownstream(Command command, Reply reply, byte[] key, long size, long threshold) {
+    public void callbackReply(Command command, Reply reply, byte[] key, long size, long threshold) {
         try {
-            String log = "big key for downstream, command.context = " + command.getCommandContext() + ", command = " + command.getRedisCommand()
+            String log = "big key for reply, command.context = " + command.getCommandContext() + ", command = " + command.getRedisCommand()
                     + ", key = " + Utils.bytesToString(key) + ", size = " + size + ", threshold = " + threshold;
             AtomicLong count = CamelliaMapUtils.computeIfAbsent(logMap, log, k -> new AtomicLong());
             count.incrementAndGet();

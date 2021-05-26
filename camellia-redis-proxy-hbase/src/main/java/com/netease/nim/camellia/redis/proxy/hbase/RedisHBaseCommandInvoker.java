@@ -85,7 +85,7 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
                     hotKeyHunter.incr(command.getKeys());
                 }
                 if (bigKeyHunter != null) {
-                    bigKeyHunter.checkUpstream(command);
+                    bigKeyHunter.checkRequest(command);
                 }
                 //
                 reply = (Reply) CommandInvokerUtil.invoke(method, command, processor);
@@ -93,7 +93,7 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
                 debugLog(reply, channelInfo);
                 //
                 if (bigKeyHunter != null) {
-                    bigKeyHunter.checkDownstream(command, reply);
+                    bigKeyHunter.checkReply(command, reply);
                 }
             } catch (Throwable e) {
                 reply = handlerError(e, command.getName());

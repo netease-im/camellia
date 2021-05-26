@@ -226,27 +226,12 @@ public class CamelliaTranspondProperties {
         private int connectTimeoutMillis = Constants.Transpond.connectTimeoutMillis;
         private int failCountThreshold = Constants.Transpond.failCountThreshold;
         private long failBanMillis = Constants.Transpond.failBanMillis;
-        private int commandPipelineFlushThreshold = Constants.Transpond.commandPipelineFlushThreshold;
         private int defaultTranspondWorkThread = Constants.Transpond.defaultTranspondWorkThread;
-        private QueueType queueType = Constants.Transpond.queueType;
         private MultiWriteMode multiWriteMode = Constants.Transpond.multiWriteMode;
-        private DisruptorConf disruptorConf;
         private boolean preheat = Constants.Transpond.preheat;
         public boolean closeIdleConnection = Constants.Transpond.closeIdleConnection;//是否关闭空闲连接（到后端redis的）
         public long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;//判断一个连接空闲的阈值，单位秒
         public int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;//判断一个连接空闲后，再过多少秒去执行关闭操作
-
-        public static class DisruptorConf {
-            private String waitStrategyClassName;
-
-            public String getWaitStrategyClassName() {
-                return waitStrategyClassName;
-            }
-
-            public void setWaitStrategyClassName(String waitStrategyClassName) {
-                this.waitStrategyClassName = waitStrategyClassName;
-            }
-        }
 
         public String getShadingFunc() {
             return shadingFunc;
@@ -302,30 +287,6 @@ public class CamelliaTranspondProperties {
 
         public void setFailBanMillis(long failBanMillis) {
             this.failBanMillis = failBanMillis;
-        }
-
-        public int getCommandPipelineFlushThreshold() {
-            return commandPipelineFlushThreshold;
-        }
-
-        public void setCommandPipelineFlushThreshold(int commandPipelineFlushThreshold) {
-            this.commandPipelineFlushThreshold = commandPipelineFlushThreshold;
-        }
-
-        public QueueType getQueueType() {
-            return queueType;
-        }
-
-        public void setQueueType(QueueType queueType) {
-            this.queueType = queueType;
-        }
-
-        public DisruptorConf getDisruptorConf() {
-            return disruptorConf;
-        }
-
-        public void setDisruptorConf(DisruptorConf disruptorConf) {
-            this.disruptorConf = disruptorConf;
         }
 
         public int getDefaultTranspondWorkThread() {

@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class LoggingHotKeyMonitorCallback implements HotKeyMonitorCallback {
 
-    private static final Logger logger = LoggerFactory.getLogger("hotKeyStats");
+    private static final Logger logger = LoggerFactory.getLogger("camellia.redis.proxy.hotKeyStats");
 
     @Override
     public void callback(CommandContext commandContext, List<HotKeyInfo> hotKeys, HotKeyConfig hotKeyConfig) {

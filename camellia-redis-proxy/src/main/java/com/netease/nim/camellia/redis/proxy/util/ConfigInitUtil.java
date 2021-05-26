@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
-import com.lmax.disruptor.WaitStrategy;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyMonitorCallback;
@@ -14,7 +13,6 @@ import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCach
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.SlowCommandMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
-import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfHook;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
@@ -114,27 +112,6 @@ public class ConfigInitUtil {
             }
         }
         return commandInterceptor;
-    }
-
-    public static void checkDisruptorWaitStrategyClassName(CamelliaTranspondProperties transpondProperties) {
-        CamelliaTranspondProperties.RedisConfProperties.DisruptorConf disruptorConf = transpondProperties.getRedisConf().getDisruptorConf();
-        if (disruptorConf != null) {
-            String waitStrategyClassName = disruptorConf.getWaitStrategyClassName();
-            if (waitStrategyClassName != null) {
-                try {
-                    Class<?> clazz = Class.forName(waitStrategyClassName);
-                    Object o = clazz.newInstance();
-                    if (!(o instanceof WaitStrategy)) {
-                        throw new CamelliaRedisException("not instance of com.lmax.disruptor.WaitStrategy");
-                    }
-                } catch (CamelliaRedisException e) {
-                    throw e;
-                } catch (Exception e) {
-                    logger.error("CommandInterceptor init error, class = {}", waitStrategyClassName, e);
-                    throw new CamelliaRedisException(e);
-                }
-            }
-        }
     }
 
     public static CommandHotKeyMonitorConfig initCommandHotKeyMonitorConfig(CamelliaServerProperties serverProperties) {
