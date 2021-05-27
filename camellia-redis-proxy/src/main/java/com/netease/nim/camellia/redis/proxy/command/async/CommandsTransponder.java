@@ -13,6 +13,7 @@ import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -28,7 +29,7 @@ import java.util.concurrent.CompletableFuture;
  * Created by caojiajun on 2021/5/26
  */
 public class CommandsTransponder {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(CommandsTransponder.class);
 
     private final AsyncCamelliaRedisTemplateChooser chooser;
@@ -54,6 +55,7 @@ public class CommandsTransponder {
             eventLoopSetSuccess = true;
         }
         try {
+            boolean hasCommandsSkip = false;
             AsyncTaskQueue taskQueue = channelInfo.getAsyncTaskQueue();
 
             if (logger.isDebugEnabled()) {
@@ -107,8 +109,23 @@ public class CommandsTransponder {
                             errorMsg = CommandInterceptResponse.DEFAULT_FAIL.getErrorMsg();
                         }
                         task.replyCompleted(new ErrorReply(errorMsg));
+                        hasCommandsSkip = true;
                         continue;
                     }
+                }
+
+                RedisCommand redisCommand = command.getRedisCommand();
+
+                if (redisCommand == RedisCommand.PING) {
+                    task.replyCompleted(StatusReply.PONG);
+                    hasCommandsSkip = true;
+                    continue;
+                }
+
+                if (redisCommand == null || redisCommand.getSupportType() == RedisCommand.CommandSupportType.NOT_SUPPORT) {
+                    task.replyCompleted(ErrorReply.NOT_SUPPORT);
+                    hasCommandsSkip = true;
+                    continue;
                 }
 
                 if (command.getRedisCommand() == RedisCommand.GET && hotKeyCacheManager != null) {
@@ -120,6 +137,7 @@ public class CommandsTransponder {
                             HotValue cache = hotKeyCache.getCache(key);
                             if (cache != null) {
                                 task.replyCompleted(new BulkReply(cache.getValue()), true);
+                                hasCommandsSkip = true;
                                 continue;
                             }
                         }
@@ -135,7 +153,14 @@ public class CommandsTransponder {
                 }
                 tasks.add(task);
             }
-            flush(channelInfo.getBid(), channelInfo.getBgroup(), tasks);
+            if (tasks.isEmpty()) return;
+            if (hasCommandsSkip) {
+                commands = new ArrayList<>(tasks.size());
+                for (AsyncTask asyncTask : tasks) {
+                    commands.add(asyncTask.getCommand());
+                }
+            }
+            flush(channelInfo.getBid(), channelInfo.getBgroup(), tasks, commands);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             channelInfo.getCtx().close();
@@ -143,31 +168,42 @@ public class CommandsTransponder {
     }
 
 
-    private void flush(Long bid, String bgroup, List<AsyncTask> taskList) {
-        AsyncCamelliaRedisTemplate template = null;
+    private void flush(Long bid, String bgroup, List<AsyncTask> tasks, List<Command> commands) {
         try {
-            template = chooser.choose(bid, bgroup);
-        } catch (Exception e) {
-            String log = "AsyncCamelliaRedisTemplateChooser choose error"
-                    + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e.toString();
-            ErrorLogCollector.collect(CommandsTransponder.class, log, e);
+            AsyncCamelliaRedisTemplate template = null;
+            try {
+                template = chooser.choose(bid, bgroup);
+            } catch (Exception e) {
+                String log = "AsyncCamelliaRedisTemplateChooser choose error"
+                        + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e.toString();
+                ErrorLogCollector.collect(CommandsTransponder.class, log, e);
+            }
+            if (template == null) {
+                for (AsyncTask task : tasks) {
+                    task.replyCompleted(ErrorReply.NOT_AVAILABLE);
+                }
+            } else {
+                List<CompletableFuture<Reply>> futureList;
+                try {
+                    futureList = template.sendCommand(commands);
+                } catch (Exception e) {
+                    String log = "AsyncCamelliaRedisTemplateChooser sendCommand error"
+                            + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e.toString();
+                    ErrorLogCollector.collect(CommandsTransponder.class, log, e);
+                    for (AsyncTask task : tasks) {
+                        task.replyCompleted(ErrorReply.NOT_AVAILABLE);
+                    }
+                    return;
+                }
+                for (int i = 0; i < tasks.size(); i++) {
+                    AsyncTask task = tasks.get(i);
+                    CompletableFuture<Reply> completableFuture = futureList.get(i);
+                    completableFuture.thenAccept(task::replyCompleted);
+                }
+            }
+        } finally {
+            tasks.clear();
         }
-        if (template == null) {
-            for (AsyncTask task : taskList) {
-                task.replyCompleted(ErrorReply.NOT_AVAILABLE);
-            }
-        } else {
-            List<Command> commandList = new ArrayList<>(taskList.size());
-            for (AsyncTask asyncTask : taskList) {
-                commandList.add(asyncTask.getCommand());
-            }
-            List<CompletableFuture<Reply>> futureList = template.sendCommand(commandList);
-            for (int i = 0; i < taskList.size(); i++) {
-                AsyncTask task = taskList.get(i);
-                CompletableFuture<Reply> completableFuture = futureList.get(i);
-                completableFuture.thenAccept(task::replyCompleted);
-            }
-        }
-        taskList.clear();
+
     }
 }

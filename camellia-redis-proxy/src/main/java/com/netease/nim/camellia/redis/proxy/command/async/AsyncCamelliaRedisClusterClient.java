@@ -62,6 +62,23 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
 
     public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> futureList) {
         if (commands.isEmpty()) return;
+        if (commands.size() == 1) {
+            Command command = commands.get(0);
+            if (isPassThroughCommand(command)) {
+                byte[][] args = command.getObjects();
+                byte[] key = args[1];
+                int slot = RedisClusterCRC16Utils.getSlot(key);
+                RedisClient client = getClient(slot);
+                if (client != null) {
+                    client.sendCommand(commands, Collections.singletonList(new CompletableFutureWrapper(this, futureList.get(0), command)));
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("sendCommand, command = {}, key = {}, slot = {}", command.getName(), SafeEncoder.encode(key), slot);
+                    }
+                    return;
+                }
+            }
+        }
+
         CommandFlusher commandFlusher = new CommandFlusher(commands.size());
         for (int i=0; i<commands.size(); i++) {
             Command command = commands.get(i);
@@ -341,6 +358,19 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
             String port = idx != -1 ? from.substring(idx + 1) : "";
             return new String[] { host, port };
         }
+    }
+
+    private boolean isPassThroughCommand(Command command) {
+        RedisClient bindClient = command.getChannelInfo().getBindClient();
+        if (bindClient != null) return false;
+        RedisCommand redisCommand = command.getRedisCommand();
+        RedisCommand.CommandSupportType supportType = redisCommand.getSupportType();
+        if (supportType == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1
+                || supportType == RedisCommand.CommandSupportType.RESTRICTIVE_SUPPORT) {
+            return false;
+        }
+        RedisCommand.CommandKeyType commandKeyType = redisCommand.getCommandKeyType();
+        return commandKeyType == RedisCommand.CommandKeyType.SIMPLE_SINGLE && !command.isBlocking();
     }
 
     private void msetnx(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {

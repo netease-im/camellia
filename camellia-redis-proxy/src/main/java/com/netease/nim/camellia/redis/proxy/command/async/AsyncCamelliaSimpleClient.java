@@ -35,6 +35,18 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
     }
 
     public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
+        if (commands.size() == 1) {
+            Command command = commands.get(0);
+            if (isPassThroughCommand(command)) {
+                flushNoBlockingCommands(commands, completableFutureList);
+                return;
+            }
+        } else {
+            if (isPassThroughCommands(commands)) {
+                flushNoBlockingCommands(commands, completableFutureList);
+                return;
+            }
+        }
         List<Command> filterCommands = new ArrayList<>(commands.size());
         List<CompletableFuture<Reply>> filterFutures = new ArrayList<>(completableFutureList.size());
         boolean hasBlockingCommands = false;
@@ -120,6 +132,23 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
         if (!commands1.isEmpty()) {
             flushNoBlockingCommands(commands1, completableFutureList1);
         }
+    }
+
+    private boolean isPassThroughCommands(List<Command> commands) {
+        for (Command command : commands) {
+            boolean passThroughCommand = isPassThroughCommand(command);
+            if (!passThroughCommand) return false;
+        }
+        return true;
+    }
+
+    private boolean isPassThroughCommand(Command command) {
+        RedisClient bindClient = command.getChannelInfo().getBindClient();
+        if (bindClient != null) return false;
+        RedisCommand redisCommand = command.getRedisCommand();
+        if (redisCommand == null) return false;
+        return !command.isBlocking() && redisCommand != RedisCommand.SUBSCRIBE && redisCommand != RedisCommand.PSUBSCRIBE
+                && redisCommand.getCommandType() != RedisCommand.CommandType.TRANSACTION;
     }
 
     private void flushBlockingCommands(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
