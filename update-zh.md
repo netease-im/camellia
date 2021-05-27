@@ -5,7 +5,7 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
-# 1.0.26（2021/05/xxx）
+# 1.0.26（2021/05/27）
 ### 新增
 * camellia-redis-proxy支持单独配置端口和applicationName（优先级高于spring的server.port/spring.application.name）
 * ProxyDynamicConf支持直接把k-v的配置项map设置进去（之前只能从指定某个文件去读取）

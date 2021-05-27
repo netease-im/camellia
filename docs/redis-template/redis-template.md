@@ -29,7 +29,7 @@
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis</artifactId>
-  <version>1.0.24</version>
+  <version>a.b.c</version>
 </dependency>
 ```
 
@@ -277,7 +277,7 @@ ReloadableLocalFileCamelliaApi会自动识别这种情况，此时ResourceTable�
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis-spring-boot-starter</artifactId>
-  <version>1.0.23</version>
+  <version>a.b.c</version>
 </dependency>
 ```
 

@@ -103,12 +103,12 @@ MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ``` 
 
 ## 快速开始一
-1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.0.25），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
+1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.0.26），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
 ```
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
-  <version>1.0.25</version>
+  <version>1.0.26</version>
 </dependency>
 ```
 2) 编写主类Application.java, 如下: 
@@ -157,11 +157,11 @@ OK
 ```
 
 ## 快速开始二
-下载最新版安装包并解压（v1.0.25）：
+下载最新版安装包并解压（v1.0.26）：
 ```
-wget https://github.com/netease-im/camellia/releases/download/v1.0.25/camellia-redis-proxy-1.0.25.tar.gz
-tar zxvf camellia-redis-proxy-1.0.25.tar.gz
-cd camellia-redis-proxy-1.0.25/
+wget https://github.com/netease-im/camellia/releases/download/v1.0.26/camellia-redis-proxy-1.0.26.tar.gz
+tar zxvf camellia-redis-proxy-1.0.26.tar.gz
+cd camellia-redis-proxy-1.0.26/
 ```
 按需修改BOOT-INF/classes/下的配置文件：
 * application.yml
@@ -179,11 +179,11 @@ java -XX:+UseG1GC -Xms2048m -Xmx2048m -server org.springframework.boot.loader.Ja
 ```
 
 ## 快速开始三（基于fatJar和sample-code)
-下载源码，切到最新稳定分支（v1.0.25）
+下载源码，切到最新稳定分支（v1.0.26）
 ```
 git clone https://github.com/netease-im/camellia.git
 cd camellia
-git checkout v1.0.25
+git checkout v1.0.26
 ```
 按需修改[sample-code](/camellia-samples/camellia-redis-proxy-samples) 中的配置文件：
 * application.yml
@@ -198,7 +198,7 @@ mvn clean install
 找到可执行jar包，使用java -jar命令运行即可(注意设置内存和GC，并确保已经安装了jdk8或以上，并添加到path）：
 ```
 cd camellia-samples/camellia-redis-proxy-samples/target
-java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy-samples-1.0.25.jar 
+java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy-samples-1.0.26.jar 
 ```
 
 ## 路由配置
