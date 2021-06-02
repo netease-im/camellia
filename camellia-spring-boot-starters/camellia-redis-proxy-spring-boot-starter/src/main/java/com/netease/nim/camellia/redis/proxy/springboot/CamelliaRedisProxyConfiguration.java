@@ -67,7 +67,7 @@ public class CamelliaRedisProxyConfiguration {
         int bossThread = camelliaServerProperties(properties).getBossThread();
         logger.info("CamelliaRedisProxyServer init, bossThread = {}", bossThread);
         GlobalRedisProxyEnv.bossThread = bossThread;
-        return new EventLoopGroupGetter(new NioEventLoopGroup(bossThread, new DefaultThreadFactory("boss-group")));
+        return new EventLoopGroupGetter(new NioEventLoopGroup(bossThread, new DefaultThreadFactory("camellia-boss-group")));
     }
 
     @Bean
@@ -77,7 +77,7 @@ public class CamelliaRedisProxyConfiguration {
         int workThread = serverProperties.getWorkThread();
         logger.info("CamelliaRedisProxyServer init, workThread = {}", workThread);
         GlobalRedisProxyEnv.workThread = workThread;
-        return new EventLoopGroupGetter(new NioEventLoopGroup(workThread, new DefaultThreadFactory("work-group")));
+        return new EventLoopGroupGetter(new NioEventLoopGroup(workThread, new DefaultThreadFactory("camellia-work-group")));
     }
 
     @Bean
@@ -97,8 +97,9 @@ public class CamelliaRedisProxyConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(value = ConsoleService.class)
-    public ConsoleService consoleService() {
-        return new ConsoleServiceAdaptor(port);
+    public ConsoleService consoleService(CamelliaRedisProxyProperties properties) {
+        CamelliaServerProperties serverProperties = camelliaServerProperties(properties);
+        return new ConsoleServiceAdaptor(serverProperties.getPort());
     }
 
     private static class EventLoopGroupGetter {

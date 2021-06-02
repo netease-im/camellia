@@ -36,7 +36,7 @@ public class RedisClient implements AsyncClient {
     private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
     private static final AtomicLong id = new AtomicLong(0);
 
-    private static final ScheduledExecutorService heartBeatScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("redis-client-heart-beat"));
+    private static final ScheduledExecutorService heartBeatScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-redis-client-heart-beat"));
 
     private final RedisClientConfig redisClientConfig;
 

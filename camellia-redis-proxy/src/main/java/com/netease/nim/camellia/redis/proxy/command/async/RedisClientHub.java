@@ -32,7 +32,7 @@ public class RedisClientHub {
     public static NioEventLoopGroup eventLoopGroupBackup = null;
 
     private static final ExecutorService redisClientAsyncInitExec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(4096), new DefaultThreadFactory("redis-client-async-init"), new ThreadPoolExecutor.AbortPolicy());
+            new LinkedBlockingQueue<>(4096), new DefaultThreadFactory("camellia-redis-client-initialize"), new ThreadPoolExecutor.AbortPolicy());
 
     private static final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, RedisClient>> eventLoopMap = new ConcurrentHashMap<>();
 

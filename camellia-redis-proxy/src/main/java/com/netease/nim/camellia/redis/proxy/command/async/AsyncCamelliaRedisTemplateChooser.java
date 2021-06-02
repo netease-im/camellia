@@ -244,8 +244,8 @@ public class AsyncCamelliaRedisTemplateChooser {
                 RedisClientHub.connectTimeoutMillis, RedisClientHub.heartbeatIntervalSeconds, RedisClientHub.heartbeatTimeoutMillis);
         RedisClientHub.failCountThreshold = redisConf.getFailCountThreshold();
         RedisClientHub.failBanMillis = redisConf.getFailBanMillis();
-        RedisClientHub.eventLoopGroup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("redis-client"));
-        RedisClientHub.eventLoopGroupBackup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("redis-client-backup"));
+        RedisClientHub.eventLoopGroup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client"));
+        RedisClientHub.eventLoopGroupBackup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client-backup"));
         logger.info("RedisClient, failCountThreshold = {}, failBanMillis = {}",
                 RedisClientHub.failCountThreshold, RedisClientHub.failBanMillis);
         RedisClientHub.closeIdleConnection = redisConf.isCloseIdleConnection();
