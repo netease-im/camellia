@@ -232,6 +232,7 @@ public class CamelliaTranspondProperties {
         public boolean closeIdleConnection = Constants.Transpond.closeIdleConnection;//是否关闭空闲连接（到后端redis的）
         public long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;//判断一个连接空闲的阈值，单位秒
         public int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;//判断一个连接空闲后，再过多少秒去执行关闭操作
+        public int blockingCommandsMaxUpstreamConnection = Constants.Transpond.blockingCommandsMaxUpstreamConnection;
 
         public String getShadingFunc() {
             return shadingFunc;
@@ -335,6 +336,14 @@ public class CamelliaTranspondProperties {
 
         public void setCloseIdleConnectionDelaySeconds(int closeIdleConnectionDelaySeconds) {
             this.closeIdleConnectionDelaySeconds = closeIdleConnectionDelaySeconds;
+        }
+
+        public int getBlockingCommandsMaxUpstreamConnection() {
+            return blockingCommandsMaxUpstreamConnection;
+        }
+
+        public void setBlockingCommandsMaxUpstreamConnection(int blockingCommandsMaxUpstreamConnection) {
+            this.blockingCommandsMaxUpstreamConnection = blockingCommandsMaxUpstreamConnection;
         }
     }
 }

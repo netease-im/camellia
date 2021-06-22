@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.async.AsyncTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
+import com.netease.nim.camellia.redis.proxy.command.async.RedisClientHub;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 
@@ -23,7 +24,7 @@ public class ChannelInfo {
     private ChannelStats channelStats = ChannelStats.NO_AUTH;
     private final ChannelHandlerContext ctx;
     private final AsyncTaskQueue asyncTaskQueue;
-    private LinkedBlockingQueue<RedisClient> redisClientsForBlockingCommand = null;
+    private volatile LinkedBlockingQueue<RedisClient> redisClientsForBlockingCommand = null;
     private RedisClient bindClient = null;
     private boolean inTransaction = false;
     private final SocketAddress clientSocketAddress;
@@ -64,13 +65,16 @@ public class ChannelInfo {
         if (redisClientsForBlockingCommand == null) {
             synchronized (this) {
                 if (redisClientsForBlockingCommand == null) {
-                    redisClientsForBlockingCommand = new LinkedBlockingQueue<>(100);
+                    redisClientsForBlockingCommand = new LinkedBlockingQueue<>(RedisClientHub.blockingCommandsMaxUpstreamConnection);
                 }
             }
         }
         boolean offer = redisClientsForBlockingCommand.offer(redisClient);
         while (!offer) {
-            redisClientsForBlockingCommand.poll();
+            RedisClient oldClient = redisClientsForBlockingCommand.poll();
+            if (oldClient != null) {
+                oldClient.stop(true);
+            }
             offer = redisClientsForBlockingCommand.offer(redisClient);
         }
     }

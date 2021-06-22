@@ -234,6 +234,7 @@ public class CamelliaRedisProxyUtil {
         redisConfProperties.setCloseIdleConnection(properties.isCloseIdleConnection());
         redisConfProperties.setCheckIdleConnectionThresholdSeconds(properties.getCheckIdleConnectionThresholdSeconds());
         redisConfProperties.setCloseIdleConnectionDelaySeconds(properties.getCloseIdleConnectionDelaySeconds());
+        redisConfProperties.setBlockingCommandsMaxUpstreamConnection(properties.getBlockingCommandsMaxUpstreamConnection());
         return redisConfProperties;
     }
 }
