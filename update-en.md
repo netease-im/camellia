@@ -5,6 +5,16 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
+# 1.0.27（2021/06/xx）
+### add
+* none
+
+### update
+* none
+
+### fix
+* fix too many connections when use blocking commands frequency
+
 # 1.0.26（2021/05/27）
 ### add
 * camellia-redis-proxy support setting port/applicationName instead of server.port/spring.application.name

@@ -5,6 +5,16 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
+# 1.0.27（2021/06/xx）
+### 新增
+* 无
+
+### 更新
+* 无
+
+### fix
+* 修复使用阻塞型命令时如果单连接tps较高时导致到后端redis连接过多的问题
+
 # 1.0.26（2021/05/27）
 ### 新增
 * camellia-redis-proxy支持单独配置端口和applicationName（优先级高于spring的server.port/spring.application.name）
