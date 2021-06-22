@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.async.AsyncTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
+import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClientHub;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
@@ -77,6 +78,19 @@ public class ChannelInfo {
             }
             offer = redisClientsForBlockingCommand.offer(redisClient);
         }
+    }
+
+    public RedisClient tryGetIdleRedisClientForBlockingCommand(RedisClientAddr addr) {
+        if (redisClientsForBlockingCommand != null && redisClientsForBlockingCommand.size() > 1) {
+            RedisClient peek = redisClientsForBlockingCommand.peek();
+            if (peek != null && peek.isIdle() && peek.getAddr().equals(addr)) {
+                RedisClient poll = redisClientsForBlockingCommand.poll();
+                if (poll != null && poll.isIdle() && poll.getAddr().equals(addr)) {
+                    return poll;
+                }
+            }
+        }
+        return null;
     }
 
     public Queue<RedisClient> getRedisClientsForBlockingCommand() {

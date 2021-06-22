@@ -552,10 +552,13 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
             future.complete(ErrorReply.NOT_AVAILABLE);
             return;
         }
-        RedisClient client = RedisClientHub.newClient(node.getAddr());
-        if (client == null) {
-            future.complete(ErrorReply.NOT_AVAILABLE);
-            return;
+        RedisClient client = command.getChannelInfo().tryGetIdleRedisClientForBlockingCommand(node.getAddr());
+        if (client == null || !client.isValid()) {
+            client = RedisClientHub.newClient(node.getAddr());
+            if (client == null) {
+                future.complete(ErrorReply.NOT_AVAILABLE);
+                return;
+            }
         }
         commandFlusher.flush();
         commandFlusher.clear();

@@ -40,6 +40,7 @@ public class RedisClient implements AsyncClient {
 
     private final RedisClientConfig redisClientConfig;
 
+    private final RedisClientAddr addr;
     private final String host;
     private final int port;
     private final String password;
@@ -71,6 +72,7 @@ public class RedisClient implements AsyncClient {
         this.host = config.getHost();
         this.port = config.getPort();
         this.password = config.getPassword();
+        this.addr = new RedisClientAddr(host, port, password);
         this.eventLoopGroup = config.getEventLoopGroup();
         this.heartbeatIntervalSeconds = config.getHeartbeatIntervalSeconds();
         this.heartbeatTimeoutMillis = config.getHeartbeatTimeoutMillis();
@@ -265,6 +267,10 @@ public class RedisClient implements AsyncClient {
     public boolean isValid() {
         if (closing) return false;
         return valid;
+    }
+
+    public RedisClientAddr getAddr() {
+        return addr;
     }
 
     public String getClientName() {
