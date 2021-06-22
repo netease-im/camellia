@@ -2,7 +2,7 @@ package com.netease.nim.camellia.spring.redis.base;
 
 import org.springframework.data.redis.connection.jedis.JedisConnection;
 import redis.clients.jedis.Jedis;
-import redis.clients.util.Pool;
+import redis.clients.jedis.JedisPool;
 
 /**
  *
@@ -13,11 +13,11 @@ public class RedisProxyJedisConnection extends JedisConnection {
         super(jedis);
     }
 
-    public RedisProxyJedisConnection(Jedis jedis, Pool<Jedis> pool) {
+    public RedisProxyJedisConnection(Jedis jedis, JedisPool pool) {
         super(jedis, pool, 0);
     }
 
-    public RedisProxyJedisConnection(Jedis jedis, Pool<Jedis> pool, String clientName) {
+    public RedisProxyJedisConnection(Jedis jedis, JedisPool pool, String clientName) {
         super(jedis, pool, 0, clientName);
     }
 }
