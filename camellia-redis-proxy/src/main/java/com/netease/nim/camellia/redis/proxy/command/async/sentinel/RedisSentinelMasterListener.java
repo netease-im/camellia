@@ -9,9 +9,9 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.util.SafeEncoder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -72,7 +72,7 @@ public class RedisSentinelMasterListener extends Thread {
                     }
                 }
                 if (redisClient.isValid()) {
-                    CompletableFuture<Reply> future1 = redisClient.sendCommand(RedisCommand.SENTINEL.raw(), RedisSentinelUtils.SENTINEL_GET_MASTER_ADDR_BY_NAME, SafeEncoder.encode(master));
+                    CompletableFuture<Reply> future1 = redisClient.sendCommand(RedisCommand.SENTINEL.raw(), RedisSentinelUtils.SENTINEL_GET_MASTER_ADDR_BY_NAME, Utils.stringToBytes(master));
                     Reply getMasterReply = future1.get(10, TimeUnit.SECONDS);
                     HostAndPort hostAndPort = RedisSentinelUtils.processMasterGet(getMasterReply);
                     if (hostAndPort != null) {
@@ -133,9 +133,9 @@ public class RedisSentinelMasterListener extends Thread {
             Reply[] replies = ((MultiBulkReply) reply).getReplies();
             if (replies.length == 3) {
                 BulkReply bulkReply = (BulkReply) replies[0];
-                if (RedisKeyword.MESSAGE.name().toLowerCase().equalsIgnoreCase(SafeEncoder.encode(bulkReply.getRaw()))) {
+                if (RedisKeyword.MESSAGE.name().toLowerCase().equalsIgnoreCase(Utils.bytesToString(bulkReply.getRaw()))) {
                     BulkReply msgReply = (BulkReply) replies[2];
-                    String msg = SafeEncoder.encode(msgReply.getRaw());
+                    String msg = Utils.bytesToString(msgReply.getRaw());
                     String[] switchMasterMsg = msg.split(" ");
                     if (switchMasterMsg.length > 3) {
                         if (master.equals(switchMasterMsg[0])) {

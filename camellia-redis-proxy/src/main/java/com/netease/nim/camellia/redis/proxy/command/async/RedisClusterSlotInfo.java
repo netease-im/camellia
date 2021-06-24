@@ -6,11 +6,11 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.redis.resource.RedisClusterResource;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.util.SafeEncoder;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -123,7 +123,7 @@ public class RedisClusterSlotInfo {
         try {
             client = RedisClientHub.newClient(host, port, password);
             if (client == null || !client.isValid()) return false;
-            CompletableFuture<Reply> future = client.sendCommand(RedisCommand.CLUSTER.raw(), SafeEncoder.encode("slots"));
+            CompletableFuture<Reply> future = client.sendCommand(RedisCommand.CLUSTER.raw(), Utils.stringToBytes("slots"));
             logger.info("tryRenew, client = {}, url = {}", client.getClientName(), redisClusterResource.getUrl());
             Reply reply = future.get(10000, TimeUnit.MILLISECONDS);
             return clusterNodes(reply);
@@ -155,7 +155,7 @@ public class RedisClusterSlotInfo {
                     Reply[] replies2 = master.getReplies();
                     BulkReply host = (BulkReply) replies2[0];
                     IntegerReply port = (IntegerReply)replies2[1];
-                    Node node = new Node(SafeEncoder.encode(host.getRaw()), port.getInteger().intValue(), password);
+                    Node node = new Node(Utils.bytesToString(host.getRaw()), port.getInteger().intValue(), password);
                     nodeSet.add(node);
                     for (long i=slotStart.getInteger(); i<=slotEnd.getInteger(); i++) {
                         slotArray[(int)i] = node;

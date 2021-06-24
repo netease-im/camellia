@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Response;
 import redis.clients.jedis.Tuple;
-import redis.clients.util.SafeEncoder;
 
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -679,7 +678,7 @@ public class RedisHBaseZSetMixClient {
         List<List<Get>> split = split(getList, RedisHBaseConfiguration.hbaseMaxBatch());
         for (List<Get> gets : split) {
             if (RedisHBaseConfiguration.hbaseReadDegraded()) {
-                logger.warn("get original zset member from hbase degraded, key = {}", SafeEncoder.encode(key));
+                logger.warn("get original zset member from hbase degraded, key = {}", Utils.bytesToString(key));
                 RedisHBaseMonitor.incrDegraded("hbase_read_batch_degraded");
             } else {
                 if (FreqUtils.hbaseReadFreq()) {
@@ -711,7 +710,7 @@ public class RedisHBaseZSetMixClient {
                         }
                     } else {
                         logger.warn("get original zset member from hbase fail, key = {}, member-ref-key = {}",
-                                SafeEncoder.encode(key), Bytes.toHex(bytes));
+                                Utils.bytesToString(key), Bytes.toHex(bytes));
                         RedisHBaseMonitor.incrDegraded("hbase_read_missing");
                     }
                 } else {
@@ -765,7 +764,7 @@ public class RedisHBaseZSetMixClient {
                         hit2HBase = true;
                         if (RedisHBaseConfiguration.hbaseReadDegraded()) {
                             logger.warn("get original zset member tuple from hbase degraded, key = {}, member-ref-key = {}",
-                                    SafeEncoder.encode(key), Bytes.toHex(bytes));
+                                    Utils.bytesToString(key), Bytes.toHex(bytes));
                             RedisHBaseMonitor.incrDegraded("hbase_read_degraded");
                         } else {
                             if (FreqUtils.hbaseReadFreq()) {
@@ -781,7 +780,7 @@ public class RedisHBaseZSetMixClient {
                                     list.add(new Tuple(originalValue, tuple.getScore()));
                                 } else {
                                     logger.warn("get original zset member tuple from hbase fail, key = {}, member-ref-key = {}",
-                                            SafeEncoder.encode(key), Bytes.toHex(bytes));
+                                            Utils.bytesToString(key), Bytes.toHex(bytes));
                                     RedisHBaseMonitor.incrDegraded("hbase_read_missing");
                                 }
                             } else {

@@ -6,9 +6,9 @@ import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClientHub;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.util.SafeEncoder;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -64,7 +64,7 @@ public class RedisSentinelSlavesListener extends Thread {
                 }
                 List<HostAndPort> slaves = null;
                 try {
-                    CompletableFuture<Reply> future = redisClient.sendCommand(RedisCommand.SENTINEL.raw(), RedisSentinelUtils.SLAVES, SafeEncoder.encode(master));
+                    CompletableFuture<Reply> future = redisClient.sendCommand(RedisCommand.SENTINEL.raw(), RedisSentinelUtils.SLAVES, Utils.stringToBytes(master));
                     Reply reply = future.get(10, TimeUnit.SECONDS);
                     slaves = RedisSentinelUtils.processSlaves(reply);
                 } catch (Exception e) {

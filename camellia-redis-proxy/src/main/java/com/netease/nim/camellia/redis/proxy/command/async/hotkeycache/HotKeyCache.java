@@ -7,7 +7,6 @@ import com.netease.nim.camellia.redis.proxy.monitor.HotKeyCacheMonitor;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.util.SafeEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -113,13 +112,13 @@ public class HotKeyCache {
                     Object old = refreshLockMap.putIfAbsent(bytesKey, lockObj);
                     if (old == null) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug("try refresh hotKey's value, key = {}", SafeEncoder.encode(bytesKey.getKey()));
+                            logger.debug("try refresh hotKey's value, key = {}", Utils.bytesToString(bytesKey.getKey()));
                         }
                         return null;
                     }
                 }
                 if (logger.isDebugEnabled()) {
-                    logger.debug("getCache of hotKey = {}", SafeEncoder.encode(bytesKey.getKey()));
+                    logger.debug("getCache of hotKey = {}", Utils.bytesToString(bytesKey.getKey()));
                 }
                 if (callback != null) {
                     AtomicLong hit = CamelliaMapUtils.computeIfAbsent(statsMap, bytesKey, k -> new AtomicLong());
@@ -148,7 +147,7 @@ public class HotKeyCache {
         lastRefreshTimeMap.put(bytesKey, TimeCache.currentMillis);
         refreshLockMap.remove(bytesKey);
         if (logger.isDebugEnabled()) {
-            logger.debug("refresh hotKey's value success, key = {}", SafeEncoder.encode(bytesKey.getKey()));
+            logger.debug("refresh hotKey's value success, key = {}", Utils.bytesToString(bytesKey.getKey()));
         }
     }
 

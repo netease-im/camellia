@@ -13,12 +13,12 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.util.SafeEncoder;
 
 import java.util.Collections;
 import java.util.List;
@@ -112,7 +112,7 @@ public class RedisClient implements AsyncClient {
             if (password != null) {
                 logger.info("{} need password, try auth", clientName);
                 boolean authSuccess = false;
-                CompletableFuture<Reply> future = sendCommand(RedisCommand.AUTH.raw(), SafeEncoder.encode(password));
+                CompletableFuture<Reply> future = sendCommand(RedisCommand.AUTH.raw(), Utils.stringToBytes(password));
                 Reply reply = future.get(connectTimeoutMillis, TimeUnit.MILLISECONDS);
                 if (reply instanceof StatusReply) {
                     if (((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.OK.getStatus())) {
@@ -190,7 +190,7 @@ public class RedisClient implements AsyncClient {
                 if (replies.length > 0) {
                     Reply reply1 = replies[0];
                     if (reply1 instanceof BulkReply) {
-                        if (SafeEncoder.encode(((BulkReply) reply1).getRaw()).equalsIgnoreCase(StatusReply.PONG.getStatus())) {
+                        if (Utils.bytesToString(((BulkReply) reply1).getRaw()).equalsIgnoreCase(StatusReply.PONG.getStatus())) {
                             return true;
                         }
                     }

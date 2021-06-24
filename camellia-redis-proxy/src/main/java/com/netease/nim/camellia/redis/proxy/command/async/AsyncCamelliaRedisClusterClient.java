@@ -13,7 +13,6 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.redis.resource.RedisClusterResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.util.SafeEncoder;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -72,7 +71,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                 if (client != null) {
                     client.sendCommand(commands, Collections.singletonList(new CompletableFutureWrapper(this, futureList.get(0), command)));
                     if (logger.isDebugEnabled()) {
-                        logger.debug("sendCommand, command = {}, key = {}, slot = {}", command.getName(), SafeEncoder.encode(key), slot);
+                        logger.debug("sendCommand, command = {}, key = {}, slot = {}", command.getName(), Utils.bytesToString(key), slot);
                     }
                     return;
                 }
@@ -225,7 +224,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
 
             RedisClient client = getClient(slot);
             if (logger.isDebugEnabled()) {
-                logger.debug("sendCommand, command = {}, key = {}, slot = {}", command.getName(), SafeEncoder.encode(key), slot);
+                logger.debug("sendCommand, command = {}, key = {}, slot = {}", command.getName(), Utils.bytesToString(key), slot);
             }
             CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, future, command);
             commandFlusher.sendCommand(client, command, futureWrapper);

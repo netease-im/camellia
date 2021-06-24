@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.command.async.sentinel;
 
-import com.netease.nim.camellia.redis.jedis.JedisSentinelSlavesPool;
 import com.netease.nim.camellia.redis.proxy.command.async.HostAndPort;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClientHub;
@@ -8,9 +7,9 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.util.SafeEncoder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,9 +26,9 @@ public class RedisSentinelUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisSentinelUtils.class);
 
-    public static final byte[] SENTINEL_GET_MASTER_ADDR_BY_NAME = SafeEncoder.encode("get-master-addr-by-name");
-    public static final byte[] MASTER_SWITCH = SafeEncoder.encode("+switch-master");
-    public static final byte[] SLAVES = SafeEncoder.encode("slaves");
+    public static final byte[] SENTINEL_GET_MASTER_ADDR_BY_NAME = Utils.stringToBytes("get-master-addr-by-name");
+    public static final byte[] MASTER_SWITCH = Utils.stringToBytes("+switch-master");
+    public static final byte[] SLAVES = Utils.stringToBytes("slaves");
 
     public static RedisSentinelMasterResponse getMasterAddr(String host, int port, String masterName) {
         RedisClient redisClient = null;
@@ -39,7 +38,7 @@ public class RedisSentinelUtils {
             redisClient = RedisClientHub.newClient(host, port, null);
             if (redisClient != null && redisClient.isValid()) {
                 sentinelAvailable = true;
-                CompletableFuture<Reply> future = redisClient.sendCommand(RedisCommand.SENTINEL.raw(), SENTINEL_GET_MASTER_ADDR_BY_NAME, SafeEncoder.encode(masterName));
+                CompletableFuture<Reply> future = redisClient.sendCommand(RedisCommand.SENTINEL.raw(), SENTINEL_GET_MASTER_ADDR_BY_NAME, Utils.stringToBytes(masterName));
                 Reply reply = future.get(10, TimeUnit.SECONDS);
                 master = processMasterGet(reply);
             }
@@ -62,7 +61,7 @@ public class RedisSentinelUtils {
             redisClient = RedisClientHub.newClient(host, port, null);
             if (redisClient != null && redisClient.isValid()) {
                 sentinelAvailable = true;
-                CompletableFuture<Reply> future = redisClient.sendCommand(RedisCommand.SENTINEL.raw(), SLAVES, SafeEncoder.encode(masterName));
+                CompletableFuture<Reply> future = redisClient.sendCommand(RedisCommand.SENTINEL.raw(), SLAVES, Utils.stringToBytes(masterName));
                 Reply reply = future.get(10, TimeUnit.SECONDS);
                 slaves = processSlaves(reply);
             }
@@ -111,8 +110,8 @@ public class RedisSentinelUtils {
             if (replies != null && replies.length == 2) {
                 BulkReply hostReply = (BulkReply) replies[0];
                 BulkReply portReply = (BulkReply) replies[1];
-                String redisHost = SafeEncoder.encode(hostReply.getRaw());
-                int redisPort = Integer.parseInt(SafeEncoder.encode(portReply.getRaw()));
+                String redisHost = Utils.bytesToString(hostReply.getRaw());
+                int redisPort = Integer.parseInt(Utils.bytesToString(portReply.getRaw()));
                 return new HostAndPort(redisHost, redisPort);
             }
         }

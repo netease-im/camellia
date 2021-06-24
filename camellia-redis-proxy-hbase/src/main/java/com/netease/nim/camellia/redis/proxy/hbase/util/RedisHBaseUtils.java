@@ -2,9 +2,9 @@ package com.netease.nim.camellia.redis.proxy.hbase.util;
 
 import com.netease.nim.camellia.core.util.MD5Util;
 import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
-import redis.clients.util.SafeEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,7 @@ public class RedisHBaseUtils {
     public static final byte[] COL_DATA = Bytes.toBytes("data");
 
     public static byte[] redisKey(byte[] key) {
-        return Bytes.add(SafeEncoder.encode(RedisHBaseConfiguration.redisKeyPrefix()), key);
+        return Bytes.add(Utils.stringToBytes(RedisHBaseConfiguration.redisKeyPrefix()), key);
     }
 
     public static <T> List<List<T>> split(List<T> list, int maxSplit) {

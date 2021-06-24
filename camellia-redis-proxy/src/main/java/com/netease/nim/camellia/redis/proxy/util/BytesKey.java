@@ -1,7 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
-import redis.clients.util.SafeEncoder;
-
 import java.util.Arrays;
 
 /**
@@ -44,6 +42,6 @@ public class BytesKey {
 
     @Override
     public String toString() {
-        return SafeEncoder.encode(key);
+        return Utils.bytesToString(key);
     }
 }

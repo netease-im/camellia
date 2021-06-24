@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.enums;
 
-import redis.clients.util.SafeEncoder;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -240,7 +240,7 @@ public enum RedisCommand {
     private final CommandType commandType;
 
     RedisCommand(CommandSupportType supportType, Type type, CommandType commandType, boolean blocking, CommandKeyType commandKeyType) {
-        this.raw = SafeEncoder.encode(name());
+        this.raw = Utils.stringToBytes(name());
         this.supportType = supportType;
         this.type = type;
         this.commandType = commandType;

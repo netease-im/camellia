@@ -124,6 +124,11 @@ public class Utils {
         return new String(bytes, utf8Charset);
     }
 
+    public static byte[] stringToBytes(String s) {
+        if (s == null) return null;
+        return s.getBytes(utf8Charset);
+    }
+
     public static IllegalArgumentException illegalArgumentException() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         if (stackTrace.length > 4) {
