@@ -15,6 +15,7 @@ public enum RedisCommand {
      * FULL_SUPPORT
      */
     PING(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
+    INFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
     AUTH(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
     QUIT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
     SET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
@@ -211,7 +212,6 @@ public enum RedisCommand {
     BGREWRITEAOF(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     LASTSAVE(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     SHUTDOWN(CommandSupportType.NOT_SUPPORT, null, null, false, null),
-    INFO(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     MONITOR(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     SLAVEOF(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     CONFIG(CommandSupportType.NOT_SUPPORT, null, null, false, null),

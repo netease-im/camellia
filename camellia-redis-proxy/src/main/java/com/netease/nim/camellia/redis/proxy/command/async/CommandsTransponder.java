@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterMan
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCache;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheManager;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotValue;
+import com.netease.nim.camellia.redis.proxy.command.async.info.InfoUtils;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
@@ -118,6 +119,12 @@ public class CommandsTransponder {
 
                 if (redisCommand == RedisCommand.PING) {
                     task.replyCompleted(StatusReply.PONG);
+                    hasCommandsSkip = true;
+                    continue;
+                }
+
+                if (redisCommand == RedisCommand.INFO) {
+                    task.replyCompleted(InfoUtils.getInfoReply());
                     hasCommandsSkip = true;
                     continue;
                 }

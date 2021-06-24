@@ -114,6 +114,14 @@ public class RedisMonitor {
         }
     }
 
+    public static ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> getTemplateMap() {
+        return templateMap;
+    }
+
+    public static ConcurrentHashMap<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> getRedisClientMap() {
+        return redisClientMap;
+    }
+
     private static ConcurrentHashMap<String, RedisClient> getRedisClientSubMap(RedisClient redisClient) {
         RedisClientConfig config = redisClient.getRedisClientConfig();
         RedisClientAddr addr = new RedisClientAddr(config.getHost(), config.getPort(), config.getPassword());
