@@ -73,19 +73,19 @@ public class ChannelInfo {
         boolean offer = redisClientsForBlockingCommand.offer(redisClient);
         while (!offer) {
             RedisClient oldClient = redisClientsForBlockingCommand.poll();
-            if (oldClient != null) {
+            if (oldClient != null && oldClient.isIdle()) {
                 oldClient.stop(true);
             }
             offer = redisClientsForBlockingCommand.offer(redisClient);
         }
     }
 
-    public RedisClient tryGetIdleRedisClientForBlockingCommand(RedisClientAddr addr) {
-        if (redisClientsForBlockingCommand != null && redisClientsForBlockingCommand.size() > 1) {
+    public RedisClient tryGetExistsRedisClientForBlockingCommand(RedisClientAddr addr) {
+        if (redisClientsForBlockingCommand != null && !redisClientsForBlockingCommand.isEmpty()) {
             RedisClient peek = redisClientsForBlockingCommand.peek();
-            if (peek != null && peek.isIdle() && peek.getAddr().equals(addr)) {
+            if (peek != null && peek.getAddr().equals(addr)) {
                 RedisClient poll = redisClientsForBlockingCommand.poll();
-                if (poll != null && poll.isIdle() && poll.getAddr().equals(addr)) {
+                if (poll != null && poll.getAddr().equals(addr)) {
                     return poll;
                 }
             }

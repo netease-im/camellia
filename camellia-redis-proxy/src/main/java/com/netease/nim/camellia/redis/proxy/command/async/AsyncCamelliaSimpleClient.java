@@ -162,7 +162,7 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
             return;
         }
         Command lastBlockingCommand = commands.get(commands.size() - 1);
-        RedisClient client = lastBlockingCommand.getChannelInfo().tryGetIdleRedisClientForBlockingCommand(addr);
+        RedisClient client = lastBlockingCommand.getChannelInfo().tryGetExistsRedisClientForBlockingCommand(addr);
         if (client == null || !client.isValid()) {
             client = RedisClientHub.newClient(addr);
         }
