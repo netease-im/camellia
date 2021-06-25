@@ -190,7 +190,7 @@ application.yml中的部分配置支持进程启动期间进行动态修改，�
 ```
 127.0.0.1:6380> info
 # Server
-camellia_redis_proxy_version:v1.0.28
+camellia_redis_proxy_version:v1.0.29
 available_processors:4
 arch:amd64
 os_name:Linux
