@@ -24,6 +24,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持热key在proxy层的本地缓存（仅支持GET命令），支持设置HotKeyCacheStatsCallback
 * 支持大key监控，支持设置BigKeyMonitorCallback
 * 支持监控配置（如开关、阈值等）的在线变更
+* 支持info命令获取服务器相关信息
 * 提供了一个httpAPI用于获取监控指标数据
 * 提供了一个spring-boot-starter，可以快速搭建proxy集群
 * 提供了一个默认的注册发现实现组件（依赖zookeeper），如果端侧是java，则可以很简单的将JedisPool替换为RedisProxyJedisPool，即可接入redis proxy  
@@ -239,6 +240,7 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 热key缓存功能
 * 通过httpAPI获取监控数据
 * 监控配置的动态修改
+* 通过info命令获取服务器相关信息
 
 具体可见：[监控](monitor.md)
 

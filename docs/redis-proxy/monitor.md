@@ -7,6 +7,7 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 热key缓存功能
 * 通过httpAPI获取监控数据
 * 监控配置的动态修改
+* 通过info命令获取服务器相关信息
 
 ### 请求tps、请求rt
 默认是关闭的，你可以这样打开：
@@ -138,6 +139,7 @@ camellia-redis-proxy:
   password: pass123   #proxy的密码
   monitor-enable: true  #是否开启监控
   monitor-interval-seconds: 60 #监控回调的间隔
+  monitor-data-mask-password: false #监控相关数据（包括日志）是否把密码隐藏，默认false（例：用***代替abc）
   monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback #监控回调类
   command-spend-time-monitor-enable: true #是否开启请求耗时的监控，只有monitor-enable=true才有效
   slow-command-threshold-millis-time: 1000 #慢查询的阈值，单位毫秒，只有command-spend-time-monitor-enable=true才有效
@@ -183,3 +185,64 @@ camellia-redis-zk-registry: #需要引入相关的依赖才有效
   base-path: /camellia #注册到zk的base-path
 ```
 application.yml中的部分配置支持进程启动期间进行动态修改，详见[动态配置](dynamic-conf.md)
+
+## 通过info命令获取服务器相关信息
+```
+127.0.0.1:6380> info
+# Server
+camellia_redis_proxy_version:v1.0.28
+available_processors:4
+arch:amd64
+os_name:Linux
+os_version:4.9.0-3-amd64
+system_load_average:0.22
+tcp_port:6380
+uptime_in_seconds:295
+uptime_in_days:0
+vm_vendor:Oracle Corporation
+vm_name:Java HotSpot(TM) 64-Bit Server VM
+vm_version:25.202-b08
+jvm.info:mixed mode
+java_version:1.8.0_202
+
+# Clients
+connect_clients:14
+
+# Route
+route_nums:6
+route_conf_20_default:redis://***********@10.201.48.171:6379
+route_conf_1_default:redis-cluster://@10.177.0.64:8801,10.177.0.64:8802,10.177.0.65:8803,10.177.0.65:8804,10.177.0.66:8805,10.177.0.66:8806
+route_conf_11_default:redis://***********@10.201.48.171:6379
+route_conf_27_default:redis://***********@10.201.48.171:6379
+route_conf_9_default:redis://***********@10.201.48.171:6379
+route_conf_3_default:{"type":"simple","operation":{"read":"redis-cluster://@10.177.0.64:8801,10.177.0.64:8802,10.177.0.65:8803,10.177.0.65:8804,10.177.0.66:8805,10.177.0.66:8806","type":"rw_separate","write":{"resources":["redis-cluster://@10.177.0.64:8801,10.177.0.64:8802,10.177.0.65:8803,10.177.0.65:8804,10.177.0.66:8805,10.177.0.66:8806","redis://***********@10.201.48.171:6379"],"type":"multi"}}}
+
+# Upstream
+upstream_redis_nums:17
+upstream_redis_nums[@10.177.0.69:8803]:4
+upstream_redis_nums[***********@10.201.48.171:6379]:5
+upstream_redis_nums[@10.177.0.64:8802]:4
+upstream_redis_nums[@10.177.0.64:8801]:4
+
+# Memory
+free_memory:220528656
+total_memory:536870912
+max_memory:536870912
+heap_memory_init:536870912
+heap_memory_used:316340208
+heap_memory_max:536870912
+heap_memory_committed:536870912
+non_heap_memory_init:2555904
+non_heap_memory_used:87099904
+non_heap_memory_max:-1
+non_heap_memory_committed:89161728
+
+# GC
+young_gc_name:G1 Young Generation
+young_gc_collection_count:6
+young_gc_collection_time:97
+old_gc_name:G1 Old Generation
+old_gc_collection_count:0
+old_gc_collection_time:0
+
+```

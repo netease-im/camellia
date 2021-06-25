@@ -5,6 +5,17 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
+# 1.0.28（2021/06/xx）
+### add
+* support info command to get server info
+* support setting monitor-data-mask-password conf, you can mask password in log and monitor data
+
+### update
+* none
+
+### fix
+* fix not_available when use pipeline submit batch blocking commands
+
 # 1.0.27（2021/06/22）
 ### add
 * none
