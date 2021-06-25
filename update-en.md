@@ -5,6 +5,17 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
+# 1.0.29（2021/06/xx）
+### add
+* none
+
+### update
+* none
+
+### fix
+* fix occasional not_available when use blocking commands
+
+
 # 1.0.28（2021/06/25）
 ### add
 * support info command to get server info
