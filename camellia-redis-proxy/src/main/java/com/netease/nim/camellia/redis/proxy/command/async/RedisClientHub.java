@@ -362,12 +362,16 @@ public class RedisClientHub {
                             redisClient.getClientName(), delaySeconds);
                     redisClient.markClosing();
                     ExecutorUtils.newTimeout(timeout -> {
-                        //double check
-                        if (redisClient.isIdle()) {
-                            logger.info("{} will close because connection is idle", redisClient.getClientName());
-                            redisClient.stop(true);
-                        } else {
-                            checkIdleAndStop(redisClient);
+                        try {
+                            //double check
+                            if (redisClient.isIdle()) {
+                                logger.info("{} will close because connection is idle", redisClient.getClientName());
+                                redisClient.stop(true);
+                            } else {
+                                checkIdleAndStop(redisClient);
+                            }
+                        } catch (Exception e) {
+                            logger.error(e.getMessage(), e);
                         }
                     }, delaySeconds, TimeUnit.SECONDS);
                     return true;
