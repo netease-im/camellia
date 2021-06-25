@@ -5,7 +5,7 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
-# 1.0.28（2021/06/xx）
+# 1.0.28（2021/06/25）
 ### 新增
 * 新增info命令获取服务器相关信息，具体见：[监控](/docs/redis-proxy/monitor.md)
 * 新增monitor-data-mask-password配置，用于隐藏日志和监控数据中的密码，具体见：[监控](/docs/redis-proxy/monitor.md)
