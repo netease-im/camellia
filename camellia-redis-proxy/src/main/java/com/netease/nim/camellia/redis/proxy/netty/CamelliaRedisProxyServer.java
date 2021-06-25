@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
-import com.netease.nim.camellia.redis.proxy.command.async.info.InfoUtils;
+import com.netease.nim.camellia.redis.proxy.command.async.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import io.netty.bootstrap.ServerBootstrap;
@@ -72,6 +72,6 @@ public class CamelliaRedisProxyServer {
                 });
         serverBootstrap.bind(serverProperties.getPort()).sync();
         logger.info("CamelliaRedisProxyServer start at port: {}", serverProperties.getPort());
-        InfoUtils.updatePort(serverProperties.getPort());
+        ProxyInfoUtils.updatePort(serverProperties.getPort());
     }
 }

@@ -24,6 +24,8 @@ public class CamelliaServerProperties {
     private boolean bigKeyMonitorEnable = Constants.Server.bigKeyMonitorEnable;
     private BigKeyMonitorConfig bigKeyMonitorConfig;
     private String proxyDynamicConfHookClassName;
+    private boolean monitorDataMaskPassword = Constants.Server.monitorDataMaskPassword;
+
 
     private int bossThread = 1;
     private int workThread = Constants.Server.workThread;
@@ -241,6 +243,14 @@ public class CamelliaServerProperties {
 
     public void setProxyDynamicConfHookClassName(String proxyDynamicConfHookClassName) {
         this.proxyDynamicConfHookClassName = proxyDynamicConfHookClassName;
+    }
+
+    public boolean isMonitorDataMaskPassword() {
+        return monitorDataMaskPassword;
+    }
+
+    public void setMonitorDataMaskPassword(boolean monitorDataMaskPassword) {
+        this.monitorDataMaskPassword = monitorDataMaskPassword;
     }
 
     public static class HotKeyMonitorConfig {

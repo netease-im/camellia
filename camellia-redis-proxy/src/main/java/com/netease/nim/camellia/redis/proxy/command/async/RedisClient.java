@@ -4,6 +4,7 @@ import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.ClientHandler;
 import com.netease.nim.camellia.redis.proxy.netty.CommandPack;
@@ -80,7 +81,13 @@ public class RedisClient implements AsyncClient {
         this.closeIdleConnection = config.isCloseIdleConnection();
         this.checkIdleThresholdSeconds = config.getCheckIdleConnectionThresholdSeconds();
         this.closeIdleConnectionDelaySeconds = config.getCloseIdleConnectionDelaySeconds();
-        this.clientName = "RedisClient[" + (password == null ? "" : password) + "@" + host + ":" + port + "][id=" + id.incrementAndGet() + "]";
+        if (PasswordMaskUtils.maskEnable) {
+            this.clientName = "RedisClient[" + (password == null ? "" : PasswordMaskUtils.maskStr(password.length()))
+                    + "@" + host + ":" + port + "][id=" + id.incrementAndGet() + "]";
+        } else {
+            this.clientName = "RedisClient[" + (password == null ? "" : password)
+                    + "@" + host + ":" + port + "][id=" + id.incrementAndGet() + "]";
+        }
     }
 
     public void start() {

@@ -94,6 +94,7 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setBigKeyMonitorConfig(config1);
         serverProperties.setBigKeyMonitorEnable(properties.isBigKeyMonitorEnable());
         serverProperties.setProxyDynamicConfHookClassName(properties.getProxyDynamicConfHookClassName());
+        serverProperties.setMonitorDataMaskPassword(properties.isMonitorDataMaskPassword());
         return serverProperties;
     }
 

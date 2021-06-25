@@ -102,6 +102,11 @@ public class CamelliaRedisProxyProperties {
     private String proxyDynamicConfHookClassName;
 
     /**
+     * 监控数据是否暴露密码
+     */
+    private boolean monitorDataMaskPassword = Constants.Server.monitorDataMaskPassword;
+
+    /**
      * netty相关参数
      */
     private NettyProperties netty = new NettyProperties();
@@ -269,6 +274,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setProxyDynamicConfHookClassName(String proxyDynamicConfHookClassName) {
         this.proxyDynamicConfHookClassName = proxyDynamicConfHookClassName;
+    }
+
+    public boolean isMonitorDataMaskPassword() {
+        return monitorDataMaskPassword;
+    }
+
+    public void setMonitorDataMaskPassword(boolean monitorDataMaskPassword) {
+        this.monitorDataMaskPassword = monitorDataMaskPassword;
     }
 
     public static class HotKeyMonitorConfig {

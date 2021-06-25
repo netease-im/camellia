@@ -60,6 +60,8 @@ public class Constants {
         public static final int bigKeyHashSizeThreshold = 10000;
         public static final int bigKeySetSizeThreshold = 10000;
         public static final String bigKeyMonitorCallbackClassName = LoggingBigKeyMonitorCallback.class.getName();
+
+        public static final boolean monitorDataMaskPassword = false;//对外暴露的监控数据是否把密码隐藏（用*代替）
     }
 
     public static class Transpond {

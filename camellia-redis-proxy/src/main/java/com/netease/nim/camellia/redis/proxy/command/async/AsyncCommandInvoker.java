@@ -10,10 +10,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCach
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
-import com.netease.nim.camellia.redis.proxy.monitor.BigKeyMonitor;
-import com.netease.nim.camellia.redis.proxy.monitor.HotKeyCacheMonitor;
-import com.netease.nim.camellia.redis.proxy.monitor.HotKeyMonitor;
-import com.netease.nim.camellia.redis.proxy.monitor.SlowCommandMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import io.netty.channel.ChannelHandlerContext;
@@ -65,6 +62,7 @@ public class AsyncCommandInvoker implements CommandInvoker {
             bigKeyHunter = new BigKeyHunter(commandBigKeyMonitorConfig);
         }
         this.commandInvokeConfig = new CommandInvokeConfig(commandInterceptor, commandSpendTimeConfig, hotKeyCacheManager, hotKeyHunterManager, bigKeyHunter);
+        PasswordMaskUtils.maskEnable = serverProperties.isMonitorDataMaskPassword();
     }
 
     private static final FastThreadLocal<CommandsTransponder> threadLocal = new FastThreadLocal<>();

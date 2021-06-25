@@ -114,6 +114,10 @@ public class RedisMonitor {
         }
     }
 
+    public static int getClientConnects() {
+        return ChannelMonitor.getChannelMap().size();
+    }
+
     public static ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> getTemplateMap() {
         return templateMap;
     }
@@ -501,7 +505,7 @@ public class RedisMonitor {
                 if (!split[1].equals("null")) {
                     bgroup = split[1];
                 }
-                String url = split[2];
+                String url = PasswordMaskUtils.maskResource(split[2]);
                 String command = split[3];
                 Stats.ResourceBidBgroupCommandStats stats = new Stats.ResourceBidBgroupCommandStats();
                 stats.setBid(bid);
@@ -559,7 +563,7 @@ public class RedisMonitor {
                 if (!split[1].equals("null")) {
                     bgroup = split[1];
                 }
-                String resourceTable = ReadableResourceTableUtil.readableResourceTable(entry.getValue().getResourceTable());
+                String resourceTable = ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(entry.getValue().getResourceTable()));
                 Stats.RouteConf routeConf = new Stats.RouteConf();
                 routeConf.setBid(bid);
                 routeConf.setBgroup(bgroup);
@@ -576,7 +580,7 @@ public class RedisMonitor {
                 if (subMap.isEmpty()) continue;
                 redisConnectStats.setConnectCount(redisConnectStats.getConnectCount() + subMap.size());
                 Stats.RedisConnectStats.Detail detail = new Stats.RedisConnectStats.Detail();
-                detail.setAddr(key.getUrl());
+                detail.setAddr(PasswordMaskUtils.maskAddr(key.getUrl()));
                 detail.setConnectCount(subMap.size());
                 detailList.add(detail);
             }
