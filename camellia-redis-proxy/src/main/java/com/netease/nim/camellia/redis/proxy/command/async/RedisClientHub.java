@@ -83,6 +83,28 @@ public class RedisClientHub {
         }
     }
 
+    public static CompletableFuture<RedisClient> newAsync(String host, int port, String password) {
+        CompletableFuture<RedisClient> future = new CompletableFuture<>();
+        try {
+            redisClientAsyncInitExec.submit(() -> {
+                try {
+                    RedisClient redisClient = newClient(host, port, password);
+                    future.complete(redisClient);
+                } catch (Exception e) {
+                    ErrorLogCollector.collect(RedisClientHub.class,
+                            "new RedisClient async error, host = " + host + ",port=" + port + ",password=" + password, e);
+                    future.complete(null);
+                }
+            });
+            return future;
+        } catch (Exception e) {
+            ErrorLogCollector.collect(RedisClientHub.class,
+                    "new RedisClient async error, host = " + host + ",port=" + port + ",password=" + password, e);
+            future.complete(null);
+            return future;
+        }
+    }
+
     public static CompletableFuture<RedisClient> getAsync(String host, int port, String password) {
         CompletableFuture<RedisClient> future = new CompletableFuture<>();
         try {
@@ -145,6 +167,8 @@ public class RedisClientHub {
             config.setHeartbeatIntervalSeconds(-1);
             config.setConnectTimeoutMillis(connectTimeoutMillis);
             config.setCloseIdleConnection(false);
+            config.setCloseIdleConnectionDelaySeconds(closeIdleConnectionDelaySeconds);
+            config.setCheckIdleConnectionThresholdSeconds(checkIdleConnectionThresholdSeconds);
             RedisClient client = new RedisClient(config);
             client.start();
             if (client.isValid()) {
@@ -300,6 +324,7 @@ public class RedisClientHub {
 
     public static void checkIdleAndStop(RedisClient redisClient) {
         try {
+            redisClient.checkClientLastCommandTime();
             submitIdleCheckTask(new CheckIdleAndStopTask(redisClient));
         } catch (Exception e) {
             logger.error("checkIdleAndStop error, client = {}", redisClient.getClientName(), e);
@@ -332,7 +357,19 @@ public class RedisClientHub {
                     return true;
                 }
                 if (redisClient.isIdle()) {
-                    ExecutorUtils.newTimeout(timeout -> redisClient.stop(true), 1, TimeUnit.MINUTES);
+                    int delaySeconds = closeIdleConnectionDelaySeconds <= 0 ? Constants.Transpond.closeIdleConnectionDelaySeconds : closeIdleConnectionDelaySeconds;
+                    logger.info("{} will close after {} seconds because connection is idle",
+                            redisClient.getClientName(), delaySeconds);
+                    redisClient.markClosing();
+                    ExecutorUtils.newTimeout(timeout -> {
+                        //double check
+                        if (redisClient.isIdle()) {
+                            logger.info("{} will close because connection is idle", redisClient.getClientName());
+                            redisClient.stop(true);
+                        } else {
+                            checkIdleAndStop(redisClient);
+                        }
+                    }, delaySeconds, TimeUnit.SECONDS);
                     return true;
                 } else {
                     return false;

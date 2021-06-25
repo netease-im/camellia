@@ -271,31 +271,65 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                             ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class, log);
                             clusterClient.clusterSlotInfo.renew();
                             String[] strings = parseTargetHostAndSlot(error);
-                            RedisClient redisClient = RedisClientHub.tryGet(strings[1], Integer.parseInt(strings[2]), clusterClient.redisClusterResource.getPassword());
-                            if (redisClient != null) {
-                                ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
-                                        "MOVED, [RedisClient tryGet success], command = " + command.getName() + ", attempts = " + attempts);
-                                redisClient.sendCommand(Collections.singletonList(command), Collections.singletonList(this));
-                            } else {
-                                CompletableFuture<RedisClient> future = RedisClientHub.getAsync(strings[1], Integer.parseInt(strings[2]), clusterClient.redisClusterResource.getPassword());
-                                future.thenAccept(client -> {
-                                    try {
-                                        if (client == null) {
+                            RedisClientAddr addr = new RedisClientAddr(strings[1], Integer.parseInt(strings[2]), clusterClient.redisClusterResource.getPassword());
+                            if (command.isBlocking()) {
+                                RedisClient redisClient = command.getChannelInfo().tryGetExistsRedisClientForBlockingCommand(addr);
+                                if (redisClient != null && redisClient.isValid()) {
+                                    ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                            "MOVED, [BlockingCommand] [RedisClient tryGet success], command = " + command.getName() + ", attempts = " + attempts);
+                                    redisClient.sendCommand(Collections.singletonList(command), Collections.singletonList(this));
+                                    RedisClientHub.checkIdleAndStop(redisClient);
+                                    command.getChannelInfo().addRedisClientForBlockingCommand(redisClient);
+                                } else {
+                                    CompletableFuture<RedisClient> future = RedisClientHub.newAsync(addr.getHost(), addr.getPort(), addr.getPassword());
+                                    future.thenAccept(client -> {
+                                        try {
+                                            if (client == null) {
+                                                ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                        "MOVED, [BlockingCommand] [RedisClient newAsync fail], command = " + command.getName() + ", attempts = " + attempts);
+                                                clusterClient.clusterSlotInfo.renew();
+                                                CompletableFutureWrapper.this.future.complete(reply);
+                                            } else {
+                                                ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                        "MOVED, [BlockingCommand] [RedisClient newAsync success], command = " + command.getName() + ", attempts = " + attempts);
+                                                client.sendCommand(Collections.singletonList(command), Collections.singletonList(CompletableFutureWrapper.this));
+                                                RedisClientHub.checkIdleAndStop(client);
+                                                command.getChannelInfo().addRedisClientForBlockingCommand(client);
+                                            }
+                                        } catch (Exception e) {
                                             ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
-                                                    "MOVED, [RedisClient getAsync fail], command = " + command.getName() + ", attempts = " + attempts);
-                                            clusterClient.clusterSlotInfo.renew();
+                                                    "MOVED, [BlockingCommand] [RedisClient newAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
                                             CompletableFutureWrapper.this.future.complete(reply);
-                                        } else {
-                                            ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
-                                                    "MOVED, [RedisClient getAsync success], command = " + command.getName() + ", attempts = " + attempts);
-                                            client.sendCommand(Collections.singletonList(command), Collections.singletonList(CompletableFutureWrapper.this));
                                         }
-                                    } catch (Exception e) {
-                                        ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
-                                                "MOVED, [RedisClient getAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
-                                        CompletableFutureWrapper.this.future.complete(reply);
-                                    }
-                                });
+                                    });
+                                }
+                            } else {
+                                RedisClient redisClient = RedisClientHub.tryGet(addr.getHost(), addr.getPort(), addr.getPassword());
+                                if (redisClient != null) {
+                                    ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                            "MOVED, [RedisClient tryGet success], command = " + command.getName() + ", attempts = " + attempts);
+                                    redisClient.sendCommand(Collections.singletonList(command), Collections.singletonList(this));
+                                } else {
+                                    CompletableFuture<RedisClient> future = RedisClientHub.getAsync(addr.getHost(), addr.getPort(), addr.getPassword());
+                                    future.thenAccept(client -> {
+                                        try {
+                                            if (client == null) {
+                                                ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                        "MOVED, [RedisClient getAsync fail], command = " + command.getName() + ", attempts = " + attempts);
+                                                clusterClient.clusterSlotInfo.renew();
+                                                CompletableFutureWrapper.this.future.complete(reply);
+                                            } else {
+                                                ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                        "MOVED, [RedisClient getAsync success], command = " + command.getName() + ", attempts = " + attempts);
+                                                client.sendCommand(Collections.singletonList(command), Collections.singletonList(CompletableFutureWrapper.this));
+                                            }
+                                        } catch (Exception e) {
+                                            ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                    "MOVED, [RedisClient getAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
+                                            CompletableFutureWrapper.this.future.complete(reply);
+                                        }
+                                    });
+                                }
                             }
                             return true;
                         } else if (error.startsWith("ASK")) {
@@ -303,31 +337,65 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                             String log = "ASK, command = " + command.getName() + ", attempts = " + attempts;
                             ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class, log);
                             String[] strings = parseTargetHostAndSlot(error);
-                            RedisClient redisClient = RedisClientHub.tryGet(strings[1], Integer.parseInt(strings[2]), clusterClient.redisClusterResource.getPassword());
-                            if (redisClient != null) {
-                                ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
-                                        "ASK, [RedisClient tryGet success], command = " + command.getName() + ", attempts = " + attempts);
-                                redisClient.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), this));
-                            } else {
-                                CompletableFuture<RedisClient> future = RedisClientHub.getAsync(strings[1], Integer.parseInt(strings[2]), clusterClient.redisClusterResource.getPassword());
-                                future.thenAccept(client -> {
-                                    try {
-                                        if (client == null) {
+                            RedisClientAddr addr = new RedisClientAddr(strings[1], Integer.parseInt(strings[2]), clusterClient.redisClusterResource.getPassword());
+                            if (command.isBlocking()) {
+                                RedisClient redisClient = command.getChannelInfo().tryGetExistsRedisClientForBlockingCommand(addr);
+                                if (redisClient != null && redisClient.isValid()) {
+                                    ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                            "ASK, [BlockingCommand] [RedisClient tryGet success], command = " + command.getName() + ", attempts = " + attempts);
+                                    redisClient.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), this));
+                                    RedisClientHub.checkIdleAndStop(redisClient);
+                                    command.getChannelInfo().addRedisClientForBlockingCommand(redisClient);
+                                } else {
+                                    CompletableFuture<RedisClient> future = RedisClientHub.newAsync(addr.getHost(), addr.getPort(), addr.getPassword());
+                                    future.thenAccept(client -> {
+                                        try {
+                                            if (client == null) {
+                                                ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                        "ASK, [BlockingCommand] [RedisClient newAsync fail], command = " + command.getName() + ", attempts = " + attempts);
+                                                clusterClient.clusterSlotInfo.renew();
+                                                CompletableFutureWrapper.this.future.complete(reply);
+                                            } else {
+                                                ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                        "ASK, [BlockingCommand] [RedisClient newAsync success], command = " + command.getName() + ", attempts = " + attempts);
+                                                client.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), CompletableFutureWrapper.this));
+                                                RedisClientHub.checkIdleAndStop(client);
+                                                command.getChannelInfo().addRedisClientForBlockingCommand(client);
+                                            }
+                                        } catch (Exception e) {
                                             ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
-                                                    "ASK, [RedisClient getAsync fail], command = " + command.getName() + ", attempts = " + attempts);
-                                            clusterClient.clusterSlotInfo.renew();
+                                                    "ASK, [BlockingCommand] [RedisClient newAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
                                             CompletableFutureWrapper.this.future.complete(reply);
-                                        } else {
-                                            ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
-                                                    "ASK, [RedisClient getAsync success], command = " + command.getName() + ", attempts = " + attempts);
-                                            client.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), CompletableFutureWrapper.this));
                                         }
-                                    } catch (Exception e) {
-                                        ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
-                                                "ASK, [RedisClient getAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
-                                        CompletableFutureWrapper.this.future.complete(reply);
-                                    }
-                                });
+                                    });
+                                }
+                            } else {
+                                RedisClient redisClient = RedisClientHub.tryGet(strings[1], Integer.parseInt(strings[2]), clusterClient.redisClusterResource.getPassword());
+                                if (redisClient != null) {
+                                    ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                            "ASK, [RedisClient tryGet success], command = " + command.getName() + ", attempts = " + attempts);
+                                    redisClient.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), this));
+                                } else {
+                                    CompletableFuture<RedisClient> future = RedisClientHub.getAsync(strings[1], Integer.parseInt(strings[2]), clusterClient.redisClusterResource.getPassword());
+                                    future.thenAccept(client -> {
+                                        try {
+                                            if (client == null) {
+                                                ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                        "ASK, [RedisClient getAsync fail], command = " + command.getName() + ", attempts = " + attempts);
+                                                clusterClient.clusterSlotInfo.renew();
+                                                CompletableFutureWrapper.this.future.complete(reply);
+                                            } else {
+                                                ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                        "ASK, [RedisClient getAsync success], command = " + command.getName() + ", attempts = " + attempts);
+                                                client.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), CompletableFutureWrapper.this));
+                                            }
+                                        } catch (Exception e) {
+                                            ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
+                                                    "ASK, [RedisClient getAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
+                                            CompletableFutureWrapper.this.future.complete(reply);
+                                        }
+                                    });
+                                }
                             }
                             return true;
                         }
@@ -548,6 +616,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
         }
         RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(slot);
         if (node == null) {
+            ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class, "blockingCommand getNode, slot=" + slot + " fail");
             future.complete(ErrorReply.NOT_AVAILABLE);
             return;
         }
@@ -555,6 +624,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
         if (client == null || !client.isValid()) {
             client = RedisClientHub.newClient(node.getAddr());
             if (client == null) {
+                ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class, "blockingCommand newClient, node=" + node.getAddr() + " fail");
                 future.complete(ErrorReply.NOT_AVAILABLE);
                 return;
             }

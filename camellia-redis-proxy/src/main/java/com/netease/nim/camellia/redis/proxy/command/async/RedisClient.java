@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
@@ -38,6 +39,7 @@ public class RedisClient implements AsyncClient {
     private static final AtomicLong id = new AtomicLong(0);
 
     private static final ScheduledExecutorService heartBeatScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-redis-client-heart-beat"));
+    private static final ScheduledExecutorService idleCheckScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-redis-client-idle-check"));
 
     private final RedisClientConfig redisClientConfig;
 
@@ -59,11 +61,13 @@ public class RedisClient implements AsyncClient {
     private final int closeIdleConnectionDelaySeconds;
 
     private Channel channel;
-    private ScheduledFuture<?> scheduledFuture;
+    private ScheduledFuture<?> heartbeatScheduledFuture;
+    private ScheduledFuture<?> idleCheckScheduledFuture;
 
     //status
     private volatile boolean valid = true;
     private volatile boolean closing = false;
+    private volatile boolean checkClientLastCommandTime = false;
     private long lastCommandTime = TimeCache.currentMillis;
 
     private final Queue<CompletableFuture<Reply>> queue = new ConcurrentLinkedQueue<>();
@@ -141,12 +145,45 @@ public class RedisClient implements AsyncClient {
             }
             if (heartbeatIntervalSeconds > 0 && heartbeatTimeoutMillis > 0) {
                 //默认60s发送一个心跳，心跳超时时间10s，如果超时了，则关闭当前连接
-                this.scheduledFuture = heartBeatScheduled.scheduleAtFixedRate(this::heartbeat,
+                this.heartbeatScheduledFuture = heartBeatScheduled.scheduleAtFixedRate(this::heartbeat,
                         heartbeatIntervalSeconds, heartbeatIntervalSeconds, TimeUnit.SECONDS);
+            }
+            if (closeIdleConnection && checkIdleThresholdSeconds > 0 && closeIdleConnectionDelaySeconds > 0) {
+                this.idleCheckScheduledFuture = idleCheckScheduled.scheduleAtFixedRate(this::checkIdle,
+                        checkIdleThresholdSeconds, checkIdleThresholdSeconds, TimeUnit.SECONDS);
             }
         } catch (Exception e) {
             stop();
             logger.error("{} start fail", clientName, e);
+        }
+    }
+
+    private void checkIdle() {
+        try {
+            if (isIdle()) {
+                closing = true;
+                logger.info("{} will close after {} seconds because connection is idle, idle.seconds = {}",
+                        clientName, closeIdleConnectionDelaySeconds, checkIdleThresholdSeconds);
+                try {
+                    ExecutorUtils.newTimeout(timeout -> {
+                        try {
+                            if (isIdle()) {
+                                logger.info("{} will close because connection is idle", clientName);
+                                _stop(true);
+                            } else {
+                                logger.warn("{} will not close because connection is not idle, will continue check idle task", clientName);
+                            }
+                        } catch (Exception e) {
+                            logger.error("{} delay close error", clientName, e);
+                        }
+                    }, closeIdleConnectionDelaySeconds, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    logger.error("submit delay close task error, stop right now, client = {}", clientName, e);
+                    _stop(false);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("{} idle check error", clientName, e);
         }
     }
 
@@ -156,27 +193,6 @@ public class RedisClient implements AsyncClient {
             if (closing) return;
             if (!ping(heartbeatTimeoutMillis)) {
                 stop();
-                return;
-            }
-            if (isIdle() && closeIdleConnection) {
-                if (TimeCache.currentMillis - lastCommandTime > checkIdleThresholdSeconds * 1000L) {
-                    closing = true;
-                    logger.info("{} will close after {} seconds because connection is idle, idle.seconds = {}",
-                            clientName, closeIdleConnectionDelaySeconds, checkIdleThresholdSeconds);
-                    try {
-                        ExecutorUtils.newTimeout(timeout -> {
-                            try {
-                                logger.info("{} will close because connection is idle", clientName);
-                                _stop(true);
-                            } catch (Exception e) {
-                                logger.error("{} delay close error", clientName, e);
-                            }
-                        }, closeIdleConnectionDelaySeconds, TimeUnit.SECONDS);
-                    } catch (Exception e) {
-                        logger.error("submit delay close task error, stop right now, client = {}", clientName, e);
-                        _stop(false);
-                    }
-                }
             }
         } catch (Exception e) {
             logger.error("{} heartbeat error", clientName, e);
@@ -212,11 +228,24 @@ public class RedisClient implements AsyncClient {
     }
 
     public boolean isIdle() {
-        return queue.isEmpty();
+        if (!queue.isEmpty()) return false;
+        if (checkIdleThresholdSeconds > 0) {
+            return TimeCache.currentMillis - lastCommandTime > checkIdleThresholdSeconds * 1000L;
+        } else {
+            return TimeCache.currentMillis - lastCommandTime > Constants.Transpond.checkIdleConnectionThresholdSeconds * 1000L;
+        }
     }
 
     public void stop() {
         stop(false);
+    }
+
+    public void markClosing() {
+        closing = true;
+    }
+
+    public void checkClientLastCommandTime() {
+        checkClientLastCommandTime = true;
     }
 
     public void stop(boolean grace) {
@@ -229,16 +258,16 @@ public class RedisClient implements AsyncClient {
     private void _stop(boolean grace) {
         RedisMonitor.removeRedisClient(this);
         if (!valid && queue.isEmpty()
-                && channel == null && scheduledFuture == null) {
+                && channel == null && heartbeatScheduledFuture == null && idleCheckScheduledFuture == null) {
             return;
         }
         synchronized (lock) {
             if (!valid && queue.isEmpty()
-                    && channel == null && scheduledFuture == null) {
+                    && channel == null && heartbeatScheduledFuture == null && idleCheckScheduledFuture == null) {
                 return;
             }
             if (!grace) {
-                String log = clientName + " stopping, command return NOT_AVAILABLE";
+                String log = clientName + " stopping, command maybe return NOT_AVAILABLE";
                 ErrorLogCollector.collect(RedisClient.class, log);
             }
             try {
@@ -252,18 +281,32 @@ public class RedisClient implements AsyncClient {
                     logger.error("{}, channel close error", clientName, e);
                 }
                 try {
-                    if (scheduledFuture != null) {
-                        scheduledFuture.cancel(false);
-                        scheduledFuture = null;
+                    if (heartbeatScheduledFuture != null) {
+                        heartbeatScheduledFuture.cancel(false);
+                        heartbeatScheduledFuture = null;
                     }
                 } catch (Exception e) {
                     logger.error("{}, heart-beat schedule cancel error", clientName, e);
                 }
+                try {
+                    if (idleCheckScheduledFuture != null) {
+                        idleCheckScheduledFuture.cancel(false);
+                        idleCheckScheduledFuture = null;
+                    }
+                } catch (Exception e) {
+                    logger.error("{}, idle-check schedule cancel error", clientName, e);
+                }
+                int count = 0;
                 while (!queue.isEmpty()) {
                     CompletableFuture<Reply> future = queue.poll();
                     if (future != null) {
                         future.complete(ErrorReply.NOT_AVAILABLE);
+                        count ++;
                     }
+                }
+                if (count > 0 && !grace) {
+                    String log = clientName + ", " + count + " commands return NOT_AVAILABLE";
+                    ErrorLogCollector.collect(RedisClient.class, log);
                 }
             } catch (Exception e) {
                 logger.error("{} stop error", clientName, e);
@@ -320,7 +363,7 @@ public class RedisClient implements AsyncClient {
             logger.debug("{} sendCommands, commands.size = {}", clientName, commands.size());
         }
         channel.writeAndFlush(pack);
-        if (closeIdleConnection) {
+        if (closeIdleConnection || checkClientLastCommandTime) {
             lastCommandTime = TimeCache.currentMillis;
         }
     }
