@@ -253,8 +253,6 @@ public class AsyncCamelliaRedisTemplateChooser {
         RedisClientHub.closeIdleConnectionDelaySeconds = redisConf.getCloseIdleConnectionDelaySeconds();
         logger.info("RedisClient, closeIdleConnection = {}, checkIdleConnectionThresholdSeconds = {}, closeIdleConnectionDelaySeconds = {}",
                 RedisClientHub.closeIdleConnection, RedisClientHub.checkIdleConnectionThresholdSeconds, RedisClientHub.closeIdleConnectionDelaySeconds);
-        RedisClientHub.blockingCommandsMaxUpstreamConnection = redisConf.getBlockingCommandsMaxUpstreamConnection();
-        logger.info("RedisClient, blockingCommandsMaxUpstreamConnection = {}", RedisClientHub.blockingCommandsMaxUpstreamConnection);
         RedisClientHub.initDynamicConf();
 
         ProxyEnv.Builder builder = new ProxyEnv.Builder();

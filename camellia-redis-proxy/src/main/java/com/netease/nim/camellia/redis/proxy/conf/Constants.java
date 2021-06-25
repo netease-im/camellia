@@ -76,8 +76,6 @@ public class Constants {
         public static final boolean closeIdleConnection = true;//是否关闭空闲连接（到后端redis的）
         public static final long checkIdleConnectionThresholdSeconds = 60 * 10;//判断一个连接空闲的阈值，单位秒
         public static final int closeIdleConnectionDelaySeconds = 60;//判断一个连接空闲后，再过多少秒去执行关闭操作
-
-        public static final int blockingCommandsMaxUpstreamConnection = 32;//使用阻塞型命令时，每次请求都会新建一个到后端redis的连接，允许建立的最大的连接数
     }
 
     public static class Remote {

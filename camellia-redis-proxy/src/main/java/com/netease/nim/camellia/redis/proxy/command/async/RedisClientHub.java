@@ -51,8 +51,6 @@ public class RedisClientHub {
     public static long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;
     public static int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;
 
-    public static int blockingCommandsMaxUpstreamConnection = Constants.Transpond.blockingCommandsMaxUpstreamConnection;
-
     private static final ConcurrentHashMap<Object, LockMap> lockMapMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, AtomicBoolean>> initializerStatusMap = new ConcurrentHashMap<>();
 

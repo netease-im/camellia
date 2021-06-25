@@ -4,14 +4,12 @@ package com.netease.nim.camellia.redis.proxy.netty;
 import com.netease.nim.camellia.redis.proxy.command.async.AsyncTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
-import com.netease.nim.camellia.redis.proxy.command.async.RedisClientHub;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 
 import java.net.SocketAddress;
-import java.util.Queue;
 import java.util.UUID;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -25,7 +23,7 @@ public class ChannelInfo {
     private ChannelStats channelStats = ChannelStats.NO_AUTH;
     private final ChannelHandlerContext ctx;
     private final AsyncTaskQueue asyncTaskQueue;
-    private volatile LinkedBlockingQueue<RedisClient> redisClientsForBlockingCommand = null;
+    private volatile ConcurrentHashMap<String, RedisClient> redisClientsMapForBlockingCommand;
     private RedisClient bindClient = null;
     private boolean inTransaction = false;
     private final SocketAddress clientSocketAddress;
@@ -63,38 +61,28 @@ public class ChannelInfo {
     }
 
     public void addRedisClientForBlockingCommand(RedisClient redisClient) {
-        if (redisClientsForBlockingCommand == null) {
+        if (redisClientsMapForBlockingCommand == null) {
             synchronized (this) {
-                if (redisClientsForBlockingCommand == null) {
-                    redisClientsForBlockingCommand = new LinkedBlockingQueue<>(RedisClientHub.blockingCommandsMaxUpstreamConnection);
+                if (redisClientsMapForBlockingCommand == null) {
+                    redisClientsMapForBlockingCommand = new ConcurrentHashMap<>();
                 }
             }
         }
-        boolean offer = redisClientsForBlockingCommand.offer(redisClient);
-        while (!offer) {
-            RedisClient oldClient = redisClientsForBlockingCommand.poll();
-            if (oldClient != null && oldClient.isIdle()) {
-                oldClient.stop(true);
-            }
-            offer = redisClientsForBlockingCommand.offer(redisClient);
-        }
+        redisClientsMapForBlockingCommand.put(redisClient.getAddr().getUrl(), redisClient);
     }
 
     public RedisClient tryGetExistsRedisClientForBlockingCommand(RedisClientAddr addr) {
-        if (redisClientsForBlockingCommand != null && !redisClientsForBlockingCommand.isEmpty()) {
-            RedisClient peek = redisClientsForBlockingCommand.peek();
-            if (peek != null && peek.getAddr().equals(addr)) {
-                RedisClient poll = redisClientsForBlockingCommand.poll();
-                if (poll != null && poll.getAddr().equals(addr)) {
-                    return poll;
-                }
+        if (redisClientsMapForBlockingCommand != null && !redisClientsMapForBlockingCommand.isEmpty()) {
+            RedisClient client = redisClientsMapForBlockingCommand.get(addr.getUrl());
+            if (client != null && client.isValid()) {
+                return client;
             }
         }
         return null;
     }
 
-    public Queue<RedisClient> getRedisClientsForBlockingCommand() {
-        return redisClientsForBlockingCommand;
+    public ConcurrentHashMap<String, RedisClient> getRedisClientsMapForBlockingCommand() {
+        return redisClientsMapForBlockingCommand;
     }
 
     public void clear() {

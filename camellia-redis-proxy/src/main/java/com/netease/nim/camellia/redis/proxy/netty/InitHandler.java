@@ -8,7 +8,8 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Queue;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -36,10 +37,10 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
         if (channelInfo != null) {
             channelInfo.clear();
             ChannelMonitor.remove(channelInfo);
-            Queue<RedisClient> queue = channelInfo.getRedisClientsForBlockingCommand();
-            if (queue != null) {
-                while (!queue.isEmpty()) {
-                    RedisClient redisClient = queue.poll();
+            ConcurrentHashMap<String, RedisClient> map = channelInfo.getRedisClientsMapForBlockingCommand();
+            if (map != null) {
+                for (Map.Entry<String, RedisClient> entry : map.entrySet()) {
+                    RedisClient redisClient = entry.getValue();
                     if (redisClient == null || !redisClient.isValid()) continue;
                     if (logger.isDebugEnabled()) {
                         logger.debug("redis client will close for blocking command interrupt by client, consid = {}, client.addr = {}, upstream.redis.client = {}",
@@ -47,6 +48,7 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
                     }
                     redisClient.stop(true);
                 }
+                map.clear();
             }
             RedisClient bindClient = channelInfo.getBindClient();
             if (bindClient != null) {
