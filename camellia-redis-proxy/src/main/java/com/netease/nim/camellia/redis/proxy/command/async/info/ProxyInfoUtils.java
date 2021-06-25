@@ -63,7 +63,7 @@ public class ProxyInfoUtils {
             builder.append("vm_vendor:").append(runtimeMXBean.getVmVendor()).append("\n");
             builder.append("vm_name:").append(runtimeMXBean.getVmName()).append("\n");
             builder.append("vm_version:").append(runtimeMXBean.getVmVersion()).append("\n");
-            builder.append("jvm.info:").append(System.getProperties().get("java.vm.info")).append("\n");
+            builder.append("jvm_info:").append(System.getProperties().get("java.vm.info")).append("\n");
             builder.append("java_version:").append(System.getProperties().get("java.version")).append("\n");
             builder.append("\n");
 

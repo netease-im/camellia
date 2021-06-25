@@ -202,7 +202,7 @@ uptime_in_days:0
 vm_vendor:Oracle Corporation
 vm_name:Java HotSpot(TM) 64-Bit Server VM
 vm_version:25.202-b08
-jvm.info:mixed mode
+jvm_info:mixed mode
 java_version:1.8.0_202
 
 # Clients
