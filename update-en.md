@@ -5,6 +5,18 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
+# 1.0.30（2021/06/xx）
+### add
+* none
+
+### update
+* none
+
+### fix
+* fix NPE when open slow-command-monitor/big-key-monitor and use pub-sub commands
+* when proxy route to redis-cluster, support subscribe/psubscribe multiple times, and support unsubscribe/punsubscribe
+
+
 # 1.0.29（2021/06/25）
 ### add
 * none
