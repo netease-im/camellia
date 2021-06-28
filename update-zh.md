@@ -14,7 +14,7 @@
 
 ### fix
 * 修复打开慢查询/大key监控时，使用subscribe/psubscribe命令时，收到超过一定数量消息后的NPE问题（会导致不能收到后续的消息）
-* 代理到redis-cluster时，subscribe/psubscribe支持在同一个长连接内多次订阅，并且unsubscribe/punsubscribe后，客户端连接可以用于普通命令（老版本proxy只能调用subscribe/psubscribe一次，并且调用后就不能unsubscribe/punsubscribe）
+* 代理到redis-cluster时：subscribe/psubscribe支持在同一个长连接内多次订阅，并且unsubscribe/punsubscribe后，客户端连接可以用于普通命令（老版本proxy只能调用subscribe/psubscribe一次，并且调用后就不能unsubscribe/punsubscribe）
 
 
 # 1.0.29（2021/06/25）
