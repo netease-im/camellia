@@ -10,7 +10,7 @@
 * none
 
 ### update
-* none
+* support mask password when init and reload route conf
 
 ### fix
 * fix NPE when open slow-command-monitor/big-key-monitor and use pub-sub commands
