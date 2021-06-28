@@ -104,7 +104,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         this.init(response.getResourceTable());
         if (logger.isInfoEnabled()) {
             logger.info("AsyncCamelliaRedisTemplate init success, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}", bid, bgroup, md5,
-                    ReadableResourceTableUtil.readableResourceTable(response.getResourceTable()));
+                    ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(response.getResourceTable())));
         }
         if (reload) {
             ReloadTask reloadTask = new ReloadTask(this, service, bid, bgroup, md5);
@@ -134,7 +134,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         this.init(resourceTable);
         if (logger.isInfoEnabled()) {
             logger.info("AsyncCamelliaRedisTemplate init success, bid = {}, bgroup = {}, resourceTable = {}, ProxyRouteConfUpdater = {}", bid, bgroup,
-                    ReadableResourceTableUtil.readableResourceTable(resourceTable), updater.getClass().getName());
+                    ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(resourceTable)), updater.getClass().getName());
         }
         if (reloadIntervalMillis > 0) {
             ProxyRouteConfUpdaterReloadTask reloadTask = new ProxyRouteConfUpdaterReloadTask(this, resourceTable, bid, bgroup, updater);
