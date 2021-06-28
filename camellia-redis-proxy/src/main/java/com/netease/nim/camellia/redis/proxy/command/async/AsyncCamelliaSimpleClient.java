@@ -58,15 +58,49 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
             RedisClient bindClient = channelInfo.getBindClient();
             RedisCommand redisCommand = command.getRedisCommand();
             if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
+                boolean first = false;
                 if (bindClient == null) {
                     bindClient = RedisClientHub.newClient(getAddr());
                     channelInfo.setBindClient(bindClient);
+                    first = true;
                 }
                 if (bindClient != null) {
                     AsyncTaskQueue asyncTaskQueue = command.getChannelInfo().getAsyncTaskQueue();
-                    PubSubUtils.sendByBindClient(bindClient, asyncTaskQueue, command, future);
+                    PubSubUtils.sendByBindClient(bindClient, asyncTaskQueue, command, future, first);
+                    byte[][] objects = command.getObjects();
+                    if (objects != null && objects.length > 1) {
+                        for (int j=1; j<objects.length; j++) {
+                            byte[] channel = objects[j];
+                            if (redisCommand == RedisCommand.SUBSCRIBE) {
+                                command.getChannelInfo().addSubscribeChannels(channel);
+                            } else {
+                                command.getChannelInfo().addPSubscribeChannels(channel);
+                            }
+                        }
+                    }
                 } else {
                     future.complete(ErrorReply.NOT_AVAILABLE);
+                }
+            } else if (redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
+                if (bindClient != null) {
+                    if (command.getObjects() != null && command.getObjects().length > 1) {
+                        for (int j=1; j<command.getObjects().length; j++) {
+                            byte[] channel = command.getObjects()[j];
+                            if (redisCommand == RedisCommand.UNSUBSCRIBE) {
+                                command.getChannelInfo().removeSubscribeChannels(channel);
+                            } else {
+                                command.getChannelInfo().removePSubscribeChannels(channel);
+                            }
+                            if (!command.getChannelInfo().hasSubscribeChannels()) {
+                                command.getChannelInfo().setBindClient(null);
+                                bindClient.startIdleCheck();
+                            }
+                        }
+                    }
+                    PubSubUtils.sendByBindClient(bindClient, channelInfo.getAsyncTaskQueue(), command, future, false);
+                } else {
+                    filterCommands.add(command);
+                    filterFutures.add(future);
                 }
             } else if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
                 if (bindClient == null) {
@@ -82,11 +116,11 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
                     } else if (redisCommand == RedisCommand.EXEC || redisCommand == RedisCommand.DISCARD) {
                         channelInfo.setInTransaction(false);
                         channelInfo.setBindClient(null);
-                        RedisClientHub.checkIdleAndStop(bindClient);
+                        bindClient.startIdleCheck();
                     } else if (redisCommand == RedisCommand.UNWATCH) {
                         if (!channelInfo.isInTransaction()) {
                             channelInfo.setBindClient(null);
-                            RedisClientHub.checkIdleAndStop(bindClient);
+                            bindClient.startIdleCheck();
                         }
                     }
                 }
@@ -168,7 +202,7 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
         }
         if (client != null) {
             client.sendCommand(commands, completableFutureList);
-            RedisClientHub.checkIdleAndStop(client);
+            client.startIdleCheck();
             lastBlockingCommand.getChannelInfo().addRedisClientForBlockingCommand(client);
         } else {
             String log = "RedisClient[" + addr + "] is null, command return NOT_AVAILABLE, RedisResource = " + getResource().getUrl();

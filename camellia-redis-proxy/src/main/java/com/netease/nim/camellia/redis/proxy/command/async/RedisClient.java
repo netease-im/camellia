@@ -70,7 +70,7 @@ public class RedisClient implements AsyncClient {
     private volatile boolean checkClientLastCommandTime = false;
     private long lastCommandTime = TimeCache.currentMillis;
 
-    private final Queue<CompletableFuture<Reply>> queue = new ConcurrentLinkedQueue<>();
+    private final Queue<CompletableFuture<Reply>> queue = new LinkedBlockingQueue<>(1024*32);
 
     public RedisClient(RedisClientConfig config) {
         this.redisClientConfig = config;
@@ -83,8 +83,10 @@ public class RedisClient implements AsyncClient {
         this.heartbeatTimeoutMillis = config.getHeartbeatTimeoutMillis();
         this.connectTimeoutMillis = config.getConnectTimeoutMillis();
         this.closeIdleConnection = config.isCloseIdleConnection();
-        this.checkIdleThresholdSeconds = config.getCheckIdleConnectionThresholdSeconds();
-        this.closeIdleConnectionDelaySeconds = config.getCloseIdleConnectionDelaySeconds();
+        this.checkIdleThresholdSeconds = config.getCheckIdleConnectionThresholdSeconds() <= 0
+                ? Constants.Transpond.checkIdleConnectionThresholdSeconds : config.getCheckIdleConnectionThresholdSeconds();
+        this.closeIdleConnectionDelaySeconds = config.getCloseIdleConnectionDelaySeconds() <=0
+                ? Constants.Transpond.closeIdleConnectionDelaySeconds : config.getCloseIdleConnectionDelaySeconds();
         if (PasswordMaskUtils.maskEnable) {
             this.clientName = "RedisClient[" + (password == null ? "" : PasswordMaskUtils.maskStr(password.length()))
                     + "@" + host + ":" + port + "][id=" + id.incrementAndGet() + "]";
@@ -159,43 +161,56 @@ public class RedisClient implements AsyncClient {
     }
 
     private void checkIdle() {
-        try {
-            if (isIdle()) {
-                closing = true;
-                logger.info("{} will close after {} seconds because connection is idle, idle.seconds = {}",
-                        clientName, closeIdleConnectionDelaySeconds, checkIdleThresholdSeconds);
-                try {
-                    ExecutorUtils.newTimeout(timeout -> {
-                        try {
-                            if (isIdle()) {
-                                logger.info("{} will close because connection is idle", clientName);
-                                _stop(true);
-                            } else {
-                                logger.warn("{} will not close because connection is not idle, will continue check idle task", clientName);
+        synchronized (this) {
+            try {
+                if (isIdle()) {
+                    closing = true;
+                    logger.info("{} will close after {} seconds because connection is idle, idle.seconds = {}",
+                            clientName, closeIdleConnectionDelaySeconds, checkIdleThresholdSeconds);
+                    try {
+                        ExecutorUtils.newTimeout(timeout -> {
+                            try {
+                                if (isIdle()) {
+                                    logger.info("{} will close because connection is idle", clientName);
+                                    _stop(true);
+                                } else {
+                                    logger.warn("{} will not close because connection is not idle, will continue check idle task", clientName);
+                                }
+                            } catch (Exception e) {
+                                logger.error("{} delay close error", clientName, e);
                             }
-                        } catch (Exception e) {
-                            logger.error("{} delay close error", clientName, e);
-                        }
-                    }, closeIdleConnectionDelaySeconds, TimeUnit.SECONDS);
-                } catch (Exception e) {
-                    logger.error("submit delay close task error, stop right now, client = {}", clientName, e);
-                    _stop(false);
+                        }, closeIdleConnectionDelaySeconds, TimeUnit.SECONDS);
+                    } catch (Exception e) {
+                        logger.error("submit delay close task error, stop right now, client = {}", clientName, e);
+                        _stop(false);
+                    }
                 }
+            } catch (Exception e) {
+                logger.error("{} idle check error", clientName, e);
             }
-        } catch (Exception e) {
-            logger.error("{} idle check error", clientName, e);
+        }
+    }
+
+    public void startIdleCheck() {
+        synchronized (this) {
+            if (idleCheckScheduledFuture == null) {
+                idleCheckScheduledFuture = idleCheckScheduled.scheduleAtFixedRate(this::checkIdle,
+                        checkIdleThresholdSeconds, checkIdleThresholdSeconds, TimeUnit.SECONDS);
+            }
         }
     }
 
     private void heartbeat() {
-        try {
-            if (!valid) return;
-            if (closing) return;
-            if (!ping(heartbeatTimeoutMillis)) {
-                stop();
+        synchronized (this) {
+            try {
+                if (!valid) return;
+                if (closing) return;
+                if (!ping(heartbeatTimeoutMillis)) {
+                    stop();
+                }
+            } catch (Exception e) {
+                logger.error("{} heartbeat error", clientName, e);
             }
-        } catch (Exception e) {
-            logger.error("{} heartbeat error", clientName, e);
         }
     }
 
@@ -241,7 +256,9 @@ public class RedisClient implements AsyncClient {
     }
 
     public void markClosing() {
-        closing = true;
+        synchronized (this) {
+            closing = true;
+        }
     }
 
     public void checkClientLastCommandTime() {
@@ -317,6 +334,10 @@ public class RedisClient implements AsyncClient {
     public boolean isValid() {
         if (closing) return false;
         return valid;
+    }
+
+    public int queueSize() {
+        return queue.size();
     }
 
     public RedisClientAddr getAddr() {

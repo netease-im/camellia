@@ -322,69 +322,6 @@ public class RedisClientHub {
         return null;
     }
 
-    public static void checkIdleAndStop(RedisClient redisClient) {
-        try {
-            redisClient.checkClientLastCommandTime();
-            submitIdleCheckTask(new CheckIdleAndStopTask(redisClient));
-        } catch (Exception e) {
-            logger.error("checkIdleAndStop error, client = {}", redisClient.getClientName(), e);
-        }
-    }
-
-    private static void submitIdleCheckTask(CheckIdleAndStopTask task) {
-        ExecutorUtils.newTimeout(timeout -> {
-            try {
-                Boolean success = task.call();
-                if (!success) {
-                    submitIdleCheckTask(task);
-                }
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-            }
-        }, 1, TimeUnit.MINUTES);
-    }
-
-    private static class CheckIdleAndStopTask implements Callable<Boolean> {
-        private final RedisClient redisClient;
-        public CheckIdleAndStopTask(RedisClient redisClient) {
-            this.redisClient = redisClient;
-        }
-        @Override
-        public Boolean call() {
-            try {
-                if (!redisClient.isValid()) {
-                    redisClient.stop();
-                    return true;
-                }
-                if (redisClient.isIdle()) {
-                    int delaySeconds = closeIdleConnectionDelaySeconds <= 0 ? Constants.Transpond.closeIdleConnectionDelaySeconds : closeIdleConnectionDelaySeconds;
-                    logger.info("{} will close after {} seconds because connection is idle",
-                            redisClient.getClientName(), delaySeconds);
-                    redisClient.markClosing();
-                    ExecutorUtils.newTimeout(timeout -> {
-                        try {
-                            //double check
-                            if (redisClient.isIdle()) {
-                                logger.info("{} will close because connection is idle", redisClient.getClientName());
-                                redisClient.stop(true);
-                            } else {
-                                checkIdleAndStop(redisClient);
-                            }
-                        } catch (Exception e) {
-                            logger.error(e.getMessage(), e);
-                        }
-                    }, delaySeconds, TimeUnit.SECONDS);
-                    return true;
-                } else {
-                    return false;
-                }
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-                return true;
-            }
-        }
-    }
-
     public static void initDynamicConf() {
         ProxyDynamicConf.registerCallback(RedisClientHub::reloadConf);
         reloadConf();

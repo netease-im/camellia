@@ -15,6 +15,7 @@ import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.FastRemoteMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.*;
@@ -166,10 +167,22 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
     }
 
+    private boolean isPassThroughCommand(List<Command> commands) {
+        if (!isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster) return false;
+        for (Command command : commands) {
+            RedisCommand redisCommand = command.getRedisCommand();
+            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1
+                    || redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public List<CompletableFuture<Reply>> sendCommand(List<Command> commands) {
         List<CompletableFuture<Reply>> futureList = new ArrayList<>(commands.size());
 
-        if (isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster) {
+        if (isPassThroughCommand(commands)) {
             String url = getReadResource(Utils.EMPTY_ARRAY).getUrl();
             for (Command command : commands) {
                 CompletableFuture<Reply> future = new CompletableFuture<>();
@@ -1004,7 +1017,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         RedisResourceUtil.checkResourceTable(resourceTable);
                     } catch (Exception e) {
                         logger.error("resourceTable check error, skip reload, bid = {}, bgroup = {}, resourceTable = {}",
-                                bid, bgroup, ReadableResourceTableUtil.readableResourceTable(resourceTable), e);
+                                bid, bgroup, ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(resourceTable)), e);
                         return;
                     }
                     String newJson = ReadableResourceTableUtil.readableResourceTable(resourceTable);
@@ -1014,7 +1027,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         this.resourceTable = resourceTable;
                         if (logger.isInfoEnabled()) {
                             logger.info("reload success, bid = {}, bgroup = {}, resourceTable = {}", bid, bgroup,
-                                    ReadableResourceTableUtil.readableResourceTable(resourceTable));
+                                    ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(resourceTable)));
                         }
                     } else {
                         if (logger.isDebugEnabled()) {
@@ -1067,14 +1080,14 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         RedisResourceUtil.checkResourceTable(response.getResourceTable());
                     } catch (Exception e) {
                         logger.error("resourceTable check error, skip reload, bid = {}, bgroup = {}, resourceTable = {}",
-                                bid, bgroup, ReadableResourceTableUtil.readableResourceTable(response.getResourceTable()), e);
+                                bid, bgroup, ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(response.getResourceTable())), e);
                         return;
                     }
                     template.init(response.getResourceTable());
                     this.md5 = response.getMd5();
                     if (logger.isInfoEnabled()) {
                         logger.info("reload success, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}", bid, bgroup, md5,
-                                ReadableResourceTableUtil.readableResourceTable(response.getResourceTable()));
+                                ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(response.getResourceTable())));
                     }
                 } catch (Exception e) {
                     Throwable ex = ErrorHandlerUtil.handler(e);

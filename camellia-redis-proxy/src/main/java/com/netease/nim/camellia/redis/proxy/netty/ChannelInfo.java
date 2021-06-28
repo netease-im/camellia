@@ -4,6 +4,7 @@ package com.netease.nim.camellia.redis.proxy.netty;
 import com.netease.nim.camellia.redis.proxy.command.async.AsyncTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
+import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 
@@ -26,7 +27,10 @@ public class ChannelInfo {
     private volatile ConcurrentHashMap<String, RedisClient> redisClientsMapForBlockingCommand;
     private RedisClient bindClient = null;
     private boolean inTransaction = false;
+    private boolean inSubscribe = false;
     private final SocketAddress clientSocketAddress;
+    private volatile ConcurrentHashMap<BytesKey, Boolean> subscribeChannels;
+    private volatile ConcurrentHashMap<BytesKey, Boolean> psubscribeChannels;
 
     private String clientName;
     private Long bid;
@@ -87,6 +91,7 @@ public class ChannelInfo {
 
     public void clear() {
         asyncTaskQueue.clear();
+        inSubscribe = false;
     }
 
     public ChannelHandlerContext getCtx() {
@@ -147,6 +152,67 @@ public class ChannelInfo {
 
     public void setBindClient(RedisClient bindClient) {
         this.bindClient = bindClient;
+    }
+
+    public void addSubscribeChannels(byte[]...channels) {
+        if (subscribeChannels == null) {
+            synchronized (this) {
+                if (subscribeChannels == null) {
+                    subscribeChannels = new ConcurrentHashMap<>();
+                }
+            }
+        }
+        if (channels != null) {
+            for (byte[] channel : channels) {
+                subscribeChannels.put(new BytesKey(channel), true);
+            }
+        }
+    }
+
+    public void removeSubscribeChannels(byte[]...channels) {
+        if (subscribeChannels != null && channels != null) {
+            for (byte[] channel : channels) {
+                subscribeChannels.remove(new BytesKey(channel));
+            }
+        }
+    }
+
+    public void addPSubscribeChannels(byte[]...channels) {
+        if (psubscribeChannels == null) {
+            synchronized (this) {
+                if (psubscribeChannels == null) {
+                    psubscribeChannels = new ConcurrentHashMap<>();
+                }
+            }
+        }
+        if (channels != null) {
+            for (byte[] channel : channels) {
+                psubscribeChannels.put(new BytesKey(channel), true);
+            }
+        }
+    }
+
+    public void removePSubscribeChannels(byte[]...channels) {
+        if (psubscribeChannels != null && channels != null) {
+            for (byte[] channel : channels) {
+                psubscribeChannels.remove(new BytesKey(channel));
+            }
+        }
+    }
+
+    public boolean hasSubscribeChannels() {
+        if (subscribeChannels != null && !subscribeChannels.isEmpty())  {
+            return true;
+        }
+        return psubscribeChannels != null && !psubscribeChannels.isEmpty();
+    }
+
+    public boolean isInSubscribe() {
+        return inSubscribe;
+    }
+
+    public void setInSubscribe(boolean inSubscribe) {
+        this.inSubscribe = inSubscribe;
     }
 
     public static enum ChannelStats {

@@ -1,11 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
-import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.reply.ReplyPack;
+import com.netease.nim.camellia.redis.proxy.reply.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -33,6 +31,9 @@ public class AsyncTaskQueue {
     }
 
     public boolean add(AsyncTask task) {
+        if (channelInfo.isInSubscribe()) {
+            return true;
+        }
         boolean offer = queue.offer(task);
         if (!offer) {
             logger.warn("AsyncTaskQueue full, consid = {}", channelInfo.getConsid());
@@ -59,7 +60,8 @@ public class AsyncTaskQueue {
                     Reply reply = task.getReply();
                     if (reply != null) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug("AsyncTaskQueue callback, reply = {}, consid = {}",
+                            logger.debug("AsyncTaskQueue callback, command = {}, reply = {}, consid = {}",
+                                    task.getCommand() == null ? null : task.getCommand().getName(),
                                     reply.getClass().getSimpleName(), channelInfo.getConsid());
                         }
                         channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet()));
@@ -73,4 +75,16 @@ public class AsyncTaskQueue {
             }
         }
     }
+
+    public void reply(Reply reply) {
+        if (!channelInfo.isInSubscribe()) {
+            return;
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("AsyncTaskQueue reply, reply = {}, consid = {}",
+                    reply.getClass().getSimpleName(), channelInfo.getConsid());
+        }
+        channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet()));
+    }
+
 }

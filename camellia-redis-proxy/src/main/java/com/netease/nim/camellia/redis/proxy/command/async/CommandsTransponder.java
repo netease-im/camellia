@@ -129,6 +129,18 @@ public class CommandsTransponder {
                     continue;
                 }
 
+                if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
+                    channelInfo.setInSubscribe(true);
+                }
+                if (channelInfo.isInSubscribe()) {
+                    if (redisCommand != RedisCommand.SUBSCRIBE && redisCommand != RedisCommand.PSUBSCRIBE
+                            && redisCommand != RedisCommand.UNSUBSCRIBE && redisCommand != RedisCommand.PUNSUBSCRIBE) {
+                        taskQueue.reply(new ErrorReply("Command " + redisCommand.name() + " not allowed while subscribed. Allowed commands are: [PSUBSCRIBE, QUIT, PUNSUBSCRIBE, SUBSCRIBE, UNSUBSCRIBE]"));
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+                }
+
                 if (redisCommand == null || redisCommand.getSupportType() == RedisCommand.CommandSupportType.NOT_SUPPORT) {
                     task.replyCompleted(ErrorReply.NOT_SUPPORT);
                     hasCommandsSkip = true;
