@@ -7,12 +7,14 @@ import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -32,7 +34,7 @@ public class PubSubUtils {
                 } else {
                     asyncTaskQueue.reply(reply);
                 }
-                checkSubscribeReply(reply, asyncTaskQueue);
+                checkSubscribeReply(client, reply, asyncTaskQueue);
             });
         }
         if (client.queueSize() < 8) {
@@ -43,7 +45,7 @@ public class PubSubUtils {
                         sendByBindClient(client, asyncTaskQueue, null, null, false);
                     }
                     asyncTaskQueue.reply(reply);
-                    checkSubscribeReply(reply, asyncTaskQueue);
+                    checkSubscribeReply(client, reply, asyncTaskQueue);
                 });
                 futures.add(completableFuture);
             }
@@ -55,7 +57,7 @@ public class PubSubUtils {
         }
     }
 
-    public static void checkSubscribeReply(Reply reply, AsyncTaskQueue asyncTaskQueue) {
+    public static void checkSubscribeReply(RedisClient client, Reply reply, AsyncTaskQueue asyncTaskQueue) {
         try {
             if (reply instanceof MultiBulkReply) {
                 Reply[] replies = ((MultiBulkReply) reply).getReplies();
@@ -65,13 +67,13 @@ public class PubSubUtils {
                         byte[] raw = ((BulkReply) firstReply).getRaw();
                         String str = Utils.bytesToString(raw);
                         if (str.equalsIgnoreCase(RedisCommand.SUBSCRIBE.name())) {
-                            checkSubscribe(replies, asyncTaskQueue);
+                            checkSubscribe(client, replies, asyncTaskQueue);
                         } else if (str.equalsIgnoreCase(RedisCommand.UNSUBSCRIBE.name())) {
-                            checkSubscribe(replies, asyncTaskQueue);
+                            checkSubscribe(client, replies, asyncTaskQueue);
                         } else if (str.equalsIgnoreCase(RedisCommand.PSUBSCRIBE.name())) {
-                            checkSubscribe(replies, asyncTaskQueue);
+                            checkSubscribe(client, replies, asyncTaskQueue);
                         } else if (str.equalsIgnoreCase(RedisCommand.PUNSUBSCRIBE.name())) {
-                            checkSubscribe(replies, asyncTaskQueue);
+                            checkSubscribe(client, replies, asyncTaskQueue);
                         }
                     }
                 }
@@ -82,12 +84,13 @@ public class PubSubUtils {
     }
 
 
-    private static void checkSubscribe(Reply[] replies, AsyncTaskQueue asyncTaskQueue) {
+    private static void checkSubscribe(RedisClient client, Reply[] replies, AsyncTaskQueue asyncTaskQueue) {
         if (replies != null && replies.length >= 2) {
             Reply reply = replies[2];
             if (reply instanceof IntegerReply) {
                 if (((IntegerReply) reply).getInteger() <= 0) {
                     asyncTaskQueue.getChannelInfo().setInSubscribe(false);
+                    ExecutorUtils.newTimeout(timeout -> client.stop(true), 60, TimeUnit.SECONDS);
                 }
             }
         }
