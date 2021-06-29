@@ -27,7 +27,7 @@ public class ProxyInfoUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(ProxyInfoUtils.class);
 
-    private static final String VERSION = "v1.0.29";
+    private static final String VERSION = "v1.0.30";
     private static int port;
     private static final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
     private static final OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
