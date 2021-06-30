@@ -95,7 +95,7 @@ public class UpstreamInfoUtils {
                             int port = Integer.parseInt(split1[1]);
                             String redisInfo = getRedisInfo(new RedisClientAddr(host, port, ((RedisClusterResource) redisResource).getPassword()));
                             builder.append("#### node").append(k).append("\n");
-                            builder.append("master.url=").append(clusterNodeInfo.master).append("\n");
+                            builder.append("master_url=").append(clusterNodeInfo.master).append("\n");
                             builder.append(redisInfo);
                             k ++;
                         }
@@ -219,7 +219,7 @@ public class UpstreamInfoUtils {
                 RedisClientAddr addr = new RedisClientAddr(master.getHost(), master.getPort(), password);
                 String redisInfo = getRedisInfo(addr);
                 if (redisInfo != null) {
-                    builder.append("master.url:").append(PasswordMaskUtils.maskAddr(addr.getUrl())).append("\n");
+                    builder.append("master_url:").append(PasswordMaskUtils.maskAddr(addr.getUrl())).append("\n");
                     builder.append(redisInfo);
                     return builder.toString();
                 }

@@ -298,7 +298,7 @@ node1:master=10.189.28.60:7001@17001,slave=[10.189.28.62:7010@17010],slots=10923
 node2:master=10.189.28.62:7011@17011,slave=[10.189.28.62:7009@17009],slots=0-5460
 ### redis-node-info
 #### node0
-master.url=10.189.28.62:7008@17008
+master_url=10.189.28.62:7008@17008
 redis_version:4.0.9
 used_memory:768150976
 used_memory_human:732.57M
@@ -312,7 +312,7 @@ role:master
 connected_slaves:1
 db0:keys=3639485,expires=3639482,avg_ttl=1621629354933212
 #### node1
-master.url=10.189.28.60:7001@17001
+master_url=10.189.28.60:7001@17001
 redis_version:4.0.9
 used_memory:3957600
 used_memory_human:3.77M
@@ -326,7 +326,7 @@ role:master
 connected_slaves:1
 db0:keys=297,expires=294,avg_ttl=62496349
 #### node2
-master.url=10.189.28.62:7011@17011
+master_url=10.189.28.62:7011@17011
 redis_version:4.0.9
 used_memory:767613120
 used_memory_human:732.05M
@@ -343,7 +343,7 @@ db0:keys=3634796,expires=3634791,avg_ttl=1621629354943862
 ## Upstream1
 url:redis-sentinel://@127.0.0.1:26379/master1
 ### redis-node-info
-master.url:@127.0.0.1:6380
+master_url:@127.0.0.1:6380
 redis_version:6.0.6
 used_memory:2437680
 used_memory_human:2.32M
@@ -360,7 +360,7 @@ db0:keys=1,expires=0,avg_ttl=0
 ## Upstream2
 url:redis-sentinel-slaves://@127.0.0.1:26379/master1?withMaster=true
 ### redis-node-info
-master.url:@127.0.0.1:6380
+master_url:@127.0.0.1:6380
 redis_version:6.0.6
 used_memory:2437680
 used_memory_human:2.32M
@@ -388,7 +388,7 @@ upstream_cluster_count:1
 ## Upstream0
 url:redis-sentinel://@127.0.0.1:26379/master1
 ### redis-node-info
-master.url:@127.0.0.1:6380
+master_url:@127.0.0.1:6380
 redis_version:6.0.6
 used_memory:2503216
 used_memory_human:2.39M

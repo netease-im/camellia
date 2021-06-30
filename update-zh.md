@@ -8,7 +8,7 @@
 
 # 1.0.31（2021/07/xx）
 ### 新增
-* info命令支持section参数，且支持获取后端redis集群的信息（内存使用率、版本、主从分布情况、slot分布情况等）
+* info命令支持section参数，且支持获取后端redis集群的信息（内存使用率、版本、主从分布情况、slot分布情况等），具体见：[监控](/docs/redis-proxy/monitor.md)
 
 ### 更新
 * 无
