@@ -296,11 +296,11 @@ cluster_slots_fail:0
 cluster_known_nodes:6
 cluster_size:3
 cluster_maxmemory:9663676416
-cluster_used_memory:2304452928
 cluster_maxmemory_human:9.00G
+cluster_used_memory:2304452928
 cluster_used_memory_human:2.15G
 cluster_memory_used_rate:0.2384654482205709
-cluster_memory_used_rate_hum:23.87%
+cluster_memory_used_rate_human:23.87%
 ### redis-cluster-node-info
 node0:master=10.189.28.62:7008@17008,slave=[10.189.28.60:7003@17003],slots=5461-10922,maxMemory=3.00G,usedMemory=733.38M,memoryUsedRate=23.87%
 node1:master=10.189.28.60:7001@17001,slave=[10.189.28.62:7010@17010],slots=10923-16383,maxMemory=3.00G,usedMemory=733.38M,memoryUsedRate=23.87%
@@ -314,7 +314,7 @@ used_memory_human:732.57M
 maxmemory:3221225472
 maxmemory_human:3.00G
 memory_used_rate:0.2384654482205709
-memory_used_rate_hum:23.85%
+memory_used_rate_human:23.85%
 maxmemory_policy:allkeys-lru
 hz:10
 role:master
@@ -329,7 +329,7 @@ used_memory_human:3.77M
 maxmemory:3221225472
 maxmemory_human:3.00G
 memory_used_rate:0.2384654482205709
-memory_used_rate_hum:23.85%
+memory_used_rate_human:23.85%
 maxmemory_policy:allkeys-lru
 hz:10
 role:master
@@ -344,7 +344,7 @@ used_memory_human:732.05M
 maxmemory:3221225472
 maxmemory_human:3.00G
 memory_used_rate:0.2382984757423401
-memory_used_rate_hum:23.83%
+memory_used_rate_human:23.83%
 maxmemory_policy:allkeys-lru
 hz:10
 role:master
@@ -362,7 +362,7 @@ used_memory_human:2.32M
 maxmemory:3221225472
 maxmemory_human:3.00G
 memory_used_rate:0.23873232305049896
-memory_used_rate_hum:23.87%
+memory_used_rate_human:23.87%
 maxmemory_policy:noeviction
 hz:10
 role:master
@@ -380,7 +380,7 @@ used_memory_human:2.32M
 maxmemory:3.00G
 maxmemory_human:3.00G
 memory_used_rate:0.23873232305049896
-memory_used_rate_hum:23.87%
+memory_used_rate_human:23.87%
 maxmemory_policy:noeviction
 hz:10
 role:master
@@ -409,7 +409,7 @@ used_memory_human:2.39M
 maxmemory:3221225472
 maxmemory_human:3.00G
 memory_used_rate:0.23873232305049896
-memory_used_rate_hum:23.87%
+memory_used_rate_human:23.87%
 maxmemory_policy:noeviction
 hz:10
 role:master

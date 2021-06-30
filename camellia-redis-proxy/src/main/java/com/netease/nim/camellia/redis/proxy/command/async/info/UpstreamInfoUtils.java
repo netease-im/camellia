@@ -139,16 +139,16 @@ public class UpstreamInfoUtils {
                         }
                         clusterBuilder.append(redisClusterNodeInfoBuilder).append(redisNodeInfoBuilder);
                     }
-                    builder.append("cluster_maxmemory:").append(totalMaxMemory).append("\n");
-                    builder.append("cluster_used_memory:").append(totalUsedMemory).append("\n");
-                    builder.append("cluster_maxmemory_human:").append(humanReadableByteCountBin(totalMaxMemory)).append("\n");
-                    builder.append("cluster_used_memory_human:").append(humanReadableByteCountBin(totalUsedMemory)).append("\n");
                     double clusterMemoryUsedRate = 0.0;
                     if (totalMaxMemory != 0) {
                         clusterMemoryUsedRate = (double) totalUsedMemory / totalMaxMemory;
                     }
+                    builder.append("cluster_maxmemory:").append(totalMaxMemory).append("\n");
+                    builder.append("cluster_maxmemory_human:").append(humanReadableByteCountBin(totalMaxMemory)).append("\n");
+                    builder.append("cluster_used_memory:").append(totalUsedMemory).append("\n");
+                    builder.append("cluster_used_memory_human:").append(humanReadableByteCountBin(totalUsedMemory)).append("\n");
                     builder.append("cluster_memory_used_rate:").append(clusterMemoryUsedRate).append("\n");
-                    builder.append("cluster_memory_used_rate_hum:").append(String.format("%.2f", clusterMemoryUsedRate * 100.0)).append("%").append("\n");
+                    builder.append("cluster_memory_used_rate_human:").append(String.format("%.2f", clusterMemoryUsedRate * 100.0)).append("%").append("\n");
                     builder.append(clusterBuilder);
                 }
                 builder.append("\n");
@@ -229,7 +229,7 @@ public class UpstreamInfoUtils {
                                 memeoryUsedRate = ((double) Long.parseLong(usedMemory.trim())) / max;
                             }
                             builder.append("memory_used_rate:").append(memeoryUsedRate).append("\n");
-                            builder.append("memory_used_rate_hum:").append(String.format("%.2f", memeoryUsedRate * 100.0)).append("%").append("\n");
+                            builder.append("memory_used_rate_human:").append(String.format("%.2f", memeoryUsedRate * 100.0)).append("%").append("\n");
                         } catch (Exception ignore) {
                         }
                     }
