@@ -20,6 +20,7 @@ import java.text.StringCharacterIterator;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
@@ -95,6 +96,8 @@ public class UpstreamInfoUtils {
                     StringBuilder clusterBuilder = new StringBuilder();
                     List<ClusterNodeInfo> redisClusterNodeInfo = getRedisClusterNodeInfo((RedisClusterResource) redisResource);
                     if (redisClusterNodeInfo != null) {
+                        boolean safety = redisClusterSafety(redisClusterNodeInfo);
+                        builder.append("cluster_safety:").append(safety ? "yes" : "no").append("\n");
                         StringBuilder redisNodeInfoBuilder = new StringBuilder();
                         redisNodeInfoBuilder.append("### redis-node-info").append("\n");
                         int k = 0;
@@ -346,6 +349,29 @@ public class UpstreamInfoUtils {
             if (redisClient != null) {
                 redisClient.stop(true);
             }
+        }
+    }
+
+    private static boolean redisClusterSafety(List<ClusterNodeInfo> clusterNodeInfos) {
+        try {
+            Map<String, AtomicLong> map = new HashMap<>();
+            for (ClusterNodeInfo clusterNodeInfo : clusterNodeInfos) {
+                String[] split = clusterNodeInfo.master.split(":");
+                String ip = split[0];
+                AtomicLong count = map.get(ip);
+                if (count == null) {
+                    count = new AtomicLong();
+                    map.put(ip, count);
+                }
+                count.incrementAndGet();
+            }
+            for (Map.Entry<String, AtomicLong> entry : map.entrySet()) {
+                if (entry.getValue().get() >= (clusterNodeInfos.size() / 2)) return false;
+            }
+            return true;
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
         }
     }
 

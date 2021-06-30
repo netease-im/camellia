@@ -275,7 +275,7 @@ non_heap_memory_committed:89161728
 
 ```
 
-特别的，Upstream-Info必须是指定之后才能返回（此时返回的是默认路由），如下：
+特别的，Upstream-Info必须是指定之后才能返回（此时返回的是默认路由），如下：  
 ```
 127.0.0.1:6381> info upstream-info
 # Upstream-Info
@@ -295,6 +295,7 @@ cluster_slots_pfail:0
 cluster_slots_fail:0
 cluster_known_nodes:6
 cluster_size:3
+cluster_safety:yes    ## 超过一半的主节点在同一个ip下，在判定为不安全
 cluster_maxmemory:9663676416
 cluster_maxmemory_human:9.00G
 cluster_used_memory:2304452928
