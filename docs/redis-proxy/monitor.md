@@ -200,7 +200,7 @@ proxy实现了info命令，支持返回如下信息：Server/Clients/Route/Upstr
 ```
 127.0.0.1:6380> info
 # Server
-camellia_redis_proxy_version:v1.0.29
+camellia_redis_proxy_version:v1.0.31
 available_processors:4
 arch:amd64
 os_name:Linux
