@@ -7,7 +7,7 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 热key缓存功能
 * 通过httpAPI获取监控数据
 * 监控配置的动态修改
-* 通过info命令获取服务器相关信息
+* 通过info命令获取服务器相关信息(包括后端redis集群的信息)
 
 ### 请求tps、请求rt
 默认是关闭的，你可以这样打开：
@@ -187,6 +187,16 @@ camellia-redis-zk-registry: #需要引入相关的依赖才有效
 application.yml中的部分配置支持进程启动期间进行动态修改，详见[动态配置](dynamic-conf.md)
 
 ## 通过info命令获取服务器相关信息
+proxy实现了info命令，支持返回如下信息：Server/Clients/Route/Upstream/Memory/GC/Upstream-Info，含义分别表示：   
+* Server 表示服务器的信息，包括proxy版本、proxy端口、操作系统类型和版本、虚拟机版本、java版本等
+* Clients 会返回连接proxy的客户端连接数
+* Route 路由信息，包括路由配置数量和路由配置
+* Upstream 后端redis连接数
+* Memory 内存
+* GC 垃圾回收相关信息
+* Upstream-Info 后端redis集群的信息，包括后端redis的内存使用率、版本、主从分布情况、slot分布情况等
+
+你可以直接输入info，则返回除了Upstream-Info之外的所有信息，如下：
 ```
 127.0.0.1:6380> info
 # Server
@@ -245,4 +255,150 @@ old_gc_name:G1 Old Generation
 old_gc_collection_count:0
 old_gc_collection_time:0
 
+```
+
+你也可以只打印其中一项，比如只想看内存信息，则如下（info后面的参数是忽略大小写的）：
+```
+127.0.0.1:6380> info memory
+# Memory
+free_memory:220528656
+total_memory:536870912
+max_memory:536870912
+heap_memory_init:536870912
+heap_memory_used:316340208
+heap_memory_max:536870912
+heap_memory_committed:536870912
+non_heap_memory_init:2555904
+non_heap_memory_used:87099904
+non_heap_memory_max:-1
+non_heap_memory_committed:89161728
+
+```
+
+特别的，Upstream-Info必须是指定之后才能返回（此时返回的是默认路由），如下：
+```
+127.0.0.1:6381> info upstream-info
+# Upstream-Info
+route_conf:{"type":"shading","operation":{"operationMap":{"0-2-4":{"read":"redis-sentinel-slaves://@127.0.0.1:26379/master1?withMaster=true","type":"rw_separate","write":"redis-sentinel://@127.0.0.1:26379/master1"},"1-3-5":"redis-cluster://@10.189.28.62:7008,10.189.28.60:7001,10.189.28.62:7011"},"bucketSize":6}}
+upstream_cluster_count:3
+
+## Upstream0
+url:redis-cluster://@10.189.28.62:7008,10.189.28.60:7001,10.189.28.62:7011
+### redis-cluster-info
+cluster_state:ok
+cluster_slots_assigned:16384
+cluster_slots_ok:16384
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:6
+cluster_size:3
+### redis-cluster-node-info
+node0:master=10.189.28.62:7008@17008,slave=[10.189.28.60:7003@17003],slots=5461-10922
+node1:master=10.189.28.60:7001@17001,slave=[10.189.28.62:7010@17010],slots=10923-16383
+node2:master=10.189.28.62:7011@17011,slave=[10.189.28.62:7009@17009],slots=0-5460
+### redis-node-info
+#### node0
+master.url=10.189.28.62:7008@17008
+redis_version:4.0.9
+used_memory:768150976
+used_memory_human:732.57M
+maxmemory:3221225472
+maxmemory_human:3.00G
+memory_used_rate:0.2384654482205709
+memory_used_rate_hum:0.00%
+maxmemory_policy:allkeys-lru
+hz:10
+role:master
+connected_slaves:1
+db0:keys=3639485,expires=3639482,avg_ttl=1621629354933212
+#### node1
+master.url=10.189.28.60:7001@17001
+redis_version:4.0.9
+used_memory:3957600
+used_memory_human:3.77M
+maxmemory:3221225472
+maxmemory_human:3.00G
+memory_used_rate:0.0012286007404327393
+memory_used_rate_hum:0.00%
+maxmemory_policy:allkeys-lru
+hz:10
+role:master
+connected_slaves:1
+db0:keys=297,expires=294,avg_ttl=62496349
+#### node2
+master.url=10.189.28.62:7011@17011
+redis_version:4.0.9
+used_memory:767613120
+used_memory_human:732.05M
+maxmemory:3221225472
+maxmemory_human:3.00G
+memory_used_rate:0.2382984757423401
+memory_used_rate_hum:0.00%
+maxmemory_policy:allkeys-lru
+hz:10
+role:master
+connected_slaves:1
+db0:keys=3634796,expires=3634791,avg_ttl=1621629354943862
+
+## Upstream1
+url:redis-sentinel://@127.0.0.1:26379/master1
+### redis-node-info
+master.url:@127.0.0.1:6380
+redis_version:6.0.6
+used_memory:2437680
+used_memory_human:2.32M
+maxmemory:0
+maxmemory_human:0B
+memory_used_rate:Infinity
+memory_used_rate_hum:Infinity%
+maxmemory_policy:noeviction
+hz:10
+role:master
+connected_slaves:1
+db0:keys=1,expires=0,avg_ttl=0
+
+## Upstream2
+url:redis-sentinel-slaves://@127.0.0.1:26379/master1?withMaster=true
+### redis-node-info
+master.url:@127.0.0.1:6380
+redis_version:6.0.6
+used_memory:2437680
+used_memory_human:2.32M
+maxmemory:0
+maxmemory_human:0B
+memory_used_rate:Infinity
+memory_used_rate_hum:Infinity%
+maxmemory_policy:noeviction
+hz:10
+role:master
+connected_slaves:1
+db0:keys=1,expires=0,avg_ttl=0
+
+```
+
+此外，如果proxy上配置了多条路由，那么你可以指定bid和bgroup返回特定路由的后端upstream信息，如下（例子中返回了bid=1以及bgroup=default的后端信息）：
+```
+127.0.0.1:6381> info upstream-info 1 default
+# Upstream-Info
+route_conf:redis-sentinel://@127.0.0.1:26379/master1
+bid:1
+bgroup:default
+upstream_cluster_count:1
+
+## Upstream0
+url:redis-sentinel://@127.0.0.1:26379/master1
+### redis-node-info
+master.url:@127.0.0.1:6380
+redis_version:6.0.6
+used_memory:2503216
+used_memory_human:2.39M
+maxmemory:0
+maxmemory_human:0B
+memory_used_rate:Infinity
+memory_used_rate_hum:Infinity%
+maxmemory_policy:noeviction
+hz:10
+role:master
+connected_slaves:1
+db0:keys=1,expires=0,avg_ttl=0
 ```

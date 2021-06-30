@@ -5,6 +5,17 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
+# 1.0.31（2021/07/xx）
+### add
+* info commands support section param, support get upstream-info(such like memory/version/master-slave/slot)
+
+### update
+* none
+
+### fix
+* fix after request subscribe/psubscribe and unsubscribe/punsubscribe, the bind pub-sub upstream redis-client do not release connection
+
+
 # 1.0.30（2021/06/29）
 ### add
 * none

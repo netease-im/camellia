@@ -5,6 +5,18 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
+
+# 1.0.31（2021/07/xx）
+### 新增
+* info命令支持section参数，且支持获取后端redis集群的信息（内存使用率、版本、主从分布情况、slot分布情况等）
+
+### 更新
+* 无
+
+### fix
+* 修复先调用subscribe/psubscribe，再调用unsubscribe/punsubscribe之后，对应的后端redis连接没有释放的问题
+
+
 # 1.0.30（2021/06/29）
 ### 新增
 * 无
