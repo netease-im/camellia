@@ -15,6 +15,8 @@ import com.netease.nim.camellia.redis.resource.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -42,64 +44,112 @@ public class UpstreamInfoUtils {
                 builder.append("bid:").append(bid).append("\n");
                 builder.append("bgroup:").append(bgroup).append("\n");
             }
-            Set<Resource> resources = ResourceUtil.getAllResources(resourceTable);
+            List<Resource> resources = new ArrayList<>(ResourceUtil.getAllResources(resourceTable));
             builder.append("upstream_cluster_count:").append(resources.size()).append("\n");
+            for (int i=0; i<resources.size(); i++) {
+                Resource resource = resources.get(i);
+                builder.append("upstream").append(i).append("_url:").append(resource.getUrl()).append("\n");
+            }
             builder.append("\n");
-            int i=0;
-            for (Resource resource : resources) {
+            for (int i=0; i<resources.size(); i++) {
+                Resource resource = resources.get(i);
                 builder.append("## Upstream").append(i).append("\n");
-                i ++;
                 builder.append("url:").append(PasswordMaskUtils.maskResource(resource.getUrl())).append("\n");
                 Resource redisResource = RedisResourceUtil.parseResourceByUrl(resource);
                 if (redisResource instanceof RedisResource) {
                     RedisClientAddr addr = new RedisClientAddr(((RedisResource) redisResource).getHost(),
                             ((RedisResource) redisResource).getPort(), ((RedisResource) redisResource).getPassword());
                     builder.append("### redis-node-info").append("\n");
-                    String redisInfo = getRedisInfo(addr);
+                    RedisInfo redisInfo = getRedisInfo(addr);
                     if (redisInfo != null) {
-                        builder.append(redisInfo);
+                        builder.append(redisInfo.string);
                     }
                 } else if (redisResource instanceof RedisSentinelResource) {
                     builder.append("### redis-node-info").append("\n");
-                    String redisSentinelInfo = getRedisSentinelInfo(((RedisSentinelResource) redisResource).getNodes(),
+                    RedisSentinelInfo redisSentinelInfo = getRedisSentinelInfo(((RedisSentinelResource) redisResource).getNodes(),
                             ((RedisSentinelResource) redisResource).getPassword(), ((RedisSentinelResource) redisResource).getMaster());
-                    builder.append(redisSentinelInfo);
+                    if (redisSentinelInfo.master != null) {
+                        builder.append("master_url:").append(redisSentinelInfo.master).append("\n");
+                    }
+                    if (redisSentinelInfo.redisInfo != null && redisSentinelInfo.redisInfo.string != null) {
+                        builder.append(redisSentinelInfo.redisInfo.string);
+                    }
                 } else if (redisResource instanceof RedisSentinelSlavesResource) {
                     builder.append("### redis-node-info").append("\n");
-                    String redisSentinelInfo = getRedisSentinelInfo(((RedisSentinelSlavesResource) redisResource).getNodes(),
+                    RedisSentinelInfo redisSentinelInfo = getRedisSentinelInfo(((RedisSentinelSlavesResource) redisResource).getNodes(),
                             ((RedisSentinelSlavesResource) redisResource).getPassword(), ((RedisSentinelSlavesResource) redisResource).getMaster());
-                    builder.append(redisSentinelInfo);
+                    if (redisSentinelInfo.master != null) {
+                        builder.append("master_url:").append(redisSentinelInfo.master).append("\n");
+                    }
+                    if (redisSentinelInfo.redisInfo != null && redisSentinelInfo.redisInfo.string != null) {
+                        builder.append(redisSentinelInfo.redisInfo.string);
+                    }
                 } else if (redisResource instanceof RedisClusterResource) {
                     String redisClusterInfo = getRedisClusterInfo((RedisClusterResource) redisResource);
                     if (redisClusterInfo != null) {
                         builder.append("### redis-cluster-info").append("\n");
                         builder.append(redisClusterInfo);
                     }
+                    long totalMaxMemory = 0;
+                    long totalUsedMemory = 0;
+                    StringBuilder clusterBuilder = new StringBuilder();
                     List<ClusterNodeInfo> redisClusterNodeInfo = getRedisClusterNodeInfo((RedisClusterResource) redisResource);
                     if (redisClusterNodeInfo != null) {
-                        builder.append("### redis-cluster-node-info").append("\n");
-                        int j = 0;
-                        for (ClusterNodeInfo clusterNodeInfo : redisClusterNodeInfo) {
-                            builder.append("node").append(j).append(":").append("master=").append(clusterNodeInfo.master)
-                                    .append(",slave=").append(clusterNodeInfo.slaves)
-                                    .append(",slots=").append(clusterNodeInfo.slots).append("\n");
-                            j++;
-                        }
-                        builder.append("### redis-node-info").append("\n");
+                        StringBuilder redisNodeInfoBuilder = new StringBuilder();
+                        redisNodeInfoBuilder.append("### redis-node-info").append("\n");
                         int k = 0;
+                        Map<String, RedisInfo> map = new HashMap<>();
                         for (ClusterNodeInfo clusterNodeInfo : redisClusterNodeInfo) {
                             String master = clusterNodeInfo.master;
                             String[] split = master.split("@");
                             String[] split1 = split[0].split(":");
                             String host = split1[0];
                             int port = Integer.parseInt(split1[1]);
-                            String redisInfo = getRedisInfo(new RedisClientAddr(host, port, ((RedisClusterResource) redisResource).getPassword()));
-                            builder.append("#### node").append(k).append("\n");
-                            builder.append("master_url=").append(clusterNodeInfo.master).append("\n");
-                            builder.append(redisInfo);
+                            RedisInfo redisInfo = getRedisInfo(new RedisClientAddr(host, port, ((RedisClusterResource) redisResource).getPassword()));
+                            redisNodeInfoBuilder.append("#### node").append(k).append("\n");
+                            redisNodeInfoBuilder.append("master_url=").append(clusterNodeInfo.master).append("\n");
+                            if (redisInfo != null) {
+                                redisNodeInfoBuilder.append(redisInfo.string);
+                                totalMaxMemory += redisInfo.maxMemory;
+                                totalUsedMemory += redisInfo.usedMemory;
+                                map.put(master, redisInfo);
+                            }
                             k ++;
                         }
+
+                        StringBuilder redisClusterNodeInfoBuilder = new StringBuilder();
+                        redisClusterNodeInfoBuilder.append("### redis-cluster-node-info").append("\n");
+                        int j = 0;
+                        for (ClusterNodeInfo clusterNodeInfo : redisClusterNodeInfo) {
+                            redisClusterNodeInfoBuilder.append("node").append(j).append(":").append("master=").append(clusterNodeInfo.master)
+                                    .append(",slave=").append(clusterNodeInfo.slaves)
+                                    .append(",slots=").append(clusterNodeInfo.slots);
+                            RedisInfo redisInfo = map.get(clusterNodeInfo.master);
+                            if (redisInfo != null) {
+                                redisClusterNodeInfoBuilder.append(",maxMemory=").append(humanReadableByteCountBin(redisInfo.maxMemory));
+                                redisClusterNodeInfoBuilder.append(",usedMemory=").append(humanReadableByteCountBin(redisInfo.usedMemory));
+                                double rate = 0.0;
+                                if (redisInfo.maxMemory != 0) {
+                                    rate = (double) redisInfo.usedMemory / redisInfo.maxMemory;
+                                }
+                                redisClusterNodeInfoBuilder.append(",memoryUsedRate=").append(String.format("%.2f", rate * 100.0)).append("%");
+                            }
+                            redisClusterNodeInfoBuilder.append("\n");
+                            j++;
+                        }
+                        clusterBuilder.append(redisClusterNodeInfoBuilder).append(redisNodeInfoBuilder);
                     }
+                    builder.append("cluster_maxmemory:").append(totalMaxMemory).append("\n");
+                    builder.append("cluster_used_memory:").append(totalUsedMemory).append("\n");
+                    builder.append("cluster_maxmemory_human:").append(humanReadableByteCountBin(totalMaxMemory)).append("\n");
+                    builder.append("cluster_used_memory_human:").append(humanReadableByteCountBin(totalUsedMemory)).append("\n");
+                    double clusterMemoryUsedRate = 0.0;
+                    if (totalMaxMemory != 0) {
+                        clusterMemoryUsedRate = (double) totalUsedMemory / totalMaxMemory;
+                    }
+                    builder.append("cluster_memory_used_rate:").append(clusterMemoryUsedRate).append("\n");
+                    builder.append("cluster_memory_used_rate_hum:").append(String.format("%.2f", clusterMemoryUsedRate * 100.0)).append("%").append("\n");
+                    builder.append(clusterBuilder);
                 }
                 builder.append("\n");
             }
@@ -108,6 +158,21 @@ public class UpstreamInfoUtils {
             logger.error(e.getMessage(), e);
             return null;
         }
+    }
+
+    public static String humanReadableByteCountBin(long bytes) {
+        long absB = bytes == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(bytes);
+        if (absB < 1024) {
+            return bytes + "B";
+        }
+        long value = absB;
+        CharacterIterator ci = new StringCharacterIterator("KMGTPE");
+        for (int i = 40; i >= 0 && absB > 0xfffccccccccccccL >> i; i -= 10) {
+            value >>= 10;
+            ci.next();
+        }
+        value *= Long.signum(bytes);
+        return String.format("%.2f%c", value / 1024.0, ci.current());
     }
 
     private static final List<String> redisInfoKeys = new ArrayList<>();
@@ -123,7 +188,13 @@ public class UpstreamInfoUtils {
         redisInfoKeys.add("connected_slaves");
         redisInfoKeys.add("db0");
     }
-    private static String getRedisInfo(RedisClientAddr addr) {
+
+    private static class RedisInfo {
+        private String string;
+        private long maxMemory;
+        private long usedMemory;
+    }
+    private static RedisInfo getRedisInfo(RedisClientAddr addr) {
         Map<String, String> map = getInfoMap(addr.getHost(), addr.getPort(), addr.getPassword(), new byte[][] {RedisCommand.INFO.raw()});
         if (map == null) {
             return null;
@@ -134,20 +205,45 @@ public class UpstreamInfoUtils {
                 if (value != null) {
                     builder.append(key).append(":").append(value).append("\n");
                 }
+                if (key.equals("connected_slaves")) {
+                    String connectedSlaves = map.get("connected_slaves");
+                    if (connectedSlaves != null) {
+                        int i = Integer.parseInt(connectedSlaves.trim());
+                        for (int j=0; j<i*2; j++) {
+                            String slaveKey = "slave" + j;
+                            String slave = map.get(slaveKey);
+                            if (slave != null) {
+                                builder.append(slaveKey).append(":").append(slave).append("\n");
+                            }
+                        }
+                    }
+                }
                 if (key.equals("maxmemory_human")) {
                     String maxmemory = map.get("maxmemory");
                     String usedMemory = map.get("used_memory");
                     if (maxmemory != null && usedMemory != null) {
                         try {
-                            double memeoryUsedRate = ((double) Long.parseLong(usedMemory.trim())) / Long.parseLong(maxmemory.trim());
+                            long max = Long.parseLong(maxmemory.trim());
+                            double memeoryUsedRate = 0.0;
+                            if (max != 0) {
+                                memeoryUsedRate = ((double) Long.parseLong(usedMemory.trim())) / max;
+                            }
                             builder.append("memory_used_rate:").append(memeoryUsedRate).append("\n");
-                            builder.append("memory_used_rate_hum:").append(String.format("%.2f", memeoryUsedRate / 100.0)).append("%").append("\n");
+                            builder.append("memory_used_rate_hum:").append(String.format("%.2f", memeoryUsedRate * 100.0)).append("%").append("\n");
                         } catch (Exception ignore) {
                         }
                     }
                 }
             }
-            return builder.toString();
+            String string = builder.toString();
+            RedisInfo redisInfo = new RedisInfo();
+            redisInfo.string = string;
+            try {
+                redisInfo.maxMemory = Long.parseLong(map.get("maxmemory").trim());
+                redisInfo.usedMemory = Long.parseLong(map.get("used_memory").trim());
+            } catch (Exception ignore) {
+            }
+            return redisInfo;
         }
     }
 
@@ -211,21 +307,25 @@ public class UpstreamInfoUtils {
         }
     }
 
-    private static String getRedisSentinelInfo(List<RedisSentinelResource.Node> sentinels, String password, String masterName) {
-        StringBuilder builder = new StringBuilder();
+    private static class RedisSentinelInfo {
+        RedisInfo redisInfo;
+        RedisClientAddr master;
+    }
+    private static RedisSentinelInfo getRedisSentinelInfo(List<RedisSentinelResource.Node> sentinels, String password, String masterName) {
+        RedisSentinelInfo redisSentinelInfo = new RedisSentinelInfo();
         for (RedisSentinelResource.Node node : sentinels) {
             HostAndPort master = getRedisSentinelMaster(node.getHost(), node.getPort(), masterName);
             if (master != null) {
                 RedisClientAddr addr = new RedisClientAddr(master.getHost(), master.getPort(), password);
-                String redisInfo = getRedisInfo(addr);
+                redisSentinelInfo.master = addr;
+                RedisInfo redisInfo = getRedisInfo(addr);
                 if (redisInfo != null) {
-                    builder.append("master_url:").append(PasswordMaskUtils.maskAddr(addr.getUrl())).append("\n");
-                    builder.append(redisInfo);
-                    return builder.toString();
+                    redisSentinelInfo.redisInfo = redisInfo;
+                    return redisSentinelInfo;
                 }
             }
         }
-        return null;
+        return redisSentinelInfo;
     }
 
     private static HostAndPort getRedisSentinelMaster(String host, int port, String masterName) {

@@ -281,6 +281,9 @@ non_heap_memory_committed:89161728
 # Upstream-Info
 route_conf:{"type":"shading","operation":{"operationMap":{"0-2-4":{"read":"redis-sentinel-slaves://@127.0.0.1:26379/master1?withMaster=true","type":"rw_separate","write":"redis-sentinel://@127.0.0.1:26379/master1"},"1-3-5":"redis-cluster://@10.189.28.62:7008,10.189.28.60:7001,10.189.28.62:7011"},"bucketSize":6}}
 upstream_cluster_count:3
+upstream0_url:redis-cluster://@10.189.28.62:7008,10.189.28.60:7001,10.189.28.62:7011
+upstream1_url:redis-sentinel://@127.0.0.1:26379/master1
+upstream2_url:redis-sentinel-slaves://@127.0.0.1:26379/master1?withMaster=true
 
 ## Upstream0
 url:redis-cluster://@10.189.28.62:7008,10.189.28.60:7001,10.189.28.62:7011
@@ -292,10 +295,16 @@ cluster_slots_pfail:0
 cluster_slots_fail:0
 cluster_known_nodes:6
 cluster_size:3
+cluster_maxmemory:9663676416
+cluster_used_memory:2304452928
+cluster_maxmemory_human:9.00G
+cluster_used_memory_human:2.15G
+cluster_memory_used_rate:0.2384654482205709
+cluster_memory_used_rate_hum:23.87%
 ### redis-cluster-node-info
-node0:master=10.189.28.62:7008@17008,slave=[10.189.28.60:7003@17003],slots=5461-10922
-node1:master=10.189.28.60:7001@17001,slave=[10.189.28.62:7010@17010],slots=10923-16383
-node2:master=10.189.28.62:7011@17011,slave=[10.189.28.62:7009@17009],slots=0-5460
+node0:master=10.189.28.62:7008@17008,slave=[10.189.28.60:7003@17003],slots=5461-10922,maxMemory=3.00G,usedMemory=733.38M,memoryUsedRate=23.87%
+node1:master=10.189.28.60:7001@17001,slave=[10.189.28.62:7010@17010],slots=10923-16383,maxMemory=3.00G,usedMemory=733.38M,memoryUsedRate=23.87%
+node2:master=10.189.28.62:7011@17011,slave=[10.189.28.62:7009@17009],slots=0-5460,maxMemory=3.00G,usedMemory=733.38M,memoryUsedRate=23.87%
 ### redis-node-info
 #### node0
 master_url=10.189.28.62:7008@17008
@@ -305,39 +314,42 @@ used_memory_human:732.57M
 maxmemory:3221225472
 maxmemory_human:3.00G
 memory_used_rate:0.2384654482205709
-memory_used_rate_hum:0.00%
+memory_used_rate_hum:23.85%
 maxmemory_policy:allkeys-lru
 hz:10
 role:master
 connected_slaves:1
+slave0:ip=10.189.28.60,port=7003,state=online,offset=88682163709,lag=0
 db0:keys=3639485,expires=3639482,avg_ttl=1621629354933212
 #### node1
 master_url=10.189.28.60:7001@17001
 redis_version:4.0.9
-used_memory:3957600
+used_memory:768150976
 used_memory_human:3.77M
 maxmemory:3221225472
 maxmemory_human:3.00G
-memory_used_rate:0.0012286007404327393
-memory_used_rate_hum:0.00%
+memory_used_rate:0.2384654482205709
+memory_used_rate_hum:23.85%
 maxmemory_policy:allkeys-lru
 hz:10
 role:master
 connected_slaves:1
+slave0:ip=10.189.28.62,port=7010,state=online,offset=253642106463,lag=0
 db0:keys=297,expires=294,avg_ttl=62496349
 #### node2
 master_url=10.189.28.62:7011@17011
 redis_version:4.0.9
-used_memory:767613120
+used_memory:768150976
 used_memory_human:732.05M
 maxmemory:3221225472
 maxmemory_human:3.00G
 memory_used_rate:0.2382984757423401
-memory_used_rate_hum:0.00%
+memory_used_rate_hum:23.83%
 maxmemory_policy:allkeys-lru
 hz:10
 role:master
 connected_slaves:1
+slave0:ip=10.189.28.62,port=7009,state=online,offset=186569832085,lag=1
 db0:keys=3634796,expires=3634791,avg_ttl=1621629354943862
 
 ## Upstream1
@@ -347,15 +359,16 @@ master_url:@127.0.0.1:6380
 redis_version:6.0.6
 used_memory:2437680
 used_memory_human:2.32M
-maxmemory:0
-maxmemory_human:0B
-memory_used_rate:Infinity
-memory_used_rate_hum:Infinity%
+maxmemory:3221225472
+maxmemory_human:3.00G
+memory_used_rate:0.23873232305049896
+memory_used_rate_hum:23.87%
 maxmemory_policy:noeviction
 hz:10
 role:master
 connected_slaves:1
-db0:keys=1,expires=0,avg_ttl=0
+slave0:ip=127.0.0.1,port=6379,state=online,offset=570473,lag=1
+db0:keys=12231212,expires=3634791,avg_ttl=123444
 
 ## Upstream2
 url:redis-sentinel-slaves://@127.0.0.1:26379/master1?withMaster=true
@@ -364,15 +377,16 @@ master_url:@127.0.0.1:6380
 redis_version:6.0.6
 used_memory:2437680
 used_memory_human:2.32M
-maxmemory:0
-maxmemory_human:0B
-memory_used_rate:Infinity
-memory_used_rate_hum:Infinity%
+maxmemory:3.00G
+maxmemory_human:3.00G
+memory_used_rate:0.23873232305049896
+memory_used_rate_hum:23.87%
 maxmemory_policy:noeviction
 hz:10
 role:master
 connected_slaves:1
-db0:keys=1,expires=0,avg_ttl=0
+slave0:ip=127.0.0.1,port=6379,state=online,offset=570473,lag=1
+db0:keys=12231212,expires=3634791,avg_ttl=123444
 
 ```
 
@@ -392,13 +406,14 @@ master_url:@127.0.0.1:6380
 redis_version:6.0.6
 used_memory:2503216
 used_memory_human:2.39M
-maxmemory:0
-maxmemory_human:0B
-memory_used_rate:Infinity
-memory_used_rate_hum:Infinity%
+maxmemory:3221225472
+maxmemory_human:3.00G
+memory_used_rate:0.23873232305049896
+memory_used_rate_hum:23.87%
 maxmemory_policy:noeviction
 hz:10
 role:master
 connected_slaves:1
-db0:keys=1,expires=0,avg_ttl=0
+slave0:ip=127.0.0.1,port=6379,state=online,offset=570473,lag=1
+db0:keys=12231212,expires=0,avg_ttl=123444
 ```
