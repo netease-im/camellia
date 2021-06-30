@@ -124,7 +124,8 @@ public class CommandsTransponder {
                 }
 
                 if (redisCommand == RedisCommand.INFO) {
-                    task.replyCompleted(ProxyInfoUtils.getInfoReply());
+                    CompletableFuture<Reply> future = ProxyInfoUtils.getInfoReply(command, chooser);
+                    future.thenAccept(task::replyCompleted);
                     hasCommandsSkip = true;
                     continue;
                 }
