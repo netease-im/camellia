@@ -53,7 +53,7 @@ camellia-redis-zk-registry:
   base-path: /camellia
 ```
 则启动后redis proxy会注册到zk(127.0.0.1:2181,127.0.0.2:2181)  
-此时你需要自己从zk上获取proxy的地址列表，然后自己实现以下客户端侧的负载均衡策略，但是如果你客户端是java，则camellia帮你做了一个实现，参考下节
+此时你需要自己从zk上获取proxy的地址列表，然后自己实现一下客户端侧的负载均衡策略，但是如果你客户端是java，则camellia帮你做了一个实现，参考下节
 
 ### 优雅上下线
 当redis proxy启动的时候，会同时启动一个http服务器console server，默认端口是16379  
