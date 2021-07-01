@@ -33,6 +33,9 @@ public class CamelliaRedisProxyServer {
         this.bossGroup = bossGroup;
         this.workGroup = workGroup;
         ConfigInitUtil.initProxyDynamicConfHook(serverProperties);
+        if (bossGroup instanceof NioEventLoopGroup && workGroup instanceof NioEventLoopGroup) {
+            ProxyInfoUtils.updateThread(((NioEventLoopGroup) bossGroup).executorCount(), ((NioEventLoopGroup) workGroup).executorCount());
+        }
     }
 
     public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, CommandInvoker invoker) {
@@ -48,6 +51,7 @@ public class CamelliaRedisProxyServer {
         GlobalRedisProxyEnv.workGroup = workGroup;
         GlobalRedisProxyEnv.bossGroup = bossGroup;
         ConfigInitUtil.initProxyDynamicConfHook(serverProperties);
+        ProxyInfoUtils.updateThread(bossThread, workThread);
     }
 
     public void start() throws Exception {
