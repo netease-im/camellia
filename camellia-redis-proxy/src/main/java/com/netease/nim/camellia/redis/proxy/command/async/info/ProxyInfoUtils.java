@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.Stats;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -23,6 +24,7 @@ import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
@@ -46,6 +48,19 @@ public class ProxyInfoUtils {
     private static GarbageCollectorMXBean oldGC;
     private static GarbageCollectorMXBean youngGC;
 
+    private static final AtomicLong commandsCount = new AtomicLong();
+    private static final AtomicLong readCommandsCount = new AtomicLong();
+    private static final AtomicLong writeCommandsCount = new AtomicLong();
+
+    private static double avgCommandsQps = 0.0;
+    private static double avgReadCommandsQps = 0.0;
+    private static double avgWriteCommandsQps = 0.0;
+
+    private static double lastCommandQps = 0.0;
+    private static double lastReadCommandQps = 0.0;
+    private static double lastWriteCommandQps = 0.0;
+
+
     static {
         initGcMXBean();
     }
@@ -57,6 +72,24 @@ public class ProxyInfoUtils {
     public static void updateThread(int bossThread, int workThread) {
         ProxyInfoUtils.bossThread = bossThread;
         ProxyInfoUtils.workThread = workThread;
+    }
+
+    public static void updateStats(Stats stats) {
+        try {
+            commandsCount.addAndGet(stats.getCount());
+            readCommandsCount.addAndGet(stats.getTotalReadCount());
+            writeCommandsCount.addAndGet(stats.getTotalWriteCount());
+
+            avgCommandsQps = commandsCount.get() / (runtimeMXBean.getUptime() / 1000.0);
+            avgReadCommandsQps = readCommandsCount.get() / (runtimeMXBean.getUptime() / 1000.0);
+            avgWriteCommandsQps = writeCommandsCount.get() / (runtimeMXBean.getUptime() / 1000.0);
+
+            lastCommandQps = (double) stats.getCount() / stats.getIntervalSeconds();
+            lastReadCommandQps = (double) stats.getTotalReadCount() / stats.getIntervalSeconds();
+            lastWriteCommandQps = (double) stats.getTotalWriteCount() / stats.getIntervalSeconds();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     public static CompletableFuture<Reply> getInfoReply(Command command, AsyncCamelliaRedisTemplateChooser chooser) {
@@ -85,6 +118,7 @@ public class ProxyInfoUtils {
                 builder.append(getUpstream()).append("\n");
                 builder.append(getMemory()).append("\n");
                 builder.append(getGC()).append("\n");
+                builder.append(getStats()).append("\n");
             } else {
                 if (objects.length == 2) {
                     String section = Utils.bytesToString(objects[1]);
@@ -100,6 +134,8 @@ public class ProxyInfoUtils {
                         builder.append(getMemory()).append("\n");
                     } else if (section.equalsIgnoreCase("gc")) {
                         builder.append(getGC()).append("\n");
+                    } else if (section.equalsIgnoreCase("stats")) {
+                        builder.append(getStats()).append("\n");
                     } else if (section.equalsIgnoreCase("upstream-info")) {
                         builder.append(UpstreamInfoUtils.upstreamInfo(null, null, chooser)).append("\n");
                     }
@@ -158,6 +194,21 @@ public class ProxyInfoUtils {
         StringBuilder builder = new StringBuilder();
         builder.append("# Clients").append("\n");
         builder.append("connect_clients:").append(RedisMonitor.getClientConnects()).append("\n");
+        return builder.toString();
+    }
+
+    private static String getStats() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("# Stats").append("\n");
+        builder.append("commands.count:").append(commandsCount).append("\n");
+        builder.append("read.commands.count:").append(readCommandsCount).append("\n");
+        builder.append("write.commands.count:").append(writeCommandsCount).append("\n");
+        builder.append("avg.commands.qps:").append(avgCommandsQps).append("\n");
+        builder.append("avg.read.commands.qps:").append(avgReadCommandsQps).append("\n");
+        builder.append("avg.write.commands.qps:").append(avgWriteCommandsQps).append("\n");
+        builder.append("last.commands.qps:").append(lastCommandQps).append("\n");
+        builder.append("last.read.commands.qps:").append(lastReadCommandQps).append("\n");
+        builder.append("last.write.commands.qps:").append(lastWriteCommandQps).append("\n");
         return builder.toString();
     }
 
@@ -242,7 +293,6 @@ public class ProxyInfoUtils {
             builder.append("old_gc_name:").append(oldGC.getName()).append("\n");
             builder.append("old_gc_collection_count:").append(oldGC.getCollectionCount()).append("\n");
             builder.append("old_gc_collection_time:").append(oldGC.getCollectionTime()).append("\n");
-            builder.append("\n");
         }
         return builder.toString();
     }
