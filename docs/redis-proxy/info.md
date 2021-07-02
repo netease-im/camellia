@@ -243,26 +243,25 @@ db0:keys=12231212,expires=3634791,avg_ttl=123444
 ```
 127.0.0.1:6381> info upstream-info 1 default
 # Upstream-Info
-route_conf:redis-sentinel://@127.0.0.1:26379/master1
+route_conf:redis://@127.0.0.1:6379
 bid:1
 bgroup:default
 upstream_cluster_count:1
+upstream0_url:redis://@127.0.0.1:6379
 
 ## Upstream0
-url:redis-sentinel://@127.0.0.1:26379/master1
+url:redis://@127.0.0.1:6379
 ### redis-node-info
-master_url:@127.0.0.1:6380
 redis_version:6.0.6
-used_memory:2503216
-used_memory_human:2.39M
-maxmemory:3221225472
-maxmemory_human:3.00G
-memory_used_rate:0.23873232305049896
-memory_used_rate_human:23.87%
+used_memory:2082800
+used_memory_human:1.99M
+maxmemory:0
+maxmemory_human:0B
+memory_used_rate:0.0
+memory_used_rate_human:0.00%
 maxmemory_policy:noeviction
 hz:10
 role:master
-connected_slaves:1
-slave0:ip=127.0.0.1,port=6379,state=online,offset=570473,lag=1
-db0:keys=12231212,expires=0,avg_ttl=123444
+connected_slaves:0
+db0:keys=39,expires=0,avg_ttl=0
 ```
