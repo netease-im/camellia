@@ -29,9 +29,29 @@ public class RedisHBaseConfiguration {
         return ProxyDynamicConf.getInt("zset.member.ref.key.threshold", 48);
     }
 
+    //string的value超过多少字节开启冷热
+    public static int stringRefKeyThreshold() {
+        return ProxyDynamicConf.getInt("string.ref.key.threshold", 48);
+    }
+
+    //hash的value超过多少字节开启冷热
+    public static int hashRefKeyThreshold() {
+        return ProxyDynamicConf.getInt("hash.ref.key.threshold", 48);
+    }
+
     //zset的member引用缓存时间，单位秒
     public static int zsetMemberRefKeyExpireSeconds() {
         return ProxyDynamicConf.getInt("zset.member.ref.key.cache.expire.seconds", 24 * 3600);
+    }
+
+    //string的value引用缓存时间，单位秒
+    public static int stringRefKeyExpireSeconds() {
+        return ProxyDynamicConf.getInt("string.ref.key.cache.expire.seconds", 2 * 3600);
+    }
+
+    //hash的value引用缓存时间，单位秒
+    public static int hashRefKeyExpireSeconds() {
+        return ProxyDynamicConf.getInt("hash.ref.key.cache.expire.seconds", 2 * 3600);
     }
 
     //redis pipeline操作的最大值

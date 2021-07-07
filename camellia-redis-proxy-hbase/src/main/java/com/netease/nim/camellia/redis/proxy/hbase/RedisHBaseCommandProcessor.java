@@ -11,8 +11,10 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.util.Bytes;
 import redis.clients.jedis.Tuple;
+import redis.clients.util.SafeEncoder;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,6 +26,8 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
 
     private final RedisHBaseZSetMixClient zSetMixClient;
     private final RedisHBaseCommonMixClient commonMixClient;
+    private final RedisHBaseStringMixClient stringMixClient;
+    private final RedisHBaseHashMixClient hashMixClient;
 
     public RedisHBaseCommandProcessor(CamelliaRedisTemplate redisTemplate, CamelliaHBaseTemplate hBaseTemplate) {
         //做一下预热
@@ -33,9 +37,14 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
         } catch (Exception e) {
             throw new IllegalArgumentException("warm fail, please check", e);
         }
+
+        HBaseAsyncWriteExecutor hBaseAsyncWriteExecutor = new HBaseAsyncWriteExecutor(hBaseTemplate,
+                RedisHBaseConfiguration.hbaseAsyncWritePoolSize(), RedisHBaseConfiguration.hbaseAsyncWriteQueueSize());
         //
-        this.zSetMixClient = new RedisHBaseZSetMixClient(redisTemplate, hBaseTemplate);
-        this.commonMixClient = new RedisHBaseCommonMixClient(redisTemplate, this.zSetMixClient);
+        this.zSetMixClient = new RedisHBaseZSetMixClient(redisTemplate, hBaseTemplate, hBaseAsyncWriteExecutor);
+        this.stringMixClient = new RedisHBaseStringMixClient(redisTemplate, hBaseTemplate, hBaseAsyncWriteExecutor);
+        this.hashMixClient = new RedisHBaseHashMixClient(redisTemplate, hBaseTemplate, hBaseAsyncWriteExecutor);
+        this.commonMixClient = new RedisHBaseCommonMixClient(redisTemplate, this.zSetMixClient, this.stringMixClient, this.hashMixClient);
     }
 
     @Override
@@ -103,6 +112,117 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
     public IntegerReply pttl(byte[] key) {
         Long pttl = commonMixClient.pttl(key);
         return new IntegerReply(pttl);
+    }
+
+    @Override
+    public BulkReply get(byte[] key) {
+        byte[] bytes = stringMixClient.get(key);
+        return new BulkReply(bytes);
+    }
+
+    @Override
+    public Reply set(byte[] key, byte[] value1, byte[][] args) {
+        if (args == null || args.length == 0) {
+            String set = stringMixClient.set(key, value1);
+            return new StatusReply(set);
+        }
+        String nxxx = null;
+        String expx = null;
+        Long time = null;
+        boolean needTime = false;
+        for (byte[] arg : args) {
+            if (needTime) {
+                time = Utils.bytesToNum(arg);
+                needTime = false;
+                continue;
+            }
+            String argStr = new String(arg, Utils.utf8Charset);
+            if (argStr.equalsIgnoreCase(RedisKeyword.NX.name())) {
+                nxxx = RedisKeyword.NX.name();
+            } else if (argStr.equalsIgnoreCase(RedisKeyword.XX.name())) {
+                nxxx = RedisKeyword.XX.name();
+            } else if (argStr.equalsIgnoreCase(RedisKeyword.EX.name())) {
+                expx = RedisKeyword.EX.name();
+                needTime = true;
+            } else if (argStr.equalsIgnoreCase(RedisKeyword.PX.name())) {
+                expx = RedisKeyword.PX.name();
+                needTime = true;
+            } else {
+                return ErrorReply.SYNTAX_ERROR;
+            }
+        }
+        if (needTime) {
+            return ErrorReply.SYNTAX_ERROR;
+        }
+        if (nxxx != null && expx != null) {
+            String set = stringMixClient.set(key, value1, SafeEncoder.encode(nxxx), SafeEncoder.encode(expx), time);
+            if (set == null) return BulkReply.NIL_REPLY;
+            return new StatusReply(set);
+        } else if (nxxx != null) {
+            if (nxxx.equalsIgnoreCase(RedisKeyword.NX.name())) {
+                Long setnx = stringMixClient.setnx(key, value1);
+                if (setnx > 0) {
+                    return StatusReply.OK;
+                } else {
+                    return BulkReply.NIL_REPLY;
+                }
+            } else {
+                //当前jedis版本不支持
+                return ErrorReply.NOT_SUPPORT;
+            }
+        } else {
+            if (expx.equalsIgnoreCase(RedisKeyword.EX.name())) {
+                String setex = stringMixClient.setex(key, Math.toIntExact(time), value1);
+                if (setex == null) return BulkReply.NIL_REPLY;
+                return new StatusReply(setex);
+            } else {
+                String psetex = stringMixClient.psetex(key, time, value1);
+                if (psetex == null) return BulkReply.NIL_REPLY;
+                return new StatusReply(psetex);
+            }
+        }
+    }
+
+    @Override
+    public StatusReply setex(byte[] key, byte[] seconds, byte[] value2) {
+        String value = stringMixClient.setex(key, (int) Utils.bytesToNum(seconds), value2);
+        return new StatusReply(value);
+    }
+
+    @Override
+    public StatusReply mset(byte[][] kvs) {
+        if (kvs == null || kvs.length % 2 != 0) {
+            throw Utils.illegalArgumentException();
+        }
+        String mset = stringMixClient.mset(kvs);
+        return new StatusReply(mset);
+    }
+
+    @Override
+    public StatusReply psetex(byte[] key, byte[] millis, byte[] value2) {
+        String value = stringMixClient.psetex(key, Utils.bytesToNum(millis), value2);
+        return new StatusReply(value);
+    }
+
+    @Override
+    public IntegerReply setnx(byte[] key, byte[] value1) {
+        Long value = stringMixClient.setnx(key, value1);
+        return new IntegerReply(value);
+    }
+
+    @Override
+    public MultiBulkReply mget(byte[][] keys) {
+        List<byte[]> mget = stringMixClient.mget(keys);
+        Reply[] replies = new Reply[mget.size()];
+        for (int i = 0; i< keys.length; i++) {
+            byte[] value = mget.get(i);
+            if (value == null) {
+                replies[i] = BulkReply.NIL_REPLY;
+            } else {
+                replies[i] = new BulkReply(value);
+            }
+        }
+        return new MultiBulkReply(replies);
     }
 
     @Override
@@ -310,5 +430,90 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
         Long zlexcount = zSetMixClient.zlexcount(key, min, max);
         RedisHBaseMonitor.incrZSetSize("zlexcount", zlexcount == null ? 0 : zlexcount);
         return new IntegerReply(zlexcount);
+    }
+
+    @Override
+    public IntegerReply hset(byte[] key, byte[] field, byte[] value) {
+        Long hset = hashMixClient.hset(key, field, value);
+        return new IntegerReply(hset);
+    }
+
+    @Override
+    public IntegerReply hsetnx(byte[] key, byte[] field, byte[] value) {
+        Long hset = hashMixClient.hsetnx(key, field, value);
+        return new IntegerReply(hset);
+    }
+
+    @Override
+    public Reply hget(byte[] key, byte[] field) {
+        byte[] hget = hashMixClient.hget(key, field);
+        return new BulkReply(hget);
+    }
+
+    @Override
+    public IntegerReply hexists(byte[] key, byte[] field) {
+        Boolean hexists = hashMixClient.hexists(key, field);
+        return hexists ? IntegerReply.REPLY_1 : IntegerReply.REPLY_0;
+    }
+
+    @Override
+    public IntegerReply hdel(byte[] key, byte[] field) {
+        Long hdel = hashMixClient.hdel(key, field);
+        return new IntegerReply(hdel);
+    }
+
+    @Override
+    public IntegerReply hlen(byte[] key) {
+        Long hlen = hashMixClient.hlen(key);
+        return new IntegerReply(hlen);
+    }
+
+    @Override
+    public StatusReply hmset(byte[] key, byte[][] kvs) {
+        if (kvs == null || kvs.length % 2 != 0) {
+            throw Utils.illegalArgumentException();
+        }
+        Map<byte[], byte[]> kvMap = new HashMap<>();
+        for (int i=0; i< kvs.length; i+=2) {
+            byte[] field = kvs[i];
+            byte[] value = kvs[i+1];
+            kvMap.put(field, value);
+        }
+        String hmset = hashMixClient.hmset(key, kvMap);
+        return new StatusReply(hmset);
+    }
+
+    @Override
+    public MultiBulkReply hmget(byte[] key, byte[][] fields) {
+        if (fields == null || fields.length == 0) {
+            throw Utils.illegalArgumentException();
+        }
+        List<byte[]> hmget = hashMixClient.hmget(key, fields);
+        return ParamUtils.collection2MultiBulkReply(hmget);
+    }
+
+    @Override
+    public MultiBulkReply hkeys(byte[] key) {
+        Set<byte[]> hkeys = hashMixClient.hkeys(key);
+        return ParamUtils.collection2MultiBulkReply(hkeys);
+    }
+
+    @Override
+    public MultiBulkReply hvals(byte[] key) {
+        List<byte[]> hkeys = hashMixClient.hvals(key);
+        return ParamUtils.collection2MultiBulkReply(hkeys);
+    }
+
+    @Override
+    public MultiBulkReply hgetall(byte[] key) {
+        Map<byte[], byte[]> map = hashMixClient.hgetAll(key);
+        Reply[] replies = new Reply[map.size()*2];
+        int index = 0;
+        for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
+            replies[index] = new BulkReply(entry.getKey());
+            replies[index + 1] = new BulkReply(entry.getValue());
+            index += 2;
+        }
+        return new MultiBulkReply(replies);
     }
 }

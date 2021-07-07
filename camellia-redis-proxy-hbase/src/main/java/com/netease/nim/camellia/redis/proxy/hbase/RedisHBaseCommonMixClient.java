@@ -15,33 +15,53 @@ public class RedisHBaseCommonMixClient {
 
     private final CamelliaRedisTemplate redisTemplate;
     private final RedisHBaseZSetMixClient zSetMixClient;
+    private final RedisHBaseStringMixClient stringMixClient;
+    private final RedisHBaseHashMixClient hashMixClient;
 
     public RedisHBaseCommonMixClient(CamelliaRedisTemplate redisTemplate,
-                                     RedisHBaseZSetMixClient zSetMixClient) {
+                                     RedisHBaseZSetMixClient zSetMixClient,
+                                     RedisHBaseStringMixClient stringMixClient,
+                                     RedisHBaseHashMixClient hashMixClient) {
         this.redisTemplate = redisTemplate;
         this.zSetMixClient = zSetMixClient;
+        this.stringMixClient = stringMixClient;
+        this.hashMixClient = hashMixClient;
     }
 
     /**
      *
      */
     public Long del(byte[]... keys) {
-        int ret = 0;
+        List<byte[]> leaveKeys = new ArrayList<>();
+        long ret = 0;
         for (byte[] key : keys) {
             String type = redisTemplate.type(redisKey(key));
-            if (type != null && type.equals("zset")) {
-                Long zremrangeByRank = zSetMixClient.zremrangeByRank(key, 0, -1);
-                if (zremrangeByRank != null && zremrangeByRank > 0) {
-                    ret ++;
+            if (type != null) {
+                if (type.equalsIgnoreCase("zset")) {
+                    Long zremrangeByRank = zSetMixClient.zremrangeByRank(key, 0, -1);
+                    if (zremrangeByRank != null && zremrangeByRank > 0) {
+                        ret++;
+                    }
+                } else if (type.equalsIgnoreCase("string")) {
+                    Long del = stringMixClient.del(key);
+                    if (del > 0) {
+                        ret ++;
+                    }
+                } else if (type.equalsIgnoreCase("hash")) {
+                    Long del = hashMixClient.del(key);
+                    if (del > 0) {
+                        ret ++;
+                    }
+                } else {
+                    leaveKeys.add(redisKey(key));
                 }
             }
         }
-
-        List<byte[]> list = new ArrayList<>(keys.length);
-        for (byte[] key : keys) {
-            list.add(redisKey(key));
+        if (leaveKeys.isEmpty()) {
+            return ret;
+        } else {
+            return redisTemplate.del(leaveKeys.toArray(new byte[0][0])) + ret;
         }
-        return redisTemplate.del(list.toArray(new byte[0][0])) + ret;
     }
 
     /**
