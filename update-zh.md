@@ -5,6 +5,16 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
+# 1.0.32（2021/07/xx）
+### 新增
+* camellia-redis-proxy-hbase新增对string/hash部分命令的冷热分离存储的支持，具体见：[监控](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
+
+### 更新
+* 无
+
+### fix
+* 无
+
 
 # 1.0.31（2021/07/05）
 ### 新增

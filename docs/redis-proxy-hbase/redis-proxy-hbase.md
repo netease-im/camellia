@@ -2,10 +2,10 @@
 # camellia-redis-proxy-hbase
 ## 简介  
 基于camellia-redis、camellia-hbase、camellia-redis-proxy开发   
-目前实现了zset相关的命令，可以实现自动的冷热数据分离（冷数据存hbase，热数据存redis）  
+目前实现了string/hash/zset相关的命令，可以实现自动的冷热数据分离（冷数据存hbase，热数据存redis）  
 1.0.20版本开始，camellia-redis-proxy-hbase进行了重构，且和老版本不兼容，以下内容均为重构后版本的描述    
 
-## 原理
+## zset原理
 zset作为redis中的有序集合，由key、score、value三部分组成，其中value部分在某些场景下可能占用较大的字节数，但是却不会经常访问（比如只要访问score大于某个数值的value集合）     
 为了减少redis的内存占用，我们通过将value部分从zset里抽离出来，zset的value部分本身只存一个索引，通过该索引可以从其他存储结构（我们这里选择了hbase）获取原始的value值    
 
@@ -19,6 +19,12 @@ zset作为redis中的有序集合，由key、score、value三部分组成，其�
 ### 读操作       
 * 当调用zrange等读命令时，先直接从redis查询zset数据，查询出来value之后，判断是否是一个索引还是原始数据，如果是索引，则先去redis查询，查不到则穿透到hbase，若穿透到hbase，会回一写一份到redis（较短ttl）  
 * 关于频控：当忽然有大量的读操作的时候，如果都没有命中redis，会穿透到hbase，为了避免hbase瞬间接收太多的读流量被打挂，支持开启单机的频控（默认关闭），频控方式进行降级是有损的，请结合业务特征按需配置  
+
+## string原理
+和zset类似，对于value，超过阈值的会存一个二级key，二级key在redis有较小的ttl，并且在hbase里有较大的ttl，读取时先取原始key，再取二级key，如果二级key没有取到，穿透到hbase
+
+## hash原理
+和zset类似，hash包括key、field、value三部分组成，其中value部分的处理方法类似于zset的value，也是二级key+hbase
 
 ### 配置
 * 所有的配置参考RedisHBaseConfiguration（配置文件是：camellia-redis-proxy.properties）
@@ -48,11 +54,15 @@ create 'nim:nim_camellia',{NAME=>'d',VERSIONS=>1,BLOCKCACHE=>true,BLOOMFILTER=>'
 ##数据库
 PING,AUTH,QUIT,EXISTS,DEL,TYPE,EXPIRE,
 EXPIREAT,TTL,PEXPIRE,PEXPIREAT,PTTL,
+##String
+SET,GET,MGET,SETNX,SETEX,MSET,
 ##有序集合
 ZADD,ZINCRBY,ZRANK,ZCARD,ZSCORE,ZCOUNT,ZRANGE,ZRANGEBYSCORE,ZRANGEBYLEX,
 ZREVRANK,ZREVRANGE,ZREVRANGEBYSCORE,ZREVRANGEBYLEX,ZREM,
 ZREMRANGEBYRANK,ZREMRANGEBYSCORE,ZREMRANGEBYLEX,ZLEXCOUNT,
-
+##Hash
+HSET,HGET,HSETNX,HMSET,HMGET,HEXISTS,HDEL,HLEN,HKEYS,
+HVALS,HGETALL,
 ```
 
 ## 配置示例

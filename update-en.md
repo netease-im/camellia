@@ -5,6 +5,16 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
+# 1.0.32（2021/07/xx）
+### add
+* camellia-redis-proxy-hbase support string/hash commands to hot-cold separate store
+
+### update
+* none
+
+### fix
+* none
+
 # 1.0.31（2021/07/05）
 ### add
 * info commands support section param, support get upstream-info(such like memory/version/master-slave/slot)
