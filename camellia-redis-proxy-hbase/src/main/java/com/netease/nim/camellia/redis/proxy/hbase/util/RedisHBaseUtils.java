@@ -93,7 +93,7 @@ public class RedisHBaseUtils {
 
     public static final int STRING_REF_KEY_THRESHOLD_MIN = 32;//阈值最小值是32
     public static int stringRefKeyThreshold() {
-        int threshold = RedisHBaseConfiguration.stringRefKeyThreshold();
+        int threshold = RedisHBaseConfiguration.stringValueRefKeyThreshold();
         return Math.max(threshold, STRING_REF_KEY_THRESHOLD_MIN);
     }
 
@@ -105,7 +105,7 @@ public class RedisHBaseUtils {
 
     public static final int HASH_REF_KEY_THRESHOLD_MIN = 32;//阈值最小值是32
     public static int hashRefKeyThreshold() {
-        int threshold = RedisHBaseConfiguration.hashRefKeyThreshold();
+        int threshold = RedisHBaseConfiguration.hashMemberRefKeyThreshold();
         return Math.max(threshold, HASH_REF_KEY_THRESHOLD_MIN);
     }
 
