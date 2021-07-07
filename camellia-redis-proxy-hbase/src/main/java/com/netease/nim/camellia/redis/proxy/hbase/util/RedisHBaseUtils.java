@@ -98,9 +98,9 @@ public class RedisHBaseUtils {
     }
 
     public static int stringRefKeyExpireSeconds(Integer expireSeconds) {
-        if (expireSeconds == null) return RedisHBaseConfiguration.stringRefKeyExpireSeconds();
+        if (expireSeconds == null) return RedisHBaseConfiguration.stringValueRefKeyExpireSeconds();
         if (expireSeconds == 0) expireSeconds = 1;
-        return Math.min(RedisHBaseConfiguration.stringRefKeyExpireSeconds(), expireSeconds);
+        return Math.min(RedisHBaseConfiguration.stringValueRefKeyExpireSeconds(), expireSeconds);
     }
 
     public static final int HASH_REF_KEY_THRESHOLD_MIN = 32;//阈值最小值是32
@@ -110,7 +110,7 @@ public class RedisHBaseUtils {
     }
 
     public static int hashRefKeyExpireSeconds() {
-        return RedisHBaseConfiguration.hashRefKeyExpireSeconds();
+        return RedisHBaseConfiguration.hashMemberRefKeyExpireSeconds();
     }
 
     public static byte[] hbaseGet(CamelliaHBaseTemplate hBaseTemplate, CamelliaRedisTemplate redisTemplate,

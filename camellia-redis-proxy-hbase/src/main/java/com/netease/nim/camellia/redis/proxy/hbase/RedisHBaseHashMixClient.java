@@ -53,7 +53,7 @@ public class RedisHBaseHashMixClient {
                     deleteList.add(delete);
                     pipeline.del(redisKey(value));
                     pipelineCount ++;
-                    if (pipelineCount >= 100) {
+                    if (pipelineCount >= RedisHBaseConfiguration.redisMaxPipeline()) {
                         pipeline.sync();
                         pipelineCount = 0;
                     }
@@ -97,9 +97,11 @@ public class RedisHBaseHashMixClient {
             }
             flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "hset");
             RedisHBaseMonitor.incr("hset(byte[], byte[], byte[])", OperationType.REDIS_HBASE.name());
+            RedisHBaseMonitor.incrValueSize("hash", value.length, true);
             return response.get();
         } else {
             RedisHBaseMonitor.incr("hset(byte[], byte[], byte[])", OperationType.REDIS_ONLY.name());
+            RedisHBaseMonitor.incrValueSize("hash", value.length, false);
             return redisTemplate.hset(redisKey(key), field, value);
         }
     }
@@ -113,9 +115,11 @@ public class RedisHBaseHashMixClient {
                 flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "hsetnx");
             }
             RedisHBaseMonitor.incr("hsetnx(byte[], byte[], byte[])", OperationType.REDIS_HBASE.name());
+            RedisHBaseMonitor.incrValueSize("hash", value.length, true);
             return hsetnx;
         } else {
             RedisHBaseMonitor.incr("hsetnx(byte[], byte[], byte[])", OperationType.REDIS_ONLY.name());
+            RedisHBaseMonitor.incrValueSize("hash", value.length, false);
             return redisTemplate.hsetnx(redisKey(key), field, value);
         }
     }
@@ -171,8 +175,10 @@ public class RedisHBaseHashMixClient {
                 byte[] refKey = buildRefKey(key, v);
                 map.put(k, refKey);
                 refKeyMap.put(refKey, v);
+                RedisHBaseMonitor.incrValueSize("hash", v.length, true);
             } else {
                 map.put(k, v);
+                RedisHBaseMonitor.incrValueSize("hash", v.length, false);
             }
         }
         if (refKeyMap.isEmpty()) {
@@ -189,7 +195,7 @@ public class RedisHBaseHashMixClient {
                     put.addColumn(CF_D, COL_DATA, entry.getValue());
                     putList.add(put);
                     pipelineCount ++;
-                    if (pipelineCount >= 100) {
+                    if (pipelineCount >= RedisHBaseConfiguration.redisMaxPipeline()) {
                         pipeline.sync();
                         pipelineCount = 0;
                     }
@@ -198,17 +204,20 @@ public class RedisHBaseHashMixClient {
                 response = pipeline.hmset(redisKey(key), map);
                 pipeline.sync();
             }
-            HBaseAsyncWriteExecutor.HBaseAsyncWriteTask task = new HBaseAsyncWriteExecutor.HBaseAsyncWriteTask();
-            task.setKey(key);
-            task.setPuts(putList);
-            boolean success = hBaseAsyncWriteExecutor.submit(task);
-            if (!success) {
-                if (RedisHBaseConfiguration.hbaseDegradedIfAsyncWriteSubmitFail()) {
-                    logger.error("hBaseAsyncWriteExecutor submit fail for hmset, degraded hbase write, key = {}", Utils.bytesToString(key));
-                    RedisHBaseMonitor.incrDegraded("hmset|async_write_submit_fail");
-                } else {
-                    logger.warn("hBaseAsyncWriteExecutor submit fail, write sync for hmset, key = {}", Utils.bytesToString(key));
-                    hBaseTemplate.put(hbaseTableName(), putList);
+            List<List<Put>> split = split(putList, RedisHBaseConfiguration.hbaseMaxBatch());
+            for (List<Put> puts : split) {
+                HBaseAsyncWriteExecutor.HBaseAsyncWriteTask task = new HBaseAsyncWriteExecutor.HBaseAsyncWriteTask();
+                task.setKey(key);
+                task.setPuts(puts);
+                boolean success = hBaseAsyncWriteExecutor.submit(task);
+                if (!success) {
+                    if (RedisHBaseConfiguration.hbaseDegradedIfAsyncWriteSubmitFail()) {
+                        logger.error("hBaseAsyncWriteExecutor submit fail for hmset, degraded hbase write, key = {}", Utils.bytesToString(key));
+                        RedisHBaseMonitor.incrDegraded("hmset|async_write_submit_fail");
+                    } else {
+                        logger.warn("hBaseAsyncWriteExecutor submit fail, write sync for hmset, key = {}", Utils.bytesToString(key));
+                        hBaseTemplate.put(hbaseTableName(), putList);
+                    }
                 }
             }
             RedisHBaseMonitor.incr("hmset(byte[], Map)", OperationType.REDIS_HBASE.name());
@@ -243,7 +252,7 @@ public class RedisHBaseHashMixClient {
                 if (isRefKey(key, value)) {
                     Response<byte[]> response = pipeline.get(redisKey(value));
                     pipelineCount ++;
-                    if (pipelineCount >= 100) {
+                    if (pipelineCount >= RedisHBaseConfiguration.redisMaxPipeline()) {
                         pipeline.sync();
                         pipelineCount = 0;
                     }
@@ -295,7 +304,7 @@ public class RedisHBaseHashMixClient {
                             ret.put(field, value);
                             pipeline.setex(redisKey(getList.get(i).getRow()), hashRefKeyExpireSeconds(), value);
                             pipelineCount ++;
-                            if (pipelineCount >= 100) {
+                            if (pipelineCount >= RedisHBaseConfiguration.redisMaxPipeline()) {
                                 pipeline.sync();
                                 pipelineCount = 0;
                             }
@@ -331,7 +340,7 @@ public class RedisHBaseHashMixClient {
                     Response<byte[]> response = pipeline.get(redisKey(bytes));
                     pipelineMap.put(i, response);
                     pipelineCount ++;
-                    if (pipelineCount >= 100) {
+                    if (pipelineCount >= RedisHBaseConfiguration.redisMaxPipeline()) {
                         pipeline.sync();
                         pipelineCount = 0;
                     }

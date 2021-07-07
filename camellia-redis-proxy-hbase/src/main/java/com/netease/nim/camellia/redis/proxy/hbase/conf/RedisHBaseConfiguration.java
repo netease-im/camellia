@@ -45,13 +45,13 @@ public class RedisHBaseConfiguration {
     }
 
     //string的value引用缓存时间，单位秒
-    public static int stringRefKeyExpireSeconds() {
-        return ProxyDynamicConf.getInt("string.ref.key.cache.expire.seconds", 2 * 3600);
+    public static int stringValueRefKeyExpireSeconds() {
+        return ProxyDynamicConf.getInt("string.value.ref.key.cache.expire.seconds", 2 * 3600);
     }
 
     //hash的value引用缓存时间，单位秒
-    public static int hashRefKeyExpireSeconds() {
-        return ProxyDynamicConf.getInt("hash.ref.key.cache.expire.seconds", 2 * 3600);
+    public static int hashMemberRefKeyExpireSeconds() {
+        return ProxyDynamicConf.getInt("hash.member.ref.key.cache.expire.seconds", 2 * 3600);
     }
 
     //redis pipeline操作的最大值

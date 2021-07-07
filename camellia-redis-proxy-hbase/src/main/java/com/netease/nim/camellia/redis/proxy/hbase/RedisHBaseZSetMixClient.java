@@ -65,10 +65,10 @@ public class RedisHBaseZSetMixClient {
                     Put put = new Put(memberRefKey);
                     put.addColumn(CF_D, COL_DATA, member);
                     putList.add(put);
-                    RedisHBaseMonitor.incrZSetMemberSize(member.length, true);
+                    RedisHBaseMonitor.incrValueSize("zset", member.length, true);
                 } else {
                     newScoreMembers.put(member, entry.getValue());
-                    RedisHBaseMonitor.incrZSetMemberSize(member.length, false);
+                    RedisHBaseMonitor.incrValueSize("zset", member.length, false);
                 }
             }
             Response<Long> response = pipeline.zadd(redisKey(key), newScoreMembers);

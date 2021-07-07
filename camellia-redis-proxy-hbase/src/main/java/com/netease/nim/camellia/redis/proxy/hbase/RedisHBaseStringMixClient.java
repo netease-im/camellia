@@ -84,9 +84,11 @@ public class RedisHBaseStringMixClient {
             }
             flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "set");
             RedisHBaseMonitor.incr("set(byte[], byte[])", OperationType.REDIS_HBASE.name());
+            RedisHBaseMonitor.incrValueSize("string", value.length, true);
             return response.get();
         } else {
             RedisHBaseMonitor.incr("set(byte[], byte[])", OperationType.REDIS_ONLY.name());
+            RedisHBaseMonitor.incrValueSize("string", value.length, false);
             return redisTemplate.set(redisKey(key), value);
         }
     }
@@ -104,16 +106,18 @@ public class RedisHBaseStringMixClient {
                     pipeline.setex(redisKey(refKey), stringRefKeyExpireSeconds(null), value);
                     flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "mset");
                     pipelineCount ++;
-                    if (pipelineCount >= 100) {
+                    if (pipelineCount >= RedisHBaseConfiguration.redisMaxPipeline()) {
                         pipeline.sync();
                         pipelineCount = 0;
                     }
                     list.add(redisKey(key));
                     list.add(refKey);
                     hitHBase = true;
+                    RedisHBaseMonitor.incrValueSize("string", value.length, true);
                 } else {
                     list.add(redisKey(key));
                     list.add(value);
+                    RedisHBaseMonitor.incrValueSize("string", value.length, false);
                 }
             }
             pipeline.sync();
@@ -162,9 +166,11 @@ public class RedisHBaseStringMixClient {
                 flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "set");
             }
             RedisHBaseMonitor.incr("set(byte[], byte[], byte[], byte[], long)", OperationType.REDIS_HBASE.name());
+            RedisHBaseMonitor.incrValueSize("string", value.length, true);
             return set;
         } else {
             RedisHBaseMonitor.incr("set(byte[], byte[], byte[], byte[], long)", OperationType.REDIS_ONLY.name());
+            RedisHBaseMonitor.incrValueSize("string", value.length, false);
             return redisTemplate.set(redisKey(key), value);
         }
     }
@@ -178,9 +184,11 @@ public class RedisHBaseStringMixClient {
                 flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "setnx");
             }
             RedisHBaseMonitor.incr("setnx(byte[], byte[])", OperationType.REDIS_HBASE.name());
+            RedisHBaseMonitor.incrValueSize("string", value.length, true);
             return setnx;
         } else {
             RedisHBaseMonitor.incr("setnx(byte[], byte[])", OperationType.REDIS_ONLY.name());
+            RedisHBaseMonitor.incrValueSize("string", value.length, false);
             return redisTemplate.setnx(redisKey(key), value);
         }
     }
@@ -194,9 +202,11 @@ public class RedisHBaseStringMixClient {
                 flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "setex");
             }
             RedisHBaseMonitor.incr("setex(byte[], byte[])", OperationType.REDIS_HBASE.name());
+            RedisHBaseMonitor.incrValueSize("string", value.length, true);
             return setex;
         } else {
             RedisHBaseMonitor.incr("setex(byte[], byte[])", OperationType.REDIS_ONLY.name());
+            RedisHBaseMonitor.incrValueSize("string", value.length, false);
             return redisTemplate.setex(redisKey(key), seconds, value);
         }
     }
@@ -210,9 +220,11 @@ public class RedisHBaseStringMixClient {
                 flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "psetx");
             }
             RedisHBaseMonitor.incr("psetex(byte[], byte[])", OperationType.REDIS_HBASE.name());
+            RedisHBaseMonitor.incrValueSize("string", value.length, true);
             return setex;
         } else {
             RedisHBaseMonitor.incr("psetex(byte[], byte[])", OperationType.REDIS_ONLY.name());
+            RedisHBaseMonitor.incrValueSize("string", value.length, false);
             return redisTemplate.psetex(redisKey(key), milliseconds, value);
         }
     }
@@ -239,7 +251,7 @@ public class RedisHBaseStringMixClient {
                         pipelineCount ++;
                         missRefKey.put(i, value);
                         missValue.put(i, response);
-                        if (pipelineCount >= 100) {
+                        if (pipelineCount >= RedisHBaseConfiguration.redisMaxPipeline()) {
                             pipeline.sync();
                             pipelineCount = 0;
                         }
@@ -286,7 +298,7 @@ public class RedisHBaseStringMixClient {
                             if (value != null) {
                                 pipeline.setex(redisKey(result.getRow()), stringRefKeyExpireSeconds(null), value);
                                 pipelineCount ++;
-                                if (pipelineCount >= 100) {
+                                if (pipelineCount >= RedisHBaseConfiguration.redisMaxPipeline()) {
                                     pipeline.sync();
                                     pipelineCount = 0;
                                 }

@@ -13,7 +13,7 @@ public class RedisHBaseStats {
     private List<Stats2> stats2List = new ArrayList<>();
     private List<QueueStats> queueStatsList = new ArrayList<>();
     private List<DegradedStats> degradedStatsList = new ArrayList<>();
-    private ZSetMemberSizeStats zSetMemberSizeStats = new ZSetMemberSizeStats();
+    private List<ValueSizeStats> valueSizeStatsList = new ArrayList<>();
     private List<ZSetSizeStats> zSetSizeStatsList = new ArrayList<>();
 
     public List<Stats> getStatsList() {
@@ -48,12 +48,12 @@ public class RedisHBaseStats {
         this.degradedStatsList = degradedStatsList;
     }
 
-    public ZSetMemberSizeStats getzSetMemberSizeStats() {
-        return zSetMemberSizeStats;
+    public List<ValueSizeStats> getValueSizeStatsList() {
+        return valueSizeStatsList;
     }
 
-    public void setzSetMemberSizeStats(ZSetMemberSizeStats zSetMemberSizeStats) {
-        this.zSetMemberSizeStats = zSetMemberSizeStats;
+    public void setValueSizeStatsList(List<ValueSizeStats> valueSizeStatsList) {
+        this.valueSizeStatsList = valueSizeStatsList;
     }
 
     public List<ZSetSizeStats> getzSetSizeStatsList() {
@@ -166,11 +166,20 @@ public class RedisHBaseStats {
         }
     }
 
-    public static class ZSetMemberSizeStats {
+    public static class ValueSizeStats {
+        private String type;
         private long thresholdExceededCount;
         private long thresholdNotExceededCount;
         private long maxSize;
         private double avgSize;
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
 
         public long getThresholdExceededCount() {
             return thresholdExceededCount;
