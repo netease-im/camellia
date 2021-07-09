@@ -13,7 +13,7 @@ proxy会将这些value进行拆分，原始key进行存储value的一个索引�
 一个写命令（如set、hset、zadd）请求到proxy，proxy会判断value部分是否超过阈值，如果没有超过则直接写入，如果超过了则生成索引，实际写入的是索引，同时把索引和实际value的关系写入hbase  
 为了提高性能和降低rt，索引和实际value的关系会同步写入到redis（给一个较小的ttl），并且异步批量刷新到hbase  
 ### 读操作
-一个读命令（如get、zrange、hget）请求到proxy，proxy先直接获取该key的value，然后判断value是否是一个索引，如果不是则直接返回，否则尝试去redis里获取value，获取不到再到hbase里获取（获取后会回填，并给一个较小的ttl）  
+一个读命令（如get、zrange、hget）请求到proxy，proxy先直接获取该key的value，然后判断value是否是一个索引，如果不是则直接返回，否则尝试去redis里获取value，获取不到再到hbase里获取（获取后会回填到redis，并给一个较小的ttl）  
 
 ## zset
 zset作为redis中的有序集合，由key、score、value三部分组成，value会有二级索引结构  
