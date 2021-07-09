@@ -3,28 +3,25 @@
 ## 简介  
 基于camellia-redis、camellia-hbase、camellia-redis-proxy开发   
 目前实现了string/hash/zset相关的命令，可以实现自动的冷热数据分离（冷数据存hbase，热数据存redis）  
-1.0.20版本开始，camellia-redis-proxy-hbase进行了重构，且和老版本不兼容，以下内容均为重构后版本的描述    
+1.0.20版本开始，camellia-redis-proxy-hbase进行了重构，且和老版本不兼容，以下内容均为重构后版本的描述
 
-## zset原理
-zset作为redis中的有序集合，由key、score、value三部分组成，其中value部分在某些场景下可能占用较大的字节数，但是却不会经常访问（比如只要访问score大于某个数值的value集合）     
-为了减少redis的内存占用，我们通过将value部分从zset里抽离出来，zset的value部分本身只存一个索引，通过该索引可以从其他存储结构（我们这里选择了hbase）获取原始的value值    
-
+## 基本原理
+对于redis中部分key的value部分（如string的value，zset的value，hash的value），可能占用较大字节  
+同时整个key的ttl较长，但是又不是时刻访问，可能这个key不是高频访问，或者这个key的某些部分不是高频访问（如zset根据score取部分value，hash根据field取部分value）     
+proxy会将这些value进行拆分，原始key进行存储value的一个索引，索引=md5(key) + md5(value)，并且将原始value保存在持久化k-v里，我们选择的是hbase（后续可以支持其他持久化k-v服务，如mysql、RocksDB等）  
 ### 写操作
-* 当zadd一个超过阈值的value到某一个zset的key里的时候，会将value计算出一个索引，计算方法value_ref_key=md5(key)+md5(value)，实际的zset仅会保存value_ref_key，原始value会以简单k-v的形式保存在hbase里  
-* 原始value除了持久化在hbase里之外，还会同步写到redis里（以一个简单的k-v形式存储，并搭配一个较短的ttl），通过这种方式来加快读取操作  
-* 对于zrem/zremrangebyrank等删除操作，会先range出需要删除的value，随后再删除zset里的索引信息以及redis/hbase里的原始value信息  
-* 如果调用了del命令，同样会先range出所有需要删除的原始value，再删除zset本身这个key
-* 关于异步刷hbase：对于任何hbase的写操作，支持开启异步模式（默认开启），即写完redis立即返回，hbase的写操作（put/delete）会进入一个异步内存队列，然后批量刷到hbase，由于原始value会写一份到redis（较短ttl，从而降低redis内存使用量），因此异步写hbase不会导致写完后读不到      
+一个写命令（如set、hset、zadd）请求到proxy，proxy会判断value部分是否超过阈值，如果没有超过则直接写入，如果超过了则生成索引，实际写入的是索引，同时把索引和实际value的关系写入hbase  
+为了提高性能和降低rt，索引和实际value的关系会同步写入到redis（给一个较小的ttl），并且异步批量刷新到hbase  
+### 读操作
+一个读命令（如get、zrange、hget）请求到proxy，proxy先直接获取该key的value，然后判断value是否是一个索引，如果不是则直接返回，否则尝试去redis里获取value，获取不到再到hbase里获取（获取后会回填，并给一个较小的ttl）  
 
-### 读操作       
-* 当调用zrange等读命令时，先直接从redis查询zset数据，查询出来value之后，判断是否是一个索引还是原始数据，如果是索引，则先去redis查询，查不到则穿透到hbase，若穿透到hbase，会回一写一份到redis（较短ttl）  
-* 关于频控：当忽然有大量的读操作的时候，如果都没有命中redis，会穿透到hbase，为了避免hbase瞬间接收太多的读流量被打挂，支持开启单机的频控（默认关闭），频控方式进行降级是有损的，请结合业务特征按需配置  
+## zset
+zset作为redis中的有序集合，由key、score、value三部分组成，value会有二级索引结构  
+## string
+string是key-value结构，value部分会有二级索引结构  
+## hash
+hash是redis中的哈希结构，由key、field、value三部分组成，value部分有二级索引结构（field没有）  
 
-## string原理
-和zset类似，对于value，超过阈值的会存一个二级key，二级key在redis有较小的ttl，并且在hbase里有较大的ttl，读取时先取原始key，再取二级key，如果二级key没有取到，穿透到hbase
-
-## hash原理
-和zset类似，hash包括key、field、value三部分组成，其中value部分的处理方法类似于zset的value，也是二级key+hbase
 
 ### 配置
 * 所有的配置参考RedisHBaseConfiguration（配置文件是：camellia-redis-proxy.properties）
