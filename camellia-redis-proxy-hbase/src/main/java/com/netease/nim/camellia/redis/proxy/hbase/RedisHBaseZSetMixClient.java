@@ -578,10 +578,6 @@ public class RedisHBaseZSetMixClient {
                             pipeline.sync();
                             pipelineSize = 0;
                         }
-                    } else {
-                        logger.warn("get original zset member from hbase fail, key = {}, member-ref-key = {}",
-                                Utils.bytesToString(key), Bytes.toHex(bytes));
-                        RedisHBaseMonitor.incrDegraded("hbase_read_missing");
                     }
                 } else {
                     ret.add(bytes);
@@ -648,10 +644,6 @@ public class RedisHBaseZSetMixClient {
                                         pipelineSize = 0;
                                     }
                                     list.add(new Tuple(originalValue, tuple.getScore()));
-                                } else {
-                                    logger.warn("get original zset member tuple from hbase fail, key = {}, member-ref-key = {}",
-                                            Utils.bytesToString(key), Bytes.toHex(bytes));
-                                    RedisHBaseMonitor.incrDegraded("hbase_read_missing");
                                 }
                             } else {
                                 RedisHBaseMonitor.incrDegraded("hbase_read_freq_degraded");
