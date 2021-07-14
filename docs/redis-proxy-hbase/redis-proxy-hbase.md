@@ -8,7 +8,7 @@
 ## 基本原理
 对于redis中部分key的value部分（如string的value，zset的value，hash的value），可能占用较大字节  
 同时整个key的ttl较长，但是又不是时刻访问，可能这个key不是高频访问，或者这个key的某些部分不是高频访问（如zset根据score取部分value，hash根据field取部分value）     
-proxy会将这些value进行拆分，原始key进行存储value的一个索引，索引=md5(key) + md5(value)，并且将原始value保存在持久化k-v里，我们选择的是hbase（后续可以支持其他持久化k-v服务，如mysql、RocksDB等）  
+proxy会将这些value进行拆分，原始key仅存储value的一个索引，索引=md5(key) + md5(value)，并且将原始value保存在持久化k-v里，我们选择的是hbase（后续可以支持其他持久化k-v服务，如mysql、RocksDB等）  
 ### 写操作
 一个写命令（如set、hset、zadd）请求到proxy，proxy会判断value部分是否超过阈值，如果没有超过则直接写入，如果超过了则生成索引，实际写入的是索引，同时把索引和实际value的关系写入hbase  
 为了提高性能和降低rt，索引和实际value的关系会同步写入到redis（给一个较小的ttl），并且异步批量刷新到hbase  
