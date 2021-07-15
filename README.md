@@ -64,7 +64,7 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 [快速开始](/docs/hbase-template/hbase-template.md)  
 ### 6、camellia-redis-proxy-hbase    
 基于camellia-redis-proxy、CamelliaRedisTemplate、CamelliaHBaseTemplate  
-支持zset命令的冷热分离存储  
+支持string/hash/zset相关命令的冷热分离存储  
 [快速开始](/docs/redis-proxy-hbase/redis-proxy-hbase.md)    
 ### 7、camellia-redis-toolkit  
 基于CamelliaRedisTemplate，提供了redis相关的一些工具类，如分布式锁、分布式id生成等    

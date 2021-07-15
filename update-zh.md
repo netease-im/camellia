@@ -7,7 +7,7 @@
 
 # 1.0.32（2021/07/xx）
 ### 新增
-* camellia-redis-proxy-hbase新增对string/hash部分命令的冷热分离存储的支持，具体见：[文档](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
+* camellia-redis-proxy-hbase新增对string/hash相关命令的冷热分离存储的支持，具体见：[文档](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
 
 ### 更新
 * 无

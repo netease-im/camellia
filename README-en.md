@@ -64,7 +64,7 @@ base on camellia-core and hbase-client，main class is CamelliaHBaseTemplate
 support client read-write-separate/double-write  
 [QUICK START](/docs/hbase-template/hbase-template.md)  
 ### 6、camellia-redis-proxy-hbase    
-base on camellia-redis-proxy、CamelliaRedisTemplate、CamelliaHBaseTemplate, support hot-code-sepatation on redis zset commands  
+base on camellia-redis-proxy、CamelliaRedisTemplate、CamelliaHBaseTemplate, support hot-code-sepatation on redis string/hash/zset commands  
 [QUICK START](/docs/redis-proxy-hbase/redis-proxy-hbase.md)  
 ### 7、camellia-redis-toolkit  
 base on CamelliaRedisTemplate，provide some toolkit of redis, such as redis-lock  
