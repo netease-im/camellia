@@ -4,19 +4,19 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis-toolkit-samples</artifactId>
-	<version>1.0.32-SNAPSHOT</version>
+	<version>1.0.32</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-samples</artifactId>
-		<version>1.0.32-SNAPSHOT</version>
+		<version>1.0.32</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-toolkit</artifactId>
-			<version>1.0.32-SNAPSHOT</version>
+			<version>1.0.32</version>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
