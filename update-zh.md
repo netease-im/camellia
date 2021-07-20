@@ -8,6 +8,7 @@
 # 1.0.33（2021/07/xx）
 ### 新增
 * camellia-redis-proxy提供TroubleTrickKeysCommandInterceptor去避免异常key导致后端redis异常（如业务层bug导致的死循环引起后端redis被打挂）
+* camellia-redis-proxy支持DUMP/RESTORE命令
 
 ### 更新
 * 无

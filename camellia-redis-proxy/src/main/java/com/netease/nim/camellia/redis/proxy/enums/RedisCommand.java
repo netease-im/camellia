@@ -135,6 +135,8 @@ public enum RedisCommand {
     LPOS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.LIST, false, CommandKeyType.SIMPLE_SINGLE),
     SMISMEMBER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.SET, false, CommandKeyType.SIMPLE_SINGLE),
     HSTRLEN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.HASH, false, CommandKeyType.SIMPLE_SINGLE),
+    DUMP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.SIMPLE_SINGLE),
+    RESTORE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, false, CommandKeyType.SIMPLE_SINGLE),
 
     /**
      * Restrictive Support
@@ -221,8 +223,6 @@ public enum RedisCommand {
     SLOWLOG(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     OBJECT(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     SENTINEL(CommandSupportType.NOT_SUPPORT, null, null, false, null),
-    DUMP(CommandSupportType.NOT_SUPPORT, null, null, false, null),
-    RESTORE(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     TIME(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     MIGRATE(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     WAIT(CommandSupportType.NOT_SUPPORT, null, null, false, null),

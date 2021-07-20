@@ -8,6 +8,7 @@
 # 1.0.33（2021/07/xx）
 ### add
 * camellia-redis-proxy provide TroubleTrickKeysCommandInterceptor to avoid trouble-trick-keys attack upstream redis
+* camellia-redis-proxy support DUMP/RESTORE commands
 
 ### update
 * none
