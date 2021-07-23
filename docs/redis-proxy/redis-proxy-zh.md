@@ -17,7 +17,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持双（多）读
 * 支持路由配置在线变更
 * 支持多配置，即业务A路由到redis1，B业务路由到redis2
-* 支持自定义方法拦截器，可以用于拦截非法请求（如自定义key/value不得超过多少字节等）
+* 支持自定义方法拦截器，可以用于实现一些自定义规则（如自定义key/value不得超过多少字节、临时屏蔽某些key不能被访问、或者基于拦截器自定义双写策略等）
 * 支持监控，可以监控各命令的调用量、方法耗时等，支持设置监控回调MonitorCallback
 * 支持慢查询监控，支持设置SlowCommandMonitorCallback
 * 支持热key监控，支持设置HotKeyMonitorCallback
@@ -215,7 +215,9 @@ java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy-samples-
 具体可见：[路由配置](route.md)
 
 ## 控制
-camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访问的目的  
+camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访问的目的，此外proxy提供了几个默认的命令拦截器实现，可以按需使用：  
+* TroubleTrickKeysCommandInterceptor 用于临时屏蔽某些key的访问    
+* MultiWriteCommandInterceptor 用于自定义配置双写策略(key级别)   
 
 具体可见：[控制](control.md)
 

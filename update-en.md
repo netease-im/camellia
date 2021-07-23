@@ -9,6 +9,7 @@
 ### add
 * camellia-redis-proxy provide TroubleTrickKeysCommandInterceptor to avoid trouble-trick-keys attack upstream redis
 * camellia-redis-proxy support DUMP/RESTORE commands
+* camellia-redis-proxy provide MultiWriteCommandInterceptor to setting custom multi-write-policy(such as some key need multi-write, others no need)
 
 ### update
 * none
