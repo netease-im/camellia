@@ -1,7 +1,7 @@
 
 # camellia-redis 
 ## 简介
-基于camellia-core和jedis开发的Redis客户端CamelliaRedisTemplate  
+基于camellia-core和jedis（2.9.3）开发的Redis客户端CamelliaRedisTemplate  
 
 ## 特性
 * 支持redis、redis-sentinel、redis-cluster，对外暴露统一的api（方法和参数同普通jedis）
