@@ -121,8 +121,9 @@ trouble.trick.keys=ZREVRANGEBYSCORE:["key1","key2"];GET:["key3","key4"]
 ### MultiWriteCommandInterceptor
 #### 用途
 用于自定义双写策略  
-可以自定义到key级别的双写策略，如：某些key需要双写，某些key不需要双写，某些key双写到redisA，某些key双写到redisB  
-备注：只有proxy完整支持的命令集合中的写命令支持本模式，对于那些限制性支持的命令（如阻塞型命令、发布订阅命令等）是不支持使用MultiWriteCommandInterceptor来双写的  
+可以自定义key级别的双写策略，如：某些key需要双写，某些key不需要双写，某些key双写到redisA，某些key双写到redisB  
+备注一：只有proxy完整支持的命令集合中的写命令支持本模式，对于那些限制性支持的命令（如阻塞型命令、发布订阅命令等）是不支持使用MultiWriteCommandInterceptor来双写的  
+备注二：redis事务包裹的写命令使用MultiWriteCommandInterceptor双写时可能主路由执行失败而双写成功  
 
 #### 配置示例
 ```yaml

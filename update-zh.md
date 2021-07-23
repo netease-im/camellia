@@ -7,8 +7,8 @@
 
 # 1.0.33（2021/07/xx）
 ### 新增
-* camellia-redis-proxy提供TroubleTrickKeysCommandInterceptor去避免异常key导致后端redis异常（如业务层bug导致的死循环引起后端redis被打挂），具体见：[控制](/docs/redis-proxy/control.md)
-* camellia-redis-proxy提供MultiWriteCommandInterceptor用于自定义双写策略（比如有些key需要双写，有些key不需要，有些key双写到A，有些key双写到B），具体见：[控制](/docs/redis-proxy/control.md)
+* camellia-redis-proxy提供TroubleTrickKeysCommandInterceptor去避免异常key导致后端redis异常（比如业务层bug导致的死循环引起后端redis被打挂，需要临时屏蔽相关请求来保护后端redis），具体见：[控制](/docs/redis-proxy/control.md)
+* camellia-redis-proxy提供MultiWriteCommandInterceptor用于自定义双写策略（比如有些key需要双写，有些key不需要，有些key双写到redisA，有些key双写到redisB），具体见：[控制](/docs/redis-proxy/control.md)
 * camellia-redis-proxy支持DUMP/RESTORE命令
 * CamelliaRedisTemplate支持DUMP/RESTORE命令
 
