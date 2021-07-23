@@ -1950,4 +1950,32 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
     public Object evalsha(byte[] sha1, int keyCount, byte[]... params) {
         throw new CamelliaRedisException("not invoke here");
     }
+
+    @ReadOp
+    @Override
+    public byte[] dump(@ShadingParam String key) {
+        LogUtil.debugLog(resource, key);
+        return redis.dump(key);
+    }
+
+    @ReadOp
+    @Override
+    public byte[] dump(@ShadingParam byte[] key) {
+        LogUtil.debugLog(resource, key);
+        return redis.dump(key);
+    }
+
+    @WriteOp
+    @Override
+    public String restore(@ShadingParam byte[] key, int ttl, byte[] serializedValue) {
+        LogUtil.debugLog(resource, key);
+        return redis.restore(key, ttl, serializedValue);
+    }
+
+    @WriteOp
+    @Override
+    public String restore(@ShadingParam String key, int ttl, byte[] serializedValue) {
+        LogUtil.debugLog(resource, key);
+        return redis.restore(key, ttl, serializedValue);
+    }
 }

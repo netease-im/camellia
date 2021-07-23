@@ -1472,4 +1472,28 @@ public class CamelliaRedisPipeline implements ICamelliaRedisPipeline {
         check();
         return pipeline.georadiusByMember(key, member, radius, unit, param);
     }
+
+    @Override
+    public Response<byte[]> dump(String key) {
+        check();
+        return pipeline.dump(key);
+    }
+
+    @Override
+    public Response<byte[]> dump(byte[] key) {
+        check();
+        return pipeline.dump(key);
+    }
+
+    @Override
+    public Response<String> restore(byte[] key, int ttl, byte[] serializedValue) {
+        check();
+        return pipeline.restore(key, ttl, serializedValue);
+    }
+
+    @Override
+    public Response<String> restore(String key, int ttl, byte[] serializedValue) {
+        check();
+        return pipeline.restore(key, ttl, serializedValue);
+    }
 }

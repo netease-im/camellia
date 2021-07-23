@@ -562,4 +562,12 @@ public interface ICamelliaRedis {
     Object eval(byte[] script, int keyCount, byte[]... params);
 
     Object evalsha(byte[] sha1, int keyCount, byte[]... params);
+
+    byte[] dump(String key);
+
+    byte[] dump(byte[] key);
+
+    String restore(byte[] key, int ttl, byte[] serializedValue);
+
+    String restore(String key, int ttl, byte[] serializedValue);
 }

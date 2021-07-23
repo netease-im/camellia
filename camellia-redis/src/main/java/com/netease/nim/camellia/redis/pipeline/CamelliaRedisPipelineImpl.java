@@ -3323,4 +3323,60 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
             }
         });
     }
+
+    @ReadOp
+    @Override
+    public Response<byte[]> dump(@ShadingParam final String key) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.dump(key);
+        return queable.getResponse(client, BuilderFactory.BYTE_ARRAY, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.dump(key);
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<byte[]> dump(@ShadingParam final byte[] key) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, key);
+        client.dump(key);
+        return queable.getResponse(client, BuilderFactory.BYTE_ARRAY, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.dump(key);
+            }
+        });
+    }
+
+    @WriteOp
+    @Override
+    public Response<String> restore(@ShadingParam final byte[] key, final int ttl, final byte[] serializedValue) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, key);
+        client.restore(key, ttl, serializedValue);
+        return queable.getResponse(client, BuilderFactory.STRING, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.restore(key, ttl, serializedValue);
+            }
+        });
+    }
+
+    @WriteOp
+    @Override
+    public Response<String> restore(@ShadingParam final String key, final int ttl, final byte[] serializedValue) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.restore(key, ttl, serializedValue);
+        return queable.getResponse(client, BuilderFactory.STRING, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.restore(key, ttl, serializedValue);
+            }
+        });
+    }
 }

@@ -1555,6 +1555,26 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     @Override
+    public byte[] dump(String key) {
+        return factory.getProxy().dump(key);
+    }
+
+    @Override
+    public byte[] dump(byte[] key) {
+        return factory.getProxy().dump(key);
+    }
+
+    @Override
+    public String restore(byte[] key, int ttl, byte[] serializedValue) {
+        return factory.getProxy().restore(key, ttl, serializedValue);
+    }
+
+    @Override
+    public String restore(String key, int ttl, byte[] serializedValue) {
+        return factory.getProxy().restore(key, ttl, serializedValue);
+    }
+
+    @Override
     public Object eval(String script, int keyCount, String... params) {
         return eval(SafeEncoder.encode(script), keyCount, SafeEncoder.encodeMany(params));
     }

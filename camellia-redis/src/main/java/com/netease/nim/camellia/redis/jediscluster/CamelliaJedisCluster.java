@@ -1815,4 +1815,44 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     public Object evalsha(byte[] sha1, int keyCount, byte[]... params) {
         return jedisCluster.evalsha(sha1, keyCount, params);
     }
+
+    @Override
+    public byte[] dump(final String key) {
+        return new JedisClusterCommand<byte[]>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public byte[] execute(Jedis connection) {
+                return connection.dump(key);
+            }
+        }.runBinary(SafeEncoder.encode(key));
+    }
+
+    @Override
+    public byte[] dump(final byte[] key) {
+        return new JedisClusterCommand<byte[]>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public byte[] execute(Jedis connection) {
+                return connection.dump(key);
+            }
+        }.runBinary(key);
+    }
+
+    @Override
+    public String restore(final byte[] key, final int ttl, final byte[] serializedValue) {
+        return new JedisClusterCommand<String>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public String execute(Jedis connection) {
+                return connection.restore(key, ttl, serializedValue);
+            }
+        }.runBinary(key);
+    }
+
+    @Override
+    public String restore(final String key, final int ttl, final byte[] serializedValue) {
+        return new JedisClusterCommand<String>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public String execute(Jedis connection) {
+                return connection.restore(key, ttl, serializedValue);
+            }
+        }.runBinary(SafeEncoder.encode(key));
+    }
 }

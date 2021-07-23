@@ -505,4 +505,14 @@ public interface ICamelliaRedisPipeline extends Closeable {
 
     Response<List<GeoRadiusResponse>> georadiusByMember(String key, String member, double radius,
                                                         GeoUnit unit, GeoRadiusParam param);
+
+
+    Response<byte[]> dump(String key);
+
+    Response<byte[]> dump(byte[] key);
+
+
+    Response<String> restore(byte[] key, int ttl, byte[] serializedValue);
+
+    Response<String> restore(String key, int ttl, byte[] serializedValue);
 }

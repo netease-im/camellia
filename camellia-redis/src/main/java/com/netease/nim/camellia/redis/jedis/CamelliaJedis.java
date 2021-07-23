@@ -2812,4 +2812,44 @@ public class CamelliaJedis implements ICamelliaRedis {
             CloseUtil.closeQuietly(jedis);
         }
     }
+
+    @Override
+    public byte[] dump(String key) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.dump(key);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
+    public byte[] dump(byte[] key) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.dump(key);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
+    public String restore(byte[] key, int ttl, byte[] serializedValue) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.restore(key, ttl, serializedValue);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
+    public String restore(String key, int ttl, byte[] serializedValue) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.restore(key, ttl, serializedValue);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
 }
