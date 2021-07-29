@@ -10,6 +10,7 @@
 * 支持配置客户端分片，从而可以多个redis/redis-sentinel/redis-cluster当做一个使用
 * 支持配置多读多写（如：双写/读写分离）
 * 支持读redis-sentinel的从节点，并自动感知主从切换、从节点扩容、从节点宕机等
+* 支持JedisCamelliaAdaptor/JedisPoolCamelliaAdaptor/PipelineCamelliaAdaptor，从而修改一行代码从Jedis迁移到CamelliaRedisTemplate，具体见：[适配器](adaptor.md)
 * 支持配置在线修改
 * 提供了一个spring-boot-starter，快速接入
 

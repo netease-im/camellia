@@ -5,6 +5,19 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
+
+# 1.0.34（2021/08/xx）
+### 新增
+* camellia-redis-proxy-hbase重构了string相关命令的冷热分离存储设计，具体见：[文档](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
+* CamelliaRedisTemplate支持JedisCamelliaAdaptor/JedisPoolCamelliaAdaptor/PipelineCamelliaAdaptor，修改一行代码从jedis迁移到CamelliaRedisTemplate，具体见：[适配器](/docs/redis-template/adaptor.md)
+
+### 更新
+* 无
+
+### fix
+* 无
+
+
 # 1.0.33（2021/07/29）
 ### 新增
 * camellia-redis-proxy提供TroubleTrickKeysCommandInterceptor去避免异常key导致后端redis异常（比如业务层bug导致的死循环引起后端redis被打挂，需要临时屏蔽相关请求来保护后端redis），具体见：[控制](/docs/redis-proxy/control.md)

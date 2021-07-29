@@ -5,6 +5,18 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
+# 1.0.34（2021/08/xx）
+### add
+* camellia-redis-proxy-hbase refactor string commands implements
+* CamelliaRedisTemplate provide JedisCamelliaAdaptor/JedisPoolCamelliaAdaptor/PipelineCamelliaAdaptor to migrate from Jedis
+
+### update
+* none
+
+### fix
+* none
+
+
 # 1.0.33（2021/07/29）
 ### add
 * camellia-redis-proxy provide TroubleTrickKeysCommandInterceptor to avoid trouble-trick-keys attack upstream redis
