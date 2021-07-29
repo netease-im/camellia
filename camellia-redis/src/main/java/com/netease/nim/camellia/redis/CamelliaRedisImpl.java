@@ -834,14 +834,14 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
         return redis.bitcount(key, start, end);
     }
 
-    @WriteOp
+    @ReadOp
     @Override
     public Long bitpos(@ShadingParam String key, boolean value) {
         LogUtil.debugLog(resource, key);
         return redis.bitpos(key, value);
     }
 
-    @WriteOp
+    @ReadOp
     @Override
     public Long bitpos(@ShadingParam String key, boolean value, BitPosParams params) {
         LogUtil.debugLog(resource, key);

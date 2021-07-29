@@ -95,7 +95,7 @@ public enum RedisCommand {
     LINSERT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.LIST, false, CommandKeyType.SIMPLE_SINGLE),
     SETBIT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
     GETBIT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
-    BITPOS(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
+    BITPOS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
     SETRANGE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
     GETRANGE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
     BITCOUNT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
