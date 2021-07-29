@@ -69,6 +69,16 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     }
 
     @Override
+    public String set(final byte[] key, final byte[] value, final byte[] nxxx) {
+        return new JedisClusterCommand<String>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public String execute(Jedis connection) {
+                return connection.set(key, value, nxxx);
+            }
+        }.runBinary(key);
+    }
+
+    @Override
     public String get(String key) {
         return jedisCluster.get(key);
     }
@@ -621,6 +631,26 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     @Override
     public Long bitpos(String key, boolean value) {
         return jedisCluster.bitpos(key, value);
+    }
+
+    @Override
+    public Long bitpos(final byte[] key, final boolean value) {
+        return new JedisClusterCommand<Long>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public Long execute(Jedis connection) {
+                return connection.bitpos(key, value);
+            }
+        }.runBinary(key);
+    }
+
+    @Override
+    public Long bitpos(final byte[] key, final boolean value, final BitPosParams params) {
+        return new JedisClusterCommand<Long>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public Long execute(Jedis connection) {
+                return connection.bitpos(key, value, params);
+            }
+        }.runBinary(key);
     }
 
     @Override

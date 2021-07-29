@@ -850,6 +850,20 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
 
     @ReadOp
     @Override
+    public Long bitpos(@ShadingParam byte[] key, boolean value) {
+        LogUtil.debugLog(resource, key);
+        return redis.bitpos(key, value);
+    }
+
+    @ReadOp
+    @Override
+    public Long bitpos(@ShadingParam byte[] key, boolean value, BitPosParams params) {
+        LogUtil.debugLog(resource, key);
+        return redis.bitpos(key, value, params);
+    }
+
+    @ReadOp
+    @Override
     public ScanResult<Map.Entry<String, String>> hscan(@ShadingParam String key, String cursor) {
         LogUtil.debugLog(resource, key);
         return redis.hscan(key, cursor);
@@ -1937,6 +1951,13 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
     @WriteOp
     @Override
     public String set(@ShadingParam String key, String value, String nxxx) {
+        LogUtil.debugLog(resource, key);
+        return redis.set(key, value, nxxx);
+    }
+
+    @WriteOp
+    @Override
+    public String set(@ShadingParam byte[] key, byte[] value, byte[] nxxx) {
         LogUtil.debugLog(resource, key);
         return redis.set(key, value, nxxx);
     }

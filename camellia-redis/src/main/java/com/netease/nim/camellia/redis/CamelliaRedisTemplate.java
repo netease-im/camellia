@@ -22,6 +22,7 @@ import redis.clients.util.SafeEncoder;
 
 import java.util.*;
 
+
 /**
  *
  * Created by caojiajun on 2019/7/22.
@@ -160,6 +161,11 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     @Override
     public String set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time) {
         return factory.getProxy().set(key, value, nxxx, expx, time);
+    }
+
+    @Override
+    public String set(byte[] key, byte[] value, byte[] nxxx) {
+        return factory.getProxy().set(key, value, nxxx);
     }
 
     @Override
@@ -1373,6 +1379,16 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     @Override
+    public Long bitpos(byte[] key, boolean value) {
+        return factory.getProxy().bitpos(key, value);
+    }
+
+    @Override
+    public Long bitpos(byte[] key, boolean value, BitPosParams params) {
+        return factory.getProxy().bitpos(key, value, params);
+    }
+
+    @Override
     public ScanResult<Map.Entry<String, String>> hscan(String key, String cursor) {
         return factory.getProxy().hscan(key, cursor);
     }
@@ -1603,6 +1619,37 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     @Override
+    public Object eval(byte[] script, List<byte[]> keys, List<byte[]> args) {
+        return eval(script, toByteArray(keys.size()), getParamsWithBinary(keys, args));
+    }
+    private static final byte[] toByteArray(final int value) {
+        return SafeEncoder.encode(String.valueOf(value));
+    }
+    private static byte[][] getParamsWithBinary(List<byte[]> keys, List<byte[]> args) {
+        final int keyCount = keys.size();
+        final int argCount = args.size();
+        byte[][] params = new byte[keyCount + argCount][];
+
+        for (int i = 0; i < keyCount; i++)
+            params[i] = keys.get(i);
+
+        for (int i = 0; i < argCount; i++)
+            params[keyCount + i] = args.get(i);
+
+        return params;
+    }
+
+    @Override
+    public Object eval(byte[] script, byte[] keyCount, byte[]... params) {
+        return eval(script, Integer.parseInt(SafeEncoder.encode(keyCount)), params);
+    }
+
+    @Override
+    public Object eval(byte[] script) {
+        return eval(script, 0);
+    }
+
+    @Override
     public Object evalsha(String sha1) {
         return evalsha(sha1, 0);
     }
@@ -1615,6 +1662,16 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     @Override
     public Object evalsha(String sha1, int keyCount, String... params) {
         return evalsha(SafeEncoder.encode(sha1), keyCount, SafeEncoder.encodeMany(params));
+    }
+
+    @Override
+    public Object evalsha(byte[] sha1) {
+        return evalsha(sha1, 0);
+    }
+
+    @Override
+    public Object evalsha(byte[] sha1, List<byte[]> keys, List<byte[]> args) {
+        return evalsha(sha1, keys.size(), getParamsWithBinary(keys, args));
     }
 
     @Override

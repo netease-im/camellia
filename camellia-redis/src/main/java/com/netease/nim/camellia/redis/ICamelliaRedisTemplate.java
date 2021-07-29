@@ -83,6 +83,8 @@ public interface ICamelliaRedisTemplate {
 
     String set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time);
 
+    String set(byte[] key, byte[] value, byte[] nxxx);
+
     byte[] getSet(byte[] key, byte[] value);
 
     Long setnx(byte[] key, byte[] value);
@@ -181,6 +183,10 @@ public interface ICamelliaRedisTemplate {
     Long bitcount(String key, long start, long end);
 
     Long bitpos(String key, boolean value);
+
+    Long bitpos(byte[] key, boolean value);
+
+    Long bitpos(byte[] key, boolean value, BitPosParams params);
 
     Long bitpos(String key, boolean value, BitPosParams params);
 
@@ -599,11 +605,21 @@ public interface ICamelliaRedisTemplate {
 
     Object eval(String script, List<String> keys, List<String> args);
 
+    Object eval(byte[] script, List<byte[]> keys, List<byte[]> args);
+
+    Object eval(byte[] script, byte[] keyCount, byte[]... params);
+
     Object eval(String script);
+
+    Object eval(byte[] script);
 
     Object evalsha(String sha1);
 
+    Object evalsha(byte[] sha1);
+
     Object evalsha(String sha1, List<String> keys, List<String> args);
+
+    Object evalsha(byte[] sha1, List<byte[]> keys, List<byte[]> args);
 
     Object evalsha(String sha1, int keyCount, String... params);
 

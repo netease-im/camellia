@@ -283,6 +283,8 @@ public interface ICamelliaRedis {
 
     String set(String key, String value, String nxxx);
 
+    String set(byte[] key, byte[] value, byte[] nxxx);
+
     String get(String key);
 
     Boolean exists(String key);
@@ -505,7 +507,11 @@ public interface ICamelliaRedis {
 
     Long bitpos(String key, boolean value);
 
+    Long bitpos(byte[] key, boolean value);
+
     Long bitpos(String key, boolean value, BitPosParams params);
+
+    Long bitpos(byte[] key, boolean value, BitPosParams params);
 
     ScanResult<Map.Entry<String, String>> hscan(String key, String cursor);
 

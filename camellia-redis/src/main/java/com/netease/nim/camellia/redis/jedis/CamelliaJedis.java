@@ -75,6 +75,16 @@ public class CamelliaJedis implements ICamelliaRedis {
     }
 
     @Override
+    public String set(byte[] key, byte[] value, byte[] nxxx) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.set(key, value, nxxx);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
     public String get(String key) {
         Jedis jedis = jedisPool.getResource();
         try {
@@ -1179,6 +1189,26 @@ public class CamelliaJedis implements ICamelliaRedis {
         Jedis jedis = jedisPool.getResource();
         try {
             return jedis.bitpos(key, value);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
+    public Long bitpos(byte[] key, boolean value) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.bitpos(key, value);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
+    public Long bitpos(byte[] key, boolean value, BitPosParams params) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.bitpos(key, value, params);
         } finally {
             CloseUtil.closeQuietly(jedis);
         }
