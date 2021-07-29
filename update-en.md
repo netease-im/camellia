@@ -5,7 +5,7 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
-# 1.0.33（2021/07/xx）
+# 1.0.33（2021/07/29）
 ### add
 * camellia-redis-proxy provide TroubleTrickKeysCommandInterceptor to avoid trouble-trick-keys attack upstream redis
 * camellia-redis-proxy provide MultiWriteCommandInterceptor to setting custom multi-write-policy(such as some key need multi-write, others no need)
@@ -16,7 +16,9 @@
 * none
 
 ### fix
-* none
+* camellia-redis-proxy BITPOS should be READ command
+* CamelliaRedisTemplate BITPOS should be READ command
+
 
 # 1.0.32（2021/07/15）
 ### add

@@ -5,19 +5,19 @@
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
 
-# 1.0.33（2021/07/xx）
+# 1.0.33（2021/07/29）
 ### 新增
 * camellia-redis-proxy提供TroubleTrickKeysCommandInterceptor去避免异常key导致后端redis异常（比如业务层bug导致的死循环引起后端redis被打挂，需要临时屏蔽相关请求来保护后端redis），具体见：[控制](/docs/redis-proxy/control.md)
 * camellia-redis-proxy提供MultiWriteCommandInterceptor用于自定义双写策略（比如有些key需要双写，有些key不需要，有些key双写到redisA，有些key双写到redisB），具体见：[控制](/docs/redis-proxy/control.md)
 * camellia-redis-proxy支持DUMP/RESTORE命令
 * CamelliaRedisTemplate支持DUMP/RESTORE命令
 
-
 ### 更新
 * 无
 
 ### fix
-* 无
+* camellia-redis-proxy的BITPOS应该是读命令
+* CamelliaRedisTemplate的BITPOS应该是读命令
 
 
 # 1.0.32（2021/07/15）
