@@ -30,8 +30,8 @@ public class RedisHBaseConfiguration {
     }
 
     //string的value超过多少字节开启冷热
-    public static int stringValueRefKeyThreshold() {
-        return ProxyDynamicConf.getInt("string.value.ref.key.threshold", 48);
+    public static int stringValueThreshold() {
+        return ProxyDynamicConf.getInt("string.value.threshold", 0);
     }
 
     //hash的value超过多少字节开启冷热
@@ -45,8 +45,8 @@ public class RedisHBaseConfiguration {
     }
 
     //string的value引用缓存时间，单位秒
-    public static int stringValueRefKeyExpireSeconds() {
-        return ProxyDynamicConf.getInt("string.value.ref.key.cache.expire.seconds", 2 * 3600);
+    public static int stringValueExpireSeconds() {
+        return ProxyDynamicConf.getInt("string.value.cache.expire.seconds", 2 * 3600);
     }
 
     //hash的value引用缓存时间，单位秒

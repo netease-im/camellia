@@ -65,9 +65,6 @@ public interface IRedisHBaseCommandProcessor {
     @CommandFinder(RedisCommand.PSETEX)
     StatusReply psetex(byte[] key, byte[] millis, byte[] value);
 
-    @CommandFinder(RedisCommand.SETNX)
-    IntegerReply setnx(byte[] key, byte[] value);
-
     @CommandFinder(RedisCommand.MGET)
     MultiBulkReply mget(byte[][] keys);
 

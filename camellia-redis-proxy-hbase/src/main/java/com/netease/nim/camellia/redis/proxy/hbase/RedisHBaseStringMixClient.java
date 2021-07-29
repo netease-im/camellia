@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.OperationType;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
 import com.netease.nim.camellia.redis.proxy.hbase.util.FreqUtils;
+import com.netease.nim.camellia.redis.proxy.hbase.util.HBaseValue;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.apache.hadoop.hbase.client.Delete;
@@ -16,8 +17,12 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Response;
+import redis.clients.util.SafeEncoder;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.netease.nim.camellia.redis.proxy.hbase.util.RedisHBaseUtils.*;
 
@@ -41,55 +46,105 @@ public class RedisHBaseStringMixClient {
         this.hBaseAsyncWriteExecutor = hBaseAsyncWriteExecutor;
     }
 
+    /**
+     * 缺陷：set完立马del，然后再get，如果是多台proxy，有可能del不掉
+     */
     public Long del(byte[] key) {
-        byte[] bytes = redisTemplate.get(redisKey(key));
-        if (bytes == null) return 0L;
-        if (isRefKey(key, bytes)) {
-            redisTemplate.del(redisKey(bytes));
-            List<Delete> deleteList = new ArrayList<>();
-            Delete delete = new Delete(bytes);
-            deleteList.add(delete);
-            if (RedisHBaseConfiguration.hbaseAsyncWriteEnable()) {
-                HBaseAsyncWriteExecutor.HBaseAsyncWriteTask writeTask = new HBaseAsyncWriteExecutor.HBaseAsyncWriteTask();
-                writeTask.setKey(key);
-                writeTask.setDeletes(deleteList);
-                boolean success = hBaseAsyncWriteExecutor.submit(writeTask);
-                if (!success) {
-                    if (RedisHBaseConfiguration.hbaseDegradedIfAsyncWriteSubmitFail()) {
-                        logger.error("hBaseAsyncWriteExecutor submit fail for string_del, degraded for hbase write, key = {}", Utils.bytesToString(key));
-                        RedisHBaseMonitor.incrDegraded("string_del|async_write_submit_fail");
-                    } else {
-                        logger.warn("hBaseAsyncWriteExecutor submit fail, write sync for string_del, key = {}", Utils.bytesToString(key));
-                        hBaseTemplate.delete(hbaseTableName(), deleteList);
-                    }
-                }
-            } else {
-                hBaseTemplate.delete(hbaseTableName(), delete);
-            }
-            RedisHBaseMonitor.incr("string_del(byte[])", OperationType.REDIS_HBASE.name());
-        } else {
-            RedisHBaseMonitor.incr("string_del(byte[])", OperationType.REDIS_ONLY.name());
+        Response<Long> response;
+        try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
+            response = pipeline.del(redisKey(key));
+            pipeline.del(nullCacheKey(key));
+            pipeline.sync();
         }
-        return redisTemplate.del(redisKey(key));
+        List<Delete> deleteList = new ArrayList<>();
+        Delete delete = new Delete(hbaseRowKey(key));
+        deleteList.add(delete);
+        if (RedisHBaseConfiguration.hbaseAsyncWriteEnable()) {
+            HBaseAsyncWriteExecutor.HBaseAsyncWriteTask writeTask = new HBaseAsyncWriteExecutor.HBaseAsyncWriteTask();
+            writeTask.setKey(key);
+            writeTask.setDeletes(deleteList);
+            boolean success = hBaseAsyncWriteExecutor.submit(writeTask);
+            if (!success) {
+                if (RedisHBaseConfiguration.hbaseDegradedIfAsyncWriteSubmitFail()) {
+                    logger.error("hBaseAsyncWriteExecutor submit fail for string_del, degraded for hbase write, key = {}", Utils.bytesToString(key));
+                    RedisHBaseMonitor.incrDegraded("string_del|async_write_submit_fail");
+                } else {
+                    logger.warn("hBaseAsyncWriteExecutor submit fail, write sync for string_del, key = {}", Utils.bytesToString(key));
+                    hBaseTemplate.delete(hbaseTableName(), deleteList);
+                }
+            }
+        } else {
+            hBaseTemplate.delete(hbaseTableName(), delete);
+        }
+        return response.get();
+    }
+
+    public Long pttl(byte[] key) {
+        Long pttl = redisTemplate.pttl(redisKey(key));
+        byte[] rowKey = hbaseRowKey(key);
+        HBaseValue hBaseValue = null;
+        if (RedisHBaseConfiguration.hbaseReadDegraded()) {
+            logger.warn("get from hbase degraded, rowKey = {}", Bytes.toHex(rowKey));
+            RedisHBaseMonitor.incrDegraded("hbase_read_degraded");
+        } else {
+            if (FreqUtils.hbaseReadFreq()) {
+                Get get = new Get(rowKey);
+                Result result = hBaseTemplate.get(hbaseTableName(), get);
+                hBaseValue = parseOriginalValueCheckExpire(result);
+            } else {
+                RedisHBaseMonitor.incrDegraded("hbase_read_freq_degraded");
+            }
+        }
+        if (hBaseValue == null) {
+            return pttl;
+        }
+        if (hBaseValue.getValue() != null && !hBaseValue.isExpire() && hBaseValue.getTtlMillis() == null) {
+            return -1L;
+        }
+        Long ttlMillis = hBaseValue.getTtlMillis();
+        if (hBaseValue.isExpire()) {
+            return -2L;
+        }
+        return ttlMillis;
+    }
+
+    public Long pexpireAt(byte[] key, long millisecondsTimestamp) {
+        byte[] bytes = get(key);
+        if (bytes != null) {
+            if (millisecondsTimestamp - System.currentTimeMillis() > 0) {
+                psetex(key, millisecondsTimestamp - System.currentTimeMillis(), bytes);
+            } else {
+                del(key);
+            }
+            return 1L;
+        } else {
+            return 0L;
+        }
+    }
+
+    public Long exists(byte[] key) {
+        byte[] bytes = get(key);
+        if (bytes != null) {
+            return 1L;
+        }
+        return 0L;
     }
 
     public String set(byte[] key, byte[] value) {
-        if (value.length > stringRefKeyThreshold()) {
-            Response<String> response;
-            byte[] refKey = buildRefKey(key, value);
-            try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
-                response = pipeline.set(redisKey(key), refKey);
-                pipeline.setex(redisKey(refKey), stringRefKeyExpireSeconds(null), value);
-                pipeline.sync();
+        try {
+            if (value.length > stringValueThreshold()) {
+                String setex = redisTemplate.setex(redisKey(key), (int)(stringValueExpireMillis(null) / 1000L), value);
+                flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, hbaseRowKey(key), value, -1L, "set");
+                RedisHBaseMonitor.incr("set(byte[], byte[])", OperationType.REDIS_HBASE.name());
+                RedisHBaseMonitor.incrValueSize("string", value.length, true);
+                return setex;
+            } else {
+                RedisHBaseMonitor.incr("set(byte[], byte[])", OperationType.REDIS_ONLY.name());
+                RedisHBaseMonitor.incrValueSize("string", value.length, false);
+                return redisTemplate.set(redisKey(key), value);
             }
-            flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "set");
-            RedisHBaseMonitor.incr("set(byte[], byte[])", OperationType.REDIS_HBASE.name());
-            RedisHBaseMonitor.incrValueSize("string", value.length, true);
-            return response.get();
-        } else {
-            RedisHBaseMonitor.incr("set(byte[], byte[])", OperationType.REDIS_ONLY.name());
-            RedisHBaseMonitor.incrValueSize("string", value.length, false);
-            return redisTemplate.set(redisKey(key), value);
+        } finally {
+            redisTemplate.del(nullCacheKey(key));
         }
     }
 
@@ -101,23 +156,22 @@ public class RedisHBaseStringMixClient {
             for (int i = 0; i < keysvalues.length; i += 2) {
                 byte[] key = keysvalues[i];
                 byte[] value = keysvalues[i + 1];
-                if (value.length > stringRefKeyThreshold()) {
-                    byte[] refKey = buildRefKey(key, value);
-                    pipeline.setex(redisKey(refKey), stringRefKeyExpireSeconds(null), value);
-                    flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "mset");
+                if (value.length > stringValueThreshold()) {
+                    pipeline.setex(redisKey(key), (int)(stringValueExpireMillis(null) / 1000L), value);
+                    flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, hbaseRowKey(key), value, -1L,"mset");
                     pipelineCount ++;
-                    if (pipelineCount >= RedisHBaseConfiguration.redisMaxPipeline()) {
-                        pipeline.sync();
-                        pipelineCount = 0;
-                    }
-                    list.add(redisKey(key));
-                    list.add(refKey);
                     hitHBase = true;
                     RedisHBaseMonitor.incrValueSize("string", value.length, true);
                 } else {
                     list.add(redisKey(key));
                     list.add(value);
                     RedisHBaseMonitor.incrValueSize("string", value.length, false);
+                }
+                pipeline.del(nullCacheKey(key));
+                pipelineCount ++;
+                if (pipelineCount >= RedisHBaseConfiguration.redisMaxPipeline()) {
+                    pipeline.sync();
+                    pipelineCount = 0;
                 }
             }
             pipeline.sync();
@@ -127,105 +181,85 @@ public class RedisHBaseStringMixClient {
         } else {
             RedisHBaseMonitor.incr("mset(byte[][])", OperationType.REDIS_ONLY.name());
         }
-        return redisTemplate.mset(list.toArray(new byte[0][0]));
+        if (!list.isEmpty()) {
+            return redisTemplate.mset(list.toArray(new byte[0][0]));
+        } else {
+            return "OK";
+        }
     }
 
     public byte[] get(byte[] key) {
         byte[] value = redisTemplate.get(redisKey(key));
         if (value == null) {
-            RedisHBaseMonitor.incr("get(byte[])", OperationType.REDIS_ONLY.name());
-            return null;
-        }
-        if (isRefKey(key, value)) {
-            byte[] bytes = redisTemplate.get(redisKey(value));
-            if (bytes != null) {
+            byte[] nullCacheKey = nullCacheKey(key);
+            Boolean nullCache = redisTemplate.exists(nullCacheKey);
+            if (nullCache) {
                 RedisHBaseMonitor.incr("get(byte[])", OperationType.REDIS_ONLY.name());
-                return bytes;
+                return null;
             }
-            bytes = hbaseGet(hBaseTemplate, redisTemplate, value, stringRefKeyExpireSeconds(null));
-            RedisHBaseMonitor.incr("get(byte[])", OperationType.REDIS_HBASE.name());
-            return bytes;
+            byte[] rowKey = hbaseRowKey(key);
+            HBaseValue hBaseValue = null;
+            if (RedisHBaseConfiguration.hbaseReadDegraded()) {
+                logger.warn("get from hbase degraded, rowKey = {}", Bytes.toHex(rowKey));
+                RedisHBaseMonitor.incrDegraded("hbase_read_degraded");
+            } else {
+                if (FreqUtils.hbaseReadFreq()) {
+                    Get get = new Get(rowKey);
+                    Result result = hBaseTemplate.get(hbaseTableName(), get);
+                    hBaseValue = parseOriginalValueCheckExpire(result);
+                } else {
+                    RedisHBaseMonitor.incrDegraded("hbase_read_freq_degraded");
+                }
+            }
+            if (hBaseValue != null) {
+                value = hBaseValue.getValue();
+                RedisHBaseMonitor.incr("get(byte[])", OperationType.REDIS_HBASE.name());
+                if (value != null && !hBaseValue.isExpire()) {
+                    redisTemplate.setex(redisKey(key), (int)(stringValueExpireMillis(hBaseValue.getTtlMillis()) / 1000L), value);
+                } else {
+                    value = null;
+                    redisTemplate.setex(nullCacheKey, (int)(stringValueExpireMillis(null) / 1000L) / 2, SafeEncoder.encode("1"));
+                }
+            }
         } else {
             RedisHBaseMonitor.incr("get(byte[])", OperationType.REDIS_ONLY.name());
-            return value;
         }
-    }
-
-    public String set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time) {
-        if (value.length > stringRefKeyThreshold()) {
-            byte[] refKey = buildRefKey(key, value);
-            String set = redisTemplate.set(redisKey(key), refKey, nxxx, expx, time);
-            if (set.equalsIgnoreCase("ok")) {
-                if (Utils.bytesToString(expx).equalsIgnoreCase("EX")) {
-                    redisTemplate.setex(redisKey(refKey), stringRefKeyExpireSeconds((int)time), value);
-                } else if (Utils.bytesToString(expx).equalsIgnoreCase("PX")) {
-                    redisTemplate.setex(redisKey(refKey), stringRefKeyExpireSeconds((int)(time/1000)), value);
-                } else {
-                    redisTemplate.setex(redisKey(refKey), stringRefKeyExpireSeconds(null), value);
-                }
-                flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "set");
-            }
-            RedisHBaseMonitor.incr("set(byte[], byte[], byte[], byte[], long)", OperationType.REDIS_HBASE.name());
-            RedisHBaseMonitor.incrValueSize("string", value.length, true);
-            return set;
-        } else {
-            RedisHBaseMonitor.incr("set(byte[], byte[], byte[], byte[], long)", OperationType.REDIS_ONLY.name());
-            RedisHBaseMonitor.incrValueSize("string", value.length, false);
-            return redisTemplate.set(redisKey(key), value);
-        }
-    }
-
-    public Long setnx(byte[] key, byte[] value) {
-        if (value.length > stringRefKeyThreshold()) {
-            byte[] refKey = buildRefKey(key, value);
-            Long setnx = redisTemplate.setnx(redisKey(key), refKey);
-            if (setnx > 0) {
-                redisTemplate.setex(redisKey(refKey), stringRefKeyExpireSeconds(null), value);
-                flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "setnx");
-            }
-            RedisHBaseMonitor.incr("setnx(byte[], byte[])", OperationType.REDIS_HBASE.name());
-            RedisHBaseMonitor.incrValueSize("string", value.length, true);
-            return setnx;
-        } else {
-            RedisHBaseMonitor.incr("setnx(byte[], byte[])", OperationType.REDIS_ONLY.name());
-            RedisHBaseMonitor.incrValueSize("string", value.length, false);
-            return redisTemplate.setnx(redisKey(key), value);
-        }
+        return value;
     }
 
     public String setex(byte[] key, int seconds, byte[] value) {
-        if (value.length > stringRefKeyThreshold()) {
-            byte[] refKey = buildRefKey(key, value);
-            String setex = redisTemplate.setex(redisKey(key), seconds, refKey);
-            if (setex.equalsIgnoreCase("ok")) {
-                redisTemplate.setex(redisKey(refKey), stringRefKeyExpireSeconds(seconds), value);
-                flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "setex");
+        try {
+            if (value.length > stringValueThreshold()) {
+                String setex = redisTemplate.setex(redisKey(key), (int)(stringValueExpireMillis(seconds * 1000L) / 1000L), value);
+                flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, hbaseRowKey(key), value, System.currentTimeMillis() + seconds * 1000L,"setex");
+                RedisHBaseMonitor.incr("setex(byte[], byte[])", OperationType.REDIS_HBASE.name());
+                RedisHBaseMonitor.incrValueSize("string", value.length, true);
+                return setex;
+            } else {
+                RedisHBaseMonitor.incr("setex(byte[], byte[])", OperationType.REDIS_ONLY.name());
+                RedisHBaseMonitor.incrValueSize("string", value.length, false);
+                return redisTemplate.setex(redisKey(key), seconds, value);
             }
-            RedisHBaseMonitor.incr("setex(byte[], byte[])", OperationType.REDIS_HBASE.name());
-            RedisHBaseMonitor.incrValueSize("string", value.length, true);
-            return setex;
-        } else {
-            RedisHBaseMonitor.incr("setex(byte[], byte[])", OperationType.REDIS_ONLY.name());
-            RedisHBaseMonitor.incrValueSize("string", value.length, false);
-            return redisTemplate.setex(redisKey(key), seconds, value);
+        } finally {
+            redisTemplate.del(nullCacheKey(key));
         }
     }
 
     public String psetex(byte[] key, long milliseconds, byte[] value) {
-        if (value.length > stringRefKeyThreshold()) {
-            byte[] refKey = buildRefKey(key, value);
-            String setex = redisTemplate.psetex(redisKey(key), milliseconds, refKey);
-            if (setex.equalsIgnoreCase("ok")) {
-                redisTemplate.setex(redisKey(refKey), stringRefKeyExpireSeconds((int)(milliseconds/ 1000)), value);
-                flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "psetx");
+        try {
+            if (value.length > stringValueThreshold()) {
+                String psetex = redisTemplate.psetex(redisKey(key), stringValueExpireMillis(milliseconds), value);
+                flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, hbaseRowKey(key), value, System.currentTimeMillis() + milliseconds,"psetx");
+                RedisHBaseMonitor.incr("psetex(byte[], byte[])", OperationType.REDIS_HBASE.name());
+                RedisHBaseMonitor.incrValueSize("string", value.length, true);
+                return psetex;
+            } else {
+                RedisHBaseMonitor.incr("psetex(byte[], byte[])", OperationType.REDIS_ONLY.name());
+                RedisHBaseMonitor.incrValueSize("string", value.length, false);
+                return redisTemplate.psetex(redisKey(key), milliseconds, value);
             }
-            RedisHBaseMonitor.incr("psetex(byte[], byte[])", OperationType.REDIS_HBASE.name());
-            RedisHBaseMonitor.incrValueSize("string", value.length, true);
-            return setex;
-        } else {
-            RedisHBaseMonitor.incr("psetex(byte[], byte[])", OperationType.REDIS_ONLY.name());
-            RedisHBaseMonitor.incrValueSize("string", value.length, false);
-            return redisTemplate.psetex(redisKey(key), milliseconds, value);
+        } finally {
+            redisTemplate.del(nullCacheKey(key));
         }
     }
 
@@ -236,88 +270,103 @@ public class RedisHBaseStringMixClient {
         }
         List<byte[]> mget = redisTemplate.mget(list.toArray(new byte[0][0]));
         Map<Integer, byte[]> valueMap = new HashMap<>();
-        Map<Integer, byte[]> missRefKey = new HashMap<>();
-        Map<Integer, Response<byte[]>> missValue = new HashMap<>();
-        int pipelineCount = 0;
+        Map<Integer, byte[]> missKeyMap = new HashMap<>();
+        Map<BytesKey, Integer> missKeyReverseMap = new HashMap<>();
+        for (int i=0; i<mget.size(); i++) {
+            byte[] key = keys[i];
+            byte[] value = mget.get(i);
+            if (value != null) {
+                valueMap.put(i, value);
+            } else {
+                missKeyMap.put(i, key);
+            }
+            missKeyReverseMap.put(new BytesKey(key), i);
+        }
+        if (missKeyMap.isEmpty()) {
+            RedisHBaseMonitor.incr("mget(byte[][])", OperationType.REDIS_ONLY.name());
+            return toList(valueMap, keys.length);
+        }
+        List<Response<Boolean>> nullCacheList = new ArrayList<>();
+        List<byte[]> originalKeys1 = new ArrayList<>();
         try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
-            for (int i=0; i<mget.size(); i++) {
-                byte[] key = keys[i];
-                byte[] value = mget.get(i);
-                if (value == null) {
-                    valueMap.put(i, null);
-                } else {
-                    if (isRefKey(key, value)) {
-                        Response<byte[]> response = pipeline.get(redisKey(value));
-                        pipelineCount ++;
-                        missRefKey.put(i, value);
-                        missValue.put(i, response);
-                        if (pipelineCount >= RedisHBaseConfiguration.redisMaxPipeline()) {
-                            pipeline.sync();
-                            pipelineCount = 0;
-                        }
-                    } else {
-                        valueMap.put(i, value);
-                    }
+            int pipelineCount = 0;
+            for (byte[] key : missKeyMap.values()) {
+                Response<Boolean> exists = pipeline.exists(nullCacheKey(key));
+                nullCacheList.add(exists);
+                originalKeys1.add(key);
+                pipelineCount ++;
+                if (pipelineCount >= RedisHBaseConfiguration.redisMaxPipeline()) {
+                    pipeline.sync();
+                    pipelineCount = 0;
                 }
             }
             pipeline.sync();
         }
-        if (!missValue.isEmpty()) {
-            for (Map.Entry<Integer, Response<byte[]>> entry : missValue.entrySet()) {
-                byte[] bytes = entry.getValue().get();
-                if (bytes != null) {
-                    valueMap.put(entry.getKey(), bytes);
-                    missRefKey.remove(entry.getKey());
+        for (int i=0; i<nullCacheList.size(); i++) {
+            Boolean nullCache = nullCacheList.get(i).get();
+            if (nullCache) {
+                byte[] originalKey = originalKeys1.get(i);
+                Integer index = missKeyReverseMap.get(new BytesKey(originalKey));
+                if (index != null) {
+                    valueMap.put(index, null);
+                    missKeyMap.remove(index);
                 }
             }
         }
-        if (valueMap.size() == keys.length) {
+        if (missKeyMap.isEmpty()) {
             RedisHBaseMonitor.incr("mget(byte[][])", OperationType.REDIS_ONLY.name());
-        } else {
-            List<Get> gets = new ArrayList<>();
-            for (byte[] value : missRefKey.values()) {
-                Get get = new Get(value);
-                gets.add(get);
-            }
-            Map<BytesKey, byte[]> hbaseMap = new HashMap<>();
-            if (RedisHBaseConfiguration.hbaseReadDegraded()) {
-                List<String> hbaseRows = new ArrayList<>();
-                for (Get get : gets) {
-                    hbaseRows.add(Bytes.toHex(get.getRow()));
-                }
-                logger.warn("mget from hbase degraded, keys = {}", hbaseRows);
-                RedisHBaseMonitor.incrDegraded("hbase_read_batch_degraded");
-            } else {
-                if (FreqUtils.hbaseReadFreq()) {
-                    Result[] results = hBaseTemplate.get(hbaseTableName(), gets);
-                    try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
-                        pipelineCount = 0;
-                        for (Result result : results) {
-                            byte[] value = result.getValue(CF_D, COL_DATA);
-                            hbaseMap.put(new BytesKey(result.getRow()), value);
-                            if (value != null) {
-                                pipeline.setex(redisKey(result.getRow()), stringRefKeyExpireSeconds(null), value);
-                                pipelineCount ++;
-                                if (pipelineCount >= RedisHBaseConfiguration.redisMaxPipeline()) {
-                                    pipeline.sync();
-                                    pipelineCount = 0;
-                                }
-                            }
-                        }
-                        pipeline.sync();
-                    }
-                } else {
-                    RedisHBaseMonitor.incrDegraded("hbase_read_batch_freq_degraded");
-                }
-            }
-            for (Map.Entry<Integer, byte[]> entry : missRefKey.entrySet()) {
-                byte[] value = entry.getValue();
-                Integer key = entry.getKey();
-                byte[] bytes = hbaseMap.get(new BytesKey(value));
-                valueMap.put(key, bytes);
-            }
-            RedisHBaseMonitor.incr("mget(byte[][])", OperationType.REDIS_HBASE.name());
+            return toList(valueMap, keys.length);
         }
+        List<Get> gets = new ArrayList<>();
+        List<byte[]> originalKeys2 = new ArrayList<>();
+        for (byte[] key : missKeyMap.values()) {
+            Get get = new Get(hbaseRowKey(key));
+            gets.add(get);
+            originalKeys2.add(key);
+        }
+        Map<BytesKey, byte[]> hbaseMap = new HashMap<>();
+        if (RedisHBaseConfiguration.hbaseReadDegraded()) {
+            List<String> hbaseRows = new ArrayList<>();
+            for (Get get : gets) {
+                hbaseRows.add(Bytes.toHex(get.getRow()));
+            }
+            logger.warn("mget from hbase degraded, rowKeys = {}", hbaseRows);
+            RedisHBaseMonitor.incrDegraded("hbase_read_batch_degraded");
+        } else {
+            if (FreqUtils.hbaseReadFreq()) {
+                Result[] results = hBaseTemplate.get(hbaseTableName(), gets);
+                try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
+                    int pipelineCount = 0;
+                    for (int i=0; i<results.length; i++) {
+                        Result result = results[i];
+                        HBaseValue hBaseValue = parseOriginalValueCheckExpire(result);
+                        if (hBaseValue == null) continue;
+                        byte[] value = hBaseValue.getValue();
+                        byte[] originalKey = originalKeys2.get(i);
+                        if (value != null && !hBaseValue.isExpire()) {
+                            hbaseMap.put(new BytesKey(originalKey), value);
+                            pipeline.setex(redisKey(originalKey), (int)(stringValueExpireMillis(hBaseValue.getTtlMillis()) / 1000L), value);
+                        } else {
+                            pipeline.setex(nullCacheKey(originalKey), (int)(stringValueExpireMillis(null) / 1000L) / 2, SafeEncoder.encode("1"));
+                        }
+                        pipelineCount ++;
+                        if (pipelineCount >= RedisHBaseConfiguration.redisMaxPipeline()) {
+                            pipeline.sync();
+                            pipelineCount = 0;
+                        }
+                    }
+                    pipeline.sync();
+                }
+            } else {
+                RedisHBaseMonitor.incrDegraded("hbase_read_batch_freq_degraded");
+            }
+        }
+        for (Map.Entry<Integer, byte[]> entry : missKeyMap.entrySet()) {
+            byte[] key = entry.getValue();
+            byte[] value = hbaseMap.get(new BytesKey(key));
+            valueMap.put(entry.getKey(), value);
+        }
+        RedisHBaseMonitor.incr("mget(byte[][])", OperationType.REDIS_HBASE.name());
         return toList(valueMap, keys.length);
     }
 

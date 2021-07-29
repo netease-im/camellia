@@ -42,7 +42,7 @@ public class RedisHBaseCommonMixClient {
                     if (zremrangeByRank != null && zremrangeByRank > 0) {
                         ret++;
                     }
-                } else if (type.equalsIgnoreCase("string")) {
+                } else if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {
                     Long del = stringMixClient.del(key);
                     if (del > 0) {
                         ret ++;
@@ -76,6 +76,11 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long ttl(byte[] key) {
+        String type = type(key);
+        if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {
+            Long pttl = stringMixClient.pttl(key);
+            return pttl < 0 ? pttl : pttl / 1000L;
+        }
         return redisTemplate.ttl(redisKey(key));
     }
 
@@ -83,6 +88,10 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long pttl(byte[] key) {
+        String type = type(key);
+        if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {
+            return stringMixClient.pttl(key);
+        }
         return redisTemplate.pttl(redisKey(key));
     }
 
@@ -90,6 +99,10 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long pexpireAt(byte[] key, long millisecondsTimestamp) {
+        String type = type(key);
+        if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {
+            return stringMixClient.pexpireAt(key, millisecondsTimestamp);
+        }
         return redisTemplate.pexpireAt(redisKey(key), millisecondsTimestamp);
     }
 
@@ -97,6 +110,10 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long expire(byte[] key, int seconds) {
+        String type = type(key);
+        if (type.equals("string") || type.equals("none")) {
+            return stringMixClient.pexpireAt(key, System.currentTimeMillis() + seconds * 1000L);
+        }
         return redisTemplate.expire(redisKey(key), seconds);
     }
 
@@ -104,6 +121,10 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long pexpire(byte[] key, long milliseconds) {
+        String type = type(key);
+        if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {
+            return stringMixClient.pexpireAt(key, System.currentTimeMillis() + milliseconds);
+        }
         return redisTemplate.pexpire(redisKey(key), milliseconds);
     }
 
@@ -111,6 +132,10 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long expireAt(byte[] key, long unixTime) {
+        String type = type(key);
+        if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {
+            return stringMixClient.pexpireAt(key, unixTime * 1000L);
+        }
         return redisTemplate.expireAt(redisKey(key), unixTime);
     }
 
@@ -118,10 +143,15 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long exists(byte[]... keys) {
-        List<byte[]> list = new ArrayList<>(keys.length);
+        Long ret = 0L;
         for (byte[] key : keys) {
-            list.add(redisKey(key));
+            String type = type(key);
+            if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {
+                ret += stringMixClient.exists(key);
+            } else {
+                ret += 1;
+            }
         }
-        return redisTemplate.exists(list.toArray(new byte[0][0]));
+        return ret;
     }
 }

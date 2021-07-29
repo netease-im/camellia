@@ -11,7 +11,6 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.util.Bytes;
 import redis.clients.jedis.Tuple;
-import redis.clients.util.SafeEncoder;
 
 import java.util.HashMap;
 import java.util.List;
@@ -155,21 +154,9 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
             return ErrorReply.SYNTAX_ERROR;
         }
         if (nxxx != null && expx != null) {
-            String set = stringMixClient.set(key, value1, SafeEncoder.encode(nxxx), SafeEncoder.encode(expx), time);
-            if (set == null) return BulkReply.NIL_REPLY;
-            return new StatusReply(set);
+            return ErrorReply.NOT_SUPPORT;
         } else if (nxxx != null) {
-            if (nxxx.equalsIgnoreCase(RedisKeyword.NX.name())) {
-                Long setnx = stringMixClient.setnx(key, value1);
-                if (setnx > 0) {
-                    return StatusReply.OK;
-                } else {
-                    return BulkReply.NIL_REPLY;
-                }
-            } else {
-                //当前jedis版本不支持
-                return ErrorReply.NOT_SUPPORT;
-            }
+            return ErrorReply.NOT_SUPPORT;
         } else {
             if (expx.equalsIgnoreCase(RedisKeyword.EX.name())) {
                 String setex = stringMixClient.setex(key, Math.toIntExact(time), value1);
@@ -202,12 +189,6 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
     public StatusReply psetex(byte[] key, byte[] millis, byte[] value2) {
         String value = stringMixClient.psetex(key, Utils.bytesToNum(millis), value2);
         return new StatusReply(value);
-    }
-
-    @Override
-    public IntegerReply setnx(byte[] key, byte[] value1) {
-        Long value = stringMixClient.setnx(key, value1);
-        return new IntegerReply(value);
     }
 
     @Override

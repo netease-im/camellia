@@ -95,7 +95,7 @@ public class RedisHBaseHashMixClient {
                 pipeline.setex(redisKey(refKey), hashRefKeyExpireSeconds(), value);
                 pipeline.sync();
             }
-            flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "hset");
+            flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, null, "hset");
             RedisHBaseMonitor.incr("hset(byte[], byte[], byte[])", OperationType.REDIS_HBASE.name());
             RedisHBaseMonitor.incrValueSize("hash", value.length, true);
             return response.get();
@@ -112,7 +112,7 @@ public class RedisHBaseHashMixClient {
             Long hsetnx = redisTemplate.hsetnx(redisKey(key), field, refKey);
             if (hsetnx > 0) {
                 redisTemplate.setex(redisKey(refKey), hashRefKeyExpireSeconds(), value);
-                flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, "hsetnx");
+                flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, refKey, value, null, "hsetnx");
             }
             RedisHBaseMonitor.incr("hsetnx(byte[], byte[], byte[])", OperationType.REDIS_HBASE.name());
             RedisHBaseMonitor.incrValueSize("hash", value.length, true);
