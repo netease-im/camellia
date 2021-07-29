@@ -3,10 +3,11 @@
 ## 简介  
 基于camellia-redis、camellia-hbase、camellia-redis-proxy开发   
 目前实现了string/hash/zset相关的命令，可以实现自动的冷热数据分离（冷数据存hbase，热数据存redis）  
-1.0.20版本开始，camellia-redis-proxy-hbase进行了重构，且和老版本不兼容，以下内容均为重构后版本的描述
+1.0.20版本开始，camellia-redis-proxy-hbase进行了重构，且和老版本不兼容，以下内容均为重构后版本的描述   
+1.0.34版本和1.0.33版本的string实现原理有重构，且不兼容  
 
 ## 基本原理
-对于redis中部分key的value部分（如string的value，zset的value，hash的value），可能占用较大字节  
+对于redis中部分key的value部分（如zset的value，hash的value），可能占用较大字节  
 同时整个key的ttl较长，但是又不是时刻访问，可能这个key不是高频访问，或者这个key的某些部分不是高频访问（如zset根据score取部分value，hash根据field取部分value）     
 proxy会将这些value进行拆分，原始key仅存储value的一个索引，索引=md5(key) + md5(value)，并且将原始value保存在持久化k-v里，我们选择的是hbase（后续可以支持其他持久化k-v服务，如mysql、RocksDB等）  
 ### 写操作
@@ -17,11 +18,10 @@ proxy会将这些value进行拆分，原始key仅存储value的一个索引，�
 
 ## zset
 zset作为redis中的有序集合，由key、score、value三部分组成，value会有二级索引结构  
-## string
-string是key-value结构，value部分会有二级索引结构  
 ## hash
 hash是redis中的哈希结构，由key、field、value三部分组成，value部分有二级索引结构（field没有）  
-
+## string
+string是redis中的k-v结构，其冷热分离存储的原理和zset/hash不同，其完整数据会持久化到hbase里面（而不是二级索引），redis里只会保留较短ttl，当get时，会先检查redis，如果没有，则会穿透到hbase去reload
 
 ### 配置
 * 所有的配置参考RedisHBaseConfiguration（配置文件是：camellia-redis-proxy.properties）
@@ -52,7 +52,7 @@ create 'nim:nim_camellia',{NAME=>'d',VERSIONS=>1,BLOCKCACHE=>true,BLOOMFILTER=>'
 PING,AUTH,QUIT,EXISTS,DEL,TYPE,EXPIRE,
 EXPIREAT,TTL,PEXPIRE,PEXPIREAT,PTTL,
 ##String
-SET,GET,MGET,SETNX,SETEX,MSET,
+SET,GET,MGET,SETEX,MSET,
 ##有序集合
 ZADD,ZINCRBY,ZRANK,ZCARD,ZSCORE,ZCOUNT,ZRANGE,ZRANGEBYSCORE,ZRANGEBYLEX,
 ZREVRANK,ZREVRANGE,ZREVRANGEBYSCORE,ZREVRANGEBYLEX,ZREM,
