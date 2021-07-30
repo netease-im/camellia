@@ -32,6 +32,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-spring-redis-base</artifactId>
+			<version>1.0.34-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-zk-discovery-spring-boot-starter</artifactId>
 			<version>1.0.34-SNAPSHOT</version>
 		</dependency>

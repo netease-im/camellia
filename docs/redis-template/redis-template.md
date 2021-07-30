@@ -25,7 +25,7 @@
 
 ## 教程
 
-### maven示例
+### maven
 ```
 <dependency>
   <groupId>com.netease.nim</groupId>
@@ -75,7 +75,10 @@ public class TestSamples {
 使用spring-boot-starter自动注入CamelliaRedisTemplate实例，参见：[spring-boot-starter](spring-boot-starter.md)
 
 ### 使用Jedis适配器接入
-如果你本来使用的是原生的Jedis，则使用适配器可以修改一行代码即可切换成CamelliaRedisTemplate，参见：[adaptor](adaptor.md)
+如果你本来使用的是原生的Jedis，则使用适配器可以修改一行代码即可切换成CamelliaRedisTemplate，参见：[adaptor](adaptor.md)  
+
+### 适配SpringRedisTemplate
+如果你本来使用的是SpringRedisTemplate，但是也想拥有CamelliaRedisTemplate的分片、读写分离、双写等能力，参见：[spring-adaptor](spring-adaptor.md)
 
 ### 示例源码
 [示例源码](/camellia-samples/camellia-redis-samples)
