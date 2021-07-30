@@ -57,6 +57,7 @@ public class LocalDynamicCamelliaApi implements CamelliaApi {
             response.setCode(CamelliaApiCode.NOT_MODIFY.getCode());
             return response;
         }
+        response.setCode(CamelliaApiCode.SUCCESS.getCode());
         response.setMd5(this.md5);
         response.setResourceTable(this.resourceTable);
         return response;
