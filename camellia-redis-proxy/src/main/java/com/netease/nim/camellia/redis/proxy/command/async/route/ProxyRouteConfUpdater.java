@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.command.async.route;
 
+import com.netease.nim.camellia.core.api.ResourceTableUpdateCallback;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
-import com.netease.nim.camellia.redis.proxy.command.async.AsyncCamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,23 +15,24 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class ProxyRouteConfUpdater {
 
     private static final Logger logger = LoggerFactory.getLogger(ProxyRouteConfUpdater.class);
-    private final ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> map = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ResourceTableUpdateCallback> map = new ConcurrentHashMap<>();
 
     public abstract ResourceTable getResourceTable(long bid, String bgroup);
 
     /**
-     * 动态更新ResourceTable，ProxyRouteConfUpdater的子类在检测到路由信息发生变更的时候，需要回调本方法，则对应的AsyncCamelliaRedisTemplate会更新对应的路由
+     * 动态更新ResourceTable，ProxyRouteConfUpdater的子类在检测到路由信息发生变更的时候，需要回调本方法，则会更新对应的路由
      * @param bid bid
      * @param bgroup bgroup
      * @param resourceTable ResourceTable
      */
     public final void invokeUpdateResourceTable(long bid, String bgroup, ResourceTable resourceTable) {
         RedisResourceUtil.checkResourceTable(resourceTable);
-        AsyncCamelliaRedisTemplate template = map.get(bid + "|" + bgroup);
-        if (template == null) return;
-        template.getCallback().callback(resourceTable);
+        ResourceTableUpdateCallback callback = map.get(bid + "|" + bgroup);
+        if (callback != null) {
+            callback.callback(resourceTable);
+        }
         if (logger.isInfoEnabled()) {
-            logger.info("resourceTable update, bid = {}, bgroup = {}, resourceTable = {}", bid, bgroup, ReadableResourceTableUtil.readableResourceTable(resourceTable));
+            logger.info("proxy resourceTable update, bid = {}, bgroup = {}, resourceTable = {}", bid, bgroup, ReadableResourceTableUtil.readableResourceTable(resourceTable));
         }
     }
 
@@ -66,9 +67,9 @@ public abstract class ProxyRouteConfUpdater {
      * 添加AsyncCamelliaRedisTemplate给ProxyRouteConfUpdater去管理
      * @param bid bid
      * @param bgroup bgroup
-     * @param template AsyncCamelliaRedisTemplate
+     * @param callback ResourceTableUpdateCallback
      */
-    public final void addAsyncCamelliaRedisTemplate(long bid, String bgroup, AsyncCamelliaRedisTemplate template) {
-        map.put(bid + "|" + bgroup, template);
+    public final void addCallback(long bid, String bgroup, ResourceTableUpdateCallback callback) {
+        map.put(bid + "|" + bgroup, callback);
     }
 }
