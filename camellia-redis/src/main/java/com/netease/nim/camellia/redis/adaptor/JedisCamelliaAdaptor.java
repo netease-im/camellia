@@ -2157,7 +2157,7 @@ public class JedisCamelliaAdaptor extends Jedis {
 
     @Override
     public Long getDB() {
-        throw new UnsupportedOperationException("not support");
+        return 0L;
     }
 
     @Override
