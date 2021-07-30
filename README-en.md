@@ -53,6 +53,7 @@ a web service, depends on mysql/redis，manage camellia-core's config，client c
 ### 3、camellia-redis  
 base on camellia-core and jedis，main class is CamelliaRedisTemplate, can invoke redis/redis-sentinel/redis-cluster in identical way，support pipeline    
 support client shading/read-write-separate/double-write  
+support jedis adaptor to migrate from jedis easily  
 [QUICK START](/docs/redis-template/redis-template.md)
 ### 4、camellia-redis-proxy  
 base on netty4, support redis/redis-sentinel/redis-cluster  
