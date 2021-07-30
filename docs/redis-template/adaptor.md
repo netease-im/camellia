@@ -40,7 +40,7 @@ public class TestAdaptor1 {
         //首先你要先初始化一个CamelliaRedisTemplate
         CamelliaRedisTemplate template = new CamelliaRedisTemplate("redis://@127.0.0.1:6379");
         //随后初始化JedisPoolCamelliaAdaptor
-        JedisPoolCamelliaAdaptor jedisPool = new JedisPoolCamelliaAdaptor(template);
+        JedisPool jedisPool = new JedisPoolCamelliaAdaptor(template);
         //然后你就可以像使用普通JedisPool一样使用了（注意：Jedis和Pipeline的部分方法是不支持的，会直接返回异常，如：brpop、pipeline里的mget等）
         Jedis jedis = null;
         try {
