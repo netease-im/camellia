@@ -9,7 +9,7 @@
 # 1.0.34（2021/08/xx）
 ### 新增
 * camellia-redis-proxy-hbase重构了string相关命令的冷热分离存储设计，具体见：[文档](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
-* CamelliaRedisTemplate支持JedisCamelliaAdaptor/JedisPoolCamelliaAdaptor/PipelineCamelliaAdaptor，修改一行代码从jedis迁移到CamelliaRedisTemplate，具体见：[适配器](/docs/redis-template/adaptor.md)
+* CamelliaRedisTemplate支持Jedis适配器，修改一行代码从Jedis迁移到CamelliaRedisTemplate，具体见：[文档](/docs/redis-template/redis-template.md)
 
 ### 更新
 * 无

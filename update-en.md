@@ -8,7 +8,7 @@
 # 1.0.34（2021/08/xx）
 ### add
 * camellia-redis-proxy-hbase refactor string commands implements
-* CamelliaRedisTemplate provide JedisCamelliaAdaptor/JedisPoolCamelliaAdaptor/PipelineCamelliaAdaptor to migrate from Jedis
+* CamelliaRedisTemplate provide Jedis Adaptor to migrate from Jedis
 
 ### update
 * none
