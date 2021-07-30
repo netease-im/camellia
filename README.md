@@ -51,7 +51,7 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 [快速开始](/docs/dashboard/dashboard.md)  
 ### 3、camellia-redis  
 基于camellia-core和jedis，主要的类是CamelliaRedisTemplate，可以使用统一的api来调用redis/redis-sentinel/redis-cluster，支持pipeline、mget/mset等     
-支持客户端分片/读写分离/双写   
+支持自定义分片、读写分离、双（多）写、双（多）读     
 支持jedis适配器，一行代码从jedis切换到CamelliaRedisTemplate  
 [快速开始](/docs/redis-template/redis-template.md)
 ### 4、camellia-redis-proxy  
