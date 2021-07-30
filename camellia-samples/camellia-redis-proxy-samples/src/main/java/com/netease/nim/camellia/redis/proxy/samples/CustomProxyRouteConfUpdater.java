@@ -27,7 +27,7 @@ public class CustomProxyRouteConfUpdater extends ProxyRouteConfUpdater {
     }
 
     private void update() {
-        String newUrl = "redis://pass123@127.0.0.1:6380";
+        String newUrl = "redis://@127.0.0.2:6379";
         if (!url.equals(newUrl)) {
             url = newUrl;
             invokeUpdateResourceTableJson(1, "default", url);

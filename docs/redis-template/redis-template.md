@@ -61,13 +61,14 @@ public class TestSamples {
 ### 生成其他复杂的ResourceTable的方法
 如何配置双写、分片、读写分离等，参见：[resource-table](resource-table.md)
 
-### 动态配置（整合camellia-dashboard）
+### 动态配置
+#### 整合camellia-dashboard
 使用camellia-dashboard来动态变更ResourceTable配置，参见：[dynamic-dashboard](dynamic-dashboard.md)
 
-### 动态配置（使用独立配置文件）
+#### 使用独立配置文件
 使用独立配置文件方式来动态变更ResourceTable配置，参见：[dynamic-conf](dynamic-conf.md)
 
-### 动态配置（自定义）
+#### 自定义
 自定义动态变更ResourceTable配置的方法，参见：[dynamic-custom](dynamic-custom.md)
 
 ### 使用spring-boot-starter快速接入

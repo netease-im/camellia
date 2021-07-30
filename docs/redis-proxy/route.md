@@ -396,7 +396,7 @@ public class CustomProxyRouteConfUpdater extends ProxyRouteConfUpdater {
     }
 
     private void update() {
-        String newUrl = "redis://pass123@127.0.0.1:6380";
+        String newUrl = "redis://@127.0.0.2:6379";
         if (!url.equals(newUrl)) {
             url = newUrl;
             invokeUpdateResourceTableJson(1, "default", url);
@@ -404,7 +404,7 @@ public class CustomProxyRouteConfUpdater extends ProxyRouteConfUpdater {
     }
 }
 ```
-上述的例子中，proxy一开始的路由是redis://@127.0.0.1:6379，10s之后，被切换到了redis://pass123@127.0.0.1:6380  
+上述的例子中，proxy一开始的路由是redis://@127.0.0.1:6379，10s之后，被切换到了redis://@127.0.0.2:6379  
 
 ### 不同的双（多）写模式
 proxy支持设置双（多）写的模式，有三个可选项：  

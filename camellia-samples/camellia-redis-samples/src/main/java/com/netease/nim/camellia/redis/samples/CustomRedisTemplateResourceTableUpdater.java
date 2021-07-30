@@ -28,7 +28,7 @@ public class CustomRedisTemplateResourceTableUpdater extends RedisTemplateResour
 
     private void checkUpdate() {
         //从你的配置中心获取配置，或者监听配置的变更
-        String newUrl = "redis://pass123@127.0.0.1:6380";
+        String newUrl = "redis://@127.0.0.2:6379";
         if (!url.equals(newUrl)) {
             //如果配置发生了变更，则回调告诉CamelliaRedisTemplate有更新
             url = newUrl;
