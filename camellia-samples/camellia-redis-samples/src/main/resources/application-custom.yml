@@ -1,0 +1,26 @@
+
+#see CamelliaRedisProperties
+camellia-redis:
+  type: custom
+  custom:
+    resource-table-updater-class-name: com.netease.nim.camellia.redis.samples.CustomRedisTemplateResourceTableUpdater
+  local:
+    resource: redis://@127.0.0.1:6379
+  redis-conf:
+    jedis:
+      timeout: 2000
+      min-idle: 0
+      max-idle: 32
+      max-active: 32
+      max-wait-millis: 2000
+    jedis-cluster:
+      max-wait-millis: 2000
+      min-idle: 0
+      max-idle: 8
+      max-active: 16
+      max-attempts: 5
+      timeout: 2000
+
+camellia-redis-zk-discovery:
+  base-path: /camellia
+  zk-url: 127.0.0.1:2181
