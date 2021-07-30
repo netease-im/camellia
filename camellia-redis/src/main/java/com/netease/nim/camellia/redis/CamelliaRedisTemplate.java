@@ -36,6 +36,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
 
     private final ReloadableProxyFactory<CamelliaRedisImpl> factory;
     private final CamelliaRedisEnv env;
+    private final CamelliaApi service;
     private String md5;
     private PipelinePool pipelinePool;
 
@@ -50,9 +51,28 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
                 .checkIntervalMillis(checkIntervalMillis)
                 .proxyEnv(env.getProxyEnv())
                 .build();
+        this.service = service;
         this.env = env;
         this.md5 = this.factory.getResponse().getMd5();
         this.pipelinePool = new PipelinePool(env);
+    }
+
+    public CamelliaRedisTemplate(CamelliaRedisEnv env, RedisTemplateResourceTableUpdater updater) {
+        this(env, new LocalDynamicCamelliaApi(updater.getResourceTable(), RedisResourceUtil.RedisResourceTableChecker),
+                defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
+        updater.addCallback(new ResourceTableUpdateCallback() {
+            @Override
+            public void callback(ResourceTable resourceTable) {
+                if (service instanceof LocalDynamicCamelliaApi) {
+                    ((LocalDynamicCamelliaApi) service).updateResourceTable(resourceTable);
+                }
+                reloadResourceTable();
+            }
+        });
+    }
+
+    public CamelliaRedisTemplate(RedisTemplateResourceTableUpdater updater) {
+        this(CamelliaRedisEnv.defaultRedisEnv(), updater);
     }
 
     public CamelliaRedisTemplate(CamelliaRedisEnv env, String url, long bid, String bgroup,
@@ -112,6 +132,10 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
 
     public CamelliaRedisTemplate(ReloadableLocalFileCamelliaApi reloadableLocalFileCamelliaApi) {
         this(CamelliaRedisEnv.defaultRedisEnv(), reloadableLocalFileCamelliaApi, defaultCheckIntervalMillis);
+    }
+
+    public final void reloadResourceTable() {
+        factory.reload(false);
     }
 
     @Override

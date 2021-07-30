@@ -9,10 +9,12 @@ import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.redis.CamelliaRedisEnv;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.jedis.JedisPoolFactory;
 import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
 import com.netease.nim.camellia.redis.proxy.*;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.resource.RedisTemplateResourceTableUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,8 +104,29 @@ public class CamelliaRedisConfiguration {
             int readTimeoutMillis = remote.getReadTimeoutMillis();
             long checkIntervalMillis = remote.getCheckIntervalMillis();
             return new CamelliaRedisTemplate(redisEnv, url, bid, bgroup, monitor, checkIntervalMillis, connectTimeoutMillis, readTimeoutMillis);
+        } else if (type == CamelliaRedisProperties.Type.CUSTOM) {
+            CamelliaRedisProperties.Custom custom = properties.getCustom();
+            String className = custom.getResourceTableUpdaterClassName();
+            if (className == null) {
+                throw new IllegalArgumentException("proxyRouteConfUpdaterClassName missing");
+            }
+            RedisTemplateResourceTableUpdater updater;
+            try {
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(className);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+                }
+                updater = (RedisTemplateResourceTableUpdater) clazz.newInstance();
+                logger.info("RedisTemplateResourceTableUpdater init success, class = {}", className);
+            } catch (Exception e) {
+                logger.error("RedisTemplateResourceTableUpdater init error, class = {}", className, e);
+                throw new CamelliaRedisException(e);
+            }
+            return new CamelliaRedisTemplate(redisEnv, updater);
         } else {
-            throw new UnsupportedOperationException("only support local/remote");
+            throw new UnsupportedOperationException("only support local/remote/custom");
         }
     }
 

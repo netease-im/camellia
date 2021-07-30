@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.hbase.util;
 
-import com.netease.nim.camellia.core.api.ReloadableLocalFileCamelliaApi;
+import com.netease.nim.camellia.core.model.ResourceTableChecker;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.CheckUtil;
@@ -15,7 +15,7 @@ import java.util.Set;
  */
 public class HBaseResourceUtil {
 
-    public static final ReloadableLocalFileCamelliaApi.ResourceTableChecker HBaseResourceTableChecker = new ReloadableLocalFileCamelliaApi.ResourceTableChecker() {
+    public static final ResourceTableChecker HBaseResourceTableChecker = new ResourceTableChecker() {
         @Override
         public boolean check(ResourceTable resourceTable) {
             try {

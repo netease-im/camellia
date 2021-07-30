@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.core.api;
 
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.core.model.ResourceTableChecker;
 import com.netease.nim.camellia.core.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +30,6 @@ public class ReloadableLocalFileCamelliaApi implements CamelliaApi {
         this.filePath = filePath;
         this.checker = checker;
         checkAndReload(true);
-    }
-
-    public static interface ResourceTableChecker {
-        boolean check(ResourceTable resourceTable);
     }
 
     private synchronized void checkAndReload(boolean throwError) {

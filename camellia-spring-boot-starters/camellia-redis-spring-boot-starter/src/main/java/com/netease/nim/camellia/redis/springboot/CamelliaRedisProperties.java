@@ -13,6 +13,7 @@ public class CamelliaRedisProperties {
     private Type type = Type.LOCAL;
     private Local local = new Local();
     private Remote remote;
+    private Custom custom;
     private RedisConf redisConf = new RedisConf();
 
     public Type getType() {
@@ -37,6 +38,14 @@ public class CamelliaRedisProperties {
 
     public void setRemote(Remote remote) {
         this.remote = remote;
+    }
+
+    public Custom getCustom() {
+        return custom;
+    }
+
+    public void setCustom(Custom custom) {
+        this.custom = custom;
     }
 
     public RedisConf getRedisConf() {
@@ -195,6 +204,18 @@ public class CamelliaRedisProperties {
         }
     }
 
+    public static class Custom {
+        private String resourceTableUpdaterClassName;
+
+        public String getResourceTableUpdaterClassName() {
+            return resourceTableUpdaterClassName;
+        }
+
+        public void setResourceTableUpdaterClassName(String resourceTableUpdaterClassName) {
+            this.resourceTableUpdaterClassName = resourceTableUpdaterClassName;
+        }
+    }
+
     public static class RedisConf {
 
         private Jedis jedis = new Jedis();
@@ -325,6 +346,7 @@ public class CamelliaRedisProperties {
     public static enum Type {
         LOCAL,
         REMOTE,
+        CUSTOM,
         ;
     }
 }
