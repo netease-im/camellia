@@ -15,7 +15,7 @@
 * 提供了一个spring-boot-starter，快速接入
 
 ## 使用场景
-* 需要从redis/redis-sentinel迁移到redis-cluster，CamelliaRedisTemplate的接口定义和Jedis一致，并且支持了mget/mset/pipeline等批量命令    
+* 需要从redis/redis-sentinel迁移到redis-cluster，CamelliaRedisTemplate的接口定义和Jedis一致（或者直接使用Jedis适配器），并且支持了mget/mset/pipeline等批量命令    
 * 需要让数据在redis/redis-sentinel/redis-cluster之间进行迁移，可以使用CamelliaRedisTemplate的双写功能    
 * 单个集群容量不够（比如redis-cluster单集群容量超过1T可能会崩溃），可以使用分片和双写，逐步迁移到N个集群进行客户端分片
 * 可以使用CamelliaRedisTemplate的读写分离功能/双（多）读功能来提升整体的读写能力，特别是存在热点的场景  
@@ -62,13 +62,13 @@ public class TestSamples {
 如何配置双写、分片、读写分离等，参见：[resource-table](resource-table.md)
 
 ### 动态配置
-#### 整合camellia-dashboard
+* 整合camellia-dashboard  
 使用camellia-dashboard来动态变更ResourceTable配置，参见：[dynamic-dashboard](dynamic-dashboard.md)
 
-#### 使用独立配置文件
+* 使用独立配置文件  
 使用独立配置文件方式来动态变更ResourceTable配置，参见：[dynamic-conf](dynamic-conf.md)
 
-#### 自定义
+* 自定义  
 自定义动态变更ResourceTable配置的方法，参见：[dynamic-custom](dynamic-custom.md)
 
 ### 使用spring-boot-starter快速接入
