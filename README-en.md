@@ -35,6 +35,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 │ ├─`camellia-redis-eureka-spring-boot-starter`  
 │ ├─`camellia-redis-proxy-hbase-spring-boot-starter`  
 │ ├─`camellia-redis-proxy-spring-boot-starter`  
+│ ├─`camellia-redis-spring-temaplate-adaptor-spring-boot-starter`   
 │ ├─`camellia-redis-proxy-zk-registry-spring-boot-starter`                     
 │ ├─`camellia-redis-spring-boot-starter`  
 │ ├─`camellia-redis-spring-boot-starter`  
@@ -42,7 +43,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 │ ├─`camellia-spring-redis-base`         
 │ ├─`camellia-spring-redis-eureka-discovery-spring-boot-starter`     
 │ ├─`camellia-spring-redis-zk-discovery-spring-boot-starter`    
-              
+                     
 ## Instruction
 ### 1、camellia-core  
 base on cglib, support client shading/read-write-separate/double-write  
@@ -52,8 +53,9 @@ a web service, depends on mysql/redis，manage camellia-core's config，client c
 [QUICK START](/docs/dashboard/dashboard.md)  
 ### 3、camellia-redis  
 base on camellia-core and jedis，main class is CamelliaRedisTemplate, can invoke redis/redis-sentinel/redis-cluster in identical way，support pipeline    
-support client shading/read-write-separate/double-write  
-support jedis adaptor to migrate from jedis easily  
+support client shading/read-write-separate/double-write   
+support jedis adaptor to migrate from jedis easily   
+support spring-redis-template adaptor  
 [QUICK START](/docs/redis-template/redis-template.md)
 ### 4、camellia-redis-proxy  
 base on netty4, support redis/redis-sentinel/redis-cluster  
