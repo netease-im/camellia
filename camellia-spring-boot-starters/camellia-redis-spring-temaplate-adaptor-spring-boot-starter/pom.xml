@@ -3,12 +3,12 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-redis-samples</artifactId>
+	<artifactId>camellia-redis-spring-temaplate-adaptor-spring-boot-starter</artifactId>
 	<version>1.0.34-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia-samples</artifactId>
+		<artifactId>camellia-spring-boot-starters</artifactId>
 		<version>1.0.34-SNAPSHOT</version>
 	</parent>
 
@@ -35,60 +35,33 @@
 			<artifactId>camellia-spring-redis-base</artifactId>
 			<version>1.0.34-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-zk-discovery-spring-boot-starter</artifactId>
-			<version>1.0.34-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-spring-temaplate-adaptor-spring-boot-starter</artifactId>
-			<version>1.0.34-SNAPSHOT</version>
-		</dependency>
-	</dependencies>
+    </dependencies>
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
+				<version>2.0.2</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
+					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
-		<resources>
-			<resource>
-				<directory>src/main/java</directory>
-				<includes>
-					<include>**/*</include>
-				</includes>
-			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-				<includes>
-					<include>**/*</include>
-				</includes>
-			</resource>
-		</resources>
 	</build>
-
-	<repositories>
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
 </project>

@@ -24,6 +24,7 @@
         <module>camellia-redis-proxy-hbase-spring-boot-starter</module>
         <module>camellia-redis-proxy-zk-registry-spring-boot-starter</module>
         <module>camellia-redis-zk-discovery-spring-boot-starter</module>
+        <module>camellia-redis-spring-temaplate-adaptor-spring-boot-starter</module>
         <module>camellia-spring-redis-zk-discovery-spring-boot-starter</module>
         <module>camellia-spring-redis-eureka-discovery-spring-boot-starter</module>
         <module>camellia-redis-eureka-base</module>

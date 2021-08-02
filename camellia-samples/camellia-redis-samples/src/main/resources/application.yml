@@ -22,3 +22,7 @@ camellia-redis:
 camellia-redis-zk-discovery:
   base-path: /camellia
   zk-url: 127.0.0.1:2181
+
+
+#camellia-redis-spring-template-adaptor:
+#  enable: true
