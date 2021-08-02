@@ -29,13 +29,13 @@ redis-cluster://@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
 ```
 ##本类型的后端只能配置为读写分离模式下的读地址
 
-##不读master，此时proxy会从slave集合中随机挑选一个slave进行命令的转发
+##不读master，此时camellia会从slave集合中随机挑选一个slave进行命令的转发
 ##有密码
 redis-sentinel-slaves://passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=false
 ##没有密码
 redis-sentinel-slaves://@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=false
 
-##读master，此时proxy会从master+slave集合中随机挑选一个节点进行命令的转发（可能是master也可能是slave，所有节点概率相同）
+##读master，此时camellia会从master+slave集合中随机挑选一个节点进行命令的转发（可能是master也可能是slave，所有节点概率相同）
 ##有密码
 redis-sentinel-slaves://passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true
 ##没有密码
