@@ -2,6 +2,7 @@
 ### 适配SpringRedisTemplate
 如果你本来使用的是SpringRedisTemplate，但是也想拥有CamelliaRedisTemplate的分片、读写分离、双写等能力，camellia提供了CamelliaRedisTemplateRedisConnectionFactory来做适配
 
+#### 手动适配
 首先引入以下依赖：  
 ```
 <dependency>
@@ -31,3 +32,44 @@ public class TestSpringRedisTemplate {
     }
 }
 ```
+
+#### 自动适配
+你可以使用spring-boot-starter来自动适配Spring的RedisTemplate到CamelliaRedisTemplate，首先需要引入以下依赖：
+
+```
+<dependency>
+    <groupId>com.netease.nim</groupId>
+    <artifactId>camellia-redis-spring-temaplate-adaptor-spring-boot-starter</artifactId>
+    <version>a.b.c</version>
+</dependency>
+```
+
+其次，在application.yml配置如下：
+
+```yaml
+#
+camellia-redis:
+  type: local
+  local:
+    resource: redis://@127.0.0.1:6379
+  redis-conf:
+    jedis:
+      timeout: 2000
+      min-idle: 0
+      max-idle: 32
+      max-active: 32
+      max-wait-millis: 2000
+    jedis-cluster:
+      max-wait-millis: 2000
+      min-idle: 0
+      max-idle: 8
+      max-active: 16
+      max-attempts: 5
+      timeout: 2000
+
+#默认就是true
+camellia-redis-spring-template-adaptor:
+  enable: true
+```
+
+则spring-boot-starter会自动注入CamelliaRedisTemplate实例和CamelliaRedisTemplateRedisConnectionFactory实例，从而自动注入的SpringRedisTemplate就是一个使用了CamelliaRedisTemplate适配器的实例了  
