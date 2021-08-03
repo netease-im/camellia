@@ -11,7 +11,7 @@
 * 注意事项
 
 ### 部署模式
-此时有两种方式来部署多实例的架构：  
+通常来说，有两种方式来部署多实例的架构：  
 * 前置四层代理(如lvs/阿里slb), 如下:   
 <img src="redis-proxy-lb.png" width="60%" height="60%">  
 
@@ -22,8 +22,8 @@
    
 此时，你需要在客户端侧实现一下负载均衡策略
 
-* 如果应用程序是java，则还可以同进程部署，如下：
-<img src="redis-proxy-in-process.png" width="60%" height="60%">  
+* 特别的，如果应用程序是java，则还可以同进程部署，如下：
+<img src="redis-proxy-in-process.png" width="40%" height="40%">  
 
 此时，应用程序可以直接访问127.0.0.1:6379即可
                                                                             
