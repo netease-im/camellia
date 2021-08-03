@@ -25,7 +25,7 @@
 * 特别的，如果应用程序是java，则还可以同进程部署，如下：
 <img src="redis-proxy-in-process.png" width="40%" height="40%">  
 
-此时，应用程序可以直接访问127.0.0.1:6379即可
+此时，应用程序直接访问127.0.0.1:6379即可
                                                                             
 ### 集成Zookeeper
 camellia提供了一个基于zookeeper的注册发现模式的默认实现，你可以这样来使用它：
