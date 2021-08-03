@@ -21,6 +21,11 @@
 <img src="redis-proxy-zk.png" width="60%" height="60%">
    
 此时，你需要在客户端侧实现一下负载均衡策略
+
+* 如果应用程序是java，则还可以同进程部署，如下：
+<img src="redis-proxy-in-process.png" width="60%" height="60%">  
+
+此时，应用程序可以直接访问127.0.0.1:6379即可
                                                                             
 ### 集成Zookeeper
 camellia提供了一个基于zookeeper的注册发现模式的默认实现，你可以这样来使用它：
