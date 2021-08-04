@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.hbase;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
-import com.netease.nim.camellia.redis.proxy.util.ParamUtils;
+import com.netease.nim.camellia.redis.proxy.hbase.util.ParamUtils;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
 import com.netease.nim.camellia.redis.proxy.reply.*;

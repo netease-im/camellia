@@ -17,6 +17,12 @@
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis</artifactId>
 			<version>1.0.34-SNAPSHOT</version>
+			<exclusions>
+				<exclusion>
+					<groupId>redis.clients</groupId>
+					<artifactId>jedis</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.curator</groupId>
