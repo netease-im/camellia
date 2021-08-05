@@ -5,13 +5,14 @@
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
 
-# 1.0.34（2021/08/xx）
+# 1.0.34（2021/08/05）
 ### add
 * camellia-redis-proxy-hbase refactor string commands implements
 * CamelliaRedisTemplate provide Jedis Adaptor to migrate from Jedis
+* CamelliaRedisTemplate provide SpringRedisTemplate Adaptor
 
 ### update
-* none
+* camellia-redis-proxy remove jedis dependency
 
 ### fix
 * none
