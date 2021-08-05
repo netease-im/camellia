@@ -1,9 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.hbase;
 
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.netease.nim.camellia.redis.proxy.hbase.util.RedisHBaseUtils.*;
 
@@ -35,7 +38,7 @@ public class RedisHBaseCommonMixClient {
         List<byte[]> leaveKeys = new ArrayList<>();
         long ret = 0;
         for (byte[] key : keys) {
-            String type = redisTemplate.type(redisKey(key));
+            String type = type(key);
             if (type != null) {
                 if (type.equalsIgnoreCase("zset")) {
                     Long zremrangeByRank = zSetMixClient.zremrangeByRank(key, 0, -1);
@@ -64,17 +67,20 @@ public class RedisHBaseCommonMixClient {
         }
     }
 
-    /**
-     *
-     */
     public String type(byte[] key) {
+        Map<String, String> map = RedisHBaseConfiguration.redisKeyTypePrioriConf();
+        if (map != null && !map.isEmpty()) {
+            String keyStr = Utils.bytesToString(key);
+            for (Map.Entry<String, String> entry : map.entrySet()) {
+                String prefix = entry.getKey();
+                if (keyStr.startsWith(prefix)) {
+                    return entry.getValue();
+                }
+            }
+        }
         return redisTemplate.type(redisKey(key));
     }
 
-
-    /**
-     *
-     */
     public Long ttl(byte[] key) {
         String type = type(key);
         if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {

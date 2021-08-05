@@ -1,13 +1,26 @@
 package com.netease.nim.camellia.redis.proxy.hbase.conf;
 
+import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
  * Created by caojiajun on 2020/2/27.
  */
 public class RedisHBaseConfiguration {
+
+    private static final Logger logger = LoggerFactory.getLogger(RedisHBaseConfiguration.class);
+
+    private static volatile Map<String, String> redisKeyTypePrioriConfMap = null;
+    static {
+        ProxyDynamicConf.registerCallback(() -> redisKeyTypePrioriConfMap = null);
+    }
 
     //hbase表名
     public static String hbaseTableName() {
@@ -102,5 +115,29 @@ public class RedisHBaseConfiguration {
     //hbase读操作单机频控的检查阈值
     public static long hbaseReadFreqCheckThreshold() {
         return ProxyDynamicConf.getLong("hbase.read.freq.check.threshold", 500L);
+    }
+
+    //哪些前缀的key是什么类型的一些先验知识，可以用于减少redis请求量
+    public static Map<String, String> redisKeyTypePrioriConf() {
+        if (redisKeyTypePrioriConfMap != null) return redisKeyTypePrioriConfMap;
+        String string = ProxyDynamicConf.getString("redis.key.type.priori.conf", null);
+        Map<String, String> map = new HashMap<>();
+        try {
+            if (string != null) {
+                JSONObject json = JSONObject.parseObject(string);
+                for (Map.Entry<String, Object> entry : json.entrySet()) {
+                    String keyPrefix = entry.getKey();
+                    String type = String.valueOf(entry.getValue());
+                    if (type.equals("string") || type.equals("hash") ||
+                            type.equals("zset") || type.equals("list") || type.equals("set")) {
+                        map.put(keyPrefix, type);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error("parse redis.key.type.priori.conf error", e);
+        }
+        redisKeyTypePrioriConfMap = map;
+        return redisKeyTypePrioriConfMap;
     }
 }
