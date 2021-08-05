@@ -11,6 +11,7 @@
 * camellia-redis-proxy-hbase重构了string相关命令的冷热分离存储设计，具体见：[文档](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
 * CamelliaRedisTemplate提供Jedis适配器，修改一行代码从Jedis迁移到CamelliaRedisTemplate，具体见：[文档](/docs/redis-template/redis-template.md)
 * CamelliaRedisTemplate提供SpringRedisTemplate适配器，具体见：[文档](/docs/redis-template/redis-template.md)
+* camellia-redis-proxy提供一个不使用spring-boot-starter启动proxy的简单封装工具类CamelliaRedisProxyStarter，具体见：[文档](/docs/redis-proxy/redis-proxy-zh.md)
 
 ### 更新
 * camellia-redis-proxy移除jedis的依赖

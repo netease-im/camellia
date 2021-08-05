@@ -10,6 +10,7 @@
 * camellia-redis-proxy-hbase refactor string commands implements
 * CamelliaRedisTemplate provide Jedis Adaptor to migrate from Jedis
 * CamelliaRedisTemplate provide SpringRedisTemplate Adaptor
+* camellia-redis-proxy provide util class CamelliaRedisProxyStarter to start proxy without spring-boot-starter
 
 ### update
 * camellia-redis-proxy remove jedis dependency

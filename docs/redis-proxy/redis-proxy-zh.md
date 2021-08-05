@@ -157,50 +157,14 @@ OK
 3) (nil)
 ```
 
-## 快速开始二
-下载最新版安装包并解压（v1.0.34）：
-```
-wget https://github.com/netease-im/camellia/releases/download/v1.0.34/camellia-redis-proxy-1.0.34.tar.gz
-tar zxvf camellia-redis-proxy-1.0.34.tar.gz
-cd camellia-redis-proxy-1.0.34/
-```
-按需修改BOOT-INF/classes/下的配置文件：
-* application.yml
-* logback.xml
-* camellia-redis-proxy.properties
-* resource-table.json
-
-按需调整start.sh的启动参数（主要是JVM参数），默认参数如下（确保已经安装了jdk8或以上，并添加到path）：
-```
-java -XX:+UseG1GC -Xms2048m -Xmx2048m -server org.springframework.boot.loader.JarLauncher
-```
-直接启动即可：
-```
-./start.sh
-```
+## 快速开始二（基于安装包）
+参见：[quick-start-package](quick-start-package.md)
 
 ## 快速开始三（基于fatJar和sample-code)
-下载源码，切到最新稳定分支（v1.0.34）
-```
-git clone https://github.com/netease-im/camellia.git
-cd camellia
-git checkout v1.0.34
-```
-按需修改[sample-code](/camellia-samples/camellia-redis-proxy-samples) 中的配置文件：
-* application.yml
-* logback.xml
-* camellia-redis-proxy.properties
-* resource-table.json
+参见：[quick-start-fat-jar](quick-start-fat-jar.md)
 
-使用maven编译
-```
-mvn clean install
-```
-找到可执行jar包，使用java -jar命令运行即可(注意设置内存和GC，并确保已经安装了jdk8或以上，并添加到path）：
-```
-cd camellia-samples/camellia-redis-proxy-samples/target
-java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy-samples-1.0.34.jar 
-```
+## 快速开始四（不使用spring-boot-stater)
+参见：[quick-start-no-spring-boot](quick-start-no-spring-boot.md)
 
 ## 路由配置
 路由配置表示了camellia-redis-proxy在收到客户端的redis命令之后的转发规则，包括：
