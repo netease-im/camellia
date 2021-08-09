@@ -18,6 +18,9 @@ camellia-redis-proxy:
   slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback #慢查询的回调类
 #  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor #方法拦截器
 #  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.command.async.interceptor.MultiWriteCommandInterceptor #方法拦截器
+  converter-enable: false
+  converter-config:
+    string-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomStringConverter
   hot-key-monitor-enable: false #是否监控热key
   hot-key-monitor-config:
     check-millis: 1000 #热key的检查周期
