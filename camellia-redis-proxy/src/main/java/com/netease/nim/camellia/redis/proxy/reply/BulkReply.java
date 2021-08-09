@@ -11,7 +11,7 @@ public class BulkReply implements Reply {
     public static final BulkReply NIL_REPLY = new BulkReply();
 
     private static final char MARKER = Marker.BulkReply.getMarker();
-    private final int capacity;
+    private int capacity;
     private byte[] raw;
 
     private BulkReply() {
@@ -29,6 +29,15 @@ public class BulkReply implements Reply {
 
     public byte[] getRaw() {
         return raw;
+    }
+
+    public void updateRaw(byte[] bytes) {
+        this.raw = bytes;
+        if (bytes == null) {
+            this.capacity = -1;
+        } else {
+            this.capacity = bytes.length;
+        }
     }
 
     @Override

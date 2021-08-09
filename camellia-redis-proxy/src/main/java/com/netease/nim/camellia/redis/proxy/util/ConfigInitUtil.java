@@ -4,6 +4,8 @@ import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.CommandBigKeyMonitorConfig;
+import com.netease.nim.camellia.redis.proxy.command.async.converter.ConverterConfig;
+import com.netease.nim.camellia.redis.proxy.command.async.converter.StringConverter;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.CommandHotKeyMonitorConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyConfig;
@@ -215,5 +217,31 @@ public class ConfigInitUtil {
         return new CommandBigKeyMonitorConfig(bigKeyMonitorConfig.getStringSizeThreshold(),
                 bigKeyMonitorConfig.getListSizeThreshold(), bigKeyMonitorConfig.getZsetSizeThreshold(),
                 bigKeyMonitorConfig.getHashSizeThreshold(), bigKeyMonitorConfig.getSetSizeThreshold(), bigKeyMonitorCallback);
+    }
+
+    public static ConverterConfig initConverterConfig(CamelliaServerProperties serverProperties) {
+        if (!serverProperties.isConverterEnable()) return null;
+        CamelliaServerProperties.ConverterConfig converterConfig = serverProperties.getConverterConfig();
+        if (converterConfig == null) return null;
+        ConverterConfig config = new ConverterConfig();
+        String stringConverterClassName = converterConfig.getStringConverterClassName();
+        if (stringConverterClassName != null) {
+            try {
+                StringConverter stringConverter;
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(stringConverterClassName);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(stringConverterClassName);
+                }
+                stringConverter = (StringConverter) clazz.newInstance();
+                logger.info("StringConverter init success, class = {}", stringConverterClassName);
+                config.setStringConverter(stringConverter);
+            } catch (Exception e) {
+                logger.error("StringConverter init error, class = {}", stringConverterClassName, e);
+                throw new CamelliaRedisException(e);
+            }
+        }
+        return config;
     }
 }

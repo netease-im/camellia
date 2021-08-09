@@ -23,6 +23,8 @@ public class CamelliaServerProperties {
     private HotKeyCacheConfig hotKeyCacheConfig;
     private boolean bigKeyMonitorEnable = Constants.Server.bigKeyMonitorEnable;
     private BigKeyMonitorConfig bigKeyMonitorConfig;
+    private boolean converterEnable = Constants.Server.converterEnable;
+    private ConverterConfig converterConfig;
     private String proxyDynamicConfHookClassName;
     private boolean monitorDataMaskPassword = Constants.Server.monitorDataMaskPassword;
 
@@ -237,6 +239,22 @@ public class CamelliaServerProperties {
         this.bigKeyMonitorConfig = bigKeyMonitorConfig;
     }
 
+    public boolean isConverterEnable() {
+        return converterEnable;
+    }
+
+    public void setConverterEnable(boolean converterEnable) {
+        this.converterEnable = converterEnable;
+    }
+
+    public ConverterConfig getConverterConfig() {
+        return converterConfig;
+    }
+
+    public void setConverterConfig(ConverterConfig converterConfig) {
+        this.converterConfig = converterConfig;
+    }
+
     public String getProxyDynamicConfHookClassName() {
         return proxyDynamicConfHookClassName;
     }
@@ -442,6 +460,18 @@ public class CamelliaServerProperties {
 
         public void setBigKeyMonitorCallbackClassName(String bigKeyMonitorCallbackClassName) {
             this.bigKeyMonitorCallbackClassName = bigKeyMonitorCallbackClassName;
+        }
+    }
+
+    public static class ConverterConfig {
+        private String StringConverterClassName;
+
+        public String getStringConverterClassName() {
+            return StringConverterClassName;
+        }
+
+        public void setStringConverterClassName(String stringConverterClassName) {
+            StringConverterClassName = stringConverterClassName;
         }
     }
 }

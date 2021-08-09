@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunter;
+import com.netease.nim.camellia.redis.proxy.command.async.converter.Converters;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCache;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -29,9 +30,10 @@ public class AsyncTask {
     private Reply reply;
     private HotKeyCache hotKeyCache;
     private final BigKeyHunter bigKeyHunter;
+    private final Converters converters;
 
     public AsyncTask(AsyncTaskQueue taskQueue, Command command,
-                     CommandSpendTimeConfig commandSpendTimeConfig, BigKeyHunter bigKeyHunter) {
+                     CommandSpendTimeConfig commandSpendTimeConfig, BigKeyHunter bigKeyHunter, Converters converters) {
         this.command = command;
         this.taskQueue = taskQueue;
         this.commandSpendTimeConfig = commandSpendTimeConfig;
@@ -39,6 +41,7 @@ public class AsyncTask {
             startTime = System.nanoTime();
         }
         this.bigKeyHunter = bigKeyHunter;
+        this.converters = converters;
     }
 
     public void setHotKeyCache(HotKeyCache hotKeyCache) {
@@ -47,6 +50,15 @@ public class AsyncTask {
 
     public void replyCompleted(Reply reply, boolean fromCache) {
         try {
+            if (command != null) {
+                if (converters != null && !fromCache) {
+                    try {
+                        converters.convertReply(command, reply);
+                    } catch (Exception e) {
+                        ErrorLogCollector.collect(AsyncTask.class, e.getMessage(), e);
+                    }
+                }
+            }
             if (command != null) {
                 try {
                     if (startTime > 0) {

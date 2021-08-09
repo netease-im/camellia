@@ -97,6 +97,16 @@ public class CamelliaRedisProxyProperties {
     private BigKeyMonitorConfig bigKeyMonitorConfig = new BigKeyMonitorConfig();
 
     /**
+     * 转换器开关
+     */
+    private boolean converterEnable = Constants.Server.converterEnable;
+
+    /**
+     * 转换器配置
+     */
+    private ConverterConfig converterConfig = new ConverterConfig();
+
+    /**
      * 动态配置的hook
      */
     private String proxyDynamicConfHookClassName;
@@ -266,6 +276,22 @@ public class CamelliaRedisProxyProperties {
 
     public void setBigKeyMonitorConfig(BigKeyMonitorConfig bigKeyMonitorConfig) {
         this.bigKeyMonitorConfig = bigKeyMonitorConfig;
+    }
+
+    public boolean isConverterEnable() {
+        return converterEnable;
+    }
+
+    public void setConverterEnable(boolean converterEnable) {
+        this.converterEnable = converterEnable;
+    }
+
+    public ConverterConfig getConverterConfig() {
+        return converterConfig;
+    }
+
+    public void setConverterConfig(ConverterConfig converterConfig) {
+        this.converterConfig = converterConfig;
     }
 
     public String getProxyDynamicConfHookClassName() {
@@ -474,6 +500,18 @@ public class CamelliaRedisProxyProperties {
 
         public void setBigKeyMonitorCallbackClassName(String bigKeyMonitorCallbackClassName) {
             this.bigKeyMonitorCallbackClassName = bigKeyMonitorCallbackClassName;
+        }
+    }
+
+    public static class ConverterConfig {
+        private String StringConverterClassName;
+
+        public String getStringConverterClassName() {
+            return StringConverterClassName;
+        }
+
+        public void setStringConverterClassName(String stringConverterClassName) {
+            StringConverterClassName = stringConverterClassName;
         }
     }
 }
