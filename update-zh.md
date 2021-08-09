@@ -1,9 +1,18 @@
 [ENGLISH](update-en.md)
 # 未来(TODO)
-* camellia-redis-proxy支持key/value等的自定义转换，可以用于透明的数据加密/数据压缩等
 * 支持基于注册中心的Lettuce的简单的接入方案
 * 支持redis6.0的client-cache特性
 * 支持监控数据可视化到prometheus等平台
+
+# 1.0.35（2021/08/xx）
+### 新增
+* camellia-redis-proxy支持对string命令的value自定义转换（可以用于数据压缩、数据加解密等），具体见：[转换](/docs/redis-proxy/converter.md)
+
+### 更新
+* 无
+
+### fix
+* 无
 
 
 # 1.0.34（2021/08/05）

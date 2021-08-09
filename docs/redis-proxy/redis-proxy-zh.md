@@ -23,6 +23,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持热key监控，支持设置HotKeyMonitorCallback
 * 支持热key在proxy层的本地缓存（仅支持GET命令），支持设置HotKeyCacheStatsCallback
 * 支持大key监控，支持设置BigKeyMonitorCallback
+* 支持value的自定义转换（当前支持string相关命令，可以用于实现压数据压缩、数据加解密等）
 * 支持监控配置（如开关、阈值等）的在线变更
 * 支持info命令获取服务器相关信息（包括后端redis集群的信息）
 * 提供了一个httpAPI用于获取监控指标数据
@@ -185,6 +186,12 @@ camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访
 
 具体可见：[控制](control.md)
 
+## value的自定义转换
+camellia-redis-proxy提供了value的自定义转换功能，从而你可以自定义的实现数据的解压缩、加解密等功能  
+当前支持string相关命令的value自定义转换    
+
+具体可见：[转换](converter.md)
+
 ## 部署和接入
 在生产环境，需要部署至少2个proxy实例来保证高可用，并且proxy是可以水平扩展的，包括：
 * 部署模式
@@ -219,6 +226,7 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 使用大key/热key/慢查询/tps等丰富的监控功能来检测你的系统
 * 使用热key缓存功能来应对突发流量
 * 使用双读/读写分离功能来扩展集群的读能力上限
+* 使用value转换功能实现自定义的数据解压缩、数据加解密等功能
 * 等等
 
 ## 性能测试报告

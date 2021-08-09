@@ -13,11 +13,15 @@ camellia-redis-proxy:
   password: pass123   #proxy的密码
   monitor-enable: true  #是否开启监控
   monitor-interval-seconds: 60 #监控回调的间隔
+  monitor-data-mask-password: false #监控相关数据（包括日志）是否把密码隐藏，默认false（例：用***代替abc）
   monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback #监控回调类
   command-spend-time-monitor-enable: true #是否开启请求耗时的监控，只有monitor-enable=true才有效
   slow-command-threshold-millis-time: 1000 #慢查询的阈值，单位毫秒，只有command-spend-time-monitor-enable=true才有效
   slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback #慢查询的回调类
   command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor #方法拦截器
+  converter-enable: false #是否开启value转换
+  converter-config:
+    string-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomStringConverter #string相关命令的自定义转换器
   hot-key-monitor-enable: true #是否监控热key
   hot-key-monitor-config:
     check-millis: 1000 #热key的检查周期
@@ -53,7 +57,7 @@ camellia-redis-proxy:
       shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc #分片函数
 
 camellia-redis-zk-registry: #需要引入相关的依赖才有效
-  enable: false #是否注册到zk 
+  enable: false #是否注册到zk
   zk-url: 127.0.0.1:2181 #zk地址
   base-path: /camellia #注册到zk的base-path
 ```

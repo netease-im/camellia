@@ -145,6 +145,9 @@ camellia-redis-proxy:
   slow-command-threshold-millis-time: 1000 #慢查询的阈值，单位毫秒，只有command-spend-time-monitor-enable=true才有效
   slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback #慢查询的回调类
   command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor #方法拦截器
+  converter-enable: false #是否开启value转换
+  converter-config:
+    string-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomStringConverter #string相关命令的自定义转换器
   hot-key-monitor-enable: true #是否监控热key
   hot-key-monitor-config:
     check-millis: 1000 #热key的检查周期

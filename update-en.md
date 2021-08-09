@@ -1,9 +1,18 @@
 [中文版](update-zh.md)
 # future(TODO)  
-* camellia-redis-proxy support key/value custom transfer, you can use this feature in data-encryption/data-compress
 * support a way for Lettuce to use camellia-redis-proxy depends on register-discovery mode easily
 * support client-cache feature of redis6.0
 * support monitor data visualization in prometheus
+
+# 1.0.35（2021/08/xx）
+### add
+* camellia-redis-proxy support convert value of string commands, you can use this feature to data-encryption/data-compress
+
+### update
+* none
+
+### fix
+* none
 
 # 1.0.34（2021/08/05）
 ### add
