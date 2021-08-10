@@ -52,7 +52,7 @@ public class CustomStringConverter implements StringConverter {
         if (keyStr.equals("k1")) {
             if (originalValue == null) return null;
             String str = Utils.bytesToString(originalValue);
-            return Utils.stringToBytes( str.replaceAll("abc", "***"));
+            return Utils.stringToBytes(str.replaceAll("abc", "***"));
         }
         return originalValue;
     }
@@ -68,6 +68,7 @@ public class CustomStringConverter implements StringConverter {
         return convertedValue;
     }
 }
+
 ```
 随后，你需要在application.yml里如下配置：
 ```yaml

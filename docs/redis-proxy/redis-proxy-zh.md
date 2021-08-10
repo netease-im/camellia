@@ -167,6 +167,9 @@ OK
 ## 快速开始四（不使用spring-boot-stater)
 参见：[quick-start-no-spring-boot](quick-start-no-spring-boot.md)
 
+## 源码解读
+具体可见：[代码结构](proxy-code.md)
+
 ## 路由配置
 路由配置表示了camellia-redis-proxy在收到客户端的redis命令之后的转发规则，包括：
 * 支持的后端redis类型

@@ -15,7 +15,7 @@ public class CustomStringConverter implements StringConverter {
         if (keyStr.equals("k1")) {
             if (originalValue == null) return null;
             String str = Utils.bytesToString(originalValue);
-            return Utils.stringToBytes( str.replaceAll("abc", "***"));
+            return Utils.stringToBytes(str.replaceAll("abc", "***"));
         }
         return originalValue;
     }
