@@ -52,7 +52,7 @@ public class ChannelInfo {
         this.consid = UUID.randomUUID().toString();
         this.clientSocketAddress = ctx.channel().remoteAddress();
         this.asyncTaskQueue = new AsyncTaskQueue(this);
-        this.mock = true;
+        this.mock = false;
     }
 
     /**
