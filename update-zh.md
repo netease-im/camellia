@@ -6,7 +6,7 @@
 
 # 1.0.35（2021/08/xx）
 ### 新增
-* camellia-redis-proxy支持对string/set/list/hash/zset相关命令的value自定义转换（可以用于数据压缩、数据加解密等），具体见：[转换](/docs/redis-proxy/converter.md)
+* camellia-redis-proxy支持对string/set/list/hash/zset相关命令的value自定义转换（可以用于透明的实现数据压缩、数据加解密等），具体见：[转换](/docs/redis-proxy/converter.md)
 * camellia-redis-proxy新增对GETEX/GETDEL/HRANDFIELD/ZRANDMEMBER命令的支持
 
 ### 更新
