@@ -21,6 +21,10 @@ camellia-redis-proxy:
   converter-enable: false
   converter-config:
     string-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomStringConverter
+    list-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomListConverter
+    hash-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomHashConverter
+    set-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomSetConverter
+    zset-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomZSetConverter
   hot-key-monitor-enable: false #是否监控热key
   hot-key-monitor-config:
     check-millis: 1000 #热key的检查周期

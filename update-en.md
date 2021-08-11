@@ -6,13 +6,14 @@
 
 # 1.0.35（2021/08/xx）
 ### add
-* camellia-redis-proxy support convert value of string commands, you can use this feature to data-encryption/data-compress
+* camellia-redis-proxy support convert value of string/hash/list/set/zset commands, you can use this feature to data-encryption/data-compress
+* camellia-redis-proxy support GETEX/GETDEL/HRANDFIELD/ZRANDMEMBER commands
 
 ### update
 * none
 
 ### fix
-* none
+* fix camellia-redis-proxy blocking commands not available(bug from v1.0.33)
 
 # 1.0.34（2021/08/05）
 ### add
