@@ -60,7 +60,8 @@ support spring-redis-template adaptor
 ### 4、camellia-redis-proxy  
 base on netty4, support redis/redis-sentinel/redis-cluster  
 support shading/read-write-separate/double-write on proxy  
-support tps/rt/big-key/hot-key/slow-command monitor, support custom command interceptor, support hot-key-cache(GET command)，support value converter and so on  
+support tps/rt/big-key/hot-key/slow-command monitor  
+support custom command interceptor, support hot-key-cache(GET command)，support value converter and so on    
 [QUICK START](/docs/redis-proxy/redis-proxy-en.md)  
 ### 5、camellia-hbase  
 base on camellia-core and hbase-client，main class is CamelliaHBaseTemplate    
