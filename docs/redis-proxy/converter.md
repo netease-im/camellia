@@ -4,10 +4,10 @@ camellia-redis-proxy提供了value的自定义转换功能，从而你可以自�
 当前支持string/set/list/hash/zset相关命令的value自定义转换  
 
 ### 原理
-* 当一个读命令请求到达proxy，proxy会根据命令的类型解析出特定的参数，并过一遍Converters接口  
-在该接口下，用户可以自己实现从originalValue到convertedValue的变换逻辑，proxy会将转换后的命令发往后端redis节点  
-* 当一个写命令到达proxy，proxy会直接将该命令路由到后端redis节点，后端redis返回之后，proxy会解析回包，并过一遍Converters接口  
-在该接口下，用户可以自己实现从convertedValue到originalValue的变换逻辑，proxy会将转换后的originalValue回给客户端  
+当一个命令请求到达proxy，proxy会根据命令的类型解析出特定的参数，并过一遍Converters的正向转换接口  
+在该接口下，用户可以自己实现从originalValue到convertedValue的变换逻辑，proxy会将转换后的命令发往后端redis节点    
+当后端redis返回之后，proxy会解析回包，并过一遍Converters反向转换接口   
+在该接口下，用户可以自己实现从convertedValue到originalValue的变换逻辑，proxy会将转换后的originalValue回给客户端    
 
 ### 当前支持value转换的数据结构和命令
 以下命令会回调Converter接口进行value转换：
