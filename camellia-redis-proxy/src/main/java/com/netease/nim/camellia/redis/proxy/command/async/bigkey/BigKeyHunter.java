@@ -129,7 +129,8 @@ public class BigKeyHunter {
     public void checkReply(Command command, Reply reply) {
         RedisCommand redisCommand = command.getRedisCommand();
         if (redisCommand == null) return;
-        if (redisCommand.getType() != RedisCommand.Type.READ) return;
+        if (redisCommand.getType() != RedisCommand.Type.READ
+                && redisCommand != RedisCommand.GETSET && redisCommand != RedisCommand.GETEX && redisCommand != RedisCommand.GETDEL) return;
         RedisCommand.CommandType commandType = redisCommand.getCommandType();
         if (commandType == null) return;
         if (reply == null) return;
@@ -142,6 +143,9 @@ public class BigKeyHunter {
         switch (commandType) {
             case STRING:
                 switch (redisCommand) {
+                    case GETEX:
+                    case GETDEL:
+                    case GETSET:
                     case GET:
                         if (reply instanceof BulkReply) {
                             byte[] raw = ((BulkReply) reply).getRaw();
