@@ -504,14 +504,50 @@ public class CamelliaRedisProxyProperties {
     }
 
     public static class ConverterConfig {
-        private String StringConverterClassName;
+        private String stringConverterClassName;
+        private String setConverterClassName;
+        private String listConverterClassName;
+        private String hashConverterClassName;
+        private String zsetConverterClassName;
 
         public String getStringConverterClassName() {
-            return StringConverterClassName;
+            return stringConverterClassName;
         }
 
         public void setStringConverterClassName(String stringConverterClassName) {
-            StringConverterClassName = stringConverterClassName;
+            this.stringConverterClassName = stringConverterClassName;
+        }
+
+        public String getSetConverterClassName() {
+            return setConverterClassName;
+        }
+
+        public void setSetConverterClassName(String setConverterClassName) {
+            this.setConverterClassName = setConverterClassName;
+        }
+
+        public String getListConverterClassName() {
+            return listConverterClassName;
+        }
+
+        public void setListConverterClassName(String listConverterClassName) {
+            this.listConverterClassName = listConverterClassName;
+        }
+
+        public String getHashConverterClassName() {
+            return hashConverterClassName;
+        }
+
+        public void setHashConverterClassName(String hashConverterClassName) {
+            this.hashConverterClassName = hashConverterClassName;
+        }
+
+        public String getZsetConverterClassName() {
+            return zsetConverterClassName;
+        }
+
+        public void setZsetConverterClassName(String zsetConverterClassName) {
+            this.zsetConverterClassName = zsetConverterClassName;
         }
     }
 }

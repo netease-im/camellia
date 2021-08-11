@@ -27,8 +27,10 @@ public enum RedisCommand {
     EXPIREAT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, false, CommandKeyType.SIMPLE_SINGLE),
     TTL(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.SIMPLE_SINGLE),
     GETSET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
+    GETEX(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
     MGET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, false, CommandKeyType.SIMPLE_MULTI),
     SETNX(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
+    GETDEL(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
     SETEX(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
     MSET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, false, CommandKeyType.COMPLEX),
     SUBSTR(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
@@ -46,6 +48,7 @@ public enum RedisCommand {
     HEXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.HASH, false, CommandKeyType.SIMPLE_SINGLE),
     HDEL(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.HASH, false, CommandKeyType.SIMPLE_SINGLE),
     HLEN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.HASH, false, CommandKeyType.SIMPLE_SINGLE),
+    HRANDFIELD(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.HASH, false, CommandKeyType.SIMPLE_SINGLE),
     HKEYS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.HASH, false, CommandKeyType.SIMPLE_SINGLE),
     HVALS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.HASH, false, CommandKeyType.SIMPLE_SINGLE),
     HGETALL(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.HASH, false, CommandKeyType.SIMPLE_SINGLE),
@@ -137,6 +140,7 @@ public enum RedisCommand {
     HSTRLEN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.HASH, false, CommandKeyType.SIMPLE_SINGLE),
     DUMP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.SIMPLE_SINGLE),
     RESTORE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, false, CommandKeyType.SIMPLE_SINGLE),
+    ZRANDMEMBER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ZSET, false, CommandKeyType.SIMPLE_SINGLE),
 
     /**
      * Restrictive Support

@@ -98,6 +98,10 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setConverterEnable(properties.isConverterEnable());
         CamelliaServerProperties.ConverterConfig config2 = new CamelliaServerProperties.ConverterConfig();
         config2.setStringConverterClassName(converterConfig.getStringConverterClassName());
+        config2.setHashConverterClassName(converterConfig.getHashConverterClassName());
+        config2.setListConverterClassName(converterConfig.getListConverterClassName());
+        config2.setSetConverterClassName(converterConfig.getSetConverterClassName());
+        config2.setZsetConverterClassName(converterConfig.getZsetConverterClassName());
         serverProperties.setConverterConfig(config2);
 
         serverProperties.setProxyDynamicConfHookClassName(properties.getProxyDynamicConfHookClassName());
