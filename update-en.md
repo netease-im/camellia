@@ -1,13 +1,15 @@
 [中文版](update-zh.md)
 # future(TODO)  
-* support a way for Lettuce to use camellia-redis-proxy depends on register-discovery mode easily
-* support client-cache feature of redis6.0
-* support monitor data visualization in prometheus
+* camellia-redis-proxy support a way for Lettuce to use camellia-redis-proxy depends on register-discovery mode easily
+* camellia-redis-proxy support client-cache feature of redis6.0
+* camellia-redis-proxy support monitor data visualization in prometheus
+* camellia-redis-proxy support multi-write based on mq(such as kafka)
 
-# 1.0.35（2021/08/xx）
+# 1.0.35（2021/08/13）
 ### add
 * camellia-redis-proxy support convert value of string/hash/list/set/zset commands, you can use this feature to data-encryption/data-compress
 * camellia-redis-proxy support GETEX/GETDEL/HRANDFIELD/ZRANDMEMBER commands
+* camellia-redis-proxy's BigKeyHunter support check of GETEX/GETDEL, support check reply of GETSET
 
 ### update
 * none

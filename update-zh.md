@@ -1,10 +1,11 @@
 [ENGLISH](update-en.md)
 # 未来(TODO)
-* 支持基于注册中心的Lettuce的简单的接入方案
-* 支持redis6.0的client-cache特性
-* 支持监控数据可视化到prometheus等平台
+* camellia-redis-proxy支持基于注册中心的Lettuce的简单的接入方案
+* camellia-redis-proxy支持redis6.0的client-cache特性
+* camellia-redis-proxy支持监控数据可视化到prometheus等平台
+* camellia-redis-proxy支持基于消息队列（如kafka）的异步双写
 
-# 1.0.35（2021/08/xx）
+# 1.0.35（2021/08/13）
 ### 新增
 * camellia-redis-proxy支持对string/set/list/hash/zset相关命令的value自定义转换（可以用于透明的实现数据压缩、数据加解密等），具体见：[转换](/docs/redis-proxy/converter.md)
 * camellia-redis-proxy新增对GETEX/GETDEL/HRANDFIELD/ZRANDMEMBER命令的支持
