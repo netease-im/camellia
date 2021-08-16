@@ -8,7 +8,7 @@
 # 1.0.36（2021/08/xx）
 ### 新增
 * 新增camellia-tools模块，提供解压缩工具类CamelliaCompressor、加解密工具类CamelliaEncryptor
-* 新增了使用camellia-tools来实现camellia-redis-proxy数据解压缩、加解密的例子
+* 新增了使用camellia-tools来实现camellia-redis-proxy数据解压缩、加解密的例子，具体见：[转换](/docs/redis-proxy/converter.md)
 
 ### 更新
 * 无
