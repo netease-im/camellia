@@ -41,6 +41,11 @@
 			<artifactId>camellia-redis-proxy-zk-registry-spring-boot-starter</artifactId>
 			<version>1.0.36-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-tools</artifactId>
+			<version>1.0.36-SNAPSHOT</version>
+		</dependency>
     </dependencies>
 	<build>
 		<plugins>
