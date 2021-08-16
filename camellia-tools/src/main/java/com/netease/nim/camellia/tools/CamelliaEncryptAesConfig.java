@@ -71,10 +71,10 @@ public class CamelliaEncryptAesConfig {
         }
     }
 
-    public CamelliaEncryptAesConfig(Type type, IvParameterSpec ivParameterSpec, SecretKeySpec secretKeySpec) {
+    public CamelliaEncryptAesConfig(Type type, SecretKeySpec secretKeySpec, IvParameterSpec ivParameterSpec) {
         this.type = type;
-        this.ivParameterSpec = ivParameterSpec;
         this.secretKeySpec = secretKeySpec;
+        this.ivParameterSpec = ivParameterSpec;
     }
 
     public Type getType() {
