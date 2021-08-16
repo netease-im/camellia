@@ -5,6 +5,17 @@
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 * camellia-redis-proxy支持基于消息队列（如kafka）的异步双写
 
+# 1.0.36（2021/08/xx）
+### 新增
+* 新增camellia-tools模块，提供解压缩工具类CamelliaCompressor、加解密工具类CamelliaEncryptor
+
+### 更新
+* 无
+
+### fix
+* 无
+
+
 # 1.0.35（2021/08/13）
 ### 新增
 * camellia-redis-proxy支持对string/set/list/hash/zset相关命令的value自定义转换（可以用于透明的实现数据压缩、数据加解密等），具体见：[转换](/docs/redis-proxy/converter.md)

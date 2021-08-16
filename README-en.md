@@ -15,6 +15,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 ├─`camellia-redis-proxy`   
 ├─`camellia-redis-proxy-hbase`  
 ├─`camellia-redis-toolkit`  
+├─`camellia-tools`  
 ├─`camellia-redis-zk`  
 │ ├─`camellia-redis-zk-common`  
 │ ├─`camellia-redis-zk-discovery`  
@@ -72,7 +73,10 @@ base on camellia-redis-proxy、CamelliaRedisTemplate、CamelliaHBaseTemplate, su
 [QUICK START](/docs/redis-proxy-hbase/redis-proxy-hbase.md)  
 ### 7、camellia-redis-toolkit  
 base on CamelliaRedisTemplate，provide some toolkit of redis, such as redis-lock  
-[QUICK START](/docs/toolkit/toolkit.md)  
+[QUICK START](/docs/toolkit/toolkit.md)
+### 8、camellia-tools  
+provide some tools, such as compress utils CamelliaCompressor, encrypt utils CamelliaEncryptor    
+[QUICK START](/docs/tools/tools.md)   
 
 ## Version
 latest version is 1.0.35，have deploy to maven central repository on 2021/08/13  
