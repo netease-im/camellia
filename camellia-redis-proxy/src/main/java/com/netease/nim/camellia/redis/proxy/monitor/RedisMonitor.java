@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.command.async.*;
+import com.netease.nim.camellia.redis.proxy.command.async.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
@@ -617,6 +618,7 @@ public class RedisMonitor {
             if (monitorCallback != null) {
                 monitorCallback.callback(stats);
             }
+            ProxyInfoUtils.updateStats(stats);
         } catch (Exception e) {
             logger.error("calc error", e);
         }

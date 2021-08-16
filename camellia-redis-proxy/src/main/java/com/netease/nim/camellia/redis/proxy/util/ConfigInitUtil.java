@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.CommandBigKeyMonitorConfig;
+import com.netease.nim.camellia.redis.proxy.command.async.converter.*;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.CommandHotKeyMonitorConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyConfig;
@@ -215,5 +216,103 @@ public class ConfigInitUtil {
         return new CommandBigKeyMonitorConfig(bigKeyMonitorConfig.getStringSizeThreshold(),
                 bigKeyMonitorConfig.getListSizeThreshold(), bigKeyMonitorConfig.getZsetSizeThreshold(),
                 bigKeyMonitorConfig.getHashSizeThreshold(), bigKeyMonitorConfig.getSetSizeThreshold(), bigKeyMonitorCallback);
+    }
+
+    public static ConverterConfig initConverterConfig(CamelliaServerProperties serverProperties) {
+        if (!serverProperties.isConverterEnable()) return null;
+        CamelliaServerProperties.ConverterConfig converterConfig = serverProperties.getConverterConfig();
+        if (converterConfig == null) return null;
+        ConverterConfig config = new ConverterConfig();
+        String stringConverterClassName = converterConfig.getStringConverterClassName();
+        if (stringConverterClassName != null) {
+            try {
+                StringConverter stringConverter;
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(stringConverterClassName);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(stringConverterClassName);
+                }
+                stringConverter = (StringConverter) clazz.newInstance();
+                logger.info("StringConverter init success, class = {}", stringConverterClassName);
+                config.setStringConverter(stringConverter);
+            } catch (Exception e) {
+                logger.error("StringConverter init error, class = {}", stringConverterClassName, e);
+                throw new CamelliaRedisException(e);
+            }
+        }
+        String listConverterClassName = converterConfig.getListConverterClassName();
+        if (listConverterClassName != null) {
+            try {
+                ListConverter listConverter;
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(listConverterClassName);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(listConverterClassName);
+                }
+                listConverter = (ListConverter) clazz.newInstance();
+                logger.info("ListConverter init success, class = {}", listConverterClassName);
+                config.setListConverter(listConverter);
+            } catch (Exception e) {
+                logger.error("ListConverter init error, class = {}", stringConverterClassName, e);
+                throw new CamelliaRedisException(e);
+            }
+        }
+        String setConverterClassName = converterConfig.getSetConverterClassName();
+        if (setConverterClassName != null) {
+            try {
+                SetConverter setConverter;
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(setConverterClassName);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(setConverterClassName);
+                }
+                setConverter = (SetConverter) clazz.newInstance();
+                logger.info("SetConverter init success, class = {}", setConverterClassName);
+                config.setSetConverter(setConverter);
+            } catch (Exception e) {
+                logger.error("SetConverter init error, class = {}", setConverterClassName, e);
+                throw new CamelliaRedisException(e);
+            }
+        }
+        String hashConverterClassName = converterConfig.getHashConverterClassName();
+        if (hashConverterClassName != null) {
+            try {
+                HashConverter hashConverter;
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(hashConverterClassName);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(hashConverterClassName);
+                }
+                hashConverter = (HashConverter) clazz.newInstance();
+                logger.info("HashConverter init success, class = {}", hashConverterClassName);
+                config.setHashConverter(hashConverter);
+            } catch (Exception e) {
+                logger.error("HashConverter init error, class = {}", hashConverterClassName, e);
+                throw new CamelliaRedisException(e);
+            }
+        }
+        String zsetConverterClassName = converterConfig.getZsetConverterClassName();
+        if (zsetConverterClassName != null) {
+            try {
+                ZSetConverter zSetConverter;
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(zsetConverterClassName);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(zsetConverterClassName);
+                }
+                zSetConverter = (ZSetConverter) clazz.newInstance();
+                logger.info("ZSetConverter init success, class = {}", zsetConverterClassName);
+                config.setzSetConverter(zSetConverter);
+            } catch (Exception e) {
+                logger.error("ZSetConverter init error, class = {}", zsetConverterClassName, e);
+                throw new CamelliaRedisException(e);
+            }
+        }
+        return config;
     }
 }

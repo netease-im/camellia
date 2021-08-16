@@ -15,6 +15,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 ├─`camellia-redis-proxy`   
 ├─`camellia-redis-proxy-hbase`  
 ├─`camellia-redis-toolkit`  
+├─`camellia-tools`  
 ├─`camellia-redis-zk`  
 │ ├─`camellia-redis-zk-common`  
 │ ├─`camellia-redis-zk-discovery`  
@@ -35,6 +36,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 │ ├─`camellia-redis-eureka-spring-boot-starter`  
 │ ├─`camellia-redis-proxy-hbase-spring-boot-starter`  
 │ ├─`camellia-redis-proxy-spring-boot-starter`  
+│ ├─`camellia-redis-spring-temaplate-adaptor-spring-boot-starter`   
 │ ├─`camellia-redis-proxy-zk-registry-spring-boot-starter`                     
 │ ├─`camellia-redis-spring-boot-starter`  
 │ ├─`camellia-redis-spring-boot-starter`  
@@ -42,7 +44,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 │ ├─`camellia-spring-redis-base`         
 │ ├─`camellia-spring-redis-eureka-discovery-spring-boot-starter`     
 │ ├─`camellia-spring-redis-zk-discovery-spring-boot-starter`    
-              
+                     
 ## Instruction
 ### 1、camellia-core  
 base on cglib, support client shading/read-write-separate/double-write  
@@ -52,26 +54,32 @@ a web service, depends on mysql/redis，manage camellia-core's config，client c
 [QUICK START](/docs/dashboard/dashboard.md)  
 ### 3、camellia-redis  
 base on camellia-core and jedis，main class is CamelliaRedisTemplate, can invoke redis/redis-sentinel/redis-cluster in identical way，support pipeline    
-support client shading/read-write-separate/double-write  
+support client shading/read-write-separate/double-write   
+support jedis adaptor to migrate from jedis easily   
+support spring-redis-template adaptor  
 [QUICK START](/docs/redis-template/redis-template.md)
 ### 4、camellia-redis-proxy  
 base on netty4, support redis/redis-sentinel/redis-cluster  
 support shading/read-write-separate/double-write on proxy  
-support tps/rt/big-key/hot-key/slow-command monitor, support custom command interceptor, support hot-key-cache(GET command) and so on  
+support tps/rt/big-key/hot-key/slow-command monitor  
+support custom command interceptor, support hot-key-cache(GET command)，support value converter and so on    
 [QUICK START](/docs/redis-proxy/redis-proxy-en.md)  
 ### 5、camellia-hbase  
 base on camellia-core and hbase-client，main class is CamelliaHBaseTemplate    
 support client read-write-separate/double-write  
 [QUICK START](/docs/hbase-template/hbase-template.md)  
 ### 6、camellia-redis-proxy-hbase    
-base on camellia-redis-proxy、CamelliaRedisTemplate、CamelliaHBaseTemplate, support hot-code-sepatation on redis zset commands  
+base on camellia-redis-proxy、CamelliaRedisTemplate、CamelliaHBaseTemplate, support hot-code-sepatation on redis string/hash/zset commands  
 [QUICK START](/docs/redis-proxy-hbase/redis-proxy-hbase.md)  
 ### 7、camellia-redis-toolkit  
 base on CamelliaRedisTemplate，provide some toolkit of redis, such as redis-lock  
-[QUICK START](/docs/toolkit/toolkit.md)  
+[QUICK START](/docs/toolkit/toolkit.md)
+### 8、camellia-tools  
+provide some tools, such as compress utils CamelliaCompressor, encrypt utils CamelliaEncryptor    
+[QUICK START](/docs/tools/tools.md)   
 
 ## Version
-latest version is 1.0.30，have deploy to maven central repository on 2021/06/29  
+latest version is 1.0.35，have deploy to maven central repository on 2021/08/13  
 [CHANGE_LOG](/update-en.md)  
 
 ## Contact

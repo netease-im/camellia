@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunter;
+import com.netease.nim.camellia.redis.proxy.command.async.converter.Converters;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunter;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterManager;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCache;
@@ -39,6 +40,7 @@ public class CommandsTransponder {
     private final HotKeyHunterManager hotKeyHunterManager;
     private final HotKeyCacheManager hotKeyCacheManager;
     private final BigKeyHunter bigKeyHunter;
+    private final Converters converters;
     private boolean eventLoopSetSuccess = false;
 
     public CommandsTransponder(AsyncCamelliaRedisTemplateChooser chooser, CommandInvokeConfig commandInvokeConfig) {
@@ -48,6 +50,7 @@ public class CommandsTransponder {
         this.hotKeyHunterManager = commandInvokeConfig.getHotKeyHunterManager();
         this.hotKeyCacheManager = commandInvokeConfig.getHotKeyCacheManager();
         this.bigKeyHunter = commandInvokeConfig.getBigKeyHunter();
+        this.converters = commandInvokeConfig.getConverters();
     }
 
     public void transpond(ChannelInfo channelInfo, List<Command> commands) {
@@ -87,7 +90,14 @@ public class CommandsTransponder {
                         }
                     }
                 }
-                AsyncTask task = new AsyncTask(taskQueue, command, commandSpendTimeConfig, bigKeyHunter);
+                if (converters != null) {
+                    try {
+                        converters.convertRequest(command);
+                    } catch (Exception e) {
+                        ErrorLogCollector.collect(CommandsTransponder.class, "convert request error", e);
+                    }
+                }
+                AsyncTask task = new AsyncTask(taskQueue, command, commandSpendTimeConfig, bigKeyHunter, converters);
                 boolean add = taskQueue.add(task);
                 if (!add) {
                     taskQueue.clear();

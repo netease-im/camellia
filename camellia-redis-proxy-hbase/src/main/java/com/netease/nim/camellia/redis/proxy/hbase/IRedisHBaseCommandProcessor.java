@@ -48,6 +48,27 @@ public interface IRedisHBaseCommandProcessor {
     IntegerReply pttl(byte[] key);
 
     /**
+     * 字符串
+     */
+    @CommandFinder(RedisCommand.GET)
+    BulkReply get(byte[] key);
+
+    @CommandFinder(RedisCommand.SET)
+    Reply set(byte[] key, byte[] value, byte[][] args);
+
+    @CommandFinder(RedisCommand.SETEX)
+    StatusReply setex(byte[] key, byte[] seconds, byte[] value);
+
+    @CommandFinder(RedisCommand.MSET)
+    StatusReply mset(byte[][] kvs);
+
+    @CommandFinder(RedisCommand.PSETEX)
+    StatusReply psetex(byte[] key, byte[] millis, byte[] value);
+
+    @CommandFinder(RedisCommand.MGET)
+    MultiBulkReply mget(byte[][] keys);
+
+    /**
      * 有序集合
      */
     @CommandFinder(RedisCommand.ZADD)
@@ -103,4 +124,40 @@ public interface IRedisHBaseCommandProcessor {
 
     @CommandFinder(RedisCommand.ZLEXCOUNT)
     IntegerReply zlexcount(byte[] key, byte[] min, byte[] max);
+
+    /**
+     * 哈希表
+     */
+    @CommandFinder(RedisCommand.HSET)
+    IntegerReply hset(byte[] key, byte[] field, byte[] value);
+
+    @CommandFinder(RedisCommand.HSETNX)
+    IntegerReply hsetnx(byte[] key, byte[] field, byte[] value);
+
+    @CommandFinder(RedisCommand.HGET)
+    Reply hget(byte[] key, byte[] field);
+
+    @CommandFinder(RedisCommand.HEXISTS)
+    IntegerReply hexists(byte[] key, byte[] field);
+
+    @CommandFinder(RedisCommand.HDEL)
+    IntegerReply hdel(byte[] key, byte[] field);
+
+    @CommandFinder(RedisCommand.HLEN)
+    IntegerReply hlen(byte[] key);
+
+    @CommandFinder(RedisCommand.HMSET)
+    StatusReply hmset(byte[] key, byte[][] kvs);
+
+    @CommandFinder(RedisCommand.HMGET)
+    MultiBulkReply hmget(byte[] key, byte[][] fields);
+
+    @CommandFinder(RedisCommand.HKEYS)
+    MultiBulkReply hkeys(byte[] key);
+
+    @CommandFinder(RedisCommand.HVALS)
+    MultiBulkReply hvals(byte[] key);
+
+    @CommandFinder(RedisCommand.HGETALL)
+    MultiBulkReply hgetall(byte[] key);
 }

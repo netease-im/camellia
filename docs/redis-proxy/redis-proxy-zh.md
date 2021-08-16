@@ -17,12 +17,13 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持双（多）读
 * 支持路由配置在线变更
 * 支持多配置，即业务A路由到redis1，B业务路由到redis2
-* 支持自定义方法拦截器，可以用于拦截非法请求（如自定义key/value不得超过多少字节等）
+* 支持自定义方法拦截器，可以用于实现一些自定义规则（如自定义key/value不得超过多少字节、临时屏蔽某些key不能被访问、或者基于拦截器自定义双写策略等）
 * 支持监控，可以监控各命令的调用量、方法耗时等，支持设置监控回调MonitorCallback
 * 支持慢查询监控，支持设置SlowCommandMonitorCallback
 * 支持热key监控，支持设置HotKeyMonitorCallback
 * 支持热key在proxy层的本地缓存（仅支持GET命令），支持设置HotKeyCacheStatsCallback
 * 支持大key监控，支持设置BigKeyMonitorCallback
+* 支持value的自定义转换（当前支持string/hash/set/list/zset相关命令，可以用于实现压数据压缩、数据加解密等）
 * 支持监控配置（如开关、阈值等）的在线变更
 * 支持info命令获取服务器相关信息（包括后端redis集群的信息）
 * 提供了一个httpAPI用于获取监控指标数据
@@ -35,13 +36,13 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 ```
 ##DataBase
 PING,AUTH,ECHO,CLIENT,QUIT,EXISTS,DEL,TYPE,EXPIRE,
-EXPIREAT,TTL,PERSIST,PEXPIRE,PEXPIREAT,PTTL,SORT,UNLINK,TOUCH,
+EXPIREAT,TTL,PERSIST,PEXPIRE,PEXPIREAT,PTTL,SORT,UNLINK,TOUCH,DUMP,RESTORE,
 ##String
 SET,GET,GETSET,MGET,SETNX,SETEX,MSET,DECRBY,DECR,INCRBY,INCR,APPEND,
-STRLEN,INCRBYFLOAT,PSETEX,SETRANGE,GETRANGE,SUBSTR,
+STRLEN,INCRBYFLOAT,PSETEX,SETRANGE,GETRANGE,SUBSTR,GETEX,GETDEL,
 ##Hash
 HSET,HGET,HSETNX,HMSET,HMGET,HINCRBY,HEXISTS,HDEL,HLEN,HKEYS,
-HVALS,HGETALL,HINCRBYFLOAT,HSCAN,HSTRLEN,
+HVALS,HGETALL,HINCRBYFLOAT,HSCAN,HSTRLEN,HRANDFIELD,
 ##List
 RPUSH,LPUSH,LLEN,LRANGE,LTRIM,LINDEX,LSET,LREM,LPOP,RPOP,LINSERT,LPUSHX,RPUSHX,LPOS,
 ##Set
@@ -50,7 +51,7 @@ SADD,SMEMBERS,SREM,SPOP,SCARD,SISMEMBER,SRANDMEMBER,SSCAN,SMISMEMBER,
 ZADD,ZINCRBY,ZRANK,ZCARD,ZSCORE,ZCOUNT,ZRANGE,ZRANGEBYSCORE,ZRANGEBYLEX,
 ZREVRANK,ZREVRANGE,ZREVRANGEBYSCORE,ZREVRANGEBYLEX,ZREM,
 ZREMRANGEBYRANK,ZREMRANGEBYSCORE,ZREMRANGEBYLEX,ZLEXCOUNT,ZSCAN,
-ZPOPMAX,ZPOPMIN,ZMSCORE,
+ZPOPMAX,ZPOPMIN,ZMSCORE,ZRANDMEMBER,
 ##BitMap
 SETBIT,GETBIT,BITPOS,BITCOUNT,BITFIELD,
 ##Geo
@@ -104,12 +105,12 @@ MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ``` 
 
 ## 快速开始一
-1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.0.30），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
+1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.0.35），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
 ```
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
-  <version>1.0.30</version>
+  <version>1.0.35</version>
 </dependency>
 ```
 2) 编写主类Application.java, 如下: 
@@ -157,50 +158,17 @@ OK
 3) (nil)
 ```
 
-## 快速开始二
-下载最新版安装包并解压（v1.0.30）：
-```
-wget https://github.com/netease-im/camellia/releases/download/v1.0.30/camellia-redis-proxy-1.0.30.tar.gz
-tar zxvf camellia-redis-proxy-1.0.30.tar.gz
-cd camellia-redis-proxy-1.0.30/
-```
-按需修改BOOT-INF/classes/下的配置文件：
-* application.yml
-* logback.xml
-* camellia-redis-proxy.properties
-* resource-table.json
-
-按需调整start.sh的启动参数（主要是JVM参数），默认参数如下（确保已经安装了jdk8或以上，并添加到path）：
-```
-java -XX:+UseG1GC -Xms2048m -Xmx2048m -server org.springframework.boot.loader.JarLauncher
-```
-直接启动即可：
-```
-./start.sh
-```
+## 快速开始二（基于安装包）
+参见：[quick-start-package](quick-start-package.md)
 
 ## 快速开始三（基于fatJar和sample-code)
-下载源码，切到最新稳定分支（v1.0.30）
-```
-git clone https://github.com/netease-im/camellia.git
-cd camellia
-git checkout v1.0.30
-```
-按需修改[sample-code](/camellia-samples/camellia-redis-proxy-samples) 中的配置文件：
-* application.yml
-* logback.xml
-* camellia-redis-proxy.properties
-* resource-table.json
+参见：[quick-start-fat-jar](quick-start-fat-jar.md)
 
-使用maven编译
-```
-mvn clean install
-```
-找到可执行jar包，使用java -jar命令运行即可(注意设置内存和GC，并确保已经安装了jdk8或以上，并添加到path）：
-```
-cd camellia-samples/camellia-redis-proxy-samples/target
-java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy-samples-1.0.30.jar 
-```
+## 快速开始四（不使用spring-boot-stater)
+参见：[quick-start-no-spring-boot](quick-start-no-spring-boot.md)
+
+## 源码解读
+具体可见：[代码结构](proxy-code.md)
 
 ## 路由配置
 路由配置表示了camellia-redis-proxy在收到客户端的redis命令之后的转发规则，包括：
@@ -215,9 +183,17 @@ java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy-samples-
 具体可见：[路由配置](route.md)
 
 ## 控制
-camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访问的目的  
+camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访问的目的，此外proxy提供了几个默认的命令拦截器实现，可以按需使用：  
+* TroubleTrickKeysCommandInterceptor 用于临时屏蔽某些key的访问    
+* MultiWriteCommandInterceptor 用于自定义配置双写策略(key级别)   
 
 具体可见：[控制](control.md)
+
+## value的自定义转换
+camellia-redis-proxy提供了value的自定义转换功能，从而你可以自定义的实现数据的解压缩、加解密等功能  
+当前支持string/hash/set/list/zset相关命令的value自定义转换    
+
+具体可见：[转换](converter.md)
 
 ## 部署和接入
 在生产环境，需要部署至少2个proxy实例来保证高可用，并且proxy是可以水平扩展的，包括：
@@ -253,6 +229,7 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 使用大key/热key/慢查询/tps等丰富的监控功能来检测你的系统
 * 使用热key缓存功能来应对突发流量
 * 使用双读/读写分离功能来扩展集群的读能力上限
+* 使用value转换功能实现自定义的数据解压缩、数据加解密等功能
 * 等等
 
 ## 性能测试报告

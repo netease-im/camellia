@@ -6,6 +6,7 @@ import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
 import com.netease.nim.camellia.redis.resource.PipelineResource;
+import com.netease.nim.camellia.redis.util.CamelliaBitPosParams;
 import com.netease.nim.camellia.redis.util.LogUtil;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.geo.GeoRadiusParam;
@@ -3320,6 +3321,356 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
             @Override
             public void invoke(Client client) {
                 client.zaddBinary(key, scoreMembers, params);
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<byte[]> dump(@ShadingParam final String key) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.dump(key);
+        return queable.getResponse(client, BuilderFactory.BYTE_ARRAY, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.dump(key);
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<byte[]> dump(@ShadingParam final byte[] key) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, key);
+        client.dump(key);
+        return queable.getResponse(client, BuilderFactory.BYTE_ARRAY, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.dump(key);
+            }
+        });
+    }
+
+    @WriteOp
+    @Override
+    public Response<String> restore(@ShadingParam final byte[] key, final int ttl, final byte[] serializedValue) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, key);
+        client.restore(key, ttl, serializedValue);
+        return queable.getResponse(client, BuilderFactory.STRING, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.restore(key, ttl, serializedValue);
+            }
+        });
+    }
+
+    @WriteOp
+    @Override
+    public Response<String> restore(@ShadingParam final String key, final int ttl, final byte[] serializedValue) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.restore(key, ttl, serializedValue);
+        return queable.getResponse(client, BuilderFactory.STRING, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.restore(key, ttl, serializedValue);
+            }
+        });
+    }
+
+    @WriteOp
+    @Override
+    public Response<Double> hincrByFloat(@ShadingParam final String key, final String field, final double increment) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.hincrByFloat(key, field, increment);
+        return queable.getResponse(client, BuilderFactory.DOUBLE, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.hincrByFloat(key, field, increment);
+            }
+        });
+    }
+
+    @WriteOp
+    @Override
+    public Response<Double> incrByFloat(@ShadingParam final String key, final double increment) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.incrByFloat(key, increment);
+        return queable.getResponse(client, BuilderFactory.DOUBLE, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.incrByFloat(key, increment);
+            }
+        });
+    }
+
+    @WriteOp
+    @Override
+    public Response<String> set(@ShadingParam final String key, final String value, final String nxxx) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.set(key, value, nxxx);
+        return queable.getResponse(client, BuilderFactory.STRING, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.set(key, value, nxxx);
+            }
+        });
+    }
+
+    @WriteOp
+    @Override
+    public Response<String> set(@ShadingParam final byte[] key, final byte[] value, final byte[] nxxx) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, key);
+        client.set(key, value, nxxx);
+        return queable.getResponse(client, BuilderFactory.STRING, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.set(key, value, nxxx);
+            }
+        });
+    }
+
+    @WriteOp
+    @Override
+    public Response<String> set(@ShadingParam final String key, final String value, final String nxxx, final String expx, final int time) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.set(key, value, nxxx, expx, time);
+        return queable.getResponse(client, BuilderFactory.STRING, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.set(key, value, nxxx, expx, time);
+            }
+        });
+    }
+
+    @WriteOp
+    @Override
+    public Response<String> psetex(@ShadingParam final String key, final long milliseconds, final String value) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.psetex(key, milliseconds, value);
+        return queable.getResponse(client, BuilderFactory.STRING, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.psetex(key, milliseconds, value);
+            }
+        });
+    }
+
+    @WriteOp
+    @Override
+    public Response<String> psetex(@ShadingParam final String key, final int milliseconds, final String value) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.psetex(key, milliseconds, value);
+        return queable.getResponse(client, BuilderFactory.STRING, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.psetex(key, milliseconds, value);
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<List<String>> srandmember(@ShadingParam final String key, final int count) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.srandmember(key, count);
+        return queable.getResponse(client, BuilderFactory.STRING_LIST, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.srandmember(key, count);
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<Long> pttl(@ShadingParam final String key) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.pttl(key);
+        return queable.getResponse(client, BuilderFactory.LONG, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.pttl(key);
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<Set<String>> zrangeByScore(@ShadingParam final String key, final String min, final String max, final int offset, final int count) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.zrangeByScore(key, min, max, offset, count);
+        return queable.getResponse(client, BuilderFactory.STRING_ZSET, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.zrangeByScore(key, min, max, offset, count);
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShadingParam final String key, final String min, final String max, final int offset, final int count) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.zrangeByScoreWithScores(key, min, max, offset, count);
+        return queable.getResponse(client, BuilderFactory.TUPLE_ZSET, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.zrangeByScoreWithScores(key, min, max, offset, count);
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShadingParam final String key, final String min, final String max) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.zrangeByScoreWithScores(key, min, max);
+        return queable.getResponse(client, BuilderFactory.TUPLE_ZSET, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.zrangeByScoreWithScores(key, min, max);
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<Set<String>> zrevrangeByScore(@ShadingParam final String key, final String max, final String min, final int offset, final int count) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.zrevrangeByScore(key, max, min, offset, count);
+        return queable.getResponse(client, BuilderFactory.STRING_ZSET, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.zrevrangeByScore(key, max, min, offset, count);
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShadingParam final String key, final String max, final String min, final int offset, final int count) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.zrevrangeByScoreWithScores(key, max, min, offset, count);
+        return queable.getResponse(client, BuilderFactory.TUPLE_ZSET, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.zrevrangeByScoreWithScores(key, max, min, offset, count);
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShadingParam final String key, final String max, final String min) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.zrevrangeByScoreWithScores(key, max, min);
+        return queable.getResponse(client, BuilderFactory.TUPLE_ZSET, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.zrevrangeByScoreWithScores(key, max, min);
+            }
+        });
+    }
+
+    @WriteOp
+    @Override
+    public Response<Long> zremrangeByScore(@ShadingParam final String key, final String min, final String max) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.zremrangeByScore(key, max, min);
+        return queable.getResponse(client, BuilderFactory.LONG, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.zremrangeByScore(key, max, min);
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<Long> bitpos(@ShadingParam final String key, final boolean value) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.bitpos(key, value, new CamelliaBitPosParams());
+        return queable.getResponse(client, BuilderFactory.LONG, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.bitpos(key, value, new CamelliaBitPosParams());
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<Long> bitpos(@ShadingParam final String key, final boolean value, final BitPosParams params) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.bitpos(key, value, params);
+        return queable.getResponse(client, BuilderFactory.LONG, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.bitpos(key, value, params);
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<Long> bitpos(@ShadingParam final byte[] key, final boolean value) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, key);
+        client.bitpos(key, value, new CamelliaBitPosParams());
+        return queable.getResponse(client, BuilderFactory.LONG, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.bitpos(key, value, new CamelliaBitPosParams());
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<Long> zcount(@ShadingParam final byte[] key, final byte[] min, final byte[] max) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, key);
+        client.zcount(key, min, max);
+        return queable.getResponse(client, BuilderFactory.LONG, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.zcount(key, min, max);
+            }
+        });
+    }
+
+    @ReadOp
+    @Override
+    public Response<Long> zcount(@ShadingParam final String key, final String min, final String max) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.zcount(key, min, max);
+        return queable.getResponse(client, BuilderFactory.LONG, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.zcount(key, min, max);
             }
         });
     }

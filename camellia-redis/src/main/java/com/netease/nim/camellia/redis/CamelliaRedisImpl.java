@@ -834,16 +834,30 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
         return redis.bitcount(key, start, end);
     }
 
-    @WriteOp
+    @ReadOp
     @Override
     public Long bitpos(@ShadingParam String key, boolean value) {
         LogUtil.debugLog(resource, key);
         return redis.bitpos(key, value);
     }
 
-    @WriteOp
+    @ReadOp
     @Override
     public Long bitpos(@ShadingParam String key, boolean value, BitPosParams params) {
+        LogUtil.debugLog(resource, key);
+        return redis.bitpos(key, value, params);
+    }
+
+    @ReadOp
+    @Override
+    public Long bitpos(@ShadingParam byte[] key, boolean value) {
+        LogUtil.debugLog(resource, key);
+        return redis.bitpos(key, value);
+    }
+
+    @ReadOp
+    @Override
+    public Long bitpos(@ShadingParam byte[] key, boolean value, BitPosParams params) {
         LogUtil.debugLog(resource, key);
         return redis.bitpos(key, value, params);
     }
@@ -1941,6 +1955,13 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
         return redis.set(key, value, nxxx);
     }
 
+    @WriteOp
+    @Override
+    public String set(@ShadingParam byte[] key, byte[] value, byte[] nxxx) {
+        LogUtil.debugLog(resource, key);
+        return redis.set(key, value, nxxx);
+    }
+
     @Override
     public Object eval(byte[] script, int keyCount, byte[]... params) {
         throw new CamelliaRedisException("not invoke here");
@@ -1949,5 +1970,33 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
     @Override
     public Object evalsha(byte[] sha1, int keyCount, byte[]... params) {
         throw new CamelliaRedisException("not invoke here");
+    }
+
+    @ReadOp
+    @Override
+    public byte[] dump(@ShadingParam String key) {
+        LogUtil.debugLog(resource, key);
+        return redis.dump(key);
+    }
+
+    @ReadOp
+    @Override
+    public byte[] dump(@ShadingParam byte[] key) {
+        LogUtil.debugLog(resource, key);
+        return redis.dump(key);
+    }
+
+    @WriteOp
+    @Override
+    public String restore(@ShadingParam byte[] key, int ttl, byte[] serializedValue) {
+        LogUtil.debugLog(resource, key);
+        return redis.restore(key, ttl, serializedValue);
+    }
+
+    @WriteOp
+    @Override
+    public String restore(@ShadingParam String key, int ttl, byte[] serializedValue) {
+        LogUtil.debugLog(resource, key);
+        return redis.restore(key, ttl, serializedValue);
     }
 }

@@ -1472,4 +1472,155 @@ public class CamelliaRedisPipeline implements ICamelliaRedisPipeline {
         check();
         return pipeline.georadiusByMember(key, member, radius, unit, param);
     }
+
+    @Override
+    public Response<byte[]> dump(String key) {
+        check();
+        return pipeline.dump(key);
+    }
+
+    @Override
+    public Response<byte[]> dump(byte[] key) {
+        check();
+        return pipeline.dump(key);
+    }
+
+    @Override
+    public Response<String> restore(byte[] key, int ttl, byte[] serializedValue) {
+        check();
+        return pipeline.restore(key, ttl, serializedValue);
+    }
+
+    @Override
+    public Response<String> restore(String key, int ttl, byte[] serializedValue) {
+        check();
+        return pipeline.restore(key, ttl, serializedValue);
+    }
+
+
+    @Override
+    public Response<Double> hincrByFloat(String key, String field, double increment) {
+        check();
+        return pipeline.hincrByFloat(key, field, increment);
+    }
+
+    @Override
+    public Response<Double> incrByFloat(String key, double increment) {
+        check();
+        return pipeline.incrByFloat(key, increment);
+    }
+
+    @Override
+    public Response<String> set(String key, String value, String nxxx) {
+        check();
+        return pipeline.set(key, value, nxxx);
+    }
+
+    @Override
+    public Response<String> set(byte[] key, byte[] value, byte[] nxxx) {
+        check();
+        return pipeline.set(key, value, nxxx);
+    }
+
+    @Override
+    public Response<String> set(String key, String value, String nxxx, String expx, int time) {
+        check();
+        return pipeline.set(key, value, nxxx, expx, time);
+    }
+
+    @Override
+    public Response<String> psetex(String key, long milliseconds, String value) {
+        check();
+        return pipeline.psetex(key, milliseconds, value);
+    }
+
+    @Override
+    public Response<String> psetex(String key, int milliseconds, String value) {
+        check();
+        return pipeline.psetex(key, milliseconds, value);
+    }
+
+    @Override
+    public Response<List<String>> srandmember(String key, int count) {
+        check();
+        return pipeline.srandmember(key, count);
+    }
+
+    @Override
+    public Response<Long> pttl(String key) {
+        check();
+        return pipeline.pttl(key);
+    }
+
+    @Override
+    public Response<Set<String>> zrangeByScore(String key, String min, String max, int offset, int count) {
+        check();
+        return pipeline.zrangeByScore(key, min, max, offset, count);
+    }
+
+    @Override
+    public Response<Set<Tuple>> zrangeByScoreWithScores(String key, String min, String max, int offset, int count) {
+        check();
+        return pipeline.zrangeByScoreWithScores(key, min, max, offset, count);
+    }
+
+    @Override
+    public Response<Set<Tuple>> zrangeByScoreWithScores(String key, String min, String max) {
+        check();
+        return pipeline.zrangeByScoreWithScores(key, min, max);
+    }
+
+    @Override
+    public Response<Set<String>> zrevrangeByScore(String key, String max, String min, int offset, int count) {
+        check();
+        return pipeline.zrevrangeByScore(key, max, min, offset, count);
+    }
+
+    @Override
+    public Response<Set<Tuple>> zrevrangeByScoreWithScores(String key, String max, String min, int offset, int count) {
+        check();
+        return pipeline.zrevrangeByScoreWithScores(key, max, min, offset, count);
+    }
+
+    @Override
+    public Response<Set<Tuple>> zrevrangeByScoreWithScores(String key, String max, String min) {
+        check();
+        return pipeline.zrevrangeByScoreWithScores(key, max, min);
+    }
+
+    @Override
+    public Response<Long> zremrangeByScore(String key, String min, String max) {
+        check();
+        return pipeline.zremrangeByScore(key, min, max);
+    }
+
+    @Override
+    public Response<Long> bitpos(String key, boolean value) {
+        check();
+        return pipeline.bitpos(key, value);
+    }
+
+    @Override
+    public Response<Long> bitpos(String key, boolean value, BitPosParams params) {
+        check();
+        return pipeline.bitpos(key, value, params);
+    }
+
+    @Override
+    public Response<Long> bitpos(byte[] key, boolean value) {
+        check();
+        return pipeline.bitpos(key, value);
+    }
+
+    @Override
+    public Response<Long> zcount(byte[] key, byte[] min, byte[] max) {
+        check();
+        return pipeline.zcount(key, min, max);
+    }
+
+    @Override
+    public Response<Long> zcount(String key, String min, String max) {
+        check();
+        return pipeline.zcount(key, min, max);
+    }
 }

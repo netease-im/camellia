@@ -23,6 +23,8 @@ public class CamelliaServerProperties {
     private HotKeyCacheConfig hotKeyCacheConfig;
     private boolean bigKeyMonitorEnable = Constants.Server.bigKeyMonitorEnable;
     private BigKeyMonitorConfig bigKeyMonitorConfig;
+    private boolean converterEnable = Constants.Server.converterEnable;
+    private ConverterConfig converterConfig;
     private String proxyDynamicConfHookClassName;
     private boolean monitorDataMaskPassword = Constants.Server.monitorDataMaskPassword;
 
@@ -237,6 +239,22 @@ public class CamelliaServerProperties {
         this.bigKeyMonitorConfig = bigKeyMonitorConfig;
     }
 
+    public boolean isConverterEnable() {
+        return converterEnable;
+    }
+
+    public void setConverterEnable(boolean converterEnable) {
+        this.converterEnable = converterEnable;
+    }
+
+    public ConverterConfig getConverterConfig() {
+        return converterConfig;
+    }
+
+    public void setConverterConfig(ConverterConfig converterConfig) {
+        this.converterConfig = converterConfig;
+    }
+
     public String getProxyDynamicConfHookClassName() {
         return proxyDynamicConfHookClassName;
     }
@@ -442,6 +460,54 @@ public class CamelliaServerProperties {
 
         public void setBigKeyMonitorCallbackClassName(String bigKeyMonitorCallbackClassName) {
             this.bigKeyMonitorCallbackClassName = bigKeyMonitorCallbackClassName;
+        }
+    }
+
+    public static class ConverterConfig {
+        private String stringConverterClassName;
+        private String setConverterClassName;
+        private String listConverterClassName;
+        private String hashConverterClassName;
+        private String zsetConverterClassName;
+
+        public String getStringConverterClassName() {
+            return stringConverterClassName;
+        }
+
+        public void setStringConverterClassName(String stringConverterClassName) {
+            this.stringConverterClassName = stringConverterClassName;
+        }
+
+        public String getSetConverterClassName() {
+            return setConverterClassName;
+        }
+
+        public void setSetConverterClassName(String setConverterClassName) {
+            this.setConverterClassName = setConverterClassName;
+        }
+
+        public String getListConverterClassName() {
+            return listConverterClassName;
+        }
+
+        public void setListConverterClassName(String listConverterClassName) {
+            this.listConverterClassName = listConverterClassName;
+        }
+
+        public String getHashConverterClassName() {
+            return hashConverterClassName;
+        }
+
+        public void setHashConverterClassName(String hashConverterClassName) {
+            this.hashConverterClassName = hashConverterClassName;
+        }
+
+        public String getZsetConverterClassName() {
+            return zsetConverterClassName;
+        }
+
+        public void setZsetConverterClassName(String zsetConverterClassName) {
+            this.zsetConverterClassName = zsetConverterClassName;
         }
     }
 }

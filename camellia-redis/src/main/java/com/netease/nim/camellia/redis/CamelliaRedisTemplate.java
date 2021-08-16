@@ -22,6 +22,7 @@ import redis.clients.util.SafeEncoder;
 
 import java.util.*;
 
+
 /**
  *
  * Created by caojiajun on 2019/7/22.
@@ -35,6 +36,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
 
     private final ReloadableProxyFactory<CamelliaRedisImpl> factory;
     private final CamelliaRedisEnv env;
+    private final CamelliaApi service;
     private String md5;
     private PipelinePool pipelinePool;
 
@@ -49,9 +51,28 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
                 .checkIntervalMillis(checkIntervalMillis)
                 .proxyEnv(env.getProxyEnv())
                 .build();
+        this.service = service;
         this.env = env;
         this.md5 = this.factory.getResponse().getMd5();
         this.pipelinePool = new PipelinePool(env);
+    }
+
+    public CamelliaRedisTemplate(CamelliaRedisEnv env, RedisTemplateResourceTableUpdater updater) {
+        this(env, new LocalDynamicCamelliaApi(updater.getResourceTable(), RedisResourceUtil.RedisResourceTableChecker),
+                defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
+        updater.addCallback(new ResourceTableUpdateCallback() {
+            @Override
+            public void callback(ResourceTable resourceTable) {
+                if (service instanceof LocalDynamicCamelliaApi) {
+                    ((LocalDynamicCamelliaApi) service).updateResourceTable(resourceTable);
+                }
+                reloadResourceTable();
+            }
+        });
+    }
+
+    public CamelliaRedisTemplate(RedisTemplateResourceTableUpdater updater) {
+        this(CamelliaRedisEnv.defaultRedisEnv(), updater);
     }
 
     public CamelliaRedisTemplate(CamelliaRedisEnv env, String url, long bid, String bgroup,
@@ -113,6 +134,10 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         this(CamelliaRedisEnv.defaultRedisEnv(), reloadableLocalFileCamelliaApi, defaultCheckIntervalMillis);
     }
 
+    public final void reloadResourceTable() {
+        factory.reload(false);
+    }
+
     @Override
     public ICamelliaRedisPipeline pipelined() {
         PipelinePool pipelinePool = this.pipelinePool;
@@ -160,6 +185,11 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     @Override
     public String set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time) {
         return factory.getProxy().set(key, value, nxxx, expx, time);
+    }
+
+    @Override
+    public String set(byte[] key, byte[] value, byte[] nxxx) {
+        return factory.getProxy().set(key, value, nxxx);
     }
 
     @Override
@@ -1373,6 +1403,16 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     @Override
+    public Long bitpos(byte[] key, boolean value) {
+        return factory.getProxy().bitpos(key, value);
+    }
+
+    @Override
+    public Long bitpos(byte[] key, boolean value, BitPosParams params) {
+        return factory.getProxy().bitpos(key, value, params);
+    }
+
+    @Override
     public ScanResult<Map.Entry<String, String>> hscan(String key, String cursor) {
         return factory.getProxy().hscan(key, cursor);
     }
@@ -1555,6 +1595,26 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     @Override
+    public byte[] dump(String key) {
+        return factory.getProxy().dump(key);
+    }
+
+    @Override
+    public byte[] dump(byte[] key) {
+        return factory.getProxy().dump(key);
+    }
+
+    @Override
+    public String restore(byte[] key, int ttl, byte[] serializedValue) {
+        return factory.getProxy().restore(key, ttl, serializedValue);
+    }
+
+    @Override
+    public String restore(String key, int ttl, byte[] serializedValue) {
+        return factory.getProxy().restore(key, ttl, serializedValue);
+    }
+
+    @Override
     public Object eval(String script, int keyCount, String... params) {
         return eval(SafeEncoder.encode(script), keyCount, SafeEncoder.encodeMany(params));
     }
@@ -1583,6 +1643,37 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     @Override
+    public Object eval(byte[] script, List<byte[]> keys, List<byte[]> args) {
+        return eval(script, toByteArray(keys.size()), getParamsWithBinary(keys, args));
+    }
+    private static final byte[] toByteArray(final int value) {
+        return SafeEncoder.encode(String.valueOf(value));
+    }
+    private static byte[][] getParamsWithBinary(List<byte[]> keys, List<byte[]> args) {
+        final int keyCount = keys.size();
+        final int argCount = args.size();
+        byte[][] params = new byte[keyCount + argCount][];
+
+        for (int i = 0; i < keyCount; i++)
+            params[i] = keys.get(i);
+
+        for (int i = 0; i < argCount; i++)
+            params[keyCount + i] = args.get(i);
+
+        return params;
+    }
+
+    @Override
+    public Object eval(byte[] script, byte[] keyCount, byte[]... params) {
+        return eval(script, Integer.parseInt(SafeEncoder.encode(keyCount)), params);
+    }
+
+    @Override
+    public Object eval(byte[] script) {
+        return eval(script, 0);
+    }
+
+    @Override
     public Object evalsha(String sha1) {
         return evalsha(sha1, 0);
     }
@@ -1595,6 +1686,16 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     @Override
     public Object evalsha(String sha1, int keyCount, String... params) {
         return evalsha(SafeEncoder.encode(sha1), keyCount, SafeEncoder.encodeMany(params));
+    }
+
+    @Override
+    public Object evalsha(byte[] sha1) {
+        return evalsha(sha1, 0);
+    }
+
+    @Override
+    public Object evalsha(byte[] sha1, List<byte[]> keys, List<byte[]> args) {
+        return evalsha(sha1, keys.size(), getParamsWithBinary(keys, args));
     }
 
     @Override

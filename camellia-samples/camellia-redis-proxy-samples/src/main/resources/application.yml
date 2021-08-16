@@ -16,7 +16,15 @@ camellia-redis-proxy:
   command-spend-time-monitor-enable: false #是否开启请求耗时的监控，只有monitor-enable=true才有效
   slow-command-threshold-millis-time: 1000 #慢查询的阈值，单位毫秒，只有command-spend-time-monitor-enable=true才有效
   slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback #慢查询的回调类
-  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor #方法拦截器
+#  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor #方法拦截器
+#  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.command.async.interceptor.MultiWriteCommandInterceptor #方法拦截器
+  converter-enable: false
+  converter-config:
+    string-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomStringConverter
+    list-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomListConverter
+    hash-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomHashConverter
+    set-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomSetConverter
+    zset-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomZSetConverter
   hot-key-monitor-enable: false #是否监控热key
   hot-key-monitor-config:
     check-millis: 1000 #热key的检查周期
@@ -49,7 +57,7 @@ camellia-redis-proxy:
       resource: redis://@127.0.0.1:6379 #转发的redis地址
     redis-conf:
       multi-write-mode: first_resource_only #双写的模式，默认第一个地址返回就返回
-      shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc #分片函数
+#      shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc #分片函数
 
 
 

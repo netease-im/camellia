@@ -1,9 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.hbase;
 
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.netease.nim.camellia.redis.proxy.hbase.util.RedisHBaseUtils.*;
 
@@ -15,47 +18,75 @@ public class RedisHBaseCommonMixClient {
 
     private final CamelliaRedisTemplate redisTemplate;
     private final RedisHBaseZSetMixClient zSetMixClient;
+    private final RedisHBaseStringMixClient stringMixClient;
+    private final RedisHBaseHashMixClient hashMixClient;
 
     public RedisHBaseCommonMixClient(CamelliaRedisTemplate redisTemplate,
-                                     RedisHBaseZSetMixClient zSetMixClient) {
+                                     RedisHBaseZSetMixClient zSetMixClient,
+                                     RedisHBaseStringMixClient stringMixClient,
+                                     RedisHBaseHashMixClient hashMixClient) {
         this.redisTemplate = redisTemplate;
         this.zSetMixClient = zSetMixClient;
+        this.stringMixClient = stringMixClient;
+        this.hashMixClient = hashMixClient;
     }
 
     /**
      *
      */
     public Long del(byte[]... keys) {
-        int ret = 0;
+        List<byte[]> leaveKeys = new ArrayList<>();
+        long ret = 0;
         for (byte[] key : keys) {
-            String type = redisTemplate.type(redisKey(key));
-            if (type != null && type.equals("zset")) {
-                Long zremrangeByRank = zSetMixClient.zremrangeByRank(key, 0, -1);
-                if (zremrangeByRank != null && zremrangeByRank > 0) {
-                    ret ++;
+            String type = type(key);
+            if (type != null) {
+                if (type.equalsIgnoreCase("zset")) {
+                    Long zremrangeByRank = zSetMixClient.zremrangeByRank(key, 0, -1);
+                    if (zremrangeByRank != null && zremrangeByRank > 0) {
+                        ret++;
+                    }
+                } else if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {
+                    Long del = stringMixClient.del(key);
+                    if (del > 0) {
+                        ret ++;
+                    }
+                } else if (type.equalsIgnoreCase("hash")) {
+                    Long del = hashMixClient.del(key);
+                    if (del > 0) {
+                        ret ++;
+                    }
+                } else {
+                    leaveKeys.add(redisKey(key));
                 }
             }
         }
-
-        List<byte[]> list = new ArrayList<>(keys.length);
-        for (byte[] key : keys) {
-            list.add(redisKey(key));
+        if (leaveKeys.isEmpty()) {
+            return ret;
+        } else {
+            return redisTemplate.del(leaveKeys.toArray(new byte[0][0])) + ret;
         }
-        return redisTemplate.del(list.toArray(new byte[0][0])) + ret;
     }
 
-    /**
-     *
-     */
     public String type(byte[] key) {
+        Map<String, String> map = RedisHBaseConfiguration.redisKeyTypePrioriConf();
+        if (map != null && !map.isEmpty()) {
+            String keyStr = Utils.bytesToString(key);
+            for (Map.Entry<String, String> entry : map.entrySet()) {
+                String prefix = entry.getKey();
+                if (keyStr.startsWith(prefix)) {
+                    return entry.getValue();
+                }
+            }
+        }
         return redisTemplate.type(redisKey(key));
     }
 
-
-    /**
-     *
-     */
     public Long ttl(byte[] key) {
+        String type = type(key);
+        if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {
+            Long pttl = stringMixClient.pttl(key);
+            return pttl < 0 ? pttl : pttl / 1000L;
+        }
         return redisTemplate.ttl(redisKey(key));
     }
 
@@ -63,6 +94,10 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long pttl(byte[] key) {
+        String type = type(key);
+        if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {
+            return stringMixClient.pttl(key);
+        }
         return redisTemplate.pttl(redisKey(key));
     }
 
@@ -70,6 +105,10 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long pexpireAt(byte[] key, long millisecondsTimestamp) {
+        String type = type(key);
+        if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {
+            return stringMixClient.pexpireAt(key, millisecondsTimestamp);
+        }
         return redisTemplate.pexpireAt(redisKey(key), millisecondsTimestamp);
     }
 
@@ -77,6 +116,10 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long expire(byte[] key, int seconds) {
+        String type = type(key);
+        if (type.equals("string") || type.equals("none")) {
+            return stringMixClient.pexpireAt(key, System.currentTimeMillis() + seconds * 1000L);
+        }
         return redisTemplate.expire(redisKey(key), seconds);
     }
 
@@ -84,6 +127,10 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long pexpire(byte[] key, long milliseconds) {
+        String type = type(key);
+        if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {
+            return stringMixClient.pexpireAt(key, System.currentTimeMillis() + milliseconds);
+        }
         return redisTemplate.pexpire(redisKey(key), milliseconds);
     }
 
@@ -91,6 +138,10 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long expireAt(byte[] key, long unixTime) {
+        String type = type(key);
+        if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {
+            return stringMixClient.pexpireAt(key, unixTime * 1000L);
+        }
         return redisTemplate.expireAt(redisKey(key), unixTime);
     }
 
@@ -98,10 +149,15 @@ public class RedisHBaseCommonMixClient {
      *
      */
     public Long exists(byte[]... keys) {
-        List<byte[]> list = new ArrayList<>(keys.length);
+        Long ret = 0L;
         for (byte[] key : keys) {
-            list.add(redisKey(key));
+            String type = type(key);
+            if (type.equalsIgnoreCase("string") || type.equalsIgnoreCase("none")) {
+                ret += stringMixClient.exists(key);
+            } else {
+                ret += 1;
+            }
         }
-        return redisTemplate.exists(list.toArray(new byte[0][0]));
+        return ret;
     }
 }

@@ -14,6 +14,7 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 ├─`camellia-redis-proxy`   
 ├─`camellia-redis-proxy-hbase`  
 ├─`camellia-redis-toolkit`  
+├─`camellia-tools`    
 ├─`camellia-redis-zk`  
 │ ├─`camellia-redis-zk-common`  
 │ ├─`camellia-redis-zk-discovery`  
@@ -34,6 +35,7 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 │ ├─`camellia-redis-eureka-spring-boot-starter`  
 │ ├─`camellia-redis-proxy-hbase-spring-boot-starter`  
 │ ├─`camellia-redis-proxy-spring-boot-starter`  
+│ ├─`camellia-redis-spring-temaplate-adaptor-spring-boot-starter`   
 │ ├─`camellia-redis-proxy-zk-registry-spring-boot-starter`                     
 │ ├─`camellia-redis-spring-boot-starter`  
 │ ├─`camellia-redis-spring-boot-starter`  
@@ -51,12 +53,15 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 [快速开始](/docs/dashboard/dashboard.md)  
 ### 3、camellia-redis  
 基于camellia-core和jedis，主要的类是CamelliaRedisTemplate，可以使用统一的api来调用redis/redis-sentinel/redis-cluster，支持pipeline、mget/mset等     
-支持客户端分片/读写分离/双写  
+支持自定义分片、读写分离、双（多）写、双（多）读     
+支持Jedis适配器，一行代码从Jedis切换到CamelliaRedisTemplate  
+支持SpringRedisTemplate适配器，不修改一行代码迁移到CamelliaRedisTemplate    
 [快速开始](/docs/redis-template/redis-template.md)
 ### 4、camellia-redis-proxy  
 基于netty4开发，支持redis/redis-sentinel/redis-cluster    
 支持自定义分片、读写分离、双（多）写、双（多）读    
-支持TPS、RT、热key、大key、慢查询的监控，支持自定义方法拦截，支持热key缓存（GET命令）等    
+支持TPS、RT、热key、大key、慢查询的监控   
+支持自定义方法拦截，支持热key缓存（GET命令），支持透明的数据转换（如解压缩、加解密）等    
 [快速开始](/docs/redis-proxy/redis-proxy-zh.md)  
 ### 5、camellia-hbase  
 基于camellia-core和hbase-client，主要的类是CamelliaHBaseTemplate  
@@ -64,14 +69,17 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 [快速开始](/docs/hbase-template/hbase-template.md)  
 ### 6、camellia-redis-proxy-hbase    
 基于camellia-redis-proxy、CamelliaRedisTemplate、CamelliaHBaseTemplate  
-支持zset命令的冷热分离存储  
+支持string/hash/zset相关命令的冷热分离存储  
 [快速开始](/docs/redis-proxy-hbase/redis-proxy-hbase.md)    
 ### 7、camellia-redis-toolkit  
 基于CamelliaRedisTemplate，提供了redis相关的一些工具类，如分布式锁、分布式id生成等    
 [快速开始](/docs/toolkit/toolkit.md)    
+### 8、camellia-tools
+提供了一些工具类，包括：压缩工具类CamelliaCompressor、加解密工具类CamelliaEncryptor等  
+[快速开始](/docs/tools/tools.md)       
 
 ## 版本
-最新版本是1.0.30，已经发布到maven中央仓库（2021/06/29）  
+最新版本是1.0.35，已经发布到maven中央仓库（2021/08/13）  
 [更新日志](/update-zh.md)  
 
 ## 联系方式

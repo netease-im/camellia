@@ -204,7 +204,7 @@ public class AsyncCamelliaRedisTemplateChooser {
                 if (template == null) {
                     ProxyRouteConfUpdater updater = custom.getProxyRouteConfUpdater();
                     template = new AsyncCamelliaRedisTemplate(env, bid, bgroup, updater, custom.getReloadIntervalMillis());
-                    updater.addAsyncCamelliaRedisTemplate(bid, bgroup, template);
+                    updater.addCallback(bid, bgroup, template.getCallback());
                     customInstanceMap.put(key, template);
                     logger.info("AsyncCamelliaRedisTemplate init, bid = {}, bgroup = {}", bid, bgroup);
                 }

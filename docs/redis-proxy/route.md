@@ -379,7 +379,32 @@ camellia-redis-proxy:
 #表示bid=2/bgroup=default的路由配置
 2.default.route.conf={"type": "simple","operation": {"read": "redis://passwd123@127.0.0.1:6379","type": "rw_separate","write": "redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master"}}
 ```
-除了camellia提供的DynamicConfProxyRouteConfUpdater，你可以自己实现一个自定义的ProxyRouteConfUpdater实现，从而对接到你们的配置中心中
+除了camellia提供的DynamicConfProxyRouteConfUpdater，你可以自己实现一个自定义的ProxyRouteConfUpdater实现，从而对接到你们的配置中心中，下面提供了一个自定义实现的例子：
+```java
+public class CustomProxyRouteConfUpdater extends ProxyRouteConfUpdater {
+
+    private String url = "redis://@127.0.0.1:6379";
+
+    public CustomProxyRouteConfUpdater() {
+        Executors.newSingleThreadScheduledExecutor()
+                .scheduleAtFixedRate(this::update, 10, 10, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public ResourceTable getResourceTable(long bid, String bgroup) {
+        return ReadableResourceTableUtil.parseTable(url);
+    }
+
+    private void update() {
+        String newUrl = "redis://@127.0.0.2:6379";
+        if (!url.equals(newUrl)) {
+            url = newUrl;
+            invokeUpdateResourceTableJson(1, "default", url);
+        }
+    }
+}
+```
+上述的例子中，proxy一开始的路由是redis://@127.0.0.1:6379，10s之后，被切换到了redis://@127.0.0.2:6379  
 
 ### 不同的双（多）写模式
 proxy支持设置双（多）写的模式，有三个可选项：  

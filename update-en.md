@@ -1,11 +1,73 @@
 [中文版](update-zh.md)
 # future(TODO)  
-* camellia-redis-proxy support key/value custom transfer, you can use this feature in data-encryption/data-compress
-* support a way for Lettuce to use camellia-redis-proxy depends on register-discovery mode easily
-* support client-cache feature of redis6.0
-* support monitor data visualization in prometheus
+* camellia-redis-proxy support a way for Lettuce to use camellia-redis-proxy depends on register-discovery mode easily
+* camellia-redis-proxy support client-cache feature of redis6.0
+* camellia-redis-proxy support monitor data visualization in prometheus
+* camellia-redis-proxy support multi-write based on mq(such as kafka)
 
-# 1.0.31（2021/07/xx）
+# 1.0.36（2021/08/xx）
+### add
+* add camellia-tools module, provide compress utils CamelliaCompressor, encrypt utils CamelliaEncryptor
+
+### update
+* none
+
+### fix
+* none
+
+
+# 1.0.35（2021/08/13）
+### add
+* camellia-redis-proxy support convert value of string/hash/list/set/zset commands, you can use this feature to data-encryption/data-compress
+* camellia-redis-proxy support GETEX/GETDEL/HRANDFIELD/ZRANDMEMBER commands
+* camellia-redis-proxy's BigKeyHunter support check of GETEX/GETDEL, support check reply of GETSET
+
+### update
+* none
+
+### fix
+* fix camellia-redis-proxy blocking commands not available(bug from v1.0.33)
+
+# 1.0.34（2021/08/05）
+### add
+* camellia-redis-proxy-hbase refactor string commands implements
+* CamelliaRedisTemplate provide Jedis Adaptor to migrate from Jedis
+* CamelliaRedisTemplate provide SpringRedisTemplate Adaptor
+* camellia-redis-proxy provide util class CamelliaRedisProxyStarter to start proxy without spring-boot-starter
+
+### update
+* camellia-redis-proxy remove jedis dependency
+
+### fix
+* none
+
+
+# 1.0.33（2021/07/29）
+### add
+* camellia-redis-proxy provide TroubleTrickKeysCommandInterceptor to avoid trouble-trick-keys attack upstream redis
+* camellia-redis-proxy provide MultiWriteCommandInterceptor to setting custom multi-write-policy(such as some key need multi-write, others no need)
+* camellia-redis-proxy support DUMP/RESTORE commands
+* CamelliaRedisTemplate support DUMP/RESTORE commands
+
+### update
+* none
+
+### fix
+* camellia-redis-proxy BITPOS should be READ command
+* CamelliaRedisTemplate BITPOS should be READ command
+
+
+# 1.0.32（2021/07/15）
+### add
+* camellia-redis-proxy-hbase support string/hash commands to hot-cold separate store
+
+### update
+* none
+
+### fix
+* none
+
+# 1.0.31（2021/07/05）
 ### add
 * info commands support section param, support get upstream-info(such like memory/version/master-slave/slot)
 

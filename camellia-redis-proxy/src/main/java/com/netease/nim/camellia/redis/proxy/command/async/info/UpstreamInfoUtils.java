@@ -15,8 +15,6 @@ import com.netease.nim.camellia.redis.resource.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.CharacterIterator;
-import java.text.StringCharacterIterator;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -129,13 +127,13 @@ public class UpstreamInfoUtils {
                                     .append(",slots=").append(clusterNodeInfo.slots);
                             RedisInfo redisInfo = map.get(clusterNodeInfo.master);
                             if (redisInfo != null) {
-                                redisClusterNodeInfoBuilder.append(",maxMemory=").append(humanReadableByteCountBin(redisInfo.maxMemory));
-                                redisClusterNodeInfoBuilder.append(",usedMemory=").append(humanReadableByteCountBin(redisInfo.usedMemory));
+                                redisClusterNodeInfoBuilder.append(",maxmemory=").append(ProxyInfoUtils.humanReadableByteCountBin(redisInfo.maxMemory));
+                                redisClusterNodeInfoBuilder.append(",used_memory=").append(ProxyInfoUtils.humanReadableByteCountBin(redisInfo.usedMemory));
                                 double rate = 0.0;
                                 if (redisInfo.maxMemory != 0) {
                                     rate = (double) redisInfo.usedMemory / redisInfo.maxMemory;
                                 }
-                                redisClusterNodeInfoBuilder.append(",memoryUsedRate=").append(String.format("%.2f", rate * 100.0)).append("%");
+                                redisClusterNodeInfoBuilder.append(",memory_used_rate=").append(String.format("%.2f", rate * 100.0)).append("%");
                             }
                             redisClusterNodeInfoBuilder.append("\n");
                             j++;
@@ -147,9 +145,9 @@ public class UpstreamInfoUtils {
                         clusterMemoryUsedRate = (double) totalUsedMemory / totalMaxMemory;
                     }
                     builder.append("cluster_maxmemory:").append(totalMaxMemory).append("\n");
-                    builder.append("cluster_maxmemory_human:").append(humanReadableByteCountBin(totalMaxMemory)).append("\n");
+                    builder.append("cluster_maxmemory_human:").append(ProxyInfoUtils.humanReadableByteCountBin(totalMaxMemory)).append("\n");
                     builder.append("cluster_used_memory:").append(totalUsedMemory).append("\n");
-                    builder.append("cluster_used_memory_human:").append(humanReadableByteCountBin(totalUsedMemory)).append("\n");
+                    builder.append("cluster_used_memory_human:").append(ProxyInfoUtils.humanReadableByteCountBin(totalUsedMemory)).append("\n");
                     builder.append("cluster_memory_used_rate:").append(clusterMemoryUsedRate).append("\n");
                     builder.append("cluster_memory_used_rate_human:").append(String.format("%.2f", clusterMemoryUsedRate * 100.0)).append("%").append("\n");
                     builder.append(clusterBuilder);
@@ -163,20 +161,6 @@ public class UpstreamInfoUtils {
         }
     }
 
-    public static String humanReadableByteCountBin(long bytes) {
-        long absB = bytes == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(bytes);
-        if (absB < 1024) {
-            return bytes + "B";
-        }
-        long value = absB;
-        CharacterIterator ci = new StringCharacterIterator("KMGTPE");
-        for (int i = 40; i >= 0 && absB > 0xfffccccccccccccL >> i; i -= 10) {
-            value >>= 10;
-            ci.next();
-        }
-        value *= Long.signum(bytes);
-        return String.format("%.2f%c", value / 1024.0, ci.current());
-    }
 
     private static final List<String> redisInfoKeys = new ArrayList<>();
     static {

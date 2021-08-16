@@ -92,6 +92,9 @@ public class Command {
     }
 
     public ChannelInfo getChannelInfo() {
+        if (channelInfo == null) {
+            channelInfo = new ChannelInfo();
+        }
         return channelInfo;
     }
 

@@ -1,12 +1,75 @@
 [ENGLISH](update-en.md)
 # 未来(TODO)
-* camellia-redis-proxy支持key/value等的自定义转换，可以用于透明的数据加密/数据压缩等
-* 支持基于注册中心的Lettuce的简单的接入方案
-* 支持redis6.0的client-cache特性
-* 支持监控数据可视化到prometheus等平台
+* camellia-redis-proxy支持基于注册中心的Lettuce的简单的接入方案
+* camellia-redis-proxy支持redis6.0的client-cache特性
+* camellia-redis-proxy支持监控数据可视化到prometheus等平台
+* camellia-redis-proxy支持基于消息队列（如kafka）的异步双写
+
+# 1.0.36（2021/08/xx）
+### 新增
+* 新增camellia-tools模块，提供解压缩工具类CamelliaCompressor、加解密工具类CamelliaEncryptor
+
+### 更新
+* 无
+
+### fix
+* 无
 
 
-# 1.0.31（2021/07/xx）
+# 1.0.35（2021/08/13）
+### 新增
+* camellia-redis-proxy支持对string/set/list/hash/zset相关命令的value自定义转换（可以用于透明的实现数据压缩、数据加解密等），具体见：[转换](/docs/redis-proxy/converter.md)
+* camellia-redis-proxy新增对GETEX/GETDEL/HRANDFIELD/ZRANDMEMBER命令的支持
+* camellia-redis-proxy的大key检测新增对GETDEL/GETEX命令的检测，新增对GETSET回包的检测
+
+### 更新
+* 无
+
+### fix
+* 修复camellia-redis-proxy阻塞型命令不可用的问题（1.0.33引入）
+
+
+# 1.0.34（2021/08/05）
+### 新增
+* camellia-redis-proxy-hbase重构了string相关命令的冷热分离存储设计，具体见：[文档](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
+* CamelliaRedisTemplate提供Jedis适配器，修改一行代码从Jedis迁移到CamelliaRedisTemplate，具体见：[文档](/docs/redis-template/redis-template.md)
+* CamelliaRedisTemplate提供SpringRedisTemplate适配器，具体见：[文档](/docs/redis-template/redis-template.md)
+* camellia-redis-proxy提供一个不使用spring-boot-starter启动proxy的简单封装工具类CamelliaRedisProxyStarter，具体见：[文档](/docs/redis-proxy/redis-proxy-zh.md)
+
+### 更新
+* camellia-redis-proxy移除jedis的依赖
+
+### fix
+* 无
+
+
+# 1.0.33（2021/07/29）
+### 新增
+* camellia-redis-proxy提供TroubleTrickKeysCommandInterceptor去避免异常key导致后端redis异常（比如业务层bug导致的死循环引起后端redis被打挂，需要临时屏蔽相关请求来保护后端redis），具体见：[控制](/docs/redis-proxy/control.md)
+* camellia-redis-proxy提供MultiWriteCommandInterceptor用于自定义双写策略（比如有些key需要双写，有些key不需要，有些key双写到redisA，有些key双写到redisB），具体见：[控制](/docs/redis-proxy/control.md)
+* camellia-redis-proxy支持DUMP/RESTORE命令
+* CamelliaRedisTemplate支持DUMP/RESTORE命令
+
+### 更新
+* 无
+
+### fix
+* camellia-redis-proxy的BITPOS应该是读命令
+* CamelliaRedisTemplate的BITPOS应该是读命令
+
+
+# 1.0.32（2021/07/15）
+### 新增
+* camellia-redis-proxy-hbase新增对string/hash相关命令的冷热分离存储的支持，具体见：[文档](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
+
+### 更新
+* 无
+
+### fix
+* 无
+
+
+# 1.0.31（2021/07/05）
 ### 新增
 * info命令支持section参数，且支持获取后端redis集群的信息（内存使用率、版本、主从分布情况、slot分布情况等），具体见：[监控](/docs/redis-proxy/monitor.md)
 

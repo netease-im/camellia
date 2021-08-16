@@ -93,6 +93,17 @@ public class CamelliaRedisProxyUtil {
         config1.setStringSizeThreshold(bigKeyMonitorConfig.getStringSizeThreshold());
         serverProperties.setBigKeyMonitorConfig(config1);
         serverProperties.setBigKeyMonitorEnable(properties.isBigKeyMonitorEnable());
+
+        CamelliaRedisProxyProperties.ConverterConfig converterConfig = properties.getConverterConfig();
+        serverProperties.setConverterEnable(properties.isConverterEnable());
+        CamelliaServerProperties.ConverterConfig config2 = new CamelliaServerProperties.ConverterConfig();
+        config2.setStringConverterClassName(converterConfig.getStringConverterClassName());
+        config2.setHashConverterClassName(converterConfig.getHashConverterClassName());
+        config2.setListConverterClassName(converterConfig.getListConverterClassName());
+        config2.setSetConverterClassName(converterConfig.getSetConverterClassName());
+        config2.setZsetConverterClassName(converterConfig.getZsetConverterClassName());
+        serverProperties.setConverterConfig(config2);
+
         serverProperties.setProxyDynamicConfHookClassName(properties.getProxyDynamicConfHookClassName());
         serverProperties.setMonitorDataMaskPassword(properties.isMonitorDataMaskPassword());
         return serverProperties;

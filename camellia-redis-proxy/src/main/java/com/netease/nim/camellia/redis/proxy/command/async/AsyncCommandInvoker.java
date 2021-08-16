@@ -3,6 +3,8 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 import com.netease.nim.camellia.redis.proxy.command.*;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunter;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.CommandBigKeyMonitorConfig;
+import com.netease.nim.camellia.redis.proxy.command.async.converter.ConverterConfig;
+import com.netease.nim.camellia.redis.proxy.command.async.converter.Converters;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.CommandHotKeyMonitorConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterManager;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.CommandHotKeyCacheConfig;
@@ -61,7 +63,12 @@ public class AsyncCommandInvoker implements CommandInvoker {
             BigKeyMonitor.init(monitorIntervalSeconds);
             bigKeyHunter = new BigKeyHunter(commandBigKeyMonitorConfig);
         }
-        this.commandInvokeConfig = new CommandInvokeConfig(commandInterceptor, commandSpendTimeConfig, hotKeyCacheManager, hotKeyHunterManager, bigKeyHunter);
+        ConverterConfig converterConfig = ConfigInitUtil.initConverterConfig(serverProperties);
+        Converters converters = null;
+        if (converterConfig != null) {
+            converters = new Converters(converterConfig);
+        }
+        this.commandInvokeConfig = new CommandInvokeConfig(commandInterceptor, commandSpendTimeConfig, hotKeyCacheManager, hotKeyHunterManager, bigKeyHunter, converters);
         PasswordMaskUtils.maskEnable = serverProperties.isMonitorDataMaskPassword();
     }
 

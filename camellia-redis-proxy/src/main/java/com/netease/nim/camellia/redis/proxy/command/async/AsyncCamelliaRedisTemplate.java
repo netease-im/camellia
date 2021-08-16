@@ -61,11 +61,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
     private final MultiWriteMode multiWriteMode;
 
-    public static interface Callback {
-        void callback(ResourceTable resourceTable);
-    }
-
-    private final Callback callback = resourceTable -> {
+    private final ResourceTableUpdateCallback callback = resourceTable -> {
         RedisResourceUtil.checkResourceTable(resourceTable);
         init(resourceTable);
     };
@@ -155,7 +151,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         return resourceChooser.getCreateTime();
     }
 
-    public Callback getCallback() {
+    public ResourceTableUpdateCallback getCallback() {
         return callback;
     }
 

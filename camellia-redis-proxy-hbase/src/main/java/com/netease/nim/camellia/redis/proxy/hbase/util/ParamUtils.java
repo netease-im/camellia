@@ -1,10 +1,11 @@
-package com.netease.nim.camellia.redis.proxy.util;
+package com.netease.nim.camellia.redis.proxy.hbase.util;
 
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.geo.GeoRadiusParam;
 
@@ -172,7 +173,7 @@ public class ParamUtils {
         throw Utils.illegalArgumentException();
     }
 
-    public static  ScanParams parseScanParams(byte[][] args) {
+    public static ScanParams parseScanParams(byte[][] args) {
         if (args.length % 2 != 0) {
             throw Utils.illegalArgumentException();
         }

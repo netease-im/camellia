@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.Stats;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -19,8 +20,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.management.*;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
@@ -35,6 +39,8 @@ public class ProxyInfoUtils {
 
     private static final String VERSION = "v1.0.31";
     private static int port;
+    private static int bossThread;
+    private static int workThread;
     private static final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
     private static final OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
     private static final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
@@ -42,12 +48,48 @@ public class ProxyInfoUtils {
     private static GarbageCollectorMXBean oldGC;
     private static GarbageCollectorMXBean youngGC;
 
+    private static final AtomicLong commandsCount = new AtomicLong();
+    private static final AtomicLong readCommandsCount = new AtomicLong();
+    private static final AtomicLong writeCommandsCount = new AtomicLong();
+
+    private static double avgCommandsQps = 0.0;
+    private static double avgReadCommandsQps = 0.0;
+    private static double avgWriteCommandsQps = 0.0;
+
+    private static double lastCommandQps = 0.0;
+    private static double lastReadCommandQps = 0.0;
+    private static double lastWriteCommandQps = 0.0;
+
+
     static {
         initGcMXBean();
     }
 
     public static void updatePort(int port) {
         ProxyInfoUtils.port = port;
+    }
+
+    public static void updateThread(int bossThread, int workThread) {
+        ProxyInfoUtils.bossThread = bossThread;
+        ProxyInfoUtils.workThread = workThread;
+    }
+
+    public static void updateStats(Stats stats) {
+        try {
+            commandsCount.addAndGet(stats.getCount());
+            readCommandsCount.addAndGet(stats.getTotalReadCount());
+            writeCommandsCount.addAndGet(stats.getTotalWriteCount());
+
+            avgCommandsQps = commandsCount.get() / (runtimeMXBean.getUptime() / 1000.0);
+            avgReadCommandsQps = readCommandsCount.get() / (runtimeMXBean.getUptime() / 1000.0);
+            avgWriteCommandsQps = writeCommandsCount.get() / (runtimeMXBean.getUptime() / 1000.0);
+
+            lastCommandQps = (double) stats.getCount() / stats.getIntervalSeconds();
+            lastReadCommandQps = (double) stats.getTotalReadCount() / stats.getIntervalSeconds();
+            lastWriteCommandQps = (double) stats.getTotalWriteCount() / stats.getIntervalSeconds();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     public static CompletableFuture<Reply> getInfoReply(Command command, AsyncCamelliaRedisTemplateChooser chooser) {
@@ -76,6 +118,7 @@ public class ProxyInfoUtils {
                 builder.append(getUpstream()).append("\n");
                 builder.append(getMemory()).append("\n");
                 builder.append(getGC()).append("\n");
+                builder.append(getStats()).append("\n");
             } else {
                 if (objects.length == 2) {
                     String section = Utils.bytesToString(objects[1]);
@@ -91,6 +134,8 @@ public class ProxyInfoUtils {
                         builder.append(getMemory()).append("\n");
                     } else if (section.equalsIgnoreCase("gc")) {
                         builder.append(getGC()).append("\n");
+                    } else if (section.equalsIgnoreCase("stats")) {
+                        builder.append(getStats()).append("\n");
                     } else if (section.equalsIgnoreCase("upstream-info")) {
                         builder.append(UpstreamInfoUtils.upstreamInfo(null, null, chooser)).append("\n");
                     }
@@ -125,6 +170,8 @@ public class ProxyInfoUtils {
         builder.append("# Server").append("\n");
         builder.append("camellia_redis_proxy_version:" + VERSION).append("\n");
         builder.append("available_processors:").append(osBean.getAvailableProcessors()).append("\n");
+        builder.append("netty_boss_thread:").append(bossThread).append("\n");
+        builder.append("netty_work_thread:").append(workThread).append("\n");
         builder.append("arch:").append(osBean.getArch()).append("\n");
         builder.append("os_name:").append(osBean.getName()).append("\n");
         builder.append("os_version:").append(osBean.getVersion()).append("\n");
@@ -147,6 +194,21 @@ public class ProxyInfoUtils {
         StringBuilder builder = new StringBuilder();
         builder.append("# Clients").append("\n");
         builder.append("connect_clients:").append(RedisMonitor.getClientConnects()).append("\n");
+        return builder.toString();
+    }
+
+    private static String getStats() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("# Stats").append("\n");
+        builder.append("commands.count:").append(commandsCount).append("\n");
+        builder.append("read.commands.count:").append(readCommandsCount).append("\n");
+        builder.append("write.commands.count:").append(writeCommandsCount).append("\n");
+        builder.append("avg.commands.qps:").append(avgCommandsQps).append("\n");
+        builder.append("avg.read.commands.qps:").append(avgReadCommandsQps).append("\n");
+        builder.append("avg.write.commands.qps:").append(avgWriteCommandsQps).append("\n");
+        builder.append("last.commands.qps:").append(lastCommandQps).append("\n");
+        builder.append("last.read.commands.qps:").append(lastReadCommandQps).append("\n");
+        builder.append("last.write.commands.qps:").append(lastWriteCommandQps).append("\n");
         return builder.toString();
     }
 
@@ -195,18 +257,29 @@ public class ProxyInfoUtils {
         long totalMemory = Runtime.getRuntime().totalMemory();
         long maxMemory = Runtime.getRuntime().maxMemory();
         builder.append("free_memory:").append(freeMemory).append("\n");
+        builder.append("free_memory_human:").append(humanReadableByteCountBin(freeMemory)).append("\n");
         builder.append("total_memory:").append(totalMemory).append("\n");
+        builder.append("total_memory_human:").append(humanReadableByteCountBin(totalMemory)).append("\n");
         builder.append("max_memory:").append(maxMemory).append("\n");
+        builder.append("max_memory_human:").append(humanReadableByteCountBin(maxMemory)).append("\n");
         MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
         builder.append("heap_memory_init:").append(heapMemoryUsage.getInit()).append("\n");
+        builder.append("heap_memory_init_human:").append(humanReadableByteCountBin(heapMemoryUsage.getInit())).append("\n");
         builder.append("heap_memory_used:").append(heapMemoryUsage.getUsed()).append("\n");
+        builder.append("heap_memory_used_human:").append(humanReadableByteCountBin(heapMemoryUsage.getUsed())).append("\n");
         builder.append("heap_memory_max:").append(heapMemoryUsage.getMax()).append("\n");
+        builder.append("heap_memory_max_human:").append(humanReadableByteCountBin(heapMemoryUsage.getMax())).append("\n");
         builder.append("heap_memory_committed:").append(heapMemoryUsage.getCommitted()).append("\n");
+        builder.append("heap_memory_committed_human:").append(humanReadableByteCountBin(heapMemoryUsage.getCommitted())).append("\n");
         MemoryUsage nonHeapMemoryUsage = memoryMXBean.getNonHeapMemoryUsage();
         builder.append("non_heap_memory_init:").append(nonHeapMemoryUsage.getInit()).append("\n");
+        builder.append("non_heap_memory_init_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getInit())).append("\n");
         builder.append("non_heap_memory_used:").append(nonHeapMemoryUsage.getUsed()).append("\n");
+        builder.append("non_heap_memory_used_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getUsed())).append("\n");
         builder.append("non_heap_memory_max:").append(nonHeapMemoryUsage.getMax()).append("\n");
+        builder.append("non_heap_memory_max_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getMax())).append("\n");
         builder.append("non_heap_memory_committed:").append(nonHeapMemoryUsage.getCommitted()).append("\n");
+        builder.append("non_heap_memory_committed_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getCommitted())).append("\n");
         return builder.toString();
     }
 
@@ -220,7 +293,6 @@ public class ProxyInfoUtils {
             builder.append("old_gc_name:").append(oldGC.getName()).append("\n");
             builder.append("old_gc_collection_count:").append(oldGC.getCollectionCount()).append("\n");
             builder.append("old_gc_collection_time:").append(oldGC.getCollectionTime()).append("\n");
-            builder.append("\n");
         }
         return builder.toString();
     }
@@ -268,5 +340,21 @@ public class ProxyInfoUtils {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+    }
+
+
+    public static String humanReadableByteCountBin(long bytes) {
+        long absB = bytes == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(bytes);
+        if (absB < 1024) {
+            return bytes + "B";
+        }
+        long value = absB;
+        CharacterIterator ci = new StringCharacterIterator("KMGTPE");
+        for (int i = 40; i >= 0 && absB > 0xfffccccccccccccL >> i; i -= 10) {
+            value >>= 10;
+            ci.next();
+        }
+        value *= Long.signum(bytes);
+        return String.format("%.2f%c", value / 1024.0, ci.current());
     }
 }

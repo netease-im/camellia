@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -35,6 +36,8 @@ public class ReloadableProxyFactory<T> {
     private final ProxyEnv env;
     private ResourceChooser resourceChooser;
 
+    private final AtomicBoolean reloading = new AtomicBoolean(false);
+
     private ReloadableProxyFactory(Class<T> clazz, ProxyEnv proxyEnv, Long bid, String bgroup, CamelliaApi service,
                                    Resource defaultResource, long checkIntervalMillis, boolean monitorEnable) {
         this.clazz = clazz;
@@ -48,51 +51,55 @@ public class ReloadableProxyFactory<T> {
         } else {
             env = proxyEnv;
         }
-        initOrReload(true);
+        reload(true);
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(ReloadableProxyFactory.class)).scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                initOrReload(false);
+                reload(false);
             }
         }, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
     }
 
-    private void initOrReload(boolean throwError) {
-        try {
-            String md5 = this.response == null ? null : this.response.getMd5();
-            CamelliaApiResponse response = service.getResourceTable(bid, bgroup, md5);
-            if (response.getCode() == CamelliaApiCode.NOT_MODIFY.getCode()) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("not modify, bid = {}, bgroup = {}, md5 = {}", bid, bgroup, md5);
+    public void reload(boolean throwError) {
+        if (reloading.compareAndSet(false, true)) {
+            try {
+                String md5 = this.response == null ? null : this.response.getMd5();
+                CamelliaApiResponse response = service.getResourceTable(bid, bgroup, md5);
+                if (response.getCode() == CamelliaApiCode.NOT_MODIFY.getCode()) {
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("not modify, bid = {}, bgroup = {}, md5 = {}", bid, bgroup, md5);
+                    }
+                    if (throwError) {
+                        throw new IllegalArgumentException("api.code=" + response.getCode() + ",bid=" + bid + ",bgroup=" + bgroup);
+                    }
+                    return;
                 }
+                if (response.getCode() != CamelliaApiCode.SUCCESS.getCode()) {
+                    logger.error("api code = {}, bid = {}, bgroup = {}", response.getCode(), bid, bgroup);
+                    if (throwError) {
+                        throw new IllegalArgumentException("api.code=" + response.getCode() + ",bid=" + bid + ",bgroup=" + bgroup);
+                    }
+                    return;
+                }
+                if (logger.isInfoEnabled()) {
+                    logger.info("getOrUpdate resourceTable success, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}",
+                            bid, bgroup, response.getMd5(), ReadableResourceTableUtil.readableResourceTable(response.getResourceTable()));
+                }
+                this.response = response;
+                this.resourceChooser = new ResourceChooser(response.getResourceTable(), env);
+                this.generator = new StandardProxyGenerator<>(clazz, response.getResourceTable(), defaultResource, env);
+                T proxy = generator.generate();
+                if (logger.isInfoEnabled()) {
+                    logger.info("initOrReload success, bid = {}, bgroup = {}, proxy = {}", bid, bgroup, clazz.getName());
+                }
+                this.proxy = proxy;
+            } catch (Exception e) {
+                logger.error("initOrReload error, bid = {}, bgroup = {}, clazz = {}", bid, bgroup, clazz.getName(), e);
                 if (throwError) {
-                    throw new IllegalArgumentException("api.code=" + response.getCode() + ",bid=" + bid + ",bgroup=" + bgroup);
+                    throw e;
                 }
-                return;
-            }
-            if (response.getCode() != CamelliaApiCode.SUCCESS.getCode()) {
-                logger.error("api code = {}, bid = {}, bgroup = {}", response.getCode(), bid, bgroup);
-                if (throwError) {
-                    throw new IllegalArgumentException("api.code=" + response.getCode() + ",bid=" + bid + ",bgroup=" + bgroup);
-                }
-                return;
-            }
-            if (logger.isInfoEnabled()) {
-                logger.info("getOrUpdate resourceTable success, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}",
-                        bid, bgroup, response.getMd5(), ReadableResourceTableUtil.readableResourceTable(response.getResourceTable()));
-            }
-            this.response = response;
-            this.resourceChooser = new ResourceChooser(response.getResourceTable(), env);
-            this.generator = new StandardProxyGenerator<>(clazz, response.getResourceTable(), defaultResource, env);
-            T proxy = generator.generate();
-            if (logger.isInfoEnabled()) {
-                logger.info("initOrReload success, bid = {}, bgroup = {}, proxy = {}", bid, bgroup, clazz.getName());
-            }
-            this.proxy = proxy;
-        } catch (Exception e) {
-            logger.error("initOrReload error, bid = {}, bgroup = {}, clazz = {}", bid, bgroup, clazz.getName(), e);
-            if (throwError) {
-                throw e;
+            } finally {
+                reloading.compareAndSet(true, false);
             }
         }
     }

@@ -60,6 +60,8 @@ public interface ICamelliaRedisPipeline extends Closeable {
 
     Response<Double> hincrByFloat(byte[] key, byte[] field, double value);
 
+    Response<Double> hincrByFloat(String key, String field, double increment);
+
     Response<Set<byte[]>> hkeys(byte[] key);
 
     Response<Long> hlen(byte[] key);
@@ -79,6 +81,8 @@ public interface ICamelliaRedisPipeline extends Closeable {
     Response<Long> incrBy(byte[] key, long integer);
 
     Response<Double> incrByFloat(byte[] key, double integer);
+
+    Response<Double> incrByFloat(String key, double increment);
 
     Response<byte[]> lindex(byte[] key, long index);
 
@@ -114,7 +118,13 @@ public interface ICamelliaRedisPipeline extends Closeable {
 
     Response<String> set(byte[] key, byte[] value);
 
+    Response<String> set(String key, String value, String nxxx);
+
+    Response<String> set(byte[] key, byte[] value, byte[] nxxx);
+
     Response<String> set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time);
+
+    Response<String> set(String key, String value, String nxxx, String expx, int time);
 
     Response<Boolean> setbit(byte[] key, long offset, byte[] value);
 
@@ -123,6 +133,10 @@ public interface ICamelliaRedisPipeline extends Closeable {
     Response<String> setex(byte[] key, int seconds, byte[] value);
 
     Response<String> psetex(byte[] key, long milliseconds, byte[] value);
+
+    Response<String> psetex(String key, long milliseconds, String value);
+
+    Response<String> psetex(String key, int milliseconds, String value);
 
     Response<Long> setnx(byte[] key, byte[] value);
 
@@ -142,6 +156,8 @@ public interface ICamelliaRedisPipeline extends Closeable {
 
     Response<List<byte[]>> srandmember(byte[] key, int count);
 
+    Response<List<String>> srandmember(String key, int count);
+
     Response<Long> srem(byte[] key, byte[]... member);
 
     Response<Long> strlen(byte[] key);
@@ -151,6 +167,8 @@ public interface ICamelliaRedisPipeline extends Closeable {
     Response<Long> ttl(byte[] key);
 
     Response<Long> pttl(byte[] key);
+
+    Response<Long> pttl(String key);
 
     Response<String> type(byte[] key);
 
@@ -170,6 +188,8 @@ public interface ICamelliaRedisPipeline extends Closeable {
 
     Response<Set<byte[]>> zrangeByScore(byte[] key, double min, double max);
 
+    Response<Set<String>> zrangeByScore(String key, String min, String max, int offset, int count);
+
     Response<Set<byte[]>> zrangeByScore(byte[] key, byte[] min, byte[] max);
 
     Response<Set<byte[]>> zrangeByScore(byte[] key, double min, double max, int offset, int count);
@@ -177,6 +197,10 @@ public interface ICamelliaRedisPipeline extends Closeable {
     Response<Set<byte[]>> zrangeByScore(byte[] key, byte[] min, byte[] max, int offset, int count);
 
     Response<Set<Tuple>> zrangeByScoreWithScores(byte[] key, double min, double max);
+
+    Response<Set<Tuple>> zrangeByScoreWithScores(String key, String min, String max, int offset, int count);
+
+    Response<Set<Tuple>> zrangeByScoreWithScores(String key, String min, String max);
 
     Response<Set<Tuple>> zrangeByScoreWithScores(byte[] key, byte[] min, byte[] max);
 
@@ -190,11 +214,17 @@ public interface ICamelliaRedisPipeline extends Closeable {
 
     Response<Set<byte[]>> zrevrangeByScore(byte[] key, byte[] max, byte[] min);
 
+    Response<Set<String>> zrevrangeByScore(String key, String max, String min, int offset, int count);
+
     Response<Set<byte[]>> zrevrangeByScore(byte[] key, double max, double min, int offset, int count);
 
     Response<Set<byte[]>> zrevrangeByScore(byte[] key, byte[] max, byte[] min, int offset, int count);
 
     Response<Set<Tuple>> zrevrangeByScoreWithScores(byte[] key, double max, double min);
+
+    Response<Set<Tuple>> zrevrangeByScoreWithScores(String key, String max, String min, int offset, int count);
+
+    Response<Set<Tuple>> zrevrangeByScoreWithScores(String key, String max, String min);
 
     Response<Set<Tuple>> zrevrangeByScoreWithScores(byte[] key, byte[] max, byte[] min);
 
@@ -213,6 +243,8 @@ public interface ICamelliaRedisPipeline extends Closeable {
     Response<Long> zremrangeByRank(byte[] key, long start, long end);
 
     Response<Long> zremrangeByScore(byte[] key, double start, double end);
+
+    Response<Long> zremrangeByScore(String key, String min, String max);
 
     Response<Long> zremrangeByScore(byte[] key, byte[] start, byte[] end);
 
@@ -273,6 +305,12 @@ public interface ICamelliaRedisPipeline extends Closeable {
     Response<List<Long>> bitfield(byte[] key, byte[]... elements);
 
     Response<Long> bitpos(byte[] key, boolean value, BitPosParams params);
+
+    Response<Long> bitpos(String key, boolean value);
+
+    Response<Long> bitpos(String key, boolean value, BitPosParams params);
+
+    Response<Long> bitpos(byte[] key, boolean value);
 
     Response<Long> append(String key, String value);
 
@@ -412,6 +450,10 @@ public interface ICamelliaRedisPipeline extends Closeable {
 
     Response<Long> zcount(String key, double min, double max);
 
+    Response<Long> zcount(byte[] key, byte[] min, byte[] max);
+
+    Response<Long> zcount(String key, String min, String max);
+
     Response<Double> zincrby(String key, double score, String member);
 
     Response<Double> zincrby(String key, double score, String member, ZIncrByParams params);
@@ -505,4 +547,14 @@ public interface ICamelliaRedisPipeline extends Closeable {
 
     Response<List<GeoRadiusResponse>> georadiusByMember(String key, String member, double radius,
                                                         GeoUnit unit, GeoRadiusParam param);
+
+
+    Response<byte[]> dump(String key);
+
+    Response<byte[]> dump(byte[] key);
+
+
+    Response<String> restore(byte[] key, int ttl, byte[] serializedValue);
+
+    Response<String> restore(String key, int ttl, byte[] serializedValue);
 }

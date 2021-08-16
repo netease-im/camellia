@@ -23,6 +23,7 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support monitor hot key, support setting HotKeyMonitorCallback
 * support hot key local cache(only support GET command), support setting HotKeyCacheStatsCallback
 * support monitor big key, support setting BigKeyMonitorCallback
+* support convert value of string/hash/set/list/zset commands, you can use this feature to data-encryption/data-compress
 * provider monitor config(such as on-off、threshold) refresh online 
 * provider a http api to get monitor metric data
 * provide a spring-boot-starter，you can quick start a proxy cluster
@@ -35,13 +36,13 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 ```
 ##DataBase
 PING,AUTH,ECHO,CLIENT,QUIT,EXISTS,DEL,TYPE,EXPIRE,
-EXPIREAT,TTL,PERSIST,PEXPIRE,PEXPIREAT,PTTL,SORT,UNLINK,TOUCH,
+EXPIREAT,TTL,PERSIST,PEXPIRE,PEXPIREAT,PTTL,SORT,UNLINK,TOUCH,DUMP,RESTORE,
 ##String
 SET,GET,GETSET,MGET,SETNX,SETEX,MSET,DECRBY,DECR,INCRBY,INCR,APPEND,
-STRLEN,INCRBYFLOAT,PSETEX,SETRANGE,GETRANGE,SUBSTR,
+STRLEN,INCRBYFLOAT,PSETEX,SETRANGE,GETRANGE,SUBSTR,GETEX,GETDEL,
 ##Hash
 HSET,HGET,HSETNX,HMSET,HMGET,HINCRBY,HEXISTS,HDEL,HLEN,HKEYS,
-HVALS,HGETALL,HINCRBYFLOAT,HSCAN,HSTRLEN,
+HVALS,HGETALL,HINCRBYFLOAT,HSCAN,HSTRLEN,HRANDFIELD,
 ##List
 RPUSH,LPUSH,LLEN,LRANGE,LTRIM,LINDEX,LSET,LREM,LPOP,RPOP,LINSERT,LPUSHX,RPUSHX,LPOS,
 ##Set
@@ -50,7 +51,7 @@ SADD,SMEMBERS,SREM,SPOP,SCARD,SISMEMBER,SRANDMEMBER,SSCAN,SMISMEMBER,
 ZADD,ZINCRBY,ZRANK,ZCARD,ZSCORE,ZCOUNT,ZRANGE,ZRANGEBYSCORE,ZRANGEBYLEX,
 ZREVRANK,ZREVRANGE,ZREVRANGEBYSCORE,ZREVRANGEBYLEX,ZREM,
 ZREMRANGEBYRANK,ZREMRANGEBYSCORE,ZREMRANGEBYLEX,ZLEXCOUNT,ZSCAN,
-ZPOPMAX,ZPOPMIN,ZMSCORE,
+ZPOPMAX,ZPOPMIN,ZMSCORE,ZRANDMEMBER,
 ##BitMap
 SETBIT,GETBIT,BITPOS,BITCOUNT,BITFIELD,
 ##Geo

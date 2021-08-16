@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.netease.nim.camellia.redis.spring.template.adaptor.springboot.CamelliaRedisSpringTemplateAdaptorConfiguration

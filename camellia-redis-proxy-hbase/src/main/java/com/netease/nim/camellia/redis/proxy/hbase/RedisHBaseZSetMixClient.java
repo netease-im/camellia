@@ -18,9 +18,6 @@ import redis.clients.jedis.Response;
 import redis.clients.jedis.Tuple;
 
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static com.netease.nim.camellia.redis.proxy.hbase.util.RedisHBaseUtils.*;
 
@@ -37,139 +34,12 @@ public class RedisHBaseZSetMixClient {
     private final CamelliaHBaseTemplate hBaseTemplate;
     private final HBaseAsyncWriteExecutor hBaseAsyncWriteExecutor;
 
-    public RedisHBaseZSetMixClient(CamelliaRedisTemplate redisTemplate, CamelliaHBaseTemplate hBaseTemplate) {
+    public RedisHBaseZSetMixClient(CamelliaRedisTemplate redisTemplate,
+                                   CamelliaHBaseTemplate hBaseTemplate,
+                                   HBaseAsyncWriteExecutor hBaseAsyncWriteExecutor) {
         this.hBaseTemplate = hBaseTemplate;
         this.redisTemplate = redisTemplate;
-        this.hBaseAsyncWriteExecutor = new HBaseAsyncWriteExecutor(hBaseTemplate,
-                RedisHBaseConfiguration.hbaseAsyncWritePoolSize(), RedisHBaseConfiguration.hbaseAsyncWriteQueueSize());
-    }
-
-    private static class HBaseAsyncWriteTask {
-        private byte[] key;
-        private List<Put> puts;
-        private List<Delete> deletes;
-
-        public byte[] getKey() {
-            return key;
-        }
-
-        public void setKey(byte[] key) {
-            this.key = key;
-        }
-
-        public List<Put> getPuts() {
-            return puts;
-        }
-
-        public void setPuts(List<Put> puts) {
-            this.puts = puts;
-        }
-
-        public List<Delete> getDeletes() {
-            return deletes;
-        }
-
-        public void setDeletes(List<Delete> deletes) {
-            this.deletes = deletes;
-        }
-    }
-
-    private static class HBaseAsyncWriteExecutor {
-        private final List<HBaseAsyncWriteThread> threadList = new ArrayList<>();
-
-        public HBaseAsyncWriteExecutor(CamelliaHBaseTemplate hBaseTemplate, int poolSize, int queueSize) {
-            for (int i=0; i<poolSize; i++) {
-                HBaseAsyncWriteThread thread = new HBaseAsyncWriteThread(hBaseTemplate, queueSize);
-                thread.start();
-                threadList.add(thread);
-            }
-        }
-
-        public boolean submit(HBaseAsyncWriteTask task) {
-            byte[] key = task.getKey();
-            int index = Math.abs(Arrays.hashCode(key)) % threadList.size();
-            return threadList.get(index).submit(task);
-        }
-
-        private static class HBaseAsyncWriteThread extends Thread {
-            private static final AtomicLong id = new AtomicLong();
-            private final LinkedBlockingQueue<HBaseAsyncWriteTask> queue;
-            private final CamelliaHBaseTemplate hBaseTemplate;
-
-            public HBaseAsyncWriteThread(CamelliaHBaseTemplate hBaseTemplate, int queueSize) {
-                this.hBaseTemplate = hBaseTemplate;
-                this.queue = new LinkedBlockingQueue<>(queueSize);
-                setName("hbase-async-write-" + id.incrementAndGet());
-                RedisHBaseMonitor.register(getName(), queue);
-            }
-
-            public boolean submit(HBaseAsyncWriteTask task) {
-                return queue.offer(task);
-            }
-
-            @Override
-            public void run() {
-                List<Put> putBuffer = new ArrayList<>();
-                List<Delete> deleteBuffer = new ArrayList<>();
-                while (true) {
-                    try {
-                        HBaseAsyncWriteTask task = queue.poll(1, TimeUnit.SECONDS);
-                        if (task == null) {
-                            if (!putBuffer.isEmpty()) {
-                                flushPuts(putBuffer);
-                            }
-                            if (!deleteBuffer.isEmpty()) {
-                                flushDelete(deleteBuffer);
-                            }
-                            continue;
-                        }
-                        List<Put> puts = task.getPuts();
-                        if (puts != null) {
-                            if (!deleteBuffer.isEmpty()) {
-                                flushDelete(deleteBuffer);
-                            }
-                            putBuffer.addAll(puts);
-                            if (putBuffer.size() >= RedisHBaseConfiguration.hbaseMaxBatch()) {
-                                flushPuts(putBuffer);
-                            }
-                        }
-                        List<Delete> deletes = task.getDeletes();
-                        if (deletes != null) {
-                            if (!putBuffer.isEmpty()) {
-                                flushPuts(putBuffer);
-                            }
-                            deleteBuffer.addAll(deletes);
-                            if (deleteBuffer.size() >= RedisHBaseConfiguration.hbaseMaxBatch()) {
-                                flushDelete(deleteBuffer);
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.error("hbase async write error", e);
-                    }
-                }
-            }
-
-            private void flushPuts(List<Put> putBuffer) {
-                int size = putBuffer.size();
-                if (size <= 0) return;
-                hBaseTemplate.put(hbaseTableName(), putBuffer);
-                putBuffer.clear();
-                if (logger.isDebugEnabled()) {
-                    logger.debug("flush hbase of put, size = {}", size);
-                }
-            }
-
-            private void flushDelete(List<Delete> deleteBuffer) {
-                int size = deleteBuffer.size();
-                if (size <= 0) return;
-                hBaseTemplate.delete(hbaseTableName(), deleteBuffer);
-                deleteBuffer.clear();
-                if (logger.isDebugEnabled()) {
-                    logger.debug("flush hbase of delete, size = {}", size);
-                }
-            }
-        }
-
+        this.hBaseAsyncWriteExecutor = hBaseAsyncWriteExecutor;
     }
 
     /**
@@ -184,7 +54,7 @@ public class RedisHBaseZSetMixClient {
             for (Map.Entry<byte[], Double> entry : scoreMembers.entrySet()) {
                 byte[] member = entry.getKey();
                 if (member.length > zsetMemberRefKeyThreshold()) {
-                    byte[] memberRefKey = buildMemberRefKey(key, member);
+                    byte[] memberRefKey = buildRefKey(key, member);
                     newScoreMembers.put(memberRefKey, entry.getValue());
                     pipeline.setex(redisKey(memberRefKey), zsetMemberRefKeyExpireSeconds(), member);
                     pipelineSize ++;
@@ -195,10 +65,10 @@ public class RedisHBaseZSetMixClient {
                     Put put = new Put(memberRefKey);
                     put.addColumn(CF_D, COL_DATA, member);
                     putList.add(put);
-                    RedisHBaseMonitor.incrZSetMemberSize(member.length, true);
+                    RedisHBaseMonitor.incrValueSize("zset", member.length, true);
                 } else {
                     newScoreMembers.put(member, entry.getValue());
-                    RedisHBaseMonitor.incrZSetMemberSize(member.length, false);
+                    RedisHBaseMonitor.incrValueSize("zset", member.length, false);
                 }
             }
             Response<Long> response = pipeline.zadd(redisKey(key), newScoreMembers);
@@ -207,7 +77,7 @@ public class RedisHBaseZSetMixClient {
                 List<List<Put>> split = split(putList, RedisHBaseConfiguration.hbaseMaxBatch());
                 for (List<Put> puts : split) {
                     if (RedisHBaseConfiguration.hbaseAsyncWriteEnable()) {
-                        HBaseAsyncWriteTask task = new HBaseAsyncWriteTask();
+                        HBaseAsyncWriteExecutor.HBaseAsyncWriteTask task = new HBaseAsyncWriteExecutor.HBaseAsyncWriteTask();
                         task.setKey(key);
                         task.setPuts(puts);
                         boolean success = this.hBaseAsyncWriteExecutor.submit(task);
@@ -260,7 +130,7 @@ public class RedisHBaseZSetMixClient {
             pipelineSize ++;
             for (byte[] bytes : member) {
                 if (bytes.length <= ZSET_MEMBER_REF_KEY_THRESHOLD_MIN) continue;
-                byte[] memberRefKey = buildMemberRefKey(key, bytes);
+                byte[] memberRefKey = buildRefKey(key, bytes);
                 Response<Long> response1 = pipeline.zrem(redisKey, memberRefKey);
                 responseList.add(response1);
                 pipeline.del(redisKey(memberRefKey));
@@ -277,7 +147,7 @@ public class RedisHBaseZSetMixClient {
                 List<List<Delete>> split = split(deleteList, RedisHBaseConfiguration.hbaseMaxBatch());
                 for (List<Delete> list : split) {
                     if (RedisHBaseConfiguration.hbaseAsyncWriteEnable()) {
-                        HBaseAsyncWriteTask task = new HBaseAsyncWriteTask();
+                        HBaseAsyncWriteExecutor.HBaseAsyncWriteTask task = new HBaseAsyncWriteExecutor.HBaseAsyncWriteTask();
                         task.setKey(key);
                         task.setDeletes(list);
                         boolean sucess = hBaseAsyncWriteExecutor.submit(task);
@@ -442,7 +312,7 @@ public class RedisHBaseZSetMixClient {
             return redisTemplate.zscore(redisKey, member);
         }
         if (member.length > zsetMemberRefKeyThreshold()) {
-            byte[] memberRefKey = buildMemberRefKey(key, member);
+            byte[] memberRefKey = buildRefKey(key, member);
             Double score = redisTemplate.zscore(redisKey, memberRefKey);
             if (score != null) {
                 return score;
@@ -453,7 +323,7 @@ public class RedisHBaseZSetMixClient {
             if (score != null) {
                 return score;
             }
-            byte[] memberRefKey = buildMemberRefKey(key, member);
+            byte[] memberRefKey = buildRefKey(key, member);
             return redisTemplate.zscore(redisKey, memberRefKey);
         }
     }
@@ -467,7 +337,7 @@ public class RedisHBaseZSetMixClient {
             return redisTemplate.zincrby(redisKey, score, member);
         }
         boolean isBigMember;
-        byte[] memberRefKey = buildMemberRefKey(key, member);
+        byte[] memberRefKey = buildRefKey(key, member);
         if (member.length > zsetMemberRefKeyThreshold()) {
             Double oldScore = redisTemplate.zscore(redisKey, memberRefKey);
             if (oldScore != null) {
@@ -541,12 +411,12 @@ public class RedisHBaseZSetMixClient {
         if (member.length < zsetMemberRefKeyThreshold()) {
             Long zrank = redisTemplate.zrank(redisKey, member);
             if (zrank == null) {
-                byte[] memberRefKey = buildMemberRefKey(key, member);
+                byte[] memberRefKey = buildRefKey(key, member);
                 return redisTemplate.zrank(redisKey, memberRefKey);
             }
             return zrank;
         } else {
-            byte[] memberRefKey = buildMemberRefKey(key, member);
+            byte[] memberRefKey = buildRefKey(key, member);
             Long zrank = redisTemplate.zrank(redisKey, memberRefKey);
             if (zrank == null) {
                 return redisTemplate.zrank(redisKey, member);
@@ -566,12 +436,12 @@ public class RedisHBaseZSetMixClient {
         if (member.length < zsetMemberRefKeyThreshold()) {
             Long zrank = redisTemplate.zrevrank(redisKey, member);
             if (zrank == null) {
-                byte[] memberRefKey = buildMemberRefKey(key, member);
+                byte[] memberRefKey = buildRefKey(key, member);
                 return redisTemplate.zrevrank(redisKey, memberRefKey);
             }
             return zrank;
         } else {
-            byte[] memberRefKey = buildMemberRefKey(key, member);
+            byte[] memberRefKey = buildRefKey(key, member);
             Long zrank = redisTemplate.zrevrank(redisKey, memberRefKey);
             if (zrank == null) {
                 return redisTemplate.zrevrank(redisKey, member);
@@ -589,7 +459,7 @@ public class RedisHBaseZSetMixClient {
         int pipelineSize = 0;
         try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
             for (byte[] bytes : set) {
-                if (isMemberRefKey(key, bytes)) {
+                if (isRefKey(key, bytes)) {
                     pipeline.del(redisKey(bytes));
                     pipelineSize ++;
                     if (pipelineSize >= RedisHBaseConfiguration.redisMaxPipeline()) {
@@ -606,7 +476,7 @@ public class RedisHBaseZSetMixClient {
             List<List<Delete>> split = split(deleteList, RedisHBaseConfiguration.hbaseMaxBatch());
             for (List<Delete> list : split) {
                 if (RedisHBaseConfiguration.hbaseAsyncWriteEnable()) {
-                    HBaseAsyncWriteTask task = new HBaseAsyncWriteTask();
+                    HBaseAsyncWriteExecutor.HBaseAsyncWriteTask task = new HBaseAsyncWriteExecutor.HBaseAsyncWriteTask();
                     task.setKey(key);
                     task.setDeletes(list);
                     boolean success = hBaseAsyncWriteExecutor.submit(task);
@@ -638,7 +508,7 @@ public class RedisHBaseZSetMixClient {
         Map<BytesKey, Response<byte[]>> map = new HashMap<>();
         try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
             for (byte[] bytes : set) {
-                if (isMemberRefKey(key, bytes)) {
+                if (isRefKey(key, bytes)) {
                     Response<byte[]> response = pipeline.get(redisKey(bytes));
                     map.put(new BytesKey(bytes), response);
                     pipelineSize ++;
@@ -657,7 +527,7 @@ public class RedisHBaseZSetMixClient {
         List<Get> getList = new ArrayList<>();
         List<byte[]> list = new ArrayList<>(set.size());
         for (byte[] bytes : set) {
-            if (isMemberRefKey(key, bytes)) {
+            if (isRefKey(key, bytes)) {
                 Response<byte[]> response = map.get(new BytesKey(bytes));
                 byte[] originalValue = response.get();
                 if (originalValue != null) {
@@ -698,7 +568,7 @@ public class RedisHBaseZSetMixClient {
         pipelineSize = 0;
         try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
             for (byte[] bytes : list) {
-                if (isMemberRefKey(key, bytes)) {
+                if (isRefKey(key, bytes)) {
                     byte[] originalValue = hbaseMap.get(new BytesKey(bytes));
                     if (originalValue != null) {
                         ret.add(originalValue);
@@ -708,10 +578,6 @@ public class RedisHBaseZSetMixClient {
                             pipeline.sync();
                             pipelineSize = 0;
                         }
-                    } else {
-                        logger.warn("get original zset member from hbase fail, key = {}, member-ref-key = {}",
-                                Utils.bytesToString(key), Bytes.toHex(bytes));
-                        RedisHBaseMonitor.incrDegraded("hbase_read_missing");
                     }
                 } else {
                     ret.add(bytes);
@@ -733,7 +599,7 @@ public class RedisHBaseZSetMixClient {
         try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
             for (Tuple tuple : set) {
                 byte[] bytes = tuple.getBinaryElement();
-                if (isMemberRefKey(key, tuple.getBinaryElement())) {
+                if (isRefKey(key, tuple.getBinaryElement())) {
                     Response<byte[]> response = pipeline.get(redisKey(bytes));
                     map.put(new BytesKey(bytes), response);
                     pipelineSize ++;
@@ -755,7 +621,7 @@ public class RedisHBaseZSetMixClient {
             List<Tuple> list = new ArrayList<>(set.size());
             for (Tuple tuple : set) {
                 byte[] bytes = tuple.getBinaryElement();
-                if (isMemberRefKey(key, bytes)) {
+                if (isRefKey(key, bytes)) {
                     Response<byte[]> response = map.get(new BytesKey(bytes));
                     byte[] originalValue = response.get();
                     if (originalValue != null) {
@@ -778,10 +644,6 @@ public class RedisHBaseZSetMixClient {
                                         pipelineSize = 0;
                                     }
                                     list.add(new Tuple(originalValue, tuple.getScore()));
-                                } else {
-                                    logger.warn("get original zset member tuple from hbase fail, key = {}, member-ref-key = {}",
-                                            Utils.bytesToString(key), Bytes.toHex(bytes));
-                                    RedisHBaseMonitor.incrDegraded("hbase_read_missing");
                                 }
                             } else {
                                 RedisHBaseMonitor.incrDegraded("hbase_read_freq_degraded");
