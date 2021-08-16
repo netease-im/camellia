@@ -17,6 +17,7 @@
 		<module>camellia-redis</module>
 		<module>camellia-redis-zk</module>
 		<module>camellia-redis-toolkit</module>
+		<module>camellia-tools</module>
 		<module>camellia-redis-proxy</module>
 		<module>camellia-redis-proxy-hbase</module>
 		<module>camellia-samples</module>
