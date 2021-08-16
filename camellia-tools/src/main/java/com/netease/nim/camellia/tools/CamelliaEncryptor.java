@@ -30,6 +30,10 @@ public class CamelliaEncryptor {
 
     public static enum Tag {
         AES_CBC_PKCS5PADDING((byte) 1),
+        AES_ECB_PKCS5PADDING((byte) 2),
+        AES_CTR_NOPADDING((byte) 3),
+        AES_CFB_NOPADDING((byte) 4),
+        AES_OFB_NOPADDING((byte) 5),
         ;
         private final byte tag;
 

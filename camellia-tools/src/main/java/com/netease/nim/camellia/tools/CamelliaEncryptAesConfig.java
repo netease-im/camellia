@@ -12,7 +12,8 @@ import java.security.SecureRandom;
  */
 public class CamelliaEncryptAesConfig {
     private static final byte[] default_iv = "0000000000000000".getBytes(StandardCharsets.UTF_8);
-    private static final int key_len = 128;
+    private static final Type default_type = Type.CBC_PKCS5PADDING;
+    private static final int default_key_len = 128;
 
     private final Type type;
     private final IvParameterSpec ivParameterSpec;
@@ -20,6 +21,10 @@ public class CamelliaEncryptAesConfig {
 
     public static enum Type {
         CBC_PKCS5PADDING(CamelliaEncryptor.Tag.AES_CBC_PKCS5PADDING, "AES/CBC/PKCS5Padding"),
+        ECB_PKCS5PADDING(CamelliaEncryptor.Tag.AES_ECB_PKCS5PADDING, "AES/ECB/PKCS5Padding"),
+        CTR_NOPADDING(CamelliaEncryptor.Tag.AES_CTR_NOPADDING, "AES/CTR/NoPadding"),
+        CFB_NOPADDING(CamelliaEncryptor.Tag.AES_CFB_NOPADDING, "AES/CFB/NoPadding"),
+        OFB_NOPADDING(CamelliaEncryptor.Tag.AES_OFB_NOPADDING, "AES/OFB/NoPadding")
         ;
         private final String desc;
         private final CamelliaEncryptor.Tag tag;
@@ -41,11 +46,15 @@ public class CamelliaEncryptAesConfig {
      * @param seed 生成秘钥的种子
      */
     public CamelliaEncryptAesConfig(String seed) {
-        this(Type.CBC_PKCS5PADDING, seed.getBytes(StandardCharsets.UTF_8));
+        this(default_type, seed.getBytes(StandardCharsets.UTF_8));
     }
 
     public CamelliaEncryptAesConfig(byte[] seed) {
-        this(Type.CBC_PKCS5PADDING, seed);
+        this(default_type, seed);
+    }
+
+    public CamelliaEncryptAesConfig(Type type, String seed) {
+        this(type, seed.getBytes(StandardCharsets.UTF_8), default_iv);
     }
 
     public CamelliaEncryptAesConfig(Type type, byte[] seed) {
@@ -53,7 +62,7 @@ public class CamelliaEncryptAesConfig {
     }
 
     public CamelliaEncryptAesConfig(Type type, byte[] seed, byte[] iv) {
-        this(type, key_len, seed, iv);
+        this(type, default_key_len, seed, iv);
     }
 
     public CamelliaEncryptAesConfig(Type type, int keyLen, byte[] seed, byte[] iv) {
@@ -65,7 +74,11 @@ public class CamelliaEncryptAesConfig {
             SecretKey sKey = kgen.generateKey();
             this.type = type;
             this.secretKeySpec = new SecretKeySpec(sKey.getEncoded(), "AES");
-            this.ivParameterSpec = new IvParameterSpec(iv);
+            if (type == Type.ECB_PKCS5PADDING) {
+                this.ivParameterSpec = null;
+            } else {
+                this.ivParameterSpec = new IvParameterSpec(iv);
+            }
         } catch (Exception e) {
             throw new CamelliaEncryptException(e);
         }

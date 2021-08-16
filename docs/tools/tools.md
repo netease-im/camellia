@@ -45,29 +45,35 @@ public class CompressSamples {
 ```
 
 ### CamelliaEncryptor示例  
-CamelliaEncryptor可以设置加密的key，此外解密之前会判断是否加密过，从而在某些业务场景下可以做到向下兼容  
+CamelliaEncryptor是线程安全的，支持AES加密，可以选择不同的模式（默认是AES/CBC/PKCS5Padding）；此外解密之前会判断是否加密过，从而在某些业务场景下可以做到向下兼容  
 ```java
 public class EncryptSamples {
 
     public static void main(String[] args) {
-        CamelliaEncryptor encryptor = new CamelliaEncryptor(new CamelliaEncryptAesConfig("111"));//设置秘钥seed
-        String data = "Hello Camellia";
 
-        //原始数据
-        System.out.println(data);
-        //加密
-        byte[] encrypt = encryptor.encrypt(data.getBytes(StandardCharsets.UTF_8));
-        System.out.println(Base64.getEncoder().encodeToString(encrypt));
-        //解密
-        byte[] decrypt = encryptor.decrypt(encrypt);
-        System.out.println(new String(decrypt));
-        //判断解密后是否和原始数据一致
-        System.out.println(new String(decrypt).equals(data));
+        for (CamelliaEncryptAesConfig.Type type : CamelliaEncryptAesConfig.Type.values()) {
+            System.out.println(">>>>>START>>>>" + type.getDesc());
+            CamelliaEncryptor encryptor = new CamelliaEncryptor(new CamelliaEncryptAesConfig(type, "111"));//设置秘钥seed
+            String data = "Hello Camellia";
 
-        //直接对原始数据解密，CamelliaEncryptor会发现没有加密过，直接返回
-        byte[] decrypt1 = encryptor.decrypt(data.getBytes(StandardCharsets.UTF_8));
-        System.out.println(new String(decrypt1));
-        System.out.println(new String(decrypt1).equals(data));
+            //原始数据
+            System.out.println(data);
+            //加密
+            byte[] encrypt = encryptor.encrypt(data.getBytes(StandardCharsets.UTF_8));
+            System.out.println(Base64.getEncoder().encodeToString(encrypt));
+            //解密
+            byte[] decrypt = encryptor.decrypt(encrypt);
+            System.out.println(new String(decrypt));
+            //判断解密后是否和原始数据一致
+            System.out.println(new String(decrypt).equals(data));
+
+            //直接对原始数据解密，CamelliaEncryptor会发现没有加密过，直接返回
+            byte[] decrypt1 = encryptor.decrypt(data.getBytes(StandardCharsets.UTF_8));
+            System.out.println(new String(decrypt1));
+            System.out.println(new String(decrypt1).equals(data));
+
+            System.out.println(">>>>>END>>>>" + type.getDesc());
+        }
     }
 }
 
