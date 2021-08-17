@@ -4,7 +4,6 @@ import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- *
  * Created by caojiajun on 2019/11/13.
  */
 @ConfigurationProperties(prefix = "camellia-redis-proxy")
@@ -59,6 +58,11 @@ public class CamelliaRedisProxyProperties {
      * 慢查询的回调方法
      */
     private String slowCommandCallbackClassName = Constants.Server.slowCommandMonitorCallbackClassName;
+
+    /**
+     * 认证处理逻辑的className
+     */
+    private String clientAuthProviderClassName = Constants.Server.clientAuthByConfigProvider;
 
     /**
      * 命令拦截器，see @CommandInterceptor
@@ -228,6 +232,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setSlowCommandCallbackClassName(String slowCommandCallbackClassName) {
         this.slowCommandCallbackClassName = slowCommandCallbackClassName;
+    }
+
+    public String getClientAuthProviderClassName() {
+        return clientAuthProviderClassName;
+    }
+
+    public void setClientAuthProviderClassName(String clientAuthProviderClassName) {
+        this.clientAuthProviderClassName = clientAuthProviderClassName;
     }
 
     public boolean isHotKeyMonitorEnable() {

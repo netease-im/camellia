@@ -13,15 +13,18 @@ import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCach
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheStatsCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.SlowCommandMonitorCallback;
+import com.netease.nim.camellia.redis.proxy.command.auth.ClientAuthProvider;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfHook;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
+import io.netty.util.internal.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Constructor;
+
 /**
- *
  * Created by caojiajun on 2020/10/22
  */
 public class ConfigInitUtil {
@@ -47,6 +50,33 @@ public class ConfigInitUtil {
                 throw new CamelliaRedisException(e);
             }
         }
+    }
+
+    public static ClientAuthProvider initClientAuthProvider(CamelliaServerProperties serverProperties) {
+        ClientAuthProvider clientAuthProvider = null;
+        String clientAuthProviderClassName = serverProperties.getClientAuthProviderClassName();
+        if (clientAuthProviderClassName != null) {
+            try {
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(clientAuthProviderClassName);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(clientAuthProviderClassName);
+                }
+                Constructor constructorWithProperties = clazz.getDeclaredConstructor(new Class[]{CamelliaServerProperties.class});
+                if (constructorWithProperties != null) {
+                    clientAuthProvider = (ClientAuthProvider) constructorWithProperties.newInstance(serverProperties);
+                } else {
+                    clientAuthProvider = (ClientAuthProvider) clazz.newInstance();
+                }
+
+                logger.info("ClientAuthProvider init success, class = {}", clientAuthProvider);
+            } catch (Exception e) {
+                logger.error("ClientAuthProvider init error, class = {}", clientAuthProvider, e);
+                throw new CamelliaRedisException(e);
+            }
+        }
+        return clientAuthProvider;
     }
 
     public static MonitorCallback initMonitorCallback(CamelliaServerProperties serverProperties) {
