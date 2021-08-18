@@ -10,9 +10,10 @@
 * 新增camellia-tools模块，提供解压缩工具类CamelliaCompressor、加解密工具类CamelliaEncryptor，具体见：[tools](/docs/tools/tools.md)
 * 新增了使用camellia-tools来实现camellia-redis-proxy数据解压缩、加解密的例子，具体见：[转换](/docs/redis-proxy/converter.md)
 * camellia-redis-proxy支持自定义的ClientAuthProvider来实现通过password区分路由的方法，具体见：[路由配置](/docs/redis-proxy/route.md)，感谢[@yangxb2010000](https://github.com/yangxb2010000)提供该功能
+* camellia-redis-proxy支持设置使用随机端口，具体见：[部署](/docs/redis-proxy/deploy.md)
 
 ### 更新
-* 无
+* camellia-redis-proxy的info命令返回新增http_console_port字段
 
 ### fix
 * 无

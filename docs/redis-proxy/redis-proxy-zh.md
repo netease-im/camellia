@@ -200,6 +200,7 @@ camellia-redis-proxy提供了value的自定义转换功能，从而你可以自�
 在生产环境，需要部署至少2个proxy实例来保证高可用，并且proxy是可以水平扩展的，包括：
 * 部署模式
 * 集成Zookeeper
+* 随机端口
 * 优雅上下线
 * 客户端接入（java之jedis）
 * 客户端接入（java之SpringRedisTemplate)

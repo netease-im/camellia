@@ -22,6 +22,7 @@ os_name:Linux  ##操作系统名称
 os_version:4.9.0-3-amd64  ##操作系统版本
 system_load_average:0.22  ##系统load
 tcp_port:6380   ##proxy的服务端口
+http_console_port:16379   ##proxy的console端口
 uptime_in_seconds:295   ##proxy启动时长（秒）
 uptime_in_days:0    ##proxy启动时长（天）
 vm_vendor:Oracle Corporation   ##虚拟机厂商

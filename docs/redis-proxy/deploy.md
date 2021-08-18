@@ -4,6 +4,7 @@
 ## 大纲
 * 部署模式
 * 集成Zookeeper
+* 随机端口
 * 优雅上下线
 * 客户端接入（java之jedis）
 * 客户端接入（java之SpringRedisTemplate)
@@ -59,6 +60,33 @@ camellia-redis-zk-registry:
 ```
 则启动后redis proxy会注册到zk(127.0.0.1:2181,127.0.0.2:2181)  
 此时你需要自己从zk上获取proxy的地址列表，然后自己实现一下客户端侧的负载均衡策略，但是如果你客户端是java，则camellia帮你做了一个实现，参考下节
+
+### 随机端口
+有一些业务场景（比如测试环境混部）容易出现端口冲突情况，你可能希望proxy启动时支持随机选择可用端口，则你可以这样配置
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  #port: -6379 #优先级高于server.port，如果缺失，则使用server.port，如果设置为-6379则会随机一个可用端口
+  #application-name: camellia-redis-proxy-server  #优先级高于spring.application.name，如果缺失，则使用spring.application.name
+  console-port: -16379 #console端口，默认是16379，如果设置为-16379则会随机一个可用端口
+  password: pass123
+  transpond:
+    type: local
+    local:
+      resource: redis://@127.0.0.1:6379
+
+camellia-redis-zk-registry:
+  enable: true
+  zk-url: 127.0.0.1:2181,127.0.0.2:2181
+  base-path: /camellia
+```
+如果你设置成特殊的-6379和-16379，则proxy以及内嵌的console就会随机选择一个可用的端口进行监听   
+你可以调用ProxyInfoUtils的getPort()和getConsolePort()方法获取实际生效的端口   
 
 ### 优雅上下线
 当redis proxy启动的时候，会同时启动一个http服务器console server，默认端口是16379  
