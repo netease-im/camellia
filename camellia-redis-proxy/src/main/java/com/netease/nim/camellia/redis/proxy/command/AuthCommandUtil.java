@@ -11,9 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AuthCommandUtil {
-    private static Logger logger = LoggerFactory.getLogger(AuthCommandUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthCommandUtil.class);
 
-    private ClientAuthProvider clientAuthProvider;
+    private final ClientAuthProvider clientAuthProvider;
 
     public AuthCommandUtil(ClientAuthProvider clientAuthProvider) {
         this.clientAuthProvider = clientAuthProvider;
@@ -39,7 +39,7 @@ public class AuthCommandUtil {
 
         channelInfo.setChannelStats(ChannelInfo.ChannelStats.AUTH_OK);
 
-        if (clientIdentity.getBid() != null) {
+        if (clientIdentity.getBid() != null && channelInfo.getBid() == null) {//不允许auth多次来改变bid/bgroup
             channelInfo.setBid(clientIdentity.getBid());
             channelInfo.setBgroup(clientIdentity.getBgroup());
             if (logger.isDebugEnabled()) {
@@ -50,5 +50,9 @@ public class AuthCommandUtil {
             }
         }
         return StatusReply.OK;
+    }
+
+    public boolean isPasswordRequired() {
+        return clientAuthProvider.isPasswordRequired();
     }
 }

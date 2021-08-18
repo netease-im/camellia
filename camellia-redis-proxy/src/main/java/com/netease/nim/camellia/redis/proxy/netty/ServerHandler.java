@@ -69,7 +69,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
                 }
 
                 //如果需要密码，则后续的操作都需要连接处于密码已经校验的状态
-                if (properties.getPassword() != null) {
+                if (authCommandUtil.isPasswordRequired()) {
                     if (channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK) {
                         ctx.writeAndFlush(ErrorReply.NO_AUTH);
                         continue;

@@ -40,7 +40,7 @@ public class ClientCommandUtil {
                     return ErrorReply.REPEAT_OPERATION;
                 }
                 channelInfo.setClientName(clienName);
-                if (channelInfo.getBid() == null) {
+                if (channelInfo.getBid() == null) {//只有没有设置过bid/bgroup，才能通过client setname来设置bid/bgroup
                     setBidAndBGroup(channelInfo, clienName);
                 }
 

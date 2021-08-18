@@ -4,7 +4,7 @@ import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import io.netty.util.internal.StringUtil;
 
 public class ClientAuthByConfigProvider implements ClientAuthProvider {
-    private String configPassword;
+    private final String configPassword;
 
     public ClientAuthByConfigProvider(CamelliaServerProperties properties) {
         this.configPassword = properties.getPassword();
