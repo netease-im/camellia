@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
+import com.netease.nim.camellia.redis.proxy.command.AuthCommandUtil;
 import com.netease.nim.camellia.redis.proxy.command.ClientCommandUtil;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
@@ -28,6 +29,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
 
     private final CommandInvoker invoker;
     private final CamelliaServerProperties properties;
+    private final AuthCommandUtil authCommandUtil;
 
     public ServerHandler(CamelliaServerProperties properties, CommandInvoker invoker) {
         super();
@@ -37,6 +39,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
             MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(properties);
             RedisMonitor.init(properties.getMonitorIntervalSeconds(), properties.isCommandSpendTimeMonitorEnable(), monitorCallback);
         }
+        authCommandUtil = new AuthCommandUtil(ConfigInitUtil.initClientAuthProvider(properties));
     }
 
     @Override
@@ -48,7 +51,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
             int index = -1;
             int startIndex = -1;
             for (Command command : commandList) {
-                index ++;
+                index++;
                 //监控
                 if (properties.isMonitorEnable()) {
                     Long bid = channelInfo.getBid();
@@ -60,26 +63,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
 
                 //鉴权
                 if (redisCommand == RedisCommand.AUTH) {
-                    if (properties.getPassword() == null) {
-                        ctx.writeAndFlush(new ErrorReply("ERR Client sent AUTH, but no password is set"));
-                        continue;
-                    } else {
-                        byte[][] objects = command.getObjects();
-                        if (objects.length != 2) {
-                            ctx.writeAndFlush(ErrorReply.INVALID_PASSWORD);
-                            continue;
-                        }
-                        String password = Utils.bytesToString(objects[1]);
-                        if (password.equals(properties.getPassword())) {
-                            channelInfo.setChannelStats(ChannelInfo.ChannelStats.AUTH_OK);
-                            ctx.writeAndFlush(StatusReply.OK);
-                            continue;
-                        } else {
-                            channelInfo.setChannelStats(ChannelInfo.ChannelStats.NO_AUTH);
-                            ctx.writeAndFlush(ErrorReply.INVALID_PASSWORD);
-                            continue;
-                        }
-                    }
+                    Reply reply = authCommandUtil.invokeAuthCommand(channelInfo, command);
+                    ctx.writeAndFlush(reply);
+                    continue;
                 }
 
                 //如果需要密码，则后续的操作都需要连接处于密码已经校验的状态
@@ -98,7 +84,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
 
                 //特殊处理client命令
                 if (redisCommand == RedisCommand.CLIENT) {
-                    if (startIndex >= 0) {//不允许和client命令同时提交一批命令，并且还在client命令之前
+                    //如果还未设置过Bid，则不允许和client命令同时提交一批命令，并且还在client命令之前
+                    if (startIndex >= 0 && channelInfo.getBid() == null) {
                         ctx.writeAndFlush(ErrorReply.SYNTAX_ERROR).addListener(future -> ctx.close());
                         return;
                     }

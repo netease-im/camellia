@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.DummyHotKe
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.LoggingHotKeyCacheStatsCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.route.DynamicConfProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback;
+import com.netease.nim.camellia.redis.proxy.command.auth.ClientAuthByConfigProvider;
 import com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback;
 
 /**
@@ -23,6 +24,7 @@ public class Constants {
         public static final String monitorCallbackClassName = LoggingMonitorCallback.class.getName();
         public static final long slowCommandThresholdMillisTime = 2000L;
         public static final String slowCommandMonitorCallbackClassName = LoggingSlowCommandMonitorCallback.class.getName();
+        public static String clientAuthByConfigProvider = ClientAuthByConfigProvider.class.getName();
         public static final int monitorIntervalSeconds = 60;
 
         public static final int workThread = SysUtils.getCpuNum();

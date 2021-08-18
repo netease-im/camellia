@@ -27,7 +27,7 @@ public class CamelliaServerProperties {
     private ConverterConfig converterConfig;
     private String proxyDynamicConfHookClassName;
     private boolean monitorDataMaskPassword = Constants.Server.monitorDataMaskPassword;
-
+    private String clientAuthProviderClassName = Constants.Server.clientAuthByConfigProvider;
 
     private int bossThread = 1;
     private int workThread = Constants.Server.workThread;
@@ -269,6 +269,14 @@ public class CamelliaServerProperties {
 
     public void setMonitorDataMaskPassword(boolean monitorDataMaskPassword) {
         this.monitorDataMaskPassword = monitorDataMaskPassword;
+    }
+
+    public String getClientAuthProviderClassName() {
+        return clientAuthProviderClassName;
+    }
+
+    public void setClientAuthProviderClassName(String clientAuthProviderClassName) {
+        this.clientAuthProviderClassName = clientAuthProviderClassName;
     }
 
     public static class HotKeyMonitorConfig {

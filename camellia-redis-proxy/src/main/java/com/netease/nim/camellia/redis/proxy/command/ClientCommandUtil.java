@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
  * Created by caojiajun on 2019/12/12.
  */
 public class ClientCommandUtil {
@@ -32,25 +31,34 @@ public class ClientCommandUtil {
             boolean setname = Utils.checkStringIgnoreCase(objects[1], RedisKeyword.SETNAME.name());
             if (setname) {
                 String clienName = Utils.bytesToString(objects[2]);
-                if (channelInfo != null) {
-                    //不允许变更clientname
-                    if (channelInfo.getClientName() != null) {
-                        return ErrorReply.REPEAT_OPERATION;
-                    }
-                    channelInfo.setClientName(clienName);
-                    Long bid = ProxyUtil.parseBid(clienName);
-                    String bgroup = ProxyUtil.parseBgroup(clienName);
-                    if (bid != null && bgroup != null) {
-                        channelInfo.setBid(bid);
-                        channelInfo.setBgroup(bgroup);
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("channel init with bid/bgroup = {}/{}, consid = {}", bid, bgroup, channelInfo.getConsid());
-                        }
-                    }
-                    return StatusReply.OK;
+                if (channelInfo == null) {
+                    return ErrorReply.SYNTAX_ERROR;
                 }
+
+                //不允许变更clientname
+                if (channelInfo.getClientName() != null) {
+                    return ErrorReply.REPEAT_OPERATION;
+                }
+                channelInfo.setClientName(clienName);
+                if (channelInfo.getBid() == null) {
+                    setBidAndBGroup(channelInfo, clienName);
+                }
+
+                return StatusReply.OK;
             }
         }
         return ErrorReply.SYNTAX_ERROR;
+    }
+
+    private static void setBidAndBGroup(ChannelInfo channelInfo, String clienName) {
+        Long bid = ProxyUtil.parseBid(clienName);
+        String bgroup = ProxyUtil.parseBgroup(clienName);
+        if (bid != null && bgroup != null) {
+            channelInfo.setBid(bid);
+            channelInfo.setBgroup(bgroup);
+            if (logger.isDebugEnabled()) {
+                logger.debug("channel init with bid/bgroup = {}/{}, consid = {} by client name", bid, bgroup, channelInfo.getConsid());
+            }
+        }
     }
 }
