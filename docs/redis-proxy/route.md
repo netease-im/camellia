@@ -8,6 +8,7 @@
 * json-file配置示例（双写、读写分离、分片等）
 * 集成camellia-dashboard
 * 集成ProxyRouteConfUpdater自定义管理多组动态配置
+* 使用自定义ClientAuthProvider来实现通过不同的登录密码来指向不同路由配置
 * 不同的双（多）写模式
 * 自定义分片函数
 
@@ -404,7 +405,59 @@ public class CustomProxyRouteConfUpdater extends ProxyRouteConfUpdater {
     }
 }
 ```
-上述的例子中，proxy一开始的路由是redis://@127.0.0.1:6379，10s之后，被切换到了redis://@127.0.0.2:6379  
+上述的例子中，proxy一开始的路由是redis://@127.0.0.1:6379，10s之后，被切换到了redis://@127.0.0.2:6379
+
+### 使用自定义ClientAuthProvider来实现通过不同的登录密码来指向不同路由配置
+前面我们已经知道proxy是通过不同的big/bgroup来映射不同的路由配置  
+对于客户端来说，默认情况下是通过client setname命令来选择所需要的bid/bgroup，从而指向不同的路由配置  
+此外，proxy还支持通过自定义的ClientAuthProvider来实现通过不同的登录密码来指向不同的bid/bgroup，如下：  
+```java
+public class MockClientAuthProvider implements ClientAuthProvider {
+
+    @Override
+    public ClientIdentity auth(String password) {
+        ClientIdentity clientIdentity = new ClientIdentity();
+        if (password.equals("pass1")) {
+            clientIdentity.setPass(true);
+            clientIdentity.setBid(1L);
+            clientIdentity.setBgroup("default");
+        } else if (password.equals("pass2")) {
+            clientIdentity.setPass(true);
+            clientIdentity.setBid(2L);
+            clientIdentity.setBgroup("default");
+        } else if (password.equals("pass3")) {
+            clientIdentity.setPass(true);
+        }
+        return clientIdentity;
+    }
+
+    @Override
+    public boolean isPasswordRequired() {
+        return true;
+    }
+}
+```  
+随后在application.yml里配置如下：  
+```yaml
+camellia-redis-proxy:
+  monitor-enable: false  #是否开启监控
+  monitor-interval-seconds: 60 #监控回调的间隔
+  client-auth-provider-class-name: com.netease.nim.camellia.redis.proxy.samples.MockClientAuthProvider #处理认证逻辑的类
+  transpond:
+    type: custom
+    custom:
+      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.command.async.route.DynamicConfProxyRouteConfUpdater
+      dynamic: true #表示支持多组配置，默认就是true
+      bid: 1 #默认的bid，当客户端请求时没有声明自己的bid和bgroup时使用的bgroup，可以缺省，若缺省则不带bid/bgroup的请求会被拒绝
+      bgroup: default #默认的bgroup，当客户端请求时没有声明自己的bid和bgroup时使用的bgroup，可以缺省，若缺省则不带bid/bgroup的请求会被拒绝
+      reload-interval-millis: 600000 #使用ProxyRouteConfUpdater时，配置变更会通过回调自动更新，为了防止更新出现丢失，会有一个兜底轮询机制，本配置表示兜底轮询的间隔，默认10分钟  
+```
+上面的例子表示：
+* 当使用pass1登录proxy时，使用bid=1,bgroup=default的路由
+* 当使用pass2登录proxy时，使用bid=2,bgroup=default的路由
+* 当使用pass3登录proxy时，使用默认路由，也就是bid=1,bgroup=default
+
+感谢[@yangxb2010000](https://github.com/yangxb2010000)提供上述功能
 
 ### 不同的双（多）写模式
 proxy支持设置双（多）写的模式，有三个可选项：  

@@ -177,6 +177,7 @@ OK
 * json-file配置示例（双写、读写分离、分片等）
 * 集成camellia-dashboard
 * 集成ProxyRouteConfUpdater自定义管理多组动态配置
+* 使用自定义ClientAuthProvider来实现通过不同的登录密码来指向不同路由配置
 * 不同的双（多）写模式
 * 自定义分片函数
 
