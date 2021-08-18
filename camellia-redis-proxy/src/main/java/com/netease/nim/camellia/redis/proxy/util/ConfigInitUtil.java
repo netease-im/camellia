@@ -18,11 +18,9 @@ import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfHook;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
-import io.netty.util.internal.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Constructor;
 
 /**
  * Created by caojiajun on 2020/10/22
@@ -63,16 +61,14 @@ public class ConfigInitUtil {
                 } catch (ClassNotFoundException e) {
                     clazz = Thread.currentThread().getContextClassLoader().loadClass(clientAuthProviderClassName);
                 }
-                Constructor constructorWithProperties = clazz.getDeclaredConstructor(new Class[]{CamelliaServerProperties.class});
-                if (constructorWithProperties != null) {
-                    clientAuthProvider = (ClientAuthProvider) constructorWithProperties.newInstance(serverProperties);
-                } else {
+                try {
+                    clientAuthProvider = (ClientAuthProvider) clazz.getDeclaredConstructor(CamelliaServerProperties.class).newInstance(serverProperties);
+                } catch (NoSuchMethodException e) {
                     clientAuthProvider = (ClientAuthProvider) clazz.newInstance();
                 }
-
-                logger.info("ClientAuthProvider init success, class = {}", clientAuthProvider);
+                logger.info("ClientAuthProvider init success, class = {}", clientAuthProviderClassName);
             } catch (Exception e) {
-                logger.error("ClientAuthProvider init error, class = {}", clientAuthProvider, e);
+                logger.error("ClientAuthProvider init error, class = {}", clientAuthProviderClassName, e);
                 throw new CamelliaRedisException(e);
             }
         }

@@ -113,3 +113,69 @@ camellia-redis-proxy:
 ```    
 
 上述示例中，如果key是k1，则value里面的abc会被转换为***再存储到redis里面；当你get时，***会被转换回abc后再返回给客户端，整个过程对于客户端是透明的
+
+### 使用CamelliaCompressor/CamelliaEncryptor来做压缩或者加解密
+首先，你需要引入：
+```
+<dependency>
+    <groupId>com.netease.nim</groupId>
+    <artifactId>camellia-tools</artifactId>
+    <version>1.0.36</version>
+</dependency>
+```
+
+压缩的例子
+```java
+public class CompressStringConverter implements StringConverter {
+
+    private final CamelliaCompressor compressor = new CamelliaCompressor();
+
+    @Override
+    public byte[] valueConvert(CommandContext commandContext, byte[] key, byte[] originalValue) {
+        return compressor.compress(originalValue);
+    }
+
+    @Override
+    public byte[] valueReverseConvert(CommandContext commandContext, byte[] key, byte[] convertedValue) {
+        return compressor.decompress(convertedValue);
+    }
+}
+```
+
+加密的例子：
+```java
+public class EncryptStringConverter implements StringConverter {
+    
+    private final CamelliaEncryptor encryptor = new CamelliaEncryptor(new CamelliaEncryptAesConfig("abc"));
+    
+    @Override
+    public byte[] valueConvert(CommandContext commandContext, byte[] key, byte[] originalValue) {
+        return encryptor.encrypt(originalValue);
+    }
+
+    @Override
+    public byte[] valueReverseConvert(CommandContext commandContext, byte[] key, byte[] convertedValue) {
+        return encryptor.decrypt(convertedValue);
+    }
+}
+```
+
+进一步的，其实你可以先压缩，再加密，如下：
+```java
+public class CompressEncryptStringConverter implements StringConverter {
+
+    private final CamelliaCompressor compressor = new CamelliaCompressor();
+    private final CamelliaEncryptor encryptor = new CamelliaEncryptor(new CamelliaEncryptAesConfig("abc"));
+    
+    @Override
+    public byte[] valueConvert(CommandContext commandContext, byte[] key, byte[] originalValue) {
+        return encryptor.encrypt(compressor.compress(originalValue));
+    }
+
+    @Override
+    public byte[] valueReverseConvert(CommandContext commandContext, byte[] key, byte[] convertedValue) {
+        return compressor.decompress(encryptor.decrypt(convertedValue));
+    }
+}
+```
+
