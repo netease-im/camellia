@@ -9,10 +9,11 @@
 ### add
 * add camellia-tools module, provide compress utils CamelliaCompressor, encrypt utils CamelliaEncryptor
 * provide samples for camellia-redis-proxy implements data-encryption/data-compress by use camellia-tools
-* camellia-redis-proxy support custom ClientAuthProvider to route different bid/bgroup route conf by different password    
+* camellia-redis-proxy support custom ClientAuthProvider to route different bid/bgroup route conf by different password  
+* camellia-redis-proxy support setting random port/consolePort  
 
 ### update
-* none
+* camellia-redis-proxy info command reply add http_console_port field
 
 ### fix
 * none
