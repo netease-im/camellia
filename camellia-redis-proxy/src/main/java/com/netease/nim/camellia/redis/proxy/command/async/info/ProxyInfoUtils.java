@@ -37,8 +37,9 @@ public class ProxyInfoUtils {
     private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(8), new DefaultThreadFactory("proxy-info"));
 
-    private static final String VERSION = "v1.0.31";
+    private static final String VERSION = "v1.0.36";
     private static int port;
+    private static int consolePort;
     private static int bossThread;
     private static int workThread;
     private static final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
@@ -60,13 +61,24 @@ public class ProxyInfoUtils {
     private static double lastReadCommandQps = 0.0;
     private static double lastWriteCommandQps = 0.0;
 
-
     static {
         initGcMXBean();
     }
 
+    public static int getPort() {
+        return port;
+    }
+
+    public static int getConsolePort() {
+        return consolePort;
+    }
+
     public static void updatePort(int port) {
         ProxyInfoUtils.port = port;
+    }
+
+    public static void updateConsolePort(int consolePort) {
+        ProxyInfoUtils.consolePort = consolePort;
     }
 
     public static void updateThread(int bossThread, int workThread) {
@@ -177,6 +189,7 @@ public class ProxyInfoUtils {
         builder.append("os_version:").append(osBean.getVersion()).append("\n");
         builder.append("system_load_average:").append(osBean.getSystemLoadAverage()).append("\n");
         builder.append("tcp_port:").append(port).append("\n");
+        builder.append("http_console_port:").append(consolePort).append("\n");
         long uptime = runtimeMXBean.getUptime();
         long uptimeInSeconds = uptime / 1000L;
         long uptimeInDays = uptime / (1000L * 60 * 60 * 24);

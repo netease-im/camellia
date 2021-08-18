@@ -3,7 +3,9 @@ package com.netease.nim.camellia.redis.proxy.netty;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.command.async.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
+import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
+import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -26,6 +28,7 @@ public class CamelliaRedisProxyServer {
     private final InitHandler initHandler = new InitHandler();
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workGroup;
+    private int port;
 
     public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, EventLoopGroup bossGroup, EventLoopGroup workGroup, CommandInvoker invoker) {
         this.serverProperties = serverProperties;
@@ -74,8 +77,18 @@ public class CamelliaRedisProxyServer {
                         p.addLast(serverHandler);
                     }
                 });
-        serverBootstrap.bind(serverProperties.getPort()).sync();
-        logger.info("CamelliaRedisProxyServer start at port: {}", serverProperties.getPort());
-        ProxyInfoUtils.updatePort(serverProperties.getPort());
+        int port = serverProperties.getPort();
+        //如果设置为这个特殊的负数端口，则会随机选择一个可用的端口
+        if (port == Constants.Server.serverPortRandSig) {
+            port = SocketUtils.findRandomPort();
+        }
+        serverBootstrap.bind(port).sync();
+        logger.info("CamelliaRedisProxyServer start at port: {}", port);
+        ProxyInfoUtils.updatePort(port);
+        this.port = port;
+    }
+
+    public int getPort() {
+        return port;
     }
 }

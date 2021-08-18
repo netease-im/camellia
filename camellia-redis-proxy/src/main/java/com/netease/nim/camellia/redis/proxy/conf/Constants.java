@@ -18,7 +18,9 @@ public class Constants {
 
     public static class Server {
         public static final int severPort = 6379;
+        public static final int serverPortRandSig = -6379;
         public static final int consolePort = 16379;
+        public static final int consolePortRandSig = -16379;
         public static final boolean monitorEnable = false;
         public static final boolean commandSpendTimeMonitorEnable = false;
         public static final String monitorCallbackClassName = LoggingMonitorCallback.class.getName();
