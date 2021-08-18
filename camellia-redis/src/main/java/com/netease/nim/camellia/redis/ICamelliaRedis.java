@@ -1,9 +1,10 @@
 package com.netease.nim.camellia.redis;
 
 import redis.clients.jedis.*;
-import redis.clients.jedis.params.geo.GeoRadiusParam;
-import redis.clients.jedis.params.sortedset.ZAddParams;
-import redis.clients.jedis.params.sortedset.ZIncrByParams;
+import redis.clients.jedis.params.GeoRadiusParam;
+import redis.clients.jedis.params.SetParams;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZIncrByParams;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,9 @@ public interface ICamelliaRedis {
 
     byte[] get(byte[] key);
 
-    String set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time);
+    // String set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time);
+
+
 
     Boolean exists(byte[] key);
 
@@ -227,7 +230,7 @@ public interface ICamelliaRedis {
 
     Long zremrangeByLex(byte[] key, byte[] min, byte[] max);
 
-    Long linsert(byte[] key, BinaryClient.LIST_POSITION where, byte[] pivot, byte[] value);
+    Long linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value);
 
     Long lpushx(byte[] key, byte[]... arg);
 
@@ -279,11 +282,15 @@ public interface ICamelliaRedis {
 
     String set(String key, String value);
 
-    String set(String key, String value, String nxxx, String expx, long time);
+//    String set(String key, String value, String nxxx, String expx, long time);
+//
+//    String set(String key, String value, String nxxx);
+//
+//    String set(byte[] key, byte[] value, byte[] nxxx);
 
-    String set(String key, String value, String nxxx);
+    String set(String key, String value, SetParams params);
 
-    String set(byte[] key, byte[] value, byte[] nxxx);
+    String set(byte[] key, byte[] value, SetParams params);
 
     String get(String key);
 
@@ -491,7 +498,7 @@ public interface ICamelliaRedis {
 
     Long zremrangeByLex(String key, String min, String max);
 
-    Long linsert(String key, BinaryClient.LIST_POSITION where, String pivot, String value);
+    Long linsert(String key, ListPosition where, String pivot, String value);
 
     Long lpushx(String key, String... string);
 

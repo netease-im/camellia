@@ -15,10 +15,11 @@ import com.netease.nim.camellia.redis.resource.*;
 import com.netease.nim.camellia.redis.util.CamelliaRedisInitializr;
 import com.netease.nim.camellia.redis.util.LogUtil;
 import redis.clients.jedis.*;
-import redis.clients.jedis.params.geo.GeoRadiusParam;
-import redis.clients.jedis.params.sortedset.ZAddParams;
-import redis.clients.jedis.params.sortedset.ZIncrByParams;
-import redis.clients.util.SafeEncoder;
+import redis.clients.jedis.params.GeoRadiusParam;
+import redis.clients.jedis.params.SetParams;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZIncrByParams;
+import redis.clients.jedis.util.SafeEncoder;
 
 import java.util.*;
 
@@ -178,18 +179,13 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     @Override
+    public String set(byte[] key, byte[] value, SetParams params) {
+        return factory.getProxy().set(key, value, params);
+    }
+
+    @Override
     public byte[] get(byte[] key) {
         return factory.getProxy().get(key);
-    }
-
-    @Override
-    public String set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time) {
-        return factory.getProxy().set(key, value, nxxx, expx, time);
-    }
-
-    @Override
-    public String set(byte[] key, byte[] value, byte[] nxxx) {
-        return factory.getProxy().set(key, value, nxxx);
     }
 
     @Override
@@ -703,7 +699,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     @Override
-    public Long linsert(byte[] key, BinaryClient.LIST_POSITION where, byte[] pivot, byte[] value) {
+    public Long linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value) {
         return factory.getProxy().linsert(key, where, pivot, value);
     }
 
@@ -833,13 +829,8 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     @Override
-    public String set(String key, String value, String nxxx, String expx, long time) {
-        return factory.getProxy().set(key, value, nxxx, expx, time);
-    }
-
-    @Override
-    public String set(String key, String value, String nxxx) {
-        return factory.getProxy().set(key, value, nxxx);
+    public String set(String key, String value, SetParams params) {
+        return factory.getProxy().set(key, value, params);
     }
 
     @Override
@@ -1358,7 +1349,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     @Override
-    public Long linsert(String key, BinaryClient.LIST_POSITION where, String pivot, String value) {
+    public Long linsert(String key, ListPosition where, String pivot, String value) {
         return factory.getProxy().linsert(key, where, pivot, value);
     }
 

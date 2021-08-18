@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.util;
 import com.netease.nim.camellia.core.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.util.SafeEncoder;
+import redis.clients.jedis.util.SafeEncoder;
 
 import java.util.Map;
 

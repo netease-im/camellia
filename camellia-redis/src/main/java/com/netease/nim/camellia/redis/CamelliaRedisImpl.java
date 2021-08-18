@@ -5,13 +5,14 @@ import com.netease.nim.camellia.core.client.annotation.ShadingParam;
 import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
-import com.netease.nim.camellia.redis.resource.*;
+import com.netease.nim.camellia.redis.resource.ResourceWrapper;
 import com.netease.nim.camellia.redis.util.CamelliaRedisInitializr;
 import com.netease.nim.camellia.redis.util.LogUtil;
 import redis.clients.jedis.*;
-import redis.clients.jedis.params.geo.GeoRadiusParam;
-import redis.clients.jedis.params.sortedset.ZAddParams;
-import redis.clients.jedis.params.sortedset.ZIncrByParams;
+import redis.clients.jedis.params.GeoRadiusParam;
+import redis.clients.jedis.params.SetParams;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZIncrByParams;
 
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,20 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
     public String set(@ShadingParam String key, String value) {
         LogUtil.debugLog(resource, key);
         return redis.set(key, value);
+    }
+
+    @WriteOp
+    @Override
+    public String set(@ShadingParam String key, String value, SetParams params) {
+        LogUtil.debugLog(resource, key);
+        return redis.set(key, value, params);
+    }
+
+    @WriteOp
+    @Override
+    public String set(@ShadingParam byte[] key, byte[] value, SetParams params) {
+        LogUtil.debugLog(resource, key);
+        return redis.set(key, value, params);
     }
 
     @ReadOp
@@ -787,7 +802,7 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
 
     @WriteOp
     @Override
-    public Long linsert(@ShadingParam String key, BinaryClient.LIST_POSITION where, String pivot, String value) {
+    public Long linsert(@ShadingParam String key, ListPosition where, String pivot, String value) {
         LogUtil.debugLog(resource, key);
         return redis.linsert(key, where, pivot, value);
     }
@@ -1042,13 +1057,6 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
     public Map<String, String> mget(@ShadingParam(type = ShadingParam.Type.Collection) String... keys) {
         LogUtil.debugLog(resource, keys);
         return redis.mget(keys);
-    }
-
-    @WriteOp
-    @Override
-    public String set(@ShadingParam byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time) {
-        LogUtil.debugLog(resource, key);
-        return redis.set(key, value, nxxx, expx, time);
     }
 
     @ReadOp
@@ -1767,7 +1775,7 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
 
     @WriteOp
     @Override
-    public Long linsert(@ShadingParam byte[] key, BinaryClient.LIST_POSITION where, byte[] pivot, byte[] value) {
+    public Long linsert(@ShadingParam byte[] key, ListPosition where, byte[] pivot, byte[] value) {
         LogUtil.debugLog(resource, key);
         return redis.linsert(key, where, pivot, value);
     }
@@ -1939,27 +1947,6 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
     public List<Long> bitfield(@ShadingParam byte[] key, byte[]... arguments) {
         LogUtil.debugLog(resource, key);
         return redis.bitfield(key, arguments);
-    }
-
-    @WriteOp
-    @Override
-    public String set(@ShadingParam String key, String value, String nxxx, String expx, long time) {
-        LogUtil.debugLog(resource, key);
-        return redis.set(key, value, nxxx, expx, time);
-    }
-
-    @WriteOp
-    @Override
-    public String set(@ShadingParam String key, String value, String nxxx) {
-        LogUtil.debugLog(resource, key);
-        return redis.set(key, value, nxxx);
-    }
-
-    @WriteOp
-    @Override
-    public String set(@ShadingParam byte[] key, byte[] value, byte[] nxxx) {
-        LogUtil.debugLog(resource, key);
-        return redis.set(key, value, nxxx);
     }
 
     @Override

@@ -3,7 +3,8 @@ package com.netease.nim.camellia.redis.toolkit.lock;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.util.SafeEncoder;
+import redis.clients.jedis.params.SetParams;
+import redis.clients.jedis.util.SafeEncoder;
 
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -127,7 +128,7 @@ public class CamelliaRedisLock {
         synchronized (lockObj) {
             try {
                 long timestamp = System.currentTimeMillis() + expireTimeoutMillis;
-                String set = template.set(lockKey, SafeEncoder.encode(lockId), SafeEncoder.encode("NX"), SafeEncoder.encode("PX"), expireTimeoutMillis);
+                String set = template.set(lockKey, SafeEncoder.encode(lockId), SetParams.setParams().nx().px(expireTimeoutMillis));
                 boolean ok = set != null && set.equalsIgnoreCase("ok");
                 if (ok) {
                     this.lockOk = true;

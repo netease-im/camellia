@@ -2,9 +2,10 @@ package com.netease.nim.camellia.redis.pipeline;
 
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import redis.clients.jedis.*;
-import redis.clients.jedis.params.geo.GeoRadiusParam;
-import redis.clients.jedis.params.sortedset.ZAddParams;
-import redis.clients.jedis.params.sortedset.ZIncrByParams;
+import redis.clients.jedis.params.GeoRadiusParam;
+import redis.clients.jedis.params.SetParams;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZIncrByParams;
 
 import java.util.List;
 import java.util.Map;
@@ -75,10 +76,22 @@ public class CamelliaRedisPipeline implements ICamelliaRedisPipeline {
         return pipeline.set(key, value);
     }
 
+//    @Override
+//    public Response<String> set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time) {
+//        check();
+//        return pipeline.set(key, value, nxxx, expx, time);
+//    }
+
     @Override
-    public Response<String> set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time) {
+    public Response<String> set(String key, String value, SetParams params) {
         check();
-        return pipeline.set(key, value, nxxx, expx, time);
+        return pipeline.set(key, value, params);
+    }
+
+    @Override
+    public Response<String> set(byte[] key, byte[] value, SetParams params) {
+        check();
+        return pipeline.set(key, value, params);
     }
 
     @Override
@@ -280,7 +293,7 @@ public class CamelliaRedisPipeline implements ICamelliaRedisPipeline {
     }
 
     @Override
-    public Response<Long> linsert(byte[] key, BinaryClient.LIST_POSITION where, byte[] pivot, byte[] value) {
+    public Response<Long> linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value) {
         check();
         return pipeline.linsert(key, where, pivot, value);
     }
@@ -994,7 +1007,7 @@ public class CamelliaRedisPipeline implements ICamelliaRedisPipeline {
     }
 
     @Override
-    public Response<Long> linsert(String key, BinaryClient.LIST_POSITION where, String pivot, String value) {
+    public Response<Long> linsert(String key, ListPosition where, String pivot, String value) {
         check();
         return pipeline.linsert(key, where, pivot, value);
     }
@@ -1510,23 +1523,23 @@ public class CamelliaRedisPipeline implements ICamelliaRedisPipeline {
         return pipeline.incrByFloat(key, increment);
     }
 
-    @Override
-    public Response<String> set(String key, String value, String nxxx) {
-        check();
-        return pipeline.set(key, value, nxxx);
-    }
-
-    @Override
-    public Response<String> set(byte[] key, byte[] value, byte[] nxxx) {
-        check();
-        return pipeline.set(key, value, nxxx);
-    }
-
-    @Override
-    public Response<String> set(String key, String value, String nxxx, String expx, int time) {
-        check();
-        return pipeline.set(key, value, nxxx, expx, time);
-    }
+//    @Override
+//    public Response<String> set(String key, String value, String nxxx) {
+//        check();
+//        return pipeline.set(key, value, nxxx);
+//    }
+//
+//    @Override
+//    public Response<String> set(byte[] key, byte[] value, byte[] nxxx) {
+//        check();
+//        return pipeline.set(key, value, nxxx);
+//    }
+//
+//    @Override
+//    public Response<String> set(String key, String value, String nxxx, String expx, int time) {
+//        check();
+//        return pipeline.set(key, value, nxxx, expx, time);
+//    }
 
     @Override
     public Response<String> psetex(String key, long milliseconds, String value) {

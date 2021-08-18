@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.pipeline;
 
 import com.netease.nim.camellia.redis.CamelliaRedisEnv;
 
-import java.util.concurrent.*;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * PipelinePool，从而可以复用pipeline，减少重新生成pipeline代理对象的开销

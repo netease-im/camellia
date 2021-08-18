@@ -4,12 +4,10 @@ import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
 import redis.clients.jedis.*;
-import redis.clients.jedis.params.geo.GeoRadiusParam;
-import redis.clients.jedis.params.sortedset.ZAddParams;
-import redis.clients.jedis.params.sortedset.ZIncrByParams;
-import redis.clients.util.Pool;
-
-import redis.clients.util.Slowlog;
+import redis.clients.jedis.commands.ProtocolCommand;
+import redis.clients.jedis.params.*;
+import redis.clients.jedis.util.Pool;
+import redis.clients.jedis.util.Slowlog;
 
 import java.util.List;
 import java.util.Map;
@@ -85,10 +83,16 @@ public class JedisCamelliaAdaptor extends Jedis {
         return template.set(key, value);
     }
 
+//    @Override
+//    public String set(String key, String value, String nxxx, String expx, long time) {
+//        check();
+//        return template.set(key, value, nxxx, expx, time);
+//    }
+
     @Override
-    public String set(String key, String value, String nxxx, String expx, long time) {
+    public String set(String key, String value, SetParams params) {
         check();
-        return template.set(key, value, nxxx, expx, time);
+        return template.set(key, value, params);
     }
 
     @Override
@@ -704,7 +708,7 @@ public class JedisCamelliaAdaptor extends Jedis {
     }
 
     @Override
-    public Long linsert(String key, BinaryClient.LIST_POSITION where, String pivot, String value) {
+    public Long linsert(String key, ListPosition where, String pivot, String value) {
         check();
         return template.linsert(key, where, pivot, value);
     }
@@ -811,11 +815,11 @@ public class JedisCamelliaAdaptor extends Jedis {
         return template.restore(key, ttl, serializedValue);
     }
 
-    @Override
-    public Long pexpire(String key, int milliseconds) {
-        check();
-        return template.pexpire(key, milliseconds);
-    }
+//    @Override
+//    public Long pexpire(String key, int milliseconds) {
+//        check();
+//        return template.pexpire(key, milliseconds);
+//    }
 
     @Override
     public Long pexpire(String key, long milliseconds) {
@@ -835,11 +839,11 @@ public class JedisCamelliaAdaptor extends Jedis {
         return template.pttl(key);
     }
 
-    @Override
-    public String psetex(String key, int milliseconds, String value) {
-        check();
-        return template.psetex(key, milliseconds, value);
-    }
+//    @Override
+//    public String psetex(String key, int milliseconds, String value) {
+//        check();
+//        return template.psetex(key, milliseconds, value);
+//    }
 
     @Override
     public String psetex(String key, long milliseconds, String value) {
@@ -847,53 +851,55 @@ public class JedisCamelliaAdaptor extends Jedis {
         return template.psetex(key, milliseconds, value);
     }
 
-    @Override
-    public String set(String key, String value, String nxxx) {
-        check();
-        return template.set(key, value, nxxx);
-    }
+//    @Override
+//    public String set(String key, String value, String nxxx) {
+//        check();
+//        return template.set(key, value, nxxx);
+//    }
+//
+//    @Override
+//    public String set(String key, String value, String nxxx, String expx, int time) {
+//        check();
+//        return template.set(key, value, nxxx, expx, time);
+//    }
 
-    @Override
-    public String set(String key, String value, String nxxx, String expx, int time) {
-        check();
-        return template.set(key, value, nxxx, expx, time);
-    }
 
-    @Override
-    public ScanResult<Map.Entry<String, String>> hscan(String key, int cursor) {
-        check();
-        return template.hscan(key, String.valueOf(cursor));
-    }
 
-    @Override
-    public ScanResult<Map.Entry<String, String>> hscan(String key, int cursor, ScanParams params) {
-        check();
-        return template.hscan(key, String.valueOf(cursor), params);
-    }
+//    @Override
+//    public ScanResult<Map.Entry<String, String>> hscan(String key, String cursor) {
+//        check();
+//        return template.hscan(key, cursor);
+//    }
+//
+//    @Override
+//    public ScanResult<Map.Entry<String, String>> hscan(String key, String cursor, ScanParams params) {
+//        check();
+//        return template.hscan(key, cursor, params);
+//    }
 
-    @Override
-    public ScanResult<String> sscan(String key, int cursor) {
-        check();
-        return template.sscan(key, String.valueOf(cursor));
-    }
-
-    @Override
-    public ScanResult<String> sscan(String key, int cursor, ScanParams params) {
-        check();
-        return template.sscan(key, String.valueOf(cursor), params);
-    }
-
-    @Override
-    public ScanResult<Tuple> zscan(String key, int cursor) {
-        check();
-        return template.zscan(key, String.valueOf(cursor));
-    }
-
-    @Override
-    public ScanResult<Tuple> zscan(String key, int cursor, ScanParams params) {
-        check();
-        return template.zscan(key, String.valueOf(cursor), params);
-    }
+//    @Override
+//    public ScanResult<String> sscan(String key, int cursor) {
+//        check();
+//        return template.sscan(key, String.valueOf(cursor));
+//    }
+//
+//    @Override
+//    public ScanResult<String> sscan(String key, int cursor, ScanParams params) {
+//        check();
+//        return template.sscan(key, String.valueOf(cursor), params);
+//    }
+//
+//    @Override
+//    public ScanResult<Tuple> zscan(String key, int cursor) {
+//        check();
+//        return template.zscan(key, String.valueOf(cursor));
+//    }
+//
+//    @Override
+//    public ScanResult<Tuple> zscan(String key, int cursor, ScanParams params) {
+//        check();
+//        return template.zscan(key, String.valueOf(cursor), params);
+//    }
 
     @Override
     public ScanResult<Map.Entry<String, String>> hscan(String key, String cursor) {
@@ -1015,11 +1021,11 @@ public class JedisCamelliaAdaptor extends Jedis {
         return template.set(key, value);
     }
 
-    @Override
-    public String set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time) {
-        check();
-        return template.set(key, value, nxxx, expx, time);
-    }
+//    @Override
+//    public String set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time) {
+//        check();
+//        return template.set(key, value, nxxx, expx, time);
+//    }
 
     @Override
     public byte[] get(byte[] key) {
@@ -1634,7 +1640,7 @@ public class JedisCamelliaAdaptor extends Jedis {
     }
 
     @Override
-    public Long linsert(byte[] key, BinaryClient.LIST_POSITION where, byte[] pivot, byte[] value) {
+    public Long linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value) {
         check();
         return template.linsert(key, where, pivot, value);
     }
@@ -1747,11 +1753,6 @@ public class JedisCamelliaAdaptor extends Jedis {
         return template.restore(key, ttl, serializedValue);
     }
 
-    @Override
-    public Long pexpire(byte[] key, int milliseconds) {
-        check();
-        return template.pexpire(key, milliseconds);
-    }
 
     @Override
     public Long pexpire(byte[] key, long milliseconds) {
@@ -1772,27 +1773,9 @@ public class JedisCamelliaAdaptor extends Jedis {
     }
 
     @Override
-    public String psetex(byte[] key, int milliseconds, byte[] value) {
-        check();
-        return template.psetex(key, milliseconds, value);
-    }
-
-    @Override
     public String psetex(byte[] key, long milliseconds, byte[] value) {
         check();
         return template.psetex(key, milliseconds, value);
-    }
-
-    @Override
-    public String set(byte[] key, byte[] value, byte[] nxxx) {
-        check();
-        return template.set(key, value, nxxx);
-    }
-
-    @Override
-    public String set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, int time) {
-        check();
-        return template.set(key, value, nxxx, expx, time);
     }
 
     @Override
@@ -1971,11 +1954,6 @@ public class JedisCamelliaAdaptor extends Jedis {
     }
 
     @Override
-    public List<Object> multi(TransactionBlock jedisTransaction) {
-        throw new UnsupportedOperationException("not support");
-    }
-
-    @Override
     protected void checkIsInMultiOrPipeline() {
         throw new UnsupportedOperationException("not support");
     }
@@ -2057,11 +2035,6 @@ public class JedisCamelliaAdaptor extends Jedis {
 
     @Override
     public List<String> time() {
-        throw new UnsupportedOperationException("not support");
-    }
-
-    @Override
-    public String migrate(byte[] host, int port, byte[] key, int destinationDb, int timeout) {
         throw new UnsupportedOperationException("not support");
     }
 
@@ -2156,8 +2129,8 @@ public class JedisCamelliaAdaptor extends Jedis {
     }
 
     @Override
-    public Long getDB() {
-        return 0L;
+    public int getDB() {
+        return 0;
     }
 
     @Override
@@ -2239,16 +2212,6 @@ public class JedisCamelliaAdaptor extends Jedis {
 
     @Override
     public List<String> brpop(String... args) {
-        throw new UnsupportedOperationException("not support");
-    }
-
-    @Override
-    public List<String> blpop(String arg) {
-        throw new UnsupportedOperationException("not support");
-    }
-
-    @Override
-    public List<String> brpop(String arg) {
         throw new UnsupportedOperationException("not support");
     }
 
@@ -2442,17 +2405,6 @@ public class JedisCamelliaAdaptor extends Jedis {
     }
 
     @Override
-    public ScanResult<String> scan(int cursor) {
-        throw new UnsupportedOperationException("not support");
-    }
-
-    @Override
-    public ScanResult<String> scan(int cursor, ScanParams params) {
-        throw new UnsupportedOperationException("not support");
-    }
-
-
-    @Override
     public ScanResult<String> scan(String cursor) {
         throw new UnsupportedOperationException("not support");
     }
@@ -2611,16 +2563,6 @@ public class JedisCamelliaAdaptor extends Jedis {
     }
 
     @Override
-    public List<byte[]> blpop(byte[] arg) {
-        throw new UnsupportedOperationException("not support");
-    }
-
-    @Override
-    public List<byte[]> brpop(byte[] arg) {
-        throw new UnsupportedOperationException("not support");
-    }
-
-    @Override
     public List<byte[]> blpop(byte[]... args) {
         throw new UnsupportedOperationException("not support");
     }
@@ -2634,13 +2576,6 @@ public class JedisCamelliaAdaptor extends Jedis {
     public String auth(String password) {
         throw new UnsupportedOperationException("not support");
     }
-
-    @Override
-    public List<Object> pipelined(PipelineBlock jedisPipeline) {
-        throw new UnsupportedOperationException("not support");
-    }
-
-
 
     @Override
     public String clusterNodes() {
@@ -2658,7 +2593,7 @@ public class JedisCamelliaAdaptor extends Jedis {
     }
 
     @Override
-    public String clusterReset(JedisCluster.Reset resetType) {
+    public String clusterReset(ClusterReset resetType) {
         throw new UnsupportedOperationException("not support");
     }
 
@@ -2768,11 +2703,6 @@ public class JedisCamelliaAdaptor extends Jedis {
     }
 
     @Override
-    public void setDataSource(Pool<Jedis> jedisPool) {
-        throw new UnsupportedOperationException("not support");
-    }
-
-    @Override
     public void connect() {
         throw new UnsupportedOperationException("not support");
     }
@@ -2790,5 +2720,381 @@ public class JedisCamelliaAdaptor extends Jedis {
     @Override
     public boolean isConnected() {
         throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public String ping(String message) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public Long unlink(String... keys) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public Long unlink(String key) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public Long touch(String... keys) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public Long touch(String key) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public Long hset(String key, Map<String, String> hash) {
+        // TODO 这里可以考虑直接使用for循环代替
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public String restoreReplace(String key, int ttl, byte[] serializedValue) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public String migrate(String host, int port, int destinationDB, int timeout, MigrateParams params, String... keys) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public void setDataSource(JedisPoolAbstract jedisPool) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public List<GeoRadiusResponse> georadiusReadonly(String key, double longitude, double latitude, double radius, GeoUnit unit) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public List<GeoRadiusResponse> georadiusReadonly(String key, double longitude, double latitude, double radius, GeoUnit unit, GeoRadiusParam param) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public List<GeoRadiusResponse> georadiusByMemberReadonly(String key, String member, double radius, GeoUnit unit) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public List<GeoRadiusResponse> georadiusByMemberReadonly(String key, String member, double radius, GeoUnit unit, GeoRadiusParam param) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public String moduleLoad(String path) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public String moduleUnload(String name) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public List<Module> moduleList() {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public Long hstrlen(String key, String field) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public String memoryDoctor() {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public StreamEntryID xadd(String key, StreamEntryID id, Map<String, String> hash) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public StreamEntryID xadd(String key, StreamEntryID id, Map<String, String> hash, long maxLen, boolean approximateLength) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public Long xlen(String key) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public List<StreamEntry> xrange(String key, StreamEntryID start, StreamEntryID end, int count) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public List<StreamEntry> xrevrange(String key, StreamEntryID end, StreamEntryID start, int count) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public List<Map.Entry<String, List<StreamEntry>>> xread(int count, long block, Map.Entry<String, StreamEntryID>... streams) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public long xack(String key, String group, StreamEntryID... ids) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public String xgroupCreate(String key, String groupname, StreamEntryID id, boolean makeStream) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public String xgroupSetID(String key, String groupname, StreamEntryID id) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public long xgroupDestroy(String key, String groupname) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public String xgroupDelConsumer(String key, String groupname, String consumerName) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public long xdel(String key, StreamEntryID... ids) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public long xtrim(String key, long maxLen, boolean approximateLength) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public List<Map.Entry<String, List<StreamEntry>>> xreadGroup(String groupname, String consumer, int count, long block, boolean noAck, Map.Entry<String, StreamEntryID>... streams) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public List<StreamPendingEntry> xpending(String key, String groupname, StreamEntryID start, StreamEntryID end, int count, String consumername) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public List<StreamEntry> xclaim(String key, String group, String consumername, long minIdleTime, long newIdleTime, int retries, boolean force, StreamEntryID... ids) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public Object sendCommand(ProtocolCommand cmd, String... args) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public byte[] ping(byte[] message) {
+        return super.ping(message);
+    }
+
+    @Override
+    public String set(byte[] key, byte[] value, SetParams params) {
+        return super.set(key, value, params);
+    }
+
+    @Override
+    public Long unlink(byte[]... keys) {
+        return super.unlink(keys);
+    }
+
+    @Override
+    public Long unlink(byte[] key) {
+        return super.unlink(key);
+    }
+
+    @Override
+    public Long touch(byte[]... keys) {
+        return super.touch(keys);
+    }
+
+    @Override
+    public Long touch(byte[] key) {
+        return super.touch(key);
+    }
+
+    @Override
+    public String swapDB(int index1, int index2) {
+        return super.swapDB(index1, index2);
+    }
+
+    @Override
+    public Long hset(byte[] key, Map<byte[], byte[]> hash) {
+        return super.hset(key, hash);
+    }
+
+    @Override
+    public String configRewrite() {
+        return super.configRewrite();
+    }
+
+    @Override
+    public String restoreReplace(byte[] key, int ttl, byte[] serializedValue) {
+        return super.restoreReplace(key, ttl, serializedValue);
+    }
+
+    @Override
+    public byte[] memoryDoctorBinary() {
+        return super.memoryDoctorBinary();
+    }
+
+    @Override
+    public String clientKill(String ip, int port) {
+        return super.clientKill(ip, port);
+    }
+
+    @Override
+    public Long clientKill(ClientKillParams params) {
+        return super.clientKill(params);
+    }
+
+    @Override
+    public byte[] clientGetnameBinary() {
+        return super.clientGetnameBinary();
+    }
+
+    @Override
+    public byte[] clientListBinary() {
+        return super.clientListBinary();
+    }
+
+    @Override
+    public String clientPause(long timeout) {
+        return super.clientPause(timeout);
+    }
+
+    @Override
+    public String migrate(String host, int port, byte[] key, int destinationDb, int timeout) {
+        return super.migrate(host, port, key, destinationDb, timeout);
+    }
+
+    @Override
+    public String migrate(String host, int port, int destinationDB, int timeout, MigrateParams params, byte[]... keys) {
+        return super.migrate(host, port, destinationDB, timeout, params, keys);
+    }
+
+    @Override
+    public List<GeoRadiusResponse> georadiusReadonly(byte[] key, double longitude, double latitude, double radius, GeoUnit unit) {
+        return super.georadiusReadonly(key, longitude, latitude, radius, unit);
+    }
+
+    @Override
+    public List<GeoRadiusResponse> georadiusReadonly(byte[] key, double longitude, double latitude, double radius, GeoUnit unit, GeoRadiusParam param) {
+        return super.georadiusReadonly(key, longitude, latitude, radius, unit, param);
+    }
+
+    @Override
+    public List<GeoRadiusResponse> georadiusByMemberReadonly(byte[] key, byte[] member, double radius, GeoUnit unit) {
+        return super.georadiusByMemberReadonly(key, member, radius, unit);
+    }
+
+    @Override
+    public List<GeoRadiusResponse> georadiusByMemberReadonly(byte[] key, byte[] member, double radius, GeoUnit unit, GeoRadiusParam param) {
+        return super.georadiusByMemberReadonly(key, member, radius, unit, param);
+    }
+
+    @Override
+    public Long hstrlen(byte[] key, byte[] field) {
+        return super.hstrlen(key, field);
+    }
+
+    @Override
+    public List<byte[]> xread(int count, long block, Map<byte[], byte[]> streams) {
+        return super.xread(count, block, streams);
+    }
+
+    @Override
+    public List<byte[]> xreadGroup(byte[] groupname, byte[] consumer, int count, long block, boolean noAck, Map<byte[], byte[]> streams) {
+        return super.xreadGroup(groupname, consumer, count, block, noAck, streams);
+    }
+
+    @Override
+    public byte[] xadd(byte[] key, byte[] id, Map<byte[], byte[]> hash, long maxLen, boolean approximateLength) {
+        return super.xadd(key, id, hash, maxLen, approximateLength);
+    }
+
+    @Override
+    public Long xlen(byte[] key) {
+        return super.xlen(key);
+    }
+
+    @Override
+    public List<byte[]> xrange(byte[] key, byte[] start, byte[] end, long count) {
+        return super.xrange(key, start, end, count);
+    }
+
+    @Override
+    public List<byte[]> xrevrange(byte[] key, byte[] end, byte[] start, int count) {
+        return super.xrevrange(key, end, start, count);
+    }
+
+    @Override
+    public Long xack(byte[] key, byte[] group, byte[]... ids) {
+        return super.xack(key, group, ids);
+    }
+
+    @Override
+    public String xgroupCreate(byte[] key, byte[] consumer, byte[] id, boolean makeStream) {
+        return super.xgroupCreate(key, consumer, id, makeStream);
+    }
+
+    @Override
+    public String xgroupSetID(byte[] key, byte[] consumer, byte[] id) {
+        return super.xgroupSetID(key, consumer, id);
+    }
+
+    @Override
+    public Long xgroupDestroy(byte[] key, byte[] consumer) {
+        return super.xgroupDestroy(key, consumer);
+    }
+
+    @Override
+    public String xgroupDelConsumer(byte[] key, byte[] consumer, byte[] consumerName) {
+        return super.xgroupDelConsumer(key, consumer, consumerName);
+    }
+
+    @Override
+    public Long xdel(byte[] key, byte[]... ids) {
+        return super.xdel(key, ids);
+    }
+
+    @Override
+    public Long xtrim(byte[] key, long maxLen, boolean approximateLength) {
+        return super.xtrim(key, maxLen, approximateLength);
+    }
+
+    @Override
+    public List<byte[]> xpending(byte[] key, byte[] groupname, byte[] start, byte[] end, int count, byte[] consumername) {
+        return super.xpending(key, groupname, start, end, count, consumername);
+    }
+
+    @Override
+    public List<byte[]> xclaim(byte[] key, byte[] groupname, byte[] consumername, long minIdleTime, long newIdleTime, int retries, boolean force, byte[][] ids) {
+        return super.xclaim(key, groupname, consumername, minIdleTime, newIdleTime, retries, force, ids);
+    }
+
+    @Override
+    public Object sendCommand(ProtocolCommand cmd, byte[]... args) {
+        return super.sendCommand(cmd, args);
+    }
+
+    @Override
+    public Object sendCommand(ProtocolCommand cmd) {
+        return super.sendCommand(cmd);
     }
 }

@@ -26,7 +26,7 @@ public interface JedisClusterFactory {
     /**
      * 一个默认实现
      */
-    JedisClusterFactory DEFAULT = new JedisClusterFactory.DefaultJedisClusterFactory();
+    JedisClusterFactory DEFAULT = new DefaultJedisClusterFactory();
 
     /**
      * 一个默认实现

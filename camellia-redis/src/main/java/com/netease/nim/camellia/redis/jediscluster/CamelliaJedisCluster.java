@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.redis.jediscluster;
 
 
-import com.netease.nim.camellia.redis.ICamelliaRedis;
 import com.netease.nim.camellia.redis.CamelliaRedisEnv;
+import com.netease.nim.camellia.redis.ICamelliaRedis;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.resource.RedisClusterResource;
 import com.netease.nim.camellia.redis.util.CloseUtil;
@@ -11,13 +11,17 @@ import redis.clients.jedis.exceptions.JedisAskDataException;
 import redis.clients.jedis.exceptions.JedisClusterException;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisMovedDataException;
-import redis.clients.jedis.params.geo.GeoRadiusParam;
-import redis.clients.jedis.params.sortedset.ZAddParams;
-import redis.clients.jedis.params.sortedset.ZIncrByParams;
-import redis.clients.util.SafeEncoder;
+import redis.clients.jedis.params.GeoRadiusParam;
+import redis.clients.jedis.params.SetParams;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZIncrByParams;
+import redis.clients.jedis.util.SafeEncoder;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * 封装了JedisCluster的接口
@@ -48,34 +52,20 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
         return jedisCluster.get(key);
     }
 
+
     @Override
-    public String set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time) {
-        return jedisCluster.set(key, value, nxxx, expx, time);
+    public String set(String key, String value, SetParams params) {
+        return jedisCluster.set(key, value, params);
+    }
+
+    @Override
+    public String set(byte[] key, byte[] value, SetParams params) {
+        return jedisCluster.set(key, value, params);
     }
 
     @Override
     public String set(String key, String value) {
         return jedisCluster.set(key, value);
-    }
-
-    @Override
-    public String set(String key, String value, String nxxx, String expx, long time) {
-        return jedisCluster.set(key, value, nxxx, expx, time);
-    }
-
-    @Override
-    public String set(String key, String value, String nxxx) {
-        return jedisCluster.set(key, value, nxxx);
-    }
-
-    @Override
-    public String set(final byte[] key, final byte[] value, final byte[] nxxx) {
-        return new JedisClusterCommand<String>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
-            @Override
-            public String execute(Jedis connection) {
-                return connection.set(key, value, nxxx);
-            }
-        }.runBinary(key);
     }
 
     @Override
@@ -239,8 +229,13 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     }
 
     @Override
-    public Double hincrByFloat(String key, String field, double value) {
-        return jedisCluster.hincrByFloat(key, field, value);
+    public Double hincrByFloat(final String key, final String field, final double value) {
+        return new JedisClusterCommand<Double>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public Double execute(Jedis connection) {
+                return connection.hincrByFloat(key, field, value);
+            }
+        }.run(key);
     }
 
     @Override
@@ -594,7 +589,7 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     }
 
     @Override
-    public Long linsert(String key, BinaryClient.LIST_POSITION where, String pivot, String value) {
+    public Long linsert(String key, ListPosition where, String pivot, String value) {
         return jedisCluster.linsert(key, where, pivot, value);
     }
 
@@ -629,8 +624,13 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     }
 
     @Override
-    public Long bitpos(String key, boolean value) {
-        return jedisCluster.bitpos(key, value);
+    public Long bitpos(final String key, final boolean value) {
+        return new JedisClusterCommand<Long>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public Long execute(Jedis connection) {
+                return connection.bitpos(key, value);
+            }
+        }.run(key);
     }
 
     @Override
@@ -654,8 +654,13 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     }
 
     @Override
-    public Long bitpos(String key, boolean value, BitPosParams params) {
-        return jedisCluster.bitpos(key, value, params);
+    public Long bitpos(final String key, final boolean value, final BitPosParams params) {
+        return new JedisClusterCommand<Long>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public Long execute(Jedis connection) {
+                return connection.bitpos(key, value, params);
+            }
+        }.run(key);
     }
 
     @Override
@@ -664,8 +669,13 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     }
 
     @Override
-    public ScanResult<Map.Entry<String, String>> hscan(String key, String cursor, ScanParams params) {
-        return jedisCluster.hscan(key, cursor, params);
+    public ScanResult<Map.Entry<String, String>> hscan(final String key, final String cursor, final ScanParams params) {
+        return new JedisClusterCommand<ScanResult<Map.Entry<String, String>>>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public ScanResult<Map.Entry<String, String>> execute(Jedis connection) {
+                return connection.hscan(key, cursor, params);
+            }
+        }.run(key);
     }
 
     @Override
@@ -674,8 +684,13 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     }
 
     @Override
-    public ScanResult<String> sscan(String key, String cursor, ScanParams params) {
-        return jedisCluster.sscan(key, cursor, params);
+    public ScanResult<String> sscan(final String key, final String cursor, final ScanParams params) {
+        return new JedisClusterCommand<ScanResult<String>>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public ScanResult<String> execute(Jedis connection) {
+                return connection.sscan(key, cursor, params);
+            }
+        }.run(key);
     }
 
     @Override
@@ -684,8 +699,13 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     }
 
     @Override
-    public ScanResult<Tuple> zscan(String key, String cursor, ScanParams params) {
-        return jedisCluster.zscan(key, cursor, params);
+    public ScanResult<Tuple> zscan(final String key, final String cursor, final ScanParams params) {
+        return new JedisClusterCommand<ScanResult<Tuple>>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public ScanResult<Tuple> execute(Jedis connection) {
+                return connection.zscan(key, cursor, params);
+            }
+        }.run(key);
     }
 
     @Override
@@ -1712,7 +1732,7 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     }
 
     @Override
-    public Long linsert(byte[] key, BinaryClient.LIST_POSITION where, byte[] pivot, byte[] value) {
+    public Long linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value) {
         return jedisCluster.linsert(key, where, pivot, value);
     }
 

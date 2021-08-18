@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.jediscluster;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.*;
-import redis.clients.util.JedisClusterCRC16;
+import redis.clients.jedis.util.JedisClusterCRC16;
 
 import java.lang.reflect.Field;
 import java.util.Set;

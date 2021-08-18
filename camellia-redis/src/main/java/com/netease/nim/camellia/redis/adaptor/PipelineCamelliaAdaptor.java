@@ -2,11 +2,11 @@ package com.netease.nim.camellia.redis.adaptor;
 
 import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
 import redis.clients.jedis.*;
-import redis.clients.jedis.params.geo.GeoRadiusParam;
-import redis.clients.jedis.params.sortedset.ZAddParams;
-import redis.clients.jedis.params.sortedset.ZIncrByParams;
+import redis.clients.jedis.params.GeoRadiusParam;
+import redis.clients.jedis.params.SetParams;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZIncrByParams;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -325,12 +325,12 @@ public class PipelineCamelliaAdaptor extends Pipeline {
     }
 
     @Override
-    public Response<Long> linsert(String key, BinaryClient.LIST_POSITION where, String pivot, String value) {
+    public Response<Long> linsert(String key, ListPosition where, String pivot, String value) {
         return pipeline.linsert(key, where, pivot, value);
     }
 
     @Override
-    public Response<Long> linsert(byte[] key, BinaryClient.LIST_POSITION where, byte[] pivot, byte[] value) {
+    public Response<Long> linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value) {
         return pipeline.linsert(key, where, pivot, value);
     }
 
@@ -413,8 +413,6 @@ public class PipelineCamelliaAdaptor extends Pipeline {
     public Response<String> ltrim(byte[] key, long start, long stop) {
         return pipeline.ltrim(key, start, stop);
     }
-
-
 
     @Override
     public Response<Long> persist(String key) {
@@ -1106,15 +1104,15 @@ public class PipelineCamelliaAdaptor extends Pipeline {
         return pipeline.dump(key);
     }
 
-    @Override
-    public Response<Long> pexpire(String key, int milliseconds) {
-        return pipeline.pexpire(key, milliseconds);
-    }
-
-    @Override
-    public Response<Long> pexpire(byte[] key, int milliseconds) {
-        return pipeline.pexpire(key, milliseconds);
-    }
+//    @Override
+//    public Response<Long> pexpire(String key, int milliseconds) {
+//        return pipeline.pexpire(key, milliseconds);
+//    }
+//
+//    @Override
+//    public Response<Long> pexpire(byte[] key, int milliseconds) {
+//        return pipeline.pexpire(key, milliseconds);
+//    }
 
     @Override
     public Response<Long> pexpire(String key, long milliseconds) {
@@ -1166,15 +1164,15 @@ public class PipelineCamelliaAdaptor extends Pipeline {
         return pipeline.incrByFloat(key, increment);
     }
 
-    @Override
-    public Response<String> psetex(String key, int milliseconds, String value) {
-        return pipeline.psetex(key, milliseconds, value);
-    }
-
-    @Override
-    public Response<String> psetex(byte[] key, int milliseconds, byte[] value) {
-        return pipeline.psetex(key, milliseconds, value);
-    }
+//    @Override
+//    public Response<String> psetex(String key, int milliseconds, String value) {
+//        return pipeline.psetex(key, milliseconds, value);
+//    }
+//
+//    @Override
+//    public Response<String> psetex(byte[] key, int milliseconds, byte[] value) {
+//        return pipeline.psetex(key, milliseconds, value);
+//    }
 
     @Override
     public Response<String> psetex(String key, long milliseconds, String value) {
@@ -1187,24 +1185,34 @@ public class PipelineCamelliaAdaptor extends Pipeline {
     }
 
     @Override
-    public Response<String> set(String key, String value, String nxxx) {
-        return pipeline.set(key, value, nxxx);
+    public Response<String> set(String key, String value, SetParams params) {
+        return pipeline.set(key, value, params);
     }
 
     @Override
-    public Response<String> set(byte[] key, byte[] value, byte[] nxxx) {
-        return pipeline.set(key, value, nxxx);
+    public Response<String> set(byte[] key, byte[] value, SetParams params) {
+        return pipeline.set(key, value, params);
     }
 
-    @Override
-    public Response<String> set(String key, String value, String nxxx, String expx, int time) {
-        return pipeline.set(key, value, nxxx, expx, time);
-    }
-
-    @Override
-    public Response<String> set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, int time) {
-        return pipeline.set(key, value, nxxx, expx, time);
-    }
+//    @Override
+//    public Response<String> set(String key, String value, String nxxx) {
+//        return pipeline.set(key, value, nxxx);
+//    }
+//
+//    @Override
+//    public Response<String> set(byte[] key, byte[] value, byte[] nxxx) {
+//        return pipeline.set(key, value, nxxx);
+//    }
+//
+//    @Override
+//    public Response<String> set(String key, String value, String nxxx, String expx, int time) {
+//        return pipeline.set(key, value, nxxx, expx, time);
+//    }
+//
+//    @Override
+//    public Response<String> set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, int time) {
+//        return pipeline.set(key, value, nxxx, expx, time);
+//    }
 
     @Override
     public Response<Double> hincrByFloat(String key, String field, double increment) {
@@ -1913,7 +1921,7 @@ public class PipelineCamelliaAdaptor extends Pipeline {
     }
 
     @Override
-    public Response<Long> getrange(byte[] key, long startOffset, long endOffset) {
+    public Response<byte[]> getrange(byte[] key, long startOffset, long endOffset) {
         //这里是因为jedis自己的bug，回包应该是Response<byte[]>
         throw new UnsupportedOperationException("not support");
     }
@@ -1978,10 +1986,12 @@ public class PipelineCamelliaAdaptor extends Pipeline {
         throw new UnsupportedOperationException("not support");
     }
 
-    @Override
-    public Response<String> migrate(byte[] host, int port, byte[] key, int destinationDb, int timeout) {
-        throw new UnsupportedOperationException("not support");
-    }
+//    @Override
+//    public Response<String> migrate(byte[] host, int port, byte[] key, int destinationDb, int timeout) {
+//        throw new UnsupportedOperationException("not support");
+//    }
+
+
 
     @Override
     public Response<Long> objectRefcount(String key) {
@@ -1989,32 +1999,32 @@ public class PipelineCamelliaAdaptor extends Pipeline {
     }
 
     @Override
-    public Response<String> eval(String script) {
+    public Response<Object> eval(String script) {
         throw new UnsupportedOperationException("not support");
     }
 
     @Override
-    public Response<String> eval(String script, List<String> keys, List<String> args) {
+    public Response<Object> eval(String script, List<String> keys, List<String> args) {
         throw new UnsupportedOperationException("not support");
     }
 
     @Override
-    public Response<String> eval(String script, int numKeys, String... args) {
+    public Response<Object> eval(String script, int numKeys, String... args) {
         throw new UnsupportedOperationException("not support");
     }
 
     @Override
-    public Response<String> evalsha(String script) {
+    public Response<Object> evalsha(String script) {
         throw new UnsupportedOperationException("not support");
     }
 
     @Override
-    public Response<String> evalsha(String sha1, List<String> keys, List<String> args) {
+    public Response<Object> evalsha(String sha1, List<String> keys, List<String> args) {
         throw new UnsupportedOperationException("not support");
     }
 
     @Override
-    public Response<String> evalsha(String sha1, int numKeys, String... args) {
+    public Response<Object> evalsha(String sha1, int numKeys, String... args) {
         throw new UnsupportedOperationException("not support");
     }
 

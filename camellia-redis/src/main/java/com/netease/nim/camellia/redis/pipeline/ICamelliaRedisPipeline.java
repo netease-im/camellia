@@ -1,9 +1,10 @@
 package com.netease.nim.camellia.redis.pipeline;
 
 import redis.clients.jedis.*;
-import redis.clients.jedis.params.geo.GeoRadiusParam;
-import redis.clients.jedis.params.sortedset.ZAddParams;
-import redis.clients.jedis.params.sortedset.ZIncrByParams;
+import redis.clients.jedis.params.GeoRadiusParam;
+import redis.clients.jedis.params.SetParams;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZIncrByParams;
 
 import java.io.Closeable;
 import java.util.List;
@@ -86,7 +87,7 @@ public interface ICamelliaRedisPipeline extends Closeable {
 
     Response<byte[]> lindex(byte[] key, long index);
 
-    Response<Long> linsert(byte[] key, BinaryClient.LIST_POSITION where, byte[] pivot, byte[] value);
+    Response<Long> linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value);
 
     Response<Long> llen(byte[] key);
 
@@ -118,13 +119,17 @@ public interface ICamelliaRedisPipeline extends Closeable {
 
     Response<String> set(byte[] key, byte[] value);
 
-    Response<String> set(String key, String value, String nxxx);
+    Response<String> set(String key, String value, SetParams params);
 
-    Response<String> set(byte[] key, byte[] value, byte[] nxxx);
+    Response<String> set(byte[] key, byte[] value, SetParams params);
 
-    Response<String> set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time);
-
-    Response<String> set(String key, String value, String nxxx, String expx, int time);
+//    Response<String> set(String key, String value, String nxxx);
+//
+//    Response<String> set(byte[] key, byte[] value, byte[] nxxx);
+//
+//    Response<String> set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time);
+//
+//    Response<String> set(String key, String value, String nxxx, String expx, int time);
 
     Response<Boolean> setbit(byte[] key, long offset, byte[] value);
 
@@ -370,7 +375,7 @@ public interface ICamelliaRedisPipeline extends Closeable {
 
     Response<String> lindex(String key, long index);
 
-    Response<Long> linsert(String key, BinaryClient.LIST_POSITION where, String pivot, String value);
+    Response<Long> linsert(String key, ListPosition where, String pivot, String value);
 
     Response<Long> llen(String key);
 

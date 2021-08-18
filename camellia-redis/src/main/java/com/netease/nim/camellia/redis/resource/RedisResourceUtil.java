@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.redis.resource;
 
-import com.netease.nim.camellia.core.model.ResourceTableChecker;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.core.model.ResourceTableChecker;
 import com.netease.nim.camellia.core.util.CheckUtil;
 import com.netease.nim.camellia.core.util.ResourceUtil;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;

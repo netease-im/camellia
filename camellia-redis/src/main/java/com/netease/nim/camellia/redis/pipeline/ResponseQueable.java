@@ -9,10 +9,10 @@ import redis.clients.jedis.exceptions.JedisAskDataException;
 import redis.clients.jedis.exceptions.JedisClusterException;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisMovedDataException;
-import redis.clients.util.SafeEncoder;
+import redis.clients.jedis.util.SafeEncoder;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.Future;
 
 /**
  *
@@ -196,7 +196,7 @@ public class ResponseQueable {
     }
 
     private void handlerClient(RedisClientPool redisClientPool, Client client, Queue<Item> queue, boolean retry) {
-        List<Object> list = client.getAll();
+        List<Object> list = client.getMany(queue.size());
         for (Object o : list) {
             Item item = queue.poll();
             if (item != null) {
