@@ -440,7 +440,7 @@ public class MockClientAuthProvider implements ClientAuthProvider {
 随后在application.yml里配置如下：  
 ```yaml
 camellia-redis-proxy:
-  monitor-enable: false  #是否开启监控
+  monitor-enable: true  #是否开启监控
   monitor-interval-seconds: 60 #监控回调的间隔
   client-auth-provider-class-name: com.netease.nim.camellia.redis.proxy.samples.MockClientAuthProvider #处理认证逻辑的类
   transpond:
@@ -453,9 +453,33 @@ camellia-redis-proxy:
       reload-interval-millis: 600000 #使用ProxyRouteConfUpdater时，配置变更会通过回调自动更新，为了防止更新出现丢失，会有一个兜底轮询机制，本配置表示兜底轮询的间隔，默认10分钟  
 ```
 上面的例子表示：
-* 当使用pass1登录proxy时，使用bid=1,bgroup=default的路由
-* 当使用pass2登录proxy时，使用bid=2,bgroup=default的路由
-* 当使用pass3登录proxy时，使用默认路由，也就是bid=1,bgroup=default
+* 当使用密码pass1登录proxy时，使用bid=1,bgroup=default的路由
+* 当使用密码pass2登录proxy时，使用bid=2,bgroup=default的路由
+* 当使用密码pass3登录proxy时，使用默认路由，也就是bid=1,bgroup=default
+
+特别的，proxy内置了基于ProxyDynamicConf的实现，大家可以按需使用，启用方式如下：
+```yaml
+camellia-redis-proxy:
+  monitor-enable: true  #是否开启监控
+  monitor-interval-seconds: 60 #监控回调的间隔
+  client-auth-provider-class-name: com.netease.nim.camellia.redis.proxy.command.auth.DynamicConfClientAuthProvider #处理认证逻辑的类
+  transpond:
+    type: custom
+    custom:
+      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.command.async.route.DynamicConfProxyRouteConfUpdater
+      dynamic: true #表示支持多组配置，默认就是true
+      bid: 1 #默认的bid，当客户端请求时没有声明自己的bid和bgroup时使用的bgroup，可以缺省，若缺省则不带bid/bgroup的请求会被拒绝
+      bgroup: default #默认的bgroup，当客户端请求时没有声明自己的bid和bgroup时使用的bgroup，可以缺省，若缺省则不带bid/bgroup的请求会被拒绝
+      reload-interval-millis: 600000 #使用ProxyRouteConfUpdater时，配置变更会通过回调自动更新，为了防止更新出现丢失，会有一个兜底轮询机制，本配置表示兜底轮询的间隔，默认10分钟  
+```
+随后，你可以在camellia-redis-proxy.properties里如下配置：  
+```
+pass123.auth.conf=1|default
+pass456.auth.conf=2|default
+```
+上述例子表示：  
+* 当使用密码pass123登录proxy时，使用bid=1,bgroup=default的路由
+* 当使用密码pass456登录proxy时，使用bid=2,bgroup=default的路由
 
 感谢[@yangxb2010000](https://github.com/yangxb2010000)提供上述功能
 

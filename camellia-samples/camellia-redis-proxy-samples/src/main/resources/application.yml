@@ -18,6 +18,7 @@ camellia-redis-proxy:
   slow-command-threshold-millis-time: 1000 #慢查询的阈值，单位毫秒，只有command-spend-time-monitor-enable=true才有效
   slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback #慢查询的回调类
 #  client-auth-provider-class-name: com.netease.nim.camellia.redis.proxy.samples.MockClientAuthProvider #处理认证逻辑的类
+#  client-auth-provider-class-name: com.netease.nim.camellia.redis.proxy.command.auth.DynamicConfClientAuthProvider #处理认证逻辑的类
 #  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor #方法拦截器
 #  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.command.async.interceptor.MultiWriteCommandInterceptor #方法拦截器
   converter-enable: false
