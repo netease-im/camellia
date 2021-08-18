@@ -13,7 +13,7 @@ proxy实现了info命令，支持返回如下信息：Server/Clients/Route/Upstr
 ```
 127.0.0.1:6380> info
 # Server
-camellia_redis_proxy_version:v1.0.31     ##proxy版本
+camellia_redis_proxy_version:v1.0.36     ##proxy版本
 available_processors:4      ##cpu核数
 netty_boss_thread:1     ##netty的bossGroup的线程数，默认=1
 netty_work_thread:4   ##netty的工作线程数，默认=cpu核数
