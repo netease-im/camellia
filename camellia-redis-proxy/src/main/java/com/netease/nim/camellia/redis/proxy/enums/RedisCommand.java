@@ -197,6 +197,7 @@ public enum RedisCommand {
      * only support while have singleton-upstream(no custom shading) (standalone-redis or redis-sentinel)
      */
     KEYS(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, false, CommandKeyType.None),
+    RANDOMKEY(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, false, CommandKeyType.None),
     SCAN(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, false, CommandKeyType.None),
     MULTI(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, false, CommandKeyType.None),
     DISCARD(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, false, CommandKeyType.None),
@@ -208,7 +209,6 @@ public enum RedisCommand {
      * NOT_SUPPORT
      */
     FLUSHDB(CommandSupportType.NOT_SUPPORT, Type.WRITE, null, false, null),
-    RANDOMKEY(CommandSupportType.NOT_SUPPORT, Type.READ, null, false, null),
     DBSIZE(CommandSupportType.NOT_SUPPORT, Type.READ, null, false, null),
     SELECT(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     MOVE(CommandSupportType.NOT_SUPPORT, null, null, false, null),

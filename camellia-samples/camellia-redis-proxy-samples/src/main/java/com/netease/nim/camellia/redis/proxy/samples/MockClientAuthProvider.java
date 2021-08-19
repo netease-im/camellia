@@ -16,6 +16,8 @@ public class MockClientAuthProvider implements ClientAuthProvider {
             clientIdentity.setPass(true);
             clientIdentity.setBid(2L);
             clientIdentity.setBgroup("default");
+        } else if (password.equals("pass3")) {
+            clientIdentity.setPass(true);
         }
         return clientIdentity;
     }

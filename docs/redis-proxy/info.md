@@ -13,7 +13,7 @@ proxy实现了info命令，支持返回如下信息：Server/Clients/Route/Upstr
 ```
 127.0.0.1:6380> info
 # Server
-camellia_redis_proxy_version:v1.0.31     ##proxy版本
+camellia_redis_proxy_version:v1.0.36     ##proxy版本
 available_processors:4      ##cpu核数
 netty_boss_thread:1     ##netty的bossGroup的线程数，默认=1
 netty_work_thread:4   ##netty的工作线程数，默认=cpu核数
@@ -22,6 +22,7 @@ os_name:Linux  ##操作系统名称
 os_version:4.9.0-3-amd64  ##操作系统版本
 system_load_average:0.22  ##系统load
 tcp_port:6380   ##proxy的服务端口
+http_console_port:16379   ##proxy的console端口
 uptime_in_seconds:295   ##proxy启动时长（秒）
 uptime_in_days:0    ##proxy启动时长（天）
 vm_vendor:Oracle Corporation   ##虚拟机厂商

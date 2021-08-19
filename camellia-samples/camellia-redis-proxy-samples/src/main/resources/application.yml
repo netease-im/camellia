@@ -6,8 +6,9 @@ spring:
     name: camellia-redis-proxy-server
 
 camellia-redis-proxy:
-  #port: 6380 #优先级高于server.port，如果缺失，则使用server.port
+  #port: 6380 #优先级高于server.port，如果缺失，则使用server.port，如果设置为-6379则会随机一个可用端口
   #application-name: camellia-redis-proxy-server  #优先级高于spring.application.name，如果缺失，则使用spring.application.name
+  console-port: 16379 #console端口，默认是16379，如果设置为-16379则会随机一个可用端口
   password: pass123   #proxy的密码，如果设置了自定义的client-auth-provider-class-name，则密码参数无效
   monitor-enable: false  #是否开启监控
   monitor-interval-seconds: 60 #监控回调的间隔
@@ -17,10 +18,12 @@ camellia-redis-proxy:
   slow-command-threshold-millis-time: 1000 #慢查询的阈值，单位毫秒，只有command-spend-time-monitor-enable=true才有效
   slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback #慢查询的回调类
 #  client-auth-provider-class-name: com.netease.nim.camellia.redis.proxy.samples.MockClientAuthProvider #处理认证逻辑的类
+#  client-auth-provider-class-name: com.netease.nim.camellia.redis.proxy.command.auth.DynamicConfClientAuthProvider #处理认证逻辑的类
 #  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor #方法拦截器
 #  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.command.async.interceptor.MultiWriteCommandInterceptor #方法拦截器
   converter-enable: false
   converter-config:
+    key-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomKeyConverter
     string-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomStringConverter
     list-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomListConverter
     hash-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomHashConverter
@@ -58,6 +61,7 @@ camellia-redis-proxy:
       resource: redis://@127.0.0.1:6379 #转发的redis地址
     redis-conf:
       multi-write-mode: first_resource_only #双写的模式，默认第一个地址返回就返回
+
 #      shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc #分片函数
 
 

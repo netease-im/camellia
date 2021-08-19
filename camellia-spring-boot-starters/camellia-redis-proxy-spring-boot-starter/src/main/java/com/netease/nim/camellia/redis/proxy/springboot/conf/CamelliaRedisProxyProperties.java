@@ -16,6 +16,7 @@ public class CamelliaRedisProxyProperties {
 
     /**
      * proxy的port，如果没有指定，则使用server.port
+     * 如果设置为Constants.Server.serverPortRandSig，则会随机选择一个可用端口
      */
     private int port = -1;
 
@@ -26,6 +27,7 @@ public class CamelliaRedisProxyProperties {
 
     /**
      * proxy的console port，会起一个console http server，可以自己实现一些自定义指令
+     * 如果设置为Constants.Server.consolePortRandSig，则会随机选择一个可用端口
      */
     private int consolePort = Constants.Server.consolePort;
 
@@ -516,11 +518,20 @@ public class CamelliaRedisProxyProperties {
     }
 
     public static class ConverterConfig {
+        private String keyConverterClassName;
         private String stringConverterClassName;
         private String setConverterClassName;
         private String listConverterClassName;
         private String hashConverterClassName;
         private String zsetConverterClassName;
+
+        public String getKeyConverterClassName() {
+            return keyConverterClassName;
+        }
+
+        public void setKeyConverterClassName(String keyConverterClassName) {
+            this.keyConverterClassName = keyConverterClassName;
+        }
 
         public String getStringConverterClassName() {
             return stringConverterClassName;

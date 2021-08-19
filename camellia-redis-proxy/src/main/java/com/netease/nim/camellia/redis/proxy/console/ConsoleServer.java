@@ -1,7 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.console;
 
 import com.netease.nim.camellia.core.util.SysUtils;
+import com.netease.nim.camellia.redis.proxy.command.async.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -21,7 +23,9 @@ public class ConsoleServer {
     private final ConsoleService consoleService;
 
     public ConsoleServer(int port, ConsoleService consoleService) {
-        if (port <= 0) {
+        if (port == Constants.Server.consolePortRandSig) {
+            port = SocketUtils.findRandomPort();
+        } else if (port <= 0) {
             port = Constants.Server.consolePort;
         }
         this.port = port;
@@ -44,6 +48,7 @@ public class ConsoleServer {
                     channelFuture.addListener((FutureListener<Void>) future -> {
                         if (future.isSuccess()) {
                             logger.info("Console Server start listen at port {}", port);
+                            ProxyInfoUtils.updateConsolePort(port);
                         } else {
                             logger.error("Console Server start listen fail! at port {}, cause={}", port, future.cause());
                         }

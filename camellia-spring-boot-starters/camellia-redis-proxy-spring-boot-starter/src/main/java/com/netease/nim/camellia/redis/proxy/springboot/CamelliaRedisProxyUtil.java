@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
+import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.NettyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.TranspondProperties;
@@ -26,7 +27,9 @@ public class CamelliaRedisProxyUtil {
 
     public static CamelliaServerProperties parse(CamelliaRedisProxyProperties properties, String applicationName, int port) {
         CamelliaServerProperties serverProperties = new CamelliaServerProperties();
-        if (properties.getPort() <= 0) {
+        if (properties.getPort() == Constants.Server.serverPortRandSig) {
+            serverProperties.setPort(Constants.Server.serverPortRandSig);
+        } else if (properties.getPort() <= 0) {
             serverProperties.setPort(port);
         } else {
             serverProperties.setPort(properties.getPort());
@@ -98,6 +101,8 @@ public class CamelliaRedisProxyUtil {
         CamelliaRedisProxyProperties.ConverterConfig converterConfig = properties.getConverterConfig();
         serverProperties.setConverterEnable(properties.isConverterEnable());
         CamelliaServerProperties.ConverterConfig config2 = new CamelliaServerProperties.ConverterConfig();
+
+        config2.setKeyConverterClassName(converterConfig.getKeyConverterClassName());
         config2.setStringConverterClassName(converterConfig.getStringConverterClassName());
         config2.setHashConverterClassName(converterConfig.getHashConverterClassName());
         config2.setListConverterClassName(converterConfig.getListConverterClassName());

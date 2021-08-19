@@ -134,9 +134,10 @@ spring:
     name: camellia-redis-proxy-server
 
 camellia-redis-proxy:
-  #port: 6380 #优先级高于server.port，如果缺失，则使用server.port
+  #port: 6380 #优先级高于server.port，如果缺失，则使用server.port，如果设置为-6379则会随机一个可用端口
   #application-name: camellia-redis-proxy-server  #优先级高于spring.application.name，如果缺失，则使用spring.application.name
-  password: pass123   #proxy的密码
+  console-port: 16379 #console端口，默认是16379，如果设置为-16379则会随机一个可用端口
+  password: pass123   #proxy的密码，如果设置了自定义的client-auth-provider-class-name，则密码参数无效
   monitor-enable: true  #是否开启监控
   monitor-interval-seconds: 60 #监控回调的间隔
   monitor-data-mask-password: false #监控相关数据（包括日志）是否把密码隐藏，默认false（例：用***代替abc）

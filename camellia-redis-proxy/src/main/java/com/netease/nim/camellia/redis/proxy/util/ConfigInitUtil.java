@@ -249,6 +249,24 @@ public class ConfigInitUtil {
         CamelliaServerProperties.ConverterConfig converterConfig = serverProperties.getConverterConfig();
         if (converterConfig == null) return null;
         ConverterConfig config = new ConverterConfig();
+        String keyConverterClassName = converterConfig.getKeyConverterClassName();
+        if (keyConverterClassName != null) {
+            try {
+                KeyConverter keyConverter;
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(keyConverterClassName);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(keyConverterClassName);
+                }
+                keyConverter = (KeyConverter) clazz.newInstance();
+                logger.info("KeyConverter init success, class = {}", keyConverterClassName);
+                config.setKeyConverter(keyConverter);
+            } catch (Exception e) {
+                logger.error("KeyConverter init error, class = {}", keyConverterClassName, e);
+                throw new CamelliaRedisException(e);
+            }
+        }
         String stringConverterClassName = converterConfig.getStringConverterClassName();
         if (stringConverterClassName != null) {
             try {

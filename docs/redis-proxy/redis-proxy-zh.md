@@ -23,7 +23,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持热key监控，支持设置HotKeyMonitorCallback
 * 支持热key在proxy层的本地缓存（仅支持GET命令），支持设置HotKeyCacheStatsCallback
 * 支持大key监控，支持设置BigKeyMonitorCallback
-* 支持value的自定义转换（当前支持string/hash/set/list/zset相关命令，可以用于实现压数据压缩、数据加解密等）
+* 支持key/value的自定义转换（当前支持string/hash/set/list/zset相关命令，可以用于实现压数据压缩、数据加解密等）
 * 支持监控配置（如开关、阈值等）的在线变更
 * 支持info命令获取服务器相关信息（包括后端redis集群的信息）
 * 提供了一个httpAPI用于获取监控指标数据
@@ -100,7 +100,7 @@ SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
 当前仅当路由后端是单个redis或者单个redis-sentinel  
 ```
 ##DataBase
-KEYS,SCAN,
+KEYS,SCAN,RANDOMKEY,
 MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ``` 
 
@@ -177,6 +177,7 @@ OK
 * json-file配置示例（双写、读写分离、分片等）
 * 集成camellia-dashboard
 * 集成ProxyRouteConfUpdater自定义管理多组动态配置
+* 使用自定义ClientAuthProvider来实现通过不同的登录密码来指向不同路由配置
 * 不同的双（多）写模式
 * 自定义分片函数
 
@@ -189,8 +190,8 @@ camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访
 
 具体可见：[控制](control.md)
 
-## value的自定义转换
-camellia-redis-proxy提供了value的自定义转换功能，从而你可以自定义的实现数据的解压缩、加解密等功能  
+## key/value的自定义转换
+camellia-redis-proxy提供了key/value的自定义转换功能，从而你可以自定义的实现数据的解压缩、加解密等功能  
 当前支持string/hash/set/list/zset相关命令的value自定义转换    
 
 具体可见：[转换](converter.md)
@@ -199,6 +200,7 @@ camellia-redis-proxy提供了value的自定义转换功能，从而你可以自�
 在生产环境，需要部署至少2个proxy实例来保证高可用，并且proxy是可以水平扩展的，包括：
 * 部署模式
 * 集成Zookeeper
+* 随机端口
 * 优雅上下线
 * 客户端接入（java之jedis）
 * 客户端接入（java之SpringRedisTemplate)

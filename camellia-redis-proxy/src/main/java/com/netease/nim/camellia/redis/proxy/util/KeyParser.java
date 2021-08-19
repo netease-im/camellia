@@ -65,7 +65,7 @@ public class KeyParser {
                         int keyCount = (int) Utils.bytesToNum(objects[2]);
                         if (keyCount > 0) {
                             keys.add(objects[1]);
-                            dynamicKey(command, keys, 3, 3 + keyCount);
+                            dynamicKey(command, keys, 3, 3 + keyCount - 1);
                         }
                     }
                     break;
@@ -75,7 +75,7 @@ public class KeyParser {
                     if (objects.length >= 3) {
                         int keyCount = (int) Utils.bytesToNum(objects[1]);
                         if (keyCount > 0) {
-                            dynamicKey(command, keys, 2, 1 + keyCount);
+                            dynamicKey(command, keys, 2, 2 + keyCount - 1);
                         }
                     }
                     break;
@@ -116,12 +116,11 @@ public class KeyParser {
                     break;
                 case XINFO:
                 case XGROUP:
-                    if (objects.length > 3) {
+                    if (objects.length >= 3) {
                         keys.add(objects[2]);
                     }
                     break;
                 default:
-                    logger.warn("unknown keys of {}", redisCommand);
                     break;
             }
             return keys;
@@ -158,7 +157,7 @@ public class KeyParser {
             if (objects.length < 3 + keyCount) {
                 return;
             }
-            for (int i=4; i<3+keyCount; i++) {
+            for (int i=3; i<3+keyCount; i++) {
                 byte[] key = objects[i];
                 keys.add(key);
             }
