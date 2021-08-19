@@ -252,6 +252,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     case UNWATCH:
                     case MULTI:
                     case EXEC:
+                    case RANDOMKEY:
                     case DISCARD:
                         Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
                         String url = resource.getUrl();
