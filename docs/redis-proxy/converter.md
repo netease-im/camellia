@@ -152,7 +152,7 @@ public class CustomKeyConverter implements KeyConverter {
     }
 }
 ```
-上述例子中表示key会增加前缀v1再转发给后端，后端的回包如果包含key信息（如RANDOMKEY、BPLOP等），也会反向转换后再回给调用方
+上述例子中表示key会增加前缀v1再转发给后端，后端的回包如果包含key信息（如RANDOMKEY、BLPOP等），也会反向转换后再回给调用方
 
 
 ### 使用CamelliaCompressor/CamelliaEncryptor来做压缩或者加解密
