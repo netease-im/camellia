@@ -101,6 +101,8 @@ public class CamelliaRedisProxyUtil {
         CamelliaRedisProxyProperties.ConverterConfig converterConfig = properties.getConverterConfig();
         serverProperties.setConverterEnable(properties.isConverterEnable());
         CamelliaServerProperties.ConverterConfig config2 = new CamelliaServerProperties.ConverterConfig();
+
+        config2.setKeyConverterClassName(converterConfig.getKeyConverterClassName());
         config2.setStringConverterClassName(converterConfig.getStringConverterClassName());
         config2.setHashConverterClassName(converterConfig.getHashConverterClassName());
         config2.setListConverterClassName(converterConfig.getListConverterClassName());

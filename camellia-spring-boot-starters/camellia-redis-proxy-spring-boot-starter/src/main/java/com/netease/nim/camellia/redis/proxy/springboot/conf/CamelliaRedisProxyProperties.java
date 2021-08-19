@@ -518,11 +518,20 @@ public class CamelliaRedisProxyProperties {
     }
 
     public static class ConverterConfig {
+        private String keyConverterClassName;
         private String stringConverterClassName;
         private String setConverterClassName;
         private String listConverterClassName;
         private String hashConverterClassName;
         private String zsetConverterClassName;
+
+        public String getKeyConverterClassName() {
+            return keyConverterClassName;
+        }
+
+        public void setKeyConverterClassName(String keyConverterClassName) {
+            this.keyConverterClassName = keyConverterClassName;
+        }
 
         public String getStringConverterClassName() {
             return stringConverterClassName;

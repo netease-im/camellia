@@ -5,11 +5,20 @@ package com.netease.nim.camellia.redis.proxy.command.async.converter;
  * Created by caojiajun on 2021/8/6
  */
 public class ConverterConfig {
+    private KeyConverter keyConverter;
     private StringConverter stringConverter;
     private SetConverter setConverter;
     private ListConverter listConverter;
     private HashConverter hashConverter;
     private ZSetConverter zSetConverter;
+
+    public KeyConverter getKeyConverter() {
+        return keyConverter;
+    }
+
+    public void setKeyConverter(KeyConverter keyConverter) {
+        this.keyConverter = keyConverter;
+    }
 
     public StringConverter getStringConverter() {
         return stringConverter;
