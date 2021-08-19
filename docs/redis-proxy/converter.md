@@ -11,10 +11,7 @@ camellia-redis-proxy提供了key/value的自定义转换功能，从而你可以
 在该接口下，用户可以自己实现从convertedValue/convertedKey到originalValue/originalKey的变换逻辑，proxy会将转换后的originalValue/originalKey回给客户端    
 
 ### 当前支持对key转换的命令
-大部分都支持，除了少数命令，如下：
-```
-KEYS,SCAN,
-```
+带key的命令都支持，特别的，对于KEYS和SCAN命令，回调给KeyConverter接口的是pattern，而不是实际的key
 
 ### 当前支持value转换的数据结构和命令
 以下命令会回调Converter接口进行value转换：
