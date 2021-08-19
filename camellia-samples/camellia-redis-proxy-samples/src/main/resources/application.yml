@@ -23,6 +23,7 @@ camellia-redis-proxy:
 #  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.command.async.interceptor.MultiWriteCommandInterceptor #方法拦截器
   converter-enable: false
   converter-config:
+    key-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomKeyConverter
     string-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomStringConverter
     list-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomListConverter
     hash-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomHashConverter

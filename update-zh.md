@@ -11,12 +11,14 @@
 * 新增了使用camellia-tools来实现camellia-redis-proxy数据解压缩、加解密的例子，具体见：[转换](/docs/redis-proxy/converter.md)
 * camellia-redis-proxy支持自定义的ClientAuthProvider来实现通过password区分路由的方法，具体见：[路由配置](/docs/redis-proxy/route.md)，感谢[@yangxb2010000](https://github.com/yangxb2010000)提供该功能
 * camellia-redis-proxy支持设置使用随机端口，具体见：[部署](/docs/redis-proxy/deploy.md)
+* camellia-redis-proxy支持对key的自定义转换，具体见：[转换](/docs/redis-proxy/converter.md)
+* camellia-redis-proxy新增对RANDOMKEY命令的支持
 
 ### 更新
 * camellia-redis-proxy的info命令返回新增http_console_port字段
 
 ### fix
-* 无
+* fix工具类KeyParser对EVAL/EVALSHA/XINFO/XGROUP/ZINTERSTORE/ZUNIONSTORE/ZDIFFSTORE命令的key的解析（如果没有在自定义方法拦截器里调用本工具类，则不受影响）
 
 
 # 1.0.35（2021/08/13）
