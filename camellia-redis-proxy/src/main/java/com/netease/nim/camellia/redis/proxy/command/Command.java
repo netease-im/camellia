@@ -44,6 +44,11 @@ public class Command {
         return objects;
     }
 
+    public void clearKeysCache() {
+        keysStr = null;
+        keys = null;
+    }
+
     public List<byte[]> getKeys() {
         if (keys != null) return keys;
         keys = KeyParser.findKeys(this);

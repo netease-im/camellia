@@ -36,6 +36,9 @@ public class Converters {
         if (commandType == null) return;
         CommandContext commandContext = command.getCommandContext();
         keyConvert(redisCommand, commandContext, command);
+        if (keyConverter != null) {
+            command.clearKeysCache();
+        }
         if (commandType == RedisCommand.CommandType.STRING) {
             stringConvertRequest(redisCommand, commandContext, command);
         } else if (commandType == RedisCommand.CommandType.SET) {
@@ -57,7 +60,6 @@ public class Converters {
         if (reply == null) return;
         if (reply instanceof ErrorReply) return;
         CommandContext commandContext = command.getCommandContext();
-        keyConvertReply(redisCommand, commandContext, command, reply);
         if (commandType == RedisCommand.CommandType.STRING) {
             stringConvertReply(redisCommand, commandContext, command, reply);
         } else if (commandType == RedisCommand.CommandType.SET) {
@@ -68,6 +70,10 @@ public class Converters {
             hashConvertReply(redisCommand, commandContext, command, reply);
         } else if (commandType == RedisCommand.CommandType.ZSET) {
             zsetConvertReply(redisCommand, commandContext, command, reply);
+        }
+        keyConvertReply(redisCommand, commandContext, command, reply);
+        if (keyConverter != null) {
+            command.clearKeysCache();
         }
     }
 
@@ -277,7 +283,6 @@ public class Converters {
         if (!(reply instanceof BulkReply)) {
             return;
         }
-
         byte[] raw = ((BulkReply) reply).getRaw();
         byte[] bytes = keyConverter.reverseConvert(commandContext, redisCommand, raw);
         ((BulkReply) reply).updateRaw(bytes);
