@@ -63,11 +63,12 @@ public class RedisClientHub {
             RedisClientAddr addr = new RedisClientAddr(host, port, password);
             EventLoop eventLoop = eventLoopThreadLocal.get();
             if (eventLoop != null) {
-                ConcurrentHashMap<String, RedisClient> map = CamelliaMapUtils.computeIfAbsent(eventLoopMap, eventLoop, k -> new ConcurrentHashMap<>());
-                String url = addr.getUrl();
-                RedisClient client = map.get(url);
-                if (client != null && client.isValid()) {
-                    return client;
+                ConcurrentHashMap<String, RedisClient> clientMap = eventLoopMap.get(eventLoop);
+                if (clientMap != null) {
+                    RedisClient client = clientMap.get(addr.getUrl());
+                    if (client != null && client.isValid()) {
+                        return client;
+                    }
                 }
             }
             String url = addr.getUrl();
