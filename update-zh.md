@@ -18,7 +18,7 @@
 * camellia-redis-proxy的info命令返回新增http_console_port字段
 
 ### fix
-* fix工具类KeyParser对EVAL/EVALSHA/XINFO/XGROUP/ZINTERSTORE/ZUNIONSTORE/ZDIFFSTORE命令的key的解析（如果没有在自定义方法拦截器里调用本工具类，则不受影响）
+* fix工具类KeyParser对EVAL/EVALSHA/XINFO/XGROUP/ZINTERSTORE/ZUNIONSTORE/ZDIFFSTORE命令的key的解析
 
 
 # 1.0.35（2021/08/13）
