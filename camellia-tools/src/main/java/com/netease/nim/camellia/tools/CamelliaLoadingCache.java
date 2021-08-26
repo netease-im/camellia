@@ -124,9 +124,9 @@ public class CamelliaLoadingCache<K, V> {
             return this;
         }
 
-        //并发缓存穿透时会控制穿透的并发，如果出现了竞争，则只有一个线程会调用ValueLoader.load()
+        //并发缓存穿透时会控制穿透的并发，如果出现了竞争，则只有一个线程会调用CacheLoader.load()
         //其他线程会等待并重试，重试时会检查缓存是否已经更新好了，如果已经更新过了，则会返回更新后的缓存，本配置表示重试的最大次数
-        //当超过重试次数时会直接穿透，此时可能会存在并发调用ValueLoader.load()的情况
+        //当超过重试次数时会直接穿透，此时可能会存在并发调用CacheLoader.load()的情况
         public Builder<K, V> concurrentMaxRetry(int concurrentMaxRetry) {
             this.concurrentMaxRetry = concurrentMaxRetry;
             return this;
