@@ -28,6 +28,11 @@
 			<artifactId>netty-all</artifactId>
 			<version>4.1.63.Final</version>
 		</dependency>
+		<dependency>
+			<groupId>com.googlecode.concurrentlinkedhashmap</groupId>
+			<artifactId>concurrentlinkedhashmap-lru</artifactId>
+			<version>1.4.2</version>
+		</dependency>
     </dependencies>
 	<build>
 		<plugins>
