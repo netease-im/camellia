@@ -31,6 +31,7 @@ public class LoadingCacheSamples {
                 .initialCapacity(100)
                 .maxCapacity(100)
                 .expireMillis(1000)
+                .cacheNull(true)//是否缓存null
                 .build(key -> {
                     TimeUnit.MILLISECONDS.sleep(10);
                     String value = key + id.incrementAndGet();
