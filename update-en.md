@@ -7,7 +7,7 @@
 
 # 1.0.36（2021/08/xx）
 ### add
-* add camellia-tools module, provide compress utils CamelliaCompressor, encrypt utils CamelliaEncryptor
+* add camellia-tools module, provide compress utils CamelliaCompressor, encrypt utils CamelliaEncryptor, local cache utils CamelliaLoadingCache  
 * provide samples for camellia-redis-proxy implements data-encryption/data-compress by use camellia-tools
 * camellia-redis-proxy support custom ClientAuthProvider to route different bid/bgroup route conf by different password  
 * camellia-redis-proxy support setting random port/consolePort
