@@ -18,6 +18,11 @@
 			<artifactId>camellia-tools</artifactId>
 			<version>1.0.36-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+			<version>2.9.1</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
