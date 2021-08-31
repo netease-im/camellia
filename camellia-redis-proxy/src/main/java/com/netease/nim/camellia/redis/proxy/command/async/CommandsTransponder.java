@@ -1,6 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
+import com.netease.nim.camellia.redis.proxy.command.AuthCommandProcessor;
+import com.netease.nim.camellia.redis.proxy.command.ClientCommandUtil;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.command.HelloCommandUtil;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunter;
 import com.netease.nim.camellia.redis.proxy.command.async.converter.Converters;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunter;
@@ -11,6 +14,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotValue;
 import com.netease.nim.camellia.redis.proxy.command.async.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
@@ -34,7 +38,9 @@ public class CommandsTransponder {
 
     private static final Logger logger = LoggerFactory.getLogger(CommandsTransponder.class);
 
+    private final AuthCommandProcessor authCommandProcessor;
     private final AsyncCamelliaRedisTemplateChooser chooser;
+
     private final CommandSpendTimeConfig commandSpendTimeConfig;
     private final CommandInterceptor commandInterceptor;
     private final HotKeyHunterManager hotKeyHunterManager;
@@ -45,6 +51,7 @@ public class CommandsTransponder {
 
     public CommandsTransponder(AsyncCamelliaRedisTemplateChooser chooser, CommandInvokeConfig commandInvokeConfig) {
         this.chooser = chooser;
+        this.authCommandProcessor = commandInvokeConfig.getAuthCommandProcessor();
         this.commandSpendTimeConfig = commandInvokeConfig.getCommandSpendTimeConfig();
         this.commandInterceptor = commandInvokeConfig.getCommandInterceptor();
         this.hotKeyHunterManager = commandInvokeConfig.getHotKeyHunterManager();
@@ -77,6 +84,16 @@ public class CommandsTransponder {
             boolean needIntercept = commandInterceptor != null;
 
             for (Command command : commands) {
+                //设置channelInfo
+                command.setChannelInfo(channelInfo);
+                //监控
+                if (RedisMonitor.isMonitorEnable()) {
+                    Long bid = channelInfo.getBid();
+                    String bgroup = channelInfo.getBgroup();
+                    RedisMonitor.incr(bid, bgroup, command.getName());
+                }
+
+                //热key监控
                 if (hotKeyHunterManager != null) {
                     HotKeyHunter hotKeyHunter = hotKeyHunterManager.get(channelInfo.getBid(), channelInfo.getBgroup());
                     if (hotKeyHunter != null) {
@@ -90,6 +107,7 @@ public class CommandsTransponder {
                         }
                     }
                 }
+                //key/value转换
                 if (converters != null) {
                     try {
                         converters.convertRequest(command);
@@ -97,6 +115,7 @@ public class CommandsTransponder {
                         ErrorLogCollector.collect(CommandsTransponder.class, "convert request error", e);
                     }
                 }
+                //任务队列
                 AsyncTask task = new AsyncTask(taskQueue, command, commandSpendTimeConfig, bigKeyHunter, converters);
                 boolean add = taskQueue.add(task);
                 if (!add) {
@@ -105,6 +124,7 @@ public class CommandsTransponder {
                     ctx.writeAndFlush(ErrorReply.TOO_BUSY).addListener((ChannelFutureListener) future -> ctx.close());
                     return;
                 }
+                //命令拦截器
                 if (needIntercept) {
                     CommandInterceptResponse response;
                     try {
@@ -133,11 +153,46 @@ public class CommandsTransponder {
                     continue;
                 }
 
+                if (redisCommand == RedisCommand.AUTH) {
+                    Reply reply = authCommandProcessor.invokeAuthCommand(channelInfo, command);
+                    task.replyCompleted(reply);
+                    hasCommandsSkip = true;
+                    continue;
+                }
+
+                if (redisCommand == RedisCommand.HELLO) {
+                    Reply reply = HelloCommandUtil.invokeHelloCommand(channelInfo, authCommandProcessor, command);
+                    task.replyCompleted(reply);
+                    hasCommandsSkip = true;
+                    continue;
+                }
+
+                //如果需要密码，但是没有auth，则返回NO_AUTH
+                if (authCommandProcessor.isPasswordRequired()) {
+                    if (channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK) {
+                        task.replyCompleted(ErrorReply.NO_AUTH);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+                }
+
                 if (redisCommand == RedisCommand.INFO) {
                     CompletableFuture<Reply> future = ProxyInfoUtils.getInfoReply(command, chooser);
                     future.thenAccept(task::replyCompleted);
                     hasCommandsSkip = true;
                     continue;
+                }
+
+                if (redisCommand == RedisCommand.CLIENT) {
+                    Reply reply = ClientCommandUtil.invokeClientCommand(channelInfo, command);
+                    task.replyCompleted(reply);
+                    hasCommandsSkip = true;
+                    continue;
+                }
+
+                if (redisCommand == RedisCommand.QUIT) {
+                    channelInfo.getCtx().close();
+                    return;
                 }
 
                 if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
@@ -158,6 +213,7 @@ public class CommandsTransponder {
                     continue;
                 }
 
+                //热key缓存
                 if (command.getRedisCommand() == RedisCommand.GET && hotKeyCacheManager != null) {
                     if (command.getObjects().length >= 2) {
                         byte[] key = command.getObjects()[1];
@@ -174,6 +230,7 @@ public class CommandsTransponder {
                     }
                 }
 
+                //大key监控
                 if (bigKeyHunter != null) {
                     try {
                         bigKeyHunter.checkRequest(command);
@@ -234,6 +291,5 @@ public class CommandsTransponder {
         } finally {
             tasks.clear();
         }
-
     }
 }

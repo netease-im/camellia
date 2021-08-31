@@ -24,7 +24,7 @@ public class DynamicConfClientAuthProvider implements ClientAuthProvider {
     }
 
     @Override
-    public ClientIdentity auth(String password) {
+    public ClientIdentity auth(String userName, String password) {
         try {
             ClientIdentity clientIdentity = cache.get(password);
             if (clientIdentity != null) {

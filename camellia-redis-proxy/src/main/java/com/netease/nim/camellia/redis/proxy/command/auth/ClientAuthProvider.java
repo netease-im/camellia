@@ -4,16 +4,15 @@ public interface ClientAuthProvider {
 
     /**
      * 验证密码
-     *
-     * @param password
-     * @return
+     * @param userName 账号，可能为null
+     * @param password 密码
+     * @return ClientIdentity
      */
-    ClientIdentity auth(String password);
+    ClientIdentity auth(String userName, String password);
 
     /**
      * Provider是否设置了密码
-     *
-     * @return
+     * @return true/false
      */
     boolean isPasswordRequired();
 }

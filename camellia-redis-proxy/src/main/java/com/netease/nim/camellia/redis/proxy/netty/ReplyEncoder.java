@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.reply.ReplyPack;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -22,13 +21,11 @@ public class ReplyEncoder extends MessageToByteEncoder<Object> {
 
     private static final Logger logger = LoggerFactory.getLogger(ReplyEncoder.class);
 
-    private final CamelliaServerProperties serverProperties;
     private long id = 0;
     private final Map<Long, ReplyPack> packMap = new HashMap<>();
 
-    public ReplyEncoder(CamelliaServerProperties serverProperties) {
+    public ReplyEncoder() {
         super();
-        this.serverProperties = serverProperties;
     }
 
     @Override
@@ -36,7 +33,7 @@ public class ReplyEncoder extends MessageToByteEncoder<Object> {
         if (object instanceof ReplyPack) {
             ReplyPack pack = (ReplyPack) object;
             if (ctx.channel().isActive()) {
-                if (serverProperties.isMonitorEnable()) {
+                if (RedisMonitor.isMonitorEnable()) {
                     if (pack.getReply() instanceof ErrorReply) {
                         RedisMonitor.incrFail(((ErrorReply) pack.getReply()).getError());
                     }
@@ -67,7 +64,7 @@ public class ReplyEncoder extends MessageToByteEncoder<Object> {
                     packMap.put(id, pack);
                 }
             } else {
-                if (serverProperties.isMonitorEnable()) {
+                if (RedisMonitor.isMonitorEnable()) {
                     RedisMonitor.incrFail("ChannelNotActive");
                 }
                 ErrorLogCollector.collect(ReplyEncoder.class, "channel not active, remote.ip=" + ctx.channel().remoteAddress());
@@ -75,14 +72,14 @@ public class ReplyEncoder extends MessageToByteEncoder<Object> {
         } else if (object instanceof Reply) {
             if (ctx.channel().isActive()) {
                 Reply reply = (Reply) object;
-                if (serverProperties.isMonitorEnable()) {
+                if (RedisMonitor.isMonitorEnable()) {
                     if (reply instanceof ErrorReply) {
                         RedisMonitor.incrFail(((ErrorReply) reply).getError());
                     }
                 }
                 reply.write(out);
             } else {
-                if (serverProperties.isMonitorEnable()) {
+                if (RedisMonitor.isMonitorEnable()) {
                     RedisMonitor.incrFail("ChannelNotActive");
                 }
                 ErrorLogCollector.collect(ReplyEncoder.class, "channel not active, remote.ip=" + ctx.channel().remoteAddress());

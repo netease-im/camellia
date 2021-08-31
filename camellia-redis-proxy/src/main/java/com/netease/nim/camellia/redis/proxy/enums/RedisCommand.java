@@ -17,6 +17,7 @@ public enum RedisCommand {
     PING(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
     INFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
     AUTH(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
+    HELLO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
     QUIT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
     SET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),
     GET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, false, CommandKeyType.SIMPLE_SINGLE),

@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.hbase;
 
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.proxy.command.AuthCommandProcessor;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunter;
@@ -11,6 +12,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunter;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterManager;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
@@ -35,6 +37,7 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
 
     private final Map<String, Method> methodMap = new HashMap<>();
     private final RedisHBaseCommandProcessor processor;
+    private final AuthCommandProcessor authCommandProcessor;
 
     private CommandSpendTimeConfig commandSpendTimeConfig;
     private HotKeyHunter hotKeyHunter;
@@ -42,6 +45,12 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
 
     public RedisHBaseCommandInvoker(CamelliaRedisTemplate redisTemplate, CamelliaHBaseTemplate hBaseTemplate, CamelliaServerProperties serverProperties) {
         processor = new RedisHBaseCommandProcessor(redisTemplate, hBaseTemplate);
+
+        if (serverProperties.isMonitorEnable()) {
+            MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);
+            RedisMonitor.init(serverProperties.getMonitorIntervalSeconds(), serverProperties.isCommandSpendTimeMonitorEnable(), monitorCallback);
+        }
+
         Class<? extends IRedisHBaseCommandProcessor> clazz = IRedisHBaseCommandProcessor.class;
         CommandMethodUtil.initCommandFinderMethods(clazz, methodMap);
 
@@ -62,38 +71,51 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
             BigKeyMonitor.init(monitorIntervalSeconds);
             this.bigKeyHunter = new BigKeyHunter(commandBigKeyMonitorConfig);
         }
+        this.authCommandProcessor = new AuthCommandProcessor(ConfigInitUtil.initClientAuthProvider(serverProperties));
     }
 
     @Override
     public void invoke(ChannelHandlerContext ctx, ChannelInfo channelInfo, List<Command> commands) {
         if (commands.isEmpty()) return;
         for (Command command : commands) {
+            if (RedisMonitor.isMonitorEnable()) {
+                RedisMonitor.incr(null, null, command.getName());
+            }
             Reply reply = null;
             long startTime = 0;
             if (RedisMonitor.isCommandSpendTimeMonitorEnable()) {
                 startTime = System.nanoTime();
             }
             try {
-                Method method = methodMap.get(command.getName());
-                if (method == null) {
-                    logger.warn("only support zset relevant commands, return NOT_SUPPORT, command = {}, consid = {}", command.getName(), channelInfo.getConsid());
-                    ctx.writeAndFlush(ErrorReply.NOT_SUPPORT);
-                    debugLog(ErrorReply.NOT_SUPPORT, channelInfo);
+                if (command.getRedisCommand() == RedisCommand.AUTH) {
+                    reply = authCommandProcessor.invokeAuthCommand(channelInfo, command);
+                    ctx.writeAndFlush(reply);
+                    debugLog(reply, channelInfo);
+                } else if (command.getRedisCommand() == RedisCommand.QUIT) {
+                    ctx.close();
                     return;
-                }
-                if (hotKeyHunter != null) {
-                    hotKeyHunter.incr(command.getKeys());
-                }
-                if (bigKeyHunter != null) {
-                    bigKeyHunter.checkRequest(command);
-                }
-                //
-                reply = (Reply) CommandInvokerUtil.invoke(method, command, processor);
-                ctx.writeAndFlush(reply);
-                debugLog(reply, channelInfo);
-                //
-                if (bigKeyHunter != null) {
-                    bigKeyHunter.checkReply(command, reply);
+                } else {
+                    Method method = methodMap.get(command.getName());
+                    if (method == null) {
+                        logger.warn("only support zset relevant commands, return NOT_SUPPORT, command = {}, consid = {}", command.getName(), channelInfo.getConsid());
+                        ctx.writeAndFlush(ErrorReply.NOT_SUPPORT);
+                        debugLog(ErrorReply.NOT_SUPPORT, channelInfo);
+                        return;
+                    }
+                    if (hotKeyHunter != null) {
+                        hotKeyHunter.incr(command.getKeys());
+                    }
+                    if (bigKeyHunter != null) {
+                        bigKeyHunter.checkRequest(command);
+                    }
+                    //
+                    reply = (Reply) CommandInvokerUtil.invoke(method, command, processor);
+                    ctx.writeAndFlush(reply);
+                    debugLog(reply, channelInfo);
+                    //
+                    if (bigKeyHunter != null) {
+                        bigKeyHunter.checkReply(command, reply);
+                    }
                 }
             } catch (Throwable e) {
                 reply = handlerError(e, command.getName());
