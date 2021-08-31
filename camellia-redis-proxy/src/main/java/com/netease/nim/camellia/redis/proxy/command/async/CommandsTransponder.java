@@ -17,6 +17,7 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
@@ -27,7 +28,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
- *
  * Created by caojiajun on 2021/5/26
  */
 public class CommandsTransponder {
@@ -129,6 +129,18 @@ public class CommandsTransponder {
 
                 if (redisCommand == RedisCommand.PING) {
                     task.replyCompleted(StatusReply.PONG);
+                    hasCommandsSkip = true;
+                    continue;
+                }
+
+                if (redisCommand == RedisCommand.SELECT) {
+                    if (command.getObjects().length == 2
+                            && "0".equals(new String(command.getObjects()[1], Utils.utf8Charset))) {
+                        task.replyCompleted(StatusReply.OK);
+                    } else {
+                        task.replyCompleted(ErrorReply.NOT_SUPPORT);
+                    }
+                    
                     hasCommandsSkip = true;
                     continue;
                 }

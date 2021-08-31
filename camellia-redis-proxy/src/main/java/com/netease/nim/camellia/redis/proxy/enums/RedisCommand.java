@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
  * Created by caojiajun on 2019/11/18.
  */
 public enum RedisCommand {
@@ -132,7 +131,7 @@ public enum RedisCommand {
     XREVRANGE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STREAM, false, CommandKeyType.SIMPLE_SINGLE),
     XTRIM(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STREAM, false, CommandKeyType.SIMPLE_SINGLE),
     XGROUP(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STREAM, false, CommandKeyType.COMPLEX),
-    XINFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STREAM,  false, CommandKeyType.COMPLEX),
+    XINFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STREAM, false, CommandKeyType.COMPLEX),
     UNLINK(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, false, CommandKeyType.SIMPLE_MULTI),
     TOUCH(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, false, CommandKeyType.SIMPLE_MULTI),
     LPOS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.LIST, false, CommandKeyType.SIMPLE_SINGLE),
@@ -141,13 +140,14 @@ public enum RedisCommand {
     DUMP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.SIMPLE_SINGLE),
     RESTORE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, false, CommandKeyType.SIMPLE_SINGLE),
     ZRANDMEMBER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ZSET, false, CommandKeyType.SIMPLE_SINGLE),
+    SELECT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
 
     /**
      * Restrictive Support
      * support only when all the keys in these command route to same redis-server or same redis-cluster slot
      * especially, blocking command don't support multi-write
      */
-    EVAL(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SCRIPT,  false, CommandKeyType.COMPLEX),
+    EVAL(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SCRIPT, false, CommandKeyType.COMPLEX),
     EVALSHA(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SCRIPT, false, CommandKeyType.COMPLEX),
     PFCOUNT(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.HYPER_LOG_LOG, false, CommandKeyType.SIMPLE_MULTI),
     PFMERGE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.HYPER_LOG_LOG, false, CommandKeyType.SIMPLE_MULTI),
@@ -155,11 +155,11 @@ public enum RedisCommand {
     RENAMENX(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.DB, false, CommandKeyType.SIMPLE_MULTI),
     SINTER(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.SET, false, CommandKeyType.SIMPLE_MULTI),
     SINTERSTORE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SET, false, CommandKeyType.SIMPLE_MULTI),
-    SUNION(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.SET,false, CommandKeyType.SIMPLE_MULTI),
+    SUNION(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.SET, false, CommandKeyType.SIMPLE_MULTI),
     SUNIONSTORE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SET, false, CommandKeyType.SIMPLE_MULTI),
     SDIFF(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.SET, false, CommandKeyType.SIMPLE_MULTI),
-    SDIFFSTORE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SET,  false, CommandKeyType.SIMPLE_MULTI),
-    SMOVE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SET,  false, CommandKeyType.COMPLEX),
+    SDIFFSTORE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SET, false, CommandKeyType.SIMPLE_MULTI),
+    SMOVE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SET, false, CommandKeyType.COMPLEX),
     ZUNIONSTORE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.ZSET, false, CommandKeyType.COMPLEX),
     ZINTERSTORE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.ZSET, false, CommandKeyType.COMPLEX),
     BITOP(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.STRING, false, CommandKeyType.COMPLEX),
@@ -192,13 +192,14 @@ public enum RedisCommand {
     PUNSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, false, CommandKeyType.None),
     PUBSUB(CommandSupportType.PARTIALLY_SUPPORT_1, Type.READ, CommandType.PUB_SUB, false, CommandKeyType.None),
 
+    SCAN(CommandSupportType.PARTIALLY_SUPPORT_1, Type.READ, CommandType.DB, false, CommandKeyType.None),
+
     /**
      * Partially Support
      * only support while have singleton-upstream(no custom shading) (standalone-redis or redis-sentinel)
      */
     KEYS(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, false, CommandKeyType.None),
     RANDOMKEY(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, false, CommandKeyType.None),
-    SCAN(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, false, CommandKeyType.None),
     MULTI(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, false, CommandKeyType.None),
     DISCARD(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, false, CommandKeyType.None),
     EXEC(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, false, CommandKeyType.None),
@@ -210,7 +211,6 @@ public enum RedisCommand {
      */
     FLUSHDB(CommandSupportType.NOT_SUPPORT, Type.WRITE, null, false, null),
     DBSIZE(CommandSupportType.NOT_SUPPORT, Type.READ, null, false, null),
-    SELECT(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     MOVE(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     FLUSHALL(CommandSupportType.NOT_SUPPORT, Type.WRITE, null, false, null),
     SAVE(CommandSupportType.NOT_SUPPORT, null, null, false, null),
