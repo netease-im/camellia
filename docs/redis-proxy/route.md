@@ -415,7 +415,7 @@ public class CustomProxyRouteConfUpdater extends ProxyRouteConfUpdater {
 public class MockClientAuthProvider implements ClientAuthProvider {
 
     @Override
-    public ClientIdentity auth(String password) {
+    public ClientIdentity auth(String userName, String password) {
         ClientIdentity clientIdentity = new ClientIdentity();
         if (password.equals("pass1")) {
             clientIdentity.setPass(true);

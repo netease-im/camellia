@@ -35,7 +35,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 完整支持
 ```
 ##DataBase
-PING,AUTH,ECHO,CLIENT,QUIT,EXISTS,DEL,TYPE,EXPIRE,
+PING,AUTH,HELLO,ECHO,CLIENT,QUIT,EXISTS,DEL,TYPE,EXPIRE,
 EXPIREAT,TTL,PERSIST,PEXPIRE,PEXPIREAT,PTTL,SORT,UNLINK,TOUCH,DUMP,RESTORE,
 ##String
 SET,GET,GETSET,MGET,SETNX,SETEX,MSET,DECRBY,DECR,INCRBY,INCR,APPEND,
@@ -228,10 +228,12 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 使用双写的功能进行集群灾备，比如双写到另外的机房
 * 使用分片功能应对单集群容量不足的问题（单个redis-cluster集群有节点和容量上限）
 * 使用自定义命令拦截器约束客户端侧的命令调用，比如屏蔽某些命令、限制key/value的格式或者大小、限制客户端的来源ip等
+* 使用内置的MultiWriteCommandInterceptor命令拦截器，实现按需双写的功能
 * 使用大key/热key/慢查询/tps等丰富的监控功能来检测你的系统
 * 使用热key缓存功能来应对突发流量
 * 使用双读/读写分离功能来扩展集群的读能力上限
 * 使用value转换功能实现自定义的数据解压缩、数据加解密等功能
+* 使用key的转换功能实现key的命名空间功能（把同一个redis划分成多个命名空间，彼此key因为前缀不同而互不影响）
 * 等等
 
 ## 性能测试报告

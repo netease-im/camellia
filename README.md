@@ -76,7 +76,7 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 基于CamelliaRedisTemplate，提供了redis相关的一些工具类，如分布式锁、分布式id生成等    
 [快速开始](/docs/toolkit/toolkit.md)    
 ### 8、camellia-tools
-提供了一些工具类，包括：压缩工具类CamelliaCompressor、加解密工具类CamelliaEncryptor等  
+提供了一些工具类，包括：压缩工具类CamelliaCompressor、加解密工具类CamelliaEncryptor、本地缓存工具类CamelliaLoadingCache等  
 [快速开始](/docs/tools/tools.md)       
 
 ## 版本

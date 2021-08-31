@@ -7,15 +7,17 @@
 
 # 1.0.36（2021/08/xx）
 ### 新增
-* 新增camellia-tools模块，提供解压缩工具类CamelliaCompressor、加解密工具类CamelliaEncryptor，具体见：[tools](/docs/tools/tools.md)
+* 新增camellia-tools模块，提供解压缩工具类CamelliaCompressor、加解密工具类CamelliaEncryptor、本地缓存工具类CamelliaLoadingCache，具体见：[tools](/docs/tools/tools.md)
 * 新增了使用camellia-tools来实现camellia-redis-proxy数据解压缩、加解密的例子，具体见：[转换](/docs/redis-proxy/converter.md)
 * camellia-redis-proxy支持自定义的ClientAuthProvider来实现通过password区分路由的方法，具体见：[路由配置](/docs/redis-proxy/route.md)，感谢[@yangxb2010000](https://github.com/yangxb2010000)提供该功能
 * camellia-redis-proxy支持设置使用随机端口，具体见：[部署](/docs/redis-proxy/deploy.md)
 * camellia-redis-proxy支持对key的自定义转换，具体见：[转换](/docs/redis-proxy/converter.md)
 * camellia-redis-proxy新增对RANDOMKEY命令的支持
+* camellia-redis-proxy新增对HELLO命令的支持，不支持RESP3，但是支持通过HELLO命令setname和auth username password（如果客户端使用Lettuce6.x，则需要升级到本版本）
 
 ### 更新
 * camellia-redis-proxy的info命令返回新增http_console_port字段
+* camellia-redis-proxy的auth/client/quit等命令的处理从ServerHandler迁移到CommandsTransponder  
 
 ### fix
 * fix工具类KeyParser对EVAL/EVALSHA/XINFO/XGROUP/ZINTERSTORE/ZUNIONSTORE/ZDIFFSTORE命令的key的解析

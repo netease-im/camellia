@@ -76,7 +76,7 @@ base on camellia-redis-proxy、CamelliaRedisTemplate、CamelliaHBaseTemplate, su
 base on CamelliaRedisTemplate，provide some toolkit of redis, such as redis-lock  
 [QUICK START](/docs/toolkit/toolkit.md)
 ### 8、camellia-tools  
-provide some tools, such as compress utils CamelliaCompressor, encrypt utils CamelliaEncryptor    
+provide some tools, such as compress utils CamelliaCompressor, encrypt utils CamelliaEncryptor, local cache utils CamelliaLoadingCache       
 [QUICK START](/docs/tools/tools.md)   
 
 ## Version
