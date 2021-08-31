@@ -10,12 +10,12 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AuthCommandUtil {
-    private static final Logger logger = LoggerFactory.getLogger(AuthCommandUtil.class);
+public class AuthCommandProcessor {
+    private static final Logger logger = LoggerFactory.getLogger(AuthCommandProcessor.class);
 
     private final ClientAuthProvider clientAuthProvider;
 
-    public AuthCommandUtil(ClientAuthProvider clientAuthProvider) {
+    public AuthCommandProcessor(ClientAuthProvider clientAuthProvider) {
         this.clientAuthProvider = clientAuthProvider;
     }
 
@@ -25,18 +25,33 @@ public class AuthCommandUtil {
         }
 
         byte[][] objects = auth.getObjects();
-        if (objects.length != 2) {
+        if (objects.length != 2 && objects.length != 3) {
             return ErrorReply.INVALID_PASSWORD;
         }
 
-        String password = Utils.bytesToString(objects[1]);
+        String userName = null;
+        String password;
+        if (objects.length == 2) {
+            password = Utils.bytesToString(objects[1]);
+        } else {
+            userName = Utils.bytesToString(objects[1]);
+            password = Utils.bytesToString(objects[2]);
+        }
 
-        ClientIdentity clientIdentity = this.clientAuthProvider.auth(password);
+        boolean pass = checkPassword(channelInfo, userName, password);
+        if (pass) {
+            return StatusReply.OK;
+        } else {
+            return ErrorReply.INVALID_PASSWORD;
+        }
+    }
+
+    public boolean checkPassword(ChannelInfo channelInfo, String userName, String password) {
+        ClientIdentity clientIdentity = this.clientAuthProvider.auth(userName, password);
         if (clientIdentity == null || !clientIdentity.isPass()) {
             channelInfo.setChannelStats(ChannelInfo.ChannelStats.NO_AUTH);
-            return ErrorReply.INVALID_PASSWORD;
+            return false;
         }
-
         channelInfo.setChannelStats(ChannelInfo.ChannelStats.AUTH_OK);
 
         if (clientIdentity.getBid() != null && channelInfo.getBid() == null) {//不允许auth多次来改变bid/bgroup
@@ -49,7 +64,7 @@ public class AuthCommandUtil {
                         channelInfo.getConsid());
             }
         }
-        return StatusReply.OK;
+        return true;
     }
 
     public boolean isPasswordRequired() {

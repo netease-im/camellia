@@ -32,7 +32,7 @@ public class CamelliaRedisProxyServer {
 
     public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, EventLoopGroup bossGroup, EventLoopGroup workGroup, CommandInvoker invoker) {
         this.serverProperties = serverProperties;
-        this.serverHandler = new ServerHandler(serverProperties, invoker);
+        this.serverHandler = new ServerHandler(invoker);
         this.bossGroup = bossGroup;
         this.workGroup = workGroup;
         ConfigInitUtil.initProxyDynamicConfHook(serverProperties);
@@ -43,7 +43,7 @@ public class CamelliaRedisProxyServer {
 
     public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, CommandInvoker invoker) {
         this.serverProperties = serverProperties;
-        this.serverHandler = new ServerHandler(serverProperties, invoker);
+        this.serverHandler = new ServerHandler(invoker);
         int bossThread = serverProperties.getBossThread();
         int workThread = serverProperties.getWorkThread();
         logger.info("CamelliaRedisProxyServer init, bossThread = {}, workThread = {}", bossThread, workThread);
@@ -72,7 +72,7 @@ public class CamelliaRedisProxyServer {
                     public void initChannel(SocketChannel ch) throws Exception {
                         ChannelPipeline p = ch.pipeline();
                         p.addLast(new CommandDecoder(serverProperties.getCommandDecodeMaxBatchSize(), serverProperties.getCommandDecodeBufferInitializerSize()));
-                        p.addLast(new ReplyEncoder(serverProperties));
+                        p.addLast(new ReplyEncoder());
                         p.addLast(initHandler);
                         p.addLast(serverHandler);
                     }

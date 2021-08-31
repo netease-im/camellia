@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterMan
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.CommandHotKeyCacheConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheManager;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
+import com.netease.nim.camellia.redis.proxy.command.AuthCommandProcessor;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
@@ -36,6 +37,12 @@ public class AsyncCommandInvoker implements CommandInvoker {
 
     public AsyncCommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
         this.chooser = new AsyncCamelliaRedisTemplateChooser(transpondProperties);
+
+        if (serverProperties.isMonitorEnable()) {
+            MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);
+            RedisMonitor.init(serverProperties.getMonitorIntervalSeconds(), serverProperties.isCommandSpendTimeMonitorEnable(), monitorCallback);
+        }
+
         int monitorIntervalSeconds = serverProperties.getMonitorIntervalSeconds();
         CommandInterceptor commandInterceptor = ConfigInitUtil.initCommandInterceptor(serverProperties);
         CommandSpendTimeConfig commandSpendTimeConfig = ConfigInitUtil.initCommandSpendTimeConfig(serverProperties);
@@ -68,7 +75,8 @@ public class AsyncCommandInvoker implements CommandInvoker {
         if (converterConfig != null) {
             converters = new Converters(converterConfig);
         }
-        this.commandInvokeConfig = new CommandInvokeConfig(commandInterceptor, commandSpendTimeConfig, hotKeyCacheManager, hotKeyHunterManager, bigKeyHunter, converters);
+        AuthCommandProcessor authCommandProcessor = new AuthCommandProcessor(ConfigInitUtil.initClientAuthProvider(serverProperties));
+        this.commandInvokeConfig = new CommandInvokeConfig(authCommandProcessor, commandInterceptor, commandSpendTimeConfig, hotKeyCacheManager, hotKeyHunterManager, bigKeyHunter, converters);
         PasswordMaskUtils.maskEnable = serverProperties.isMonitorDataMaskPassword();
     }
 

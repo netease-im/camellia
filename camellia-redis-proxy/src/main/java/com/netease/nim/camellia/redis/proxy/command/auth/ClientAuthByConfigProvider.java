@@ -11,8 +11,12 @@ public class ClientAuthByConfigProvider implements ClientAuthProvider {
     }
 
     @Override
-    public ClientIdentity auth(String password) {
+    public ClientIdentity auth(String userName, String password) {
         ClientIdentity clientIdentity = new ClientIdentity();
+        if (userName != null && !userName.equals("default")) {
+            clientIdentity.setPass(false);
+            return clientIdentity;
+        }
         clientIdentity.setPass(!StringUtil.isNullOrEmpty(this.configPassword)
                 && this.configPassword.equals(password));
         return clientIdentity;

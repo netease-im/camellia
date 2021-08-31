@@ -17,8 +17,8 @@ public class ClientCommandUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientCommandUtil.class);
 
-    public static Reply invokeClientCommand(ChannelInfo channelInfo, Command client) {
-        byte[][] objects = client.getObjects();
+    public static Reply invokeClientCommand(ChannelInfo channelInfo, Command command) {
+        byte[][] objects = command.getObjects();
         if (objects.length == 2) {
             boolean getname = Utils.checkStringIgnoreCase(objects[1], RedisKeyword.GETNAME.name());
             if (getname) {
@@ -35,19 +35,25 @@ public class ClientCommandUtil {
                     return ErrorReply.SYNTAX_ERROR;
                 }
 
-                //不允许变更clientname
-                if (channelInfo.getClientName() != null) {
+                boolean success = updateClientName(channelInfo, clienName);
+                if (!success) {
                     return ErrorReply.REPEAT_OPERATION;
                 }
-                channelInfo.setClientName(clienName);
-                if (channelInfo.getBid() == null) {//只有没有设置过bid/bgroup，才能通过client setname来设置bid/bgroup
-                    setBidAndBGroup(channelInfo, clienName);
-                }
-
                 return StatusReply.OK;
             }
         }
         return ErrorReply.SYNTAX_ERROR;
+    }
+
+    public static boolean updateClientName(ChannelInfo channelInfo, String clientName) {
+        if (channelInfo.getClientName() != null) {
+            return false;
+        }
+        channelInfo.setClientName(clientName);
+        if (channelInfo.getBid() == null) {//只有没有设置过bid/bgroup，才能通过client setname来设置bid/bgroup
+            setBidAndBGroup(channelInfo, clientName);
+        }
+        return true;
     }
 
     private static void setBidAndBGroup(ChannelInfo channelInfo, String clienName) {
