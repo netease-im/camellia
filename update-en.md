@@ -12,7 +12,8 @@
 * camellia-redis-proxy support custom ClientAuthProvider to route different bid/bgroup route conf by different password  
 * camellia-redis-proxy support setting random port/consolePort
 * camellia-redis-proxy support key converter
-* camellia-redis-proxy support RANDOMKEY commands  
+* camellia-redis-proxy support RANDOMKEY command  
+* camellia-redis-proxy support HELLO command, do not support RESP3, but support setname and auth username password by HELLO  
 
 ### update
 * camellia-redis-proxy info command reply add http_console_port field

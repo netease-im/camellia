@@ -13,6 +13,7 @@
 * camellia-redis-proxy支持设置使用随机端口，具体见：[部署](/docs/redis-proxy/deploy.md)
 * camellia-redis-proxy支持对key的自定义转换，具体见：[转换](/docs/redis-proxy/converter.md)
 * camellia-redis-proxy新增对RANDOMKEY命令的支持
+* camellia-redis-proxy新增对HELLO命令的支持，不支持RESP3，但是支持通过HELLO命令setname和auth username password
 
 ### 更新
 * camellia-redis-proxy的info命令返回新增http_console_port字段
