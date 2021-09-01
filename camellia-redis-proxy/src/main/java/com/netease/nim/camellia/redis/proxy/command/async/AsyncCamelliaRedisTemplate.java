@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- *
  * Created by caojiajun on 2019/12/19.
  */
 public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
@@ -85,7 +84,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     }
 
     public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, CamelliaApi service, long bid, String bgroup,
-                                        boolean monitorEnable, long checkIntervalMillis, boolean reload) {
+                                      boolean monitorEnable, long checkIntervalMillis, boolean reload) {
         this.env = env;
         this.bid = bid;
         this.bgroup = bgroup;
@@ -216,6 +215,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 CompletableFuture<Reply> future;
                 switch (redisCommand) {
                     case PUBSUB:
+                    case SCAN:
                         future = commandFlusher.sendCommand(client, command);
                         incrRead(resource, command);
                         break;
@@ -247,7 +247,6 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 CompletableFuture<Reply> future;
                 switch (redisCommand) {
                     case KEYS:
-                    case SCAN:
                     case WATCH:
                     case UNWATCH:
                     case MULTI:
@@ -435,7 +434,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     private CompletableFuture<Reply> xreadOrXreadgroup(Command command, CommandFlusher commandFlusher) {
         byte[][] objects = command.getObjects();
         int index = -1;
-        for (int i=1; i<objects.length; i++) {
+        for (int i = 1; i < objects.length; i++) {
             String string = new String(objects[i], Utils.utf8Charset);
             if (string.equalsIgnoreCase(RedisKeyword.STREAMS.name())) {
                 index = i;
@@ -543,7 +542,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 return completableFuture;
             }
             List<Resource> resources = resourceChooser.getWriteResources(objects[3]);
-            for (int i=4; i<3+keyCount; i++) {
+            for (int i = 4; i < 3 + keyCount; i++) {
                 byte[] key = objects[i];
                 List<Resource> writeResources = resourceChooser.getWriteResources(key);
                 if (writeResources.size() != resources.size()) {
@@ -551,7 +550,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     completableFuture.complete(new ErrorReply("ERR keys in request not in same resources"));
                     return completableFuture;
                 }
-                for (int j=0; j<writeResources.size(); j++) {
+                for (int j = 0; j < writeResources.size(); j++) {
                     if (!resources.get(j).getUrl().equals(writeResources.get(j).getUrl())) {
                         CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
                         completableFuture.complete(new ErrorReply("ERR keys in request not in same resources"));
@@ -639,7 +638,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         List<BytesKey> redisKeys = new ArrayList<>();
         Map<String, List<BytesKey>> map = new HashMap<>();
         byte[][] args = command.getObjects();
-        for (int i=1; i<args.length; i++) {
+        for (int i = 1; i < args.length; i++) {
             byte[] key = args[i];
             BytesKey redisKey = new BytesKey(key);
             redisKeys.add(redisKey);
@@ -674,7 +673,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         CompletableFuture<Reply> future = new CompletableFuture<>();
         AsyncUtils.allOf(futures).thenAccept(replies -> {
             Map<BytesKey, Reply> replyMap = new HashMap<>();
-            for (int i=0; i<urlList.size(); i++) {
+            for (int i = 0; i < urlList.size(); i++) {
                 String url = urlList.get(i);
                 List<BytesKey> keyList = map.get(url);
                 Reply reply = replies.get(i);
@@ -695,7 +694,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 }
             }
             Reply[] retReplies = new Reply[redisKeys.size()];
-            for (int i=0; i<redisKeys.size(); i++) {
+            for (int i = 0; i < redisKeys.size(); i++) {
                 BytesKey redisKey = redisKeys.get(i);
                 retReplies[i] = replyMap.get(redisKey);
             }
@@ -761,7 +760,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     private CompletableFuture<Reply> exists(Command command, CommandFlusher commandFlusher) {
         Map<String, List<byte[]>> map = new HashMap<>();
         byte[][] args = command.getObjects();
-        for (int i=1; i<args.length; i++) {
+        for (int i = 1; i < args.length; i++) {
             byte[] key = args[i];
             Resource resource = getReadResource(key);
             List<byte[]> list = map.get(resource.getUrl());
@@ -796,7 +795,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         byte[][] objects = command.getObjects();
         if (resourceChooser.getType() == ResourceTable.Type.SHADING) {
             String url = null;
-            for (int i=start; i<=end; i++) {
+            for (int i = start; i <= end; i++) {
                 byte[] key = objects[i];
                 Resource resource = resourceChooser.getReadResource(key);
                 if (url != null && !url.equals(resource.getUrl())) {
@@ -895,7 +894,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 return future;
             }
             List<Resource> writeResources = null;
-            for (int i=start; i<=end; i++) {
+            for (int i = start; i <= end; i++) {
                 byte[] key = objects[i];
                 List<Resource> resources = resourceChooser.getWriteResources(key);
                 if (writeResources != null) {
@@ -945,7 +944,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         if (resources1.size() != resources2.size()) {
             return false;
         }
-        for (int i=0; i<resources1.size(); i++) {
+        for (int i = 0; i < resources1.size(); i++) {
             Resource resource1 = resources1.get(i);
             Resource resource2 = resources2.get(i);
             if (!resource1.getUrl().equals(resource2.getUrl())) {
@@ -997,7 +996,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         private ResourceTable resourceTable;
 
         ProxyRouteConfUpdaterReloadTask(AsyncCamelliaRedisTemplate template, ResourceTable resourceTable, long bid, String bgroup,
-                                               ProxyRouteConfUpdater updater) {
+                                        ProxyRouteConfUpdater updater) {
             this.template = template;
             this.resourceTable = resourceTable;
             this.bid = bid;
@@ -1118,6 +1117,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     }
 
     private static final String className = AsyncCamelliaRedisTemplate.class.getSimpleName();
+
     private void incrRead(String url, Command command) {
         if (monitor != null) {
             monitor.incrRead(url, className, command.getName());
@@ -1131,6 +1131,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             logger.debug("read command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, url);
         }
     }
+
     private void incrRead(Resource resource, Command command) {
         if (monitor != null) {
             monitor.incrRead(resource.getUrl(), className, command.getName());
@@ -1158,6 +1159,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             logger.debug("write command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, url);
         }
     }
+
     private void incrWrite(Resource resource, Command command) {
         if (monitor != null) {
             monitor.incrWrite(resource.getUrl(), className, command.getName());

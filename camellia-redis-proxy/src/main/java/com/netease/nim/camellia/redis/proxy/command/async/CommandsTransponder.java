@@ -21,6 +21,7 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
@@ -163,6 +164,18 @@ public class CommandsTransponder {
                 if (redisCommand == RedisCommand.HELLO) {
                     Reply reply = HelloCommandUtil.invokeHelloCommand(channelInfo, authCommandProcessor, command);
                     task.replyCompleted(reply);
+                    hasCommandsSkip = true;
+                    continue;
+                }
+
+                if (redisCommand == RedisCommand.SELECT) {
+                    if (command.getObjects().length == 2
+                            && "0".equals(new String(command.getObjects()[1], Utils.utf8Charset))) {
+                        task.replyCompleted(StatusReply.OK);
+                    } else {
+                        task.replyCompleted(ErrorReply.NOT_SUPPORT);
+                    }
+
                     hasCommandsSkip = true;
                     continue;
                 }

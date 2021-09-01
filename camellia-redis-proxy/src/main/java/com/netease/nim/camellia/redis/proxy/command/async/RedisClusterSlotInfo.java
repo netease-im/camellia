@@ -15,9 +15,9 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
- *
  * Created by caojiajun on 2019/12/18.
  */
 public class RedisClusterSlotInfo {
@@ -30,11 +30,13 @@ public class RedisClusterSlotInfo {
     public static final int SLOT_SIZE = 16384;
 
     //slot -> master redis node
-    private Node[] slotArray = new Node[SLOT_SIZE];
-    private Set<Node> nodeSet = new HashSet<>();
+    private volatile Node[] slotArray = new Node[SLOT_SIZE];
+    private volatile Set<Node> nodeSet = new TreeSet<>(Comparator.comparing(o -> o.getAddr().getUrl()));
+    private volatile List<Node> nodeList = new ArrayList<>();
 
     private final RedisClusterResource redisClusterResource;
     private final String password;
+
     public RedisClusterSlotInfo(RedisClusterResource redisClusterResource) {
         if (redisClusterResource == null) {
             throw new CamelliaRedisException("redisClusterResource is null");
@@ -45,6 +47,7 @@ public class RedisClusterSlotInfo {
 
     /**
      * get client by slot
+     *
      * @param slot slot
      * @return client
      */
@@ -56,6 +59,7 @@ public class RedisClusterSlotInfo {
 
     /**
      * get node by slot
+     *
      * @param slot slot
      * @return node
      */
@@ -65,6 +69,7 @@ public class RedisClusterSlotInfo {
 
     /**
      * get all nodes
+     *
      * @return nodes
      */
     public Set<Node> getNodes() {
@@ -72,10 +77,36 @@ public class RedisClusterSlotInfo {
     }
 
     /**
+     * get node by index, node list is sorted by url.
+     *
+     * @return
+     */
+    public Node getNodeByIndex(int index) {
+        List<Node> tmpNodeList = this.nodeList;
+        if (tmpNodeList.size() > index) {
+            return tmpNodeList.get(index);
+        }
+
+        return null;
+    }
+
+    /**
+     * get client by index, node list is sorted by url.
+     *
+     * @return
+     */
+    public RedisClient getClientByIndex(int index) {
+        Node node = getNodeByIndex(index);
+        if (node == null) return null;
+        return RedisClientHub.get(node.getAddr());
+    }
+
+    /**
      * renew slot info
      */
     private long lastRenewTimestamp = 0L;
     private final AtomicBoolean renew = new AtomicBoolean(false);
+
     public Future<Boolean> renew() {
         //限制1s内最多renew一次
         if (TimeCache.currentMillis - lastRenewTimestamp < 1000) {
@@ -149,17 +180,17 @@ public class RedisClusterSlotInfo {
 
                     MultiBulkReply reply2 = (MultiBulkReply) reply1;
                     Reply[] replies1 = reply2.getReplies();
-                    IntegerReply slotStart = (IntegerReply)replies1[0];
-                    IntegerReply slotEnd = (IntegerReply)replies1[1];
+                    IntegerReply slotStart = (IntegerReply) replies1[0];
+                    IntegerReply slotEnd = (IntegerReply) replies1[1];
                     MultiBulkReply master = (MultiBulkReply) replies1[2];
                     Reply[] replies2 = master.getReplies();
                     BulkReply host = (BulkReply) replies2[0];
-                    IntegerReply port = (IntegerReply)replies2[1];
+                    IntegerReply port = (IntegerReply) replies2[1];
                     Node node = new Node(Utils.bytesToString(host.getRaw()), port.getInteger().intValue(), password);
                     nodeSet.add(node);
-                    for (long i=slotStart.getInteger(); i<=slotEnd.getInteger(); i++) {
-                        slotArray[(int)i] = node;
-                        size ++;
+                    for (long i = slotStart.getInteger(); i <= slotEnd.getInteger(); i++) {
+                        slotArray[(int) i] = node;
+                        size++;
                     }
                 }
             } else if (reply instanceof ErrorReply) {
@@ -173,6 +204,7 @@ public class RedisClusterSlotInfo {
             }
             if (!nodeSet.isEmpty()) {
                 this.nodeSet = nodeSet;
+                this.nodeList = nodeSet.stream().collect(Collectors.toList());
             }
             if (size > 0) {
                 this.slotArray = slotArray;
@@ -186,6 +218,10 @@ public class RedisClusterSlotInfo {
         } catch (Exception e) {
             throw new CamelliaRedisException(e);
         }
+    }
+
+    public Integer getNodesSize() {
+        return nodeList.size();
     }
 
     public static class Node {
