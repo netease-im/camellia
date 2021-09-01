@@ -13,7 +13,7 @@ camellia-redis-proxy提供了key/value的自定义转换功能，从而你可以
 ### 当前支持对key转换的命令
 带key的命令都支持，特别的：
 * 对于KEYS和SCAN命令，回调给KeyConverter接口的是pattern，而不是实际的key  
-* 对于pubsub系列命令，回调给KeyConverter接口的是pattern或者channel，而不是实际的key    
+* 对于PUBSUB系列命令，回调给KeyConverter接口的是pattern或者channel，而不是实际的key    
 
 感谢[@yangxb2010000](https://github.com/yangxb2010000)对key转换功能的增强
 
