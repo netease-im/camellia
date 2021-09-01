@@ -10,6 +10,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持pubsub命令
 * 支持事务命令（MULTI/EXEC/DISCARD/WATCH/UNWATCH），当前仅当代理到redis/redis-sentinel且无分片/无读写分离时支持
 * 支持redis5.0的Streams命令
+* 支持SCAN命令（代理到redis/redis-sentinel/redis-cluster均支持）
 * 支持自定义分片
 * 支持读写分离
 * 支持读slave（redis-sentinel的主从模式下，支持配置读slave，且proxy能自动感知节点宕机、主从切换和从节点扩容）
@@ -93,14 +94,14 @@ GEOSEARCHSTORE,
 当前仅当路由后端是单个redis或者单个redis-sentinel或者单个redis-cluster  
 ```
 ##PUBSUB
-SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
+SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,SCAN,
 ```
 
 * 部分支持2
 当前仅当路由后端是单个redis或者单个redis-sentinel  
 ```
 ##DataBase
-KEYS,SCAN,RANDOMKEY,
+KEYS,RANDOMKEY,
 MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ``` 
 

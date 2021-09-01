@@ -14,6 +14,7 @@
 * camellia-redis-proxy支持对key的自定义转换，具体见：[转换](/docs/redis-proxy/converter.md)
 * camellia-redis-proxy新增对RANDOMKEY命令的支持
 * camellia-redis-proxy新增对HELLO命令的支持，不支持RESP3，但是支持通过HELLO命令setname和auth username password（如果客户端使用Lettuce6.x，则需要升级到本版本）
+* camellia-redis-proxy代理到redis-cluster时支持scan命令，感谢[@yangxb2010000](https://github.com/yangxb2010000)提供该功能
 
 ### 更新
 * camellia-redis-proxy的info命令返回新增http_console_port字段

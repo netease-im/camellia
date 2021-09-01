@@ -13,7 +13,8 @@
 * camellia-redis-proxy support setting random port/consolePort
 * camellia-redis-proxy support key converter
 * camellia-redis-proxy support RANDOMKEY command  
-* camellia-redis-proxy support HELLO command, do not support RESP3, but support setname and auth username password by HELLO command(if redis-client is Lettuce6.x, proxy should upgrade to this version)  
+* camellia-redis-proxy support HELLO command, do not support RESP3, but support setname and auth username password by HELLO command(if redis-client is Lettuce6.x, proxy should upgrade to this version)
+* camellia-redis-proxy support scan command when route to redis-cluster  
 
 ### update
 * camellia-redis-proxy info command reply add http_console_port field
