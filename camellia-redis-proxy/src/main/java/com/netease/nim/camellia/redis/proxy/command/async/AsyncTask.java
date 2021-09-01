@@ -36,6 +36,7 @@ public class AsyncTask {
                      CommandSpendTimeConfig commandSpendTimeConfig, BigKeyHunter bigKeyHunter, Converters converters) {
         this.command = command;
         this.taskQueue = taskQueue;
+        this.taskQueue.setConverters(converters);
         this.commandSpendTimeConfig = commandSpendTimeConfig;
         if (RedisMonitor.isCommandSpendTimeMonitorEnable()) {
             startTime = System.nanoTime();

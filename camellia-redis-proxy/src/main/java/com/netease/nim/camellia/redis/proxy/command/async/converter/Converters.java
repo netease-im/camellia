@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command.async.converter;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
+import com.netease.nim.camellia.redis.proxy.command.async.PubSubUtils;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.reply.*;
@@ -27,6 +28,30 @@ public class Converters {
         this.listConverter = converterConfig.getListConverter();
         this.hashConverter = converterConfig.getHashConverter();
         this.zSetConverter = converterConfig.getzSetConverter();
+    }
+
+    public KeyConverter getKeyConverter() {
+        return keyConverter;
+    }
+
+    public StringConverter getStringConverter() {
+        return stringConverter;
+    }
+
+    public SetConverter getSetConverter() {
+        return setConverter;
+    }
+
+    public ListConverter getListConverter() {
+        return listConverter;
+    }
+
+    public HashConverter getHashConverter() {
+        return hashConverter;
+    }
+
+    public ZSetConverter getzSetConverter() {
+        return zSetConverter;
     }
 
     public void convertRequest(Command command) {
@@ -238,6 +263,36 @@ public class Converters {
                     matchIndex = i;
                 }
             }
+        } else if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE
+                || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
+            if (objects.length > 1) {
+                for (int i = 1; i < objects.length; i ++) {
+                    byte[] convertedChannels = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                    objects[i] = convertedChannels;
+                }
+            }
+        } else if (redisCommand == RedisCommand.PUBLISH) {
+            if (objects.length > 1) {
+                byte[] convertedChannels = keyConverter.convert(commandContext, redisCommand, objects[1]);
+                objects[1] = convertedChannels;
+            }
+        } else if (redisCommand == RedisCommand.PUBSUB) {
+            if (objects.length >= 2) {
+                String subCommand = Utils.bytesToString(objects[1]);
+                if (subCommand.equalsIgnoreCase("NUMSUB")) {
+                    if (objects.length >= 3) {
+                        for (int i=2; i<objects.length; i++) {
+                            byte[] convertedChannels = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                            objects[i] = convertedChannels;
+                        }
+                    }
+                } else if (subCommand.equalsIgnoreCase("CHANNELS")) {
+                    if (objects.length == 3) {
+                        byte[] convertedChannels = keyConverter.convert(commandContext, redisCommand, objects[2]);
+                        objects[2] = convertedChannels;
+                    }
+                }
+            }
         }
     }
 
@@ -263,9 +318,40 @@ public class Converters {
             }
         } else if (redisCommand == RedisCommand.BLPOP || redisCommand == RedisCommand.BRPOP
                 || redisCommand == RedisCommand.BZPOPMAX || redisCommand == RedisCommand.BZPOPMIN) {
-            Reply[] replies = ((MultiBulkReply) reply).getReplies();
-            if (replies != null && replies.length >= 2) {
-                reverseConvertKey(redisCommand, commandContext, replies[0]);
+            if (reply instanceof MultiBulkReply) {
+                Reply[] replies = ((MultiBulkReply) reply).getReplies();
+                if (replies != null && replies.length >= 2) {
+                    reverseConvertKey(redisCommand, commandContext, replies[0]);
+                }
+            }
+        } else if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE
+                || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
+            PubSubUtils.checkKeyConverter(redisCommand, command.getCommandContext(), keyConverter, reply);
+        } else if (redisCommand == RedisCommand.PUBSUB) {
+            byte[][] objects = command.getObjects();
+            if (objects.length >= 2) {
+                String subCommand = Utils.bytesToString(objects[1]);
+                if (subCommand.equalsIgnoreCase("NUMSUB")) {
+                    if (reply instanceof MultiBulkReply) {
+                        Reply[] replies = ((MultiBulkReply) reply).getReplies();
+                        if (replies != null) {
+                            if (replies.length % 2 == 0) {
+                                for (int i=0; i<replies.length; i+=2) {
+                                    reverseConvertKey(redisCommand, commandContext, replies[i]);
+                                }
+                            }
+                        }
+                    }
+                } else if (subCommand.equalsIgnoreCase("CHANNELS")) {
+                    if (reply instanceof MultiBulkReply) {
+                        Reply[] replies = ((MultiBulkReply) reply).getReplies();
+                        if (replies != null) {
+                            for (Reply reply1 : replies) {
+                                reverseConvertKey(redisCommand, commandContext, reply1);
+                            }
+                        }
+                    }
+                }
             }
         }
     }

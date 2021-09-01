@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
+import com.netease.nim.camellia.redis.proxy.command.async.converter.Converters;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import org.slf4j.Logger;
@@ -21,9 +22,18 @@ public class AsyncTaskQueue {
     private final Queue<AsyncTask> queue = new LinkedBlockingQueue<>(1024*32);
     private final AtomicBoolean callbacking = new AtomicBoolean(false);
     private final AtomicLong id = new AtomicLong(0);
+    private Converters converters;
 
     public AsyncTaskQueue(ChannelInfo channelInfo) {
         this.channelInfo = channelInfo;
+    }
+
+    public Converters getConverters() {
+        return converters;
+    }
+
+    public void setConverters(Converters converters) {
+        this.converters = converters;
     }
 
     public ChannelInfo getChannelInfo() {

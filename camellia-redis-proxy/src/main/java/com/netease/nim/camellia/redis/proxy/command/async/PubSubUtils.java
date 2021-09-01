@@ -1,6 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.command.async.converter.Converters;
+import com.netease.nim.camellia.redis.proxy.command.async.converter.KeyConverter;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
@@ -24,6 +26,11 @@ public class PubSubUtils {
 
     public static void sendByBindClient(RedisClient client, AsyncTaskQueue asyncTaskQueue,
                                         Command command, CompletableFuture<Reply> future, boolean first) {
+        sendByBindClient(client, asyncTaskQueue, command, future, first, command.getRedisCommand(), command.getCommandContext());
+    }
+
+    private static void sendByBindClient(RedisClient client, AsyncTaskQueue asyncTaskQueue,
+                                        Command command, CompletableFuture<Reply> future, boolean first, RedisCommand redisCommand, CommandContext commandContext) {
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
         if (future != null) {
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
@@ -32,6 +39,10 @@ public class PubSubUtils {
                 if (first) {
                     future.complete(reply);
                 } else {
+                    Converters converters = asyncTaskQueue.getConverters();
+                    if (converters != null) {
+                        checkKeyConverter(redisCommand, commandContext, converters.getKeyConverter(), reply);
+                    }
                     asyncTaskQueue.reply(reply);
                 }
                 checkSubscribeReply(client, reply, asyncTaskQueue);
@@ -42,7 +53,11 @@ public class PubSubUtils {
                 CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
                 completableFuture.thenAccept(reply -> {
                     if (client.queueSize() < 8 && client.isValid()) {
-                        sendByBindClient(client, asyncTaskQueue, null, null, false);
+                        sendByBindClient(client, asyncTaskQueue, null, null, false, redisCommand, commandContext);
+                    }
+                    Converters converters = asyncTaskQueue.getConverters();
+                    if (converters != null) {
+                        checkKeyConverter(redisCommand, commandContext, converters.getKeyConverter(), reply);
                     }
                     asyncTaskQueue.reply(reply);
                     checkSubscribeReply(client, reply, asyncTaskQueue);
@@ -54,6 +69,46 @@ public class PubSubUtils {
             client.sendCommand(Collections.singletonList(command), futures);
         } else {
             client.sendCommand(Collections.emptyList(), futures);
+        }
+    }
+
+    public static void checkKeyConverter(RedisCommand redisCommand, CommandContext commandContext, KeyConverter keyConverter, Reply reply) {
+        if (keyConverter != null) {
+            if (reply instanceof MultiBulkReply) {
+                Reply[] replies = ((MultiBulkReply) reply).getReplies();
+                if (replies.length > 1) {
+                    if (replies[0] instanceof BulkReply) {
+                        String type = Utils.bytesToString(((BulkReply) replies[0]).getRaw());
+                        if (type.equalsIgnoreCase("psubscribe") || type.equalsIgnoreCase("subscribe")
+                                || type.equalsIgnoreCase("unsubscribe") || type.equalsIgnoreCase("punsubscribe")
+                                || type.equalsIgnoreCase("message")) {
+                            if (replies.length == 3) {
+                                Reply reply1 = replies[1];
+                                if (reply1 instanceof BulkReply) {
+                                    byte[] raw = ((BulkReply) reply1).getRaw();
+                                    byte[] convert = keyConverter.reverseConvert(commandContext, redisCommand, raw);
+                                    ((BulkReply) reply1).updateRaw(convert);
+                                }
+                            }
+                        } else if (type.equalsIgnoreCase("pmessage")) {
+                            if (replies.length == 4) {
+                                Reply reply1 = replies[1];
+                                if (reply1 instanceof BulkReply) {
+                                    byte[] raw = ((BulkReply) reply1).getRaw();
+                                    byte[] convert = keyConverter.reverseConvert(commandContext, redisCommand, raw);
+                                    ((BulkReply) reply1).updateRaw(convert);
+                                }
+                                Reply reply2 = replies[2];
+                                if (reply2 instanceof BulkReply) {
+                                    byte[] raw = ((BulkReply) reply2).getRaw();
+                                    byte[] convert = keyConverter.reverseConvert(commandContext, redisCommand, raw);
+                                    ((BulkReply) reply2).updateRaw(convert);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
