@@ -12,7 +12,6 @@ import com.netease.nim.camellia.redis.resource.RedisClusterResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -147,7 +146,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                     }
                 }
                 if (redisCommand == RedisCommand.SCAN) {
-                    handleScanCommand(commandFlusher, command, future);
+                    scan(commandFlusher, command, future);
                     continue;
                 }
             }
@@ -275,14 +274,14 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
         commandFlusher.flush();
     }
 
-    private void handleScanCommand(CommandFlusher commandFlusher, Command command, CompletableFuture<Reply> future) {
+    private void scan(CommandFlusher commandFlusher, Command command, CompletableFuture<Reply> future) {
         byte[][] objects = command.getObjects();
         if (objects == null || objects.length <= 1) {
-            future.complete(ErrorReply.NOT_AVAILABLE);
+            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
             return;
         }
 
-        long requestCursor = Long.parseLong(new String(objects[1], Utils.utf8Charset));
+        long requestCursor = Utils.bytesToNum(objects[1]);
         long nodeIndex;
         long realCursor;
         if (requestCursor == 0) {
@@ -302,11 +301,11 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
         }
 
         // rewrite real requestCursor for cluster node.
-        objects[1] = String.valueOf(realCursor).getBytes(StandardCharsets.UTF_8);
+        objects[1] = Utils.stringToBytes(String.valueOf(realCursor));
 
         final long currentNodeIndex = nodeIndex;
 
-        CompletableFuture<Reply> completableFuture = new CompletableFuture();
+        CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
         completableFuture.thenApply((reply) -> {
             if (reply instanceof MultiBulkReply) {
                 MultiBulkReply multiBulkReply = (MultiBulkReply) reply;
@@ -314,14 +313,14 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                 long newCursor;
                 if (multiBulkReply.getReplies().length == 2) {
                     BulkReply cursorReply = (BulkReply) multiBulkReply.getReplies()[0];
-                    long replyCursor = Long.parseLong(cursorReply.toString());
-                    if (replyCursor == 0l) {
+                    long replyCursor = Utils.bytesToNum(cursorReply.getRaw());
+                    if (replyCursor == 0L) {
                         if (currentNodeIndex < (getNodesSize() - 1)) {
                             newNodeIndex = currentNodeIndex + 1;
                         } else {
-                            newNodeIndex = 0l;
+                            newNodeIndex = 0L;
                         }
-                        newCursor = 0l;
+                        newCursor = 0L;
                     } else {
                         newCursor = replyCursor;
                         newNodeIndex = currentNodeIndex;
@@ -331,11 +330,11 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                         return new ErrorReply(String.format("Redis requestCursor is larger than %d is not supported for cluster mode.", RealCursorMask));
                     }
 
-                    multiBulkReply.getReplies()[0] = new IntegerReply(newNodeIndex << RealCursorBitLength | newCursor);
+                    multiBulkReply.getReplies()[0] = new BulkReply(Utils.stringToBytes(String.valueOf(newNodeIndex << RealCursorBitLength | newCursor)));
                 }
             }
             return reply;
-        }).thenAccept(reply -> future.complete(reply));
+        }).thenAccept(future::complete);
         CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, completableFuture, command);
         commandFlusher.sendCommand(redisClient, command, futureWrapper);
     }

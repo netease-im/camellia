@@ -192,7 +192,6 @@ public enum RedisCommand {
     PSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, true, CommandKeyType.None),
     PUNSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, false, CommandKeyType.None),
     PUBSUB(CommandSupportType.PARTIALLY_SUPPORT_1, Type.READ, CommandType.PUB_SUB, false, CommandKeyType.None),
-
     SCAN(CommandSupportType.PARTIALLY_SUPPORT_1, Type.READ, CommandType.DB, false, CommandKeyType.None),
 
     /**

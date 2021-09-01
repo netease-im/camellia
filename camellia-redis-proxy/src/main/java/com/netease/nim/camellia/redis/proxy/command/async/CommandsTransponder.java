@@ -168,18 +168,6 @@ public class CommandsTransponder {
                     continue;
                 }
 
-                if (redisCommand == RedisCommand.SELECT) {
-                    if (command.getObjects().length == 2
-                            && "0".equals(new String(command.getObjects()[1], Utils.utf8Charset))) {
-                        task.replyCompleted(StatusReply.OK);
-                    } else {
-                        task.replyCompleted(ErrorReply.NOT_SUPPORT);
-                    }
-
-                    hasCommandsSkip = true;
-                    continue;
-                }
-
                 //如果需要密码，但是没有auth，则返回NO_AUTH
                 if (authCommandProcessor.isPasswordRequired()) {
                     if (channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK) {
@@ -187,6 +175,21 @@ public class CommandsTransponder {
                         hasCommandsSkip = true;
                         continue;
                     }
+                }
+
+                if (redisCommand == RedisCommand.SELECT) {
+                    byte[][] objects = command.getObjects();
+                    if (objects.length == 2) {
+                        if ("0".equals(Utils.bytesToString(command.getObjects()[1]))) {
+                            task.replyCompleted(StatusReply.OK);
+                        } else {
+                            task.replyCompleted(new ErrorReply("ERR DB index is out of range"));
+                        }
+                    } else {
+                        task.replyCompleted(ErrorReply.argNumWrong(redisCommand));
+                    }
+                    hasCommandsSkip = true;
+                    continue;
                 }
 
                 if (redisCommand == RedisCommand.INFO) {

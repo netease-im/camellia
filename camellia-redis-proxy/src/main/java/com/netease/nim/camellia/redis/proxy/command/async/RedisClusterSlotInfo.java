@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 /**
  * Created by caojiajun on 2019/12/18.
@@ -77,36 +76,39 @@ public class RedisClusterSlotInfo {
     }
 
     /**
-     * get node by index, node list is sorted by url.
-     *
-     * @return
-     */
-    public Node getNodeByIndex(int index) {
-        List<Node> tmpNodeList = this.nodeList;
-        if (tmpNodeList.size() > index) {
-            return tmpNodeList.get(index);
-        }
-
-        return null;
-    }
-
-    /**
      * get client by index, node list is sorted by url.
      *
-     * @return
+     * @return RedisClient
      */
     public RedisClient getClientByIndex(int index) {
-        Node node = getNodeByIndex(index);
-        if (node == null) return null;
-        return RedisClientHub.get(node.getAddr());
+        try {
+            Node node = this.nodeList.get(index);
+            if (node == null) return null;
+            return RedisClientHub.get(node.getAddr());
+        } catch (Exception e) {
+            ErrorLogCollector.collect(RedisClusterSlotInfo.class,
+                    "getClientByIndex error, url = " + redisClusterResource.getUrl() + ", index = " + index, e);
+            return null;
+        }
     }
 
     /**
-     * renew slot info
+     * get nodes size
+     *
+     * @return size
      */
+    public Integer getNodesSize() {
+        return nodeList.size();
+    }
+
     private long lastRenewTimestamp = 0L;
     private final AtomicBoolean renew = new AtomicBoolean(false);
 
+    /**
+     * renew node list
+     *
+     * @return success/fail
+     */
     public Future<Boolean> renew() {
         //限制1s内最多renew一次
         if (TimeCache.currentMillis - lastRenewTimestamp < 1000) {
@@ -171,7 +173,7 @@ public class RedisClusterSlotInfo {
     private boolean clusterNodes(Reply reply) {
         try {
             Node[] slotArray = new Node[SLOT_SIZE];
-            Set<Node> nodeSet = new HashSet<>();
+            Set<Node> nodeSet = new TreeSet<>(Comparator.comparing(o -> o.getAddr().getUrl()));
 
             int size = 0;
             if (reply instanceof MultiBulkReply) {
@@ -204,7 +206,7 @@ public class RedisClusterSlotInfo {
             }
             if (!nodeSet.isEmpty()) {
                 this.nodeSet = nodeSet;
-                this.nodeList = nodeSet.stream().collect(Collectors.toList());
+                this.nodeList = new ArrayList<>(nodeSet);
             }
             if (size > 0) {
                 this.slotArray = slotArray;
@@ -218,10 +220,6 @@ public class RedisClusterSlotInfo {
         } catch (Exception e) {
             throw new CamelliaRedisException(e);
         }
-    }
-
-    public Integer getNodesSize() {
-        return nodeList.size();
     }
 
     public static class Node {
