@@ -49,6 +49,7 @@ public class ProxyInfoUtils {
     private static GarbageCollectorMXBean oldGC;
     private static GarbageCollectorMXBean youngGC;
 
+    private static int monitorIntervalSeconds;
     private static final AtomicLong commandsCount = new AtomicLong();
     private static final AtomicLong readCommandsCount = new AtomicLong();
     private static final AtomicLong writeCommandsCount = new AtomicLong();
@@ -88,6 +89,7 @@ public class ProxyInfoUtils {
 
     public static void updateStats(Stats stats) {
         try {
+            monitorIntervalSeconds = stats.getIntervalSeconds();
             commandsCount.addAndGet(stats.getCount());
             readCommandsCount.addAndGet(stats.getTotalReadCount());
             writeCommandsCount.addAndGet(stats.getTotalWriteCount());
@@ -181,6 +183,7 @@ public class ProxyInfoUtils {
         StringBuilder builder = new StringBuilder();
         builder.append("# Server").append("\n");
         builder.append("camellia_redis_proxy_version:" + VERSION).append("\n");
+        builder.append("redis_version:6.2.5").append("\n");//spring actuator默认会使用info命令返回的redis_version字段来做健康检查，这里直接返回一个固定的版本号
         builder.append("available_processors:").append(osBean.getAvailableProcessors()).append("\n");
         builder.append("netty_boss_thread:").append(bossThread).append("\n");
         builder.append("netty_work_thread:").append(workThread).append("\n");
@@ -213,15 +216,16 @@ public class ProxyInfoUtils {
     private static String getStats() {
         StringBuilder builder = new StringBuilder();
         builder.append("# Stats").append("\n");
-        builder.append("commands.count:").append(commandsCount).append("\n");
-        builder.append("read.commands.count:").append(readCommandsCount).append("\n");
-        builder.append("write.commands.count:").append(writeCommandsCount).append("\n");
-        builder.append("avg.commands.qps:").append(avgCommandsQps).append("\n");
-        builder.append("avg.read.commands.qps:").append(avgReadCommandsQps).append("\n");
-        builder.append("avg.write.commands.qps:").append(avgWriteCommandsQps).append("\n");
-        builder.append("last.commands.qps:").append(lastCommandQps).append("\n");
-        builder.append("last.read.commands.qps:").append(lastReadCommandQps).append("\n");
-        builder.append("last.write.commands.qps:").append(lastWriteCommandQps).append("\n");
+        builder.append("commands_count:").append(commandsCount).append("\n");
+        builder.append("read_commands_count:").append(readCommandsCount).append("\n");
+        builder.append("write_commands_count:").append(writeCommandsCount).append("\n");
+        builder.append("avg_commands_qps:").append(avgCommandsQps).append("\n");
+        builder.append("avg_read_commands_qps:").append(avgReadCommandsQps).append("\n");
+        builder.append("avg_write_commands_qps:").append(avgWriteCommandsQps).append("\n");
+        builder.append("monitor_interval_seconds:").append(monitorIntervalSeconds).append("\n");
+        builder.append("last_commands_qps:").append(lastCommandQps).append("\n");
+        builder.append("last_read_commands_qps:").append(lastReadCommandQps).append("\n");
+        builder.append("last_write_commands_qps:").append(lastWriteCommandQps).append("\n");
         return builder.toString();
     }
 

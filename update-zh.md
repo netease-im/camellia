@@ -18,6 +18,8 @@
 
 ### 更新
 * camellia-redis-proxy的info命令返回新增http_console_port字段
+* camellia-redis-proxy的info命令返回新增redis_version字段，spring actuator默认会使用info命令返回的redis_version字段来做健康检查，这里直接返回一个固定的版本号
+* camellia-redis-proxy的info命令中Stats部分的字段重命名（改成下划线），如：avg.commands.qps改成avg_commands_qps
 * camellia-redis-proxy的auth/client/quit等命令的处理从ServerHandler迁移到CommandsTransponder  
 
 ### fix

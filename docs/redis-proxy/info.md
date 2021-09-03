@@ -14,6 +14,7 @@ proxy实现了info命令，支持返回如下信息：Server/Clients/Route/Upstr
 127.0.0.1:6380> info
 # Server
 camellia_redis_proxy_version:v1.0.36     ##proxy版本
+redis_version:6.2.5  ##spring actuator默认会使用info命令返回的redis_version字段来做健康检查，这里直接返回一个固定的版本号
 available_processors:4      ##cpu核数
 netty_boss_thread:1     ##netty的bossGroup的线程数，默认=1
 netty_work_thread:4   ##netty的工作线程数，默认=cpu核数
@@ -83,15 +84,16 @@ old_gc_collection_count:0  ##old gc累计次数
 old_gc_collection_time:0  ##old gc累计时长
 
 # Stats
-commands.count:4158008   ##proxy启动至今的请求数
-read.commands.count:928037   ##proxy启动至今的读请求数
-write.commands.count:3229970   ##proxy启动至今的写请求数
-avg.commands.qps:34183.18138097157   ##proxy启动至今的平均QPS
-avg.read.commands.qps:7629.436282771151    ##proxy启动至今的平均读QPS
-avg.write.commands.qps:26553.73687715289   ##proxy启动至今的平均写QPS
-last.commands.qps:29304.433333333334   ##proxy上一个统计周期的QPS
-last.read.commands.qps:6426.05   ##proxy上一个统计周期的读QPS
-last.write.commands.qps:22878.383333333335   ##proxy上一个统计周期的写QPS
+commands_count:4158008   ##proxy启动至今的请求数
+read_commands_count:928037   ##proxy启动至今的读请求数
+write_commands_count:3229970   ##proxy启动至今的写请求数
+avg_commands_qps:34183.18138097157   ##proxy启动至今的平均QPS
+avg_read_commands_qps:7629.436282771151    ##proxy启动至今的平均读QPS
+avg_write_commands_qps:26553.73687715289   ##proxy启动至今的平均写QPS
+monitor_interval_seconds:60   ##统计周期，单位秒
+last_commands_qps:29304.433333333334   ##proxy上一个统计周期的QPS
+last_read_commands_qps:6426.05   ##proxy上一个统计周期的读QPS
+last_write_commands_qps:22878.383333333335   ##proxy上一个统计周期的写QPS
 
 ```
 
