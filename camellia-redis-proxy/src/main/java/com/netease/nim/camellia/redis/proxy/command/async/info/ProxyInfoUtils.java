@@ -219,13 +219,13 @@ public class ProxyInfoUtils {
         builder.append("commands_count:").append(commandsCount).append("\n");
         builder.append("read_commands_count:").append(readCommandsCount).append("\n");
         builder.append("write_commands_count:").append(writeCommandsCount).append("\n");
-        builder.append("avg_commands_qps:").append(avgCommandsQps).append("\n");
-        builder.append("avg_read_commands_qps:").append(avgReadCommandsQps).append("\n");
-        builder.append("avg_write_commands_qps:").append(avgWriteCommandsQps).append("\n");
+        builder.append("avg_commands_qps:").append(String.format("%.2f", avgCommandsQps)).append("\n");
+        builder.append("avg_read_commands_qps:").append(String.format("%.2f", avgReadCommandsQps)).append("\n");
+        builder.append("avg_write_commands_qps:").append(String.format("%.2f", avgWriteCommandsQps)).append("\n");
         builder.append("monitor_interval_seconds:").append(monitorIntervalSeconds).append("\n");
-        builder.append("last_commands_qps:").append(lastCommandQps).append("\n");
-        builder.append("last_read_commands_qps:").append(lastReadCommandQps).append("\n");
-        builder.append("last_write_commands_qps:").append(lastWriteCommandQps).append("\n");
+        builder.append("last_commands_qps:").append(String.format("%.2f", lastCommandQps)).append("\n");
+        builder.append("last_read_commands_qps:").append(String.format("%.2f", lastReadCommandQps)).append("\n");
+        builder.append("last_write_commands_qps:").append(String.format("%.2f", lastWriteCommandQps)).append("\n");
         return builder.toString();
     }
 
