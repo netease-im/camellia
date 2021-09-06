@@ -19,7 +19,8 @@
 ### update
 * camellia-redis-proxy info command reply add http_console_port field
 * camellia-redis-proxy info command reply add redis_version field
-* camellia-redis-proxy info command reply of Stats rename field, such as avg.commands.qps rename to avg_commands_qps, qps format to %.2f
+* camellia-redis-proxy info command reply of Stats rename field, such as avg.commands.qps rename to avg_commands_qps  
+* camellia-redis-proxy info command reply of Stats qps field format to %.2f
 * auth/client/quit commands migrate from ServerHandler to CommandsTransponder  
 
 ### fix
