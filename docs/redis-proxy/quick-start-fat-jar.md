@@ -1,11 +1,11 @@
 
 ## 快速开始（基于fatJar和sample-code)
 
-下载源码，切到最新稳定分支（v1.0.35）
+下载源码，切到最新稳定分支（v1.0.36）
 ```
 git clone https://github.com/netease-im/camellia.git
 cd camellia
-git checkout v1.0.35
+git checkout v1.0.36
 ```
 按需修改[sample-code](/camellia-samples/camellia-redis-proxy-samples) 中的配置文件：
 * application.yml
@@ -20,5 +20,5 @@ mvn clean install
 找到可执行jar包，使用java -jar命令运行即可(注意设置内存和GC，并确保已经安装了jdk8或以上，并添加到path）：
 ```
 cd camellia-samples/camellia-redis-proxy-samples/target
-java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy-samples-1.0.35.jar 
+java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy-samples-1.0.36.jar 
 ```

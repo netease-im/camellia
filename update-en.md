@@ -5,7 +5,7 @@
 * camellia-redis-proxy support monitor data visualization in prometheus
 * camellia-redis-proxy support multi-write based on mq(such as kafka)
 
-# 1.0.36（2021/08/xx）
+# 1.0.36（2021/09/06）
 ### add
 * add camellia-tools module, provide compress utils CamelliaCompressor, encrypt utils CamelliaEncryptor, local cache utils CamelliaLoadingCache  
 * provide samples for camellia-redis-proxy implements data-encryption/data-compress by use camellia-tools
