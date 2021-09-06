@@ -87,13 +87,13 @@ old_gc_collection_time:0  ##old gc累计时长
 commands_count:4158008   ##proxy启动至今的请求数
 read_commands_count:928037   ##proxy启动至今的读请求数
 write_commands_count:3229970   ##proxy启动至今的写请求数
-avg_commands_qps:34183.18138097157   ##proxy启动至今的平均QPS
-avg_read_commands_qps:7629.436282771151    ##proxy启动至今的平均读QPS
-avg_write_commands_qps:26553.73687715289   ##proxy启动至今的平均写QPS
+avg_commands_qps:34183.18   ##proxy启动至今的平均QPS
+avg_read_commands_qps:7629.44    ##proxy启动至今的平均读QPS
+avg_write_commands_qps:26553.74   ##proxy启动至今的平均写QPS
 monitor_interval_seconds:60   ##统计周期，单位秒
-last_commands_qps:29304.433333333334   ##proxy上一个统计周期的QPS
+last_commands_qps:29304.43   ##proxy上一个统计周期的QPS
 last_read_commands_qps:6426.05   ##proxy上一个统计周期的读QPS
-last_write_commands_qps:22878.383333333335   ##proxy上一个统计周期的写QPS
+last_write_commands_qps:22878.38   ##proxy上一个统计周期的写QPS
 
 ```
 
