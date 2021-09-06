@@ -95,6 +95,11 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
                     ctx.close();
                     return;
                 } else {
+                    if (authCommandProcessor.isPasswordRequired() && channelInfo.getChannelStats() == ChannelInfo.ChannelStats.NO_AUTH) {
+                        ctx.writeAndFlush(ErrorReply.NO_AUTH);
+                        debugLog(ErrorReply.NO_AUTH, channelInfo);
+                        continue;
+                    }
                     Method method = methodMap.get(command.getName());
                     if (method == null) {
                         logger.warn("only support zset relevant commands, return NOT_SUPPORT, command = {}, consid = {}", command.getName(), channelInfo.getConsid());
