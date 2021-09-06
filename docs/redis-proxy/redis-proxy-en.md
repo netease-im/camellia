@@ -24,7 +24,8 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support monitor hot key, support setting HotKeyMonitorCallback
 * support hot key local cache(only support GET command), support setting HotKeyCacheStatsCallback
 * support monitor big key, support setting BigKeyMonitorCallback
-* support convert key/value of string/hash/set/list/zset commands, you can use this feature to data-encryption/data-compress
+* support convert key, so you can divide keys into different namespace
+* support convert value of string/hash/set/list/zset commands, you can use this feature to data-encryption/data-compress
 * provider monitor config(such as on-off、threshold) refresh online 
 * provider a http api to get monitor metric data
 * provide a spring-boot-starter，you can quick start a proxy cluster
