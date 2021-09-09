@@ -181,7 +181,9 @@ camellia-redis-proxy:
       resource: redis://@127.0.0.1:6379 #转发的redis地址
     redis-conf:
       multi-write-mode: first_resource_only #双写的模式，默认第一个地址返回就返回
-      shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc #分片函数
+      #close-idle-connection: true #是否关闭空闲连接，默认true
+      #check-idle-connection-threshold-seconds: 600  #多久算空闲连接，默认600s
+      #shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc #分片函数
 
 camellia-redis-zk-registry: #需要引入相关的依赖才有效
   enable: false #是否注册到zk
