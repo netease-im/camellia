@@ -96,8 +96,20 @@ public class RedisMonitor {
      */
     public static void addRedisClient(RedisClient redisClient) {
         try {
-            ConcurrentHashMap<String, RedisClient> subMap = getRedisClientSubMap(redisClient);
-            subMap.put(redisClient.getClientName(), redisClient);
+            ExecutorUtils.submitToSingleThreadExecutor(() -> {
+                try {
+                    RedisClientConfig config = redisClient.getRedisClientConfig();
+                    RedisClientAddr addr = new RedisClientAddr(config.getHost(), config.getPort(), config.getPassword());
+                    ConcurrentHashMap<String, RedisClient> subMap = redisClientMap.get(addr);
+                    if (subMap == null) {
+                        subMap = new ConcurrentHashMap<>();
+                        redisClientMap.put(addr, subMap);
+                    }
+                    subMap.put(redisClient.getClientName(), redisClient);
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                }
+            });
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -108,8 +120,21 @@ public class RedisMonitor {
      */
     public static void removeRedisClient(RedisClient redisClient) {
         try {
-            ConcurrentHashMap<String, RedisClient> subMap = getRedisClientSubMap(redisClient);
-            subMap.remove(redisClient.getClientName());
+            ExecutorUtils.submitToSingleThreadExecutor(() -> {
+                try {
+                    RedisClientConfig config = redisClient.getRedisClientConfig();
+                    RedisClientAddr addr = new RedisClientAddr(config.getHost(), config.getPort(), config.getPassword());
+                    ConcurrentHashMap<String, RedisClient> subMap = redisClientMap.get(addr);
+                    if (subMap != null) {
+                        subMap.remove(redisClient.getClientName());
+                        if (subMap.isEmpty()) {
+                            redisClientMap.remove(addr);
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                }
+            });
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -125,20 +150,6 @@ public class RedisMonitor {
 
     public static ConcurrentHashMap<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> getRedisClientMap() {
         return redisClientMap;
-    }
-
-    private static ConcurrentHashMap<String, RedisClient> getRedisClientSubMap(RedisClient redisClient) {
-        RedisClientConfig config = redisClient.getRedisClientConfig();
-        RedisClientAddr addr = new RedisClientAddr(config.getHost(), config.getPort(), config.getPassword());
-        ConcurrentHashMap<String, RedisClient> subMap = redisClientMap.get(addr);
-        if (subMap == null) {
-            subMap = new ConcurrentHashMap<>();
-            ConcurrentHashMap<String, RedisClient> oldMap = redisClientMap.putIfAbsent(addr, subMap);
-            if (oldMap != null) {
-                subMap = oldMap;
-            }
-        }
-        return subMap;
     }
 
     /**
@@ -210,6 +221,8 @@ public class RedisMonitor {
      * get stats json
      */
     public static JSONObject getStatsJson() {
+        Stats stats = RedisMonitor.getStats();
+
         JSONObject monitorJson = new JSONObject();
         JSONArray connectJsonArray = new JSONArray();
         JSONObject connectJson = new JSONObject();

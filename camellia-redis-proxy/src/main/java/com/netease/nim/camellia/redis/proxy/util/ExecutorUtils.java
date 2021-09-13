@@ -16,6 +16,7 @@ public class ExecutorUtils {
 
     private static final ScheduledExecutorService scheduleService = Executors.newScheduledThreadPool(SysUtils.getCpuNum(), new DefaultThreadFactory("camellia-schedule"));
     private static final HashedWheelTimer delayTimer = new HashedWheelTimer(new DefaultThreadFactory("camellia-delay-timer"));
+    private static final ExecutorService singleThreadExecutor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10240));
 
     public static ScheduledFuture<?> scheduleAtFixedRate(Runnable command,
                                                          long initialDelay,
@@ -26,5 +27,9 @@ public class ExecutorUtils {
 
     public static Timeout newTimeout(TimerTask task, long delay, TimeUnit unit) {
         return delayTimer.newTimeout(task, delay, unit);
+    }
+
+    public static void submitToSingleThreadExecutor(Runnable runnable) {
+        singleThreadExecutor.submit(runnable);
     }
 }
