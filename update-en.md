@@ -11,6 +11,7 @@
 
 ### update
 * info command get upstream redis connect, will not return if connect is 0
+* enhance ProxyDynamicConfHook, so you can intercept all dynamic conf of ProxyDynamicConf 
 
 ### fix
 * none

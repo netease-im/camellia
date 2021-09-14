@@ -96,11 +96,35 @@ public class ProxyDynamicConfHook {
         return null;
     }
 
+    //get int
+    public Integer getInt(String key) {
+        return null;
+    }
+
+    //get Long
+    public Long getLong(String key) {
+        return null;
+    }
+
+    //get Boolean
+    public Boolean getBoolean(String key) {
+        return null;
+    }
+
+    //get Double
+    public Double getDouble(String key) {
+        return null;
+    }
+
+    //get String
+    public String getString(String key) {
+        return null;
+    }
+
     /**
      * 触发一下所有配置的重新加载
      */
     public final void invokeUpdate() {
         ProxyDynamicConf.reload();
-        ProxyDynamicConf.triggerCallback();
     }
 }

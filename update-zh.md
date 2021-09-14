@@ -11,6 +11,7 @@
 
 ### 更新
 * info命令获取后端redis连接数时，如果某个后端连接数是0，则不返回
+* 增强ProxyDynamicConfHook，可以拦截ProxyDynamicConf的所有动态配置
 
 ### fix
 * 无

@@ -54,6 +54,8 @@ public class ProxyDynamicConf {
             if (logger.isDebugEnabled()) {
                 logger.debug("{} not exists", fileName);
             }
+            clearCache();
+            triggerCallback();
             return;
         }
         try {
@@ -88,6 +90,11 @@ public class ProxyDynamicConf {
                     } else {
                         logger.debug("classpath:{} not modify", fileName);
                     }
+                }
+                if (hook != null) {
+                    clearCache();
+                    triggerCallback();
+                    logger.info("dynamic conf reload success");
                 }
             } else {
                 ProxyDynamicConf.conf = conf;
@@ -125,10 +132,8 @@ public class ProxyDynamicConf {
         }
     }
 
-    /**
-     * 触发一下监听者的回调
-     */
-    public static void triggerCallback() {
+    // 触发一下监听者的回调
+    private static void triggerCallback() {
         for (DynamicConfCallback callback : callbackSet) {
             try {
                 callback.callback();
@@ -332,20 +337,28 @@ public class ProxyDynamicConf {
         return getInt("big.key.monitor.list.threshold", bid, bgroup, defaultValue);
     }
 
-    public static int getInt(String key, int defaultValue) {
+    private static Integer _getInt(String key, Integer defaultValue) {
+        if (hook != null) {
+            Integer value = hook.getInt(key);
+            if (value != null) return value;
+        }
         return ConfigurationUtil.getInteger(conf, key, defaultValue);
+    }
+
+    public static int getInt(String key, int defaultValue) {
+        return _getInt(key, defaultValue);
     }
 
     public static int getInt(String key, Long bid, String bgroup, int defaultValue) {
         try {
-            if (conf.isEmpty()) return defaultValue;
+            if (conf.isEmpty() && hook == null) return defaultValue;
             String confKey = buildConfKey(key, bid, bgroup);
             Integer value;
             Integer cacheValue = intCache.get(confKey);
             if (cacheValue != null) return cacheValue;
-            value = ConfigurationUtil.getInteger(conf, confKey, null);
+            value = _getInt(confKey, null);
             if (value == null) {
-                value = ConfigurationUtil.getInteger(conf, key, null);
+                value = _getInt(key, null);
             }
             if (value == null) {
                 intCache.put(confKey, defaultValue);
@@ -358,20 +371,28 @@ public class ProxyDynamicConf {
         }
     }
 
-    public static long getLong(String key, long defaultValue) {
+    private static Long _getLong(String key, Long defaultValue) {
+        if (hook != null) {
+            Long value = hook.getLong(key);
+            if (value != null) return value;
+        }
         return ConfigurationUtil.getLong(conf, key, defaultValue);
+    }
+
+    public static long getLong(String key, long defaultValue) {
+        return _getLong(key, defaultValue);
     }
 
     public static long getLong(String key, Long bid, String bgroup, long defaultValue) {
         try {
-            if (conf.isEmpty()) return defaultValue;
+            if (conf.isEmpty() && hook == null) return defaultValue;
             String confKey = buildConfKey(key, bid, bgroup);
             Long value;
             Long cacheValue = longCache.get(confKey);
             if (cacheValue != null) return cacheValue;
-            value = ConfigurationUtil.getLong(conf, confKey, null);
+            value = _getLong(confKey, null);
             if (value == null) {
-                value = ConfigurationUtil.getLong(conf, key, null);
+                value = _getLong(key, null);
             }
             if (value == null) {
                 longCache.put(confKey, defaultValue);
@@ -390,7 +411,7 @@ public class ProxyDynamicConf {
 
     public static boolean getBoolean(String key, Long bid, String bgroup, boolean defaultValue) {
         try {
-            if (conf.isEmpty()) return defaultValue;
+            if (conf.isEmpty() && hook == null) return defaultValue;
             String confKey = buildConfKey(key, bid, bgroup);
             Boolean value;
             Boolean cacheValue = booleanCache.get(confKey);
@@ -410,20 +431,28 @@ public class ProxyDynamicConf {
         }
     }
 
-    public static double getDouble(String key, double defaultValue) {
+    private static Double _getDouble(String key, Double defaultValue) {
+        if (hook != null) {
+            Double value = hook.getDouble(key);
+            if (value != null) return value;
+        }
         return ConfigurationUtil.getDouble(conf, key, defaultValue);
+    }
+
+    public static double getDouble(String key, double defaultValue) {
+        return _getDouble(key, defaultValue);
     }
 
     public static double getDouble(String key, Long bid, String bgroup, double defaultValue) {
         try {
-            if (conf.isEmpty()) return defaultValue;
+            if (conf.isEmpty() && hook == null) return defaultValue;
             String confKey = buildConfKey(key, bid, bgroup);
             Double value;
             Double cacheValue = doubleCache.get(confKey);
             if (cacheValue != null) return cacheValue;
-            value = ConfigurationUtil.getDouble(conf, confKey, null);
+            value = _getDouble(confKey, null);
             if (value == null) {
-                value = ConfigurationUtil.getDouble(conf, key, null);
+                value = _getDouble(key, null);
             }
             if (value == null) {
                 doubleCache.put(confKey, defaultValue);
@@ -436,20 +465,28 @@ public class ProxyDynamicConf {
         }
     }
 
-    public static String getString(String key, String defaultValue) {
+    private static String _getString(String key, String defaultValue) {
+        if (hook != null) {
+            String value = hook.getString(key);
+            if (value != null) return value;
+        }
         return ConfigurationUtil.get(conf, key, defaultValue);
+    }
+
+    public static String getString(String key, String defaultValue) {
+        return _getString(key, defaultValue);
     }
 
     public static String getString(String key, Long bid, String bgroup, String defaultValue) {
         try {
-            if (conf.isEmpty()) return defaultValue;
+            if (conf.isEmpty() && hook == null) return defaultValue;
             String confKey = buildConfKey(key, bid, bgroup);
             String value;
             String cacheValue = stringCache.get(confKey);
             if (cacheValue != null) return cacheValue;
-            value = ConfigurationUtil.get(conf, confKey, null);
+            value = _getString(confKey, null);
             if (value == null) {
-                value = ConfigurationUtil.get(conf, key, null);
+                value = _getString(key, null);
             }
             if (value == null) {
                 stringCache.put(confKey, defaultValue);
