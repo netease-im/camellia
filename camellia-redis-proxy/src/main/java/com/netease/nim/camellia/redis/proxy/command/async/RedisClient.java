@@ -67,7 +67,6 @@ public class RedisClient implements AsyncClient {
     //status
     private volatile boolean valid = true;
     private volatile boolean closing = false;
-    private volatile boolean checkClientLastCommandTime = false;
     private long lastCommandTime = TimeCache.currentMillis;
 
     private final Queue<CompletableFuture<Reply>> queue = new LinkedBlockingQueue<>(1024*32);
@@ -255,16 +254,6 @@ public class RedisClient implements AsyncClient {
         stop(false);
     }
 
-    public void markClosing() {
-        synchronized (this) {
-            closing = true;
-        }
-    }
-
-    public void checkClientLastCommandTime() {
-        checkClientLastCommandTime = true;
-    }
-
     public void stop(boolean grace) {
         if (closing) {
             return;
@@ -384,7 +373,7 @@ public class RedisClient implements AsyncClient {
             logger.debug("{} sendCommands, commands.size = {}", clientName, commands.size());
         }
         channel.writeAndFlush(pack);
-        if (closeIdleConnection || checkClientLastCommandTime) {
+        if (closeIdleConnection) {
             lastCommandTime = TimeCache.currentMillis;
         }
     }

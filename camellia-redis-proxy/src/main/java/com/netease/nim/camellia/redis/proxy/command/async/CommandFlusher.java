@@ -20,7 +20,7 @@ public class CommandFlusher {
     private final Map<AsyncClient, List<Command>> commandMap = new HashMap<>();
     private final Map<AsyncClient, List<CompletableFuture<Reply>>> futureMap = new HashMap<>();
 
-    private final int initializerSize;
+    private int initializerSize;
 
     public CommandFlusher(int initializerSize) {
         this.initializerSize = initializerSize;
@@ -28,6 +28,14 @@ public class CommandFlusher {
 
     public CommandFlusher() {
         this(10);
+    }
+
+    public int getInitializerSize() {
+        return initializerSize;
+    }
+
+    public void updateInitializerSize(int initializerSize) {
+        this.initializerSize = initializerSize;
     }
 
     public void sendCommand(AsyncClient client, Command command, CompletableFuture<Reply> future) {

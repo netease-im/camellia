@@ -228,9 +228,15 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                 boolean continueOk = false;
                 switch (redisCommand) {
                     case MGET: {
-                        if (command.getObjects().length > 2) {
+                        int argLen = command.getObjects().length;
+                        int initializerSize = commandFlusher.getInitializerSize();
+                        if (argLen > 2) {
+                            if (argLen -1 > initializerSize) {
+                                commandFlusher.updateInitializerSize(argLen - 1);//调整initializerSize
+                            }
                             mget(command, commandFlusher, future);
                             continueOk = true;
+                            commandFlusher.updateInitializerSize(initializerSize);
                         }
                         break;
                     }
@@ -238,16 +244,29 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                     case UNLINK:
                     case TOUCH:
                     case DEL: {
-                        if (command.getObjects().length > 2) {
+                        int argLen = command.getObjects().length;
+                        int initializerSize = commandFlusher.getInitializerSize();
+                        if (argLen > 2) {
+                            if (argLen -1 > initializerSize) {
+                                commandFlusher.updateInitializerSize(argLen - 1);//调整initializerSize
+                            }
                             simpleIntegerReplyMerge(command, commandFlusher, future);
                             continueOk = true;
+                            commandFlusher.updateInitializerSize(initializerSize);
                         }
                         break;
                     }
                     case MSET: {
-                        if (command.getObjects().length > 3) {
+                        int argLen = command.getObjects().length;
+                        int keyCount = (argLen - 1) / 2;
+                        int initializerSize = commandFlusher.getInitializerSize();
+                        if (argLen > 3) {
+                            if (keyCount > initializerSize) {
+                                commandFlusher.updateInitializerSize(keyCount);//调整initializerSize
+                            }
                             mset(command, commandFlusher, future);
                             continueOk = true;
+                            commandFlusher.updateInitializerSize(initializerSize);
                         }
                         break;
                     }
@@ -644,6 +663,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
     private void mget(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
         byte[][] args = command.getObjects();
         List<CompletableFuture<Reply>> futureList = new ArrayList<>();
+
         for (int i = 1; i < args.length; i++) {
             byte[] key = args[i];
             int slot = RedisClusterCRC16Utils.getSlot(key);
