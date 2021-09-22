@@ -56,7 +56,7 @@ public class RedisClient implements AsyncClient {
     private final long heartbeatTimeoutMillis;
     private final int connectTimeoutMillis;
 
-    private final boolean closeIdleConnection;
+    private boolean closeIdleConnection;
     private final long checkIdleThresholdSeconds;
     private final int closeIdleConnectionDelaySeconds;
 
@@ -193,6 +193,8 @@ public class RedisClient implements AsyncClient {
     public void startIdleCheck() {
         synchronized (this) {
             if (idleCheckScheduledFuture == null) {
+                lastCommandTime = TimeCache.currentMillis;
+                closeIdleConnection = true;
                 idleCheckScheduledFuture = idleCheckScheduled.scheduleAtFixedRate(this::checkIdle,
                         checkIdleThresholdSeconds, checkIdleThresholdSeconds, TimeUnit.SECONDS);
             }
