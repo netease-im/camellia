@@ -14,7 +14,7 @@
 * 增强ProxyDynamicConfHook，可以拦截ProxyDynamicConf的所有动态配置
 
 ### fix
-* 无
+* 修复了后端redis连接数的监控可能不准的问题（不影响核心功能）
 
 
 # 1.0.36（2021/09/06）

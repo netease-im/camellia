@@ -14,7 +14,7 @@
 * enhance ProxyDynamicConfHook, so you can intercept all dynamic conf of ProxyDynamicConf 
 
 ### fix
-* none
+* fix monitor data not exact of upstream redis connect, no effect the core function  
 
 
 # 1.0.36（2021/09/06）
