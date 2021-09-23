@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.async.sentinel.RedisSentinelMasterListener;
 import com.netease.nim.camellia.redis.proxy.command.async.sentinel.RedisSentinelMasterResponse;
 import com.netease.nim.camellia.redis.proxy.command.async.sentinel.RedisSentinelUtils;
+import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.resource.RedisSentinelResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class AsyncCamelliaRedisSentinelClient extends AsyncCamelliaSimpleClient 
             if (redisSentinelMasterResponse.getMaster() != null) {
                 HostAndPort hostAndPort = redisSentinelMasterResponse.getMaster();
                 redisClientAddr = new RedisClientAddr(hostAndPort.getHost(), hostAndPort.getPort(), redisSentinelResource.getUserName(), redisSentinelResource.getPassword());
-                logger.info("redis sentinel init, url = {}, master = {}", redisSentinelResource.getUrl(), redisClientAddr);
+                logger.info("redis sentinel init, url = {}, master = {}", PasswordMaskUtils.maskResource(redisSentinelResource.getUrl()), PasswordMaskUtils.maskAddr(redisClientAddr));
                 break;
             }
         }
@@ -54,7 +55,8 @@ public class AsyncCamelliaRedisSentinelClient extends AsyncCamelliaSimpleClient 
                     RedisClientAddr oldNode = redisClientAddr;
                     if (!Objects.equals(newNode.getUrl(), oldNode.getUrl())) {
                         redisClientAddr = newNode;
-                        logger.info("sentinel redis master node update, resource = {}, oldMaster = {}, newMaster = {}", redisSentinelResource.getUrl(), oldNode, newNode);
+                        logger.info("sentinel redis master node update, resource = {}, oldMaster = {}, newMaster = {}",
+                                PasswordMaskUtils.maskResource(redisSentinelResource.getUrl()), PasswordMaskUtils.maskAddr(oldNode), PasswordMaskUtils.maskAddr(newNode));
                     }
                 }
             };

@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
+import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
@@ -57,14 +58,14 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
 
     @Override
     public void preheat() {
-        logger.info("try preheat, url = {}", redisClusterResource.getUrl());
+        logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(redisClusterResource.getUrl()));
         Set<RedisClusterSlotInfo.Node> nodes = this.clusterSlotInfo.getNodes();
         for (RedisClusterSlotInfo.Node node : nodes) {
-            logger.info("try preheat, url = {}, node = {}", redisClusterResource.getUrl(), node.getAddr().getUrl());
+            logger.info("try preheat, url = {}, node = {}", PasswordMaskUtils.maskResource(redisClusterResource.getUrl()), PasswordMaskUtils.maskAddr(node.getAddr()));
             boolean result = RedisClientHub.preheat(node.getHost(), node.getPort(), node.getUserName(), node.getPassword());
-            logger.info("preheat result = {}, url = {}, node = {}", result, redisClusterResource.getUrl(), node.getAddr().getUrl());
+            logger.info("preheat result = {}, url = {}, node = {}", result, PasswordMaskUtils.maskResource(redisClusterResource.getUrl()), PasswordMaskUtils.maskAddr(node.getAddr()));
         }
-        logger.info("preheat ok, url = {}", redisClusterResource.getUrl());
+        logger.info("preheat ok, url = {}", PasswordMaskUtils.maskResource(redisClusterResource.getUrl()));
     }
 
     public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> futureList) {

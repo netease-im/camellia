@@ -5,6 +5,7 @@ import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import io.netty.channel.EventLoop;
@@ -192,17 +193,17 @@ public class RedisClientHub {
         int workThread = GlobalRedisProxyEnv.workThread;
         RedisClientAddr addr = new RedisClientAddr(host, port, userName, password);
         if (workGroup != null && workThread > 0) {
-            logger.info("try preheat, addr = {}", addr.getUrl());
+            logger.info("try preheat, addr = {}", PasswordMaskUtils.maskAddr(addr));
             for (int i = 0; i < GlobalRedisProxyEnv.workThread; i++) {
                 EventLoop eventLoop = workGroup.next();
                 updateEventLoop(eventLoop);
                 RedisClient redisClient = get(new RedisClientAddr(host, port, userName, password));
                 if (redisClient == null) {
-                    logger.error("preheat fail, addr = {}", addr.getUrl());
-                    throw new CamelliaRedisException("preheat fail, addr = " + addr.getUrl());
+                    logger.error("preheat fail, addr = {}", PasswordMaskUtils.maskAddr(addr));
+                    throw new CamelliaRedisException("preheat fail, addr = " + PasswordMaskUtils.maskAddr(addr));
                 }
             }
-            logger.info("preheat success, addr = {}", addr.getUrl());
+            logger.info("preheat success, addr = {}", PasswordMaskUtils.maskAddr(addr));
             return true;
         }
         return false;

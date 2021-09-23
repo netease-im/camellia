@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.async.sentinel.*;
+import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.resource.RedisSentinelResource;
 import com.netease.nim.camellia.redis.resource.RedisSentinelSlavesResource;
@@ -39,7 +40,7 @@ public class AsyncCamelliaRedisSentinelSlavesClient extends AsyncCamelliaSimpleC
                 }
                 if (masterResponse.getMaster() != null) {
                     this.master = new RedisClientAddr(masterResponse.getMaster().getHost(), masterResponse.getMaster().getPort(), redisSentinelSlavesResource.getUserName(), redisSentinelSlavesResource.getPassword());
-                    logger.info("redis-sentinel-slaves init, url = {}, master = {}", redisSentinelSlavesResource.getUrl(), this.master);
+                    logger.info("redis-sentinel-slaves init, url = {}, master = {}", PasswordMaskUtils.maskResource(redisSentinelSlavesResource.getUrl()), PasswordMaskUtils.maskAddr(this.master));
                     break;
                 }
             }
@@ -55,7 +56,7 @@ public class AsyncCamelliaRedisSentinelSlavesClient extends AsyncCamelliaSimpleC
                     slaves.add(new RedisClientAddr(slave.getHost(), slave.getPort(), redisSentinelSlavesResource.getUserName(), redisSentinelSlavesResource.getPassword()));
                 }
                 this.slaves = slaves;
-                logger.info("redis-sentinel-slaves init, url = {}, slaves = {}", redisSentinelSlavesResource.getUrl(), this.slaves);
+                logger.info("redis-sentinel-slaves init, url = {}, slaves = {}", PasswordMaskUtils.maskResource(redisSentinelSlavesResource.getUrl()), PasswordMaskUtils.maskAddrs(slaves));
                 break;
             }
         }
@@ -79,8 +80,8 @@ public class AsyncCamelliaRedisSentinelSlavesClient extends AsyncCamelliaSimpleC
                             RedisClientAddr oldMaster = AsyncCamelliaRedisSentinelSlavesClient.this.master;
                             if (master == null) {
                                 if (oldMaster != null) {
-                                    logger.info("master update, url = {}, newMaster = {}, oldMaster = {}", getResource().getUrl(), null, oldMaster);
                                     AsyncCamelliaRedisSentinelSlavesClient.this.master = null;
+                                    logger.info("master update, url = {}, newMaster = {}, oldMaster = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), null, PasswordMaskUtils.maskAddr(oldMaster));
                                 }
                             } else {
                                 String password = AsyncCamelliaRedisSentinelSlavesClient.this.redisSentinelSlavesResource.getPassword();
@@ -93,12 +94,13 @@ public class AsyncCamelliaRedisSentinelSlavesClient extends AsyncCamelliaSimpleC
                                     needUpdate = true;
                                 }
                                 if (needUpdate) {
-                                    logger.info("master update, url = {}, newMaster = {}, oldMaster = {}", getResource().getUrl(), newMaster, oldMaster);
                                     AsyncCamelliaRedisSentinelSlavesClient.this.master = newMaster;
+                                    logger.info("master update, url = {}, newMaster = {}, oldMaster = {}",
+                                            PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(newMaster), PasswordMaskUtils.maskAddr(oldMaster));
                                 }
                             }
                         } catch (Exception e) {
-                            logger.error("MasterUpdateCallback error, url = {}", redisSentinelSlavesResource.getUrl(), e);
+                            logger.error("MasterUpdateCallback error, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), e);
                         }
                     }
                 };
@@ -141,11 +143,12 @@ public class AsyncCamelliaRedisSentinelSlavesClient extends AsyncCamelliaSimpleC
                             }
                         }
                         if (needUpdate) {
-                            logger.info("slaves update, url = {}, newSlaves = {}, oldSlaves = {}", getResource().getUrl(), newSlaves, oldSlaves);
                             AsyncCamelliaRedisSentinelSlavesClient.this.slaves = newSlaves;
+                            logger.info("slaves update, url = {}, newSlaves = {}, oldSlaves = {}",
+                                    PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddrs(newSlaves), PasswordMaskUtils.maskAddrs(oldSlaves));
                         }
                     } catch (Exception e) {
-                        logger.error("SlavesUpdateCallback error, url = {}", getResource().getUrl(), e);
+                        logger.error("SlavesUpdateCallback error, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), e);
                     }
                 }
             };
@@ -158,20 +161,20 @@ public class AsyncCamelliaRedisSentinelSlavesClient extends AsyncCamelliaSimpleC
 
     @Override
     public void preheat() {
-        logger.info("try preheat, url = {}", getResource().getUrl());
+        logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
         if (master != null) {
-            logger.info("try preheat, url = {}, master = {}", getResource().getUrl(), master.getUrl());
+            logger.info("try preheat, url = {}, master = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(master));
             boolean result = RedisClientHub.preheat(master.getHost(), master.getPort(), master.getUserName(), master.getPassword());
-            logger.info("preheat result = {}, url = {}, master = {}", result, getResource().getUrl(), master.getUrl());
+            logger.info("preheat result = {}, url = {}, master = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(master));
         }
         if (slaves != null) {
             for (RedisClientAddr slave : slaves) {
-                logger.info("try preheat, url = {}, slave = {}", getResource().getUrl(), slave.getUrl());
+                logger.info("try preheat, url = {}, slave = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(slave));
                 boolean result = RedisClientHub.preheat(slave.getHost(), slave.getPort(), slave.getUserName(), slave.getPassword());
-                logger.info("preheat result = {}, url = {}, slave = {}", result, getResource().getUrl(), slave.getUrl());
+                logger.info("preheat result = {}, url = {}, slave = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(slave));
             }
         }
-        logger.info("preheat success, url = {}", getResource().getUrl());
+        logger.info("preheat success, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
     }
 
     @Override
@@ -194,7 +197,7 @@ public class AsyncCamelliaRedisSentinelSlavesClient extends AsyncCamelliaSimpleC
                     return slaves.get(index);
                 }
             } catch (Exception e) {
-                ErrorLogCollector.collect(AsyncCamelliaRedisSentinelSlavesClient.class, "getAddr error, url = " + redisSentinelSlavesResource.getUrl(), e);
+                ErrorLogCollector.collect(AsyncCamelliaRedisSentinelSlavesClient.class, "getAddr error, url = " + PasswordMaskUtils.maskResource(redisSentinelSlavesResource.getUrl()), e);
             }
         }
         return null;

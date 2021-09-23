@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClientHub;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
+import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -53,7 +54,7 @@ public class RedisSentinelMasterListener extends Thread {
     @Override
     public void run() {
         RedisClient redisClient = null;
-        logger.info("redis sentinel master listener thread start, resource = {}, sentinel = {}", resource.getUrl(), sentinel.getUrl());
+        logger.info("redis sentinel master listener thread start, resource = {}, sentinel = {}", PasswordMaskUtils.maskResource(resource.getUrl()), sentinel.getUrl());
         while (running) {
             try {
                 if (redisClient == null || !redisClient.isValid()) {
@@ -101,7 +102,7 @@ public class RedisSentinelMasterListener extends Thread {
         if (redisClient != null && redisClient.isValid()) {
             redisClient.stop();
         }
-        logger.info("redis sentinel master listener thread stop, resource = {}, sentinel = {}", resource.getUrl(), sentinel.getUrl());
+        logger.info("redis sentinel master listener thread stop, resource = {}, sentinel = {}", PasswordMaskUtils.maskResource(resource.getUrl()), sentinel.getUrl());
     }
 
     private void sendFutures(RedisClient redisClient) {

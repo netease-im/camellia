@@ -36,6 +36,7 @@ public class AsyncCommandInvoker implements CommandInvoker {
     private final CommandInvokeConfig commandInvokeConfig;
 
     public AsyncCommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
+        PasswordMaskUtils.maskEnable = serverProperties.isMonitorDataMaskPassword();
         this.chooser = new AsyncCamelliaRedisTemplateChooser(transpondProperties);
 
         if (serverProperties.isMonitorEnable()) {
@@ -77,7 +78,7 @@ public class AsyncCommandInvoker implements CommandInvoker {
         }
         AuthCommandProcessor authCommandProcessor = new AuthCommandProcessor(ConfigInitUtil.initClientAuthProvider(serverProperties));
         this.commandInvokeConfig = new CommandInvokeConfig(authCommandProcessor, commandInterceptor, commandSpendTimeConfig, hotKeyCacheManager, hotKeyHunterManager, bigKeyHunter, converters);
-        PasswordMaskUtils.maskEnable = serverProperties.isMonitorDataMaskPassword();
+
     }
 
     private static final FastThreadLocal<CommandsTransponder> threadLocal = new FastThreadLocal<>();
