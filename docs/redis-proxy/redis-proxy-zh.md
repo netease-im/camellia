@@ -239,7 +239,7 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 等等
 
 ## 性能测试报告
-[基于v1.0.19的性能测试报告](performance-report-8.md)
+[基于v1.0.37的性能测试报告](performance-report-9.md)
 
 历史性能测试报告  
 [代理到redis cluster（v1.0.4）](performance-report-1.md)  
@@ -249,3 +249,4 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 [云主机环境测试（v1.0.7）](performance-report-5.md)  
 [使用redis-benchmark（v1.0.8 vs v1.0.9）](performance-report-6-zh.md)    
 [使用网易NPT性能测试平台（v1.0.8 vs v1.0.9）](performance-report-7.md)
+[基于v1.0.19的性能测试报告](performance-report-8.md)
