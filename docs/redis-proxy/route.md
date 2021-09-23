@@ -40,6 +40,8 @@ camellia-redis-proxy:
 redis://passwd@127.0.0.1:6379
 ##没有密码
 redis://@127.0.0.1:6379
+##有账号也有密码
+redis://username:passwd@127.0.0.1:6379
 ```
 
 * redis-sentinel
@@ -48,6 +50,8 @@ redis://@127.0.0.1:6379
 redis-sentinel://passwd@127.0.0.1:16379,127.0.0.1:16379/masterName
 ##没有密码
 redis-sentinel://@127.0.0.1:16379,127.0.0.1:16379/masterName
+##有账号也有密码
+redis-sentinel://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName
 ```
 
 * redis-cluster
@@ -56,6 +60,8 @@ redis-sentinel://@127.0.0.1:16379,127.0.0.1:16379/masterName
 redis-cluster://passwd@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
 ##没有密码
 redis-cluster://@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
+##有账号也有密码
+redis-cluster://username:passwd@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
 ```
 
 * redis-sentinel-slaves
@@ -67,12 +73,16 @@ redis-cluster://@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
 redis-sentinel-slaves://passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=false
 ##没有密码
 redis-sentinel-slaves://@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=false
+##有账号也有密码
+redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=false
 
 ##读master，此时proxy会从master+slave集合中随机挑选一个节点进行命令的转发（可能是master也可能是slave，所有节点概率相同）
 ##有密码
 redis-sentinel-slaves://passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true
 ##没有密码
 redis-sentinel-slaves://@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true
+##有账号也有密码
+redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true
 
 ##redis-sentinel-slaves会自动感知：节点宕机、主从切换和节点扩容
 ```

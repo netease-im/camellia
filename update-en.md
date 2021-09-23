@@ -7,7 +7,7 @@
 
 # 1.0.37（2021/09/xx）
 ### add
-* none
+* camellia-redis-proxy support setting upstream redis auth with userName/password
 
 ### update
 * info command get upstream redis connect, will not return if connect is 0

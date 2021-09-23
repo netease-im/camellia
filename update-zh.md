@@ -7,7 +7,7 @@
 
 # 1.0.37（2021/09/xx）
 ### 新增
-* 无
+* camellia-redis-proxy配置的后端redis支持使用账号+密码登录，具体见：[route](/docs/redis-proxy/route.md)
 
 ### 更新
 * info命令获取后端redis连接数时，如果某个后端连接数是0，则不返回
