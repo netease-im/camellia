@@ -2,9 +2,6 @@ package com.netease.nim.camellia.redis.proxy.reply;
 
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
-import java.io.IOException;
 
 
 public class BulkReply implements Reply {
@@ -41,12 +38,11 @@ public class BulkReply implements Reply {
     }
 
     @Override
-    public void write(ByteBuf byteBuf) throws IOException {
+    public void write(ByteBuf byteBuf) {
         byteBuf.writeByte(MARKER);
         byteBuf.writeBytes(Utils.numToBytes(capacity, true));
         if (capacity >= 0) {
-            ByteBuf buf = Unpooled.wrappedBuffer(raw);
-            byteBuf.writeBytes(buf);
+            byteBuf.writeBytes(raw);
             byteBuf.writeBytes(CRLF);
         }
     }

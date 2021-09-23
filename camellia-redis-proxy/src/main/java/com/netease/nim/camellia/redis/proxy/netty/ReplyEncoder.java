@@ -51,11 +51,10 @@ public class ReplyEncoder extends MessageToByteEncoder<Object> {
                     Reply reply = pack.getReply();
                     reply.write(out);
                     while (!packMap.isEmpty()) {
-                        ReplyPack replyPack = packMap.get(this.id + 1);
+                        ReplyPack replyPack = packMap.remove(this.id + 1);
                         if (replyPack != null) {
                             this.id = replyPack.getId();
                             replyPack.getReply().write(out);
-                            packMap.remove(replyPack.getId());
                         } else {
                             break;
                         }
