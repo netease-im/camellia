@@ -13,6 +13,7 @@
 * info command get upstream redis connect, will not return if connect is 0
 * enhance ProxyDynamicConfHook, so you can intercept all dynamic conf of ProxyDynamicConf
 * extend the boundary of password-mask in monitor-data/log  
+* refactor CommandDecoder
 
 ### fix
 * fix monitor data not exact of upstream redis connect, no effect the core function  

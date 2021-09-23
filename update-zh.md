@@ -13,6 +13,7 @@
 * info命令获取后端redis连接数时，如果某个后端连接数是0，则不返回
 * 增强ProxyDynamicConfHook，可以拦截ProxyDynamicConf的所有动态配置
 * 扩大监控/日志打印时隐藏密码功能的范围
+* 重写了CommandDecoder
 
 ### fix
 * 修复了后端redis连接数的监控可能不准的问题（不影响核心功能）
