@@ -34,7 +34,7 @@ public class AsyncCamelliaRedisSentinelClient extends AsyncCamelliaSimpleClient 
             }
             if (redisSentinelMasterResponse.getMaster() != null) {
                 HostAndPort hostAndPort = redisSentinelMasterResponse.getMaster();
-                redisClientAddr = new RedisClientAddr(hostAndPort.getHost(), hostAndPort.getPort(), redisSentinelResource.getPassword());
+                redisClientAddr = new RedisClientAddr(hostAndPort.getHost(), hostAndPort.getPort(), redisSentinelResource.getUserName(), redisSentinelResource.getPassword());
                 logger.info("redis sentinel init, url = {}, master = {}", redisSentinelResource.getUrl(), redisClientAddr);
                 break;
             }
@@ -50,7 +50,7 @@ public class AsyncCamelliaRedisSentinelClient extends AsyncCamelliaSimpleClient 
             RedisSentinelMasterListener.MasterUpdateCallback callback = m -> {
                 if (m == null) return;
                 synchronized (lock) {
-                    RedisClientAddr newNode = new RedisClientAddr(m.getHost(), m.getPort(), redisSentinelResource.getPassword());
+                    RedisClientAddr newNode = new RedisClientAddr(m.getHost(), m.getPort(), redisSentinelResource.getUserName(), redisSentinelResource.getPassword());
                     RedisClientAddr oldNode = redisClientAddr;
                     if (!Objects.equals(newNode.getUrl(), oldNode.getUrl())) {
                         redisClientAddr = newNode;

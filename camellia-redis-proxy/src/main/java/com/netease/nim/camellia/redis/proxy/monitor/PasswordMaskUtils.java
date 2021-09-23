@@ -17,20 +17,32 @@ public class PasswordMaskUtils {
     public static String maskResource(String url) {
         if (!maskEnable) return url;
         int i = url.indexOf("://");
-        int j = url.indexOf("@");
-        String password = url.substring(i + 3, j);
-        if (password.length() != 0) {
-            password = maskStr(password.length());
+        int j = url.lastIndexOf("@");
+        String userNameAndPassword = url.substring(i + 3, j);
+        if (userNameAndPassword.length() != 0) {
+            int k = userNameAndPassword.indexOf(":");
+            if (k != -1) {
+                userNameAndPassword = maskStr(k) + ":" + maskStr(userNameAndPassword.length() - k - 1);
+            } else {
+                userNameAndPassword = maskStr(userNameAndPassword.length());
+            }
         }
-        url = url.substring(0, i+3) + password + url.substring(j);
+        url = url.substring(0, i+3) + userNameAndPassword + url.substring(j);
         return url;
     }
 
     public static String maskAddr(String addr) {
         if (!maskEnable) return addr;
-        int i = addr.indexOf("@");
+        int i = addr.lastIndexOf("@");
         if (i == 0) return addr;
-        return maskStr(i) + addr.substring(i);
+        String substring = addr.substring(0, i);
+        int k = substring.indexOf(":");
+        if (k != -1) {
+            substring = maskStr(k) + ":" + maskStr(substring.length() - k - 1);
+        } else {
+            substring = maskStr(substring.length());
+        }
+        return substring + addr.substring(i);
     }
 
     public static ResourceTable maskResourceTable(ResourceTable resourceTable) {

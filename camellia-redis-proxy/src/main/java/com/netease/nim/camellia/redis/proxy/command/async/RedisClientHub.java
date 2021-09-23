@@ -58,9 +58,9 @@ public class RedisClientHub {
         eventLoopThreadLocal.set(eventLoop);
     }
 
-    public static RedisClient tryGet(String host, int port, String password) {
+    public static RedisClient tryGet(String host, int port, String userName, String password) {
         try {
-            RedisClientAddr addr = new RedisClientAddr(host, port, password);
+            RedisClientAddr addr = new RedisClientAddr(host, port, userName, password);
             EventLoop eventLoop = eventLoopThreadLocal.get();
             if (eventLoop != null) {
                 ConcurrentHashMap<String, RedisClient> clientMap = eventLoopMap.get(eventLoop);
@@ -79,72 +79,72 @@ public class RedisClientHub {
             return null;
         } catch (Exception e) {
             ErrorLogCollector.collect(RedisClientHub.class,
-                    "try get RedisClient error, host = " + host + ",port=" + port + ",password=" + password, e);
+                    "try get RedisClient error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
             return null;
         }
     }
 
-    public static CompletableFuture<RedisClient> newAsync(String host, int port, String password) {
+    public static CompletableFuture<RedisClient> newAsync(String host, int port, String userName, String password) {
         CompletableFuture<RedisClient> future = new CompletableFuture<>();
         try {
             redisClientAsyncInitExec.submit(() -> {
                 try {
-                    RedisClient redisClient = newClient(host, port, password);
+                    RedisClient redisClient = newClient(host, port, userName, password);
                     future.complete(redisClient);
                 } catch (Exception e) {
                     ErrorLogCollector.collect(RedisClientHub.class,
-                            "new RedisClient async error, host = " + host + ",port=" + port + ",password=" + password, e);
+                            "new RedisClient async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
                     future.complete(null);
                 }
             });
             return future;
         } catch (Exception e) {
             ErrorLogCollector.collect(RedisClientHub.class,
-                    "new RedisClient async error, host = " + host + ",port=" + port + ",password=" + password, e);
+                    "new RedisClient async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
             future.complete(null);
             return future;
         }
     }
 
-    public static CompletableFuture<RedisClient> getAsync(String host, int port, String password) {
+    public static CompletableFuture<RedisClient> getAsync(String host, int port, String userName, String password) {
         CompletableFuture<RedisClient> future = new CompletableFuture<>();
         try {
             redisClientAsyncInitExec.submit(() -> {
                 try {
-                    RedisClient redisClient = get(host, port, password);
+                    RedisClient redisClient = get(host, port, userName, password);
                     future.complete(redisClient);
                 } catch (Exception e) {
                     ErrorLogCollector.collect(RedisClientHub.class,
-                            "get RedisClient async error, host = " + host + ",port=" + port + ",password=" + password, e);
+                            "get RedisClient async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
                     future.complete(null);
                 }
             });
             return future;
         } catch (Exception e) {
             ErrorLogCollector.collect(RedisClientHub.class,
-                    "get RedisClient async error, host = " + host + ",port=" + port + ",password=" + password, e);
+                    "get RedisClient async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
             future.complete(null);
             return future;
         }
     }
 
-    public static RedisClient get(String host, int port, String password) {
+    public static RedisClient get(String host, int port, String userName, String password) {
         try {
-            RedisClientAddr addr = new RedisClientAddr(host, port, password);
+            RedisClientAddr addr = new RedisClientAddr(host, port, userName, password);
             return get(addr);
         } catch (Exception e) {
             ErrorLogCollector.collect(RedisClientHub.class,
-                    "get RedisClient error, host = " + host + ",port=" + port + ",password=" + password, e);
+                    "get RedisClient error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
             return null;
         }
     }
 
-    public static RedisClient newClient(String host, int port, String password) {
+    public static RedisClient newClient(String host, int port, String userName, String password) {
         try {
-            return newClient(new RedisClientAddr(host, port, password));
+            return newClient(new RedisClientAddr(host, port, userName, password));
         } catch (Exception e) {
             ErrorLogCollector.collect(RedisClientHub.class,
-                    "new RedisClient error, host = " + host + ",port=" + port + ",password=" + password, e);
+                    "new RedisClient error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
             return null;
         }
     }
@@ -162,6 +162,7 @@ public class RedisClientHub {
             RedisClientConfig config = new RedisClientConfig();
             config.setHost(addr.getHost());
             config.setPort(addr.getPort());
+            config.setUserName(addr.getUserName());
             config.setPassword(addr.getPassword());
             config.setEventLoopGroup(loopGroup);
             config.setHeartbeatTimeoutMillis(-1);
@@ -186,16 +187,16 @@ public class RedisClientHub {
         }
     }
 
-    public static boolean preheat(String host, int port, String password) {
+    public static boolean preheat(String host, int port, String userName, String password) {
         EventLoopGroup workGroup = GlobalRedisProxyEnv.workGroup;
         int workThread = GlobalRedisProxyEnv.workThread;
-        RedisClientAddr addr = new RedisClientAddr(host, port, password);
+        RedisClientAddr addr = new RedisClientAddr(host, port, userName, password);
         if (workGroup != null && workThread > 0) {
             logger.info("try preheat, addr = {}", addr.getUrl());
             for (int i = 0; i < GlobalRedisProxyEnv.workThread; i++) {
                 EventLoop eventLoop = workGroup.next();
                 updateEventLoop(eventLoop);
-                RedisClient redisClient = get(new RedisClientAddr(host, port, password));
+                RedisClient redisClient = get(new RedisClientAddr(host, port, userName, password));
                 if (redisClient == null) {
                     logger.error("preheat fail, addr = {}", addr.getUrl());
                     throw new CamelliaRedisException("preheat fail, addr = " + addr.getUrl());
@@ -294,6 +295,7 @@ public class RedisClientHub {
                     RedisClientConfig config = new RedisClientConfig();
                     config.setHost(addr.getHost());
                     config.setPort(addr.getPort());
+                    config.setUserName(addr.getUserName());
                     config.setPassword(addr.getPassword());
                     config.setEventLoopGroup(eventLoop);
                     config.setHeartbeatTimeoutMillis(heartbeatTimeoutMillis);

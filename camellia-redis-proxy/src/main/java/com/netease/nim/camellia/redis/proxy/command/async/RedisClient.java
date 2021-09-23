@@ -46,6 +46,7 @@ public class RedisClient implements AsyncClient {
     private final RedisClientAddr addr;
     private final String host;
     private final int port;
+    private final String userName;
     private final String password;
 
     private final EventLoopGroup eventLoopGroup;
@@ -75,8 +76,9 @@ public class RedisClient implements AsyncClient {
         this.redisClientConfig = config;
         this.host = config.getHost();
         this.port = config.getPort();
+        this.userName = config.getUserName();
         this.password = config.getPassword();
-        this.addr = new RedisClientAddr(host, port, password);
+        this.addr = new RedisClientAddr(host, port, userName, password);
         this.eventLoopGroup = config.getEventLoopGroup();
         this.heartbeatIntervalSeconds = config.getHeartbeatIntervalSeconds();
         this.heartbeatTimeoutMillis = config.getHeartbeatTimeoutMillis();
@@ -86,13 +88,7 @@ public class RedisClient implements AsyncClient {
                 ? Constants.Transpond.checkIdleConnectionThresholdSeconds : config.getCheckIdleConnectionThresholdSeconds();
         this.closeIdleConnectionDelaySeconds = config.getCloseIdleConnectionDelaySeconds() <=0
                 ? Constants.Transpond.closeIdleConnectionDelaySeconds : config.getCloseIdleConnectionDelaySeconds();
-        if (PasswordMaskUtils.maskEnable) {
-            this.clientName = "RedisClient[" + (password == null ? "" : PasswordMaskUtils.maskStr(password.length()))
-                    + "@" + host + ":" + port + "][id=" + id.incrementAndGet() + "]";
-        } else {
-            this.clientName = "RedisClient[" + (password == null ? "" : password)
-                    + "@" + host + ":" + port + "][id=" + id.incrementAndGet() + "]";
-        }
+        this.clientName = "RedisClient[" + PasswordMaskUtils.maskAddr(addr.getUrl()) + "][id=" + id.incrementAndGet() + "]";
     }
 
     public void start() {
@@ -124,7 +120,12 @@ public class RedisClient implements AsyncClient {
             if (password != null) {
                 logger.info("{} need password, try auth", clientName);
                 boolean authSuccess = false;
-                CompletableFuture<Reply> future = sendCommand(RedisCommand.AUTH.raw(), Utils.stringToBytes(password));
+                CompletableFuture<Reply> future;
+                if (userName == null) {
+                    future = sendCommand(RedisCommand.AUTH.raw(), Utils.stringToBytes(password));
+                } else {
+                    future = sendCommand(RedisCommand.AUTH.raw(), Utils.stringToBytes(userName), Utils.stringToBytes(password));
+                }
                 Reply reply = future.get(connectTimeoutMillis, TimeUnit.MILLISECONDS);
                 if (reply instanceof StatusReply) {
                     if (((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.OK.getStatus())) {

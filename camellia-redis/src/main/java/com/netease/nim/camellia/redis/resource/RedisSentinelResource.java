@@ -6,7 +6,12 @@ import java.util.List;
 
 /**
  * 格式如下：
+ * 1、没有密码
+ * redis-sentinel://@host:port,host:port,host:port/master
+ * 2、有密码
  * redis-sentinel://password@host:port,host:port,host:port/master
+ * 3、有密码且有账号
+ * redis-sentinel://username:password@host:port,host:port,host:port/master
  *
  * Created by caojiajun on 2019/10/15.
  */
@@ -14,14 +19,18 @@ public class RedisSentinelResource extends Resource {
     private final String master;
     private final List<Node> nodes;
     private final String password;
+    private final String userName;
 
-    public RedisSentinelResource(String master, List<Node> nodes, String password) {
+    public RedisSentinelResource(String master, List<Node> nodes, String userName, String password) {
         this.master = master;
         this.nodes = nodes;
         this.password = password;
+        this.userName = userName;
         StringBuilder url = new StringBuilder();
         url.append(RedisType.RedisSentinel.getPrefix());
-        if (password != null) {
+        if (userName != null && password != null) {
+            url.append(userName).append(":").append(password);
+        } else if (userName == null && password != null) {
             url.append(password);
         }
         url.append("@");
@@ -35,6 +44,10 @@ public class RedisSentinelResource extends Resource {
         this.setUrl(url.toString());
     }
 
+    public RedisSentinelResource(String master, List<Node> nodes, String password) {
+        this(master, nodes, null, password);
+    }
+
     public String getMaster() {
         return master;
     }
@@ -45,6 +58,10 @@ public class RedisSentinelResource extends Resource {
 
     public String getPassword() {
         return password;
+    }
+
+    public String getUserName() {
+        return userName;
     }
 
     public static class Node {

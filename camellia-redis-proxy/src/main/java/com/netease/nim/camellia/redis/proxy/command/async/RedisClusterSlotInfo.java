@@ -34,6 +34,7 @@ public class RedisClusterSlotInfo {
     private volatile List<Node> nodeList = new ArrayList<>();
 
     private final RedisClusterResource redisClusterResource;
+    private final String userName;
     private final String password;
 
     public RedisClusterSlotInfo(RedisClusterResource redisClusterResource) {
@@ -42,6 +43,7 @@ public class RedisClusterSlotInfo {
         }
         this.redisClusterResource = redisClusterResource;
         this.password = redisClusterResource.getPassword();
+        this.userName = redisClusterResource.getUserName();
     }
 
     /**
@@ -120,12 +122,12 @@ public class RedisClusterSlotInfo {
                     try {
                         boolean success = false;
                         for (Node node : nodeSet) {
-                            success = tryRenew(node.getHost(), node.getPort(), password);
+                            success = tryRenew(node.getHost(), node.getPort(), userName, password);
                             if (success) break;
                         }
                         if (!success) {
                             for (RedisClusterResource.Node node : redisClusterResource.getNodes()) {
-                                success = tryRenew(node.getHost(), node.getPort(), password);
+                                success = tryRenew(node.getHost(), node.getPort(), userName, password);
                                 if (success) break;
                             }
                         }
@@ -151,10 +153,10 @@ public class RedisClusterSlotInfo {
         return null;
     }
 
-    private boolean tryRenew(String host, int port, String password) {
+    private boolean tryRenew(String host, int port, String userName, String password) {
         RedisClient client = null;
         try {
-            client = RedisClientHub.newClient(host, port, password);
+            client = RedisClientHub.newClient(host, port, userName, password);
             if (client == null || !client.isValid()) return false;
             CompletableFuture<Reply> future = client.sendCommand(RedisCommand.CLUSTER.raw(), Utils.stringToBytes("slots"));
             logger.info("tryRenew, client = {}, url = {}", client.getClientName(), redisClusterResource.getUrl());
@@ -188,7 +190,7 @@ public class RedisClusterSlotInfo {
                     Reply[] replies2 = master.getReplies();
                     BulkReply host = (BulkReply) replies2[0];
                     IntegerReply port = (IntegerReply) replies2[1];
-                    Node node = new Node(Utils.bytesToString(host.getRaw()), port.getInteger().intValue(), password);
+                    Node node = new Node(Utils.bytesToString(host.getRaw()), port.getInteger().intValue(), userName, password);
                     nodeSet.add(node);
                     for (long i = slotStart.getInteger(); i <= slotEnd.getInteger(); i++) {
                         slotArray[(int) i] = node;
@@ -226,13 +228,15 @@ public class RedisClusterSlotInfo {
         private final String host;
         private final int port;
         private final String password;
+        private final String userName;
         private final RedisClientAddr addr;
 
-        public Node(String host, int port, String password) {
+        public Node(String host, int port, String userName, String password) {
             this.host = host;
             this.port = port;
+            this.userName = userName;
             this.password = password;
-            this.addr = new RedisClientAddr(host, port, password);
+            this.addr = new RedisClientAddr(host, port, userName, password);
         }
 
         public String getHost() {
@@ -249,6 +253,10 @@ public class RedisClusterSlotInfo {
 
         public RedisClientAddr getAddr() {
             return addr;
+        }
+
+        public String getUserName() {
+            return userName;
         }
 
         @Override

@@ -9,6 +9,7 @@ public class RedisClientConfig {
 
     private String host;
     private int port;
+    private String userName;
     private String password;
     private EventLoopGroup eventLoopGroup;
     private int heartbeatIntervalSeconds;
@@ -33,6 +34,14 @@ public class RedisClientConfig {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public String getPassword() {

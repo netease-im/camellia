@@ -11,17 +11,26 @@ import java.util.Objects;
 public class RedisClientAddr {
     private final String host;
     private final int port;
+    private final String userName;
     private final String password;
 
     private final String url;
 
     private final FastThreadLocal<RedisClient> cache = new FastThreadLocal<>();
 
-    public RedisClientAddr(String host, int port, String password) {
+    public RedisClientAddr(String host, int port, String userName, String password) {
         this.host = host;
         this.port = port;
         this.password = password;
-        this.url = (password == null ? "" : password) + "@" + host + ":" + port;
+        this.userName = userName;
+        StringBuilder builder = new StringBuilder();
+        if (userName != null && password != null) {
+            builder.append(userName).append(":").append(password);
+        } else if (userName == null && password != null) {
+            builder.append(password);
+        }
+        builder.append("@").append(host).append(":").append(port);
+        this.url = builder.toString();
     }
 
     public String getHost() {
@@ -34,6 +43,10 @@ public class RedisClientAddr {
 
     public String getPassword() {
         return password;
+    }
+
+    public String getUserName() {
+        return userName;
     }
 
     public String getUrl() {

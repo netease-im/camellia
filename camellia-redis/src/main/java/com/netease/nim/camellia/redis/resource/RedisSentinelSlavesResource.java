@@ -6,7 +6,13 @@ import java.util.List;
 
 /**
  * 格式如下：
+ * 1、没有密码
+ * redis-sentinel-slaves://@host:port,host:port,host:port/masterName?withMaster=false
+ * 2、有密码
  * redis-sentinel-slaves://password@host:port,host:port,host:port/masterName?withMaster=false
+ * 3、有密码且有账号
+ * redis-sentinel-slaves://username:password@host:port,host:port,host:port/masterName?withMaster=false
+ *
  * only for read
  *
  * Created by caojiajun on 2021/4/7
@@ -17,15 +23,19 @@ public class RedisSentinelSlavesResource extends Resource {
     private final List<RedisSentinelResource.Node> nodes;
     private final String password;
     private final boolean withMaster;
+    private final String userName;
 
-    public RedisSentinelSlavesResource(String master, List<RedisSentinelResource.Node> nodes, String password, boolean withMaster) {
+    public RedisSentinelSlavesResource(String master, List<RedisSentinelResource.Node> nodes, String userName, String password, boolean withMaster) {
         this.master = master;
         this.nodes = nodes;
         this.password = password;
         this.withMaster = withMaster;
+        this.userName = userName;
         StringBuilder url = new StringBuilder();
         url.append(RedisType.RedisSentinelSlaves.getPrefix());
-        if (password != null) {
+        if (userName != null && password != null) {
+            url.append(userName).append(":").append(password);
+        } else if (userName == null && password != null) {
             url.append(password);
         }
         url.append("@");
@@ -38,6 +48,10 @@ public class RedisSentinelSlavesResource extends Resource {
         url.append(master);
         url.append("?withMaster=").append(withMaster);
         this.setUrl(url.toString());
+    }
+
+    public RedisSentinelSlavesResource(String master, List<RedisSentinelResource.Node> nodes, String password, boolean withMaster) {
+        this(master, nodes, null, password, withMaster);
     }
 
     public String getMaster() {
@@ -54,6 +68,10 @@ public class RedisSentinelSlavesResource extends Resource {
 
     public boolean isWithMaster() {
         return withMaster;
+    }
+
+    public String getUserName() {
+        return userName;
     }
 
     public static class Node {

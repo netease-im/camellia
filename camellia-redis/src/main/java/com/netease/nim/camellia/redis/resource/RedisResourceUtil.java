@@ -55,15 +55,15 @@ public class RedisResourceUtil {
                 }
 
                 int index = substring.lastIndexOf("@");
-                String password = substring.substring(0, index);
+                String[] userNameAndPassword = getUserNameAndPassword(substring.substring(0, index));
+                String userName = userNameAndPassword[0];
+                String password = userNameAndPassword[1];
+
                 String split = substring.substring(index + 1);
                 String[] split2 = split.split(":");
                 String host = split2[0];
                 int port = Integer.parseInt(split2[1]);
-                if (password.length() == 0) {
-                    password = null;
-                }
-                RedisResource redisResource = new RedisResource(host, port, password);
+                RedisResource redisResource = new RedisResource(host, port, userName, password);
                 if (!redisResource.getUrl().equals(resource.getUrl())) {
                     throw new CamelliaRedisException("resource url not equals");
                 }
@@ -78,10 +78,11 @@ public class RedisResourceUtil {
                 }
 
                 int index = substring.lastIndexOf("@");
-                String password = substring.substring(0, index);
-                if (password.length() == 0) {
-                    password = null;
-                }
+
+                String[] userNameAndPassword = getUserNameAndPassword(substring.substring(0, index));
+                String userName = userNameAndPassword[0];
+                String password = userNameAndPassword[1];
+
                 String split = substring.substring(index + 1);
 
                 int index2 = split.indexOf("/");
@@ -96,7 +97,7 @@ public class RedisResourceUtil {
                     int port = Integer.parseInt(split3[1]);
                     nodeList.add(new RedisSentinelResource.Node(host, port));
                 }
-                RedisSentinelResource redisSentinelResource = new RedisSentinelResource(master, nodeList, password);
+                RedisSentinelResource redisSentinelResource = new RedisSentinelResource(master, nodeList, userName, password);
                 if (!redisSentinelResource.getUrl().equals(resource.getUrl())) {
                     throw new CamelliaRedisException("resource url not equals");
                 }
@@ -108,7 +109,10 @@ public class RedisResourceUtil {
                 }
 
                 int index = substring.lastIndexOf("@");
-                String password = substring.substring(0, index);
+                String[] userNameAndPassword = getUserNameAndPassword(substring.substring(0, index));
+                String userName = userNameAndPassword[0];
+                String password = userNameAndPassword[1];
+
                 String split = substring.substring(index + 1);
 
                 String[] split2 = split.split(",");
@@ -119,10 +123,7 @@ public class RedisResourceUtil {
                     int port = Integer.parseInt(split1[1]);
                     nodeList.add(new RedisClusterResource.Node(ip, port));
                 }
-                if (password.length() == 0) {
-                    password = null;
-                }
-                RedisClusterResource redisClusterResource = new RedisClusterResource(nodeList, password);
+                RedisClusterResource redisClusterResource = new RedisClusterResource(nodeList, userName, password);
                 if (!redisClusterResource.getUrl().equals(resource.getUrl())) {
                     throw new CamelliaRedisException("resource url not equals");
                 }
@@ -187,10 +188,10 @@ public class RedisResourceUtil {
                 }
 
                 int index = substring.lastIndexOf("@");
-                String password = substring.substring(0, index);
-                if (password.length() == 0) {
-                    password = null;
-                }
+                String[] userNameAndPassword = getUserNameAndPassword(substring.substring(0, index));
+                String userName = userNameAndPassword[0];
+                String password = userNameAndPassword[1];
+
                 String split = substring.substring(index + 1);
 
                 int index2 = split.indexOf("/");
@@ -222,7 +223,7 @@ public class RedisResourceUtil {
                 } else {
                     master = masterWithParams;
                 }
-                return new RedisSentinelSlavesResource(master, nodeList, password, withMaster);
+                return new RedisSentinelSlavesResource(master, nodeList, userName, password, withMaster);
             }
             throw new CamelliaRedisException("not redis resource");
         } catch (CamelliaRedisException e) {
@@ -243,5 +244,27 @@ public class RedisResourceUtil {
             map.put(k, v);
         }
         return map;
+    }
+
+    private static String[] getUserNameAndPassword(String str) {
+        if (str == null) {
+            return new String[2];
+        }
+        if (str.length() == 0) {
+            return new String[2];
+        }
+        int i = str.indexOf(":");
+        if (i == -1) {
+            return new String[] {null, str};
+        }
+        String userName = str.substring(0, i);
+        String password = str.substring(i+1);
+        if (userName.length() == 0) {
+            userName = null;
+        }
+        if (password.length() == 0) {
+            password = null;
+        }
+        return new String[] {userName, password};
     }
 }

@@ -57,7 +57,7 @@ public class UpstreamInfoUtils {
                 Resource redisResource = RedisResourceUtil.parseResourceByUrl(resource);
                 if (redisResource instanceof RedisResource) {
                     RedisClientAddr addr = new RedisClientAddr(((RedisResource) redisResource).getHost(),
-                            ((RedisResource) redisResource).getPort(), ((RedisResource) redisResource).getPassword());
+                            ((RedisResource) redisResource).getPort(), ((RedisResource) redisResource).getUserName(), ((RedisResource) redisResource).getPassword());
                     builder.append("### redis-node-info").append("\n");
                     RedisInfo redisInfo = getRedisInfo(addr);
                     if (redisInfo != null) {
@@ -65,7 +65,7 @@ public class UpstreamInfoUtils {
                     }
                 } else if (redisResource instanceof RedisSentinelResource) {
                     builder.append("### redis-node-info").append("\n");
-                    RedisSentinelInfo redisSentinelInfo = getRedisSentinelInfo(((RedisSentinelResource) redisResource).getNodes(),
+                    RedisSentinelInfo redisSentinelInfo = getRedisSentinelInfo(((RedisSentinelResource) redisResource).getNodes(), ((RedisSentinelResource) redisResource).getUserName(),
                             ((RedisSentinelResource) redisResource).getPassword(), ((RedisSentinelResource) redisResource).getMaster());
                     if (redisSentinelInfo.master != null) {
                         builder.append("master_url:").append(redisSentinelInfo.master).append("\n");
@@ -75,7 +75,7 @@ public class UpstreamInfoUtils {
                     }
                 } else if (redisResource instanceof RedisSentinelSlavesResource) {
                     builder.append("### redis-node-info").append("\n");
-                    RedisSentinelInfo redisSentinelInfo = getRedisSentinelInfo(((RedisSentinelSlavesResource) redisResource).getNodes(),
+                    RedisSentinelInfo redisSentinelInfo = getRedisSentinelInfo(((RedisSentinelSlavesResource) redisResource).getNodes(), ((RedisSentinelSlavesResource) redisResource).getUserName(),
                             ((RedisSentinelSlavesResource) redisResource).getPassword(), ((RedisSentinelSlavesResource) redisResource).getMaster());
                     if (redisSentinelInfo.master != null) {
                         builder.append("master_url:").append(redisSentinelInfo.master).append("\n");
@@ -106,7 +106,7 @@ public class UpstreamInfoUtils {
                             String[] split1 = split[0].split(":");
                             String host = split1[0];
                             int port = Integer.parseInt(split1[1]);
-                            RedisInfo redisInfo = getRedisInfo(new RedisClientAddr(host, port, ((RedisClusterResource) redisResource).getPassword()));
+                            RedisInfo redisInfo = getRedisInfo(new RedisClientAddr(host, port, ((RedisClusterResource) redisResource).getUserName(), ((RedisClusterResource) redisResource).getPassword()));
                             redisNodeInfoBuilder.append("#### node").append(k).append("\n");
                             redisNodeInfoBuilder.append("master_url=").append(clusterNodeInfo.master).append("\n");
                             if (redisInfo != null) {
@@ -182,7 +182,7 @@ public class UpstreamInfoUtils {
         private long usedMemory;
     }
     private static RedisInfo getRedisInfo(RedisClientAddr addr) {
-        Map<String, String> map = getInfoMap(addr.getHost(), addr.getPort(), addr.getPassword(), new byte[][] {RedisCommand.INFO.raw()});
+        Map<String, String> map = getInfoMap(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), new byte[][] {RedisCommand.INFO.raw()});
         if (map == null) {
             return null;
         } else {
@@ -247,8 +247,9 @@ public class UpstreamInfoUtils {
     private static String getRedisClusterInfo(RedisClusterResource redisClusterResource) {
         List<RedisClusterResource.Node> nodes = redisClusterResource.getNodes();
         String password = redisClusterResource.getPassword();
+        String userName = redisClusterResource.getUserName();
         for (RedisClusterResource.Node node : nodes) {
-            Map<String, String> map = getInfoMap(node.getHost(), node.getPort(), password, new byte[][]{Utils.stringToBytes("cluster"), Utils.stringToBytes("info")});
+            Map<String, String> map = getInfoMap(node.getHost(), node.getPort(), userName, password, new byte[][]{Utils.stringToBytes("cluster"), Utils.stringToBytes("info")});
             if (map == null) continue;
             StringBuilder builder = new StringBuilder();
             for (String key : redisClusterInfoKeys) {
@@ -262,10 +263,10 @@ public class UpstreamInfoUtils {
         return null;
     }
 
-    private static Map<String, String> getInfoMap(String host, int port, String password, byte[][] command) {
+    private static Map<String, String> getInfoMap(String host, int port, String userName, String password, byte[][] command) {
         RedisClient redisClient = null;
         try {
-            redisClient = RedisClientHub.newClient(host, port, password);
+            redisClient = RedisClientHub.newClient(host, port, userName, password);
             if (redisClient != null) {
                 Map<String, String> map = new HashMap<>();
                 CompletableFuture<Reply> future = redisClient.sendCommand(command);
@@ -298,12 +299,12 @@ public class UpstreamInfoUtils {
         RedisInfo redisInfo;
         RedisClientAddr master;
     }
-    private static RedisSentinelInfo getRedisSentinelInfo(List<RedisSentinelResource.Node> sentinels, String password, String masterName) {
+    private static RedisSentinelInfo getRedisSentinelInfo(List<RedisSentinelResource.Node> sentinels, String userName, String password, String masterName) {
         RedisSentinelInfo redisSentinelInfo = new RedisSentinelInfo();
         for (RedisSentinelResource.Node node : sentinels) {
             HostAndPort master = getRedisSentinelMaster(node.getHost(), node.getPort(), masterName);
             if (master != null) {
-                RedisClientAddr addr = new RedisClientAddr(master.getHost(), master.getPort(), password);
+                RedisClientAddr addr = new RedisClientAddr(master.getHost(), master.getPort(), userName, password);
                 redisSentinelInfo.master = addr;
                 RedisInfo redisInfo = getRedisInfo(addr);
                 if (redisInfo != null) {
@@ -318,7 +319,7 @@ public class UpstreamInfoUtils {
     private static HostAndPort getRedisSentinelMaster(String host, int port, String masterName) {
         RedisClient redisClient = null;
         try {
-            redisClient = RedisClientHub.newClient(host, port, null);
+            redisClient = RedisClientHub.newClient(host, port, null, null);
             if (redisClient != null) {
                 CompletableFuture<Reply> future1 = redisClient.sendCommand(RedisCommand.SENTINEL.raw(),
                         RedisSentinelUtils.SENTINEL_GET_MASTER_ADDR_BY_NAME, Utils.stringToBytes(masterName));
@@ -362,8 +363,9 @@ public class UpstreamInfoUtils {
     private static List<ClusterNodeInfo> getRedisClusterNodeInfo(RedisClusterResource redisClusterResource) {
         List<RedisClusterResource.Node> nodes = redisClusterResource.getNodes();
         String password = redisClusterResource.getPassword();
+        String userName = redisClusterResource.getUserName();
         for (RedisClusterResource.Node node : nodes) {
-            List<ClusterNodeInfo> clusterNodeInfos = clusterNodes(node.getHost(), node.getPort(), password);
+            List<ClusterNodeInfo> clusterNodeInfos = clusterNodes(node.getHost(), node.getPort(), userName, password);
             if (clusterNodeInfos != null) {
                 return clusterNodeInfos;
             }
@@ -377,10 +379,10 @@ public class UpstreamInfoUtils {
         String slots;
     }
 
-    private static List<ClusterNodeInfo> clusterNodes(String host, int port, String password) {
+    private static List<ClusterNodeInfo> clusterNodes(String host, int port, String userName, String password) {
         RedisClient redisClient = null;
         try {
-            redisClient = RedisClientHub.newClient(host, port, password);
+            redisClient = RedisClientHub.newClient(host, port, userName, password);
             if (redisClient != null) {
                 CompletableFuture<Reply> future = redisClient.sendCommand(Utils.stringToBytes("cluster"), Utils.stringToBytes("nodes"));
                 Reply reply = future.get(10, TimeUnit.SECONDS);

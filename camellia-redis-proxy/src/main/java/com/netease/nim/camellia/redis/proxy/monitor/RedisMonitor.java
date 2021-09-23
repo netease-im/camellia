@@ -99,7 +99,7 @@ public class RedisMonitor {
             ExecutorUtils.submitToSingleThreadExecutor(() -> {
                 try {
                     RedisClientConfig config = redisClient.getRedisClientConfig();
-                    RedisClientAddr addr = new RedisClientAddr(config.getHost(), config.getPort(), config.getPassword());
+                    RedisClientAddr addr = new RedisClientAddr(config.getHost(), config.getPort(), config.getUserName(), config.getPassword());
                     ConcurrentHashMap<String, RedisClient> subMap = redisClientMap.get(addr);
                     if (subMap == null) {
                         subMap = new ConcurrentHashMap<>();
@@ -123,7 +123,7 @@ public class RedisMonitor {
             ExecutorUtils.submitToSingleThreadExecutor(() -> {
                 try {
                     RedisClientConfig config = redisClient.getRedisClientConfig();
-                    RedisClientAddr addr = new RedisClientAddr(config.getHost(), config.getPort(), config.getPassword());
+                    RedisClientAddr addr = new RedisClientAddr(config.getHost(), config.getPort(), config.getUserName(), config.getPassword());
                     ConcurrentHashMap<String, RedisClient> subMap = redisClientMap.get(addr);
                     if (subMap != null) {
                         subMap.remove(redisClient.getClientName());
