@@ -1,11 +1,11 @@
 
 ## 快速开始（基于安装包）
 
-下载最新版安装包并解压（v1.0.36）：
+下载最新版安装包并解压（v1.0.37）：
 ```
-wget https://github.com/netease-im/camellia/releases/download/v1.0.36/camellia-redis-proxy-1.0.36.tar.gz
-tar zxvf camellia-redis-proxy-1.0.36.tar.gz
-cd camellia-redis-proxy-1.0.36/
+wget https://github.com/netease-im/camellia/releases/download/v1.0.37/camellia-redis-proxy-1.0.37.tar.gz
+tar zxvf camellia-redis-proxy-1.0.37.tar.gz
+cd camellia-redis-proxy-1.0.37/
 ```
 按需修改BOOT-INF/classes/下的配置文件：
 * application.yml
@@ -20,4 +20,13 @@ java -XX:+UseG1GC -Xms2048m -Xmx2048m -server org.springframework.boot.loader.Ja
 直接启动即可：
 ```
 ./start.sh
+```
+
+如果是在docker里，则调用start_in_docker.sh，默认参数如下（主要是添加了UseContainerSupport，需要jdk8u191以上）：
+```
+java -XX:+UseG1GC -XX:+UseContainerSupport -Xms2048m -Xmx2048m -server org.springframework.boot.loader.JarLauncher
+```
+启动如下：
+```
+./start_in_docker.sh
 ```

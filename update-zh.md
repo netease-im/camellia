@@ -5,7 +5,7 @@
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 * camellia-redis-proxy支持基于消息队列（如kafka）的异步双写
 
-# 1.0.37（2021/09/xx）
+# 1.0.37（2021/09/24）
 ### 新增
 * camellia-redis-proxy配置的后端redis支持使用账号+密码登录，具体见：[route](/docs/redis-proxy/route.md)
 
