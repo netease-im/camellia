@@ -11,7 +11,7 @@ import com.netease.nim.camellia.dashboard.model.TableRef;
 import com.netease.nim.camellia.dashboard.util.LogBean;
 import com.netease.nim.camellia.dashboard.exception.AppException;
 import com.netease.nim.camellia.dashboard.model.ValidFlag;
-import com.netease.nim.camellia.redis.toolkit.localcache.LocalCache;
+import com.netease.nim.camellia.tools.CamelliaLocalCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +32,7 @@ public class ResourceTableService {
     private DashboardProperties dashboardProperties;
 
     private static final String TAG = "tag";
-    private final LocalCache localCache = new LocalCache();
+    private final CamelliaLocalCache camelliaLocalCache = new CamelliaLocalCache();
 
     public CamelliaApiResponse get(long bid, String bgroup, String md5) {
         CamelliaApiResponse response = new CamelliaApiResponse();
@@ -58,7 +58,7 @@ public class ResourceTableService {
 
     private String getTableString(long bid, String bgroup) {
         String cacheKey = bid + "|" + bgroup;
-        String cacheValue = localCache.get(TAG, cacheKey, String.class);
+        String cacheValue = camelliaLocalCache.get(TAG, cacheKey, String.class);
         if (cacheValue != null) {
             return cacheValue;
         }
@@ -82,7 +82,7 @@ public class ResourceTableService {
             throw new AppException(CamelliaApiCode.NOT_EXISTS.getCode(), "tid not valid");
         }
         String tableString = table.getDetail();
-        localCache.put(TAG, cacheKey, tableString, dashboardProperties.getLocalCacheExpireSeconds());
+        camelliaLocalCache.put(TAG, cacheKey, tableString, dashboardProperties.getLocalCacheExpireSeconds());
         return tableString;
     }
 }

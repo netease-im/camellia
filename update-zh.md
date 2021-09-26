@@ -5,6 +5,17 @@
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 * camellia-redis-proxy支持基于消息队列（如kafka）的异步双写
 
+# 1.0.38（2021/10/xx）
+### 新增
+* 新增camellia-id-gen模块，支持：snowflake策略（支持设置单元标记）、基于数据库的id生成策略（支持设置单元标记，趋势递增）、基于数据库和redis的id生成策略（严格递增）
+
+### 更新
+* 移除了camellia-redis-toolkit模块，其中CamelliaCounterCache/CamelliaRedisLock合并到camellia-redis
+
+### fix
+* 无
+
+
 # 1.0.37（2021/09/24）
 ### 新增
 * camellia-redis-proxy配置的后端redis支持使用账号+密码登录，具体见：[route](/docs/redis-proxy/route.md)

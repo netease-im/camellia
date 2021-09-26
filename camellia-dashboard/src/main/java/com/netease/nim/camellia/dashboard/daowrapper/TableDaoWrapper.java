@@ -6,7 +6,7 @@ import com.netease.nim.camellia.dashboard.dao.TableDao;
 import com.netease.nim.camellia.dashboard.model.ValidFlag;
 import com.netease.nim.camellia.dashboard.model.Table;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
-import com.netease.nim.camellia.redis.toolkit.utils.CacheUtil;
+import com.netease.nim.camellia.core.util.CacheUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

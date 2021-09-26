@@ -22,8 +22,8 @@
         <module>camellia-hbase-samples</module>
         <module>camellia-redis-proxy-samples</module>
         <module>camellia-redis-proxy-hbase-samples</module>
-        <module>camellia-redis-toolkit-samples</module>
         <module>camellia-tools-samples</module>
+        <module>camellia-id-gen-samples</module>
         <module>camellia-spring-redis-samples</module>
     </modules>
 

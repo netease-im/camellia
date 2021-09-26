@@ -81,5 +81,8 @@ public class TestSamples {
 ### 使用SpringRedisTemplate适配器接入
 如果你本来使用的是SpringRedisTemplate，但是也想拥有CamelliaRedisTemplate的分片、读写分离、双写等能力，使用适配器，不需要修改代码即可切换成CamelliaRedisTemplate，参见：[spring-adaptor](spring-adaptor.md)
 
+### 几个工具类
+基于CamelliaRedisTemplate实现了几个工具类，如分布式锁，参见：[redis-toolkit](toolkit.md)
+
 ### 示例源码
 [示例源码](/camellia-samples/camellia-redis-samples)

@@ -5,7 +5,7 @@ import com.netease.nim.camellia.core.api.ResourceStats;
 import com.netease.nim.camellia.dashboard.conf.DashboardProperties;
 import com.netease.nim.camellia.dashboard.model.RwStats;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
-import com.netease.nim.camellia.redis.toolkit.utils.CacheUtil;
+import com.netease.nim.camellia.core.util.CacheUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

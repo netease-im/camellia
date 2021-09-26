@@ -14,8 +14,8 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 ├─`camellia-redis`  
 ├─`camellia-redis-proxy`   
 ├─`camellia-redis-proxy-hbase`  
-├─`camellia-redis-toolkit`  
 ├─`camellia-tools`  
+├─`camellia-id-gen`  
 ├─`camellia-redis-zk`  
 │ ├─`camellia-redis-zk-common`  
 │ ├─`camellia-redis-zk-discovery`  
@@ -25,8 +25,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 │ ├─`camellia-dashboard-samples`  
 │ ├─`camellia-redis-samples`  
 │ ├─`camellia-redis-proxy-samples`   
-│ ├─`camellia-redis-proxy-hbase-samples`  
-│ ├─`camellia-redis-toolkit-samples`  
+│ ├─`camellia-redis-proxy-hbase-samples`    
 │ ├─`camellia-hbase-samples`   
 │ ├─`camellia-spring-redis-samples`   
 ├─`camellia-spring-boot-starters`               
@@ -72,10 +71,7 @@ support client read-write-separate/double-write
 ### 6、camellia-redis-proxy-hbase    
 base on camellia-redis-proxy、CamelliaRedisTemplate、CamelliaHBaseTemplate, support hot-code-sepatation on redis string/hash/zset commands  
 [QUICK START](/docs/redis-proxy-hbase/redis-proxy-hbase.md)  
-### 7、camellia-redis-toolkit  
-base on CamelliaRedisTemplate，provide some toolkit of redis, such as redis-lock  
-[QUICK START](/docs/toolkit/toolkit.md)
-### 8、camellia-tools  
+### 7、camellia-tools  
 provide some tools, such as compress utils CamelliaCompressor, encrypt utils CamelliaEncryptor, local cache utils CamelliaLoadingCache       
 [QUICK START](/docs/tools/tools.md)   
 

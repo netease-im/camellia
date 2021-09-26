@@ -46,7 +46,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-toolkit</artifactId>
+			<artifactId>camellia-tools</artifactId>
 			<version>1.0.38-SNAPSHOT</version>
 		</dependency>
 		<dependency>

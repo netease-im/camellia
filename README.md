@@ -13,8 +13,8 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 ├─`camellia-redis`  
 ├─`camellia-redis-proxy`   
 ├─`camellia-redis-proxy-hbase`  
-├─`camellia-redis-toolkit`  
 ├─`camellia-tools`    
+├─`camellia-id-gen`      
 ├─`camellia-redis-zk`  
 │ ├─`camellia-redis-zk-common`  
 │ ├─`camellia-redis-zk-discovery`  
@@ -25,7 +25,6 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 │ ├─`camellia-redis-samples`  
 │ ├─`camellia-redis-proxy-samples`   
 │ ├─`camellia-redis-proxy-hbase-samples`  
-│ ├─`camellia-redis-toolkit-samples`  
 │ ├─`camellia-hbase-samples`   
 │ ├─`camellia-spring-redis-samples`   
 ├─`camellia-spring-boot-starters`               
@@ -72,10 +71,7 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 基于camellia-redis-proxy、CamelliaRedisTemplate、CamelliaHBaseTemplate  
 支持string/hash/zset相关命令的冷热分离存储  
 [快速开始](/docs/redis-proxy-hbase/redis-proxy-hbase.md)    
-### 7、camellia-redis-toolkit  
-基于CamelliaRedisTemplate，提供了redis相关的一些工具类，如分布式锁、分布式id生成等    
-[快速开始](/docs/toolkit/toolkit.md)    
-### 8、camellia-tools
+### 7、camellia-tools
 提供了一些工具类，包括：压缩工具类CamelliaCompressor、加解密工具类CamelliaEncryptor、本地缓存工具类CamelliaLoadingCache等  
 [快速开始](/docs/tools/tools.md)       
 

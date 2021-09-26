@@ -3,57 +3,44 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-redis-proxy-hbase</artifactId>
+	<artifactId>camellia-id-gen-samples</artifactId>
 	<version>1.0.38-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia</artifactId>
+		<artifactId>camellia-samples</artifactId>
 		<version>1.0.38-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-proxy</artifactId>
+			<artifactId>camellia-id-gen</artifactId>
 			<version>1.0.38-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-hbase</artifactId>
-			<version>1.0.38-SNAPSHOT</version>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.2.3</version>
 		</dependency>
-		<dependency>
-			<groupId>redis.clients</groupId>
-			<artifactId>jedis</artifactId>
-			<version>2.9.3</version>
-		</dependency>
-    </dependencies>
+	</dependencies>
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.0.2</version>
+				<version>3.1</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
-					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>3.1.0</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>jar-no-fork</goal>
-						</goals>
-					</execution>
-				</executions>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
 			</plugin>
 		</plugins>
 		<resources>
@@ -63,6 +50,23 @@
 					<include>**/*</include>
 				</includes>
 			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>**/*</include>
+				</includes>
+			</resource>
 		</resources>
 	</build>
+
+	<repositories>
+		<repository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 </project>
