@@ -23,6 +23,7 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 │ ├─`camellia-core-samples`  
 │ ├─`camellia-dashboard-samples`  
 │ ├─`camellia-redis-samples`  
+│ ├─`camellia-id-gen-samples`    
 │ ├─`camellia-redis-proxy-samples`   
 │ ├─`camellia-redis-proxy-hbase-samples`  
 │ ├─`camellia-hbase-samples`   
@@ -73,7 +74,10 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 [快速开始](/docs/redis-proxy-hbase/redis-proxy-hbase.md)    
 ### 7、camellia-tools
 提供了一些工具类，包括：压缩工具类CamelliaCompressor、加解密工具类CamelliaEncryptor、本地缓存工具类CamelliaLoadingCache等  
-[快速开始](/docs/tools/tools.md)       
+[快速开始](/docs/tools/tools.md)     
+### 8、camellia-id-gen
+提供了多种id生成算法，开箱即用，包括雪花算法、严格递增的id生成算法、趋势递增的id生成算法等    
+[快速开始](/docs/id-gen/id-gen.md)       
 
 ## 版本
 最新版本是1.0.37，已经发布到maven中央仓库（2021/09/24）  

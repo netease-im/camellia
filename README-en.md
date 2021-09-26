@@ -24,6 +24,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 │ ├─`camellia-core-samples`  
 │ ├─`camellia-dashboard-samples`  
 │ ├─`camellia-redis-samples`  
+│ ├─`camellia-id-gen-samples`  
 │ ├─`camellia-redis-proxy-samples`   
 │ ├─`camellia-redis-proxy-hbase-samples`    
 │ ├─`camellia-hbase-samples`   
