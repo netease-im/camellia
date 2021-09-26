@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.id.gen.snowflake;
 
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.id.gen.common.CamelliaIdGenConstants;
 import com.netease.nim.camellia.id.gen.common.CamelliaIdGenException;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.toolkit.lock.CamelliaRedisLock;
@@ -27,15 +28,15 @@ public class RedisWorkerIdGen implements WorkerIdGen {
     private final boolean exitIfRenewFail;
 
     public RedisWorkerIdGen(CamelliaRedisTemplate template) {
-        this(template, "camellia");
+        this(template, CamelliaIdGenConstants.Snowflake.RedisWorkerIdGen.namespace);
     }
 
     public RedisWorkerIdGen(CamelliaRedisTemplate template, String namespace) {
-        this(template, namespace, 3000, 1000, false);
+        this(template, namespace, CamelliaIdGenConstants.Snowflake.RedisWorkerIdGen.lockExpireMillis,  CamelliaIdGenConstants.Snowflake.RedisWorkerIdGen.renewIntervalMillis,  CamelliaIdGenConstants.Snowflake.RedisWorkerIdGen.exitIfRenewFail);
     }
 
     public RedisWorkerIdGen(CamelliaRedisTemplate template, String namespace, long lockExpireMillis, long renewIntervalMillis) {
-        this(template, namespace, lockExpireMillis, renewIntervalMillis, false);
+        this(template, namespace, lockExpireMillis, renewIntervalMillis,  CamelliaIdGenConstants.Snowflake.RedisWorkerIdGen.exitIfRenewFail);
     }
 
     public RedisWorkerIdGen(CamelliaRedisTemplate template, String namespace, long lockExpireMillis, long renewIntervalMillis, boolean exitIfRenewFail) {
@@ -44,6 +45,8 @@ public class RedisWorkerIdGen implements WorkerIdGen {
         this.lockExpireMillis = lockExpireMillis;
         this.renewIntervalMillis = renewIntervalMillis;
         this.exitIfRenewFail = exitIfRenewFail;
+        logger.info("RedisWorkerIdGen init success, namespace = {}, lockExpireMillis = {}, renewIntervalMillis = {}, exitIfRenewFail = {}",
+                namespace, lockExpireMillis, renewIntervalMillis, exitIfRenewFail);
     }
 
     @Override

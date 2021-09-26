@@ -1,12 +1,15 @@
 package com.netease.nim.camellia.id.gen.snowflake;
 
 
+import com.netease.nim.camellia.id.gen.common.CamelliaIdGenConstants;
+
 /**
  * Created by caojiajun on 2021/9/18
  */
 public class CamelliaSnowflakeConfig {
 
-    private long twepoch = 1631203200000L;//默认：2021-09-10 00:00:00
+    //默认：2021-09-10 00:00:00
+    private long twepoch = CamelliaIdGenConstants.Snowflake.twepoch;
 
     /**
      * regionBits + workerIdBits + sequenceBits <= 22
@@ -14,13 +17,13 @@ public class CamelliaSnowflakeConfig {
     //单元id所占的位数
     //默认为0，表示不需要单元id
     //如果为4，则表示最多支持16个单元id
-    private int regionBits = 0;
+    private int regionBits = CamelliaIdGenConstants.Snowflake.regionBits;
     //workerId所占的位数
     //默认10，表示最多支持1024个workerId
-    private int workerIdBits = 10;//默认10位，表示最多支持1024个发号器进程
+    private int workerIdBits = CamelliaIdGenConstants.Snowflake.workerIdBits;//默认10位，表示最多支持1024个发号器进程
     //sequence所占的位数
     //默认12，表示每ms最多支持生成4096个序号
-    private int sequenceBits = 12;
+    private int sequenceBits = CamelliaIdGenConstants.Snowflake.sequenceBits;
 
     private long regionId;//regionId，位数不超过regionBits
 

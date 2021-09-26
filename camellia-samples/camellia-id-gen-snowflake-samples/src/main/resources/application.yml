@@ -1,0 +1,37 @@
+
+server:
+  port: 8081
+spring:
+  application:
+    name: camellia-id-gen-snowflake
+camellia-id-gen-snowflake:
+  sequence-bits: 12
+  worker-id-bits: 10
+  region-bits: 0
+  region-id: 0
+  worker-id: -1 #-1表示使用redis生成workerId
+  redis-worker-id-gen-conf:
+    namespace: camellia
+    lock-expire-millis: 3000
+    renew-interval-millis: 1000
+    exit-if-renew-fail: false
+
+
+camellia-redis:
+  type: local
+  local:
+    resource: redis://@127.0.0.1:6379
+  redis-conf:
+    jedis:
+      timeout: 2000
+      min-idle: 0
+      max-idle: 32
+      max-active: 32
+      max-wait-millis: 2000
+    jedis-cluster:
+      max-wait-millis: 2000
+      min-idle: 0
+      max-idle: 8
+      max-active: 16
+      max-attempts: 5
+      timeout: 2000
