@@ -32,34 +32,6 @@ public abstract class AbstractCamelliaSegmentIdGen implements ICamelliaSegmentId
 
     protected ExecutorService asyncLoadThreadPool;
 
-    public void setStep(int step) {
-        this.step = step;
-    }
-
-    public void setMaxRetry(int maxRetry) {
-        this.maxRetry = maxRetry;
-    }
-
-    public void setRetryIntervalMillis(long retryIntervalMillis) {
-        this.retryIntervalMillis = retryIntervalMillis;
-    }
-
-    public void setCacheMaxCapacity(int cacheMaxCapacity) {
-        this.cacheMaxCapacity = cacheMaxCapacity;
-    }
-
-    public void setCacheMap(ConcurrentLinkedHashMap<String, LinkedBlockingQueue<Long>> cacheMap) {
-        this.cacheMap = cacheMap;
-    }
-
-    public void setLockMap(ConcurrentLinkedHashMap<String, AtomicBoolean> lockMap) {
-        this.lockMap = lockMap;
-    }
-
-    public void setAsyncLoadThreadPool(ExecutorService asyncLoadThreadPool) {
-        this.asyncLoadThreadPool = asyncLoadThreadPool;
-    }
-
     @Override
     public List<Long> genIds(String tag, int count) {
         try {
