@@ -115,7 +115,9 @@ camellia-redis:
       max-attempts: 5
       timeout: 2000
 ```
-启动后访问http://127.0.0.1:8081/camellia/id/gen/snowflake/genId即可，返回示例：
+启动后访问：  
+http://127.0.0.1:8081/camellia/id/gen/snowflake/genId  
+返回示例：  
 ```json
 {
   "code": 200,
