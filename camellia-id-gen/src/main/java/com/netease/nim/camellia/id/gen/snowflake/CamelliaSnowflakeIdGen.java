@@ -90,7 +90,7 @@ public class CamelliaSnowflakeIdGen implements ICamelliaSnowflakeIdGen {
         }
         if (lastTimestamp == now) {
             sequence ++;
-            if (sequence >= maxSequence) {
+            if (sequence > maxSequence) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("ids exhaust in current ms, wait to next ms");
                 }
