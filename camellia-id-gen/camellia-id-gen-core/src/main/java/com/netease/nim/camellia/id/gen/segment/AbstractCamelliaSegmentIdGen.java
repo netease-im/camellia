@@ -137,7 +137,7 @@ public abstract class AbstractCamelliaSegmentIdGen implements ICamelliaSegmentId
         if (getLock(tag).compareAndSet(false, true)) {
             try {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("try load ids from idLoader, tag = {}, count = {}", tag, count);
+                    logger.debug("try load ids, tag = {}, count = {}", tag, count);
                 }
                 checkAndLoadCache(getCacheQueue(tag), tag, count);
             } finally {
@@ -155,7 +155,7 @@ public abstract class AbstractCamelliaSegmentIdGen implements ICamelliaSegmentId
             //同时最多只有一个load任务
             if (getLock(tag).compareAndSet(false, true)) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("cache.size[{}] < threshold[{}], try load from db", size, threshold);
+                    logger.debug("cache.size[{}] < threshold[{}], try load ids", size, threshold);
                 }
                 try {
                     asyncLoadThreadPool.submit(() -> {
