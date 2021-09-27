@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.netease.nim.camellia.id.gen.springboot.snowflake.CamelliaSnowflakeIdGenConfiguration
+  com.netease.nim.camellia.id.gen.springboot.snowflake.CamelliaIdGenSnowflakeConfiguration

@@ -39,6 +39,9 @@ public class CamelliaSegmentIdGen implements ICamelliaSegmentIdGen {
 
     public CamelliaSegmentIdGen(CamelliaSegmentIdGenConfig config) {
         this.idLoader = config.getIdLoader();
+        if (idLoader == null) {
+            throw new CamelliaIdGenException("idLoader not found");
+        }
         this.regionBits = config.getRegionBits();
         this.regionId = config.getRegionId();
         this.step = config.getStep();

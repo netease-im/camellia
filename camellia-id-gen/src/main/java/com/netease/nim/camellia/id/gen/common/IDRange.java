@@ -28,4 +28,12 @@ public class IDRange {
     public void setEnd(long end) {
         this.end = end;
     }
+
+    @Override
+    public String toString() {
+        return "IDRange{" +
+                "start=" + start +
+                ", end=" + end +
+                '}';
+    }
 }

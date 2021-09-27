@@ -1,0 +1,51 @@
+
+server:
+  port: 8082
+spring:
+  application:
+    name: camellia-id-gen-segment
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&rewriteBatchedStatements=false
+    username: root
+    password: root
+    hikari:
+      minimum-idle: 5
+      idle-timeout: 180000
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+
+camellia-id-gen-strict:
+  regionBits: 0
+  regionId: 0
+  cache-key-prefix: camellia
+  lock-expire-millis: 3000
+  cache-hold-seconds: 10
+  cache-expire-seconds: 86400
+  max-retry: 10
+  retry-interval-millis: 5
+  default-step: 10
+  max-step: 100
+
+
+camellia-redis:
+  type: local
+  local:
+    resource: redis://@127.0.0.1:6379
+  redis-conf:
+    jedis:
+      timeout: 2000
+      min-idle: 0
+      max-idle: 32
+      max-active: 32
+      max-wait-millis: 2000
+    jedis-cluster:
+      max-wait-millis: 2000
+      min-idle: 0
+      max-idle: 8
+      max-active: 16
+      max-attempts: 5
+      timeout: 2000

@@ -1,0 +1,27 @@
+
+server:
+  port: 8083
+spring:
+  application:
+    name: camellia-id-gen-segment
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&rewriteBatchedStatements=false
+    username: root
+    password: root
+    hikari:
+      minimum-idle: 5
+      idle-timeout: 180000
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+
+camellia-id-gen-segment:
+  regionBits: 0
+  regionId: 0
+  tag-count: 1000
+  step: 1000
+  max-retry: 10
+  retry-interval-millis: 10

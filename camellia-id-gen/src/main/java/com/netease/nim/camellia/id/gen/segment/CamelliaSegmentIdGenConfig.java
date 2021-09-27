@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.id.gen.segment;
 
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.id.gen.common.CamelliaIdGenConstants;
 import com.netease.nim.camellia.id.gen.common.IDLoader;
 
 import java.util.concurrent.ExecutorService;
@@ -19,20 +20,17 @@ public class CamelliaSegmentIdGenConfig {
 
     private IDLoader idLoader;
 
-    //单元id所占的位数
-    //默认为0，表示不需要单元id
-    //如果为4，则表示最多支持16个单元id，会基于数据库生成的id在右边补上4bit的单元id
-    private int regionBits = 0;
+    private int regionBits = CamelliaIdGenConstants.Segment.regionBits;
 
-    private long regionId;//regionId，位数不超过regionBits
+    private long regionId;
 
-    private int step = 1000;
+    private int step = CamelliaIdGenConstants.Segment.step;
 
-    private int tagCount = 1000;//包含的tag数
+    private int tagCount = CamelliaIdGenConstants.Segment.tagCount;
 
-    //maxRetry*retryIntervalMillis至少要比idLoader执行一次耗时更长
-    private int maxRetry = 100;//并发情况下重试的最大次数
-    private long retryIntervalMillis = 10;//并发情况下重试间隔
+    private int maxRetry = CamelliaIdGenConstants.Segment.maxRetry;
+
+    private long retryIntervalMillis = CamelliaIdGenConstants.Segment.retryIntervalMillis;
 
     private ExecutorService asyncLoadThreadPool = defaultAsyncLoadThreadPool;
 

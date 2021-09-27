@@ -38,8 +38,8 @@ public class IdGenResult {
         this.msg = msg;
     }
 
-    public static IdGenResult success(long id) {
-        return new IdGenResult(200, id, "success");
+    public static IdGenResult success(Object data) {
+        return new IdGenResult(200, data, "success");
     }
 
     public static IdGenResult error(String msg) {

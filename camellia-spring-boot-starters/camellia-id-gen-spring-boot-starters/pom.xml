@@ -16,7 +16,10 @@
     </parent>
 
     <modules>
+        <module>camellia-id-gen-id-loader</module>
         <module>camellia-id-gen-snowflake-spring-boot-starter</module>
+        <module>camellia-id-gen-strict-spring-boot-starter</module>
+        <module>camellia-id-gen-segment-spring-boot-starter</module>
     </modules>
 
 </project>

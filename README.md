@@ -23,7 +23,9 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 │ ├─`camellia-core-samples`  
 │ ├─`camellia-dashboard-samples`  
 │ ├─`camellia-redis-samples`  
-│ ├─`camellia-id-gen-samples`    
+│ ├─`camellia-id-gen-snowflake-samples`    
+│ ├─`camellia-id-gen-strict-samples`    
+│ ├─`camellia-id-gen-segment-samples`    
 │ ├─`camellia-redis-proxy-samples`   
 │ ├─`camellia-redis-proxy-hbase-samples`  
 │ ├─`camellia-hbase-samples`   
@@ -42,7 +44,10 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 │ ├─`camellia-redis-zk-discovery-spring-boot-starter`    
 │ ├─`camellia-spring-redis-base`         
 │ ├─`camellia-spring-redis-eureka-discovery-spring-boot-starter`     
-│ ├─`camellia-spring-redis-zk-discovery-spring-boot-starter`    
+│ ├─`camellia-spring-redis-zk-discovery-spring-boot-starter`  
+│ ├─`camellia-spring-redis-id-gen-snowflake-spring-boot-starter`   
+│ ├─`camellia-spring-redis-id-gen-strict-spring-boot-starter`   
+│ ├─`camellia-spring-redis-id-gen-segment-spring-boot-starter`  
               
 ## 介绍
 ### 1、camellia-core  

@@ -49,6 +49,12 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
         this.template = config.getTemplate();
         this.asyncLoadThreadPool = config.getAsyncLoadThreadPool();
         this.idLoader = config.getIdLoader();
+        if (template == null) {
+            throw new CamelliaIdGenException("redis template not found");
+        }
+        if (idLoader == null) {
+            throw new CamelliaIdGenException("idLoader not found");
+        }
         this.cacheKeyPrefix = config.getCacheKeyPrefix();
         this.lockExpireMillis = config.getLockExpireMillis();
         this.cacheExpireSeconds = config.getCacheExpireSeconds();
