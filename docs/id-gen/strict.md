@@ -179,11 +179,7 @@ http://127.0.0.1:8082/camellia/id/gen/strict/peekId?tag=a
 ```json
 {
     "code": 200,
-    "data": [
-      5072,
-      5073,
-      5074
-    ],
+    "data": 5023,
     "msg": "success"
 }
 ```
