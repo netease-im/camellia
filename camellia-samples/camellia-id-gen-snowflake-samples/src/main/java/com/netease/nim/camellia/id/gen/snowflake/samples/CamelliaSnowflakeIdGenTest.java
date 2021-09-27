@@ -12,11 +12,13 @@ public class CamelliaSnowflakeIdGenTest {
 
     public static void main(String[] args) throws Exception {
         CamelliaSnowflakeConfig config = new CamelliaSnowflakeConfig();
-        config.setRegionBits(0);
-        config.setWorkerIdBits(10);
-        config.setSequenceBits(2);
+        config.setRegionBits(0);//单元id所占的比特位数，0表示不区分单元
+        config.setRegionId(0);//regionId，如果regionBits为0，则regionId必须为0
+        config.setWorkerIdBits(10);//workerId所占的比特位数
+        config.setSequenceBits(12);//序列号所占比特位数
+        //使用redis生成workerId
         config.setWorkerIdGen(new RedisWorkerIdGen(new CamelliaRedisTemplate("redis://@127.0.0.1:6379")));
-        config.setRegionId(0);
+
         CamelliaSnowflakeIdGen idGen = new CamelliaSnowflakeIdGen(config);
 
         int i=2000;

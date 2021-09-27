@@ -5,16 +5,16 @@ spring:
   application:
     name: camellia-id-gen-snowflake
 camellia-id-gen-snowflake:
-  sequence-bits: 12
-  worker-id-bits: 10
-  region-bits: 0
-  region-id: 0
+  sequence-bits: 12 #序列号所占比特位数
+  worker-id-bits: 10 #workerId所占的比特位数
+  region-bits: 0 #单元id所占的比特位数，0表示不区分单元
+  region-id: 0 #regionId，如果regionBits为0，则regionId必须为0
   worker-id: -1 #-1表示使用redis生成workerId
   redis-worker-id-gen-conf:
-    namespace: camellia
-    lock-expire-millis: 3000
-    renew-interval-millis: 1000
-    exit-if-renew-fail: false
+    namespace: camellia #使用redis生成workerId时不同的命名空间下，workerId生成互不干扰
+    lock-expire-millis: 3000 #使用redis生成workerId时获取分布式锁时的超时时间
+    renew-interval-millis: 1000 #使用redis生成workerId时续约workerId的间隔
+    exit-if-renew-fail: false #如果续约失败（可能redis超时了，或者gc导致workerId被其他进程抢走了，概率较低），是否进程退出，默认false
 
 
 camellia-redis:
