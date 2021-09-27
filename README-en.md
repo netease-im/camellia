@@ -15,7 +15,9 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 ├─`camellia-redis-proxy`   
 ├─`camellia-redis-proxy-hbase`  
 ├─`camellia-tools`    
-├─`camellia-id-gen`      
+├─`camellia-id-gen`  
+│ ├─`camellia-id-gen-core`   
+│ ├─`camellia-id-gen-sdk`      
 ├─`camellia-redis-zk`  
 │ ├─`camellia-redis-zk-common`  
 │ ├─`camellia-redis-zk-discovery`  

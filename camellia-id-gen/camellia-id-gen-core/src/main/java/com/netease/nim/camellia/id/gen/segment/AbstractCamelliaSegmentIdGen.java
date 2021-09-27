@@ -1,10 +1,7 @@
 package com.netease.nim.camellia.id.gen.segment;
 
-
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.id.gen.common.CamelliaIdGenException;
-import com.netease.nim.camellia.id.gen.common.IDLoader;
-import com.netease.nim.camellia.id.gen.common.IDRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,55 +13,51 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Created by caojiajun on 2021/9/24
+ * Created by caojiajun on 2021/9/27
  */
-public class CamelliaSegmentIdGen implements ICamelliaSegmentIdGen {
+public abstract class AbstractCamelliaSegmentIdGen implements ICamelliaSegmentIdGen {
 
-    private static final Logger logger = LoggerFactory.getLogger(CamelliaSegmentIdGen.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractCamelliaSegmentIdGen.class);
+    protected int step;
 
-    private final IDLoader idLoader;
-    private final int regionBits;
-    private final long regionId;
-    private final int step;
+    protected int maxRetry;
+    protected long retryIntervalMillis;
 
-    private final int maxRetry;
-    private final long retryIntervalMillis;
+    protected int cacheMaxCapacity;
 
-    private final int cacheMaxCapacity;
+    private final Object lock = new Object();
 
-    private final ConcurrentLinkedHashMap<String, LinkedBlockingQueue<Long>> cacheMap;
-    private final ConcurrentLinkedHashMap<String, AtomicBoolean> lockMap;
+    protected ConcurrentLinkedHashMap<String, LinkedBlockingQueue<Long>> cacheMap;
+    protected ConcurrentLinkedHashMap<String, AtomicBoolean> lockMap;
 
-    private final ExecutorService asyncLoadThreadPool;
+    protected ExecutorService asyncLoadThreadPool;
 
-    public CamelliaSegmentIdGen(CamelliaSegmentIdGenConfig config) {
-        this.idLoader = config.getIdLoader();
-        if (idLoader == null) {
-            throw new CamelliaIdGenException("idLoader not found");
-        }
-        this.regionBits = config.getRegionBits();
-        this.regionId = config.getRegionId();
-        this.step = config.getStep();
-        this.cacheMaxCapacity = step * 10;
-        this.maxRetry = config.getMaxRetry();
-        this.retryIntervalMillis = config.getRetryIntervalMillis();
+    public void setStep(int step) {
+        this.step = step;
+    }
 
-        this.cacheMap = new ConcurrentLinkedHashMap.Builder<String, LinkedBlockingQueue<Long>>()
-                .initialCapacity(config.getTagCount()).maximumWeightedCapacity(config.getTagCount()).build();
-        this.lockMap = new ConcurrentLinkedHashMap.Builder<String, AtomicBoolean>()
-                .initialCapacity(config.getTagCount() * 2).maximumWeightedCapacity(config.getTagCount() * 2).build();
+    public void setMaxRetry(int maxRetry) {
+        this.maxRetry = maxRetry;
+    }
 
-        if (this.regionBits < 0) {
-            throw new CamelliaIdGenException("regionBits should >= 0");
-        }
-        long maxRegionId = (1L << config.getRegionBits()) - 1;
-        if (this.regionId > maxRegionId) {
-            throw new CamelliaIdGenException("regionId too long");
-        }
-        this.asyncLoadThreadPool = config.getAsyncLoadThreadPool();
+    public void setRetryIntervalMillis(long retryIntervalMillis) {
+        this.retryIntervalMillis = retryIntervalMillis;
+    }
 
-        logger.info("CamelliaSegmentIdGen init success, regionId = {}, regionBits = {}, step = {}, maxRetry = {}, retryIntervalMillis = {}",
-                regionId, regionBits, step, maxRetry, retryIntervalMillis);
+    public void setCacheMaxCapacity(int cacheMaxCapacity) {
+        this.cacheMaxCapacity = cacheMaxCapacity;
+    }
+
+    public void setCacheMap(ConcurrentLinkedHashMap<String, LinkedBlockingQueue<Long>> cacheMap) {
+        this.cacheMap = cacheMap;
+    }
+
+    public void setLockMap(ConcurrentLinkedHashMap<String, AtomicBoolean> lockMap) {
+        this.lockMap = lockMap;
+    }
+
+    public void setAsyncLoadThreadPool(ExecutorService asyncLoadThreadPool) {
+        this.asyncLoadThreadPool = asyncLoadThreadPool;
     }
 
     @Override
@@ -146,7 +139,7 @@ public class CamelliaSegmentIdGen implements ICamelliaSegmentIdGen {
                 if (logger.isDebugEnabled()) {
                     logger.debug("try load ids from idLoader, tag = {}, count = {}", tag, count);
                 }
-                loadCache(tag, count);
+                checkAndLoadCache(getCacheQueue(tag), tag, count);
             } finally {
                 getLock(tag).compareAndSet(true, false);
             }
@@ -167,7 +160,7 @@ public class CamelliaSegmentIdGen implements ICamelliaSegmentIdGen {
                 try {
                     asyncLoadThreadPool.submit(() -> {
                         try {
-                            loadCache(tag, count);
+                            checkAndLoadCache(getCacheQueue(tag), tag, count);
                         } finally {
                             getLock(tag).compareAndSet(true, false);
                         }
@@ -178,30 +171,20 @@ public class CamelliaSegmentIdGen implements ICamelliaSegmentIdGen {
             }
         }
     }
-    private void loadCache(String tag, int count) {
-        try {
-            LinkedBlockingQueue<Long> cache = getCacheQueue(tag);
-            int size = cache.size();
-            int maxLoading = cacheMaxCapacity - size;
-            int loadCount = Math.min(maxLoading, count);
-            IDRange load = idLoader.load(tag, loadCount);
-            for (long i=load.getStart(); i<=load.getEnd(); i++) {
-                long id = (i << regionBits) | regionId;
-                cache.offer(id);
-            }
-            if (logger.isDebugEnabled()) {
-                logger.debug("load ids from idLoader success, tag = {}, start = {}, end = {}", tag, load.getStart(), load.getEnd());
-            }
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw new CamelliaIdGenException("load ids from idLoader error", e);
-        }
+
+    private void checkAndLoadCache(LinkedBlockingQueue<Long> cache, String tag, int count) {
+        int size = cache.size();
+        int maxLoading = cacheMaxCapacity - size;
+        int loadCount = Math.min(maxLoading, count);
+        loadCache(cache, tag, loadCount);
     }
 
-    public LinkedBlockingQueue<Long> getCacheQueue(String tag) {
+    protected abstract void loadCache(LinkedBlockingQueue<Long> cache, String tag, int loadCount);
+
+    private LinkedBlockingQueue<Long> getCacheQueue(String tag) {
         LinkedBlockingQueue<Long> queue = this.cacheMap.get(tag);
         if (queue == null) {
-            synchronized (this.cacheMap) {
+            synchronized (this.lock) {
                 queue = this.cacheMap.get(tag);
                 if (queue == null) {
                     queue = new LinkedBlockingQueue<>(cacheMaxCapacity + 1000);
@@ -212,10 +195,10 @@ public class CamelliaSegmentIdGen implements ICamelliaSegmentIdGen {
         return queue;
     }
 
-    public AtomicBoolean getLock(String tag) {
+    private AtomicBoolean getLock(String tag) {
         AtomicBoolean lock = this.lockMap.get(tag);
         if (lock == null) {
-            synchronized (this.lockMap) {
+            synchronized (this.lock) {
                 lock = this.lockMap.get(tag);
                 if (lock == null) {
                     lock = new AtomicBoolean();

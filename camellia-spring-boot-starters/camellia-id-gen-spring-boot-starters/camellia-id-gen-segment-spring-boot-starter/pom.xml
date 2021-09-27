@@ -27,7 +27,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-id-gen</artifactId>
+			<artifactId>camellia-id-gen-core</artifactId>
 			<version>1.0.38-SNAPSHOT</version>
 		</dependency>
 		<dependency>

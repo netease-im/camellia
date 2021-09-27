@@ -6,55 +6,16 @@
 	<artifactId>camellia-id-gen</artifactId>
 	<version>1.0.38-SNAPSHOT</version>
 
+	<packaging>pom</packaging>
+
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia</artifactId>
 		<version>1.0.38-SNAPSHOT</version>
 	</parent>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.7</version>
-		</dependency>
-		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis</artifactId>
-			<version>1.0.38-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.googlecode.concurrentlinkedhashmap</groupId>
-			<artifactId>concurrentlinkedhashmap-lru</artifactId>
-			<version>1.4.2</version>
-		</dependency>
-    </dependencies>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.0.2</version>
-				<configuration>
-					<source>8</source>
-					<target>8</target>
-					<encoding>UTF-8</encoding>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>3.1.0</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>jar-no-fork</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+	<modules>
+		<module>camellia-id-gen-core</module>
+		<module>camellia-id-gen-sdk</module>
+	</modules>
 </project>

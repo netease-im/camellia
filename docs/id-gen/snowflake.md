@@ -19,7 +19,7 @@
 ```
 <dependency>
     <groupId>com.netease.nim</groupId>
-    <artifactId>camellia-id-gen</artifactId>
+    <artifactId>camellia-id-gen-core</artifactId>
     <version>a.b.c</version>
 </dependency>
 ```
@@ -124,6 +124,28 @@ http://127.0.0.1:8081/camellia/id/gen/snowflake/genId
   "data": 6393964107649080,
   "msg": "success"
 }
+```
+
+当使用spring-boot-starter部署了独立的发号器服务后，为了方便使用http方法访问相关接口，我们提供了一个简易的封装    
+先引入maven依赖：  
+```
+<dependency>
+    <groupId>com.netease.nim</groupId>
+    <artifactId>camellia-id-gen-sdk</artifactId>
+    <version>a.b.c</version>
+</dependency>
+```
+示例代码如下：  
+```java
+public class CamelliaSnowflakeIdGenSdkTest {
+    public static void main(String[] args) {
+        CamelliaIdGenSdkConfig config = new CamelliaIdGenSdkConfig();
+        config.setUrl("http://127.0.0.1:8081");
+        CamelliaSnowflakeIdGenSdk idGenSdk = new CamelliaSnowflakeIdGenSdk(config);
+        System.out.println(idGenSdk.genId());
+    }
+}
+
 ```
 
 ### 示例源码
