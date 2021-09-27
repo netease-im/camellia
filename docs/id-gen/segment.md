@@ -5,7 +5,7 @@
 * 支持根据tag维护多条序列，彼此独立
 * 支持设置region标记（比特位数可以自定义），从而可以在单元化部署中保证不同单元之间id不冲突
 * 基于数据库保证id唯一，基于内存保证分配速度，基于预留buffer确保rt稳定
-* 提供了一个spring-boot-starter，快速搭建一个基于数据库的segmentId发号器集群
+* 提供了一个spring-boot-starter，快速搭建一个基于数据库的发号器集群
 
 ### 原理
 * 数据库表记录每个tag当前分配到的id，每个发号器节点每次从数据库取一段id保留在内存中作为buffer提升性能
@@ -126,9 +126,9 @@ CREATE TABLE `camellia_id_info` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='id生成表';
 ```
 启动后访问相关接口：  
-返回一个id：
-http://127.0.0.1:8083/camellia/id/gen/segment/genId?tag=a
-返回示例：
+返回一个id：  
+http://127.0.0.1:8083/camellia/id/gen/segment/genId?tag=a  
+返回示例：  
 ```json
 {
   "code": 200,
@@ -136,9 +136,9 @@ http://127.0.0.1:8083/camellia/id/gen/segment/genId?tag=a
   "msg": "success"
 }
 ```
-返回多个id：
-http://127.0.0.1:8083/camellia/id/gen/segment/genIds?tag=a&count=3  
-返回示例：
+返回多个id：  
+http://127.0.0.1:8083/camellia/id/gen/segment/genIds?tag=a&count=3   
+返回示例：  
 ```json
 {
     "code": 200,
@@ -148,7 +148,7 @@ http://127.0.0.1:8083/camellia/id/gen/segment/genIds?tag=a&count=3
       5074
     ],
     "msg": "success"
-    }
+}
 ```
 
 ### 示例源码

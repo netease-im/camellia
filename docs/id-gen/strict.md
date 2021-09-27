@@ -161,10 +161,10 @@ CREATE TABLE `camellia_id_info` (
   PRIMARY KEY (`tag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='id生成表';
 ```
-启动后访问相关接口：  
-返回一个id：
-http://127.0.0.1:8082/camellia/id/gen/strict/genId?tag=a
-返回示例：
+启动后访问相关接口：   
+返回一个id：  
+http://127.0.0.1:8082/camellia/id/gen/strict/genId?tag=a  
+返回示例：  
 ```json
 {
   "code": 200,
@@ -172,9 +172,9 @@ http://127.0.0.1:8082/camellia/id/gen/strict/genId?tag=a
   "msg": "success"
 }
 ```
-返回最新的id，但是不使用：
-http://127.0.0.1:8082/camellia/id/gen/strict/peekId?tag=a  
-返回示例：
+返回最新的id，但是不使用：  
+http://127.0.0.1:8082/camellia/id/gen/strict/peekId?tag=a    
+返回示例：  
 ```json
 {
     "code": 200,
@@ -184,7 +184,7 @@ http://127.0.0.1:8082/camellia/id/gen/strict/peekId?tag=a
       5074
     ],
     "msg": "success"
-    }
+}
 ```
 
 ### 示例源码
