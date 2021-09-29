@@ -38,14 +38,6 @@ public abstract class ProxyRouteConfUpdater {
 
     /**
      * 动态更新ResourceTable
-     * @param resourceTable ResourceTable
-     */
-    public final void invokeUpdateResourceTable(ResourceTable resourceTable) {
-        invokeUpdateResourceTable(-1, "default", resourceTable);
-    }
-
-    /**
-     * 动态更新ResourceTable
      * @param bid bid
      * @param bgroup bgroup
      * @param json ResourceTableJson
@@ -53,14 +45,6 @@ public abstract class ProxyRouteConfUpdater {
     public final void invokeUpdateResourceTableJson(long bid, String bgroup, String json) {
         ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(json);
         invokeUpdateResourceTable(bid, bgroup, resourceTable);
-    }
-
-    /**
-     * 动态更新ResourceTable
-     * @param json ResourceTableJson
-     */
-    public final void invokeUpdateResourceTableJson(String json) {
-        invokeUpdateResourceTableJson(-1, "default", json);
     }
 
     /**

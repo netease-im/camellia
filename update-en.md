@@ -8,6 +8,7 @@
 # 1.0.38（2021/10/xx）
 ### 新增
 * add camellia-id-gen mode, support snowflake, support db-base id-gen(growth tread), support db/redis-base id-gen(strict growth)
+* support setting custom callback by spring @Autowired
 
 ### 更新
 * remove camellia-redis-toolkit module, CamelliaCounterCache/CamelliaRedisLock merge to camellia-redis module

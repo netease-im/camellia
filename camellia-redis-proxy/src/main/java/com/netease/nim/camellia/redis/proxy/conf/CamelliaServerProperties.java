@@ -1,6 +1,15 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
 
+import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
+import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyMonitorCallback;
+import com.netease.nim.camellia.redis.proxy.command.async.converter.*;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyMonitorCallback;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheKeyChecker;
+import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheStatsCallback;
+import com.netease.nim.camellia.redis.proxy.command.async.spendtime.SlowCommandMonitorCallback;
+import com.netease.nim.camellia.redis.proxy.command.auth.ClientAuthProvider;
+import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
 
 /**
  *
@@ -13,10 +22,13 @@ public class CamelliaServerProperties {
     private boolean monitorEnable = Constants.Server.monitorEnable;
     private int monitorIntervalSeconds = Constants.Server.monitorIntervalSeconds;
     private String monitorCallbackClassName = Constants.Server.monitorCallbackClassName;
+    private MonitorCallback monitorCallback;
     private boolean commandSpendTimeMonitorEnable = Constants.Server.commandSpendTimeMonitorEnable;
     private long slowCommandThresholdMillisTime = Constants.Server.slowCommandThresholdMillisTime;
     private String slowCommandCallbackClassName = Constants.Server.slowCommandMonitorCallbackClassName;
+    private SlowCommandMonitorCallback slowCommandMonitorCallback;
     private String commandInterceptorClassName;
+    private CommandInterceptor commandInterceptor;
     private boolean hotKeyMonitorEnable = Constants.Server.hotKeyMonitorEnable;
     private HotKeyMonitorConfig hotKeyMonitorConfig;
     private boolean hotKeyCacheEnable = Constants.Server.hotKeyCacheEnable;
@@ -26,8 +38,10 @@ public class CamelliaServerProperties {
     private boolean converterEnable = Constants.Server.converterEnable;
     private ConverterConfig converterConfig;
     private String proxyDynamicConfHookClassName;
+    private ProxyDynamicConfHook proxyDynamicConfHook;
     private boolean monitorDataMaskPassword = Constants.Server.monitorDataMaskPassword;
     private String clientAuthProviderClassName = Constants.Server.clientAuthByConfigProvider;
+    private ClientAuthProvider clientAuthProvider;
 
     private int bossThread = 1;
     private int workThread = Constants.Server.workThread;
@@ -279,12 +293,53 @@ public class CamelliaServerProperties {
         this.clientAuthProviderClassName = clientAuthProviderClassName;
     }
 
+    public MonitorCallback getMonitorCallback() {
+        return monitorCallback;
+    }
+
+    public void setMonitorCallback(MonitorCallback monitorCallback) {
+        this.monitorCallback = monitorCallback;
+    }
+
+    public SlowCommandMonitorCallback getSlowCommandMonitorCallback() {
+        return slowCommandMonitorCallback;
+    }
+
+    public void setSlowCommandMonitorCallback(SlowCommandMonitorCallback slowCommandMonitorCallback) {
+        this.slowCommandMonitorCallback = slowCommandMonitorCallback;
+    }
+
+    public CommandInterceptor getCommandInterceptor() {
+        return commandInterceptor;
+    }
+
+    public void setCommandInterceptor(CommandInterceptor commandInterceptor) {
+        this.commandInterceptor = commandInterceptor;
+    }
+
+    public ProxyDynamicConfHook getProxyDynamicConfHook() {
+        return proxyDynamicConfHook;
+    }
+
+    public void setProxyDynamicConfHook(ProxyDynamicConfHook proxyDynamicConfHook) {
+        this.proxyDynamicConfHook = proxyDynamicConfHook;
+    }
+
+    public ClientAuthProvider getClientAuthProvider() {
+        return clientAuthProvider;
+    }
+
+    public void setClientAuthProvider(ClientAuthProvider clientAuthProvider) {
+        this.clientAuthProvider = clientAuthProvider;
+    }
+
     public static class HotKeyMonitorConfig {
         private long checkMillis = Constants.Server.hotKeyMonitorCheckMillis;
         private int checkCacheMaxCapacity = Constants.Server.hotKeyMonitorCheckCacheMaxCapacity;
         private long checkThreshold = Constants.Server.hotKeyMonitorCheckThreshold;
         private int maxHotKeyCount = Constants.Server.hotKeyMonitorMaxHotKeyCount;
         private String hotKeyMonitorCallbackClassName = Constants.Server.hotKeyMonitorCallbackClassName;
+        private HotKeyMonitorCallback hotKeyMonitorCallback;
 
         public long getCheckMillis() {
             return checkMillis;
@@ -325,6 +380,14 @@ public class CamelliaServerProperties {
         public void setHotKeyMonitorCallbackClassName(String hotKeyMonitorCallbackClassName) {
             this.hotKeyMonitorCallbackClassName = hotKeyMonitorCallbackClassName;
         }
+
+        public HotKeyMonitorCallback getHotKeyMonitorCallback() {
+            return hotKeyMonitorCallback;
+        }
+
+        public void setHotKeyMonitorCallback(HotKeyMonitorCallback hotKeyMonitorCallback) {
+            this.hotKeyMonitorCallback = hotKeyMonitorCallback;
+        }
     }
 
     public static class HotKeyCacheConfig {
@@ -337,9 +400,11 @@ public class CamelliaServerProperties {
         private boolean needCacheNull = Constants.Server.hotKeyCacheNeedCacheNull;
 
         private String cacheKeyCheckerClassName = Constants.Server.hotKeyCacheKeyCheckerClassName;
+        private HotKeyCacheKeyChecker hotKeyCacheKeyChecker;
 
         private long hotKeyCacheStatsCallbackIntervalSeconds = Constants.Server.hotKeyCacheStatsCallbackIntervalSeconds;
         private String hotKeyCacheStatsCallbackClassName = Constants.Server.hotKeyCacheStatsCallbackClassName;
+        private HotKeyCacheStatsCallback hotKeyCacheStatsCallback;
 
         public long getCacheExpireMillis() {
             return cacheExpireMillis;
@@ -412,6 +477,22 @@ public class CamelliaServerProperties {
         public void setNeedCacheNull(boolean needCacheNull) {
             this.needCacheNull = needCacheNull;
         }
+
+        public HotKeyCacheKeyChecker getHotKeyCacheKeyChecker() {
+            return hotKeyCacheKeyChecker;
+        }
+
+        public void setHotKeyCacheKeyChecker(HotKeyCacheKeyChecker hotKeyCacheKeyChecker) {
+            this.hotKeyCacheKeyChecker = hotKeyCacheKeyChecker;
+        }
+
+        public HotKeyCacheStatsCallback getHotKeyCacheStatsCallback() {
+            return hotKeyCacheStatsCallback;
+        }
+
+        public void setHotKeyCacheStatsCallback(HotKeyCacheStatsCallback hotKeyCacheStatsCallback) {
+            this.hotKeyCacheStatsCallback = hotKeyCacheStatsCallback;
+        }
     }
 
     public static class BigKeyMonitorConfig {
@@ -421,6 +502,7 @@ public class CamelliaServerProperties {
         private int hashSizeThreshold = Constants.Server.bigKeyHashSizeThreshold;
         private int setSizeThreshold = Constants.Server.bigKeySetSizeThreshold;
         private String bigKeyMonitorCallbackClassName = Constants.Server.bigKeyMonitorCallbackClassName;
+        private BigKeyMonitorCallback bigKeyMonitorCallback;
 
         public int getStringSizeThreshold() {
             return stringSizeThreshold;
@@ -469,15 +551,29 @@ public class CamelliaServerProperties {
         public void setBigKeyMonitorCallbackClassName(String bigKeyMonitorCallbackClassName) {
             this.bigKeyMonitorCallbackClassName = bigKeyMonitorCallbackClassName;
         }
+
+        public BigKeyMonitorCallback getBigKeyMonitorCallback() {
+            return bigKeyMonitorCallback;
+        }
+
+        public void setBigKeyMonitorCallback(BigKeyMonitorCallback bigKeyMonitorCallback) {
+            this.bigKeyMonitorCallback = bigKeyMonitorCallback;
+        }
     }
 
     public static class ConverterConfig {
         private String keyConverterClassName;
+        private KeyConverter keyConverter;
         private String stringConverterClassName;
+        private StringConverter stringConverter;
         private String setConverterClassName;
+        private SetConverter setConverter;
         private String listConverterClassName;
+        private ListConverter listConverter;
         private String hashConverterClassName;
+        private HashConverter hashConverter;
         private String zsetConverterClassName;
+        private ZSetConverter zSetConverter;
 
         public String getKeyConverterClassName() {
             return keyConverterClassName;
@@ -525,6 +621,54 @@ public class CamelliaServerProperties {
 
         public void setZsetConverterClassName(String zsetConverterClassName) {
             this.zsetConverterClassName = zsetConverterClassName;
+        }
+
+        public KeyConverter getKeyConverter() {
+            return keyConverter;
+        }
+
+        public void setKeyConverter(KeyConverter keyConverter) {
+            this.keyConverter = keyConverter;
+        }
+
+        public StringConverter getStringConverter() {
+            return stringConverter;
+        }
+
+        public void setStringConverter(StringConverter stringConverter) {
+            this.stringConverter = stringConverter;
+        }
+
+        public SetConverter getSetConverter() {
+            return setConverter;
+        }
+
+        public void setSetConverter(SetConverter setConverter) {
+            this.setConverter = setConverter;
+        }
+
+        public ListConverter getListConverter() {
+            return listConverter;
+        }
+
+        public void setListConverter(ListConverter listConverter) {
+            this.listConverter = listConverter;
+        }
+
+        public HashConverter getHashConverter() {
+            return hashConverter;
+        }
+
+        public void setHashConverter(HashConverter hashConverter) {
+            this.hashConverter = hashConverter;
+        }
+
+        public ZSetConverter getzSetConverter() {
+            return zSetConverter;
+        }
+
+        public void setzSetConverter(ZSetConverter zSetConverter) {
+            this.zSetConverter = zSetConverter;
         }
     }
 }

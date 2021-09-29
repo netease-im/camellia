@@ -224,6 +224,11 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 
 具体可见：[监控](monitor.md)
 
+## 通过spring自动注入自定义回调
+camellia-redis-proxy默认通过在application.yml里配置全类名的方式来自定义一些功能（如监控回调、自定义动态路由等），1.0.38版本开始，支持使用spring来托管相关类的初始化  
+
+具体可见：[spring-autowire](spring-autowire.md)
+
 ## 应用场景
 * 业务开始使用单点redis或者redis-sentinel，现在需要切换到redis-cluster，但是客户端需要改造（比如jedis访问redis-sentinel和redis-cluster是不一样的），此时你可以使用proxy，从而做到不改造（使用四层代理LB）或者很少的改造（使用注册中心）
 * 使用双写功能进行集群的迁移

@@ -15,6 +15,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -22,12 +23,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 /**
  *
  * Created by caojiajun on 2019/11/6.
  */
 @Configuration
+@Import(CamelliaRedisProxyConfigurerSupport.class)
 @EnableConfigurationProperties({CamelliaRedisProxyProperties.class, NettyProperties.class, TranspondProperties.class})
 public class CamelliaRedisProxyConfiguration {
 
@@ -39,9 +42,12 @@ public class CamelliaRedisProxyConfiguration {
     @Value("${spring.application.name:camellia-redis-proxy}")
     private String applicationName;
 
+    @Autowired
+    private CamelliaRedisProxyConfigurerSupport configurerSupport;
+
     @Bean
     public CamelliaServerProperties camelliaServerProperties(CamelliaRedisProxyProperties properties) {
-        return CamelliaRedisProxyUtil.parse(properties, applicationName, port);
+        return CamelliaRedisProxyUtil.parse(properties, configurerSupport, applicationName, port);
     }
 
     @Bean
@@ -53,8 +59,8 @@ public class CamelliaRedisProxyConfiguration {
         transpondProperties.setType(CamelliaRedisProxyUtil.parseType(transpond));
         transpondProperties.setLocal(CamelliaRedisProxyUtil.parse(transpond.getLocal()));
         transpondProperties.setRemote(CamelliaRedisProxyUtil.parse(transpond.getRemote()));
-        transpondProperties.setCustom(CamelliaRedisProxyUtil.parse(transpond.getCustom()));
-        transpondProperties.setRedisConf(CamelliaRedisProxyUtil.parse(transpond.getRedisConf()));
+        transpondProperties.setCustom(CamelliaRedisProxyUtil.parse(transpond.getCustom(), configurerSupport));
+        transpondProperties.setRedisConf(CamelliaRedisProxyUtil.parse(transpond.getRedisConf(), configurerSupport));
 
         GlobalRedisProxyEnv.bossGroup = bossGroup(properties).get();
         GlobalRedisProxyEnv.workGroup = workGroup(properties).get();

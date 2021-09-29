@@ -256,11 +256,17 @@ public class AsyncCamelliaRedisTemplateChooser {
         RedisClientHub.initDynamicConf();
 
         ProxyEnv.Builder builder = new ProxyEnv.Builder();
-        String className = redisConf.getShadingFunc();
-        if (className != null) {
-            ShadingFunc shadingFunc = ShadingFuncUtil.forName(className);
+        ShadingFunc shadingFunc = redisConf.getShadingFuncInstance();
+        if (shadingFunc != null) {
             builder.shadingFunc(shadingFunc);
-            logger.info("ShadingFunc, className = {}", className);
+            logger.info("ShadingFunc, className = {}", shadingFunc.getClass().getName());
+        } else {
+            String className = redisConf.getShadingFunc();
+            if (className != null) {
+                shadingFunc = ShadingFuncUtil.forName(className);
+                builder.shadingFunc(shadingFunc);
+                logger.info("ShadingFunc, className = {}", className);
+            }
         }
         logger.info("multi write mode = {}", redisConf.getMultiWriteMode());
         ProxyEnv proxyEnv = builder.build();

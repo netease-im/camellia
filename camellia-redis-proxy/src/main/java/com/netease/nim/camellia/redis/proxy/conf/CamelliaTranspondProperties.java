@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
+import com.netease.nim.camellia.core.client.env.ShadingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
 
@@ -220,6 +221,7 @@ public class CamelliaTranspondProperties {
     public static class RedisConfProperties {
         //分片函数
         private String shadingFunc;
+        private ShadingFunc shadingFuncInstance;
         private int redisClusterMaxAttempts = Constants.Transpond.redisClusterMaxAttempts;
         private int heartbeatIntervalSeconds = Constants.Transpond.heartbeatIntervalSeconds;
         private long heartbeatTimeoutMillis = Constants.Transpond.heartbeatTimeoutMillis;
@@ -239,6 +241,14 @@ public class CamelliaTranspondProperties {
 
         public void setShadingFunc(String shadingFunc) {
             this.shadingFunc = shadingFunc;
+        }
+
+        public ShadingFunc getShadingFuncInstance() {
+            return shadingFuncInstance;
+        }
+
+        public void setShadingFuncInstance(ShadingFunc shadingFuncInstance) {
+            this.shadingFuncInstance = shadingFuncInstance;
         }
 
         public int getRedisClusterMaxAttempts() {

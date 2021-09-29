@@ -30,8 +30,13 @@ public class ConfigInitUtil {
     private static final Logger logger = LoggerFactory.getLogger(ConfigInitUtil.class);
 
     public static void initProxyDynamicConfHook(CamelliaServerProperties serverProperties) {
+        ProxyDynamicConfHook hook = serverProperties.getProxyDynamicConfHook();
+        if (hook != null) {
+            logger.info("ProxyDynamicConfHook init success, class = {}", hook.getClass().getName());
+            ProxyDynamicConf.updateProxyDynamicConfHook(hook);
+            return;
+        }
         String proxyDynamicConfHookClassName = serverProperties.getProxyDynamicConfHookClassName();
-        ProxyDynamicConfHook hook;
         if (proxyDynamicConfHookClassName != null) {
             try {
                 Class<?> clazz;
@@ -51,7 +56,11 @@ public class ConfigInitUtil {
     }
 
     public static ClientAuthProvider initClientAuthProvider(CamelliaServerProperties serverProperties) {
-        ClientAuthProvider clientAuthProvider = null;
+        ClientAuthProvider clientAuthProvider = serverProperties.getClientAuthProvider();
+        if (clientAuthProvider != null) {
+            logger.info("ClientAuthProvider init success, class = {}", clientAuthProvider.getClass().getName());
+            return clientAuthProvider;
+        }
         String clientAuthProviderClassName = serverProperties.getClientAuthProviderClassName();
         if (clientAuthProviderClassName != null) {
             try {
@@ -67,16 +76,21 @@ public class ConfigInitUtil {
                     clientAuthProvider = (ClientAuthProvider) clazz.newInstance();
                 }
                 logger.info("ClientAuthProvider init success, class = {}", clientAuthProviderClassName);
+                return clientAuthProvider;
             } catch (Exception e) {
                 logger.error("ClientAuthProvider init error, class = {}", clientAuthProviderClassName, e);
                 throw new CamelliaRedisException(e);
             }
         }
-        return clientAuthProvider;
+        throw new CamelliaRedisException("clientAuthProviderClassName missing");
     }
 
     public static MonitorCallback initMonitorCallback(CamelliaServerProperties serverProperties) {
-        MonitorCallback monitorCallback = null;
+        MonitorCallback monitorCallback = serverProperties.getMonitorCallback();
+        if (monitorCallback != null) {
+            logger.info("MonitorCallback init success, class = {}", monitorCallback.getClass().getName());
+            return monitorCallback;
+        }
         String monitorCallbackClassName = serverProperties.getMonitorCallbackClassName();
         if (monitorCallbackClassName != null) {
             try {
@@ -100,29 +114,37 @@ public class ConfigInitUtil {
         boolean commandSpendTimeMonitorEnable = serverProperties.isMonitorEnable() && serverProperties.isCommandSpendTimeMonitorEnable();
         if (!commandSpendTimeMonitorEnable) return null;
         long slowCommandThresholdMillisTime = serverProperties.getSlowCommandThresholdMillisTime();
-        String slowCommandCallbackClassName = serverProperties.getSlowCommandCallbackClassName();
-        SlowCommandMonitorCallback slowCommandMonitorCallback = null;
-        if (slowCommandCallbackClassName != null) {
-            try {
-                Class<?> clazz;
+        SlowCommandMonitorCallback slowCommandMonitorCallback = serverProperties.getSlowCommandMonitorCallback();
+        if (slowCommandMonitorCallback != null) {
+            logger.info("SlowCommandCallback init success, class = {}", slowCommandMonitorCallback.getClass().getName());
+        } else {
+            String slowCommandCallbackClassName = serverProperties.getSlowCommandCallbackClassName();
+            if (slowCommandCallbackClassName != null) {
                 try {
-                    clazz = Class.forName(slowCommandCallbackClassName);
-                } catch (ClassNotFoundException e) {
-                    clazz = Thread.currentThread().getContextClassLoader().loadClass(slowCommandCallbackClassName);
+                    Class<?> clazz;
+                    try {
+                        clazz = Class.forName(slowCommandCallbackClassName);
+                    } catch (ClassNotFoundException e) {
+                        clazz = Thread.currentThread().getContextClassLoader().loadClass(slowCommandCallbackClassName);
+                    }
+                    slowCommandMonitorCallback = (SlowCommandMonitorCallback) clazz.newInstance();
+                    logger.info("SlowCommandCallback init success, class = {}", slowCommandCallbackClassName);
+                } catch (Exception e) {
+                    logger.error("SlowCommandCallback init error, class = {}", slowCommandCallbackClassName, e);
+                    throw new CamelliaRedisException(e);
                 }
-                slowCommandMonitorCallback = (SlowCommandMonitorCallback) clazz.newInstance();
-                logger.info("SlowCommandCallback init success, class = {}", slowCommandCallbackClassName);
-            } catch (Exception e) {
-                logger.error("SlowCommandCallback init error, class = {}", slowCommandCallbackClassName, e);
-                throw new CamelliaRedisException(e);
             }
         }
         return new CommandSpendTimeConfig(slowCommandThresholdMillisTime, slowCommandMonitorCallback);
     }
 
     public static CommandInterceptor initCommandInterceptor(CamelliaServerProperties serverProperties) {
+        CommandInterceptor commandInterceptor = serverProperties.getCommandInterceptor();
+        if (commandInterceptor != null) {
+            logger.info("CommandInterceptor init success, class = {}", commandInterceptor.getClass().getName());
+            return commandInterceptor;
+        }
         String commandInterceptorClassName = serverProperties.getCommandInterceptorClassName();
-        CommandInterceptor commandInterceptor = null;
         if (commandInterceptorClassName != null) {
             try {
                 Class<?> clazz;
@@ -142,10 +164,13 @@ public class ConfigInitUtil {
     }
 
     public static CommandHotKeyMonitorConfig initCommandHotKeyMonitorConfig(CamelliaServerProperties serverProperties) {
-        CommandHotKeyMonitorConfig commandHotKeyMonitorConfig = null;
+        if (!serverProperties.isHotKeyMonitorEnable()) return null;
         CamelliaServerProperties.HotKeyMonitorConfig config = serverProperties.getHotKeyMonitorConfig();
-        if (config != null && serverProperties.isHotKeyMonitorEnable()) {
-            HotKeyMonitorCallback hotKeyMonitorCallback = null;
+        if (config == null) return null;
+        HotKeyMonitorCallback hotKeyMonitorCallback = config.getHotKeyMonitorCallback();
+        if (hotKeyMonitorCallback != null) {
+            logger.info("HotKeyMonitorCallback init success, class = {}", hotKeyMonitorCallback.getClass().getName());
+        } else {
             String hotKeyCallbackClassName = config.getHotKeyMonitorCallbackClassName();
             if (hotKeyCallbackClassName != null) {
                 try {
@@ -162,57 +187,65 @@ public class ConfigInitUtil {
                     throw new CamelliaRedisException(e);
                 }
             }
-            HotKeyConfig hotKeyConfig = new HotKeyConfig(config.getCheckMillis(), config.getCheckCacheMaxCapacity(),
-                    config.getCheckThreshold(), config.getMaxHotKeyCount());
-            commandHotKeyMonitorConfig = new CommandHotKeyMonitorConfig(hotKeyConfig, hotKeyMonitorCallback);
         }
-        return commandHotKeyMonitorConfig;
+        HotKeyConfig hotKeyConfig = new HotKeyConfig(config.getCheckMillis(), config.getCheckCacheMaxCapacity(),
+                config.getCheckThreshold(), config.getMaxHotKeyCount());
+        return new CommandHotKeyMonitorConfig(hotKeyConfig, hotKeyMonitorCallback);
     }
 
     public static CommandHotKeyCacheConfig initHotKeyCacheConfig(CamelliaServerProperties serverProperties) {
         if (!serverProperties.isHotKeyCacheEnable()) return null;
-        CamelliaServerProperties.HotKeyCacheConfig cacheConfig = serverProperties.getHotKeyCacheConfig();
+        CamelliaServerProperties.HotKeyCacheConfig config = serverProperties.getHotKeyCacheConfig();
+        if (config == null) return null;
         CommandHotKeyCacheConfig commandHotKeyCacheConfig = new CommandHotKeyCacheConfig();
-        commandHotKeyCacheConfig.setCounterCheckThreshold(cacheConfig.getCounterCheckThreshold());
-        commandHotKeyCacheConfig.setCounterCheckMillis(cacheConfig.getCounterCheckMillis());
-        commandHotKeyCacheConfig.setCounterMaxCapacity(cacheConfig.getCounterMaxCapacity());
-        commandHotKeyCacheConfig.setCacheExpireMillis(cacheConfig.getCacheExpireMillis());
-        commandHotKeyCacheConfig.setCacheMaxCapacity(cacheConfig.getCacheMaxCapacity());
-        commandHotKeyCacheConfig.setNeedCacheNull(cacheConfig.isNeedCacheNull());
-        String hotKeyCacheKeyCheckerClassName = cacheConfig.getCacheKeyCheckerClassName();
-        HotKeyCacheKeyChecker hotKeyCacheKeyChecker = null;
-        if (hotKeyCacheKeyCheckerClassName != null) {
-            try {
-                Class<?> clazz;
+        commandHotKeyCacheConfig.setCounterCheckThreshold(config.getCounterCheckThreshold());
+        commandHotKeyCacheConfig.setCounterCheckMillis(config.getCounterCheckMillis());
+        commandHotKeyCacheConfig.setCounterMaxCapacity(config.getCounterMaxCapacity());
+        commandHotKeyCacheConfig.setCacheExpireMillis(config.getCacheExpireMillis());
+        commandHotKeyCacheConfig.setCacheMaxCapacity(config.getCacheMaxCapacity());
+        commandHotKeyCacheConfig.setNeedCacheNull(config.isNeedCacheNull());
+        String hotKeyCacheKeyCheckerClassName = config.getCacheKeyCheckerClassName();
+        HotKeyCacheKeyChecker hotKeyCacheKeyChecker = config.getHotKeyCacheKeyChecker();
+        if (hotKeyCacheKeyChecker != null) {
+            logger.info("HotKeyCacheKeyChecker init success, class = {}", hotKeyCacheKeyChecker.getClass().getName());
+        } else {
+            if (hotKeyCacheKeyCheckerClassName != null) {
                 try {
-                    clazz = Class.forName(hotKeyCacheKeyCheckerClassName);
-                } catch (ClassNotFoundException e) {
-                    clazz = Thread.currentThread().getContextClassLoader().loadClass(hotKeyCacheKeyCheckerClassName);
+                    Class<?> clazz;
+                    try {
+                        clazz = Class.forName(hotKeyCacheKeyCheckerClassName);
+                    } catch (ClassNotFoundException e) {
+                        clazz = Thread.currentThread().getContextClassLoader().loadClass(hotKeyCacheKeyCheckerClassName);
+                    }
+                    hotKeyCacheKeyChecker = (HotKeyCacheKeyChecker) clazz.newInstance();
+                    logger.info("HotKeyCacheKeyChecker init success, class = {}", hotKeyCacheKeyCheckerClassName);
+                } catch (Exception e) {
+                    logger.error("HotKeyCacheKeyChecker init error, class = {}", hotKeyCacheKeyCheckerClassName, e);
+                    throw new CamelliaRedisException(e);
                 }
-                hotKeyCacheKeyChecker = (HotKeyCacheKeyChecker) clazz.newInstance();
-                logger.info("HotKeyCacheKeyChecker init success, class = {}", hotKeyCacheKeyCheckerClassName);
-            } catch (Exception e) {
-                logger.error("HotKeyCacheKeyChecker init error, class = {}", hotKeyCacheKeyCheckerClassName, e);
-                throw new CamelliaRedisException(e);
             }
         }
         commandHotKeyCacheConfig.setHotKeyCacheKeyChecker(hotKeyCacheKeyChecker);
-        commandHotKeyCacheConfig.setHotKeyCacheStatsCallbackIntervalSeconds(cacheConfig.getHotKeyCacheStatsCallbackIntervalSeconds());
-        String hotKeyCacheStatsCallbackClassName = cacheConfig.getHotKeyCacheStatsCallbackClassName();
-        HotKeyCacheStatsCallback hotKeyCacheStatsCallback = null;
-        if (hotKeyCacheStatsCallbackClassName != null) {
-            try {
-                Class<?> clazz;
+        commandHotKeyCacheConfig.setHotKeyCacheStatsCallbackIntervalSeconds(config.getHotKeyCacheStatsCallbackIntervalSeconds());
+        String hotKeyCacheStatsCallbackClassName = config.getHotKeyCacheStatsCallbackClassName();
+        HotKeyCacheStatsCallback hotKeyCacheStatsCallback = config.getHotKeyCacheStatsCallback();
+        if (hotKeyCacheStatsCallback != null) {
+            logger.info("HotKeyCacheStatsCallback init success, class = {}", hotKeyCacheStatsCallback.getClass().getName());
+        } else {
+            if (hotKeyCacheStatsCallbackClassName != null) {
                 try {
-                    clazz = Class.forName(hotKeyCacheStatsCallbackClassName);
-                } catch (ClassNotFoundException e) {
-                    clazz = Thread.currentThread().getContextClassLoader().loadClass(hotKeyCacheStatsCallbackClassName);
+                    Class<?> clazz;
+                    try {
+                        clazz = Class.forName(hotKeyCacheStatsCallbackClassName);
+                    } catch (ClassNotFoundException e) {
+                        clazz = Thread.currentThread().getContextClassLoader().loadClass(hotKeyCacheStatsCallbackClassName);
+                    }
+                    hotKeyCacheStatsCallback = (HotKeyCacheStatsCallback) clazz.newInstance();
+                    logger.info("HotKeyCacheStatsCallback init success, class = {}", hotKeyCacheStatsCallbackClassName);
+                } catch (Exception e) {
+                    logger.error("HotKeyCacheStatsCallback init error, class = {}", hotKeyCacheStatsCallbackClassName, e);
+                    throw new CamelliaRedisException(e);
                 }
-                hotKeyCacheStatsCallback = (HotKeyCacheStatsCallback) clazz.newInstance();
-                logger.info("HotKeyCacheStatsCallback init success, class = {}", hotKeyCacheStatsCallbackClassName);
-            } catch (Exception e) {
-                logger.error("HotKeyCacheStatsCallback init error, class = {}", hotKeyCacheStatsCallbackClassName, e);
-                throw new CamelliaRedisException(e);
             }
         }
         commandHotKeyCacheConfig.setHotKeyCacheStatsCallback(hotKeyCacheStatsCallback);
@@ -221,27 +254,32 @@ public class ConfigInitUtil {
 
     public static CommandBigKeyMonitorConfig initBigKeyMonitorConfig(CamelliaServerProperties serverProperties) {
         if (!serverProperties.isBigKeyMonitorEnable()) return null;
-        CamelliaServerProperties.BigKeyMonitorConfig bigKeyMonitorConfig = serverProperties.getBigKeyMonitorConfig();
-        String bigKeyCallbackClassName = bigKeyMonitorConfig.getBigKeyMonitorCallbackClassName();
-        BigKeyMonitorCallback bigKeyMonitorCallback = null;
-        if (bigKeyCallbackClassName != null) {
-            try {
-                Class<?> clazz;
+        CamelliaServerProperties.BigKeyMonitorConfig config = serverProperties.getBigKeyMonitorConfig();
+        if (config == null) return null;
+        BigKeyMonitorCallback bigKeyMonitorCallback = config.getBigKeyMonitorCallback();
+        if (bigKeyMonitorCallback != null) {
+            logger.info("BigKeyCallback init success, class = {}", bigKeyMonitorCallback.getClass().getName());
+        } else {
+            String bigKeyCallbackClassName = config.getBigKeyMonitorCallbackClassName();
+            if (bigKeyCallbackClassName != null) {
                 try {
-                    clazz = Class.forName(bigKeyCallbackClassName);
-                } catch (ClassNotFoundException e) {
-                    clazz = Thread.currentThread().getContextClassLoader().loadClass(bigKeyCallbackClassName);
+                    Class<?> clazz;
+                    try {
+                        clazz = Class.forName(bigKeyCallbackClassName);
+                    } catch (ClassNotFoundException e) {
+                        clazz = Thread.currentThread().getContextClassLoader().loadClass(bigKeyCallbackClassName);
+                    }
+                    bigKeyMonitorCallback = (BigKeyMonitorCallback) clazz.newInstance();
+                    logger.info("BigKeyCallback init success, class = {}", bigKeyCallbackClassName);
+                } catch (Exception e) {
+                    logger.error("BigKeyCallback init error, class = {}", bigKeyCallbackClassName, e);
+                    throw new CamelliaRedisException(e);
                 }
-                bigKeyMonitorCallback = (BigKeyMonitorCallback) clazz.newInstance();
-                logger.info("BigKeyCallback init success, class = {}", bigKeyCallbackClassName);
-            } catch (Exception e) {
-                logger.error("BigKeyCallback init error, class = {}", bigKeyCallbackClassName, e);
-                throw new CamelliaRedisException(e);
             }
         }
-        return new CommandBigKeyMonitorConfig(bigKeyMonitorConfig.getStringSizeThreshold(),
-                bigKeyMonitorConfig.getListSizeThreshold(), bigKeyMonitorConfig.getZsetSizeThreshold(),
-                bigKeyMonitorConfig.getHashSizeThreshold(), bigKeyMonitorConfig.getSetSizeThreshold(), bigKeyMonitorCallback);
+        return new CommandBigKeyMonitorConfig(config.getStringSizeThreshold(),
+                config.getListSizeThreshold(), config.getZsetSizeThreshold(),
+                config.getHashSizeThreshold(), config.getSetSizeThreshold(), bigKeyMonitorCallback);
     }
 
     public static ConverterConfig initConverterConfig(CamelliaServerProperties serverProperties) {
@@ -249,114 +287,143 @@ public class ConfigInitUtil {
         CamelliaServerProperties.ConverterConfig converterConfig = serverProperties.getConverterConfig();
         if (converterConfig == null) return null;
         ConverterConfig config = new ConverterConfig();
-        String keyConverterClassName = converterConfig.getKeyConverterClassName();
-        if (keyConverterClassName != null) {
-            try {
-                KeyConverter keyConverter;
-                Class<?> clazz;
+        KeyConverter keyConverter = converterConfig.getKeyConverter();
+        if (keyConverter != null) {
+            logger.info("KeyConverter init success, class = {}", keyConverter.getClass().getName());
+        } else {
+            String keyConverterClassName = converterConfig.getKeyConverterClassName();
+            if (keyConverterClassName != null) {
                 try {
-                    clazz = Class.forName(keyConverterClassName);
-                } catch (ClassNotFoundException e) {
-                    clazz = Thread.currentThread().getContextClassLoader().loadClass(keyConverterClassName);
+                    Class<?> clazz;
+                    try {
+                        clazz = Class.forName(keyConverterClassName);
+                    } catch (ClassNotFoundException e) {
+                        clazz = Thread.currentThread().getContextClassLoader().loadClass(keyConverterClassName);
+                    }
+                    keyConverter = (KeyConverter) clazz.newInstance();
+                    logger.info("KeyConverter init success, class = {}", keyConverterClassName);
+                } catch (Exception e) {
+                    logger.error("KeyConverter init error, class = {}", keyConverterClassName, e);
+                    throw new CamelliaRedisException(e);
                 }
-                keyConverter = (KeyConverter) clazz.newInstance();
-                logger.info("KeyConverter init success, class = {}", keyConverterClassName);
-                config.setKeyConverter(keyConverter);
-            } catch (Exception e) {
-                logger.error("KeyConverter init error, class = {}", keyConverterClassName, e);
-                throw new CamelliaRedisException(e);
             }
         }
-        String stringConverterClassName = converterConfig.getStringConverterClassName();
-        if (stringConverterClassName != null) {
-            try {
-                StringConverter stringConverter;
-                Class<?> clazz;
+        config.setKeyConverter(keyConverter);
+
+        StringConverter stringConverter = converterConfig.getStringConverter();
+        if (stringConverter != null) {
+            logger.info("StringConverter init success, class = {}", stringConverter.getClass().getName());
+        } else {
+            String stringConverterClassName = converterConfig.getStringConverterClassName();
+            if (stringConverterClassName != null) {
                 try {
-                    clazz = Class.forName(stringConverterClassName);
-                } catch (ClassNotFoundException e) {
-                    clazz = Thread.currentThread().getContextClassLoader().loadClass(stringConverterClassName);
+                    Class<?> clazz;
+                    try {
+                        clazz = Class.forName(stringConverterClassName);
+                    } catch (ClassNotFoundException e) {
+                        clazz = Thread.currentThread().getContextClassLoader().loadClass(stringConverterClassName);
+                    }
+                    stringConverter = (StringConverter) clazz.newInstance();
+                    logger.info("StringConverter init success, class = {}", stringConverterClassName);
+                } catch (Exception e) {
+                    logger.error("StringConverter init error, class = {}", stringConverterClassName, e);
+                    throw new CamelliaRedisException(e);
                 }
-                stringConverter = (StringConverter) clazz.newInstance();
-                logger.info("StringConverter init success, class = {}", stringConverterClassName);
-                config.setStringConverter(stringConverter);
-            } catch (Exception e) {
-                logger.error("StringConverter init error, class = {}", stringConverterClassName, e);
-                throw new CamelliaRedisException(e);
             }
         }
-        String listConverterClassName = converterConfig.getListConverterClassName();
-        if (listConverterClassName != null) {
-            try {
-                ListConverter listConverter;
-                Class<?> clazz;
+        config.setStringConverter(stringConverter);
+
+        ListConverter listConverter = converterConfig.getListConverter();
+        if (listConverter != null) {
+            logger.info("ListConverter init success, class = {}", listConverter.getClass().getName());
+        } else {
+            String listConverterClassName = converterConfig.getListConverterClassName();
+            if (listConverterClassName != null) {
                 try {
-                    clazz = Class.forName(listConverterClassName);
-                } catch (ClassNotFoundException e) {
-                    clazz = Thread.currentThread().getContextClassLoader().loadClass(listConverterClassName);
+                    Class<?> clazz;
+                    try {
+                        clazz = Class.forName(listConverterClassName);
+                    } catch (ClassNotFoundException e) {
+                        clazz = Thread.currentThread().getContextClassLoader().loadClass(listConverterClassName);
+                    }
+                    listConverter = (ListConverter) clazz.newInstance();
+                    logger.info("ListConverter init success, class = {}", listConverterClassName);
+                } catch (Exception e) {
+                    logger.error("ListConverter init error, class = {}", listConverterClassName, e);
+                    throw new CamelliaRedisException(e);
                 }
-                listConverter = (ListConverter) clazz.newInstance();
-                logger.info("ListConverter init success, class = {}", listConverterClassName);
-                config.setListConverter(listConverter);
-            } catch (Exception e) {
-                logger.error("ListConverter init error, class = {}", stringConverterClassName, e);
-                throw new CamelliaRedisException(e);
             }
         }
-        String setConverterClassName = converterConfig.getSetConverterClassName();
-        if (setConverterClassName != null) {
-            try {
-                SetConverter setConverter;
-                Class<?> clazz;
+        config.setListConverter(listConverter);
+
+        SetConverter setConverter = converterConfig.getSetConverter();
+        if (setConverter != null) {
+            logger.info("SetConverter init success, class = {}", setConverter.getClass().getName());
+        } else {
+            String setConverterClassName = converterConfig.getSetConverterClassName();
+            if (setConverterClassName != null) {
                 try {
-                    clazz = Class.forName(setConverterClassName);
-                } catch (ClassNotFoundException e) {
-                    clazz = Thread.currentThread().getContextClassLoader().loadClass(setConverterClassName);
+                    Class<?> clazz;
+                    try {
+                        clazz = Class.forName(setConverterClassName);
+                    } catch (ClassNotFoundException e) {
+                        clazz = Thread.currentThread().getContextClassLoader().loadClass(setConverterClassName);
+                    }
+                    setConverter = (SetConverter) clazz.newInstance();
+                    logger.info("SetConverter init success, class = {}", setConverterClassName);
+                } catch (Exception e) {
+                    logger.error("SetConverter init error, class = {}", setConverterClassName, e);
+                    throw new CamelliaRedisException(e);
                 }
-                setConverter = (SetConverter) clazz.newInstance();
-                logger.info("SetConverter init success, class = {}", setConverterClassName);
-                config.setSetConverter(setConverter);
-            } catch (Exception e) {
-                logger.error("SetConverter init error, class = {}", setConverterClassName, e);
-                throw new CamelliaRedisException(e);
             }
         }
-        String hashConverterClassName = converterConfig.getHashConverterClassName();
-        if (hashConverterClassName != null) {
-            try {
-                HashConverter hashConverter;
-                Class<?> clazz;
+        config.setSetConverter(setConverter);
+
+        HashConverter hashConverter = converterConfig.getHashConverter();
+        if (hashConverter != null) {
+            logger.info("HashConverter init success, class = {}", hashConverter.getClass().getName());
+        } else {
+            String hashConverterClassName = converterConfig.getHashConverterClassName();
+            if (hashConverterClassName != null) {
                 try {
-                    clazz = Class.forName(hashConverterClassName);
-                } catch (ClassNotFoundException e) {
-                    clazz = Thread.currentThread().getContextClassLoader().loadClass(hashConverterClassName);
+                    Class<?> clazz;
+                    try {
+                        clazz = Class.forName(hashConverterClassName);
+                    } catch (ClassNotFoundException e) {
+                        clazz = Thread.currentThread().getContextClassLoader().loadClass(hashConverterClassName);
+                    }
+                    hashConverter = (HashConverter) clazz.newInstance();
+                    logger.info("HashConverter init success, class = {}", hashConverterClassName);
+                } catch (Exception e) {
+                    logger.error("HashConverter init error, class = {}", hashConverterClassName, e);
+                    throw new CamelliaRedisException(e);
                 }
-                hashConverter = (HashConverter) clazz.newInstance();
-                logger.info("HashConverter init success, class = {}", hashConverterClassName);
-                config.setHashConverter(hashConverter);
-            } catch (Exception e) {
-                logger.error("HashConverter init error, class = {}", hashConverterClassName, e);
-                throw new CamelliaRedisException(e);
             }
         }
-        String zsetConverterClassName = converterConfig.getZsetConverterClassName();
-        if (zsetConverterClassName != null) {
-            try {
-                ZSetConverter zSetConverter;
-                Class<?> clazz;
+        config.setHashConverter(hashConverter);
+
+        ZSetConverter zSetConverter = converterConfig.getzSetConverter();
+        if (zSetConverter != null) {
+            logger.info("ZSetConverter init success, class = {}", zSetConverter.getClass().getName());
+        } else {
+            String zsetConverterClassName = converterConfig.getZsetConverterClassName();
+            if (zsetConverterClassName != null) {
                 try {
-                    clazz = Class.forName(zsetConverterClassName);
-                } catch (ClassNotFoundException e) {
-                    clazz = Thread.currentThread().getContextClassLoader().loadClass(zsetConverterClassName);
+                    Class<?> clazz;
+                    try {
+                        clazz = Class.forName(zsetConverterClassName);
+                    } catch (ClassNotFoundException e) {
+                        clazz = Thread.currentThread().getContextClassLoader().loadClass(zsetConverterClassName);
+                    }
+                    zSetConverter = (ZSetConverter) clazz.newInstance();
+                    logger.info("ZSetConverter init success, class = {}", zsetConverterClassName);
+                } catch (Exception e) {
+                    logger.error("ZSetConverter init error, class = {}", zsetConverterClassName, e);
+                    throw new CamelliaRedisException(e);
                 }
-                zSetConverter = (ZSetConverter) clazz.newInstance();
-                logger.info("ZSetConverter init success, class = {}", zsetConverterClassName);
-                config.setzSetConverter(zSetConverter);
-            } catch (Exception e) {
-                logger.error("ZSetConverter init error, class = {}", zsetConverterClassName, e);
-                throw new CamelliaRedisException(e);
             }
         }
+        config.setzSetConverter(zSetConverter);
         return config;
     }
 }
