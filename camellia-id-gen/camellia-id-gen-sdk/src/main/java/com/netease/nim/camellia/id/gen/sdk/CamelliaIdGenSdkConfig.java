@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.id.gen.sdk;
 
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
-import com.netease.nim.camellia.id.gen.common.CamelliaIdGenConstants;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -15,7 +14,7 @@ public class CamelliaIdGenSdkConfig {
 
     public static final ThreadPoolExecutor defaultAsyncLoadThreadPool = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() * 2,
             Runtime.getRuntime().availableProcessors() * 2, 0, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(10240), new CamelliaThreadFactory("camellia-id-gen-sdk"));
+            new LinkedBlockingQueue<>(10240), new CamelliaThreadFactory("camellia-id-gen-sdk", true));
 
     private String url;
     private long connectTimeoutMillis = 5000;

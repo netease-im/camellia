@@ -78,7 +78,7 @@ public class RedisWorkerIdGen implements WorkerIdGen {
     }
 
     private void startRenewThread(long workerId, CamelliaRedisLock redisLock) {
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-snowflake-redis-worker-id-renew"))
+        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-snowflake-redis-worker-id-renew", true))
                 .scheduleAtFixedRate(() -> {
                     boolean renew = redisLock.renew();
                     if (renew) {

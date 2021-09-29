@@ -18,7 +18,7 @@ public class CamelliaStrictIdGenConfig {
 
     public static final ThreadPoolExecutor defaultAsyncLoadThreadPool = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() * 2,
             Runtime.getRuntime().availableProcessors() * 2, 0, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(10240), new CamelliaThreadFactory("camellia-strict-id-gen"));
+            new LinkedBlockingQueue<>(10240), new CamelliaThreadFactory("camellia-strict-id-gen", true));
 
     private CamelliaRedisTemplate template;
     private ExecutorService asyncLoadThreadPool = defaultAsyncLoadThreadPool;

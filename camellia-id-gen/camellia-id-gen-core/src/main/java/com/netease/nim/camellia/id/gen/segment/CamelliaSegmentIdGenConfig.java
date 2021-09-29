@@ -16,7 +16,7 @@ public class CamelliaSegmentIdGenConfig {
 
     public static final ThreadPoolExecutor defaultAsyncLoadThreadPool = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() * 2,
             Runtime.getRuntime().availableProcessors() * 2, 0, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(10240), new CamelliaThreadFactory("camellia-segment-id-gen"));
+            new LinkedBlockingQueue<>(10240), new CamelliaThreadFactory("camellia-segment-id-gen", true));
 
     private IDLoader idLoader;
 
