@@ -10,6 +10,7 @@ public class CamelliaSnowflakeIdGenSdkTest {
     public static void main(String[] args) {
         CamelliaIdGenSdkConfig config = new CamelliaIdGenSdkConfig();
         config.setUrl("http://127.0.0.1:8081");
+        config.setMaxRetry(2);//重试次数
         CamelliaSnowflakeIdGenSdk idGenSdk = new CamelliaSnowflakeIdGenSdk(config);
         System.out.println(idGenSdk.genId());
     }

@@ -70,7 +70,7 @@ public class CamelliaIdGenHttpUtils {
             Response response = okHttpClient.newCall(request).execute();
             int httpCode = response.code();
             if (httpCode != 200) {
-                throw new CamelliaIdGenException("http.code=" + httpCode);
+                throw new CamelliaIdGenException(CamelliaIdGenException.NETWORK_ERROR, "http.code=" + httpCode);
             }
             String string = response.body().string();
             JSONObject json = JSONObject.parseObject(string);
@@ -82,7 +82,7 @@ public class CamelliaIdGenHttpUtils {
         } catch (CamelliaIdGenException e) {
             throw e;
         } catch (Exception e) {
-            throw new CamelliaIdGenException(e);
+            throw new CamelliaIdGenException(CamelliaIdGenException.NETWORK_ERROR, e);
         }
     }
 }

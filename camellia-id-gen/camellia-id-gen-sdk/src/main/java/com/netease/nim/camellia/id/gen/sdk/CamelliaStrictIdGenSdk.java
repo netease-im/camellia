@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.id.gen.sdk;
 
-import com.netease.nim.camellia.id.gen.common.CamelliaIdGenException;
 import com.netease.nim.camellia.id.gen.strict.ICamelliaStrictIdGen;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
@@ -18,40 +17,28 @@ public class CamelliaStrictIdGenSdk implements ICamelliaStrictIdGen {
 
     private final CamelliaIdGenSdkConfig config;
     private final OkHttpClient okHttpClient;
+    private final CamelliaIdGenInvoker invoker;
 
     public CamelliaStrictIdGenSdk(CamelliaIdGenSdkConfig config) {
-        if (config.getUrl() == null || config.getUrl().trim().length() == 0) {
-            throw new CamelliaIdGenException("url is empty");
-        }
+        this.invoker = new CamelliaIdGenInvoker(config);
         this.config = config;
         this.okHttpClient = CamelliaIdGenHttpUtils.initOkHttpClient(config);
-        if (config.getUrl() == null || config.getUrl().trim().length() == 0) {
-            throw new CamelliaIdGenException("url is empty");
-        }
-        logger.info("CamelliaStrictIdGenSdk init success, url = {}", config.getUrl());
+        logger.info("CamelliaStrictIdGenSdk init success");
     }
 
     @Override
     public long genId(String tag) {
-        try {
-            String fullUrl = config.getUrl() + "/camellia/id/gen/strict/genId?tag=" + URLEncoder.encode(tag, "utf-8");
+        return invoker.invoke(server -> {
+            String fullUrl = server.getUrl() + "/camellia/id/gen/strict/genId?tag=" + URLEncoder.encode(tag, "utf-8");
             return CamelliaIdGenHttpUtils.genId(okHttpClient, fullUrl);
-        } catch (CamelliaIdGenException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new CamelliaIdGenException(e);
-        }
+        }, config.getMaxRetry());
     }
 
     @Override
     public long peekId(String tag) {
-        try {
-            String fullUrl = config.getUrl() + "/camellia/id/gen/strict/peekId?tag=" + URLEncoder.encode(tag, "utf-8");
+        return invoker.invoke(server -> {
+            String fullUrl = server.getUrl() + "/camellia/id/gen/strict/peekId?tag=" + URLEncoder.encode(tag, "utf-8");
             return CamelliaIdGenHttpUtils.genId(okHttpClient, fullUrl);
-        } catch (CamelliaIdGenException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new CamelliaIdGenException(e);
-        }
+        }, config.getMaxRetry());
     }
 }

@@ -199,11 +199,13 @@ public class CamelliaStrictIdGenSdkTest {
     public static void main(String[] args) {
         CamelliaIdGenSdkConfig config = new CamelliaIdGenSdkConfig();
         config.setUrl("http://127.0.0.1:8082");
+        config.setMaxRetry(2);//重试次数
         CamelliaStrictIdGenSdk idGenSdk = new CamelliaStrictIdGenSdk(config);
         System.out.println(idGenSdk.peekId("a"));
         System.out.println(idGenSdk.genId("a"));
     }
 }
+
 ```
 
 ### 示例源码

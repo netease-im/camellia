@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.id.gen.sdk;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
-import com.netease.nim.camellia.id.gen.common.CamelliaIdGenException;
 import com.netease.nim.camellia.id.gen.segment.AbstractCamelliaSegmentIdGen;
 import okhttp3.*;
 import org.slf4j.Logger;
@@ -22,13 +21,12 @@ public class CamelliaSegmentIdGenSdk extends AbstractCamelliaSegmentIdGen {
 
     private final CamelliaIdGenSdkConfig config;
     private final OkHttpClient okHttpClient;
+    private final CamelliaIdGenInvoker invoker;
 
     private final boolean cacheEnable;
 
     public CamelliaSegmentIdGenSdk(CamelliaIdGenSdkConfig config) {
-        if (config.getUrl() == null || config.getUrl().trim().length() == 0) {
-            throw new CamelliaIdGenException("url is empty");
-        }
+        this.invoker = new CamelliaIdGenInvoker(config);
         this.config = config;
         this.okHttpClient = CamelliaIdGenHttpUtils.initOkHttpClient(config);
         CamelliaIdGenSdkConfig.SegmentIdGenSdkConfig segmentIdGenSdkConfig = config.getSegmentIdGenSdkConfig();
@@ -45,8 +43,8 @@ public class CamelliaSegmentIdGenSdk extends AbstractCamelliaSegmentIdGen {
                 .initialCapacity(segmentIdGenSdkConfig.getTagCount() * 2).maximumWeightedCapacity(segmentIdGenSdkConfig.getTagCount() * 2).build();
         this.asyncLoadThreadPool = segmentIdGenSdkConfig.getAsyncLoadThreadPool();
 
-        logger.info("CamelliaSegmentIdGenSdk init success, url = {}, cacheEnable = {}, step = {}, tagCount = {}",
-                config.getUrl(), cacheEnable, step, segmentIdGenSdkConfig.getTagCount());
+        logger.info("CamelliaSegmentIdGenSdk init success, cacheEnable = {}, step = {}, tagCount = {}",
+                cacheEnable, step, segmentIdGenSdkConfig.getTagCount());
     }
 
     @Override
@@ -76,25 +74,17 @@ public class CamelliaSegmentIdGenSdk extends AbstractCamelliaSegmentIdGen {
     }
 
     private long _genId(String tag) {
-        try {
-            String fullUrl = config.getUrl() + "/camellia/id/gen/segment/genId?tag=" + URLEncoder.encode(tag, "utf-8");
+        return invoker.invoke(server -> {
+            String fullUrl = server.getUrl() + "/camellia/id/gen/segment/genId?tag=" + URLEncoder.encode(tag, "utf-8");
             return CamelliaIdGenHttpUtils.genId(okHttpClient, fullUrl);
-        } catch (CamelliaIdGenException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new CamelliaIdGenException(e);
-        }
+        }, config.getMaxRetry());
     }
 
     private List<Long> _genIds(String tag, int count) {
-        try {
-            String fullUrl = config.getUrl() + "/camellia/id/gen/segment/genIds?tag=" + URLEncoder.encode(tag, "utf-8") + "&count=" + count;
+        return invoker.invoke(server -> {
+            String fullUrl = server.getUrl() + "/camellia/id/gen/segment/genIds?tag=" + URLEncoder.encode(tag, "utf-8") + "&count=" + count;
             return CamelliaIdGenHttpUtils.genIds(okHttpClient, fullUrl);
-        } catch (CamelliaIdGenException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new CamelliaIdGenException(e);
-        }
+        }, config.getMaxRetry());
     }
 
 }

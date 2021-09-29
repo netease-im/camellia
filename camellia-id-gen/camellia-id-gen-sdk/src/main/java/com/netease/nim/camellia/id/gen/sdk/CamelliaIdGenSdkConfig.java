@@ -17,6 +17,9 @@ public class CamelliaIdGenSdkConfig {
             new LinkedBlockingQueue<>(10240), new CamelliaThreadFactory("camellia-id-gen-sdk", true));
 
     private String url;
+    private IdGenServerDiscovery discovery;
+    private int discoveryReloadIntervalSeconds = 60;
+    private int maxRetry = 2;
     private long connectTimeoutMillis = 5000;
     private long readTimeoutMillis = 5000;
     private long writeTimeoutMillis = 5000;
@@ -91,6 +94,30 @@ public class CamelliaIdGenSdkConfig {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public IdGenServerDiscovery getDiscovery() {
+        return discovery;
+    }
+
+    public void setDiscovery(IdGenServerDiscovery discovery) {
+        this.discovery = discovery;
+    }
+
+    public int getDiscoveryReloadIntervalSeconds() {
+        return discoveryReloadIntervalSeconds;
+    }
+
+    public void setDiscoveryReloadIntervalSeconds(int discoveryReloadIntervalSeconds) {
+        this.discoveryReloadIntervalSeconds = discoveryReloadIntervalSeconds;
+    }
+
+    public int getMaxRetry() {
+        return maxRetry;
+    }
+
+    public void setMaxRetry(int maxRetry) {
+        this.maxRetry = maxRetry;
     }
 
     public long getConnectTimeoutMillis() {

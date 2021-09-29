@@ -151,7 +151,7 @@ http://127.0.0.1:8083/camellia/id/gen/segment/genIds?tag=a&count=3
 }
 ```
 
-当使用spring-boot-starter部署了独立的发号器服务后，为了方便使用http方法访问相关接口，我们提供了一个简易的封装    
+当使用spring-boot-starter部署了独立的发号器服务后，为了方便使用http方法访问相关接口，我们提供了一个封装sdk（sdk支持缓存id用于提高性能）      
 先引入maven依赖：  
 ```
 <dependency>
@@ -163,20 +163,19 @@ http://127.0.0.1:8083/camellia/id/gen/segment/genIds?tag=a&count=3
 示例代码如下：  
 ```java
 public class CamelliaSegmentIdGenSdkTest {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         CamelliaIdGenSdkConfig config = new CamelliaIdGenSdkConfig();
         config.setUrl("http://127.0.0.1:8083");
+        config.setMaxRetry(2);//重试次数
         config.getSegmentIdGenSdkConfig().setCacheEnable(false);//表示sdk是否缓存id
         config.getSegmentIdGenSdkConfig().setStep(100);//sdk缓存的id数
         CamelliaSegmentIdGenSdk idGenSdk = new CamelliaSegmentIdGenSdk(config);
 
-        while (true) {
-            System.out.println(idGenSdk.genId("a"));
-            System.out.println(idGenSdk.genIds("a", 3));
-            TimeUnit.SECONDS.sleep(1);
-        }
+        System.out.println(idGenSdk.genId("a"));
+        System.out.println(idGenSdk.genIds("a", 3));
     }
 }
+
 ```
 
 ### 示例源码

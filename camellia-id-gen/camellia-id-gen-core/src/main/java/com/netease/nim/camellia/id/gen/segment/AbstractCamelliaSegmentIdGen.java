@@ -34,11 +34,11 @@ public abstract class AbstractCamelliaSegmentIdGen implements ICamelliaSegmentId
 
     @Override
     public List<Long> genIds(String tag, int count) {
+        //每次获取的个数不能超过step的5倍
+        if (count > step * 5) {
+            throw new CamelliaIdGenException("count exceed step*5");
+        }
         try {
-            //每次获取的个数不能超过step的5倍
-            if (count > step * 5) {
-                throw new CamelliaIdGenException("count exceed step*5");
-            }
             LinkedBlockingQueue<Long> cache = getCacheQueue(tag);
             List<Long> ids = new ArrayList<>(count);
             int maxRetry = this.maxRetry;
