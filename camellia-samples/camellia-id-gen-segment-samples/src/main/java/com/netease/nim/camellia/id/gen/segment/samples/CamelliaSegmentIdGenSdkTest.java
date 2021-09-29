@@ -33,5 +33,6 @@ public class CamelliaSegmentIdGenSdkTest {
         }
         long end = System.currentTimeMillis();
         System.out.println("QPS=" + (target / ((end - start)/1000.0)));
+        //QPS=4657.878801993572
     }
 }

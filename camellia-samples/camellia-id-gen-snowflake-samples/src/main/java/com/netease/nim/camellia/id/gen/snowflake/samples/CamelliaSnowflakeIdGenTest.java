@@ -29,18 +29,19 @@ public class CamelliaSnowflakeIdGenTest {
             System.out.println(Long.toBinaryString(id).length());
         }
 
-        long target = 100*10000;
+        long target = 1000*10000;
         int j = 0;
         long start = System.currentTimeMillis();
         while (true) {
             idGen.genId();
             j++;
-            if (j % 10000 == 0) {
+            if (j % 100000 == 0) {
                 System.out.println("i=" + j);
             }
             if (j >= target) break;
         }
         long end = System.currentTimeMillis();
         System.out.println("QPS=" + (target / ((end - start)/1000.0)));
+        //QPS=4061738.424045491
     }
 }

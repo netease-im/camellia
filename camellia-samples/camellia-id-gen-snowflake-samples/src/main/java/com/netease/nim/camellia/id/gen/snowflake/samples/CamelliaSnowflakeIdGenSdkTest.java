@@ -27,5 +27,6 @@ public class CamelliaSnowflakeIdGenSdkTest {
         }
         long end = System.currentTimeMillis();
         System.out.println("QPS=" + (target / ((end - start)/1000.0)));
+        //QPS=5052.801778586226
     }
 }
