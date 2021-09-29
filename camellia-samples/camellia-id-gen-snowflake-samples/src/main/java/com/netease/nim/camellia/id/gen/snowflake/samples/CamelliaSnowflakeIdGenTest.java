@@ -10,7 +10,7 @@ import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
  */
 public class CamelliaSnowflakeIdGenTest {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         CamelliaSnowflakeConfig config = new CamelliaSnowflakeConfig();
         config.setRegionBits(0);//单元id所占的比特位数，0表示不区分单元
         config.setRegionId(0);//regionId，如果regionBits为0，则regionId必须为0
@@ -27,7 +27,20 @@ public class CamelliaSnowflakeIdGenTest {
             System.out.println(id);
             System.out.println(Long.toBinaryString(id));
             System.out.println(Long.toBinaryString(id).length());
-//            TimeUnit.SECONDS.sleep(ThreadLocalRandom.current().nextInt(3));
         }
+
+        long target = 100*10000;
+        int j = 0;
+        long start = System.currentTimeMillis();
+        while (true) {
+            idGen.genId();
+            j++;
+            if (j % 10000 == 0) {
+                System.out.println("i=" + j);
+            }
+            if (j >= target) break;
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("QPS=" + (target / ((end - start)/1000.0)));
     }
 }
