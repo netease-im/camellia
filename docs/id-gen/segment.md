@@ -167,8 +167,8 @@ public class CamelliaSegmentIdGenSdkTest {
         CamelliaIdGenSdkConfig config = new CamelliaIdGenSdkConfig();
         config.setUrl("http://127.0.0.1:8083");
         config.setMaxRetry(2);//重试次数
-        config.getSegmentIdGenSdkConfig().setCacheEnable(false);//表示sdk是否缓存id
-        config.getSegmentIdGenSdkConfig().setStep(100);//sdk缓存的id数
+        config.getSegmentIdGenSdkConfig().setCacheEnable(true);//表示sdk是否缓存id
+        config.getSegmentIdGenSdkConfig().setStep(200);//sdk缓存的id数
         CamelliaSegmentIdGenSdk idGenSdk = new CamelliaSegmentIdGenSdk(config);
 
         System.out.println(idGenSdk.genId("a"));
@@ -187,6 +187,12 @@ public class CamelliaSegmentIdGenSdkTest {
         }
         long end = System.currentTimeMillis();
         System.out.println("QPS=" + (target / ((end - start)/1000.0)));
+        //###idea里直接运行的简单测试结果：
+        //开启sdk缓存并设置缓存step=200：
+        //QPS=17286.084701815038
+        //开启sdk缓存并设置缓存step=100：
+        //QPS=8647.526807333103
+        //不开启sdk缓存
         //QPS=4657.878801993572
     }
 }
