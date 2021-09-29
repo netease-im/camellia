@@ -24,7 +24,8 @@ camellia-redis-proxy:
     local:
       resource: redis://@127.0.0.1:6379
 ```
-通过在application.yml里配置monitor-callback-class-name的全类目，proxy在初始化的时候会自动调用该类的无参构造方法来生成MonitorCallback的实例对象  
+通过在application.yml里配置monitor-callback-class-name的全类名，proxy在初始化的时候会自动调用该类的无参构造方法来生成MonitorCallback的实例对象  
+  
 1.0.38版本开始，你可以把自定义实现的callback托管给spring，proxy会自动优先使用spring工厂中的实例对象，如下：  
 ```java
 @Component
