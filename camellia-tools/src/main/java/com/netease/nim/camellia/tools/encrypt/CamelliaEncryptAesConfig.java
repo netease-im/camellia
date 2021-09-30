@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.tools;
+package com.netease.nim.camellia.tools.encrypt;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;

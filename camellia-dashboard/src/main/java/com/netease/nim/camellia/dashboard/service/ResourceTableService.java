@@ -11,7 +11,7 @@ import com.netease.nim.camellia.dashboard.model.TableRef;
 import com.netease.nim.camellia.dashboard.util.LogBean;
 import com.netease.nim.camellia.dashboard.exception.AppException;
 import com.netease.nim.camellia.dashboard.model.ValidFlag;
-import com.netease.nim.camellia.tools.CamelliaLocalCache;
+import com.netease.nim.camellia.tools.cache.CamelliaLocalCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

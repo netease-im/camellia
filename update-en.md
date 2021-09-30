@@ -12,6 +12,7 @@
 
 ### 更新
 * remove camellia-redis-toolkit module, CamelliaCounterCache/CamelliaRedisLock merge to camellia-redis module
+* rename package of camellia-tools module
 
 ### fix
 * none

@@ -2,7 +2,7 @@ package com.netease.nim.camellia.tools.samples;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import com.netease.nim.camellia.tools.CamelliaLoadingCache;
+import com.netease.nim.camellia.tools.cache.CamelliaLoadingCache;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;

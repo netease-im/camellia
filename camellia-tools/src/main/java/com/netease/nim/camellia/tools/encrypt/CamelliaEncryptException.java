@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.tools;
+package com.netease.nim.camellia.tools.encrypt;
 
 /**
  * Created by caojiajun on 2021/8/16

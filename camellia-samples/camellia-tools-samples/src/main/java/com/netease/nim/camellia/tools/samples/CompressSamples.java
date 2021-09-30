@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.tools.samples;
 
-import com.netease.nim.camellia.tools.CamelliaCompressor;
+import com.netease.nim.camellia.tools.compress.CamelliaCompressor;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;

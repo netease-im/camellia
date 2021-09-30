@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.tools.samples;
 
-import com.netease.nim.camellia.tools.CamelliaEncryptAesConfig;
-import com.netease.nim.camellia.tools.CamelliaEncryptor;
+import com.netease.nim.camellia.tools.encrypt.CamelliaEncryptAesConfig;
+import com.netease.nim.camellia.tools.encrypt.CamelliaEncryptor;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;

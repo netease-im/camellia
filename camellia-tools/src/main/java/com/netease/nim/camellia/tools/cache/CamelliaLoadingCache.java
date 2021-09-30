@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.tools;
+package com.netease.nim.camellia.tools.cache;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import org.slf4j.Logger;

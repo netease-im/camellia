@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.tools;
+package com.netease.nim.camellia.tools.encrypt;
 
 import io.netty.util.concurrent.FastThreadLocal;
 import org.slf4j.Logger;

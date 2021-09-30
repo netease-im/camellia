@@ -12,6 +12,7 @@
 
 ### 更新
 * 移除了camellia-redis-toolkit模块，其中CamelliaCounterCache/CamelliaRedisLock合并到camellia-redis
+* camellia-tools模块下包名重命名
 
 ### fix
 * 无
