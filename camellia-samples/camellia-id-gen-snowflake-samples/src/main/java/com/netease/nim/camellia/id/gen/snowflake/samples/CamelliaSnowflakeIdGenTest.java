@@ -5,6 +5,8 @@ import com.netease.nim.camellia.id.gen.snowflake.CamelliaSnowflakeIdGen;
 import com.netease.nim.camellia.id.gen.snowflake.RedisWorkerIdGen;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 
+import java.util.Date;
+
 /**
  * Created by caojiajun on 2021/9/18
  */
@@ -23,10 +25,13 @@ public class CamelliaSnowflakeIdGenTest {
 
         int i=2000;
         while (i -- > 0) {
-            long id = idGen.genId();
+            long id = idGen.genId();//生成id
             System.out.println(id);
             System.out.println(Long.toBinaryString(id));
             System.out.println(Long.toBinaryString(id).length());
+            long ts = idGen.decodeTs(id);//从id中解析出时间戳
+            System.out.println(ts);
+            System.out.println(new Date(ts));
         }
 
         long target = 1000*10000;

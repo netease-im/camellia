@@ -40,10 +40,13 @@ public class CamelliaSnowflakeIdGenTest {
 
         int i=2000;
         while (i -- > 0) {
-            long id = idGen.genId();
+            long id = idGen.genId();//生成id
             System.out.println(id);
             System.out.println(Long.toBinaryString(id));
             System.out.println(Long.toBinaryString(id).length());
+            long ts = idGen.decodeTs(id);//从id中解析出时间戳
+            System.out.println(ts);
+            System.out.println(new Date(ts));
         }
 
         long target = 1000*10000;
@@ -141,6 +144,16 @@ http://127.0.0.1:8081/camellia/id/gen/snowflake/genId
   "msg": "success"
 }
 ```
+此外还提供了一个解析时间戳的接口：  
+http://127.0.0.1:8081/camellia/id/gen/snowflake/decodeTs?id=6393964107649080  
+返回示例：  
+```json
+{
+  "code": 200,
+  "data": 1632727639837,
+  "msg": "success"
+}
+```  
 
 当使用spring-boot-starter部署了独立的发号器服务后，为了方便使用http方法访问相关接口，我们提供了一个简易的封装    
 先引入maven依赖：  
@@ -159,7 +172,11 @@ public class CamelliaSnowflakeIdGenSdkTest {
         config.setUrl("http://127.0.0.1:8081");
         config.setMaxRetry(2);//重试次数
         CamelliaSnowflakeIdGenSdk idGenSdk = new CamelliaSnowflakeIdGenSdk(config);
-        System.out.println(idGenSdk.genId());
+        long id = idGenSdk.genId();//生成id
+        System.out.println(id);
+        long ts = idGenSdk.decodeTs(id);//从id中解析出时间戳
+        System.out.println(ts);
+        System.out.println(new Date(ts));
 
         long target = 10*10000;
         int i = 0;
@@ -178,6 +195,7 @@ public class CamelliaSnowflakeIdGenSdkTest {
         //QPS=5052.801778586226
     }
 }
+
 
 ```
 

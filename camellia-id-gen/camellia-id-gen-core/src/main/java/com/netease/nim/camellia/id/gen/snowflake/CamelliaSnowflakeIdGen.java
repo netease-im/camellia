@@ -115,6 +115,11 @@ public class CamelliaSnowflakeIdGen implements ICamelliaSnowflakeIdGen {
         return ((now - twepoch) << (regionBits + workerIdBits + sequenceBits)) | (regionId << (workerIdBits + sequenceBits)) | (workerId << sequenceBits) | sequence;
     }
 
+    @Override
+    public long decodeTs(long id) {
+        return (id >> (regionBits + workerIdBits + sequenceBits)) + twepoch;
+    }
+
     //选择一个随机值，而不是每次都从0开始
     private long sequenceInit() {
         if (maxSequence > 128L) {

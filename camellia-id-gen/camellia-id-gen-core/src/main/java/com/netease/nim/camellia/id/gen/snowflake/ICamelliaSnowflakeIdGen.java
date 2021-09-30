@@ -11,4 +11,11 @@ public interface ICamelliaSnowflakeIdGen {
      * @return id
      */
     long genId();
+
+    /**
+     * 解析id中的时间戳
+     * @param id id
+     * @return 时间戳
+     */
+    long decodeTs(long id);
 }

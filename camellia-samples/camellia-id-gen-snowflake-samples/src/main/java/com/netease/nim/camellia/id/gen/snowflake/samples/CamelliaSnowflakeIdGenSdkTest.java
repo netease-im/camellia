@@ -3,6 +3,8 @@ package com.netease.nim.camellia.id.gen.snowflake.samples;
 import com.netease.nim.camellia.id.gen.sdk.CamelliaIdGenSdkConfig;
 import com.netease.nim.camellia.id.gen.sdk.CamelliaSnowflakeIdGenSdk;
 
+import java.util.Date;
+
 /**
  * Created by caojiajun on 2021/9/27
  */
@@ -12,7 +14,11 @@ public class CamelliaSnowflakeIdGenSdkTest {
         config.setUrl("http://127.0.0.1:8081");
         config.setMaxRetry(2);//重试次数
         CamelliaSnowflakeIdGenSdk idGenSdk = new CamelliaSnowflakeIdGenSdk(config);
-        System.out.println(idGenSdk.genId());
+        long id = idGenSdk.genId();//生成id
+        System.out.println(id);
+        long ts = idGenSdk.decodeTs(id);//从id中解析出时间戳
+        System.out.println(ts);
+        System.out.println(new Date(ts));
 
         long target = 10*10000;
         int i = 0;

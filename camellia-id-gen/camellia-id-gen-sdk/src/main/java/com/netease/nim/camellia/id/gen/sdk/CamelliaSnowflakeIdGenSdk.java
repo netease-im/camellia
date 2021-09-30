@@ -28,4 +28,12 @@ public class CamelliaSnowflakeIdGenSdk implements ICamelliaSnowflakeIdGen {
             return CamelliaIdGenHttpUtils.genId(okHttpClient, fullUrl);
         }, config.getMaxRetry());
     }
+
+    @Override
+    public long decodeTs(long id) {
+        return invoker.invoke(server -> {
+            String fullUrl = server.getUrl() + "/camellia/id/gen/snowflake/decodeTs?id=" + id;
+            return CamelliaIdGenHttpUtils.genId(okHttpClient, fullUrl);
+        }, config.getMaxRetry());
+    }
 }

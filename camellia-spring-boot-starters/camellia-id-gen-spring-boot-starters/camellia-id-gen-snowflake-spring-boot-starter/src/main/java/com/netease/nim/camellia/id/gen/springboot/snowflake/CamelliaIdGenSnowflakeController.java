@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -27,6 +28,19 @@ public class CamelliaIdGenSnowflakeController {
     public IdGenResult genId() {
         try {
             return IdGenResult.success(camelliaSnowflakeIdGen.genId());
+        } catch (CamelliaIdGenException e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error(e.getMessage());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error("internal error");
+        }
+    }
+
+    @GetMapping("/decodeTs")
+    public IdGenResult decodeTs(@RequestParam("id") long id) {
+        try {
+            return IdGenResult.success(camelliaSnowflakeIdGen.decodeTs(id));
         } catch (CamelliaIdGenException e) {
             logger.error(e.getMessage(), e);
             return IdGenResult.error(e.getMessage());
