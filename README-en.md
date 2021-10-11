@@ -16,7 +16,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 ├─`camellia-redis-proxy-hbase`  
 ├─`camellia-tools`    
 ├─`camellia-id-gen`  
-│ ├─`camellia-id-gen-core`   
+│ ├─`camellia-id-gen-core`  
 │ ├─`camellia-id-gen-sdk`      
 ├─`camellia-redis-zk`  
 │ ├─`camellia-redis-zk-common`  
@@ -48,9 +48,11 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 │ ├─`camellia-spring-redis-base`         
 │ ├─`camellia-spring-redis-eureka-discovery-spring-boot-starter`     
 │ ├─`camellia-spring-redis-zk-discovery-spring-boot-starter`  
-│ ├─`camellia-spring-redis-id-gen-snowflake-spring-boot-starter`   
-│ ├─`camellia-spring-redis-id-gen-strict-spring-boot-starter`   
-│ ├─`camellia-spring-redis-id-gen-segment-spring-boot-starter`  
+│ ├─`camellia-id-gen-spring-boot-starters`  
+│ │ ├─`camellia-id-gen-id-loader`        
+│ │ ├─`camellia-id-gen-snowflake-spring-boot-starter`       
+│ │ ├─`camellia-id-gen-strict-spring-boot-starter`    
+│ │ ├─`camellia-id-gen-segment-spring-boot-starter`   
                      
 ## Instruction
 ### 1、camellia-core  
