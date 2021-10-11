@@ -11,6 +11,7 @@ public interface ICamelliaSegmentIdGen {
 
     /**
      * 获取一批id
+     * @param tag tag
      * @param count 数量
      * @return 一批id
      */
@@ -18,6 +19,7 @@ public interface ICamelliaSegmentIdGen {
 
     /**
      * 获取一个id
+     * @param tag tag
      * @return id
      */
     long genId(String tag);
