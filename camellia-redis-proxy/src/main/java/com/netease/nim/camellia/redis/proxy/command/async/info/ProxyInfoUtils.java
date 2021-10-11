@@ -37,7 +37,7 @@ public class ProxyInfoUtils {
     private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(8), new DefaultThreadFactory("proxy-info"));
 
-    private static final String VERSION = "v1.0.37";
+    private static final String VERSION = "v1.0.38";
     private static int port;
     private static int consolePort;
     private static int bossThread;

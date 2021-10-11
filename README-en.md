@@ -84,7 +84,7 @@ provide some tools, such as compress utils CamelliaCompressor, encrypt utils Cam
 [QUICK START](/docs/tools/tools.md)   
 
 ## Version
-latest version is 1.0.37，have deploy to maven central repository on 2021/09/24  
+latest version is 1.0.38，have deploy to maven central repository on 2021/10/11  
 [CHANGE_LOG](/update-en.md)  
 
 ## Contact

@@ -162,7 +162,7 @@ public class CustomKeyConverter implements KeyConverter {
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-tools</artifactId>
-    <version>1.0.37</version>
+    <version>1.0.38</version>
 </dependency>
 ```
 
