@@ -4,6 +4,8 @@ import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.CommandBigKeyMonitorConfig;
+import com.netease.nim.camellia.redis.proxy.command.async.connectlimit.ConnectLimiter;
+import com.netease.nim.camellia.redis.proxy.command.async.connectlimit.ConnectLimiterHolder;
 import com.netease.nim.camellia.redis.proxy.command.async.converter.*;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.CommandHotKeyMonitorConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyMonitorCallback;
@@ -50,6 +52,32 @@ public class ConfigInitUtil {
                 ProxyDynamicConf.updateProxyDynamicConfHook(hook);
             } catch (Exception e) {
                 logger.error("ProxyDynamicConfHook init error, class = {}", proxyDynamicConfHookClassName, e);
+                throw new CamelliaRedisException(e);
+            }
+        }
+    }
+
+    public static void initConnectLimiter(CamelliaServerProperties serverProperties) {
+        ConnectLimiter connectLimiter = serverProperties.getConnectLimiter();
+        if (connectLimiter != null) {
+            logger.info("ConnectLimiter init success, class = {}", connectLimiter.getClass().getName());
+            ConnectLimiterHolder.connectLimiter = connectLimiter;
+            return;
+        }
+        String connectLimiterClassName = serverProperties.getConnectLimiterClassName();
+        if (connectLimiterClassName != null) {
+            try {
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(connectLimiterClassName);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(connectLimiterClassName);
+                }
+                connectLimiter = (ConnectLimiter) clazz.newInstance();
+                logger.info("ConnectLimiter init success, class = {}", connectLimiterClassName);
+                ConnectLimiterHolder.connectLimiter = connectLimiter;
+            } catch (Exception e) {
+                logger.error("ConnectLimiter init error, class = {}", connectLimiterClassName, e);
                 throw new CamelliaRedisException(e);
             }
         }

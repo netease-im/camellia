@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyMonitorCallback;
+import com.netease.nim.camellia.redis.proxy.command.async.connectlimit.ConnectLimiter;
 import com.netease.nim.camellia.redis.proxy.command.async.converter.*;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheKeyChecker;
@@ -42,12 +43,21 @@ public class CamelliaServerProperties {
     private boolean monitorDataMaskPassword = Constants.Server.monitorDataMaskPassword;
     private String clientAuthProviderClassName = Constants.Server.clientAuthByConfigProvider;
     private ClientAuthProvider clientAuthProvider;
+    private ConnectLimiter connectLimiter;
+    private String connectLimiterClassName = Constants.Server.connectLimiterClassName;
 
     private int bossThread = 1;
     private int workThread = Constants.Server.workThread;
     private int soBacklog = Constants.Server.soBacklog;
     private int soSndbuf = Constants.Server.soSndbuf;
     private int soRcvbuf = Constants.Server.soRcvbuf;
+    private boolean keepalive = Constants.Server.keepalive;
+    private int readerIdleTimeSeconds = Constants.Server.readerIdleTimeSeconds;
+    private int writerIdleTimeSeconds = Constants.Server.writerIdleTimeSeconds;
+    private int allIdleTimeSeconds = Constants.Server.allIdleTimeSeconds;
+    private boolean readerIdleClose = Constants.Server.readerIdleClose;
+    private boolean writerIdleClose = Constants.Server.writerIdleClose;
+    private boolean allIdleClose = Constants.Server.allIdleClose;
     private int writeBufferWaterMarkLow = Constants.Server.writeBufferWaterMarkLow;
     private int writeBufferWaterMarkHigh = Constants.Server.writeBufferWaterMarkHigh;
     private int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
@@ -155,6 +165,62 @@ public class CamelliaServerProperties {
 
     public void setSoRcvbuf(int soRcvbuf) {
         this.soRcvbuf = soRcvbuf;
+    }
+
+    public boolean isKeepalive() {
+        return keepalive;
+    }
+
+    public void setKeepalive(boolean keepalive) {
+        this.keepalive = keepalive;
+    }
+
+    public int getReaderIdleTimeSeconds() {
+        return readerIdleTimeSeconds;
+    }
+
+    public void setReaderIdleTimeSeconds(int readerIdleTimeSeconds) {
+        this.readerIdleTimeSeconds = readerIdleTimeSeconds;
+    }
+
+    public int getWriterIdleTimeSeconds() {
+        return writerIdleTimeSeconds;
+    }
+
+    public void setWriterIdleTimeSeconds(int writerIdleTimeSeconds) {
+        this.writerIdleTimeSeconds = writerIdleTimeSeconds;
+    }
+
+    public int getAllIdleTimeSeconds() {
+        return allIdleTimeSeconds;
+    }
+
+    public void setAllIdleTimeSeconds(int allIdleTimeSeconds) {
+        this.allIdleTimeSeconds = allIdleTimeSeconds;
+    }
+
+    public boolean isReaderIdleClose() {
+        return readerIdleClose;
+    }
+
+    public void setReaderIdleClose(boolean readerIdleClose) {
+        this.readerIdleClose = readerIdleClose;
+    }
+
+    public boolean isWriterIdleClose() {
+        return writerIdleClose;
+    }
+
+    public void setWriterIdleClose(boolean writerIdleClose) {
+        this.writerIdleClose = writerIdleClose;
+    }
+
+    public boolean isAllIdleClose() {
+        return allIdleClose;
+    }
+
+    public void setAllIdleClose(boolean allIdleClose) {
+        this.allIdleClose = allIdleClose;
     }
 
     public int getWriteBufferWaterMarkLow() {
@@ -331,6 +397,22 @@ public class CamelliaServerProperties {
 
     public void setClientAuthProvider(ClientAuthProvider clientAuthProvider) {
         this.clientAuthProvider = clientAuthProvider;
+    }
+
+    public ConnectLimiter getConnectLimiter() {
+        return connectLimiter;
+    }
+
+    public void setConnectLimiter(ConnectLimiter connectLimiter) {
+        this.connectLimiter = connectLimiter;
+    }
+
+    public String getConnectLimiterClassName() {
+        return connectLimiterClassName;
+    }
+
+    public void setConnectLimiterClassName(String connectLimiterClassName) {
+        this.connectLimiterClassName = connectLimiterClassName;
     }
 
     public static class HotKeyMonitorConfig {

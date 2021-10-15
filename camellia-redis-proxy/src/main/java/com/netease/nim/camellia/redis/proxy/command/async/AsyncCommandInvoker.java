@@ -77,8 +77,8 @@ public class AsyncCommandInvoker implements CommandInvoker {
             converters = new Converters(converterConfig);
         }
         AuthCommandProcessor authCommandProcessor = new AuthCommandProcessor(ConfigInitUtil.initClientAuthProvider(serverProperties));
-        this.commandInvokeConfig = new CommandInvokeConfig(authCommandProcessor, commandInterceptor, commandSpendTimeConfig, hotKeyCacheManager, hotKeyHunterManager, bigKeyHunter, converters);
-
+        this.commandInvokeConfig = new CommandInvokeConfig(authCommandProcessor, commandInterceptor, commandSpendTimeConfig,
+                hotKeyCacheManager, hotKeyHunterManager, bigKeyHunter, converters);
     }
 
     private static final FastThreadLocal<CommandsTransponder> threadLocal = new FastThreadLocal<>();

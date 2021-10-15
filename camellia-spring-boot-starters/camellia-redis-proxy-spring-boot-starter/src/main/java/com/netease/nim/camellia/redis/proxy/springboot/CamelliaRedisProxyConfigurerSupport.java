@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.springboot;
 import com.netease.nim.camellia.core.client.env.ShadingFunc;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyMonitorCallback;
+import com.netease.nim.camellia.redis.proxy.command.async.connectlimit.ConnectLimiter;
 import com.netease.nim.camellia.redis.proxy.command.async.converter.*;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheKeyChecker;
@@ -72,6 +73,9 @@ public class CamelliaRedisProxyConfigurerSupport {
     @Autowired(required = false)
     private ProxyRouteConfUpdater proxyRouteConfUpdater;
 
+    @Autowired(required = false)
+    private ConnectLimiter connectLimiter;
+
     public MonitorCallback getMonitorCallback() {
         return monitorCallback;
     }
@@ -138,5 +142,9 @@ public class CamelliaRedisProxyConfigurerSupport {
 
     public ProxyRouteConfUpdater getProxyRouteConfUpdater() {
         return proxyRouteConfUpdater;
+    }
+
+    public ConnectLimiter getConnectLimiter() {
+        return connectLimiter;
     }
 }

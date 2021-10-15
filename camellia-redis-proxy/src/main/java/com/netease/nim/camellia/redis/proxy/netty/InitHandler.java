@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
+import com.netease.nim.camellia.redis.proxy.command.async.connectlimit.ConnectLimiterHolder;
 import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -20,10 +21,21 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(InitHandler.class);
 
+
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
         ChannelInfo channelInfo = ChannelInfo.init(ctx);
+        if (ConnectLimiterHolder.connectLimiter != null) {
+            int threshold = ConnectLimiterHolder.connectLimiter.connectThreshold();
+            int currentConnect = ChannelMonitor.connect();
+            if (currentConnect >= threshold) {
+                ctx.close();
+                logger.warn("too many connects, connect will be force closed, current = {}, max = {}, consid = {}, client.addr = {}",
+                        currentConnect, threshold, channelInfo.getConsid(), ctx.channel().remoteAddress());
+                return;
+            }
+        }
         ChannelMonitor.init(channelInfo);
         if (logger.isDebugEnabled()) {
             logger.debug("channel init, consid = {}", channelInfo.getConsid());
