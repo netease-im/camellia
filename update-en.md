@@ -5,12 +5,24 @@
 * camellia-redis-proxy support monitor data visualization in prometheus
 * camellia-redis-proxy support multi-write based on mq(such as kafka)
 
+# 1.0.39（2021/10/xx）
+### add
+* camellia-redis-proxy support setting max client connect limit, default no limit
+* camellia-redis-proxy support setting idle client connect check and close, default disable
+
+### update
+* none
+
+### fix
+* none
+
+
 # 1.0.38（2021/10/11）
-### 新增
+### add
 * add camellia-id-gen mode, support snowflake, support db-base id-gen(growth tread), support db/redis-base id-gen(strict growth)
 * support setting custom callback by spring @Autowired
 
-### 更新
+### update
 * remove camellia-redis-toolkit module, CamelliaCounterCache/CamelliaRedisLock merge to camellia-redis module
 * rename package of camellia-tools module
 
