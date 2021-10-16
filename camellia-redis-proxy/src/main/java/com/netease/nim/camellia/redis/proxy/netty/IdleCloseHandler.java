@@ -23,26 +23,28 @@ public class IdleCloseHandler extends IdleStateHandler {
     protected void channelIdle(ChannelHandlerContext ctx, IdleStateEvent evt) throws Exception {
         super.channelIdle(ctx, evt);
         ChannelInfo channelInfo = ChannelInfo.get(ctx);
+        String consid = channelInfo == null ? null : channelInfo.getConsid();
         Long bid = channelInfo == null ? null : channelInfo.getBid();
         String bgroup = channelInfo == null ? null : channelInfo.getBgroup();
         if (evt.state() == IdleState.READER_IDLE) {
-            logger.info("connection reader idle, client.addr = {}", ctx.channel().remoteAddress());
+            logger.info("client connection reader idle, client.addr = {}, consid = {}", ctx.channel().remoteAddress(), consid);
             if (ProxyDynamicConf.getBoolean("reader.idle.connection.force.close.enable", bid, bgroup, false)) {
-                logger.warn("connection force close for reader idle, client.addr = {}, bid = {}, bgroup = {}",
-                        ctx.channel().remoteAddress(), bid, bgroup);
+                logger.warn("client connection force close for reader idle, client.addr = {}, consid = {}, bid = {}, bgroup = {}",
+                        ctx.channel().remoteAddress(), consid, bid, bgroup);
                 ctx.close();
             }
         } else if (evt.state() == IdleState.WRITER_IDLE) {
-            logger.info("connection writer idle, client.addr = {}", ctx.channel().remoteAddress());
+            logger.info("client connection writer idle, client.addr = {}, consid = {}", ctx.channel().remoteAddress(), consid);
             if (ProxyDynamicConf.getBoolean("writer.idle.connection.force.close.enable", bid, bgroup, false)) {
-                logger.warn("connection force close for reader idle, client.addr = {}, bid = {}, bgroup = {}",
-                        ctx.channel().remoteAddress(), bid, bgroup);
+                logger.warn("client connection force close for writer idle, client.addr = {}, consid = {}, bid = {}, bgroup = {}",
+                        ctx.channel().remoteAddress(), consid, bid, bgroup);
+                ctx.close();
             }
         } else if (evt.state() == IdleState.ALL_IDLE) {
-            logger.info("connection all idle, client.addr = {}", ctx.channel().remoteAddress());
+            logger.info("client connection all idle, client.addr = {}, consid = {}", ctx.channel().remoteAddress(), consid);
             if (ProxyDynamicConf.getBoolean("all.idle.connection.force.close.enable", bid, bgroup, false)) {
-                logger.warn("connection force close for all idle, client.addr = {}, bid = {}, bgroup = {}",
-                        ctx.channel().remoteAddress(), bid, bgroup);
+                logger.warn("client connection force close for all idle, client.addr = {}, consid = {}, bid = {}, bgroup = {}",
+                        ctx.channel().remoteAddress(), consid, bid, bgroup);
                 ctx.close();
             }
         }
