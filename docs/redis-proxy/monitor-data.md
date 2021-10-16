@@ -136,6 +136,7 @@
     }
   ],
   "bigKeyStats": [  //大key监控
+    //特别的，你可以通过在camellia-redis-proxy.propertis里配置big.key.monitor.json.max.count=10000来限制该监控数据项的最大个数，默认不限制，一般来说，更好的方式是通过调整更合适的大key检测阈值来减少数据项
     {
       "commandType": "ZSET",  //key的类型，包括STRING/ZSET/SET/LIST/HASH等
       "size": 1903,  //大小

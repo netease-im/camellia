@@ -61,10 +61,11 @@ public class CamelliaRedisProxyUtil {
         }
         serverProperties.setCommandDecodeMaxBatchSize(netty.getCommandDecodeMaxBatchSize());
         serverProperties.setCommandDecodeBufferInitializerSize(netty.getCommandDecodeBufferInitializerSize());
+        serverProperties.setTcpNoDelay(netty.isTcpNoDelay());
         serverProperties.setSoBacklog(netty.getSoBacklog());
         serverProperties.setSoRcvbuf(netty.getSoRcvbuf());
         serverProperties.setSoSndbuf(netty.getSoSndbuf());
-        serverProperties.setKeepalive(netty.isKeepalive());
+        serverProperties.setSoKeepalive(netty.isSoKeepalive());
         serverProperties.setReaderIdleTimeSeconds(netty.getReaderIdleTimeSeconds());
         serverProperties.setWriterIdleTimeSeconds(netty.getWriterIdleTimeSeconds());
         serverProperties.setAllIdleTimeSeconds(netty.getAllIdleTimeSeconds());
@@ -281,5 +282,17 @@ public class CamelliaRedisProxyUtil {
         redisConfProperties.setCheckIdleConnectionThresholdSeconds(properties.getCheckIdleConnectionThresholdSeconds());
         redisConfProperties.setCloseIdleConnectionDelaySeconds(properties.getCloseIdleConnectionDelaySeconds());
         return redisConfProperties;
+    }
+
+    public static CamelliaTranspondProperties.NettyProperties parse(TranspondProperties.NettyProperties properties) {
+        if (properties == null) return null;
+        CamelliaTranspondProperties.NettyProperties nettyProperties = new CamelliaTranspondProperties.NettyProperties();
+        nettyProperties.setSoKeepalive(properties.isSoKeepalive());
+        nettyProperties.setTcpNoDelay(properties.isTcpNoDelay());
+        nettyProperties.setSoRcvbuf(properties.getSoRcvbuf());
+        nettyProperties.setSoSndbuf(properties.getSoSndbuf());
+        nettyProperties.setWriteBufferWaterMarkLow(properties.getWriteBufferWaterMarkLow());
+        nettyProperties.setWriteBufferWaterMarkHigh(properties.getWriteBufferWaterMarkHigh());
+        return nettyProperties;
     }
 }

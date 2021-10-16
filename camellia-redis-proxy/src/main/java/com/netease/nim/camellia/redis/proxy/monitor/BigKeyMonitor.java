@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
@@ -61,6 +62,7 @@ public class BigKeyMonitor {
             ConcurrentHashMap<String, BigKeyStats> statsMap = BigKeyMonitor.statsMap;
             BigKeyMonitor.statsMap = new ConcurrentHashMap<>();
             JSONArray bigKeyJsonArray = new JSONArray();
+            int maxCount = ProxyDynamicConf.getInt("big.key.monitor.json.max.count", Integer.MAX_VALUE);
             for (BigKeyStats bigKeyStats : statsMap.values()) {
                 JSONObject bigKeyJson = new JSONObject();
                 bigKeyJson.put("bid", bigKeyStats.bid);
@@ -71,6 +73,9 @@ public class BigKeyMonitor {
                 bigKeyJson.put("size", bigKeyStats.size);
                 bigKeyJson.put("threshold", bigKeyStats.threshold);
                 bigKeyJsonArray.add(bigKeyJson);
+                if (bigKeyJsonArray.size() >= maxCount) {
+                    break;
+                }
             }
             json.put("bigKeyStats", bigKeyJsonArray);
             monitorJson = json;

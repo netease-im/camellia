@@ -36,6 +36,11 @@ public class TranspondProperties {
      */
     private RedisConfProperties redisConf = new RedisConfProperties();
 
+    /**
+     * proxy到后端redis的tcp连接的相关配置
+     */
+    private NettyProperties netty = new NettyProperties();
+
     public static enum Type {
         LOCAL,
         REMOTE,
@@ -82,6 +87,14 @@ public class TranspondProperties {
 
     public void setRedisConf(RedisConfProperties redisConf) {
         this.redisConf = redisConf;
+    }
+
+    public NettyProperties getNetty() {
+        return netty;
+    }
+
+    public void setNetty(NettyProperties netty) {
+        this.netty = netty;
     }
 
     public static class LocalProperties {
@@ -346,6 +359,63 @@ public class TranspondProperties {
         }
     }
 
+    public static class NettyProperties {
+        public int soSndbuf = Constants.Transpond.soSndbuf;
+        public int soRcvbuf = Constants.Transpond.soRcvbuf;
+        public boolean tcpNoDelay = Constants.Transpond.tcpNoDelay;
+        public boolean soKeepalive = Constants.Transpond.soKeepalive;
+        public int writeBufferWaterMarkLow = Constants.Transpond.writeBufferWaterMarkLow;
+        public int writeBufferWaterMarkHigh = Constants.Transpond.writeBufferWaterMarkHigh;
+
+        public int getSoSndbuf() {
+            return soSndbuf;
+        }
+
+        public void setSoSndbuf(int soSndbuf) {
+            this.soSndbuf = soSndbuf;
+        }
+
+        public int getSoRcvbuf() {
+            return soRcvbuf;
+        }
+
+        public void setSoRcvbuf(int soRcvbuf) {
+            this.soRcvbuf = soRcvbuf;
+        }
+
+        public boolean isTcpNoDelay() {
+            return tcpNoDelay;
+        }
+
+        public void setTcpNoDelay(boolean tcpNoDelay) {
+            this.tcpNoDelay = tcpNoDelay;
+        }
+
+        public boolean isSoKeepalive() {
+            return soKeepalive;
+        }
+
+        public void setSoKeepalive(boolean soKeepalive) {
+            this.soKeepalive = soKeepalive;
+        }
+
+        public int getWriteBufferWaterMarkLow() {
+            return writeBufferWaterMarkLow;
+        }
+
+        public void setWriteBufferWaterMarkLow(int writeBufferWaterMarkLow) {
+            this.writeBufferWaterMarkLow = writeBufferWaterMarkLow;
+        }
+
+        public int getWriteBufferWaterMarkHigh() {
+            return writeBufferWaterMarkHigh;
+        }
+
+        public void setWriteBufferWaterMarkHigh(int writeBufferWaterMarkHigh) {
+            this.writeBufferWaterMarkHigh = writeBufferWaterMarkHigh;
+        }
+    }
+
     public static class RedisConfProperties {
 
         //分片函数
@@ -359,9 +429,9 @@ public class TranspondProperties {
         private int defaultTranspondWorkThread = Constants.Transpond.defaultTranspondWorkThread;
         private MultiWriteMode multiWriteMode = Constants.Transpond.multiWriteMode;
         private boolean preheat = Constants.Transpond.preheat;
-        public boolean closeIdleConnection = Constants.Transpond.closeIdleConnection;//是否关闭空闲连接（到后端redis的）
-        public long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;//判断一个连接空闲的阈值，单位秒
-        public int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;//判断一个连接空闲后，再过多少秒去执行关闭操作
+        private boolean closeIdleConnection = Constants.Transpond.closeIdleConnection;//是否关闭空闲连接（到后端redis的）
+        private long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;//判断一个连接空闲的阈值，单位秒
+        private int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;//判断一个连接空闲后，再过多少秒去执行关闭操作
 
         public String getShadingFunc() {
             return shadingFunc;

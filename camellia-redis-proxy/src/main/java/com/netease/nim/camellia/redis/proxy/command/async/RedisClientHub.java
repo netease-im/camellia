@@ -48,6 +48,13 @@ public class RedisClientHub {
     public static int failCountThreshold = Constants.Transpond.failCountThreshold;
     public static long failBanMillis = Constants.Transpond.failBanMillis;
 
+    public static boolean soKeepalive = Constants.Transpond.soKeepalive;
+    public static int soSndbuf = Constants.Transpond.soSndbuf;
+    public static int soRcvbuf = Constants.Transpond.soRcvbuf;
+    public static boolean tcpNoDelay = Constants.Transpond.tcpNoDelay;
+    public static int writeBufferWaterMarkLow = Constants.Transpond.writeBufferWaterMarkLow;
+    public static int writeBufferWaterMarkHigh = Constants.Transpond.writeBufferWaterMarkHigh;
+
     public static boolean closeIdleConnection = Constants.Transpond.closeIdleConnection;
     public static long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;
     public static int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;

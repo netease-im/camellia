@@ -48,10 +48,11 @@ public class CamelliaServerProperties {
 
     private int bossThread = 1;
     private int workThread = Constants.Server.workThread;
+    private boolean tcpNoDelay = Constants.Server.tcpNoDelay;
     private int soBacklog = Constants.Server.soBacklog;
     private int soSndbuf = Constants.Server.soSndbuf;
     private int soRcvbuf = Constants.Server.soRcvbuf;
-    private boolean keepalive = Constants.Server.keepalive;
+    private boolean soKeepalive = Constants.Server.soKeepalive;
     private int readerIdleTimeSeconds = Constants.Server.readerIdleTimeSeconds;
     private int writerIdleTimeSeconds = Constants.Server.writerIdleTimeSeconds;
     private int allIdleTimeSeconds = Constants.Server.allIdleTimeSeconds;
@@ -140,6 +141,14 @@ public class CamelliaServerProperties {
         this.workThread = workThread;
     }
 
+    public boolean isTcpNoDelay() {
+        return tcpNoDelay;
+    }
+
+    public void setTcpNoDelay(boolean tcpNoDelay) {
+        this.tcpNoDelay = tcpNoDelay;
+    }
+
     public int getSoBacklog() {
         return soBacklog;
     }
@@ -164,12 +173,12 @@ public class CamelliaServerProperties {
         this.soRcvbuf = soRcvbuf;
     }
 
-    public boolean isKeepalive() {
-        return keepalive;
+    public boolean isSoKeepalive() {
+        return soKeepalive;
     }
 
-    public void setKeepalive(boolean keepalive) {
-        this.keepalive = keepalive;
+    public void setSoKeepalive(boolean soKeepalive) {
+        this.soKeepalive = soKeepalive;
     }
 
     public int getReaderIdleTimeSeconds() {

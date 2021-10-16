@@ -97,12 +97,12 @@ public class RedisClient implements AsyncClient {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(eventLoopGroup)
                     .channel(NioSocketChannel.class)
-                    .option(ChannelOption.SO_KEEPALIVE, true)
-                    .option(ChannelOption.TCP_NODELAY, true)
-                    .option(ChannelOption.SO_SNDBUF, 10485760)
-                    .option(ChannelOption.SO_RCVBUF, 10485760)
+                    .option(ChannelOption.SO_KEEPALIVE, RedisClientHub.soKeepalive)
+                    .option(ChannelOption.TCP_NODELAY, RedisClientHub.tcpNoDelay)
+                    .option(ChannelOption.SO_SNDBUF, RedisClientHub.soSndbuf)
+                    .option(ChannelOption.SO_RCVBUF, RedisClientHub.soRcvbuf)
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
-                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(128 * 1024, 512 * 1024))
+                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(RedisClientHub.writeBufferWaterMarkLow, RedisClientHub.writeBufferWaterMarkHigh))
                     .handler(new ChannelInitializer<Channel>() {
                         @Override
                         protected void initChannel(Channel channel) {

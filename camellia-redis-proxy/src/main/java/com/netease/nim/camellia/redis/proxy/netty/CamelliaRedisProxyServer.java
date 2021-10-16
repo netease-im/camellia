@@ -66,8 +66,8 @@ public class CamelliaRedisProxyServer {
                 .option(ChannelOption.SO_BACKLOG, serverProperties.getSoBacklog())
                 .childOption(ChannelOption.SO_SNDBUF, serverProperties.getSoSndbuf())
                 .childOption(ChannelOption.SO_RCVBUF, serverProperties.getSoRcvbuf())
-                .childOption(ChannelOption.TCP_NODELAY, true)
-                .childOption(ChannelOption.SO_KEEPALIVE, serverProperties.isKeepalive())
+                .childOption(ChannelOption.TCP_NODELAY, serverProperties.isTcpNoDelay())
+                .childOption(ChannelOption.SO_KEEPALIVE, serverProperties.isSoKeepalive())
                 .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK,
                         new WriteBufferWaterMark(serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh()))
                 .childHandler(new ChannelInitializer<SocketChannel>() {

@@ -253,6 +253,17 @@ public class AsyncCamelliaRedisTemplateChooser {
         RedisClientHub.closeIdleConnectionDelaySeconds = redisConf.getCloseIdleConnectionDelaySeconds();
         logger.info("RedisClient, closeIdleConnection = {}, checkIdleConnectionThresholdSeconds = {}, closeIdleConnectionDelaySeconds = {}",
                 RedisClientHub.closeIdleConnection, RedisClientHub.checkIdleConnectionThresholdSeconds, RedisClientHub.closeIdleConnectionDelaySeconds);
+
+        RedisClientHub.soKeepalive = properties.getNettyProperties().isSoKeepalive();
+        RedisClientHub.tcpNoDelay = properties.getNettyProperties().isTcpNoDelay();
+        RedisClientHub.soRcvbuf = properties.getNettyProperties().getSoRcvbuf();
+        RedisClientHub.soSndbuf = properties.getNettyProperties().getSoSndbuf();
+        RedisClientHub.writeBufferWaterMarkLow = properties.getNettyProperties().getWriteBufferWaterMarkLow();
+        RedisClientHub.writeBufferWaterMarkHigh = properties.getNettyProperties().getWriteBufferWaterMarkHigh();
+        logger.info("RedisClient, soKeepalive = {}, tcpNoDelay = {}, soRcvbuf = {}, soSndbuf = {}, writeBufferWaterMarkLow = {}, writeBufferWaterMarkHigh = {}",
+                RedisClientHub.soKeepalive, RedisClientHub.tcpNoDelay, RedisClientHub.soRcvbuf,
+                RedisClientHub.soSndbuf, RedisClientHub.writeBufferWaterMarkLow, RedisClientHub.writeBufferWaterMarkHigh);
+
         RedisClientHub.initDynamicConf();
 
         ProxyEnv.Builder builder = new ProxyEnv.Builder();

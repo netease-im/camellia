@@ -15,6 +15,7 @@ public class CamelliaTranspondProperties {
     private RemoteProperties remote;
     private CustomProperties custom;
     private RedisConfProperties redisConf = new RedisConfProperties();
+    private NettyProperties nettyProperties = new NettyProperties();
 
     public static enum Type {
         LOCAL,
@@ -62,6 +63,14 @@ public class CamelliaTranspondProperties {
 
     public void setRedisConf(RedisConfProperties redisConf) {
         this.redisConf = redisConf;
+    }
+
+    public NettyProperties getNettyProperties() {
+        return nettyProperties;
+    }
+
+    public void setNettyProperties(NettyProperties nettyProperties) {
+        this.nettyProperties = nettyProperties;
     }
 
     public static class LocalProperties {
@@ -215,6 +224,63 @@ public class CamelliaTranspondProperties {
 
         public void setReloadIntervalMillis(long reloadIntervalMillis) {
             this.reloadIntervalMillis = reloadIntervalMillis;
+        }
+    }
+
+    public static class NettyProperties {
+        public int soSndbuf = Constants.Transpond.soSndbuf;
+        public int soRcvbuf = Constants.Transpond.soRcvbuf;
+        public boolean tcpNoDelay = Constants.Transpond.tcpNoDelay;
+        public boolean soKeepalive = Constants.Transpond.soKeepalive;
+        public int writeBufferWaterMarkLow = Constants.Transpond.writeBufferWaterMarkLow;
+        public int writeBufferWaterMarkHigh = Constants.Transpond.writeBufferWaterMarkHigh;
+
+        public int getSoSndbuf() {
+            return soSndbuf;
+        }
+
+        public void setSoSndbuf(int soSndbuf) {
+            this.soSndbuf = soSndbuf;
+        }
+
+        public int getSoRcvbuf() {
+            return soRcvbuf;
+        }
+
+        public void setSoRcvbuf(int soRcvbuf) {
+            this.soRcvbuf = soRcvbuf;
+        }
+
+        public boolean isTcpNoDelay() {
+            return tcpNoDelay;
+        }
+
+        public void setTcpNoDelay(boolean tcpNoDelay) {
+            this.tcpNoDelay = tcpNoDelay;
+        }
+
+        public boolean isSoKeepalive() {
+            return soKeepalive;
+        }
+
+        public void setSoKeepalive(boolean soKeepalive) {
+            this.soKeepalive = soKeepalive;
+        }
+
+        public int getWriteBufferWaterMarkLow() {
+            return writeBufferWaterMarkLow;
+        }
+
+        public void setWriteBufferWaterMarkLow(int writeBufferWaterMarkLow) {
+            this.writeBufferWaterMarkLow = writeBufferWaterMarkLow;
+        }
+
+        public int getWriteBufferWaterMarkHigh() {
+            return writeBufferWaterMarkHigh;
+        }
+
+        public void setWriteBufferWaterMarkHigh(int writeBufferWaterMarkHigh) {
+            this.writeBufferWaterMarkHigh = writeBufferWaterMarkHigh;
         }
     }
 

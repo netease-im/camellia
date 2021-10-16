@@ -61,6 +61,7 @@ public class CamelliaRedisProxyConfiguration {
         transpondProperties.setRemote(CamelliaRedisProxyUtil.parse(transpond.getRemote()));
         transpondProperties.setCustom(CamelliaRedisProxyUtil.parse(transpond.getCustom(), configurerSupport));
         transpondProperties.setRedisConf(CamelliaRedisProxyUtil.parse(transpond.getRedisConf(), configurerSupport));
+        transpondProperties.setNettyProperties(CamelliaRedisProxyUtil.parse(transpond.getNetty()));
 
         GlobalRedisProxyEnv.bossGroup = bossGroup(properties).get();
         GlobalRedisProxyEnv.workGroup = workGroup(properties).get();
