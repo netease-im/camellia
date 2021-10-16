@@ -55,9 +55,6 @@ public class CamelliaServerProperties {
     private int readerIdleTimeSeconds = Constants.Server.readerIdleTimeSeconds;
     private int writerIdleTimeSeconds = Constants.Server.writerIdleTimeSeconds;
     private int allIdleTimeSeconds = Constants.Server.allIdleTimeSeconds;
-    private boolean readerIdleClose = Constants.Server.readerIdleClose;
-    private boolean writerIdleClose = Constants.Server.writerIdleClose;
-    private boolean allIdleClose = Constants.Server.allIdleClose;
     private int writeBufferWaterMarkLow = Constants.Server.writeBufferWaterMarkLow;
     private int writeBufferWaterMarkHigh = Constants.Server.writeBufferWaterMarkHigh;
     private int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
@@ -197,30 +194,6 @@ public class CamelliaServerProperties {
 
     public void setAllIdleTimeSeconds(int allIdleTimeSeconds) {
         this.allIdleTimeSeconds = allIdleTimeSeconds;
-    }
-
-    public boolean isReaderIdleClose() {
-        return readerIdleClose;
-    }
-
-    public void setReaderIdleClose(boolean readerIdleClose) {
-        this.readerIdleClose = readerIdleClose;
-    }
-
-    public boolean isWriterIdleClose() {
-        return writerIdleClose;
-    }
-
-    public void setWriterIdleClose(boolean writerIdleClose) {
-        this.writerIdleClose = writerIdleClose;
-    }
-
-    public boolean isAllIdleClose() {
-        return allIdleClose;
-    }
-
-    public void setAllIdleClose(boolean allIdleClose) {
-        this.allIdleClose = allIdleClose;
     }
 
     public int getWriteBufferWaterMarkLow() {

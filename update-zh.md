@@ -7,9 +7,9 @@
 
 # 1.0.39（2021/10/xx）
 ### 新增
-* camellia-redis-proxy支持配置客户端最大连接数（总连接数限制+bid/bgroup限制），默认不限制
-* camellia-redis-proxy支持配置检测空闲客户端连接并关闭，默认不启用
-* camellia-redis-proxy提供RateLimitCommandInterceptor，可以用于控制客户端请求速率（支持全局级别，也支持bid/bgroup级别）  
+* camellia-redis-proxy支持配置客户端最大连接数（总连接数限制+bid/bgroup限制），默认不限制，具体见：[客户端连接控制](/docs/redis-proxy/connectlimit.md)
+* camellia-redis-proxy支持配置检测空闲客户端连接并关闭，默认不启用，具体见：[客户端连接控制](/docs/redis-proxy/connectlimit.md)
+* camellia-redis-proxy提供RateLimitCommandInterceptor，可以用于控制客户端请求速率（支持全局级别，也支持bid/bgroup级别），具体见：[拦截器](/docs/redis-proxy/interceptor.md)  
 
 ### 更新
 * 修改CommandInterceptor所属包名
@@ -96,8 +96,8 @@
 
 # 1.0.33（2021/07/29）
 ### 新增
-* camellia-redis-proxy提供TroubleTrickKeysCommandInterceptor去避免异常key导致后端redis异常（比如业务层bug导致的死循环引起后端redis被打挂，需要临时屏蔽相关请求来保护后端redis），具体见：[控制](/docs/redis-proxy/control.md)
-* camellia-redis-proxy提供MultiWriteCommandInterceptor用于自定义双写策略（比如有些key需要双写，有些key不需要，有些key双写到redisA，有些key双写到redisB），具体见：[控制](/docs/redis-proxy/control.md)
+* camellia-redis-proxy提供TroubleTrickKeysCommandInterceptor去避免异常key导致后端redis异常（比如业务层bug导致的死循环引起后端redis被打挂，需要临时屏蔽相关请求来保护后端redis），具体见：[拦截器](/docs/redis-proxy/interceptor.md)
+* camellia-redis-proxy提供MultiWriteCommandInterceptor用于自定义双写策略（比如有些key需要双写，有些key不需要，有些key双写到redisA，有些key双写到redisB），具体见：[拦截器](/docs/redis-proxy/interceptor.md)
 * camellia-redis-proxy支持DUMP/RESTORE命令
 * CamelliaRedisTemplate支持DUMP/RESTORE命令
 

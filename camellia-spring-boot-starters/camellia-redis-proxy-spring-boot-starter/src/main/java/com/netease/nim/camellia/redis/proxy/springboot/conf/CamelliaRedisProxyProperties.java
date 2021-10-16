@@ -123,6 +123,11 @@ public class CamelliaRedisProxyProperties {
     private boolean monitorDataMaskPassword = Constants.Server.monitorDataMaskPassword;
 
     /**
+     * 用于配置客户端最大连接数
+     */
+    private String connectLimiterClassName = Constants.Server.connectLimiterClassName;
+
+    /**
      * netty相关参数
      */
     private NettyProperties netty = new NettyProperties();
@@ -322,6 +327,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setMonitorDataMaskPassword(boolean monitorDataMaskPassword) {
         this.monitorDataMaskPassword = monitorDataMaskPassword;
+    }
+
+    public String getConnectLimiterClassName() {
+        return connectLimiterClassName;
+    }
+
+    public void setConnectLimiterClassName(String connectLimiterClassName) {
+        this.connectLimiterClassName = connectLimiterClassName;
     }
 
     public static class HotKeyMonitorConfig {

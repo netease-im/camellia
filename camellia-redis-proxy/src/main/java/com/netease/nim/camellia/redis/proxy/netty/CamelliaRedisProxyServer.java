@@ -77,8 +77,7 @@ public class CamelliaRedisProxyServer {
                         if (serverProperties.getReaderIdleTimeSeconds() >= 0 && serverProperties.getWriterIdleTimeSeconds() >= 0
                                 && serverProperties.getAllIdleTimeSeconds() >= 0) {
                             p.addLast(new IdleCloseHandler(serverProperties.getReaderIdleTimeSeconds(),
-                                    serverProperties.getWriterIdleTimeSeconds(), serverProperties.getAllIdleTimeSeconds(),
-                                    serverProperties.isReaderIdleClose(), serverProperties.isWriterIdleClose(), serverProperties.isAllIdleClose()));
+                                    serverProperties.getWriterIdleTimeSeconds(), serverProperties.getAllIdleTimeSeconds()));
                         }
                         p.addLast(new CommandDecoder(serverProperties.getCommandDecodeMaxBatchSize(), serverProperties.getCommandDecodeBufferInitializerSize()));
                         p.addLast(new ReplyEncoder());

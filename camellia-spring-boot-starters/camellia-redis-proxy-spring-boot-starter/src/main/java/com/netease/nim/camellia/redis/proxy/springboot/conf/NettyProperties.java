@@ -11,7 +11,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class NettyProperties {
     private int bossThread = 1;
     private int workThread = -1;
-    private String connectLimiterClassName = Constants.Server.connectLimiterClassName;
     private int soBacklog = Constants.Server.soBacklog;
     private int soSndbuf = Constants.Server.soSndbuf;
     private int soRcvbuf = Constants.Server.soRcvbuf;
@@ -19,9 +18,6 @@ public class NettyProperties {
     private int readerIdleTimeSeconds = Constants.Server.readerIdleTimeSeconds;
     private int writerIdleTimeSeconds = Constants.Server.writerIdleTimeSeconds;
     private int allIdleTimeSeconds = Constants.Server.allIdleTimeSeconds;
-    private boolean readerIdleClose = Constants.Server.readerIdleClose;
-    private boolean writerIdleClose = Constants.Server.writerIdleClose;
-    private boolean allIdleClose = Constants.Server.allIdleClose;
     private int writeBufferWaterMarkLow = Constants.Server.writeBufferWaterMarkLow;
     private int writeBufferWaterMarkHigh = Constants.Server.writeBufferWaterMarkHigh;
     private int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
@@ -41,14 +37,6 @@ public class NettyProperties {
 
     public void setWorkThread(int workThread) {
         this.workThread = workThread;
-    }
-
-    public String getConnectLimiterClassName() {
-        return connectLimiterClassName;
-    }
-
-    public void setConnectLimiterClassName(String connectLimiterClassName) {
-        this.connectLimiterClassName = connectLimiterClassName;
     }
 
     public int getCommandDecodeMaxBatchSize() {
@@ -137,30 +125,6 @@ public class NettyProperties {
 
     public void setAllIdleTimeSeconds(int allIdleTimeSeconds) {
         this.allIdleTimeSeconds = allIdleTimeSeconds;
-    }
-
-    public boolean isReaderIdleClose() {
-        return readerIdleClose;
-    }
-
-    public void setReaderIdleClose(boolean readerIdleClose) {
-        this.readerIdleClose = readerIdleClose;
-    }
-
-    public boolean isWriterIdleClose() {
-        return writerIdleClose;
-    }
-
-    public void setWriterIdleClose(boolean writerIdleClose) {
-        this.writerIdleClose = writerIdleClose;
-    }
-
-    public boolean isAllIdleClose() {
-        return allIdleClose;
-    }
-
-    public void setAllIdleClose(boolean allIdleClose) {
-        this.allIdleClose = allIdleClose;
     }
 
 }

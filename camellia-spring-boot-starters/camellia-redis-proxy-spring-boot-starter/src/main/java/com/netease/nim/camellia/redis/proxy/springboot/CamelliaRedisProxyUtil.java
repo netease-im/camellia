@@ -68,12 +68,10 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setReaderIdleTimeSeconds(netty.getReaderIdleTimeSeconds());
         serverProperties.setWriterIdleTimeSeconds(netty.getWriterIdleTimeSeconds());
         serverProperties.setAllIdleTimeSeconds(netty.getAllIdleTimeSeconds());
-        serverProperties.setReaderIdleClose(netty.isReaderIdleClose());
-        serverProperties.setWriterIdleClose(netty.isWriterIdleClose());
-        serverProperties.setAllIdleClose(netty.isAllIdleClose());
         serverProperties.setWriteBufferWaterMarkLow(netty.getWriteBufferWaterMarkLow());
         serverProperties.setWriteBufferWaterMarkHigh(netty.getWriteBufferWaterMarkHigh());
-        serverProperties.setConnectLimiterClassName(netty.getConnectLimiterClassName());
+
+        serverProperties.setConnectLimiterClassName(properties.getConnectLimiterClassName());
         serverProperties.setConnectLimiter(support.getConnectLimiter());
 
         CamelliaRedisProxyProperties.HotKeyMonitorConfig hotKeyMonitorConfig = properties.getHotKeyMonitorConfig();

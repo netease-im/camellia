@@ -186,11 +186,19 @@ OK
 具体可见：[路由配置](route.md)
 
 ## 控制
+### 控制客户端连接
+* camellia-redis-proxy支持配置客户端的连接数上限（支持全局的连接数，也支持bid/bgroup级别的）
+* camellia-redis-proxy支持配置关闭空闲的客户端连接数（该功能可能导致请求数较少的客户端请求异常，慎重配置） 
+
+具体可见：[客户端连接控制](connectlimit.md)
+
+### 拦截器
 camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访问的目的，此外proxy提供了几个默认的命令拦截器实现，可以按需使用：  
 * TroubleTrickKeysCommandInterceptor 用于临时屏蔽某些key的访问    
-* MultiWriteCommandInterceptor 用于自定义配置双写策略(key级别)   
+* MultiWriteCommandInterceptor 用于自定义配置双写策略(key级别)
+* RateLimitCommandInterceptor 用于控制客户端请求速率（支持全局速率控制，也支持bid/bgroup级别的速率控制）   
 
-具体可见：[控制](control.md)
+具体可见：[拦截器](interceptor.md)
 
 ## key/value的自定义转换
 camellia-redis-proxy提供了key/value的自定义转换功能，从而你可以自定义的实现数据的解压缩、加解密等功能  
