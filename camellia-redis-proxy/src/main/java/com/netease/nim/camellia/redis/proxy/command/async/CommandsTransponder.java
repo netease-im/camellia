@@ -159,18 +159,24 @@ public class CommandsTransponder {
                 }
 
                 if (redisCommand == RedisCommand.AUTH) {
+                    boolean hasBidBgroup = channelInfo.getBid() != null && channelInfo.getBgroup() != null;
                     Reply reply = authCommandProcessor.invokeAuthCommand(channelInfo, command);
-                    boolean pass = checkConnectLimit(channelInfo);
-                    if (!pass) return;
+                    if (!hasBidBgroup) {
+                        boolean pass = checkConnectLimit(channelInfo);
+                        if (!pass) return;
+                    }
                     task.replyCompleted(reply);
                     hasCommandsSkip = true;
                     continue;
                 }
 
                 if (redisCommand == RedisCommand.HELLO) {
+                    boolean hasBidBgroup = channelInfo.getBid() != null && channelInfo.getBgroup() != null;
                     Reply reply = HelloCommandUtil.invokeHelloCommand(channelInfo, authCommandProcessor, command);
-                    boolean pass = checkConnectLimit(channelInfo);
-                    if (!pass) return;
+                    if (!hasBidBgroup) {
+                        boolean pass = checkConnectLimit(channelInfo);
+                        if (!pass) return;
+                    }
                     task.replyCompleted(reply);
                     hasCommandsSkip = true;
                     continue;
@@ -208,9 +214,12 @@ public class CommandsTransponder {
                 }
 
                 if (redisCommand == RedisCommand.CLIENT) {
+                    boolean hasBidBgroup = channelInfo.getBid() != null && channelInfo.getBgroup() != null;
                     Reply reply = ClientCommandUtil.invokeClientCommand(channelInfo, command);
-                    boolean pass = checkConnectLimit(channelInfo);
-                    if (!pass) return;
+                    if (!hasBidBgroup) {
+                        boolean pass = checkConnectLimit(channelInfo);
+                        if (!pass) return;
+                    }
                     task.replyCompleted(reply);
                     hasCommandsSkip = true;
                     continue;
