@@ -2,8 +2,6 @@ package com.netease.nim.camellia.redis.proxy.command.async.interceptor;
 
 import com.alibaba.fastjson.JSONArray;
 import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptResponse;
-import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;

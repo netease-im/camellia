@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunter;
 import com.netease.nim.camellia.redis.proxy.command.async.converter.Converters;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterManager;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheManager;
+import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 
 /**

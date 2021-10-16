@@ -3,6 +3,9 @@ camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访
 * 自定义CommandInterceptor示例  
 * TroubleTrickKeysCommandInterceptor 用于临时屏蔽某些key的访问    
 * MultiWriteCommandInterceptor 用于自定义配置双写策略(key级别)   
+* RateLimitCommandInterceptor 用于控制客户端请求速率（支持全局速率控制，也支持bid/bgroup级别的速率控制）
+
+备注：相关拦截器可以通过组合的方式一起使用  
   
 ### 自定义CommandInterceptor
 如果你想添加一个自定义的方法拦截器，则应该实现CommandInterceptor接口，类似于这样：
@@ -11,8 +14,8 @@ package com.netease.nim.camellia.redis.proxy.samples;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
-import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptResponse;
-import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
+import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptResponse;
+import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 
 import java.net.InetSocketAddress;
@@ -164,3 +167,42 @@ public class CustomMultiWriteFunc implements MultiWriteCommandInterceptor.MultiW
 
 #### 使用场景
 某些业务场景中（如金融合规要求），不需要全量双写，则可以使用MultiWriteCommandInterceptor来自定义key级别的双写策略  
+
+### RateLimitCommandInterceptor
+#### 用途
+可以用于控制客户端的请求速率，支持全局级别的速率控制，也支持bid/bgroup级别
+
+#### 配置示例
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      resource: redis://@127.0.0.1:6379
+  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.command.async.interceptor.RateLimitCommandInterceptor
+```
+随后你可以在camellia-redis-proxy.properties配置速率上限（默认不限制）：
+```
+#全局级别的速率控制（下面的例子表示proxy全局最多允许1000ms内10w次请求，超过会返回错误）
+##检查周期
+rate.limit.check.millis=1000
+##最大请求次数，如果小于0，则不限制，如果等于0，则会拦截所有请求
+rate.limit.max.count=100000
+
+#bid/bgroup级别的速率控制（下面的例子表示bid=1，bgroup=default的请求，最多允许1000ms内10w次请求，超过会返回错误）
+##检查周期
+1.default.rate.limit.check.millis=1000
+##最大请求次数，如果小于0，则不限制，如果等于0，则会拦截所有请求
+1.default.rate.limit.max.count=100000
+```
+
+#### 使用场景
+* 如果业务侧bug或者滥用导致不符合预期的高tps，为了保护后端redis或者保护proxy，可以临时配置速率限制
+* 当使用bid/bgroup代理多组路由配置时，使用bid/bgroup级别的速率控制，避免某个业务异常引起全局异常

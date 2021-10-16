@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.hotkey.CommandHotKeyMo
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterManager;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.CommandHotKeyCacheConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheManager;
+import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.command.AuthCommandProcessor;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;

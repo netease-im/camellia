@@ -9,9 +9,10 @@
 ### 新增
 * camellia-redis-proxy支持配置客户端最大连接数（总连接数限制+bid/bgroup限制），默认不限制
 * camellia-redis-proxy支持配置检测空闲客户端连接并关闭，默认不启用
+* camellia-redis-proxy提供RateLimitCommandInterceptor，可以用于控制客户端请求速率（支持全局级别，也支持bid/bgroup级别）  
 
 ### 更新
-* 无
+* 修改CommandInterceptor所属包名
 
 ### fix
 * 无

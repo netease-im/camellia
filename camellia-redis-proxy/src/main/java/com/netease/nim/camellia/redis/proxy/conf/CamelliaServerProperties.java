@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
 
-import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
+import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.connectlimit.ConnectLimiter;
 import com.netease.nim.camellia.redis.proxy.command.async.converter.*;

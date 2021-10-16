@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.command.async;
+package com.netease.nim.camellia.redis.proxy.command.async.interceptor;
 
 /**
  *

@@ -2,8 +2,8 @@ package com.netease.nim.camellia.redis.proxy.samples;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
-import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptResponse;
-import com.netease.nim.camellia.redis.proxy.command.async.CommandInterceptor;
+import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptResponse;
+import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 
 import java.net.InetSocketAddress;
