@@ -13,6 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class Application {
 
     public static void main(String[] args) {
+//        NacosConfStarter.start("127.0.0.1:8848");
         SpringApplication.run(Application.class);
     }
 }
