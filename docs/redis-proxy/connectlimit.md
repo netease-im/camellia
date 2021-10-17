@@ -63,18 +63,18 @@ camellia-redis-proxy:
 ```
 #触发reader-idle事件时是否关闭空闲连接，默认false
 ##全局配置
-reader.idle.connection.force.close.enable=true
+reader.idle.client.connection.force.close.enable=true
 ##bid/bgroup级别的配置，优先级高于全局配置
-1.default.reader.idle.connection.force.close.enable=true
+1.default.reader.idle.client.connection.force.close.enable=true
 
 #触发writer-idle事件时是否关闭空闲连接，默认false
 ##全局配置
-writer.idle.connection.force.close.enable=true
+writer.idle.client.connection.force.close.enable=true
 ##bid/bgroup级别的配置，优先级高于全局配置
-1.default.writer.idle.connection.force.close.enable=true
+1.default.writer.idle.client.connection.force.close.enable=true
 
 #触发all-idle事件时是否关闭空闲连接，默认false
-all.idle.connection.force.close.enable=true
+all.idle.client.connection.force.close.enable=true
 ##bid/bgroup级别的配置，优先级高于全局配置
-1.default.all.idle.connection.force.close.enable=true
+1.default.all.idle.client.connection.force.close.enable=true
 ```
