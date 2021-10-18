@@ -5,9 +5,9 @@
 
 ## 配置客户端最大连接数
 ### 原理
-proxy提供了ConnectLimiter来配置客户端最大连接数，你可以自定义实现ConnectLimiter接口（比如从业务的配置中心动态获取最大连接数的配置），并通过在application.yaml里配置全类名或者使用spring自动注入的方式启用  
-proxy默认使用的ConnectLimiter实现是DynamicConfConnectLimiter，该实现下，最大连接数的配置通过读取camellia-redis-proxy.properties相关配置来获取，支持动态变更  
-当触发全局的最大连接数时，客户端连接会被直接关闭；当触发bid/bgroup级别的最大连接数时，会在执行AUTH/CLIENT/HELLO等命令进行bid/bgroup绑定时返回错误信息并关闭连接    
+* proxy提供了ConnectLimiter来配置客户端最大连接数，你可以自定义实现ConnectLimiter接口（比如从业务的配置中心动态获取最大连接数的配置），并通过在application.yaml里配置全类名或者使用spring自动注入的方式启用  
+* proxy默认使用的ConnectLimiter实现是DynamicConfConnectLimiter，该实现下，最大连接数的配置通过读取camellia-redis-proxy.properties相关配置来获取，支持动态变更  
+* 当触发全局的最大连接数时，新的客户端连接会被直接关闭；当触发bid/bgroup级别的最大连接数时，会在新连接执行AUTH/CLIENT/HELLO等命令进行bid/bgroup绑定时返回错误信息并关闭连接    
 
 ### 配置示例
 ```yaml
