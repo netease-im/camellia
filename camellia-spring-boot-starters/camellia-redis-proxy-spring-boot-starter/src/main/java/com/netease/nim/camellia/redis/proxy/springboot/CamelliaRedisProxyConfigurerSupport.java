@@ -76,6 +76,9 @@ public class CamelliaRedisProxyConfigurerSupport {
     @Autowired(required = false)
     private ConnectLimiter connectLimiter;
 
+    @Autowired(required = false)
+    private ProxyDynamicConfSupport proxyDynamicConfSupport;
+
     public MonitorCallback getMonitorCallback() {
         return monitorCallback;
     }
@@ -146,5 +149,9 @@ public class CamelliaRedisProxyConfigurerSupport {
 
     public ConnectLimiter getConnectLimiter() {
         return connectLimiter;
+    }
+
+    public ProxyDynamicConfSupport getProxyDynamicConfSupport() {
+        return proxyDynamicConfSupport;
     }
 }

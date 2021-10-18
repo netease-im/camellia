@@ -3,7 +3,6 @@ package com.netease.nim.camellia.redis.proxy.command.auth;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 使用ProxyDynamicConf进行自定义配置（camellia-redis-proxy.properties）

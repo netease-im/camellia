@@ -260,7 +260,7 @@ public class AsyncCamelliaRedisTemplateChooser {
         RedisClientHub.soSndbuf = properties.getNettyProperties().getSoSndbuf();
         RedisClientHub.writeBufferWaterMarkLow = properties.getNettyProperties().getWriteBufferWaterMarkLow();
         RedisClientHub.writeBufferWaterMarkHigh = properties.getNettyProperties().getWriteBufferWaterMarkHigh();
-        logger.info("RedisClient, soKeepalive = {}, tcpNoDelay = {}, soRcvbuf = {}, soSndbuf = {}, writeBufferWaterMarkLow = {}, writeBufferWaterMarkHigh = {}",
+        logger.info("RedisClient, so_keepalive = {}, tcp_no_delay = {}, so_rcvbuf = {}, so_sndbuf = {}, write_buffer_water_mark_Low = {}, write_buffer_water_mark_high = {}",
                 RedisClientHub.soKeepalive, RedisClientHub.tcpNoDelay, RedisClientHub.soRcvbuf,
                 RedisClientHub.soSndbuf, RedisClientHub.writeBufferWaterMarkLow, RedisClientHub.writeBufferWaterMarkHigh);
 

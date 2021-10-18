@@ -3,7 +3,6 @@ package com.netease.nim.camellia.redis.proxy.nacos.springboot;
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
-import com.alibaba.nacos.api.exception.NacosException;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.springboot.CamelliaRedisProxyConfiguration;
 import org.slf4j.Logger;
@@ -33,9 +32,9 @@ public class CamelliaRedisProxyNacosConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyNacosConfiguration.class);
 
     @Bean
-    public CamelliaRedisProxyNacosService nacosConfigService(CamelliaRedisProxyNacosProperties properties) {
+    public NacosProxyDamicConfSupport nacosConfigService(CamelliaRedisProxyNacosProperties properties) {
         try {
-            CamelliaRedisProxyNacosService service = new CamelliaRedisProxyNacosService();
+            NacosProxyDamicConfSupport support = new NacosProxyDamicConfSupport();
             if (properties.isEnable()) {
                 Properties nacosProps = new Properties();
                 if (properties.getServerAddr() != null) {
@@ -48,10 +47,14 @@ public class CamelliaRedisProxyNacosConfiguration {
                     }
                 }
                 ConfigService configService = NacosFactory.createConfigService(nacosProps);
-                service.setConfigService(configService);
+                support.setConfigService(configService);
                 for (CamelliaRedisProxyNacosProperties.ConfFile confFile : properties.getConfFileList()) {
-                    String content = configService.getConfig(confFile.getDataId(), confFile.getGroup(), properties.getTimeoutMs());
-                    updateConf(content, confFile.getFileName());
+                    NacosProxyDamicConfSupport.ReloadCallback reloadCallback = () -> {
+                        String content = configService.getConfig(confFile.getDataId(), confFile.getGroup(), properties.getTimeoutMs());
+                        updateConf(content, confFile.getFileName());
+                    };
+                    reloadCallback.reload();
+                    support.addReloadCallback(reloadCallback);
                     configService.addListener(confFile.getDataId(), confFile.getGroup(), new Listener() {
                         @Override
                         public Executor getExecutor() {
@@ -63,9 +66,11 @@ public class CamelliaRedisProxyNacosConfiguration {
                         }
                     });
                 }
+            } else {
+                logger.info("camellia redis proxy nacos not enable");
             }
-            return service;
-        } catch (NacosException e) {
+            return support;
+        } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }
     }
@@ -86,10 +91,11 @@ public class CamelliaRedisProxyNacosConfiguration {
             try (BufferedWriter out = new BufferedWriter(new FileWriter(file, false))) {
                 out.write(content);
                 logger.info("{} update from nacos, content:\r\n{}", fileName, content);
-                ProxyDynamicConf.reload();
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
+        } finally {
+            ProxyDynamicConf.reload();
         }
     }
 }

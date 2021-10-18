@@ -91,6 +91,10 @@ public class CamelliaRedisProxyServer {
             port = SocketUtils.findRandomPort();
         }
         serverBootstrap.bind(port).sync();
+        logger.info("CamelliaRedisProxyServer, so_backlog = {}, so_sendbuf = {}, so_rcvbuf = {}, so_keepalive = {}",
+                serverProperties.getSoBacklog(), serverProperties.getSoSndbuf(), serverProperties.getSoRcvbuf(), serverProperties.isSoKeepalive());
+        logger.info("CamelliaRedisProxyServer, tcp_no_delay = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
+                serverProperties.isTcpNoDelay(), serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh());
         logger.info("CamelliaRedisProxyServer start at port: {}", port);
         ProxyInfoUtils.updatePort(port);
         this.port = port;
