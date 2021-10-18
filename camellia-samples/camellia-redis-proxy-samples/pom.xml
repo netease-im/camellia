@@ -43,13 +43,13 @@
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-tools</artifactId>
+			<artifactId>camellia-redis-proxy-nacos-spring-boot-starter</artifactId>
 			<version>1.0.39-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>com.alibaba.nacos</groupId>
-			<artifactId>nacos-client</artifactId>
-			<version>2.0.3</version>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-tools</artifactId>
+			<version>1.0.39-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>

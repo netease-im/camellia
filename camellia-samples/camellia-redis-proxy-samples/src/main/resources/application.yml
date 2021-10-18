@@ -68,8 +68,21 @@ camellia-redis-proxy:
 #      shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc #分片函数
 
 
-
 camellia-redis-zk-registry:
   enable: false #是否注册到zk
   zk-url: 127.0.0.1:2181 #zk地址
   base-path: /camellia #注册到zk的base-path
+
+camellia-redis-proxy-nacos:
+  enable: false #是否从nacos获取配置文件
+  server-addr: 127.0.0.1:8848 #nacos地址
+  nacos-conf: #其他nacos配置项
+    k1: v1
+    k2: v2
+  conf-file-list:
+    - file-name: camellia-redis-proxy.properties #文件名
+      data-id: camellia-redis-proxy.properties #nacos的dataId
+      group: camellia #nacos的group
+    - file-name: logback.xml #文件名
+      data-id: logback.xml
+      group: camellia
