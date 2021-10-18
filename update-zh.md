@@ -12,6 +12,7 @@
 * camellia-redis-proxy提供RateLimitCommandInterceptor，可以用于控制客户端请求速率（支持全局级别，也支持bid/bgroup级别），具体见：[拦截器](/docs/redis-proxy/interceptor.md)
 * 使用/monitor获取camellia-redis-proxy的大key监控数据时，支持配置返回json的大小，具体见：[监控数据](/docs/redis-proxy/monitor-data.md)
 * camellia-redis-proxy开放更多netty参数配置，具体见：[netty-conf](/docs/redis-proxy/netty-conf.md)
+* camellia-redis-proxy提供camellia-redis-proxy-nacos-spring-boot-starter用于使用nacos托管配合，具体见：[nacos-conf](/docs/redis-proxy/nacos-conf.md)
 
 ### 更新
 * 修改CommandInterceptor所属包名

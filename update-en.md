@@ -9,7 +9,8 @@
 ### add
 * camellia-redis-proxy support setting max client connect limit, default no limit
 * camellia-redis-proxy support setting idle client connect check and close, default disable
-* camellia-redis-proxy provide RateLimitCommandInterceptor, both support proxy-level and bid-bgroup-level  
+* camellia-redis-proxy provide RateLimitCommandInterceptor, both support proxy-level and bid-bgroup-level
+* camellia-redis-proxy provide camellia-redis-proxy-nacos-spring-boot-starter  
 
 ### update
 * rename package name of CommandInterceptor
