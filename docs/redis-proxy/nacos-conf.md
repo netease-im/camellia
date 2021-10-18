@@ -27,3 +27,6 @@ camellia-redis-proxy-nacos:
       group: camellia
 ```
 上述配置表示把proxy的camellia-redis-proxy.properties和logback.xml这两份配置文件托管到nacos
+
+### nacos安装
+参见：https://nacos.io/zh-cn/docs/quick-start.html  
