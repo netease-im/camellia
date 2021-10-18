@@ -22,60 +22,117 @@ import org.springframework.stereotype.Component;
 @Component
 public class CamelliaRedisProxyConfigurerSupport {
 
+    /**
+     * 监控数据回调
+     */
     @Autowired(required = false)
     private MonitorCallback monitorCallback;
 
+    /**
+     * 命令拦截器接
+     */
     @Autowired(required = false)
     private CommandInterceptor commandInterceptor;
 
+    /**
+     * 慢查询回调
+     */
     @Autowired(required = false)
     private SlowCommandMonitorCallback slowCommandMonitorCallback;
 
+    /**
+     * 大key监控回调
+     */
     @Autowired(required = false)
     private BigKeyMonitorCallback bigKeyMonitorCallback;
 
+    /**
+     * 热key监控回调
+     */
     @Autowired(required = false)
     private HotKeyMonitorCallback hotKeyMonitorCallback;
 
+    /**
+     * 哪些key需要进行热key缓存
+     */
     @Autowired(required = false)
     private HotKeyCacheKeyChecker hotKeyCacheKeyChecker;
 
+    /**
+     * 热key缓存命中统计信息回调
+     */
     @Autowired(required = false)
     private HotKeyCacheStatsCallback hotKeyCacheStatsCallback;
 
+    /**
+     * 自定义auth策略
+     */
     @Autowired(required = false)
     private ClientAuthProvider clientAuthProvider;
 
+    /**
+     * key自定义转换器
+     */
     @Autowired(required = false)
     private KeyConverter keyConverter;
 
+    /**
+     * string的自定义value转换器
+     */
     @Autowired(required = false)
     private StringConverter stringConverter;
 
+    /**
+     * list的自定义value转换器
+     */
     @Autowired(required = false)
     private ListConverter listConverter;
 
+    /**
+     * set的自定义value转换器
+     */
     @Autowired(required = false)
     private SetConverter setConverter;
 
+    /**
+     * zset的自定义value转换器
+     */
     @Autowired(required = false)
     private ZSetConverter zSetConverter;
 
+    /**
+     * hash的自定义value转换器
+     */
     @Autowired(required = false)
     private HashConverter hashConverter;
 
+    /**
+     * 自定义分片函数
+     */
     @Autowired(required = false)
     private ShadingFunc shadingFunc;
 
+    /**
+     * 动态配置hook
+     */
     @Autowired(required = false)
     private ProxyDynamicConfHook proxyDynamicConfHook;
 
+    /**
+     * 自定义动态路由
+     */
     @Autowired(required = false)
     private ProxyRouteConfUpdater proxyRouteConfUpdater;
 
+    /**
+     * 客户端连接限制
+     */
     @Autowired(required = false)
     private ConnectLimiter connectLimiter;
 
+    /**
+     * 动态配置回调
+     */
     @Autowired(required = false)
     private ProxyDynamicConfSupport proxyDynamicConfSupport;
 
