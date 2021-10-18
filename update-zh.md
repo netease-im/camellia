@@ -5,7 +5,7 @@
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 * camellia-redis-proxy支持基于消息队列（如kafka）的异步双写
 
-# 1.0.39（2021/10/xx）
+# 1.0.39（2021/10/18）
 ### 新增
 * camellia-redis-proxy支持配置客户端最大连接数（总连接数限制+bid/bgroup限制），默认不限制，具体见：[客户端连接控制](/docs/redis-proxy/connectlimit.md)
 * camellia-redis-proxy支持配置检测空闲客户端连接并关闭，默认不启用，具体见：[客户端连接控制](/docs/redis-proxy/connectlimit.md)
