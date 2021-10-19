@@ -198,7 +198,7 @@ public class ProxyInfoUtils {
                 if (index > 0) {
                     String itemKey = line.substring(0, index);
                     String itemValue = line.substring(index + 1);
-                    if (itemKey.equalsIgnoreCase("Route")) {
+                    if (key != null && key.equalsIgnoreCase("Route")) {
                         try {
                             JSONObject itemValueJson = JSONObject.parseObject(itemValue);
                             item.put(itemKey, itemValueJson);
