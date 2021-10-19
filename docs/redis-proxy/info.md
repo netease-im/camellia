@@ -271,16 +271,16 @@ db0:keys=39,expires=0,avg_ttl=0
 
 除了使用redis协议来获取info信息外，你还可以基于console的http-api来执行并获取info信息：  
 你可以访问http://127.0.0.1:16379/info来获取信息，如下：  
-<img src="redis-proxy-info.png" width="30%" height="30%">  
+<img src="redis-proxy-info.png" width="50%" height="50%">  
 
 
 你也可以使用section参数，如下：    
-<img src="redis-proxy-info-section.png" width="30%" height="30%">  
+<img src="redis-proxy-info-section.png" width="50%" height="50%">  
 
 
 也支持upstream-info，如下：    
-<img src="redis-proxy-info-upstream-info.png" width="30%" height="30%">  
+<img src="redis-proxy-info-upstream-info.png" width="50%" height="50%">  
 
 
 此外，也支持将返回使用json格式化后返回，如下：  
-<img src="redis-proxy-info-json.png" width="30%" height="30%">  
+<img src="redis-proxy-info-json.png" width="50%" height="50%">  
