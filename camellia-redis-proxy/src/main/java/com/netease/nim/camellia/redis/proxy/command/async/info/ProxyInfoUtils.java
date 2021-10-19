@@ -9,12 +9,15 @@ import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.Stats;
+import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -195,7 +198,16 @@ public class ProxyInfoUtils {
                 if (index > 0) {
                     String itemKey = line.substring(0, index);
                     String itemValue = line.substring(index + 1);
-                    item.put(itemKey, itemValue);
+                    if (itemKey.equalsIgnoreCase("Route")) {
+                        try {
+                            JSONObject itemValueJson = JSONObject.parseObject(itemValue);
+                            item.put(itemKey, itemValueJson);
+                        } catch (Exception e) {
+                            item.put(itemKey, itemValue);
+                        }
+                    } else {
+                        item.put(itemKey, itemValue);
+                    }
                 }
             }
         }
@@ -307,7 +319,23 @@ public class ProxyInfoUtils {
     private static String getClients() {
         StringBuilder builder = new StringBuilder();
         builder.append("# Clients").append("\n");
-        builder.append("connect_clients:").append(RedisMonitor.getClientConnects()).append("\n");
+        builder.append("connect_clients:").append(ChannelMonitor.connect()).append("\n");
+        ConcurrentHashMap<String, AtomicLong> map = new ConcurrentHashMap<>();
+        for (Map.Entry<String, ChannelInfo> entry : ChannelMonitor.getChannelMap().entrySet()) {
+            Long bid = entry.getValue().getBid();
+            String bgroup = entry.getValue().getBgroup();
+            String key;
+            if (bid == null || bgroup == null) {
+                key = "connect_clients_default_default";
+            } else {
+                key = "connect_clients_" + bid + "_" + bgroup;
+            }
+            AtomicLong count = CamelliaMapUtils.computeIfAbsent(map, key, k -> new AtomicLong());
+            count.incrementAndGet();
+        }
+        for (Map.Entry<String, AtomicLong> entry : map.entrySet()) {
+            builder.append(entry.getKey()).append(":").append(entry.getValue().get()).append("\n");
+        }
         return builder.toString();
     }
 

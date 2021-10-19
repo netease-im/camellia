@@ -8,6 +8,7 @@
 # 1.0.40（2021/10/xx）
 ### add
 * camellia-redis-proxy support info command by http-api
+* camellia-redis-proxy support client connect of bid/bgroup in info command
 
 ### update
 * none

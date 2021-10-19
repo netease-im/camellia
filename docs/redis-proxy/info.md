@@ -34,6 +34,8 @@ java_version:1.8.0_202  ##java版本
 
 # Clients
 connect_clients:14  ##客户端连接数
+connect_clients_1_default:10  ##bid=1，bgroup=default的客户端连接数
+connect_clients_2_default:4  ##bid=2，bgroup=default的客户端连接数
 
 # Route   
 route_nums:6  ##路由配置数量
