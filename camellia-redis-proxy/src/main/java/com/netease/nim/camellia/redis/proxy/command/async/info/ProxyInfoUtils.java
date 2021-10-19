@@ -143,14 +143,18 @@ public class ProxyInfoUtils {
                 String bid = params.get("bid");
                 String bgroup = params.get("bgroup");
                 if (bid == null || bgroup == null) {
+                    return UpstreamInfoUtils.upstreamInfo(null, null, chooser, parseJson);
+                }
+                try {
+                    Long.parseLong(bid);
+                } catch (NumberFormatException e) {
                     return parseResponse(ErrorReply.SYNTAX_ERROR, parseJson);
                 }
-                Reply reply = generateInfoReply(new Command(new byte[][]{RedisCommand.INFO.raw(), section.getBytes(StandardCharsets.UTF_8),
-                        bid.getBytes(StandardCharsets.UTF_8), bgroup.getBytes(StandardCharsets.UTF_8)}), chooser);
+                return UpstreamInfoUtils.upstreamInfo(Long.parseLong(bid), bgroup, chooser, parseJson);
+            } else {
+                Reply reply = generateInfoReply(new Command(new byte[][]{RedisCommand.INFO.raw(), section.getBytes(StandardCharsets.UTF_8)}), chooser);
                 return parseResponse(reply, parseJson);
             }
-            Reply reply = generateInfoReply(new Command(new byte[][]{RedisCommand.INFO.raw(), section.getBytes(StandardCharsets.UTF_8)}), chooser);
-            return parseResponse(reply, parseJson);
         } else {
             Reply reply = generateInfoReply(new Command(new byte[][]{RedisCommand.INFO.raw()}), chooser);
             return parseResponse(reply, parseJson);
@@ -245,7 +249,7 @@ public class ProxyInfoUtils {
                     } else if (section.equalsIgnoreCase("stats")) {
                         builder.append(getStats()).append("\n");
                     } else if (section.equalsIgnoreCase("upstream-info")) {
-                        builder.append(UpstreamInfoUtils.upstreamInfo(null, null, chooser)).append("\n");
+                        builder.append(UpstreamInfoUtils.upstreamInfo(null, null, chooser, false)).append("\n");
                     }
                 } else if (objects.length == 4) {
                     String section = Utils.bytesToString(objects[1]);
@@ -258,7 +262,7 @@ public class ProxyInfoUtils {
                         } catch (Exception e) {
                             return ErrorReply.SYNTAX_ERROR;
                         }
-                        builder.append(UpstreamInfoUtils.upstreamInfo(bid, bgroup, chooser)).append("\n");
+                        builder.append(UpstreamInfoUtils.upstreamInfo(bid, bgroup, chooser, false)).append("\n");
                     } else {
                         return ErrorReply.SYNTAX_ERROR;
                     }
