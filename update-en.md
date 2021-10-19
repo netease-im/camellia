@@ -5,7 +5,7 @@
 * camellia-redis-proxy support monitor data visualization in prometheus
 * camellia-redis-proxy support multi-write based on mq(such as kafka)
 
-# 1.0.40（2021/10/xx）
+# 1.0.40（2021/10/19）
 ### add
 * camellia-redis-proxy support info command by http-api
 * camellia-redis-proxy support client connect of bid/bgroup in info command
