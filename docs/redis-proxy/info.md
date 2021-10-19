@@ -289,7 +289,7 @@ db0:keys=39,expires=0,avg_ttl=0
 
 * json格式化：    
 
-<img src="redis-proxy-info-api-section-txt.png" width="50%" height="50%">  
+<img src="redis-proxy-info-api-section-json.png" width="50%" height="50%">  
 
 也支持upstream-info，如下：        
 
@@ -299,4 +299,4 @@ db0:keys=39,expires=0,avg_ttl=0
 
 * json格式化：  
 
-<img src="redis-proxy-upstream-info-api-txt.png" width="50%" height="50%">
+<img src="redis-proxy-upstream-info-api-json.png" width="50%" height="50%">
