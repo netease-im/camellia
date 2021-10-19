@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.hotkey.CommandHotKeyMo
 import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterManager;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.CommandHotKeyCacheConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheManager;
+import com.netease.nim.camellia.redis.proxy.command.async.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.command.AuthCommandProcessor;
@@ -39,6 +40,7 @@ public class AsyncCommandInvoker implements CommandInvoker {
     public AsyncCommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
         PasswordMaskUtils.maskEnable = serverProperties.isMonitorDataMaskPassword();
         this.chooser = new AsyncCamelliaRedisTemplateChooser(transpondProperties);
+        ProxyInfoUtils.updateAsyncCamelliaRedisTemplateChooser(chooser);
 
         if (serverProperties.isMonitorEnable()) {
             MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);

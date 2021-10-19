@@ -8,6 +8,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.DecoderResult;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.SocketAddress;
 import java.util.List;
@@ -21,6 +23,9 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 @ChannelHandler.Sharable
 public class ConsoleServerHandler extends SimpleChannelInboundHandler<Object> {
+
+    private static final Logger logger = LoggerFactory.getLogger(ConsoleServerHandler.class);
+
     private HttpRequest request;
     private CustomRequestObject requestObject;
     private final ConsoleService consoleService;
@@ -30,23 +35,30 @@ public class ConsoleServerHandler extends SimpleChannelInboundHandler<Object> {
     }
 
     private ConsoleResult handlerRequest(CustomRequestObject requestObject) {
-        String uri = requestObject.getUriNoParam();
-        if (uri.equalsIgnoreCase("/online")) {
-            return consoleService.online();
-        } else if (uri.equalsIgnoreCase("/offline")) {
-            return consoleService.offline();
-        } else if (uri.equalsIgnoreCase("/check")) {
-            return consoleService.check();
-        } else if (uri.equalsIgnoreCase("/status")) {
-            return consoleService.status();
-        } else if (uri.equalsIgnoreCase("/monitor")) {
-            return consoleService.monitor();
-        } else if (uri.equalsIgnoreCase("/reload")) {
-            return consoleService.reload();
-        } else if (uri.equalsIgnoreCase("/custom")) {
-            return consoleService.custom(requestObject.getParams());
+        try {
+            String uri = requestObject.getUriNoParam();
+            if (uri.equalsIgnoreCase("/online")) {
+                return consoleService.online();
+            } else if (uri.equalsIgnoreCase("/offline")) {
+                return consoleService.offline();
+            } else if (uri.equalsIgnoreCase("/check")) {
+                return consoleService.check();
+            } else if (uri.equalsIgnoreCase("/status")) {
+                return consoleService.status();
+            } else if (uri.equalsIgnoreCase("/monitor")) {
+                return consoleService.monitor();
+            } else if (uri.equalsIgnoreCase("/reload")) {
+                return consoleService.reload();
+            } else if (uri.equalsIgnoreCase("/info")) {
+                return consoleService.info(requestObject.getParams());
+            } else if (uri.equalsIgnoreCase("/custom")) {
+                return consoleService.custom(requestObject.getParams());
+            }
+            return ConsoleResult.error();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return ConsoleResult.error("unknown");
         }
-        return ConsoleResult.error();
     }
 
     private CustomRequestObject getRequestObject() {

@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.command.async.info;
 
+import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.AsyncCamelliaRedisTemplate;
@@ -7,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.AsyncCamelliaRedisTemp
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.Stats;
@@ -20,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.management.*;
+import java.nio.charset.StandardCharsets;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.*;
@@ -62,6 +65,8 @@ public class ProxyInfoUtils {
     private static double lastReadCommandQps = 0.0;
     private static double lastWriteCommandQps = 0.0;
 
+    private static AsyncCamelliaRedisTemplateChooser chooser;
+
     static {
         initGcMXBean();
     }
@@ -76,6 +81,14 @@ public class ProxyInfoUtils {
 
     public static void updatePort(int port) {
         ProxyInfoUtils.port = port;
+    }
+
+    public static void updateAsyncCamelliaRedisTemplateChooser(AsyncCamelliaRedisTemplateChooser chooser) {
+        ProxyInfoUtils.chooser = chooser;
+    }
+
+    public static AsyncCamelliaRedisTemplateChooser getAsyncCamelliaRedisTemplateChooser() {
+        return chooser;
     }
 
     public static void updateConsolePort(int consolePort) {
@@ -118,6 +131,87 @@ public class ProxyInfoUtils {
             ErrorLogCollector.collect(ProxyInfoUtils.class, "submit generateInfoReply task error", e);
             future.complete(ErrorReply.TOO_BUSY);
             return future;
+        }
+    }
+
+    public static String generateProxyInfo(Map<String, String> params) {
+        String json = params.get("json");
+        boolean parseJson = json != null && json.equalsIgnoreCase("true");
+        String section = params.get("section");
+        if (section != null) {
+            if (section.equalsIgnoreCase("upstream-info")) {
+                String bid = params.get("bid");
+                String bgroup = params.get("bgroup");
+                if (bid == null || bgroup == null) {
+                    return parseResponse(ErrorReply.SYNTAX_ERROR, parseJson);
+                }
+                Reply reply = generateInfoReply(new Command(new byte[][]{RedisCommand.INFO.raw(), section.getBytes(StandardCharsets.UTF_8),
+                        bid.getBytes(StandardCharsets.UTF_8), bgroup.getBytes(StandardCharsets.UTF_8)}), chooser);
+                return parseResponse(reply, parseJson);
+            }
+            Reply reply = generateInfoReply(new Command(new byte[][]{RedisCommand.INFO.raw(), section.getBytes(StandardCharsets.UTF_8)}), chooser);
+            return parseResponse(reply, parseJson);
+        } else {
+            Reply reply = generateInfoReply(new Command(new byte[][]{RedisCommand.INFO.raw()}), chooser);
+            return parseResponse(reply, parseJson);
+        }
+    }
+
+    private static String parseResponse(Reply reply, boolean parseJson) {
+        String string = replyToString(reply);
+        if (!parseJson) return string;
+        String[] split = string.split("\n");
+        JSONObject result = new JSONObject();
+        if (split.length == 1) {
+            result.put("code", 500);
+            result.put("msg", split[0]);
+            return result.toJSONString();
+        }
+        result.put("code", 200);
+        result.put("msg", "success");
+        JSONObject data = new JSONObject();
+        String key = null;
+        JSONObject item = new JSONObject();
+        for (String line : split) {
+            line = line.replaceAll("\\s*", "");
+            if (line.startsWith("#")) {
+                line = line.replaceAll("#", "");
+                if (key != null) {
+                    data.put(key, item);
+                    item = new JSONObject();
+                }
+                key = line;
+            } else {
+                int index;
+                if (line.startsWith("upstream_redis_nums")) {
+                    index = line.lastIndexOf(":");
+                } else {
+                    index = line.indexOf(":");
+                }
+                if (index > 0) {
+                    String itemKey = line.substring(0, index);
+                    String itemValue = line.substring(index + 1);
+                    item.put(itemKey, itemValue);
+                }
+            }
+        }
+        if (key != null) {
+            data.put(key, item);
+        }
+        result.put("data", data);
+        return result.toJSONString();
+    }
+
+    private static String replyToString(Reply reply) {
+        if (reply == null) {
+            reply = ErrorReply.SYNTAX_ERROR;
+        }
+        if (reply instanceof BulkReply) {
+            return reply.toString();
+        } else if (reply instanceof ErrorReply) {
+            return ((ErrorReply) reply).getError();
+        } else {
+            return ErrorReply.SYNTAX_ERROR.getError();
         }
     }
 

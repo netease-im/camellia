@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.console;
 
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.redis.proxy.command.async.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ServerStatus;
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -106,6 +108,18 @@ public class ConsoleServiceAdaptor implements ConsoleService {
         ProxyDynamicConf.reload();
         logger.info("proxy dynamic conf reload success");
         return ConsoleResult.success();
+    }
+
+    @Override
+    public ConsoleResult info(Map<String, List<String>> params) {
+        Map<String, String> map = new HashMap<>();
+        for (Map.Entry<String, List<String>> entry : params.entrySet()) {
+            if (!entry.getValue().isEmpty()) {
+                map.put(entry.getKey(), entry.getValue().get(0));
+            }
+        }
+        String string = ProxyInfoUtils.generateProxyInfo(map);
+        return ConsoleResult.success(string);
     }
 
     @Override

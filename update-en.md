@@ -5,6 +5,17 @@
 * camellia-redis-proxy support monitor data visualization in prometheus
 * camellia-redis-proxy support multi-write based on mq(such as kafka)
 
+# 1.0.40（2021/10/xx）
+### add
+* camellia-redis-proxy support info command by http-api
+
+### update
+* none
+
+### fix
+* none
+
+
 # 1.0.39（2021/10/18）
 ### add
 * camellia-redis-proxy support setting max client connect limit, default no limit
