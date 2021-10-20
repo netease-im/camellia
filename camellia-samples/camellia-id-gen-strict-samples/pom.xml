@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-id-gen-strict-samples</artifactId>
-	<version>1.0.40</version>
+	<version>1.0.41-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-samples</artifactId>
-		<version>1.0.40</version>
+		<version>1.0.41-SNAPSHOT</version>
 	</parent>
 
 	<dependencyManagement>
@@ -28,22 +28,22 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-id-gen-strict-spring-boot-starter</artifactId>
-			<version>1.0.40</version>
+			<version>1.0.41-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-id-gen-id-loader</artifactId>
-			<version>1.0.40</version>
+			<version>1.0.41-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-spring-boot-starter</artifactId>
-			<version>1.0.40</version>
+			<version>1.0.41-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-id-gen-sdk</artifactId>
-			<version>1.0.40</version>
+			<version>1.0.41-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>
