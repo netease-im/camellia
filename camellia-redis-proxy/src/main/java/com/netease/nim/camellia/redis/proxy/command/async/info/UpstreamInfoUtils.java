@@ -463,7 +463,10 @@ public class UpstreamInfoUtils {
                     count.incrementAndGet();
                 }
             }
-            int size = map.size();
+            int size = 0;
+            for (Map.Entry<String, AtomicLong> entry : map.entrySet()) {
+                size += entry.getValue().intValue();
+            }
             int halfSize;
             if (size % 2 == 0) {
                 halfSize = size / 2;
