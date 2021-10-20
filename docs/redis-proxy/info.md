@@ -148,7 +148,7 @@ cluster_slots_pfail:0  ##pfail状态的slot数量
 cluster_slots_fail:0  ##fail状态的slot数量
 cluster_known_nodes:6  ##集群的节点数
 cluster_size:3  ##集群大小，即主节点数量
-cluster_safety:yes    ## 超过一半的主节点在同一个ip下，则判定为不安全
+cluster_safety:yes    ##如果master没有slave，或者有一个ip的节点占了所有节点的一半以上，则认为集群是不安全的
 cluster_maxmemory:9663676416  ##集群总内存大小
 cluster_maxmemory_human:9.00G  ##集群总内存大小（可读性）
 cluster_used_memory:2304452928  ##集群已用内存大小

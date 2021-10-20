@@ -435,21 +435,43 @@ public class UpstreamInfoUtils {
         }
     }
 
+    /**
+     * 如果master没有slave，或者有一个ip的节点占了所有节点的一半以上，则认为集群是不安全的
+     */
     private static boolean redisClusterSafety(List<ClusterNodeInfo> clusterNodeInfos) {
         try {
             Map<String, AtomicLong> map = new HashMap<>();
             for (ClusterNodeInfo clusterNodeInfo : clusterNodeInfos) {
-                String[] split = clusterNodeInfo.master.split(":");
-                String ip = split[0];
-                AtomicLong count = map.get(ip);
-                if (count == null) {
-                    count = new AtomicLong();
-                    map.put(ip, count);
+                if (clusterNodeInfo.slaves == null || clusterNodeInfo.slaves.isEmpty()) {
+                    return false;
                 }
-                count.incrementAndGet();
+                String[] split = clusterNodeInfo.master.split(":");
+                List<String> ips = new ArrayList<>();
+                String masterIp = split[0];
+                ips.add(masterIp);
+                for (String slave : clusterNodeInfo.slaves) {
+                    String[] split1 = slave.split(":");
+                    String slaveIp = split1[0];
+                    ips.add(slaveIp);
+                }
+                for (String ip : ips) {
+                    AtomicLong count = map.get(ip);
+                    if (count == null) {
+                        count = new AtomicLong();
+                        map.put(ip, count);
+                    }
+                    count.incrementAndGet();
+                }
+            }
+            int size = map.size();
+            int halfSize;
+            if (size % 2 == 0) {
+                halfSize = size / 2;
+            } else {
+                halfSize = (size / 2) + 1;
             }
             for (Map.Entry<String, AtomicLong> entry : map.entrySet()) {
-                if (entry.getValue().get() >= (clusterNodeInfos.size() / 2)) return false;
+                if (entry.getValue().get() >= halfSize) return false;
             }
             return true;
         } catch (Exception e) {
