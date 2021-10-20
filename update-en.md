@@ -5,7 +5,7 @@
 * camellia-redis-proxy support monitor data visualization in prometheus
 * camellia-redis-proxy support multi-write based on mq(such as kafka)
 
-# 1.0.41（2021/10/xx）
+# 1.0.41（2021/10/20）
 ### add
 * camellia-redis-proxy info command metrics of redis-cluster-safety redefine
 
