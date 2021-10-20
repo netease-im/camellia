@@ -59,8 +59,8 @@ camellia-redis-proxy:
   transpond:
     type: local #使用本地配置
     local:
-#      resource: redis://@127.0.0.1:6379 #转发的redis地址
-      resource: redis-sentinel://@127.0.0.1:26379/master1
+      resource: redis://@127.0.0.1:6379 #转发的redis地址
+#      resource: redis-sentinel://@127.0.0.1:26379/master1
 #      resource: redis-sentinel-slaves://@127.0.0.1:26379/master1
 #      resource: redis-cluster://@nim-redis-perftest-jd-1.v1.yunxin.jd1.vpc:7000,nim-redis-perftest-jd-2.v1.yunxin.jd1.vpc:7006,nim-redis-perftest-jd-3.v1.yunxin.jd1.vpc:7010
     redis-conf:
