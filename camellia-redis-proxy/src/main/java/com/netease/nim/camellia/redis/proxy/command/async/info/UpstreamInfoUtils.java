@@ -436,7 +436,7 @@ public class UpstreamInfoUtils {
     }
 
     /**
-     * 如果master没有slave，或者有一个ip的节点占了所有节点的一半以上，则认为集群是不安全的
+     * 如果master没有slave，或者有一个ip的master节点占了所有master节点的一半以上，则认为集群是不安全的
      */
     private static boolean redisClusterSafety(List<ClusterNodeInfo> clusterNodeInfos) {
         try {
@@ -446,27 +446,15 @@ public class UpstreamInfoUtils {
                     return false;
                 }
                 String[] split = clusterNodeInfo.master.split(":");
-                List<String> ips = new ArrayList<>();
                 String masterIp = split[0];
-                ips.add(masterIp);
-                for (String slave : clusterNodeInfo.slaves) {
-                    String[] split1 = slave.split(":");
-                    String slaveIp = split1[0];
-                    ips.add(slaveIp);
+                AtomicLong count = map.get(masterIp);
+                if (count == null) {
+                    count = new AtomicLong();
+                    map.put(masterIp, count);
                 }
-                for (String ip : ips) {
-                    AtomicLong count = map.get(ip);
-                    if (count == null) {
-                        count = new AtomicLong();
-                        map.put(ip, count);
-                    }
-                    count.incrementAndGet();
-                }
+                count.incrementAndGet();
             }
-            int size = 0;
-            for (Map.Entry<String, AtomicLong> entry : map.entrySet()) {
-                size += entry.getValue().intValue();
-            }
+            int size = clusterNodeInfos.size();
             int halfSize;
             if (size % 2 == 0) {
                 halfSize = size / 2;
