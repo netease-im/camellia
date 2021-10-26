@@ -1,11 +1,11 @@
 
 ## 快速开始（基于安装包）
 
-下载最新版安装包并解压（v1.0.41）：
+下载最新版安装包并解压（v1.0.42）：
 ```
-wget https://github.com/netease-im/camellia/releases/download/v1.0.41/camellia-redis-proxy-1.0.41.tar.gz
-tar zxvf camellia-redis-proxy-1.0.41.tar.gz
-cd camellia-redis-proxy-1.0.41/
+wget https://github.com/netease-im/camellia/releases/download/v1.0.42/camellia-redis-proxy-1.0.42.tar.gz
+tar zxvf camellia-redis-proxy-1.0.42.tar.gz
+cd camellia-redis-proxy-1.0.42/
 ```
 按需修改BOOT-INF/classes/下的配置文件：
 * application.yml
