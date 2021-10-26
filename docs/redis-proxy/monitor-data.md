@@ -105,7 +105,8 @@
       "count": 2  //数量
     }
   ],
-  "slowCommandStats": [ //慢查询监控，
+  "slowCommandStats": [ //慢查询监控
+    //特别的，你可以通过在camellia-redis-proxy.propertis里配置slow.command.monitor.json.max.count=100来限制该监控数据项的最大个数，默认100个
     {
       "bgroup": "default",  //bgroup
       "bid": "1",   //bid，如果没有使用camellia-dashboard，而是使用了local配置，则bid=default/bgroup=default

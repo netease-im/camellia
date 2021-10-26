@@ -10,7 +10,7 @@
 * camellia-redis-proxy info command metrics of redis-cluster-safety redefine
 
 ### update
-* none
+* camellia-redis-proxy console api of monitor support setting json max size of slow-command/big-key
 
 ### fix
 * none

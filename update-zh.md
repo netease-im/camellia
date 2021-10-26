@@ -10,7 +10,7 @@
 * camellia-redis-proxy的info命令修改redis-cluster集群安全性指标的含义，具体见：[info](/docs/redis-proxy/info.md)
 
 ### 更新
-* 无
+* 通过console-api获取慢查询/大key监控数据时支持设置监控数据量的上限，具体见：[monitor-data](/docs/redis-proxy/monitor-data.md)
 
 ### fix
 * 无

@@ -31,6 +31,8 @@ public class BigKeyMonitor {
 
     public static void bigKey(Command command, byte[] key, long size, long threshold) {
         try {
+            int maxCount = ProxyDynamicConf.getInt("big.key.monitor.json.max.count", Integer.MAX_VALUE);
+            if (statsMap.size() >= maxCount) return;
             CommandContext commandContext = command.getCommandContext();
             String bid = commandContext.getBid() == null ? "default" : String.valueOf(commandContext.getBid());
             String bgroup = commandContext.getBgroup() == null ? "default" : commandContext.getBgroup();

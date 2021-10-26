@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.monitor;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,11 @@ public class SlowCommandMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(SlowCommandMonitor.class);
 
-    private static final LinkedBlockingQueue<SlowCommandStats> queue = new LinkedBlockingQueue<>(100);
+    private static final int defaultMaxCount = 100;
+    private static final LinkedBlockingQueue<SlowCommandStats> queue;
+    static {
+        queue = new LinkedBlockingQueue<>(ProxyDynamicConf.getInt("slow.command.monitor.json.max.count", defaultMaxCount) * 10);
+    }
 
     public static void init(int seconds) {
         ExecutorUtils.scheduleAtFixedRate(SlowCommandMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
@@ -26,6 +31,9 @@ public class SlowCommandMonitor {
 
     public static void slowCommand(Command command, double spendMillis, long thresholdMillis) {
         try {
+            if (queue.size() >= ProxyDynamicConf.getInt("slow.command.monitor.json.max.count", defaultMaxCount)) {
+                return;
+            }
             Long bid = command.getCommandContext().getBid();
             String bgroup = command.getCommandContext().getBgroup();
             SlowCommandStats slowCommandStats = new SlowCommandStats();
