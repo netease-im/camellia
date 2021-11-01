@@ -6,10 +6,7 @@ import com.netease.nim.camellia.id.gen.strict.CamelliaStrictIdGen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Created by caojiajun on 2021/9/27
@@ -40,6 +37,20 @@ public class CamelliaIdGenStrictController {
     public IdGenResult peekId(@RequestParam("tag") String tag) {
         try {
             return IdGenResult.success(camelliaStrictIdGen.peekId(tag));
+        } catch (CamelliaIdGenException e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error(e.getMessage());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error("internal error");
+        }
+    }
+
+    @PostMapping
+    public IdGenResult update(@RequestParam("tag") String tag, @RequestParam("id") long id) {
+        try {
+            boolean result = camelliaStrictIdGen.getIdLoader().update(tag, id);
+            return IdGenResult.success(result);
         } catch (CamelliaIdGenException e) {
             logger.error(e.getMessage(), e);
             return IdGenResult.error(e.getMessage());

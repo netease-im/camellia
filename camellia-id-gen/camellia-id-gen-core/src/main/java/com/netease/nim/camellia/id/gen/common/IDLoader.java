@@ -8,4 +8,8 @@ package com.netease.nim.camellia.id.gen.common;
 public interface IDLoader {
 
     IDRange load(String tag, int step);
+
+    default boolean update(String tag, long id) {
+        return false;
+    }
 }

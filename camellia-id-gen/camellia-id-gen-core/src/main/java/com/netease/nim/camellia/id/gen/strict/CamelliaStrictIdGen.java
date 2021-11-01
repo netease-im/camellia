@@ -55,6 +55,7 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
         if (idLoader == null) {
             throw new CamelliaIdGenException("idLoader not found");
         }
+        logger.info("CamelliaStrictIdGen, idLoader = {}", idLoader.getClass().getName());
         this.cacheKeyPrefix = config.getCacheKeyPrefix();
         this.lockExpireMillis = config.getLockExpireMillis();
         this.cacheExpireSeconds = config.getCacheExpireSeconds();
@@ -75,6 +76,10 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
         }
         logger.info("CamelliaStrictIdGen init success, regionId = {}, regionBits = {}, defaultStep = {}, maxStep = {}, maxRetry = {}, retryIntervalMillis = {}",
                 regionId, regionBits, defaultStep, maxStep, maxRetry, retryIntervalMillis);
+    }
+
+    public IDLoader getIdLoader() {
+        return idLoader;
     }
 
     @Override

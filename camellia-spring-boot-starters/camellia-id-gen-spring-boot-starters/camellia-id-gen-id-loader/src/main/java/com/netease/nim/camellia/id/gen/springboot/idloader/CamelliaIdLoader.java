@@ -42,4 +42,11 @@ public class CamelliaIdLoader implements IDLoader {
             return idRange;
         }
     }
+
+    @Override
+    public boolean update(String tag, long id) {
+        boolean result = mapper.update(tag, id, System.currentTimeMillis()) > 0;
+        logger.info("update tag = {}, id = {}, result = {}", tag, id, result);
+        return result;
+    }
 }

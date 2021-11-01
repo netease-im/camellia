@@ -23,8 +23,8 @@ public class CamelliaIdGenSdkConfig {
     private long connectTimeoutMillis = 5000;
     private long readTimeoutMillis = 5000;
     private long writeTimeoutMillis = 5000;
-    private int maxRequests = 1024;
-    private int maxRequestsPerHost = 4096;
+    private int maxRequests = 4096;
+    private int maxRequestsPerHost = 1024;
     private int maxIdleConnections = 1024;
 
     private SegmentIdGenSdkConfig segmentIdGenSdkConfig = new SegmentIdGenSdkConfig();

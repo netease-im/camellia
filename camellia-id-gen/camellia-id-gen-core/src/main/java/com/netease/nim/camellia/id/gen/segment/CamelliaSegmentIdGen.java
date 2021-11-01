@@ -27,6 +27,7 @@ public class CamelliaSegmentIdGen extends AbstractCamelliaSegmentIdGen {
         if (idLoader == null) {
             throw new CamelliaIdGenException("idLoader not found");
         }
+        logger.info("CamelliaSegmentIdGen, idLoader = {}", idLoader.getClass().getName());
         this.regionBits = config.getRegionBits();
         this.regionId = config.getRegionId();
 
@@ -38,7 +39,7 @@ public class CamelliaSegmentIdGen extends AbstractCamelliaSegmentIdGen {
         this.cacheMap = new ConcurrentLinkedHashMap.Builder<String, LinkedBlockingQueue<Long>>()
                 .initialCapacity(config.getTagCount()).maximumWeightedCapacity(config.getTagCount()).build();
         this.lockMap = new ConcurrentLinkedHashMap.Builder<String, AtomicBoolean>()
-                .initialCapacity(config.getTagCount() * 2).maximumWeightedCapacity(config.getTagCount() * 2).build();
+                .initialCapacity(config.getTagCount() * 2).maximumWeightedCapacity(config.getTagCount() * 2L).build();
         this.asyncLoadThreadPool = config.getAsyncLoadThreadPool();
 
         if (this.regionBits < 0) {
@@ -51,6 +52,10 @@ public class CamelliaSegmentIdGen extends AbstractCamelliaSegmentIdGen {
 
         logger.info("CamelliaSegmentIdGen init success, regionId = {}, regionBits = {}, step = {}, maxRetry = {}, retryIntervalMillis = {}",
                 regionId, regionBits, step, maxRetry, retryIntervalMillis);
+    }
+
+    public IDLoader getIdLoader() {
+        return idLoader;
     }
 
     @Override
