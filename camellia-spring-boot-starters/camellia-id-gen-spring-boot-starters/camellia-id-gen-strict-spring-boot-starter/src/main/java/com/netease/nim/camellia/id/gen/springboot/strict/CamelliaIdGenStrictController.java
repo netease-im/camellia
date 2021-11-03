@@ -46,7 +46,7 @@ public class CamelliaIdGenStrictController {
         }
     }
 
-    @PostMapping
+    @PostMapping("/update")
     public IdGenResult update(@RequestParam("tag") String tag, @RequestParam("id") long id) {
         try {
             boolean result = camelliaStrictIdGen.getIdLoader().update(tag, id);

@@ -47,7 +47,7 @@ public class CamelliaIdGenSegmentController {
         }
     }
 
-    @PostMapping
+    @PostMapping("/update")
     public IdGenResult update(@RequestParam("tag") String tag, @RequestParam("id") long id) {
         try {
             boolean result = camelliaSegmentIdGen.getIdLoader().update(tag, id);
