@@ -5,6 +5,17 @@
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 * camellia-redis-proxy支持基于消息队列（如kafka）的异步双写
 
+# 1.0.43（2021/11/xx）
+### 新增
+* camellia-id-gen的segment和strict模式新增更新号段起始值的update接口，具体见：[id-gen](/docs/id-gen/id-gen.md)
+
+### 更新
+* camellia-redis-proxy的监控数据buffer增加最大size的限制以保护proxy
+
+### fix
+* 无
+
+
 # 1.0.42（2021/10/26）
 ### 新增
 * camellia-redis-proxy的info命令修改redis-cluster集群安全性指标的含义，具体见：[info](/docs/redis-proxy/info.md)

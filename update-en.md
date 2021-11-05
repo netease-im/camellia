@@ -5,6 +5,17 @@
 * camellia-redis-proxy support monitor data visualization in prometheus
 * camellia-redis-proxy support multi-write based on mq(such as kafka)
 
+# 1.0.43（2021/11/xx）
+### add
+* camellia-id-gen of segment and strict mode provide update api to setting starting id
+
+### update
+* camellia-redis-proxy monitor data buffer with size limit
+
+### fix
+* none
+
+
 # 1.0.42（2021/10/26）
 ### add
 * camellia-redis-proxy info command metrics of redis-cluster-safety redefine

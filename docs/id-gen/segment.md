@@ -150,6 +150,10 @@ http://127.0.0.1:8083/camellia/id/gen/segment/genIds?tag=a&count=3
     "msg": "success"
 }
 ```
+更新id起始值（POST请求）：  
+```
+curl -d "tag=a&id=100" http://127.0.0.1:8083/camellia/id/gen/segment/update
+```
 
 当使用spring-boot-starter部署了独立的发号器服务后，为了方便使用http方法访问相关接口，我们提供了一个封装sdk（sdk支持缓存id用于提高性能）      
 先引入maven依赖：  
