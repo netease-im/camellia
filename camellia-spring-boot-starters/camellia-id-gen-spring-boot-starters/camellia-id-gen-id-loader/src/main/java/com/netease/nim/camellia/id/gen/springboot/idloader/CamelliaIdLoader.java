@@ -52,6 +52,10 @@ public class CamelliaIdLoader implements IDLoader {
         if (oldId == null) {
             result = mapper.insert(tag, id, now, now) > 0;
         } else {
+            if (oldId > id) {
+                logger.warn("update tag = {} fail for old.id = {} > new.id = {}", tag, oldId, id);
+                return false;
+            }
             result = mapper.update(tag, id, now) > 0;
         }
         logger.info("update tag = {}, old.id = {}, new.id = {}, result = {}", tag, oldId, id, result);
