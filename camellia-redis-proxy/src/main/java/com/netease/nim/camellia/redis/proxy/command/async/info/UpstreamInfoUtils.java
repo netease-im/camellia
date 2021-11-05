@@ -94,9 +94,7 @@ public class UpstreamInfoUtils {
 
                         Map<String, String> map = parseKv(redisInfo.string);
                         if (map != null) {
-                            for (Map.Entry<String, String> entry : map.entrySet()) {
-                                redisNodeInfoJson.put(entry.getKey(), entry.getValue());
-                            }
+                            redisNodeInfoJson.putAll(map);
                         }
                     }
                 } else if (redisResource instanceof RedisSentinelResource || redisResource instanceof RedisSentinelSlavesResource) {
@@ -129,9 +127,7 @@ public class UpstreamInfoUtils {
                         builder.append(redisSentinelInfo.redisInfo.string);
                         Map<String, String> map = parseKv(redisSentinelInfo.redisInfo.string);
                         if (map != null) {
-                            for (Map.Entry<String, String> entry : map.entrySet()) {
-                                redisNodeInfoJson.put(entry.getKey(), entry.getValue());
-                            }
+                            redisNodeInfoJson.putAll(map);
                         }
                     }
                 } else if (redisResource instanceof RedisClusterResource) {
@@ -145,8 +141,8 @@ public class UpstreamInfoUtils {
                         builder.append(redisClusterInfo);
 
                         Map<String, String> map = parseKv(redisClusterInfo);
-                        for (Map.Entry<String, String> entry : map.entrySet()) {
-                            redisClusterInfoJson.put(entry.getKey(), entry.getValue());
+                        if (map != null) {
+                            redisClusterInfoJson.putAll(map);
                         }
                     }
                     long totalMaxMemory = 0;
@@ -188,9 +184,7 @@ public class UpstreamInfoUtils {
 
                                 Map<String, String> map1 = parseKv(redisInfo.string);
                                 if (map1 != null) {
-                                    for (Map.Entry<String, String> entry : map1.entrySet()) {
-                                        node.put(entry.getKey(), entry.getValue());
-                                    }
+                                    node.putAll(map1);
                                 }
                             }
                             k ++;
@@ -241,9 +235,7 @@ public class UpstreamInfoUtils {
                     stringBuilder.append("cluster_memory_used_rate_human:").append(String.format("%.2f", clusterMemoryUsedRate * 100.0)).append("%").append("\n");
                     Map<String, String> map = parseKv(stringBuilder.toString());
                     if (map != null) {
-                        for (Map.Entry<String, String> entry : map.entrySet()) {
-                            redisClusterInfoJson.put(entry.getKey(), entry.getValue());
-                        }
+                        redisClusterInfoJson.putAll(map);
                     }
                     builder.append(stringBuilder).append(clusterBuilder);
                 }

@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command.async.spendtime;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
@@ -21,6 +22,9 @@ public class LoggingSlowCommandMonitorCallback implements SlowCommandMonitorCall
     private static final Logger logger = LoggerFactory.getLogger("camellia.redis.proxy.slowCommandStats");
 
     private static ConcurrentHashMap<String, AtomicLong> logMap = new ConcurrentHashMap<>();
+
+    private static final String BUFFER_MAX_SIZE_CONF_KEY = "logging.slow.command.monitor.buffer.max.size";
+    private static final int defaultBufferMaxSize = 100;
 
     static {
         ExecutorUtils.scheduleAtFixedRate(LoggingSlowCommandMonitorCallback::printLog, 5, 5, TimeUnit.SECONDS);
@@ -44,6 +48,10 @@ public class LoggingSlowCommandMonitorCallback implements SlowCommandMonitorCall
         try {
             String log = "slow command, command.context = " + command.getCommandContext() + ", spendMs = " + spendMillis + ", thresholdMs = " + thresholdMillis
                     + ", command = " + command.getRedisCommand() + ", keys = " + command.getKeysStr();
+            if (logMap.size() >= ProxyDynamicConf.getInt(BUFFER_MAX_SIZE_CONF_KEY, defaultBufferMaxSize)) {
+                logger.warn(log + ", count = 1");
+                return;
+            }
             AtomicLong count = CamelliaMapUtils.computeIfAbsent(logMap, log, k -> new AtomicLong());
             count.incrementAndGet();
         } catch (Exception e) {
