@@ -44,9 +44,17 @@ public class CamelliaIdLoader implements IDLoader {
     }
 
     @Override
+    @Transactional(rollbackForClassName = { "Exception" })
     public boolean update(String tag, long id) {
-        boolean result = mapper.update(tag, id, System.currentTimeMillis()) > 0;
-        logger.info("update tag = {}, id = {}, result = {}", tag, id, result);
+        long now = System.currentTimeMillis();
+        Long oldId = mapper.selectForUpdate(tag);
+        boolean result;
+        if (oldId == null) {
+            result = mapper.insert(tag, id, now, now) > 0;
+        } else {
+            result = mapper.update(tag, id, now) > 0;
+        }
+        logger.info("update tag = {}, old.id = {}, new.id = {}, result = {}", tag, oldId, id, result);
         return result;
     }
 }
