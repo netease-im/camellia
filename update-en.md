@@ -11,6 +11,7 @@
 
 ### update
 * camellia-redis-proxy monitor data buffer with size limit
+* camellia-redis-proxy close client connection if custom ClientAuthProvider throw exception
 
 ### fix
 * none

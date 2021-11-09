@@ -11,6 +11,7 @@
 
 ### 更新
 * camellia-redis-proxy的监控数据buffer增加最大size的限制以保护proxy
+* camellia-redis-proxy的自定义ClientAuthProvider抛异常时关闭客户端连接
 
 ### fix
 * 无
