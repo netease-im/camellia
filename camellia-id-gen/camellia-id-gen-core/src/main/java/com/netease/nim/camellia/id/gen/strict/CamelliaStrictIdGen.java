@@ -31,6 +31,7 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
     private final IDLoader idLoader;
     private final int regionBits;
     private final long regionId;
+    private final int regionIdShiftingBits;
 
     private final long lockExpireMillis;
     private final int cacheExpireSeconds;
@@ -65,6 +66,7 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
         this.cacheHoldSeconds = config.getCacheHoldSeconds();
         this.regionBits = config.getRegionBits();
         this.regionId = config.getRegionId();
+        this.regionIdShiftingBits = config.getRegionIdShiftingBits();
         this.retryIntervalMillis = config.getRetryIntervalMillis();
 
         if (this.regionBits < 0) {
@@ -74,8 +76,8 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
         if (this.regionId > maxRegionId) {
             throw new CamelliaIdGenException("regionId too long");
         }
-        logger.info("CamelliaStrictIdGen init success, regionId = {}, regionBits = {}, defaultStep = {}, maxStep = {}, maxRetry = {}, retryIntervalMillis = {}",
-                regionId, regionBits, defaultStep, maxStep, maxRetry, retryIntervalMillis);
+        logger.info("CamelliaStrictIdGen init success, regionId = {}, regionBits = {}, regionIdShiftingBits = {}, defaultStep = {}, maxStep = {}, maxRetry = {}, retryIntervalMillis = {}",
+                regionId, regionBits, regionIdShiftingBits, defaultStep, maxStep, maxRetry, retryIntervalMillis);
     }
 
     public IDLoader getIdLoader() {
@@ -206,7 +208,7 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
                 IDRange range = idLoader.load(tag, newStep);
                 List<String> ids = new ArrayList<>();
                 for (long i = range.getStart(); i<= range.getEnd(); i++) {
-                    long id = (i << regionBits) | regionId;
+                    long id = ((i >> regionIdShiftingBits) << (regionIdShiftingBits + regionBits)) | (regionId << regionIdShiftingBits) | (i & ((1L << regionIdShiftingBits) - 1));
                     ids.add(String.valueOf(id));
                 }
                 //把新获取到的id导入到redis的队列里，并记录load时间以及load的step

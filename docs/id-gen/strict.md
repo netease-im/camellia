@@ -123,6 +123,7 @@ spring:
 camellia-id-gen-strict:
   region-bits: 0 #单元id所占的比特位数，0表示不区分单元
   region-id: 0 #regionId，如果regionBits为0，则regionId必须为0
+  region-id-shifting-bits: 0 #regionId左移多少位
   cache-key-prefix: strict #redis key的前缀
   lock-expire-millis: 3000 #redis缓存里id耗尽时需要穿透到db重新获取，为了控制并发需要一个分布式锁，这是分布式锁的超时时间
   cache-expire-seconds: 86400 #id缓存在redis里，redis key的过期时间，默认1天

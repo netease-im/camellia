@@ -19,6 +19,7 @@ public class CamelliaIdGenStrictProperties {
     private int cacheHoldSeconds = CamelliaIdGenConstants.Strict.cacheHoldSeconds;
     private int regionBits = CamelliaIdGenConstants.Strict.regionBits;
     private int regionId;
+    private int regionIdShiftingBits = 0;//regionId偏移量，默认不偏移
 
     public String getCacheKeyPrefix() {
         return cacheKeyPrefix;
@@ -98,5 +99,13 @@ public class CamelliaIdGenStrictProperties {
 
     public void setRegionId(int regionId) {
         this.regionId = regionId;
+    }
+
+    public int getRegionIdShiftingBits() {
+        return regionIdShiftingBits;
+    }
+
+    public void setRegionIdShiftingBits(int regionIdShiftingBits) {
+        this.regionIdShiftingBits = regionIdShiftingBits;
     }
 }

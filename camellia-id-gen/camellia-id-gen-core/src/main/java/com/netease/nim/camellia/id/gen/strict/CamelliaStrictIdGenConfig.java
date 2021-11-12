@@ -47,6 +47,8 @@ public class CamelliaStrictIdGenConfig {
     private int regionBits = CamelliaIdGenConstants.Strict.regionBits;
     //regionId，位数不超过regionBits
     private long regionId;
+    //regionId偏移量，默认不偏移
+    private int regionIdShiftingBits = 0;
 
     public CamelliaRedisTemplate getTemplate() {
         return template;
@@ -150,5 +152,13 @@ public class CamelliaStrictIdGenConfig {
 
     public void setRegionId(long regionId) {
         this.regionId = regionId;
+    }
+
+    public int getRegionIdShiftingBits() {
+        return regionIdShiftingBits;
+    }
+
+    public void setRegionIdShiftingBits(int regionIdShiftingBits) {
+        this.regionIdShiftingBits = regionIdShiftingBits;
     }
 }

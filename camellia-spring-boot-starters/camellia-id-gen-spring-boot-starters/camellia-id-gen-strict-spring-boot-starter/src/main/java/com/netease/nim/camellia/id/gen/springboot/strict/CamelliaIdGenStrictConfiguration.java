@@ -28,7 +28,7 @@ public class CamelliaIdGenStrictConfiguration {
         CamelliaStrictIdGenConfig config = new CamelliaStrictIdGenConfig();
         config.setIdLoader(idLoader);
         config.setTemplate(camelliaRedisTemplate);
-        config.setCacheKeyPrefix(config.getCacheKeyPrefix());
+        config.setCacheKeyPrefix(properties.getCacheKeyPrefix());
         config.setMaxStep(properties.getMaxStep());
         config.setDefaultStep(properties.getDefaultStep());
         config.setCacheExpireSeconds(properties.getCacheExpireSeconds());
