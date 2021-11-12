@@ -24,6 +24,8 @@ public class CamelliaSegmentIdGenConfig {
 
     private long regionId;
 
+    private int regionIdShiftingBits = 0;//regionId偏移量，默认不偏移
+
     private int step = CamelliaIdGenConstants.Segment.step;
 
     private int tagCount = CamelliaIdGenConstants.Segment.tagCount;
@@ -96,5 +98,13 @@ public class CamelliaSegmentIdGenConfig {
 
     public void setTagCount(int tagCount) {
         this.tagCount = tagCount;
+    }
+
+    public int getRegionIdShiftingBits() {
+        return regionIdShiftingBits;
+    }
+
+    public void setRegionIdShiftingBits(int regionIdShiftingBits) {
+        this.regionIdShiftingBits = regionIdShiftingBits;
     }
 }

@@ -108,8 +108,9 @@ spring:
 
 
 camellia-id-gen-segment:
-  regionBits: 0 #region比特位，0表示不区分单元
-  regionId: 0 #regionId，如果regionBits为0，则regionId必须为0
+  region-bits: 0 #region比特位，0表示不区分单元
+  region-id: 0 #regionId，如果regionBits为0，则regionId必须为0
+  region-id-shifting-bits: 0 #regionId左移多少多少位
   tag-count: 1000 #服务包括的tag数量，会缓存在本地内存，如果实际tag数超过本配置，会导致本地内存被驱逐，进而丢失部分id段，丢失后会穿透到数据库）
   step: 1000 #每次从数据库获取一批id时的批次大小
   max-retry: 10 #当并发请求过来时，只会让一次请求穿透到db，其他请求会等待并重试，本配置表示重试的次数

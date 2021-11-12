@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.id.gen.segment;
 
-
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.id.gen.common.CamelliaIdGenException;
 import com.netease.nim.camellia.id.gen.common.IDLoader;
@@ -19,6 +18,7 @@ public class CamelliaSegmentIdGen extends AbstractCamelliaSegmentIdGen {
     private static final Logger logger = LoggerFactory.getLogger(CamelliaSegmentIdGen.class);
 
     private final IDLoader idLoader;
+    private final long regionIdShiftingBits;
     private final int regionBits;
     private final long regionId;
 
@@ -30,6 +30,7 @@ public class CamelliaSegmentIdGen extends AbstractCamelliaSegmentIdGen {
         logger.info("CamelliaSegmentIdGen, idLoader = {}", idLoader.getClass().getName());
         this.regionBits = config.getRegionBits();
         this.regionId = config.getRegionId();
+        this.regionIdShiftingBits = config.getRegionIdShiftingBits();
 
         this.step = config.getStep();
         this.cacheMaxCapacity = step * 10;
@@ -50,8 +51,8 @@ public class CamelliaSegmentIdGen extends AbstractCamelliaSegmentIdGen {
             throw new CamelliaIdGenException("regionId too long");
         }
 
-        logger.info("CamelliaSegmentIdGen init success, regionId = {}, regionBits = {}, step = {}, maxRetry = {}, retryIntervalMillis = {}",
-                regionId, regionBits, step, maxRetry, retryIntervalMillis);
+        logger.info("CamelliaSegmentIdGen init success, regionId = {}, regionBits = {}, regionIdShiftingBits = {}, step = {}, maxRetry = {}, retryIntervalMillis = {}",
+                regionId, regionBits, regionIdShiftingBits, step, maxRetry, retryIntervalMillis);
     }
 
     public IDLoader getIdLoader() {
@@ -63,7 +64,7 @@ public class CamelliaSegmentIdGen extends AbstractCamelliaSegmentIdGen {
         try {
             IDRange load = idLoader.load(tag, loadCount);
             for (long i=load.getStart(); i<=load.getEnd(); i++) {
-                long id = (i << regionBits) | regionId;
+                long id = ((i >> regionIdShiftingBits) << (regionIdShiftingBits + regionBits)) | (regionId << regionIdShiftingBits) | (i & ((1L << regionIdShiftingBits) - 1));
                 cache.offer(id);
             }
             if (logger.isDebugEnabled()) {

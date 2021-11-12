@@ -11,6 +11,7 @@ public class CamelliaIdGenSegmentProperties {
 
     private int regionBits = CamelliaIdGenConstants.Segment.regionBits;
     private long regionId;
+    private int regionIdShiftingBits = 0;//regionId偏移量，默认不偏移
 
     private int step = CamelliaIdGenConstants.Segment.step;
 
@@ -34,6 +35,14 @@ public class CamelliaIdGenSegmentProperties {
 
     public void setRegionId(long regionId) {
         this.regionId = regionId;
+    }
+
+    public int getRegionIdShiftingBits() {
+        return regionIdShiftingBits;
+    }
+
+    public void setRegionIdShiftingBits(int regionIdShiftingBits) {
+        this.regionIdShiftingBits = regionIdShiftingBits;
     }
 
     public int getStep() {

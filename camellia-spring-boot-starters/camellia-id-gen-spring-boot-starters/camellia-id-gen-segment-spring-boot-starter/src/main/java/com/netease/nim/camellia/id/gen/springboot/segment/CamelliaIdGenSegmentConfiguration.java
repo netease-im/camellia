@@ -24,6 +24,7 @@ public class CamelliaIdGenSegmentConfiguration {
         CamelliaSegmentIdGenConfig config = new CamelliaSegmentIdGenConfig();
         config.setRegionBits(properties.getRegionBits());
         config.setRegionId(properties.getRegionId());
+        config.setRegionIdShiftingBits(properties.getRegionIdShiftingBits());
         config.setMaxRetry(properties.getMaxRetry());
         config.setRetryIntervalMillis(properties.getRetryIntervalMillis());
         config.setTagCount(properties.getTagCount());

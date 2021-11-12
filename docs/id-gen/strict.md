@@ -121,8 +121,8 @@ spring:
 
 
 camellia-id-gen-strict:
-  regionBits: 0 #单元id所占的比特位数，0表示不区分单元
-  regionId: 0 #regionId，如果regionBits为0，则regionId必须为0
+  region-bits: 0 #单元id所占的比特位数，0表示不区分单元
+  region-id: 0 #regionId，如果regionBits为0，则regionId必须为0
   cache-key-prefix: strict #redis key的前缀
   lock-expire-millis: 3000 #redis缓存里id耗尽时需要穿透到db重新获取，为了控制并发需要一个分布式锁，这是分布式锁的超时时间
   cache-expire-seconds: 86400 #id缓存在redis里，redis key的过期时间，默认1天
@@ -131,6 +131,7 @@ camellia-id-gen-strict:
   retry-interval-millis: 5 #缓存中id耗尽时穿透到db，其他线程等待重试的间隔
   default-step: 10 #默认每次从db获取的id个数，也是最小的个数
   max-step: 100 #根据id的消耗速率动态调整每次从db获取id的个数，这个是上限值
+
 
 
 camellia-redis:
