@@ -6,7 +6,6 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by caojiajun on 2021/9/27
@@ -22,7 +21,7 @@ public interface CamelliaIdLoaderMapper {
     @Select("select id from camellia_id_info where tag=#{tag} for update;")
     Long selectForUpdate(@Param("tag") String tag);
 
-    @Update("update camellia_id_info set id=#{id}, updateTime=#{updateTime} where tag=#{tag}")
+    @Update("update camellia_id_info set id=#{id}, updateTime=#{updateTime} where tag=#{tag} and id < #{id}")
     int update(@Param("tag") String tag,
                @Param("id") long id,
                @Param("updateTime") long updateTime);
