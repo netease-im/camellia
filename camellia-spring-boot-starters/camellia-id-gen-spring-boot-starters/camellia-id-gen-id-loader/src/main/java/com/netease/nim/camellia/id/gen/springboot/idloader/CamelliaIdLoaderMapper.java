@@ -5,6 +5,9 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * Created by caojiajun on 2021/9/27
  */
@@ -24,4 +27,9 @@ public interface CamelliaIdLoaderMapper {
                @Param("id") long id,
                @Param("updateTime") long updateTime);
 
+    @Select("select tag, id from camellia_id_info limit 10000")
+    List<TagIdInfo> selectTagIdMaps();
+
+    @Select("select id from camellia_id_info where tag=#{tag};")
+    Long selectId(@Param("tag") String tag);
 }

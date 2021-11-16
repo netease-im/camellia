@@ -30,7 +30,7 @@ public class CamelliaIdGenHttpUtils {
 
     public static long genId(OkHttpClient okHttpClient, String url) {
         try {
-            JSONObject json = invoke(okHttpClient, url);
+            JSONObject json = invokeGet(okHttpClient, url);
             return json.getLongValue("data");
         } catch (CamelliaIdGenException e) {
             throw e;
@@ -41,7 +41,7 @@ public class CamelliaIdGenHttpUtils {
 
     public static List<Long> genIds(OkHttpClient okHttpClient, String url) {
         try {
-            JSONObject json = invoke(okHttpClient, url);
+            JSONObject json = invokeGet(okHttpClient, url);
             JSONArray data = json.getJSONArray("data");
             if (data != null) {
                 List<Long> ids = new ArrayList<>();
@@ -61,11 +61,37 @@ public class CamelliaIdGenHttpUtils {
         }
     }
 
-    private static JSONObject invoke(OkHttpClient okHttpClient, String url) {
+    public static JSONObject invokeGet(OkHttpClient okHttpClient, String url) {
         try {
             Request request = new Request.Builder()
                     .url(url)
                     .get()
+                    .build();
+            Response response = okHttpClient.newCall(request).execute();
+            int httpCode = response.code();
+            if (httpCode != 200) {
+                throw new CamelliaIdGenException(CamelliaIdGenException.NETWORK_ERROR, "http.code=" + httpCode);
+            }
+            String string = response.body().string();
+            JSONObject json = JSONObject.parseObject(string);
+            Integer code = json.getInteger("code");
+            if (code == null || code != 200) {
+                throw new CamelliaIdGenException("code=" + code);
+            }
+            return json;
+        } catch (CamelliaIdGenException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CamelliaIdGenException(CamelliaIdGenException.NETWORK_ERROR, e);
+        }
+    }
+
+    public static JSONObject invokePost(OkHttpClient okHttpClient, String url, String body) {
+        try {
+            RequestBody requestBody = RequestBody.create(MediaType.parse("application/x-www-form-urlencoded"), body);
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(requestBody)
                     .build();
             Response response = okHttpClient.newCall(request).execute();
             int httpCode = response.code();

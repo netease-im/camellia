@@ -8,13 +8,14 @@
 # 1.0.43（2021/11/xx）
 ### add
 * camellia-id-gen of segment and strict mode provide update api to setting starting id
+* * camellia-id-gen of segment and strict mode support setting shifting region id
 
 ### update
 * camellia-redis-proxy monitor data buffer with size limit
 * camellia-redis-proxy close client connection if custom ClientAuthProvider throw exception
 
 ### fix
-* none
+* fix camellia-id-gen-strict-spring-boot-starter config of cache-key-prefix not effective
 
 
 # 1.0.42（2021/10/26）

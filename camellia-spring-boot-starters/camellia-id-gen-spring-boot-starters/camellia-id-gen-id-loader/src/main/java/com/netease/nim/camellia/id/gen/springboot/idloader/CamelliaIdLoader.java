@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -60,5 +63,23 @@ public class CamelliaIdLoader implements IDLoader {
         }
         logger.info("update tag = {}, old.id = {}, new.id = {}, result = {}", tag, oldId, id, result);
         return result;
+    }
+
+    @Override
+    public Map<String, Long> selectTagIdMaps() {
+        List<TagIdInfo> tagIdInfos = mapper.selectTagIdMaps();
+        Map<String, Long> map = new HashMap<>();
+        for (TagIdInfo tagIdInfo : tagIdInfos) {
+            map.put(tagIdInfo.getTag(), tagIdInfo.getId());
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info("select tag-id maps, size = {}", tagIdInfos.size());
+        }
+        return map;
+    }
+
+    @Override
+    public Long selectId(String tag) {
+        return mapper.selectId(tag);
     }
 }

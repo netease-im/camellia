@@ -8,13 +8,15 @@
 # 1.0.43（2021/11/xx）
 ### 新增
 * camellia-id-gen的segment和strict模式新增更新号段起始值的update接口，具体见：[id-gen](/docs/id-gen/id-gen.md)
+* camellia-id-gen的segment和strict模式，regionId字段支持设置偏移量，具体见：[id-gen](/docs/id-gen/id-gen.md)
+* camellia-id-gen的segment模式支持跨单元同步，具体见：[id-gen-segment](/docs/id-gen/segment.md)
 
 ### 更新
 * camellia-redis-proxy的监控数据buffer增加最大size的限制以保护proxy
 * camellia-redis-proxy的自定义ClientAuthProvider抛异常时关闭客户端连接
 
 ### fix
-* 无
+* 修复了camellia-id-gen-strict-spring-boot-starter的cache-key-prefix配置不生效的问题
 
 
 # 1.0.42（2021/10/26）
