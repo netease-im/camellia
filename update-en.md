@@ -3,12 +3,13 @@
 * camellia-redis-proxy support a way for Lettuce to use camellia-redis-proxy depends on register-discovery mode easily
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
-* camellia-redis-proxy support multi-write based on mq(such as kafka)
 
 # 1.0.43（2021/11/xx）
 ### add
 * camellia-id-gen of segment and strict mode provide update api to setting starting id
-* * camellia-id-gen of segment and strict mode support setting shifting region id
+* camellia-id-gen of segment and strict mode support setting shifting region id
+* camellia-id-gen of segment mode support id sync in multi regions
+* camellia-redis-proxy support multi-write based on mq(such as kafka)
 
 ### update
 * camellia-redis-proxy monitor data buffer with size limit

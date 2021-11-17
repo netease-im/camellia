@@ -3,13 +3,13 @@
 * camellia-redis-proxy支持基于注册中心的Lettuce的简单的接入方案
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
-* camellia-redis-proxy支持基于消息队列（如kafka）的异步双写
 
 # 1.0.43（2021/11/xx）
 ### 新增
 * camellia-id-gen的segment和strict模式新增更新号段起始值的update接口，具体见：[id-gen](/docs/id-gen/id-gen.md)
 * camellia-id-gen的segment和strict模式，regionId字段支持设置偏移量，具体见：[id-gen](/docs/id-gen/id-gen.md)
 * camellia-id-gen的segment模式支持跨单元同步，具体见：[id-gen-segment](/docs/id-gen/segment.md)
+* camellia-redis-proxy支持基于消息队列（kafka等）的异地双写
 
 ### 更新
 * camellia-redis-proxy的监控数据buffer增加最大size的限制以保护proxy

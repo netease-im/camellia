@@ -43,7 +43,6 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 │ ├─`camellia-redis-spring-temaplate-adaptor-spring-boot-starter`   
 │ ├─`camellia-redis-proxy-zk-registry-spring-boot-starter`                     
 │ ├─`camellia-redis-spring-boot-starter`  
-│ ├─`camellia-redis-spring-boot-starter`  
 │ ├─`camellia-redis-zk-discovery-spring-boot-starter`    
 │ ├─`camellia-spring-redis-base`         
 │ ├─`camellia-spring-redis-eureka-discovery-spring-boot-starter`     
