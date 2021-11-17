@@ -2,12 +2,17 @@ package com.netease.nim.camellia.redis.proxy.mq.kafka;
 
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.command.async.AsyncCamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.proxy.command.async.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptResponse;
 import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
 import com.netease.nim.camellia.redis.proxy.mq.common.MqPack;
-import com.netease.nim.camellia.redis.proxy.mq.common.MqPackFlusher;
 import com.netease.nim.camellia.redis.proxy.mq.common.MqPackSerializer;
+import com.netease.nim.camellia.redis.proxy.netty.ReplyEncoder;
+import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
+import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -16,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class KafkaMqPacketConsumer implements CommandInterceptor {
@@ -25,10 +30,7 @@ public class KafkaMqPacketConsumer implements CommandInterceptor {
 
     private static final AtomicLong id = new AtomicLong();
 
-    private final ConcurrentHashMap<String, List<String>> cache = new ConcurrentHashMap<>();
-
     public KafkaMqPacketConsumer() {
-        ProxyDynamicConf.registerCallback(cache::clear);
         start();
     }
 
@@ -54,16 +56,18 @@ public class KafkaMqPacketConsumer implements CommandInterceptor {
                             try {
                                 byte[] data = record.value();
                                 MqPack mqPack = MqPackSerializer.deserialize(data);
-                                List<String> redisUrls = redisUrls(mqPack.getBid(), mqPack.getBgroup());
-                                if (!redisUrls.isEmpty()) {
-                                    for (String redisUrl : redisUrls) {
-                                        MqPackFlusher.flush(mqPack.getCommand(), redisUrl);
-                                    }
-                                } else {
-                                    ErrorLogCollector.collect(KafkaMqPacketConsumer.class, "mq pack flush redis urls is empty");
+                                AsyncCamelliaRedisTemplate template = ProxyInfoUtils.getAsyncCamelliaRedisTemplateChooser().choose(mqPack.getBid(), mqPack.getBgroup());
+                                List<CompletableFuture<Reply>> futures = template.sendCommand(Collections.singletonList(mqPack.getCommand()));
+                                for (CompletableFuture<Reply> future : futures) {
+                                    future.thenAccept(reply -> {
+                                        if (reply instanceof ErrorReply) {
+                                            RedisMonitor.incrFail(((ErrorReply) reply).getError());
+                                            ErrorLogCollector.collect(ReplyEncoder.class, "mq multi write error, msg = " + ((ErrorReply) reply).getError());
+                                        }
+                                    });
                                 }
                             } catch (Exception e) {
-                                ErrorLogCollector.collect(KafkaMqPacketConsumer.class, "mq pack flush error", e);
+                                ErrorLogCollector.collect(KafkaMqPacketConsumer.class, "mq pack send commands error", e);
                             }
                         }
                         consumer.commitAsync();
@@ -76,24 +80,6 @@ public class KafkaMqPacketConsumer implements CommandInterceptor {
             thread.start();
         }
         logger.info("kafka consumer start, kafkaUrl = {}, topic = {}, num = {}, props = {}", kafkaUrl, topic, num, properties);
-    }
-
-    private List<String> redisUrls(Long bid, String bgroup) {
-        String key = bid + "|" + bgroup;
-        List<String> urls = cache.get(key);
-        if (urls != null) {
-            return urls;
-        }
-        String kafkaUrls = ProxyDynamicConf.getString("mq.multi.write.redis.urls", bid, bgroup, null);
-        if (kafkaUrls == null) {
-            urls = new ArrayList<>();
-            cache.put(key, urls);
-            return urls;
-        }
-        String[] split = kafkaUrls.split("\\|");
-        urls = new ArrayList<>(Arrays.asList(split));
-        cache.put(key, urls);
-        return urls;
     }
 
     private Properties initKafkaConf(String kafkaUrl) {
