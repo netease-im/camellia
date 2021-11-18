@@ -3,6 +3,7 @@
 * camellia-redis-proxy支持基于注册中心的Lettuce的简单的接入方案
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
+* camellia-redis-proxy支持读redis-cluster的从节点
 
 # 1.0.43（2021/11/xx）
 ### 新增

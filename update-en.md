@@ -3,6 +3,7 @@
 * camellia-redis-proxy support a way for Lettuce to use camellia-redis-proxy depends on register-discovery mode easily
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
+* camellia-redis-proxy support read from slaves of redis-cluster
 
 # 1.0.43（2021/11/xx）
 ### add
