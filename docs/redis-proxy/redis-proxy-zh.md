@@ -17,7 +17,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持双（多）写，可以直接双写，也可以基于mq（如kafka）双写
 * 支持双（多）读
 * 支持路由配置在线变更
-* 支持多配置，即业务A路由到redis1，B业务路由到redis2
+* 支持多配置，即业务A路由到redis1，B业务路由到redis2（可以通过不同的clientname区分，也可以通过不同的password区分）
 * 支持自定义方法拦截器，可以用于实现一些自定义规则（如自定义key/value不得超过多少字节、临时屏蔽某些key不能被访问、或者基于拦截器自定义双写策略等）
 * 支持监控，可以监控各命令的调用量、方法耗时等，支持设置监控回调MonitorCallback
 * 支持慢查询监控，支持设置SlowCommandMonitorCallback
