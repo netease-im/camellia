@@ -15,7 +15,7 @@
 * 核心源码参见CamelliaSegmentIdGen
 
 ### id构成（二进制）
-<img src="id-gen-segment-region.png" width="50%" height="50%">
+<img src="id-gen-segment-region.png" width="100%" height="100%">
 
 ### 用法(直接使用)
 引入maven依赖
