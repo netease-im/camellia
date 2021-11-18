@@ -4,6 +4,7 @@ camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访
 * TroubleTrickKeysCommandInterceptor 用于临时屏蔽某些key的访问    
 * MultiWriteCommandInterceptor 用于自定义配置双写策略(key级别)   
 * RateLimitCommandInterceptor 用于控制客户端请求速率（支持全局速率控制，也支持bid/bgroup级别的速率控制）
+* MqMultiWriteCommandInterceptor 用于基于mq（如kafka等）的异步双写
 
 备注：相关拦截器可以通过组合的方式一起使用  
   
@@ -206,3 +207,72 @@ rate.limit.max.count=100000
 #### 使用场景
 * 如果业务侧bug或者滥用导致不符合预期的高tps，为了保护后端redis或者保护proxy，可以临时配置速率限制
 * 当使用bid/bgroup代理多组路由配置时，使用bid/bgroup级别的速率控制，避免某个业务异常引起全局异常
+
+
+### MqMultiWriteCommandInterceptor
+#### 用途
+可以用于基于mq（如kafka等）的异步双写，如跨机房、异地场景下redis的数据双写同步
+
+#### 配置示例
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      resource: redis://@127.0.0.1:6379
+  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.mq.common.MqMultiWriteCommandInterceptor
+```
+MqMultiWriteCommandInterceptor依赖MqPackSender接口，camellia提供了一个默认实现（KafkaMqPackSender）  
+随后你需要在camellia-redis-proxy.properties里配置启用KafkaMqPackSender，并配置好kafka的地址，如下：  
+```
+#生产端kafka的地址和topic，反斜杠分隔
+mq.multi.write.producer.kafka.urls=127.0.0.1:9092,127.0.0.1:9093/camellia_multi_write_kafka
+#使用KafkaMqPackSender来进行mq的异步写入
+mq.multi.write.sender.class.name=com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackSender
+```
+上面的例子表示所有到proxy的写请求（限制性命令不支持，如阻塞型命令、发布订阅命令等），均会写入kafka  
+随后，你需要再启动一个proxy作为kafka的消费者，如下：  
+```yaml
+server:
+  port: 6381
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      resource: redis://@127.0.0.1:6378
+  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackConsumer
+```
+上面的例子表示启用KafkaMqPackConsumer作为方法拦截器，该拦截器会从kafka消费信息，并根据上下文写入到后端的redis中  
+为了正确工作，你还需要在camellia-redis-proxy.properties配置kafka的地址和topic，如下  
+```
+#消费端kafka的地址和topic，反斜杠分隔
+mq.multi.write.consumer.kafka.urls=127.0.0.1:9092,127.0.0.1:9093/camellia_multi_write_kafka
+```
+最后，当你连接6381端口的proxy写入一个set命令，命令在写入127.0.0.1:6379这个redis的同时   
+还会通过kafka=127.0.0.1:9092,127.0.0.1:9093的camellia_multi_write_kafka这个topic，进入到6381这个proxy，并写入到127.0.0.1:6378这个redis  
+此外，如果proxy启用了bid/bgroup，则该上下文信息也会随着kafka一起同步过来；proxy也支持同时写入/消费多组kafka，如下：  
+```
+#生产端，竖线分隔可以表示多组kafka和topic
+mq.multi.write.producer.kafka.urls=127.0.0.1:9092,127.0.0.1:9093/camellia_multi_write_kafka|127.0.0.2:9092,127.0.0.2:9093/camellia_multi_write_kafka2
+#生产端还支持对bid/bgroup的不同设置不同的kafka写入地址，如下表示bid=1,bgroup=default的写入地址
+1.default.mq.multi.write.producer.kafka.urls=127.0.0.1:9092,127.0.0.1:9093/camellia_multi_write_kafka
+
+#消费端，竖线分隔可以表示多组kafka和topic
+mq.multi.write.consumer.kafka.urls=127.0.0.1:9092,127.0.0.1:9093/camellia_multi_write_kafka|127.0.0.2:9092,127.0.0.2:9093/camellia_multi_write_kafka2
+```
+
+#### 使用场景
+* 需要跨机房或者异地机房的redis数据双写同步，可以用于数据的迁移或者容灾
+

@@ -14,7 +14,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持自定义分片
 * 支持读写分离
 * 支持读slave（redis-sentinel的主从模式下，支持配置读slave，且proxy能自动感知节点宕机、主从切换和从节点扩容）
-* 支持双（多）写
+* 支持双（多）写，可以直接双写，也可以基于mq（如kafka）双写
 * 支持双（多）读
 * 支持路由配置在线变更
 * 支持多配置，即业务A路由到redis1，B业务路由到redis2
@@ -196,7 +196,8 @@ OK
 camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访问的目的，此外proxy提供了几个默认的命令拦截器实现，可以按需使用：  
 * TroubleTrickKeysCommandInterceptor 用于临时屏蔽某些key的访问    
 * MultiWriteCommandInterceptor 用于自定义配置双写策略(key级别)
-* RateLimitCommandInterceptor 用于控制客户端请求速率（支持全局速率控制，也支持bid/bgroup级别的速率控制）   
+* RateLimitCommandInterceptor 用于控制客户端请求速率（支持全局速率控制，也支持bid/bgroup级别的速率控制）
+* MqMultiWriteCommandInterceptor 用于基于mq（如kafka等）的异步双写
 
 具体可见：[拦截器](interceptor.md)
 

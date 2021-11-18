@@ -9,7 +9,7 @@
 * camellia-id-gen的segment和strict模式新增更新号段起始值的update接口，具体见：[id-gen](/docs/id-gen/id-gen.md)
 * camellia-id-gen的segment和strict模式，regionId字段支持设置偏移量，具体见：[id-gen](/docs/id-gen/id-gen.md)
 * camellia-id-gen的segment模式支持跨单元同步，具体见：[id-gen-segment](/docs/id-gen/segment.md)
-* camellia-redis-proxy支持基于消息队列（kafka等）的异地双写
+* camellia-redis-proxy支持基于消息队列（kafka等）的异地双写，具体见：[拦截器](/docs/redis-proxy/interceptor.md)
 
 ### 更新
 * camellia-redis-proxy的监控数据buffer增加最大size的限制以保护proxy
