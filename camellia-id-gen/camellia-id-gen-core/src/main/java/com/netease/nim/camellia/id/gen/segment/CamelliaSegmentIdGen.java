@@ -64,7 +64,15 @@ public class CamelliaSegmentIdGen extends AbstractCamelliaSegmentIdGen {
         try {
             IDRange load = idLoader.load(tag, loadCount);
             for (long i=load.getStart(); i<=load.getEnd(); i++) {
-                long id = ((i >> regionIdShiftingBits) << (regionIdShiftingBits + regionBits)) | (regionId << regionIdShiftingBits) | (i & ((1L << regionIdShiftingBits) - 1));
+                long id;
+                if (regionBits == 0) {
+                    id = i;
+                } else if (regionBits > 0 && regionIdShiftingBits == 0) {
+                    id = (i << regionBits) | regionId;
+                    cache.offer(id);
+                } else {
+                    id = ((i >> regionIdShiftingBits) << (regionIdShiftingBits + regionBits)) | (regionId << regionIdShiftingBits) | (i & ((1L << regionIdShiftingBits) - 1));
+                }
                 cache.offer(id);
             }
             if (logger.isDebugEnabled()) {

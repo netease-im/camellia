@@ -208,7 +208,14 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
                 IDRange range = idLoader.load(tag, newStep);
                 List<String> ids = new ArrayList<>();
                 for (long i = range.getStart(); i<= range.getEnd(); i++) {
-                    long id = ((i >> regionIdShiftingBits) << (regionIdShiftingBits + regionBits)) | (regionId << regionIdShiftingBits) | (i & ((1L << regionIdShiftingBits) - 1));
+                    long id;
+                    if (regionBits == 0) {
+                        id = i;
+                    } else if (regionBits > 0 && regionIdShiftingBits == 0) {
+                        id = (i << regionBits) | regionId;
+                    } else {
+                        id = ((i >> regionIdShiftingBits) << (regionIdShiftingBits + regionBits)) | (regionId << regionIdShiftingBits) | (i & ((1L << regionIdShiftingBits) - 1));
+                    }
                     ids.add(String.valueOf(id));
                 }
                 //把新获取到的id导入到redis的队列里，并记录load时间以及load的step
