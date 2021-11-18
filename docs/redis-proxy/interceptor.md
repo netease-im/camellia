@@ -213,6 +213,9 @@ rate.limit.max.count=100000
 #### 用途
 可以用于基于mq（如kafka等）的异步双写，如跨机房、异地场景下redis的数据双写同步
 
+#### 架构简图
+<img src="redis-proxy-mq-multi-write.png" width="50%" height="50%">
+
 #### 配置示例
 ```yaml
 server:
