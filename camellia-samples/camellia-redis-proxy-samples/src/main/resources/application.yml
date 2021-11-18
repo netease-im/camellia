@@ -22,6 +22,8 @@ camellia-redis-proxy:
 #  client-auth-provider-class-name: com.netease.nim.camellia.redis.proxy.command.auth.DynamicConfClientAuthProvider #处理认证逻辑的类
 #  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor #方法拦截器
 #  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.command.async.interceptor.MultiWriteCommandInterceptor #方法拦截器
+#  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.mq.common.MqMultiWriteCommandInterceptor #方法拦截器
+#  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackConsumer #方法拦截器
   converter-enable: false
   converter-config:
     key-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomKeyConverter

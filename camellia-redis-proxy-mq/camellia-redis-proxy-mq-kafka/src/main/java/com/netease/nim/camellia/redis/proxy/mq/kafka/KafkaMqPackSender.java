@@ -22,7 +22,7 @@ public class KafkaMqPackSender implements MqPackSender {
     private static final Logger logger = LoggerFactory.getLogger(KafkaMqPackSender.class);
 
     private static final AtomicLong id = new AtomicLong();
-    private final ConcurrentHashMap<String, List<String>> cache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, List<KafkaUrl>> cache = new ConcurrentHashMap<>();
     private final LinkedBlockingQueue<MqPack> queue;
 
     public KafkaMqPackSender() {
@@ -74,35 +74,33 @@ public class KafkaMqPackSender implements MqPackSender {
             kafkaHashKey = Utils.stringToBytes(UUID.randomUUID().toString());
         }
         byte[] data = MqPackSerializer.serialize(pack);
-        String topic = kafkaTopic(bid, bgroup);
 
-        ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, kafkaHashKey, data);
-        List<String> kafkaUrls = kafkaUrls(bid, bgroup);
-        for (String kafkaUrl : kafkaUrls) {
-            KafkaProducerWrapper producer = KafkaProducerHub.getKafkaProducer(kafkaUrl);
+        List<KafkaUrl> kafkaUrls = kafkaUrls(bid, bgroup);
+        if (kafkaUrls.isEmpty()) {
+            ErrorLogCollector.collect(KafkaMqPackSender.class, "kafka urls is empty");
+            return;
+        }
+        for (KafkaUrl kafkaUrl : kafkaUrls) {
+            ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(kafkaUrl.getTopic(), kafkaHashKey, data);
+            KafkaProducerWrapper producer = KafkaProducerHub.getKafkaProducer(kafkaUrl.getAddrs());
             if (producer == null || !producer.isValid()) continue;
             producer.send(record, pack);
         }
     }
 
-    private String kafkaTopic(Long bid, String bgroup) {
-        return ProxyDynamicConf.getString("mq.multi.write.kafka.topic", bid, bgroup, "camellia_multi_write_kafka");
-    }
-
-    private List<String> kafkaUrls(Long bid, String bgroup) {
+    private List<KafkaUrl> kafkaUrls(Long bid, String bgroup) {
         String key = bid + "|" + bgroup;
-        List<String> urls = cache.get(key);
+        List<KafkaUrl> urls = cache.get(key);
         if (urls != null) {
             return urls;
         }
-        String kafkaUrls = ProxyDynamicConf.getString("mq.multi.write.kafka.urls", bid, bgroup, null);
+        String kafkaUrls = ProxyDynamicConf.getString(KafkaMqPackConstants.CONF_KEY_PRODUCER_KAFKA_URLS, bid, bgroup, null);
         if (kafkaUrls == null) {
             urls = new ArrayList<>();
             cache.put(key, urls);
             return urls;
         }
-        String[] split = kafkaUrls.split("\\|");
-        urls = new ArrayList<>(Arrays.asList(split));
+        urls = KafkaUrl.fromUrls(kafkaUrls);
         cache.put(key, urls);
         return urls;
     }

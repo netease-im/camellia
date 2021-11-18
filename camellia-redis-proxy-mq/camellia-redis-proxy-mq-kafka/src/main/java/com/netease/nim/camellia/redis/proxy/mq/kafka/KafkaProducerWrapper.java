@@ -16,25 +16,25 @@ public class KafkaProducerWrapper {
     private static final Logger logger = LoggerFactory.getLogger(KafkaProducerWrapper.class);
 
     private final List<KafkaProducer<byte[], byte[]>> list = new ArrayList<>();
-    private final String kafkaUrl;
+    private final String url;
     private boolean valid;
 
-    public KafkaProducerWrapper(String kafkaUrl) {
-        this.kafkaUrl = kafkaUrl;
+    public KafkaProducerWrapper(String url) {
+        this.url = url;
     }
 
     public void start() {
         try {
             int num = ProxyDynamicConf.getInt("mq.multi.write.kafka.producer.num", 5);
-            Properties properties = initKafkaConf(kafkaUrl);
+            Properties properties = initKafkaConf(url);
             for (int i=0; i<num; i++) {
                 KafkaProducer<byte[], byte[]> producer = new KafkaProducer<>(properties);
                 list.add(producer);
             }
             valid = true;
-            logger.info("kafka producer start success, kafkaUrl = {}, num = {}, props = {}", kafkaUrl, num, properties);
+            logger.info("kafka producer start success, kafka = {}, num = {}, props = {}", url, num, properties);
         } catch (Exception e) {
-            logger.error("kafka producer start error, kafkaUrl = {}", kafkaUrl, e);
+            logger.error("kafka producer start error, kafka = {}", url, e);
             valid = false;
         }
     }
@@ -46,15 +46,15 @@ public class KafkaProducerWrapper {
         producer.send(record, (recordMetadata, e) -> {
             if (e != null) {
                 valid = false;
-                String errMsg = String.format("send to kafka error, kafkaUrl = %s, topic = %s, data.len = %s, " +
+                String errMsg = String.format("send to kafka error, kafka = %s, topic = %s, data.len = %s, " +
                                 "bid = %s, bgroup = %s, command = %s, key = %s, ex = %s",
-                        kafkaUrl, record.topic(), record.value().length, mqPack.getBid(), mqPack.getBgroup(),
+                        url, record.topic(), record.value().length, mqPack.getBid(), mqPack.getBgroup(),
                         mqPack.getCommand().getName(), mqPack.getCommand().getKeysStr(), e);
                 ErrorLogCollector.collect(KafkaMqPackSender.class, errMsg, e);
             } else {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("send to kafka success, kafkaUrl = {}, topic = {}, data.len = {}, bid = {}, bgroup = {}, command = {}, key = {}",
-                            kafkaUrl, record.topic(), record.value().length, mqPack.getBid(), mqPack.getBgroup(),
+                    logger.debug("send to kafka success, kafka = {}, topic = {}, data.len = {}, bid = {}, bgroup = {}, command = {}, key = {}",
+                            url, record.topic(), record.value().length, mqPack.getBid(), mqPack.getBgroup(),
                             mqPack.getCommand().getName(), mqPack.getCommand().getKeysStr());
                 }
             }
@@ -75,9 +75,9 @@ public class KafkaProducerWrapper {
         }
     }
 
-    private Properties initKafkaConf(String kafkaUrl) {
+    private Properties initKafkaConf(String url) {
         Properties properties = new Properties();
-        properties.put("bootstrap.servers", kafkaUrl);
+        properties.put("bootstrap.servers", url);
         properties.put("key.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
         properties.put("partitioner.class", "org.apache.kafka.clients.producer.internals.DefaultPartitioner");
@@ -87,7 +87,7 @@ public class KafkaProducerWrapper {
         properties.put("queue.buffering.max.messages", "10000");
         properties.put("batch.num.messages", "200");
         try {
-            String props = ProxyDynamicConf.getString("mq.multi.write.kafka.conf.props", null);
+            String props = ProxyDynamicConf.getString(KafkaMqPackConstants.CONF_KEY_KAFKA_CONF_PROPS, null);
             if (props != null) {
                 JSONObject json = JSONObject.parseObject(props);
                 for (Map.Entry<String, Object> entry : json.entrySet()) {
