@@ -16,6 +16,9 @@
 * 发号器节点会统计每个批次分配完毕消耗的时间来动态调整批次大小
 * 核心源码参见CamelliaStrictIdGen
 
+### id构成（二进制，设置了regionId且设置了regionId左移的情况下）
+<img src="id-gen-segment-region.png" width="70%" height="70%">
+
 ### 用法(直接使用)
 引入maven依赖
 ```

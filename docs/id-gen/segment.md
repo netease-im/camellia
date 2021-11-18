@@ -14,7 +14,7 @@
 * 如果设置region标记，则regionId会作为id的后几位，确保不同单元间的id整体是保持相同的趋势递增规律的，为了避免id的最后几位是固定的，regionId会左移若干位
 * 核心源码参见CamelliaSegmentIdGen
 
-### id构成（二进制）
+### id构成（二进制，设置了regionId且设置了regionId左移的情况下）
 <img src="id-gen-segment-region.png" width="70%" height="70%">
 
 ### 用法(直接使用)
