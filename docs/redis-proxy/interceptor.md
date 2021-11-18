@@ -267,7 +267,7 @@ mq.multi.write.consumer.kafka.urls=127.0.0.1:9092,127.0.0.1:9093/camellia_multi_
 ```
 #生产端，竖线分隔可以表示多组kafka和topic
 mq.multi.write.producer.kafka.urls=127.0.0.1:9092,127.0.0.1:9093/camellia_multi_write_kafka|127.0.0.2:9092,127.0.0.2:9093/camellia_multi_write_kafka2
-#生产端还支持对bid/bgroup的不同设置不同的kafka写入地址，如下表示bid=1,bgroup=default的写入地址
+#生产端还支持对不同的bid/bgroup设置不同的kafka写入地址，如下表示bid=1,bgroup=default的写入地址
 1.default.mq.multi.write.producer.kafka.urls=127.0.0.1:9092,127.0.0.1:9093/camellia_multi_write_kafka
 
 #消费端，竖线分隔可以表示多组kafka和topic
