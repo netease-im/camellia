@@ -260,8 +260,9 @@ camellia-redis-proxy:
 #消费端kafka的地址和topic，反斜杠分隔
 mq.multi.write.consumer.kafka.urls=127.0.0.1:9092,127.0.0.1:9093/camellia_multi_write_kafka
 ```
-最后，当你连接6381端口的proxy写入一个set命令，命令在写入127.0.0.1:6379这个redis的同时   
+最后依次启动两个proxy，当你连接6380端口的proxy写入一个set命令，命令在写入127.0.0.1:6379这个redis的同时   
 还会通过kafka=127.0.0.1:9092,127.0.0.1:9093的camellia_multi_write_kafka这个topic，进入到6381这个proxy，并写入到127.0.0.1:6378这个redis  
+
 此外，如果proxy启用了bid/bgroup，则该上下文信息也会随着kafka一起同步过来；proxy也支持同时写入/消费多组kafka，如下：  
 ```
 #生产端，竖线分隔可以表示多组kafka和topic
