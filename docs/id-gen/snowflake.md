@@ -14,6 +14,9 @@
 * 每个ms内使用递增sequence确保唯一    
 * 核心源码参见CamelliaSnowflakeIdGen  
 
+### id构成（二进制）
+<img src="id-gen-snowflake.png" width="50%" height="50%">
+
 ### 用法（直接使用）
 引入maven依赖
 ```

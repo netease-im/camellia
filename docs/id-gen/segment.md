@@ -11,8 +11,11 @@
 ### 原理
 * 数据库表记录每个tag当前分配到的id，每个发号器节点每次从数据库取一段id保留在内存中作为buffer提升性能
 * 内存buffer快用完时，提前从数据库load一批新id，避免内存buffer耗尽时引起rt周期性上升
-* 如果设置region标记，则regionId会作为id的后几位，确保不同单元间的id整体是保持相同的趋势递增规律的
+* 如果设置region标记，则regionId会作为id的后几位，确保不同单元间的id整体是保持相同的趋势递增规律的，为了避免id的最后几位是固定的，regionId会左移若干位
 * 核心源码参见CamelliaSegmentIdGen
+
+### id构成（二进制）
+<img src="id-gen-segment-region.png" width="50%" height="50%">
 
 ### 用法(直接使用)
 引入maven依赖
