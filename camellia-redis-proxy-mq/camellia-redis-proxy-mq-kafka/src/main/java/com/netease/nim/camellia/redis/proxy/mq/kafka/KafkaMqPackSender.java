@@ -83,7 +83,10 @@ public class KafkaMqPackSender implements MqPackSender {
         for (KafkaUrl kafkaUrl : kafkaUrls) {
             ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(kafkaUrl.getTopic(), kafkaHashKey, data);
             KafkaProducerWrapper producer = KafkaProducerHub.getKafkaProducer(kafkaUrl.getAddrs());
-            if (producer == null || !producer.isValid()) continue;
+            if (producer == null || !producer.isValid()) {
+                ErrorLogCollector.collect(KafkaMqPackSender.class, "kafka producer is not valid, url = " + kafkaUrl.getAddrs());
+                continue;
+            }
             producer.send(record, pack);
         }
     }

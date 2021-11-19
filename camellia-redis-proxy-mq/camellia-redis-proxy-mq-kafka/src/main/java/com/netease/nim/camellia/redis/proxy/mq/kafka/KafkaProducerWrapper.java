@@ -70,8 +70,9 @@ public class KafkaProducerWrapper {
             for (KafkaProducer<byte[], byte[]> producer : list) {
                 producer.close();
             }
+            logger.info("kafka producer close success, kafka = {}", url);
         } catch (Exception e) {
-            logger.error("close error", e);
+            logger.error("kafka producer close error, kafka = {}", url, e);
         }
     }
 

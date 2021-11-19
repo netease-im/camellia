@@ -6,14 +6,16 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 ![GitHub](https://img.shields.io/badge/license-MIT-green.svg)
 ![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.netease.nim/camellia/badge.svg)
   
-
 ## Catalog
 ├─`camellia-core`   
 ├─`camellia-dashboard`    
 ├─`camellia-hbase`  
 ├─`camellia-redis`  
 ├─`camellia-redis-proxy`   
-├─`camellia-redis-proxy-hbase`  
+├─`camellia-redis-proxy-hbase`
+├─`camellia-redis-proxy-mq`
+│ ├─`camellia-redis-proxy-mq-common`   
+│ ├─`camellia-redis-proxy-mq-kafka`  
 ├─`camellia-tools`    
 ├─`camellia-id-gen`  
 │ ├─`camellia-id-gen-core`  
@@ -52,8 +54,8 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 │ │ ├─`camellia-id-gen-id-loader`        
 │ │ ├─`camellia-id-gen-snowflake-spring-boot-starter`       
 │ │ ├─`camellia-id-gen-strict-spring-boot-starter`    
-│ │ ├─`camellia-id-gen-segment-spring-boot-starter`   
-           
+│ │ ├─`camellia-id-gen-segment-spring-boot-starter`  
+
 ## Instruction
 ### 1、camellia-core  
 base on cglib, support client shading/read-write-separate/double-write  
