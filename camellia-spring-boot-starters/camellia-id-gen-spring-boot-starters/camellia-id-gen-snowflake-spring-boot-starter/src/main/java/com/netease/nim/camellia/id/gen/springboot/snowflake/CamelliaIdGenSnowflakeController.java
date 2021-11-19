@@ -27,7 +27,11 @@ public class CamelliaIdGenSnowflakeController {
     @GetMapping("/genId")
     public IdGenResult genId() {
         try {
-            return IdGenResult.success(camelliaSnowflakeIdGen.genId());
+            long id = camelliaSnowflakeIdGen.genId();
+            if (logger.isDebugEnabled()) {
+                logger.debug("genId, id = {}", id);
+            }
+            return IdGenResult.success(id);
         } catch (CamelliaIdGenException e) {
             logger.error(e.getMessage(), e);
             return IdGenResult.error(e.getMessage());
@@ -40,7 +44,11 @@ public class CamelliaIdGenSnowflakeController {
     @GetMapping("/decodeTs")
     public IdGenResult decodeTs(@RequestParam("id") long id) {
         try {
-            return IdGenResult.success(camelliaSnowflakeIdGen.decodeTs(id));
+            long ts = camelliaSnowflakeIdGen.decodeTs(id);
+            if (logger.isDebugEnabled()) {
+                logger.debug("decodeTs, id = {}, ts = {}", id, ts);
+            }
+            return IdGenResult.success(ts);
         } catch (CamelliaIdGenException e) {
             logger.error(e.getMessage(), e);
             return IdGenResult.error(e.getMessage());

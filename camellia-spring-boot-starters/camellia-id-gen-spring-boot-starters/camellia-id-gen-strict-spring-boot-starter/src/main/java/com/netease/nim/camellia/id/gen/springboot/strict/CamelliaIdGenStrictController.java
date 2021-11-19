@@ -23,7 +23,11 @@ public class CamelliaIdGenStrictController {
     @GetMapping("/genId")
     public IdGenResult genId(@RequestParam("tag") String tag) {
         try {
-            return IdGenResult.success(camelliaStrictIdGen.genId(tag));
+            long id = camelliaStrictIdGen.genId(tag);
+            if (logger.isDebugEnabled()) {
+                logger.debug("genId, tag = {}, id = {}", tag, id);
+            }
+            return IdGenResult.success(id);
         } catch (CamelliaIdGenException e) {
             logger.error(e.getMessage(), e);
             return IdGenResult.error(e.getMessage());
@@ -36,7 +40,11 @@ public class CamelliaIdGenStrictController {
     @GetMapping("/peekId")
     public IdGenResult peekId(@RequestParam("tag") String tag) {
         try {
-            return IdGenResult.success(camelliaStrictIdGen.peekId(tag));
+            long id = camelliaStrictIdGen.peekId(tag);
+            if (logger.isDebugEnabled()) {
+                logger.debug("peekId, tag = {}, id = {}", tag, id);
+            }
+            return IdGenResult.success(id);
         } catch (CamelliaIdGenException e) {
             logger.error(e.getMessage(), e);
             return IdGenResult.error(e.getMessage());
@@ -50,6 +58,9 @@ public class CamelliaIdGenStrictController {
     public IdGenResult update(@RequestParam("tag") String tag, @RequestParam("id") long id) {
         try {
             boolean result = camelliaStrictIdGen.getIdLoader().update(tag, id);
+            if (logger.isDebugEnabled()) {
+                logger.debug("update, tag = {}, id = {}, result = {}", tag, id, result);
+            }
             return IdGenResult.success(result);
         } catch (CamelliaIdGenException e) {
             logger.error(e.getMessage(), e);
