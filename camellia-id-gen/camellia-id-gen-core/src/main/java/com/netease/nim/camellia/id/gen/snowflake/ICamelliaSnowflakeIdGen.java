@@ -18,4 +18,25 @@ public interface ICamelliaSnowflakeIdGen {
      * @return 时间戳
      */
     long decodeTs(long id);
+
+    /**
+     * 解析id中的regionId
+     * @param id id
+     * @return regionId
+     */
+    long decodeRegionId(long id);
+
+    /**
+     * 解析id中的workerId
+     * @param id id
+     * @return workerId
+     */
+    long decodeWorkerId(long id);
+
+    /**
+     * 解析id中的sequence
+     * @param id id
+     * @return sequence
+     */
+    long decodeSequence(long id);
 }

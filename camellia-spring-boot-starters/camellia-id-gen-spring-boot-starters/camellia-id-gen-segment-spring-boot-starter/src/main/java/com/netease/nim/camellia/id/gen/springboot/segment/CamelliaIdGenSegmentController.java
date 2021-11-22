@@ -61,6 +61,23 @@ public class CamelliaIdGenSegmentController {
         }
     }
 
+    @GetMapping("/decodeRegionId")
+    public IdGenResult decodeRegionId(@RequestParam("id") long id) {
+        try {
+            long regionId = camelliaSegmentIdGen.decodeRegionId(id);
+            if (logger.isDebugEnabled()) {
+                logger.debug("decodeRegionId, id = {}, regionId = {}", id, regionId);
+            }
+            return IdGenResult.success(regionId);
+        } catch (CamelliaIdGenException e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error(e.getMessage());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error("internal error");
+        }
+    }
+
     @PostMapping("/update")
     public IdGenResult update(@RequestParam("tag") String tag, @RequestParam("id") long id) {
         try {

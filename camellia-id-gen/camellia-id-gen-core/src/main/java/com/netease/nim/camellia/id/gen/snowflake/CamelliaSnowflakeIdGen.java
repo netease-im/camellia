@@ -120,6 +120,30 @@ public class CamelliaSnowflakeIdGen implements ICamelliaSnowflakeIdGen {
         return (id >> (regionBits + workerIdBits + sequenceBits)) + twepoch;
     }
 
+    public long decodeRegionId(long id) {
+        if (regionBits == 0) {
+            return -1;
+        } else {
+            return ((((1L << regionBits) - 1) << (workerIdBits + sequenceBits)) & id) >> (workerIdBits + sequenceBits);
+        }
+    }
+
+    public long decodeWorkerId(long id) {
+        if (workerIdBits == 0) {
+            return -1;
+        } else {
+            return ((((1L << workerIdBits) - 1) << sequenceBits) & id) >> sequenceBits;
+        }
+    }
+
+    public long decodeSequence(long id) {
+        if (sequenceBits == 0) {
+            return -1;
+        } else {
+            return ((1L << sequenceBits) - 1) & id;
+        }
+    }
+
     //选择一个随机值，而不是每次都从0开始
     private long sequenceInit() {
         if (maxSequence > 128L) {

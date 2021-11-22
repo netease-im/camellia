@@ -19,4 +19,11 @@ public interface ICamelliaStrictIdGen {
      * @return id
      */
     long peekId(String tag);
+
+    /**
+     * 解析id中的regionId
+     * @param id id
+     * @return regionId
+     */
+    long decodeRegionId(long id);
 }

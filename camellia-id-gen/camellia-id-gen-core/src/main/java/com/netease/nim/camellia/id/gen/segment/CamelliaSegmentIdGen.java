@@ -83,4 +83,14 @@ public class CamelliaSegmentIdGen extends AbstractCamelliaSegmentIdGen {
             throw new CamelliaIdGenException("load ids from idLoader error", e);
         }
     }
+
+    public long decodeRegionId(long id) {
+        if (regionBits == 0) {
+            return -1;
+        } else if (regionBits > 0 && regionIdShiftingBits == 0) {
+            return ((1L << regionBits) - 1) & id;
+        } else {
+            return ((((1L << regionBits) - 1) << regionIdShiftingBits) & id) >> regionIdShiftingBits;
+        }
+    }
 }

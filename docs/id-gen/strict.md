@@ -193,6 +193,17 @@ http://127.0.0.1:8082/camellia/id/gen/strict/peekId?tag=a
 curl -d "tag=a&id=100" http://127.0.0.1:8082/camellia/id/gen/strict/update
 ```
 
+解析regionId：  
+http://127.0.0.1:8082/camellia/id/gen/strict/decodeRegionId?id=11111  
+返回示例：
+```json
+{
+    "code": 200,
+    "data": 10,
+    "msg": "success"
+}
+```
+
 当使用spring-boot-starter部署了独立的发号器服务后，为了方便使用http方法访问相关接口，我们提供了一个简易的封装    
 先引入maven依赖：  
 ```

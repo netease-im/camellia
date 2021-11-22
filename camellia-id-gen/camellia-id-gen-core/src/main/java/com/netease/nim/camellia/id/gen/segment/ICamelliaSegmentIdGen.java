@@ -24,4 +24,10 @@ public interface ICamelliaSegmentIdGen {
      */
     long genId(String tag);
 
+    /**
+     * 解析id中的regionId
+     * @param id id
+     * @return regionId
+     */
+    long decodeRegionId(long id);
 }

@@ -162,6 +162,17 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
         throw new CamelliaIdGenException("exceed maxRetry=" + maxRetry);
     }
 
+    @Override
+    public long decodeRegionId(long id) {
+        if (regionBits == 0) {
+            return -1;
+        } else if (regionBits > 0 && regionIdShiftingBits == 0) {
+            return ((1L << regionBits) - 1) & id;
+        } else {
+            return ((((1L << regionBits) - 1) << regionIdShiftingBits) & id) >> regionIdShiftingBits;
+        }
+    }
+
     //尝试load一下id，会有分布式的锁来控制并发
     private boolean tryLoadIds(String tag) {
         String cacheKey = cacheKey(tag);

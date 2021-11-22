@@ -66,6 +66,14 @@ public class CamelliaSegmentIdGenSdk extends AbstractCamelliaSegmentIdGen {
     }
 
     @Override
+    public long decodeRegionId(long id) {
+        return invoker.invoke(server -> {
+            String fullUrl = server.getUrl() + "/camellia/id/gen/segment/decodeRegionId?id=" + id;
+            return CamelliaIdGenHttpUtils.genId(okHttpClient, fullUrl);
+        }, config.getMaxRetry());
+    }
+
+    @Override
     protected void loadCache(LinkedBlockingQueue<Long> cache, String tag, int loadCount) {
         List<Long> ids = _genIds(tag, loadCount);
         for (Long id : ids) {

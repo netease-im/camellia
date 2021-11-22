@@ -57,4 +57,55 @@ public class CamelliaIdGenSnowflakeController {
             return IdGenResult.error("internal error");
         }
     }
+
+    @GetMapping("/decodeRegionId")
+    public IdGenResult decodeRegionId(@RequestParam("id") long id) {
+        try {
+            long regionId = camelliaSnowflakeIdGen.decodeRegionId(id);
+            if (logger.isDebugEnabled()) {
+                logger.debug("decodeRegionId, id = {}, regionId = {}", id, regionId);
+            }
+            return IdGenResult.success(regionId);
+        } catch (CamelliaIdGenException e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error(e.getMessage());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error("internal error");
+        }
+    }
+
+    @GetMapping("/decodeSequence")
+    public IdGenResult decodeSequence(@RequestParam("id") long id) {
+        try {
+            long regionId = camelliaSnowflakeIdGen.decodeSequence(id);
+            if (logger.isDebugEnabled()) {
+                logger.debug("decodeSequence, id = {}, regionId = {}", id, regionId);
+            }
+            return IdGenResult.success(regionId);
+        } catch (CamelliaIdGenException e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error(e.getMessage());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error("internal error");
+        }
+    }
+
+    @GetMapping("/decodeWorkerId")
+    public IdGenResult decodeWorkerId(@RequestParam("id") long id) {
+        try {
+            long regionId = camelliaSnowflakeIdGen.decodeWorkerId(id);
+            if (logger.isDebugEnabled()) {
+                logger.debug("decodeWorkerId, id = {}, regionId = {}", id, regionId);
+            }
+            return IdGenResult.success(regionId);
+        } catch (CamelliaIdGenException e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error(e.getMessage());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return IdGenResult.error("internal error");
+        }
+    }
 }

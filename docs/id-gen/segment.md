@@ -169,6 +169,17 @@ curl -d "tag=a&id=100" http://127.0.0.1:8083/camellia/id/gen/segment/update
     <version>a.b.c</version>
 </dependency>
 ```
+解析regionId：  
+http://127.0.0.1:8083/camellia/id/gen/segment/decodeRegionId?id=11111  
+返回示例：  
+```json
+{
+    "code": 200,
+    "data": 10,
+    "msg": "success"
+}
+```
+
 示例代码如下：  
 ```java
 public class CamelliaSegmentIdGenSdkTest {

@@ -36,4 +36,28 @@ public class CamelliaSnowflakeIdGenSdk implements ICamelliaSnowflakeIdGen {
             return CamelliaIdGenHttpUtils.genId(okHttpClient, fullUrl);
         }, config.getMaxRetry());
     }
+
+    @Override
+    public long decodeRegionId(long id) {
+        return invoker.invoke(server -> {
+            String fullUrl = server.getUrl() + "/camellia/id/gen/snowflake/decodeRegionId?id=" + id;
+            return CamelliaIdGenHttpUtils.genId(okHttpClient, fullUrl);
+        }, config.getMaxRetry());
+    }
+
+    @Override
+    public long decodeWorkerId(long id) {
+        return invoker.invoke(server -> {
+            String fullUrl = server.getUrl() + "/camellia/id/gen/snowflake/decodeWorkerId?id=" + id;
+            return CamelliaIdGenHttpUtils.genId(okHttpClient, fullUrl);
+        }, config.getMaxRetry());
+    }
+
+    @Override
+    public long decodeSequence(long id) {
+        return invoker.invoke(server -> {
+            String fullUrl = server.getUrl() + "/camellia/id/gen/snowflake/decodeSequence?id=" + id;
+            return CamelliaIdGenHttpUtils.genId(okHttpClient, fullUrl);
+        }, config.getMaxRetry());
+    }
 }

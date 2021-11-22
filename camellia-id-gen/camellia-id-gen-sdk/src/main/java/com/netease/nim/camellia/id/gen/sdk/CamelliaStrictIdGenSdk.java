@@ -41,4 +41,12 @@ public class CamelliaStrictIdGenSdk implements ICamelliaStrictIdGen {
             return CamelliaIdGenHttpUtils.genId(okHttpClient, fullUrl);
         }, config.getMaxRetry());
     }
+
+    @Override
+    public long decodeRegionId(long id) {
+        return invoker.invoke(server -> {
+            String fullUrl = server.getUrl() + "/camellia/id/gen/strict/decodeRegionId?id=" + id;
+            return CamelliaIdGenHttpUtils.genId(okHttpClient, fullUrl);
+        }, config.getMaxRetry());
+    }
 }

@@ -10,6 +10,7 @@
 * camellia-id-gen of segment and strict mode provide update api to setting starting id
 * camellia-id-gen of segment and strict mode support setting shifting region id
 * camellia-id-gen of segment mode support id sync in multi regions
+* camellia-id-gen provide api to decode regionId/workerId
 * camellia-redis-proxy support multi-write based on mq(such as kafka)
 
 ### update
