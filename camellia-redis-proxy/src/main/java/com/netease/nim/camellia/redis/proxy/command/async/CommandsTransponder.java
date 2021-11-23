@@ -284,7 +284,8 @@ public class CommandsTransponder {
             }
             flush(channelInfo.getBid(), channelInfo.getBgroup(), tasks, commands);
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            logger.error("commands transponder error, client connect will be force closed, bid = {}, bgroup = {}, addr = {}",
+                    channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getCtx().channel().remoteAddress(), e);
             channelInfo.getCtx().close();
         }
     }
