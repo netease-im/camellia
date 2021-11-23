@@ -5,7 +5,7 @@
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 * camellia-redis-proxy支持读redis-cluster的从节点
 
-# 1.0.43（2021/11/xx）
+# 1.0.43（2021/11/23）
 ### 新增
 * camellia-id-gen的segment和strict模式新增更新号段起始值的update接口，具体见：[id-gen](/docs/id-gen/id-gen.md)
 * camellia-id-gen的segment和strict模式，regionId字段支持设置偏移量，具体见：[id-gen](/docs/id-gen/id-gen.md)

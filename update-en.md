@@ -5,7 +5,7 @@
 * camellia-redis-proxy support monitor data visualization in prometheus
 * camellia-redis-proxy support read from slaves of redis-cluster
 
-# 1.0.43（2021/11/xx）
+# 1.0.43（2021/11/23）
 ### add
 * camellia-id-gen of segment and strict mode provide update api to setting starting id
 * camellia-id-gen of segment and strict mode support setting shifting region id
