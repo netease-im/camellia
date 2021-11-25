@@ -7,7 +7,7 @@
 
 # 1.0.44（2021/11/xx）
 ### add
-* none
+* camellia-redis-proxy provide KafkaMqPackProducerConsumer, so proxy can be producer/consumer at the same time
 
 ### update
 * refactor project module structure, new module camellia-redis-proxy-plugins, rename/move camellia-redis-zk/camellia-redis-proxy-mq/camellia-redis-proxy-hbase into camellia-redis-proxy-plugins

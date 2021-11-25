@@ -277,6 +277,13 @@ mq.multi.write.producer.kafka.urls=127.0.0.1:9092,127.0.0.1:9093/camellia_multi_
 mq.multi.write.consumer.kafka.urls=127.0.0.1:9092,127.0.0.1:9093/camellia_multi_write_kafka|127.0.0.2:9092,127.0.0.2:9093/camellia_multi_write_kafka2
 ```
 
+如果你想proxy同时是生产者和消费者（kafkaUrl1的生产者、kafkaUrl2的消费者），则可以配置以下CommandInterceptor：  
+```
+com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackProducerConsumer
+```
+通过对2个机房的proxy配置不同的kafka生产消费地址，搭配使用，可以实现如下效果：  
+<img src="redis-proxy-mq-multi-write2.png" width="50%" height="50%">
+
 #### 使用场景
 * 需要跨机房或者异地机房的redis数据双写同步，可以用于数据的迁移或者容灾
 

@@ -7,7 +7,7 @@
 
 # 1.0.44（2021/11/xx）
 ### 新增
-* 无
+* camellia-redis-proxy新增KafkaMqPackProducerConsumer，proxy可以同时作为kafka的生产者和消费者，具体见：[拦截器](/docs/redis-proxy/interceptor.md)
 
 ### 更新
 * 调整代码结构，新建camellia-redis-proxy-plugins模块，camellia-redis-zk/camellia-redis-proxy-mq/camellia-redis-proxy-hbase平移到camellia-redis-proxy-plugins模块下
