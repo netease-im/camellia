@@ -8,7 +8,7 @@
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia</artifactId>
+		<artifactId>camellia-redis-proxy-plugins</artifactId>
 		<version>1.0.44-SNAPSHOT</version>
 	</parent>
 
