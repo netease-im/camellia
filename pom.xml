@@ -19,8 +19,7 @@
 		<module>camellia-id-gen</module>
 		<module>camellia-tools</module>
 		<module>camellia-redis-proxy</module>
-		<module>camellia-redis-proxy-mq</module>
-		<module>camellia-redis-proxy-hbase</module>
+		<module>camellia-redis-proxy-plugins</module>
 		<module>camellia-samples</module>
 		<module>camellia-spring-boot-starters</module>
 	</modules>

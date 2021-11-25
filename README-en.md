@@ -12,10 +12,11 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 ├─`camellia-hbase`  
 ├─`camellia-redis`  
 ├─`camellia-redis-proxy`   
-├─`camellia-redis-proxy-hbase`  
-├─`camellia-redis-proxy-mq`  
-│ ├─`camellia-redis-proxy-mq-common`    
-│ ├─`camellia-redis-proxy-mq-kafka`   
+├─`camellia-redis-proxy-plugins`  
+│ ├─`camellia-redis-proxy-hbase`    
+│ ├─`camellia-redis-proxy-mq`  
+│ │ ├─`camellia-redis-proxy-mq-common`   
+│ │ ├─`camellia-redis-proxy-mq-kafka`  
 ├─`camellia-tools`    
 ├─`camellia-id-gen`  
 │ ├─`camellia-id-gen-core`  
