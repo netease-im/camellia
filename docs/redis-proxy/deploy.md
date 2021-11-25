@@ -148,7 +148,7 @@ reload动态配置ProxyDynamicConf
 ```
 <dependency>
     <groupId>com.netease.nim</groupId>
-    <artifactId>camellia-redis-zk-discovery</artifactId>
+    <artifactId>camellia-redis-proxy-discovery-zk</artifactId>
     <version>a.b.c</version>
 </dependency>
 ``` 
@@ -160,11 +160,6 @@ RedisProxyJedisPool使用IProxySelector来定义proxy的负载均衡策略，默
 此外，如果redis-proxy使用了camellia-dashboard，且使用了动态的多组配置，那么RedisProxyJedisPool需要声明一下自己的bid和bgroup  
 下面是一个例子：  
 ```java
-import com.netease.nim.camellia.redis.proxy.RedisProxyJedisPool;
-import com.netease.nim.camellia.redis.proxy.RegionResolver;
-import com.netease.nim.camellia.redis.zk.discovery.ZkProxyDiscovery;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPoolConfig;
 
 public class TestRedisProxyJedisPool {
 

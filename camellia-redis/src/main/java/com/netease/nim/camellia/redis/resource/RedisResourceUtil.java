@@ -7,6 +7,8 @@ import com.netease.nim.camellia.core.util.CheckUtil;
 import com.netease.nim.camellia.core.util.ResourceUtil;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.*;
+import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
+import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPoolContext;
 import redis.clients.jedis.JedisPool;
 
 import java.util.*;

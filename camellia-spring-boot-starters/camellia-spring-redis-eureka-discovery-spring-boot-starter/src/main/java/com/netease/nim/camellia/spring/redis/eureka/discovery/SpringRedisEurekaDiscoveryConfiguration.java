@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.spring.redis.eureka.discovery;
 
 import com.netease.nim.camellia.redis.eureka.base.EurekaProxyDiscovery;
-import com.netease.nim.camellia.redis.proxy.RedisProxyJedisPool;
-import com.netease.nim.camellia.redis.proxy.RegionResolver;
+import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
+import com.netease.nim.camellia.redis.proxy.discovery.common.RegionResolver;
 import com.netease.nim.camellia.spring.redis.base.RedisProxyRedisConnectionFactory;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;

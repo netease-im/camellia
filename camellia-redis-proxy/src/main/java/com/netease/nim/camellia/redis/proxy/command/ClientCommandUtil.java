@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.command;
 
-import com.netease.nim.camellia.redis.proxy.ProxyUtil;
+import com.netease.nim.camellia.redis.proxy.discovery.common.ProxyUtil;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;

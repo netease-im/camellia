@@ -1,9 +1,9 @@
 package com.netease.nim.camellia.redis.zk.discovery.springboot;
 
-import com.netease.nim.camellia.redis.proxy.ProxyDiscovery;
 import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
-import com.netease.nim.camellia.redis.zk.discovery.ZkClientFactory;
-import com.netease.nim.camellia.redis.zk.discovery.ZkProxyDiscovery;
+import com.netease.nim.camellia.redis.proxy.discovery.common.ProxyDiscovery;
+import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkClientFactory;
+import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkProxyDiscovery;
 
 import java.util.concurrent.ConcurrentHashMap;
 

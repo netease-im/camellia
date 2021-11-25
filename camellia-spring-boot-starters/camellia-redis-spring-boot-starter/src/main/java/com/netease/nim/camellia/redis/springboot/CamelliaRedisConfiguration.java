@@ -13,6 +13,7 @@ import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.jedis.JedisPoolFactory;
 import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
 import com.netease.nim.camellia.redis.proxy.*;
+import com.netease.nim.camellia.redis.proxy.discovery.jedis.ProxyJedisPoolConfig;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
 import com.netease.nim.camellia.redis.resource.RedisTemplateResourceTableUpdater;
 import org.slf4j.Logger;

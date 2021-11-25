@@ -5,6 +5,19 @@
 * camellia-redis-proxy support monitor data visualization in prometheus
 * camellia-redis-proxy support read from slaves of redis-cluster
 
+# 1.0.44（2021/11/xx）
+### add
+* none
+
+### update
+* refactor project module structure, new module camellia-redis-proxy-plugins, rename/move camellia-redis-zk/camellia-redis-proxy-mq/camellia-redis-proxy-hbase into camellia-redis-proxy-plugins
+* RedisProxyJedisPool rename package, move package to camellia-redis-proxy-discovery
+* RedisProxyJedisPool support jedis3
+
+### fix
+* none
+
+
 # 1.0.43（2021/11/23）
 ### add
 * camellia-id-gen of segment and strict mode provide update api to setting starting id

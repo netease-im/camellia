@@ -12,19 +12,20 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 ├─`camellia-hbase`  
 ├─`camellia-redis`  
 ├─`camellia-redis-proxy`   
-├─`camellia-redis-proxy-plugins`  
+├─`camellia-redis-proxy-plugins`
+│ ├─`camellia-redis-proxy-discovery`  
+│ │ ├─`camellia-redis-proxy-discovery-common`  
+│ │ ├─`camellia-redis-proxy-discovery-jedis2`   
+│ │ ├─`camellia-redis-proxy-discovery-jedis3`  
+│ │ ├─`camellia-redis-proxy-discovery-zk`  
 │ ├─`camellia-redis-proxy-hbase`    
 │ ├─`camellia-redis-proxy-mq`  
-│ │ ├─`camellia-redis-proxy-mq-common`   
+│ │ ├─`camellia-redis-proxy-mq-common`     
 │ │ ├─`camellia-redis-proxy-mq-kafka`  
 ├─`camellia-tools`    
 ├─`camellia-id-gen`  
 │ ├─`camellia-id-gen-core`  
-│ ├─`camellia-id-gen-sdk`      
-├─`camellia-redis-zk`  
-│ ├─`camellia-redis-zk-common`  
-│ ├─`camellia-redis-zk-discovery`  
-│ ├─`camellia-redis-zk-registry`    
+│ ├─`camellia-id-gen-sdk`  
 ├─`camellia-samples`               
 │ ├─`camellia-core-samples`  
 │ ├─`camellia-dashboard-samples`  
@@ -55,7 +56,7 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 │ │ ├─`camellia-id-gen-id-loader`        
 │ │ ├─`camellia-id-gen-snowflake-spring-boot-starter`       
 │ │ ├─`camellia-id-gen-strict-spring-boot-starter`    
-│ │ ├─`camellia-id-gen-segment-spring-boot-starter`   
+│ │ ├─`camellia-id-gen-segment-spring-boot-starter`  
               
 ## 介绍
 ### 1、camellia-core  
@@ -65,7 +66,7 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 一个web服务，依赖mysql/redis，用于管理camellia-core的配置，端侧可以获取并动态更新配置  
 [快速开始](/docs/dashboard/dashboard.md)  
 ### 3、camellia-redis  
-基于camellia-core和jedis，主要的类是CamelliaRedisTemplate，可以使用统一的api来调用redis/redis-sentinel/redis-cluster，支持pipeline、mget/mset等     
+基于camellia-core和jedis(2.9.3)，主要的类是CamelliaRedisTemplate，可以使用统一的api来调用redis/redis-sentinel/redis-cluster，支持pipeline、mget/mset等     
 支持自定义分片、读写分离、双（多）写、双（多）读     
 支持Jedis适配器，一行代码从Jedis切换到CamelliaRedisTemplate  
 支持SpringRedisTemplate适配器，不修改一行代码迁移到CamelliaRedisTemplate    

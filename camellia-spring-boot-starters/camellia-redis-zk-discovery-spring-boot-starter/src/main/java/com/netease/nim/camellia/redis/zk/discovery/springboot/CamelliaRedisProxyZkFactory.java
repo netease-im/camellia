@@ -1,6 +1,9 @@
 package com.netease.nim.camellia.redis.zk.discovery.springboot;
 
 import com.netease.nim.camellia.redis.proxy.*;
+import com.netease.nim.camellia.redis.proxy.discovery.common.*;
+import com.netease.nim.camellia.redis.proxy.discovery.jedis.ProxyJedisPoolConfig;
+import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
 import com.netease.nim.camellia.redis.resource.CamelliaRedisProxyResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.redis.eureka.base;
 
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
-import com.netease.nim.camellia.redis.proxy.Proxy;
-import com.netease.nim.camellia.redis.proxy.ProxyDiscovery;
+import com.netease.nim.camellia.redis.proxy.discovery.common.Proxy;
+import com.netease.nim.camellia.redis.proxy.discovery.common.ProxyDiscovery;
 import com.netflix.appinfo.InstanceInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.redis.eureka.springboot;
 
 import com.netease.nim.camellia.redis.eureka.base.EurekaProxyDiscovery;
-import com.netease.nim.camellia.redis.proxy.ProxyDiscovery;
 import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
+import com.netease.nim.camellia.redis.proxy.discovery.common.ProxyDiscovery;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 
 import java.util.concurrent.ConcurrentHashMap;

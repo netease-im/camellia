@@ -5,6 +5,20 @@
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 * camellia-redis-proxy支持读redis-cluster的从节点
 
+# 1.0.44（2021/11/xx）
+### 新增
+* 无
+
+### 更新
+* 调整代码结构，新建camellia-redis-proxy-plugins模块，camellia-redis-zk/camellia-redis-proxy-mq/camellia-redis-proxy-hbase平移到camellia-redis-proxy-plugins模块下
+* camellia-redis-zk重命名为camellia-redis-proxy-discovery-zk，并归属于camellia-redis-proxy-discovery，相关类包名修改    
+* RedisProxyJedisPool相关类包名修改，代码从camellia-redis移动到camellia-redis-proxy-discovery
+* RedisProxyJedisPool支持jedis3
+
+### fix
+* 无
+
+
 # 1.0.43（2021/11/23）
 ### 新增
 * camellia-id-gen的segment和strict模式新增更新号段起始值的update接口，具体见：[id-gen](/docs/id-gen/id-gen.md)

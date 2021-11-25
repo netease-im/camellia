@@ -1,9 +1,9 @@
 package com.netease.nim.camellia.spring.redis.zk.discovery;
 
-import com.netease.nim.camellia.redis.proxy.RedisProxyJedisPool;
-import com.netease.nim.camellia.redis.proxy.RegionResolver;
-import com.netease.nim.camellia.redis.zk.discovery.ZkClientFactory;
-import com.netease.nim.camellia.redis.zk.discovery.ZkProxyDiscovery;
+import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
+import com.netease.nim.camellia.redis.proxy.discovery.common.RegionResolver;
+import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkClientFactory;
+import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkProxyDiscovery;
 import com.netease.nim.camellia.spring.redis.base.RedisProxyRedisConnectionFactory;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;

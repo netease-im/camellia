@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.id.gen.sdk;
 
-import com.netease.nim.camellia.redis.proxy.ProxyDiscovery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +11,7 @@ import java.util.Set;
  */
 public abstract class AbstractIdGenServerDiscovery implements IdGenServerDiscovery {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProxyDiscovery.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractIdGenServerDiscovery.class);
     private final Set<Callback> callbackSet = new HashSet<>();
 
     public void invokeAddCallback(IdGenServer server) {

@@ -12,19 +12,20 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 ├─`camellia-hbase`  
 ├─`camellia-redis`  
 ├─`camellia-redis-proxy`   
-├─`camellia-redis-proxy-plugins`  
+├─`camellia-redis-proxy-plugins`
+│ ├─`camellia-redis-proxy-discovery`  
+│ │ ├─`camellia-redis-proxy-discovery-common`  
+│ │ ├─`camellia-redis-proxy-discovery-jedis2`   
+│ │ ├─`camellia-redis-proxy-discovery-jedis3`  
+│ │ ├─`camellia-redis-proxy-discovery-zk`  
 │ ├─`camellia-redis-proxy-hbase`    
 │ ├─`camellia-redis-proxy-mq`  
-│ │ ├─`camellia-redis-proxy-mq-common`   
+│ │ ├─`camellia-redis-proxy-mq-common`     
 │ │ ├─`camellia-redis-proxy-mq-kafka`  
 ├─`camellia-tools`    
 ├─`camellia-id-gen`  
 │ ├─`camellia-id-gen-core`  
-│ ├─`camellia-id-gen-sdk`      
-├─`camellia-redis-zk`  
-│ ├─`camellia-redis-zk-common`  
-│ ├─`camellia-redis-zk-discovery`  
-│ ├─`camellia-redis-zk-registry`    
+│ ├─`camellia-id-gen-sdk`  
 ├─`camellia-samples`               
 │ ├─`camellia-core-samples`  
 │ ├─`camellia-dashboard-samples`  
@@ -65,7 +66,7 @@ base on cglib, support client shading/read-write-separate/double-write
 a web service, depends on mysql/redis，manage camellia-core's config，client can get and update config from dashboard  
 [QUICK START](/docs/dashboard/dashboard.md)  
 ### 3、camellia-redis  
-base on camellia-core and jedis，main class is CamelliaRedisTemplate, can invoke redis/redis-sentinel/redis-cluster in identical way，support pipeline    
+base on camellia-core and jedis(2.9.3)，main class is CamelliaRedisTemplate, can invoke redis/redis-sentinel/redis-cluster in identical way，support pipeline    
 support client shading/read-write-separate/double-write   
 support jedis adaptor to migrate from jedis easily   
 support spring-redis-template adaptor  

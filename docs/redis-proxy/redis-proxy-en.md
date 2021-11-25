@@ -689,11 +689,6 @@ certainly, you can implement custom IProxySelector to define your load balance p
 otherwise, if redis-proxy use camellia-dashboard and multi-config, then RedisProxyJedisPool should setting bid/bgroup.  
 this is a sample:  
 ```java
-import com.netease.nim.camellia.redis.proxy.RedisProxyJedisPool;
-import com.netease.nim.camellia.redis.proxy.RegionResolver;
-import com.netease.nim.camellia.redis.zk.discovery.ZkProxyDiscovery;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPoolConfig;
 
 public class TestRedisProxyJedisPool {
 

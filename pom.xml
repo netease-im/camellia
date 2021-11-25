@@ -15,7 +15,6 @@
 		<module>camellia-dashboard</module>
 		<module>camellia-hbase</module>
 		<module>camellia-redis</module>
-		<module>camellia-redis-zk</module>
 		<module>camellia-id-gen</module>
 		<module>camellia-tools</module>
 		<module>camellia-redis-proxy</module>
