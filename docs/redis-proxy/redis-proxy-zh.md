@@ -242,6 +242,9 @@ camellia-redis-proxy默认通过在application.yml里配置全类名的方式来
 * netty配置，具体见：[netty-conf](netty-conf.md)
 * 使用nacos托管proxy配置，具体见：[nacos-conf](nacos-conf.md)
 
+## 其他
+* 关于双（多）写的若干问题，具体见：[multi-write](multi-write.md)
+
 ## 应用场景
 * 业务开始使用单点redis或者redis-sentinel，现在需要切换到redis-cluster，但是客户端需要改造（比如jedis访问redis-sentinel和redis-cluster是不一样的），此时你可以使用proxy，从而做到不改造（使用四层代理LB）或者很少的改造（使用注册中心）
 * 使用双写功能进行集群的迁移
