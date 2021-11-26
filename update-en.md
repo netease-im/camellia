@@ -9,11 +9,11 @@
 ### add
 * camellia-redis-proxy provide KafkaMqPackProducerConsumer, so proxy can be producer/consumer at the same time
 * camellia-redis-proxy provide monitor upstream redis spend time
+* RedisProxyJedisPool support jedis3
 
 ### update
 * refactor project module structure, new module camellia-redis-proxy-plugins, rename/move camellia-redis-zk/camellia-redis-proxy-mq/camellia-redis-proxy-hbase into camellia-redis-proxy-plugins
 * RedisProxyJedisPool rename package, move package to camellia-redis-proxy-discovery
-* RedisProxyJedisPool support jedis3
 
 ### fix
 * none
