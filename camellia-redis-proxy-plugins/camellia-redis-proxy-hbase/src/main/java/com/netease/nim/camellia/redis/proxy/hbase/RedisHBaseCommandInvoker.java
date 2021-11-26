@@ -48,7 +48,7 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
 
         if (serverProperties.isMonitorEnable()) {
             MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);
-            RedisMonitor.init(serverProperties.getMonitorIntervalSeconds(), serverProperties.isCommandSpendTimeMonitorEnable(), monitorCallback);
+            RedisMonitor.init(serverProperties, monitorCallback);
         }
 
         Class<? extends IRedisHBaseCommandProcessor> clazz = IRedisHBaseCommandProcessor.class;
@@ -129,7 +129,7 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
             } finally {
                 if (startTime > 0) {
                     long spendNanoTime = System.nanoTime() - startTime;
-                    RedisMonitor.incrCommandSpendTime(null, null, command.getName(), spendNanoTime);
+                    CommandSpendMonitor.incrCommandSpendTime(null, null, command.getName(), spendNanoTime);
                     if (this.commandSpendTimeConfig != null && spendNanoTime > this.commandSpendTimeConfig.getSlowCommandThresholdNanoTime()) {
                         double spendMillis = spendNanoTime / 1000000.0;
                         long slowCommandThresholdMillisTime = this.commandSpendTimeConfig.getSlowCommandThresholdMillisTime();

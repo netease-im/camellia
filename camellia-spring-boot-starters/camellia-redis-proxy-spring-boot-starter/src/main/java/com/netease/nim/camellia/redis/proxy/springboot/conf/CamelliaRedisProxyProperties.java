@@ -52,6 +52,11 @@ public class CamelliaRedisProxyProperties {
     private boolean commandSpendTimeMonitorEnable = Constants.Server.commandSpendTimeMonitorEnable;
 
     /**
+     * 是否开启监控后端redis响应时间的监控，需要同时开启monitorEnable和upstreamRedisSpendTimeMonitorEnable才能生效，see @RedisMonitor
+     */
+    private boolean upstreamRedisSpendTimeMonitorEnable = Constants.Server.upstreamRedisSpendTimeMonitorEnable;
+
+    /**
      * 开启监控命令执行时间的监控的前提下，慢查询的阈值，单位ms
      */
     private long slowCommandThresholdMillisTime = Constants.Server.slowCommandThresholdMillisTime;
@@ -199,6 +204,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setCommandSpendTimeMonitorEnable(boolean commandSpendTimeMonitorEnable) {
         this.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
+    }
+
+    public boolean isUpstreamRedisSpendTimeMonitorEnable() {
+        return upstreamRedisSpendTimeMonitorEnable;
+    }
+
+    public void setUpstreamRedisSpendTimeMonitorEnable(boolean upstreamRedisSpendTimeMonitorEnable) {
+        this.upstreamRedisSpendTimeMonitorEnable = upstreamRedisSpendTimeMonitorEnable;
     }
 
     public long getSlowCommandThresholdMillisTime() {

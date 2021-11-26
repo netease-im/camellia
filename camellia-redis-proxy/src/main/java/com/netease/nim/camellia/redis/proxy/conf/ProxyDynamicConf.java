@@ -195,13 +195,22 @@ public class ProxyDynamicConf {
         return ConfigurationUtil.getBoolean(conf, "monitor.enable", defaultValue);
     }
 
-    //command spend time monitor enable，当前仅当application.yml里的command-spend-time-monitor-enable=true，才能通过本配置在进程运行期间进行动态的执行开启关闭的操作
+    //command spend time monitor enable，当前仅当application.yml里的monitor-enable=true，才能通过本配置在进程运行期间进行动态的执行开启关闭的操作
     public static boolean commandSpendTimeMonitorEnable(boolean defaultValue) {
         if (hook != null) {
             Boolean value = hook.commandSpendTimeMonitorEnable();
             if (value != null) return value;
         }
         return ConfigurationUtil.getBoolean(conf, "command.spend.time.monitor.enable", defaultValue);
+    }
+
+    //upstream redis spend time monitor enable，当前仅当application.yml里的monitor-enable=true，才能通过本配置在进程运行期间进行动态的执行开启关闭的操作
+    public static boolean upstreamRedisSpendTimeMonitorEnable(boolean defaultValue) {
+        if (hook != null) {
+            Boolean value = hook.upstreamRedisSpendTimeMonitorEnable();
+            if (value != null) return value;
+        }
+        return ConfigurationUtil.getBoolean(conf, "upstream.redis.spend.time.monitor.enable", defaultValue);
     }
 
     //slow command threshold, ms

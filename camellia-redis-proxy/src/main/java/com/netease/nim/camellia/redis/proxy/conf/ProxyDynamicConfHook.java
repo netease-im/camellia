@@ -26,8 +26,13 @@ public class ProxyDynamicConfHook {
         return null;
     }
 
-    //command spend time monitor enable，当前仅当application.yml里的command-spend-time-monitor-enable=true，才能通过本配置在进程运行期间进行动态的执行开启关闭的操作
+    //command spend time monitor enable，当前仅当application.yml里的monitor-enable=true，才能通过本配置在进程运行期间进行动态的执行开启关闭的操作
     public Boolean commandSpendTimeMonitorEnable() {
+        return null;
+    }
+
+    //upstream redis spend time monitor enable，当前仅当application.yml里的monitor-enable=true，才能通过本配置在进程运行期间进行动态的执行开启关闭的操作
+    public Boolean upstreamRedisSpendTimeMonitorEnable() {
         return null;
     }
 

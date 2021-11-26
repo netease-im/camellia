@@ -263,6 +263,20 @@
       "addr": "abc@10.201.48.171:6379",
       "connect": 4
     }
+  ],
+  "upstreamRedisSpendStats": [//后端redis的响应时间
+    {
+      "maxSpendMs": 8.689271,
+      "count": 184,
+      "addr": "abc@10.201.48.171:6379",
+      "avgSpendMs": 3.060518804347826
+    },
+    {
+      "maxSpendMs": 0.176157,
+      "count": 19,
+      "addr": "@10.177.0.69:8803",
+      "avgSpendMs": 0.12276473684210526
+    }
   ]
 }
 ```

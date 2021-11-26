@@ -13,10 +13,12 @@ import java.util.concurrent.CompletableFuture;
 public class CommandPack {
     private final List<Command> commands;
     private final List<CompletableFuture<Reply>> completableFutureList;
+    private final long startTime;
 
-    public CommandPack(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
+    public CommandPack(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList, long startTime) {
         this.commands = commands;
         this.completableFutureList = completableFutureList;
+        this.startTime = startTime;
     }
 
     public List<Command> getCommands() {
@@ -25,5 +27,9 @@ public class CommandPack {
 
     public List<CompletableFuture<Reply>> getCompletableFutureList() {
         return completableFutureList;
+    }
+
+    public long getStartTime() {
+        return startTime;
     }
 }

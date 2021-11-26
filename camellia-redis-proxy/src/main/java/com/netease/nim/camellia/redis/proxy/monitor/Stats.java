@@ -29,6 +29,7 @@ public class Stats {
     private List<ResourceBidBgroupCommandStats> resourceBidBgroupCommandStatsList = new ArrayList<>();
     private List<RouteConf> routeConfList = new ArrayList<>();
     private RedisConnectStats redisConnectStats = new RedisConnectStats();
+    private List<UpstreamRedisSpendStats> upstreamRedisSpendStatsList = new ArrayList<>();
 
     public int getIntervalSeconds() {
         return intervalSeconds;
@@ -164,6 +165,14 @@ public class Stats {
 
     public void setRedisConnectStats(RedisConnectStats redisConnectStats) {
         this.redisConnectStats = redisConnectStats;
+    }
+
+    public List<UpstreamRedisSpendStats> getUpstreamRedisSpendStatsList() {
+        return upstreamRedisSpendStatsList;
+    }
+
+    public void setUpstreamRedisSpendStatsList(List<UpstreamRedisSpendStats> upstreamRedisSpendStatsList) {
+        this.upstreamRedisSpendStatsList = upstreamRedisSpendStatsList;
     }
 
     public static class BidBgroupStats {
@@ -581,5 +590,44 @@ public class Stats {
             }
         }
 
+    }
+
+    public static class UpstreamRedisSpendStats {
+        private String addr;
+        private long count;
+        private double avgSpendMs;
+        private double maxSpendMs;
+
+        public String getAddr() {
+            return addr;
+        }
+
+        public void setAddr(String addr) {
+            this.addr = addr;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+        public void setCount(long count) {
+            this.count = count;
+        }
+
+        public double getAvgSpendMs() {
+            return avgSpendMs;
+        }
+
+        public void setAvgSpendMs(double avgSpendMs) {
+            this.avgSpendMs = avgSpendMs;
+        }
+
+        public double getMaxSpendMs() {
+            return maxSpendMs;
+        }
+
+        public void setMaxSpendMs(double maxSpendMs) {
+            this.maxSpendMs = maxSpendMs;
+        }
     }
 }

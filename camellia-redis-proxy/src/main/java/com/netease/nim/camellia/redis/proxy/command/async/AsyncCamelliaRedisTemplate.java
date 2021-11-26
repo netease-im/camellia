@@ -14,9 +14,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUp
 import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
-import com.netease.nim.camellia.redis.proxy.monitor.FastRemoteMonitor;
-import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
-import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
@@ -112,9 +110,9 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             }
         }
         if (bid == -1) {
-            RedisMonitor.registerRedisTemplate(null, null, this);
+            RouteConfMonitor.registerRedisTemplate(null, null, this);
         } else {
-            RedisMonitor.registerRedisTemplate(bid, bgroup, this);
+            RouteConfMonitor.registerRedisTemplate(bid, bgroup, this);
         }
     }
 
@@ -136,9 +134,9 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             scheduleExecutor.scheduleAtFixedRate(reloadTask, reloadIntervalMillis, reloadIntervalMillis, TimeUnit.MILLISECONDS);
         }
         if (bid == -1) {
-            RedisMonitor.registerRedisTemplate(null, null, this);
+            RouteConfMonitor.registerRedisTemplate(null, null, this);
         } else {
-            RedisMonitor.registerRedisTemplate(bid, bgroup, this);
+            RouteConfMonitor.registerRedisTemplate(bid, bgroup, this);
         }
     }
 
@@ -1123,9 +1121,9 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             monitor.incrRead(url, className, command.getName());
         }
         if (bid == -1) {
-            RedisMonitor.incr(null, null, url, command.getName());
+            ResourceStatsMonitor.incr(null, null, url, command.getName());
         } else {
-            RedisMonitor.incr(bid, bgroup, url, command.getName());
+            ResourceStatsMonitor.incr(bid, bgroup, url, command.getName());
         }
         if (logger.isDebugEnabled()) {
             logger.debug("read command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, url);
@@ -1137,9 +1135,9 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             monitor.incrRead(resource.getUrl(), className, command.getName());
         }
         if (bid == -1) {
-            RedisMonitor.incr(null, null, resource.getUrl(), command.getName());
+            ResourceStatsMonitor.incr(null, null, resource.getUrl(), command.getName());
         } else {
-            RedisMonitor.incr(bid, bgroup, resource.getUrl(), command.getName());
+            ResourceStatsMonitor.incr(bid, bgroup, resource.getUrl(), command.getName());
         }
         if (logger.isDebugEnabled()) {
             logger.debug("read command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, resource.getUrl());
@@ -1151,9 +1149,9 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             monitor.incrWrite(url, className, command.getName());
         }
         if (bid == -1) {
-            RedisMonitor.incr(null, null, url, command.getName());
+            ResourceStatsMonitor.incr(null, null, url, command.getName());
         } else {
-            RedisMonitor.incr(bid, bgroup, url, command.getName());
+            ResourceStatsMonitor.incr(bid, bgroup, url, command.getName());
         }
         if (logger.isDebugEnabled()) {
             logger.debug("write command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, url);
@@ -1165,9 +1163,9 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             monitor.incrWrite(resource.getUrl(), className, command.getName());
         }
         if (bid == -1) {
-            RedisMonitor.incr(null, null, resource.getUrl(), command.getName());
+            ResourceStatsMonitor.incr(null, null, resource.getUrl(), command.getName());
         } else {
-            RedisMonitor.incr(bid, bgroup, resource.getUrl(), command.getName());
+            ResourceStatsMonitor.incr(bid, bgroup, resource.getUrl(), command.getName());
         }
         if (logger.isDebugEnabled()) {
             logger.debug("write command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, resource.getUrl());

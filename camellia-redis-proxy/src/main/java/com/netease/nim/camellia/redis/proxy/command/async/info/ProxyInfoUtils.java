@@ -9,10 +9,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
-import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
-import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
-import com.netease.nim.camellia.redis.proxy.monitor.Stats;
+import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
@@ -358,7 +355,7 @@ public class ProxyInfoUtils {
     private static String getRoutes() {
         StringBuilder builder = new StringBuilder();
         builder.append("# Route").append("\n");
-        ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> templateMap = RedisMonitor.getTemplateMap();
+        ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> templateMap = RouteConfMonitor.getTemplateMap();
         builder.append("route_nums:").append(templateMap.size()).append("\n");
         for (Map.Entry<String, AsyncCamelliaRedisTemplate> entry : templateMap.entrySet()) {
             String key = entry.getKey();
@@ -381,7 +378,7 @@ public class ProxyInfoUtils {
     private static String getUpstream() {
         StringBuilder builder = new StringBuilder();
         builder.append("# Upstream").append("\n");
-        ConcurrentHashMap<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> redisClientMap = RedisMonitor.getRedisClientMap();
+        ConcurrentHashMap<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> redisClientMap = RedisClientMonitor.getRedisClientMap();
         int upstreamRedisNums = 0;
         for (Map.Entry<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> entry : redisClientMap.entrySet()) {
             upstreamRedisNums += entry.getValue().size();

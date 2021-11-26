@@ -38,12 +38,18 @@ public class CommandPackEncoder extends MessageToMessageEncoder<CommandPack> {
     protected void encode(ChannelHandlerContext ctx, CommandPack msg, List<Object> out) {
         try {
             List<Command> commands = msg.getCommands();
+            long startTime = msg.getStartTime();
             for (CompletableFuture<Reply> future : msg.getCompletableFutureList()) {
                 if (!redisClient.isValid()) {
                     future.complete(ErrorReply.NOT_AVAILABLE);
                     continue;
                 }
-                boolean offer = queue.offer(future);
+                boolean offer;
+                if (startTime > 0) {
+                    offer = queue.offer(new CompletableFutureWithTime<>(future, redisClient.getAddr(), startTime));
+                } else {
+                    offer = queue.offer(future);
+                }
                 if (!offer) {
                     String log = redisClient.getClientName() + ", queue full, will stop";
                     ErrorLogCollector.collect(CommandPackEncoder.class, log);

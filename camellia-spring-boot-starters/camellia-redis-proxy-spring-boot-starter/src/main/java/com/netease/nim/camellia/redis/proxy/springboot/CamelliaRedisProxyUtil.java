@@ -45,6 +45,7 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setMonitorCallback(support.getMonitorCallback());
         serverProperties.setMonitorCallbackClassName(properties.getMonitorCallbackClassName());
         serverProperties.setCommandSpendTimeMonitorEnable(properties.isCommandSpendTimeMonitorEnable());
+        serverProperties.setUpstreamRedisSpendTimeMonitorEnable(properties.isUpstreamRedisSpendTimeMonitorEnable());
         serverProperties.setSlowCommandThresholdMillisTime(properties.getSlowCommandThresholdMillisTime());
         serverProperties.setCommandInterceptorClassName(properties.getCommandInterceptorClassName());
         serverProperties.setCommandInterceptor(support.getCommandInterceptor());

@@ -24,6 +24,7 @@ camellia-redis-proxy:
   password: pass123   #proxy的密码
   monitor-enable: true  #是否开启监控
   command-spend-time-monitor-enable: true #是否开启请求耗时的监控，只有monitor-enable=true才有效
+  upstream-redis-spend-time-monitor-enable: true #是否开启后端redis响应耗时的监控，只有monitor-enable=true才有效
   monitor-interval-seconds: 60 #监控回调的间隔
   monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback #监控回调类
   transpond:
@@ -143,6 +144,7 @@ camellia-redis-proxy:
   monitor-data-mask-password: false #监控相关数据（包括日志）是否把密码隐藏，默认false（例：用***代替abc）
   monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback #监控回调类
   command-spend-time-monitor-enable: true #是否开启请求耗时的监控，只有monitor-enable=true才有效
+  upstream-redis-spend-time-monitor-enable: true #是否开启后端redis响应耗时的监控，只有monitor-enable=true才有效
   slow-command-threshold-millis-time: 1000 #慢查询的阈值，单位毫秒，只有command-spend-time-monitor-enable=true才有效
   slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback #慢查询的回调类
   command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor #方法拦截器

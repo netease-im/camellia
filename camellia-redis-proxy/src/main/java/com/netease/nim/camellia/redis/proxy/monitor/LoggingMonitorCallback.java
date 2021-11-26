@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.monitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -71,6 +72,12 @@ public class LoggingMonitorCallback implements MonitorCallback {
             logger.info("redis.total.connect.count={}", redisConnectStats.getConnectCount());
             for (Stats.RedisConnectStats.Detail detail : redisConnectStats.getDetailList()) {
                 logger.info("redis.addr={},connect.count={}", detail.getAddr(), detail.getConnectCount());
+            }
+            logger.info("====upstream.redis.spend.stats====");
+            List<Stats.UpstreamRedisSpendStats> upstreamRedisSpendStatsList = stats.getUpstreamRedisSpendStatsList();
+            for (Stats.UpstreamRedisSpendStats upstreamRedisSpendStats : upstreamRedisSpendStatsList) {
+                logger.info("addr={},count={},avgSpendMs={},maxSpendMs={}", upstreamRedisSpendStats.getAddr(),
+                        upstreamRedisSpendStats.getCount(), upstreamRedisSpendStats.getAvgSpendMs(), upstreamRedisSpendStats.getMaxSpendMs());
             }
             logger.info("<<<<<<<END<<<<<<<");
         } catch (Exception e) {

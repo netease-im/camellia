@@ -6,7 +6,9 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
+import com.netease.nim.camellia.redis.proxy.monitor.RedisClientMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.UpstreamRedisSpendTimeMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.ClientHandler;
 import com.netease.nim.camellia.redis.proxy.netty.CommandPack;
 import com.netease.nim.camellia.redis.proxy.netty.CommandPackEncoder;
@@ -93,7 +95,7 @@ public class RedisClient implements AsyncClient {
 
     public void start() {
         try {
-            RedisMonitor.addRedisClient(this);
+            RedisClientMonitor.addRedisClient(this);
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(eventLoopGroup)
                     .channel(NioSocketChannel.class)
@@ -265,7 +267,7 @@ public class RedisClient implements AsyncClient {
     }
 
     private void _stop(boolean grace) {
-        RedisMonitor.removeRedisClient(this);
+        RedisClientMonitor.removeRedisClient(this);
         if (!valid && queue.isEmpty()
                 && channel == null && heartbeatScheduledFuture == null && idleCheckScheduledFuture == null) {
             return;
@@ -348,7 +350,7 @@ public class RedisClient implements AsyncClient {
         List<Command> commands = Collections.singletonList(new Command(new byte[][]{RedisCommand.PING.raw()}));
         CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
         List<CompletableFuture<Reply>> futures = Collections.singletonList(completableFuture);
-        CommandPack pack = new CommandPack(commands, futures);
+        CommandPack pack = new CommandPack(commands, futures, _startTime());
         if (logger.isDebugEnabled()) {
             logger.debug("{} send ping for heart-beat", clientName);
         }
@@ -371,13 +373,21 @@ public class RedisClient implements AsyncClient {
             }
             return;
         }
-        CommandPack pack = new CommandPack(commands, completableFutureList);
+        CommandPack pack = new CommandPack(commands, completableFutureList, _startTime());
         if (logger.isDebugEnabled()) {
             logger.debug("{} sendCommands, commands.size = {}", clientName, commands.size());
         }
         channel.writeAndFlush(pack);
         if (closeIdleConnection) {
             lastCommandTime = TimeCache.currentMillis;
+        }
+    }
+
+    private long _startTime() {
+        if (RedisMonitor.isUpstreamRedisSpendTimeMonitorEnable()) {
+            return System.nanoTime();
+        } else {
+            return -1;
         }
     }
 

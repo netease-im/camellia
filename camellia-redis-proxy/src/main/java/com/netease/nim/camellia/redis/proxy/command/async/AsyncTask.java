@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.converter.Converters;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCache;
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.CommandSpendMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.SlowCommandMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
@@ -67,7 +68,7 @@ public class AsyncTask {
                         ChannelInfo channelInfo = command.getChannelInfo();
                         Long bid = channelInfo == null ? null : channelInfo.getBid();
                         String bgroup = channelInfo == null ? null : channelInfo.getBgroup();
-                        RedisMonitor.incrCommandSpendTime(bid, bgroup, command.getName(), spendNanoTime);
+                        CommandSpendMonitor.incrCommandSpendTime(bid, bgroup, command.getName(), spendNanoTime);
                         if (commandSpendTimeConfig != null && spendNanoTime > commandSpendTimeConfig.getSlowCommandThresholdNanoTime()
                                 && !command.isBlocking()) {
                             long slowCommandThresholdMillisTime = commandSpendTimeConfig.getSlowCommandThresholdMillisTime();

@@ -25,6 +25,7 @@ public class CamelliaServerProperties {
     private String monitorCallbackClassName = Constants.Server.monitorCallbackClassName;
     private MonitorCallback monitorCallback;
     private boolean commandSpendTimeMonitorEnable = Constants.Server.commandSpendTimeMonitorEnable;
+    private boolean upstreamRedisSpendTimeMonitorEnable = Constants.Server.upstreamRedisSpendTimeMonitorEnable;
     private long slowCommandThresholdMillisTime = Constants.Server.slowCommandThresholdMillisTime;
     private String slowCommandCallbackClassName = Constants.Server.slowCommandMonitorCallbackClassName;
     private SlowCommandMonitorCallback slowCommandMonitorCallback;
@@ -99,6 +100,14 @@ public class CamelliaServerProperties {
 
     public void setCommandSpendTimeMonitorEnable(boolean commandSpendTimeMonitorEnable) {
         this.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
+    }
+
+    public boolean isUpstreamRedisSpendTimeMonitorEnable() {
+        return upstreamRedisSpendTimeMonitorEnable;
+    }
+
+    public void setUpstreamRedisSpendTimeMonitorEnable(boolean upstreamRedisSpendTimeMonitorEnable) {
+        this.upstreamRedisSpendTimeMonitorEnable = upstreamRedisSpendTimeMonitorEnable;
     }
 
     public long getSlowCommandThresholdMillisTime() {

@@ -2,14 +2,12 @@ package com.netease.nim.camellia.redis.proxy.monitor;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
-import com.netease.nim.camellia.redis.proxy.command.async.*;
 import com.netease.nim.camellia.redis.proxy.command.async.info.ProxyInfoUtils;
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
-import com.netease.nim.camellia.redis.proxy.util.MaxValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +16,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -28,45 +25,41 @@ import java.util.concurrent.atomic.LongAdder;
 public class RedisMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisMonitor.class);
-
     private static final ThreadLocal<SimpleDateFormat> dataFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
     private static final AtomicBoolean initOk = new AtomicBoolean(false);
-
     private static MonitorCallback monitorCallback;
-
     private static int intervalSeconds;
-    private static ConcurrentHashMap<String, LongAdder> map = new ConcurrentHashMap<>();
-    private static Stats stats = new Stats();
-    private static final ConcurrentHashMap<String, LongAdder> failCountMap = new ConcurrentHashMap<>();
 
     private static boolean monitorEnable;
     private static boolean commandSpendTimeMonitorEnable;
+    private static boolean upstreamRedisSpendTimeMonitorEnable;
 
-    private static final ConcurrentHashMap<String, LongAdder> commandSpendCountMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, LongAdder> commandSpendTotalMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, MaxValue> commandSpendMaxMap = new ConcurrentHashMap<>();
+    private static Stats stats = new Stats();
 
-    private static ConcurrentHashMap<String, LongAdder> resourceCommandBidBgroupMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, LongAdder> map = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, LongAdder> failCountMap = new ConcurrentHashMap<>();
 
-    private static final ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> templateMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> redisClientMap = new ConcurrentHashMap<>();
-
-    public static void init(int seconds, boolean commandSpendTimeMonitorEnable, MonitorCallback monitorCallback) {
+    public static void init(CamelliaServerProperties serverProperties, MonitorCallback monitorCallback) {
         if (initOk.compareAndSet(false, true)) {
+            int seconds = serverProperties.getMonitorIntervalSeconds();
             intervalSeconds = seconds;
             ExecutorUtils.scheduleAtFixedRate(RedisMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
             RedisMonitor.monitorEnable = true;
-            RedisMonitor.commandSpendTimeMonitorEnable = commandSpendTimeMonitorEnable;
+            RedisMonitor.commandSpendTimeMonitorEnable = serverProperties.isCommandSpendTimeMonitorEnable();
+            RedisMonitor.upstreamRedisSpendTimeMonitorEnable = serverProperties.isUpstreamRedisSpendTimeMonitorEnable();
             RedisMonitor.monitorCallback = monitorCallback;
             ProxyDynamicConf.registerCallback(RedisMonitor::reloadConf);
             reloadConf();
+            logger.info("RedisMonitor init success, intervalSeconds = {}, monitorEnable = {}, commandSpendTimeMonitorEnable = {}, upstreamRedisSpendTimeMonitorEnable = {}",
+                    intervalSeconds, monitorEnable, commandSpendTimeMonitorEnable, upstreamRedisSpendTimeMonitorEnable);
         }
     }
 
     private static void reloadConf() {
         RedisMonitor.monitorEnable = ProxyDynamicConf.monitorEnable(RedisMonitor.monitorEnable);
         RedisMonitor.commandSpendTimeMonitorEnable = ProxyDynamicConf.commandSpendTimeMonitorEnable(RedisMonitor.commandSpendTimeMonitorEnable);
+        RedisMonitor.upstreamRedisSpendTimeMonitorEnable = ProxyDynamicConf.upstreamRedisSpendTimeMonitorEnable(RedisMonitor.upstreamRedisSpendTimeMonitorEnable);
     }
 
     /**
@@ -85,85 +78,10 @@ public class RedisMonitor {
     }
 
     /**
-     * 统计 AsyncCamelliaRedisTemplate
+     * 后端响应耗时开关
      */
-    public static void registerRedisTemplate(Long bid, String bgroup, AsyncCamelliaRedisTemplate template) {
-        templateMap.put(bid + "|" + bgroup, template);
-    }
-
-    /**
-     * 统计RedisClient，增加
-     */
-    public static void addRedisClient(RedisClient redisClient) {
-        try {
-            ExecutorUtils.submitToSingleThreadExecutor(() -> {
-                try {
-                    RedisClientConfig config = redisClient.getRedisClientConfig();
-                    RedisClientAddr addr = new RedisClientAddr(config.getHost(), config.getPort(), config.getUserName(), config.getPassword());
-                    ConcurrentHashMap<String, RedisClient> subMap = redisClientMap.get(addr);
-                    if (subMap == null) {
-                        subMap = new ConcurrentHashMap<>();
-                        redisClientMap.put(addr, subMap);
-                    }
-                    subMap.put(redisClient.getClientName(), redisClient);
-                } catch (Exception e) {
-                    logger.error(e.getMessage(), e);
-                }
-            });
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 统计RedisClient，减少
-     */
-    public static void removeRedisClient(RedisClient redisClient) {
-        try {
-            ExecutorUtils.submitToSingleThreadExecutor(() -> {
-                try {
-                    RedisClientConfig config = redisClient.getRedisClientConfig();
-                    RedisClientAddr addr = new RedisClientAddr(config.getHost(), config.getPort(), config.getUserName(), config.getPassword());
-                    ConcurrentHashMap<String, RedisClient> subMap = redisClientMap.get(addr);
-                    if (subMap != null) {
-                        subMap.remove(redisClient.getClientName());
-                        if (subMap.isEmpty()) {
-                            redisClientMap.remove(addr);
-                        }
-                    }
-                } catch (Exception e) {
-                    logger.error(e.getMessage(), e);
-                }
-            });
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    public static int getClientConnects() {
-        return ChannelMonitor.getChannelMap().size();
-    }
-
-    public static ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> getTemplateMap() {
-        return templateMap;
-    }
-
-    public static ConcurrentHashMap<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> getRedisClientMap() {
-        return redisClientMap;
-    }
-
-    /**
-     * 根据后端redis集群记录请求
-     */
-    public static void incr(Long bid, String bgroup, String url, String command) {
-        if (!monitorEnable) return;
-        try {
-            String key = bid + "|" + bgroup + "|" + url + "|" + command;
-            LongAdder count = CamelliaMapUtils.computeIfAbsent(resourceCommandBidBgroupMap, key, k -> new LongAdder());
-            count.increment();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
+    public static boolean isUpstreamRedisSpendTimeMonitorEnable() {
+        return monitorEnable && upstreamRedisSpendTimeMonitorEnable;
     }
 
     /**
@@ -194,28 +112,109 @@ public class RedisMonitor {
     }
 
     /**
-     * command spend time incr
-     */
-    public static void incrCommandSpendTime(Long bid, String bgroup, String command, long spendNanoTime) {
-        try {
-            if (!commandSpendTimeMonitorEnable || !monitorEnable) return;
-            String key = bid + "|" + bgroup + "|" + command;
-            CamelliaMapUtils.computeIfAbsent(commandSpendCountMap, key, k -> new LongAdder()).increment();
-            CamelliaMapUtils.computeIfAbsent(commandSpendTotalMap, key, k -> new LongAdder()).add(spendNanoTime);
-            MaxValue maxValue = CamelliaMapUtils.computeIfAbsent(commandSpendMaxMap, key, k -> new MaxValue());
-            maxValue.update(spendNanoTime);
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    /**
      * get Stats
      */
     public static Stats getStats() {
         return stats;
     }
 
+    /**
+     * 定时计算
+     */
+    private static void calc() {
+        try {
+            long totalCount = 0;
+            long totalReadCount = 0;
+            long totalWriteCount = 0;
+            Map<String, Stats.TotalStats> totalStatsMap = new HashMap<>();
+            Map<String, Stats.BidBgroupStats> bidBgroupStatsMap = new HashMap<>();
+            List<Stats.DetailStats> detailStatsList = new ArrayList<>();
+
+            ConcurrentHashMap<String, LongAdder> map = RedisMonitor.map;
+            RedisMonitor.map = new ConcurrentHashMap<>();
+            for (Map.Entry<String, LongAdder> entry : map.entrySet()) {
+                String[] split = entry.getKey().split("\\|");
+                long count = entry.getValue().longValue();
+                Long bid = null;
+                if (!split[0].equalsIgnoreCase("null")) {
+                    bid = Long.parseLong(split[0]);
+                }
+                String bgroup = null;
+                if (!split[1].equalsIgnoreCase("null")) {
+                    bgroup = split[1];
+                }
+                String command = split[2];
+
+                Stats.TotalStats totalStats = totalStatsMap.get(command);
+                if (totalStats == null) {
+                    totalStats = totalStatsMap.computeIfAbsent(command, Stats.TotalStats::new);
+                }
+                totalStats.setCount(totalStats.getCount() + count);
+
+                String key = bid + "|" + bgroup;
+                Stats.BidBgroupStats bidBgroupStats = bidBgroupStatsMap.get(key);
+                if (bidBgroupStats == null) {
+                    bidBgroupStats = bidBgroupStatsMap.computeIfAbsent(key, k -> new Stats.BidBgroupStats());
+                }
+                bidBgroupStats.setBid(bid);
+                bidBgroupStats.setBgroup(bgroup);
+                bidBgroupStats.setCount(bidBgroupStats.getCount() + count);
+
+                detailStatsList.add(new Stats.DetailStats(bid, bgroup, command, count));
+
+                totalCount += count;
+                RedisCommand redisCommand = RedisCommand.getRedisCommandByName(command);
+                if (redisCommand != null && redisCommand.getType() != null) {
+                    if (redisCommand.getType() == RedisCommand.Type.READ) {
+                        totalReadCount += count;
+                    } else {
+                        totalWriteCount += count;
+                    }
+                }
+            }
+
+            Stats stats = new Stats();
+            stats.setIntervalSeconds(intervalSeconds);
+            stats.setClientConnectCount(ChannelMonitor.getChannelMap().size());
+            stats.setCount(totalCount);
+            stats.setTotalReadCount(totalReadCount);
+            stats.setTotalWriteCount(totalWriteCount);
+            stats.setDetailStatsList(detailStatsList);
+            stats.setTotalStatsList(new ArrayList<>(totalStatsMap.values()));
+            stats.setBidBgroupStatsList(new ArrayList<>(bidBgroupStatsMap.values()));
+            Map<String, Long> failMap = new HashMap<>();
+            for (Map.Entry<String, LongAdder> entry : failCountMap.entrySet()) {
+                long count = entry.getValue().sumThenReset();
+                if (count > 0) {
+                    failMap.put(entry.getKey(), count);
+                }
+            }
+            stats.setFailMap(failMap);
+
+            CommandSpendMonitor.CommandSpendStats commandSpendStats = CommandSpendMonitor.calc();
+            stats.setSpendStatsList(commandSpendStats.spendStatsList);
+            stats.setBidBgroupSpendStatsList(commandSpendStats.bidBgroupSpendStatsList);
+
+            ResourceStatsMonitor.ResourceStats resourceStats = ResourceStatsMonitor.calc();
+            stats.setResourceStatsList(resourceStats.resourceStatsList);
+            stats.setResourceCommandStatsList(resourceStats.resourceCommandStatsList);
+            stats.setResourceBidBgroupStatsList(resourceStats.resourceBidBgroupStatsList);
+            stats.setResourceBidBgroupCommandStatsList(resourceStats.resourceBidBgroupCommandStatsList);
+
+            stats.setRouteConfList(RouteConfMonitor.calc());
+            stats.setRedisConnectStats(RedisClientMonitor.calc());
+            stats.setUpstreamRedisSpendStatsList(UpstreamRedisSpendTimeMonitor.calc());
+
+            RedisMonitor.stats = stats;
+
+            if (monitorCallback != null) {
+                monitorCallback.callback(stats);
+            }
+            ProxyInfoUtils.updateStats(stats);
+        } catch (Exception e) {
+            logger.error("calc error", e);
+        }
+    }
 
     /**
      * get stats json
@@ -386,254 +385,20 @@ public class RedisMonitor {
             redisConnectDetailStatsJsonArray.add(json);
         }
         monitorJson.put("redisConnectDetailStats", redisConnectDetailStatsJsonArray);
+
+        List<Stats.UpstreamRedisSpendStats> upstreamRedisSpendStatsList = stats.getUpstreamRedisSpendStatsList();
+        JSONArray upstreamRedisSpendStatsJsonArray = new JSONArray();
+        for (Stats.UpstreamRedisSpendStats spendStats : upstreamRedisSpendStatsList) {
+            JSONObject json = new JSONObject();
+            json.put("addr", spendStats.getAddr());
+            json.put("count", spendStats.getCount());
+            json.put("avgSpendMs", spendStats.getAvgSpendMs());
+            json.put("maxSpendMs", spendStats.getMaxSpendMs());
+            upstreamRedisSpendStatsJsonArray.add(json);
+        }
+        monitorJson.put("upstreamRedisSpendStats", upstreamRedisSpendStatsJsonArray);
+
         return monitorJson;
     }
 
-    private static void calc() {
-        try {
-            long totalCount = 0;
-            long totalReadCount = 0;
-            long totalWriteCount = 0;
-            Map<String, Stats.TotalStats> totalStatsMap = new HashMap<>();
-            Map<String, Stats.BidBgroupStats> bidBgroupStatsMap = new HashMap<>();
-            List<Stats.DetailStats> detailStatsList = new ArrayList<>();
-
-            ConcurrentHashMap<String, LongAdder> map = RedisMonitor.map;
-            RedisMonitor.map = new ConcurrentHashMap<>();
-            for (Map.Entry<String, LongAdder> entry : map.entrySet()) {
-                String[] split = entry.getKey().split("\\|");
-                long count = entry.getValue().longValue();
-                Long bid = null;
-                if (!split[0].equalsIgnoreCase("null")) {
-                    bid = Long.parseLong(split[0]);
-                }
-                String bgroup = null;
-                if (!split[1].equalsIgnoreCase("null")) {
-                    bgroup = split[1];
-                }
-                String command = split[2];
-
-                Stats.TotalStats totalStats = totalStatsMap.get(command);
-                if (totalStats == null) {
-                    totalStats = totalStatsMap.computeIfAbsent(command, Stats.TotalStats::new);
-                }
-                totalStats.setCount(totalStats.getCount() + count);
-
-                String key = bid + "|" + bgroup;
-                Stats.BidBgroupStats bidBgroupStats = bidBgroupStatsMap.get(key);
-                if (bidBgroupStats == null) {
-                    bidBgroupStats = bidBgroupStatsMap.computeIfAbsent(key, k -> new Stats.BidBgroupStats());
-                }
-                bidBgroupStats.setBid(bid);
-                bidBgroupStats.setBgroup(bgroup);
-                bidBgroupStats.setCount(bidBgroupStats.getCount() + count);
-
-                detailStatsList.add(new Stats.DetailStats(bid, bgroup, command, count));
-
-                totalCount += count;
-                RedisCommand redisCommand = RedisCommand.getRedisCommandByName(command);
-                if (redisCommand != null && redisCommand.getType() != null) {
-                    if (redisCommand.getType() == RedisCommand.Type.READ) {
-                        totalReadCount += count;
-                    } else {
-                        totalWriteCount += count;
-                    }
-                }
-            }
-
-            List<Stats.BidBgroupSpendStats> bidBgroupSpendStatsList = new ArrayList<>();
-            ConcurrentHashMap<String, AtomicLong> spendSumMap = new ConcurrentHashMap<>();
-            ConcurrentHashMap<String, Stats.SpendStats> spendStatsMap = new ConcurrentHashMap<>();
-            for (Map.Entry<String, LongAdder> entry : commandSpendCountMap.entrySet()) {
-                String key = entry.getKey();
-                long count = entry.getValue().sumThenReset();
-                if (count == 0) continue;
-                MaxValue nanoMax = commandSpendMaxMap.get(key);
-                double maxSpendMs = 0;
-                if (nanoMax != null) {
-                    maxSpendMs = nanoMax.getAndSet(0) / 1000000.0;
-                }
-                double avgSpendMs = 0;
-                LongAdder nanoSum = commandSpendTotalMap.get(key);
-                long sum = 0;
-                if (nanoSum != null) {
-                    sum = nanoSum.sumThenReset();
-                    avgSpendMs = sum / (1000000.0 * count);
-                }
-                String[] split = key.split("\\|");
-                Long bid = null;
-                if (!split[0].equals("null")) {
-                    bid = Long.parseLong(split[0]);
-                }
-                String bgroup = null;
-                if (!split[1].equals("null")) {
-                    bgroup = split[1];
-                }
-                String command = split[2];
-                Stats.BidBgroupSpendStats bidBgroupSpendStats = new Stats.BidBgroupSpendStats();
-                bidBgroupSpendStats.setBid(bid);
-                bidBgroupSpendStats.setBgroup(bgroup);
-                bidBgroupSpendStats.setCommand(command);
-                bidBgroupSpendStats.setAvgSpendMs(avgSpendMs);
-                bidBgroupSpendStats.setMaxSpendMs(maxSpendMs);
-                bidBgroupSpendStats.setCount(count);
-                bidBgroupSpendStatsList.add(bidBgroupSpendStats);
-
-                Stats.SpendStats spendStats = CamelliaMapUtils.computeIfAbsent(spendStatsMap, command, string -> {
-                    Stats.SpendStats bean = new Stats.SpendStats();
-                    bean.setCommand(string);
-                    return bean;
-                });
-                spendStats.setCount(spendStats.getCount() + bidBgroupSpendStats.getCount());
-                if (bidBgroupSpendStats.getMaxSpendMs() > spendStats.getMaxSpendMs()) {
-                    spendStats.setMaxSpendMs(bidBgroupSpendStats.getMaxSpendMs());
-                }
-                CamelliaMapUtils.computeIfAbsent(spendSumMap, command, k -> new AtomicLong()).addAndGet(sum);
-            }
-            for (Map.Entry<String, Stats.SpendStats> entry : spendStatsMap.entrySet()) {
-                String command = entry.getKey();
-                Stats.SpendStats spendStats = entry.getValue();
-                AtomicLong sum = spendSumMap.get(command);
-                if (sum == null) {
-                    spendStats.setAvgSpendMs(0.0);
-                } else {
-                    spendStats.setAvgSpendMs(sum.get() / (1000000.0 * spendStats.getCount()));
-                }
-            }
-
-            ConcurrentHashMap<String, Stats.ResourceStats> resourceStatsMap = new ConcurrentHashMap<>();
-            ConcurrentHashMap<String, Stats.ResourceCommandStats> resourceCommandStatsMap = new ConcurrentHashMap<>();
-
-            ConcurrentHashMap<String, LongAdder> resourceCommandBidBgroupMap = RedisMonitor.resourceCommandBidBgroupMap;
-            RedisMonitor.resourceCommandBidBgroupMap = new ConcurrentHashMap<>();
-            List<Stats.ResourceBidBgroupCommandStats> resourceBidBgroupCommandStatsList = new ArrayList<>();
-            ConcurrentHashMap<String, Stats.ResourceBidBgroupStats> resourceBidBgroupStatsMap = new ConcurrentHashMap<>();
-            for (Map.Entry<String, LongAdder> entry : resourceCommandBidBgroupMap.entrySet()) {
-                String key = entry.getKey();
-                String[] split = key.split("\\|");
-                Long bid = null;
-                if (!split[0].equals("null")) {
-                    bid = Long.parseLong(split[0]);
-                }
-                String bgroup = null;
-                if (!split[1].equals("null")) {
-                    bgroup = split[1];
-                }
-                String url = PasswordMaskUtils.maskResource(split[2]);
-                String command = split[3];
-                Stats.ResourceBidBgroupCommandStats stats = new Stats.ResourceBidBgroupCommandStats();
-                stats.setBid(bid);
-                stats.setBgroup(bgroup);
-                stats.setResource(url);
-                stats.setCommand(command);
-                stats.setCount(entry.getValue().sum());
-                resourceBidBgroupCommandStatsList.add(stats);
-
-                Stats.ResourceStats resourceStats = CamelliaMapUtils.computeIfAbsent(resourceStatsMap, url, string -> {
-                    Stats.ResourceStats bean = new Stats.ResourceStats();
-                    bean.setResource(string);
-                    return bean;
-                });
-                resourceStats.setCount(resourceStats.getCount() + stats.getCount());
-
-                Stats.ResourceCommandStats resourceCommandStats = CamelliaMapUtils.computeIfAbsent(resourceCommandStatsMap, url + "|" + command, string -> {
-                    String[] strings = string.split("\\|");
-                    Stats.ResourceCommandStats bean = new Stats.ResourceCommandStats();
-                    bean.setResource(strings[0]);
-                    bean.setCommand(strings[1]);
-                    return bean;
-                });
-                resourceCommandStats.setCount(resourceCommandStats.getCount() + stats.getCount());
-
-                Stats.ResourceBidBgroupStats resourceBidBgroupStats = CamelliaMapUtils.computeIfAbsent(resourceBidBgroupStatsMap, bid + "|" + bgroup + "|" + url, string -> {
-                    String[] split1 = string.split("\\|");
-                    Long bid1 = null;
-                    if (!split1[0].equals("null")) {
-                        bid1 = Long.parseLong(split1[0]);
-                    }
-                    String bgroup1 = null;
-                    if (!split1[1].equals("null")) {
-                        bgroup1 = split1[1];
-                    }
-                    String url1 = split1[2];
-                    Stats.ResourceBidBgroupStats bean = new Stats.ResourceBidBgroupStats();
-                    bean.setBid(bid1);
-                    bean.setBgroup(bgroup1);
-                    bean.setResource(url1);
-                    return bean;
-                });
-                resourceBidBgroupStats.setCount(resourceBidBgroupStats.getCount() + stats.getCount());
-            }
-
-            List<Stats.RouteConf> routeConfList = new ArrayList<>();
-            for (Map.Entry<String, AsyncCamelliaRedisTemplate> entry : templateMap.entrySet()) {
-                String key = entry.getKey();
-                String[] split = key.split("\\|");
-                Long bid = null;
-                if (!split[0].equals("null")) {
-                    bid = Long.parseLong(split[0]);
-                }
-                String bgroup = null;
-                if (!split[1].equals("null")) {
-                    bgroup = split[1];
-                }
-                String resourceTable = ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(entry.getValue().getResourceTable()));
-                Stats.RouteConf routeConf = new Stats.RouteConf();
-                routeConf.setBid(bid);
-                routeConf.setBgroup(bgroup);
-                routeConf.setResourceTable(resourceTable);
-                routeConf.setUpdateTime(entry.getValue().getResourceTableUpdateTime());
-                routeConfList.add(routeConf);
-            }
-
-            Stats.RedisConnectStats redisConnectStats = new Stats.RedisConnectStats();
-            List<Stats.RedisConnectStats.Detail> detailList = new ArrayList<>();
-            for (Map.Entry<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> entry : redisClientMap.entrySet()) {
-                RedisClientAddr key = entry.getKey();
-                ConcurrentHashMap<String, RedisClient> subMap = entry.getValue();
-                if (subMap.isEmpty()) continue;
-                redisConnectStats.setConnectCount(redisConnectStats.getConnectCount() + subMap.size());
-                Stats.RedisConnectStats.Detail detail = new Stats.RedisConnectStats.Detail();
-                detail.setAddr(PasswordMaskUtils.maskAddr(key.getUrl()));
-                detail.setConnectCount(subMap.size());
-                detailList.add(detail);
-            }
-            redisConnectStats.setDetailList(detailList);
-
-            Stats stats = new Stats();
-            stats.setClientConnectCount(ChannelMonitor.getChannelMap().size());
-            stats.setCount(totalCount);
-            stats.setTotalReadCount(totalReadCount);
-            stats.setTotalWriteCount(totalWriteCount);
-            stats.setDetailStatsList(detailStatsList);
-            stats.setTotalStatsList(new ArrayList<>(totalStatsMap.values()));
-            stats.setBidBgroupStatsList(new ArrayList<>(bidBgroupStatsMap.values()));
-            Map<String, Long> failMap = new HashMap<>();
-            for (Map.Entry<String, LongAdder> entry : failCountMap.entrySet()) {
-                long count = entry.getValue().sumThenReset();
-                if (count > 0) {
-                    failMap.put(entry.getKey(), count);
-                }
-            }
-            stats.setFailMap(failMap);
-            stats.setSpendStatsList(new ArrayList<>(spendStatsMap.values()));
-            stats.setBidBgroupSpendStatsList(bidBgroupSpendStatsList);
-            stats.setIntervalSeconds(intervalSeconds);
-            stats.setResourceStatsList(new ArrayList<>(resourceStatsMap.values()));
-            stats.setResourceCommandStatsList(new ArrayList<>(resourceCommandStatsMap.values()));
-            stats.setResourceBidBgroupStatsList(new ArrayList<>(resourceBidBgroupStatsMap.values()));
-            stats.setResourceBidBgroupCommandStatsList(resourceBidBgroupCommandStatsList);
-            stats.setRouteConfList(routeConfList);
-            stats.setRedisConnectStats(redisConnectStats);
-
-            RedisMonitor.stats = stats;
-
-            if (monitorCallback != null) {
-                monitorCallback.callback(stats);
-            }
-            ProxyInfoUtils.updateStats(stats);
-        } catch (Exception e) {
-            logger.error("calc error", e);
-        }
-    }
 }

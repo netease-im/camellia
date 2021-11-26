@@ -24,6 +24,7 @@ public class Constants {
         public static final int consolePortRandSig = -16379;
         public static final boolean monitorEnable = false;
         public static final boolean commandSpendTimeMonitorEnable = false;
+        public static final boolean upstreamRedisSpendTimeMonitorEnable = false;//检测后段redis
         public static final String monitorCallbackClassName = LoggingMonitorCallback.class.getName();
         public static final long slowCommandThresholdMillisTime = 2000L;
         public static final String slowCommandMonitorCallbackClassName = LoggingSlowCommandMonitorCallback.class.getName();

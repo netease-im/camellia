@@ -44,7 +44,7 @@ public class AsyncCommandInvoker implements CommandInvoker {
 
         if (serverProperties.isMonitorEnable()) {
             MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);
-            RedisMonitor.init(serverProperties.getMonitorIntervalSeconds(), serverProperties.isCommandSpendTimeMonitorEnable(), monitorCallback);
+            RedisMonitor.init(serverProperties, monitorCallback);
         }
 
         int monitorIntervalSeconds = serverProperties.getMonitorIntervalSeconds();
