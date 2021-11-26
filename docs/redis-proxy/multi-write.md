@@ -28,4 +28,3 @@
 
 ### 双写一致性
 * 你可以通过一些工具，来判断多个redis集群的数据一致性，如redis-full-check，见：https://developer.aliyun.com/article/690463    
-* 你可以通过一些工具，来判断多个redis集群的数据一致性，如redis-full-check，见：https://developer.aliyun.com/article/690463    
