@@ -12,7 +12,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 ├─`camellia-hbase`  
 ├─`camellia-redis`  
 ├─`camellia-redis-proxy`   
-├─`camellia-redis-proxy-plugins`
+├─`camellia-redis-proxy-plugins`  
 │ ├─`camellia-redis-proxy-discovery`  
 │ │ ├─`camellia-redis-proxy-discovery-common`  
 │ │ ├─`camellia-redis-proxy-discovery-jedis2`   

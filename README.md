@@ -12,7 +12,7 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 ├─`camellia-hbase`  
 ├─`camellia-redis`  
 ├─`camellia-redis-proxy`   
-├─`camellia-redis-proxy-plugins`
+├─`camellia-redis-proxy-plugins`  
 │ ├─`camellia-redis-proxy-discovery`  
 │ │ ├─`camellia-redis-proxy-discovery-common`  
 │ │ ├─`camellia-redis-proxy-discovery-jedis2`   
