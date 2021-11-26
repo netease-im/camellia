@@ -27,4 +27,5 @@
 * 在基于MQ的双写模式下，通过MQ来保证写命令的不丢失
 
 ### 双写一致性
-* 你可以通过一些工具，如redis-full-check（https://developer.aliyun.com/article/690463），来判断多个redis集群的数据一致性  
+* 你可以通过一些工具，来判断多个redis集群的数据一致性，如redis-full-check，见：https://developer.aliyun.com/article/690463    
+* 你可以通过一些工具，来判断多个redis集群的数据一致性，如redis-full-check，见：https://developer.aliyun.com/article/690463    
