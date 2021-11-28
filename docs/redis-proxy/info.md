@@ -77,13 +77,13 @@ non_heap_memory_max_human:-1B
 non_heap_memory_committed:33882112
 non_heap_memory_committed_human:32.31M
 
-# GC  ##GC相关信息
-young_gc_name:G1 Young Generation  ##young gc的回收器类型
-young_gc_collection_count:6  ##young gc累计次数
-young_gc_collection_time:97  ##young gc累计时间
-old_gc_name:G1 Old Generation  ##old gc的回收器类型
-old_gc_collection_count:0  ##old gc累计次数
-old_gc_collection_time:0  ##old gc累计时长
+# GC
+gc0_name:G1 Young Generation ##gc的回收器类型
+gc0_collection_count:3 ##gc累计次数
+gc0_collection_time:3 ##gc累计时间
+gc1_name:G1 Old Generation
+gc1_collection_count:0
+gc1_collection_time:0
 
 # Stats
 commands_count:4158008   ##proxy启动至今的请求数

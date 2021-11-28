@@ -15,6 +15,7 @@
 * 调整代码结构，新建camellia-redis-proxy-plugins模块，camellia-redis-zk/camellia-redis-proxy-mq/camellia-redis-proxy-hbase平移到camellia-redis-proxy-plugins模块下
 * camellia-redis-zk重命名为camellia-redis-proxy-discovery-zk，并归属于camellia-redis-proxy-discovery，相关类包名修改    
 * RedisProxyJedisPool相关类包名修改，代码从camellia-redis移动到camellia-redis-proxy-discovery
+* camellia-redis-proxy的info gc命令修改返回格式，从而支持zgc等垃圾回收器，具体见：[info](/docs/redis-proxy/info.md)
 
 ### fix
 * 无

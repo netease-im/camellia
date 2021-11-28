@@ -14,6 +14,7 @@
 ### update
 * refactor project module structure, new module camellia-redis-proxy-plugins, rename/move camellia-redis-zk/camellia-redis-proxy-mq/camellia-redis-proxy-hbase into camellia-redis-proxy-plugins
 * RedisProxyJedisPool rename package, move package to camellia-redis-proxy-discovery
+* camellia-redis-proxy refactor reply of info gc command
 
 ### fix
 * none
