@@ -355,9 +355,9 @@ public class RedisProxyJedisPool extends JedisPool {
             }
         }
         if (cause == null) {
-            throw new IllegalArgumentException("Could not get a resource from the pool");
+            throw new RedisProxyJedisPoolException("Could not get a resource from the pool");
         } else {
-            throw new IllegalArgumentException("Could not get a resource from the pool", cause);
+            throw new RedisProxyJedisPoolException("Could not get a resource from the pool", cause);
         }
     }
 

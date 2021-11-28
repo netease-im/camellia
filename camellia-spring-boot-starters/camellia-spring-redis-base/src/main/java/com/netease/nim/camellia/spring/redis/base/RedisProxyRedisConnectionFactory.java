@@ -2,6 +2,7 @@ package com.netease.nim.camellia.spring.redis.base;
 
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
+import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPoolException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.ExceptionTranslationStrategy;
 import org.springframework.data.redis.PassThroughExceptionTranslationStrategy;
@@ -57,7 +58,7 @@ public class RedisProxyRedisConnectionFactory implements RedisConnectionFactory 
 
     @Override
     public DataAccessException translateExceptionIfPossible(RuntimeException e) {
-        if (e instanceof CamelliaRedisException) {
+        if (e instanceof CamelliaRedisException || e instanceof RedisProxyJedisPoolException) {
             Throwable cause = e.getCause();
             if (cause instanceof RuntimeException) {
                 e = (RuntimeException) cause;
