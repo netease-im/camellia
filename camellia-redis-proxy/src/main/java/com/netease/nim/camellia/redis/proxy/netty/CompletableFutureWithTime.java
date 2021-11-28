@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
-import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.UpstreamRedisSpendTimeMonitor;
 
 import java.util.concurrent.CompletableFuture;
