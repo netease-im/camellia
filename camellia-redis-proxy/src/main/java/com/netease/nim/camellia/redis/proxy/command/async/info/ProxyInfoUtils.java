@@ -7,7 +7,6 @@ import com.netease.nim.camellia.redis.proxy.command.async.AsyncCamelliaRedisTemp
 import com.netease.nim.camellia.redis.proxy.command.async.AsyncCamelliaRedisTemplateChooser;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
@@ -48,9 +47,7 @@ public class ProxyInfoUtils {
     private static final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
     private static final OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
     private static final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
-
-    private static GarbageCollectorMXBean oldGC;
-    private static GarbageCollectorMXBean youngGC;
+    private static final List<GarbageCollectorMXBean> garbageCollectorMXBeanList = ManagementFactory.getGarbageCollectorMXBeans();
 
     private static int monitorIntervalSeconds;
     private static final AtomicLong commandsCount = new AtomicLong();
@@ -66,10 +63,6 @@ public class ProxyInfoUtils {
     private static double lastWriteCommandQps = 0.0;
 
     private static AsyncCamelliaRedisTemplateChooser chooser;
-
-    static {
-        initGcMXBean();
-    }
 
     public static int getPort() {
         return port;
@@ -425,63 +418,17 @@ public class ProxyInfoUtils {
 
     private static String getGC() {
         StringBuilder builder = new StringBuilder();
-        if (oldGC != null && youngGC != null) {
-            builder.append("# GC").append("\n");
-            builder.append("young_gc_name:").append(youngGC.getName()).append("\n");
-            builder.append("young_gc_collection_count:").append(youngGC.getCollectionCount()).append("\n");
-            builder.append("young_gc_collection_time:").append(youngGC.getCollectionTime()).append("\n");
-            builder.append("old_gc_name:").append(oldGC.getName()).append("\n");
-            builder.append("old_gc_collection_count:").append(oldGC.getCollectionCount()).append("\n");
-            builder.append("old_gc_collection_time:").append(oldGC.getCollectionTime()).append("\n");
+        builder.append("# GC").append("\n");
+        if (garbageCollectorMXBeanList != null) {
+            for (int i=0; i<garbageCollectorMXBeanList.size(); i++) {
+                GarbageCollectorMXBean garbageCollectorMXBean = garbageCollectorMXBeanList.get(i);
+                builder.append("gc").append(i).append("_name:").append(garbageCollectorMXBean.getName()).append("\n");
+                builder.append("gc").append(i).append("_collection_count:").append(garbageCollectorMXBean.getCollectionCount()).append("\n");
+                builder.append("gc").append(i).append("_collection_time:").append(garbageCollectorMXBean.getCollectionCount()).append("\n");
+            }
         }
         return builder.toString();
     }
-
-    private static void initGcMXBean() {
-        try {
-            List<GarbageCollectorMXBean> list = ManagementFactory.getGarbageCollectorMXBeans();
-
-            Set<String> oldGcNames = new HashSet<>();
-            oldGcNames.add("ConcurrentMarkSweep");
-            oldGcNames.add("MarkSweepCompact");
-            oldGcNames.add("PS MarkSweep");
-            oldGcNames.add("G1 Old Generation");
-            oldGcNames.add("Garbage collection optimized for short pausetimes Old Collector");
-            oldGcNames.add("Garbage collection optimized for throughput Old Collector");
-            oldGcNames.add("Garbage collection optimized for deterministic pausetimes Old Collector");
-            String oldGcNameConf = ProxyDynamicConf.getString("redis.info.old.gc.names", "");
-            if (oldGcNameConf != null && oldGcNameConf.trim().length() > 0) {
-                String[] split = oldGcNameConf.split(",");
-                oldGcNames.addAll(Arrays.asList(split));
-            }
-
-            Set<String> youngGcNames = new HashSet<>();
-            youngGcNames.add("ParNew");
-            youngGcNames.add("Copy");
-            youngGcNames.add("PS Scavenge");
-            youngGcNames.add("G1 Young Generation");
-            youngGcNames.add("Garbage collection optimized for short pausetimes Young Collector");
-            youngGcNames.add("Garbage collection optimized for throughput Young Collector");
-            youngGcNames.add("Garbage collection optimized for deterministic pausetimes Young Collector");
-            String youngGcNameConf = ProxyDynamicConf.getString("redis.info.young.gc.names", "");
-            if (youngGcNameConf != null && youngGcNameConf.trim().length() > 0) {
-                String[] split = youngGcNameConf.split(",");
-                youngGcNames.addAll(Arrays.asList(split));
-            }
-
-            for (GarbageCollectorMXBean bean : list) {
-                if (oldGcNames.contains(bean.getName())) {
-                    oldGC = bean;
-                }
-                if (youngGcNames.contains(bean.getName())) {
-                    youngGC = bean;
-                }
-            }
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
 
     public static String humanReadableByteCountBin(long bytes) {
         long absB = bytes == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(bytes);
