@@ -90,7 +90,7 @@ provide some tools, such as compress utils CamelliaCompressor, encrypt utils Cam
 [QUICK START](/docs/tools/tools.md)   
 
 ## Version
-latest version is 1.0.43，have deploy to maven central repository on 2021/11/23  
+latest version is 1.0.44，have deploy to maven central repository on 2021/11/29  
 [CHANGE_LOG](/update-en.md)  
 
 ## Contact

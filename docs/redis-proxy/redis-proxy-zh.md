@@ -107,12 +107,12 @@ MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ``` 
 
 ## 快速开始一
-1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.0.43），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
+1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.0.44），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
 ```
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
-  <version>1.0.43</version>
+  <version>1.0.44</version>
 </dependency>
 ```
 2) 编写主类Application.java, 如下: 

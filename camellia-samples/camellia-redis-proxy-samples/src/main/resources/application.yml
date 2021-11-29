@@ -25,6 +25,7 @@ camellia-redis-proxy:
 #  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.command.async.interceptor.MultiWriteCommandInterceptor #方法拦截器
 #  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.mq.common.MqMultiWriteCommandInterceptor #方法拦截器
 #  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackConsumer #方法拦截器
+#  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackProducerConsumer #方法拦截器
   converter-enable: false
   converter-config:
     key-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomKeyConverter

@@ -5,7 +5,7 @@
 * camellia-redis-proxy support monitor data visualization in prometheus
 * camellia-redis-proxy support read from slaves of redis-cluster
 
-# 1.0.44（2021/11/xx）
+# 1.0.44（2021/11/29）
 ### add
 * camellia-redis-proxy provide KafkaMqPackProducerConsumer, so proxy can be producer/consumer at the same time
 * camellia-redis-proxy provide monitor upstream redis spend time
