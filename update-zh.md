@@ -9,7 +9,7 @@
 ### 新增
 * camellia-redis-proxy新增KafkaMqPackProducerConsumer，proxy可以同时作为kafka的生产者和消费者，具体见：[拦截器](/docs/redis-proxy/interceptor.md)
 * camellia-redis-proxy支持监控后端redis的响应时间，具体见：[监控](/docs/redis-proxy/monitor.md)
-* RedisProxyJedisPool支持jedis3，具体见：[监控](/docs/redis-proxy/deploy.md)
+* RedisProxyJedisPool支持jedis3，具体见：[部署](/docs/redis-proxy/deploy.md)
 
 ### 更新
 * 调整代码结构，新建camellia-redis-proxy-plugins模块，camellia-redis-zk/camellia-redis-proxy-mq/camellia-redis-proxy-hbase平移到camellia-redis-proxy-plugins模块下
