@@ -586,6 +586,7 @@ public class Converters {
                         }
                     }
                 }
+                break;
             case LINDEX:
                 if (reply instanceof BulkReply) {
                     byte[] bytes = listConverter.valueReverseConvert(commandContext, objects[1], ((BulkReply) reply).getRaw());
