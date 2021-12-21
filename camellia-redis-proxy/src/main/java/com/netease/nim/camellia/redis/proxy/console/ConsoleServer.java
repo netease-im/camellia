@@ -25,7 +25,7 @@ public class ConsoleServer {
     public ConsoleServer(int port, ConsoleService consoleService) {
         if (port == Constants.Server.consolePortRandSig) {
             port = SocketUtils.findRandomPort();
-        } else if (port <= 0) {
+        } else if (port < 0) {
             port = Constants.Server.consolePort;
         }
         this.port = port;
@@ -33,6 +33,7 @@ public class ConsoleServer {
     }
 
     public void start() throws Exception {
+        if (port == 0) return;
         new Thread(() -> {
             try {
                 EventLoopGroup bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory("console-boss-group"));
