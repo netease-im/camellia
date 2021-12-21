@@ -5,9 +5,8 @@ camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访
 * MultiWriteCommandInterceptor 用于自定义配置双写策略(key级别)   
 * RateLimitCommandInterceptor 用于控制客户端请求速率（支持全局速率控制，也支持bid/bgroup级别的速率控制）
 * MqMultiWriteCommandInterceptor 用于基于mq（如kafka等）的异步双写
+* DynamicCommandInterceptorWrapper 可以组合多个CommandInterceptor的一个包装类
 
-备注：相关拦截器可以通过组合的方式一起使用  
-  
 ### 自定义CommandInterceptor
 如果你想添加一个自定义的方法拦截器，则应该实现CommandInterceptor接口，类似于这样：
 ```java
@@ -294,3 +293,31 @@ com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackProducerConsumer
 #### 使用场景
 * 需要跨机房或者异地机房的redis数据双写同步，可以用于数据的迁移或者容灾
 
+### DynamicCommandInterceptorWrapper
+#### 用途
+当需要同时使用多个CommandInterceptor来实现相关业务功能时，可以通过组合的方式来实现，camellia默认提供了DynamicCommandInterceptorWrapper来实现组合的效果  
+DynamicCommandInterceptorWrapper会依次执行各个拦截器，如果中间出现一个拦截器返回不通过，则执行链会被打断而直接返回   
+
+#### 配置示例
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      resource: redis://@127.0.0.1:6379
+  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.command.async.interceptor.DynamicCommandInterceptorWrapper
+```
+随后你可以在camellia-redis-proxy.properties里配置如下：
+```
+##竖线分隔多个CommandInterceptor实现的全类名
+dynamic.command.interceptor.class.names=com.netease.nim.camellia.samples.CustomCommandInterceptor1|com.netease.nim.camellia.samples.CustomCommandInterceptor2
+```
+上述配置表示DynamicCommandInterceptorWrapper组合了CustomCommandInterceptor1和CustomCommandInterceptor2两个拦截器的功能   
+特别的，DynamicCommandInterceptorWrapper支持动态修改配置的方式来动态调整组合的拦截器列表  

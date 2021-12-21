@@ -8,6 +8,7 @@
 # 1.0.45（2021/12/xx）
 ### add
 * camellia-redis-proxy KafkaMqPackConsumer support batch/retry
+* camellia-redis-proxy provide DynamicCommandInterceptorWrapper to combine multi CommandInterceptors
 
 ### update
 * camellia-id-gen modify default conf
