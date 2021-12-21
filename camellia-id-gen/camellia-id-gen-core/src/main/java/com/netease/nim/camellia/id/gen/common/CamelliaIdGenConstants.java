@@ -45,11 +45,11 @@ public class CamelliaIdGenConstants {
         public static final int step = 1000;
 
         //每个CamelliaSegmentIdGen包含的tag数，涉及到缓存的初始化
-        public static final int tagCount = 1000;
+        public static final int tagCount = 10000;
 
         //maxRetry*retryIntervalMillis至少要比idLoader执行一次耗时更长
         //并发情况下重试的最大次数
-        public static final int maxRetry = 100;
+        public static final int maxRetry = 500;
 
         //并发情况下重试间隔
         public static final long retryIntervalMillis = 10;
@@ -64,7 +64,7 @@ public class CamelliaIdGenConstants {
         //id在redis中的缓存时长
         public static final int cacheExpireSeconds = 3600*24;
         //最大重试次数
-        public static final int maxRetry = 100;
+        public static final int maxRetry = 1000;
         //并发情况下重试间隔
         public static final long retryIntervalMillis = 5;
         //装填redis时的默认步长

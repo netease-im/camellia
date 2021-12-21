@@ -19,7 +19,7 @@ public class CamelliaIdGenSdkConfig {
     private String url;
     private IdGenServerDiscovery discovery;
     private int discoveryReloadIntervalSeconds = 60;
-    private int maxRetry = 2;
+    private int maxRetry = 5;
     private long connectTimeoutMillis = 5000;
     private long readTimeoutMillis = 5000;
     private long writeTimeoutMillis = 5000;
@@ -34,8 +34,8 @@ public class CamelliaIdGenSdkConfig {
         private boolean cacheEnable = false;
 
         private int step = 100;
-        private int tagCount = 1000;
-        private int maxRetry = 10;
+        private int tagCount = 10000;
+        private int maxRetry = 500;
         private long retryIntervalMillis = 10;
         private ExecutorService asyncLoadThreadPool = defaultAsyncLoadThreadPool;
 
