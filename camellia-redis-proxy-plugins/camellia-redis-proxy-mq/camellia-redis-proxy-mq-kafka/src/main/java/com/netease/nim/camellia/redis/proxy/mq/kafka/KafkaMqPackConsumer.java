@@ -160,6 +160,7 @@ public class KafkaMqPackConsumer implements CommandInterceptor {
                                 mqPack.getBid(), mqPack.getBgroup(), mqPack.getCommand().getName(), mqPack.getCommand().getKeysStr());
                     }
                     int retry = ProxyDynamicConf.getInt("mq.multi.write.kafka.consume.retry", 3);
+                    int index = 1;
                     while (retry-- > 0) {
                         AsyncCamelliaRedisTemplate template = ProxyInfoUtils.getAsyncCamelliaRedisTemplateChooser().choose(mqPack.getBid(), mqPack.getBgroup());
                         List<CompletableFuture<Reply>> futures = template.sendCommand(Collections.singletonList(mqPack.getCommand()));
@@ -178,6 +179,8 @@ public class KafkaMqPackConsumer implements CommandInterceptor {
                             isRetry = true;
                         }
                         if (isRetry) {
+                            TimeUnit.MILLISECONDS.sleep(1000L * index);
+                            index ++;
                             continue;
                         }
                         break;
