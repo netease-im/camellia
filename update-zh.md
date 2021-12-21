@@ -5,6 +5,17 @@
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 * camellia-redis-proxy支持读redis-cluster的从节点
 
+# 1.0.45（2021/12/xx）
+### 新增
+* camellia-redis-proxy的KafkaMqPackConsumer支持配置批量消费和重试，具体见：[拦截器](/docs/redis-proxy/interceptor.md)
+
+### 更新
+* camellia-id-gen调整了若干参数的默认值
+
+### fix
+* 无
+
+
 # 1.0.44（2021/11/29）
 ### 新增
 * camellia-redis-proxy新增KafkaMqPackProducerConsumer，proxy可以同时作为kafka的生产者和消费者，具体见：[拦截器](/docs/redis-proxy/interceptor.md)

@@ -284,6 +284,13 @@ com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackProducerConsumer
 通过对2个机房的proxy配置不同的kafka生产消费地址，搭配使用，可以实现如下效果：  
 <img src="redis-proxy-mq-multi-write2.png" width="50%" height="50%">
 
+使用KafkaMqPackProducerConsumer/KafkaMqPackConsumer的其他几个可配参数：  
+* 消费kafka的双写任务时，默认情况下，consumer会直接把任务发送给后端redis（异步的），如果连续的几个命令归属于相同的bid/bgroup下，则consumer会批量投递，单次批量默认最大是200，可以通过mq.multi.write.commands.max.batch=200来修改
+* 如果希望双写异常时进行重试，则需要先开启mq.multi.write.kafka.consumer.sync.enable=true，随后通过mq.multi.write.kafka.consume.retry=3参数来配置重试次数，此时如果后端redis连接不可用时consumer会进行重试，重试间隔1s/2s/3s/4s/...依次增加
+* 在开启mq.multi.write.kafka.consumer.sync.enable=true时，因为要支持重试，为了避免kafka的consumer触发rebalance，consumer会使用pause/commitSync来手动控制消费的速度，并且会使用一个内存队列来为缓冲，缓冲队列的容量可以通过mq.multi.write.kafka.consume.queue.size=100来配置
+* 在开启mq.multi.write.kafka.consumer.sync.enable=true时，因为要支持重试，同时为了保证命令执行顺序，所有命令是依次执行的，不支持批量
+* 相关参数的含义以及其他参数，可见源码KafkaMqPackConsumer.java
+
 #### 使用场景
 * 需要跨机房或者异地机房的redis数据双写同步，可以用于数据的迁移或者容灾
 
