@@ -226,6 +226,45 @@ public class RedisResourceUtil {
                     master = masterWithParams;
                 }
                 return new RedisSentinelSlavesResource(master, nodeList, userName, password, withMaster);
+            } else if (url.startsWith(RedisType.RedisClusterSlaves.getPrefix())) {
+                String substring = url.substring(RedisType.RedisClusterSlaves.getPrefix().length());
+                if (!substring.contains("@")) {
+                    throw new CamelliaRedisException("missing @");
+                }
+
+                int index = substring.lastIndexOf("@");
+                String[] userNameAndPassword = getUserNameAndPassword(substring.substring(0, index));
+                String userName = userNameAndPassword[0];
+                String password = userNameAndPassword[1];
+
+                String split = substring.substring(index + 1);
+
+                String hostPortStr;
+                boolean withMaster = false;
+                if (split.contains("?")) {
+                    int i = split.indexOf("?");
+                    String queryString = split.substring(i + 1);
+                    Map<String, String> params = getParams(queryString);
+                    String withMasterStr = params.get("withMaster");
+                    if (withMasterStr != null && withMasterStr.trim().length() > 0) {
+                        if (!withMasterStr.equals("true") && !withMasterStr.equals("false")) {
+                            throw new CamelliaRedisException("withMaster only support true/false");
+                        }
+                        withMaster = Boolean.parseBoolean(withMasterStr);
+                    }
+                    hostPortStr = split.substring(0, i);
+                } else {
+                    hostPortStr = split;
+                }
+                List<RedisClusterResource.Node> nodeList = new ArrayList<>();
+                String[] split2 = hostPortStr.split(",");
+                for (String node : split2) {
+                    String[] split1 = node.split(":");
+                    String ip = split1[0];
+                    int port = Integer.parseInt(split1[1]);
+                    nodeList.add(new RedisClusterResource.Node(ip, port));
+                }
+                return new RedisClusterSlavesResource(nodeList, userName, password, withMaster);
             }
             throw new CamelliaRedisException("not redis resource");
         } catch (CamelliaRedisException e) {

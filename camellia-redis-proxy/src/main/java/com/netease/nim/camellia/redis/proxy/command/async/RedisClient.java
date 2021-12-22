@@ -80,7 +80,7 @@ public class RedisClient implements AsyncClient {
         this.port = config.getPort();
         this.userName = config.getUserName();
         this.password = config.getPassword();
-        this.addr = new RedisClientAddr(host, port, userName, password);
+        this.addr = new RedisClientAddr(host, port, userName, password, config.isReadonly());
         this.eventLoopGroup = config.getEventLoopGroup();
         this.heartbeatIntervalSeconds = config.getHeartbeatIntervalSeconds();
         this.heartbeatTimeoutMillis = config.getHeartbeatTimeoutMillis();
@@ -146,6 +146,9 @@ public class RedisClient implements AsyncClient {
             //建完连接先ping一下，确保连接此时是可用的
             if (!ping(connectTimeoutMillis)) {
                 throw new CamelliaRedisException("ping fail");
+            }
+            if (addr.isReadonly()) {
+                sendCommand(new byte[][]{RedisCommand.READONLY.raw()});
             }
             if (heartbeatIntervalSeconds > 0 && heartbeatTimeoutMillis > 0) {
                 //默认60s发送一个心跳，心跳超时时间10s，如果超时了，则关闭当前连接

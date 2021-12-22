@@ -13,23 +13,33 @@ public class RedisClientAddr {
     private final int port;
     private final String userName;
     private final String password;
+    private final boolean readonly;
 
     private final String url;
 
     private final FastThreadLocal<RedisClient> cache = new FastThreadLocal<>();
 
     public RedisClientAddr(String host, int port, String userName, String password) {
+        this(host, port, userName, password, false);
+    }
+
+    public RedisClientAddr(String host, int port, String userName, String password, boolean readonly) {
         this.host = host;
         this.port = port;
         this.password = password;
         this.userName = userName;
+        this.readonly = readonly;
         StringBuilder builder = new StringBuilder();
         if (userName != null && password != null) {
             builder.append(userName).append(":").append(password);
         } else if (userName == null && password != null) {
             builder.append(password);
         }
-        builder.append("@").append(host).append(":").append(port);
+        if (readonly) {
+            builder.append("@").append(host).append(":").append(port).append("?readonly=").append(readonly);
+        } else {
+            builder.append("@").append(host).append(":").append(port);
+        }
         this.url = builder.toString();
     }
 
@@ -59,6 +69,10 @@ public class RedisClientAddr {
 
     public void setCache(RedisClient cache) {
         this.cache.set(cache);
+    }
+
+    public boolean isReadonly() {
+        return readonly;
     }
 
     @Override

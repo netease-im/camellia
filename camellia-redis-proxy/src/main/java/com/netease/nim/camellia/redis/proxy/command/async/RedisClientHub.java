@@ -172,6 +172,7 @@ public class RedisClientHub {
             config.setPort(addr.getPort());
             config.setUserName(addr.getUserName());
             config.setPassword(addr.getPassword());
+            config.setReadonly(addr.isReadonly());
             config.setEventLoopGroup(loopGroup);
             config.setHeartbeatTimeoutMillis(-1);
             config.setHeartbeatIntervalSeconds(-1);
@@ -305,6 +306,7 @@ public class RedisClientHub {
                     config.setPort(addr.getPort());
                     config.setUserName(addr.getUserName());
                     config.setPassword(addr.getPassword());
+                    config.setReadonly(addr.isReadonly());
                     config.setEventLoopGroup(eventLoop);
                     config.setHeartbeatTimeoutMillis(heartbeatTimeoutMillis);
                     config.setHeartbeatIntervalSeconds(heartbeatIntervalSeconds);

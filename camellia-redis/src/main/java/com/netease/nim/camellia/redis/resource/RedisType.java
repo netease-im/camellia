@@ -24,6 +24,9 @@ public enum RedisType {
     //格式：redis-sentinel-slaves://password@127.0.0.1:6379,127.0.0.1:6380/masterName?withMaster=true
     RedisSentinelSlaves("redis-sentinel-slaves://"),
 
+    //格式：redis-cluster-slaves://password@127.0.0.1:6379,127.0.0.1:6380?withMaster=true
+    RedisClusterSlaves("redis-cluster-slaves://")
+
     ;
     private final String prefix;
 
