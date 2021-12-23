@@ -88,10 +88,12 @@ public class AsyncCameliaRedisProxiesClient extends AsyncCamelliaSimpleClient {
                     dynamicList.remove(addr);
                 }
             }
-            return list.get(0);
+            int i = ThreadLocalRandom.current().nextInt(list.size());
+            return list.get(i);
         } catch (Exception e) {
             if (list.isEmpty()) return null;
-            return list.get(0);
+            int i = ThreadLocalRandom.current().nextInt(list.size());
+            return list.get(i);
         }
     }
 
