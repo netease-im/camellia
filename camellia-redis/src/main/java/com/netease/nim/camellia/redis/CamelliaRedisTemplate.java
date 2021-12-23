@@ -12,7 +12,7 @@ import com.netease.nim.camellia.core.util.ResourceTransferUtil;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.pipeline.*;
 import com.netease.nim.camellia.redis.resource.*;
-import com.netease.nim.camellia.redis.util.CamelliaRedisInitializr;
+import com.netease.nim.camellia.redis.util.CamelliaRedisInitializer;
 import com.netease.nim.camellia.redis.util.LogUtil;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.geo.GeoRadiusParam;
@@ -1763,7 +1763,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
             }
             url = writeResources.get(0).getUrl();
         }
-        ICamelliaRedis redis = CamelliaRedisInitializr.init(new Resource(url), env);
+        ICamelliaRedis redis = CamelliaRedisInitializer.init(new Resource(url), env);
         return redis.getJedis(keys[0]);
     }
 
@@ -1781,7 +1781,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
             }
             url = readResource.getUrl();
         }
-        ICamelliaRedis redis = CamelliaRedisInitializr.init(new Resource(url), env);
+        ICamelliaRedis redis = CamelliaRedisInitializer.init(new Resource(url), env);
         return redis.getJedis(keys[0]);
     }
 
@@ -1829,7 +1829,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         }
         Object result = null;
         for (Resource resource : writeResources) {
-            ICamelliaRedis redis = CamelliaRedisInitializr.init(resource, env);
+            ICamelliaRedis redis = CamelliaRedisInitializer.init(resource, env);
             if (result == null) {
                 result = writeInvoker.invoke(resource, redis);
             } else {

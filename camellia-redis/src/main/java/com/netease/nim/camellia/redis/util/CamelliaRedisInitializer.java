@@ -12,7 +12,7 @@ import com.netease.nim.camellia.redis.resource.*;
  *
  * Created by caojiajun on 2020/7/31
  */
-public class CamelliaRedisInitializr {
+public class CamelliaRedisInitializer {
 
     public static ICamelliaRedis init(Resource resource, CamelliaRedisEnv env) {
         ICamelliaRedis redis;

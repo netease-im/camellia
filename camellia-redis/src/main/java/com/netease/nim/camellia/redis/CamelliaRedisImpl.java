@@ -6,7 +6,7 @@ import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.resource.*;
-import com.netease.nim.camellia.redis.util.CamelliaRedisInitializr;
+import com.netease.nim.camellia.redis.util.CamelliaRedisInitializer;
 import com.netease.nim.camellia.redis.util.LogUtil;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.geo.GeoRadiusParam;
@@ -35,7 +35,7 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
         } else {
             throw new IllegalArgumentException("not ResourceWrapper");
         }
-        redis = CamelliaRedisInitializr.init(resource, env);
+        redis = CamelliaRedisInitializer.init(resource, env);
     }
 
     @Override
