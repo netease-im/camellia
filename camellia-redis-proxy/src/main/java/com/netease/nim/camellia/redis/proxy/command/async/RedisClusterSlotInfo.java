@@ -31,11 +31,13 @@ public class RedisClusterSlotInfo {
     public static final int SLOT_SIZE = 16384;
 
     //slot -> master redis node
-    private volatile Node[] slotArray = new Node[SLOT_SIZE];
-    private volatile Set<Node> nodeSet = new TreeSet<>(Comparator.comparing(o -> o.getAddr().getUrl()));
-    private volatile List<Node> nodeList = new ArrayList<>();
+    private volatile Node[] masterSlotArray = new Node[SLOT_SIZE];
+    private volatile Set<Node> masterNodeSet = new TreeSet<>(Comparator.comparing(o -> o.getAddr().getUrl()));
+    private volatile List<Node> masterNodeList = new ArrayList<>();
 
     private volatile Map<Node, List<Node>> masterSlaveMap = new HashMap<>();
+    private volatile Set<Node> slaveNodeSet = new HashSet<>();
+    private volatile Set<Node> masterSlaveNodeSet = new HashSet<>();
     private volatile NodeWithSlaves[] nodeWithSlavesArray = new NodeWithSlaves[SLOT_SIZE];
 
     private final Type type;
@@ -113,7 +115,7 @@ public class RedisClusterSlotInfo {
     public Node getNode(int slot) {
         try {
             if (type == Type.MASTER_ONLY) {
-                return slotArray[slot];
+                return masterSlotArray[slot];
             } else if (type == Type.SLAVE_ONLY) {
                 NodeWithSlaves nodeWithSlaves = nodeWithSlavesArray[slot];
                 if (nodeWithSlaves == null) return null;
@@ -135,7 +137,7 @@ public class RedisClusterSlotInfo {
                 try {
                     NodeWithSlaves nodeWithSlaves = nodeWithSlavesArray[slot];
                     if (nodeWithSlaves == null) {
-                        return slotArray[slot];
+                        return masterSlotArray[slot];
                     } else {
                         Node master = nodeWithSlaves.getMaster();
                         List<Node> slaves = nodeWithSlaves.getSlaves();
@@ -162,7 +164,7 @@ public class RedisClusterSlotInfo {
                         return node;
                     }
                 } catch (Exception e) {
-                    return slotArray[slot];
+                    return masterSlotArray[slot];
                 }
             } else {
                 return null;
@@ -181,23 +183,11 @@ public class RedisClusterSlotInfo {
      */
     public Set<Node> getNodes() {
         if (type == Type.MASTER_ONLY) {
-            return nodeSet;
+            return masterNodeSet;
         } else if (type == Type.SLAVE_ONLY) {
-            Set<Node> set = new HashSet<>();
-            for (Map.Entry<Node, List<Node>> entry : masterSlaveMap.entrySet()) {
-                if (entry.getValue() != null) {
-                    set.addAll(entry.getValue());
-                }
-            }
-            return set;
+            return slaveNodeSet;
         } else if (type == Type.MASTER_SLAVE) {
-            Set<Node> set = new HashSet<>(nodeSet);
-            for (Map.Entry<Node, List<Node>> entry : masterSlaveMap.entrySet()) {
-                if (entry.getKey() != null) {
-                    set.add(entry.getKey());
-                }
-            }
-            return set;
+            return masterSlaveNodeSet;
         } else {
             return Collections.emptySet();
         }
@@ -219,7 +209,7 @@ public class RedisClusterSlotInfo {
      */
     public RedisClient getClientByIndex(int index) {
         try {
-            Node master = this.nodeList.get(index);
+            Node master = this.masterNodeList.get(index);
             if (master == null) return null;
             if (type == Type.MASTER_ONLY) {
                 return RedisClientHub.get(master.getAddr());
@@ -272,7 +262,7 @@ public class RedisClusterSlotInfo {
      * @return size
      */
     public Integer getNodesSize() {
-        return nodeList.size();
+        return masterNodeList.size();
     }
 
     private long lastRenewTimestamp = 0L;
@@ -293,7 +283,7 @@ public class RedisClusterSlotInfo {
                 return redisClusterRenewExec.submit(() -> {
                     try {
                         boolean success = false;
-                        for (Node node : nodeSet) {
+                        for (Node node : masterNodeSet) {
                             success = tryRenew(node.getHost(), node.getPort(), userName, password);
                             if (success) break;
                         }
@@ -346,9 +336,9 @@ public class RedisClusterSlotInfo {
 
     private boolean clusterNodes(Reply reply) {
         try {
-            Node[] slotArray = new Node[SLOT_SIZE];
+            Node[] masterSlotArray = new Node[SLOT_SIZE];
             NodeWithSlaves[] nodeWithSlavesArray = new NodeWithSlaves[SLOT_SIZE];
-            Set<Node> nodeSet = new TreeSet<>(Comparator.comparing(o -> o.getAddr().getUrl()));
+            Set<Node> masterNodeSet = new TreeSet<>(Comparator.comparing(o -> o.getAddr().getUrl()));
             Map<Node, List<Node>> masterSlaveMap = new HashMap<>();
 
             int size = 0;
@@ -364,8 +354,8 @@ public class RedisClusterSlotInfo {
                     Reply[] replies2 = master.getReplies();
                     BulkReply host = (BulkReply) replies2[0];
                     IntegerReply port = (IntegerReply) replies2[1];
-                    Node node = new Node(Utils.bytesToString(host.getRaw()), port.getInteger().intValue(), userName, password, false);
-                    nodeSet.add(node);
+                    Node masterNode = new Node(Utils.bytesToString(host.getRaw()), port.getInteger().intValue(), userName, password, false);
+                    masterNodeSet.add(masterNode);
 
                     List<Node> slaveNodeList = new ArrayList<>();
                     if (replies1.length > 3) {
@@ -378,11 +368,11 @@ public class RedisClusterSlotInfo {
                             slaveNodeList.add(slaveNode);
                         }
                     }
-                    masterSlaveMap.put(node, slaveNodeList);
-                    NodeWithSlaves nodeWithSlaves = new NodeWithSlaves(node, slaveNodeList);
+                    masterSlaveMap.put(masterNode, slaveNodeList);
+                    NodeWithSlaves nodeWithSlaves = new NodeWithSlaves(masterNode, slaveNodeList);
 
                     for (long i = slotStart.getInteger(); i <= slotEnd.getInteger(); i++) {
-                        slotArray[(int) i] = node;
+                        masterSlotArray[(int) i] = masterNode;
                         nodeWithSlavesArray[(int) i] = nodeWithSlaves;
                         size++;
                     }
@@ -394,17 +384,28 @@ public class RedisClusterSlotInfo {
             }
             boolean success = size == SLOT_SIZE;
             if (logger.isDebugEnabled()) {
-                logger.debug("node.size = {}, url = {}", nodeSet.size(), url);
+                logger.debug("node.size = {}, url = {}", masterNodeSet.size(), url);
             }
-            if (!nodeSet.isEmpty()) {
-                this.nodeSet = nodeSet;
-                this.nodeList = new ArrayList<>(nodeSet);
+            if (!masterNodeSet.isEmpty()) {
+                this.masterNodeSet = masterNodeSet;
+                this.masterNodeList = new ArrayList<>(masterNodeSet);
             }
             if (!masterSlaveMap.isEmpty()) {
                 this.masterSlaveMap = masterSlaveMap;
+                Set<Node> slaveNodeSet = new HashSet<>();
+                Set<Node> masterSlaveNodeSet = new HashSet<>();
+                for (Map.Entry<Node, List<Node>> entry : masterSlaveMap.entrySet()) {
+                    masterSlaveNodeSet.add(entry.getKey());
+                    if (!entry.getValue().isEmpty()) {
+                        slaveNodeSet.addAll(entry.getValue());
+                        masterSlaveNodeSet.addAll(entry.getValue());
+                    }
+                }
+                this.slaveNodeSet = slaveNodeSet;
+                this.masterSlaveNodeSet = masterSlaveNodeSet;
             }
             if (size > 0) {
-                this.slotArray = slotArray;
+                this.masterSlotArray = masterSlotArray;
                 this.nodeWithSlavesArray = nodeWithSlavesArray;
             }
             if (!success) {
