@@ -10,6 +10,8 @@
 * camellia-redis-proxy KafkaMqPackConsumer support batch/retry
 * camellia-redis-proxy provide DynamicCommandInterceptorWrapper to combine multi CommandInterceptors
 * camellia-redis-proxy support disable console
+* camellia-redis-proxy support read from redis-cluster slave node
+* camellia-redis-proxy support transpond to multi stateless redis proxies, such as codis-proxy/twemproxy
 
 ### update
 * camellia-id-gen modify default conf

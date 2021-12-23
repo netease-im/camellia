@@ -10,6 +10,8 @@
 * camellia-redis-proxy的KafkaMqPackConsumer支持配置批量消费和重试，具体见：[拦截器](/docs/redis-proxy/interceptor.md)
 * camellia-redis-proxy提供DynamicCommandInterceptorWrapper用于动态组合多个拦截器，具体见：[拦截器](/docs/redis-proxy/interceptor.md)
 * camellia-redis-proxy支持不开启console（设置端口为0即可），具体见：[监控](/docs/redis-proxy/monitor.md)
+* camellia-redis-proxy支持读redis-cluster的从节点，具体见：[路由](/docs/redis-proxy/route.md)
+* camellia-redis-proxy支持代理到多个其他无状态的proxy节点，如codis-proxy、twemproxy等，具体见：[路由](/docs/redis-proxy/route.md)
 
 ### 更新
 * camellia-id-gen调整了若干参数的默认值

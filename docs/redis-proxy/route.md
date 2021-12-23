@@ -87,6 +87,42 @@ redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterNa
 ##redis-sentinel-slaves会自动感知：节点宕机、主从切换和节点扩容
 ```
 
+* redis-cluster-slaves
+```
+##本类型的后端只能配置为读写分离模式下的读地址，如果配置为写地址，proxy不会报错，但是每次写请求都会产生一次重定向，性能会大大受影响
+
+##不读master，此时proxy会从slave集合中随机挑选一个slave进行命令的转发
+##有密码
+redis-cluster-slaves://passwd@127.0.0.1:16379,127.0.0.1:16379?withMaster=false
+##没有密码
+redis-cluster-slaves://@127.0.0.1:16379,127.0.0.1:16379?withMaster=false
+##有账号也有密码
+redis-cluster-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379?withMaster=false
+
+##读master，此时proxy会从master+slave集合中随机挑选一个节点进行命令的转发（可能是master也可能是slave，所有节点概率相同）
+##有密码
+redis-cluster-slaves://passwd@127.0.0.1:16379,127.0.0.1:16379?withMaster=true
+##没有密码
+redis-cluster-slaves://@127.0.0.1:16379,127.0.0.1:16379?withMaster=true
+##有账号也有密码
+redis-cluster-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379?withMaster=true
+
+##redis-cluster-slaves会自动感知：节点宕机、主从切换和节点扩容
+```
+
+* redis-proxies
+```
+##本类型主要是为了代理到多个无状态的proxy节点，如codis-proxy、twemproxy等，camellia-redis-proxy会从配置的多个node中随机选择一个进行转发
+##当后端的proxy node有宕机时，camellia-redis-proxy会动态剔除相关节点，如果节点恢复了则会动态加回
+
+##有密码
+redis-proxies://passwd@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
+##没有密码
+redis-proxies://@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
+##有账号也有密码
+redis-proxies://username:passwd@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
+```
+
 ### 动态配置
 如果你希望你的proxy的路由配置可以动态变更，比如本来路由到redisA，然后动态的切换成redisB，那么你需要一个额外的配置文件，并且在application.yml中引用，如下：
 ```yaml
