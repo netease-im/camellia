@@ -126,10 +126,11 @@ public class KafkaMqPackConsumer implements CommandInterceptor {
 
     private void flush(Long bid, String bgroup, List<Command> buffer) {
         if (buffer.isEmpty()) return;
+        List<Command> commands = new ArrayList<>(buffer);
         AsyncCamelliaRedisTemplate template = ProxyInfoUtils.getAsyncCamelliaRedisTemplateChooser().choose(bid, bgroup);
-        List<CompletableFuture<Reply>> futures = template.sendCommand(buffer);
+        List<CompletableFuture<Reply>> futures = template.sendCommand(commands);
         for (int i=0; i<futures.size(); i++) {
-            Command command = buffer.get(i);
+            Command command = commands.get(i);
             CompletableFuture<Reply> future = futures.get(i);
             future.thenAccept(reply -> {
                 if (logger.isDebugEnabled()) {
