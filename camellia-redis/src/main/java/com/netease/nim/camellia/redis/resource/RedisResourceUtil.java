@@ -265,6 +265,32 @@ public class RedisResourceUtil {
                     nodeList.add(new RedisClusterResource.Node(ip, port));
                 }
                 return new RedisClusterSlavesResource(nodeList, userName, password, withMaster);
+            } else if (url.startsWith(RedisType.RedisProxies.getPrefix())) {
+                String substring = url.substring(RedisType.RedisProxies.getPrefix().length());
+                if (!substring.contains("@")) {
+                    throw new CamelliaRedisException("missing @");
+                }
+
+                int index = substring.lastIndexOf("@");
+                String[] userNameAndPassword = getUserNameAndPassword(substring.substring(0, index));
+                String userName = userNameAndPassword[0];
+                String password = userNameAndPassword[1];
+
+                String split = substring.substring(index + 1);
+
+                String[] split2 = split.split(",");
+                List<RedisProxiesResource.Node> nodeList = new ArrayList<>();
+                for (String node : split2) {
+                    String[] split1 = node.split(":");
+                    String ip = split1[0];
+                    int port = Integer.parseInt(split1[1]);
+                    nodeList.add(new RedisProxiesResource.Node(ip, port));
+                }
+                RedisProxiesResource proxyResource = new RedisProxiesResource(nodeList, userName, password);
+                if (!proxyResource.getUrl().equals(resource.getUrl())) {
+                    throw new CamelliaRedisException("resource url not equals");
+                }
+                return proxyResource;
             }
             throw new CamelliaRedisException("not redis resource");
         } catch (CamelliaRedisException e) {

@@ -75,6 +75,15 @@ public interface AsyncNettyClientFactory {
             return client;
         }
 
+        public AsyncClient get(RedisProxiesResource redisProxiesResource) {
+            AsyncClient client = map.get(redisProxiesResource.getUrl());
+            if (client == null) {
+                client = map.computeIfAbsent(redisProxiesResource.getUrl(),
+                        k -> new AsyncCameliaRedisProxiesClient(redisProxiesResource));
+            }
+            return client;
+        }
+
         @Override
         public AsyncClient get(String url) {
             AsyncClient client = map.get(url);
@@ -93,6 +102,8 @@ public interface AsyncNettyClientFactory {
                             client = get((RedisSentinelSlavesResource) resource);
                         } else if (resource instanceof RedisClusterSlavesResource) {
                             client = get((RedisClusterSlavesResource) resource);
+                        } else if (resource instanceof RedisProxiesResource) {
+                            client = get((RedisProxiesResource) resource);
                         } else {
                             throw new CamelliaRedisException("not support resource");
                         }
