@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.command.async.interceptor;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.*;
+import com.netease.nim.camellia.redis.proxy.command.async.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
@@ -109,7 +110,7 @@ public class MultiWriteCommandInterceptor implements CommandInterceptor {
                 if (urls != null && !urls.isEmpty()) {
                     for (String url : urls) {
                         try {
-                            AsyncClient client = AsyncNettyClientFactory.DEFAULT.get(url);
+                            AsyncClient client = ProxyInfoUtils.getAsyncCamelliaRedisTemplateChooser().getEnv().getClientFactory().get(url);
                             client.sendCommand(Collections.singletonList(command),
                                     Collections.singletonList(new CompletableFuture<>()));
                         } catch (Exception e) {

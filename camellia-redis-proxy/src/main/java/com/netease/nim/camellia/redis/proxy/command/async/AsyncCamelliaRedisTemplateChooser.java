@@ -232,6 +232,10 @@ public class AsyncCamelliaRedisTemplateChooser {
         return template;
     }
 
+    public AsyncCamelliaRedisEnv getEnv() {
+        return env;
+    }
+
     private void initEnv() {
         CamelliaTranspondProperties.RedisConfProperties redisConf = properties.getRedisConf();
 
