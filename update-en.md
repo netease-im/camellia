@@ -4,7 +4,7 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
-# 1.0.45（2021/12/xx）
+# 1.0.45（2021/12/24）
 ### add
 * camellia-redis-proxy KafkaMqPackConsumer support batch/retry
 * camellia-redis-proxy provide DynamicCommandInterceptorWrapper to combine multi CommandInterceptors

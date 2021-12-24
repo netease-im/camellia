@@ -13,7 +13,7 @@ proxy实现了info命令，支持返回如下信息：Server/Clients/Route/Upstr
 ```
 127.0.0.1:6380> info
 # Server
-camellia_redis_proxy_version:v1.0.44     ##proxy版本
+camellia_redis_proxy_version:v1.0.45     ##proxy版本
 redis_version:6.2.5  ##spring actuator默认会使用info命令返回的redis_version字段来做健康检查，这里直接返回一个固定的版本号
 available_processors:4      ##cpu核数
 netty_boss_thread:1     ##netty的bossGroup的线程数，默认=1
