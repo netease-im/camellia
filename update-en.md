@@ -6,6 +6,17 @@
 
 # 1.0.45（2021/12/24）
 ### add
+* provider CRC16HashTagShardingFunc to support hashtag
+
+### update
+* rename shading to sharding
+
+### fix
+* none
+
+
+# 1.0.45（2021/12/24）
+### add
 * camellia-redis-proxy KafkaMqPackConsumer support batch/retry
 * camellia-redis-proxy provide DynamicCommandInterceptorWrapper to combine multi CommandInterceptors
 * camellia-redis-proxy support disable console

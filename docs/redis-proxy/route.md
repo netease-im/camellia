@@ -207,7 +207,7 @@ redis://passwd@127.0.0.1:6379
 * 写命令会代理到redis-sentinel://passwd123@127.0.0.1:26379/master  
 * 读命令会代理到redis-sentinel-slaves://passwd123@127.0.0.1:26379/master?withMaster=true，也就是redis-sentinel://passwd123@127.0.0.1:26379/master的主节点和所有从节点
 
-#### 配置分片
+#### 配置分片（之前有命名错误，1.0.45及以前，请使用shading代替sharding，1.0.46及之后兼容sharding和shading）
 ```json
 {
   "type": "sharding",
@@ -266,7 +266,7 @@ redis://passwd@127.0.0.1:6379
 * 所有的写命令（如setex/zadd/hset）代理到redis://passwd1@127.0.0.1:6379  
 * 所有的读命令（如get/zrange/mget）随机代理到redis://passwd1@127.0.0.1:6379或者redis://password2@127.0.0.1:6380
 
-#### 混合各种分片、双写逻辑
+#### 混合各种分片、双写逻辑（之前有命名错误，1.0.45及以前，请使用shading代替sharding，1.0.46及之后兼容sharding和shading）
 ```json
 {
   "type": "sharding",
@@ -576,6 +576,7 @@ camellia-redis-proxy:
 ### 自定义分片函数
 你可以自定义分片函数，分片函数会计算出一个key的哈希值，和分片大小（bucketSize）取余后，得到该key所属的分片。  
 默认的分片函数是com.netease.nim.camellia.core.client.env.DefaultShardingFunc  
+默认的分片函数不支持hashtag，如果要使用hashtag，可以使用com.netease.nim.camellia.core.client.env.CRC16HashTagShardingFunc  
 你可以继承com.netease.nim.camellia.core.client.env.AbstractSimpleShardingFunc实现自己想要的分片函数，类似于这样：  
 ```java
 package com.netease.nim.camellia.redis.proxy.samples;
@@ -612,5 +613,5 @@ camellia-redis-proxy:
       type: complex
       json-file: resource-table.json
     redis-conf:
-      sharding-func: com.netease.nim.camellia.redis.proxy.samples.CustomShardingFunc
+      sharding-func: com.netease.nim.camellia.redis.proxy.samples.CustomShardingFunc #之前有命名错误，1.0.45及以前，配置项叫shading-func，1.0.46及之后，配置项叫sharding-func
 ```

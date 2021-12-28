@@ -39,7 +39,7 @@ CamelliaRedisTemplate会自动识别是否是json，如果发现不是json，则
 * 写命令会指向redis-sentinel://passwd123@127.0.0.1:26379/master  
 * 读命令会指向redis-sentinel-slaves://passwd123@127.0.0.1:26379/master?withMaster=true，也就是redis-sentinel://passwd123@127.0.0.1:26379/master的主节点和所有从节点
 
-#### 配置分片
+#### 配置分片（之前有命名错误，1.0.45及以前，请使用shading代替sharding，1.0.46及之后兼容sharding和shading）
 ```json
 {
   "type": "sharding",
@@ -98,7 +98,7 @@ CamelliaRedisTemplate会自动识别是否是json，如果发现不是json，则
 * 所有的写命令（如setex/zadd/hset）指向redis://passwd1@127.0.0.1:6379  
 * 所有的读命令（如get/zrange/mget）随机指向redis://passwd1@127.0.0.1:6379或者redis://password2@127.0.0.1:6380
 
-#### 混合各种分片、双写逻辑
+#### 混合各种分片、双写逻辑（之前有命名错误，1.0.45及以前，请使用shading代替sharding，1.0.46及之后兼容sharding和shading）
 ```json
 {
   "type": "sharding",

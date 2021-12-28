@@ -6,6 +6,17 @@
 
 # 1.0.45（2021/12/24）
 ### 新增
+* 新增CRC16HashTagShardingFunc类，从而自定义分片时，也支持hashtag，具体见：[路由](/docs/redis-proxy/route.md)
+
+### 更新
+* 重命名shading为sharding，对于通过json描述分片的resource-table，向下兼容之前写错为shading的情况，具体见：[路由](/docs/redis-proxy/route.md)
+
+### fix
+* 无
+
+
+# 1.0.45（2021/12/24）
+### 新增
 * camellia-redis-proxy的KafkaMqPackConsumer支持配置批量消费和重试，具体见：[拦截器](/docs/redis-proxy/interceptor.md)
 * camellia-redis-proxy提供DynamicCommandInterceptorWrapper用于动态组合多个拦截器，具体见：[拦截器](/docs/redis-proxy/interceptor.md)
 * camellia-redis-proxy支持不开启console（设置端口为0即可），具体见：[监控](/docs/redis-proxy/monitor.md)

@@ -70,7 +70,7 @@ camellia-redis:
       max-attempts: 5
       timeout: 2000
 ```
-### 使用json自定义配置（需要单独的一个json文件）  
+### 使用json自定义配置（需要单独的一个json文件）（之前有命名错误，1.0.45及以前，请使用shading代替sharding，1.0.46及之后兼容sharding和shading）
 ```yaml
 camellia-redis:
   type: local
