@@ -268,8 +268,8 @@ public class CamelliaRedisProxyUtil {
     public static CamelliaTranspondProperties.RedisConfProperties parse(TranspondProperties.RedisConfProperties properties, CamelliaRedisProxyConfigurerSupport support) {
         if (properties == null) return null;
         CamelliaTranspondProperties.RedisConfProperties redisConfProperties = new CamelliaTranspondProperties.RedisConfProperties();
-        redisConfProperties.setShadingFunc(properties.getShadingFunc());
-        redisConfProperties.setShadingFuncInstance(support.getShadingFunc());
+        redisConfProperties.setShardingFunc(properties.getShardingFunc());
+        redisConfProperties.setShardingFuncInstance(support.getShardingFunc());
         redisConfProperties.setConnectTimeoutMillis(properties.getConnectTimeoutMillis());
         redisConfProperties.setFailBanMillis(properties.getFailBanMillis());
         redisConfProperties.setFailCountThreshold(properties.getFailCountThreshold());

@@ -466,7 +466,7 @@
 * camellia-redis-proxy支持pub-sub命令
 * camellia-redis-proxy支持集合运算命令，如SINTER/SINTERSTORE/SUNION/SUNIONSTORE/SDIFF/SDIFFSTORE等
 * camellia-redis-proxy支持设置双（多）写的模式，提供了三种方式供选择, 参考com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode以及相关文档
-* camellia-redis-proxy提供了抽象类AbstractSimpleShadingFunc用于自定义分片函数
+* camellia-redis-proxy提供了抽象类AbstractSimpleShardingFunc用于自定义分片函数
 * camellia-redis-proxy-hbase支持了针对zmember到hbase的读穿透的单机频控
 
 ### 更新

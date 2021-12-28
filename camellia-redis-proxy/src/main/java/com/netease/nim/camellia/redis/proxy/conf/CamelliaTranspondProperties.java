@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
-import com.netease.nim.camellia.core.client.env.ShadingFunc;
+import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
 
@@ -286,8 +286,8 @@ public class CamelliaTranspondProperties {
 
     public static class RedisConfProperties {
         //分片函数
-        private String shadingFunc;
-        private ShadingFunc shadingFuncInstance;
+        private String shardingFunc;
+        private ShardingFunc shardingFuncInstance;
         private int redisClusterMaxAttempts = Constants.Transpond.redisClusterMaxAttempts;
         private int heartbeatIntervalSeconds = Constants.Transpond.heartbeatIntervalSeconds;
         private long heartbeatTimeoutMillis = Constants.Transpond.heartbeatTimeoutMillis;
@@ -301,20 +301,20 @@ public class CamelliaTranspondProperties {
         public long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;//判断一个连接空闲的阈值，单位秒
         public int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;//判断一个连接空闲后，再过多少秒去执行关闭操作
 
-        public String getShadingFunc() {
-            return shadingFunc;
+        public String getShardingFunc() {
+            return shardingFunc;
         }
 
-        public void setShadingFunc(String shadingFunc) {
-            this.shadingFunc = shadingFunc;
+        public void setShardingFunc(String shardingFunc) {
+            this.shardingFunc = shardingFunc;
         }
 
-        public ShadingFunc getShadingFuncInstance() {
-            return shadingFuncInstance;
+        public ShardingFunc getShardingFuncInstance() {
+            return shardingFuncInstance;
         }
 
-        public void setShadingFuncInstance(ShadingFunc shadingFuncInstance) {
-            this.shadingFuncInstance = shadingFuncInstance;
+        public void setShardingFuncInstance(ShardingFunc shardingFuncInstance) {
+            this.shardingFuncInstance = shardingFuncInstance;
         }
 
         public int getRedisClusterMaxAttempts() {

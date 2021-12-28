@@ -93,7 +93,7 @@ kill -15和kill -9表现没有区别
 
 ```
 {
-  "type": "shading",
+  "type": "sharding",
   "operation": {
     "operationMap": {
       "0-1-6-7": {

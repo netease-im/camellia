@@ -1,14 +1,14 @@
 package com.netease.nim.camellia.core.util;
 
-import com.netease.nim.camellia.core.client.env.ShadingFunc;
+import com.netease.nim.camellia.core.client.env.ShardingFunc;
 
 /**
  *
  * Created by caojiajun on 2019/12/13.
  */
-public class ShadingFuncUtil {
+public class ShardingFuncUtil {
 
-    public static ShadingFunc forName(String className) {
+    public static ShardingFunc forName(String className) {
         try {
             Class<?> clazz;
             try {
@@ -16,11 +16,11 @@ public class ShadingFuncUtil {
             } catch (ClassNotFoundException e) {
                 clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
             }
-            Object shadingFuncObj = clazz.newInstance();
-            if (shadingFuncObj instanceof ShadingFunc) {
-                return (ShadingFunc) shadingFuncObj;
+            Object shardingFuncObj = clazz.newInstance();
+            if (shardingFuncObj instanceof ShardingFunc) {
+                return (ShardingFunc) shardingFuncObj;
             } else {
-                throw new IllegalArgumentException("shadingFunc not instance of " + ShadingFunc.class.getName());
+                throw new IllegalArgumentException("shardingFunc not instance of " + ShardingFunc.class.getName());
             }
         } catch (IllegalArgumentException e) {
             throw e;

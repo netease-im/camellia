@@ -59,9 +59,9 @@ public class ResourceTableUtil {
     /**
      * 不带N读N写的分片
      */
-    public static ResourceTable simpleShadingTable(Map<Integer, Resource> resourceMap, int bucketSize) {
-        ResourceTable.ShadingTable shadingTable = new ResourceTable.ShadingTable();
-        shadingTable.setBucketSize(bucketSize);
+    public static ResourceTable simpleShardingTable(Map<Integer, Resource> resourceMap, int bucketSize) {
+        ResourceTable.ShardingTable shardingTable = new ResourceTable.ShardingTable();
+        shardingTable.setBucketSize(bucketSize);
         Map<Integer, ResourceOperation> resourceOperationMap = new HashMap<>();
         for (int i=0; i<bucketSize; i++) {
             Resource resource = resourceMap.get(i);
@@ -70,11 +70,11 @@ public class ResourceTableUtil {
             }
             resourceOperationMap.put(i, new ResourceOperation(resource));
         }
-        shadingTable.setResourceOperationMap(resourceOperationMap);
+        shardingTable.setResourceOperationMap(resourceOperationMap);
 
         ResourceTable table = new ResourceTable();
-        table.setType(ResourceTable.Type.SHADING);
-        table.setShadingTable(shadingTable);
+        table.setType(ResourceTable.Type.SHARDING);
+        table.setShardingTable(shardingTable);
         return table;
     }
 }
@@ -85,7 +85,7 @@ public class ResourceTableUtil {
 public class TestJsonResourceTable {
     public static void testJsonResourceTable() {
         String json = "{\n" +
-                "  \"type\": \"shading\",\n" +
+                "  \"type\": \"sharding\",\n" +
                 "  \"operation\": {\n" +
                 "    \"operationMap\": {\n" +
                 "      \"4\": {\n" +

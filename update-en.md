@@ -370,7 +370,7 @@
 
 # 1.0.17（2021/01/15）
 ### add
-* camellia-redis-proxy support transaction command, only when proxy route to redis/redis-sentinel with no-shading/no-read-write-separate
+* camellia-redis-proxy support transaction command, only when proxy route to redis/redis-sentinel with no-sharding/no-read-write-separate
 * support ZPOPMIN/ZPOPMAX/BZPOPMIN/BZPOPMAX
 
 ### update
@@ -452,7 +452,7 @@
 * update CommandInterceptor define
 
 ### fix
-* fix NPE for mget when use custom shading(from 1.0.10)
+* fix NPE for mget when use custom sharding(from 1.0.10)
 * fix bug of redis sentinel master switch in proxy
 
 # 1.0.10（2020/10/16）
@@ -462,7 +462,7 @@
 * camellia-redis-proxy support pub-sub commands
 * camellia-redis-proxy support set calc commands, such as SINTER/SINTERSTORE/SUNION/SUNIONSTORE/SDIFF/SDIFFSTORE and so on
 * camellia-redis-proxy support setting multi-write-mode, provider three options, see com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode
-* camellia-redis-proxy provider AbstractSimpleShadingFunc to easily define custom shading func
+* camellia-redis-proxy provider AbstractSimpleShardingFunc to easily define custom sharding func
 * camellia-redis-proxy-hbase support standalone freq of hbase get hit of zmemeber
 
 ### update

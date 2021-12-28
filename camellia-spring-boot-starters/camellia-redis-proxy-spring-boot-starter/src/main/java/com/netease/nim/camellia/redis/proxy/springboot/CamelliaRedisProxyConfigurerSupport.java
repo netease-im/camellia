@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.springboot;
 
-import com.netease.nim.camellia.core.client.env.ShadingFunc;
+import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.connectlimit.ConnectLimiter;
@@ -110,7 +110,7 @@ public class CamelliaRedisProxyConfigurerSupport {
      * 自定义分片函数
      */
     @Autowired(required = false)
-    private ShadingFunc shadingFunc;
+    private ShardingFunc shardingFunc;
 
     /**
      * 动态配置hook
@@ -188,8 +188,8 @@ public class CamelliaRedisProxyConfigurerSupport {
         return hashConverter;
     }
 
-    public ShadingFunc getShadingFunc() {
-        return shadingFunc;
+    public ShardingFunc getShardingFunc() {
+        return shardingFunc;
     }
 
     public HotKeyCacheKeyChecker getHotKeyCacheKeyChecker() {

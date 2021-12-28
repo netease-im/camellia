@@ -10,25 +10,25 @@ import java.util.Map;
  *
  * Created by caojiajun on 2019/5/16.
  */
-public class ShadingProxyHub<T> implements IProxyHub<T> {
+public class ShardingProxyHub<T> implements IProxyHub<T> {
 
-    private int bucketSize;
-    private Object[] proxyArray;
-    private boolean is2Power;
-    private ProxyEnv env;
+    private final int bucketSize;
+    private final Object[] proxyArray;
+    private final boolean is2Power;
+    private final ProxyEnv env;
 
-    public ShadingProxyHub(int bucketSize, Map<Integer, T> proxyMap, ProxyEnv env) {
+    public ShardingProxyHub(int bucketSize, Map<Integer, T> proxyMap, ProxyEnv env) {
         if (env == null) {
             throw new IllegalArgumentException("env is null");
         }
-        if (env.getShadingFunc() == null) {
-            throw new IllegalArgumentException("shadingFunc is null");
+        if (env.getShardingFunc() == null) {
+            throw new IllegalArgumentException("shardingFunc is null");
         }
         if (proxyMap == null) {
             throw new IllegalArgumentException("proxyMap is null");
         }
         if (bucketSize != proxyMap.size()) {
-            throw new IllegalArgumentException("shadingTable/proxyMap not match");
+            throw new IllegalArgumentException("shardingTable/proxyMap not match");
         }
         proxyArray = new Object[bucketSize];
         for (int i=0; i<bucketSize; i++) {
@@ -45,7 +45,7 @@ public class ShadingProxyHub<T> implements IProxyHub<T> {
 
     @Override
     public T chooseProxy(byte[]... key) {
-        int code = env.getShadingFunc().shadingCode(key);
+        int code = env.getShardingFunc().shardingCode(key);
         if (code < 0) {
             code = -code;
         }

@@ -210,7 +210,7 @@ redis://passwd@127.0.0.1:6379
 #### 配置分片
 ```json
 {
-  "type": "shading",
+  "type": "sharding",
   "operation": {
     "operationMap": {
       "0-2-4": "redis://password1@127.0.0.1:6379",
@@ -269,7 +269,7 @@ redis://passwd@127.0.0.1:6379
 #### 混合各种分片、双写逻辑
 ```json
 {
-  "type": "shading",
+  "type": "sharding",
   "operation": {
     "operationMap": {
       "4": {
@@ -575,17 +575,17 @@ camellia-redis-proxy:
 
 ### 自定义分片函数
 你可以自定义分片函数，分片函数会计算出一个key的哈希值，和分片大小（bucketSize）取余后，得到该key所属的分片。  
-默认的分片函数是com.netease.nim.camellia.core.client.env.DefaultShadingFunc  
-你可以继承com.netease.nim.camellia.core.client.env.AbstractSimpleShadingFunc实现自己想要的分片函数，类似于这样：  
+默认的分片函数是com.netease.nim.camellia.core.client.env.DefaultShardingFunc  
+你可以继承com.netease.nim.camellia.core.client.env.AbstractSimpleShardingFunc实现自己想要的分片函数，类似于这样：  
 ```java
 package com.netease.nim.camellia.redis.proxy.samples;
 
-import com.netease.nim.camellia.core.client.env.AbstractSimpleShadingFunc;
+import com.netease.nim.camellia.core.client.env.AbstractSimpleShardingFunc;
 
-public class CustomShadingFunc extends AbstractSimpleShadingFunc {
+public class CustomShardingFunc extends AbstractSimpleShardingFunc {
     
     @Override
-    public int shadingCode(byte[] key) {
+    public int shardingCode(byte[] key) {
         if (key == null) return 0;
         if (key.length == 0) return 0;
         int h = 0;
@@ -612,5 +612,5 @@ camellia-redis-proxy:
       type: complex
       json-file: resource-table.json
     redis-conf:
-      shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc
+      sharding-func: com.netease.nim.camellia.redis.proxy.samples.CustomShardingFunc
 ```

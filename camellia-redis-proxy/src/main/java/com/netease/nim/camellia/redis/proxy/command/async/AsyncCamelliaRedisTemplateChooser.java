@@ -3,9 +3,9 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiUtil;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
-import com.netease.nim.camellia.core.client.env.ShadingFunc;
+import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
-import com.netease.nim.camellia.core.util.ShadingFuncUtil;
+import com.netease.nim.camellia.core.util.ShardingFuncUtil;
 import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.util.LockMap;
@@ -271,16 +271,16 @@ public class AsyncCamelliaRedisTemplateChooser {
         RedisClientHub.initDynamicConf();
 
         ProxyEnv.Builder builder = new ProxyEnv.Builder();
-        ShadingFunc shadingFunc = redisConf.getShadingFuncInstance();
-        if (shadingFunc != null) {
-            builder.shadingFunc(shadingFunc);
-            logger.info("ShadingFunc, className = {}", shadingFunc.getClass().getName());
+        ShardingFunc shardingFunc  = redisConf.getShardingFuncInstance();
+        if (shardingFunc != null) {
+            builder.shardingFunc(shardingFunc);
+            logger.info("ShardingFunc, className = {}", shardingFunc.getClass().getName());
         } else {
-            String className = redisConf.getShadingFunc();
+            String className = redisConf.getShardingFunc();
             if (className != null) {
-                shadingFunc = ShadingFuncUtil.forName(className);
-                builder.shadingFunc(shadingFunc);
-                logger.info("ShadingFunc, className = {}", className);
+                shardingFunc = ShardingFuncUtil.forName(className);
+                builder.shardingFunc(shardingFunc);
+                logger.info("ShardingFunc, className = {}", className);
             }
         }
         logger.info("multi write mode = {}", redisConf.getMultiWriteMode());

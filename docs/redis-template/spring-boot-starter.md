@@ -95,7 +95,7 @@ camellia-redis:
 ```
 ```yaml
 {
-  "type": "shading",
+  "type": "sharding",
   "operation": {
     "operationMap": {
       "4": {

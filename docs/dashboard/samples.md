@@ -97,7 +97,7 @@ redis://password@127.0.0.1:6379
 * 分片
 ```
 {
-  "type": "shading",
+  "type": "sharding",
   "operation": {
     "operationMap": {
       "0-2-4": "redis://password1@127.0.0.1:6379",
@@ -111,7 +111,7 @@ redis://password@127.0.0.1:6379
 * 分片+双写
 ```
 {
-  "type": "shading",
+  "type": "sharding",
   "operation": {
     "operationMap": {
       "4": {
