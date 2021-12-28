@@ -184,7 +184,7 @@ public enum RedisCommand {
 
     /**
      * Partially Support
-     * only support while have singleton-upstream(no custom shading) (standalone-redis or redis-sentinel or redis-cluster)
+     * only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel or redis-cluster)
      */
     SUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, true, CommandKeyType.None),
     PUBLISH(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, false, CommandKeyType.None),
@@ -196,7 +196,7 @@ public enum RedisCommand {
 
     /**
      * Partially Support
-     * only support while have singleton-upstream(no custom shading) (standalone-redis or redis-sentinel)
+     * only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel)
      */
     KEYS(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, false, CommandKeyType.None),
     RANDOMKEY(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, false, CommandKeyType.None),
@@ -306,10 +306,10 @@ public enum RedisCommand {
         //only support while keys in this command location at the same server or same slot, especially, blocking command don't support multi-write
         RESTRICTIVE_SUPPORT(2),
 
-        //only support while have singleton-upstream(no custom shading) [standalone-redis or redis-sentinel or redis-cluster]
+        //only support while have singleton-upstream(no custom sharding) [standalone-redis or redis-sentinel or redis-cluster]
         PARTIALLY_SUPPORT_1(3),
 
-        //only support while have singleton-upstream(no custom shading) [standalone-redis or redis-sentinel]
+        //only support while have singleton-upstream(no custom sharding) [standalone-redis or redis-sentinel]
         PARTIALLY_SUPPORT_2(4),
 
         //not support

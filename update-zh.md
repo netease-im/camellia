@@ -4,17 +4,6 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
-# 1.0.45（2021/12/xx）
-### 新增
-* 新增CRC16HashTagShadingFunc类，从而自定义分片时，也支持hashtag，具体见：[路由](/docs/redis-proxy/route.md)
-
-### 更新
-* 无
-
-### fix
-* 无
-
-
 # 1.0.45（2021/12/24）
 ### 新增
 * camellia-redis-proxy的KafkaMqPackConsumer支持配置批量消费和重试，具体见：[拦截器](/docs/redis-proxy/interceptor.md)
@@ -477,7 +466,7 @@
 * camellia-redis-proxy支持pub-sub命令
 * camellia-redis-proxy支持集合运算命令，如SINTER/SINTERSTORE/SUNION/SUNIONSTORE/SDIFF/SDIFFSTORE等
 * camellia-redis-proxy支持设置双（多）写的模式，提供了三种方式供选择, 参考com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode以及相关文档
-* camellia-redis-proxy提供了抽象类AbstractSimpleShadingFunc用于自定义分片函数
+* camellia-redis-proxy提供了抽象类AbstractSimpleShardingFunc用于自定义分片函数
 * camellia-redis-proxy-hbase支持了针对zmember到hbase的读穿透的单机频控
 
 ### 更新

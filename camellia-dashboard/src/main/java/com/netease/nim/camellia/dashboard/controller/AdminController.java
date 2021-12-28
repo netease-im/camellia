@@ -3,7 +3,7 @@ package com.netease.nim.camellia.dashboard.controller;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.api.CamelliaApiCode;
-import com.netease.nim.camellia.core.client.env.DefaultShadingFunc;
+import com.netease.nim.camellia.core.client.env.DefaultShardingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.model.operation.ResourceOperation;
 import com.netease.nim.camellia.core.util.CheckUtil;
@@ -24,6 +24,8 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.web.bind.annotation.*;
+
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 
@@ -245,12 +247,12 @@ public class AdminController {
             LogBean.get().addProps("ret", ret);
             return WebResult.success(ret);
         } else if (type == ResourceTable.Type.SHADING) {
-            ResourceTable.ShadingTable shadingTable = resourceTable.getShadingTable();
-            int bucketSize = shadingTable.getBucketSize();
-            DefaultShadingFunc shadingFunc = new DefaultShadingFunc();
-            int shadingCode = shadingFunc.shadingCode(key.getBytes("utf-8"));
-            int index = Math.abs(shadingCode) % bucketSize;
-            ResourceOperation resourceOperation = shadingTable.getResourceOperationMap().get(index);
+            ResourceTable.ShardingTable shardingTable = resourceTable.getShardingTable();
+            int bucketSize = shardingTable.getBucketSize();
+            DefaultShardingFunc shardingFunc = new DefaultShardingFunc();
+            int shardingCode = shardingFunc.shardingCode(key.getBytes(StandardCharsets.UTF_8));
+            int index = Math.abs(shardingCode) % bucketSize;
+            ResourceOperation resourceOperation = shardingTable.getResourceOperationMap().get(index);
             Object ret = ReadableResourceTableUtil.readableResourceOperation(resourceOperation);
             LogBean.get().addProps("ret", ret);
             return WebResult.success(ret);

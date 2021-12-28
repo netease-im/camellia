@@ -47,12 +47,12 @@ public class ResourceTableJsonSamples {
         System.out.println(ReadableResourceTableUtil.readableResourceTable(resourceTable));
     }
 
-    private static void simpleShading(Map<Integer, String> urlMap, int bucketSize) {
+    private static void simpleSharding(Map<Integer, String> urlMap, int bucketSize) {
         Map<Integer, Resource> resourceMap = new HashMap<>();
         for (Map.Entry<Integer, String> entry : urlMap.entrySet()) {
             resourceMap.put(entry.getKey(), new Resource(entry.getValue()));
         }
-        ResourceTable resourceTable = ResourceTableUtil.simpleShadingTable(resourceMap, bucketSize);
+        ResourceTable resourceTable = ResourceTableUtil.simpleShardingTable(resourceMap, bucketSize);
 
         boolean check = CheckUtil.checkResourceTable(resourceTable);
         if (!check) {
@@ -61,7 +61,7 @@ public class ResourceTableJsonSamples {
         System.out.println(ReadableResourceTableUtil.readableResourceTable(resourceTable));
     }
 
-    private static void complexShading(Map<Integer, String> simpleUrlMap, Map<Integer, String[]> w2UrlMap, int bucketSize) {
+    private static void complexSharding(Map<Integer, String> simpleUrlMap, Map<Integer, String[]> w2UrlMap, int bucketSize) {
         Map<Integer, ResourceOperation> operationMap = new HashMap<>();
         for (Map.Entry<Integer, String> entry : simpleUrlMap.entrySet()) {
             operationMap.put(entry.getKey(), new ResourceOperation(new Resource(entry.getValue())));
@@ -78,10 +78,10 @@ public class ResourceTableJsonSamples {
             operationMap.put(entry.getKey(), resourceOperation);
         }
 
-        ResourceTable.ShadingTable shadingTable = new ResourceTable.ShadingTable();
-        shadingTable.setBucketSize(bucketSize);
-        shadingTable.setResourceOperationMap(operationMap);
-        ResourceTable resourceTable = new ResourceTable(shadingTable);
+        ResourceTable.ShardingTable shardingTable = new ResourceTable.ShardingTable();
+        shardingTable.setBucketSize(bucketSize);
+        shardingTable.setResourceOperationMap(operationMap);
+        ResourceTable resourceTable = new ResourceTable(shardingTable);
 
         boolean check = CheckUtil.checkResourceTable(resourceTable);
         if (!check) {
@@ -111,7 +111,7 @@ public class ResourceTableJsonSamples {
                 urlMap.put(i, "redis://password2@127.0.0.1:6380");
             }
         }
-        simpleShading(urlMap, bucketSize);
+        simpleSharding(urlMap, bucketSize);
 
         //
         Map<Integer, String> simpleUrlMap = new HashMap<>();
@@ -126,6 +126,6 @@ public class ResourceTableJsonSamples {
         }
         Map<Integer, String[]> w2UrlMap = new HashMap<>();
         w2UrlMap.put(4, new String[] {"redis://password1@127.0.0.1:6379", "redis://password2@127.0.0.1:6380"});
-        complexShading(simpleUrlMap, w2UrlMap, bucketSize2);
+        complexSharding(simpleUrlMap, w2UrlMap, bucketSize2);
     }
 }

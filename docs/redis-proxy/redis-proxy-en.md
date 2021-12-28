@@ -8,10 +8,10 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support set password
 * support blocking commands, such as BLPOP/BRPOP/BRPOPLPUSH/BZPOPMIN/BZPOPMAX and so on
 * support pub-sub commands
-* support transaction command, only when proxy route to redis/redis-sentinel with no-shading/no-read-write-separate
+* support transaction command, only when proxy route to redis/redis-sentinel with no-sharding/no-read-write-separate
 * support stream commands of redis5.0
 * support scan command of redis-cluster
-* support custom shading
+* support custom sharding
 * support read write separation
 * support read from slave(in redis-sentinel master-slave mode，support read slave, and proxy will automatic process node-down/master-switch/node-expansion）
 * support double(multi) write
@@ -92,14 +92,14 @@ GEOSEARCHSTORE,
 ```
 
 * Partially Supported 1   
-only support while have singleton-upstream(no custom shading) (standalone-redis or redis-sentinel or redis-cluster)
+only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel or redis-cluster)
 ```
 ##PUBSUB
 SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,SCAN,
 ```
 
 * Partially Supported 2   
-only support while have singleton-upstream(no custom shading) (standalone-redis or redis-sentinel)   
+only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel)   
 ```
 ##DataBase
 KEYS,RANDOMKEY,
@@ -222,7 +222,7 @@ camellia-redis-proxy:
 }
 ```
 it means write commands will route to redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master, and read commands will route to redis://passwd123@127.0.0.1:6379
-### 4) route with shading(need two files)  
+### 4) route with sharding(need two files)  
 * application.yml  
 ```yaml
 server:
@@ -242,7 +242,7 @@ camellia-redis-proxy:
 * resource-table.json  
 ```json
 {
-  "type": "shading",
+  "type": "sharding",
   "operation": {
     "operationMap": {
       "0-2-4": "redis://password1@127.0.0.1:6379",
@@ -252,7 +252,7 @@ camellia-redis-proxy:
   }
 }
 ```
-it means keys will shading in 6 buckets, bucket.index=[0,2,4] route to redis://password1@127.0.0.1:6379, others route to redis-cluster://@127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381 
+it means keys will sharding in 6 buckets, bucket.index=[0,2,4] route to redis://password1@127.0.0.1:6379, others route to redis-cluster://@127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381 
 ### 5) route with double write(need two files)  
 * application.yml  
 ```yaml
@@ -327,7 +327,7 @@ camellia-redis-proxy:
 it means:  
 all the write-commands(like setex/zadd/hset and so on) will route to redis://passwd1@127.0.0.1:6379   
 all the read-commands(like get/zrange/mget and so on) will route to redis://passwd1@127.0.0.1:6379 or redis://password2@127.0.0.1:6380 in random
-### 7) proxy with shading/read-write-separation/double-write/multi-read(need two files)  
+### 7) proxy with sharding/read-write-separation/double-write/multi-read(need two files)  
 * application.yml  
 ```yaml
 server:
@@ -347,7 +347,7 @@ camellia-redis-proxy:
 * resource-table.json  
 ```json
 {
-  "type": "shading",
+  "type": "sharding",
   "operation": {
     "operationMap": {
       "4": {
@@ -385,7 +385,7 @@ camellia-redis-proxy:
   }
 }
 ```
-it means keys shading in 6 buckets, and bucket.index=4 is read-write-separation and double-write, bucket.index=5 is read-write-separation and double-write/multi-read 
+it means keys sharding in 6 buckets, and bucket.index=4 is read-write-separation and double-write, bucket.index=5 is read-write-separation and double-write/multi-read 
 ### 7) config from camellia-dashboard  
 * application.yml  
 ```yaml
@@ -582,19 +582,19 @@ camellia-redis-proxy:
       multi-write-mode: all_resources_check_error
 ```  
 
-## Custom Shading
-you can define custom ShadingFunc, the func will calc the shading hash code of the key, then calc hashcode % bucket.size to resolve location bucket of the key.  
-the default ShadingFunc is com.netease.nim.camellia.core.client.env.DefaultShadingFunc.  
-you can implements abstract class of com.netease.nim.camellia.core.client.env.AbstractSimpleShadingFunc, such like this:
+## Custom Sharding
+you can define custom ShardingFunc, the func will calc the sharding hash code of the key, then calc hashcode % bucket.size to resolve location bucket of the key.  
+the default ShardingFunc is com.netease.nim.camellia.core.client.env.DefaultShardingFunc.  
+you can implements abstract class of com.netease.nim.camellia.core.client.env.AbstractSimpleShardingFunc, such like this:
 ```java
 package com.netease.nim.camellia.redis.proxy.samples;
 
-import com.netease.nim.camellia.core.client.env.AbstractSimpleShadingFunc;
+import com.netease.nim.camellia.core.client.env.AbstractSimpleShardingFunc;
 
-public class CustomShadingFunc extends AbstractSimpleShadingFunc {
+public class CustomShardingFunc extends AbstractSimpleShardingFunc {
     
     @Override
-    public int shadingCode(byte[] key) {
+    public int shardingCode(byte[] key) {
         if (key == null) return 0;
         if (key.length == 0) return 0;
         int h = 0;
@@ -621,7 +621,7 @@ camellia-redis-proxy:
       type: complex
       json-file: resource-table.json
     redis-conf:
-      shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc
+      sharding-func: com.netease.nim.camellia.redis.proxy.samples.CustomShardingFunc
 ```
 
 
@@ -1005,7 +1005,7 @@ camellia-redis-proxy:
       resource: redis://@127.0.0.1:6379
     redis-conf:
       multi-write-mode: first_resource_only
-      shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc
+       com.netease.nim.camellia.redis.proxy.samples.CustomShardingFunc
 
 camellia-redis-zk-registry:
   enable: false
@@ -1018,7 +1018,7 @@ camellia-redis-zk-registry:
 
 history performance report  
 [route to redis cluster（v1.0.4）](performance-report-1.md)  
-[shading（v1.0.4）](performance-report-2.md)  
+[sharding（v1.0.4）](performance-report-2.md)  
 [double write（v1.0.4）](performance-report-3.md)  
 [negative tests（v1.0.4）](performance-report-4.md)  
 [virtual machine（v1.0.7）](performance-report-5.md)  

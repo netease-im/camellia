@@ -11,7 +11,7 @@
 ```
 配置  
 {
-  "type": "shading",
+  "type": "sharding",
   "operation": {
     "operationMap": {
       "0-1": "redis://test123@10.196.8.92:6379",

@@ -9,13 +9,13 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 ## Instruction
 ### camellia-redis  
 base on camellia-core and jedis(2.9.3)，main class is CamelliaRedisTemplate, can invoke redis/redis-sentinel/redis-cluster in identical way，support pipeline    
-support client shading/read-write-separate/double-write   
+support client sharding/read-write-separate/double-write   
 support jedis adaptor to migrate from jedis easily   
 support spring-redis-template adaptor  
 [QUICK START](/docs/redis-template/redis-template.md)
 ### camellia-redis-proxy  
 base on netty4, support redis/redis-sentinel/redis-cluster  
-support shading/read-write-separate/double-write on proxy  
+support sharding/read-write-separate/double-write on proxy  
 support multi-route-conf            
 support tps/rt/big-key/hot-key/slow-command monitor  
 support custom command interceptor, support hot-key-cache(GET command)，support value converter and so on    

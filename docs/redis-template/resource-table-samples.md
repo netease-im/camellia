@@ -42,7 +42,7 @@ CamelliaRedisTemplate会自动识别是否是json，如果发现不是json，则
 #### 配置分片
 ```json
 {
-  "type": "shading",
+  "type": "sharding",
   "operation": {
     "operationMap": {
       "0-2-4": "redis://password1@127.0.0.1:6379",
@@ -101,7 +101,7 @@ CamelliaRedisTemplate会自动识别是否是json，如果发现不是json，则
 #### 混合各种分片、双写逻辑
 ```json
 {
-  "type": "shading",
+  "type": "sharding",
   "operation": {
     "operationMap": {
       "4": {

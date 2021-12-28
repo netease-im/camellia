@@ -31,7 +31,7 @@ public class StandardProxyHub<T> implements IProxyHub<T> {
         IProxyHub<T> proxyHub;
         switch (type) {
             case SHADING:
-                proxyHub = new StandardShadingProxyHub<>(clazz, resourceTable.getShadingTable(), defaultResource, env);
+                proxyHub = new StandardShardingProxyHub<>(clazz, resourceTable.getShardingTable(), defaultResource, env);
                 break;
             case SIMPLE:
                 proxyHub = new StandardSimpleProxyHub<>(clazz, resourceTable.getSimpleTable(), defaultResource, env);
