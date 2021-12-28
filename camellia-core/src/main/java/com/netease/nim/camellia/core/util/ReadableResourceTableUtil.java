@@ -103,7 +103,7 @@ public class ReadableResourceTableUtil {
             shardingJson.put("operationMap", operationMap);
 
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("type", resourceTable.getType().name().toLowerCase());
+            jsonObject.put("type", "sharding");
             jsonObject.put("operation", shardingJson);
             return jsonObject.toJSONString();
         }
