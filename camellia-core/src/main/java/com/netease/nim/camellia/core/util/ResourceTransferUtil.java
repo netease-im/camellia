@@ -37,8 +37,8 @@ public class ResourceTransferUtil {
             newSimpleTable.setResourceOperation(resourceOperation1);
             newResourceTable.setSimpleTable(newSimpleTable);
         } else if (type == ResourceTable.Type.SHADING) {
-            ResourceTable.ShardingTable shardingTable = resourceTable.getShardingTable();
-            ResourceTable.ShardingTable newShardingTable = new ResourceTable.ShardingTable();
+            ResourceTable.ShadingTable shardingTable = resourceTable.getShadingTable();
+            ResourceTable.ShadingTable newShardingTable = new ResourceTable.ShadingTable();
             newShardingTable.setBucketSize(shardingTable.getBucketSize());
             Map<Integer, ResourceOperation> map = new HashMap<>();
             for (Map.Entry<Integer, ResourceOperation> entry : shardingTable.getResourceOperationMap().entrySet()) {
@@ -48,7 +48,7 @@ public class ResourceTransferUtil {
                 map.put(key, resourceOperation1);
             }
             newShardingTable.setResourceOperationMap(map);
-            newResourceTable.setShardingTable(newShardingTable);
+            newResourceTable.setShadingTable(newShardingTable);
         }
         return newResourceTable;
     }

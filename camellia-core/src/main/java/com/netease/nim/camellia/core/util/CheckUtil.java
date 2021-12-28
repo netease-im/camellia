@@ -22,7 +22,7 @@ public class CheckUtil {
         if (type == null) return false;
         switch (type) {
             case SHADING:
-                return checkShardingTable(table.getShardingTable());
+                return checkShardingTable(table.getShadingTable());
             case SIMPLE:
                 return checkSimpleTable(table.getSimpleTable());
             default:
@@ -36,7 +36,7 @@ public class CheckUtil {
         return checkResourceOperation(resourceOperation);
     }
 
-    public static boolean checkShardingTable(ResourceTable.ShardingTable table) {
+    public static boolean checkShardingTable(ResourceTable.ShadingTable table) {
         if (table == null) return false;
         int bucketSize = table.getBucketSize();
         Map<Integer, ResourceOperation> map = table.getResourceOperationMap();

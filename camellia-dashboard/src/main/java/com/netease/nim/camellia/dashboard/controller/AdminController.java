@@ -247,7 +247,7 @@ public class AdminController {
             LogBean.get().addProps("ret", ret);
             return WebResult.success(ret);
         } else if (type == ResourceTable.Type.SHADING) {
-            ResourceTable.ShardingTable shardingTable = resourceTable.getShardingTable();
+            ResourceTable.ShadingTable shardingTable = resourceTable.getShadingTable();
             int bucketSize = shardingTable.getBucketSize();
             DefaultShardingFunc shardingFunc = new DefaultShardingFunc();
             int shardingCode = shardingFunc.shardingCode(key.getBytes(StandardCharsets.UTF_8));

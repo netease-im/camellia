@@ -71,7 +71,7 @@ public class ResourceTableUtil {
      * 不带N读N写的分片
      */
     public static ResourceTable simpleShardingTable(Map<Integer, Resource> resourceMap, int bucketSize) {
-        ResourceTable.ShardingTable shardingTable = new ResourceTable.ShardingTable();
+        ResourceTable.ShadingTable shardingTable = new ResourceTable.ShadingTable();
         shardingTable.setBucketSize(bucketSize);
         Map<Integer, ResourceOperation> resourceOperationMap = new HashMap<>();
         for (int i=0; i<bucketSize; i++) {
@@ -85,7 +85,7 @@ public class ResourceTableUtil {
 
         ResourceTable table = new ResourceTable();
         table.setType(ResourceTable.Type.SHADING);
-        table.setShardingTable(shardingTable);
+        table.setShadingTable(shardingTable);
         return table;
     }
 }

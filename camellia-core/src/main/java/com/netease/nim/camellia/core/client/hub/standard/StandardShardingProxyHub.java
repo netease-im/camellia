@@ -21,15 +21,15 @@ public class StandardShardingProxyHub<T> implements IProxyHub<T> {
 
     private final ShardingProxyHub<T> shardingProxyHub;
 
-    public StandardShardingProxyHub(Class<T> clazz, ResourceTable.ShardingTable shardingTable) {
+    public StandardShardingProxyHub(Class<T> clazz, ResourceTable.ShadingTable shardingTable) {
         this(clazz, shardingTable, null);
     }
 
-    public StandardShardingProxyHub(Class<T> clazz, ResourceTable.ShardingTable shardingTable, Resource defaultResource) {
+    public StandardShardingProxyHub(Class<T> clazz, ResourceTable.ShadingTable shardingTable, Resource defaultResource) {
         this(clazz, shardingTable, defaultResource, null);
     }
 
-    public StandardShardingProxyHub(Class<T> clazz, ResourceTable.ShardingTable shardingTable, Resource defaultResource, ProxyEnv env) {
+    public StandardShardingProxyHub(Class<T> clazz, ResourceTable.ShadingTable shardingTable, Resource defaultResource, ProxyEnv env) {
         if (!CheckUtil.checkShardingTable(shardingTable)) {
             throw new IllegalArgumentException("shardingTable check fail");
         }

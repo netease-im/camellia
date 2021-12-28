@@ -78,7 +78,7 @@ public class ResourceTableJsonSamples {
             operationMap.put(entry.getKey(), resourceOperation);
         }
 
-        ResourceTable.ShardingTable shardingTable = new ResourceTable.ShardingTable();
+        ResourceTable.ShadingTable shardingTable = new ResourceTable.ShadingTable();
         shardingTable.setBucketSize(bucketSize);
         shardingTable.setResourceOperationMap(operationMap);
         ResourceTable resourceTable = new ResourceTable(shardingTable);

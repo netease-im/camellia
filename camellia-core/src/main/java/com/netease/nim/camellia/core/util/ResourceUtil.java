@@ -41,7 +41,7 @@ public class ResourceUtil {
             case SIMPLE:
                 return getAllResources(resourceTable.getSimpleTable());
             case SHADING:
-                return getAllResources(resourceTable.getShardingTable());
+                return getAllResources(resourceTable.getShadingTable());
             default:
                 return Collections.emptySet();
         }
@@ -97,7 +97,7 @@ public class ResourceUtil {
         return allResource;
     }
 
-    public static Set<Resource> getAllResources(ResourceTable.ShardingTable shardingTable) {
+    public static Set<Resource> getAllResources(ResourceTable.ShadingTable shardingTable) {
         if (shardingTable == null) {
             return Collections.emptySet();
         }

@@ -33,7 +33,7 @@ public class ResourceChooser {
         this.proxyEnv = proxyEnv;
         ResourceTable.Type type = resourceTable.getType();
         if (type == ResourceTable.Type.SHADING) {
-            int bucketSize = resourceTable.getShardingTable().getBucketSize();
+            int bucketSize = resourceTable.getShadingTable().getBucketSize();
             bucketSizeIs2Power = MathUtil.is2Power(bucketSize);
         }
         this.allResources = ResourceUtil.getAllResources(resourceTable);
@@ -94,7 +94,7 @@ public class ResourceChooser {
             return this.readResourceBean;
         } else {
             int shardingCode = proxyEnv.getShardingFunc().shardingCode(shardingParam);
-            ResourceTable.ShardingTable shardingTable = resourceTable.getShardingTable();
+            ResourceTable.ShadingTable shardingTable = resourceTable.getShadingTable();
             int bucketSize = shardingTable.getBucketSize();
             Map<Integer, ResourceOperation> operationMap = shardingTable.getResourceOperationMap();
             int index = MathUtil.mod(bucketSizeIs2Power, Math.abs(shardingCode), bucketSize);
@@ -113,7 +113,7 @@ public class ResourceChooser {
             return this.writeResources;
         } else {
             int shardingCode = proxyEnv.getShardingFunc().shardingCode(shardingParam);
-            ResourceTable.ShardingTable shardingTable = resourceTable.getShardingTable();
+            ResourceTable.ShadingTable shardingTable = resourceTable.getShadingTable();
             int bucketSize = shardingTable.getBucketSize();
             Map<Integer, ResourceOperation> operationMap = shardingTable.getResourceOperationMap();
             int index = MathUtil.mod(bucketSizeIs2Power, Math.abs(shardingCode), bucketSize);
