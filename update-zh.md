@@ -6,7 +6,7 @@
 
 # 1.0.45（2021/12/xx）
 ### 新增
-* 新增CRC16HashTagShardingFunc类，从而自定义分片时，也支持hashtag，具体见：[路由](/docs/redis-proxy/route.md)
+* 新增CRC16HashTagShadingFunc类，从而自定义分片时，也支持hashtag，具体见：[路由](/docs/redis-proxy/route.md)
 
 ### 更新
 * 无

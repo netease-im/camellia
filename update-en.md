@@ -6,7 +6,7 @@
 
 # 1.0.46（2021/12/xx）
 ### add
-* provider CRC16HashTagShardingFunc to support hashtag
+* provider CRC16HashTagShadingFunc to support hashtag
 
 ### update
 * none
