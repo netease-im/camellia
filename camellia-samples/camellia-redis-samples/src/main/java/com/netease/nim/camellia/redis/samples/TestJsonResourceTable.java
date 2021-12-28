@@ -11,7 +11,7 @@ public class TestJsonResourceTable {
 
     public static void testJsonResourceTable() {
         String json = "{\n" +
-                "  \"type\": \"sharding\",\n" +
+                "  \"type\": \"shading\",\n" +
                 "  \"operation\": {\n" +
                 "    \"operationMap\": {\n" +
                 "      \"4\": {\n" +

@@ -353,7 +353,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             }
 
             //特殊处理多key的命令
-            if (resourceChooser.getType() == ResourceTable.Type.SHARDING) {
+            if (resourceChooser.getType() == ResourceTable.Type.SHADING) {
                 boolean continueOk = false;
                 switch (redisCommand) {
                     case MGET: {
@@ -494,7 +494,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             completableFuture.complete(ErrorReply.argNumWrong(redisCommand));
             return completableFuture;
         }
-        if (resourceChooser.getType() == ResourceTable.Type.SHARDING) {
+        if (resourceChooser.getType() == ResourceTable.Type.SHADING) {
             return evalOrEvalSha(redisCommand, command, commandFlusher);
         } else {
             List<Resource> writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
@@ -791,7 +791,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
     private CompletableFuture<Reply> readCommandWithDynamicKeyCount(Command command, CommandFlusher commandFlusher, int start, int end) {
         byte[][] objects = command.getObjects();
-        if (resourceChooser.getType() == ResourceTable.Type.SHARDING) {
+        if (resourceChooser.getType() == ResourceTable.Type.SHADING) {
             String url = null;
             for (int i = start; i <= end; i++) {
                 byte[] key = objects[i];
@@ -825,7 +825,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             if (type == ResourceTable.Type.SIMPLE) {
                 List<Resource> writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
                 future = doWrite(writeResources, commandFlusher, command);
-            } else if (type == ResourceTable.Type.SHARDING) {
+            } else if (type == ResourceTable.Type.SHADING) {
                 List<Resource> writeResources = null;
                 for (int i = 1; i < objects.length; i += 2) {
                     byte[] key = objects[i];
@@ -885,7 +885,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         if (type == ResourceTable.Type.SIMPLE) {
             List<Resource> writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
             return doWrite(writeResources, commandFlusher, command);
-        } else if (type == ResourceTable.Type.SHARDING) {
+        } else if (type == ResourceTable.Type.SHADING) {
             if (objects.length <= end) {
                 CompletableFuture<Reply> future = new CompletableFuture<>();
                 future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
@@ -956,7 +956,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         this.resourceChooser = new ResourceChooser(resourceTable, env.getProxyEnv());
 
         ResourceTable.Type type = resourceChooser.getType();
-        if (type == ResourceTable.Type.SHARDING) {
+        if (type == ResourceTable.Type.SHADING) {
             isSingletonStandaloneRedisOrRedisSentinel = false;
             isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster = false;
             return;

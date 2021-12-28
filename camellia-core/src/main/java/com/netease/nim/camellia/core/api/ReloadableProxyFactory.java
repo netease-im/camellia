@@ -122,8 +122,8 @@ public class ReloadableProxyFactory<T> {
     }
 
     /**
-     * 暴露给上层一个通过shardingKey选择Proxy的方法，一般用不上
-     * @param key shardingKey
+     * 暴露给上层一个通过shadingKey选择Proxy的方法，一般用不上
+     * @param key shadingKey
      * @return 代理对象
      */
     public T chooseProxy(byte[]... key) {

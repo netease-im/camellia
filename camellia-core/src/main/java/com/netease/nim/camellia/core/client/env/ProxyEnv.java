@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.core.client.env;
 
 import com.netease.nim.camellia.core.client.callback.OperationCallback;
-import com.netease.nim.camellia.core.client.callback.ShardingCallback;
+import com.netease.nim.camellia.core.client.callback.ShadingCallback;
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 
 import java.util.concurrent.ExecutorService;
@@ -16,11 +16,11 @@ import java.util.concurrent.TimeUnit;
 public class ProxyEnv {
 
     //批量操作是否并发进行，默认true，即针对多个分片的操作同时进行，而不是顺序执行
-    private boolean shardingConcurrentEnable = ProxyConstants.shardingConcurrentEnable;
+    private boolean shadingConcurrentEnable = ProxyConstants.shadingConcurrentEnable;
     //批量操作的线程池大小
-    private int shardingConcurrentExecPoolSize = ProxyConstants.shardingConcurrentExecPoolSize;
+    private int shadingConcurrentExecPoolSize = ProxyConstants.shadingConcurrentExecPoolSize;
     //批量操作的并发线程池
-    private ExecutorService shardingConcurrentExec;
+    private ExecutorService shadingConcurrentExec;
 
     //多写操作是否并发进行，默认true，即针对多个资源的多写操作
     private boolean multiWriteConcurrentEnable = ProxyConstants.multiWriteConcurrentEnable;
@@ -33,26 +33,26 @@ public class ProxyEnv {
     private Monitor monitor;
 
     //分片函数
-    private ShardingFunc shardingFunc = new DefaultShardingFunc();
+    private ShadingFunc shadingFunc = new DefaultShadingFunc();
 
     private ProxyEnv() {
         initExec();
     }
 
-    private ProxyEnv(boolean shardingConcurrentEnable, int shardingConcurrentExecPoolSize, boolean multiWriteConcurrentEnable,
-                    int multiWriteConcurrentExecPoolSize, Monitor monitor, ShardingFunc shardingFunc) {
-        this.shardingConcurrentEnable = shardingConcurrentEnable;
-        this.shardingConcurrentExecPoolSize = shardingConcurrentExecPoolSize;
+    private ProxyEnv(boolean shadingConcurrentEnable, int shadingConcurrentExecPoolSize, boolean multiWriteConcurrentEnable,
+                    int multiWriteConcurrentExecPoolSize, Monitor monitor, ShadingFunc shadingFunc) {
+        this.shadingConcurrentEnable = shadingConcurrentEnable;
+        this.shadingConcurrentExecPoolSize = shadingConcurrentExecPoolSize;
         this.multiWriteConcurrentEnable = multiWriteConcurrentEnable;
         this.multiWriteConcurrentExecPoolSize = multiWriteConcurrentExecPoolSize;
         this.monitor = monitor;
-        this.shardingFunc = shardingFunc;
+        this.shadingFunc = shadingFunc;
         initExec();
     }
 
     private void initExec() {
-        shardingConcurrentExec = new ThreadPoolExecutor(shardingConcurrentExecPoolSize, shardingConcurrentExecPoolSize, 0, TimeUnit.SECONDS,
-                new SynchronousQueue<Runnable>(), new CamelliaThreadFactory(ShardingCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
+        shadingConcurrentExec = new ThreadPoolExecutor(shadingConcurrentExecPoolSize, shadingConcurrentExecPoolSize, 0, TimeUnit.SECONDS,
+                new SynchronousQueue<Runnable>(), new CamelliaThreadFactory(ShadingCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
         multiWriteConcurrentExec = new ThreadPoolExecutor(multiWriteConcurrentExecPoolSize, multiWriteConcurrentExecPoolSize, 0, TimeUnit.SECONDS,
                 new SynchronousQueue<Runnable>(), new CamelliaThreadFactory(OperationCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
     }
@@ -61,12 +61,12 @@ public class ProxyEnv {
         return new ProxyEnv();
     }
 
-    public boolean isShardingConcurrentEnable() {
-        return shardingConcurrentEnable;
+    public boolean isShadingConcurrentEnable() {
+        return shadingConcurrentEnable;
     }
 
-    public ExecutorService getShardingConcurrentExec() {
-        return shardingConcurrentExec;
+    public ExecutorService getShadingConcurrentExec() {
+        return shadingConcurrentExec;
     }
 
     public boolean isMultiWriteConcurrentEnable() {
@@ -81,8 +81,8 @@ public class ProxyEnv {
         return monitor;
     }
 
-    public ShardingFunc getShardingFunc() {
-        return shardingFunc;
+    public ShadingFunc getShadingFunc() {
+        return shadingFunc;
     }
 
     public static class Builder {
@@ -94,20 +94,20 @@ public class ProxyEnv {
         }
 
         public Builder(ProxyEnv proxyEnv) {
-            this.proxyEnv = new ProxyEnv(proxyEnv.shardingConcurrentEnable, proxyEnv.shardingConcurrentExecPoolSize, proxyEnv.multiWriteConcurrentEnable,
-                    proxyEnv.multiWriteConcurrentExecPoolSize, proxyEnv.monitor, proxyEnv.shardingFunc);
-            this.proxyEnv.shardingConcurrentExec = proxyEnv.shardingConcurrentExec;
+            this.proxyEnv = new ProxyEnv(proxyEnv.shadingConcurrentEnable, proxyEnv.shadingConcurrentExecPoolSize, proxyEnv.multiWriteConcurrentEnable,
+                    proxyEnv.multiWriteConcurrentExecPoolSize, proxyEnv.monitor, proxyEnv.shadingFunc);
+            this.proxyEnv.shadingConcurrentExec = proxyEnv.shadingConcurrentExec;
             this.proxyEnv.multiWriteConcurrentExec = proxyEnv.multiWriteConcurrentExec;
         }
 
-        public Builder shardingConcurrentEnable(boolean shardingConcurrentEnable) {
-            proxyEnv.shardingConcurrentEnable = shardingConcurrentEnable;
+        public Builder shadingConcurrentEnable(boolean shadingConcurrentEnable) {
+            proxyEnv.shadingConcurrentEnable = shadingConcurrentEnable;
             return this;
         }
 
-        public Builder shardingConcurrentExecPoolSize(int shardingConcurrentExecPoolSize) {
-            if (shardingConcurrentExecPoolSize > 0) {
-                proxyEnv.shardingConcurrentExecPoolSize = shardingConcurrentExecPoolSize;
+        public Builder shadingConcurrentExecPoolSize(int shadingConcurrentExecPoolSize) {
+            if (shadingConcurrentExecPoolSize > 0) {
+                proxyEnv.shadingConcurrentExecPoolSize = shadingConcurrentExecPoolSize;
             }
             return this;
         }
@@ -131,9 +131,9 @@ public class ProxyEnv {
             return this;
         }
 
-        public Builder shardingFunc(ShardingFunc shardingFunc) {
-            if (shardingFunc != null) {
-                proxyEnv.shardingFunc = shardingFunc;
+        public Builder shadingFunc(ShadingFunc shadingFunc) {
+            if (shadingFunc != null) {
+                proxyEnv.shadingFunc = shadingFunc;
             }
             return this;
         }

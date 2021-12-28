@@ -3,7 +3,7 @@ package com.netease.nim.camellia.core.client.env;
 /**
  * Created by caojiajun on 2021/12/28
  */
-public class CRC16HashTagShardingFunc extends AbstractSimpleShardingFunc {
+public class CRC16HashTagShadingFunc extends AbstractSimpleShadingFunc {
 
     private static final int[] LOOKUP_TABLE = {0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5,
             0x60C6, 0x70E7, 0x8108, 0x9129, 0xA14A, 0xB16B, 0xC18C, 0xD1AD, 0xE1CE, 0xF1EF, 0x1231,
@@ -31,7 +31,7 @@ public class CRC16HashTagShardingFunc extends AbstractSimpleShardingFunc {
             0x6E17, 0x7E36, 0x4E55, 0x5E74, 0x2E93, 0x3EB2, 0x0ED1, 0x1EF0,};
 
     @Override
-    public int shardingCode(byte[] key) {
+    public int shadingCode(byte[] key) {
         int s = -1;
         int e = -1;
         boolean sFound = false;

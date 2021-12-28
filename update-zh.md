@@ -9,7 +9,7 @@
 * 新增CRC16HashTagShardingFunc类，从而自定义分片时，也支持hashtag，具体见：[路由](/docs/redis-proxy/route.md)
 
 ### 更新
-* 重命名shading为sharding，对于通过json描述分片的resource-table，向下兼容之前写错为shading的情况，具体见：[路由](/docs/redis-proxy/route.md)
+* 无
 
 ### fix
 * 无
@@ -477,7 +477,7 @@
 * camellia-redis-proxy支持pub-sub命令
 * camellia-redis-proxy支持集合运算命令，如SINTER/SINTERSTORE/SUNION/SUNIONSTORE/SDIFF/SDIFFSTORE等
 * camellia-redis-proxy支持设置双（多）写的模式，提供了三种方式供选择, 参考com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode以及相关文档
-* camellia-redis-proxy提供了抽象类AbstractSimpleShardingFunc用于自定义分片函数
+* camellia-redis-proxy提供了抽象类AbstractSimpleShadingFunc用于自定义分片函数
 * camellia-redis-proxy-hbase支持了针对zmember到hbase的读穿透的单机频控
 
 ### 更新

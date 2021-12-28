@@ -27,27 +27,27 @@ public class Cache {
     }
 
     @ReadOp
-    public String get(@Param String key) {
+    public String get(@ShadingParam String key) {
         System.out.println("get, resource = " + resource.getUrl() + ", key = " + key);
         return map.get(key);
     }
 
     @WriteOp
-    public int set(@ShardingParam String key, String value) {
+    public int set(@ShadingParam String key, String value) {
         System.out.println("set, resource = " + resource.getUrl() + ", key = " + key);
         map.put(key, value);
         return 1;
     }
 
     @WriteOp
-    public int delete(@ShardingParam String key) {
+    public int delete(@ShadingParam String key) {
         System.out.println("delete, resource = " + resource.getUrl() + ", key = " + key);
         map.remove(key);
         return 1;
     }
 
     @ReadOp
-    public Map<String, String> getBulk(@ShardingParam(type = ShardingParam.Type.Collection) String... keys) {
+    public Map<String, String> getBulk(@ShadingParam(type = ShadingParam.Type.Collection) String... keys) {
         System.out.println("getBulk, resource = " + resource.getUrl() + ", keys = " + keys);
         Map<String, String> ret = new HashMap<>();
         for (String key : keys) {
@@ -60,7 +60,7 @@ public class Cache {
     }
 
     @WriteOp
-    public int setBulk(@ShardingParam(type = ShardingParam.Type.Collection) Map<String, String> kvs) {
+    public int setBulk(@ShadingParam(type = ShadingParam.Type.Collection) Map<String, String> kvs) {
         System.out.println("setBulk, resource = " + resource.getUrl() + ", keys = " + JSONObject.toJSONString(kvs.keySet()));
         for (Map.Entry<String, String> entry : kvs.entrySet()) {
             this.map.put(entry.getKey(), entry.getValue());

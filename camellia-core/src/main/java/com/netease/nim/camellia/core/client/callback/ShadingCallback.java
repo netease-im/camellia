@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.core.client.callback;
 
 import com.netease.nim.camellia.core.client.annotation.ReadOp;
-import com.netease.nim.camellia.core.client.annotation.ShardingConfig;
-import com.netease.nim.camellia.core.client.annotation.ShardingParam;
+import com.netease.nim.camellia.core.client.annotation.ShadingConfig;
+import com.netease.nim.camellia.core.client.annotation.ShadingParam;
 import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.hub.IProxyHub;
@@ -12,7 +12,6 @@ import net.sf.cglib.proxy.MethodProxy;
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -21,12 +20,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * Created by caojiajun on 2019/5/17.
  */
-public class ShardingCallback<T> implements MethodInterceptor {
+public class ShadingCallback<T> implements MethodInterceptor {
 
-    private final IProxyHub<T> proxyHub;
+    private IProxyHub<T> proxyHub;
     private ProxyEnv env = ProxyEnv.defaultProxyEnv();
 
-    public ShardingCallback(IProxyHub<T> proxyHub, Class<T> clazz, ProxyEnv env) {
+    public ShadingCallback(IProxyHub<T> proxyHub, Class<T> clazz, ProxyEnv env) {
         this.proxyHub = proxyHub;
         for (Method method : clazz.getMethods()) {
             initCache(method);
@@ -44,7 +43,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
         CollectionType collectionType = getCollectionType(method);
 
         if (collectionType == CollectionType.NOT_COLLECTION) {
-            byte[][] key = parseShardingSimple(method, objects);
+            byte[][] key = parseShadingSimple(method, objects);
             T proxy = proxyHub.chooseProxy(key);
             return method.invoke(proxy, objects);
         } else {
@@ -52,16 +51,16 @@ public class ShardingCallback<T> implements MethodInterceptor {
             Map<byte[][], Object[]> map;
             switch (collectionType) {
                 case LIST:
-                    map = parseShardingListParam(method, objects);
+                    map = parseShadingListParam(method, objects);
                     break;
                 case SET:
-                    map = parseShardingSetParam(method, objects);
+                    map = parseShadingSetParam(method, objects);
                     break;
                 case Map:
-                    map = parseShardingMapParam(method, objects);
+                    map = parseShadingMapParam(method, objects);
                     break;
                 case ARRAY:
-                    map = parseShardingArrayParam(method, objects);
+                    map = parseShadingArrayParam(method, objects);
                     break;
                 default:
                     throw new UnsupportedEncodingException("CollectionType only support List/Set/Map/Array");
@@ -103,7 +102,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                 }
                 throw new RuntimeException("will not invoke here");
             } else {
-                if (env.isShardingConcurrentEnable()) {
+                if (env.isShadingConcurrentEnable()) {
                     final AtomicBoolean isInvokeError = new AtomicBoolean(false);
                     final Throwable[] invokeError = new Throwable[1];
                     List<Object> results = new ArrayList<>();
@@ -111,7 +110,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                     for (Map.Entry<T, Object[]> entry : finalProxyMap.entrySet()) {
                         final T proxy = entry.getKey();
                         final Object[] params = entry.getValue();
-                        Future<Object> future = env.getShardingConcurrentExec().submit(new Callable<Object>() {
+                        Future<Object> future = env.getShadingConcurrentExec().submit(new Callable<Object>() {
                             @Override
                             public Object call() throws Exception {
                                 try {
@@ -149,19 +148,19 @@ public class ShardingCallback<T> implements MethodInterceptor {
 
     private Map<T, Object[]> mergeProxyMapOfArray(Map<T, List<Object[]>> proxyMap, Method method, Object[] objects) throws Throwable {
         Map<T, Object[]> finalProxyMap = new HashMap<>();
-        int collectionShardingIndex = getShardingCollectionParamIndex(method);
+        int collectionShadingIndex = getShadingCollectionParamIndex(method);
         for (Map.Entry<T, List<Object[]>> entry : proxyMap.entrySet()) {
             T proxy = entry.getKey();
             List<Object[]> value = entry.getValue();
             Object[] param = copy(objects);
 
             Object arrayParam;
-            String name = getShardingCollectionParamArrayParamType(method);
+            String name = getShadingCollectionParamArrayParamType(method);
             switch (name) {
                 case "java.lang.String":
                     String[] strArrayParam = new String[value.size()];
                     for (int i = 0; i < value.size(); i++) {
-                        String[] obj = (String[]) (value.get(i)[collectionShardingIndex]);
+                        String[] obj = (String[]) (value.get(i)[collectionShadingIndex]);
                         strArrayParam[i] = obj[0];
                     }
                     arrayParam = strArrayParam;
@@ -169,7 +168,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                 case "java.lang.Long": {
                     Long[] longArrayParam = new Long[value.size()];
                     for (int i = 0; i < value.size(); i++) {
-                        Long[] obj = (Long[]) (value.get(i)[collectionShardingIndex]);
+                        Long[] obj = (Long[]) (value.get(i)[collectionShadingIndex]);
                         longArrayParam[i] = obj[0];
                     }
                     arrayParam = longArrayParam;
@@ -178,7 +177,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                 case "java.lang.Integer": {
                     Integer[] integerArrayParam = new Integer[value.size()];
                     for (int i = 0; i < value.size(); i++) {
-                        Integer[] obj = (Integer[]) (value.get(i)[collectionShardingIndex]);
+                        Integer[] obj = (Integer[]) (value.get(i)[collectionShadingIndex]);
                         integerArrayParam[i] = obj[0];
                     }
                     arrayParam = integerArrayParam;
@@ -187,7 +186,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                 case "java.lang.Byte": {
                     Byte[] integerArrayParam = new Byte[value.size()];
                     for (int i = 0; i < value.size(); i++) {
-                        Byte[] obj = (Byte[]) (value.get(i)[collectionShardingIndex]);
+                        Byte[] obj = (Byte[]) (value.get(i)[collectionShadingIndex]);
                         integerArrayParam[i] = obj[0];
                     }
                     arrayParam = integerArrayParam;
@@ -196,7 +195,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                 case "long": {
                     long[] longArrayParam = new long[value.size()];
                     for (int i = 0; i < value.size(); i++) {
-                        long[] obj = (long[]) (value.get(i)[collectionShardingIndex]);
+                        long[] obj = (long[]) (value.get(i)[collectionShadingIndex]);
                         longArrayParam[i] = obj[0];
                     }
                     arrayParam = longArrayParam;
@@ -205,7 +204,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                 case "int": {
                     int[] intArrayParam = new int[value.size()];
                     for (int i = 0; i < value.size(); i++) {
-                        int[] obj = (int[]) (value.get(i)[collectionShardingIndex]);
+                        int[] obj = (int[]) (value.get(i)[collectionShadingIndex]);
                         intArrayParam[i] = obj[0];
                     }
                     arrayParam = intArrayParam;
@@ -214,7 +213,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                 case "byte": {
                     byte[] byteArrayParam = new byte[value.size()];
                     for (int i = 0; i < value.size(); i++) {
-                        byte[] obj = (byte[]) (value.get(i)[collectionShardingIndex]);
+                        byte[] obj = (byte[]) (value.get(i)[collectionShadingIndex]);
                         byteArrayParam[i] = obj[0];
                     }
                     arrayParam = byteArrayParam;
@@ -223,7 +222,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                 case "[B": {
                     byte[][] byte2ArrayParam = new byte[value.size()][0];
                     for (int i = 0; i < value.size(); i++) {
-                        byte[][] obj = (byte[][]) (value.get(i)[collectionShardingIndex]);
+                        byte[][] obj = (byte[][]) (value.get(i)[collectionShadingIndex]);
                         byte2ArrayParam[i] = obj[0];
                     }
                     arrayParam = byte2ArrayParam;
@@ -233,7 +232,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                     throw new UnsupportedOperationException("Unsupported array param type");
             }
 
-            param[collectionShardingIndex] = arrayParam;
+            param[collectionShadingIndex] = arrayParam;
             finalProxyMap.put(proxy, param);
         }
         return finalProxyMap;
@@ -241,16 +240,16 @@ public class ShardingCallback<T> implements MethodInterceptor {
 
     private Map<T, Object[]> mergeProxyMapOfSet(Map<T, List<Object[]>> proxyMap, Method method, Object[] objects) throws Throwable {
         Map<T, Object[]> finalProxyMap = new HashMap<>();
-        int collectionShardingIndex = getShardingCollectionParamIndex(method);
+        int collectionShadingIndex = getShadingCollectionParamIndex(method);
         for (Map.Entry<T, List<Object[]>> entry : proxyMap.entrySet()) {
             T proxy = entry.getKey();
             List<Object[]> value = entry.getValue();
             Object[] param = copy(objects);
             Set<Object> set = new HashSet<>();
             for (Object[] obj : value) {
-                set.addAll((Set) obj[collectionShardingIndex]);
+                set.addAll((Set) obj[collectionShadingIndex]);
             }
-            param[collectionShardingIndex] = set;
+            param[collectionShadingIndex] = set;
             finalProxyMap.put(proxy, param);
         }
         return finalProxyMap;
@@ -258,16 +257,16 @@ public class ShardingCallback<T> implements MethodInterceptor {
 
     private Map<T, Object[]> mergeProxyMapOfMap(Map<T, List<Object[]>> proxyMap, Method method, Object[] objects) throws Throwable {
         Map<T, Object[]> finalProxyMap = new HashMap<>();
-        int collectionShardingIndex = getShardingCollectionParamIndex(method);
+        int collectionShadingIndex = getShadingCollectionParamIndex(method);
         for (Map.Entry<T, List<Object[]>> entry : proxyMap.entrySet()) {
             T proxy = entry.getKey();
             List<Object[]> value = entry.getValue();
             Object[] param = copy(objects);
             Map<Object, Object> map1 = new HashMap<>();
             for (Object[] obj : value) {
-                map1.putAll((Map) obj[collectionShardingIndex]);
+                map1.putAll((Map) obj[collectionShadingIndex]);
             }
-            param[collectionShardingIndex] = map1;
+            param[collectionShadingIndex] = map1;
             finalProxyMap.put(proxy, param);
         }
         return finalProxyMap;
@@ -275,16 +274,16 @@ public class ShardingCallback<T> implements MethodInterceptor {
 
     private Map<T, Object[]> mergeProxyMapOfList(Map<T, List<Object[]>> proxyMap, Method method, Object[] objects) throws Throwable {
         Map<T, Object[]> finalProxyMap = new HashMap<>();
-        int collectionShardingIndex = getShardingCollectionParamIndex(method);
+        int collectionShadingIndex = getShadingCollectionParamIndex(method);
         for (Map.Entry<T, List<Object[]>> entry : proxyMap.entrySet()) {
             T proxy = entry.getKey();
             List<Object[]> value = entry.getValue();
             Object[] param = copy(objects);
             List<Object> list = new ArrayList<>();
             for (Object[] obj : value) {
-                list.addAll((List) obj[collectionShardingIndex]);
+                list.addAll((List) obj[collectionShadingIndex]);
             }
-            param[collectionShardingIndex] = list;
+            param[collectionShadingIndex] = list;
             finalProxyMap.put(proxy, param);
         }
         return finalProxyMap;
@@ -350,16 +349,16 @@ public class ShardingCallback<T> implements MethodInterceptor {
         return copy;
     }
 
-    private Map<byte[][], Object[]> parseShardingArrayParam(Method method, Object[] objects) {
-        List<Integer> shardingParamIndex = getShardingParamIndex(method);
-        int shardingCollectionParamIndex = getShardingCollectionParamIndex(method);
+    private Map<byte[][], Object[]> parseShadingArrayParam(Method method, Object[] objects) {
+        List<Integer> shadingParamIndex = getShadingParamIndex(method);
+        int shadingCollectionParamIndex = getShadingCollectionParamIndex(method);
 
         Map<byte[][], Object[]> map = new HashMap<>();
 
         List<Object> arrayParamList = new ArrayList<>();
         List<Object> arrayParamInnerList = new ArrayList<>();
-        Object arrayParam = objects[shardingCollectionParamIndex];
-        String name = getShardingCollectionParamArrayParamType(method);
+        Object arrayParam = objects[shadingCollectionParamIndex];
+        String name = getShadingCollectionParamArrayParamType(method);
         switch (name) {
             case "java.lang.String":
                 String[] strArr = (String[]) arrayParam;
@@ -422,22 +421,22 @@ public class ShardingCallback<T> implements MethodInterceptor {
         }
         for (int i=0; i<arrayParamList.size(); i++) {
             Object c = arrayParamList.get(i);
-            List<byte[]> shardingKey = new ArrayList<>();
+            List<byte[]> shadingKey = new ArrayList<>();
             byte[] prefix = getPrefix(method);
             if (prefix != null && prefix.length > 0) {
-                shardingKey.add(prefix);
+                shadingKey.add(prefix);
             }
-            for (Integer index : shardingParamIndex) {
-                if (index == shardingCollectionParamIndex) {
-                    shardingKey.add(toBytes(arrayParamInnerList.get(i)));
+            for (Integer index : shadingParamIndex) {
+                if (index == shadingCollectionParamIndex) {
+                    shadingKey.add(toBytes(arrayParamInnerList.get(i)));
                 } else {
-                    shardingKey.add(toBytes(objects[index]));
+                    shadingKey.add(toBytes(objects[index]));
                 }
             }
-            byte[][] key = shardingKey.toArray(new byte[0][0]);
+            byte[][] key = shadingKey.toArray(new byte[0][0]);
             Object[] param = new Object[objects.length];
             for (int j=0; j<objects.length; j++) {
-                if (j != shardingCollectionParamIndex) {
+                if (j != shadingCollectionParamIndex) {
                     param[j] = objects[j];
                 } else {
                     param[j] = c;
@@ -448,30 +447,30 @@ public class ShardingCallback<T> implements MethodInterceptor {
         return map;
     }
 
-    private Map<byte[][], Object[]> parseShardingSetParam(Method method, Object[] objects) {
-        List<Integer> shardingParamIndex = getShardingParamIndex(method);
-        int shardingCollectionParamIndex = getShardingCollectionParamIndex(method);
+    private Map<byte[][], Object[]> parseShadingSetParam(Method method, Object[] objects) {
+        List<Integer> shadingParamIndex = getShadingParamIndex(method);
+        int shadingCollectionParamIndex = getShadingCollectionParamIndex(method);
 
         Map<byte[][], Object[]> map = new HashMap<>();
 
-        Set setParam = (Set) objects[shardingCollectionParamIndex];
+        Set setParam = (Set) objects[shadingCollectionParamIndex];
         for (Object c : setParam) {
-            List<byte[]> shardingKey = new ArrayList<>();
+            List<byte[]> shadingKey = new ArrayList<>();
             byte[] prefix = getPrefix(method);
             if (prefix != null && prefix.length > 0) {
-                shardingKey.add(prefix);
+                shadingKey.add(prefix);
             }
-            for (Integer index : shardingParamIndex) {
-                if (index == shardingCollectionParamIndex) {
-                    shardingKey.add(toBytes(c));
+            for (Integer index : shadingParamIndex) {
+                if (index == shadingCollectionParamIndex) {
+                    shadingKey.add(toBytes(c));
                 } else {
-                    shardingKey.add(toBytes(objects[index]));
+                    shadingKey.add(toBytes(objects[index]));
                 }
             }
-            byte[][] key = shardingKey.toArray(new byte[0][0]);
+            byte[][] key = shadingKey.toArray(new byte[0][0]);
             Object[] param = new Object[objects.length];
             for (int i=0; i<objects.length; i++) {
-                if (i != shardingCollectionParamIndex) {
+                if (i != shadingCollectionParamIndex) {
                     param[i] = objects[i];
                 } else {
                     Set<Object> set = new HashSet<>();
@@ -484,30 +483,30 @@ public class ShardingCallback<T> implements MethodInterceptor {
         return map;
     }
 
-    private Map<byte[][], Object[]> parseShardingMapParam(Method method, Object[] objects) {
-        List<Integer> shardingParamIndex = getShardingParamIndex(method);
-        int shardingCollectionParamIndex = getShardingCollectionParamIndex(method);
+    private Map<byte[][], Object[]> parseShadingMapParam(Method method, Object[] objects) {
+        List<Integer> shadingParamIndex = getShadingParamIndex(method);
+        int shadingCollectionParamIndex = getShadingCollectionParamIndex(method);
 
         Map<byte[][], Object[]> map = new HashMap<>();
 
-        Map mapParam = (Map) objects[shardingCollectionParamIndex];
+        Map mapParam = (Map) objects[shadingCollectionParamIndex];
         for (Object k : mapParam.keySet()) {
-            List<byte[]> shardingKey = new ArrayList<>();
+            List<byte[]> shadingKey = new ArrayList<>();
             byte[] prefix = getPrefix(method);
             if (prefix != null && prefix.length > 0) {
-                shardingKey.add(prefix);
+                shadingKey.add(prefix);
             }
-            for (Integer index : shardingParamIndex) {
-                if (index == shardingCollectionParamIndex) {
-                    shardingKey.add(toBytes(k));
+            for (Integer index : shadingParamIndex) {
+                if (index == shadingCollectionParamIndex) {
+                    shadingKey.add(toBytes(k));
                 } else {
-                    shardingKey.add(toBytes(objects[index]));
+                    shadingKey.add(toBytes(objects[index]));
                 }
             }
-            byte[][] key = shardingKey.toArray(new byte[0][0]);
+            byte[][] key = shadingKey.toArray(new byte[0][0]);
             Object[] param = new Object[objects.length];
             for (int i=0; i<objects.length; i++) {
-                if (i != shardingCollectionParamIndex) {
+                if (i != shadingCollectionParamIndex) {
                     param[i] = objects[i];
                 } else {
                     Map<Object, Object> map1 = new HashMap<>();
@@ -520,30 +519,30 @@ public class ShardingCallback<T> implements MethodInterceptor {
         return map;
     }
 
-    private Map<byte[][], Object[]> parseShardingListParam(Method method, Object[] objects) {
-        List<Integer> shardingParamIndex = getShardingParamIndex(method);
-        int shardingCollectionParamIndex = getShardingCollectionParamIndex(method);
+    private Map<byte[][], Object[]> parseShadingListParam(Method method, Object[] objects) {
+        List<Integer> shadingParamIndex = getShadingParamIndex(method);
+        int shadingCollectionParamIndex = getShadingCollectionParamIndex(method);
 
         Map<byte[][], Object[]> map = new HashMap<>();
 
-        List listParam = (List) objects[shardingCollectionParamIndex];
+        List listParam = (List) objects[shadingCollectionParamIndex];
         for (Object c : listParam) {
-            List<byte[]> shardingKey = new ArrayList<>();
+            List<byte[]> shadingKey = new ArrayList<>();
             byte[] prefix = getPrefix(method);
             if (prefix != null && prefix.length > 0) {
-                shardingKey.add(prefix);
+                shadingKey.add(prefix);
             }
-            for (Integer index : shardingParamIndex) {
-                if (index == shardingCollectionParamIndex) {
-                    shardingKey.add(toBytes(c));
+            for (Integer index : shadingParamIndex) {
+                if (index == shadingCollectionParamIndex) {
+                    shadingKey.add(toBytes(c));
                 } else {
-                    shardingKey.add(toBytes(objects[index]));
+                    shadingKey.add(toBytes(objects[index]));
                 }
             }
-            byte[][] key = shardingKey.toArray(new byte[0][0]);
+            byte[][] key = shadingKey.toArray(new byte[0][0]);
             Object[] param = new Object[objects.length];
             for (int i=0; i<objects.length; i++) {
-                if (i != shardingCollectionParamIndex) {
+                if (i != shadingCollectionParamIndex) {
                     param[i] = objects[i];
                 } else {
                     List<Object> list = new ArrayList<>();
@@ -556,17 +555,17 @@ public class ShardingCallback<T> implements MethodInterceptor {
         return map;
     }
 
-    private byte[][] parseShardingSimple(Method method, Object[] objects) {
-        List<Integer> paramIndex = getShardingParamIndex(method);
-        List<byte[]> shardingKey = new ArrayList<>();
+    private byte[][] parseShadingSimple(Method method, Object[] objects) {
+        List<Integer> paramIndex = getShadingParamIndex(method);
+        List<byte[]> shadingKey = new ArrayList<>();
         byte[] prefix = getPrefix(method);
         if (prefix != null && prefix.length > 0) {
-            shardingKey.add(prefix);
+            shadingKey.add(prefix);
         }
         for (Integer index : paramIndex) {
-            shardingKey.add(toBytes(objects[index]));
+            shadingKey.add(toBytes(objects[index]));
         }
-        return shardingKey.toArray(new byte[0][0]);
+        return shadingKey.toArray(new byte[0][0]);
     }
 
     private byte[] toBytes(Object object) {
@@ -574,16 +573,20 @@ public class ShardingCallback<T> implements MethodInterceptor {
         if (object instanceof byte[]) {
             return (byte[]) object;
         } else {
-            return object.toString().getBytes(StandardCharsets.UTF_8);
+            try {
+                return object.toString().getBytes("utf-8");
+            } catch (UnsupportedEncodingException e) {
+                return new byte[0];
+            }
         }
     }
 
-    private final Map<Method, List<Integer>> shardingParamIndex = new HashMap<>();
-    private final Map<Method, Integer> shardingCollectionParamIndex = new HashMap<>();
-    private final Map<Method, CollectionType> collectionTypeMap = new HashMap<>();
-    private final Map<Method, byte[]> prefixCache = new HashMap<>();
-    private final Map<Method, Boolean> isOpMethodCache = new HashMap<>();
-    private final Map<Method, String> shardingCollectionParamArrayParamType = new HashMap<>();
+    private Map<Method, List<Integer>> shadingParamIndex = new HashMap<>();
+    private Map<Method, Integer> shadingCollectionParamIndex = new HashMap<>();
+    private Map<Method, CollectionType> collectionTypeMap = new HashMap<>();
+    private Map<Method, byte[]> prefixCache = new HashMap<>();
+    private Map<Method, Boolean> isOpMethodCache = new HashMap<>();
+    private Map<Method, String> shadingCollectionParamArrayParamType = new HashMap<>();
 
     private byte[] getPrefix(Method method) {
         byte[] prefix = prefixCache.get(method);
@@ -592,11 +595,11 @@ public class ShardingCallback<T> implements MethodInterceptor {
         return prefixCache.get(method);
     }
 
-    private String getShardingCollectionParamArrayParamType(Method method) {
-        String name = shardingCollectionParamArrayParamType.get(method);
+    private String getShadingCollectionParamArrayParamType(Method method) {
+        String name = shadingCollectionParamArrayParamType.get(method);
         if (name != null) return name;
         initCache(method);
-        return shardingCollectionParamArrayParamType.get(method);
+        return shadingCollectionParamArrayParamType.get(method);
     }
 
     private CollectionType getCollectionType(Method method) {
@@ -606,24 +609,24 @@ public class ShardingCallback<T> implements MethodInterceptor {
         return collectionTypeMap.get(method);
     }
 
-    private int getShardingCollectionParamIndex(Method method) {
-        Integer index = shardingCollectionParamIndex.get(method);
+    private int getShadingCollectionParamIndex(Method method) {
+        Integer index = shadingCollectionParamIndex.get(method);
         if (index != null) return index;
         initCache(method);
-        return shardingCollectionParamIndex.get(method);
+        return shadingCollectionParamIndex.get(method);
     }
 
-    private List<Integer> getShardingParamIndex(Method method) {
-        List<Integer> index = shardingParamIndex.get(method);
+    private List<Integer> getShadingParamIndex(Method method) {
+        List<Integer> index = shadingParamIndex.get(method);
         if (index != null) return index;
         initCache(method);
-        return shardingParamIndex.get(method);
+        return shadingParamIndex.get(method);
     }
 
-    private ShardingParam getShardingParam(Annotation[] annotations) {
+    private ShadingParam getShadingParam(Annotation[] annotations) {
         for (Annotation annotation : annotations) {
-            if (ShardingParam.class.isAssignableFrom(annotation.annotationType())) {
-                return (ShardingParam) annotation;
+            if (ShadingParam.class.isAssignableFrom(annotation.annotationType())) {
+                return (ShadingParam) annotation;
             }
         }
         return null;
@@ -639,17 +642,17 @@ public class ShardingCallback<T> implements MethodInterceptor {
 
     private void initCache(Method method) {
         if (!isOpMethod(method)) return;
-        int shardingCollectionParamIndexCount = 0;
+        int shadingCollectionParamIndexCount = 0;
         List<Integer> paramIndex = new ArrayList<>();
         Class<?>[] parameterTypes = method.getParameterTypes();
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
         for (int i=0; i<parameterAnnotations.length; i++) {
             Annotation[] annotations = parameterAnnotations[i];
-            ShardingParam shardingParam = getShardingParam(annotations);
-            if (shardingParam != null) {
-                if (shardingParam.type() == ShardingParam.Type.Collection) {
-                    shardingCollectionParamIndexCount ++;
-                    shardingCollectionParamIndex.put(method, i);
+            ShadingParam shadingParam = getShadingParam(annotations);
+            if (shadingParam != null) {
+                if (shadingParam.type() == ShadingParam.Type.Collection) {
+                    shadingCollectionParamIndexCount ++;
+                    shadingCollectionParamIndex.put(method, i);
                     if (List.class.isAssignableFrom(parameterTypes[i])) {
                         collectionTypeMap.put(method, CollectionType.LIST);
                     } else if (Set.class.isAssignableFrom(parameterTypes[i])) {
@@ -659,7 +662,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                     } else if (parameterTypes[i].isArray()) {
                         collectionTypeMap.put(method, CollectionType.ARRAY);
                         String name = parameterTypes[i].getComponentType().getName();
-                        shardingCollectionParamArrayParamType.put(method, name);
+                        shadingCollectionParamArrayParamType.put(method, name);
                     } else {
                         throw new UnsupportedOperationException("collection type param only support List/Set/Map/Array");
                     }
@@ -667,21 +670,21 @@ public class ShardingCallback<T> implements MethodInterceptor {
                 paramIndex.add(i);
             }
         }
-        if (shardingCollectionParamIndexCount > 1) {
+        if (shadingCollectionParamIndexCount > 1) {
             throw new UnsupportedOperationException("only support one param is collection type");
         }
-        shardingParamIndex.put(method, paramIndex);
+        shadingParamIndex.put(method, paramIndex);
         if (!collectionTypeMap.containsKey(method)) {
             collectionTypeMap.put(method, CollectionType.NOT_COLLECTION);
         }
 
         byte[] prefix = null;
-        ShardingConfig shardingConfig = method.getAnnotation(ShardingConfig.class);
-        if (shardingConfig == null) {
-            shardingConfig = method.getDeclaringClass().getAnnotation(ShardingConfig.class);
+        ShadingConfig shadingConfig = method.getAnnotation(ShadingConfig.class);
+        if (shadingConfig == null) {
+            shadingConfig = method.getDeclaringClass().getAnnotation(ShadingConfig.class);
         }
-        if (shardingConfig != null) {
-            String prefixStr = shardingConfig.prefix();
+        if (shadingConfig != null) {
+            String prefixStr = shadingConfig.prefix();
             if (prefixStr.length() != 0) {
                 try {
                     prefix = prefixStr.getBytes("utf-8");

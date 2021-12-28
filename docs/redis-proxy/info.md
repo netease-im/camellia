@@ -132,7 +132,7 @@ non_heap_memory_committed_human:32.31M
 ```
 127.0.0.1:6381> info upstream-info
 # Upstream-Info
-route_conf:{"type":"sharding","operation":{"operationMap":{"0-2-4":{"read":"redis-sentinel-slaves://@127.0.0.1:26379/master1?withMaster=true","type":"rw_separate","write":"redis-sentinel://@127.0.0.1:26379/master1"},"1-3-5":"redis-cluster://@10.189.28.62:7008,10.189.28.60:7001,10.189.28.62:7011"},"bucketSize":6}}
+route_conf:{"type":"shading","operation":{"operationMap":{"0-2-4":{"read":"redis-sentinel-slaves://@127.0.0.1:26379/master1?withMaster=true","type":"rw_separate","write":"redis-sentinel://@127.0.0.1:26379/master1"},"1-3-5":"redis-cluster://@10.189.28.62:7008,10.189.28.60:7001,10.189.28.62:7011"},"bucketSize":6}}
 upstream_cluster_count:3  ##本路由后端redis集群数量
 upstream0_url:redis-cluster://@10.189.28.62:7008,10.189.28.60:7001,10.189.28.62:7011  ##本路由包含的redis集群地址1
 upstream1_url:redis-sentinel://@127.0.0.1:26379/master1    ##本路由包含的redis集群地址2

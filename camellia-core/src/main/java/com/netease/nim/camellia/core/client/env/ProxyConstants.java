@@ -9,8 +9,8 @@ import com.netease.nim.camellia.core.util.SysUtils;
  */
 public class ProxyConstants {
 
-    public static final boolean shardingConcurrentEnable = true;
-    public static final int shardingConcurrentExecPoolSize = SysUtils.getCpuNum() * 16;
+    public static final boolean shadingConcurrentEnable = true;
+    public static final int shadingConcurrentExecPoolSize = SysUtils.getCpuNum() * 16;
     public static final boolean multiWriteConcurrentEnable = true;
     public static final int multiWriteConcurrentExecPoolSize = SysUtils.getCpuNum() * 16;
 }

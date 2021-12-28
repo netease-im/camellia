@@ -71,7 +71,7 @@ camellia-redis-proxy:
       multi-write-mode: first_resource_only #双写的模式，默认第一个地址返回就返回
 #      close-idle-connection: true #是否关闭空闲连接，默认true
 #      check-idle-connection-threshold-seconds: 600  #多久算空闲连接，默认600s
-#      sharding-func: com.netease.nim.camellia.redis.proxy.samples.CustomShardingFunc #分片函数
+#      shading-func: com.netease.nim.camellia.redis.proxy.samples.CustomShadingFunc #分片函数
 
 
 camellia-redis-zk-registry:

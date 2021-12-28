@@ -165,7 +165,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         //pipeline的proxy对象在分片和双写场景下，不能使用分片并发和多写并发，因为在某些场景下可能有并发问题（获取Client、Client发出指令、把Response对象放到ResponseQueable这三个操作）
         //并且由于pipeline下，只有在调用sync方法时才会真正发出请求，因此使用分片并发和多写并发本身也没有什么意义
         ProxyEnv pipelineProxyEnv = new ProxyEnv.Builder(env)
-                .shardingConcurrentEnable(false).multiWriteConcurrentEnable(false).build();
+                .shadingConcurrentEnable(false).multiWriteConcurrentEnable(false).build();
         StandardProxyGenerator<CamelliaRedisPipelineImpl> generator = new StandardProxyGenerator<>(CamelliaRedisPipelineImpl.class,
                 resourceTable, null, pipelineProxyEnv);
         CamelliaRedisPipelineImpl pipelineProxy = generator.generate();

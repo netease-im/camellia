@@ -17,7 +17,7 @@ public class ResourceTable {
     //simple
     private SimpleTable simpleTable;
     //分片
-    private ShardingTable shardingTable;
+    private ShadingTable shadingTable;
 
     public ResourceTable() {
     }
@@ -27,15 +27,15 @@ public class ResourceTable {
         this.simpleTable = simpleTable;
     }
 
-    public ResourceTable(ShardingTable shardingTable) {
-        this.type = Type.SHARDING;
-        this.shardingTable = shardingTable;
+    public ResourceTable(ShadingTable shadingTable) {
+        this.type = Type.SHADING;
+        this.shadingTable = shadingTable;
     }
 
     public static enum Type {
 
         SIMPLE(1),
-        SHARDING(2),
+        SHADING(2),
         ;
 
         private final int value;
@@ -58,7 +58,7 @@ public class ResourceTable {
         }
     }
 
-    public static class ShardingTable {
+    public static class ShadingTable {
         private int bucketSize;
         private Map<Integer, ResourceOperation> resourceOperationMap = new HashMap<>();
 
@@ -100,12 +100,12 @@ public class ResourceTable {
         this.type = type;
     }
 
-    public ShardingTable getShardingTable() {
-        return shardingTable;
+    public ShadingTable getShadingTable() {
+        return shadingTable;
     }
 
-    public void setShardingTable(ShardingTable shardingTable) {
-        this.shardingTable = shardingTable;
+    public void setShadingTable(ShadingTable shadingTable) {
+        this.shadingTable = shadingTable;
     }
 
     public SimpleTable getSimpleTable() {

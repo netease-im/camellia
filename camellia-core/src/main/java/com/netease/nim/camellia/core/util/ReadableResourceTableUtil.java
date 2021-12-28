@@ -39,11 +39,11 @@ public class ReadableResourceTableUtil {
                 throw new IllegalArgumentException("check table fail");
             }
             return resourceTable;
-        } else if (type.equalsIgnoreCase(ResourceTable.Type.SHARDING.name()) || type.equalsIgnoreCase("shading")) {//之前的错别字，这里兼容一下
-            resourceTable.setType(ResourceTable.Type.SHARDING);
-            ResourceTable.ShardingTable shardingTable = new ResourceTable.ShardingTable();
+        } else if (type.equalsIgnoreCase(ResourceTable.Type.SHADING.name())) {
+            resourceTable.setType(ResourceTable.Type.SHADING);
+            ResourceTable.ShadingTable shadingTable = new ResourceTable.ShadingTable();
             JSONObject operation = jsonObject.getJSONObject("operation");
-            shardingTable.setBucketSize(operation.getInteger("bucketSize"));
+            shadingTable.setBucketSize(operation.getInteger("bucketSize"));
             JSONObject operationMap = operation.getJSONObject("operationMap");
             Map<Integer, ResourceOperation> map = new HashMap<>();
             for (Map.Entry<String, Object> entry : operationMap.entrySet()) {
@@ -55,8 +55,8 @@ public class ReadableResourceTableUtil {
                     map.put(i, resourceOperation);
                 }
             }
-            shardingTable.setResourceOperationMap(map);
-            resourceTable.setShardingTable(shardingTable);
+            shadingTable.setResourceOperationMap(map);
+            resourceTable.setShadingTable(shadingTable);
             if (!CheckUtil.checkResourceTable(resourceTable)) {
                 throw new IllegalArgumentException("check table fail");
             }
@@ -76,12 +76,12 @@ public class ReadableResourceTableUtil {
             jsonObject.put("type", resourceTable.getType().name().toLowerCase());
             jsonObject.put("operation", readableResourceOperation(resourceOperation));
             return jsonObject.toJSONString();
-        } else if (resourceTable.getType() == ResourceTable.Type.SHARDING) {
-            ResourceTable.ShardingTable shardingTable = resourceTable.getShardingTable();
-            JSONObject shardingJson = new JSONObject();
-            shardingJson.put("bucketSize", shardingTable.getBucketSize());
+        } else if (resourceTable.getType() == ResourceTable.Type.SHADING) {
+            ResourceTable.ShadingTable shadingTable = resourceTable.getShadingTable();
+            JSONObject shadingJson = new JSONObject();
+            shadingJson.put("bucketSize", shadingTable.getBucketSize());
             Map<ResourceOperation, List<Integer>> map = new HashMap<>();
-            for (Map.Entry<Integer, ResourceOperation> entry : shardingTable.getResourceOperationMap().entrySet()) {
+            for (Map.Entry<Integer, ResourceOperation> entry : shadingTable.getResourceOperationMap().entrySet()) {
                 List<Integer> list = map.get(entry.getValue());
                 if (list == null) {
                     list = new ArrayList<>();
@@ -100,11 +100,11 @@ public class ReadableResourceTableUtil {
                 builder.deleteCharAt(builder.length() - 1);
                 operationMap.put(builder.toString(), readableResourceOperation(entry.getKey()));
             }
-            shardingJson.put("operationMap", operationMap);
+            shadingJson.put("operationMap", operationMap);
 
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("type", resourceTable.getType().name().toLowerCase());
-            jsonObject.put("operation", shardingJson);
+            jsonObject.put("operation", shadingJson);
             return jsonObject.toJSONString();
         }
         throw new IllegalArgumentException();

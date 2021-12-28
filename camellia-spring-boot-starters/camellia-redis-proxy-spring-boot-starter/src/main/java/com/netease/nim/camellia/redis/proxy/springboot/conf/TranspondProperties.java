@@ -419,7 +419,7 @@ public class TranspondProperties {
     public static class RedisConfProperties {
 
         //分片函数
-        private String shardingFunc;
+        private String shadingFunc;
         private int redisClusterMaxAttempts = Constants.Transpond.redisClusterMaxAttempts;
         private int heartbeatIntervalSeconds = Constants.Transpond.heartbeatIntervalSeconds;//若小于等于0则不发心跳
         private long heartbeatTimeoutMillis = Constants.Transpond.heartbeatTimeoutMillis;
@@ -433,12 +433,12 @@ public class TranspondProperties {
         private long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;//判断一个连接空闲的阈值，单位秒
         private int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;//判断一个连接空闲后，再过多少秒去执行关闭操作
 
-        public String getShardingFunc() {
-            return shardingFunc;
+        public String getShadingFunc() {
+            return shadingFunc;
         }
 
-        public void setShardingFunc(String shardingFunc) {
-            this.shardingFunc = shardingFunc;
+        public void setShadingFunc(String shadingFunc) {
+            this.shadingFunc = shadingFunc;
         }
 
         public int getRedisClusterMaxAttempts() {

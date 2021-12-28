@@ -40,8 +40,8 @@ public class ResourceUtil {
         switch (type) {
             case SIMPLE:
                 return getAllResources(resourceTable.getSimpleTable());
-            case SHARDING:
-                return getAllResources(resourceTable.getShardingTable());
+            case SHADING:
+                return getAllResources(resourceTable.getShadingTable());
             default:
                 return Collections.emptySet();
         }
@@ -88,7 +88,9 @@ public class ResourceUtil {
                     case RANDOM:
                     case ORDER:
                         List<Resource> readResources = readOperation.getReadResources();
-                        allResource.addAll(readResources);
+                        for (Resource resource : readResources) {
+                            allResource.add(resource);
+                        }
                         break;
                     default:
                         break;
@@ -97,12 +99,12 @@ public class ResourceUtil {
         return allResource;
     }
 
-    public static Set<Resource> getAllResources(ResourceTable.ShardingTable shardingTable) {
-        if (shardingTable == null) {
+    public static Set<Resource> getAllResources(ResourceTable.ShadingTable shadingTable) {
+        if (shadingTable == null) {
             return Collections.emptySet();
         }
         Set<Resource> allResource = new HashSet<>();
-        for (Map.Entry<Integer, ResourceOperation> entry : shardingTable.getResourceOperationMap().entrySet()) {
+        for (Map.Entry<Integer, ResourceOperation> entry : shadingTable.getResourceOperationMap().entrySet()) {
             allResource.addAll(getAllResources(entry.getValue()));
         }
         return allResource;

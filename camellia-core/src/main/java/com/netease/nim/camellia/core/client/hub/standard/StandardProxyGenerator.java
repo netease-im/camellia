@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.core.client.hub.standard;
 
 import com.netease.nim.camellia.core.client.callback.ProxyClientFactory;
-import com.netease.nim.camellia.core.client.callback.ShardingCallback;
+import com.netease.nim.camellia.core.client.callback.ShadingCallback;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.hub.IProxyHub;
 import com.netease.nim.camellia.core.model.Resource;
@@ -49,10 +49,10 @@ public class StandardProxyGenerator<T> {
             case SIMPLE:
                 //随便返回一个即可，因为只有一个
                 return standardProxyHub.chooseProxy(new byte[0]);
-            case SHARDING:
-                //此时有多个，需要根据sharding规则动态返回，此时再生成一个代理类，封装掉sharding逻辑
+            case SHADING:
+                //此时有多个，需要根据shading规则动态返回，此时再生成一个代理类，封装掉shading逻辑
                 return ProxyClientFactory.createProxy(clazz, new Class[] {Resource.class}, new Object[] {null},
-                        new ShardingCallback<>(standardProxyHub, clazz, env));
+                        new ShadingCallback<>(standardProxyHub, clazz, env));
             default:
                 throw new IllegalArgumentException("ResourceTable type error");
         }

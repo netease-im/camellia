@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.pipeline;
 
 import com.netease.nim.camellia.core.client.annotation.ReadOp;
-import com.netease.nim.camellia.core.client.annotation.ShardingParam;
+import com.netease.nim.camellia.core.client.annotation.ShadingParam;
 import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
@@ -51,7 +51,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> append(@ShardingParam final byte[] key, final byte[] value) {
+    public Response<Long> append(@ShadingParam final byte[] key, final byte[] value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.append(key, value);
@@ -65,7 +65,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> decr(@ShardingParam final byte[] key) {
+    public Response<Long> decr(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.decr(key);
@@ -79,7 +79,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> set(@ShardingParam final String key, final String value) {
+    public Response<String> set(@ShadingParam final String key, final String value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.set(key, value);
@@ -93,7 +93,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<String> get(@ShardingParam final String key) {
+    public Response<String> get(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.get(key);
@@ -107,7 +107,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> decrBy(@ShardingParam final byte[] key, final long integer) {
+    public Response<Long> decrBy(@ShadingParam final byte[] key, final long integer) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.decrBy(key, integer);
@@ -121,7 +121,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> del(@ShardingParam final byte[] key) {
+    public Response<Long> del(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.del(key);
@@ -135,7 +135,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<byte[]> echo(@ShardingParam final byte[] string) {
+    public Response<byte[]> echo(@ShadingParam final byte[] string) {
         LogUtil.debugLog(resource, string);
         Client client = clientPool.getClient(resource, string);
         client.echo(string);
@@ -149,7 +149,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Boolean> exists(@ShardingParam final byte[] key) {
+    public Response<Boolean> exists(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.exists(key);
@@ -163,7 +163,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> expire(@ShardingParam final byte[] key, final int seconds) {
+    public Response<Long> expire(@ShadingParam final byte[] key, final int seconds) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.expire(key, seconds);
@@ -177,7 +177,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> pexpire(@ShardingParam final byte[] key, final long milliseconds) {
+    public Response<Long> pexpire(@ShadingParam final byte[] key, final long milliseconds) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.pexpire(key, milliseconds);
@@ -191,7 +191,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> expireAt(@ShardingParam final byte[] key, final long unixTime) {
+    public Response<Long> expireAt(@ShadingParam final byte[] key, final long unixTime) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.expireAt(key, unixTime);
@@ -205,7 +205,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> pexpireAt(@ShardingParam final byte[] key, final long millisecondsTimestamp) {
+    public Response<Long> pexpireAt(@ShadingParam final byte[] key, final long millisecondsTimestamp) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.pexpireAt(key, millisecondsTimestamp);
@@ -219,7 +219,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<byte[]> get(@ShardingParam final byte[] key) {
+    public Response<byte[]> get(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.get(key);
@@ -233,7 +233,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Boolean> getbit(@ShardingParam final byte[] key, final long offset) {
+    public Response<Boolean> getbit(@ShadingParam final byte[] key, final long offset) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.getbit(key, offset);
@@ -247,7 +247,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<byte[]> getSet(@ShardingParam final byte[] key, final byte[] value) {
+    public Response<byte[]> getSet(@ShadingParam final byte[] key, final byte[] value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.getSet(key, value);
@@ -261,7 +261,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<byte[]> getrange(@ShardingParam final byte[] key, final long startOffset, final long endOffset) {
+    public Response<byte[]> getrange(@ShadingParam final byte[] key, final long startOffset, final long endOffset) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.getrange(key, startOffset, endOffset);
@@ -275,7 +275,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> hdel(@ShardingParam final byte[] key, final byte[]... field) {
+    public Response<Long> hdel(@ShadingParam final byte[] key, final byte[]... field) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.hdel(key, field);
@@ -289,7 +289,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Boolean> hexists(@ShardingParam final byte[] key, final byte[] field) {
+    public Response<Boolean> hexists(@ShadingParam final byte[] key, final byte[] field) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.hexists(key, field);
@@ -303,7 +303,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<byte[]> hget(@ShardingParam final byte[] key, final byte[] field) {
+    public Response<byte[]> hget(@ShadingParam final byte[] key, final byte[] field) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.hget(key, field);
@@ -317,7 +317,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Map<byte[], byte[]>> hgetAll(@ShardingParam final byte[] key) {
+    public Response<Map<byte[], byte[]>> hgetAll(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.hgetAll(key);
@@ -331,7 +331,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> hincrBy(@ShardingParam final byte[] key, final byte[] field, final long value) {
+    public Response<Long> hincrBy(@ShadingParam final byte[] key, final byte[] field, final long value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.hincrBy(key, field, value);
@@ -345,7 +345,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Double> hincrByFloat(@ShardingParam final byte[] key, final byte[] field, final double value) {
+    public Response<Double> hincrByFloat(@ShadingParam final byte[] key, final byte[] field, final double value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.hincrByFloat(key, field, value);
@@ -359,7 +359,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> hkeys(@ShardingParam final byte[] key) {
+    public Response<Set<byte[]>> hkeys(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.hkeys(key);
@@ -373,7 +373,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> hlen(@ShardingParam final byte[] key) {
+    public Response<Long> hlen(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.hlen(key);
@@ -387,7 +387,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<byte[]>> hmget(@ShardingParam final byte[] key, final byte[]... fields) {
+    public Response<List<byte[]>> hmget(@ShadingParam final byte[] key, final byte[]... fields) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.hmget(key, fields);
@@ -401,7 +401,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> hmset(@ShardingParam final byte[] key, final Map<byte[], byte[]> hash) {
+    public Response<String> hmset(@ShadingParam final byte[] key, final Map<byte[], byte[]> hash) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.hmset(key, hash);
@@ -415,7 +415,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> hset(@ShardingParam final byte[] key, final byte[] field, final byte[] value) {
+    public Response<Long> hset(@ShadingParam final byte[] key, final byte[] field, final byte[] value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.hset(key, field, value);
@@ -429,7 +429,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> hsetnx(@ShardingParam final byte[] key, final byte[] field, final byte[] value) {
+    public Response<Long> hsetnx(@ShadingParam final byte[] key, final byte[] field, final byte[] value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.hsetnx(key, field, value);
@@ -443,7 +443,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<byte[]>> hvals(@ShardingParam final byte[] key) {
+    public Response<List<byte[]>> hvals(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.hvals(key);
@@ -457,7 +457,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> incr(@ShardingParam final byte[] key) {
+    public Response<Long> incr(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.incr(key);
@@ -471,7 +471,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> incrBy(@ShardingParam final byte[] key, final long integer) {
+    public Response<Long> incrBy(@ShadingParam final byte[] key, final long integer) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.incrBy(key, integer);
@@ -485,7 +485,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Double> incrByFloat(@ShardingParam final byte[] key, final double value) {
+    public Response<Double> incrByFloat(@ShadingParam final byte[] key, final double value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.incrByFloat(key, value);
@@ -499,7 +499,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<byte[]> lindex(@ShardingParam final byte[] key, final long index) {
+    public Response<byte[]> lindex(@ShadingParam final byte[] key, final long index) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.lindex(key, index);
@@ -513,7 +513,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> linsert(@ShardingParam final byte[] key, final BinaryClient.LIST_POSITION where, final byte[] pivot, final byte[] value) {
+    public Response<Long> linsert(@ShadingParam final byte[] key, final BinaryClient.LIST_POSITION where, final byte[] pivot, final byte[] value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.linsert(key, where, pivot, value);
@@ -527,7 +527,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> llen(@ShardingParam final byte[] key) {
+    public Response<Long> llen(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.llen(key);
@@ -541,7 +541,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<byte[]> lpop(@ShardingParam final byte[] key) {
+    public Response<byte[]> lpop(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.lpop(key);
@@ -555,7 +555,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> lpush(@ShardingParam final byte[] key, final byte[]... string) {
+    public Response<Long> lpush(@ShadingParam final byte[] key, final byte[]... string) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.lpush(key, string);
@@ -569,7 +569,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> lpushx(@ShardingParam final byte[] key, final byte[]... bytes) {
+    public Response<Long> lpushx(@ShadingParam final byte[] key, final byte[]... bytes) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.lpushx(key, bytes);
@@ -583,7 +583,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<byte[]>> lrange(@ShardingParam final byte[] key, final long start, final long end) {
+    public Response<List<byte[]>> lrange(@ShadingParam final byte[] key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.lrange(key, start, end);
@@ -597,7 +597,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> lrem(@ShardingParam final byte[] key, final long count, final byte[] value) {
+    public Response<Long> lrem(@ShadingParam final byte[] key, final long count, final byte[] value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.lrem(key, count, value);
@@ -611,7 +611,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> lset(@ShardingParam final byte[] key, final long index, final byte[] value) {
+    public Response<String> lset(@ShadingParam final byte[] key, final long index, final byte[] value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.lset(key, index, value);
@@ -625,7 +625,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<String> ltrim(@ShardingParam final byte[] key, final long start, final long end) {
+    public Response<String> ltrim(@ShadingParam final byte[] key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.ltrim(key, start, end);
@@ -639,7 +639,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> persist(@ShardingParam final byte[] key) {
+    public Response<Long> persist(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.persist(key);
@@ -653,7 +653,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<byte[]> rpop(@ShardingParam final byte[] key) {
+    public Response<byte[]> rpop(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.rpop(key);
@@ -667,7 +667,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> rpush(@ShardingParam final byte[] key, final byte[]... string) {
+    public Response<Long> rpush(@ShadingParam final byte[] key, final byte[]... string) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.rpush(key, string);
@@ -681,7 +681,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> rpushx(@ShardingParam final byte[] key, final byte[]... string) {
+    public Response<Long> rpushx(@ShadingParam final byte[] key, final byte[]... string) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.rpushx(key, string);
@@ -695,7 +695,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> sadd(@ShardingParam final byte[] key, final byte[]... member) {
+    public Response<Long> sadd(@ShadingParam final byte[] key, final byte[]... member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.sadd(key, member);
@@ -709,7 +709,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> scard(@ShardingParam final byte[] key) {
+    public Response<Long> scard(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.scard(key);
@@ -723,7 +723,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> set(@ShardingParam final byte[] key, final byte[] value) {
+    public Response<String> set(@ShadingParam final byte[] key, final byte[] value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.set(key, value);
@@ -751,7 +751,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Boolean> setbit(@ShardingParam final byte[] key, final long offset, final byte[] value) {
+    public Response<Boolean> setbit(@ShadingParam final byte[] key, final long offset, final byte[] value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.setbit(key, offset, value);
@@ -765,7 +765,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> setrange(@ShardingParam final byte[] key, final long offset, final byte[] value) {
+    public Response<Long> setrange(@ShadingParam final byte[] key, final long offset, final byte[] value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.setrange(key, offset, value);
@@ -779,7 +779,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> setex(@ShardingParam final byte[] key, final int seconds, final byte[] value) {
+    public Response<String> setex(@ShadingParam final byte[] key, final int seconds, final byte[] value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.setex(key, seconds, value);
@@ -793,7 +793,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> psetex(@ShardingParam final byte[] key, final long milliseconds, final byte[] value) {
+    public Response<String> psetex(@ShadingParam final byte[] key, final long milliseconds, final byte[] value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.psetex(key, milliseconds, value);
@@ -807,7 +807,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> setnx(@ShardingParam final byte[] key, final byte[] value) {
+    public Response<Long> setnx(@ShadingParam final byte[] key, final byte[] value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.setnx(key, value);
@@ -821,7 +821,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> smembers(@ShardingParam final byte[] key) {
+    public Response<Set<byte[]>> smembers(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.smembers(key);
@@ -835,7 +835,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Boolean> sismember(@ShardingParam final byte[] key, final byte[] member) {
+    public Response<Boolean> sismember(@ShadingParam final byte[] key, final byte[] member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.sismember(key, member);
@@ -849,7 +849,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<byte[]>> sort(@ShardingParam final byte[] key) {
+    public Response<List<byte[]>> sort(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.sort(key);
@@ -863,7 +863,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<byte[]>> sort(@ShardingParam final byte[] key, final SortingParams sortingParameters) {
+    public Response<List<byte[]>> sort(@ShadingParam final byte[] key, final SortingParams sortingParameters) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.sort(key, sortingParameters);
@@ -877,7 +877,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<byte[]> spop(@ShardingParam final byte[] key) {
+    public Response<byte[]> spop(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.spop(key);
@@ -891,7 +891,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Set<byte[]>> spop(@ShardingParam final byte[] key, final long count) {
+    public Response<Set<byte[]>> spop(@ShadingParam final byte[] key, final long count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.spop(key, count);
@@ -905,7 +905,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<byte[]> srandmember(@ShardingParam final byte[] key) {
+    public Response<byte[]> srandmember(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.srandmember(key);
@@ -919,7 +919,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<byte[]>> srandmember(@ShardingParam final byte[] key, final int count) {
+    public Response<List<byte[]>> srandmember(@ShadingParam final byte[] key, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.srandmember(key, count);
@@ -933,7 +933,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> srem(@ShardingParam final byte[] key, final byte[]... member) {
+    public Response<Long> srem(@ShadingParam final byte[] key, final byte[]... member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.srem(key, member);
@@ -947,7 +947,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> strlen(@ShardingParam final byte[] key) {
+    public Response<Long> strlen(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.strlen(key);
@@ -961,7 +961,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<String> substr(@ShardingParam final byte[] key, final int start, final int end) {
+    public Response<String> substr(@ShadingParam final byte[] key, final int start, final int end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.substr(key, start, end);
@@ -975,7 +975,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> ttl(@ShardingParam final byte[] key) {
+    public Response<Long> ttl(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.ttl(key);
@@ -989,7 +989,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> pttl(@ShardingParam final byte[] key) {
+    public Response<Long> pttl(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.pttl(key);
@@ -1003,7 +1003,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<String> type(@ShardingParam final byte[] key) {
+    public Response<String> type(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.type(key);
@@ -1017,7 +1017,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zadd(@ShardingParam final byte[] key, final double score, final byte[] member) {
+    public Response<Long> zadd(@ShadingParam final byte[] key, final double score, final byte[] member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zadd(key, score, member);
@@ -1031,7 +1031,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zadd(@ShardingParam final byte[] key, final double score, final byte[] member, final ZAddParams params) {
+    public Response<Long> zadd(@ShadingParam final byte[] key, final double score, final byte[] member, final ZAddParams params) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zadd(key, score, member, params);
@@ -1045,7 +1045,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> zcard(@ShardingParam final byte[] key) {
+    public Response<Long> zcard(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zcard(key);
@@ -1059,7 +1059,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> zcount(@ShardingParam final byte[] key, final double min, final double max) {
+    public Response<Long> zcount(@ShadingParam final byte[] key, final double min, final double max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zcount(key, min, max);
@@ -1073,7 +1073,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Double> zincrby(@ShardingParam final byte[] key, final double score, final byte[] member) {
+    public Response<Double> zincrby(@ShadingParam final byte[] key, final double score, final byte[] member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zincrby(key, score, member);
@@ -1087,7 +1087,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Double> zincrby(@ShardingParam final byte[] key, final double score, final byte[] member, final ZIncrByParams params) {
+    public Response<Double> zincrby(@ShadingParam final byte[] key, final double score, final byte[] member, final ZIncrByParams params) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zincrby(key, score, member, params);
@@ -1101,7 +1101,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> zrange(@ShardingParam final byte[] key, final long start, final long end) {
+    public Response<Set<byte[]>> zrange(@ShadingParam final byte[] key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrange(key, start, end);
@@ -1115,7 +1115,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> zrangeByScore(@ShardingParam final byte[] key, final double min, final double max) {
+    public Response<Set<byte[]>> zrangeByScore(@ShadingParam final byte[] key, final double min, final double max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrangeByScore(key, min, max);
@@ -1129,7 +1129,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> zrangeByScore(@ShardingParam final byte[] key, final byte[] min, final byte[] max) {
+    public Response<Set<byte[]>> zrangeByScore(@ShadingParam final byte[] key, final byte[] min, final byte[] max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrangeByScore(key, min, max);
@@ -1143,7 +1143,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> zrangeByScore(@ShardingParam final byte[] key, final double min, final double max, final int offset, final int count) {
+    public Response<Set<byte[]>> zrangeByScore(@ShadingParam final byte[] key, final double min, final double max, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrangeByScore(key, min, max, offset, count);
@@ -1157,7 +1157,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> zrangeByScore(@ShardingParam final byte[] key, final byte[] min, final byte[] max, final int offset, final int count) {
+    public Response<Set<byte[]>> zrangeByScore(@ShadingParam final byte[] key, final byte[] min, final byte[] max, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrangeByScore(key, min, max, offset, count);
@@ -1171,7 +1171,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShardingParam final byte[] key, final double min, final double max) {
+    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShadingParam final byte[] key, final double min, final double max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrangeByScoreWithScores(key, min, max);
@@ -1185,7 +1185,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShardingParam final byte[] key, final byte[] min, final byte[] max) {
+    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShadingParam final byte[] key, final byte[] min, final byte[] max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrangeByScoreWithScores(key, min, max);
@@ -1199,7 +1199,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShardingParam final byte[] key, final double min, final double max, final int offset, final int count) {
+    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShadingParam final byte[] key, final double min, final double max, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrangeByScoreWithScores(key, min, max, offset, count);
@@ -1213,7 +1213,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShardingParam final byte[] key, final byte[] min, final byte[] max, final int offset, final int count) {
+    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShadingParam final byte[] key, final byte[] min, final byte[] max, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrangeByScoreWithScores(key, min, max, offset, count);
@@ -1227,7 +1227,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> zrevrangeByScore(@ShardingParam final byte[] key, final double max, final double min) {
+    public Response<Set<byte[]>> zrevrangeByScore(@ShadingParam final byte[] key, final double max, final double min) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrevrangeByScore(key, max, min);
@@ -1241,7 +1241,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> zrevrangeByScore(@ShardingParam final byte[] key, final byte[] max, final byte[] min) {
+    public Response<Set<byte[]>> zrevrangeByScore(@ShadingParam final byte[] key, final byte[] max, final byte[] min) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrevrangeByScore(key, max, min);
@@ -1255,7 +1255,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> zrevrangeByScore(@ShardingParam final byte[] key, final double max, final double min, final int offset, final int count) {
+    public Response<Set<byte[]>> zrevrangeByScore(@ShadingParam final byte[] key, final double max, final double min, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrevrangeByScore(key, max, min, offset, count);
@@ -1269,7 +1269,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> zrevrangeByScore(@ShardingParam final byte[] key, final byte[] max, final byte[] min, final int offset, final int count) {
+    public Response<Set<byte[]>> zrevrangeByScore(@ShadingParam final byte[] key, final byte[] max, final byte[] min, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrevrangeByScore(key, max, min, offset, count);
@@ -1283,7 +1283,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShardingParam final byte[] key, final double max, final double min) {
+    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShadingParam final byte[] key, final double max, final double min) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrevrangeByScoreWithScores(key, max, min);
@@ -1297,7 +1297,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShardingParam final byte[] key, final byte[] max, final byte[] min) {
+    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShadingParam final byte[] key, final byte[] max, final byte[] min) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrevrangeByScoreWithScores(key, max, min);
@@ -1311,7 +1311,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShardingParam final byte[] key, final double max, final double min, final int offset, final int count) {
+    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShadingParam final byte[] key, final double max, final double min, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrevrangeByScoreWithScores(key, max, min, offset, count);
@@ -1325,7 +1325,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShardingParam final byte[] key, final byte[] max, final byte[] min, final int offset, final int count) {
+    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShadingParam final byte[] key, final byte[] max, final byte[] min, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrevrangeByScoreWithScores(key, max, min, offset, count);
@@ -1339,7 +1339,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrangeWithScores(@ShardingParam final byte[] key, final long start, final long end) {
+    public Response<Set<Tuple>> zrangeWithScores(@ShadingParam final byte[] key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrangeWithScores(key, start, end);
@@ -1353,7 +1353,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> zrank(@ShardingParam final byte[] key, final byte[] member) {
+    public Response<Long> zrank(@ShadingParam final byte[] key, final byte[] member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrank(key, member);
@@ -1367,7 +1367,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zrem(@ShardingParam final byte[] key, final byte[]... member) {
+    public Response<Long> zrem(@ShadingParam final byte[] key, final byte[]... member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrem(key, member);
@@ -1381,7 +1381,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zremrangeByRank(@ShardingParam final byte[] key, final long start, final long end) {
+    public Response<Long> zremrangeByRank(@ShadingParam final byte[] key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zremrangeByRank(key, start, end);
@@ -1395,7 +1395,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zremrangeByScore(@ShardingParam final byte[] key, final double start, final double end) {
+    public Response<Long> zremrangeByScore(@ShadingParam final byte[] key, final double start, final double end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zremrangeByScore(SafeEncoder.encode(key), start, end);
@@ -1409,7 +1409,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zremrangeByScore(@ShardingParam final byte[] key, final byte[] start, final byte[] end) {
+    public Response<Long> zremrangeByScore(@ShadingParam final byte[] key, final byte[] start, final byte[] end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zremrangeByScore(key, start, end);
@@ -1423,7 +1423,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> zrevrange(@ShardingParam final byte[] key, final long start, final long end) {
+    public Response<Set<byte[]>> zrevrange(@ShadingParam final byte[] key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrevrange(key, start, end);
@@ -1437,7 +1437,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrevrangeWithScores(@ShardingParam final byte[] key, final long start, final long end) {
+    public Response<Set<Tuple>> zrevrangeWithScores(@ShadingParam final byte[] key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrevrangeWithScores(key, start, end);
@@ -1451,7 +1451,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> zrevrank(@ShardingParam final byte[] key, final byte[] member) {
+    public Response<Long> zrevrank(@ShadingParam final byte[] key, final byte[] member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrevrank(key, member);
@@ -1465,7 +1465,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Double> zscore(@ShardingParam final byte[] key, final byte[] member) {
+    public Response<Double> zscore(@ShadingParam final byte[] key, final byte[] member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zscore(key, member);
@@ -1479,7 +1479,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> zlexcount(@ShardingParam final byte[] key, final byte[] min, final byte[] max) {
+    public Response<Long> zlexcount(@ShadingParam final byte[] key, final byte[] min, final byte[] max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zlexcount(key, min, max);
@@ -1493,7 +1493,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> zrangeByLex(@ShardingParam final byte[] key, final byte[] min, final byte[] max) {
+    public Response<Set<byte[]>> zrangeByLex(@ShadingParam final byte[] key, final byte[] min, final byte[] max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrangeByLex(key, min, max);
@@ -1507,7 +1507,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> zrangeByLex(@ShardingParam final byte[] key, final byte[] min, final byte[] max, final int offset, final int count) {
+    public Response<Set<byte[]>> zrangeByLex(@ShadingParam final byte[] key, final byte[] min, final byte[] max, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrangeByLex(key, min, max, offset, count);
@@ -1521,7 +1521,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> zrevrangeByLex(@ShardingParam final byte[] key, final byte[] max, final byte[] min) {
+    public Response<Set<byte[]>> zrevrangeByLex(@ShadingParam final byte[] key, final byte[] max, final byte[] min) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrevrangeByLex(key, max, min);
@@ -1535,7 +1535,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<byte[]>> zrevrangeByLex(@ShardingParam final byte[] key, final byte[] max, final byte[] min, final int offset, final int count) {
+    public Response<Set<byte[]>> zrevrangeByLex(@ShadingParam final byte[] key, final byte[] max, final byte[] min, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zrevrangeByLex(key, max, min, offset, count);
@@ -1549,7 +1549,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zremrangeByLex(@ShardingParam final byte[] key, final byte[] min, final byte[] max) {
+    public Response<Long> zremrangeByLex(@ShadingParam final byte[] key, final byte[] min, final byte[] max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zremrangeByLex(key, min, max);
@@ -1563,7 +1563,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> bitcount(@ShardingParam final byte[] key) {
+    public Response<Long> bitcount(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.bitcount(key);
@@ -1577,7 +1577,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> bitcount(@ShardingParam final byte[] key, final long start, final long end) {
+    public Response<Long> bitcount(@ShadingParam final byte[] key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.bitcount(key, start, end);
@@ -1591,7 +1591,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> pfadd(@ShardingParam final byte[] key, final byte[]... elements) {
+    public Response<Long> pfadd(@ShadingParam final byte[] key, final byte[]... elements) {
         LogUtil.debugLog(resource, key);
         final Client client = clientPool.getClient(resource, key);
         client.pfadd(key, elements);
@@ -1605,7 +1605,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> pfcount(@ShardingParam final byte[] key) {
+    public Response<Long> pfcount(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.pfcount(key);
@@ -1619,7 +1619,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> geoadd(@ShardingParam final byte[] key, final double longitude, final double latitude, final byte[] member) {
+    public Response<Long> geoadd(@ShadingParam final byte[] key, final double longitude, final double latitude, final byte[] member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.geoadd(key, longitude, latitude, member);
@@ -1633,7 +1633,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> geoadd(@ShardingParam final byte[] key, final Map<byte[], GeoCoordinate> memberCoordinateMap) {
+    public Response<Long> geoadd(@ShadingParam final byte[] key, final Map<byte[], GeoCoordinate> memberCoordinateMap) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.geoadd(key, memberCoordinateMap);
@@ -1647,7 +1647,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Double> geodist(@ShardingParam final byte[] key, final byte[] member1, final byte[] member2) {
+    public Response<Double> geodist(@ShadingParam final byte[] key, final byte[] member1, final byte[] member2) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.geodist(key, member1, member2);
@@ -1661,7 +1661,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Double> geodist(@ShardingParam final byte[] key, final byte[] member1, final byte[] member2, final GeoUnit unit) {
+    public Response<Double> geodist(@ShadingParam final byte[] key, final byte[] member1, final byte[] member2, final GeoUnit unit) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.geodist(key, member1, member2, unit);
@@ -1675,7 +1675,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<byte[]>> geohash(@ShardingParam final byte[] key, final byte[]... members) {
+    public Response<List<byte[]>> geohash(@ShadingParam final byte[] key, final byte[]... members) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.geohash(key, members);
@@ -1689,7 +1689,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<GeoCoordinate>> geopos(@ShardingParam final byte[] key, final byte[]... members) {
+    public Response<List<GeoCoordinate>> geopos(@ShadingParam final byte[] key, final byte[]... members) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.geopos(key, members);
@@ -1703,7 +1703,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<GeoRadiusResponse>> georadius(@ShardingParam final byte[] key, final double longitude, final double latitude, final double radius, final GeoUnit unit) {
+    public Response<List<GeoRadiusResponse>> georadius(@ShadingParam final byte[] key, final double longitude, final double latitude, final double radius, final GeoUnit unit) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.georadius(key, longitude, latitude, radius, unit);
@@ -1717,7 +1717,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<GeoRadiusResponse>> georadius(@ShardingParam final byte[] key, final double longitude, final double latitude, final double radius, final GeoUnit unit, final GeoRadiusParam param) {
+    public Response<List<GeoRadiusResponse>> georadius(@ShadingParam final byte[] key, final double longitude, final double latitude, final double radius, final GeoUnit unit, final GeoRadiusParam param) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.georadius(key, longitude, latitude, radius, unit, param);
@@ -1731,7 +1731,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<GeoRadiusResponse>> georadiusByMember(@ShardingParam final byte[] key, final byte[] member, final double radius, final GeoUnit unit) {
+    public Response<List<GeoRadiusResponse>> georadiusByMember(@ShadingParam final byte[] key, final byte[] member, final double radius, final GeoUnit unit) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.georadiusByMember(key, member, radius, unit);
@@ -1745,7 +1745,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<GeoRadiusResponse>> georadiusByMember(@ShardingParam final byte[] key, final byte[] member, final double radius, final GeoUnit unit, final GeoRadiusParam param) {
+    public Response<List<GeoRadiusResponse>> georadiusByMember(@ShadingParam final byte[] key, final byte[] member, final double radius, final GeoUnit unit, final GeoRadiusParam param) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.georadiusByMember(key, member, radius, unit, param);
@@ -1759,7 +1759,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<Long>> bitfield(@ShardingParam final byte[] key, final byte[]... elements) {
+    public Response<List<Long>> bitfield(@ShadingParam final byte[] key, final byte[]... elements) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.bitfield(key, elements);
@@ -1773,7 +1773,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> bitpos(@ShardingParam final byte[] key, final boolean value, final BitPosParams params) {
+    public Response<Long> bitpos(@ShadingParam final byte[] key, final boolean value, final BitPosParams params) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.bitpos(key, value, params);
@@ -1787,7 +1787,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> append(@ShardingParam final String key, final String value) {
+    public Response<Long> append(@ShadingParam final String key, final String value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.append(key, value);
@@ -1801,7 +1801,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> decr(@ShardingParam final String key) {
+    public Response<Long> decr(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.decr(key);
@@ -1815,7 +1815,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> decrBy(@ShardingParam final String key, final long integer) {
+    public Response<Long> decrBy(@ShadingParam final String key, final long integer) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.decrBy(key, integer);
@@ -1829,7 +1829,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> del(@ShardingParam final String key) {
+    public Response<Long> del(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.del(key);
@@ -1843,7 +1843,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<String> echo(@ShardingParam final String string) {
+    public Response<String> echo(@ShadingParam final String string) {
         LogUtil.debugLog(resource, string);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(string));
         client.echo(string);
@@ -1857,7 +1857,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Boolean> exists(@ShardingParam final String key) {
+    public Response<Boolean> exists(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.exists(key);
@@ -1871,7 +1871,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> expire(@ShardingParam final String key, final int seconds) {
+    public Response<Long> expire(@ShadingParam final String key, final int seconds) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.expire(key, seconds);
@@ -1885,7 +1885,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> pexpire(@ShardingParam final String key, final long milliseconds) {
+    public Response<Long> pexpire(@ShadingParam final String key, final long milliseconds) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.pexpire(key, milliseconds);
@@ -1899,7 +1899,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> expireAt(@ShardingParam final String key, final long unixTime) {
+    public Response<Long> expireAt(@ShadingParam final String key, final long unixTime) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.expireAt(key, unixTime);
@@ -1913,7 +1913,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> pexpireAt(@ShardingParam final String key, final long millisecondsTimestamp) {
+    public Response<Long> pexpireAt(@ShadingParam final String key, final long millisecondsTimestamp) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.pexpireAt(key, millisecondsTimestamp);
@@ -1927,7 +1927,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Boolean> getbit(@ShardingParam final String key, final long offset) {
+    public Response<Boolean> getbit(@ShadingParam final String key, final long offset) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.getbit(key, offset);
@@ -1941,7 +1941,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<String> getrange(@ShardingParam final String key, final long startOffset, final long endOffset) {
+    public Response<String> getrange(@ShadingParam final String key, final long startOffset, final long endOffset) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.getrange(key, startOffset, endOffset);
@@ -1955,7 +1955,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> getSet(@ShardingParam final String key, final String value) {
+    public Response<String> getSet(@ShadingParam final String key, final String value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.getSet(key, value);
@@ -1969,7 +1969,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> hdel(@ShardingParam final String key, final String... field) {
+    public Response<Long> hdel(@ShadingParam final String key, final String... field) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.hdel(key, field);
@@ -1983,7 +1983,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Boolean> hexists(@ShardingParam final String key, final String field) {
+    public Response<Boolean> hexists(@ShadingParam final String key, final String field) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.hexists(key, field);
@@ -1997,7 +1997,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<String> hget(@ShardingParam final String key, final String field) {
+    public Response<String> hget(@ShadingParam final String key, final String field) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.hget(key, field);
@@ -2011,7 +2011,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Map<String, String>> hgetAll(@ShardingParam final String key) {
+    public Response<Map<String, String>> hgetAll(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.hgetAll(key);
@@ -2025,7 +2025,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> hincrBy(@ShardingParam final String key, final String field, final long value) {
+    public Response<Long> hincrBy(@ShadingParam final String key, final String field, final long value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.hincrBy(key, field, value);
@@ -2039,7 +2039,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> hkeys(@ShardingParam final String key) {
+    public Response<Set<String>> hkeys(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.hkeys(key);
@@ -2053,7 +2053,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> hlen(@ShardingParam final String key) {
+    public Response<Long> hlen(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.hlen(key);
@@ -2067,7 +2067,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<String>> hmget(@ShardingParam final String key, final String... fields) {
+    public Response<List<String>> hmget(@ShadingParam final String key, final String... fields) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.hmget(key, fields);
@@ -2081,7 +2081,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> hmset(@ShardingParam final String key, final Map<String, String> hash) {
+    public Response<String> hmset(@ShadingParam final String key, final Map<String, String> hash) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.hmset(key, hash);
@@ -2095,7 +2095,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> hset(@ShardingParam final String key, final String field, final String value) {
+    public Response<Long> hset(@ShadingParam final String key, final String field, final String value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.hset(key, field, value);
@@ -2109,7 +2109,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> hsetnx(@ShardingParam final String key, final String field, final String value) {
+    public Response<Long> hsetnx(@ShadingParam final String key, final String field, final String value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.hsetnx(key, field, value);
@@ -2123,7 +2123,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<String>> hvals(@ShardingParam final String key) {
+    public Response<List<String>> hvals(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.hvals(key);
@@ -2137,7 +2137,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> incr(@ShardingParam final String key) {
+    public Response<Long> incr(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.incr(key);
@@ -2151,7 +2151,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> incrBy(@ShardingParam final String key, final long integer) {
+    public Response<Long> incrBy(@ShadingParam final String key, final long integer) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.incrBy(key, integer);
@@ -2165,7 +2165,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<String> lindex(@ShardingParam final String key, final long index) {
+    public Response<String> lindex(@ShadingParam final String key, final long index) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.lindex(key, index);
@@ -2179,7 +2179,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> linsert(@ShardingParam final String key, final BinaryClient.LIST_POSITION where, final String pivot, final String value) {
+    public Response<Long> linsert(@ShadingParam final String key, final BinaryClient.LIST_POSITION where, final String pivot, final String value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.linsert(key, where, pivot, value);
@@ -2193,7 +2193,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> llen(@ShardingParam final String key) {
+    public Response<Long> llen(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.llen(key);
@@ -2207,7 +2207,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> lpop(@ShardingParam final String key) {
+    public Response<String> lpop(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.lpop(key);
@@ -2221,7 +2221,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> lpush(@ShardingParam final String key, final String... string) {
+    public Response<Long> lpush(@ShadingParam final String key, final String... string) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.lpush(key, string);
@@ -2235,7 +2235,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> lpushx(@ShardingParam final String key, final String... string) {
+    public Response<Long> lpushx(@ShadingParam final String key, final String... string) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.lpushx(key, string);
@@ -2249,7 +2249,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<String>> lrange(@ShardingParam final String key, final long start, final long end) {
+    public Response<List<String>> lrange(@ShadingParam final String key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.lrange(key, start, end);
@@ -2263,7 +2263,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> lrem(@ShardingParam final String key, final long count, final String value) {
+    public Response<Long> lrem(@ShadingParam final String key, final long count, final String value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.lrem(key, count, value);
@@ -2277,7 +2277,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> lset(@ShardingParam final String key, final long index, final String value) {
+    public Response<String> lset(@ShadingParam final String key, final long index, final String value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.lset(key, index, value);
@@ -2291,7 +2291,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<String> ltrim(@ShardingParam final String key, final long start, final long end) {
+    public Response<String> ltrim(@ShadingParam final String key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.ltrim(key, start, end);
@@ -2305,7 +2305,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> persist(@ShardingParam final String key) {
+    public Response<Long> persist(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.persist(key);
@@ -2319,7 +2319,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> rpop(@ShardingParam final String key) {
+    public Response<String> rpop(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.rpop(key);
@@ -2333,7 +2333,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> rpush(@ShardingParam final String key, final String... string) {
+    public Response<Long> rpush(@ShadingParam final String key, final String... string) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.rpush(key, string);
@@ -2347,7 +2347,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> rpushx(@ShardingParam final String key, final String... string) {
+    public Response<Long> rpushx(@ShadingParam final String key, final String... string) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.rpushx(key, string);
@@ -2361,7 +2361,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> sadd(@ShardingParam final String key, final String... member) {
+    public Response<Long> sadd(@ShadingParam final String key, final String... member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.sadd(key, member);
@@ -2375,7 +2375,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> scard(@ShardingParam final String key) {
+    public Response<Long> scard(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.scard(key);
@@ -2389,7 +2389,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Boolean> sismember(@ShardingParam final String key, final String member) {
+    public Response<Boolean> sismember(@ShadingParam final String key, final String member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.sismember(key, member);
@@ -2403,7 +2403,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Boolean> setbit(@ShardingParam final String key, final long offset, final boolean value) {
+    public Response<Boolean> setbit(@ShadingParam final String key, final long offset, final boolean value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.setbit(key, offset, value);
@@ -2417,7 +2417,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> setex(@ShardingParam final String key, final int seconds, final String value) {
+    public Response<String> setex(@ShadingParam final String key, final int seconds, final String value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.setex(key, seconds, value);
@@ -2431,7 +2431,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> setnx(@ShardingParam final String key, final String value) {
+    public Response<Long> setnx(@ShadingParam final String key, final String value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.setnx(key, value);
@@ -2445,7 +2445,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> setrange(@ShardingParam final String key, final long offset, final String value) {
+    public Response<Long> setrange(@ShadingParam final String key, final long offset, final String value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.setrange(key, offset, value);
@@ -2459,7 +2459,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> smembers(@ShardingParam final String key) {
+    public Response<Set<String>> smembers(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.smembers(key);
@@ -2473,7 +2473,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<String>> sort(@ShardingParam final String key) {
+    public Response<List<String>> sort(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.sort(key);
@@ -2487,7 +2487,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<String>> sort(@ShardingParam final String key, final SortingParams sortingParameters) {
+    public Response<List<String>> sort(@ShadingParam final String key, final SortingParams sortingParameters) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.sort(key, sortingParameters);
@@ -2501,7 +2501,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> spop(@ShardingParam final String key) {
+    public Response<String> spop(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.spop(key);
@@ -2515,7 +2515,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Set<String>> spop(@ShardingParam final String key, final long count) {
+    public Response<Set<String>> spop(@ShadingParam final String key, final long count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.spop(key, count);
@@ -2529,7 +2529,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<String> srandmember(@ShardingParam final String key) {
+    public Response<String> srandmember(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.srandmember(key);
@@ -2543,7 +2543,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> srem(@ShardingParam final String key, final String... member) {
+    public Response<Long> srem(@ShadingParam final String key, final String... member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.srem(key, member);
@@ -2557,7 +2557,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> strlen(@ShardingParam final String key) {
+    public Response<Long> strlen(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.strlen(key);
@@ -2571,7 +2571,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<String> substr(@ShardingParam final String key, final int start, final int end) {
+    public Response<String> substr(@ShadingParam final String key, final int start, final int end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.substr(key, start, end);
@@ -2585,7 +2585,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> ttl(@ShardingParam final String key) {
+    public Response<Long> ttl(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.ttl(key);
@@ -2599,7 +2599,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<String> type(@ShardingParam final String key) {
+    public Response<String> type(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.type(key);
@@ -2613,7 +2613,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zadd(@ShardingParam final String key, final double score, final String member) {
+    public Response<Long> zadd(@ShadingParam final String key, final double score, final String member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zadd(key, score, member);
@@ -2627,7 +2627,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zadd(@ShardingParam final String key, final double score, final String member, final ZAddParams params) {
+    public Response<Long> zadd(@ShadingParam final String key, final double score, final String member, final ZAddParams params) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zadd(key, score, member, params);
@@ -2641,7 +2641,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zadd(@ShardingParam final String key, final Map<String, Double> scoreMembers) {
+    public Response<Long> zadd(@ShadingParam final String key, final Map<String, Double> scoreMembers) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zadd(key, scoreMembers);
@@ -2655,7 +2655,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zadd(@ShardingParam final String key, final Map<String, Double> scoreMembers, final ZAddParams params) {
+    public Response<Long> zadd(@ShadingParam final String key, final Map<String, Double> scoreMembers, final ZAddParams params) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zadd(key, scoreMembers, params);
@@ -2669,7 +2669,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zcard(@ShardingParam final String key) {
+    public Response<Long> zcard(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zcard(key);
@@ -2683,7 +2683,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> zcount(@ShardingParam final String key, final double min, final double max) {
+    public Response<Long> zcount(@ShadingParam final String key, final double min, final double max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zcount(key, min, max);
@@ -2697,7 +2697,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Double> zincrby(@ShardingParam final String key, final double score, final String member) {
+    public Response<Double> zincrby(@ShadingParam final String key, final double score, final String member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zincrby(key, score, member);
@@ -2711,7 +2711,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Double> zincrby(@ShardingParam final String key, final double score, final String member, final ZIncrByParams params) {
+    public Response<Double> zincrby(@ShadingParam final String key, final double score, final String member, final ZIncrByParams params) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zincrby(key, score, member, params);
@@ -2725,7 +2725,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> zrange(@ShardingParam final String key, final long start, final long end) {
+    public Response<Set<String>> zrange(@ShadingParam final String key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrange(key, start, end);
@@ -2739,7 +2739,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> zrangeByScore(@ShardingParam final String key, final double min, final double max) {
+    public Response<Set<String>> zrangeByScore(@ShadingParam final String key, final double min, final double max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrangeByScore(key, min, max);
@@ -2753,7 +2753,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> zrangeByScore(@ShardingParam final String key, final String min, final String max) {
+    public Response<Set<String>> zrangeByScore(@ShadingParam final String key, final String min, final String max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrangeByScore(key, min, max);
@@ -2767,7 +2767,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> zrangeByScore(@ShardingParam final String key, final double min, final double max, final int offset, final int count) {
+    public Response<Set<String>> zrangeByScore(@ShadingParam final String key, final double min, final double max, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrangeByScore(key, min, max, offset, count);
@@ -2781,7 +2781,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShardingParam final String key, final double min, final double max) {
+    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShadingParam final String key, final double min, final double max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrangeByScoreWithScores(key, min, max);
@@ -2795,7 +2795,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShardingParam final String key, final double min, final double max, final int offset, final int count) {
+    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShadingParam final String key, final double min, final double max, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrangeByScoreWithScores(key, min, max, offset, count);
@@ -2809,7 +2809,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> zrevrangeByScore(@ShardingParam final String key, final double max, final double min) {
+    public Response<Set<String>> zrevrangeByScore(@ShadingParam final String key, final double max, final double min) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrevrangeByScore(key, max, min);
@@ -2823,7 +2823,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> zrevrangeByScore(@ShardingParam final String key, final String max, final String min) {
+    public Response<Set<String>> zrevrangeByScore(@ShadingParam final String key, final String max, final String min) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrevrangeByScore(key, max, min);
@@ -2837,7 +2837,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> zrevrangeByScore(@ShardingParam final String key, final double max, final double min, final int offset, final int count) {
+    public Response<Set<String>> zrevrangeByScore(@ShadingParam final String key, final double max, final double min, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrevrangeByScore(key, max, min, offset, count);
@@ -2851,7 +2851,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShardingParam final String key, final double max, final double min) {
+    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShadingParam final String key, final double max, final double min) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrevrangeByScoreWithScores(key, max, min);
@@ -2865,7 +2865,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShardingParam final String key, final double max, final double min, final int offset, final int count) {
+    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShadingParam final String key, final double max, final double min, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrevrangeByScoreWithScores(key, max, min, offset, count);
@@ -2879,7 +2879,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrangeWithScores(@ShardingParam final String key, final long start, final long end) {
+    public Response<Set<Tuple>> zrangeWithScores(@ShadingParam final String key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrangeWithScores(key, start, end);
@@ -2893,7 +2893,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> zrank(@ShardingParam final String key, final String member) {
+    public Response<Long> zrank(@ShadingParam final String key, final String member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrank(key, member);
@@ -2907,7 +2907,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zrem(@ShardingParam final String key, final String... member) {
+    public Response<Long> zrem(@ShadingParam final String key, final String... member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrem(key, member);
@@ -2921,7 +2921,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zremrangeByRank(@ShardingParam final String key, final long start, final long end) {
+    public Response<Long> zremrangeByRank(@ShadingParam final String key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zremrangeByRank(key, start, end);
@@ -2935,7 +2935,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zremrangeByScore(@ShardingParam final String key, final double start, final double end) {
+    public Response<Long> zremrangeByScore(@ShadingParam final String key, final double start, final double end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zremrangeByScore(key, start, end);
@@ -2949,7 +2949,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> zrevrange(@ShardingParam final String key, final long start, final long end) {
+    public Response<Set<String>> zrevrange(@ShadingParam final String key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrevrange(key, start, end);
@@ -2963,7 +2963,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrevrangeWithScores(@ShardingParam final String key, final long start, final long end) {
+    public Response<Set<Tuple>> zrevrangeWithScores(@ShadingParam final String key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrevrangeWithScores(key, start, end);
@@ -2977,7 +2977,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> zrevrank(@ShardingParam final String key, final String member) {
+    public Response<Long> zrevrank(@ShadingParam final String key, final String member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrevrank(key, member);
@@ -2991,7 +2991,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Double> zscore(@ShardingParam final String key, final String member) {
+    public Response<Double> zscore(@ShadingParam final String key, final String member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zscore(key, member);
@@ -3005,7 +3005,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> zlexcount(@ShardingParam final String key, final String min, final String max) {
+    public Response<Long> zlexcount(@ShadingParam final String key, final String min, final String max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zlexcount(key, min, max);
@@ -3019,7 +3019,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> zrangeByLex(@ShardingParam final String key, final String min, final String max) {
+    public Response<Set<String>> zrangeByLex(@ShadingParam final String key, final String min, final String max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrangeByLex(key, min, max);
@@ -3033,7 +3033,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> zrangeByLex(@ShardingParam final String key, final String min, final String max, final int offset, final int count) {
+    public Response<Set<String>> zrangeByLex(@ShadingParam final String key, final String min, final String max, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrangeByLex(key, min, max, offset, count);
@@ -3047,7 +3047,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> zrevrangeByLex(@ShardingParam final String key, final String max, final String min) {
+    public Response<Set<String>> zrevrangeByLex(@ShadingParam final String key, final String max, final String min) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrevrangeByLex(key, max, min);
@@ -3061,7 +3061,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> zrevrangeByLex(@ShardingParam final String key, final String max, final String min, final int offset, final int count) {
+    public Response<Set<String>> zrevrangeByLex(@ShadingParam final String key, final String max, final String min, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrevrangeByLex(key, max, min, offset, count);
@@ -3075,7 +3075,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zremrangeByLex(@ShardingParam final String key, final String start, final String end) {
+    public Response<Long> zremrangeByLex(@ShadingParam final String key, final String start, final String end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zremrangeByLex(key, start, end);
@@ -3089,7 +3089,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> bitcount(@ShardingParam final String key) {
+    public Response<Long> bitcount(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.bitcount(key);
@@ -3103,7 +3103,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> bitcount(@ShardingParam final String key, final long start, final long end) {
+    public Response<Long> bitcount(@ShadingParam final String key, final long start, final long end) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.bitcount(key, start, end);
@@ -3117,7 +3117,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> pfadd(@ShardingParam final String key, final String... elements) {
+    public Response<Long> pfadd(@ShadingParam final String key, final String... elements) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.pfadd(key, elements);
@@ -3131,7 +3131,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> pfcount(@ShardingParam final String key) {
+    public Response<Long> pfcount(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.pfcount(key);
@@ -3145,7 +3145,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<Long>> bitfield(@ShardingParam final String key, final String... arguments) {
+    public Response<List<Long>> bitfield(@ShadingParam final String key, final String... arguments) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.bitfield(key, arguments);
@@ -3159,7 +3159,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> geoadd(@ShardingParam final String key, final double longitude, final double latitude, final String member) {
+    public Response<Long> geoadd(@ShadingParam final String key, final double longitude, final double latitude, final String member) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.geoadd(key, longitude, latitude, member);
@@ -3173,7 +3173,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> geoadd(@ShardingParam final String key, final Map<String, GeoCoordinate> memberCoordinateMap) {
+    public Response<Long> geoadd(@ShadingParam final String key, final Map<String, GeoCoordinate> memberCoordinateMap) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.geoadd(key, memberCoordinateMap);
@@ -3187,7 +3187,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Double> geodist(@ShardingParam final String key, final String member1, final String member2) {
+    public Response<Double> geodist(@ShadingParam final String key, final String member1, final String member2) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.geodist(key, member1, member2);
@@ -3201,7 +3201,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Double> geodist(@ShardingParam final String key, final String member1, final String member2, final GeoUnit unit) {
+    public Response<Double> geodist(@ShadingParam final String key, final String member1, final String member2, final GeoUnit unit) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.geodist(key, member1, member2, unit);
@@ -3215,7 +3215,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<String>> geohash(@ShardingParam final String key, final String... members) {
+    public Response<List<String>> geohash(@ShadingParam final String key, final String... members) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.geohash(key, members);
@@ -3229,7 +3229,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<GeoCoordinate>> geopos(@ShardingParam final String key, final String... members) {
+    public Response<List<GeoCoordinate>> geopos(@ShadingParam final String key, final String... members) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.geopos(key, members);
@@ -3243,7 +3243,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<GeoRadiusResponse>> georadius(@ShardingParam final String key, final double longitude, final double latitude, final double radius, final GeoUnit unit) {
+    public Response<List<GeoRadiusResponse>> georadius(@ShadingParam final String key, final double longitude, final double latitude, final double radius, final GeoUnit unit) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.georadius(key, longitude, latitude, radius, unit);
@@ -3257,7 +3257,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<GeoRadiusResponse>> georadius(@ShardingParam final String key, final double longitude, final double latitude, final double radius, final GeoUnit unit, final GeoRadiusParam param) {
+    public Response<List<GeoRadiusResponse>> georadius(@ShadingParam final String key, final double longitude, final double latitude, final double radius, final GeoUnit unit, final GeoRadiusParam param) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.georadius(key, longitude, latitude, radius, unit, param);
@@ -3271,7 +3271,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<GeoRadiusResponse>> georadiusByMember(@ShardingParam final String key, final String member, final double radius, final GeoUnit unit) {
+    public Response<List<GeoRadiusResponse>> georadiusByMember(@ShadingParam final String key, final String member, final double radius, final GeoUnit unit) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.georadiusByMember(key, member, radius, unit);
@@ -3285,7 +3285,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<GeoRadiusResponse>> georadiusByMember(@ShardingParam final String key, final String member, final double radius, final GeoUnit unit, final GeoRadiusParam param) {
+    public Response<List<GeoRadiusResponse>> georadiusByMember(@ShadingParam final String key, final String member, final double radius, final GeoUnit unit, final GeoRadiusParam param) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.georadiusByMember(key, member, radius, unit, param);
@@ -3299,7 +3299,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zadd(@ShardingParam final byte[] key, final Map<byte[], Double> scoreMembers) {
+    public Response<Long> zadd(@ShadingParam final byte[] key, final Map<byte[], Double> scoreMembers) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zaddBinary(key, scoreMembers);
@@ -3313,7 +3313,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zadd(@ShardingParam final byte[] key, final Map<byte[], Double> scoreMembers, final ZAddParams params) {
+    public Response<Long> zadd(@ShadingParam final byte[] key, final Map<byte[], Double> scoreMembers, final ZAddParams params) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zaddBinary(key, scoreMembers, params);
@@ -3327,7 +3327,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<byte[]> dump(@ShardingParam final String key) {
+    public Response<byte[]> dump(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.dump(key);
@@ -3341,7 +3341,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<byte[]> dump(@ShardingParam final byte[] key) {
+    public Response<byte[]> dump(@ShadingParam final byte[] key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.dump(key);
@@ -3355,7 +3355,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> restore(@ShardingParam final byte[] key, final int ttl, final byte[] serializedValue) {
+    public Response<String> restore(@ShadingParam final byte[] key, final int ttl, final byte[] serializedValue) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.restore(key, ttl, serializedValue);
@@ -3369,7 +3369,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> restore(@ShardingParam final String key, final int ttl, final byte[] serializedValue) {
+    public Response<String> restore(@ShadingParam final String key, final int ttl, final byte[] serializedValue) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.restore(key, ttl, serializedValue);
@@ -3383,7 +3383,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Double> hincrByFloat(@ShardingParam final String key, final String field, final double increment) {
+    public Response<Double> hincrByFloat(@ShadingParam final String key, final String field, final double increment) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.hincrByFloat(key, field, increment);
@@ -3397,7 +3397,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Double> incrByFloat(@ShardingParam final String key, final double increment) {
+    public Response<Double> incrByFloat(@ShadingParam final String key, final double increment) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.incrByFloat(key, increment);
@@ -3411,7 +3411,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> set(@ShardingParam final String key, final String value, final String nxxx) {
+    public Response<String> set(@ShadingParam final String key, final String value, final String nxxx) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.set(key, value, nxxx);
@@ -3425,7 +3425,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> set(@ShardingParam final byte[] key, final byte[] value, final byte[] nxxx) {
+    public Response<String> set(@ShadingParam final byte[] key, final byte[] value, final byte[] nxxx) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.set(key, value, nxxx);
@@ -3439,7 +3439,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> set(@ShardingParam final String key, final String value, final String nxxx, final String expx, final int time) {
+    public Response<String> set(@ShadingParam final String key, final String value, final String nxxx, final String expx, final int time) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.set(key, value, nxxx, expx, time);
@@ -3453,7 +3453,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> psetex(@ShardingParam final String key, final long milliseconds, final String value) {
+    public Response<String> psetex(@ShadingParam final String key, final long milliseconds, final String value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.psetex(key, milliseconds, value);
@@ -3467,7 +3467,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<String> psetex(@ShardingParam final String key, final int milliseconds, final String value) {
+    public Response<String> psetex(@ShadingParam final String key, final int milliseconds, final String value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.psetex(key, milliseconds, value);
@@ -3481,7 +3481,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<List<String>> srandmember(@ShardingParam final String key, final int count) {
+    public Response<List<String>> srandmember(@ShadingParam final String key, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.srandmember(key, count);
@@ -3495,7 +3495,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> pttl(@ShardingParam final String key) {
+    public Response<Long> pttl(@ShadingParam final String key) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.pttl(key);
@@ -3509,7 +3509,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> zrangeByScore(@ShardingParam final String key, final String min, final String max, final int offset, final int count) {
+    public Response<Set<String>> zrangeByScore(@ShadingParam final String key, final String min, final String max, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrangeByScore(key, min, max, offset, count);
@@ -3523,7 +3523,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShardingParam final String key, final String min, final String max, final int offset, final int count) {
+    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShadingParam final String key, final String min, final String max, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrangeByScoreWithScores(key, min, max, offset, count);
@@ -3537,7 +3537,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShardingParam final String key, final String min, final String max) {
+    public Response<Set<Tuple>> zrangeByScoreWithScores(@ShadingParam final String key, final String min, final String max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrangeByScoreWithScores(key, min, max);
@@ -3551,7 +3551,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<String>> zrevrangeByScore(@ShardingParam final String key, final String max, final String min, final int offset, final int count) {
+    public Response<Set<String>> zrevrangeByScore(@ShadingParam final String key, final String max, final String min, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrevrangeByScore(key, max, min, offset, count);
@@ -3565,7 +3565,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShardingParam final String key, final String max, final String min, final int offset, final int count) {
+    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShadingParam final String key, final String max, final String min, final int offset, final int count) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrevrangeByScoreWithScores(key, max, min, offset, count);
@@ -3579,7 +3579,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShardingParam final String key, final String max, final String min) {
+    public Response<Set<Tuple>> zrevrangeByScoreWithScores(@ShadingParam final String key, final String max, final String min) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zrevrangeByScoreWithScores(key, max, min);
@@ -3593,7 +3593,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
-    public Response<Long> zremrangeByScore(@ShardingParam final String key, final String min, final String max) {
+    public Response<Long> zremrangeByScore(@ShadingParam final String key, final String min, final String max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zremrangeByScore(key, max, min);
@@ -3607,7 +3607,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> bitpos(@ShardingParam final String key, final boolean value) {
+    public Response<Long> bitpos(@ShadingParam final String key, final boolean value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.bitpos(key, value, new CamelliaBitPosParams());
@@ -3621,7 +3621,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> bitpos(@ShardingParam final String key, final boolean value, final BitPosParams params) {
+    public Response<Long> bitpos(@ShadingParam final String key, final boolean value, final BitPosParams params) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.bitpos(key, value, params);
@@ -3635,7 +3635,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> bitpos(@ShardingParam final byte[] key, final boolean value) {
+    public Response<Long> bitpos(@ShadingParam final byte[] key, final boolean value) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.bitpos(key, value, new CamelliaBitPosParams());
@@ -3649,7 +3649,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> zcount(@ShardingParam final byte[] key, final byte[] min, final byte[] max) {
+    public Response<Long> zcount(@ShadingParam final byte[] key, final byte[] min, final byte[] max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
         client.zcount(key, min, max);
@@ -3663,7 +3663,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
-    public Response<Long> zcount(@ShardingParam final String key, final String min, final String max) {
+    public Response<Long> zcount(@ShadingParam final String key, final String min, final String max) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
         client.zcount(key, min, max);

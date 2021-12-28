@@ -133,7 +133,7 @@ public class CamelliaRedisProxyConfigurerSupport {
      * 自定义分片函数
      */
     @Autowired(required = false)
-    private ShardingFunc shardingFunc;
+    private ShadingFunc shadingFunc;
 
     /**
      * 动态配置hook
