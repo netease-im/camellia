@@ -6,7 +6,7 @@
 
 # 1.0.46（2021/12/xx）
 ### add
-* provide CRC16HashTagShardingFunc to support HashTag
+* provide CRC16HashTagShardingFunc/DefaultHashTagShardingFunc to support HashTag when use custom sharding route table
 
 ### update
 * rename shading到sharding

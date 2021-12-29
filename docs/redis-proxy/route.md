@@ -575,8 +575,17 @@ camellia-redis-proxy:
 
 ### 自定义分片函数
 你可以自定义分片函数，分片函数会计算出一个key的哈希值，和分片大小（bucketSize）取余后，得到该key所属的分片。  
-默认的分片函数是com.netease.nim.camellia.core.client.env.DefaultShardingFunc  
-你可以继承com.netease.nim.camellia.core.client.env.AbstractSimpleShardingFunc实现自己想要的分片函数，类似于这样：  
+默认的分片函数是：  
+```
+com.netease.nim.camellia.core.client.env.DefaultShardingFunc
+```  
+默认的分片函数是不支持HashTag的，如果你想使用HashTag，可以使用如下两个分片函数：  
+```
+com.netease.nim.camellia.core.client.env.CRC16HashTagShardingFunc
+com.netease.nim.camellia.core.client.env.DefaultHashTagShardingFunc
+```
+此外，你也可以继承com.netease.nim.camellia.core.client.env.AbstractSimpleShardingFunc实现自己想要的分片函数，类似于这样：  
+
 ```java
 package com.netease.nim.camellia.redis.proxy.samples;
 
@@ -612,5 +621,5 @@ camellia-redis-proxy:
       type: complex
       json-file: resource-table.json
     redis-conf:
-      sharding-func: com.netease.nim.camellia.redis.proxy.samples.CustomShardingFunc
+      sharding-func: com.netease.nim.camellia.redis.proxy.samples.CustomShardingFunc #1.0.45及以前版本，配置项叫shading-func；1.0.46及以后版本，配置项叫sharding-func
 ```
