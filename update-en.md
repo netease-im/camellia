@@ -4,12 +4,12 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
-# 1.0.46（2021/12/xx）
+# 1.0.46（2021/12/29）
 ### add
 * provide CRC16HashTagShardingFunc/DefaultHashTagShardingFunc to support HashTag when use custom sharding route table
 
 ### update
-* rename shading到sharding
+* rename shading to sharding
 
 ### fix
 * none

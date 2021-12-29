@@ -32,7 +32,7 @@ provide some tools, such as compress utils CamelliaCompressor, encrypt utils Cam
 [QUICK START](/docs/tools/tools.md)   
 
 ## Version
-latest version is 1.0.45，have deploy to maven central repository on 2021/12/24  
+latest version is 1.0.46，have deploy to maven central repository on 2021/12/29  
 [CHANGE_LOG](/update-en.md)  
 
 ## User List
