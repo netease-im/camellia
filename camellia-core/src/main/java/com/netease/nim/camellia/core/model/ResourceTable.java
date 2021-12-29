@@ -17,7 +17,7 @@ public class ResourceTable {
     //simple
     private SimpleTable simpleTable;
     //分片
-    private ShadingTable shadingTable;//为了兼容CamelliaApi的getResourceTable接口的jackson解析，此处不修改
+    private ShadingTable shadingTable;//为了兼容CamelliaApi的getResourceTable接口的jackson解析，此处保持错误的ShadingTable，而不修改为ShardingTable
 
     public ResourceTable() {
     }
@@ -35,7 +35,7 @@ public class ResourceTable {
     public static enum Type {
 
         SIMPLE(1),
-        SHADING(2),//为了兼容CamelliaApi的getResourceTable接口的jackson解析，此处不修改
+        SHADING(2),//为了兼容CamelliaApi的getResourceTable接口的jackson解析，此处保持错误的SHADING，而不修改为SHARDING
         ;
 
         private final int value;

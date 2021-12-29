@@ -45,10 +45,16 @@ public class CRC16HashTagShardingFunc extends AbstractSimpleShardingFunc {
                 break;
             }
         }
+        int code;
         if (s > -1 && e > -1 && e != s + 1) {
-            return getCRC16(key, s + 1, e);
+            code = getCRC16(key, s + 1, e);
+        } else {
+            code = getCRC16(key, 0, key.length);
         }
-        return getCRC16(key);
+        if (code < 0) {
+            code = -code;
+        }
+        return code;
     }
 
     private int getCRC16(byte[] bytes, int s, int e) {
@@ -58,9 +64,5 @@ public class CRC16HashTagShardingFunc extends AbstractSimpleShardingFunc {
             crc = ((crc << 8) ^ LOOKUP_TABLE[((crc >>> 8) ^ (bytes[i] & 0xFF)) & 0xFF]);
         }
         return crc & 0xFFFF;
-    }
-
-    private int getCRC16(byte[] bytes) {
-        return getCRC16(bytes, 0, bytes.length);
     }
 }
