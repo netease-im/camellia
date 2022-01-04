@@ -645,4 +645,6 @@ public interface ICamelliaRedisTemplate {
     Jedis getWriteJedis(String... keys);
 
     Jedis getReadJedis(String... keys);
+
+    List<Jedis> getJedisList();
 }

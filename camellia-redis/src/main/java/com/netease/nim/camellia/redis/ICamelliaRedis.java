@@ -15,6 +15,8 @@ import java.util.Set;
  */
 public interface ICamelliaRedis {
 
+    List<Jedis> getJedisList();
+
     Jedis getJedis(byte[] key);
 
     String set(byte[] key, byte[] value);

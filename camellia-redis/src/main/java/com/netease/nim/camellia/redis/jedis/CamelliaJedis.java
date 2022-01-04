@@ -45,6 +45,11 @@ public class CamelliaJedis implements ICamelliaRedis {
     }
 
     @Override
+    public List<Jedis> getJedisList() {
+        return Collections.singletonList(jedisPool.getResource());
+    }
+
+    @Override
     public String set(String key, String value) {
         Jedis jedis = jedisPool.getResource();
         try {

@@ -39,6 +39,11 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
     }
 
     @Override
+    public List<Jedis> getJedisList() {
+        return redis.getJedisList();
+    }
+
+    @Override
     public Jedis getJedis(byte[] key) {
         return redis.getJedis(key);
     }

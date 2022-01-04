@@ -33,6 +33,19 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
         this.env = env;
     }
 
+    public List<Jedis> getJedisList() {
+        List<JedisPool> jedisPoolList = jedisCluster.getJedisPoolList();
+        List<Jedis> jedisList = new ArrayList<>();
+        if (jedisPoolList == null || jedisPoolList.isEmpty()) {
+            return jedisList;
+        }
+        for (JedisPool jedisPool : jedisPoolList) {
+            Jedis jedis = jedisPool.getResource();
+            jedisList.add(jedis);
+        }
+        return jedisList;
+    }
+
     @Override
     public Jedis getJedis(byte[] key) {
         return jedisCluster.getJedisPool(key).getResource();

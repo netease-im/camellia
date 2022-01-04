@@ -6,6 +6,7 @@ import redis.clients.jedis.*;
 import redis.clients.util.JedisClusterCRC16;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -24,6 +25,10 @@ public class JedisClusterWrapper extends JedisCluster {
         } catch (Exception e) {
             throw new CamelliaRedisException(e);
         }
+    }
+
+    public List<JedisPool> getJedisPoolList() {
+        return cache.getShuffledNodesPool();
     }
 
     public JedisPool getJedisPool(String key) {

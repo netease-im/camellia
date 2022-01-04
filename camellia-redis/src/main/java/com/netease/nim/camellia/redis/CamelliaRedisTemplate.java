@@ -1795,6 +1795,21 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         return getReadJedis(SafeEncoder.encodeMany(keys));
     }
 
+    @Override
+    public List<Jedis> getJedisList() {
+        ResourceChooser chooser = factory.getResourceChooser();
+        Set<Resource> allResources = chooser.getAllResources();
+        List<Jedis> jedisList = new ArrayList<>();
+        for (Resource resource : allResources) {
+            ICamelliaRedis redis = CamelliaRedisInitializer.init(resource, env);
+            List<Jedis> list = redis.getJedisList();
+            if (list != null && !list.isEmpty()) {
+                jedisList.addAll(list);
+            }
+        }
+        return jedisList;
+    }
+
     private interface WriteInvoker {
         Object invoke(Resource resource, ICamelliaRedis redis);
     }
