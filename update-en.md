@@ -4,6 +4,17 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+# 1.0.47（2022/01/05）
+### add
+* CamelliaRedisTemplate provide getJedisList method
+
+### update
+* none
+
+### fix
+* none
+
+
 # 1.0.46（2021/12/29）
 ### add
 * provide CRC16HashTagShardingFunc/DefaultHashTagShardingFunc to support HashTag when use custom sharding route table

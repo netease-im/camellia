@@ -4,6 +4,17 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.0.47（2022/01/05）
+### 新增
+* CamelliaRedisTemplate新增getJedisList接口
+
+### 更新
+* 无
+
+### fix
+* 无
+
+
 # 1.0.46（2021/12/29）
 ### 新增
 * 新增CRC16HashTagShardingFunc类和DefaultHashTagShardingFunc类，用于自定义分片时可以支持hashtag，具体见：[路由](/docs/redis-proxy/route.md)
