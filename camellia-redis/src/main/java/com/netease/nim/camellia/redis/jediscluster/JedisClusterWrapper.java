@@ -6,8 +6,7 @@ import redis.clients.jedis.*;
 import redis.clients.util.JedisClusterCRC16;
 
 import java.lang.reflect.Field;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  *
@@ -16,19 +15,27 @@ import java.util.Set;
 public class JedisClusterWrapper extends JedisCluster {
 
     private JedisClusterInfoCache cache;
+    private Field slots;
 
     private void init() {
         try {
             Field cacheField = JedisClusterConnectionHandler.class.getDeclaredField("cache");
             cacheField.setAccessible(true);
             cache = (JedisClusterInfoCache)cacheField.get(this.connectionHandler);
+            slots = JedisClusterInfoCache.class.getDeclaredField("slots");
+            slots.setAccessible(true);
         } catch (Exception e) {
             throw new CamelliaRedisException(e);
         }
     }
 
     public List<JedisPool> getJedisPoolList() {
-        return cache.getShuffledNodesPool();
+        try {
+            Map<Integer, JedisPool> map = (Map<Integer, JedisPool>) slots.get(this.cache);
+            return new ArrayList<>(new HashSet<>(map.values()));
+        } catch (Exception e) {
+            throw new CamelliaRedisException(e);
+        }
     }
 
     public JedisPool getJedisPool(String key) {
