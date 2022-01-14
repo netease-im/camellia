@@ -25,6 +25,8 @@ public class ResourceChooser {
     private boolean bucketSizeIs2Power = false;
 
     private final Set<Resource> allResources;
+    private final List<Resource> allReadResources;
+    private final List<Resource> allWriteReources;
 
     private final long createTime = System.currentTimeMillis();
 
@@ -37,6 +39,23 @@ public class ResourceChooser {
             bucketSizeIs2Power = MathUtil.is2Power(bucketSize);
         }
         this.allResources = ResourceUtil.getAllResources(resourceTable);
+        Set<Resource> readResources = new TreeSet<>(new Comparator<Resource>() {
+            @Override
+            public int compare(Resource o1, Resource o2) {
+                return o1.getUrl().compareTo(o2.getUrl());
+            }
+        });
+        readResources.addAll(ResourceUtil.getAllReadResources(resourceTable));
+        Set<Resource> writeResources = new TreeSet<>(new Comparator<Resource>() {
+            @Override
+            public int compare(Resource o1, Resource o2) {
+                return o1.getUrl().compareTo(o2.getUrl());
+            }
+        });
+        readResources.addAll(ResourceUtil.getAllReadResources(resourceTable));
+        writeResources.addAll(ResourceUtil.getAllWriteResources(resourceTable));
+        this.allReadResources = new ArrayList<>(readResources);
+        this.allWriteReources = new ArrayList<>(writeResources);
     }
 
     public ResourceTable getResourceTable() {
@@ -49,6 +68,14 @@ public class ResourceChooser {
 
     public ResourceTable.Type getType() {
         return resourceTable.getType();
+    }
+
+    public List<Resource> getAllReadResources() {
+        return allReadResources;
+    }
+
+    public List<Resource> getAllWriteResources() {
+        return allWriteReources;
     }
 
     public Set<Resource> getAllResources() {

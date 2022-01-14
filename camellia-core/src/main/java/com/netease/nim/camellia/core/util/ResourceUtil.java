@@ -47,6 +47,78 @@ public class ResourceUtil {
         }
     }
 
+    public static Set<Resource> getAllReadResources(ResourceTable resourceTable) {
+        Set<Resource> readResources = new HashSet<>();
+        ResourceTable.Type type = resourceTable.getType();
+        if (type == ResourceTable.Type.SIMPLE) {
+            ResourceTable.SimpleTable simpleTable = resourceTable.getSimpleTable();
+            ResourceOperation resourceOperation = simpleTable.getResourceOperation();
+            Set<Resource> set = getAllReadResources(resourceOperation);
+            readResources.addAll(set);
+        } else if (type == ResourceTable.Type.SHADING) {
+            ResourceTable.ShadingTable shadingTable = resourceTable.getShadingTable();
+            Map<Integer, ResourceOperation> resourceOperationMap = shadingTable.getResourceOperationMap();
+            for (ResourceOperation resourceOperation : resourceOperationMap.values()) {
+                Set<Resource> set = getAllReadResources(resourceOperation);
+                readResources.addAll(set);
+            }
+        }
+        return readResources;
+    }
+
+    public static Set<Resource> getAllWriteResources(ResourceTable resourceTable) {
+        Set<Resource> writeResources = new HashSet<>();
+        ResourceTable.Type type = resourceTable.getType();
+        if (type == ResourceTable.Type.SIMPLE) {
+            ResourceTable.SimpleTable simpleTable = resourceTable.getSimpleTable();
+            ResourceOperation resourceOperation = simpleTable.getResourceOperation();
+            Set<Resource> set = getAllWriteResources(resourceOperation);
+            writeResources.addAll(set);
+        } else if (type == ResourceTable.Type.SHADING) {
+            ResourceTable.ShadingTable shadingTable = resourceTable.getShadingTable();
+            Map<Integer, ResourceOperation> resourceOperationMap = shadingTable.getResourceOperationMap();
+            for (ResourceOperation resourceOperation : resourceOperationMap.values()) {
+                Set<Resource> set = getAllWriteResources(resourceOperation);
+                writeResources.addAll(set);
+            }
+        }
+        return writeResources;
+    }
+
+    public static Set<Resource> getAllReadResources(ResourceOperation resourceOperation) {
+        Set<Resource> readResources = new HashSet<>();
+        ResourceOperation.Type operationType = resourceOperation.getType();
+        if (operationType == ResourceOperation.Type.SIMPLE) {
+            readResources.add(resourceOperation.getResource());
+        } else if (operationType == ResourceOperation.Type.RW_SEPARATE) {
+            ResourceReadOperation readOperation = resourceOperation.getReadOperation();
+            ResourceReadOperation.Type readOperationType = readOperation.getType();
+            if (readOperationType == ResourceReadOperation.Type.SIMPLE) {
+                readResources.add(readOperation.getReadResource());
+            } else if (readOperationType == ResourceReadOperation.Type.ORDER || readOperationType == ResourceReadOperation.Type.RANDOM) {
+                readResources.addAll(readOperation.getReadResources());
+            }
+        }
+        return readResources;
+    }
+
+    public static Set<Resource> getAllWriteResources(ResourceOperation resourceOperation) {
+        Set<Resource> writeResources = new HashSet<>();
+        ResourceOperation.Type operationType = resourceOperation.getType();
+        if (operationType == ResourceOperation.Type.SIMPLE) {
+            writeResources.add(resourceOperation.getResource());
+        } else if (operationType == ResourceOperation.Type.RW_SEPARATE) {
+            ResourceWriteOperation writeOperation = resourceOperation.getWriteOperation();
+            ResourceWriteOperation.Type writeOperationType = writeOperation.getType();
+            if (writeOperationType == ResourceWriteOperation.Type.SIMPLE) {
+                writeResources.add(writeOperation.getWriteResource());
+            } else if (writeOperationType == ResourceWriteOperation.Type.MULTI) {
+                writeResources.addAll(writeOperation.getWriteResources());
+            }
+        }
+        return writeResources;
+    }
+
     public static Set<Resource> getAllResources(ResourceTable.SimpleTable simpleTable) {
         if (simpleTable == null) {
             return Collections.emptySet();

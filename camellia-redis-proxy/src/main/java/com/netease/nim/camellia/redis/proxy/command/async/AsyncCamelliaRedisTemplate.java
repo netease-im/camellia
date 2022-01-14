@@ -15,6 +15,7 @@ import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
+import com.netease.nim.camellia.redis.proxy.netty.CompletableFutureWithTime;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
@@ -57,6 +58,8 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     private boolean isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster;
 
     private final MultiWriteMode multiWriteMode;
+
+    private ScanCursorCalculator cursorCalculator;
 
     private final ResourceTableUpdateCallback callback = resourceTable -> {
         RedisResourceUtil.checkResourceTable(resourceTable);
@@ -213,10 +216,6 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 CompletableFuture<Reply> future;
                 switch (redisCommand) {
                     case PUBSUB:
-                    case SCAN:
-                        future = commandFlusher.sendCommand(client, command);
-                        incrRead(resource, command);
-                        break;
                     case PUBLISH:
                     case SUBSCRIBE:
                     case PSUBSCRIBE:
@@ -349,6 +348,51 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         break;
                 }
                 futureList.add(future);
+                continue;
+            }
+
+            if (redisCommand == RedisCommand.SCAN) {
+                try {
+                    if (isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster) {
+                        Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
+                        AsyncClient client = factory.get(resource.getUrl());
+                        CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
+                        futureList.add(future);
+                        incrWrite(resource, command);
+                    } else {
+                        List<Resource> allReadResources = resourceChooser.getAllReadResources();
+                        if (cursorCalculator == null || cursorCalculator.getNodeBitLen() != ScanCursorCalculator.getSuitableNodeBitLen(allReadResources.size())) {
+                            cursorCalculator = new ScanCursorCalculator(ScanCursorCalculator.getSuitableNodeBitLen(allReadResources.size()));
+                        }
+                        byte[][] objects = command.getObjects();
+                        if (objects == null || objects.length <= 1) {
+                            CompletableFuture<Reply> future = new CompletableFuture<>();
+                            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
+                            continue;
+                        }
+                        int currentNodeIndex = cursorCalculator.filterScanCommand(command);
+                        if (currentNodeIndex < 0) {
+                            CompletableFuture<Reply> future = new CompletableFuture<>();
+                            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
+                            continue;
+                        }
+                        if (currentNodeIndex >= allReadResources.size()) {
+                            CompletableFuture<Reply> future = new CompletableFuture<>();
+                            future.complete(new ErrorReply("ERR illegal arguments of cursor"));
+                            continue;
+                        }
+                        Resource resource = allReadResources.get(currentNodeIndex);
+                        AsyncClient client = factory.get(resource.getUrl());
+                        CompletableFuture<Reply> f = commandFlusher.sendCommand(client, command);
+                        CompletableFuture<Reply> future = new CompletableFuture<>();
+                        f.thenApply((reply) -> cursorCalculator.filterScanReply(reply, currentNodeIndex, allReadResources.size())).thenAccept(future::complete);
+                        futureList.add(future);
+                        incrWrite(resource, command);
+                    }
+                } catch (Exception e) {
+                    CompletableFuture<Reply> future = new CompletableFuture<>();
+                    future.complete(ErrorReply.NOT_AVAILABLE);
+                }
                 continue;
             }
 

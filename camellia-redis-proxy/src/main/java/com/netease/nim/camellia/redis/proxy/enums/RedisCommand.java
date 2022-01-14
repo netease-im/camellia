@@ -142,6 +142,7 @@ public enum RedisCommand {
     RESTORE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, false, CommandKeyType.SIMPLE_SINGLE),
     ZRANDMEMBER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ZSET, false, CommandKeyType.SIMPLE_SINGLE),
     SELECT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
+    SCAN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
 
     /**
      * Restrictive Support
@@ -192,7 +193,6 @@ public enum RedisCommand {
     PSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, true, CommandKeyType.None),
     PUNSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, false, CommandKeyType.None),
     PUBSUB(CommandSupportType.PARTIALLY_SUPPORT_1, Type.READ, CommandType.PUB_SUB, false, CommandKeyType.None),
-    SCAN(CommandSupportType.PARTIALLY_SUPPORT_1, Type.READ, CommandType.DB, false, CommandKeyType.None),
 
     /**
      * Partially Support

@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
@@ -27,15 +28,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncCamelliaRedisClusterClient.class);
 
-    // 用于描述cluster nodes的index的bit位数
-    private static final Integer NodeIndexBitLength = 10;
-
-    // 用于描述real cursor的bit位数，最高位永远是0
-    private static final Integer RealCursorBitLength = 63 - NodeIndexBitLength;
-    // RealCursorBitLength = 10 时，ClusterNodeIndexMask的二进制为 0111111111100000 0000000000000000 0000000000000000 0000000000000000
-    private static final Long ClusterNodeIndexMask = ((long) Math.pow(2, NodeIndexBitLength) - 1) << RealCursorBitLength;
-    // RealCursorBitLength = 10 时，RealCursorMask的二进制为 0000000000011111 1111111111111111 1111111111111111 1111111111111111
-    private static final Long RealCursorMask = (long) Math.pow(2, RealCursorBitLength) - 1;
+    private final ScanCursorCalculator cursorCalculator;
 
     private final int maxAttempts;
     private final RedisClusterSlotInfo clusterSlotInfo;
@@ -48,6 +41,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
     private RedisClusterSlavesResource redisClusterSlavesResource;
 
     public AsyncCamelliaRedisClusterClient(RedisClusterSlavesResource redisClusterSlavesResource, int maxAttempts) {
+        this.cursorCalculator = new ScanCursorCalculator(ProxyDynamicConf.getInt("redis-cluster.scan.node.bits.len", 10));
         this.redisClusterSlavesResource = redisClusterSlavesResource;
         this.url = redisClusterSlavesResource.getUrl();
         this.userName = redisClusterSlavesResource.getUserName();
@@ -67,6 +61,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
     }
 
     public AsyncCamelliaRedisClusterClient(RedisClusterResource redisClusterResource, int maxAttempts) {
+        this.cursorCalculator = new ScanCursorCalculator(ProxyDynamicConf.getInt("redis-cluster.scan.node.bits.len", 10));
         this.redisClusterResource = redisClusterResource;
         this.url = redisClusterResource.getUrl();
         this.userName = redisClusterResource.getUserName();
@@ -185,10 +180,11 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                         }
                     }
                 }
-                if (redisCommand == RedisCommand.SCAN) {
-                    scan(commandFlusher, command, future);
-                    continue;
-                }
+            }
+
+            if (redisCommand == RedisCommand.SCAN) {
+                scan(commandFlusher, command, future);
+                continue;
             }
 
             if (bindClient != null) {
@@ -340,60 +336,25 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
             return;
         }
 
-        long requestCursor = Utils.bytesToNum(objects[1]);
-        long nodeIndex;
-        long realCursor;
-        if (requestCursor == 0) {
-            nodeIndex = 0;
-            realCursor = 0;
-        } else {
-            nodeIndex = (requestCursor & ClusterNodeIndexMask) >> RealCursorBitLength;
-            realCursor = requestCursor & RealCursorMask;
+        int currentNodeIndex = cursorCalculator.filterScanCommand(command);
+        if (currentNodeIndex < 0) {
+            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
+            return;
         }
 
-        RedisClient redisClient = clusterSlotInfo.getClientByIndex((int) nodeIndex);
-        if (redisClient == null) {
-            logger.warn("cannot find redis client for cluster index: {}, client requestCursor: {}",
-                    nodeIndex, requestCursor);
+        if (currentNodeIndex >= clusterSlotInfo.getNodesSize()) {
+            future.complete(new ErrorReply("ERR illegal arguments of cursor"));
+            return;
+        }
+
+        RedisClient redisClient = clusterSlotInfo.getClientByIndex(currentNodeIndex);
+        if (redisClient == null || !redisClient.isValid()) {
             future.complete(ErrorReply.NOT_AVAILABLE);
             return;
         }
 
-        // rewrite real requestCursor for cluster node.
-        objects[1] = Utils.stringToBytes(String.valueOf(realCursor));
-
-        final long currentNodeIndex = nodeIndex;
-
         CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-        completableFuture.thenApply((reply) -> {
-            if (reply instanceof MultiBulkReply) {
-                MultiBulkReply multiBulkReply = (MultiBulkReply) reply;
-                long newNodeIndex;
-                long newCursor;
-                if (multiBulkReply.getReplies().length == 2) {
-                    BulkReply cursorReply = (BulkReply) multiBulkReply.getReplies()[0];
-                    long replyCursor = Utils.bytesToNum(cursorReply.getRaw());
-                    if (replyCursor == 0L) {
-                        if (currentNodeIndex < (clusterSlotInfo.getNodesSize() - 1)) {
-                            newNodeIndex = currentNodeIndex + 1;
-                        } else {
-                            newNodeIndex = 0L;
-                        }
-                        newCursor = 0L;
-                    } else {
-                        newCursor = replyCursor;
-                        newNodeIndex = currentNodeIndex;
-                    }
-
-                    if (newCursor > RealCursorMask) {
-                        return new ErrorReply(String.format("Redis requestCursor is larger than %d is not supported for cluster mode.", RealCursorMask));
-                    }
-
-                    multiBulkReply.getReplies()[0] = new BulkReply(Utils.stringToBytes(String.valueOf(newNodeIndex << RealCursorBitLength | newCursor)));
-                }
-            }
-            return reply;
-        }).thenAccept(future::complete);
+        completableFuture.thenApply((reply) -> cursorCalculator.filterScanReply(reply, currentNodeIndex, clusterSlotInfo.getNodesSize())).thenAccept(future::complete);
         CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, completableFuture, command);
         commandFlusher.sendCommand(redisClient, command, futureWrapper);
     }
