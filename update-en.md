@@ -4,6 +4,18 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+# 1.0.48（2022/01/xx）
+### add
+* camellia-redis-proxy support scan command when use custom sharding
+* CamelliaRedisTemplate provide getReadJedisList/getReadJedisList method
+
+### update
+* none
+
+### fix
+* none
+
+
 # 1.0.47（2022/01/05）
 ### add
 * CamelliaRedisTemplate provide getJedisList method
