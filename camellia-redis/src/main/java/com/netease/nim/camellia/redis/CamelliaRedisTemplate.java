@@ -1810,6 +1810,36 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         return jedisList;
     }
 
+    @Override
+    public List<Jedis> getWriteJedisList() {
+        ResourceChooser chooser = factory.getResourceChooser();
+        List<Resource> allResources = chooser.getAllWriteResources();
+        List<Jedis> jedisList = new ArrayList<>();
+        for (Resource resource : allResources) {
+            ICamelliaRedis redis = CamelliaRedisInitializer.init(resource, env);
+            List<Jedis> list = redis.getJedisList();
+            if (list != null && !list.isEmpty()) {
+                jedisList.addAll(list);
+            }
+        }
+        return jedisList;
+    }
+
+    @Override
+    public List<Jedis> getReadJedisList() {
+        ResourceChooser chooser = factory.getResourceChooser();
+        List<Resource> allResources = chooser.getAllWriteResources();
+        List<Jedis> jedisList = new ArrayList<>();
+        for (Resource resource : allResources) {
+            ICamelliaRedis redis = CamelliaRedisInitializer.init(resource, env);
+            List<Jedis> list = redis.getJedisList();
+            if (list != null && !list.isEmpty()) {
+                jedisList.addAll(list);
+            }
+        }
+        return jedisList;
+    }
+
     private interface WriteInvoker {
         Object invoke(Resource resource, ICamelliaRedis redis);
     }
