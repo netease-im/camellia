@@ -1828,7 +1828,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     @Override
     public List<Jedis> getReadJedisList() {
         ResourceChooser chooser = factory.getResourceChooser();
-        List<Resource> allResources = chooser.getAllWriteResources();
+        List<Resource> allResources = chooser.getAllReadResources();
         List<Jedis> jedisList = new ArrayList<>();
         for (Resource resource : allResources) {
             ICamelliaRedis redis = CamelliaRedisInitializer.init(resource, env);

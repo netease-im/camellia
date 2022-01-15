@@ -7,7 +7,7 @@
 # 1.0.48（2022/01/xx）
 ### add
 * camellia-redis-proxy support scan command when use custom sharding
-* CamelliaRedisTemplate provide getReadJedisList/getReadJedisList method
+* CamelliaRedisTemplate provide getReadJedisList/getWriteJedisList method
 
 ### update
 * none
