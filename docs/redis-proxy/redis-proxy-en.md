@@ -10,7 +10,7 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support pub-sub commands
 * support transaction command, only when proxy route to redis/redis-sentinel with no-sharding/no-read-write-separate
 * support stream commands of redis5.0
-* support scan command of redis-cluster
+* support scan command of redis-cluster, even custom sharding
 * support custom sharding
 * support read write separation
 * support read from slave(in redis-sentinel master-slave mode，support read slave, and proxy will automatic process node-down/master-switch/node-expansion）
@@ -38,7 +38,7 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 ```
 ##DataBase
 PING,AUTH,HELLO,ECHO,CLIENT,QUIT,EXISTS,DEL,TYPE,EXPIRE,
-EXPIREAT,TTL,PERSIST,PEXPIRE,PEXPIREAT,PTTL,SORT,UNLINK,TOUCH,DUMP,RESTORE,
+EXPIREAT,TTL,PERSIST,PEXPIRE,PEXPIREAT,PTTL,SORT,UNLINK,TOUCH,DUMP,RESTORE,SCAN,
 ##String
 SET,GET,GETSET,MGET,SETNX,SETEX,MSET,DECRBY,DECR,INCRBY,INCR,APPEND,
 STRLEN,INCRBYFLOAT,PSETEX,SETRANGE,GETRANGE,SUBSTR,GETEX,GETDEL,
@@ -95,7 +95,7 @@ GEOSEARCHSTORE,
 only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel or redis-cluster)
 ```
 ##PUBSUB
-SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,SCAN,
+SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB
 ```
 
 * Partially Supported 2   

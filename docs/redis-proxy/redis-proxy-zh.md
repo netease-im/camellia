@@ -10,7 +10,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持pubsub命令
 * 支持事务命令（MULTI/EXEC/DISCARD/WATCH/UNWATCH），当前仅当代理到redis/redis-sentinel且无分片/无读写分离时支持
 * 支持redis5.0的Streams命令
-* 支持SCAN命令（代理到redis/redis-sentinel/redis-cluster均支持）
+* 支持SCAN命令（代理到redis/redis-sentinel/redis-cluster均支持，自定义分片时也支持）
 * 支持自定义分片
 * 支持读写分离
 * 支持读slave（redis-sentinel/redis-cluster均支持配置读从节点）
@@ -39,7 +39,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 ```
 ##DataBase
 PING,AUTH,HELLO,ECHO,CLIENT,QUIT,EXISTS,DEL,TYPE,EXPIRE,
-EXPIREAT,TTL,PERSIST,PEXPIRE,PEXPIREAT,PTTL,SORT,UNLINK,TOUCH,DUMP,RESTORE,
+EXPIREAT,TTL,PERSIST,PEXPIRE,PEXPIREAT,PTTL,SORT,UNLINK,TOUCH,DUMP,RESTORE,SCAN,
 ##String
 SET,GET,GETSET,MGET,SETNX,SETEX,MSET,DECRBY,DECR,INCRBY,INCR,APPEND,
 STRLEN,INCRBYFLOAT,PSETEX,SETRANGE,GETRANGE,SUBSTR,GETEX,GETDEL,
@@ -96,7 +96,7 @@ GEOSEARCHSTORE,
 当前仅当路由后端是单个redis或者单个redis-sentinel或者单个redis-cluster  
 ```
 ##PUBSUB
-SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,SCAN,
+SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
 ```
 
 * 部分支持2
