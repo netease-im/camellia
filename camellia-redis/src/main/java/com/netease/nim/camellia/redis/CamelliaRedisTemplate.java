@@ -13,6 +13,7 @@ import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.pipeline.*;
 import com.netease.nim.camellia.redis.resource.*;
 import com.netease.nim.camellia.redis.util.CamelliaRedisInitializer;
+import com.netease.nim.camellia.redis.util.CloseUtil;
 import com.netease.nim.camellia.redis.util.LogUtil;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.geo.GeoRadiusParam;
@@ -1646,7 +1647,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     public Object eval(byte[] script, List<byte[]> keys, List<byte[]> args) {
         return eval(script, toByteArray(keys.size()), getParamsWithBinary(keys, args));
     }
-    private static final byte[] toByteArray(final int value) {
+    private static byte[] toByteArray(final int value) {
         return SafeEncoder.encode(String.valueOf(value));
     }
     private static byte[][] getParamsWithBinary(List<byte[]> keys, List<byte[]> args) {
@@ -1746,6 +1747,9 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         }, keyCount, params);
     }
 
+    /**
+     * 上层业务使用完毕后，请自行close jedis
+     */
     @Override
     public Jedis getWriteJedis(byte[]... keys) {
         if (keys == null || keys.length == 0) {
@@ -1767,6 +1771,10 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         return redis.getJedis(keys[0]);
     }
 
+
+    /**
+     * 上层业务使用完毕后，请自行close jedis
+     */
     @Override
     public Jedis getReadJedis(byte[]... keys) {
         if (keys == null || keys.length == 0) {
@@ -1785,16 +1793,25 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         return redis.getJedis(keys[0]);
     }
 
+    /**
+     * 上层业务使用完毕后，请自行close jedis
+     */
     @Override
     public Jedis getWriteJedis(String... keys) {
         return getWriteJedis(SafeEncoder.encodeMany(keys));
     }
 
+    /**
+     * 上层业务使用完毕后，请自行close jedis
+     */
     @Override
     public Jedis getReadJedis(String... keys) {
         return getReadJedis(SafeEncoder.encodeMany(keys));
     }
 
+    /**
+     * 上层业务使用完毕后，请自行close jedis
+     */
     @Override
     public List<Jedis> getJedisList() {
         ResourceChooser chooser = factory.getResourceChooser();
@@ -1810,6 +1827,9 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         return jedisList;
     }
 
+    /**
+     * 上层业务使用完毕后，请自行close jedis
+     */
     @Override
     public List<Jedis> getWriteJedisList() {
         ResourceChooser chooser = factory.getResourceChooser();
@@ -1825,6 +1845,9 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         return jedisList;
     }
 
+    /**
+     * 上层业务使用完毕后，请自行close jedis
+     */
     @Override
     public List<Jedis> getReadJedisList() {
         ResourceChooser chooser = factory.getResourceChooser();
@@ -1838,6 +1861,69 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
             }
         }
         return jedisList;
+    }
+
+    @Override
+    public <T> T executeRead(CamelliaRedisCommandTask<T> task, String... keys) {
+        return executeRead(task, SafeEncoder.encodeMany(keys));
+    }
+
+    @Override
+    public <T> T executeRead(CamelliaRedisCommandTask<T> task, byte[]... keys) {
+        Jedis jedis = getReadJedis(keys);
+        try {
+            return task.execute(jedis);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
+    public <T> T executeWrite(CamelliaRedisCommandTask<T> task, String... keys) {
+        return executeWrite(task, SafeEncoder.encodeMany(keys));
+    }
+
+    @Override
+    public <T> T executeWrite(CamelliaRedisCommandTask<T> task, byte[]... keys) {
+        if (keys == null || keys.length == 0) {
+            throw new CamelliaRedisException("keys is null or empty");
+        }
+        ResourceChooser chooser = factory.getResourceChooser();
+        Map<String, Resource> writeResourceMap = new HashMap<>();
+        for (byte[] key : keys) {
+            List<Resource> resources = chooser.getWriteResources(key);
+            if (writeResourceMap.isEmpty()) {
+                for (Resource resource : resources) {
+                    writeResourceMap.put(resource.getUrl(), resource);
+                }
+            } else {
+                if (writeResourceMap.size() != resources.size()) {
+                    throw new CamelliaRedisException("ERR keys in request not in same resources");
+                }
+                for (Resource resource : resources) {
+                    if (!writeResourceMap.containsKey(resource.getUrl())) {
+                        throw new CamelliaRedisException("ERR keys in request not in same resources");
+                    }
+                }
+            }
+        }
+
+        T result = null;
+        for (String url : writeResourceMap.keySet()) {
+            ICamelliaRedis redis = CamelliaRedisInitializer.init(new Resource(url), env);
+            //只取第一个key，如果是redis-cluster，需要业务自己保证多个key的情况下是分布在相同的redis-node上的，否则会报错
+            Jedis jedis = redis.getJedis(keys[0]);
+            try {
+                if (result == null) {
+                    result = task.execute(jedis);
+                } else {
+                    task.execute(jedis);
+                }
+            } finally {
+                CloseUtil.closeQuietly(jedis);
+            }
+        }
+        return result;
     }
 
     private interface WriteInvoker {

@@ -8,6 +8,7 @@
 ### 新增
 * camellia-redis-proxy在自定义分片策略下支持scan命令
 * CamelliaRedisTemplate新增getReadJedisList/getWriteJedisList接口
+* CamelliaRedisTemplate新增executeRead/executeWrite接口
 
 ### 更新
 * 无

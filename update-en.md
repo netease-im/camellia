@@ -8,6 +8,7 @@
 ### add
 * camellia-redis-proxy support scan command when use custom sharding
 * CamelliaRedisTemplate provide getReadJedisList/getWriteJedisList method
+* CamelliaRedisTemplate provide executeRead/executeWrite method
 
 ### update
 * none
