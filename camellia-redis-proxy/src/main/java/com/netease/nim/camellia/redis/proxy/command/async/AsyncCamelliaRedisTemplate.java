@@ -412,9 +412,9 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     CompletableFuture<Reply> future = doWrite(resources, commandFlusher, command);
                     futureList.add(future);
                 } else if (ope.equalsIgnoreCase(RedisKeyword.EXISTS.name())) {
-                    Set<Resource> allResources = resourceChooser.getAllResources();
+                    List<Resource> resources = resourceChooser.getAllReadResources();
                     List<CompletableFuture<Reply>> futures = new ArrayList<>();
-                    for (Resource resource : allResources) {
+                    for (Resource resource : resources) {
                         CompletableFuture<Reply> future = doRead(resource, commandFlusher, command);
                         futures.add(future);
                     }
