@@ -46,7 +46,7 @@ redis-cluster://@127.0.0.1:6379,127.0.0.1:6380
 ## 关于lua
 
 * camellia-redis-proxy支持eval/evalsha/eval_ro/evalsha_ro，当代理到redis-cluster或者自定义分片时，proxy会检查每个key是否指向同一个后端node或者slot
-* proxy也支持script命令，支持load/flush/exists参数，当使用script load/flush时，proxy会把脚本发往所有的写后端，当使用script exists时，会发往所有节点
+* proxy也支持script命令，支持load/flush/exists参数，当使用script load/flush时，proxy会把脚本发往所有的写后端，当使用script exists时，会发往所有读后端
 
 ### 例子一
 ```
