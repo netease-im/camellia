@@ -4,6 +4,18 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+# 1.0.49（2022/01/xx）
+### 新增
+* camellia-redis-proxy support script load/flush/exists
+* camellia-redis-proxy support eval_ro/evalsha_ro, need upstream redis7.0+
+
+### 更新
+* 无
+
+### fix
+* scan should be a read command in monitor data
+
+
 # 1.0.48（2022/01/17）
 ### add
 * camellia-redis-proxy support scan command when use custom sharding

@@ -4,6 +4,18 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.0.49（2022/01/xx）
+### 新增
+* camellia-redis-proxy支持script load/flush/exists
+* camellia-redis-proxy支持eval_ro/evalsha_ro，需要后端是redis7.0+
+
+### 更新
+* 无
+
+### fix
+* scan在监控数据里应该是一个读命令而不是写命令，不影响功能，只是监控数据有误
+
+
 # 1.0.48（2022/01/17）
 ### 新增
 * camellia-redis-proxy在自定义分片策略下支持scan命令
