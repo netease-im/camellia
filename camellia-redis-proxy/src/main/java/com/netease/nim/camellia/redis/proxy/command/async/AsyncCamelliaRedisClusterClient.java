@@ -187,6 +187,11 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                 continue;
             }
 
+            if (redisCommand == RedisCommand.SCRIPT) {
+                script(commandFlusher, command, future);
+                continue;
+            }
+
             if (bindClient != null) {
                 commandFlusher.flush();
                 commandFlusher.clear();
@@ -329,6 +334,37 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
             commandFlusher.sendCommand(client, command, futureWrapper);
         }
         commandFlusher.flush();
+    }
+
+    private void script(CommandFlusher commandFlusher, Command command, CompletableFuture<Reply> future) {
+        byte[][] objects = command.getObjects();
+        if (objects.length <= 1) {
+            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
+            return;
+        }
+        String ope = Utils.bytesToString(objects[1]);
+        if (ope.equalsIgnoreCase(RedisKeyword.FLUSH.name()) || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())) {
+            Set<RedisClusterSlotInfo.Node> nodes = clusterSlotInfo.getNodes();
+            boolean futureSetting = false;
+            for (RedisClusterSlotInfo.Node node : nodes) {
+                RedisClient redisClient = RedisClientHub.get(node.getAddr());
+                //只返回第一个reply
+                commandFlusher.sendCommand(redisClient, command, !futureSetting ? future : new CompletableFuture<>());
+                futureSetting = true;
+            }
+        } else if (ope.equalsIgnoreCase(RedisKeyword.EXISTS.name())) {
+            Set<RedisClusterSlotInfo.Node> nodes = clusterSlotInfo.getNodes();
+            List<CompletableFuture<Reply>> futures = new ArrayList<>();
+            for (RedisClusterSlotInfo.Node node : nodes) {
+                RedisClient redisClient = RedisClientHub.get(node.getAddr());
+                CompletableFuture<Reply> f = new CompletableFuture<>();
+                commandFlusher.sendCommand(redisClient, command, f);
+                futures.add(f);
+            }
+            AsyncUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeMultiIntegerReply(replies)));
+        } else {
+            future.complete(ErrorReply.NOT_SUPPORT);
+        }
     }
 
     private void scan(CommandFlusher commandFlusher, Command command, CompletableFuture<Reply> future) {

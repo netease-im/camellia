@@ -1,15 +1,15 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
-import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
-import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
-import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
+import com.netease.nim.camellia.redis.proxy.reply.*;
 import io.netty.buffer.ByteBuf;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
@@ -166,6 +166,43 @@ public class Utils {
             }
             read = bytes[position++];
         } while (true);
+    }
+
+    public static Reply mergeMultiIntegerReply(List<Reply> replies) {
+        if (replies == null || replies.isEmpty()) {
+            return MultiBulkReply.EMPTY;
+        } else {
+            int size = 0;
+            Map<Integer, AtomicLong> map = new HashMap<>();
+            for (Reply reply : replies) {
+                if (reply instanceof MultiBulkReply) {
+                    Reply[] replies1 = ((MultiBulkReply) reply).getReplies();
+                    size = Math.max(replies1.length, size);
+                    for (int i=0; i<replies1.length; i++) {
+                        Reply reply1 = replies1[i];
+                        if (reply1 instanceof IntegerReply) {
+                            Long integer = ((IntegerReply) reply1).getInteger();
+                            AtomicLong atomicLong = map.get(i);
+                            if (atomicLong == null) {
+                                atomicLong = new AtomicLong(0);
+                                map.put(i, atomicLong);
+                            }
+                            atomicLong.addAndGet(integer);
+                        } else {
+                            return checkErrorReply(reply);
+                        }
+                    }
+                } else {
+                    return checkErrorReply(reply);
+                }
+            }
+            Reply[] replies1 = new Reply[size];
+            for (int i=0; i<size; i++) {
+                AtomicLong atomicLong = map.get(i);
+                replies1[i] = new IntegerReply(atomicLong == null ? 0 : atomicLong.get());
+            }
+            return new MultiBulkReply(replies1);
+        }
     }
 
     public static Reply mergeIntegerReply(List<Reply> replies) {

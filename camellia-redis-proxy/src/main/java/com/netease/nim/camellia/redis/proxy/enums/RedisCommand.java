@@ -143,6 +143,7 @@ public enum RedisCommand {
     ZRANDMEMBER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ZSET, false, CommandKeyType.SIMPLE_SINGLE),
     SELECT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
     SCAN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
+    SCRIPT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.SCRIPT, false, CommandKeyType.None),
 
     /**
      * Restrictive Support
@@ -225,7 +226,6 @@ public enum RedisCommand {
     CONFIG(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     SYNC(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     DEBUG(CommandSupportType.NOT_SUPPORT, null, null, false, null),
-    SCRIPT(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     SLOWLOG(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     OBJECT(CommandSupportType.NOT_SUPPORT, null, null, false, null),
     SENTINEL(CommandSupportType.NOT_SUPPORT, null, null, false, null),

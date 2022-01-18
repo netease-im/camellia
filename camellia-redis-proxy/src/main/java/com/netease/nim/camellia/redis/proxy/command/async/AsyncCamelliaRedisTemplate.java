@@ -358,7 +358,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         AsyncClient client = factory.get(resource.getUrl());
                         CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
                         futureList.add(future);
-                        incrWrite(resource, command);
+                        incrRead(resource, command);
                     } else {
                         List<Resource> allReadResources = resourceChooser.getAllReadResources();
                         if (cursorCalculator == null || cursorCalculator.getNodeBitLen() != ScanCursorCalculator.getSuitableNodeBitLen(allReadResources.size())) {
@@ -387,11 +387,44 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         CompletableFuture<Reply> future = new CompletableFuture<>();
                         f.thenApply((reply) -> cursorCalculator.filterScanReply(reply, currentNodeIndex, allReadResources.size())).thenAccept(future::complete);
                         futureList.add(future);
-                        incrWrite(resource, command);
+                        incrRead(resource, command);
                     }
                 } catch (Exception e) {
                     CompletableFuture<Reply> future = new CompletableFuture<>();
                     future.complete(ErrorReply.NOT_AVAILABLE);
+                    futureList.add(future);
+                }
+                continue;
+            }
+
+            if (redisCommand == RedisCommand.SCRIPT) {
+                byte[][] objects = command.getObjects();
+                if (objects.length <= 1) {
+                    CompletableFuture<Reply> future = new CompletableFuture<>();
+                    future.complete(ErrorReply.argNumWrong(redisCommand));
+                    futureList.add(future);
+                    continue;
+                }
+                String ope = Utils.bytesToString(objects[1]);
+                if (ope.equalsIgnoreCase(RedisKeyword.FLUSH.name())
+                        || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())) {
+                    List<Resource> resources = resourceChooser.getAllWriteResources();
+                    CompletableFuture<Reply> future = doWrite(resources, commandFlusher, command);
+                    futureList.add(future);
+                } else if (ope.equalsIgnoreCase(RedisKeyword.EXISTS.name())) {
+                    Set<Resource> allResources = resourceChooser.getAllResources();
+                    List<CompletableFuture<Reply>> futures = new ArrayList<>();
+                    for (Resource resource : allResources) {
+                        CompletableFuture<Reply> future = doRead(resource, commandFlusher, command);
+                        futures.add(future);
+                    }
+                    CompletableFuture<Reply> future = new CompletableFuture<>();
+                    AsyncUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeMultiIntegerReply(replies)));
+                    futureList.add(future);
+                } else {
+                    CompletableFuture<Reply> future = new CompletableFuture<>();
+                    future.complete(ErrorReply.NOT_SUPPORT);
+                    futureList.add(future);
                 }
                 continue;
             }
