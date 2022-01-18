@@ -82,13 +82,25 @@ public class ResourceChooser {
         return allResources;
     }
 
+    public static Resource getReadResource(ReadResourceBean readResourceBean) {
+        if (readResourceBean == null) return null;
+        if (readResourceBean.resources == null || readResourceBean.resources.isEmpty()) {
+            return null;
+        }
+        if (!readResourceBean.needRandom || readResourceBean.resources.size() == 1) {
+            return readResourceBean.getResources().get(0);
+        }
+        int index = ThreadLocalRandom.current().nextInt(readResourceBean.resources.size());
+        return readResourceBean.resources.get(index);
+    }
+
     public Resource getReadResource(byte[]... shardingParam) {
         if (readResource != null) {
             return readResource;
         }
         ResourceTable.Type type = resourceTable.getType();
         if (type == ResourceTable.Type.SIMPLE) {
-            ReadResourceBean readResourceBean = _getReadResources(shardingParam);
+            ReadResourceBean readResourceBean = getReadResources(shardingParam);
             if (readResourceBean == null) return null;
             if (!readResourceBean.needRandom || readResourceBean.resources.size() == 1) {
                 readResource = readResourceBean.resources.get(0);
@@ -98,18 +110,12 @@ public class ResourceChooser {
                 return readResourceBean.resources.get(index);
             }
         } else {
-            ReadResourceBean readResourceBean = _getReadResources(shardingParam);
-            if (readResourceBean == null) return null;
-            if (!readResourceBean.needRandom || readResourceBean.resources.size() == 1) {
-                return readResourceBean.resources.get(0);
-            } else {
-                int index = ThreadLocalRandom.current().nextInt(readResourceBean.resources.size());
-                return readResourceBean.resources.get(index);
-            }
+            ReadResourceBean readResourceBean = getReadResources(shardingParam);
+            return getReadResource(readResourceBean);
         }
     }
 
-    private ReadResourceBean _getReadResources(byte[]... shardingParam) {
+    public ReadResourceBean getReadResources(byte[]... shardingParam) {
         if (readResourceBean != null) {
             return readResourceBean;
         }
@@ -186,7 +192,50 @@ public class ResourceChooser {
         throw new IllegalArgumentException();
     }
 
-    private static class ReadResourceBean {
+    public static boolean checkReadResourcesEqual(ResourceChooser.ReadResourceBean readResourceBean1, ResourceChooser.ReadResourceBean readResourceBean2) {
+        if (readResourceBean1 == null || readResourceBean2 == null) {
+            return false;
+        }
+        if (readResourceBean1.isNeedRandom() && !readResourceBean2.isNeedRandom()) {
+            return false;
+        }
+        if (!readResourceBean1.isNeedRandom() && readResourceBean2.isNeedRandom()) {
+            return false;
+        }
+        if (readResourceBean1.getResources() == null || readResourceBean2.getResources() == null) {
+            return false;
+        }
+        if (readResourceBean1.getResources().size() != readResourceBean2.getResources().size()) {
+            return false;
+        }
+        for (int i = 0; i < readResourceBean1.getResources().size(); i++) {
+            Resource resource1 = readResourceBean1.getResources().get(i);
+            Resource resource2 = readResourceBean2.getResources().get(i);
+            if (!resource1.getUrl().equals(resource2.getUrl())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean checkWriteResourcesEqual(List<Resource> resources1, List<Resource> resources2) {
+        if (resources1 == null || resources2 == null) {
+            return false;
+        }
+        if (resources1.size() != resources2.size()) {
+            return false;
+        }
+        for (int i = 0; i < resources1.size(); i++) {
+            Resource resource1 = resources1.get(i);
+            Resource resource2 = resources2.get(i);
+            if (!resource1.getUrl().equals(resource2.getUrl())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static class ReadResourceBean {
         private final boolean needRandom;
         private final List<Resource> resources;
 
@@ -194,5 +243,14 @@ public class ResourceChooser {
             this.needRandom = needRandom;
             this.resources = resources;
         }
+
+        public boolean isNeedRandom() {
+            return needRandom;
+        }
+
+        public List<Resource> getResources() {
+            return resources;
+        }
+
     }
 }

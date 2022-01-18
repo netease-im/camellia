@@ -151,6 +151,8 @@ public enum RedisCommand {
      */
     EVAL(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SCRIPT, false, CommandKeyType.COMPLEX),
     EVALSHA(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SCRIPT, false, CommandKeyType.COMPLEX),
+    EVAL_RO(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.SCRIPT, false, CommandKeyType.COMPLEX),
+    EVALSHA_RO(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.SCRIPT, false, CommandKeyType.COMPLEX),
     PFCOUNT(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.HYPER_LOG_LOG, false, CommandKeyType.SIMPLE_MULTI),
     PFMERGE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.HYPER_LOG_LOG, false, CommandKeyType.SIMPLE_MULTI),
     RENAME(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.DB, false, CommandKeyType.SIMPLE_MULTI),

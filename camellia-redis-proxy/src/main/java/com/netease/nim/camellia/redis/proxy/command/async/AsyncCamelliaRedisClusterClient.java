@@ -198,6 +198,8 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                 switch (redisCommand) {
                     case EVAL:
                     case EVALSHA:
+                    case EVAL_RO:
+                    case EVALSHA_RO:
                         evalOrEvalSha(command, commandFlusher, future);
                         break;
                     case PFCOUNT:
