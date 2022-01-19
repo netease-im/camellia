@@ -10,7 +10,7 @@
 * camellia-redis-proxy支持eval_ro/evalsha_ro，需要后端是redis7.0+
 
 ### 更新
-* 无
+* camellia-redis-proxy监控后端redis响应耗时的监控数据支持密码脱敏
 
 ### fix
 * scan在监控数据里应该是一个读命令而不是写命令，不影响功能，只是监控数据有误

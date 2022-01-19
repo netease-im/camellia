@@ -5,12 +5,12 @@
 * camellia-redis-proxy support monitor data visualization in prometheus
 
 # 1.0.49（2022/01/xx）
-### 新增
+### add
 * camellia-redis-proxy support script load/flush/exists
 * camellia-redis-proxy support eval_ro/evalsha_ro, need upstream redis7.0+
 
-### 更新
-* 无
+### update
+* camellia-redis-proxy upstream redis spend stats support mask password
 
 ### fix
 * scan should be a read command in monitor data
