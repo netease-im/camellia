@@ -4,7 +4,7 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
-# 1.0.49（2022/01/xx）
+# 1.0.49（2022/01/19）
 ### 新增
 * camellia-redis-proxy支持script load/flush/exists，具体见：[misc](/docs/redis-proxy/misc.md)
 * camellia-redis-proxy支持eval_ro/evalsha_ro，需要后端是redis7.0+

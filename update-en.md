@@ -4,7 +4,7 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
-# 1.0.49（2022/01/xx）
+# 1.0.49（2022/01/19）
 ### add
 * camellia-redis-proxy support script load/flush/exists
 * camellia-redis-proxy support eval_ro/evalsha_ro, need upstream redis7.0+
