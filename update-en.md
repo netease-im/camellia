@@ -14,7 +14,7 @@
 
 ### fix
 * scan should be a read command in monitor data
-
+* fix camellia-dashboard api getTableRefByBidGroup, param should bid not tid
 
 # 1.0.48（2022/01/17）
 ### add
