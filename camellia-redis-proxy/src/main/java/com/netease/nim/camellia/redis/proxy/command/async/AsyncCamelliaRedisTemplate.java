@@ -355,10 +355,8 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 try {
                     if (isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster) {
                         Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
-                        AsyncClient client = factory.get(resource.getUrl());
-                        CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
+                        CompletableFuture<Reply> future = doRead(resource, commandFlusher, command);
                         futureList.add(future);
-                        incrRead(resource, command);
                     } else {
                         List<Resource> allReadResources = resourceChooser.getAllReadResources();
                         if (cursorCalculator == null || cursorCalculator.getNodeBitLen() != ScanCursorCalculator.getSuitableNodeBitLen(allReadResources.size())) {
