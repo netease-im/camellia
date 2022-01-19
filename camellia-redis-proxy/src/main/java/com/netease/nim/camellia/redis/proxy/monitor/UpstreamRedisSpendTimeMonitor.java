@@ -45,6 +45,7 @@ public class UpstreamRedisSpendTimeMonitor {
 
             for (Map.Entry<String, LongAdder> entry : spendCountMap.entrySet()) {
                 String key = entry.getKey();
+                key = PasswordMaskUtils.maskAddr(key);
                 long count = entry.getValue().sumThenReset();
                 if (count == 0) continue;
                 MaxValue nanoMax = spendMaxMap.get(key);
