@@ -189,7 +189,7 @@ public class AdminController {
 
     @ApiOperation(value = "删除单个资源表引用关系", notes = "需要指定bid和bgroup")
     @DeleteMapping("/tableRef")
-    public WebResult deleteTableRef(@RequestParam("tid") long bid,
+    public WebResult deleteTableRef(@RequestParam("bid") long bid,
                                     @RequestParam("bgroup") String bgroup) {
         LogBean.get().addProps("bid", bid);
         LogBean.get().addProps("bgroup", bgroup);
