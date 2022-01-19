@@ -14,7 +14,7 @@
 
 ### fix
 * scan在监控数据里应该是一个读命令而不是写命令，不影响功能，只是监控数据有误
-* camellia-dashboard的getTableRefByBidGroup接口参数应该是bid而不是tid，感谢[@chanjarster](https://github.com/chanjarster)修复该bug
+* camellia-dashboard的getTableRefByBidGroup/deleteTableRef接口参数应该是bid而不是tid，感谢[@chanjarster](https://github.com/chanjarster)修复该bug
 
 
 # 1.0.48（2022/01/17）
