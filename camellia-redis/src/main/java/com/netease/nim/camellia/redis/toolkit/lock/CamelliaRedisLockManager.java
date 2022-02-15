@@ -31,8 +31,16 @@ public class CamelliaRedisLockManager {
         this(null, Runtime.getRuntime().availableProcessors() * 4, 5000, 5000);
     }
 
+    public CamelliaRedisLockManager(CamelliaRedisTemplate template) {
+        this(template, Runtime.getRuntime().availableProcessors() * 4, 5000, 5000);
+    }
+
     public CamelliaRedisLockManager(int poolSize) {
         this(null, poolSize, 5000, 5000);
+    }
+
+    public CamelliaRedisLockManager(CamelliaRedisTemplate template, int poolSize) {
+        this(template, poolSize, 5000, 5000);
     }
 
     public CamelliaRedisLockManager(CamelliaRedisTemplate template, int poolSize, long acquireTimeoutMillis, long expireTimeoutMillis) {

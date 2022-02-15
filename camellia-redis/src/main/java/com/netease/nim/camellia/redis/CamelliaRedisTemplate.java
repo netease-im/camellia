@@ -139,6 +139,14 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         factory.reload(false);
     }
 
+    public CamelliaRedisEnv getRedisEnv() {
+        return env;
+    }
+
+    public CamelliaApi getCamelliaApi() {
+        return service;
+    }
+
     @Override
     public ICamelliaRedisPipeline pipelined() {
         PipelinePool pipelinePool = this.pipelinePool;
