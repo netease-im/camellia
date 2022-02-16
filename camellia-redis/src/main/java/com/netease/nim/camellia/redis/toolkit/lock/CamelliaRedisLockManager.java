@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -272,6 +273,17 @@ public class CamelliaRedisLockManager {
 
     public CamelliaRedisLock getLock(byte[] lockKey) {
         return getLock(new LockKey(lockKey));
+    }
+
+    public void clearAll() {
+        for (Map.Entry<LockKey, CamelliaRedisLock> entry : lockMap.entrySet()) {
+            entry.getValue().release();
+        }
+        for (Map.Entry<LockKey, ScheduledFuture<?>> entry : futureMap.entrySet()) {
+            entry.getValue().cancel(false);
+        }
+        lockMap.clear();
+        futureMap.clear();
     }
 
     private boolean lock(CamelliaRedisTemplate template, LockKey lockKey,
