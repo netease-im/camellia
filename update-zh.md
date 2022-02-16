@@ -8,6 +8,7 @@
 ### 新增
 * camellia-redis新增CamelliaRedisLockManager，用于管理redis分布式锁的自动续约，具体见：[toolkit](/docs/redis-template/toolkit.md)
 * camellia-redis新增CamelliaRedisTemplateManager，用于管理不同bid/bgroup的多组CamelliaRedisTemplate，具体见：[dynamic-dashboard](/docs/redis-template/dynamic-dashboard.md)
+* camellia-tools新增CamelliaHashedExecutor，用于执行相同hashKey的runnable/callable任务时是相同线程执行
 
 ### 更新
 * 无

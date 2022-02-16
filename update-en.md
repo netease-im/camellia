@@ -8,6 +8,7 @@
 ### add
 * camellia-redis provide CamelliaRedisLockManager to manager redis-lock auto renew
 * camellia-redis provide CamelliaRedisTemplateManager to manger multi-redis-template of different bid/bgroup
+* camellia-tools prvodie CamelliaHashedExecutor to execute runnable/callable with same thread in same hashKey
 
 ### update
 * none
