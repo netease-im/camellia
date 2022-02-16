@@ -4,6 +4,18 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+# 1.0.50（2022/02/xx）
+### add
+* camellia-redis provide CamelliaRedisLockManager to manager redis-lock auto renew
+* camellia-redis provide CamelliaRedisTemplateManager to manger multi-redis-template of different bid/bgroup
+
+### update
+* none
+
+### fix
+* fix camellia-dashboard deleteResourceTable api, should update ResourceInfo's tid ref
+
+
 # 1.0.49（2022/01/19）
 ### add
 * camellia-redis-proxy support script load/flush/exists

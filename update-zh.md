@@ -4,6 +4,18 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.0.50（2022/02/xx）
+### 新增
+* camellia-redis新增CamelliaRedisLockManager，用于管理redis分布式锁的自动续约，具体见：[toolkit](/docs/redis-template/toolkit.md)
+* camellia-redis新增CamelliaRedisTemplateManager，用于管理不同bid/bgroup的多组CamelliaRedisTemplate，具体见：[dynamic-dashboard](/docs/redis-template/dynamic-dashboard.md)
+
+### 更新
+* 无
+
+### fix
+* camellia-dashboard的deleteResourceTable接口，应该同步更新ResourceInfo的tid引用，感谢[@chanjarster](https://github.com/chanjarster)修复该bug
+
+
 # 1.0.49（2022/01/19）
 ### 新增
 * camellia-redis-proxy支持script load/flush/exists，具体见：[misc](/docs/redis-proxy/misc.md)

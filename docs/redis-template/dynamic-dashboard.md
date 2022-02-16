@@ -13,10 +13,19 @@ public class TestCamelliaDashboard {
         long checkIntervalMillis = 5000;//检查resourceTable的间隔
 
         CamelliaRedisEnv redisEnv = CamelliaRedisEnv.defaultRedisEnv();
-        
+
         CamelliaRedisTemplate template = new CamelliaRedisTemplate(redisEnv, dashboardUrl, bid, bgroup, monitorEnable, checkIntervalMillis);
         String k1 = template.get("k1");
         System.out.println(k1);
+
+        //如果要同时管理多组bid/bgroup，你可以使用CamelliaRedisTemplateManager
+        CamelliaRedisTemplateManager manager = new CamelliaRedisTemplateManager(dashboardUrl);
+        CamelliaRedisTemplate redisTemplate1 = manager.getRedisTemplate(1L, "default");
+        String k2 = redisTemplate1.get("k2");
+        System.out.println(k2);
+        CamelliaRedisTemplate redisTemplate2 = manager.getRedisTemplate(2L, "default");
+        String k3 = redisTemplate2.get("k3");
+        System.out.println(k3);
     }
 
     public static void main(String[] args) {
