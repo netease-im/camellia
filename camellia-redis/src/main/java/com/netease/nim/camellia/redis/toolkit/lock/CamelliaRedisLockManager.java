@@ -15,6 +15,10 @@ import java.util.concurrent.*;
  */
 public class CamelliaRedisLockManager {
 
+    private static final int defaultPoolSize = Runtime.getRuntime().availableProcessors() * 4;
+    private static final long defaultAcquireTimeoutMillis = 5000;
+    private static final long defaultExpireTimeoutMillis = 5000;
+
     private final ScheduledExecutorService scheduledExec;
 
     private final CamelliaRedisTemplate template;
@@ -28,19 +32,19 @@ public class CamelliaRedisLockManager {
     private static final CamelliaRedisLockManager INSTANCE = new CamelliaRedisLockManager();
 
     public CamelliaRedisLockManager() {
-        this(null, Runtime.getRuntime().availableProcessors() * 4, 5000, 5000);
+        this(null, defaultPoolSize, defaultAcquireTimeoutMillis, defaultExpireTimeoutMillis);
     }
 
     public CamelliaRedisLockManager(CamelliaRedisTemplate template) {
-        this(template, Runtime.getRuntime().availableProcessors() * 4, 5000, 5000);
+        this(template, defaultPoolSize, defaultAcquireTimeoutMillis, defaultExpireTimeoutMillis);
     }
 
     public CamelliaRedisLockManager(int poolSize) {
-        this(null, poolSize, 5000, 5000);
+        this(null, poolSize, defaultAcquireTimeoutMillis, defaultExpireTimeoutMillis);
     }
 
     public CamelliaRedisLockManager(CamelliaRedisTemplate template, int poolSize) {
-        this(template, poolSize, 5000, 5000);
+        this(template, poolSize, defaultAcquireTimeoutMillis, defaultExpireTimeoutMillis);
     }
 
     public CamelliaRedisLockManager(CamelliaRedisTemplate template, int poolSize, long acquireTimeoutMillis, long expireTimeoutMillis) {
@@ -54,28 +58,12 @@ public class CamelliaRedisLockManager {
         return INSTANCE;
     }
 
-    public boolean tryLock(CamelliaRedisTemplate template, String lockKey) {
-        return tryLock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
-    }
-
-    public boolean tryLock(CamelliaRedisTemplate template, byte[] lockKey) {
-        return tryLock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
-    }
-
     public boolean lock(CamelliaRedisTemplate template, String lockKey) {
         return lock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
     }
 
     public boolean lock(CamelliaRedisTemplate template, byte[] lockKey) {
         return lock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
-    }
-
-    public boolean tryLock(CamelliaRedisTemplate template, String lockKey, long acquireTimeoutMillis, long expireTimeoutMillis) {
-        return tryLock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
-    }
-
-    public boolean tryLock(CamelliaRedisTemplate template, byte[] lockKey, long acquireTimeoutMillis, long expireTimeoutMillis) {
-        return tryLock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
     }
 
     public boolean lock(CamelliaRedisTemplate template, String lockKey, long acquireTimeoutMillis, long expireTimeoutMillis) {
@@ -86,20 +74,36 @@ public class CamelliaRedisLockManager {
         return lock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
     }
 
-    public boolean tryLock(String lockKey) {
-        return tryLock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
-    }
-
-    public boolean tryLock(byte[] lockKey) {
-        return tryLock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
-    }
-
     public boolean lock(String lockKey) {
         return lock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
     }
 
     public boolean lock(byte[] lockKey) {
         return lock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean lock(String lockKey, long acquireTimeoutMillis, long expireTimeoutMillis) {
+        return lock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean lock(byte[] lockKey, long acquireTimeoutMillis, long expireTimeoutMillis) {
+        return lock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean tryLock(CamelliaRedisTemplate template, String lockKey) {
+        return tryLock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean tryLock(CamelliaRedisTemplate template, byte[] lockKey) {
+        return tryLock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean tryLock(CamelliaRedisTemplate template, String lockKey, long acquireTimeoutMillis, long expireTimeoutMillis) {
+        return tryLock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean tryLock(CamelliaRedisTemplate template, byte[] lockKey, long acquireTimeoutMillis, long expireTimeoutMillis) {
+        return tryLock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
     }
 
     public boolean tryLock(String lockKey, long acquireTimeoutMillis, long expireTimeoutMillis) {
@@ -110,12 +114,140 @@ public class CamelliaRedisLockManager {
         return tryLock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
     }
 
-    public boolean lock(String lockKey, long acquireTimeoutMillis, long expireTimeoutMillis) {
-        return lock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
+    public boolean tryLock(String lockKey) {
+        return tryLock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
     }
 
-    public boolean lock(byte[] lockKey, long acquireTimeoutMillis, long expireTimeoutMillis) {
-        return lock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
+    public boolean tryLock(byte[] lockKey) {
+        return tryLock(template, new LockKey(lockKey), acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean tryLockAndRun(CamelliaRedisTemplate template, byte[] lockKey, Runnable runnable) {
+        return tryLockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean tryLockAndRun(CamelliaRedisTemplate template, String lockKey, Runnable runnable) {
+        return tryLockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean tryLockAndRun(CamelliaRedisTemplate template, byte[] lockKey, Runnable runnable, long acquireTimeoutMillis, long expireTimeoutMillis) {
+        return tryLockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean tryLockAndRun(CamelliaRedisTemplate template, String lockKey, Runnable runnable, long acquireTimeoutMillis, long expireTimeoutMillis) {
+        return tryLockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean tryLockAndRun(byte[] lockKey, Runnable runnable) {
+        return tryLockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean tryLockAndRun(String lockKey, Runnable runnable) {
+        return tryLockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean tryLockAndRun(byte[] lockKey, Runnable runnable, long acquireTimeoutMillis, long expireTimeoutMillis) {
+        return tryLockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean tryLockAndRun(String lockKey, Runnable runnable, long acquireTimeoutMillis, long expireTimeoutMillis) {
+        return tryLockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean lockAndRun(CamelliaRedisTemplate template, byte[] lockKey, Runnable runnable) {
+        return lockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean lockAndRun(CamelliaRedisTemplate template, String lockKey, Runnable runnable) {
+        return lockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean lockAndRun(CamelliaRedisTemplate template, byte[] lockKey, Runnable runnable, long acquireTimeoutMillis, long expireTimeoutMillis) {
+        return lockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean lockAndRun(CamelliaRedisTemplate template, String lockKey, Runnable runnable, long acquireTimeoutMillis, long expireTimeoutMillis) {
+        return lockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean lockAndRun(byte[] lockKey, Runnable runnable) {
+        return lockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean lockAndRun(String lockKey, Runnable runnable) {
+        return lockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean lockAndRun(byte[] lockKey, Runnable runnable, long acquireTimeoutMillis, long expireTimeoutMillis) {
+        return lockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public boolean lockAndRun(String lockKey, Runnable runnable, long acquireTimeoutMillis, long expireTimeoutMillis) {
+        return lockAndRun(template, new LockKey(lockKey), runnable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> lockAndRun(CamelliaRedisTemplate template, byte[] lockKey, Callable<T> callable) throws Exception {
+        return lockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> lockAndRun(CamelliaRedisTemplate template, String lockKey, Callable<T> callable) throws Exception {
+        return lockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> lockAndRun(CamelliaRedisTemplate template, byte[] lockKey, Callable<T> callable, long acquireTimeoutMillis, long expireTimeoutMillis) throws Exception {
+        return lockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> lockAndRun(CamelliaRedisTemplate template, String lockKey, Callable<T> callable, long acquireTimeoutMillis, long expireTimeoutMillis) throws Exception {
+        return lockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> lockAndRun(byte[] lockKey, Callable<T> callable) throws Exception {
+        return lockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> lockAndRun(String lockKey, Callable<T> callable) throws Exception {
+        return lockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> lockAndRun(byte[] lockKey, Callable<T> callable, long acquireTimeoutMillis, long expireTimeoutMillis) throws Exception {
+        return lockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> lockAndRun(String lockKey, Callable<T> callable, long acquireTimeoutMillis, long expireTimeoutMillis) throws Exception {
+        return lockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> tryLockAndRun(CamelliaRedisTemplate template, byte[] lockKey, Callable<T> callable) throws Exception {
+        return tryLockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> tryLockAndRun(CamelliaRedisTemplate template, String lockKey, Callable<T> callable) throws Exception {
+        return tryLockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> tryLockAndRun(CamelliaRedisTemplate template, byte[] lockKey, Callable<T> callable, long acquireTimeoutMillis, long expireTimeoutMillis) throws Exception {
+        return tryLockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> tryLockAndRun(CamelliaRedisTemplate template, String lockKey, Callable<T> callable, long acquireTimeoutMillis, long expireTimeoutMillis) throws Exception {
+        return tryLockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> tryLockAndRun(byte[] lockKey, Callable<T> callable) throws Exception {
+        return tryLockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> tryLockAndRun(String lockKey, Callable<T> callable) throws Exception {
+        return tryLockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> tryLockAndRun(byte[] lockKey, Callable<T> callable, long acquireTimeoutMillis, long expireTimeoutMillis) throws Exception {
+        return tryLockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
+    }
+
+    public <T> LockTaskResult<T> tryLockAndRun(String lockKey, Callable<T> callable, long acquireTimeoutMillis, long expireTimeoutMillis) throws Exception {
+        return tryLockAndRun(template, new LockKey(lockKey), callable, acquireTimeoutMillis, expireTimeoutMillis);
     }
 
     public boolean release(String lockKey) {
@@ -189,12 +321,12 @@ public class CamelliaRedisLockManager {
     }
 
     private boolean release(LockKey lockKey) {
-        CamelliaRedisLock lock = lockMap.get(lockKey);
+        CamelliaRedisLock lock = lockMap.remove(lockKey);
         boolean result = false;
         if (lock != null) {
             result = lock.release();
         }
-        ScheduledFuture<?> future = futureMap.get(lockKey);
+        ScheduledFuture<?> future = futureMap.remove(lockKey);
         if (future != null) {
             future.cancel(false);
         }
@@ -202,16 +334,60 @@ public class CamelliaRedisLockManager {
     }
 
     private boolean clear(LockKey lockKey) {
-        CamelliaRedisLock lock = lockMap.get(lockKey);
+        CamelliaRedisLock lock = lockMap.remove(lockKey);
         boolean result = false;
         if (lock != null) {
             result = lock.clear();
         }
-        ScheduledFuture<?> future = futureMap.get(lockKey);
+        ScheduledFuture<?> future = futureMap.remove(lockKey);
         if (future != null) {
             future.cancel(false);
         }
         return result;
+    }
+
+    private  <T> LockTaskResult<T> tryLockAndRun(CamelliaRedisTemplate template, LockKey lockKey, Callable<T> callable, long acquireTimeoutMillis, long expireTimeoutMillis) throws Exception {
+        boolean lock = tryLock(template, lockKey, acquireTimeoutMillis, expireTimeoutMillis);
+        if (!lock) return new LockTaskResult<>(false, null);
+        try {
+            T result = callable.call();
+            return new LockTaskResult<>(true, result);
+        } finally {
+            release(lockKey);
+        }
+    }
+
+    private boolean tryLockAndRun(CamelliaRedisTemplate template, LockKey lockKey, Runnable runnable, long acquireTimeoutMillis, long expireTimeoutMillis) {
+        boolean lock = tryLock(template, lockKey, acquireTimeoutMillis, expireTimeoutMillis);
+        if (!lock) return false;
+        try {
+            runnable.run();
+            return true;
+        } finally {
+            release(lockKey);
+        }
+    }
+
+    private  <T> LockTaskResult<T> lockAndRun(CamelliaRedisTemplate template, LockKey lockKey, Callable<T> callable, long acquireTimeoutMillis, long expireTimeoutMillis) throws Exception {
+        boolean lock = lock(template, lockKey, acquireTimeoutMillis, expireTimeoutMillis);
+        if (!lock) return new LockTaskResult<>(false, null);
+        try {
+            T result = callable.call();
+            return new LockTaskResult<>(true, result);
+        } finally {
+            release(lockKey);
+        }
+    }
+
+    private boolean lockAndRun(CamelliaRedisTemplate template, LockKey lockKey, Runnable runnable, long acquireTimeoutMillis, long expireTimeoutMillis) {
+        boolean lock = lock(template, lockKey, acquireTimeoutMillis, expireTimeoutMillis);
+        if (!lock) return false;
+        try {
+            runnable.run();
+            return true;
+        } finally {
+            release(lockKey);
+        }
     }
 
     private static class LockKey {
