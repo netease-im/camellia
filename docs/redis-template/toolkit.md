@@ -55,7 +55,7 @@ public class LockSamples {
             try {
                 System.out.println("do some thing long time start");
                 try {
-                    TimeUnit.SECONDS.sleep(expireTimeoutMillis * 3);
+                    TimeUnit.MILLISECONDS.sleep(expireTimeoutMillis * 3);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
