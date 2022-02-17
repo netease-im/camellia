@@ -75,7 +75,7 @@ public class CamelliaHashedExecutor {
         FutureTask<Void> task = new FutureTask<>(runnable, null);
         boolean success = workThreads.get(index).submit(task);
         if (!success) {
-            rejectedExecutionHandler.rejectedExecution(runnable, this);
+            rejectedExecutionHandler.rejectedExecution(task, this);
         }
         return task;
     }
