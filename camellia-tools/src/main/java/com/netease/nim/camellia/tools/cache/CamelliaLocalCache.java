@@ -63,7 +63,7 @@ public class CamelliaLocalCache {
         if (expireSeconds <= 0) {
             bean = new CacheBean(value, Long.MAX_VALUE);
         } else {
-            bean = new CacheBean(value, System.currentTimeMillis() + expireSeconds * 1000);
+            bean = new CacheBean(value, System.currentTimeMillis() + expireSeconds * 1000L);
         }
         cache.put(uniqueKey, bean);
         if (logger.isDebugEnabled()) {
@@ -83,7 +83,7 @@ public class CamelliaLocalCache {
         if (expireSeconds <= 0) {
             bean = new CacheBean(value, Long.MAX_VALUE);
         } else {
-            bean = new CacheBean(value, System.currentTimeMillis() + expireSeconds * 1000);
+            bean = new CacheBean(value, System.currentTimeMillis() + expireSeconds * 1000L);
         }
         CacheBean oldBean = cache.get(uniqueKey);
         if (oldBean != null && oldBean.isExpire()) {
