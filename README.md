@@ -40,11 +40,11 @@ camellia主要包括以下功能模块：
 
 ### camellia-tools
 提供了一些工具类，包括：  
-* 压缩工具类CamelliaCompressor，支持LZ4压缩算法，压缩时支持判断阈值，解压时会检查是否压缩过，从而向下兼容
-* 加解密工具类CamelliaEncryptor，支持AES相关算法，解密时会检查是否加密过，从而向下兼容
-* 本地缓存工具类CamelliaLoadingCache，提供区别于Caffeine和Guava的load策略，适用于特定场景
-* 线程池工具类CamelliaHashedExecutor，提供哈希策略，相同hashKey确保顺序执行
-[快速开始](/docs/tools/tools.md)
+* 压缩工具类CamelliaCompressor，支持LZ4压缩算法，压缩时支持判断阈值，解压时会检查是否压缩过（向下兼容）  
+* 加解密工具类CamelliaEncryptor，支持AES相关算法，解密时会检查是否加密过（向下兼容）  
+* 本地缓存工具类CamelliaLoadingCache，提供区别于Caffeine和Guava的load策略，适用于特定场景  
+* 线程池工具类CamelliaHashedExecutor，提供哈希策略，相同hashKey确保顺序执行   
+[快速开始](/docs/tools/tools.md)  
 
 ## 版本
 最新版本是1.0.49，已经发布到maven中央仓库（2022/01/19）  
