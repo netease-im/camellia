@@ -36,7 +36,7 @@ thread pool utils CamelliaHashedExecutor
 [QUICK START](/docs/tools/tools.md)   
 
 ## Version
-latest version is 1.0.49，have deploy to maven central repository on 2022/01/19  
+latest version is 1.0.50，have deploy to maven central repository on 2022/02/17  
 [CHANGE_LOG](/update-en.md)  
 
 ## User List
