@@ -18,6 +18,10 @@ public class CamelliaHashedExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaHashedExecutor.class);
 
+    private static final int defaultPoolSize = Runtime.getRuntime().availableProcessors() * 2;
+    private static final int defaultQueueSize = 100000;
+    private static final RejectedExecutionHandler defaultRejectedPolicy = new AbortPolicy();
+
     private static final AtomicLong executorIdGen = new AtomicLong(1);
     private final AtomicLong workerIdGen = new AtomicLong(1);
 
@@ -26,6 +30,22 @@ public class CamelliaHashedExecutor {
     private final List<WorkThread> workThreads;
     private final RejectedExecutionHandler rejectedExecutionHandler;
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
+
+    public CamelliaHashedExecutor(String name) {
+        this(name, defaultPoolSize, defaultQueueSize, defaultRejectedPolicy);
+    }
+
+    public CamelliaHashedExecutor(String name, int poolSize) {
+        this(name, poolSize, defaultQueueSize, defaultRejectedPolicy);
+    }
+
+    public CamelliaHashedExecutor(String name, int poolSize, int queueSize) {
+        this(name, poolSize, queueSize, defaultRejectedPolicy);
+    }
+
+    public CamelliaHashedExecutor(String name, RejectedExecutionHandler rejectedExecutionHandler) {
+        this(name, defaultPoolSize, defaultQueueSize, rejectedExecutionHandler);
+    }
 
     public CamelliaHashedExecutor(String name, int poolSize, int queueSize, RejectedExecutionHandler rejectedExecutionHandler) {
         this.name = name + "-" + executorIdGen.getAndIncrement();
@@ -53,8 +73,8 @@ public class CamelliaHashedExecutor {
         }
         int index = Math.abs(Arrays.hashCode(hashKey)) % workThreads.size();
         FutureTask<Void> task = new FutureTask<>(runnable, null);
-        boolean offer = workThreads.get(index).submit(task);
-        if (!offer) {
+        boolean success = workThreads.get(index).submit(task);
+        if (!success) {
             rejectedExecutionHandler.rejectedExecution(runnable, this);
         }
         return task;
@@ -76,8 +96,8 @@ public class CamelliaHashedExecutor {
         }
         int index = Math.abs(Arrays.hashCode(hashKey)) % workThreads.size();
         FutureTask<T> task = new FutureTask<>(callable);
-        boolean offer = workThreads.get(index).submit(task);
-        if (!offer) {
+        boolean success = workThreads.get(index).submit(task);
+        if (!success) {
             rejectedExecutionHandler.rejectedExecution(task, this);
         }
         return task;
@@ -138,6 +158,7 @@ public class CamelliaHashedExecutor {
     public static class DiscardPolicy implements RejectedExecutionHandler {
         @Override
         public void rejectedExecution(Runnable runnable, CamelliaHashedExecutor executor) {
+            logger.warn("Task " + runnable.toString() + " is discard from " + executor.name);
         }
     }
 
