@@ -9,6 +9,7 @@ import javax.crypto.spec.IvParameterSpec;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 
 /**
  * 一个加解密的工具类，会在加密数据头里添加相关校验，用于判断数据是否加过密，可以用于对加密前后的数据进行兼容性处理（加过密的则直接解密后返回，没有加过密的则直接返回）
@@ -137,6 +138,12 @@ public class CamelliaEncryptor {
         }
     }
 
+    public String encryptToBase64(byte[] originalData) {
+        byte[] encrypt = encrypt(originalData);
+        if (encrypt == null) return null;
+        return Base64.getEncoder().encodeToString(encrypt);
+    }
+
     /**
      * 解密，会判断数据是否加密
      * @param encryptData 加密后数据
@@ -172,5 +179,10 @@ public class CamelliaEncryptor {
             logger.error("decrypt error", e);
             throw new CamelliaEncryptException(e);
         }
+    }
+
+    public byte[] decryptFromBase64(String encryptDataBase64) {
+        if (encryptDataBase64 == null) return null;
+        return decrypt(Base64.getDecoder().decode(encryptDataBase64));
     }
 }
