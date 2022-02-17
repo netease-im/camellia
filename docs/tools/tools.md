@@ -1,6 +1,10 @@
 
 ## 介绍
-提供了一些工具类，包括：压缩工具类CamelliaCompressor、加解密工具类CamelliaEncryptor、本地缓存工具类CamelliaLoadingCache等  
+提供了一些工具类，包括：
+* 压缩工具类CamelliaCompressor，支持LZ4压缩算法，压缩时支持判断阈值，解压时会检查是否压缩过，从而向下兼容
+* 加解密工具类CamelliaEncryptor，支持AES相关算法，解密时会检查是否加密过，从而向下兼容
+* 本地缓存工具类CamelliaLoadingCache，提供区别于Caffeine和Guava的load策略，适用于特定场景
+* 线程池工具类CamelliaHashedExecutor，提供哈希策略，相同hashKey确保顺序执行
 
 ## maven依赖
 ```
@@ -166,6 +170,64 @@ public class LoadingCacheSamples {
     }
 }
 
+```
+
+### CamelliaHashedExecutor示例
+在某些使用线程池的场景下，我们希望其中部分任务是顺序执行的，而常规的线程池是按照提交顺序执行的，如果线程池线程数超过1个，则可能导致乱序或者并发   
+CamelliaHashedExecutor在提交任务时额外提供了hashKey这样的参数，当hashKey参数是一样的时候，会确保所有任务都是相同线程执行的   
+
+```java
+public class CamelliaHashedExecutorSamples {
+    public static void main(String[] args) {
+        String name = "sample";
+        int poolSize = Runtime.getRuntime().availableProcessors() * 2;
+        int queueSize = 100000;
+        CamelliaHashedExecutor.RejectedExecutionHandler rejectedExecutionHandler = new CamelliaHashedExecutor.CallerRunsPolicy();
+        CamelliaHashedExecutor executor = new CamelliaHashedExecutor(name, poolSize, queueSize, rejectedExecutionHandler);
+
+        //相同hashKey的两个任务确保是单线程顺序执行的
+        
+        executor.submit("key1", () -> {
+            System.out.println("key1 start1, thread=" + Thread.currentThread().getName());
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("key1 end1, thread=" + Thread.currentThread().getName());
+        });
+
+        executor.submit("key2", () -> {
+            System.out.println("key2 start1, thread=" + Thread.currentThread().getName());
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("key2 end1, thread=" + Thread.currentThread().getName());
+        });
+
+        executor.submit("key1", () -> {
+            System.out.println("key1 start2, thread=" + Thread.currentThread().getName());
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("key1 end2, thread=" + Thread.currentThread().getName());
+        });
+
+        executor.submit("key2", () -> {
+            System.out.println("key2 start2, thread=" + Thread.currentThread().getName());
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("key2 end2, thread=" + Thread.currentThread().getName());
+        });
+    }
+}
 ```
 
 ### 更多示例和源码
