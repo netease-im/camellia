@@ -8,7 +8,6 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisClientMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
-import com.netease.nim.camellia.redis.proxy.monitor.UpstreamRedisSpendTimeMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.ClientHandler;
 import com.netease.nim.camellia.redis.proxy.netty.CommandPack;
 import com.netease.nim.camellia.redis.proxy.netty.CommandPackEncoder;
