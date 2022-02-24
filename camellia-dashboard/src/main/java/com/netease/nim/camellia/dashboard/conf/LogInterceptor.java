@@ -19,6 +19,10 @@ public class LogInterceptor extends HandlerInterceptorAdapter {
 
     private static final Logger staticsLogger = LoggerFactory.getLogger("stats");
 
+    public static boolean isDebugEnabled() {
+        return staticsLogger.isDebugEnabled();
+    }
+
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws Exception {
         LogBean logBean = LogBean.init();
