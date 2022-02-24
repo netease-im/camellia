@@ -6,7 +6,7 @@
               </encoder>
        </appender>
 
-       <logger name="com.netease.nim" level="INFO" additivity="false" >
+       <logger name="com.netease.nim" level="DEBUG" additivity="false" >
               <appender-ref ref="STDOUT" />
        </logger>
        <root level="INFO">

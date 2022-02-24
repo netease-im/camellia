@@ -97,6 +97,9 @@ public class CommandsTransponder {
                     String bgroup = channelInfo.getBgroup();
                     RedisMonitor.incr(bid, bgroup, command.getName());
                 }
+                for (byte[] object : command.getObjects()) {
+                    System.out.println(Utils.bytesToString(object));
+                }
 
                 //热key监控
                 if (hotKeyHunterManager != null) {
