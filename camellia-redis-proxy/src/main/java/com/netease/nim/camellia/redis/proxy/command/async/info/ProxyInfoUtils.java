@@ -157,7 +157,7 @@ public class ProxyInfoUtils {
     private static String parseResponse(Reply reply, boolean parseJson) {
         String string = replyToString(reply);
         if (!parseJson) return string;
-        String[] split = string.split("\n");
+        String[] split = string.split("\r\n");
         JSONObject result = new JSONObject();
         if (split.length == 1) {
             result.put("code", 500);
@@ -226,32 +226,32 @@ public class ProxyInfoUtils {
             StringBuilder builder = new StringBuilder();
             byte[][] objects = command.getObjects();
             if (objects.length == 1) {
-                builder.append(getServer()).append("\n");
-                builder.append(getClients()).append("\n");
-                builder.append(getRoutes()).append("\n");
-                builder.append(getUpstream()).append("\n");
-                builder.append(getMemory()).append("\n");
-                builder.append(getGC()).append("\n");
-                builder.append(getStats()).append("\n");
+                builder.append(getServer()).append("\r\n");
+                builder.append(getClients()).append("\r\n");
+                builder.append(getRoutes()).append("\r\n");
+                builder.append(getUpstream()).append("\r\n");
+                builder.append(getMemory()).append("\r\n");
+                builder.append(getGC()).append("\r\n");
+                builder.append(getStats()).append("\r\n");
             } else {
                 if (objects.length == 2) {
                     String section = Utils.bytesToString(objects[1]);
                     if (section.equalsIgnoreCase("server")) {
-                        builder.append(getServer()).append("\n");
+                        builder.append(getServer()).append("\r\n");
                     } else if (section.equalsIgnoreCase("clients")) {
-                        builder.append(getClients()).append("\n");
+                        builder.append(getClients()).append("\r\n");
                     } else if (section.equalsIgnoreCase("route")) {
-                        builder.append(getRoutes()).append("\n");
+                        builder.append(getRoutes()).append("\r\n");
                     } else if (section.equalsIgnoreCase("upstream")) {
-                        builder.append(getUpstream()).append("\n");
+                        builder.append(getUpstream()).append("\r\n");
                     } else if (section.equalsIgnoreCase("memory")) {
-                        builder.append(getMemory()).append("\n");
+                        builder.append(getMemory()).append("\r\n");
                     } else if (section.equalsIgnoreCase("gc")) {
-                        builder.append(getGC()).append("\n");
+                        builder.append(getGC()).append("\r\n");
                     } else if (section.equalsIgnoreCase("stats")) {
-                        builder.append(getStats()).append("\n");
+                        builder.append(getStats()).append("\r\n");
                     } else if (section.equalsIgnoreCase("upstream-info")) {
-                        builder.append(UpstreamInfoUtils.upstreamInfo(null, null, chooser, false)).append("\n");
+                        builder.append(UpstreamInfoUtils.upstreamInfo(null, null, chooser, false)).append("\r\n");
                     }
                 } else if (objects.length == 4) {
                     String section = Utils.bytesToString(objects[1]);
@@ -264,7 +264,7 @@ public class ProxyInfoUtils {
                         } catch (Exception e) {
                             return ErrorReply.SYNTAX_ERROR;
                         }
-                        builder.append(UpstreamInfoUtils.upstreamInfo(bid, bgroup, chooser, false)).append("\n");
+                        builder.append(UpstreamInfoUtils.upstreamInfo(bid, bgroup, chooser, false)).append("\r\n");
                     } else {
                         return ErrorReply.SYNTAX_ERROR;
                     }
@@ -281,35 +281,35 @@ public class ProxyInfoUtils {
 
     private static String getServer() {
         StringBuilder builder = new StringBuilder();
-        builder.append("# Server").append("\n");
-        builder.append("camellia_redis_proxy_version:" + VERSION).append("\n");
-        builder.append("redis_version:6.2.6").append("\n");//spring actuator默认会使用info命令返回的redis_version字段来做健康检查，这里直接返回一个固定的版本号
-        builder.append("available_processors:").append(osBean.getAvailableProcessors()).append("\n");
-        builder.append("netty_boss_thread:").append(bossThread).append("\n");
-        builder.append("netty_work_thread:").append(workThread).append("\n");
-        builder.append("arch:").append(osBean.getArch()).append("\n");
-        builder.append("os_name:").append(osBean.getName()).append("\n");
-        builder.append("os_version:").append(osBean.getVersion()).append("\n");
-        builder.append("system_load_average:").append(osBean.getSystemLoadAverage()).append("\n");
-        builder.append("tcp_port:").append(port).append("\n");
-        builder.append("http_console_port:").append(consolePort).append("\n");
+        builder.append("# Server").append("\r\n");
+        builder.append("camellia_redis_proxy_version:" + VERSION).append("\r\n");
+        builder.append("redis_version:6.2.6").append("\r\n");//spring actuator默认会使用info命令返回的redis_version字段来做健康检查，这里直接返回一个固定的版本号
+        builder.append("available_processors:").append(osBean.getAvailableProcessors()).append("\r\n");
+        builder.append("netty_boss_thread:").append(bossThread).append("\r\n");
+        builder.append("netty_work_thread:").append(workThread).append("\r\n");
+        builder.append("arch:").append(osBean.getArch()).append("\r\n");
+        builder.append("os_name:").append(osBean.getName()).append("\r\n");
+        builder.append("os_version:").append(osBean.getVersion()).append("\r\n");
+        builder.append("system_load_average:").append(osBean.getSystemLoadAverage()).append("\r\n");
+        builder.append("tcp_port:").append(port).append("\r\n");
+        builder.append("http_console_port:").append(consolePort).append("\r\n");
         long uptime = runtimeMXBean.getUptime();
         long uptimeInSeconds = uptime / 1000L;
         long uptimeInDays = uptime / (1000L * 60 * 60 * 24);
-        builder.append("uptime_in_seconds:").append(uptimeInSeconds).append("\n");
-        builder.append("uptime_in_days:").append(uptimeInDays).append("\n");
-        builder.append("vm_vendor:").append(runtimeMXBean.getVmVendor()).append("\n");
-        builder.append("vm_name:").append(runtimeMXBean.getVmName()).append("\n");
-        builder.append("vm_version:").append(runtimeMXBean.getVmVersion()).append("\n");
-        builder.append("jvm_info:").append(System.getProperties().get("java.vm.info")).append("\n");
-        builder.append("java_version:").append(System.getProperties().get("java.version")).append("\n");
+        builder.append("uptime_in_seconds:").append(uptimeInSeconds).append("\r\n");
+        builder.append("uptime_in_days:").append(uptimeInDays).append("\r\n");
+        builder.append("vm_vendor:").append(runtimeMXBean.getVmVendor()).append("\r\n");
+        builder.append("vm_name:").append(runtimeMXBean.getVmName()).append("\r\n");
+        builder.append("vm_version:").append(runtimeMXBean.getVmVersion()).append("\r\n");
+        builder.append("jvm_info:").append(System.getProperties().get("java.vm.info")).append("\r\n");
+        builder.append("java_version:").append(System.getProperties().get("java.version")).append("\r\n");
         return builder.toString();
     }
 
     private static String getClients() {
         StringBuilder builder = new StringBuilder();
-        builder.append("# Clients").append("\n");
-        builder.append("connect_clients:").append(ChannelMonitor.connect()).append("\n");
+        builder.append("# Clients").append("\r\n");
+        builder.append("connect_clients:").append(ChannelMonitor.connect()).append("\r\n");
         ConcurrentHashMap<String, AtomicLong> map = new ConcurrentHashMap<>();
         for (Map.Entry<String, ChannelInfo> entry : ChannelMonitor.getChannelMap().entrySet()) {
             Long bid = entry.getValue().getBid();
@@ -324,32 +324,32 @@ public class ProxyInfoUtils {
             count.incrementAndGet();
         }
         for (Map.Entry<String, AtomicLong> entry : map.entrySet()) {
-            builder.append(entry.getKey()).append(":").append(entry.getValue().get()).append("\n");
+            builder.append(entry.getKey()).append(":").append(entry.getValue().get()).append("\r\n");
         }
         return builder.toString();
     }
 
     private static String getStats() {
         StringBuilder builder = new StringBuilder();
-        builder.append("# Stats").append("\n");
-        builder.append("commands_count:").append(commandsCount).append("\n");
-        builder.append("read_commands_count:").append(readCommandsCount).append("\n");
-        builder.append("write_commands_count:").append(writeCommandsCount).append("\n");
-        builder.append("avg_commands_qps:").append(String.format("%.2f", avgCommandsQps)).append("\n");
-        builder.append("avg_read_commands_qps:").append(String.format("%.2f", avgReadCommandsQps)).append("\n");
-        builder.append("avg_write_commands_qps:").append(String.format("%.2f", avgWriteCommandsQps)).append("\n");
-        builder.append("monitor_interval_seconds:").append(monitorIntervalSeconds).append("\n");
-        builder.append("last_commands_qps:").append(String.format("%.2f", lastCommandQps)).append("\n");
-        builder.append("last_read_commands_qps:").append(String.format("%.2f", lastReadCommandQps)).append("\n");
-        builder.append("last_write_commands_qps:").append(String.format("%.2f", lastWriteCommandQps)).append("\n");
+        builder.append("# Stats").append("\r\n");
+        builder.append("commands_count:").append(commandsCount).append("\r\n");
+        builder.append("read_commands_count:").append(readCommandsCount).append("\r\n");
+        builder.append("write_commands_count:").append(writeCommandsCount).append("\r\n");
+        builder.append("avg_commands_qps:").append(String.format("%.2f", avgCommandsQps)).append("\r\n");
+        builder.append("avg_read_commands_qps:").append(String.format("%.2f", avgReadCommandsQps)).append("\r\n");
+        builder.append("avg_write_commands_qps:").append(String.format("%.2f", avgWriteCommandsQps)).append("\r\n");
+        builder.append("monitor_interval_seconds:").append(monitorIntervalSeconds).append("\r\n");
+        builder.append("last_commands_qps:").append(String.format("%.2f", lastCommandQps)).append("\r\n");
+        builder.append("last_read_commands_qps:").append(String.format("%.2f", lastReadCommandQps)).append("\r\n");
+        builder.append("last_write_commands_qps:").append(String.format("%.2f", lastWriteCommandQps)).append("\r\n");
         return builder.toString();
     }
 
     private static String getRoutes() {
         StringBuilder builder = new StringBuilder();
-        builder.append("# Route").append("\n");
+        builder.append("# Route").append("\r\n");
         ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> templateMap = RouteConfMonitor.getTemplateMap();
-        builder.append("route_nums:").append(templateMap.size()).append("\n");
+        builder.append("route_nums:").append(templateMap.size()).append("\r\n");
         for (Map.Entry<String, AsyncCamelliaRedisTemplate> entry : templateMap.entrySet()) {
             String key = entry.getKey();
             String[] split = key.split("\\|");
@@ -363,68 +363,68 @@ public class ProxyInfoUtils {
             }
             AsyncCamelliaRedisTemplate template = entry.getValue();
             String routeConf = ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(template.getResourceTable()));
-            builder.append("route_conf_").append(bid == null ? "default" : bid).append("_").append(bgroup == null ? "default" : bgroup).append(":").append(routeConf).append("\n");
+            builder.append("route_conf_").append(bid == null ? "default" : bid).append("_").append(bgroup == null ? "default" : bgroup).append(":").append(routeConf).append("\r\n");
         }
         return builder.toString();
     }
 
     private static String getUpstream() {
         StringBuilder builder = new StringBuilder();
-        builder.append("# Upstream").append("\n");
+        builder.append("# Upstream").append("\r\n");
         ConcurrentHashMap<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> redisClientMap = RedisClientMonitor.getRedisClientMap();
         int upstreamRedisNums = 0;
         for (Map.Entry<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> entry : redisClientMap.entrySet()) {
             upstreamRedisNums += entry.getValue().size();
         }
-        builder.append("upstream_redis_nums:").append(upstreamRedisNums).append("\n");
+        builder.append("upstream_redis_nums:").append(upstreamRedisNums).append("\r\n");
         for (Map.Entry<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> entry : redisClientMap.entrySet()) {
-            builder.append("upstream_redis_nums").append("[").append(PasswordMaskUtils.maskAddr(entry.getKey().getUrl())).append("]").append(":").append(entry.getValue().size()).append("\n");
+            builder.append("upstream_redis_nums").append("[").append(PasswordMaskUtils.maskAddr(entry.getKey().getUrl())).append("]").append(":").append(entry.getValue().size()).append("\r\n");
         }
         return builder.toString();
     }
 
     private static String getMemory() {
         StringBuilder builder = new StringBuilder();
-        builder.append("# Memory").append("\n");
+        builder.append("# Memory").append("\r\n");
         long freeMemory = Runtime.getRuntime().freeMemory();
         long totalMemory = Runtime.getRuntime().totalMemory();
         long maxMemory = Runtime.getRuntime().maxMemory();
-        builder.append("free_memory:").append(freeMemory).append("\n");
-        builder.append("free_memory_human:").append(humanReadableByteCountBin(freeMemory)).append("\n");
-        builder.append("total_memory:").append(totalMemory).append("\n");
-        builder.append("total_memory_human:").append(humanReadableByteCountBin(totalMemory)).append("\n");
-        builder.append("max_memory:").append(maxMemory).append("\n");
-        builder.append("max_memory_human:").append(humanReadableByteCountBin(maxMemory)).append("\n");
+        builder.append("free_memory:").append(freeMemory).append("\r\n");
+        builder.append("free_memory_human:").append(humanReadableByteCountBin(freeMemory)).append("\r\n");
+        builder.append("total_memory:").append(totalMemory).append("\r\n");
+        builder.append("total_memory_human:").append(humanReadableByteCountBin(totalMemory)).append("\r\n");
+        builder.append("max_memory:").append(maxMemory).append("\r\n");
+        builder.append("max_memory_human:").append(humanReadableByteCountBin(maxMemory)).append("\r\n");
         MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
-        builder.append("heap_memory_init:").append(heapMemoryUsage.getInit()).append("\n");
-        builder.append("heap_memory_init_human:").append(humanReadableByteCountBin(heapMemoryUsage.getInit())).append("\n");
-        builder.append("heap_memory_used:").append(heapMemoryUsage.getUsed()).append("\n");
-        builder.append("heap_memory_used_human:").append(humanReadableByteCountBin(heapMemoryUsage.getUsed())).append("\n");
-        builder.append("heap_memory_max:").append(heapMemoryUsage.getMax()).append("\n");
-        builder.append("heap_memory_max_human:").append(humanReadableByteCountBin(heapMemoryUsage.getMax())).append("\n");
-        builder.append("heap_memory_committed:").append(heapMemoryUsage.getCommitted()).append("\n");
-        builder.append("heap_memory_committed_human:").append(humanReadableByteCountBin(heapMemoryUsage.getCommitted())).append("\n");
+        builder.append("heap_memory_init:").append(heapMemoryUsage.getInit()).append("\r\n");
+        builder.append("heap_memory_init_human:").append(humanReadableByteCountBin(heapMemoryUsage.getInit())).append("\r\n");
+        builder.append("heap_memory_used:").append(heapMemoryUsage.getUsed()).append("\r\n");
+        builder.append("heap_memory_used_human:").append(humanReadableByteCountBin(heapMemoryUsage.getUsed())).append("\r\n");
+        builder.append("heap_memory_max:").append(heapMemoryUsage.getMax()).append("\r\n");
+        builder.append("heap_memory_max_human:").append(humanReadableByteCountBin(heapMemoryUsage.getMax())).append("\r\n");
+        builder.append("heap_memory_committed:").append(heapMemoryUsage.getCommitted()).append("\r\n");
+        builder.append("heap_memory_committed_human:").append(humanReadableByteCountBin(heapMemoryUsage.getCommitted())).append("\r\n");
         MemoryUsage nonHeapMemoryUsage = memoryMXBean.getNonHeapMemoryUsage();
-        builder.append("non_heap_memory_init:").append(nonHeapMemoryUsage.getInit()).append("\n");
-        builder.append("non_heap_memory_init_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getInit())).append("\n");
-        builder.append("non_heap_memory_used:").append(nonHeapMemoryUsage.getUsed()).append("\n");
-        builder.append("non_heap_memory_used_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getUsed())).append("\n");
-        builder.append("non_heap_memory_max:").append(nonHeapMemoryUsage.getMax()).append("\n");
-        builder.append("non_heap_memory_max_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getMax())).append("\n");
-        builder.append("non_heap_memory_committed:").append(nonHeapMemoryUsage.getCommitted()).append("\n");
-        builder.append("non_heap_memory_committed_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getCommitted())).append("\n");
+        builder.append("non_heap_memory_init:").append(nonHeapMemoryUsage.getInit()).append("\r\n");
+        builder.append("non_heap_memory_init_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getInit())).append("\r\n");
+        builder.append("non_heap_memory_used:").append(nonHeapMemoryUsage.getUsed()).append("\r\n");
+        builder.append("non_heap_memory_used_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getUsed())).append("\r\n");
+        builder.append("non_heap_memory_max:").append(nonHeapMemoryUsage.getMax()).append("\r\n");
+        builder.append("non_heap_memory_max_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getMax())).append("\r\n");
+        builder.append("non_heap_memory_committed:").append(nonHeapMemoryUsage.getCommitted()).append("\r\n");
+        builder.append("non_heap_memory_committed_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getCommitted())).append("\r\n");
         return builder.toString();
     }
 
     private static String getGC() {
         StringBuilder builder = new StringBuilder();
-        builder.append("# GC").append("\n");
+        builder.append("# GC").append("\r\n");
         if (garbageCollectorMXBeanList != null) {
             for (int i=0; i<garbageCollectorMXBeanList.size(); i++) {
                 GarbageCollectorMXBean garbageCollectorMXBean = garbageCollectorMXBeanList.get(i);
-                builder.append("gc").append(i).append("_name:").append(garbageCollectorMXBean.getName()).append("\n");
-                builder.append("gc").append(i).append("_collection_count:").append(garbageCollectorMXBean.getCollectionCount()).append("\n");
-                builder.append("gc").append(i).append("_collection_time:").append(garbageCollectorMXBean.getCollectionCount()).append("\n");
+                builder.append("gc").append(i).append("_name:").append(garbageCollectorMXBean.getName()).append("\r\n");
+                builder.append("gc").append(i).append("_collection_count:").append(garbageCollectorMXBean.getCollectionCount()).append("\r\n");
+                builder.append("gc").append(i).append("_collection_time:").append(garbageCollectorMXBean.getCollectionCount()).append("\r\n");
             }
         }
         return builder.toString();
