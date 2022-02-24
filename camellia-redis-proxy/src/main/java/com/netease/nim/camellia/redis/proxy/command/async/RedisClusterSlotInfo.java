@@ -4,6 +4,7 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
@@ -54,7 +55,7 @@ public class RedisClusterSlotInfo {
             throw new CamelliaRedisException("redisClusterResource is null");
         }
         this.redisClusterResource = redisClusterResource;
-        this.url = redisClusterResource.getUrl();
+        this.url = PasswordMaskUtils.maskResource(redisClusterResource.getUrl());
         this.nodes = redisClusterResource.getNodes();
         this.password = redisClusterResource.getPassword();
         this.userName = redisClusterResource.getUserName();

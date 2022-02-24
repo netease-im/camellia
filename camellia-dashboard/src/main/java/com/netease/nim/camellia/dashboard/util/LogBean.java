@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.dashboard.util;
 
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.dashboard.conf.LogInterceptor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -105,6 +106,12 @@ public class LogBean {
 
     public void addProps(String key, Object value) {
         this.props.put(key, value);
+    }
+
+    public void addDebugProps(String key, Object value) {
+        if (LogInterceptor.isDebugEnabled()) {
+            this.props.put(key, value);
+        }
     }
 
     public JSONObject toJson() {

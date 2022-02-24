@@ -82,7 +82,7 @@ public class TableService {
                 resourceInfo.setCreateTime(now);
                 resourceInfo.setUpdateTime(now);
                 int insert = resourceInfoDaoWrapper.save(resourceInfo);
-                LogBean.get().addProps("resource.url=[" + resource.getUrl() + "].insert", insert);
+                LogBean.get().addDebugProps("resource.url=[" + resource.getUrl() + "].insert", insert);
             } else {
                 String tids = resourceInfo.getTids();
                 Set<Long> set = ResourceInfoTidsUtil.parseTids(tids);
@@ -90,7 +90,7 @@ public class TableService {
                 resourceInfo.setTids(ResourceInfoTidsUtil.toString(set));
                 resourceInfo.setUpdateTime(now);
                 int update = resourceInfoDaoWrapper.save(resourceInfo);
-                LogBean.get().addProps("resource.url=[" + resource.getUrl() + "].update", update);
+                LogBean.get().addDebugProps("resource.url=[" + resource.getUrl() + "].update", update);
             }
         }
         return table;
@@ -148,7 +148,7 @@ public class TableService {
             set.remove(tid);
             resourceInfo.setTids(ResourceInfoTidsUtil.toString(set));
             int update = resourceInfoDaoWrapper.save(resourceInfo);
-            LogBean.get().addProps("resource.url=[" + resource.getUrl() + "].update", update);
+            LogBean.get().addDebugProps("resource.url=[" + resource.getUrl() + "].update", update);
         }
         return delete;
     }
