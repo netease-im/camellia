@@ -45,7 +45,7 @@ public class RedisClusterSlotInfo {
 
     private RedisClusterResource redisClusterResource;
     private RedisClusterSlavesResource redisClusterSlavesResource;
-    private final String url;
+    private final String maskUrl;
     private final List<RedisClusterResource.Node> nodes;
     private final String userName;
     private final String password;
@@ -55,7 +55,7 @@ public class RedisClusterSlotInfo {
             throw new CamelliaRedisException("redisClusterResource is null");
         }
         this.redisClusterResource = redisClusterResource;
-        this.url = PasswordMaskUtils.maskResource(redisClusterResource.getUrl());
+        this.maskUrl = PasswordMaskUtils.maskResource(redisClusterResource.getUrl());
         this.nodes = redisClusterResource.getNodes();
         this.password = redisClusterResource.getPassword();
         this.userName = redisClusterResource.getUserName();
@@ -67,7 +67,7 @@ public class RedisClusterSlotInfo {
             throw new CamelliaRedisException("redisClusterSlavesResource is null");
         }
         this.redisClusterSlavesResource = redisClusterSlavesResource;
-        this.url = redisClusterSlavesResource.getUrl();
+        this.maskUrl = PasswordMaskUtils.maskResource(redisClusterSlavesResource.getUrl());
         this.nodes = redisClusterSlavesResource.getNodes();
         this.password = redisClusterSlavesResource.getPassword();
         this.userName = redisClusterSlavesResource.getUserName();
@@ -172,7 +172,7 @@ public class RedisClusterSlotInfo {
             }
         } catch (Exception e) {
             ErrorLogCollector.collect(RedisClusterSlotInfo.class,
-                    "getNode error, url = " + url + ", slot = " + slot, e);
+                    "getNode error, url = " + maskUrl + ", slot = " + slot, e);
             return null;
         }
     }
@@ -252,7 +252,7 @@ public class RedisClusterSlotInfo {
             }
         } catch (Exception e) {
             ErrorLogCollector.collect(RedisClusterSlotInfo.class,
-                    "getClientByIndex error, url = " + url + ", index = " + index, e);
+                    "getClientByIndex error, url = " + maskUrl + ", index = " + index, e);
             return null;
         }
     }
@@ -295,21 +295,21 @@ public class RedisClusterSlotInfo {
                             }
                         }
                         if (success) {
-                            logger.info("renew success, url = {}", url);
+                            logger.info("renew success, url = {}", maskUrl);
                         } else {
-                            ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew fail, url = " + url);
+                            ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew fail, url = " + maskUrl);
                         }
                         lastRenewTimestamp = TimeCache.currentMillis;
                         return success;
                     } catch (Exception e) {
-                        ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew error, url = " + url, e);
+                        ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew error, url = " + maskUrl, e);
                         return false;
                     } finally {
                         renew.set(false);
                     }
                 });
             } catch (Exception e) {
-                ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew error, url = " + url, e);
+                ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew error, url = " + maskUrl, e);
                 renew.set(false);
             }
         }
@@ -322,11 +322,11 @@ public class RedisClusterSlotInfo {
             client = RedisClientHub.newClient(host, port, userName, password);
             if (client == null || !client.isValid()) return false;
             CompletableFuture<Reply> future = client.sendCommand(RedisCommand.CLUSTER.raw(), Utils.stringToBytes("slots"));
-            logger.info("tryRenew, client = {}, url = {}", client.getClientName(), url);
+            logger.info("tryRenew, client = {}, url = {}", client.getClientName(), maskUrl);
             Reply reply = future.get(10000, TimeUnit.MILLISECONDS);
             return clusterNodes(reply);
         } catch (Exception e) {
-            logger.error("tryRenew error, host = {}, port = {}, url = {}", host, port, url, e);
+            logger.error("tryRenew error, host = {}, port = {}, url = {}", host, port, maskUrl, e);
             return false;
         } finally {
             if (client != null) {
@@ -385,7 +385,7 @@ public class RedisClusterSlotInfo {
             }
             boolean success = size == SLOT_SIZE;
             if (logger.isDebugEnabled()) {
-                logger.debug("node.size = {}, url = {}", masterNodeSet.size(), url);
+                logger.debug("node.size = {}, url = {}", masterNodeSet.size(), maskUrl);
             }
             if (!masterNodeSet.isEmpty()) {
                 this.masterNodeSet = masterNodeSet;
@@ -410,7 +410,7 @@ public class RedisClusterSlotInfo {
                 this.nodeWithSlavesArray = nodeWithSlavesArray;
             }
             if (!success) {
-                logger.error("slot size is {}, not {}, url = {}", size, SLOT_SIZE, url);
+                logger.error("slot size is {}, not {}, url = {}", size, SLOT_SIZE, maskUrl);
             }
             return success;
         } catch (CamelliaRedisException e) {
