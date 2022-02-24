@@ -9,7 +9,7 @@ camellia-redis-proxy:
   #port: 6380 #优先级高于server.port，如果缺失，则使用server.port，如果设置为-6379则会随机一个可用端口
   #application-name: camellia-redis-proxy-server  #优先级高于spring.application.name，如果缺失，则使用spring.application.name
   console-port: 16379 #console端口，默认是16379，如果设置为-16379则会随机一个可用端口，如果设置为0，则不启动console
-#  password: pass123   #proxy的密码，如果设置了自定义的client-auth-provider-class-name，则密码参数无效
+  password: pass123   #proxy的密码，如果设置了自定义的client-auth-provider-class-name，则密码参数无效
   monitor-enable: false  #是否开启监控
   monitor-interval-seconds: 60 #监控回调的间隔
   monitor-data-mask-password: false #监控相关数据（包括日志）是否把密码隐藏，默认false（例：用***代替abc）
@@ -64,7 +64,7 @@ camellia-redis-proxy:
     type: local #使用本地配置
     local:
       type: simple
-      resource: redis://@127.0.0.1:6378 #转发的redis地址
+      resource: redis://@127.0.0.1:6379 #转发的redis地址
 #      resource: redis-sentinel://@127.0.0.1:26379/master1
 #      resource: redis-sentinel-slaves://@127.0.0.1:26379/master1
 #      resource: redis-cluster://@nim-redis-perftest-jd-1.v1.yunxin.jd1.vpc:7000,nim-redis-perftest-jd-2.v1.yunxin.jd1.vpc:7006,nim-redis-perftest-jd-3.v1.yunxin.jd1.vpc:7010

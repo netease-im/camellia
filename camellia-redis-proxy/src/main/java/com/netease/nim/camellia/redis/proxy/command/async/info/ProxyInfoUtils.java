@@ -280,54 +280,30 @@ public class ProxyInfoUtils {
     }
 
     private static String getServer() {
-        return "# Server\n" +
-                "redis_version:6.2.6\n" +
-                "redis_git_sha1:00000000\n" +
-                "redis_git_dirty:0\n" +
-                "redis_build_id:4e3fe8963c672cee\n" +
-                "redis_mode:standalone\n" +
-                "os:Darwin 21.3.0 x86_64\n" +
-                "arch_bits:64\n" +
-                "multiplexing_api:kqueue\n" +
-                "atomicvar_api:c11-builtin\n" +
-                "gcc_version:4.2.1\n" +
-                "process_id:9388\n" +
-                "process_supervised:no\n" +
-                "run_id:139ce9d546ad9c767aaa35d17b8d98f15d2f1c79\n" +
-                "tcp_port:6379\n" +
-                "server_time_usec:1645530860454811\n" +
-                "uptime_in_seconds:86496\n" +
-                "uptime_in_days:1\n" +
-                "hz:10\n" +
-                "configured_hz:10\n" +
-                "lru_clock:1363692\n" +
-                "executable:/Users/caojiajun/tools/redis-6.2.6/src/./redis-server\n" +
-                "config_file:\n" +
-                "io_threads_active:0";
-//        StringBuilder builder = new StringBuilder();
-//        builder.append("# Server").append("\n");
-////        builder.append("camellia_redis_proxy_version:" + VERSION).append("\n");
-//        builder.append("redis_version:6.2.6").append("\n");//spring actuator默认会使用info命令返回的redis_version字段来做健康检查，这里直接返回一个固定的版本号
-//        builder.append("available_processors:").append(osBean.getAvailableProcessors()).append("\n");
-//        builder.append("netty_boss_thread:").append(bossThread).append("\n");
-//        builder.append("netty_work_thread:").append(workThread).append("\n");
-//        builder.append("arch:").append(osBean.getArch()).append("\n");
-//        builder.append("os_name:").append(osBean.getName()).append("\n");
-//        builder.append("os_version:").append(osBean.getVersion()).append("\n");
-//        builder.append("system_load_average:").append(osBean.getSystemLoadAverage()).append("\n");
-//        builder.append("tcp_port:").append(port).append("\n");
-//        builder.append("http_console_port:").append(consolePort).append("\n");
-//        long uptime = runtimeMXBean.getUptime();
-//        long uptimeInSeconds = uptime / 1000L;
-//        long uptimeInDays = uptime / (1000L * 60 * 60 * 24);
-//        builder.append("uptime_in_seconds:").append(uptimeInSeconds).append("\n");
-//        builder.append("uptime_in_days:").append(uptimeInDays).append("\n");
-//        builder.append("vm_vendor:").append(runtimeMXBean.getVmVendor()).append("\n");
-//        builder.append("vm_name:").append(runtimeMXBean.getVmName()).append("\n");
-//        builder.append("vm_version:").append(runtimeMXBean.getVmVersion()).append("\n");
-//        builder.append("jvm_info:").append(System.getProperties().get("java.vm.info")).append("\n");
-//        builder.append("java_version:").append(System.getProperties().get("java.version")).append("\n");
-//        return builder.toString();
+        StringBuilder builder = new StringBuilder();
+        builder.append("# Server").append("\n");
+        builder.append("camellia_redis_proxy_version:" + VERSION).append("\n");
+        builder.append("redis_version:6.2.6").append("\n");//spring actuator默认会使用info命令返回的redis_version字段来做健康检查，这里直接返回一个固定的版本号
+        builder.append("available_processors:").append(osBean.getAvailableProcessors()).append("\n");
+        builder.append("netty_boss_thread:").append(bossThread).append("\n");
+        builder.append("netty_work_thread:").append(workThread).append("\n");
+        builder.append("arch:").append(osBean.getArch()).append("\n");
+        builder.append("os_name:").append(osBean.getName()).append("\n");
+        builder.append("os_version:").append(osBean.getVersion()).append("\n");
+        builder.append("system_load_average:").append(osBean.getSystemLoadAverage()).append("\n");
+        builder.append("tcp_port:").append(port).append("\n");
+        builder.append("http_console_port:").append(consolePort).append("\n");
+        long uptime = runtimeMXBean.getUptime();
+        long uptimeInSeconds = uptime / 1000L;
+        long uptimeInDays = uptime / (1000L * 60 * 60 * 24);
+        builder.append("uptime_in_seconds:").append(uptimeInSeconds).append("\n");
+        builder.append("uptime_in_days:").append(uptimeInDays).append("\n");
+        builder.append("vm_vendor:").append(runtimeMXBean.getVmVendor()).append("\n");
+        builder.append("vm_name:").append(runtimeMXBean.getVmName()).append("\n");
+        builder.append("vm_version:").append(runtimeMXBean.getVmVersion()).append("\n");
+        builder.append("jvm_info:").append(System.getProperties().get("java.vm.info")).append("\n");
+        builder.append("java_version:").append(System.getProperties().get("java.version")).append("\n");
+        return builder.toString();
     }
 
     private static String getClients() {
