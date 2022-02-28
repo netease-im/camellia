@@ -4,6 +4,18 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+# 1.0.51（2022/02/xx）
+### add
+* none
+
+### update
+* camellia-redis-proxy info command reply, replace \n to \r\n, so you can use redis-shake to migrate redis data
+
+### fix
+* after invoke deregister method of ZkProxyRegistry, if the tcp connect of zk reset, reconnect task will trigger camellia-redis-proxy register to zk again
+* camellia-dashboard and camellia-redis-proxy print redis password in some case
+
+
 # 1.0.50（2022/02/17）
 ### add
 * camellia-redis provide CamelliaRedisLockManager to manager redis-lock auto renew

@@ -4,6 +4,18 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.0.51（2022/02/xx）
+### 新增
+* 无
+
+### 更新
+* camellia-redis-proxy的info命令回包中，换行符从\n替换为\r\n，从而适配redis-shake进行redis数据迁移，具体见：[misc](/docs/redis-proxy/misc.md)
+
+### fix
+* ZkProxyRegistry在调用了deregister方法取消注册后，如果网络异常导致proxy到zk的tcp连接重连，可能会导致camellia-redis-proxy重新注册到zk
+* camellia-dashboard和camellia-redis-proxy某些情况下在日志中打印了后端redis的密码，感谢[@chanjarster](https://github.com/chanjarster)修复该问题
+
+
 # 1.0.50（2022/02/17）
 ### 新增
 * camellia-redis新增CamelliaRedisLockManager，用于管理redis分布式锁的自动续约，具体见：[toolkit](/docs/redis-template/toolkit.md)
