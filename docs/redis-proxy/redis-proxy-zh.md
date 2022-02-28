@@ -108,12 +108,12 @@ MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ``` 
 
 ## 快速开始一
-1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.0.50），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
+1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.0.51），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
 ```
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
-  <version>1.0.50</version>
+  <version>1.0.51</version>
 </dependency>
 ```
 2) 编写主类Application.java, 如下: 
@@ -245,7 +245,7 @@ camellia-redis-proxy默认通过在application.yml里配置全类名的方式来
 
 ## 其他
 * 关于双（多）写的若干问题，具体见：[multi-write](multi-write.md)
-* 关于scan和lua的相关说明，具体见：[misc](misc.md)
+* 关于scan和lua的相关说明，以及使用redis-shake进行数据迁移的说明，具体见：[misc](misc.md)
 
 ## 应用场景
 * 业务开始使用单点redis或者redis-sentinel，现在需要切换到redis-cluster，但是客户端需要改造（比如jedis访问redis-sentinel和redis-cluster是不一样的），此时你可以使用proxy，从而做到不改造（使用四层代理LB）或者很少的改造（使用注册中心）

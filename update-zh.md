@@ -4,7 +4,7 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
-# 1.0.51（2022/02/xx）
+# 1.0.51（2022/02/28）
 ### 新增
 * 无
 

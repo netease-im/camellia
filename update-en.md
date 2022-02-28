@@ -4,7 +4,7 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
-# 1.0.51（2022/02/xx）
+# 1.0.51（2022/02/28）
 ### add
 * none
 
