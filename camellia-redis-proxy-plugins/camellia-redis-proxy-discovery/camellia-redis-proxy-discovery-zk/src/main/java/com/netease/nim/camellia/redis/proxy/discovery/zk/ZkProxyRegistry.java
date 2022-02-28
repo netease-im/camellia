@@ -39,6 +39,7 @@ public class ZkProxyRegistry {
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private boolean registerOk;
+    private boolean deregister = false;
     private InstanceInfo instanceInfo;
 
     public ZkProxyRegistry(String zkUrl, String basePath, String applicationName, Proxy proxy) {
@@ -82,8 +83,10 @@ public class ZkProxyRegistry {
                     while (true) {
                         try {
                             if (curatorFramework.getZookeeperClient().blockUntilConnectedOrTimedOut()) {
-                                registerOk = false;
-                                register();
+                                if (!deregister) {
+                                    registerOk = false;
+                                    register();
+                                }
                                 break;
                             }
                         } catch (Exception e) {
@@ -113,6 +116,7 @@ public class ZkProxyRegistry {
     public void register() {
         if (running.compareAndSet(false, true)) {
             try {
+                deregister = false;
                 if (registerOk) return;
                 while (true) {
                     try {
@@ -151,6 +155,7 @@ public class ZkProxyRegistry {
     public void deregister() {
         if (running.compareAndSet(false, true)) {
             try {
+                deregister = true;
                 if (!registerOk) return;
                 client.delete().forPath(registerPath());
                 registerOk = false;
