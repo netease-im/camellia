@@ -94,11 +94,15 @@ redis-cluster://@127.0.0.1:6379,127.0.0.1:6380
 
 ### 典型场景一
 * 背景：从redis-cluster迁移到多套redis-sentinel
-* 源集群是一套redis-cluster
-* 目标集群是：camellia-redis-proxy + redis-sentinel集群*N
+* 源集群：一套redis-cluster
+* 目标集群：camellia-redis-proxy + redis-sentinel集群*N
 
 ### 典型场景二
 * 背景：从1套redis-cluster迁移到多套redis-cluster组成自定义分片的逻辑大集群
-* 源集群是一套redis-cluster
-* 目标集群是：camellia-redis-proxy + redis-cluster集群*N
+* 源集群：一套redis-cluster
+* 目标集群：camellia-redis-proxy + redis-cluster集群*N
 
+### 典型场景三
+* 背景：从twemproxy/codis迁移到redis-cluster，但是客户端不支持redis-cluster协议，因此加了camellia-redis-proxy作为前置代理
+* 源集群：twemproxy/codis + 多个redis-server，对每个redis-server单独起一个redis-shake任务
+* 目标集群：camellia-redis-proxy + redis-cluster集群
