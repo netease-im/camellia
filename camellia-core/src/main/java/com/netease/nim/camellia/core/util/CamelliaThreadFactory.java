@@ -14,7 +14,7 @@ public class CamelliaThreadFactory implements ThreadFactory {
     private final String namePrefix;
     private final boolean daemon;
 
-    public CamelliaThreadFactory(Class clazz, boolean daemon) {
+    public CamelliaThreadFactory(Class<?> clazz, boolean daemon) {
         SecurityManager s = System.getSecurityManager();
         this.group = (s != null) ? s.getThreadGroup() :
                 Thread.currentThread().getThreadGroup();
@@ -23,7 +23,7 @@ public class CamelliaThreadFactory implements ThreadFactory {
         this.daemon = daemon;
     }
 
-    public CamelliaThreadFactory(Class clazz) {
+    public CamelliaThreadFactory(Class<?> clazz) {
         this(clazz, false);
     }
 

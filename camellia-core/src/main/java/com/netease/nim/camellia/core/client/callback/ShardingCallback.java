@@ -6,6 +6,7 @@ import com.netease.nim.camellia.core.client.annotation.ShardingParam;
 import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.hub.IProxyHub;
+import com.netease.nim.camellia.core.util.ExceptionUtils;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
@@ -38,112 +39,116 @@ public class ShardingCallback<T> implements MethodInterceptor {
 
     @Override
     public Object intercept(Object o, final Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
-        if (!isOpMethod(method)) {
-            return methodProxy.invokeSuper(o, objects);
-        }
-        CollectionType collectionType = getCollectionType(method);
-
-        if (collectionType == CollectionType.NOT_COLLECTION) {
-            byte[][] key = parseShardingSimple(method, objects);
-            T proxy = proxyHub.chooseProxy(key);
-            return method.invoke(proxy, objects);
-        } else {
-            Map<T, List<Object[]>> proxyMap = new HashMap<>();
-            Map<byte[][], Object[]> map;
-            switch (collectionType) {
-                case LIST:
-                    map = parseShardingListParam(method, objects);
-                    break;
-                case SET:
-                    map = parseShardingSetParam(method, objects);
-                    break;
-                case Map:
-                    map = parseShardingMapParam(method, objects);
-                    break;
-                case ARRAY:
-                    map = parseShardingArrayParam(method, objects);
-                    break;
-                default:
-                    throw new UnsupportedEncodingException("CollectionType only support List/Set/Map/Array");
+        try {
+            if (!isOpMethod(method)) {
+                return methodProxy.invokeSuper(o, objects);
             }
-            for (Map.Entry<byte[][], Object[]> entry : map.entrySet()) {
-                byte[][] key = entry.getKey();
-                Object[] param = entry.getValue();
+            CollectionType collectionType = getCollectionType(method);
+
+            if (collectionType == CollectionType.NOT_COLLECTION) {
+                byte[][] key = parseShardingSimple(method, objects);
                 T proxy = proxyHub.chooseProxy(key);
-                List<Object[]> list = proxyMap.get(proxy);
-                if (list == null) {
-                    list = new ArrayList<>();
-                    proxyMap.put(proxy, list);
-                }
-                list.add(param);
-            }
-            Map<T, Object[]> finalProxyMap;
-            switch (collectionType) {
-                case LIST:
-                    finalProxyMap = mergeProxyMapOfList(proxyMap, method, objects);
-                    break;
-                case SET:
-                    finalProxyMap = mergeProxyMapOfSet(proxyMap, method, objects);
-                    break;
-                case Map:
-                    finalProxyMap = mergeProxyMapOfMap(proxyMap, method, objects);
-                    break;
-                case ARRAY:
-                    finalProxyMap = mergeProxyMapOfArray(proxyMap, method, objects);
-                    break;
-                default:
-                    throw new UnsupportedEncodingException("CollectionType only support List/Set/Map/Array");
-            }
-
-            if (finalProxyMap.size() == 1) {
-                for (Map.Entry<T, Object[]> entry : finalProxyMap.entrySet()) {
-                    T proxy = entry.getKey();
-                    Object[] params = entry.getValue();
-                    return method.invoke(proxy, params);
-                }
-                throw new RuntimeException("will not invoke here");
+                return method.invoke(proxy, objects);
             } else {
-                if (env.isShardingConcurrentEnable()) {
-                    final AtomicBoolean isInvokeError = new AtomicBoolean(false);
-                    final Throwable[] invokeError = new Throwable[1];
-                    List<Object> results = new ArrayList<>();
-                    List<Future<Object>> futureList = new ArrayList<>();
-                    for (Map.Entry<T, Object[]> entry : finalProxyMap.entrySet()) {
-                        final T proxy = entry.getKey();
-                        final Object[] params = entry.getValue();
-                        Future<Object> future = env.getShardingConcurrentExec().submit(new Callable<Object>() {
-                            @Override
-                            public Object call() throws Exception {
-                                try {
-                                    return method.invoke(proxy, params);
-                                } catch (Throwable e) {
-                                    invokeError[0] = e;
-                                    isInvokeError.set(true);
-                                    throw e;
-                                }
-                            }
-                        });
-                        futureList.add(future);
+                Map<T, List<Object[]>> proxyMap = new HashMap<>();
+                Map<byte[][], Object[]> map;
+                switch (collectionType) {
+                    case LIST:
+                        map = parseShardingListParam(method, objects);
+                        break;
+                    case SET:
+                        map = parseShardingSetParam(method, objects);
+                        break;
+                    case Map:
+                        map = parseShardingMapParam(method, objects);
+                        break;
+                    case ARRAY:
+                        map = parseShardingArrayParam(method, objects);
+                        break;
+                    default:
+                        throw new UnsupportedEncodingException("CollectionType only support List/Set/Map/Array");
+                }
+                for (Map.Entry<byte[][], Object[]> entry : map.entrySet()) {
+                    byte[][] key = entry.getKey();
+                    Object[] param = entry.getValue();
+                    T proxy = proxyHub.chooseProxy(key);
+                    List<Object[]> list = proxyMap.get(proxy);
+                    if (list == null) {
+                        list = new ArrayList<>();
+                        proxyMap.put(proxy, list);
                     }
-                    for (Future<Object> future : futureList) {
-                        if (isInvokeError.get() && invokeError[0] != null) {
-                            throw invokeError[0];
-                        }
-                        Object result = future.get();
-                        results.add(result);
-                    }
-                    return mergeResult(results, method);
-                } else {
-                    List<Object> results = new ArrayList<>();
+                    list.add(param);
+                }
+                Map<T, Object[]> finalProxyMap;
+                switch (collectionType) {
+                    case LIST:
+                        finalProxyMap = mergeProxyMapOfList(proxyMap, method, objects);
+                        break;
+                    case SET:
+                        finalProxyMap = mergeProxyMapOfSet(proxyMap, method, objects);
+                        break;
+                    case Map:
+                        finalProxyMap = mergeProxyMapOfMap(proxyMap, method, objects);
+                        break;
+                    case ARRAY:
+                        finalProxyMap = mergeProxyMapOfArray(proxyMap, method, objects);
+                        break;
+                    default:
+                        throw new UnsupportedEncodingException("CollectionType only support List/Set/Map/Array");
+                }
+
+                if (finalProxyMap.size() == 1) {
                     for (Map.Entry<T, Object[]> entry : finalProxyMap.entrySet()) {
                         T proxy = entry.getKey();
                         Object[] params = entry.getValue();
-                        Object result = method.invoke(proxy, params);
-                        results.add(result);
+                        return method.invoke(proxy, params);
                     }
-                    return mergeResult(results, method);
+                    throw new RuntimeException("will not invoke here");
+                } else {
+                    if (env.isShardingConcurrentEnable()) {
+                        final AtomicBoolean isInvokeError = new AtomicBoolean(false);
+                        final Throwable[] invokeError = new Throwable[1];
+                        List<Object> results = new ArrayList<>();
+                        List<Future<Object>> futureList = new ArrayList<>();
+                        for (Map.Entry<T, Object[]> entry : finalProxyMap.entrySet()) {
+                            final T proxy = entry.getKey();
+                            final Object[] params = entry.getValue();
+                            Future<Object> future = env.getShardingConcurrentExec().submit(new Callable<Object>() {
+                                @Override
+                                public Object call() throws Exception {
+                                    try {
+                                        return method.invoke(proxy, params);
+                                    } catch (Throwable e) {
+                                        invokeError[0] = e;
+                                        isInvokeError.set(true);
+                                        throw e;
+                                    }
+                                }
+                            });
+                            futureList.add(future);
+                        }
+                        for (Future<Object> future : futureList) {
+                            if (isInvokeError.get() && invokeError[0] != null) {
+                                throw invokeError[0];
+                            }
+                            Object result = future.get();
+                            results.add(result);
+                        }
+                        return mergeResult(results, method);
+                    } else {
+                        List<Object> results = new ArrayList<>();
+                        for (Map.Entry<T, Object[]> entry : finalProxyMap.entrySet()) {
+                            T proxy = entry.getKey();
+                            Object[] params = entry.getValue();
+                            Object result = method.invoke(proxy, params);
+                            results.add(result);
+                        }
+                        return mergeResult(results, method);
+                    }
                 }
             }
+        } catch (Throwable e) {
+            throw ExceptionUtils.onError(e);
         }
     }
 

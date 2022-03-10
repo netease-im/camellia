@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.core.client.callback;
 
 import com.netease.nim.camellia.core.api.ReloadableProxyFactory;
+import com.netease.nim.camellia.core.util.ExceptionUtils;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
@@ -20,6 +21,10 @@ public class DynamicProxyCallback<T> implements MethodInterceptor {
 
     @Override
     public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
-        return method.invoke(factory.getProxy(), args);
+        try {
+            return method.invoke(factory.getProxy(), args);
+        } catch (Exception e) {
+            throw ExceptionUtils.onError(e);
+        }
     }
 }

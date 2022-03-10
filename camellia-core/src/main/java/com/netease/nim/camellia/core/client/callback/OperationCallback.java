@@ -8,6 +8,7 @@ import com.netease.nim.camellia.core.model.operation.ResourceOperation;
 import com.netease.nim.camellia.core.model.operation.ResourceReadOperation;
 import com.netease.nim.camellia.core.model.operation.ResourceWriteOperation;
 import com.netease.nim.camellia.core.util.CheckUtil;
+import com.netease.nim.camellia.core.util.ExceptionUtils;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
@@ -52,7 +53,7 @@ public class OperationCallback<T> implements MethodInterceptor {
     private static final byte WRITE = 1;
     private static final byte READ = 2;
     private static final byte UNKNOWN = 3;
-    private Map<Method, Byte> annotationCache = new HashMap<>();
+    private final Map<Method, Byte> annotationCache = new HashMap<>();
 
     private byte operationType(Method method) {
         if (method == null) return UNKNOWN;
@@ -74,14 +75,18 @@ public class OperationCallback<T> implements MethodInterceptor {
 
     @Override
     public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
-        Byte operationType = operationType(method);
-        if (Objects.equals(operationType, WRITE)) {
-            return write(objects, method);
+        try {
+            Byte operationType = operationType(method);
+            if (Objects.equals(operationType, WRITE)) {
+                return write(objects, method);
+            }
+            if (Objects.equals(operationType, READ)) {
+                return read(objects, method);
+            }
+            return methodProxy.invokeSuper(o, objects);
+        } catch (Throwable e) {
+            throw ExceptionUtils.onError(e);
         }
-        if (Objects.equals(operationType, READ)) {
-            return read(objects, method);
-        }
-        return methodProxy.invokeSuper(o, objects);
     }
 
     private Object write(final Object[] objects, final Method method) throws Throwable {

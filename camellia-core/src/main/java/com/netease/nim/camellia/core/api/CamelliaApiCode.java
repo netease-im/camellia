@@ -12,7 +12,7 @@ public enum CamelliaApiCode {
     FORBIDDEN(403),
     ;
 
-    private int code;
+    private final int code;
 
     CamelliaApiCode(int code) {
         this.code = code;

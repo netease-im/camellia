@@ -102,7 +102,9 @@ public class DiscoveryResourcePool implements FeignResourcePool {
     @Override
     public void onError(FeignResource feignResource) {
         try {
-            dynamicList.remove(feignResource);
+            synchronized (lock) {
+                dynamicList.remove(feignResource);
+            }
         } catch (Exception e) {
             logger.error("onError error", e);
         }
@@ -120,21 +122,19 @@ public class DiscoveryResourcePool implements FeignResourcePool {
     }
 
     private void remove(FeignResource feignResource) {
-        synchronized (lock) {
-            try {
-                synchronized (lock) {
-                    ArrayList<FeignResource> list = new ArrayList<>(originalList);
-                    list.remove(feignResource);
-                    if (list.isEmpty()) {
-                        logger.warn("last server, skip remove");
-                        return;
-                    }
-                    originalList = list;
-                    dynamicList = new ArrayList<>(originalList);
+        try {
+            synchronized (lock) {
+                ArrayList<FeignResource> list = new ArrayList<>(originalList);
+                list.remove(feignResource);
+                if (list.isEmpty()) {
+                    logger.warn("last server, skip remove");
+                    return;
                 }
-            } catch (Exception e) {
-                logger.error("remove error", e);
+                originalList = list;
+                dynamicList = new ArrayList<>(originalList);
             }
+        } catch (Exception e) {
+            logger.error("remove error", e);
         }
     }
 

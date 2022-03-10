@@ -15,11 +15,11 @@ import com.netease.nim.camellia.core.util.CheckUtil;
  */
 public class StandardProxyGenerator<T> {
 
-    private Class<T> clazz;
-    private ResourceTable resourceTable;
-    private Resource defaultResource;
+    private final Class<T> clazz;
+    private final ResourceTable resourceTable;
+    private final Resource defaultResource;
     private IProxyHub<T> proxyHub;
-    private ProxyEnv env;
+    private final ProxyEnv env;
 
     public StandardProxyGenerator(Class<T> clazz, ResourceTable resourceTable) {
         this(clazz, resourceTable, null);

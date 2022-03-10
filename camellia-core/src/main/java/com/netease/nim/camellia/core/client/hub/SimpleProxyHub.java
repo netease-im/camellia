@@ -6,7 +6,7 @@ package com.netease.nim.camellia.core.client.hub;
  */
 public class SimpleProxyHub<T> implements IProxyHub<T> {
 
-    private T proxy;
+    private final T proxy;
 
     public SimpleProxyHub(T proxy) {
         this.proxy = proxy;

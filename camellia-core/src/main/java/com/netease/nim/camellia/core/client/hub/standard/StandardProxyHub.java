@@ -13,7 +13,7 @@ import com.netease.nim.camellia.core.util.CheckUtil;
  */
 public class StandardProxyHub<T> implements IProxyHub<T> {
 
-    private IProxyHub<T> proxyHub;
+    private final IProxyHub<T> proxyHub;
 
     public StandardProxyHub(Class<T> clazz, ResourceTable resourceTable) {
         this(clazz, resourceTable, null);

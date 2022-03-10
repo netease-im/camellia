@@ -21,7 +21,7 @@ import java.util.Set;
  */
 public class StandardSimpleProxyHub<T> implements IProxyHub<T> {
 
-    private SimpleProxyHub<T> proxyHub;
+    private final SimpleProxyHub<T> proxyHub;
 
     public StandardSimpleProxyHub(Class<T> clazz, ResourceTable.SimpleTable simpleTable) {
         this(clazz, simpleTable, null);
