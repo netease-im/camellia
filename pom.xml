@@ -13,6 +13,7 @@
 	<modules>
 		<module>camellia-core</module>
 		<module>camellia-dashboard</module>
+		<module>camellia-feign</module>
 		<module>camellia-hbase</module>
 		<module>camellia-redis</module>
 		<module>camellia-id-gen</module>

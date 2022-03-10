@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Created by caojiajun on 2021/9/29
  */
-public class LocalConfIdGenServerDiscovery extends AbstractIdGenServerDiscovery {
+public class LocalConfIdGenServerDiscovery implements IdGenServerDiscovery {
 
     private final List<IdGenServer> list;
 
@@ -25,5 +25,15 @@ public class LocalConfIdGenServerDiscovery extends AbstractIdGenServerDiscovery 
     @Override
     public List<IdGenServer> findAll() {
         return list;
+    }
+
+    @Override
+    public void setCallback(Callback<IdGenServer> callback) {
+
+    }
+
+    @Override
+    public void clearCallback(Callback<IdGenServer> callback) {
+
     }
 }

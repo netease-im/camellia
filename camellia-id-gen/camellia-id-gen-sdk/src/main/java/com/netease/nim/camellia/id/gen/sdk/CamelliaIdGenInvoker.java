@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.id.gen.sdk;
 
+import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.id.gen.common.CamelliaIdGenException;
 import org.slf4j.Logger;
@@ -42,7 +43,7 @@ public class CamelliaIdGenInvoker {
         this.dynamic = new ArrayList<>(all);
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("id-gen-sdk", true))
                 .scheduleAtFixedRate(this::reload, config.getDiscoveryReloadIntervalSeconds(), config.getDiscoveryReloadIntervalSeconds(), TimeUnit.SECONDS);
-        this.discovery.setCallback(new IdGenServerDiscovery.Callback() {
+        this.discovery.setCallback(new CamelliaDiscovery.Callback<IdGenServer>() {
             @Override
             public void add(IdGenServer server) {
                 try {

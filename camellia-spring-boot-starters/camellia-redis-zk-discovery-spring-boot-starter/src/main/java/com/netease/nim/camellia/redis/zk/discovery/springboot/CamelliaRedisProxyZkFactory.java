@@ -39,7 +39,7 @@ public class CamelliaRedisProxyZkFactory implements CamelliaRedisProxyFactory {
                 if (jedisPool == null) {
                     String proxyName = resource.getProxyName();
                     String password = resource.getPassword();
-                    ProxyDiscovery proxyDiscovery = zkProxyDiscoveryFactory.getProxyDiscovery(proxyName);
+                    IProxyDiscovery proxyDiscovery = zkProxyDiscoveryFactory.getProxyDiscovery(proxyName);
                     List<Proxy> proxyList = proxyDiscovery.findAll();
                     if (proxyList == null || proxyList.isEmpty()) {
                         throw new IllegalArgumentException("proxyList is empty, proxyName=" + proxyName);

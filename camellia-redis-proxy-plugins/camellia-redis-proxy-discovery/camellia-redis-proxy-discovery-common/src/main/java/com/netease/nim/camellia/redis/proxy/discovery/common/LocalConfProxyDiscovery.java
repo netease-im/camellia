@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.discovery.common;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,7 +8,7 @@ import java.util.List;
  *
  * Created by caojiajun on 2020/12/17
  */
-public class LocalConfProxyDiscovery extends ProxyDiscovery {
+public class LocalConfProxyDiscovery implements IProxyDiscovery {
 
     private final List<Proxy> list;
 
@@ -31,6 +32,16 @@ public class LocalConfProxyDiscovery extends ProxyDiscovery {
     @Override
     public List<Proxy> findAll() {
         return new ArrayList<>(list);
+    }
+
+    @Override
+    public void setCallback(Callback<Proxy> callback) {
+
+    }
+
+    @Override
+    public void clearCallback(Callback<Proxy> callback) {
+
     }
 
 }

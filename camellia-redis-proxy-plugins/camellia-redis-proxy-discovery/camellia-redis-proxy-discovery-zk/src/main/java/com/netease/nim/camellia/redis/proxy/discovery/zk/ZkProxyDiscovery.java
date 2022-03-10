@@ -1,9 +1,10 @@
 package com.netease.nim.camellia.redis.proxy.discovery.zk;
 
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.core.discovery.AbstractCamelliaDiscovery;
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.redis.proxy.discovery.common.IProxyDiscovery;
 import com.netease.nim.camellia.redis.proxy.discovery.common.Proxy;
-import com.netease.nim.camellia.redis.proxy.discovery.common.ProxyDiscovery;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.*;
 import org.slf4j.Logger;
@@ -16,7 +17,7 @@ import java.util.concurrent.*;
  *
  * Created by caojiajun on 2020/8/10
  */
-public class ZkProxyDiscovery extends ProxyDiscovery {
+public class ZkProxyDiscovery extends AbstractCamelliaDiscovery<Proxy> implements IProxyDiscovery {
 
     private static final Logger logger = LoggerFactory.getLogger(ZkProxyDiscovery.class);
 
@@ -59,7 +60,7 @@ public class ZkProxyDiscovery extends ProxyDiscovery {
                             int index = path.lastIndexOf("/") + 1;
                             String id = path.substring(index);
                             map.put(id, instanceInfo);
-                            invokeAddProxyCallback(instanceInfo.getProxy());
+                            invokeAddCallback(instanceInfo.getProxy());
                             logger.info("instanceInfo add, path = {}, instanceInfo = {}", path, JSONObject.toJSONString(instanceInfo));
                         }
                     } else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
@@ -69,7 +70,7 @@ public class ZkProxyDiscovery extends ProxyDiscovery {
                         String id = path.substring(index);
                         InstanceInfo instanceInfo = map.remove(id);
                         if (instanceInfo != null) {
-                            invokeRemoveProxyCallback(instanceInfo.getProxy());
+                            invokeRemoveCallback(instanceInfo.getProxy());
                             logger.info("instanceInfo remove, path = {}, instanceInfo = {}", path, JSONObject.toJSONString(instanceInfo));
                         } else {
                             logger.info("instanceInfo try remove, but not found, path = {}", path);

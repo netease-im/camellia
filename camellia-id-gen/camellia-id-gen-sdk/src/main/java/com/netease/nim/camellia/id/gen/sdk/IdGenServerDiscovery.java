@@ -1,22 +1,11 @@
 package com.netease.nim.camellia.id.gen.sdk;
 
-import java.util.List;
+
+import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 
 /**
  * Created by caojiajun on 2021/9/29
  */
-public interface IdGenServerDiscovery {
+public interface IdGenServerDiscovery extends CamelliaDiscovery<IdGenServer> {
 
-    List<IdGenServer> findAll();
-
-    void setCallback(Callback callback);
-
-    void clearCallback(Callback callback);
-
-    interface Callback {
-
-        void add(IdGenServer server);
-
-        void remove(IdGenServer server);
-    }
 }

@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy;
 
-import com.netease.nim.camellia.redis.proxy.discovery.common.ProxyDiscovery;
+import com.netease.nim.camellia.redis.proxy.discovery.common.IProxyDiscovery;
 
 /**
  *
@@ -8,5 +8,5 @@ import com.netease.nim.camellia.redis.proxy.discovery.common.ProxyDiscovery;
  */
 public interface ProxyDiscoveryFactory {
 
-    ProxyDiscovery getProxyDiscovery(String proxyName);
+    IProxyDiscovery getProxyDiscovery(String proxyName);
 }

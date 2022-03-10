@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.discovery.jedis;
 
+import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.redis.proxy.discovery.common.*;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
@@ -392,7 +393,7 @@ public class RedisProxyJedisPool extends JedisPool {
         }
     }
 
-    private final IProxyDiscovery.Callback callback = new IProxyDiscovery.Callback() {
+    private final CamelliaDiscovery.Callback<Proxy> callback = new CamelliaDiscovery.Callback<Proxy>() {
         @Override
         public void add(Proxy proxy) {
             RedisProxyJedisPool.this.add(proxy);

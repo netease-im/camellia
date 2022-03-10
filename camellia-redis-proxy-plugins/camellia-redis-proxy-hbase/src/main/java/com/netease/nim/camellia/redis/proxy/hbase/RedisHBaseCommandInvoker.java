@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.hbase;
 
+import com.netease.nim.camellia.core.util.ExceptionUtils;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.proxy.command.AuthCommandProcessor;
@@ -149,7 +150,7 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
     }
 
     private Reply handlerError(Throwable e, String msg) {
-        e = ErrorHandlerUtil.handler(e);
+        e = ExceptionUtils.onError(e);
         String message = ErrorHandlerUtil.redisErrorMessage(e);
         String log = "invoke error, msg = " + msg + ",e=" + e.toString();
         ErrorLogCollector.collect(RedisHBaseCommandInvoker.class, log);

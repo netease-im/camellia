@@ -40,7 +40,7 @@ public class CamelliaRedisProxyEurekaFactory implements CamelliaRedisProxyFactor
                 if (jedisPool == null) {
                     String proxyName = resource.getProxyName();
                     String password = resource.getPassword();
-                    ProxyDiscovery proxyDiscovery = proxyDiscoveryFactory.getProxyDiscovery(proxyName);
+                    IProxyDiscovery proxyDiscovery = proxyDiscoveryFactory.getProxyDiscovery(proxyName);
                     List<Proxy> proxyList = proxyDiscovery.findAll();
                     if (proxyList == null || proxyList.isEmpty()) {
                         throw new IllegalArgumentException("proxyList is empty, proxyName=" + proxyName);

@@ -6,6 +6,7 @@ import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.core.util.ExceptionUtils;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceChooser;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
@@ -1112,7 +1113,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         }
                     }
                 } catch (Exception e) {
-                    Throwable ex = ErrorHandlerUtil.handler(e);
+                    Throwable ex = ExceptionUtils.onError(e);
                     String log = "reload error, bid = " + bid + ", bgroup = " + bgroup + ", updater = " + updater.getClass().getName() + ", ex = " + ex.toString();
                     ErrorLogCollector.collect(AsyncCamelliaRedisTemplate.class, log, e);
                 } finally {
@@ -1167,7 +1168,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                                 ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(response.getResourceTable())));
                     }
                 } catch (Exception e) {
-                    Throwable ex = ErrorHandlerUtil.handler(e);
+                    Throwable ex = ExceptionUtils.onError(e);
                     String log = "reload error, bid = " + bid + ", bgroup = " + bgroup + ", md5 = " + md5 + ", ex = " + ex.toString();
                     ErrorLogCollector.collect(AsyncCamelliaRedisTemplate.class, log, e);
                 } finally {

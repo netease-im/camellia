@@ -40,7 +40,7 @@ public class CamelliaSegmentIdGenSdk extends AbstractCamelliaSegmentIdGen {
         this.cacheMap = new ConcurrentLinkedHashMap.Builder<String, LinkedBlockingQueue<Long>>()
                 .initialCapacity(segmentIdGenSdkConfig.getTagCount()).maximumWeightedCapacity(segmentIdGenSdkConfig.getTagCount()).build();
         this.lockMap = new ConcurrentLinkedHashMap.Builder<String, AtomicBoolean>()
-                .initialCapacity(segmentIdGenSdkConfig.getTagCount() * 2).maximumWeightedCapacity(segmentIdGenSdkConfig.getTagCount() * 2).build();
+                .initialCapacity(segmentIdGenSdkConfig.getTagCount() * 2).maximumWeightedCapacity(segmentIdGenSdkConfig.getTagCount() * 2L).build();
         this.asyncLoadThreadPool = segmentIdGenSdkConfig.getAsyncLoadThreadPool();
 
         logger.info("CamelliaSegmentIdGenSdk init success, cacheEnable = {}, step = {}, tagCount = {}",
