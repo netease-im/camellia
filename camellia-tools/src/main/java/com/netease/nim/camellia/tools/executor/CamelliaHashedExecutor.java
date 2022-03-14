@@ -186,7 +186,7 @@ public class CamelliaHashedExecutor {
         }
 
         public boolean isActive() {
-            return active.get();
+            return active.get() || !queue.isEmpty();
         }
 
         @Override
