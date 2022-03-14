@@ -15,15 +15,12 @@ import java.util.Set;
  */
 public class HBaseResourceUtil {
 
-    public static final ResourceTableChecker HBaseResourceTableChecker = new ResourceTableChecker() {
-        @Override
-        public boolean check(ResourceTable resourceTable) {
-            try {
-                checkResourceTable(resourceTable);
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
+    public static final ResourceTableChecker HBaseResourceTableChecker = resourceTable -> {
+        try {
+            checkResourceTable(resourceTable);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     };
 

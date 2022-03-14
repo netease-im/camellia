@@ -25,11 +25,11 @@ public abstract class SimpleHealthChecker<T> implements CamelliaServerHealthChec
     }
 
     public SimpleHealthChecker(OkHttpClient okHttpClient) {
-        this(okHttpClient, new HashMap<String, String>());
+        this(okHttpClient, new HashMap<>());
     }
 
     public SimpleHealthChecker() {
-        this(new OkHttpClient(), new HashMap<String, String>());
+        this(new OkHttpClient(), new HashMap<>());
     }
 
     public abstract String toUrl(T server);

@@ -37,9 +37,9 @@ public class MD5Util {
     private static String getFormattedText(byte[] bytes) {
         int len = bytes.length;
         StringBuilder buf = new StringBuilder(len * 2);
-        for (int j = 0; j < len; j++) {
-            buf.append(HEX_DIGITS[(bytes[j] >> 4) & 0x0f]);
-            buf.append(HEX_DIGITS[bytes[j] & 0x0f]);
+        for (byte b : bytes) {
+            buf.append(HEX_DIGITS[(b >> 4) & 0x0f]);
+            buf.append(HEX_DIGITS[b & 0x0f]);
         }
         return buf.toString();
     }

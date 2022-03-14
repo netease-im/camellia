@@ -2,6 +2,7 @@ package com.netease.nim.camellia.feign.resource;
 
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.core.model.ResourceTableChecker;
 import com.netease.nim.camellia.core.util.CheckUtil;
 import com.netease.nim.camellia.core.util.ResourceUtil;
 
@@ -11,6 +12,15 @@ import java.util.Set;
  * Created by caojiajun on 2022/3/1
  */
 public class FeignResourceUtils {
+
+    public static final ResourceTableChecker FeignResourceTableChecker = resourceTable -> {
+        try {
+            checkResourceTable(resourceTable);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    };
 
     public static void checkResourceTable(ResourceTable resourceTable) {
         boolean check = CheckUtil.checkResourceTable(resourceTable);

@@ -143,9 +143,7 @@ public class ResourceUtil {
                         break;
                     case MULTI:
                         List<Resource> writeResources = writeOperation.getWriteResources();
-                        for (Resource resource : writeResources) {
-                            allResource.add(resource);
-                        }
+                        allResource.addAll(writeResources);
                         break;
                     default:
                         break;

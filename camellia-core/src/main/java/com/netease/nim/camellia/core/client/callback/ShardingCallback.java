@@ -6,6 +6,7 @@ import com.netease.nim.camellia.core.client.annotation.ShardingParam;
 import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.hub.IProxyHub;
+import com.netease.nim.camellia.core.util.CamelliaMapUtils;
 import com.netease.nim.camellia.core.util.ExceptionUtils;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
@@ -72,11 +73,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                     byte[][] key = entry.getKey();
                     Object[] param = entry.getValue();
                     T proxy = proxyHub.chooseProxy(key);
-                    List<Object[]> list = proxyMap.get(proxy);
-                    if (list == null) {
-                        list = new ArrayList<>();
-                        proxyMap.put(proxy, list);
-                    }
+                    List<Object[]> list = CamelliaMapUtils.computeIfAbsent(proxyMap, proxy, k -> new ArrayList<>());
                     list.add(param);
                 }
                 Map<T, Object[]> finalProxyMap;

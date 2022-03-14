@@ -52,12 +52,8 @@ public class ReloadableProxyFactory<T> {
             env = proxyEnv;
         }
         reload(true);
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(ReloadableProxyFactory.class)).scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                reload(false);
-            }
-        }, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
+        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(ReloadableProxyFactory.class))
+                .scheduleAtFixedRate(() -> reload(false), checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
     }
 
     public void reload(boolean throwError) {

@@ -23,7 +23,8 @@ public class RemoteMonitor implements Monitor {
 
     private static final Logger logger = LoggerFactory.getLogger(RemoteMonitor.class);
 
-    private static final ScheduledExecutorService scheduleService = Executors.newScheduledThreadPool(SysUtils.getCpuNum(), new CamelliaThreadFactory("camellia-monitor"));
+    private static final ScheduledExecutorService scheduleService = Executors.newScheduledThreadPool(SysUtils.getCpuNum(),
+            new CamelliaThreadFactory("camellia-monitor"));
 
     private final ConcurrentHashMap<String, LongAdder> readMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, LongAdder> writeMap = new ConcurrentHashMap<>();

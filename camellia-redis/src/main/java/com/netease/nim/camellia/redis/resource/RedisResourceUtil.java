@@ -19,15 +19,12 @@ import java.util.*;
  */
 public class RedisResourceUtil {
 
-    public static final ResourceTableChecker RedisResourceTableChecker = new ResourceTableChecker() {
-        @Override
-        public boolean check(ResourceTable resourceTable) {
-            try {
-                checkResourceTable(resourceTable);
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
+    public static final ResourceTableChecker RedisResourceTableChecker = resourceTable -> {
+        try {
+            checkResourceTable(resourceTable);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     };
 
