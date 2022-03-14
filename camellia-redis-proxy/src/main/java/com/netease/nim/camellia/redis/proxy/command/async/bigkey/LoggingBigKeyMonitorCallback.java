@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.command.async.bigkey;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
+import com.netease.nim.camellia.core.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;

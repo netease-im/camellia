@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.CommandHotKeyCacheConfig;
 import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheStats;
-import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
+import com.netease.nim.camellia.core.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;

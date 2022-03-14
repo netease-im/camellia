@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
+import com.netease.nim.camellia.core.util.CamelliaMapUtils;
+
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

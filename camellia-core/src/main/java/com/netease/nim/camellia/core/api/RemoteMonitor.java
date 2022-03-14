@@ -2,18 +2,18 @@ package com.netease.nim.camellia.core.api;
 
 
 import com.netease.nim.camellia.core.client.env.Monitor;
+import com.netease.nim.camellia.core.util.CamelliaMapUtils;
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.core.util.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  *
@@ -23,8 +23,10 @@ public class RemoteMonitor implements Monitor {
 
     private static final Logger logger = LoggerFactory.getLogger(RemoteMonitor.class);
 
-    private final ConcurrentHashMap<DetailUniqueKey, AtomicLong> readMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<DetailUniqueKey, AtomicLong> writeMap = new ConcurrentHashMap<>();
+    private static final ScheduledExecutorService scheduleService = Executors.newScheduledThreadPool(SysUtils.getCpuNum(), new CamelliaThreadFactory("camellia-monitor"));
+
+    private final ConcurrentHashMap<String, LongAdder> readMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, LongAdder> writeMap = new ConcurrentHashMap<>();
 
     private final Long bid;
     private final String bgroup;
@@ -34,14 +36,11 @@ public class RemoteMonitor implements Monitor {
         this.bid = bid;
         this.bgroup = bgroup;
         this.service = service;
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(RemoteMonitor.class)).scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    calcAndReport();
-                } catch (Exception e) {
-                    logger.error("calc error", e);
-                }
+        scheduleService.scheduleAtFixedRate(() -> {
+            try {
+                calcAndReport();
+            } catch (Exception e) {
+                logger.error("calc error", e);
             }
         }, 1, 1, TimeUnit.MINUTES);
     }
@@ -49,16 +48,9 @@ public class RemoteMonitor implements Monitor {
     @Override
     public void incrWrite(String resource, String className, String methodName) {
         try {
-            DetailUniqueKey uniqueKey = new DetailUniqueKey(resource, className, methodName, ResourceStats.OPE_WRITE);
-            AtomicLong count = writeMap.get(uniqueKey);
-            if (count == null) {
-                count = new AtomicLong(0);
-                AtomicLong oldCount = writeMap.putIfAbsent(uniqueKey, count);
-                if (oldCount != null) {
-                    count = oldCount;
-                }
-            }
-            count.incrementAndGet();
+            String key = resource + "|" + className + "|" + methodName + "|" + ResourceStats.OPE_WRITE;
+            LongAdder count = CamelliaMapUtils.computeIfAbsent(writeMap, key, k -> new LongAdder());
+            count.increment();
         } catch (Exception e) {
             logger.error("incrWrite error", e);
         } finally {
@@ -72,16 +64,9 @@ public class RemoteMonitor implements Monitor {
     @Override
     public void incrRead(String resource, String className, String methodName) {
         try {
-            DetailUniqueKey uniqueKey = new DetailUniqueKey(resource, className, methodName, ResourceStats.OPE_READ);
-            AtomicLong count = readMap.get(uniqueKey);
-            if (count == null) {
-                count = new AtomicLong(0);
-                AtomicLong oldCount = readMap.putIfAbsent(uniqueKey, count);
-                if (oldCount != null) {
-                    count = oldCount;
-                }
-            }
-            count.incrementAndGet();
+            String key = resource + "|" + className + "|" + methodName + "|" + ResourceStats.OPE_READ;
+            LongAdder count = CamelliaMapUtils.computeIfAbsent(readMap, key, k -> new LongAdder());
+            count.increment();
         } catch (Exception e) {
             logger.error("incrRead error", e);
         } finally {
@@ -96,9 +81,15 @@ public class RemoteMonitor implements Monitor {
         ResourceStats resourceStats = new ResourceStats();
         Map<UniqueKey, ResourceStats.Stats> map = new HashMap<>();
         Map<DetailUniqueKey, ResourceStats.StatsDetail> detailMap = new HashMap<>();
-        for (Map.Entry<DetailUniqueKey, AtomicLong> entry : readMap.entrySet()) {
-            DetailUniqueKey key = entry.getKey();
-            long read = entry.getValue().getAndSet(0);
+        for (Map.Entry<String, LongAdder> entry : readMap.entrySet()) {
+            String[] split = entry.getKey().split("\\|");
+            String resource = split[0];
+            String className = split[1];
+            String methodName = split[2];
+            String ope = split[3];
+            DetailUniqueKey key = new DetailUniqueKey(resource, className, methodName, ope);
+
+            long read = entry.getValue().sumThenReset();
             UniqueKey uniqueKey = new UniqueKey(key.getResource(), key.getOpe());
             ResourceStats.Stats stats = map.get(uniqueKey);
             if (stats == null) {
@@ -115,9 +106,15 @@ public class RemoteMonitor implements Monitor {
             detail.setCount(read);
         }
 
-        for (Map.Entry<DetailUniqueKey, AtomicLong> entry : writeMap.entrySet()) {
-            DetailUniqueKey key = entry.getKey();
-            long write = entry.getValue().getAndSet(0);
+        for (Map.Entry<String, LongAdder> entry : writeMap.entrySet()) {
+            String[] split = entry.getKey().split("\\|");
+            String resource = split[0];
+            String className = split[1];
+            String methodName = split[2];
+            String ope = split[3];
+            DetailUniqueKey key = new DetailUniqueKey(resource, className, methodName, ope);
+
+            long write = entry.getValue().sumThenReset();
             UniqueKey uniqueKey = new UniqueKey(key.getResource(), key.getOpe());
             ResourceStats.Stats stats = map.get(uniqueKey);
             if (stats == null) {
@@ -188,8 +185,8 @@ public class RemoteMonitor implements Monitor {
 
             UniqueKey uniqueKey = (UniqueKey) object;
 
-            if (resource != null ? !resource.equals(uniqueKey.resource) : uniqueKey.resource != null) return false;
-            return ope != null ? ope.equals(uniqueKey.ope) : uniqueKey.ope == null;
+            if (!Objects.equals(resource, uniqueKey.resource)) return false;
+            return Objects.equals(ope, uniqueKey.ope);
         }
 
         @Override
@@ -252,10 +249,10 @@ public class RemoteMonitor implements Monitor {
 
             DetailUniqueKey that = (DetailUniqueKey) object;
 
-            if (resource != null ? !resource.equals(that.resource) : that.resource != null) return false;
-            if (className != null ? !className.equals(that.className) : that.className != null) return false;
-            if (methodName != null ? !methodName.equals(that.methodName) : that.methodName != null) return false;
-            return ope != null ? ope.equals(that.ope) : that.ope == null;
+            if (!Objects.equals(resource, that.resource)) return false;
+            if (!Objects.equals(className, that.className)) return false;
+            if (!Objects.equals(methodName, that.methodName)) return false;
+            return Objects.equals(ope, that.ope);
         }
 
         @Override

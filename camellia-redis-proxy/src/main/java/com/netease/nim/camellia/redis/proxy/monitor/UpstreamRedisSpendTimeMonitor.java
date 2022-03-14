@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
 import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
-import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
+import com.netease.nim.camellia.core.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.MaxValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

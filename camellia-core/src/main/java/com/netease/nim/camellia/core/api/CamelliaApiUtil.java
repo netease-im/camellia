@@ -21,12 +21,9 @@ public class CamelliaApiUtil {
         return Feign.builder()
                 .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder())
-                .requestInterceptor(new RequestInterceptor() {
-                    @Override
-                    public void apply(RequestTemplate template) {
-                        if (CamelliaApiEnv.source != null) {
-                            template.header(CamelliaApiEnv.REQUEST_SOURCE, CamelliaApiEnv.source);
-                        }
+                .requestInterceptor(template -> {
+                    if (CamelliaApiEnv.source != null) {
+                        template.header(CamelliaApiEnv.REQUEST_SOURCE, CamelliaApiEnv.source);
                     }
                 })
                 .options(new Request.Options(connectTimeoutMillis, readTimeoutMillis))

@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
-import com.netease.nim.camellia.redis.proxy.util.CamelliaMapUtils;
+import com.netease.nim.camellia.core.util.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

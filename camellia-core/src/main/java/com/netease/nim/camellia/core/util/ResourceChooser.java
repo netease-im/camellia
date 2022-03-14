@@ -39,19 +39,9 @@ public class ResourceChooser {
             bucketSizeIs2Power = MathUtil.is2Power(bucketSize);
         }
         this.allResources = ResourceUtil.getAllResources(resourceTable);
-        Set<Resource> readResources = new TreeSet<>(new Comparator<Resource>() {
-            @Override
-            public int compare(Resource o1, Resource o2) {
-                return o1.getUrl().compareTo(o2.getUrl());
-            }
-        });
+        Set<Resource> readResources = new TreeSet<>(Comparator.comparing(Resource::getUrl));
         readResources.addAll(ResourceUtil.getAllReadResources(resourceTable));
-        Set<Resource> writeResources = new TreeSet<>(new Comparator<Resource>() {
-            @Override
-            public int compare(Resource o1, Resource o2) {
-                return o1.getUrl().compareTo(o2.getUrl());
-            }
-        });
+        Set<Resource> writeResources = new TreeSet<>(Comparator.comparing(Resource::getUrl));
         readResources.addAll(ResourceUtil.getAllReadResources(resourceTable));
         writeResources.addAll(ResourceUtil.getAllWriteResources(resourceTable));
         this.allReadResources = new ArrayList<>(readResources);

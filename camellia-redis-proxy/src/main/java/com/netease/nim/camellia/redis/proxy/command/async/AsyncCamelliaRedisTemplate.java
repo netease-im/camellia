@@ -103,7 +103,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             ReloadTask reloadTask = new ReloadTask(this, service, bid, bgroup, md5);
             scheduleExecutor.scheduleAtFixedRate(reloadTask, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
             if (monitorEnable) {
-                Monitor monitor = new FastRemoteMonitor(bid, bgroup, service);
+                Monitor monitor = new RemoteMonitor(bid, bgroup, service);
                 ProxyEnv proxyEnv = new ProxyEnv.Builder(env.getProxyEnv()).monitor(monitor).build();
                 this.env = new AsyncCamelliaRedisEnv.Builder(env).proxyEnv(proxyEnv).build();
                 this.monitor = monitor;

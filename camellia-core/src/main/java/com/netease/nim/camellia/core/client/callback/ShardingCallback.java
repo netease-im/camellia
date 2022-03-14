@@ -113,16 +113,13 @@ public class ShardingCallback<T> implements MethodInterceptor {
                         for (Map.Entry<T, Object[]> entry : finalProxyMap.entrySet()) {
                             final T proxy = entry.getKey();
                             final Object[] params = entry.getValue();
-                            Future<Object> future = env.getShardingConcurrentExec().submit(new Callable<Object>() {
-                                @Override
-                                public Object call() throws Exception {
-                                    try {
-                                        return method.invoke(proxy, params);
-                                    } catch (Throwable e) {
-                                        invokeError[0] = e;
-                                        isInvokeError.set(true);
-                                        throw e;
-                                    }
+                            Future<Object> future = env.getShardingConcurrentExec().submit(() -> {
+                                try {
+                                    return method.invoke(proxy, params);
+                                } catch (Throwable e) {
+                                    invokeError[0] = e;
+                                    isInvokeError.set(true);
+                                    throw e;
                                 }
                             });
                             futureList.add(future);
@@ -152,7 +149,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
         }
     }
 
-    private Map<T, Object[]> mergeProxyMapOfArray(Map<T, List<Object[]>> proxyMap, Method method, Object[] objects) throws Throwable {
+    private Map<T, Object[]> mergeProxyMapOfArray(Map<T, List<Object[]>> proxyMap, Method method, Object[] objects) {
         Map<T, Object[]> finalProxyMap = new HashMap<>();
         int collectionShardingIndex = getShardingCollectionParamIndex(method);
         for (Map.Entry<T, List<Object[]>> entry : proxyMap.entrySet()) {
@@ -244,7 +241,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
         return finalProxyMap;
     }
 
-    private Map<T, Object[]> mergeProxyMapOfSet(Map<T, List<Object[]>> proxyMap, Method method, Object[] objects) throws Throwable {
+    private Map<T, Object[]> mergeProxyMapOfSet(Map<T, List<Object[]>> proxyMap, Method method, Object[] objects) {
         Map<T, Object[]> finalProxyMap = new HashMap<>();
         int collectionShardingIndex = getShardingCollectionParamIndex(method);
         for (Map.Entry<T, List<Object[]>> entry : proxyMap.entrySet()) {
@@ -261,7 +258,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
         return finalProxyMap;
     }
 
-    private Map<T, Object[]> mergeProxyMapOfMap(Map<T, List<Object[]>> proxyMap, Method method, Object[] objects) throws Throwable {
+    private Map<T, Object[]> mergeProxyMapOfMap(Map<T, List<Object[]>> proxyMap, Method method, Object[] objects) {
         Map<T, Object[]> finalProxyMap = new HashMap<>();
         int collectionShardingIndex = getShardingCollectionParamIndex(method);
         for (Map.Entry<T, List<Object[]>> entry : proxyMap.entrySet()) {
@@ -278,7 +275,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
         return finalProxyMap;
     }
 
-    private Map<T, Object[]> mergeProxyMapOfList(Map<T, List<Object[]>> proxyMap, Method method, Object[] objects) throws Throwable {
+    private Map<T, Object[]> mergeProxyMapOfList(Map<T, List<Object[]>> proxyMap, Method method, Object[] objects) {
         Map<T, Object[]> finalProxyMap = new HashMap<>();
         int collectionShardingIndex = getShardingCollectionParamIndex(method);
         for (Map.Entry<T, List<Object[]>> entry : proxyMap.entrySet()) {
@@ -688,11 +685,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
         if (shardingConfig != null) {
             String prefixStr = shardingConfig.prefix();
             if (prefixStr.length() != 0) {
-                try {
-                    prefix = prefixStr.getBytes("utf-8");
-                } catch (UnsupportedEncodingException e) {
-                    prefix = new byte[0];
-                }
+                prefix = prefixStr.getBytes(StandardCharsets.UTF_8);
             }
         }
         if (prefix == null) {

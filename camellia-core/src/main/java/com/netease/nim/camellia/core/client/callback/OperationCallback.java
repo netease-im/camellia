@@ -107,21 +107,18 @@ public class OperationCallback<T> implements MethodInterceptor {
                         return method.invoke(client1, objects);
                     case MULTI:
                         if (env.isMultiWriteConcurrentEnable()) {
-                            List<Future> futureList = new ArrayList<>();
+                            List<Future<Object>> futureList = new ArrayList<>();
                             for (final Resource resource : writeOperation.getWriteResources()) {
                                 final T client2 = clientMap.get(resource);
-                                Future<Object> future = env.getMultiWriteConcurrentExec().submit(new Callable<Object>() {
-                                    @Override
-                                    public Object call() throws Exception {
-                                        incrWrite(resource, method);
-                                        return method.invoke(client2, objects);
-                                    }
+                                Future<Object> future = env.getMultiWriteConcurrentExec().submit(() -> {
+                                    incrWrite(resource, method);
+                                    return method.invoke(client2, objects);
                                 });
                                 futureList.add(future);
                             }
                             Object ret = null;
                             boolean isRetSet = false;
-                            for (Future future : futureList) {
+                            for (Future<Object> future : futureList) {
                                 Object ret1 = future.get();
                                 if (!isRetSet) {
                                     ret = ret1;
@@ -197,7 +194,7 @@ public class OperationCallback<T> implements MethodInterceptor {
         }
     }
 
-    private Map<Method, String> fullNameCache = new HashMap<>();
+    private final Map<Method, String> fullNameCache = new HashMap<>();
 
     private String getMethodName(Method method) {
         String string = fullNameCache.get(method);
@@ -208,21 +205,17 @@ public class OperationCallback<T> implements MethodInterceptor {
         String name = method.getName();
         fullName.append(name);
         Class<?>[] parameterTypes = method.getParameterTypes();
-        if (parameterTypes == null) {
-            fullName.append("()");
-        } else {
-            fullName.append("(");
-            for (int i = 0; i < parameterTypes.length; i++) {
-                Class type = parameterTypes[i];
-                if (i != parameterTypes.length - 1) {
-                    fullName.append(type.getSimpleName());
-                    fullName.append(",");
-                } else {
-                    fullName.append(type.getSimpleName());
-                }
+        fullName.append("(");
+        for (int i = 0; i < parameterTypes.length; i++) {
+            Class<?> type = parameterTypes[i];
+            if (i != parameterTypes.length - 1) {
+                fullName.append(type.getSimpleName());
+                fullName.append(",");
+            } else {
+                fullName.append(type.getSimpleName());
             }
-            fullName.append(")");
         }
+        fullName.append(")");
         string = fullName.toString();
         fullNameCache.put(method, string);
         return string;

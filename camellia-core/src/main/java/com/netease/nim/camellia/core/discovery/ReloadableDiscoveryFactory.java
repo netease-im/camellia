@@ -33,12 +33,7 @@ public class ReloadableDiscoveryFactory<T> implements CamelliaDiscoveryFactory<T
             synchronized (map) {
                 discovery = map.get(serviceName);
                 if (discovery == null) {
-                    discovery = new ReloadableCamelliaDiscovery<>(new ReloadableCamelliaDiscovery.ServerListGetter<T>() {
-                        @Override
-                        public List<T> findAll() {
-                            return getter.findAll(serviceName);
-                        }
-                    }, reloadIntervalSeconds);
+                    discovery = new ReloadableCamelliaDiscovery<>(() -> getter.findAll(serviceName), reloadIntervalSeconds);
                     map.put(serviceName, discovery);
                 }
             }
