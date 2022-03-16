@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>camellia-redis-proxy-discovery-common</artifactId>
-    <version>1.0.52-SNAPSHOT</version>
+    <version>1.0.52</version>
 
     <parent>
         <groupId>com.netease.nim</groupId>
         <artifactId>camellia-redis-proxy-discovery</artifactId>
-        <version>1.0.52-SNAPSHOT</version>
+        <version>1.0.52</version>
     </parent>
 
     <dependencies>
@@ -22,7 +22,7 @@
         <dependency>
             <groupId>com.netease.nim</groupId>
             <artifactId>camellia-core</artifactId>
-            <version>1.0.52-SNAPSHOT</version>
+            <version>1.0.52</version>
         </dependency>
     </dependencies>
 
