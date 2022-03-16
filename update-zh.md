@@ -4,6 +4,21 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+
+# 1.0.52（2022/03/16）
+### 新增
+* 新增camellia-feign模块，feign支持动态路由，支持双写，支持动态调整超时时间等
+* camellia-core新增CamelliaDiscovery/CamelliaDiscoveryFactory系列接口，统一camellia各模块下的discovery功能
+* camellia-core新增ResourceTableUpdater/MultiResourceTableUpdater系列抽象类，统一camellia各模块下基于updater实现的动态路由功能
+
+### 更新
+* camellia-redis移除了ProxyDiscovery抽象类，统一使用IProxyDiscovery接口，并继承自CamelliaDiscovery接口
+* camellia-id-gen移除了AbstractIdGenServerDiscovery抽象类，统一使用IdGenServerDiscovery接口，并继承自CamelliaDiscovery接口
+
+### fix
+* 无
+
+
 # 1.0.51（2022/02/28）
 ### 新增
 * 无

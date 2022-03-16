@@ -35,6 +35,12 @@ local cache utils CamelliaLoadingCache
 thread pool utils CamelliaHashedExecutor   
 [QUICK START](/docs/tools/tools.md)   
 
+### camellia-feign
+join camellia-core and open-feign, so your feign-client have this feature: 
+* support dynamic route
+* support multi-write
+* support dynamic timeout conf
+
 ## Version
 latest version is 1.0.51，have deploy to maven central repository on 2022/02/28  
 [CHANGE_LOG](/update-en.md)  

@@ -48,6 +48,12 @@ camellia主要包括以下功能模块：
 * 线程池工具类CamelliaHashedExecutor，提供哈希策略，相同hashKey确保顺序执行   
 [快速开始](/docs/tools/tools.md)  
 
+### camellia-feign
+整合了camellia-core和open-feign，从而你的feign客户端可以：
+* 支持动态路由
+* 支持双写
+* 支持动态调整超时时间
+
 ## 版本
 最新版本是1.0.51，已经发布到maven中央仓库（2022/02/28）  
 [更新日志](/update-zh.md)  

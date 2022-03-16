@@ -4,6 +4,21 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+
+# 1.0.52（2022/03/16）
+### add
+* provide camellia-feign module, so feign support dynamic route, multi-write, dynamic timeout conf
+* camellia-core provide CamelliaDiscovery/CamelliaDiscoveryFactory
+* camellia-core provide ResourceTableUpdater/MultiResourceTableUpdater
+
+### update
+* camellia-redis remove ProxyDiscovery, use IProxyDiscovery which implements CamelliaDiscovery
+* camellia-id-gen remove AbstractIdGenServerDiscovery, use IdGenServerDiscovery which implements CamelliaDiscovery
+
+### fix
+* none
+
+
 # 1.0.51（2022/02/28）
 ### add
 * none
