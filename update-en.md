@@ -5,6 +5,17 @@
 * camellia-redis-proxy support monitor data visualization in prometheus
 
 
+# 1.0.53（2022/03/xx）
+### add
+* camellia-redis-proxy console support /detect, so you can use camellia-redis-proxy as a monitor platform
+
+### update
+* none
+
+### fix
+* fix camellia-redis-proxy's if command with upstream-info section(bug from v1.0.51)
+
+
 # 1.0.52（2022/03/16）
 ### add
 * provide camellia-feign module, so feign support dynamic route, multi-write, dynamic timeout conf

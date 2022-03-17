@@ -4,6 +4,16 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.0.53（2022/03/xx）
+### 新增
+* camellia-redis-proxy的console新增detect接口，从而可以把camellia-redis-proxy作为一个监控平台使用
+
+### 更新
+* 无
+
+### fix
+* camellia-redis-proxy使用info upstream-info命令获取后端redis集群信息时，当后端是redis-cluster时抛异常，v1.0.51时引入
+
 
 # 1.0.52（2022/03/16）
 ### 新增
