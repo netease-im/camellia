@@ -12,7 +12,7 @@ camellia-redis-proxy:
   password: pass123   #proxy的密码，如果设置了自定义的client-auth-provider-class-name，则密码参数无效
   monitor-enable: false  #是否开启监控
   monitor-interval-seconds: 60 #监控回调的间隔
-  monitor-data-mask-password: false #监控相关数据（包括日志）是否把密码隐藏，默认false（例：用***代替abc）
+  monitor-data-mask-password: true #监控相关数据（包括日志）是否把密码隐藏，默认false（例：用***代替abc）
   monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback #监控回调类
   command-spend-time-monitor-enable: false #是否开启请求耗时的监控，只有monitor-enable=true才有效
   upstream-redis-spend-time-monitor-enable: false #是否开启后端redis响应耗时的监控，只有monitor-enable=true才有效
@@ -75,6 +75,7 @@ camellia-redis-proxy:
 #      close-idle-connection: true #是否关闭空闲连接，默认true
 #      check-idle-connection-threshold-seconds: 600  #多久算空闲连接，默认600s
 #      sharding-func: com.netease.nim.camellia.redis.proxy.samples.CustomShardingFunc #分片函数
+#      preheat: true
 
 
 camellia-redis-zk-registry:
