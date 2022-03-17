@@ -1,9 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.command.async.info;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
+import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceUtil;
 import com.netease.nim.camellia.redis.proxy.command.async.*;
 import com.netease.nim.camellia.redis.proxy.command.async.sentinel.RedisSentinelUtils;
@@ -28,6 +30,120 @@ import java.util.concurrent.atomic.AtomicLong;
 public class UpstreamInfoUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(UpstreamInfoUtils.class);
+
+    public static JSONObject monitorJson(String url) {
+        boolean pass = RedisResourceUtil.RedisResourceTableChecker.check(ResourceTableUtil.simpleTable(new Resource(url)));
+        if (!pass) {
+            return null;
+        }
+        JSONObject jsonObject = new JSONObject();
+        JSONArray infoJsonArray = new JSONArray();
+        JSONObject infoJson = new JSONObject();
+        infoJsonArray.add(infoJson);
+        JSONArray otherInfoJsonArray = new JSONArray();
+        infoJson.put("url", PasswordMaskUtils.maskResource(url));
+        JSONArray nodeJsonArray = new JSONArray();
+        Resource resource = RedisResourceUtil.parseResourceByUrl(new Resource(url));
+        if (resource instanceof RedisClusterResource) {
+            infoJson.put("type", "cluster");
+            String redisClusterInfo = getRedisClusterInfo((RedisClusterResource) resource);
+            infoJson.put("status", "unknown");
+            if (redisClusterInfo != null) {
+                Map<String, String> map = parseKv(redisClusterInfo);
+                if (map != null) {
+                    for (Map.Entry<String, String> entry : map.entrySet()) {
+                        otherInfoJsonArray.add(infoItem(entry.getKey(), entry.getValue()));
+                    }
+                    if (map.containsKey("cluster_state")) {
+                        infoJson.put("status", map.get("cluster_state"));
+                    }
+                }
+                long totalMaxMemory = 0;
+                long totalUsedMemory = 0;
+                List<ClusterNodeInfo> redisClusterNodeInfo = getRedisClusterNodeInfo((RedisClusterResource) resource);
+                if (redisClusterNodeInfo != null) {
+                    boolean safety = redisClusterSafety(redisClusterNodeInfo);
+                    otherInfoJsonArray.add(infoItem("cluster_safety", safety ? "yes" : "no"));
+                    for (ClusterNodeInfo clusterNodeInfo : redisClusterNodeInfo) {
+                        String master = clusterNodeInfo.master;
+                        String[] split = master.split("@");
+                        String[] split1 = split[0].split(":");
+                        String host = split1[0];
+                        int port = Integer.parseInt(split1[1]);
+                        RedisClientAddr addr = new RedisClientAddr(host, port, ((RedisClusterResource) resource).getUserName(), ((RedisClusterResource) resource).getPassword());
+                        RedisInfo redisInfo = getRedisInfo(addr);
+                        if (redisInfo != null) {
+                            totalMaxMemory += redisInfo.maxMemory;
+                            totalUsedMemory += redisInfo.usedMemory;
+                            JSONObject nodeJson = toNodeJson(addr, redisInfo);
+                            nodeJsonArray.add(nodeJson);
+                        }
+                    }
+                }
+                memoryUsed(infoJson, totalMaxMemory, totalUsedMemory);
+            }
+        } else if (resource instanceof RedisSentinelResource) {
+            infoJson.put("type", "sentinel");
+            RedisSentinelInfo redisSentinelInfo = getRedisSentinelInfo(((RedisSentinelResource) resource).getNodes(),
+                    ((RedisSentinelResource) resource).getUserName(), ((RedisSentinelResource) resource).getPassword(), ((RedisSentinelResource) resource).getMaster());
+            if (redisSentinelInfo.master != null && redisSentinelInfo.redisInfo != null) {
+                infoJson.put("status", "ok");
+                otherInfoJsonArray.add(infoItem("master_node", PasswordMaskUtils.maskAddr(redisSentinelInfo.master)));
+                JSONObject nodeJson = toNodeJson(redisSentinelInfo.master, redisSentinelInfo.redisInfo);
+                nodeJsonArray.add(nodeJson);
+                memoryUsed(infoJson, redisSentinelInfo.redisInfo.maxMemory, redisSentinelInfo.redisInfo.usedMemory);
+            } else {
+                infoJson.put("status", "unknown");
+            }
+        } else if (resource instanceof RedisResource) {
+            infoJson.put("type", "standalone");
+            RedisClientAddr addr = new RedisClientAddr(((RedisResource) resource).getHost(),
+                    ((RedisResource) resource).getPort(), ((RedisResource) resource).getUserName(), ((RedisResource) resource).getPassword());
+            RedisInfo redisInfo = getRedisInfo(addr);
+            if (redisInfo != null) {
+                infoJson.put("status", "ok");
+                memoryUsed(infoJson, redisInfo.maxMemory, redisInfo.usedMemory);
+                JSONObject nodeJson = toNodeJson(addr, redisInfo);
+                nodeJsonArray.add(nodeJson);
+            } else {
+                infoJson.put("status", "unknown");
+            }
+        } else {
+            infoJsonArray.add(infoItem("type", "unknown"));
+        }
+        jsonObject.put("info", infoJsonArray);
+        jsonObject.put("nodeInfo", nodeJsonArray);
+        jsonObject.put("otherInfo", otherInfoJsonArray);
+        return jsonObject;
+    }
+
+    private static void memoryUsed(JSONObject infoJson, long maxMemory, long usedMemory) {
+        double memoryUsedRate = 0.0;
+        if (maxMemory != 0) {
+            memoryUsedRate = (double) usedMemory / maxMemory;
+        }
+        infoJson.put("maxmemory", maxMemory);
+        infoJson.put("maxmemory_hum", ProxyInfoUtils.humanReadableByteCountBin(maxMemory));
+        infoJson.put("used_memory", usedMemory);
+        infoJson.put("used_memory_human", ProxyInfoUtils.humanReadableByteCountBin(usedMemory));
+        infoJson.put("memory_used_rate", memoryUsedRate);
+        infoJson.put("memory_used_rate_human", String.format("%.2f", memoryUsedRate * 100.0) + "%");
+    }
+
+    private static JSONObject toNodeJson(RedisClientAddr clientAddr, RedisInfo redisInfo) {
+        JSONObject json = new JSONObject();
+        Map<String, String> map = parseKv(redisInfo.string);
+        json.putAll(map);
+        json.put("node_url", PasswordMaskUtils.maskAddr(clientAddr.getUrl()));
+        return json;
+    }
+
+    private static JSONObject infoItem(String key, Object value) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("key", key);
+        jsonObject.put("value", value);
+        return jsonObject;
+    }
 
     public static String upstreamInfo(Long bid, String bgroup, AsyncCamelliaRedisTemplateChooser chooser, boolean parseJson) {
         try {
@@ -492,7 +608,7 @@ public class UpstreamInfoUtils {
                 if (reply instanceof BulkReply) {
                     String string = Utils.bytesToString(((BulkReply) reply).getRaw());
                     string = string.replaceAll("myself,", "");
-                    String[] split = string.split("\r\n");
+                    String[] split = string.split("\n");
                     Map<String, ClusterNodeInfo> map = new HashMap<>();
                     for (String subStr : split) {
                         if (subStr.contains("master")) {
