@@ -5,7 +5,7 @@
 * camellia-redis-proxy support monitor data visualization in prometheus
 
 
-# 1.0.53（2022/03/xx）
+# 1.0.53（2022/03/24）
 ### add
 * camellia-redis-proxy console support /detect, so you can use camellia-redis-proxy as a monitor platform
 
