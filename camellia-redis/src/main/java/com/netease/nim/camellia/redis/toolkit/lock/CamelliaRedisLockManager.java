@@ -296,12 +296,7 @@ public class CamelliaRedisLockManager {
         boolean lockOk = lock.lock();
         if (lockOk) {
             lockMap.put(lockKey, lock);
-            ScheduledFuture<?> future = scheduledExec.scheduleAtFixedRate(new Runnable() {
-                @Override
-                public void run() {
-                    lock.renew();
-                }
-            }, expireTimeoutMillis / 5, expireTimeoutMillis / 5, TimeUnit.MILLISECONDS);
+            ScheduledFuture<?> future = scheduledExec.scheduleAtFixedRate(lock::renew, expireTimeoutMillis / 5, expireTimeoutMillis / 5, TimeUnit.MILLISECONDS);
             futureMap.put(lockKey, future);
         }
         return lockOk;
@@ -317,12 +312,7 @@ public class CamelliaRedisLockManager {
         boolean lockOk = lock.tryLock();
         if (lockOk) {
             lockMap.put(lockKey, lock);
-            ScheduledFuture<?> future = scheduledExec.scheduleAtFixedRate(new Runnable() {
-                @Override
-                public void run() {
-                    lock.renew();
-                }
-            }, expireTimeoutMillis / 5, expireTimeoutMillis / 5, TimeUnit.MILLISECONDS);
+            ScheduledFuture<?> future = scheduledExec.scheduleAtFixedRate(lock::renew, expireTimeoutMillis / 5, expireTimeoutMillis / 5, TimeUnit.MILLISECONDS);
             futureMap.put(lockKey, future);
         }
         return lockOk;

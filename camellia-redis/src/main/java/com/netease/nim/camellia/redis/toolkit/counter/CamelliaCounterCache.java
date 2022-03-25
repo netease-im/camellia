@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.toolkit.counter;
 
+import com.netease.nim.camellia.core.util.DynamicValueGetter;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
 import org.slf4j.Logger;
@@ -18,12 +19,7 @@ public class CamelliaCounterCache<T> {
     private CounterGetter<T> counterGetter;//获取精确值的回调方法
 
     //是否开启
-    private DynamicValueGetter<Boolean> cacheEnable = new DynamicValueGetter<Boolean>() {
-        @Override
-        public Boolean get() {
-            return true;
-        }
-    };
+    private DynamicValueGetter<Boolean> cacheEnable = () -> true;
 
     private CamelliaRedisTemplate template;//redis客户端
     private TagToCacheKey<T> tagToCacheKey;//tag转成缓存key

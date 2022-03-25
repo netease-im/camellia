@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command.async.hotkeycache;
 
 import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
-import com.netease.nim.camellia.redis.proxy.util.LockMap;
+import com.netease.nim.camellia.core.util.LockMap;
 
 import java.util.concurrent.ConcurrentHashMap;
 

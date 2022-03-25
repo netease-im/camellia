@@ -20,6 +20,9 @@ import com.netease.nim.camellia.feign.resource.FeignDiscoveryResource;
 import com.netease.nim.camellia.feign.resource.FeignResource;
 import com.netease.nim.camellia.feign.resource.FeignResourceUtils;
 import com.netease.nim.camellia.feign.route.FeignResourceTableUpdater;
+import com.netease.nim.camellia.tools.circuitbreaker.CamelliaCircuitBreaker;
+import com.netease.nim.camellia.tools.circuitbreaker.CamelliaCircuitBreakerException;
+import com.netease.nim.camellia.tools.circuitbreaker.CircuitBreakerConfig;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 import org.slf4j.Logger;
@@ -42,17 +45,24 @@ public class FeignCallback<T> implements MethodInterceptor {
     private final CamelliaFeignEnv feignEnv;
     private final FeignClientFactory<T> factory;
     private final Class<T> clazz;
+    private final T fallback;
+    private CamelliaCircuitBreaker circuitBreaker;
 
-    public FeignCallback(Class<T> clazz, FeignResourceTableUpdater updater, FeignClientFactory<T> factory, CamelliaFeignEnv feignEnv) {
+    public FeignCallback(Class<T> clazz, T fallback, FeignResourceTableUpdater updater,
+                         FeignClientFactory<T> factory, CamelliaFeignEnv feignEnv, CircuitBreakerConfig circuitBreakerConfig) {
         this.clazz = clazz;
         this.feignEnv = feignEnv;
         this.factory = factory;
+        this.fallback = fallback;
         for (Method method : clazz.getMethods()) {
             operationType(method);
             keyParamIndex(method);
         }
         refresh(updater.getResourceTable());
         updater.addCallback(this::refresh);
+        if (circuitBreakerConfig != null) {
+            circuitBreaker = new CamelliaCircuitBreaker(circuitBreakerConfig);
+        }
     }
 
     private void refresh(ResourceTable resourceTable) {
@@ -94,7 +104,22 @@ public class FeignCallback<T> implements MethodInterceptor {
 
     @Override
     public Object intercept(Object o, final Method method, final Object[] objects, MethodProxy methodProxy) throws Throwable {
+        boolean success = true;
         try {
+            if (circuitBreaker != null) {
+                boolean allowRequest = circuitBreaker.allowRequest();
+                if (!allowRequest) {
+                    success = false;
+                    if (fallback != null) {
+                        try {
+                            return method.invoke(fallback, objects);
+                        } catch (Exception ex) {
+                            throw ExceptionUtils.onError(ex);
+                        }
+                    }
+                    throw new CamelliaCircuitBreakerException("camellia-circuit-breaker[" + circuitBreaker.getName() + "] short-circuit, and no fallback");
+                }
+            }
             byte operationType = operationType(method);
             Integer index = keyParamIndex(method);
             final Object key;
@@ -145,7 +170,23 @@ public class FeignCallback<T> implements MethodInterceptor {
             }
             throw new IllegalStateException("wil not invoke here");
         } catch (Exception e) {
+            success = false;
+            if (fallback != null) {
+                try {
+                    return method.invoke(fallback, objects);
+                } catch (Exception ex) {
+                    throw ExceptionUtils.onError(ex);
+                }
+            }
             throw ExceptionUtils.onError(e);
+        } finally {
+            if (circuitBreaker != null) {
+                if (success) {
+                    circuitBreaker.incrementSuccess();
+                } else {
+                    circuitBreaker.incrementFail();
+                }
+            }
         }
     }
 

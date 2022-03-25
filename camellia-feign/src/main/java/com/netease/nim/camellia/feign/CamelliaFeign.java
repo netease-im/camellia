@@ -8,6 +8,7 @@ import com.netease.nim.camellia.feign.resource.FeignResourceUtils;
 import com.netease.nim.camellia.feign.route.CamelliaDashboardFeignResourceTableUpdater;
 import com.netease.nim.camellia.feign.route.FeignResourceTableUpdater;
 import com.netease.nim.camellia.feign.route.SimpleFeignResourceTableUpdater;
+import com.netease.nim.camellia.tools.circuitbreaker.CircuitBreakerConfig;
 import feign.*;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
@@ -32,6 +33,7 @@ public final class CamelliaFeign {
         private long bid = -1;
         private String bgroup = null;
         private ResourceTable resourceTable;
+        private CircuitBreakerConfig circuitBreakerConfig;
 
         public Builder bid(long bid) {
             this.bid = bid;
@@ -79,6 +81,11 @@ public final class CamelliaFeign {
 
         public Builder feignEnv(CamelliaFeignEnv feignEnv) {
             this.feignEnv = feignEnv;
+            return this;
+        }
+
+        public Builder circuitBreakerConfig(CircuitBreakerConfig circuitBreakerConfig) {
+            this.circuitBreakerConfig = circuitBreakerConfig;
             return this;
         }
 
@@ -153,6 +160,10 @@ public final class CamelliaFeign {
         }
 
         public <T> T target(Class<T> apiType) {
+            return target(apiType, (T) null);
+        }
+
+        public <T> T target(Class<T> apiType, T fallback) {
             FeignResourceTableUpdater updater = null;
             //指定配置 优于 注解配置
             //bid/bgroup/CamelliaApi 优于 固定配置
@@ -191,7 +202,7 @@ public final class CamelliaFeign {
             FeignClientFactory.Default<T> factory = new FeignClientFactory.Default<>(apiType, feignProps);
             Enhancer enhancer = new Enhancer();
             enhancer.setSuperclass(apiType);
-            enhancer.setCallback(new FeignCallback<>(apiType, updater, factory, feignEnv));
+            enhancer.setCallback(new FeignCallback<>(apiType, fallback, updater, factory, feignEnv, circuitBreakerConfig));
             return (T) enhancer.create();
         }
     }

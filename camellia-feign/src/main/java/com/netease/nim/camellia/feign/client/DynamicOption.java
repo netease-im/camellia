@@ -1,5 +1,8 @@
 package com.netease.nim.camellia.feign.client;
 
+import com.netease.nim.camellia.core.util.DynamicValueGetter;
+import com.netease.nim.camellia.tools.circuitbreaker.CircuitBreakerConfig;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -7,19 +10,18 @@ import java.util.concurrent.TimeUnit;
  */
 public class DynamicOption {
 
-    private final DynamicValueGetter<Long> connectTimeout;
-    private final DynamicValueGetter<TimeUnit> connectTimeoutUnit;
-    private final DynamicValueGetter<Long> readTimeout;
-    private final DynamicValueGetter<TimeUnit> readTimeoutUnit;
-    private final DynamicValueGetter<Boolean> followRedirects;
+    private DynamicValueGetter<Long> connectTimeout;
+    private DynamicValueGetter<TimeUnit> connectTimeoutUnit;
+    private DynamicValueGetter<Long> readTimeout;
+    private DynamicValueGetter<TimeUnit> readTimeoutUnit;
+    private DynamicValueGetter<Boolean> followRedirects;
+    private CircuitBreakerConfig circuitBreakerConfig;
 
-    public DynamicOption(DynamicValueGetter<Long> connectTimeout, DynamicValueGetter<TimeUnit> connectTimeoutUnit,
-                         DynamicValueGetter<Long> readTimeout, DynamicValueGetter<TimeUnit> readTimeoutUnit, DynamicValueGetter<Boolean> followRedirects) {
-        this.connectTimeout = connectTimeout;
-        this.connectTimeoutUnit = connectTimeoutUnit;
-        this.readTimeout = readTimeout;
-        this.readTimeoutUnit = readTimeoutUnit;
-        this.followRedirects = followRedirects;
+    private DynamicOption() {
+    }
+
+    public CircuitBreakerConfig getCircuitBreakerConfig() {
+        return circuitBreakerConfig;
     }
 
     public Long getConnectTimeout() {
@@ -47,7 +49,35 @@ public class DynamicOption {
         return followRedirects.get();
     }
 
-    public static interface DynamicValueGetter<T> {
-        T get();
+    public static class Builder {
+        private final DynamicOption dynamicOption = new DynamicOption();
+        public Builder() {
+        }
+
+        public Builder connectTimeout(DynamicValueGetter<Long> connectTimeout, DynamicValueGetter<TimeUnit> connectTimeoutUnit) {
+            dynamicOption.connectTimeout = connectTimeout;
+            dynamicOption.connectTimeoutUnit = connectTimeoutUnit;
+            return this;
+        }
+
+        public Builder readTimeoutTimeout(DynamicValueGetter<Long> readTimeout, DynamicValueGetter<TimeUnit> readTimeoutUnit) {
+            dynamicOption.readTimeout = readTimeout;
+            dynamicOption.readTimeoutUnit = readTimeoutUnit;
+            return this;
+        }
+
+        public Builder followRedirects(DynamicValueGetter<Boolean> followRedirects) {
+            dynamicOption.followRedirects = followRedirects;
+            return this;
+        }
+
+        public Builder circuitBreakerConfig(CircuitBreakerConfig circuitBreakerConfig) {
+            dynamicOption.circuitBreakerConfig = circuitBreakerConfig;
+            return this;
+        }
+
+        public DynamicOption build() {
+            return dynamicOption;
+        }
     }
 }

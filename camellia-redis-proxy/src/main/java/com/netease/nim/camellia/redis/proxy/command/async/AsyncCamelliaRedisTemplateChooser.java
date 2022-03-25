@@ -8,7 +8,7 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ShardingFuncUtil;
 import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
-import com.netease.nim.camellia.redis.proxy.util.LockMap;
+import com.netease.nim.camellia.core.util.LockMap;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;

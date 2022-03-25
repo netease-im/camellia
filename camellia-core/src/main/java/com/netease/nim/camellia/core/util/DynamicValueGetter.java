@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.toolkit.counter;
+package com.netease.nim.camellia.core.util;
 
 /**
  *
