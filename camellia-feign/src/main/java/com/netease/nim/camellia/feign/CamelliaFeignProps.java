@@ -4,26 +4,55 @@ import feign.*;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.okhttp.OkHttpClient;
+import okhttp3.ConnectionPool;
+import okhttp3.Dispatcher;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by caojiajun on 2022/3/1
  */
 public class CamelliaFeignProps {
 
+    private static final okhttp3.OkHttpClient okHttpClient;
+    static {
+        Dispatcher dispatcher = new Dispatcher();
+        dispatcher.setMaxRequests(2048);
+        dispatcher.setMaxRequestsPerHost(256);
+        okHttpClient = new okhttp3.OkHttpClient.Builder()
+                .readTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS)
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .connectionPool(new ConnectionPool(256, 5, TimeUnit.SECONDS))
+                .dispatcher(dispatcher)
+                .build();
+    }
+
+    public static final Logger.Level defaultLevel = Logger.Level.NONE;
+    public static final Contract defaultContract = new Contract.Default();
+    public static final Client defaultClient = new OkHttpClient(okHttpClient);
+    public static final Retryer defaultRetry = Retryer.NEVER_RETRY;
+    public static final Logger defaultLogger = new Logger.NoOpLogger();
+    public static final Encoder defaultEncoder = new Encoder.Default();
+    public static final Decoder defaultDecoder = new Decoder.Default();
+    public static final ErrorDecoder defaultErrorDecoder = new ErrorDecoder.Default();
+    public static final Request.Options defaultOptions = new Request.Options();
+    public static final InvocationHandlerFactory defaultInvocationHandlerFactory = new InvocationHandlerFactory.Default();
+
     private final List<RequestInterceptor> requestInterceptors = new ArrayList<>();
-    private Logger.Level logLevel = Logger.Level.NONE;
-    private Contract contract = new Contract.Default();
-    private Client client = new Client.Default(null, null);
-    private Retryer retryer = new Retryer.Default();
-    private Logger logger = new Logger.NoOpLogger();
-    private Encoder encoder = new Encoder.Default();
-    private Decoder decoder = new Decoder.Default();
-    private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
-    private Request.Options options = new Request.Options();
-    private InvocationHandlerFactory invocationHandlerFactory = new InvocationHandlerFactory.Default();
+    private Logger.Level logLevel;
+    private Contract contract;
+    private Client client;
+    private Retryer retryer;
+    private Logger logger;
+    private Encoder encoder;
+    private Decoder decoder;
+    private ErrorDecoder errorDecoder;
+    private Request.Options options;
+    private InvocationHandlerFactory invocationHandlerFactory;
     private boolean decode404;
 
     public List<RequestInterceptor> getRequestInterceptors() {
@@ -117,4 +146,5 @@ public class CamelliaFeignProps {
     public void setDecode404(boolean decode404) {
         this.decode404 = decode404;
     }
+
 }

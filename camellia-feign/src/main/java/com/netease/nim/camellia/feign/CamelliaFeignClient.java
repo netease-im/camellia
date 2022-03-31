@@ -17,4 +17,8 @@ public @interface CamelliaFeignClient {
     String bgroup() default "default";
 
     String route() default "";
+
+    String[] qualifiers() default {};//仅给camellia-feign-spring-boot-starter使用
+
+    boolean primary() default true;//仅给camellia-feign-spring-boot-starter使用
 }

@@ -52,9 +52,9 @@ public class ProxyEnv {
 
     private void initExec() {
         shardingConcurrentExec = new ThreadPoolExecutor(shardingConcurrentExecPoolSize, shardingConcurrentExecPoolSize, 0, TimeUnit.SECONDS,
-                new SynchronousQueue<Runnable>(), new CamelliaThreadFactory(ShardingCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
+                new SynchronousQueue<>(), new CamelliaThreadFactory(ShardingCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
         multiWriteConcurrentExec = new ThreadPoolExecutor(multiWriteConcurrentExecPoolSize, multiWriteConcurrentExecPoolSize, 0, TimeUnit.SECONDS,
-                new SynchronousQueue<Runnable>(), new CamelliaThreadFactory(OperationCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
+                new SynchronousQueue<>(), new CamelliaThreadFactory(OperationCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     public static ProxyEnv defaultProxyEnv() {

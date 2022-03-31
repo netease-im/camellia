@@ -16,4 +16,11 @@ public class ProxyClientFactory {
         enhancer.setCallback(callback);
         return (T) enhancer.create(argumentTypes, arguments);
     }
+
+    public static <T> T createProxy(Class<T> clazz, MethodInterceptor callback) {
+        Enhancer enhancer = new Enhancer();
+        enhancer.setSuperclass(clazz);
+        enhancer.setCallback(callback);
+        return (T) enhancer.create();
+    }
 }

@@ -6,7 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class HashCamelliaServerSelector<T> implements CamelliaServerSelector<T> {
 
     @Override
-    public T pick(List<T> list, Object key) {
+    public T pick(List<T> list, Object loadBalanceKey) {
         try {
             if (list == null || list.isEmpty()) return null;
             int size = list.size();
@@ -14,10 +14,10 @@ public class HashCamelliaServerSelector<T> implements CamelliaServerSelector<T> 
                 return list.get(0);
             }
             int index;
-            if (key == null) {
+            if (loadBalanceKey == null) {
                 index = ThreadLocalRandom.current().nextInt(list.size());
             } else {
-                index = Math.abs(key.hashCode() % list.size());
+                index = Math.abs(loadBalanceKey.hashCode() % list.size());
             }
             return list.get(index);
         } catch (Exception e) {

@@ -67,7 +67,7 @@ public class DiscoveryResourcePool implements FeignResourcePool {
     }
 
     @Override
-    public FeignResource getResource(Object key) {
+    public FeignResource getResource(Object loadBalanceKey) {
         try {
             Exception cause = null;
             int retry = 10;
@@ -76,9 +76,9 @@ public class DiscoveryResourcePool implements FeignResourcePool {
                 retry --;
                 try {
                     if (dynamicList.isEmpty()) {
-                        feignResource = serverSelector.pick(originalList, key);
+                        feignResource = serverSelector.pick(originalList, loadBalanceKey);
                     } else {
-                        feignResource = serverSelector.pick(dynamicList, key);
+                        feignResource = serverSelector.pick(dynamicList, loadBalanceKey);
                     }
                 } catch (Exception e) {
                     cause = e;

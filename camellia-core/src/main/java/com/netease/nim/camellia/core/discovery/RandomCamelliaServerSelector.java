@@ -6,7 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class RandomCamelliaServerSelector<T> implements CamelliaServerSelector<T> {
 
     @Override
-    public T pick(List<T> list, Object key) {
+    public T pick(List<T> list, Object loadBalanceKey) {
         try {
             if (list == null || list.isEmpty()) return null;
             int size = list.size();

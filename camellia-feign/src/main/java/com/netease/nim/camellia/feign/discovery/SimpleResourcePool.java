@@ -14,7 +14,7 @@ public class SimpleResourcePool implements FeignResourcePool {
     }
 
     @Override
-    public FeignResource getResource(Object key) {
+    public FeignResource getResource(Object loadBalanceKey) {
         return feignResource;
     }
 

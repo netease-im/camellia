@@ -56,7 +56,7 @@ public class CamelliaRedisEnv {
 
     private void initExec() {
         this.concurrentExec = new ThreadPoolExecutor(concurrentExecPoolSize, concurrentExecPoolSize, 0, TimeUnit.SECONDS,
-                new SynchronousQueue<Runnable>(), new CamelliaThreadFactory(CamelliaRedisEnv.class), new ThreadPoolExecutor.CallerRunsPolicy());
+                new SynchronousQueue<>(), new CamelliaThreadFactory(CamelliaRedisEnv.class), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     public static CamelliaRedisEnv defaultRedisEnv() {

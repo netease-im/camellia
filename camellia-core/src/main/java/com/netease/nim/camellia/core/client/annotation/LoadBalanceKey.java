@@ -6,9 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ *
  * Created by caojiajun on 2022/3/2
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.PARAMETER})
-public @interface Key {
+@Target({ElementType.PARAMETER, ElementType.FIELD})
+public @interface LoadBalanceKey {
 }

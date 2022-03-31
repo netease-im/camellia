@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.feign;
 
+import com.netease.nim.camellia.feign.client.DynamicOption;
 import com.netease.nim.camellia.feign.resource.FeignResource;
 import com.netease.nim.camellia.feign.util.CamelliaFeignUtils;
 
@@ -16,27 +17,29 @@ public interface FeignClientFactory<T> {
 
         private final Class<T> clazz;
         private final CamelliaFeignProps feignProps;
+        private final DynamicOption dynamicOption;
         private final ConcurrentHashMap<String, T> map = new ConcurrentHashMap<>();
 
-        public Default(Class<T> clazz, CamelliaFeignProps feignProps) {
+        public Default(Class<T> clazz, CamelliaFeignProps feignProps, DynamicOption dynamicOption) {
             this.clazz = clazz;
             this.feignProps = feignProps;
+            this.dynamicOption = dynamicOption;
         }
 
         @Override
         public T get(FeignResource feignResource) {
             String feignUrl = feignResource.getFeignUrl();
-            T t = map.get(feignUrl);
-            if (t == null) {
+            T client = map.get(feignUrl);
+            if (client == null) {
                 synchronized (map) {
-                    t = map.get(feignUrl);
-                    if (t == null) {
-                        t = CamelliaFeignUtils.generate(feignProps, clazz, feignUrl);
-                        map.put(feignUrl, t);
+                    client = map.get(feignUrl);
+                    if (client == null) {
+                        client = CamelliaFeignUtils.generate(feignProps, dynamicOption, clazz, feignUrl);
+                        map.put(feignUrl, client);
                     }
                 }
             }
-            return t;
+            return client;
         }
     }
 }

@@ -1,7 +1,5 @@
 package com.netease.nim.camellia.core.client.callback;
 
-import com.netease.nim.camellia.core.client.annotation.ReadOp;
-import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.operation.ResourceOperation;
@@ -9,6 +7,7 @@ import com.netease.nim.camellia.core.model.operation.ResourceReadOperation;
 import com.netease.nim.camellia.core.model.operation.ResourceWriteOperation;
 import com.netease.nim.camellia.core.util.CheckUtil;
 import com.netease.nim.camellia.core.util.ExceptionUtils;
+import com.netease.nim.camellia.core.util.ReadWriteOperationCache;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
@@ -26,6 +25,7 @@ public class OperationCallback<T> implements MethodInterceptor {
     private final Map<Resource, T> clientMap;
     private final String className;
     private ProxyEnv env = ProxyEnv.defaultProxyEnv();
+    private final ReadWriteOperationCache readWriteOperationCache = new ReadWriteOperationCache();
 
     public OperationCallback(ResourceOperation resourceOperation, Map<Resource, T> clientMap, Class<T> clazz, ProxyEnv env) {
         if (resourceOperation == null) {
@@ -38,10 +38,7 @@ public class OperationCallback<T> implements MethodInterceptor {
             throw new IllegalArgumentException("resourceOperation check fail");
         }
         check(resourceOperation, clientMap);
-        for (Method method : clazz.getMethods()) {
-            operationType(method);
-            getMethodName(method);
-        }
+        readWriteOperationCache.preheat(clazz);
         this.resourceOperation = resourceOperation;
         this.clientMap = clientMap;
         this.className = clazz.getName();
@@ -50,37 +47,14 @@ public class OperationCallback<T> implements MethodInterceptor {
         }
     }
 
-    private static final byte WRITE = 1;
-    private static final byte READ = 2;
-    private static final byte UNKNOWN = 3;
-    private final Map<Method, Byte> annotationCache = new HashMap<>();
-
-    private byte operationType(Method method) {
-        if (method == null) return UNKNOWN;
-        Byte cache = annotationCache.get(method);
-        if (cache != null) return cache;
-        WriteOp writeOp = method.getAnnotation(WriteOp.class);
-        if (writeOp != null) {
-            annotationCache.put(method, WRITE);
-            return WRITE;
-        }
-        ReadOp readOp = method.getAnnotation(ReadOp.class);
-        if (readOp != null) {
-            annotationCache.put(method, READ);
-            return READ;
-        }
-        annotationCache.put(method, UNKNOWN);
-        return UNKNOWN;
-    }
-
     @Override
     public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
         try {
-            Byte operationType = operationType(method);
-            if (Objects.equals(operationType, WRITE)) {
+            byte operationType = readWriteOperationCache.getOperationType(method);
+            if (operationType == ReadWriteOperationCache.WRITE) {
                 return write(objects, method);
             }
-            if (Objects.equals(operationType, READ)) {
+            if (operationType == ReadWriteOperationCache.READ) {
                 return read(objects, method);
             }
             return methodProxy.invokeSuper(o, objects);
@@ -194,42 +168,42 @@ public class OperationCallback<T> implements MethodInterceptor {
         }
     }
 
-    private final Map<Method, String> fullNameCache = new HashMap<>();
-
-    private String getMethodName(Method method) {
-        String string = fullNameCache.get(method);
-        if (string != null) {
-            return string;
-        }
-        StringBuilder fullName = new StringBuilder();
-        String name = method.getName();
-        fullName.append(name);
-        Class<?>[] parameterTypes = method.getParameterTypes();
-        fullName.append("(");
-        for (int i = 0; i < parameterTypes.length; i++) {
-            Class<?> type = parameterTypes[i];
-            if (i != parameterTypes.length - 1) {
-                fullName.append(type.getSimpleName());
-                fullName.append(",");
-            } else {
-                fullName.append(type.getSimpleName());
-            }
-        }
-        fullName.append(")");
-        string = fullName.toString();
-        fullNameCache.put(method, string);
-        return string;
-    }
+//    private final Map<Method, String> fullNameCache = new HashMap<>();
+//
+//    private String getMethodName(Method method) {
+//        String string = fullNameCache.get(method);
+//        if (string != null) {
+//            return string;
+//        }
+//        StringBuilder fullName = new StringBuilder();
+//        String name = method.getName();
+//        fullName.append(name);
+//        Class<?>[] parameterTypes = method.getParameterTypes();
+//        fullName.append("(");
+//        for (int i = 0; i < parameterTypes.length; i++) {
+//            Class<?> type = parameterTypes[i];
+//            if (i != parameterTypes.length - 1) {
+//                fullName.append(type.getSimpleName());
+//                fullName.append(",");
+//            } else {
+//                fullName.append(type.getSimpleName());
+//            }
+//        }
+//        fullName.append(")");
+//        string = fullName.toString();
+//        fullNameCache.put(method, string);
+//        return string;
+//    }
 
     private void incrWrite(Resource resource, Method method) {
         if (env != null && env.getMonitor() != null) {
-            env.getMonitor().incrWrite(resource.getUrl(), className, getMethodName(method));
+            env.getMonitor().incrWrite(resource.getUrl(), className, readWriteOperationCache.getMethodName(method));
         }
     }
 
     private void incrRead(Resource resource, Method method) {
         if (env != null && env.getMonitor() != null) {
-            env.getMonitor().incrRead(resource.getUrl(), className, getMethodName(method));
+            env.getMonitor().incrRead(resource.getUrl(), className, readWriteOperationCache.getMethodName(method));
         }
     }
 

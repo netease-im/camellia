@@ -8,5 +8,5 @@ import java.util.List;
  */
 public interface CamelliaServerSelector<T> {
 
-    T pick(List<T> list, Object key);
+    T pick(List<T> list, Object loadBalanceKey);
 }

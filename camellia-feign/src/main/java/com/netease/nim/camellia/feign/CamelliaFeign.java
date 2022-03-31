@@ -2,18 +2,20 @@ package com.netease.nim.camellia.feign;
 
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiUtil;
+import com.netease.nim.camellia.core.client.callback.ProxyClientFactory;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
+import com.netease.nim.camellia.feign.client.DynamicOption;
+import com.netease.nim.camellia.feign.conf.CamelliaFeignDynamicOptionGetter;
 import com.netease.nim.camellia.feign.resource.FeignResourceUtils;
 import com.netease.nim.camellia.feign.route.CamelliaDashboardFeignResourceTableUpdater;
 import com.netease.nim.camellia.feign.route.FeignResourceTableUpdater;
 import com.netease.nim.camellia.feign.route.SimpleFeignResourceTableUpdater;
-import com.netease.nim.camellia.tools.circuitbreaker.CircuitBreakerConfig;
 import feign.*;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import net.sf.cglib.proxy.Enhancer;
+
 
 /**
  * Created by caojiajun on 2022/3/1
@@ -26,6 +28,7 @@ public final class CamelliaFeign {
 
     public static final class Builder extends Feign.Builder {
         private final CamelliaFeignProps feignProps = new CamelliaFeignProps();
+        private CamelliaFeignDynamicOptionGetter camelliaFeignDynamicOptionGetter;
         private CamelliaFeignEnv feignEnv = CamelliaFeignEnv.defaultFeignEnv();
         private String camelliaUrl;
         private CamelliaApi camelliaApi;
@@ -33,7 +36,6 @@ public final class CamelliaFeign {
         private long bid = -1;
         private String bgroup = null;
         private ResourceTable resourceTable;
-        private CircuitBreakerConfig circuitBreakerConfig;
 
         public Builder bid(long bid) {
             this.bid = bid;
@@ -84,8 +86,8 @@ public final class CamelliaFeign {
             return this;
         }
 
-        public Builder circuitBreakerConfig(CircuitBreakerConfig circuitBreakerConfig) {
-            this.circuitBreakerConfig = circuitBreakerConfig;
+        public Builder dynamicOptionGetter(CamelliaFeignDynamicOptionGetter camelliaFeignDynamicOptionGetter) {
+            this.camelliaFeignDynamicOptionGetter = camelliaFeignDynamicOptionGetter;
             return this;
         }
 
@@ -185,6 +187,7 @@ public final class CamelliaFeign {
                 }
                 if (camelliaApi != null) {
                     updater = new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, checkIntervalMillis);
+                    this.camelliaApi = camelliaApi;
                 }
             }
             if (updater == null) {
@@ -199,11 +202,19 @@ public final class CamelliaFeign {
                 FeignResourceUtils.checkResourceTable(resourceTable);
                 updater = new SimpleFeignResourceTableUpdater(resourceTable);
             }
-            FeignClientFactory.Default<T> factory = new FeignClientFactory.Default<>(apiType, feignProps);
-            Enhancer enhancer = new Enhancer();
-            enhancer.setSuperclass(apiType);
-            enhancer.setCallback(new FeignCallback<>(apiType, fallback, updater, factory, feignEnv, circuitBreakerConfig));
-            return (T) enhancer.create();
+            DynamicOption dynamicOption = null;
+            if (camelliaFeignDynamicOptionGetter != null) {
+                dynamicOption = camelliaFeignDynamicOptionGetter.getDynamicOption(bid, bgroup);
+            }
+            CamelliaFeignBuildParam<T> buildParam = new CamelliaFeignBuildParam<>(apiType, fallback, feignProps, updater, feignEnv, dynamicOption);
+            T defaultFeignClient = ProxyClientFactory.createProxy(apiType, new FeignCallback<>(buildParam));
+            if (camelliaFeignDynamicOptionGetter != null && camelliaFeignDynamicOptionGetter.getDynamicRouteConfGetter(bid) != null && bid > 0 && camelliaApi != null ) {
+                //如果设置了DynamicRouteConfGetter，则允许根据请求参数做动态路由下发
+                return ProxyClientFactory.createProxy(apiType, new FeignDynamicRouteCallback<>(defaultFeignClient, buildParam, camelliaFeignDynamicOptionGetter,
+                        bid, bgroup, camelliaApi, checkIntervalMillis));
+            } else {
+                return defaultFeignClient;
+            }
         }
     }
 }

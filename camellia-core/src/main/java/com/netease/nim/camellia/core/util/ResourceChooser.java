@@ -15,6 +15,9 @@ import java.util.concurrent.ThreadLocalRandom;
  * Created by caojiajun on 2019/12/13.
  */
 public class ResourceChooser {
+
+    public static final byte[] EMPTY_ARRAY = new byte[0];
+
     private final ResourceTable resourceTable;
     private final ProxyEnv proxyEnv;
 

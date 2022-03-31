@@ -33,7 +33,7 @@ public class CamelliaHBaseEnv {
     }
 
     public static class Builder {
-        private CamelliaHBaseEnv env;
+        private final CamelliaHBaseEnv env;
 
         public Builder() {
             env = new CamelliaHBaseEnv();
@@ -51,9 +51,7 @@ public class CamelliaHBaseEnv {
 
         public Builder proxyEnv(ProxyEnv proxyEnv) {
             if (proxyEnv == null) return this;
-            if (env != null) {
-                env.proxyEnv = proxyEnv;
-            }
+            env.proxyEnv = proxyEnv;
             return this;
         }
 

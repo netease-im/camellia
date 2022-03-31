@@ -18,6 +18,7 @@
     <modules>
         <module>camellia-core-samples</module>
         <module>camellia-dashboard-samples</module>
+        <module>camellia-feign-samples</module>
         <module>camellia-redis-samples</module>
         <module>camellia-hbase-samples</module>
         <module>camellia-redis-proxy-samples</module>
