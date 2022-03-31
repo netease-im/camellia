@@ -33,6 +33,10 @@ public class CamelliaCircuitBreaker {
     private volatile long openTimestamp = 0;//熔断器打开的时间戳
     private final AtomicLong lastSingleTestTimestamp = new AtomicLong(0L);//上一次探测的时间戳（半开）
 
+    public CamelliaCircuitBreaker() {
+        this(new CircuitBreakerConfig());
+    }
+
     public CamelliaCircuitBreaker(CircuitBreakerConfig config) {
         this.config = config;
         this.name = config.getName();
@@ -202,9 +206,11 @@ public class CamelliaCircuitBreaker {
                 //如果失败率超过了阈值，则断路器打开
                 double failRate = ((double)totalFail) / (totalSuccess + totalFail);
                 if (failRate > config.getFailThresholdPercentage().get()) {
-                    openTimestamp = System.currentTimeMillis();
-                    circuitBreakerOpen.set(true);
-                    if (config.getLogEnable().get()) {
+                    boolean open = circuitBreakerOpen.compareAndSet(false, true);
+                    if (open) {
+                        openTimestamp = System.currentTimeMillis();
+                    }
+                    if (open && config.getLogEnable().get()) {
                         logger.info("camellia circuit breaker open, name = {}, success = {}, fail = {}, fail-rate = {}, fail-threshold-percentage = {}",
                                 name, totalSuccess, totalFail, failRate, config.getFailThresholdPercentage().get());
                     }
