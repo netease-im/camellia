@@ -168,33 +168,6 @@ public class OperationCallback<T> implements MethodInterceptor {
         }
     }
 
-//    private final Map<Method, String> fullNameCache = new HashMap<>();
-//
-//    private String getMethodName(Method method) {
-//        String string = fullNameCache.get(method);
-//        if (string != null) {
-//            return string;
-//        }
-//        StringBuilder fullName = new StringBuilder();
-//        String name = method.getName();
-//        fullName.append(name);
-//        Class<?>[] parameterTypes = method.getParameterTypes();
-//        fullName.append("(");
-//        for (int i = 0; i < parameterTypes.length; i++) {
-//            Class<?> type = parameterTypes[i];
-//            if (i != parameterTypes.length - 1) {
-//                fullName.append(type.getSimpleName());
-//                fullName.append(",");
-//            } else {
-//                fullName.append(type.getSimpleName());
-//            }
-//        }
-//        fullName.append(")");
-//        string = fullName.toString();
-//        fullNameCache.put(method, string);
-//        return string;
-//    }
-
     private void incrWrite(Resource resource, Method method) {
         if (env != null && env.getMonitor() != null) {
             env.getMonitor().incrWrite(resource.getUrl(), className, readWriteOperationCache.getMethodName(method));
