@@ -218,7 +218,11 @@ public class AsyncCamelliaRedisTemplateChooser {
                         Set<ChannelInfo> channelMap = ChannelMonitor.getChannelMap(bid, bgroup);
                         int size = channelMap.size();
                         for (ChannelInfo channelInfo : channelMap) {
-                            channelInfo.getCtx().close();
+                            try {
+                                channelInfo.getCtx().close();
+                            } catch (Exception e) {
+                                logger.error("force close client connect error, bid = {}, bgroup = {}, consid = {}", bid, bgroup, channelInfo.getConsid(), e);
+                            }
                         }
                         logger.info("force close client connect for resourceTable remove, bid = {}, bgroup = {}, count = {}", bid, bgroup, size);
                     };
