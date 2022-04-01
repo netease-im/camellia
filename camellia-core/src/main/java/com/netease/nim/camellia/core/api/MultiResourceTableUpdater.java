@@ -57,9 +57,11 @@ public abstract class MultiResourceTableUpdater {
      * @param bgroup bgroup
      */
     public void invokeRemoveResourceTable(long bid, String bgroup) {
-        ResourceTableRemoveCallback callback = removeCallbackMap.get(bid + "|" + bgroup);
+        String key = bid + "|" + bgroup;
+        ResourceTableRemoveCallback callback = removeCallbackMap.get(key);
         if (callback != null) {
             callback.callback();
+            removeCallbackMap.remove(key);
         }
         if (logger.isInfoEnabled()) {
             logger.info("resourceTable remove, bid = {}, bgroup = {}", bid, bgroup);
@@ -74,11 +76,12 @@ public abstract class MultiResourceTableUpdater {
      * @param removeCallback ResourceTableRemoveCallback
      */
     public void addCallback(long bid, String bgroup, ResourceTableUpdateCallback addCallback, ResourceTableRemoveCallback removeCallback) {
+        String key = bid + "|" + bgroup;
         if (addCallback != null) {
-            updateCallbackMap.put(bid + "|" + bgroup, addCallback);
+            updateCallbackMap.put(key, addCallback);
         }
         if (removeCallback != null) {
-            removeCallbackMap.put(bid + "|" + bgroup, removeCallback);
+            removeCallbackMap.put(key, removeCallback);
         }
     }
 

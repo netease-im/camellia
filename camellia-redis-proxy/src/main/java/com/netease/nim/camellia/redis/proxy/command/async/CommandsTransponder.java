@@ -322,7 +322,7 @@ public class CommandsTransponder {
                 template = chooser.choose(bid, bgroup);
             } catch (Exception e) {
                 String log = "AsyncCamelliaRedisTemplateChooser choose error"
-                        + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e.toString();
+                        + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e;
                 ErrorLogCollector.collect(CommandsTransponder.class, log, e);
             }
             if (template == null) {
@@ -335,7 +335,7 @@ public class CommandsTransponder {
                     futureList = template.sendCommand(commands);
                 } catch (Exception e) {
                     String log = "AsyncCamelliaRedisTemplateChooser sendCommand error"
-                            + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e.toString();
+                            + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e;
                     ErrorLogCollector.collect(CommandsTransponder.class, log, e);
                     for (AsyncTask task : tasks) {
                         task.replyCompleted(ErrorReply.NOT_AVAILABLE);
