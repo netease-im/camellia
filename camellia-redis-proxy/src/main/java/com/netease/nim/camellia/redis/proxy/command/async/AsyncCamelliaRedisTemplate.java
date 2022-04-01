@@ -43,6 +43,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     private static final boolean defaultMonitorEnable = false;
 
     private final AsyncNettyClientFactory factory;
+    private ScheduledFuture<?> future;
 
     private final long bid;
     private final String bgroup;
@@ -58,10 +59,11 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
     private ScanCursorCalculator cursorCalculator;
 
-    private final ResourceTableUpdateCallback callback = resourceTable -> {
+    private final ResourceTableUpdateCallback updateCallback = resourceTable -> {
         RedisResourceUtil.checkResourceTable(resourceTable);
         init(resourceTable);
     };
+    private final ResourceTableRemoveCallback removeCallback = this::shutdown;
 
     public AsyncCamelliaRedisTemplate(ResourceTable resourceTable) {
         this(AsyncCamelliaRedisEnv.defaultRedisEnv(), resourceTable);
@@ -101,7 +103,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
         if (reload) {
             ReloadTask reloadTask = new ReloadTask(this, service, bid, bgroup, md5);
-            scheduleExecutor.scheduleAtFixedRate(reloadTask, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
+            this.future = scheduleExecutor.scheduleAtFixedRate(reloadTask, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
             if (monitorEnable) {
                 Monitor monitor = new RemoteMonitor(bid, bgroup, service);
                 ProxyEnv proxyEnv = new ProxyEnv.Builder(env.getProxyEnv()).monitor(monitor).build();
@@ -131,7 +133,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
         if (reloadIntervalMillis > 0) {
             ProxyRouteConfUpdaterReloadTask reloadTask = new ProxyRouteConfUpdaterReloadTask(this, resourceTable, bid, bgroup, updater);
-            scheduleExecutor.scheduleAtFixedRate(reloadTask, reloadIntervalMillis, reloadIntervalMillis, TimeUnit.MILLISECONDS);
+            this.future = scheduleExecutor.scheduleAtFixedRate(reloadTask, reloadIntervalMillis, reloadIntervalMillis, TimeUnit.MILLISECONDS);
         }
         if (bid == -1) {
             RouteConfMonitor.registerRedisTemplate(null, null, this);
@@ -148,8 +150,12 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         return resourceChooser.getCreateTime();
     }
 
-    public ResourceTableUpdateCallback getCallback() {
-        return callback;
+    public ResourceTableUpdateCallback getUpdateCallback() {
+        return updateCallback;
+    }
+
+    public ResourceTableRemoveCallback getRemoveCallback() {
+        return removeCallback;
     }
 
     public void preheat() {
@@ -157,6 +163,20 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         for (Resource resource : allResources) {
             AsyncClient client = factory.get(resource.getUrl());
             client.preheat();
+        }
+    }
+
+    public void shutdown() {
+        if (future != null) {
+            future.cancel(false);
+        }
+        if (bid == -1) {
+            RouteConfMonitor.deregisterRedisTemplate(null, null);
+        } else {
+            RouteConfMonitor.deregisterRedisTemplate(bid, bgroup);
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info("AsyncCamelliaRedisTemplate shutdown, bid = {}, bgroup = {}", bid, bgroup);
         }
     }
 

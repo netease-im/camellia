@@ -29,7 +29,11 @@ public class DynamicConfProxyRouteConfUpdater extends ProxyRouteConfUpdater {
                 String bgroup = split[1];
                 String oldConf = map.get(key);
                 String newConf = getConf(bid, bgroup);
-                if (newConf != null && !oldConf.equals(newConf)) {
+                if (newConf == null) {
+                    invokeRemoveResourceTable(bid, bgroup);
+                    continue;
+                }
+                if (!oldConf.equals(newConf)) {
                     ResourceTable resourceTable = getResourceTable(bid, bgroup);
                     //触发回调
                     invokeUpdateResourceTable(bid, bgroup, resourceTable);

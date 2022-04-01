@@ -2,6 +2,8 @@ package com.netease.nim.camellia.redis.proxy.command.async;
 
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiUtil;
+import com.netease.nim.camellia.core.api.ResourceTableRemoveCallback;
+import com.netease.nim.camellia.core.api.ResourceTableUpdateCallback;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
@@ -204,7 +206,14 @@ public class AsyncCamelliaRedisTemplateChooser {
                 if (template == null) {
                     ProxyRouteConfUpdater updater = custom.getProxyRouteConfUpdater();
                     template = new AsyncCamelliaRedisTemplate(env, bid, bgroup, updater, custom.getReloadIntervalMillis());
-                    updater.addCallback(bid, bgroup, template.getCallback());
+                    //更新的callback和删除的callback
+                    ResourceTableUpdateCallback updateCallback = template.getUpdateCallback();
+                    ResourceTableRemoveCallback templateRemoveCallback = template.getRemoveCallback();
+                    ResourceTableRemoveCallback removeCallback = () -> {
+                        customInstanceMap.remove(key);
+                        templateRemoveCallback.callback();
+                    };
+                    updater.addCallback(bid, bgroup, updateCallback, removeCallback);
                     customInstanceMap.put(key, template);
                     logger.info("AsyncCamelliaRedisTemplate init, bid = {}, bgroup = {}", bid, bgroup);
                 }

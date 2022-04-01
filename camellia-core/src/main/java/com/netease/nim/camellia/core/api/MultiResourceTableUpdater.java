@@ -13,7 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class MultiResourceTableUpdater {
 
     private static final Logger logger = LoggerFactory.getLogger(MultiResourceTableUpdater.class);
-    private final ConcurrentHashMap<String, ResourceTableUpdateCallback> map = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ResourceTableUpdateCallback> updateCallbackMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ResourceTableRemoveCallback> removeCallbackMap = new ConcurrentHashMap<>();
 
     public abstract ResourceTable getResourceTable(long bid, String bgroup);
 
@@ -25,7 +26,7 @@ public abstract class MultiResourceTableUpdater {
      */
     public void invokeUpdateResourceTable(long bid, String bgroup, ResourceTable resourceTable) {
         checkResourceTable(resourceTable);
-        ResourceTableUpdateCallback callback = map.get(bid + "|" + bgroup);
+        ResourceTableUpdateCallback callback = updateCallbackMap.get(bid + "|" + bgroup);
         if (callback != null) {
             callback.callback(resourceTable);
         }
@@ -51,12 +52,34 @@ public abstract class MultiResourceTableUpdater {
     }
 
     /**
-     * 添加AsyncCamelliaRedisTemplate给ProxyRouteConfUpdater去管理
+     * 动态删除ResourceTable
      * @param bid bid
      * @param bgroup bgroup
-     * @param callback ResourceTableUpdateCallback
      */
-    public void addCallback(long bid, String bgroup, ResourceTableUpdateCallback callback) {
-        map.put(bid + "|" + bgroup, callback);
+    public void invokeRemoveResourceTable(long bid, String bgroup) {
+        ResourceTableRemoveCallback callback = removeCallbackMap.get(bid + "|" + bgroup);
+        if (callback != null) {
+            callback.callback();
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info("resourceTable remove, bid = {}, bgroup = {}", bid, bgroup);
+        }
     }
+
+    /**
+     * 添加callback
+     * @param bid bid
+     * @param bgroup bgroup
+     * @param addCallback ResourceTableUpdateCallback
+     * @param removeCallback ResourceTableRemoveCallback
+     */
+    public void addCallback(long bid, String bgroup, ResourceTableUpdateCallback addCallback, ResourceTableRemoveCallback removeCallback) {
+        if (addCallback != null) {
+            updateCallbackMap.put(bid + "|" + bgroup, addCallback);
+        }
+        if (removeCallback != null) {
+            removeCallbackMap.put(bid + "|" + bgroup, removeCallback);
+        }
+    }
+
 }

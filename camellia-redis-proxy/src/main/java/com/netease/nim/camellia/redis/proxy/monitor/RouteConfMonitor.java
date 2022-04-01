@@ -24,6 +24,14 @@ public class RouteConfMonitor {
         }
     }
 
+    public static void deregisterRedisTemplate(Long bid, String bgroup) {
+        try {
+            templateMap.remove(bid + "|" + bgroup);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
     public static ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> getTemplateMap() {
         return templateMap;
     }
