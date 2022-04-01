@@ -1,8 +1,10 @@
 package com.netease.nim.camellia.tools.circuitbreaker;
 
+import com.netease.nim.camellia.core.util.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +21,7 @@ public class CamelliaCircuitBreaker {
     private static final Logger logger = LoggerFactory.getLogger(CamelliaCircuitBreaker.class);
 
     private static final ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
+    private static final ConcurrentHashMap<String, AtomicLong> idMap = new ConcurrentHashMap<>();
 
     private final CircuitBreakerConfig config;
     private final String name;
@@ -39,7 +42,8 @@ public class CamelliaCircuitBreaker {
 
     public CamelliaCircuitBreaker(CircuitBreakerConfig config) {
         this.config = config;
-        this.name = config.getName();
+        AtomicLong id = CamelliaMapUtils.computeIfAbsent(idMap, config.getName(), k -> new AtomicLong());
+        this.name = config.getName() + "-" + id.incrementAndGet();
         this.bucketSize = config.getStatisticSlidingWindowBucketSize();
         this.successBuckets = new LongAdder[bucketSize];
         this.failBuckets = new LongAdder[bucketSize];
