@@ -19,6 +19,7 @@ public class DynamicOption {
     private DynamicValueGetter<Long> readTimeout;
     private DynamicValueGetter<TimeUnit> readTimeoutUnit;
     private DynamicValueGetter<Boolean> followRedirects;
+    private DynamicValueGetter<Boolean> monitorEnable;
     private CircuitBreakerConfig circuitBreakerConfig;
     private DynamicContractTypeGetter dynamicContractTypeGetter = new DynamicContractTypeGetter.Default();
     private CamelliaServerSelector<FeignResource> serverSelector = new RandomCamelliaServerSelector<>();
@@ -55,6 +56,11 @@ public class DynamicOption {
         return followRedirects.get();
     }
 
+    public Boolean isMonitorEnable() {
+        if (monitorEnable == null) return false;
+        return monitorEnable.get();
+    }
+
     public CamelliaServerSelector<FeignResource> getServerSelector() {
         if (serverSelector == null) {
             return new RandomCamelliaServerSelector<>();
@@ -85,6 +91,11 @@ public class DynamicOption {
 
         public Builder followRedirects(DynamicValueGetter<Boolean> followRedirects) {
             dynamicOption.followRedirects = followRedirects;
+            return this;
+        }
+
+        public Builder monitorEnable(DynamicValueGetter<Boolean> monitorEnable) {
+            dynamicOption.monitorEnable = monitorEnable;
             return this;
         }
 

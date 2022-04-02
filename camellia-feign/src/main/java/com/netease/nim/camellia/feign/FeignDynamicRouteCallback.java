@@ -1,10 +1,13 @@
 package com.netease.nim.camellia.feign;
 
 import com.netease.nim.camellia.core.api.CamelliaApi;
+import com.netease.nim.camellia.core.api.RemoteMonitor;
 import com.netease.nim.camellia.core.client.annotation.RouteKey;
 import com.netease.nim.camellia.core.client.callback.ProxyClientFactory;
+import com.netease.nim.camellia.core.client.env.Monitor;
 import com.netease.nim.camellia.core.util.AnnotationValueGetterCache;
 import com.netease.nim.camellia.core.util.ExceptionUtils;
+import com.netease.nim.camellia.feign.client.DynamicOption;
 import com.netease.nim.camellia.feign.conf.CamelliaFeignDynamicOptionGetter;
 import com.netease.nim.camellia.feign.route.CamelliaDashboardFeignResourceTableUpdater;
 import net.sf.cglib.proxy.MethodInterceptor;
@@ -66,6 +69,19 @@ public class FeignDynamicRouteCallback<T> implements MethodInterceptor {
                 client = clientMap.get(bgroup);
                 if (client == null) {
                     CamelliaFeignBuildParam<T> param = buildParam.duplicate();
+                    Monitor monitor = buildParam.getFeignEnv().getProxyEnv().getMonitor();
+                    DynamicOption dynamicOption = camelliaFeignDynamicOptionGetter.getDynamicOption(bid, bgroup);
+                    if (dynamicOption != null) {
+                        Boolean monitorEnable = dynamicOption.isMonitorEnable();
+                        if (monitorEnable != null && monitorEnable && camelliaApi != null) {
+                            if (monitor == null) {
+                                monitor = new RemoteMonitor(bid, bgroup, camelliaApi);
+                            }
+                        } else {
+                            monitor = null;
+                        }
+                    }
+                    param.setMonitor(monitor);
                     param.setDynamicOption(camelliaFeignDynamicOptionGetter.getDynamicOption(bid, bgroup));
                     param.setUpdater(new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, checkIntervalMillis));
                     client = ProxyClientFactory.createProxy(param.getApiType(), new FeignCallback<>(param));

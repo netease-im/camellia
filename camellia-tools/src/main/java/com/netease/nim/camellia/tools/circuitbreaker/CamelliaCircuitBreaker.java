@@ -43,7 +43,7 @@ public class CamelliaCircuitBreaker {
     public CamelliaCircuitBreaker(CircuitBreakerConfig config) {
         this.config = config;
         AtomicLong id = CamelliaMapUtils.computeIfAbsent(idMap, config.getName(), k -> new AtomicLong());
-        this.name = config.getName() + "-" + id.incrementAndGet();
+        this.name = "[" + config.getName() + "][" + id.incrementAndGet() + "]";
         this.bucketSize = config.getStatisticSlidingWindowBucketSize();
         this.successBuckets = new LongAdder[bucketSize];
         this.failBuckets = new LongAdder[bucketSize];
@@ -95,7 +95,12 @@ public class CamelliaCircuitBreaker {
                 }
                 return true;
             }
-            if (config.getForceOpen().get()) return false;
+            if (config.getForceOpen().get()) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("camellia circuit breaker return allowRequest=false for forceOpen, name = {}", name);
+                }
+                return false;
+            }
             //如果熔断器没有打开，直接返回true
             if (!circuitBreakerOpen.get()) {
                 return true;
@@ -110,6 +115,9 @@ public class CamelliaCircuitBreaker {
                     }
                     return allow;
                 }
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("camellia circuit breaker return allowRequest=false for open, name = {}", name);
             }
             return false;
         } catch (Exception e) {
@@ -138,6 +146,9 @@ public class CamelliaCircuitBreaker {
         try {
             if (!config.getEnable().get()) return;
             successBuckets[index].add(count);
+            if (logger.isDebugEnabled()) {
+                logger.debug("camellia circuit breaker incrementSuccess, count = {}, name = {}", count, name);
+            }
             //如果此时熔断器是打开的，则说明探测成功了，则需要重置一下状态
             if (circuitBreakerOpen.get() && circuitBreakerOpen.compareAndSet(true, false)) {
                 if (config.getLogEnable().get()) {
@@ -175,6 +186,9 @@ public class CamelliaCircuitBreaker {
         try {
             if (!config.getEnable().get()) return;
             failBuckets[index].add(count);
+            if (logger.isDebugEnabled()) {
+                logger.debug("camellia circuit breaker incrementFail, count = {}, name = {}", count, name);
+            }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

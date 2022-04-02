@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.feign;
 
+import com.netease.nim.camellia.core.client.env.Monitor;
 import com.netease.nim.camellia.feign.client.DynamicOption;
 import com.netease.nim.camellia.feign.route.FeignResourceTableUpdater;
 
@@ -14,22 +15,24 @@ public class CamelliaFeignBuildParam<T> {
     private FeignResourceTableUpdater updater;
     private CamelliaFeignEnv feignEnv;
     private DynamicOption dynamicOption;
+    private Monitor monitor;
 
     public CamelliaFeignBuildParam() {
     }
 
     public CamelliaFeignBuildParam(Class<T> apiType, T fallback, CamelliaFeignProps feignProps, FeignResourceTableUpdater updater,
-                                   CamelliaFeignEnv feignEnv, DynamicOption dynamicOption) {
+                                   CamelliaFeignEnv feignEnv, DynamicOption dynamicOption, Monitor monitor) {
         this.apiType = apiType;
         this.fallback = fallback;
         this.feignProps = feignProps;
         this.updater = updater;
         this.feignEnv = feignEnv;
         this.dynamicOption = dynamicOption;
+        this.monitor = monitor;
     }
 
     public CamelliaFeignBuildParam<T> duplicate() {
-        return new CamelliaFeignBuildParam<>(apiType, fallback, feignProps, updater, feignEnv, dynamicOption);
+        return new CamelliaFeignBuildParam<>(apiType, fallback, feignProps, updater, feignEnv, dynamicOption, monitor);
     }
 
     public Class<T> getApiType() {
@@ -78,5 +81,13 @@ public class CamelliaFeignBuildParam<T> {
 
     public void setDynamicOption(DynamicOption dynamicOption) {
         this.dynamicOption = dynamicOption;
+    }
+
+    public Monitor getMonitor() {
+        return monitor;
+    }
+
+    public void setMonitor(Monitor monitor) {
+        this.monitor = monitor;
     }
 }

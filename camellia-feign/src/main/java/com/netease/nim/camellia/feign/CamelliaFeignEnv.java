@@ -12,15 +12,17 @@ public class CamelliaFeignEnv {
     private ProxyEnv proxyEnv = ProxyEnv.defaultProxyEnv();
     private CamelliaDiscoveryFactory<FeignServerInfo> discoveryFactory;
     private CamelliaServerHealthChecker<FeignServerInfo> healthChecker = new DummyCamelliaServerHealthChecker<>();
+    private FallbackExceptionChecker fallbackExceptionChecker = new FallbackExceptionChecker.Default();
 
     private CamelliaFeignEnv() {
     }
 
     private CamelliaFeignEnv(ProxyEnv proxyEnv, CamelliaDiscoveryFactory<FeignServerInfo> discoveryFactory,
-                             CamelliaServerHealthChecker<FeignServerInfo> healthChecker) {
-        this.discoveryFactory = discoveryFactory;
+                             CamelliaServerHealthChecker<FeignServerInfo> healthChecker, FallbackExceptionChecker fallbackExceptionChecker) {
         this.proxyEnv = proxyEnv;
+        this.discoveryFactory = discoveryFactory;
         this.healthChecker = healthChecker;
+        this.fallbackExceptionChecker = fallbackExceptionChecker;
     }
 
     public static CamelliaFeignEnv defaultFeignEnv() {
@@ -39,28 +41,42 @@ public class CamelliaFeignEnv {
         return healthChecker;
     }
 
+    public FallbackExceptionChecker getFallbackExceptionChecker() {
+        return fallbackExceptionChecker;
+    }
+
     public static class Builder {
-        private final CamelliaFeignEnv redisEnv;
+        private final CamelliaFeignEnv feignEnv;
         public Builder() {
-            redisEnv = new CamelliaFeignEnv();
+            feignEnv = new CamelliaFeignEnv();
         }
 
         public Builder(CamelliaFeignEnv feignEnv) {
-            this.redisEnv = new CamelliaFeignEnv(feignEnv.proxyEnv, feignEnv.discoveryFactory, feignEnv.healthChecker);
+            this.feignEnv = new CamelliaFeignEnv(feignEnv.proxyEnv, feignEnv.discoveryFactory, feignEnv.healthChecker, feignEnv.fallbackExceptionChecker);
+        }
+
+        public Builder proxyEnv(ProxyEnv proxyEnv) {
+            feignEnv.proxyEnv = proxyEnv;
+            return this;
         }
 
         public Builder healthChecker(CamelliaServerHealthChecker<FeignServerInfo> healthChecker) {
-            redisEnv.healthChecker = healthChecker;
+            feignEnv.healthChecker = healthChecker;
             return this;
         }
 
         public Builder discoveryFactory(CamelliaDiscoveryFactory<FeignServerInfo> discoveryFactory) {
-            redisEnv.discoveryFactory = discoveryFactory;
+            feignEnv.discoveryFactory = discoveryFactory;
+            return this;
+        }
+
+        public Builder fallbackExceptionChecker(FallbackExceptionChecker fallbackExceptionChecker) {
+            feignEnv.fallbackExceptionChecker = fallbackExceptionChecker;
             return this;
         }
 
         public CamelliaFeignEnv build() {
-            return redisEnv;
+            return feignEnv;
         }
     }
 }

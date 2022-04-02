@@ -20,6 +20,29 @@ public class CircuitBreakerConfig {
     private DynamicValueGetter<Long> singleTestIntervalMillis = () -> 5000L;//当熔断器打开的情况下，间隔多久尝试一次探测（也就是半开）
     private DynamicValueGetter<Boolean> logEnable = () -> true;//是否打开日志（主要是打印熔断器状态变更时打印）
 
+    public CircuitBreakerConfig() {
+    }
+
+    public CircuitBreakerConfig(String name, long statisticSlidingWindowTime, int statisticSlidingWindowBucketSize,
+                                DynamicValueGetter<Boolean> enable, DynamicValueGetter<Boolean> forceOpen,
+                                DynamicValueGetter<Double> failThresholdPercentage, DynamicValueGetter<Long> requestVolumeThreshold,
+                                DynamicValueGetter<Long> singleTestIntervalMillis, DynamicValueGetter<Boolean> logEnable) {
+        this.name = name;
+        this.statisticSlidingWindowTime = statisticSlidingWindowTime;
+        this.statisticSlidingWindowBucketSize = statisticSlidingWindowBucketSize;
+        this.enable = enable;
+        this.forceOpen = forceOpen;
+        this.failThresholdPercentage = failThresholdPercentage;
+        this.requestVolumeThreshold = requestVolumeThreshold;
+        this.singleTestIntervalMillis = singleTestIntervalMillis;
+        this.logEnable = logEnable;
+    }
+
+    public CircuitBreakerConfig duplicate() {
+        return new CircuitBreakerConfig(name, statisticSlidingWindowTime, statisticSlidingWindowBucketSize,
+                enable, forceOpen, failThresholdPercentage, requestVolumeThreshold, singleTestIntervalMillis, logEnable);
+    }
+
     public String getName() {
         return name;
     }

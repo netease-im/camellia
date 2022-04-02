@@ -2,7 +2,9 @@ package com.netease.nim.camellia.feign;
 
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiUtil;
+import com.netease.nim.camellia.core.api.RemoteMonitor;
 import com.netease.nim.camellia.core.client.callback.ProxyClientFactory;
+import com.netease.nim.camellia.core.client.env.Monitor;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.feign.client.DynamicOption;
@@ -206,7 +208,18 @@ public final class CamelliaFeign {
             if (camelliaFeignDynamicOptionGetter != null) {
                 dynamicOption = camelliaFeignDynamicOptionGetter.getDynamicOption(bid, bgroup);
             }
-            CamelliaFeignBuildParam<T> buildParam = new CamelliaFeignBuildParam<>(apiType, fallback, feignProps, updater, feignEnv, dynamicOption);
+            Monitor monitor = feignEnv.getProxyEnv().getMonitor();
+            if (dynamicOption != null) {
+                Boolean monitorEnable = dynamicOption.isMonitorEnable();
+                if (monitorEnable != null && monitorEnable) {
+                    if (monitor == null && bid > 0 && camelliaApi != null) {
+                        monitor = new RemoteMonitor(bid, bgroup, camelliaApi);
+                    }
+                } else {
+                    monitor = null;
+                }
+            }
+            CamelliaFeignBuildParam<T> buildParam = new CamelliaFeignBuildParam<>(apiType, fallback, feignProps, updater, feignEnv, dynamicOption, monitor);
             T defaultFeignClient = ProxyClientFactory.createProxy(apiType, new FeignCallback<>(buildParam));
             if (camelliaFeignDynamicOptionGetter != null && camelliaFeignDynamicOptionGetter.getDynamicRouteConfGetter(bid) != null && bid > 0 && camelliaApi != null ) {
                 //如果设置了DynamicRouteConfGetter，则允许根据请求参数做动态路由下发
