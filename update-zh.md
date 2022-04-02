@@ -24,6 +24,7 @@
 ### 更新
 * camellia-redis移除了ProxyDiscovery抽象类，统一使用IProxyDiscovery接口，并继承自CamelliaDiscovery接口
 * camellia-id-gen移除了AbstractIdGenServerDiscovery抽象类，统一使用IdGenServerDiscovery接口，并继承自CamelliaDiscovery接口
+* 所有模块的最低jdk依赖都升级到jdk8
 
 ### fix
 * 无

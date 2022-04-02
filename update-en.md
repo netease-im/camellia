@@ -25,6 +25,7 @@
 ### update
 * camellia-redis remove ProxyDiscovery, use IProxyDiscovery which implements CamelliaDiscovery
 * camellia-id-gen remove AbstractIdGenServerDiscovery, use IdGenServerDiscovery which implements CamelliaDiscovery
+* all modules upgrade to jdk8
 
 ### fix
 * none
