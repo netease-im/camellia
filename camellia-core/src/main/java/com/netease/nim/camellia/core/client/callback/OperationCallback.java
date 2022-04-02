@@ -91,25 +91,25 @@ public class OperationCallback<T> implements MethodInterceptor {
                                 futureList.add(future);
                             }
                             Object ret = null;
-                            boolean isRetSet = false;
-                            for (Future<Object> future : futureList) {
-                                Object ret1 = future.get();
-                                if (!isRetSet) {
-                                    ret = ret1;
-                                    isRetSet = true;
+                            for (int i=0; i<futureList.size(); i++) {
+                                Future<Object> future = futureList.get(i);
+                                Object obj = future.get();
+                                boolean first = i == 0;
+                                if (first) {
+                                    ret = obj;
                                 }
                             }
                             return ret;
                         } else {
                             Object ret = null;
-                            boolean isRetSet = false;
-                            for (Resource resource : writeOperation.getWriteResources()) {
+                            for (int i=0; i<writeOperation.getWriteResources().size(); i++) {
+                                Resource resource = writeOperation.getWriteResources().get(i);
                                 T client2 = clientMap.get(resource);
                                 incrWrite(resource, method);
-                                Object ret1 = method.invoke(client2, objects);
-                                if (!isRetSet) {
-                                    ret = ret1;
-                                    isRetSet = true;
+                                Object obj = method.invoke(client2, objects);
+                                boolean first = i == 0;
+                                if (first) {
+                                    ret = obj;
                                 }
                             }
                             return ret;
