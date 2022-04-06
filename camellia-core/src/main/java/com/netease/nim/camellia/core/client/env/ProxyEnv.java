@@ -32,6 +32,8 @@ public class ProxyEnv {
     //监控bean，若为null，表示不监控
     private Monitor monitor;
 
+    private ThreadContextSwitchStrategy threadContextSwitchStrategy = new ThreadContextSwitchStrategy.Default();
+
     //分片函数
     private ShardingFunc shardingFunc = new DefaultShardingFunc();
 
@@ -85,6 +87,10 @@ public class ProxyEnv {
         return shardingFunc;
     }
 
+    public ThreadContextSwitchStrategy getThreadContextSwitchStrategy() {
+        return threadContextSwitchStrategy;
+    }
+
     public static class Builder {
 
         private final ProxyEnv proxyEnv;
@@ -98,6 +104,7 @@ public class ProxyEnv {
                     proxyEnv.multiWriteConcurrentExecPoolSize, proxyEnv.monitor, proxyEnv.shardingFunc);
             this.proxyEnv.shardingConcurrentExec = proxyEnv.shardingConcurrentExec;
             this.proxyEnv.multiWriteConcurrentExec = proxyEnv.multiWriteConcurrentExec;
+            this.proxyEnv.threadContextSwitchStrategy = proxyEnv.threadContextSwitchStrategy;
         }
 
         public Builder shardingConcurrentEnable(boolean shardingConcurrentEnable) {
@@ -134,6 +141,13 @@ public class ProxyEnv {
         public Builder shardingFunc(ShardingFunc shardingFunc) {
             if (shardingFunc != null) {
                 proxyEnv.shardingFunc = shardingFunc;
+            }
+            return this;
+        }
+
+        public Builder threadContextSwitchStrategy(ThreadContextSwitchStrategy threadContextSwitchStrategy) {
+            if (threadContextSwitchStrategy != null) {
+                proxyEnv.threadContextSwitchStrategy = threadContextSwitchStrategy;
             }
             return this;
         }

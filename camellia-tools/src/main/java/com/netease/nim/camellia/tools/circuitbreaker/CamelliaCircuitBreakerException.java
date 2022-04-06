@@ -5,6 +5,8 @@ package com.netease.nim.camellia.tools.circuitbreaker;
  */
 public class CamelliaCircuitBreakerException extends RuntimeException {
 
+    public static final CamelliaCircuitBreakerException DEFAULT = new CamelliaCircuitBreakerException();
+
     public CamelliaCircuitBreakerException() {
     }
 

@@ -168,6 +168,10 @@ public final class CamelliaFeign {
         }
 
         public <T> T target(Class<T> apiType, T fallback) {
+            return target(apiType, new CamelliaFeignFallbackFactory.Default<>(fallback));
+        }
+
+        public <T> T target(Class<T> apiType, CamelliaFeignFallbackFactory<T> fallbackFactory) {
             FeignResourceTableUpdater updater = null;
             //指定配置 优于 注解配置
             //bid/bgroup/CamelliaApi 优于 固定配置
@@ -204,10 +208,14 @@ public final class CamelliaFeign {
                 FeignResourceUtils.checkResourceTable(resourceTable);
                 updater = new SimpleFeignResourceTableUpdater(resourceTable);
             }
+
+            //获取动态配置
             DynamicOption dynamicOption = null;
             if (camelliaFeignDynamicOptionGetter != null) {
                 dynamicOption = camelliaFeignDynamicOptionGetter.getDynamicOption(bid, bgroup);
             }
+
+            //监控类，优先使用proxyEnv中指定的Monitor
             Monitor monitor = feignEnv.getProxyEnv().getMonitor();
             if (dynamicOption != null) {
                 Boolean monitorEnable = dynamicOption.isMonitorEnable();
@@ -219,7 +227,29 @@ public final class CamelliaFeign {
                     monitor = null;
                 }
             }
-            CamelliaFeignBuildParam<T> buildParam = new CamelliaFeignBuildParam<>(apiType, fallback, feignProps, updater, feignEnv, dynamicOption, monitor);
+
+            //如果未指定fallback，则尝试根据注解的fallback类型信息，去主动创建一个
+            if (fallbackFactory == null && annotation != null) {
+                Class<?> fallbackFactoryClazz = annotation.fallbackFactory();
+                if (fallbackFactoryClazz == null) {
+                    try {
+                        fallbackFactory = (CamelliaFeignFallbackFactory<T>) fallbackFactoryClazz.newInstance();
+                    } catch (Exception ignore) {
+                    }
+                }
+                if (fallbackFactory == null) {
+                    Class<?> fallbackClass = annotation.fallback();
+                    if (fallbackClass != null) {
+                        try {
+                            T fallback = (T) fallbackClass.newInstance();
+                            fallbackFactory = new CamelliaFeignFallbackFactory.Default<>(fallback);
+                        } catch (Exception ignore) {
+                        }
+                    }
+                }
+            }
+
+            CamelliaFeignBuildParam<T> buildParam = new CamelliaFeignBuildParam<>(apiType, fallbackFactory, feignProps, updater, feignEnv, dynamicOption, monitor);
             T defaultFeignClient = ProxyClientFactory.createProxy(apiType, new FeignCallback<>(buildParam));
             if (camelliaFeignDynamicOptionGetter != null && camelliaFeignDynamicOptionGetter.getDynamicRouteConfGetter(bid) != null && bid > 0 && camelliaApi != null ) {
                 //如果设置了DynamicRouteConfGetter，则允许根据请求参数做动态路由下发

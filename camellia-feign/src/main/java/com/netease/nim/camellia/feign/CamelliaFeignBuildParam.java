@@ -10,7 +10,7 @@ import com.netease.nim.camellia.feign.route.FeignResourceTableUpdater;
 public class CamelliaFeignBuildParam<T> {
 
     private Class<T> apiType;
-    private T fallback;
+    private CamelliaFeignFallbackFactory<T> fallbackFactory;
     private CamelliaFeignProps feignProps;
     private FeignResourceTableUpdater updater;
     private CamelliaFeignEnv feignEnv;
@@ -20,10 +20,10 @@ public class CamelliaFeignBuildParam<T> {
     public CamelliaFeignBuildParam() {
     }
 
-    public CamelliaFeignBuildParam(Class<T> apiType, T fallback, CamelliaFeignProps feignProps, FeignResourceTableUpdater updater,
+    public CamelliaFeignBuildParam(Class<T> apiType, CamelliaFeignFallbackFactory<T> fallbackFactory, CamelliaFeignProps feignProps, FeignResourceTableUpdater updater,
                                    CamelliaFeignEnv feignEnv, DynamicOption dynamicOption, Monitor monitor) {
         this.apiType = apiType;
-        this.fallback = fallback;
+        this.fallbackFactory = fallbackFactory;
         this.feignProps = feignProps;
         this.updater = updater;
         this.feignEnv = feignEnv;
@@ -32,7 +32,7 @@ public class CamelliaFeignBuildParam<T> {
     }
 
     public CamelliaFeignBuildParam<T> duplicate() {
-        return new CamelliaFeignBuildParam<>(apiType, fallback, feignProps, updater, feignEnv, dynamicOption, monitor);
+        return new CamelliaFeignBuildParam<>(apiType, fallbackFactory, feignProps, updater, feignEnv, dynamicOption, monitor);
     }
 
     public Class<T> getApiType() {
@@ -43,12 +43,12 @@ public class CamelliaFeignBuildParam<T> {
         this.apiType = apiType;
     }
 
-    public T getFallback() {
-        return fallback;
+    public CamelliaFeignFallbackFactory<T> getFallbackFactory() {
+        return fallbackFactory;
     }
 
-    public void setFallback(T fallback) {
-        this.fallback = fallback;
+    public void setFallbackFactory(CamelliaFeignFallbackFactory<T> fallbackFactory) {
+        this.fallbackFactory = fallbackFactory;
     }
 
     public FeignResourceTableUpdater getUpdater() {

@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.core.client.callback;
 
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
+import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.operation.ResourceOperation;
 import com.netease.nim.camellia.core.model.operation.ResourceReadOperation;
@@ -81,13 +82,14 @@ public class OperationCallback<T> implements MethodInterceptor {
                         return method.invoke(client1, objects);
                     case MULTI:
                         if (env.isMultiWriteConcurrentEnable()) {
+                            ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
                             List<Future<Object>> futureList = new ArrayList<>();
                             for (final Resource resource : writeOperation.getWriteResources()) {
                                 final T client2 = clientMap.get(resource);
-                                Future<Object> future = env.getMultiWriteConcurrentExec().submit(() -> {
+                                Future<Object> future = env.getMultiWriteConcurrentExec().submit(strategy.wrapperCallable(() -> {
                                     incrWrite(resource, method);
                                     return method.invoke(client2, objects);
-                                });
+                                }));
                                 futureList.add(future);
                             }
                             Object ret = null;

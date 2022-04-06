@@ -19,6 +19,9 @@ public class TestFeignController {
 
     @PostMapping("/getUser")
     public UserResponse getUser(@RequestBody User user) {
+        if (user.getUid() == 222) {
+            throw new RuntimeException();
+        }
         user.setName("zhangsan");
         user.setExt("ext123");
         UserResponse response = new UserResponse();
@@ -31,6 +34,15 @@ public class TestFeignController {
     public UserResponse getUser2() {
         User user = new User();
         user.setUid(111);
+        UserResponse response = testFeignService.getUser(user);
+        System.out.println("getUser2=" + JSONObject.toJSONString(response));
+        return response;
+    }
+
+    @GetMapping("/getUserFallback")
+    public UserResponse getUserFallback() {
+        User user = new User();
+        user.setUid(222);
         UserResponse response = testFeignService.getUser(user);
         System.out.println("getUser2=" + JSONObject.toJSONString(response));
         return response;

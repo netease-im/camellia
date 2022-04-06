@@ -3,6 +3,7 @@ package com.netease.nim.camellia.feign;
 import com.netease.nim.camellia.core.client.annotation.LoadBalanceKey;
 import com.netease.nim.camellia.core.client.env.Monitor;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
+import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 import com.netease.nim.camellia.core.discovery.CamelliaServerHealthChecker;
 import com.netease.nim.camellia.core.discovery.CamelliaServerSelector;
@@ -46,7 +47,7 @@ public class FeignCallback<T> implements MethodInterceptor {
     private final CamelliaFeignEnv feignEnv;
     private final FeignClientFactory<T> factory;
     private final Class<T> clazz;
-    private final T fallback;
+    private final CamelliaFeignFallbackFactory<T> fallbackFactory;
     private final CircuitBreakerConfig circuitBreakerConfig;
     private final CamelliaServerSelector<FeignResource> serverSelector;
     private final ReadWriteOperationCache readWriteOperationCache = new ReadWriteOperationCache();
@@ -62,7 +63,7 @@ public class FeignCallback<T> implements MethodInterceptor {
         this.feignEnv = buildParam.getFeignEnv();
         this.dynamicOption = buildParam.getDynamicOption();
         this.factory = new FeignClientFactory.Default<>(clazz, buildParam.getFeignProps(), buildParam.getDynamicOption());
-        this.fallback = buildParam.getFallback();
+        this.fallbackFactory = buildParam.getFallbackFactory();
         this.circuitBreakerConfig = buildParam.getDynamicOption() == null ? null : buildParam.getDynamicOption().getCircuitBreakerConfig();
         if (circuitBreakerConfig != null) {
             String name = circuitBreakerConfig.getName();
@@ -130,6 +131,9 @@ public class FeignCallback<T> implements MethodInterceptor {
                 }
             }
         }
+        if (logger.isDebugEnabled()) {
+            logger.debug("camellia-feign, service = {}, method = {}, resource = {}", className, readWriteOperationCache.getMethodName(method), resource.getUrl());
+        }
         FeignResourcePool pool = map.get(resource.getUrl());
         FeignResource feignResource = pool.getResource(loadBalanceKey);
         T t = factory.get(feignResource);
@@ -140,9 +144,12 @@ public class FeignCallback<T> implements MethodInterceptor {
                 boolean allowRequest = circuitBreaker.allowRequest();
                 if (!allowRequest) {
                     success = false;
-                    if (checkFallback && fallback != null) {
+                    if (checkFallback && fallbackFactory != null) {
                         try {
-                            return method.invoke(fallback, objects);
+                            T fallback = fallbackFactory.getFallback(CamelliaCircuitBreakerException.DEFAULT);
+                            if (fallback != null) {
+                                return method.invoke(fallback, objects);
+                            }
                         } catch (Exception ex) {
                             throw new CamelliaFeignFallbackErrorException(ExceptionUtils.onError(ex));
                         }
@@ -184,17 +191,18 @@ public class FeignCallback<T> implements MethodInterceptor {
                 } else {
                     ProxyEnv env = feignEnv.getProxyEnv();
                     if (env.isMultiWriteConcurrentEnable()) {
+                        ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
                         List<Future<Object>> futureList = new ArrayList<>();
                         for (int i=0; i<list.size(); i++) {
                             Resource resource = list.get(i);
                             boolean first = i == 0;
-                            Future<Object> future = env.getMultiWriteConcurrentExec().submit(() -> {
+                            Future<Object> future = env.getMultiWriteConcurrentExec().submit(strategy.wrapperCallable(() -> {
                                 try {
                                     return invoke(resource, loadBalanceKey, method, objects, first, operationType);
                                 } catch (Throwable e) {
                                     throw new ExecutionException(e);
                                 }
-                            });
+                            }));
                             futureList.add(future);
                         }
                         Object ret = null;
@@ -224,9 +232,12 @@ public class FeignCallback<T> implements MethodInterceptor {
             throw new IllegalStateException("wil not invoke here");
         } catch (Exception e) {
             Throwable t = ExceptionUtils.onError(e);
-            if (fallback != null && !(e instanceof CamelliaFeignFallbackErrorException) && !feignEnv.getFallbackExceptionChecker().isSkipError(t)) {
+            if (fallbackFactory != null && !(e instanceof CamelliaFeignFallbackErrorException) && !feignEnv.getFallbackExceptionChecker().isSkipError(e)) {
                 try {
-                    return method.invoke(fallback, objects);
+                    T fallback = fallbackFactory.getFallback(t);
+                    if (fallback != null) {
+                        return method.invoke(fallback, objects);
+                    }
                 } catch (Exception ex) {
                     throw ExceptionUtils.onError(ex);
                 }

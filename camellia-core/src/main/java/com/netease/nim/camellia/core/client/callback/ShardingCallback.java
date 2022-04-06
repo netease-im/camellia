@@ -5,6 +5,7 @@ import com.netease.nim.camellia.core.client.annotation.ShardingConfig;
 import com.netease.nim.camellia.core.client.annotation.ShardingParam;
 import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
+import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
 import com.netease.nim.camellia.core.client.hub.IProxyHub;
 import com.netease.nim.camellia.core.util.CamelliaMapUtils;
 import com.netease.nim.camellia.core.util.ExceptionUtils;
@@ -103,6 +104,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                     throw new RuntimeException("will not invoke here");
                 } else {
                     if (env.isShardingConcurrentEnable()) {
+                        ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
                         final AtomicBoolean isInvokeError = new AtomicBoolean(false);
                         final Throwable[] invokeError = new Throwable[1];
                         List<Object> results = new ArrayList<>();
@@ -110,7 +112,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                         for (Map.Entry<T, Object[]> entry : finalProxyMap.entrySet()) {
                             final T proxy = entry.getKey();
                             final Object[] params = entry.getValue();
-                            Future<Object> future = env.getShardingConcurrentExec().submit(() -> {
+                            Future<Object> future = env.getShardingConcurrentExec().submit(strategy.wrapperCallable(() -> {
                                 try {
                                     return method.invoke(proxy, params);
                                 } catch (Throwable e) {
@@ -118,7 +120,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
                                     isInvokeError.set(true);
                                     throw e;
                                 }
-                            });
+                            }));
                             futureList.add(future);
                         }
                         for (Future<Object> future : futureList) {

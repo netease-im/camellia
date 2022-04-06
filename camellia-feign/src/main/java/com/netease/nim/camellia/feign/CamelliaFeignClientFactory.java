@@ -25,6 +25,14 @@ public class CamelliaFeignClientFactory {
     private final long checkIntervalMillis;
     private final CamelliaFeignDynamicOptionGetter dynamicOptionGetter;
 
+    /**
+     *
+     * @param feignEnv 一些全局参数：包括camellia-core的一些基本参数、使用注册中心时需要的discovery实现以及对应的健康检查方法、使用fallback和熔断时过滤异常类型的FallbackExceptionChecker
+     * @param camelliaApi 接入camellia-dashboard时需要本参数
+     * @param checkIntervalMillis 接入camellia-dashboard时的规则检查周期，默认5000ms
+     * @param feignProps 构造feign客户端时的参数，包括编解码类型、异常处理类等
+     * @param dynamicOptionGetter 动态配置的回调接口
+     */
     public CamelliaFeignClientFactory(CamelliaFeignEnv feignEnv, CamelliaApi camelliaApi, long checkIntervalMillis,
                                       CamelliaFeignProps feignProps, CamelliaFeignDynamicOptionGetter dynamicOptionGetter) {
         this.feignProps = feignProps;
@@ -48,7 +56,7 @@ public class CamelliaFeignClientFactory {
      * @return 客户端实例
      */
     public <T> T getService(Class<T> apiType) {
-        return getService(-1, "default", apiType, null);
+        return getService(-1, "default", apiType, (CamelliaFeignFallbackFactory<T>) null);
     }
 
     /**
@@ -63,13 +71,23 @@ public class CamelliaFeignClientFactory {
 
     /**
      * 生成一个camellia-feign客户端
+     * @param apiType 类型
+     * @param fallbackFactory fallback工厂
+     * @return 客户端实例
+     */
+    public <T> T getService(Class<T> apiType, CamelliaFeignFallbackFactory<T> fallbackFactory) {
+        return getService(-1, "default", apiType, fallbackFactory);
+    }
+
+    /**
+     * 生成一个camellia-feign客户端
      * @param bid 业务bid
      * @param bgroup 业务bgroup
      * @param apiType 类型
      * @return 客户端实例
      */
     public <T> T getService(long bid, String bgroup, Class<T> apiType) {
-        return getService(bid, bgroup, apiType, null);
+        return getService(bid, bgroup, apiType, (CamelliaFeignFallbackFactory<T>) null);
     }
 
     /**
@@ -81,6 +99,18 @@ public class CamelliaFeignClientFactory {
      * @return 客户端实例
      */
     public <T> T getService(long bid, String bgroup, Class<T> apiType, T fallback) {
+        return getService(bid, bgroup, apiType, new CamelliaFeignFallbackFactory.Default<>(fallback));
+    }
+
+    /**
+     * 生成一个camellia-feign客户端
+     * @param bid 业务bid
+     * @param bgroup 业务bgroup
+     * @param apiType 类型
+     * @param fallbackFactory fallback工厂
+     * @return 客户端实例
+     */
+    public <T> T getService(long bid, String bgroup, Class<T> apiType, CamelliaFeignFallbackFactory<T> fallbackFactory) {
         String key = bid + "|" + bgroup;
         String lockKey = key + "|" + apiType.getName();
         ConcurrentHashMap<String, Object> subMap = map.get(apiType);
@@ -118,7 +148,7 @@ public class CamelliaFeignClientFactory {
                     if (feignProps.isDecode404()) {
                         builder.decode404();
                     }
-                    target = builder.target(apiType, fallback);
+                    target = builder.target(apiType, fallbackFactory);
                     subMap.put(key, target);
                     logger.info("camellia feign service = {} init success, bid = {}, bgroup = {}", apiType.getName(), bid, bgroup);
                 }

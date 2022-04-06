@@ -12,8 +12,19 @@ import java.util.concurrent.TimeUnit;
  */
 public interface CamelliaFeignDynamicOptionGetter {
 
+    /**
+     * 根据bid和bgroup获取动态配置
+     * @param bid 业务bid
+     * @param bgroup 业务bgroup
+     * @return DynamicOption
+     */
     DynamicOption getDynamicOption(long bid, String bgroup);
 
+    /**
+     * 根据bid获取DynamicRouteConfGetter
+     * @param bid 业务bid
+     * @return DynamicRouteConfGetter
+     */
     default DynamicRouteConfGetter getDynamicRouteConfGetter(long bid) {
         return null;
     }
@@ -25,31 +36,34 @@ public interface CamelliaFeignDynamicOptionGetter {
         private final TimeUnit readTimeoutUnit;
         private final boolean followRedirects;
         private final boolean circuitBreakerEnable;
+        private final boolean monitorEnable;
 
         public DefaultCamelliaFeignDynamicOptionGetter(long connectTimeout, TimeUnit connectTimeoutUnit,
-                                                       long readTimeout, TimeUnit readTimeoutUnit, boolean followRedirects, boolean circuitBreakerEnable) {
+                                                       long readTimeout, TimeUnit readTimeoutUnit, boolean followRedirects,
+                                                       boolean circuitBreakerEnable, boolean monitorEnable) {
             this.connectTimeout = connectTimeout;
             this.connectTimeoutUnit = connectTimeoutUnit;
             this.readTimeout = readTimeout;
             this.readTimeoutUnit = readTimeoutUnit;
             this.followRedirects = followRedirects;
             this.circuitBreakerEnable = circuitBreakerEnable;
+            this.monitorEnable = monitorEnable;
         }
 
         public DefaultCamelliaFeignDynamicOptionGetter(long connectTimeoutMillis, long readTimeoutMillis, boolean circuitBreakerEnable) {
-            this(connectTimeoutMillis, TimeUnit.MILLISECONDS, readTimeoutMillis, TimeUnit.MILLISECONDS, false, circuitBreakerEnable);
+            this(connectTimeoutMillis, TimeUnit.MILLISECONDS, readTimeoutMillis, TimeUnit.MILLISECONDS, false, circuitBreakerEnable, false);
         }
 
         public DefaultCamelliaFeignDynamicOptionGetter(long connectTimeoutMillis, long readTimeoutMillis) {
-            this(connectTimeoutMillis, TimeUnit.MILLISECONDS, readTimeoutMillis, TimeUnit.MILLISECONDS, false, false);
+            this(connectTimeoutMillis, TimeUnit.MILLISECONDS, readTimeoutMillis, TimeUnit.MILLISECONDS, false, false, false);
         }
 
         public DefaultCamelliaFeignDynamicOptionGetter(long timeoutMillis, boolean circuitBreakerEnable) {
-            this(timeoutMillis, TimeUnit.MILLISECONDS, timeoutMillis, TimeUnit.MILLISECONDS, false, circuitBreakerEnable);
+            this(timeoutMillis, TimeUnit.MILLISECONDS, timeoutMillis, TimeUnit.MILLISECONDS, false, circuitBreakerEnable, false);
         }
 
         public DefaultCamelliaFeignDynamicOptionGetter(long timeoutMillis) {
-            this(timeoutMillis, TimeUnit.MILLISECONDS, timeoutMillis, TimeUnit.MILLISECONDS, false, false);
+            this(timeoutMillis, TimeUnit.MILLISECONDS, timeoutMillis, TimeUnit.MILLISECONDS, false, false, false);
         }
 
         @Override
@@ -59,6 +73,7 @@ public interface CamelliaFeignDynamicOptionGetter {
             DynamicValueGetter<Long> readTimeoutGetter = () -> readTimeout;
             DynamicValueGetter<TimeUnit> readTimeoutUnitGetter = () -> readTimeoutUnit;
             DynamicValueGetter<Boolean> followRedirectsGetter = () -> followRedirects;
+            DynamicValueGetter<Boolean> monitorEnableGetter = () -> monitorEnable;
             CircuitBreakerConfig circuitBreakerConfig = null;
             if (circuitBreakerEnable) {
                 circuitBreakerConfig = new CircuitBreakerConfig();
@@ -69,6 +84,7 @@ public interface CamelliaFeignDynamicOptionGetter {
                     .connectTimeout(connectTimeoutGetter, connectTimeoutUnitGetter)
                     .followRedirects(followRedirectsGetter)
                     .circuitBreakerConfig(circuitBreakerConfig)
+                    .monitorEnable(monitorEnableGetter)
                     .build();
         }
     }

@@ -14,14 +14,27 @@ import java.util.concurrent.TimeUnit;
  */
 public class DynamicOption {
 
+    //连接超时配置
     private DynamicValueGetter<Long> connectTimeout;
     private DynamicValueGetter<TimeUnit> connectTimeoutUnit;
+
+    //读超时配置
     private DynamicValueGetter<Long> readTimeout;
     private DynamicValueGetter<TimeUnit> readTimeoutUnit;
+
+    //是否支持重定向
     private DynamicValueGetter<Boolean> followRedirects;
+
+    //是否开启监控
     private DynamicValueGetter<Boolean> monitorEnable;
+
+    //是否开启熔断，若circuitBreakerConfig为null，则不开启熔断
     private CircuitBreakerConfig circuitBreakerConfig;
+
+    //动态检查feign的注解类型，当前支持默认注解和spring-mvc注解，默认支持动态监测
     private DynamicContractTypeGetter dynamicContractTypeGetter = new DynamicContractTypeGetter.Default();
+
+    //当基于注册中心时，如何选择服务节点，默认随机，支持哈希以及其他自定义规则，功能类似于一个简单的ribbon
     private CamelliaServerSelector<FeignResource> serverSelector = new RandomCamelliaServerSelector<>();
 
     private DynamicOption() {
