@@ -230,7 +230,7 @@ public class SampleDynamicRouteConfGetter implements DynamicRouteConfGetter {
 
 ## 根据不同的参数设置不同的负载均衡策略
 * 负载均衡策略的含义是指在使用注册中心进行节点的自动发现的模式下，在同一个路由规则下，针对多个服务节点，如何将请求分发到具体某个节点     
-* 设置负载均衡器策略的方法通过设置DynamicOption下的CamelliaServerSelector<FeignResource> serverSelector参数来实现，默认是随机策略，此外还内置了哈希策略，可以按需选择    
+* 设置负载均衡器策略的方法通过设置DynamicOption下的CamelliaServerSelector参数来实现，默认是随机策略，此外还内置了哈希策略，可以按需选择    
 ```java
 public interface CamelliaServerSelector<T> {
     /**
