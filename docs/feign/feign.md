@@ -190,7 +190,57 @@ public @interface CamelliaFeignClient {
 ```
 
 ## 根据不同的参数设置不同的路由规则
-//todo
+camellia支持根据请求参数中的某个字段，映射到不同的bgroup，从而映射到不同的路由  
+上诉功能使用时需要配合使用@RouteKey注解和DynamicRouteConfGetter动态接口  
+```java
+public class User {
+
+    @RouteKey
+    private long tenancyId;
+
+    @LoadBalanceKey
+    private long uid;
+
+    private String name;
+    private String ext;
+    
+    //.....
+}
+```
+以快速开始sample中的接口为例，我们把接口入参User中的tenancyId字段添加了@RouteKey注解，随后可以定义如下DynamicRouteConfGetter动态接口  
+```java
+public class SampleDynamicRouteConfGetter implements DynamicRouteConfGetter {
+
+    @Override
+    public String bgroup(Object routeKey) {
+        if (routeKey == null) return "default";
+        if (String.valueOf(routeKey).equals("1")) {
+            return "bgroup1";
+        } else if (String.valueOf(routeKey).equals("2")) {
+            return "bgroup2";
+        }
+        return "default";
+    }
+}
+```
+假设bid=1，则上述的DynamicRouteConfGetter动态接口表示：  
+1）当User的tenancyId字段是1时，使用bid=1,bgroup=bgroup1的路由，比如路由到集群1    
+2）当User的tenancyId字段是2时，使用bid=1,bgroup=bgroup2的路由，比如路由到集群2    
+3）其他情况使用bid=1,bgroup=default的路由，比如路由到集群3  
 
 ## 根据不同的参数设置不同的负载均衡策略
-//todo
+* 负载均衡策略的含义是指在使用注册中心进行节点的自动发现的模式下，在同一个路由规则下，针对多个服务节点，如何将请求分发到具体某个节点     
+* 设置负载均衡器策略的方法通过设置DynamicOption下的CamelliaServerSelector<FeignResource> serverSelector参数来实现，默认是随机策略，此外还内置了哈希策略，可以按需选择    
+```java
+public interface CamelliaServerSelector<T> {
+    /**
+     *
+     * @param list 待选择的节点列表
+     * @param loadBalanceKey 负载均衡key
+     * @return 具体选择哪个节点
+     */
+    T pick(List<T> list, Object loadBalanceKey);
+}
+```
+我们同样以快速开始的sample为例，我们把接口入参User对象中的uid字段添加了@LoadBalanceKey注解，假设我们选择了哈希策略，则相同uid的请求总是会发给同一个服务节点来处理  
+
