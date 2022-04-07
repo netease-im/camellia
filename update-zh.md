@@ -4,6 +4,19 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.0.54（2022/04/07）
+### 新增
+* 新增CamelliaCircuitBreaker熔断器
+* camellia-feign支持熔断（接入CamelliaCircuitBreaker），支持spring-boot-starter，支持动态配置，具体见：[camellia-feign](/docs/feign/feign.md)
+* camellia-redis-proxy自定义ProxyRouteConfUpdater支持删除已有路由
+
+### 更新
+* 无
+
+### fix
+* 无
+
+
 # 1.0.53（2022/03/24）
 ### 新增
 * camellia-redis-proxy的console新增detect接口，从而可以把camellia-redis-proxy作为一个监控平台使用

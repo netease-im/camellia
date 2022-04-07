@@ -4,6 +4,18 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+# 1.0.54（2022/04/07）
+### add
+* provide CamelliaCircuitBreaker
+* camellia-feign support circuit breaker, support spring-boot-starter, support dynamic option conf
+* camellia-redis-proxy custom ProxyRouteConfUpdater support delete route conf
+
+### update
+* none
+
+### fix
+* none
+
 
 # 1.0.53（2022/03/24）
 ### add
