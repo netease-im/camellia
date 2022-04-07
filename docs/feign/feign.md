@@ -226,7 +226,7 @@ public class SampleDynamicRouteConfGetter implements DynamicRouteConfGetter {
 假设bid=1，则上述的DynamicRouteConfGetter动态接口表示：  
 1）当User的tenancyId字段是1时，使用bid=1,bgroup=bgroup1的路由，比如路由到集群1    
 2）当User的tenancyId字段是2时，使用bid=1,bgroup=bgroup2的路由，比如路由到集群2    
-3）其他情况使用bid=1,bgroup=default的路由，比如路由到集群3  
+3）其他情况，使用bid=1,bgroup=default的路由，比如路由到集群3  
 
 ## 根据不同的参数设置不同的负载均衡策略
 * 负载均衡策略的含义是指在使用注册中心进行节点的自动发现的模式下，在同一个路由规则下，针对多个服务节点，如何将请求分发到具体某个节点     
@@ -244,3 +244,33 @@ public interface CamelliaServerSelector<T> {
 ```
 我们同样以快速开始的sample为例，我们把接口入参User对象中的uid字段添加了@LoadBalanceKey注解，假设我们选择了哈希策略，则相同uid的请求总是会发给同一个服务节点来处理  
 
+## 关于熔断
+camellia-feign集成了CamelliaCircuitBreaker，从而拥有熔断能力  
+CamelliaCircuitBreaker通过DynamicOption的CircuitBreakerConfig来配置，配置可以动态修改，并且对于不同的bid/bgroup可以进行不同的配置，具体配置包括如下：  
+```java
+public class CircuitBreakerConfig {
+
+    //以下参数一经设置不可修改
+    private String name = "camellia-circuit-breaker";//熔断器的别名
+    private long statisticSlidingWindowTime = 10 * 1000L;//统计成功失败的滑动窗口的大小，单位ms，默认10s
+    private int statisticSlidingWindowBucketSize = 10;//滑动窗口分割为多少个bucket，默认10个
+
+    //以下参数可以动态修改
+    private DynamicValueGetter<Boolean> enable = () -> true;//是否启用，若不启用，则不进行失败率统计，所有请求都允许
+    private DynamicValueGetter<Boolean> forceOpen = () -> false;//强制打开，则所有请求都不允许
+    private DynamicValueGetter<Double> failThresholdPercentage = () -> 0.5;//滑动窗口范围内失败比例超过多少触发熔断，默认50%
+    private DynamicValueGetter<Long> requestVolumeThreshold = () -> 20L;//滑动窗口内至少多少个请求才会触发熔断，默认20个
+    private DynamicValueGetter<Long> singleTestIntervalMillis = () -> 5000L;//当熔断器打开的情况下，间隔多久尝试一次探测（也就是半开）
+    private DynamicValueGetter<Boolean> logEnable = () -> true;//是否打开日志（主要是打印熔断器状态变更时打印
+    
+    //.....
+}
+```
+
+## 关于fallback
+camellia-feign支持为每个service设置fallback或者fallbackFactory（所谓的fallbackFactory指可以针对不同的异常类型返回不同的fallback对象）    
+我们可以在@CamelliaFeignClient注解中添加fallback和fallbackFactory，如果使用spring-boot-starter使用camellia-feign，则fallback和fallbackFactory可以通过spring自动注入，整体的优先级：  
+* spring自动注入的fallbackFactory实例  
+* spring自动注入的fallback实例
+* 尝试使用无参构造方法去初始化注解中fallbackFactory实例
+* 尝试使用无参构造方法去初始化注解中fallback实例

@@ -159,11 +159,12 @@ public class FeignCallback<T> implements MethodInterceptor {
             }
             return method.invoke(t, objects);
         } catch (Throwable e) {
-            success = feignEnv.getFallbackExceptionChecker().isSkipError(e);
-            if (!(e instanceof CamelliaCircuitBreakerException)) {
+            Throwable error = ExceptionUtils.onError(e);
+            success = feignEnv.getFallbackExceptionChecker().isSkipError(error);
+            if (!(error instanceof CamelliaCircuitBreakerException)) {
                 pool.onError(feignResource);
             }
-            throw e;
+            throw error;
         } finally {
             if (circuitBreaker != null) {
                 if (success) {

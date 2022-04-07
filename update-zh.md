@@ -4,6 +4,17 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.0.55（2022/04/07）
+### 新增
+* 无
+
+### 更新
+* 无
+
+### fix
+* 修复camellia-feign熔断器过滤异常类型时的一个bug（没有把原始异常从InvocationTargetException中提取出来）
+
+
 # 1.0.54（2022/04/07）
 ### 新增
 * 新增CamelliaCircuitBreaker熔断器
