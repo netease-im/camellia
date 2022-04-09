@@ -5,7 +5,7 @@ camellia-feign封装了feign，集成到camellia的体系中，提供一些额�
 
 ## 特性
 * 支持动态路由，运行期间支持动态配置新的路由规则
-* 支持camellia-core的通用能力，如分片、读写分离、双写等
+* 支持camellia-core的通用能力，如读写分离、双写
 * 支持熔断（集成了CamelliaCircuitBreaker）
 * 支持fallback（支持fallback和fallbackFactory）
 * 支持根据租户id配置不同的路由（使用注解的方式标识租户id，无侵入性）
@@ -64,7 +64,7 @@ feign#http://serviceName
 feign#https://serviceName
 
 ```
-此外，路由可以按照camellia的标准写法，支持双写、分片、读写分离等
+此外，路由可以按照camellia的标准写法，支持读写分离、双写
 
 ## 支持的配置项
 你可以使用CamelliaFeignClientFactory来手动构造camellia-feign客户端（spring-boot-starter内部也是调用的CamelliaFeignClientFactory来自动注入相关service）  
