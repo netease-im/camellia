@@ -19,7 +19,7 @@
 ### 新增
 * 新增CamelliaCircuitBreaker熔断器
 * camellia-feign支持熔断（接入CamelliaCircuitBreaker），支持spring-boot-starter，支持动态配置，具体见：[camellia-feign](/docs/feign/feign.md)
-* camellia-redis-proxy自定义ProxyRouteConfUpdater支持删除已有路由
+* camellia-redis-proxy自定义ProxyRouteConfUpdater支持删除已有路由，具体见：[路由](/docs/redis-proxy/route.md)
 
 ### 更新
 * 无

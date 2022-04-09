@@ -399,6 +399,10 @@ proxy在启动时会默认调用该方法去获取初始的路由配置。（备
 ```
 public final void invokeUpdateResourceTable(long bid, String bgroup, ResourceTable resourceTable)
 ```
+当需要删除一个路由时，可以调用invokeRemoveResourceTable回调方法，如下：
+```
+public void invokeRemoveResourceTable(long bid, String bgroup)
+```
 开启ProxyRouteConfUpdater的示例配置如下：
 ```yaml
 server:
