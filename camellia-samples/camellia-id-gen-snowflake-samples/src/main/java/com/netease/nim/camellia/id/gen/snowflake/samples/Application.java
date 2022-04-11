@@ -11,6 +11,6 @@ import org.springframework.context.annotation.ComponentScan;
 @ComponentScan(basePackages = {"com.netease.nim.camellia.id.gen.springboot.snowflake"})
 public class Application {
     public static void main(String[] args) {
-        SpringApplication.run(Application.class);
+        SpringApplication.run(Application.class, args);
     }
 }
