@@ -78,11 +78,11 @@ public class FeignCallback<T> implements MethodInterceptor {
         annotationValueGetterCache.preheatAnnotationValueByParameterField(clazz, LoadBalanceKey.class);
         readWriteOperationCache.preheat(clazz);
         FeignResourceTableUpdater updater = buildParam.getUpdater();
-        refresh(updater.getResourceTable());
-        updater.addCallback(this::refresh);
+        refresh(updater.getResourceTable(), true);
+        updater.addCallback(resourceTable -> refresh(resourceTable, false));
     }
 
-    private void refresh(ResourceTable resourceTable) {
+    private void refresh(ResourceTable resourceTable, boolean throwError) {
         try {
             Set<Resource> resources = ResourceUtil.getAllResources(resourceTable);
             for (Resource r : resources) {
@@ -113,6 +113,9 @@ public class FeignCallback<T> implements MethodInterceptor {
             this.resourceChooser = new ResourceChooser(resourceTable, feignEnv.getProxyEnv());
         } catch (Exception e) {
             logger.error("refresh error, class = {}", clazz.getName(), e);
+            if (throwError) {
+                throw e;
+            }
         }
     }
 
