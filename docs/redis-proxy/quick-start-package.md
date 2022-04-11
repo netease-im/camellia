@@ -30,3 +30,20 @@ java -XX:+UseG1GC -XX:+UseContainerSupport -Xms2048m -Xmx2048m -server org.sprin
 ```
 ./start_in_docker.sh
 ```
+
+
+特别的，在某些业务场景中下，可能希望proxy的可执行文件与配置文件application.yml分开，此时可以把tar包重新打成jar包，并配合spring提供的spring.config.name参数来指定，具体如下：
+```
+wget https://github.com/netease-im/camellia/releases/download/v1.0.55/camellia-redis-proxy-1.0.55.tar.gz
+tar zxvf camellia-redis-proxy-1.0.55.tar.gz
+cd camellia-redis-proxy-1.0.55/
+jar -cvf0M camellia-redis-proxy.jar BOOT-INF/ META-INF/ org/
+```
+此时，就会生成一个camellia-redis-proxy.jar，随后使用java -jar命令启动即可，如下：
+```
+java -XX:+UseG1GC -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy.jar --spring.config.location=file:/xxx/xxx/application.yml
+```
+如果是在docker里，记得添加UseContainerSupport参数，如下：
+```
+java -XX:+UseG1GC -XX:+UseContainerSupport -Xms2048m -Xmx2048m -server -jar camellia-redis-proxy.jar --spring.config.location=file:/xxx/xxx/application.yml
+```
