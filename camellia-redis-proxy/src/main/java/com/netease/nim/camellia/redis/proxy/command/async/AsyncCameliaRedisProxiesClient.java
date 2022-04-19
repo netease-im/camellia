@@ -1,26 +1,25 @@
 package com.netease.nim.camellia.redis.proxy.command.async;
 
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.resource.RedisProxiesResource;
-import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 基于固定配置的proxy client
+ * 对于每个proxy，都会当做一个普通的redis去访问
+ */
 public class AsyncCameliaRedisProxiesClient extends AsyncCamelliaSimpleClient {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncCameliaRedisProxiesClient.class);
-
-    private static final ScheduledExecutorService scheduleService = Executors.newScheduledThreadPool(SysUtils.getCpuNum(), new DefaultThreadFactory("camellia-redis-proxies-reload"));
 
     private final RedisProxiesResource redisProxiesResource;
     private final List<RedisClientAddr> list = new ArrayList<>();
@@ -34,7 +33,7 @@ public class AsyncCameliaRedisProxiesClient extends AsyncCamelliaSimpleClient {
         }
         dynamicList = new ArrayList<>(list);
         int seconds = ProxyDynamicConf.getInt("redis.proxies.reload.interval.seconds", 60);
-        scheduleService.scheduleAtFixedRate(this::reload, seconds, seconds, TimeUnit.SECONDS);
+        ExecutorUtils.scheduleAtFixedRate(this::reload, seconds, seconds, TimeUnit.SECONDS);
     }
 
     @Override
@@ -81,8 +80,7 @@ public class AsyncCameliaRedisProxiesClient extends AsyncCamelliaSimpleClient {
                 }
                 int i = ThreadLocalRandom.current().nextInt(dynamicList.size());
                 RedisClientAddr addr = dynamicList.get(i);
-                RedisClient redisClient = RedisClientHub.get(addr);
-                if (redisClient != null && redisClient.isValid()) {
+                if (check(addr)) {
                     return addr;
                 } else {
                     dynamicList.remove(addr);
@@ -91,14 +89,28 @@ public class AsyncCameliaRedisProxiesClient extends AsyncCamelliaSimpleClient {
             int i = ThreadLocalRandom.current().nextInt(list.size());
             return list.get(i);
         } catch (Exception e) {
-            if (list.isEmpty()) return null;
-            int i = ThreadLocalRandom.current().nextInt(list.size());
-            return list.get(i);
+            try {
+                if (list.isEmpty()) return null;
+                int i = ThreadLocalRandom.current().nextInt(list.size());
+                return list.get(i);
+            } catch (Exception ex) {
+                try {
+                    return list.get(0);
+                } catch (Exception exc) {
+                    return null;
+                }
+            }
         }
     }
 
     @Override
     public Resource getResource() {
         return redisProxiesResource;
+    }
+
+
+    private boolean check(RedisClientAddr addr) {
+        RedisClient redisClient = RedisClientHub.get(addr);
+        return redisClient != null && redisClient.isValid();
     }
 }

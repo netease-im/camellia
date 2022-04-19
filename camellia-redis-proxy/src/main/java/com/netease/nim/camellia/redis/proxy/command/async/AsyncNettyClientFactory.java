@@ -15,9 +15,9 @@ public interface AsyncNettyClientFactory {
 
     AsyncClient get(String url);
 
-    public static AsyncNettyClientFactory DEFAULT = new Default();
+    AsyncNettyClientFactory DEFAULT = new Default();
 
-    public static class Default implements AsyncNettyClientFactory {
+    class Default implements AsyncNettyClientFactory {
 
         private final Object lock = new Object();
         private final ConcurrentHashMap<String, AsyncClient> map = new ConcurrentHashMap<>();
@@ -84,6 +84,15 @@ public interface AsyncNettyClientFactory {
             return client;
         }
 
+        public AsyncClient get(RedisProxiesDiscoveryResource redisProxiesDiscoveryResource) {
+            AsyncClient client = map.get(redisProxiesDiscoveryResource.getUrl());
+            if (client == null) {
+                client = map.computeIfAbsent(redisProxiesDiscoveryResource.getUrl(),
+                        k -> new AsyncCameliaRedisProxiesDiscoveryClient(redisProxiesDiscoveryResource));
+            }
+            return client;
+        }
+
         @Override
         public AsyncClient get(String url) {
             AsyncClient client = map.get(url);
@@ -104,6 +113,8 @@ public interface AsyncNettyClientFactory {
                             client = get((RedisClusterSlavesResource) resource);
                         } else if (resource instanceof RedisProxiesResource) {
                             client = get((RedisProxiesResource) resource);
+                        } else if (resource instanceof RedisProxiesDiscoveryResource) {
+                            client = get((RedisProxiesDiscoveryResource) resource);
                         } else {
                             throw new CamelliaRedisException("not support resource");
                         }

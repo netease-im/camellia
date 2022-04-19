@@ -8,11 +8,13 @@ import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ShardingFuncUtil;
+import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.core.util.LockMap;
 import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
+import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
@@ -306,6 +308,10 @@ public class AsyncCamelliaRedisTemplateChooser {
             }
         }
         logger.info("multi write mode = {}", redisConf.getMultiWriteMode());
+
+        ProxyDiscoveryFactory proxyDiscoveryFactory = ConfigInitUtil.initProxyDiscoveryFactory(redisConf);
+        CamelliaProxyDiscoveryFactory.init(proxyDiscoveryFactory);
+
         ProxyEnv proxyEnv = builder.build();
 
         env = new AsyncCamelliaRedisEnv.Builder()

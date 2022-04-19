@@ -36,7 +36,7 @@ public class RedisClientAddr {
             builder.append(password);
         }
         if (readonly) {
-            builder.append("@").append(host).append(":").append(port).append("?readonly=").append(readonly);
+            builder.append("@").append(host).append(":").append(port).append("?readonly=").append(true);
         } else {
             builder.append("@").append(host).append(":").append(port);
         }

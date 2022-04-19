@@ -123,6 +123,21 @@ redis-proxies://@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
 redis-proxies://username:passwd@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
 ```
 
+* redis-proxies-discovery
+```
+##本类型主要是为了代理到多个无状态的proxy节点，如codis-proxy、twemproxy等
+##与redis-proxies的区别在于，本类型支持从注册中心获取无状态proxy节点的列表，并动态增减相关节点
+##为了实现和注册中心进行交互，你需要先实现ProxyDiscoveryFactory接口（支持全类名配置，也支持spring直接注入相关实现类）
+##本类型通过proxyName来标识proxy节点列表，并通过proxyName去ProxyDiscoveryFactory获取实际的proxy节点列表
+
+##有密码
+redis-proxies-discovery://passwd@proxyName
+##没有密码
+redis-proxies-discovery://@proxyName
+##有密码且有账号
+redis-proxies-discovery://username:passwd@proxyName
+```
+
 ### 动态配置
 如果你希望你的proxy的路由配置可以动态变更，比如本来路由到redisA，然后动态的切换成redisB，那么你需要一个额外的配置文件，并且在application.yml中引用，如下：
 ```yaml

@@ -10,9 +10,9 @@ import java.util.List;
  * 1、没有密码
  * redis-proxies://@host:port,host:port,host:port
  * 2、有密码
- * redis-proxies://password@host:port,host:port,host:port
+ * redis-proxies://passwd@host:port,host:port,host:port
  * 3、有密码且有账号
- * redis-proxies://username:password@host:port,host:port,host:port
+ * redis-proxies://username:passwd@host:port,host:port,host:port
  */
 public class RedisProxiesResource extends Resource {
     private final List<Node> nodes;

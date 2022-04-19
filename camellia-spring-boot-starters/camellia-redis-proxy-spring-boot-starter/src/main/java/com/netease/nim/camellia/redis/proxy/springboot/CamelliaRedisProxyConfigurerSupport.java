@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.springboot;
 
 import com.netease.nim.camellia.core.client.env.ShardingFunc;
+import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.connectlimit.ConnectLimiter;
@@ -136,6 +137,12 @@ public class CamelliaRedisProxyConfigurerSupport {
     @Autowired(required = false)
     private ProxyDynamicConfSupport proxyDynamicConfSupport;
 
+    /**
+     * 如果转发的后端也是无状态proxy，如何去发现后端proxy的一个工厂类
+     */
+    @Autowired(required = false)
+    private ProxyDiscoveryFactory proxyDiscoveryFactory;
+
     public MonitorCallback getMonitorCallback() {
         return monitorCallback;
     }
@@ -210,5 +217,9 @@ public class CamelliaRedisProxyConfigurerSupport {
 
     public ProxyDynamicConfSupport getProxyDynamicConfSupport() {
         return proxyDynamicConfSupport;
+    }
+
+    public ProxyDiscoveryFactory getProxyDiscoveryFactory() {
+        return proxyDiscoveryFactory;
     }
 }

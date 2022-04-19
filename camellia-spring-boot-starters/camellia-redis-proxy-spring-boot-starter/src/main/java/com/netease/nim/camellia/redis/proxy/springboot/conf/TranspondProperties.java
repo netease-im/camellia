@@ -432,6 +432,7 @@ public class TranspondProperties {
         private boolean closeIdleConnection = Constants.Transpond.closeIdleConnection;//是否关闭空闲连接（到后端redis的）
         private long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;//判断一个连接空闲的阈值，单位秒
         private int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;//判断一个连接空闲后，再过多少秒去执行关闭操作
+        private String proxyDiscoveryFactoryClassName;
 
         public String getShardingFunc() {
             return shardingFunc;
@@ -535,6 +536,14 @@ public class TranspondProperties {
 
         public void setCloseIdleConnectionDelaySeconds(int closeIdleConnectionDelaySeconds) {
             this.closeIdleConnectionDelaySeconds = closeIdleConnectionDelaySeconds;
+        }
+
+        public String getProxyDiscoveryFactoryClassName() {
+            return proxyDiscoveryFactoryClassName;
+        }
+
+        public void setProxyDiscoveryFactoryClassName(String proxyDiscoveryFactoryClassName) {
+            this.proxyDiscoveryFactoryClassName = proxyDiscoveryFactoryClassName;
         }
     }
 }

@@ -288,6 +288,23 @@ public class RedisResourceUtil {
                     throw new CamelliaRedisException("resource url not equals");
                 }
                 return proxyResource;
+            } else if (url.startsWith(RedisType.RedisProxiesDiscovery.getPrefix())) {
+                String substring = url.substring(RedisType.RedisProxiesDiscovery.getPrefix().length());
+                if (!substring.contains("@")) {
+                    throw new CamelliaRedisException("missing @");
+                }
+
+                int index = substring.lastIndexOf("@");
+                String[] userNameAndPassword = getUserNameAndPassword(substring.substring(0, index));
+                String userName = userNameAndPassword[0];
+                String password = userNameAndPassword[1];
+
+                String proxyName = substring.substring(index + 1);
+                RedisProxiesDiscoveryResource redisProxiesDiscoveryResource = new RedisProxiesDiscoveryResource(userName, password, proxyName);
+                if (!redisProxiesDiscoveryResource.getUrl().equals(resource.getUrl())) {
+                    throw new CamelliaRedisException("resource url not equals");
+                }
+                return redisProxiesDiscoveryResource;
             }
             throw new CamelliaRedisException("not redis resource");
         } catch (CamelliaRedisException e) {

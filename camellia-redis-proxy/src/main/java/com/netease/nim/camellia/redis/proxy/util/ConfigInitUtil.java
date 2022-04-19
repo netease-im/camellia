@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptor;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.async.bigkey.CommandBigKeyMonitorConfig;
@@ -17,6 +18,7 @@ import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpend
 import com.netease.nim.camellia.redis.proxy.command.async.spendtime.SlowCommandMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.command.auth.ClientAuthProvider;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfHook;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
@@ -453,5 +455,29 @@ public class ConfigInitUtil {
         }
         config.setzSetConverter(zSetConverter);
         return config;
+    }
+
+    public static ProxyDiscoveryFactory initProxyDiscoveryFactory(CamelliaTranspondProperties.RedisConfProperties redisConfProperties) {
+        ProxyDiscoveryFactory proxyDiscoveryFactory = redisConfProperties.getProxyDiscoveryFactory();
+        if (proxyDiscoveryFactory != null) {
+            return proxyDiscoveryFactory;
+        }
+        String className = redisConfProperties.getProxyDiscoveryFactoryClassName();
+        if (className != null) {
+            try {
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(className);
+                } catch (ClassNotFoundException e) {
+                    clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+                }
+                proxyDiscoveryFactory = (ProxyDiscoveryFactory) clazz.newInstance();
+                logger.info("ProxyDiscoveryFactory init success, class = {}", className);
+            } catch (Exception e) {
+                logger.error("ProxyDiscoveryFactory init error, class = {}", className, e);
+                throw new CamelliaRedisException(e);
+            }
+        }
+        return proxyDiscoveryFactory;
     }
 }
