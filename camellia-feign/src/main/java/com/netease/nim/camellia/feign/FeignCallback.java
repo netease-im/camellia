@@ -2,6 +2,7 @@ package com.netease.nim.camellia.feign;
 
 import com.netease.nim.camellia.core.client.annotation.LoadBalanceKey;
 import com.netease.nim.camellia.core.client.env.Monitor;
+import com.netease.nim.camellia.core.client.env.MultiWriteType;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
@@ -194,7 +195,8 @@ public class FeignCallback<T> implements MethodInterceptor {
                     return invoke(resource, loadBalanceKey, method, objects, true, operationType);
                 } else {
                     ProxyEnv env = feignEnv.getProxyEnv();
-                    if (env.isMultiWriteConcurrentEnable()) {
+                    MultiWriteType multiWriteType = env.getMultiWriteType();
+                    if (multiWriteType == MultiWriteType.MULTI_THREAD_CONCURRENT) {
                         ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
                         List<Future<Object>> futureList = new ArrayList<>();
                         for (int i=0; i<list.size(); i++) {
@@ -219,7 +221,7 @@ public class FeignCallback<T> implements MethodInterceptor {
                             }
                         }
                         return ret;
-                    } else {
+                    } else if (multiWriteType == MultiWriteType.SINGLE_THREAD) {
                         Object ret = null;
                         for (int i=0; i<list.size(); i++) {
                             boolean first = i == 0;
@@ -230,6 +232,33 @@ public class FeignCallback<T> implements MethodInterceptor {
                             }
                         }
                         return ret;
+                    } else if (multiWriteType == MultiWriteType.ASYNC_MULTI_THREAD) {
+                        Object ret = null;
+                        ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
+                        for (int i=0; i<list.size(); i++) {
+                            boolean first = i == 0;
+                            Resource resource = list.get(i);
+                            if (first) {
+                                ret = invoke(resource, loadBalanceKey, method, objects, true, operationType);
+                            } else {
+                                try {
+                                    env.getMultiWriteAsyncExec().submit(strategy.wrapperCallable(() -> {
+                                        try {
+                                            //走异步了，则也要有熔断
+                                            return invoke(resource, loadBalanceKey, method, objects, false, operationType);
+                                        } catch (Throwable e) {
+                                            throw new ExecutionException(e);
+                                        }
+                                    }));
+                                } catch (Exception e) {
+                                    //走异步了，则异常都不上抛
+                                    logger.error("async multi write error, resource = {}", resource, e);
+                                }
+                            }
+                        }
+                        return ret;
+                    } else {
+                        throw new IllegalArgumentException("unknown multiWriteType");
                     }
                 }
             }

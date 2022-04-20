@@ -4,10 +4,7 @@ import com.netease.nim.camellia.core.client.callback.OperationCallback;
 import com.netease.nim.camellia.core.client.callback.ShardingCallback;
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  *
@@ -22,12 +19,20 @@ public class ProxyEnv {
     //批量操作的并发线程池
     private ExecutorService shardingConcurrentExec;
 
-    //多写操作是否并发进行，默认true，即针对多个资源的多写操作
-    private boolean multiWriteConcurrentEnable = ProxyConstants.multiWriteConcurrentEnable;
-    //多写操作的线程池大小
+    //多写操作类型
+    private MultiWriteType multiWriteType = MultiWriteType.MULTI_THREAD_CONCURRENT;
+
+    //多写操作（多线程并发）的线程池大小
     private int multiWriteConcurrentExecPoolSize = ProxyConstants.multiWriteConcurrentExecPoolSize;
-    //多写操作的并发线程池
+    //多写操作（多线程并发）的线程池
     private ExecutorService multiWriteConcurrentExec;
+
+    //多写操作（异步）的线程池大小
+    private int multiWriteAsyncExecPoolSize = ProxyConstants.multiWriteAsyncExecPoolSize;
+    //多写操作（异步）的队列大小
+    private int multiWriteAsyncExecQueueSize = ProxyConstants.multiWriteAsyncExecQueueSize;
+    //多写操作（异步）的线程池
+    private ExecutorService multiWriteAsyncExec;
 
     //监控bean，若为null，表示不监控
     private Monitor monitor;
@@ -41,12 +46,14 @@ public class ProxyEnv {
         initExec();
     }
 
-    private ProxyEnv(boolean shardingConcurrentEnable, int shardingConcurrentExecPoolSize, boolean multiWriteConcurrentEnable,
-                    int multiWriteConcurrentExecPoolSize, Monitor monitor, ShardingFunc shardingFunc) {
+    private ProxyEnv(boolean shardingConcurrentEnable, int shardingConcurrentExecPoolSize, MultiWriteType multiWriteType,
+                    int multiWriteConcurrentExecPoolSize, int multiWriteAsyncExecPoolSize, int multiWriteAsyncExecQueueSize, Monitor monitor, ShardingFunc shardingFunc) {
         this.shardingConcurrentEnable = shardingConcurrentEnable;
         this.shardingConcurrentExecPoolSize = shardingConcurrentExecPoolSize;
-        this.multiWriteConcurrentEnable = multiWriteConcurrentEnable;
+        this.multiWriteType = multiWriteType;
         this.multiWriteConcurrentExecPoolSize = multiWriteConcurrentExecPoolSize;
+        this.multiWriteAsyncExecPoolSize = multiWriteAsyncExecPoolSize;
+        this.multiWriteAsyncExecQueueSize = multiWriteAsyncExecQueueSize;
         this.monitor = monitor;
         this.shardingFunc = shardingFunc;
         initExec();
@@ -57,6 +64,8 @@ public class ProxyEnv {
                 new SynchronousQueue<>(), new CamelliaThreadFactory(ShardingCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
         multiWriteConcurrentExec = new ThreadPoolExecutor(multiWriteConcurrentExecPoolSize, multiWriteConcurrentExecPoolSize, 0, TimeUnit.SECONDS,
                 new SynchronousQueue<>(), new CamelliaThreadFactory(OperationCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
+        multiWriteAsyncExec = new ThreadPoolExecutor(multiWriteAsyncExecPoolSize, multiWriteAsyncExecPoolSize, 0, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(multiWriteAsyncExecQueueSize), new CamelliaThreadFactory(OperationCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     public static ProxyEnv defaultProxyEnv() {
@@ -71,12 +80,16 @@ public class ProxyEnv {
         return shardingConcurrentExec;
     }
 
-    public boolean isMultiWriteConcurrentEnable() {
-        return multiWriteConcurrentEnable;
+    public MultiWriteType getMultiWriteType() {
+        return multiWriteType;
     }
 
     public ExecutorService getMultiWriteConcurrentExec() {
         return multiWriteConcurrentExec;
+    }
+
+    public ExecutorService getMultiWriteAsyncExec() {
+        return multiWriteAsyncExec;
     }
 
     public Monitor getMonitor() {
@@ -100,8 +113,9 @@ public class ProxyEnv {
         }
 
         public Builder(ProxyEnv proxyEnv) {
-            this.proxyEnv = new ProxyEnv(proxyEnv.shardingConcurrentEnable, proxyEnv.shardingConcurrentExecPoolSize, proxyEnv.multiWriteConcurrentEnable,
-                    proxyEnv.multiWriteConcurrentExecPoolSize, proxyEnv.monitor, proxyEnv.shardingFunc);
+            this.proxyEnv = new ProxyEnv(proxyEnv.shardingConcurrentEnable, proxyEnv.shardingConcurrentExecPoolSize, proxyEnv.multiWriteType,
+                    proxyEnv.multiWriteConcurrentExecPoolSize, proxyEnv.multiWriteAsyncExecPoolSize, proxyEnv.multiWriteAsyncExecQueueSize,
+                    proxyEnv.monitor, proxyEnv.shardingFunc);
             this.proxyEnv.shardingConcurrentExec = proxyEnv.shardingConcurrentExec;
             this.proxyEnv.multiWriteConcurrentExec = proxyEnv.multiWriteConcurrentExec;
             this.proxyEnv.threadContextSwitchStrategy = proxyEnv.threadContextSwitchStrategy;
@@ -119,14 +133,28 @@ public class ProxyEnv {
             return this;
         }
 
-        public Builder multiWriteConcurrentEnable(boolean multiWriteConcurrentEnable) {
-            proxyEnv.multiWriteConcurrentEnable = multiWriteConcurrentEnable;
+        public Builder multiWriteType(MultiWriteType multiWriteType) {
+            proxyEnv.multiWriteType = multiWriteType;
             return this;
         }
 
         public Builder multiWriteConcurrentExecPoolSize(int multiWriteConcurrentExecPoolSize) {
             if (multiWriteConcurrentExecPoolSize > 0) {
                 proxyEnv.multiWriteConcurrentExecPoolSize = multiWriteConcurrentExecPoolSize;
+            }
+            return this;
+        }
+
+        public Builder multiWriteAsyncExecPoolSize(int multiWriteAsyncExecPoolSize) {
+            if (multiWriteAsyncExecPoolSize > 0) {
+                proxyEnv.multiWriteAsyncExecPoolSize = multiWriteAsyncExecPoolSize;
+            }
+            return this;
+        }
+
+        public Builder multiWriteAsyncExecQueueSize(int multiWriteAsyncExecQueueSize) {
+            if (multiWriteAsyncExecQueueSize > 0) {
+                proxyEnv.multiWriteAsyncExecQueueSize = multiWriteAsyncExecQueueSize;
             }
             return this;
         }

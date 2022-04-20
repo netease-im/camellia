@@ -191,6 +191,10 @@ public final class CamelliaFeign {
                         camelliaApi = CamelliaApiUtil.init(camelliaUrl);
                     }
                 }
+                String defaultBgroup = camelliaFeignDynamicOptionGetter.getDefaultBgroup(bid);
+                if (defaultBgroup != null) {
+                    bgroup = defaultBgroup;
+                }
                 if (camelliaApi != null) {
                     updater = new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, checkIntervalMillis);
                     this.camelliaApi = camelliaApi;

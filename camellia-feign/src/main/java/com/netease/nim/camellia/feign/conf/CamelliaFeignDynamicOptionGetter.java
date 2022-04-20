@@ -29,6 +29,15 @@ public interface CamelliaFeignDynamicOptionGetter {
         return null;
     }
 
+    /**
+     * 根据bid获取默认的bgroup
+     * @param bid 业务bid
+     * @return 默认bgroup
+     */
+    default String getDefaultBgroup(long bid) {
+        return null;
+    }
+
     public static class DefaultCamelliaFeignDynamicOptionGetter implements CamelliaFeignDynamicOptionGetter {
         private final long connectTimeout;
         private final TimeUnit connectTimeoutUnit;

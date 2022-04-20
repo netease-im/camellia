@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.core.client.callback;
 
+import com.netease.nim.camellia.core.client.env.MultiWriteType;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
 import com.netease.nim.camellia.core.model.Resource;
@@ -11,6 +12,8 @@ import com.netease.nim.camellia.core.util.ExceptionUtils;
 import com.netease.nim.camellia.core.util.ReadWriteOperationCache;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -21,6 +24,8 @@ import java.util.concurrent.*;
  * Created by caojiajun on 2019/5/16.
  */
 public class OperationCallback<T> implements MethodInterceptor {
+
+    private static final Logger logger = LoggerFactory.getLogger(OperationCallback.class);
 
     private final ResourceOperation resourceOperation;
     private final Map<Resource, T> clientMap;
@@ -81,7 +86,8 @@ public class OperationCallback<T> implements MethodInterceptor {
                         incrWrite(resource2, method);
                         return method.invoke(client1, objects);
                     case MULTI:
-                        if (env.isMultiWriteConcurrentEnable()) {
+                        MultiWriteType multiWriteType = env.getMultiWriteType();
+                        if (multiWriteType == MultiWriteType.MULTI_THREAD_CONCURRENT) {
                             ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
                             List<Future<Object>> futureList = new ArrayList<>();
                             for (final Resource resource : writeOperation.getWriteResources()) {
@@ -102,7 +108,7 @@ public class OperationCallback<T> implements MethodInterceptor {
                                 }
                             }
                             return ret;
-                        } else {
+                        } else if (multiWriteType == MultiWriteType.SINGLE_THREAD) {
                             Object ret = null;
                             for (int i=0; i<writeOperation.getWriteResources().size(); i++) {
                                 Resource resource = writeOperation.getWriteResources().get(i);
@@ -115,9 +121,34 @@ public class OperationCallback<T> implements MethodInterceptor {
                                 }
                             }
                             return ret;
+                        } else if (multiWriteType == MultiWriteType.ASYNC_MULTI_THREAD) {
+                            ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
+                            Object ret = null;
+                            for (int i=0; i<writeOperation.getWriteResources().size(); i++) {
+                                Resource resource = writeOperation.getWriteResources().get(i);
+                                T client2 = clientMap.get(resource);
+                                incrWrite(resource, method);
+                                boolean first = i == 0;
+                                if (first) {
+                                    ret = method.invoke(client2, objects);
+                                } else {
+                                    try {
+                                        env.getMultiWriteConcurrentExec().submit(strategy.wrapperCallable(() -> {
+                                            incrWrite(resource, method);
+                                            return method.invoke(client2, objects);
+                                        }));
+                                    } catch (Exception e) {
+                                        //走异步了，则异常都不上抛
+                                        logger.error("async multi write error, resource = {}", resource, e);
+                                    }
+                                }
+                            }
+                            return ret;
+                        } else {
+                            throw new IllegalArgumentException("unknown multiWriteType");
                         }
                     default:
-                        throw new RuntimeException("unknown operation write type");
+                        throw new IllegalArgumentException("unknown operation write type");
                 }
             default:
                 throw new IllegalArgumentException("unknown operation type");
