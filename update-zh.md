@@ -8,6 +8,8 @@
 ### 新增
 * camellia-redis-proxy支持转发到其他proxy（如codis、twemproxy），且支持以注册发现模式去发现后端proxy节点列表
 * camellia-core支持异步双写（基于线程池+内存队列）
+* camellia-feign提供CamelliaNakedClient，用于支持自定义的调用（非标准feign客户端）
+* camellia-redis-proxy支持BloomFilter相关的命令
 
 ### 更新
 * 无
