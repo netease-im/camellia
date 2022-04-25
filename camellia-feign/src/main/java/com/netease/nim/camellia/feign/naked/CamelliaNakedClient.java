@@ -28,12 +28,14 @@ import com.netease.nim.camellia.feign.resource.FeignResource;
 import com.netease.nim.camellia.feign.resource.FeignResourceUtils;
 import com.netease.nim.camellia.feign.route.CamelliaDashboardFeignResourceTableUpdater;
 import com.netease.nim.camellia.feign.route.FeignResourceTableUpdater;
-import com.netease.nim.camellia.feign.naked.exception.ClientException;
-import com.netease.nim.camellia.feign.naked.exception.ClientNoRetriableException;
-import com.netease.nim.camellia.feign.naked.exception.ClientRetriableException;
+import com.netease.nim.camellia.feign.naked.exception.CamelliaNakedClientException;
+import com.netease.nim.camellia.feign.naked.exception.CamelliaNakedClientNoRetriableException;
+import com.netease.nim.camellia.feign.naked.exception.CamelliaNakedClientRetriableException;
 import com.netease.nim.camellia.tools.circuitbreaker.CamelliaCircuitBreaker;
 import com.netease.nim.camellia.tools.circuitbreaker.CamelliaCircuitBreakerException;
 import com.netease.nim.camellia.tools.circuitbreaker.CircuitBreakerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,11 +44,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
-/**
- * 一个简单的封装了重试逻辑的client
- * Created by yuanyuanjun on 2019/4/22.
- */
 public class CamelliaNakedClient<R, W> {
+
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaNakedClient.class);
 
     public static enum OperationType {
         READ,
@@ -59,9 +59,12 @@ public class CamelliaNakedClient<R, W> {
     private CamelliaNakedRequestInvoker<R, W> invoker;
     private int defaultMaxRetry = 0;
 
+    private String name = "camellia-naked-client";
+
     private long bid = -1;
     private String bgroup = "default";
     private CamelliaApi camelliaApi;
+    private long checkIntervalMillis = 5000;
     private ResourceTable resourceTable;
     private Monitor monitor;
     private String className;
@@ -74,6 +77,9 @@ public class CamelliaNakedClient<R, W> {
     private final ConcurrentHashMap<String, ResourceChooser> resourceChooserMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, CamelliaCircuitBreaker> circuitBreakerMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, CamelliaDashboardFeignResourceTableUpdater> updaterMap = new ConcurrentHashMap<>();
+
+    private CamelliaNakedClient() {
+    }
 
     public static class Builder<R, W> {
 
@@ -89,6 +95,11 @@ public class CamelliaNakedClient<R, W> {
 
         public Builder<R, W> bgroup(String bgroup) {
             client.bgroup = bgroup;
+            return this;
+        }
+
+        public Builder<R, W> name(String name) {
+            client.name = name;
             return this;
         }
 
@@ -126,6 +137,14 @@ public class CamelliaNakedClient<R, W> {
             return this;
         }
 
+        public Builder<R, W> checkIntervalMillis(long checkIntervalMillis) {
+            if (checkIntervalMillis < 0) {
+                throw new IllegalArgumentException("illegal checkIntervalMillis");
+            }
+            client.checkIntervalMillis = checkIntervalMillis;
+            return this;
+        }
+
         public CamelliaNakedClient<R, W> build(CamelliaNakedRequestInvoker<R, W> invoker) {
             client.invoker = invoker;
             client.init();
@@ -134,14 +153,34 @@ public class CamelliaNakedClient<R, W> {
     }
 
     /**
+     * 别名
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
      * 执行请求
      * @param operationType 读写类型
      * @param request 请求体
      * @return 响应
-     * @throws ClientException 异常
+     * @throws CamelliaNakedClientException 异常
      */
-    public W sendRequest(OperationType operationType, R request) throws ClientException {
+    public W sendRequest(OperationType operationType, R request) throws CamelliaNakedClientException {
         return sendRequest(operationType, request, null, null, defaultMaxRetry);
+    }
+
+    /**
+     * 执行请求
+     * @param operationType 读写类型
+     * @param request 请求体
+     * @param routeKey 路由key
+     * @param loadBalanceKey 负载均衡key
+     * @return 响应
+     * @throws CamelliaNakedClientException 异常
+     */
+    public W sendRequest(OperationType operationType, R request, Object routeKey, Object loadBalanceKey) throws CamelliaNakedClientException {
+        return sendRequest(operationType, request, routeKey, loadBalanceKey, defaultMaxRetry);
     }
 
     /**
@@ -152,9 +191,9 @@ public class CamelliaNakedClient<R, W> {
      * @param loadBalanceKey 负载均衡key
      * @param maxRetry 最大重试次数
      * @return 响应
-     * @throws ClientException 异常
+     * @throws CamelliaNakedClientException 异常
      */
-    public W sendRequest(OperationType operationType, R request, Object routeKey, Object loadBalanceKey, int maxRetry) throws ClientException {
+    public W sendRequest(OperationType operationType, R request, Object routeKey, Object loadBalanceKey, int maxRetry) throws CamelliaNakedClientException {
         try {
             int retry;
             if (maxRetry < 0) {
@@ -216,7 +255,7 @@ public class CamelliaNakedClient<R, W> {
                     return futureList.get(0).get();
                 }
             }
-            throw new ClientNoRetriableException("unknown operationType");
+            throw new CamelliaNakedClientNoRetriableException("unknown operationType");
         } catch (Exception e) {
             Throwable ex = ExceptionUtils.onError(e);
             if (fallbackFactory != null) {
@@ -225,20 +264,24 @@ public class CamelliaNakedClient<R, W> {
                     return fallback;
                 }
             }
-            if (ex instanceof ClientException) {
-                throw (ClientException) ex;
+            if (ex instanceof CamelliaNakedClientException) {
+                throw (CamelliaNakedClientException) ex;
             }
-            throw new ClientException(ex);
+            throw new CamelliaNakedClientException(ex);
         }
     }
 
-    private W invoke(OperationType operationType, Resource resource, R request, int maxRetry, Object loadBalanceKey, String bgroup) throws ClientException {
+    private W invoke(OperationType operationType, Resource resource, R request, int maxRetry, Object loadBalanceKey, String bgroup) throws CamelliaNakedClientException {
         if (monitor != null) {
             if (operationType == OperationType.READ) {
                 monitor.incrRead(resource.getUrl(), className, "read");
             } else if (operationType == OperationType.WRITE) {
                 monitor.incrWrite(resource.getUrl(), className, "write");
             }
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("camellia-naked-client, bid = {}, bgroup = {}, name = {}, method = {}, resource = {}",
+                    bid, bgroup, name, operationType, resource);
         }
         if (maxRetry <= 0) maxRetry = 0;
         int retry = 0;
@@ -252,14 +295,14 @@ public class CamelliaNakedClient<R, W> {
                     throw new CamelliaCircuitBreakerException("camellia-circuit-breaker[" + circuitBreaker.getName() + "] short-circuit, and no fallback");
                 }
             }
-            ClientException throwException = null;
+            CamelliaNakedClientException throwException = null;
             FeignResource feignResource = null;
             FeignResourcePool resourcePool = getResourcePool(resource, bgroup);
             while (retry <= maxRetry) {
                 try {
                     feignResource = resourcePool.getResource(loadBalanceKey);
                     return invoker.invoke(feignResource, request);
-                } catch (ClientRetriableException e) {
+                } catch (CamelliaNakedClientRetriableException e) {
                     retry ++;
                     throwException = e;
                     if (feignResource != null) {
@@ -273,12 +316,12 @@ public class CamelliaNakedClient<R, W> {
                 }
             }
             throw throwException;
-        } catch (ClientException e) {
+        } catch (CamelliaNakedClientException e) {
             success = feignEnv.getFallbackExceptionChecker().isSkipError(e);
             throw e;
         } catch (Exception e) {
             success = feignEnv.getFallbackExceptionChecker().isSkipError(e);
-            throw new ClientNoRetriableException(e);
+            throw new CamelliaNakedClientNoRetriableException(e);
         } finally {
             if (circuitBreaker != null) {
                 if (success) {
@@ -415,7 +458,7 @@ public class CamelliaNakedClient<R, W> {
             synchronized (updaterMap) {
                 updater = updaterMap.get(bgroup);
                 if (updater == null) {
-                    updater = new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, 5000);
+                    updater = new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, checkIntervalMillis);
                     ResourceTable resourceTable = updater.getResourceTable();
                     ResourceChooser resourceChooser = new ResourceChooser(resourceTable, feignEnv.getProxyEnv());
                     updater.addCallback(table -> resourceChooserMap.put(bgroup, new ResourceChooser(table, feignEnv.getProxyEnv())));
