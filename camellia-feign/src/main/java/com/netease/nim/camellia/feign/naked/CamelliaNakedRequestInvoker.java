@@ -10,5 +10,5 @@ import com.netease.nim.camellia.feign.naked.exception.ClientException;
  * Created by yuanyuanjun on 2019/4/22.
  */
 public interface CamelliaNakedRequestInvoker<R, W> {
-    W doRequest(FeignResource feignResource, R request) throws ClientException;
+    W invoke(FeignResource feignResource, R request) throws ClientException;
 }

@@ -1,6 +1,8 @@
 package com.netease.nim.camellia.feign.naked;
 
 import com.netease.nim.camellia.core.api.CamelliaApi;
+import com.netease.nim.camellia.core.api.RemoteMonitor;
+import com.netease.nim.camellia.core.client.env.Monitor;
 import com.netease.nim.camellia.core.client.env.MultiWriteType;
 import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
@@ -13,6 +15,7 @@ import com.netease.nim.camellia.core.util.ExceptionUtils;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceChooser;
 import com.netease.nim.camellia.feign.CamelliaFeignEnv;
+import com.netease.nim.camellia.feign.CamelliaFeignFallbackFactory;
 import com.netease.nim.camellia.feign.client.DynamicOption;
 import com.netease.nim.camellia.feign.client.DynamicRouteConfGetter;
 import com.netease.nim.camellia.feign.conf.CamelliaFeignDynamicOptionGetter;
@@ -53,14 +56,17 @@ public class CamelliaNakedClient<R, W> {
 
     private CamelliaFeignEnv feignEnv = CamelliaFeignEnv.defaultFeignEnv();
 
-    private CamelliaNakedRequestInvoker<R, W> camelliaNakedRequestInvoker;
+    private CamelliaNakedRequestInvoker<R, W> invoker;
     private int defaultMaxRetry = 0;
 
     private long bid = -1;
     private String bgroup = "default";
     private CamelliaApi camelliaApi;
     private ResourceTable resourceTable;
+    private Monitor monitor;
+    private String className;
     private CamelliaFeignDynamicOptionGetter dynamicOptionGetter;
+    private CamelliaFeignFallbackFactory<W> fallbackFactory;
 
     private final Map<String, FeignResourcePool> map = new HashMap<>();
 
@@ -101,6 +107,11 @@ public class CamelliaNakedClient<R, W> {
             return this;
         }
 
+        public Builder<R, W> fallbackFactory(CamelliaFeignFallbackFactory<W> fallbackFactory) {
+            client.fallbackFactory = fallbackFactory;
+            return this;
+        }
+
         public Builder<R, W> resourceTable(String route) {
             if (route != null) {
                 ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(route);
@@ -115,8 +126,8 @@ public class CamelliaNakedClient<R, W> {
             return this;
         }
 
-        public CamelliaNakedClient<R, W> build(CamelliaNakedRequestInvoker<R, W> camelliaNakedRequestInvoker) {
-            client.camelliaNakedRequestInvoker = camelliaNakedRequestInvoker;
+        public CamelliaNakedClient<R, W> build(CamelliaNakedRequestInvoker<R, W> invoker) {
+            client.invoker = invoker;
             client.init();
             return client;
         }
@@ -156,12 +167,12 @@ public class CamelliaNakedClient<R, W> {
             String bgroup = pair.second;
             if (operationType == OperationType.READ) {
                 Resource resource = resourceChooser.getReadResource(ResourceChooser.EMPTY_ARRAY);
-                return invoke(resource, request, retry, loadBalanceKey, bgroup);
+                return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
             } else if (operationType == OperationType.WRITE) {
                 List<Resource> writeResources = resourceChooser.getWriteResources(ResourceChooser.EMPTY_ARRAY);
                 if (writeResources.size() == 1) {
                     Resource resource = writeResources.get(0);
-                    return invoke(resource, request, retry, loadBalanceKey, bgroup);
+                    return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
                 }
                 MultiWriteType multiWriteType = feignEnv.getProxyEnv().getMultiWriteType();
                 if (multiWriteType == MultiWriteType.SINGLE_THREAD) {
@@ -170,9 +181,9 @@ public class CamelliaNakedClient<R, W> {
                         Resource resource = writeResources.get(0);
                         boolean first = i == 0;
                         if (first) {
-                            result = invoke(resource, request, retry, loadBalanceKey, bgroup);
+                            result = invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
                         } else {
-                            invoke(resource, request, retry, loadBalanceKey, bgroup);
+                            invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
                         }
                     }
                     return result;
@@ -182,7 +193,7 @@ public class CamelliaNakedClient<R, W> {
                     for (int i = 0; i < writeResources.size(); i++) {
                         Resource resource = writeResources.get(0);
                         Future<W> future = feignEnv.getProxyEnv().getMultiWriteConcurrentExec()
-                                .submit(strategy.wrapperCallable(() -> invoke(resource, request, retry, loadBalanceKey, bgroup)));
+                                .submit(strategy.wrapperCallable(() -> invoke(operationType, resource, request, retry, loadBalanceKey, bgroup)));
                         futureList.add(future);
                     }
                     W result = null;
@@ -199,7 +210,7 @@ public class CamelliaNakedClient<R, W> {
                     for (int i = 0; i < writeResources.size(); i++) {
                         Resource resource = writeResources.get(0);
                         Future<W> future = feignEnv.getProxyEnv().getMultiWriteAsyncExec()
-                                .submit(strategy.wrapperCallable(() -> invoke(resource, request, retry, loadBalanceKey, bgroup)));
+                                .submit(strategy.wrapperCallable(() -> invoke(operationType, resource, request, retry, loadBalanceKey, bgroup)));
                         futureList.add(future);
                     }
                     return futureList.get(0).get();
@@ -208,6 +219,12 @@ public class CamelliaNakedClient<R, W> {
             throw new ClientNoRetriableException("unknown operationType");
         } catch (Exception e) {
             Throwable ex = ExceptionUtils.onError(e);
+            if (fallbackFactory != null) {
+                W fallback = fallbackFactory.getFallback(ex);
+                if (fallback != null) {
+                    return fallback;
+                }
+            }
             if (ex instanceof ClientException) {
                 throw (ClientException) ex;
             }
@@ -215,7 +232,14 @@ public class CamelliaNakedClient<R, W> {
         }
     }
 
-    private W invoke(Resource resource, R request, int maxRetry, Object loadBalanceKey, String bgroup) throws ClientException {
+    private W invoke(OperationType operationType, Resource resource, R request, int maxRetry, Object loadBalanceKey, String bgroup) throws ClientException {
+        if (monitor != null) {
+            if (operationType == OperationType.READ) {
+                monitor.incrRead(resource.getUrl(), className, "read");
+            } else if (operationType == OperationType.WRITE) {
+                monitor.incrWrite(resource.getUrl(), className, "write");
+            }
+        }
         if (maxRetry <= 0) maxRetry = 0;
         int retry = 0;
         boolean success = true;
@@ -234,7 +258,7 @@ public class CamelliaNakedClient<R, W> {
             while (retry <= maxRetry) {
                 try {
                     feignResource = resourcePool.getResource(loadBalanceKey);
-                    return camelliaNakedRequestInvoker.doRequest(feignResource, request);
+                    return invoker.invoke(feignResource, request);
                 } catch (ClientRetriableException e) {
                     retry ++;
                     throwException = e;
@@ -250,10 +274,10 @@ public class CamelliaNakedClient<R, W> {
             }
             throw throwException;
         } catch (ClientException e) {
-            success = false;
+            success = feignEnv.getFallbackExceptionChecker().isSkipError(e);
             throw e;
         } catch (Exception e) {
-            success = false;
+            success = feignEnv.getFallbackExceptionChecker().isSkipError(e);
             throw new ClientNoRetriableException(e);
         } finally {
             if (circuitBreaker != null) {
@@ -292,6 +316,25 @@ public class CamelliaNakedClient<R, W> {
                 this.bgroup = bgroup;
             }
         }
+
+        //监控类，优先使用proxyEnv中指定的Monitor
+        Monitor monitor = feignEnv.getProxyEnv().getMonitor();
+        if (dynamicOptionGetter != null) {
+            DynamicOption dynamicOption = dynamicOptionGetter.getDynamicOption(bid, bgroup);
+            if (dynamicOption != null) {
+                Boolean monitorEnable = dynamicOption.isMonitorEnable();
+                if (monitorEnable != null && monitorEnable) {
+                    if (monitor == null && bid > 0 && camelliaApi != null) {
+                        monitor = new RemoteMonitor(bid, bgroup, camelliaApi);
+                    }
+                } else {
+                    monitor = null;
+                }
+            }
+        }
+        this.monitor = monitor;
+
+        this.className = this.getClass().getSimpleName();
     }
 
     private FeignResourcePool getResourcePool(Resource resource, String bgroup) {
