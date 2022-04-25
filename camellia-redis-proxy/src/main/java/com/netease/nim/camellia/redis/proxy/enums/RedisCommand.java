@@ -144,6 +144,14 @@ public enum RedisCommand {
     SELECT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
     SCAN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, false, CommandKeyType.None),
     SCRIPT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.SCRIPT, false, CommandKeyType.None),
+    BFADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, false, CommandKeyType.SIMPLE_SINGLE),
+    BFEXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, false, CommandKeyType.SIMPLE_SINGLE),
+    BFINFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, false, CommandKeyType.SIMPLE_SINGLE),
+    BFINSERT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, false, CommandKeyType.SIMPLE_SINGLE),
+    BFLOADCHUNK(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, false, CommandKeyType.SIMPLE_SINGLE),
+    BFMADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, false, CommandKeyType.SIMPLE_SINGLE),
+    BFMEXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, false, CommandKeyType.SIMPLE_SINGLE),
+    BFSCANDUMP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, false, CommandKeyType.SIMPLE_SINGLE),
 
     /**
      * Restrictive Support
@@ -297,6 +305,7 @@ public enum RedisCommand {
         SCRIPT,
         GE0,
         TRANSACTION,
+        BF,
         ;
     }
 
@@ -342,6 +351,13 @@ public enum RedisCommand {
 
     static {
         for (RedisCommand command : RedisCommand.values()) {
+            if (command.getCommandType() == CommandType.BF) {
+                String name = command.name().toLowerCase();
+                name = "bf." + name.substring(2);
+                supportCommandMap.put(name, command);
+                commandMap.put(name, command);
+                continue;
+            }
             if (command.getSupportType() != CommandSupportType.NOT_SUPPORT && command.getType() != null) {
                 supportCommandMap.put(command.name().toLowerCase(), command);
             }
