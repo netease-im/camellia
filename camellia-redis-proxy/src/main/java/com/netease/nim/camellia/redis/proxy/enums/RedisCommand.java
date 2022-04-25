@@ -247,6 +247,7 @@ public enum RedisCommand {
     ;
 
     private final CommandSupportType supportType;
+    private final String strRaw;
     private final byte[] raw;
     private final Type type;
     private final boolean blocking;
@@ -254,7 +255,12 @@ public enum RedisCommand {
     private final CommandType commandType;
 
     RedisCommand(CommandSupportType supportType, Type type, CommandType commandType, boolean blocking, CommandKeyType commandKeyType) {
-        this.raw = Utils.stringToBytes(name());
+        if (commandType == CommandType.BF) {
+            this.strRaw = "bf." + name().toLowerCase().substring(2);
+        } else {
+            this.strRaw = name().toLowerCase();
+        }
+        this.raw = Utils.stringToBytes(this.strRaw);
         this.supportType = supportType;
         this.type = type;
         this.commandType = commandType;
@@ -264,6 +270,10 @@ public enum RedisCommand {
 
     public byte[] raw() {
         return raw;
+    }
+
+    public String strRaw() {
+        return strRaw;
     }
 
     public Type getType() {
@@ -351,17 +361,10 @@ public enum RedisCommand {
 
     static {
         for (RedisCommand command : RedisCommand.values()) {
-            if (command.getCommandType() == CommandType.BF) {
-                String name = command.name().toLowerCase();
-                name = "bf." + name.substring(2);
-                supportCommandMap.put(name, command);
-                commandMap.put(name, command);
-                continue;
-            }
             if (command.getSupportType() != CommandSupportType.NOT_SUPPORT && command.getType() != null) {
-                supportCommandMap.put(command.name().toLowerCase(), command);
+                supportCommandMap.put(command.strRaw, command);
             }
-            commandMap.put(command.name().toLowerCase(), command);
+            commandMap.put(command.strRaw, command);
         }
 
     }
