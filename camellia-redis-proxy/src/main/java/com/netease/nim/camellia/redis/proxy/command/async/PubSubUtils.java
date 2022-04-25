@@ -121,13 +121,13 @@ public class PubSubUtils {
                     if (firstReply instanceof BulkReply) {
                         byte[] raw = ((BulkReply) firstReply).getRaw();
                         String str = Utils.bytesToString(raw);
-                        if (str.equalsIgnoreCase(RedisCommand.SUBSCRIBE.name())) {
+                        if (str.equalsIgnoreCase(RedisCommand.SUBSCRIBE.strRaw())) {
                             checkSubscribe(client, replies, asyncTaskQueue);
-                        } else if (str.equalsIgnoreCase(RedisCommand.UNSUBSCRIBE.name())) {
+                        } else if (str.equalsIgnoreCase(RedisCommand.UNSUBSCRIBE.strRaw())) {
                             checkSubscribe(client, replies, asyncTaskQueue);
-                        } else if (str.equalsIgnoreCase(RedisCommand.PSUBSCRIBE.name())) {
+                        } else if (str.equalsIgnoreCase(RedisCommand.PSUBSCRIBE.strRaw())) {
                             checkSubscribe(client, replies, asyncTaskQueue);
-                        } else if (str.equalsIgnoreCase(RedisCommand.PUNSUBSCRIBE.name())) {
+                        } else if (str.equalsIgnoreCase(RedisCommand.PUNSUBSCRIBE.strRaw())) {
                             checkSubscribe(client, replies, asyncTaskQueue);
                         }
                     }

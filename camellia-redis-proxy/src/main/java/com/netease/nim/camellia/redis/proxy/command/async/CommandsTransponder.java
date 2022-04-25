@@ -236,7 +236,7 @@ public class CommandsTransponder {
                 if (channelInfo.isInSubscribe()) {
                     if (redisCommand != RedisCommand.SUBSCRIBE && redisCommand != RedisCommand.PSUBSCRIBE
                             && redisCommand != RedisCommand.UNSUBSCRIBE && redisCommand != RedisCommand.PUNSUBSCRIBE) {
-                        taskQueue.reply(new ErrorReply("Command " + redisCommand.name() + " not allowed while subscribed. Allowed commands are: [PSUBSCRIBE, QUIT, PUNSUBSCRIBE, SUBSCRIBE, UNSUBSCRIBE]"));
+                        taskQueue.reply(new ErrorReply("Command " + redisCommand.strRaw() + " not allowed while subscribed. Allowed commands are: [PSUBSCRIBE, QUIT, PUNSUBSCRIBE, SUBSCRIBE, UNSUBSCRIBE]"));
                         hasCommandsSkip = true;
                         continue;
                     }
