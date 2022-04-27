@@ -8,19 +8,18 @@ import com.netease.nim.camellia.feign.naked.CamelliaNakedClient;
  */
 public class NakedTestMain {
     public static void main(String[] args) {
-        CamelliaNakedClient<Long, String> client = new CamelliaNakedClient.Builder<Long, String>()
+        CamelliaNakedClient<Long, String> client = new CamelliaNakedClient.Builder()
                 .bid(1L)
                 .bgroup("default")
                 .resourceTable("feign#http://baidu.com")
-                .fallbackFactory(t -> "FALLBACK")
                 .dynamicOptionGetter(new CamelliaFeignDynamicOptionGetter.DefaultCamelliaFeignDynamicOptionGetter(1000, true))
                 .build((feignResource, request) -> {
                     System.out.println("feignResource=" + feignResource.getFeignUrl());
                     if (request == 100L) {
                         throw new IllegalArgumentException("");
                     }
-                    return "request=" + request;
-                });
+                    return "success,request=" + request;
+                }, t -> "fail,FALLBACK");
         //fallback
         String response1 = client.sendRequest(CamelliaNakedClient.OperationType.READ, 100L);
         System.out.println(response1);

@@ -59,7 +59,7 @@ public class CamelliaNakedClient<R, W> {
     private CamelliaNakedRequestInvoker<R, W> invoker;
     private int defaultMaxRetry = 0;
 
-    private String name = "camellia-naked-client";
+    private String name = "default";
 
     private long bid = -1;
     private String bgroup = "default";
@@ -81,71 +81,89 @@ public class CamelliaNakedClient<R, W> {
     private CamelliaNakedClient() {
     }
 
-    public static class Builder<R, W> {
+    public static class Builder {
 
-        private final CamelliaNakedClient<R, W> client = new CamelliaNakedClient<>();
+        private long bid = -1;
+        private String bgroup = "default";
+        private CamelliaApi camelliaApi;
+        private long checkIntervalMillis = 5000;
+        private ResourceTable resourceTable;
+        private String name = "default";
+        private int defaultMaxRetry = 0;
+        private CamelliaFeignDynamicOptionGetter dynamicOptionGetter;
+        private CamelliaFeignEnv feignEnv = CamelliaFeignEnv.defaultFeignEnv();
 
         public Builder() {
         }
 
-        public Builder<R, W> bid(long bid) {
-            client.bid = bid;
+        public Builder bid(long bid) {
+            this.bid = bid;
             return this;
         }
 
-        public Builder<R, W> bgroup(String bgroup) {
-            client.bgroup = bgroup;
+        public Builder bgroup(String bgroup) {
+            this.bgroup = bgroup;
             return this;
         }
 
-        public Builder<R, W> name(String name) {
-            client.name = name;
+        public Builder name(String name) {
+            this.name = name;
             return this;
         }
 
-        public Builder<R, W> camelliaApi(CamelliaApi camelliaApi) {
-            client.camelliaApi = camelliaApi;
+        public Builder camelliaApi(CamelliaApi camelliaApi) {
+            this.camelliaApi = camelliaApi;
             return this;
         }
 
-        public Builder<R, W> feignEnv(CamelliaFeignEnv feignEnv) {
-            client.feignEnv = feignEnv;
+        public Builder feignEnv(CamelliaFeignEnv feignEnv) {
+            this.feignEnv = feignEnv;
             return this;
         }
 
-        public Builder<R, W> dynamicOptionGetter(CamelliaFeignDynamicOptionGetter dynamicOptionGetter) {
-            client.dynamicOptionGetter = dynamicOptionGetter;
+        public Builder dynamicOptionGetter(CamelliaFeignDynamicOptionGetter dynamicOptionGetter) {
+            this.dynamicOptionGetter = dynamicOptionGetter;
             return this;
         }
 
-        public Builder<R, W> fallbackFactory(CamelliaFeignFallbackFactory<W> fallbackFactory) {
-            client.fallbackFactory = fallbackFactory;
-            return this;
-        }
-
-        public Builder<R, W> resourceTable(String route) {
+        public Builder resourceTable(String route) {
             if (route != null) {
                 ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(route);
                 FeignResourceUtils.checkResourceTable(resourceTable);
-                client.resourceTable = resourceTable;
+                this.resourceTable = resourceTable;
             }
             return this;
         }
 
-        public Builder<R, W> defaultMaxRetry(int defaultMaxRetry) {
-            client.defaultMaxRetry = defaultMaxRetry;
+        public Builder defaultMaxRetry(int defaultMaxRetry) {
+            this.defaultMaxRetry = defaultMaxRetry;
             return this;
         }
 
-        public Builder<R, W> checkIntervalMillis(long checkIntervalMillis) {
+        public Builder checkIntervalMillis(long checkIntervalMillis) {
             if (checkIntervalMillis < 0) {
                 throw new IllegalArgumentException("illegal checkIntervalMillis");
             }
-            client.checkIntervalMillis = checkIntervalMillis;
+            this.checkIntervalMillis = checkIntervalMillis;
             return this;
         }
 
-        public CamelliaNakedClient<R, W> build(CamelliaNakedRequestInvoker<R, W> invoker) {
+        public <R, W> CamelliaNakedClient<R, W> build(CamelliaNakedRequestInvoker<R, W> invoker) {
+            return build(invoker, null);
+        }
+
+        public <R, W> CamelliaNakedClient<R, W> build(CamelliaNakedRequestInvoker<R, W> invoker, CamelliaFeignFallbackFactory<W> fallbackFactory) {
+            CamelliaNakedClient<R, W> client = new CamelliaNakedClient<>();
+            client.bid = bid;
+            client.bgroup = bgroup;
+            client.camelliaApi = camelliaApi;
+            client.checkIntervalMillis = checkIntervalMillis;
+            client.defaultMaxRetry = defaultMaxRetry;
+            client.feignEnv = feignEnv;
+            client.name = name;
+            client.resourceTable = resourceTable;
+            client.dynamicOptionGetter = dynamicOptionGetter;
+            client.fallbackFactory = fallbackFactory;
             client.invoker = invoker;
             client.init();
             return client;
@@ -377,7 +395,7 @@ public class CamelliaNakedClient<R, W> {
         }
         this.monitor = monitor;
 
-        this.className = this.getClass().getSimpleName();
+        this.className = this.getClass().getSimpleName() + "." + name;
     }
 
     private FeignResourcePool getResourcePool(Resource resource, String bgroup) {
