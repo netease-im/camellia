@@ -395,7 +395,7 @@ public class CamelliaNakedClient<R, W> {
         }
         this.monitor = monitor;
 
-        this.className = this.getClass().getSimpleName() + "." + name;
+        this.className = this.getClass().getSimpleName() + "-" + name;
     }
 
     private FeignResourcePool getResourcePool(Resource resource, String bgroup) {
