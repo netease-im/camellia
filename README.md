@@ -51,7 +51,9 @@ camellia主要包括以下功能模块：
 ### camellia-feign
 整合了camellia-core和open-feign，从而你的feign客户端可以：
 * 支持动态路由
-* 支持双写
+* 支持根据请求参数做自定义路由
+* 支持根据请求参数做自定义负载均衡
+* 支持双写、支持读写分离
 * 支持动态调整超时时间  
 [快速开始](/docs/feign/feign.md)
 
