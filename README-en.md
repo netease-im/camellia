@@ -8,31 +8,31 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
   
 ## Instruction
 ### camellia-redis  
-base on camellia-core and jedis(2.9.3)，main class is CamelliaRedisTemplate, can invoke redis/redis-sentinel/redis-cluster in identical way，support pipeline    
-support client sharding/read-write-separate/double-write   
-support jedis adaptor to migrate from jedis easily   
-support spring-redis-template adaptor  
+* base on camellia-core and jedis(2.9.3)，main class is CamelliaRedisTemplate, can invoke redis/redis-sentinel/redis-cluster in identical way，support pipeline    
+* support client sharding/read-write-separate/double-write   
+* support jedis adaptor to migrate from jedis easily   
+* support spring-redis-template adaptor  
 [QUICK START](/docs/redis-template/redis-template.md)
 ### camellia-redis-proxy  
-base on netty4, support redis/redis-sentinel/redis-cluster  
-support sharding/read-write-separate/double-write on proxy  
-support multi-route-conf            
-support tps/rt/big-key/hot-key/slow-command monitor  
-support custom command interceptor, support hot-key-cache(GET command)，support value converter and so on    
+* base on netty4, support redis/redis-sentinel/redis-cluster  
+* support sharding/read-write-separate/double-write on proxy  
+* support multi-route-conf            
+* support tps/rt/big-key/hot-key/slow-command monitor  
+* support custom command interceptor, support hot-key-cache(GET command)，support value converter and so on    
 [QUICK START](/docs/redis-proxy/redis-proxy-en.md)  
 ### camellia-hbase  
-base on camellia-core and hbase-client，main class is CamelliaHBaseTemplate    
-support client read-write-separate/double-write  
+* base on camellia-core and hbase-client，main class is CamelliaHBaseTemplate    
+* support client read-write-separate/double-write  
 [QUICK START](/docs/hbase-template/hbase-template.md)  
 ### camellia-id-gen
-provide some id gen algorithm, such as snowflake、segment、strict       
+* provide some id gen algorithm, such as snowflake、segment、strict       
 [QUICK START](/docs/id-gen/id-gen.md)
 ### camellia-tools  
-provide some tools, such as：    
-compress utils CamelliaCompressor   
-encrypt utils CamelliaEncryptor   
-local cache utils CamelliaLoadingCache   
-thread pool utils CamelliaHashedExecutor   
+* provide some tools, such as：    
+* compress utils CamelliaCompressor   
+* encrypt utils CamelliaEncryptor   
+* local cache utils CamelliaLoadingCache   
+* thread pool utils CamelliaHashedExecutor   
 [QUICK START](/docs/tools/tools.md)   
 
 ### camellia-feign

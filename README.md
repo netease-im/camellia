@@ -12,7 +12,9 @@ camellia主要包括以下功能模块：
 * 这是一个封装了jedis（2.9.3）的redis客户端，主要的类是CamelliaRedisTemplate  
 * 屏蔽了访问redis-standalone/redis-sentinel/redis-cluster的区别（jedis访问上述三种redis服务器的api是不一样的）   
 * 支持pipeline、mget、mset等操作（jedis不支持使用pipeline访问redis-cluster，也不支持跨slot场景下使用mget、mset命令访问redis-cluster）    
+* 支持透明的访问从节点（当前支持redis-sentinel）
 * 支持自定义分片、读写分离、双（多）写、双（多）读  
+* 提供了一些常有的工具类，如分布式锁等
 * 支持Jedis适配器，一行代码从Jedis切换到CamelliaRedisTemplate   
 * 支持SpringRedisTemplate适配器，不修改一行代码迁移到CamelliaRedisTemplate     
 [快速开始](/docs/redis-template/redis-template.md)
