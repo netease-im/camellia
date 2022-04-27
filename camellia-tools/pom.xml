@@ -13,11 +13,11 @@
 	</parent>
 
 	<dependencies>
-		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-core</artifactId>
-			<version>1.0.56-SNAPSHOT</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>com.netease.nim</groupId>-->
+<!--			<artifactId>camellia-core</artifactId>-->
+<!--			<version>1.0.56-SNAPSHOT</version>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>

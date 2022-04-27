@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.tools.circuitbreaker;
 
-import com.netease.nim.camellia.core.util.DynamicValueGetter;
+import com.netease.nim.camellia.tools.base.DynamicValueGetter;
 
 /**
  * Created by caojiajun on 2022/3/25

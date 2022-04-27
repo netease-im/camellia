@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.feign.conf;
 
-import com.netease.nim.camellia.core.util.DynamicValueGetter;
+import com.netease.nim.camellia.tools.base.DynamicValueGetter;
 import com.netease.nim.camellia.feign.client.DynamicOption;
 import com.netease.nim.camellia.feign.client.DynamicRouteConfGetter;
 import com.netease.nim.camellia.tools.circuitbreaker.CircuitBreakerConfig;

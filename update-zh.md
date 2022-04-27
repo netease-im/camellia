@@ -12,7 +12,7 @@
 * camellia-redis-proxy支持BloomFilter相关的命令，具体见：[redis-proxy](/docs/redis-proxy/redis-proxy-zh.md)
 
 ### 更新
-* CamelliaHashedExecutor类从camellia-tools包移动到camellia-core包
+* DynamicValueGetter类从camellia-core包移动到camellia-tools包
 
 ### fix
 * 无

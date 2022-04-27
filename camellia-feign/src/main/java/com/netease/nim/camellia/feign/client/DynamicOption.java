@@ -2,7 +2,7 @@ package com.netease.nim.camellia.feign.client;
 
 import com.netease.nim.camellia.core.discovery.CamelliaServerSelector;
 import com.netease.nim.camellia.core.discovery.RandomCamelliaServerSelector;
-import com.netease.nim.camellia.core.util.DynamicValueGetter;
+import com.netease.nim.camellia.tools.base.DynamicValueGetter;
 import com.netease.nim.camellia.feign.conf.DynamicContractTypeGetter;
 import com.netease.nim.camellia.feign.resource.FeignResource;
 import com.netease.nim.camellia.tools.circuitbreaker.CircuitBreakerConfig;

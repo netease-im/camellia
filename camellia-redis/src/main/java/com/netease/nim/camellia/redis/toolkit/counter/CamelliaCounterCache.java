@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.redis.toolkit.counter;
 
-import com.netease.nim.camellia.core.util.DynamicValueGetter;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
+import com.netease.nim.camellia.tools.base.DynamicValueGetter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Response;
