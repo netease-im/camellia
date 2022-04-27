@@ -2,6 +2,7 @@ package com.netease.nim.camellia.core.client.env;
 
 import com.netease.nim.camellia.core.client.callback.OperationCallback;
 import com.netease.nim.camellia.core.client.callback.ShardingCallback;
+import com.netease.nim.camellia.core.util.CamelliaHashedExecutor;
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 
 import java.util.concurrent.*;
@@ -32,7 +33,7 @@ public class ProxyEnv {
     //多写操作（异步）的队列大小
     private int multiWriteAsyncExecQueueSize = ProxyConstants.multiWriteAsyncExecQueueSize;
     //多写操作（异步）的线程池
-    private ExecutorService multiWriteAsyncExec;
+    private CamelliaHashedExecutor multiWriteAsyncExec;
 
     //监控bean，若为null，表示不监控
     private Monitor monitor;
@@ -64,8 +65,7 @@ public class ProxyEnv {
                 new SynchronousQueue<>(), new CamelliaThreadFactory(ShardingCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
         multiWriteConcurrentExec = new ThreadPoolExecutor(multiWriteConcurrentExecPoolSize, multiWriteConcurrentExecPoolSize, 0, TimeUnit.SECONDS,
                 new SynchronousQueue<>(), new CamelliaThreadFactory(OperationCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
-        multiWriteAsyncExec = new ThreadPoolExecutor(multiWriteAsyncExecPoolSize, multiWriteAsyncExecPoolSize, 0, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(multiWriteAsyncExecQueueSize), new CamelliaThreadFactory(OperationCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
+        multiWriteAsyncExec = new CamelliaHashedExecutor("multi-write-async", multiWriteAsyncExecPoolSize, multiWriteAsyncExecQueueSize, new CamelliaHashedExecutor.CallerRunsPolicy());
     }
 
     public static ProxyEnv defaultProxyEnv() {
@@ -88,7 +88,7 @@ public class ProxyEnv {
         return multiWriteConcurrentExec;
     }
 
-    public ExecutorService getMultiWriteAsyncExec() {
+    public CamelliaHashedExecutor getMultiWriteAsyncExec() {
         return multiWriteAsyncExec;
     }
 

@@ -7,12 +7,12 @@
 # 1.0.56（2022/04/xx）
 ### 新增
 * camellia-redis-proxy支持转发到其他proxy（如codis、twemproxy），且支持以注册发现模式去发现后端proxy节点列表，具体见：[路由](/docs/redis-proxy/route.md)
-* camellia-core支持异步双写（基于线程池+内存队列）
+* camellia-core支持异步双写（基于线程池+内存队列），进程内相同线程的多次写请求会保证顺序执行
 * camellia-feign提供CamelliaNakedClient，用于支持自定义的调用（非标准feign客户端）
 * camellia-redis-proxy支持BloomFilter相关的命令，具体见：[redis-proxy](/docs/redis-proxy/redis-proxy-zh.md)
 
 ### 更新
-* 无
+* CamelliaHashedExecutor类从camellia-tools包移动到camellia-core包
 
 ### fix
 * 无

@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.tools.samples;
 
-import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
+import com.netease.nim.camellia.core.util.CamelliaHashedExecutor;
 
 import java.util.concurrent.TimeUnit;
 

@@ -267,7 +267,7 @@ public class CamelliaNakedClient<R, W> {
                     for (int i = 0; i < writeResources.size(); i++) {
                         Resource resource = writeResources.get(0);
                         Future<W> future = feignEnv.getProxyEnv().getMultiWriteAsyncExec()
-                                .submit(strategy.wrapperCallable(() -> invoke(operationType, resource, request, retry, loadBalanceKey, bgroup)));
+                                .submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> invoke(operationType, resource, request, retry, loadBalanceKey, bgroup)));
                         futureList.add(future);
                     }
                     return futureList.get(0).get();

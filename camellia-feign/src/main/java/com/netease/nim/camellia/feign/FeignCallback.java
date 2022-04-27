@@ -242,7 +242,7 @@ public class FeignCallback<T> implements MethodInterceptor {
                                 ret = invoke(resource, loadBalanceKey, method, objects, true, operationType);
                             } else {
                                 try {
-                                    env.getMultiWriteAsyncExec().submit(strategy.wrapperCallable(() -> {
+                                    env.getMultiWriteAsyncExec().submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
                                         try {
                                             //走异步了，则也要有熔断
                                             return invoke(resource, loadBalanceKey, method, objects, false, operationType);

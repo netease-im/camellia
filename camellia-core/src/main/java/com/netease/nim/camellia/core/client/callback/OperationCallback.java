@@ -133,7 +133,7 @@ public class OperationCallback<T> implements MethodInterceptor {
                                     ret = method.invoke(client2, objects);
                                 } else {
                                     try {
-                                        env.getMultiWriteConcurrentExec().submit(strategy.wrapperCallable(() -> {
+                                        env.getMultiWriteAsyncExec().submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
                                             incrWrite(resource, method);
                                             return method.invoke(client2, objects);
                                         }));
