@@ -41,7 +41,7 @@ join camellia-core and open-feign, so your feign-client have this feature:
 * support custom route by request param
 * support custom load balance policy by request param
 * support read-write-separate/double-write
-* support dynamic timeout conf
+* support dynamic conf, such like timeout
 
 ## Version
 latest version is 1.0.55, have deploy to maven central repository on 2022/04/07  
