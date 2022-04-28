@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by caojiajun on 2021/8/9
@@ -25,8 +26,12 @@ public class CamelliaHashedExecutor {
     private static final AtomicLong executorIdGen = new AtomicLong(1);
     private final AtomicLong workerIdGen = new AtomicLong(1);
 
+    private final ReentrantLock lock = new ReentrantLock();
+    private final AtomicBoolean initOk = new AtomicBoolean(false);
+
     private final String name;
     private final int poolSize;
+    private final int queueSize;
     private final List<WorkThread> workThreads;
     private final RejectedExecutionHandler rejectedExecutionHandler;
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
@@ -50,15 +55,30 @@ public class CamelliaHashedExecutor {
     public CamelliaHashedExecutor(String name, int poolSize, int queueSize, RejectedExecutionHandler rejectedExecutionHandler) {
         this.name = name + "-" + executorIdGen.getAndIncrement();
         this.poolSize = poolSize;
+        this.queueSize = queueSize;
         this.workThreads = new ArrayList<>(poolSize);
         this.rejectedExecutionHandler = rejectedExecutionHandler;
-        for (int i=0; i<poolSize; i++) {
-            WorkThread workThread = new WorkThread(this, queueSize);
-            workThread.start();
-            workThreads.add(workThread);
-        }
         logger.info("CamelliaHashedExecutor init success, name = {}, poolSize = {}, queueSize = {}, rejectedExecutionHandler = {}",
-                name, poolSize, queueSize, rejectedExecutionHandler.getClass().getSimpleName());
+                this.name, poolSize, queueSize, rejectedExecutionHandler.getClass().getSimpleName());
+    }
+
+    private void initWorkThreads() {
+        if (initOk.get()) return;
+        lock.lock();
+        try {
+            if (!initOk.get()) {
+                for (int i = 0; i < poolSize; i++) {
+                    WorkThread workThread = new WorkThread(this, queueSize);
+                    workThread.start();
+                    workThreads.add(workThread);
+                }
+                logger.info("CamelliaHashedExecutor thread init success, name = {}, poolSize = {}, queueSize = {}, rejectedExecutionHandler = {}",
+                        name, poolSize, queueSize, rejectedExecutionHandler.getClass().getSimpleName());
+                initOk.set(true);
+            }
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -71,6 +91,7 @@ public class CamelliaHashedExecutor {
         if (shutdown.get()) {
             throw new IllegalStateException("executor has shutdown");
         }
+        initWorkThreads();
         int index = Math.abs(Arrays.hashCode(hashKey)) % workThreads.size();
         FutureTask<Void> task = new FutureTask<>(runnable, null);
         boolean success = workThreads.get(index).submit(task);
@@ -94,6 +115,7 @@ public class CamelliaHashedExecutor {
         if (shutdown.get()) {
             throw new IllegalStateException("executor has shutdown");
         }
+        initWorkThreads();
         int index = Math.abs(Arrays.hashCode(hashKey)) % workThreads.size();
         FutureTask<T> task = new FutureTask<>(callable);
         boolean success = workThreads.get(index).submit(task);

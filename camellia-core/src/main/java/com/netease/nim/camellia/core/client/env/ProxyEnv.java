@@ -118,6 +118,7 @@ public class ProxyEnv {
                     proxyEnv.monitor, proxyEnv.shardingFunc);
             this.proxyEnv.shardingConcurrentExec = proxyEnv.shardingConcurrentExec;
             this.proxyEnv.multiWriteConcurrentExec = proxyEnv.multiWriteConcurrentExec;
+            this.proxyEnv.multiWriteAsyncExec = proxyEnv.multiWriteAsyncExec;
             this.proxyEnv.threadContextSwitchStrategy = proxyEnv.threadContextSwitchStrategy;
         }
 
