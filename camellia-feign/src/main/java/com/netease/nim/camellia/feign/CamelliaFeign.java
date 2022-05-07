@@ -163,6 +163,12 @@ public final class CamelliaFeign {
             return this;
         }
 
+        public <T> T target(Class<T> apiType, String url) {
+            this.resourceTable = ReadableResourceTableUtil.parseTable("feign#" + url);
+            FeignResourceUtils.checkResourceTable(this.resourceTable);
+            return target(apiType, (T) null);
+        }
+
         public <T> T target(Class<T> apiType) {
             return target(apiType, (T) null);
         }
