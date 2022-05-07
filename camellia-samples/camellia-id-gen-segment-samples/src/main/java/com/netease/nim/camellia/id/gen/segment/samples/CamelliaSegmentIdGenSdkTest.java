@@ -12,7 +12,7 @@ public class CamelliaSegmentIdGenSdkTest {
     public static void main(String[] args) {
         CamelliaIdGenSdkConfig config = new CamelliaIdGenSdkConfig();
         config.setUrl("http://127.0.0.1:8083");
-        config.setMaxRetry(2);//重试次数
+        config.setMaxRetry(5);//重试次数
         config.getSegmentIdGenSdkConfig().setCacheEnable(true);//表示sdk是否缓存id
         config.getSegmentIdGenSdkConfig().setStep(200);//sdk缓存的id数
         CamelliaSegmentIdGenSdk idGenSdk = new CamelliaSegmentIdGenSdk(config);

@@ -117,7 +117,7 @@ camellia-id-gen-segment:
   region-id-shifting-bits: 0 #regionId左移多少位
   tag-count: 1000 #服务包括的tag数量，会缓存在本地内存，如果实际tag数超过本配置，会导致本地内存被驱逐，进而丢失部分id段，丢失后会穿透到数据库）
   step: 1000 #每次从数据库获取一批id时的批次大小
-  max-retry: 100 #当并发请求过来时，只会让一次请求穿透到db，其他请求会等待并重试，本配置表示重试的次数
+  max-retry: 500 #当并发请求过来时，只会让一次请求穿透到db，其他请求会等待并重试，本配置表示重试的次数
   retry-interval-millis: 10 #当并发请求过来时，只会让一次请求穿透到db，其他请求会等待并重试，表示重试间隔
 ```
 数据库建表语句：
@@ -186,7 +186,7 @@ public class CamelliaSegmentIdGenSdkTest {
     public static void main(String[] args) {
         CamelliaIdGenSdkConfig config = new CamelliaIdGenSdkConfig();
         config.setUrl("http://127.0.0.1:8083");
-        config.setMaxRetry(2);//重试次数
+        config.setMaxRetry(5);//重试次数
         config.getSegmentIdGenSdkConfig().setCacheEnable(true);//表示sdk是否缓存id
         config.getSegmentIdGenSdkConfig().setStep(200);//sdk缓存的id数
         CamelliaSegmentIdGenSdk idGenSdk = new CamelliaSegmentIdGenSdk(config);

@@ -25,7 +25,7 @@ public class CamelliaStrictIdGenTest {
         config.setCacheHoldSeconds(10);//缓存里的id如果在短时间内被消耗完，则下次获取id时需要多获取一些，本配置是触发step调整的阈值
         config.setRegionBits(0);//单元id所占的比特位数，0表示不区分单元
         config.setRegionId(0);//regionId，如果regionBits为0，则regionId必须为0
-        config.setMaxRetry(10);//缓存中id耗尽时穿透到db，其他线程等待重试的最大次数
+        config.setMaxRetry(1000);//缓存中id耗尽时穿透到db，其他线程等待重试的最大次数
         config.setRetryIntervalMillis(5);//缓存中id耗尽时穿透到db，其他线程等待重试的间隔
 
         //设置redis template

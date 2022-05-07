@@ -26,7 +26,7 @@ camellia-id-gen-strict:
   lock-expire-millis: 3000 #redis缓存里id耗尽时需要穿透到db重新获取，为了控制并发需要一个分布式锁，这是分布式锁的超时时间
   cache-expire-seconds: 86400 #id缓存在redis里，redis key的过期时间，默认1天
   cache-hold-seconds: 10 #缓存里的id如果在短时间内被消耗完，则下次获取id时需要多获取一些，本配置是触发step调整的阈值
-  max-retry: 100 #缓存中id耗尽时穿透到db，其他线程等待重试的最大次数
+  max-retry: 1000 #缓存中id耗尽时穿透到db，其他线程等待重试的最大次数
   retry-interval-millis: 5 #缓存中id耗尽时穿透到db，其他线程等待重试的间隔
   default-step: 10 #默认每次从db获取的id个数，也是最小的个数
   max-step: 100 #根据id的消耗速率动态调整每次从db获取id的个数，这个是上限值
