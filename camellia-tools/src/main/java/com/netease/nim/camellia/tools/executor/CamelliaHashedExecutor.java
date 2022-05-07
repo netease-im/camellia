@@ -58,8 +58,6 @@ public class CamelliaHashedExecutor {
         this.queueSize = queueSize;
         this.workThreads = new ArrayList<>(poolSize);
         this.rejectedExecutionHandler = rejectedExecutionHandler;
-        logger.info("CamelliaHashedExecutor init success, name = {}, poolSize = {}, queueSize = {}, rejectedExecutionHandler = {}",
-                this.name, poolSize, queueSize, rejectedExecutionHandler.getClass().getSimpleName());
     }
 
     private void initWorkThreads() {
@@ -166,6 +164,20 @@ public class CamelliaHashedExecutor {
         return num;
     }
 
+    /**
+     * 获取等待队列的大小
+     * @return 大小
+     */
+    public int getQueueSize() {
+        int queueSize = 0;
+        for (WorkThread workThread : workThreads) {
+            if (workThread.isActive()) {
+                queueSize += workThread.queueSize();
+            }
+        }
+        return queueSize;
+    }
+
     public static interface RejectedExecutionHandler {
         void rejectedExecution(Runnable runnable, CamelliaHashedExecutor executor);
     }
@@ -209,6 +221,10 @@ public class CamelliaHashedExecutor {
 
         public boolean isActive() {
             return active.get() || !queue.isEmpty();
+        }
+
+        public int queueSize() {
+            return queue.size();
         }
 
         @Override
