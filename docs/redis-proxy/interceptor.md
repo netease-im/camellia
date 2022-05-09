@@ -6,6 +6,7 @@ camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访
 * RateLimitCommandInterceptor 用于控制客户端请求速率（支持全局速率控制，也支持bid/bgroup级别的速率控制）
 * MqMultiWriteCommandInterceptor 用于基于mq（如kafka等）的异步双写
 * DynamicCommandInterceptorWrapper 可以组合多个CommandInterceptor的一个包装类
+* IPCheckerCommandInterceptor 可以根据客户端ip进行权限校验，支持黑名单模式和白名单模式
 
 ### 自定义CommandInterceptor
 如果你想添加一个自定义的方法拦截器，则应该实现CommandInterceptor接口，类似于这样：
@@ -320,4 +321,49 @@ camellia-redis-proxy:
 dynamic.command.interceptor.class.names=com.netease.nim.camellia.samples.CustomCommandInterceptor1|com.netease.nim.camellia.samples.CustomCommandInterceptor2
 ```
 上述配置表示DynamicCommandInterceptorWrapper组合了CustomCommandInterceptor1和CustomCommandInterceptor2两个拦截器的功能   
-特别的，DynamicCommandInterceptorWrapper支持动态修改配置的方式来动态调整组合的拦截器列表  
+特别的，DynamicCommandInterceptorWrapper支持动态修改配置的方式来动态调整组合的拦截器列表
+
+
+### IPCheckerCommandInterceptor
+#### 用途
+当需要通过识别客户端ip来控制proxy的访问权限时，可以使用本拦截器，支持黑名单模式和白名单模式  
+你还可以根据bid/bgroup设置不同的ip拦截策略
+
+#### 配置示例
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      resource: redis://@127.0.0.1:6379
+  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.command.async.interceptor.IPCheckerCommandInterceptor
+```
+随后你可以在camellia-redis-proxy.properties里配置如下：
+```
+#黑名单示例（支持ip，也支持网段，逗号分隔）：
+ip.check.mode=1
+ip.black.list=2.2.2.2,5.5.5.5,3.3.3.0/24,6.6.0.0/16
+```
+```
+#白名单示例（支持ip，也支持网段，逗号分隔）：
+ip.check.mode=2
+ip.white.list=2.2.2.2,5.5.5.5,3.3.3.0/24,6.6.0.0/16
+```
+```
+#根据bid/bgroup设置不同的策略：
+#黑名单示例（表示bid=1,bgroup=default的黑名单配置）：
+1.default.ip.check.mode=1
+1.default.ip.black.list=2.2.2.2,5.5.5.5,3.3.3.0/24,6.6.0.0/16
+```
+```
+#白名单示例（表示bid=1,bgroup=default的白名单配置）：
+1.default.ip.check.mode=2
+1.default.ip.white.list=2.2.2.2,5.5.5.5,3.3.3.0/24,6.6.0.0/16
+```

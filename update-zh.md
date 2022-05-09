@@ -4,12 +4,13 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
-# 1.0.56（2022/04/xx）
+# 1.0.56（2022/05/10）
 ### 新增
 * camellia-redis-proxy支持转发到其他proxy（如codis、twemproxy），且支持以注册发现模式去发现后端proxy节点列表，具体见：[路由](/docs/redis-proxy/route.md)
 * camellia-core支持异步双写（基于线程池+内存队列），进程内相同线程的多次写请求会保证顺序执行
 * camellia-feign提供CamelliaNakedClient，用于支持自定义的调用（非标准feign客户端）
 * camellia-redis-proxy支持BloomFilter相关的命令，具体见：[redis-proxy](/docs/redis-proxy/redis-proxy-zh.md)
+* camellia-redis-proxy内置一个基于ip校验客户端的拦截器（IPCheckerCommandInterceptor），具体见：[拦截器](/docs/redis-proxy/interceptor.md)
 
 ### 更新
 * DynamicValueGetter类从camellia-core包移动到camellia-tools包
