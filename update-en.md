@@ -4,6 +4,17 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+# 1.0.57（2022/05/10）
+### add
+* none
+
+### update
+* none
+
+### fix
+* fix CamelliaNakedClient multi-write
+
+
 # 1.0.56（2022/05/10）
 ### add
 * camellia-redis-proxy support transpond to other proxy, such as codis、twemproxy, and support use discovery mode to find proxy

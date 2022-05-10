@@ -4,20 +4,15 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-tools</artifactId>
-	<version>1.0.56</version>
+	<version>1.0.57</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia</artifactId>
-		<version>1.0.56</version>
+		<version>1.0.57</version>
 	</parent>
 
 	<dependencies>
-<!--		<dependency>-->
-<!--			<groupId>com.netease.nim</groupId>-->
-<!--			<artifactId>camellia-core</artifactId>-->
-<!--			<version>1.0.56-SNAPSHOT</version>-->
-<!--		</dependency>-->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>

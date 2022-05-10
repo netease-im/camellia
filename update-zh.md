@@ -4,6 +4,17 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.0.57（2022/05/10）
+### 新增
+* 无
+
+### 更新
+* 无
+
+### fix
+* fix CamelliaNakedClient双写无效的问题
+
+
 # 1.0.56（2022/05/10）
 ### 新增
 * camellia-redis-proxy支持转发到其他proxy（如codis、twemproxy），且支持以注册发现模式去发现后端proxy节点列表，具体见：[路由](/docs/redis-proxy/route.md)
