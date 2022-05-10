@@ -235,7 +235,7 @@ public class CamelliaNakedClient<R, W> {
                 if (multiWriteType == MultiWriteType.SINGLE_THREAD) {
                     W result = null;
                     for (int i = 0; i < writeResources.size(); i++) {
-                        Resource resource = writeResources.get(0);
+                        Resource resource = writeResources.get(i);
                         boolean first = i == 0;
                         if (first) {
                             result = invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
@@ -247,8 +247,7 @@ public class CamelliaNakedClient<R, W> {
                 } else if (multiWriteType == MultiWriteType.MULTI_THREAD_CONCURRENT) {
                     ThreadContextSwitchStrategy strategy = feignEnv.getProxyEnv().getThreadContextSwitchStrategy();
                     List<Future<W>> futureList = new ArrayList<>();
-                    for (int i = 0; i < writeResources.size(); i++) {
-                        Resource resource = writeResources.get(0);
+                    for (Resource resource : writeResources) {
                         Future<W> future = feignEnv.getProxyEnv().getMultiWriteConcurrentExec()
                                 .submit(strategy.wrapperCallable(() -> invoke(operationType, resource, request, retry, loadBalanceKey, bgroup)));
                         futureList.add(future);
@@ -264,8 +263,7 @@ public class CamelliaNakedClient<R, W> {
                 } else if (multiWriteType == MultiWriteType.ASYNC_MULTI_THREAD) {
                     ThreadContextSwitchStrategy strategy = feignEnv.getProxyEnv().getThreadContextSwitchStrategy();
                     List<Future<W>> futureList = new ArrayList<>();
-                    for (int i = 0; i < writeResources.size(); i++) {
-                        Resource resource = writeResources.get(0);
+                    for (Resource resource : writeResources) {
                         Future<W> future = feignEnv.getProxyEnv().getMultiWriteAsyncExec()
                                 .submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> invoke(operationType, resource, request, retry, loadBalanceKey, bgroup)));
                         futureList.add(future);
