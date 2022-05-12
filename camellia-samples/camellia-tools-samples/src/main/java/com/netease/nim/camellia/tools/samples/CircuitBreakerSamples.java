@@ -16,9 +16,9 @@ public class CircuitBreakerSamples {
 //        config.setName("camellia-circuit-breaker");
 //        config.setStatisticSlidingWindowTime(10*1000L);//统计成功失败的滑动窗口的大小，单位ms，默认10s
 //        config.setStatisticSlidingWindowBucketSize(10);//滑动窗口分割为多少个bucket，默认10个
-        //以下参数可以动态配置
-//        config.setEnable(() -> true);//熔断器开关，一个lambda表达式，可以动态配置，默认true，若配置false，则所有请求都通过
-//        config.setForceOpen(() -> false);//强制打开开关，一个lambda表达式，可以动态配置，默认false，若配置true，则所有请求都通过
+        //以下参数可以动态配置，通过lambda表达式来实现动态配置
+//        config.setEnable(() -> true);//熔断器开关，默认true，若配置false，则所有请求都通过
+//        config.setForceOpen(() -> false);//强制打开开关，默认false，若配置true，则所有请求都不通过
 //        config.setFailThresholdPercentage(() -> 0.5);////滑动窗口范围内失败比例超过多少触发熔断，默认50%
 //        config.setSingleTestIntervalMillis(() -> 5000L);//当熔断器打开的情况下，间隔多久尝试一次探测（也就是半开）
 //        config.setRequestVolumeThreshold(() -> 20L);//滑动窗口内至少多少个请求才会触发熔断，默认20个
