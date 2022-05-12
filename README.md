@@ -48,7 +48,7 @@ camellia主要包括以下功能模块：
 * 加解密工具类CamelliaEncryptor，支持AES相关算法，解密时会检查是否加密过（向下兼容）  
 * 本地缓存工具类CamelliaLoadingCache，提供区别于Caffeine和Guava的load策略，适用于特定场景  
 * 线程池工具类CamelliaHashedExecutor，提供哈希策略，相同hashKey确保顺序执行   
-* 熔断器工具类CamelliaCircuitBreaker，支持动态配置
+* 熔断器工具类CamelliaCircuitBreaker，支持动态配置  
 [快速开始](/docs/tools/tools.md)  
 
 ### camellia-feign
