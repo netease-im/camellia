@@ -4,6 +4,18 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+
+# 1.0.58（2022/05/xx）
+### add
+* camellia-redis-proxy detect api support key count and qps
+
+### update
+* CamelliaIdGenSdkConfig support setting OkHttpClient keepAliveSeconds, default 30s
+
+### fix
+* none
+
+
 # 1.0.57（2022/05/10）
 ### add
 * none

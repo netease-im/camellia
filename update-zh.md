@@ -4,9 +4,10 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+
 # 1.0.58（2022/05/xx）
 ### 新增
-* camellia-redis-proxy的detect接口支持返回key总数/qps等信息
+* camellia-redis-proxy的detect接口支持返回key总数/qps等信息，具体见：[detect](/docs/redis-proxy/detect.md)
 
 ### 更新
 * CamelliaIdGenSdkConfig支持设置OkHttpClient的keepAliveSeconds配置，默认30s

@@ -233,6 +233,7 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 通过httpAPI获取监控数据
 * 监控配置的动态修改
 * 通过info命令获取服务器相关信息（包括后端redis集群的信息）
+* 把proxy当做一个监控redis集群状态的平台（通过http接口暴露）
 
 具体可见：[监控](monitor.md)
 

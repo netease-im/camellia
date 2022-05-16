@@ -8,6 +8,7 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 通过httpAPI获取监控数据
 * 监控配置的动态修改
 * 通过info命令获取服务器相关信息(包括后端redis集群的信息)
+* 把proxy当做一个监控redis集群状态的平台（通过http接口暴露）
 
 ### 请求tps、请求rt
 默认是关闭的，你可以这样打开：
@@ -197,3 +198,7 @@ application.yml中的部分配置支持进程启动期间进行动态修改，�
 ## 通过info命令获取服务器相关信息
 proxy实现了info命令，支持返回如下信息：Server/Clients/Route/Upstream/Memory/GC/Stats/Upstream-Info  
 详见[info命令](info.md)
+
+## 把proxy当做一个监控redis集群状态的平台（通过http接口暴露）
+你可以使用http接口去请求proxy，并把需要探测的redis地址传递给proxy，proxy会以json格式返回目标redis集群的信息  
+详见[detect](detect.md)
