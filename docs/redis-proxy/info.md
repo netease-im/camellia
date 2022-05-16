@@ -174,7 +174,10 @@ hz:10  ##hz，提高它的值将会占用更多的cpu,当然相应的redis将会
 role:master  ##节点类型
 connected_slaves:1  ##从节点数量
 slave0:ip=10.189.28.60,port=7003,state=online,offset=88682163709,lag=0  ##从节点信息
-db0:keys=3639485,expires=3639482,avg_ttl=1621629354933212  ##key的分布情况（数量、带ttl的数量、平均ttl）
+key_count:297 #key的数量
+expire_key_count:294 #带有过期时间的key的数量
+avg_ttl:62496349 #平均ttl
+qps:20
 #### node1
 master_url=10.189.28.60:7001@17001
 redis_version:4.0.9
@@ -189,7 +192,10 @@ hz:10
 role:master
 connected_slaves:1
 slave0:ip=10.189.28.62,port=7010,state=online,offset=253642106463,lag=0
-db0:keys=297,expires=294,avg_ttl=62496349
+key_count:297
+expire_key_count:294
+avg_ttl:62496349
+qps:20
 #### node2
 master_url=10.189.28.62:7011@17011
 redis_version:4.0.9
@@ -204,7 +210,10 @@ hz:10
 role:master
 connected_slaves:1
 slave0:ip=10.189.28.62,port=7009,state=online,offset=186569832085,lag=1
-db0:keys=3634796,expires=3634791,avg_ttl=1621629354943862
+key_count:297
+expire_key_count:294
+avg_ttl:62496349
+qps:20
 
 ## Upstream1
 url:redis-sentinel://@127.0.0.1:26379/master1
@@ -222,7 +231,10 @@ hz:10
 role:master
 connected_slaves:1
 slave0:ip=127.0.0.1,port=6379,state=online,offset=570473,lag=1
-db0:keys=12231212,expires=3634791,avg_ttl=123444
+key_count:297
+expire_key_count:294
+avg_ttl:62496349
+qps:20
 
 ## Upstream2
 url:redis-sentinel-slaves://@127.0.0.1:26379/master1?withMaster=true
@@ -240,7 +252,10 @@ hz:10
 role:master
 connected_slaves:1
 slave0:ip=127.0.0.1,port=6379,state=online,offset=570473,lag=1
-db0:keys=12231212,expires=3634791,avg_ttl=123444
+key_count:297
+expire_key_count:294
+avg_ttl:62496349
+qps:20
 
 ```
 
@@ -268,7 +283,10 @@ maxmemory_policy:noeviction
 hz:10
 role:master
 connected_slaves:0
-db0:keys=39,expires=0,avg_ttl=0
+key_count:297
+expire_key_count:294
+avg_ttl:62496349
+qps:20
 ```
 
 除了使用redis协议来获取info信息外，你还可以基于console的http-api来执行并获取info信息：  
