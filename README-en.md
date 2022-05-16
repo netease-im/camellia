@@ -45,7 +45,7 @@ join camellia-core and open-feign, so your feign-client have this feature:
 * support dynamic conf, such like timeout
 
 ## Version
-latest version is 1.0.57, have deploy to maven central repository on 2022/05/10  
+latest version is 1.0.58, have deploy to maven central repository on 2022/05/16  
 [CHANGE_LOG](/update-en.md)  
 
 ## User List
