@@ -137,8 +137,8 @@ public class UpstreamInfoUtils {
         infoJson.put("memory_used_rate", memoryUsedRate);
         infoJson.put("memory_used_rate_human", String.format("%.2f", memoryUsedRate * 100.0) + "%");
         infoJson.put("qps", qps);
-        infoJson.put("keyCount", keyCount);
-        infoJson.put("expireKeyCount", expireKeyCount);
+        infoJson.put("key_count", keyCount);
+        infoJson.put("expire_key_count", expireKeyCount);
     }
 
     private static JSONObject toNodeJson(RedisClientAddr clientAddr, RedisInfo redisInfo) {
