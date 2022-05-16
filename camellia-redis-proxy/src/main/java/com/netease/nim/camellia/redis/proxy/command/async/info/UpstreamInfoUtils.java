@@ -144,7 +144,25 @@ public class UpstreamInfoUtils {
     private static JSONObject toNodeJson(RedisClientAddr clientAddr, RedisInfo redisInfo) {
         JSONObject json = new JSONObject();
         Map<String, String> map = parseKv(redisInfo.string);
-        json.putAll(map);
+        Map<String, Object> formatMap = new HashMap<>();
+        HashSet<String> keys = new HashSet<>(map.keySet());
+        for (String key : keys) {
+            String value = map.get(key);
+            try {
+                double number = Double.parseDouble(value);
+                formatMap.put(key, number);
+                continue;
+            } catch (NumberFormatException ignore) {
+            }
+            try {
+                long number = Long.parseLong(value);
+                formatMap.put(key, number);
+                continue;
+            } catch (NumberFormatException ignore) {
+            }
+            formatMap.put(key, value);
+        }
+        json.putAll(formatMap);
         json.put("node_url", PasswordMaskUtils.maskAddr(clientAddr.getUrl()));
         return json;
     }
