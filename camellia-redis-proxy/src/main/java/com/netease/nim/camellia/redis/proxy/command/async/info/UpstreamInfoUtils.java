@@ -60,6 +60,9 @@ public class UpstreamInfoUtils {
                 }
                 long totalMaxMemory = 0;
                 long totalUsedMemory = 0;
+                long totalQps = 0;
+                long totalKeyCount = 0;
+                long totalExpireKeyCount = 0;
                 List<ClusterNodeInfo> redisClusterNodeInfo = getRedisClusterNodeInfo((RedisClusterResource) resource);
                 if (redisClusterNodeInfo != null) {
                     boolean safety = redisClusterSafety(redisClusterNodeInfo);
@@ -75,12 +78,15 @@ public class UpstreamInfoUtils {
                         if (redisInfo != null) {
                             totalMaxMemory += redisInfo.maxMemory;
                             totalUsedMemory += redisInfo.usedMemory;
+                            totalQps += redisInfo.qps;
+                            totalKeyCount += redisInfo.keyCount;
+                            totalExpireKeyCount += redisInfo.expireKeyCount;
                             JSONObject nodeJson = toNodeJson(addr, redisInfo);
                             nodeJsonArray.add(nodeJson);
                         }
                     }
                 }
-                memoryUsed(infoJson, totalMaxMemory, totalUsedMemory);
+                infoJson(infoJson, totalMaxMemory, totalUsedMemory, totalQps, totalKeyCount, totalExpireKeyCount);
             }
         } else if (resource instanceof RedisSentinelResource) {
             infoJson.put("type", "sentinel");
@@ -91,7 +97,8 @@ public class UpstreamInfoUtils {
                 otherInfoJsonArray.add(infoItem("master_node", PasswordMaskUtils.maskAddr(redisSentinelInfo.master)));
                 JSONObject nodeJson = toNodeJson(redisSentinelInfo.master, redisSentinelInfo.redisInfo);
                 nodeJsonArray.add(nodeJson);
-                memoryUsed(infoJson, redisSentinelInfo.redisInfo.maxMemory, redisSentinelInfo.redisInfo.usedMemory);
+                infoJson(infoJson, redisSentinelInfo.redisInfo.maxMemory, redisSentinelInfo.redisInfo.usedMemory,
+                        redisSentinelInfo.redisInfo.qps, redisSentinelInfo.redisInfo.keyCount, redisSentinelInfo.redisInfo.expireKeyCount);
             } else {
                 infoJson.put("status", "unknown");
             }
@@ -102,7 +109,8 @@ public class UpstreamInfoUtils {
             RedisInfo redisInfo = getRedisInfo(addr);
             if (redisInfo != null) {
                 infoJson.put("status", "ok");
-                memoryUsed(infoJson, redisInfo.maxMemory, redisInfo.usedMemory);
+                infoJson(infoJson, redisInfo.maxMemory, redisInfo.usedMemory,
+                        redisInfo.qps, redisInfo.keyCount, redisInfo.expireKeyCount);
                 JSONObject nodeJson = toNodeJson(addr, redisInfo);
                 nodeJsonArray.add(nodeJson);
             } else {
@@ -117,7 +125,7 @@ public class UpstreamInfoUtils {
         return jsonObject;
     }
 
-    private static void memoryUsed(JSONObject infoJson, long maxMemory, long usedMemory) {
+    private static void infoJson(JSONObject infoJson, long maxMemory, long usedMemory, long qps, long keyCount, long expireKeyCount) {
         double memoryUsedRate = 0.0;
         if (maxMemory != 0) {
             memoryUsedRate = (double) usedMemory / maxMemory;
@@ -128,6 +136,9 @@ public class UpstreamInfoUtils {
         infoJson.put("used_memory_human", ProxyInfoUtils.humanReadableByteCountBin(usedMemory));
         infoJson.put("memory_used_rate", memoryUsedRate);
         infoJson.put("memory_used_rate_human", String.format("%.2f", memoryUsedRate * 100.0) + "%");
+        infoJson.put("qps", qps);
+        infoJson.put("keyCount", keyCount);
+        infoJson.put("expireKeyCount", expireKeyCount);
     }
 
     private static JSONObject toNodeJson(RedisClientAddr clientAddr, RedisInfo redisInfo) {
@@ -380,12 +391,17 @@ public class UpstreamInfoUtils {
         redisInfoKeys.add("role");
         redisInfoKeys.add("connected_slaves");
         redisInfoKeys.add("db0");
+        redisInfoKeys.add("instantaneous_ops_per_sec");
     }
 
     private static class RedisInfo {
         private String string;
         private long maxMemory;
         private long usedMemory;
+        private long qps;
+        private long keyCount;
+        private long expireKeyCount;
+        private long avgTtl;
     }
     private static RedisInfo getRedisInfo(RedisClientAddr addr) {
         Map<String, String> map = getInfoMap(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), new byte[][] {RedisCommand.INFO.raw()});
@@ -393,8 +409,30 @@ public class UpstreamInfoUtils {
             return null;
         } else {
             StringBuilder builder = new StringBuilder();
+            RedisInfo redisInfo = new RedisInfo();
             for (String key : redisInfoKeys) {
                 String value = map.get(key);
+                if (key.equals("db0") && value != null) {
+                    try {
+                        String[] split = value.trim().split(",");
+                        redisInfo.keyCount = Long.parseLong(split[0].split("=")[1]);
+                        redisInfo.expireKeyCount = Long.parseLong(split[1].split("=")[1]);
+                        redisInfo.avgTtl = Long.parseLong(split[2].split("=")[1]);
+                        builder.append("key_count:").append(redisInfo.keyCount).append("\r\n");
+                        builder.append("expire_key_count:").append(redisInfo.expireKeyCount).append("\r\n");
+                        builder.append("avg_ttl:").append(redisInfo.avgTtl).append("\r\n");
+                    } catch (Exception ignore) {
+                    }
+                    continue;
+                }
+                if (key.equals("instantaneous_ops_per_sec") && value != null) {
+                    try {
+                        redisInfo.qps = Long.parseLong(value.trim());
+                        builder.append("qps:").append(redisInfo.qps).append("\r\n");
+                    } catch (Exception ignore) {
+                    }
+                    continue;
+                }
                 if (value != null) {
                     builder.append(key).append(":").append(value).append("\r\n");
                 }
@@ -425,17 +463,15 @@ public class UpstreamInfoUtils {
                             builder.append("memory_used_rate_human:").append(String.format("%.2f", memeoryUsedRate * 100.0)).append("%").append("\r\n");
                         } catch (Exception ignore) {
                         }
+                        try {
+                            redisInfo.maxMemory = Long.parseLong(map.get("maxmemory").trim());
+                            redisInfo.usedMemory = Long.parseLong(map.get("used_memory").trim());
+                        } catch (Exception ignore) {
+                        }
                     }
                 }
             }
-            String string = builder.toString();
-            RedisInfo redisInfo = new RedisInfo();
-            redisInfo.string = string;
-            try {
-                redisInfo.maxMemory = Long.parseLong(map.get("maxmemory").trim());
-                redisInfo.usedMemory = Long.parseLong(map.get("used_memory").trim());
-            } catch (Exception ignore) {
-            }
+            redisInfo.string = builder.toString();
             return redisInfo;
         }
     }
