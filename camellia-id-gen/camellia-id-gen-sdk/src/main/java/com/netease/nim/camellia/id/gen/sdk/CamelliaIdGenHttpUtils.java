@@ -24,7 +24,7 @@ public class CamelliaIdGenHttpUtils {
                 .writeTimeout(config.getWriteTimeoutMillis(), TimeUnit.MILLISECONDS)
                 .connectTimeout(config.getConnectTimeoutMillis(), TimeUnit.MILLISECONDS)
                 .dispatcher(dispatcher)
-                .connectionPool(new ConnectionPool(config.getMaxIdleConnections(), 5, TimeUnit.MINUTES))
+                .connectionPool(new ConnectionPool(config.getMaxIdleConnections(), config.getKeepAliveSeconds(), TimeUnit.SECONDS))
                 .build();
     }
 

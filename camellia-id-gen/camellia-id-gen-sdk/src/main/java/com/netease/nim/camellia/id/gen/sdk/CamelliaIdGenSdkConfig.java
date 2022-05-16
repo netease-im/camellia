@@ -26,6 +26,7 @@ public class CamelliaIdGenSdkConfig {
     private int maxRequests = 4096;
     private int maxRequestsPerHost = 1024;
     private int maxIdleConnections = 1024;
+    private int keepAliveSeconds = 30;
 
     private SegmentIdGenSdkConfig segmentIdGenSdkConfig = new SegmentIdGenSdkConfig();
 
@@ -174,5 +175,13 @@ public class CamelliaIdGenSdkConfig {
 
     public void setSegmentIdGenSdkConfig(SegmentIdGenSdkConfig segmentIdGenSdkConfig) {
         this.segmentIdGenSdkConfig = segmentIdGenSdkConfig;
+    }
+
+    public int getKeepAliveSeconds() {
+        return keepAliveSeconds;
+    }
+
+    public void setKeepAliveSeconds(int keepAliveSeconds) {
+        this.keepAliveSeconds = keepAliveSeconds;
     }
 }
