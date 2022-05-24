@@ -32,7 +32,7 @@ public class ErrorReply implements Reply {
     }
 
     public static ErrorReply argNumWrong(RedisCommand command) {
-        return new ErrorReply("ERR wrong number of arguments for '" + command.name().toLowerCase() + "' command");
+        return new ErrorReply("ERR wrong number of arguments for '" + command.strRaw() + "' command");
     }
 
     @Override
