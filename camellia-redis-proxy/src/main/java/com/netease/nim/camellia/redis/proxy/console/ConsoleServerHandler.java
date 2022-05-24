@@ -135,9 +135,9 @@ public class ConsoleServerHandler extends SimpleChannelInboundHandler<Object> {
         response.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
 
         if (keepAlive) {
-            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
             response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
         }
+        response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
 
         String cookieString = request.headers().get(COOKIE);
         if (cookieString != null) {
