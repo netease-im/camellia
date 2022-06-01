@@ -4,11 +4,14 @@ import com.netease.nim.camellia.core.api.CamelliaApiCode;
 import com.netease.nim.camellia.dashboard.daowrapper.ResourceInfoDaoWrapper;
 import com.netease.nim.camellia.dashboard.exception.AppException;
 import com.netease.nim.camellia.dashboard.model.ResourceInfo;
+import com.netease.nim.camellia.dashboard.model.ResourceInfoPage;
 import com.netease.nim.camellia.dashboard.util.LogBean;
 import com.netease.nim.camellia.dashboard.util.ResourceInfoTidsUtil;
+import io.netty.util.internal.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -72,7 +75,30 @@ public class ResourceInfoService {
         return resourceInfoDaoWrapper.getByUrl(url);
     }
 
-    public List<ResourceInfo> getList() {
-        return resourceInfoDaoWrapper.getList();
+    public List<ResourceInfo> getList(Integer pageNum,Integer pageSize) {
+        int currentNum=(pageNum-1)*pageSize;
+        return resourceInfoDaoWrapper.getPageList(currentNum,pageSize);
+    }
+
+    public ResourceInfoPage queryPageUrl(String url, Integer pageNum, Integer pageSize) {
+        ResourceInfoPage infoPage=new ResourceInfoPage();
+        int currentNum=(pageNum-1)*pageSize;
+        if(StringUtil.isNullOrEmpty(url)){
+            List<ResourceInfo> pageList = resourceInfoDaoWrapper.getPageList(currentNum, pageSize);
+            int count=resourceInfoDaoWrapper.queryCount();
+            infoPage.setCount(count);
+            infoPage.setResourceInfos(pageList);
+        }else {
+            ResourceInfo byUrl = resourceInfoDaoWrapper.getByUrl(url);
+            if(byUrl!=null) {
+                infoPage.setResourceInfos(Collections.singletonList(byUrl));
+                infoPage.setCount(1);
+            }
+            else {
+                infoPage.setResourceInfos(null);
+                infoPage.setCount(0);
+            }
+        }
+        return infoPage;
     }
 }

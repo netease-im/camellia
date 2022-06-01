@@ -7,18 +7,16 @@ import com.netease.nim.camellia.core.client.env.DefaultShardingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.model.operation.ResourceOperation;
 import com.netease.nim.camellia.core.util.CheckUtil;
+import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.dashboard.conf.DashboardProperties;
 import com.netease.nim.camellia.dashboard.exception.AppException;
-import com.netease.nim.camellia.dashboard.model.ResourceInfo;
-import com.netease.nim.camellia.dashboard.model.Table;
-import com.netease.nim.camellia.dashboard.model.TableRef;
+import com.netease.nim.camellia.dashboard.model.*;
 import com.netease.nim.camellia.dashboard.service.ResourceInfoService;
 import com.netease.nim.camellia.dashboard.service.StatsService;
 import com.netease.nim.camellia.dashboard.service.TableRefService;
 import com.netease.nim.camellia.dashboard.service.TableService;
 import com.netease.nim.camellia.dashboard.util.LogBean;
-import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
-import com.netease.nim.camellia.dashboard.model.RwStats;
+import io.netty.util.internal.StringUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +28,6 @@ import java.util.List;
 
 
 /**
- *
  * Created by caojiajun on 2019/5/28.
  */
 @Api(value = "管理接口", tags = {"AdminController"})
@@ -112,6 +109,72 @@ public class AdminController {
         return WebResult.success(ret);
     }
 
+
+    @ApiOperation(value = "获取资源表列表", notes = "全量列表，可以指定tid,是否只返回valid的资源表,info")
+    @GetMapping("/resourceTablesAll")
+    public WebResult getResourceTableAll(@RequestParam(value = "tid", required = false) Long tid,
+                                         @RequestParam(value = "validFlag", required = false) Integer validFlag,
+                                         @RequestParam(value = "info",required = false) String info,
+                                         @RequestParam Integer pageNum,
+                                         @RequestParam Integer pageSize) {
+        if(validFlag!=null && validFlag!=1 && validFlag!=0){
+            throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(),"valid wrong");
+        }
+        LogBean.get().addProps("validFlag", validFlag);
+        LogBean.get().addProps("tid", tid);
+        LogBean.get().addProps("info", info);
+        LogBean.get().addProps("pageNum", pageNum);
+        LogBean.get().addProps("pageSize", pageSize);
+        TablePage listTidValidFlagInfo = tableService.getListTidValidFlagInfo(tid, validFlag, info, pageSize, pageNum);
+        JSONArray tables = new JSONArray();
+        for (Table table : listTidValidFlagInfo.getTables()) {
+            tables.add(table.toJson());
+        }
+        JSONObject ret=new JSONObject();
+        ret.put("count",listTidValidFlagInfo.getCount());
+        ret.put("tables",tables);
+        LogBean.get().addProps("ret", ret);
+        return WebResult.success(ret);
+    }
+
+
+    @ApiOperation(value = "修改资源", notes = "修改tid的table")
+    @PostMapping("/changeResourceTable")
+    public WebResult changeResourceTableList(@RequestParam("tid") long tid,
+                                             @RequestParam("detail") String detail,
+                                             @RequestParam("info") String info) {
+        LogBean.get().addProps("tid", tid);
+        LogBean.get().addProps("detail", detail);
+        LogBean.get().addProps("info", info);
+        ResourceTable resourceTable;
+        try {
+            resourceTable = JSONObject.parseObject(detail, ResourceTable.class);
+            boolean check = CheckUtil.checkResourceTable(resourceTable);
+            if (!check) {
+                resourceTable = ReadableResourceTableUtil.parseTable(detail);
+            }
+        } catch (Exception e) {
+            try {
+                resourceTable = ReadableResourceTableUtil.parseTable(detail);
+            } catch (Exception e1) {
+                throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(), "resourceTable parse error");
+            }
+        }
+        TableWithTableRefs tableWithTableRefs = tableService.change(tid, resourceTable, info);
+        JSONObject ret = new JSONObject();
+        JSONObject tableJson = tableWithTableRefs.getTable().toJson();
+        ret.put("table", tableJson);
+
+        List<TableRef> list = tableWithTableRefs.getTableRefs();
+        JSONArray jsonArray = new JSONArray();
+        for (TableRef tableRef : list) {
+            jsonArray.add(tableRef.toJson());
+        }
+        ret.put("tableRefs", jsonArray);
+        LogBean.get().addProps("ret", ret);
+        return WebResult.success(ret);
+    }
+
     @ApiOperation(value = "创建或者更新资源表引用关系", notes = "资源表引用关系")
     @PostMapping("/createOrUpdateTableRef")
     public WebResult createOrUpdateTableRef(@RequestParam("bid") long bid,
@@ -122,8 +185,13 @@ public class AdminController {
         LogBean.get().addProps("bgroup", bgroup);
         LogBean.get().addProps("tid", tid);
         LogBean.get().addProps("info", info);
-        TableRef tableRef = tableRefService.createOrUpdate(bid, bgroup, tid, info);
-        JSONObject ret = tableRef.toJson();
+        TableWithTableRef tableWithTableRef = tableRefService.createOrUpdate(bid, bgroup, tid, info);
+
+        JSONObject tableJson = tableWithTableRef.getTable().toJson();
+        JSONObject tableRefJson = tableWithTableRef.getTableRef().toJson();
+        JSONObject ret = new JSONObject();
+        ret.put("table", tableJson);
+        ret.put("tableRef", tableRefJson);
         LogBean.get().addProps("ret", ret);
         return WebResult.success(ret);
     }
@@ -140,6 +208,40 @@ public class AdminController {
             throw new AppException(CamelliaApiCode.NOT_EXISTS.getCode(), "bid/group not exists");
         }
         JSONObject ret = tableRef.toJson();
+        LogBean.get().addProps("ret", ret);
+        return WebResult.success(ret);
+    }
+
+    @ApiOperation(value = "查询单个资源表引用关系", notes = "根据tid,bid,bgroup,onlyValid")
+    @GetMapping("/getTableRefAll")
+    public WebResult getTableRefAll(@RequestParam(value = "bid", required = false) Long bid,
+                                    @RequestParam(value = "bgroup", required = false) String bgroup,
+                                    @RequestParam(value = "tid", required = false) Long tid,
+                                    @RequestParam(value = "validFlag", required = false) Integer validFlag,
+                                    @RequestParam(value = "info",required = false)String info,
+                                    @RequestParam Integer pageNum,
+                                    @RequestParam Integer pageSize) {
+        if(validFlag!=null && validFlag!=1 && validFlag!=0){
+            throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(),"valid wrong");
+        }
+        LogBean.get().addProps("bid", bid);
+        LogBean.get().addProps("bgroup", bgroup);
+        LogBean.get().addProps("tid", tid);
+        LogBean.get().addProps("validFlag", validFlag);
+        LogBean.get().addProps("info", info);
+
+        LogBean.get().addProps("pageNum", pageNum);
+        LogBean.get().addProps("pageSize", pageSize);
+
+        TableRefPage tableRefPage=tableRefService.getRefsList(tid, bid, bgroup, validFlag,info,pageNum,pageSize);
+
+        JSONArray ret1 = new JSONArray();
+        for (TableRef tableRef : tableRefPage.getTableRefs()) {
+            ret1.add(tableRef.toJson());
+        }
+        JSONObject ret=new JSONObject();
+        ret.put("tableRefs",ret1);
+        ret.put("count",tableRefPage.getCount());
         LogBean.get().addProps("ret", ret);
         return WebResult.success(ret);
     }
@@ -216,10 +318,18 @@ public class AdminController {
 
     @ApiOperation(value = "获取资源全量列表", notes = "返回全量")
     @GetMapping("/resources")
-    public WebResult getResourceList() {
-        List<ResourceInfo> list = resourceInfoService.getList();
-        return WebResult.success(list);
+    public WebResult getResourceList(@RequestParam(value = "url", required = false, defaultValue = "") String url,
+                                     @RequestParam(value = "pageNum") Integer pageNum,
+                                     @RequestParam(value = "pageSize") Integer pageSize) {
+        if(!StringUtil.isNullOrEmpty(url))
+            LogBean.get().addProps("url", url);
+        LogBean.get().addProps("pageNum", pageNum);
+        LogBean.get().addProps("pageSize", pageSize);
+        ResourceInfoPage resourceInfoPage=resourceInfoService.queryPageUrl(url,pageNum,pageSize);
+        LogBean.get().addProps("ret",resourceInfoPage);
+        return WebResult.success(resourceInfoPage);
     }
+
 
     @ApiOperation(value = "一个mock接口", notes = "用于在指定tid和分片key的情况下确定分片结果，使用的是默认的分片函数")
     @GetMapping("/mock")
@@ -266,6 +376,7 @@ public class AdminController {
         RwStats stats = statsService.getStats();
         return WebResult.success(stats);
     }
+
 
     @ApiOperation(value = "根据资源url查询读写统计", notes = "用于查询上报的资源读写统计，根据资源url查询")
     @GetMapping("/rwStatsByResourceUrl")

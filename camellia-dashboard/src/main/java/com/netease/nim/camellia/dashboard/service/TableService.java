@@ -10,23 +10,17 @@ import com.netease.nim.camellia.dashboard.daowrapper.ResourceInfoDaoWrapper;
 import com.netease.nim.camellia.dashboard.daowrapper.TableDaoWrapper;
 import com.netease.nim.camellia.dashboard.daowrapper.TableRefDaoWrapper;
 import com.netease.nim.camellia.dashboard.exception.AppException;
-import com.netease.nim.camellia.dashboard.model.ResourceInfo;
-import com.netease.nim.camellia.dashboard.model.Table;
-import com.netease.nim.camellia.dashboard.model.TableRef;
-import com.netease.nim.camellia.dashboard.model.ValidFlag;
+import com.netease.nim.camellia.dashboard.model.*;
 import com.netease.nim.camellia.dashboard.util.LogBean;
 import com.netease.nim.camellia.dashboard.util.ResourceInfoTidsUtil;
-
+import io.netty.util.internal.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
- *
  * Created by caojiajun on 2019/5/17.
  */
 @Service
@@ -43,6 +37,7 @@ public class TableService {
 
     @Autowired
     private ResourceCheckService resourceCheckService;
+
 
     public Table create(ResourceTable resourceTable, String info) {
         boolean check = CheckUtil.checkResourceTable(resourceTable);
@@ -153,4 +148,127 @@ public class TableService {
         return delete;
     }
 
+    @Transactional
+    public TableWithTableRefs change(long tid, ResourceTable resourceTable, String info) {
+        Table table = tableDao.get(tid);
+        if (table == null) {
+            LogBean.get().addProps("tid.not.exists", true);
+            throw new AppException(CamelliaApiCode.NOT_EXISTS.getCode(), "tid not exists");
+        }
+        if (table.getValidFlag() == ValidFlag.NOT_VALID.getValue()) {
+            LogBean.get().addProps("not.valid", true);
+            throw new AppException(CamelliaApiCode.NOT_EXISTS.getCode(), "tid not valid");
+        }
+
+        boolean check = CheckUtil.checkResourceTable(resourceTable);
+        if (!check) {
+            LogBean.get().addProps("resourceTable.check", false);
+            throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(), "resourceTable check fail");
+        }
+
+        Set<Resource> allResources = ResourceUtil.getAllResources(resourceTable);
+        for (Resource resource : allResources) {
+            if (!resourceCheckService.check(resource.getUrl())) {
+                throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(), "resource.url=[" + resource.getUrl() + "] check fail");
+            }
+        }
+
+
+        ResourceTable resourceTableUrl = ReadableResourceTableUtil.parseTable(table.getDetail());
+        Set<Resource> allResourcesUrl = ResourceUtil.getAllResources(resourceTableUrl);
+        for (Resource resource : allResourcesUrl) {
+            ResourceInfo resourceInfo = resourceInfoDaoWrapper.getByUrl(resource.getUrl());
+            if (resourceInfo == null) continue;
+            Set<Long> set = ResourceInfoTidsUtil.parseTids(resourceInfo.getTids());
+            set.remove(tid);
+            resourceInfo.setTids(ResourceInfoTidsUtil.toString(set));
+            int update = resourceInfoDaoWrapper.save(resourceInfo);
+            LogBean.get().addDebugProps("resource.url=[" + resource.getUrl() + "].update", update);
+        }
+
+
+        long now = System.currentTimeMillis();
+        table.setDetail(ReadableResourceTableUtil.readableResourceTable(resourceTable));
+        table.setInfo(info);
+        table.setUpdateTime(now);
+        int save = tableDao.save(table);
+        LogBean.get().addProps("change", save);
+
+        for (Resource resource : allResources) {
+            ResourceInfo resourceInfo = resourceInfoDaoWrapper.getByUrl(resource.getUrl());
+            if (resourceInfo == null) {
+                resourceInfo = new ResourceInfo();
+                resourceInfo.setUrl(resource.getUrl());
+                resourceInfo.setInfo("");
+                Set<Long> tids = new HashSet<>();
+                tids.add(table.getTid());
+                resourceInfo.setTids(ResourceInfoTidsUtil.toString(tids));
+                resourceInfo.setCreateTime(now);
+                resourceInfo.setUpdateTime(now);
+                int insert = resourceInfoDaoWrapper.save(resourceInfo);
+                LogBean.get().addDebugProps("resource.url=[" + resource.getUrl() + "].insert", insert);
+            } else {
+                String tids = resourceInfo.getTids();
+                Set<Long> set = ResourceInfoTidsUtil.parseTids(tids);
+                set.add(table.getTid());
+                resourceInfo.setTids(ResourceInfoTidsUtil.toString(set));
+                resourceInfo.setUpdateTime(now);
+                int update = resourceInfoDaoWrapper.save(resourceInfo);
+                LogBean.get().addDebugProps("resource.url=[" + resource.getUrl() + "].update", update);
+            }
+        }
+        List<TableRef> refs = tableRefDao.getByTid(tid);
+        List<TableRef> bidAndBgroups = new ArrayList<>();
+        List<TableRef> validList = new ArrayList<>();
+        if (refs != null && !refs.isEmpty()) {
+            for (TableRef tableRef : refs) {
+                if (tableRef.getValidFlag() == ValidFlag.VALID.getValue()) {
+                    tableRef.setUpdateTime(now);
+                    validList.add(tableRef);
+                    TableRef bbg = new TableRef();
+                    bbg.setBid(tableRef.getBid());
+                    bbg.setBgroup(tableRef.getBgroup());
+                    bidAndBgroups.add(bbg);
+                    tableRefDao.save(tableRef);
+                }
+            }
+        }
+        LogBean.get().addProps("affect bid bgroup", bidAndBgroups);
+        TableWithTableRefs tableWithTableRefs = new TableWithTableRefs();
+        tableWithTableRefs.setTable(table);
+        tableWithTableRefs.setTableRefs(validList);
+        return tableWithTableRefs;
+    }
+
+
+    public TablePage getListTidValidFlagInfo(Long tid, Integer validFlag, String info,Integer pageSize,Integer pageNum) {
+        Integer currentNum = (pageNum - 1) * pageSize;
+
+        TablePage tablePage = new TablePage();
+        if (tid != null) {
+            Table table = tableDao.get(tid);
+            if(table==null){
+                tablePage.setCount(0);
+                tablePage.setTables(new ArrayList<>());
+                return tablePage;
+            }
+            if ((validFlag == null || table.getValidFlag().equals(validFlag)) && (StringUtil.isNullOrEmpty(info) || table.getInfo().contains(info))) {
+                List<Table> tables = Collections.singletonList(table);
+                tablePage.setTables(tables);
+                tablePage.setCount(tables.size());
+            }
+            else {
+                tablePage.setCount(0);
+                tablePage.setTables(new ArrayList<>());
+                return tablePage;
+            }
+        }
+        else {
+            List<Table> tables=tableDao.getPageValidFlagInfo(validFlag,info,currentNum,pageSize);
+            Integer count=tableDao.countPageValidFlagInfo(validFlag,info);
+            tablePage.setTables(tables);
+            tablePage.setCount(count);
+        }
+        return tablePage;
+    }
 }

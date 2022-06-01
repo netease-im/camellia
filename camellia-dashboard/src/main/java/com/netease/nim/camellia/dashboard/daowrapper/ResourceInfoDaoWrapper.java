@@ -41,4 +41,12 @@ public class ResourceInfoDaoWrapper {
         resourceInfo.setId(save.getId());
         return 1;
     }
+
+    public List<ResourceInfo> getPageList(int currentNum, Integer pageSize) {
+        return resourceInfoDao.getPageList(currentNum,pageSize);
+    }
+
+    public int queryCount() {
+        return resourceInfoDao.countAll();
+    }
 }

@@ -18,6 +18,8 @@ public class CamelliaDashboardConfiguration {
 
     private int daoCacheExpireSeconds = 86400;
 
+
+
     public int getLocalCacheExpireSeconds() {
         return localCacheExpireSeconds;
     }

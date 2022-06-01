@@ -15,6 +15,7 @@ public class DashboardProperties {
 
     private int daoCacheExpireSeconds = 86400;
 
+
     public int getLocalCacheExpireSeconds() {
         return localCacheExpireSeconds;
     }
@@ -46,5 +47,6 @@ public class DashboardProperties {
     public void setDaoCacheExpireSeconds(int daoCacheExpireSeconds) {
         this.daoCacheExpireSeconds = daoCacheExpireSeconds;
     }
+
 }
 
