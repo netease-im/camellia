@@ -58,7 +58,15 @@ public class TableRefDaoWrapper {
         return mapper.findByBid(bid);
     }
 
+    public List<TableRef> getByTidBidBgroupValidFlag(Long tid,Long bid,String bgroup,Integer validFlag,String info,Integer currentNum,Integer pageSize) {
+        return mapper.findByTidBidBGroupValid(tid,bid,bgroup,validFlag,info,currentNum,pageSize);
+    }
+
     public List<TableRef> getList() {
         return mapper.findAll();
+    }
+
+    public Integer countByTidBidBgroupValidFlag(Long tid, Long bid, String bgroup, Integer validFlag,String info) {
+        return mapper.countByTidBidBGroupValid(tid,bid,bgroup,validFlag,info);
     }
 }

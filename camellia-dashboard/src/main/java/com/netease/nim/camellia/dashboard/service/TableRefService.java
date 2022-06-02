@@ -4,9 +4,7 @@ import com.netease.nim.camellia.core.api.CamelliaApiCode;
 import com.netease.nim.camellia.dashboard.daowrapper.TableDaoWrapper;
 import com.netease.nim.camellia.dashboard.daowrapper.TableRefDaoWrapper;
 import com.netease.nim.camellia.dashboard.exception.AppException;
-import com.netease.nim.camellia.dashboard.model.Table;
-import com.netease.nim.camellia.dashboard.model.TableRef;
-import com.netease.nim.camellia.dashboard.model.ValidFlag;
+import com.netease.nim.camellia.dashboard.model.*;
 import com.netease.nim.camellia.dashboard.util.LogBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,7 +26,7 @@ public class TableRefService {
     @Autowired
     private TableDaoWrapper tableDao;
 
-    public TableRef createOrUpdate(long bid, String bgroup, long tid, String info) {
+    public TableWithTableRef createOrUpdate(long bid, String bgroup, long tid, String info) {
         Table table = tableDao.get(tid);
         if (table == null) {
             LogBean.get().addProps("tid.not.exists", true);
@@ -61,7 +59,10 @@ public class TableRefService {
             int update = tableRefDao.save(tableRef);
             LogBean.get().addProps("update", update);
         }
-        return tableRef;
+        TableWithTableRef tableWithTableRef=new TableWithTableRef();
+        tableWithTableRef.setTable(table);
+        tableWithTableRef.setTableRef(tableRef);
+        return tableWithTableRef;
     }
 
     public TableRef getByBidBGroup(long bid, String bgroup) {
@@ -93,6 +94,16 @@ public class TableRefService {
         } else {
             return list;
         }
+    }
+
+    public TableRefPage getRefsList(Long tid, Long bid, String bgroup, Integer validFlag,String info,Integer pageNum,Integer pageSize){
+        TableRefPage tableRefPage=new TableRefPage();
+        Integer currentNum = (pageNum - 1) * pageSize;
+        List<TableRef> byTidBidBgroupValidFlag = tableRefDao.getByTidBidBgroupValidFlag(tid, bid, bgroup, validFlag,info,currentNum,pageSize);
+        tableRefPage.setTableRefs(byTidBidBgroupValidFlag);
+        Integer count=tableRefDao.countByTidBidBgroupValidFlag(tid, bid, bgroup, validFlag,info);
+        tableRefPage.setCount(count);
+        return tableRefPage;
     }
 
     public int delete(long bid, String bgroup) {

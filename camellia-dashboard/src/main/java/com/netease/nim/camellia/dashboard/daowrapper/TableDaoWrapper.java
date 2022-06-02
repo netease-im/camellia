@@ -7,6 +7,7 @@ import com.netease.nim.camellia.dashboard.model.ValidFlag;
 import com.netease.nim.camellia.dashboard.model.Table;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.core.util.CacheUtil;
+import io.netty.util.internal.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -66,5 +67,20 @@ public class TableDaoWrapper {
 
     public List<Table> getList() {
         return tableDao.findAll();
+    }
+
+    public int save(Table table) {
+        String cacheKey = CacheUtil.buildCacheKey(tag, table.getTid());
+        template.del(cacheKey);
+        tableDao.save(table);
+        return 1;
+    }
+
+    public List<Table> getPageValidFlagInfo(Integer validFlag, String info, Integer currentNum, Integer pageSize) {
+        return tableDao.getPageValidFlagInfo(validFlag,info,currentNum,pageSize);
+    }
+
+    public Integer countPageValidFlagInfo(Integer validFlag, String info) {
+        return tableDao.countPageValidFlagInfo(validFlag,info);
     }
 }
