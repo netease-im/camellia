@@ -249,7 +249,14 @@ public class CamelliaNakedClient<R, W> {
                     List<Future<W>> futureList = new ArrayList<>();
                     for (Resource resource : writeResources) {
                         Future<W> future = feignEnv.getProxyEnv().getMultiWriteConcurrentExec()
-                                .submit(strategy.wrapperCallable(() -> invoke(operationType, resource, request, retry, loadBalanceKey, bgroup)));
+                                .submit(strategy.wrapperCallable(() -> {
+                                    try {
+                                        return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
+                                    } catch (Exception e) {
+                                        logger.error("multi thread concurrent invoke error, bid = {}, bgroup = {}, resource = {}", bid, bgroup, resource.getUrl(), e);
+                                        throw e;
+                                    }
+                                }));
                         futureList.add(future);
                     }
                     W result = null;
@@ -265,7 +272,14 @@ public class CamelliaNakedClient<R, W> {
                     List<Future<W>> futureList = new ArrayList<>();
                     for (Resource resource : writeResources) {
                         Future<W> future = feignEnv.getProxyEnv().getMultiWriteAsyncExec()
-                                .submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> invoke(operationType, resource, request, retry, loadBalanceKey, bgroup)));
+                                .submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
+                                    try {
+                                        return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
+                                    } catch (Exception e) {
+                                        logger.error("async multi thread invoke error, bid = {}, bgroup = {}, resource = {}", bid, bgroup, resource.getUrl(), e);
+                                        throw e;
+                                    }
+                                }));
                         futureList.add(future);
                     }
                     return futureList.get(0).get();
