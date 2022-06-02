@@ -269,20 +269,39 @@ public class CamelliaNakedClient<R, W> {
                     return result;
                 } else if (multiWriteType == MultiWriteType.ASYNC_MULTI_THREAD) {
                     ThreadContextSwitchStrategy strategy = feignEnv.getProxyEnv().getThreadContextSwitchStrategy();
-                    List<Future<W>> futureList = new ArrayList<>();
-                    for (Resource resource : writeResources) {
-                        Future<W> future = feignEnv.getProxyEnv().getMultiWriteAsyncExec()
-                                .submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
-                                    try {
-                                        return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
-                                    } catch (Exception e) {
-                                        logger.error("async multi thread invoke error, bid = {}, bgroup = {}, resource = {}", bid, bgroup, resource.getUrl(), e);
-                                        throw e;
-                                    }
-                                }));
-                        futureList.add(future);
+                    Future<W> targetFuture = null;
+                    for (int i = 0; i < writeResources.size(); i++) {
+                        Resource resource = writeResources.get(i);
+                        boolean first = i == 0;
+                        Future<W> future = null;
+                        try {
+                            future = feignEnv.getProxyEnv().getMultiWriteAsyncExec()
+                                    .submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
+                                        try {
+                                            return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
+                                        } catch (Exception e) {
+                                            logger.error("async multi thread invoke error, bid = {}, bgroup = {}, resource = {}",
+                                                    bid, bgroup, resource.getUrl(), e);
+                                            throw e;
+                                        }
+                                    }));
+                        } catch (Exception e) {
+                            if (!first) {
+                                logger.error("submit async multi thread task error, bid = {}, bgroup = {}, resource = {}",
+                                        bid, bgroup, resource.getUrl(), e);
+                            } else {
+                                throw e;
+                            }
+                        }
+                        if (first) {
+                            targetFuture = future;
+                        }
                     }
-                    return futureList.get(0).get();
+                    if (targetFuture != null) {
+                        return targetFuture.get();
+                    } else {
+                        throw new IllegalStateException("wil not invoke here");
+                    }
                 }
             }
             throw new CamelliaNakedClientNoRetriableException("unknown operationType");

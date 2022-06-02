@@ -206,6 +206,8 @@ public class FeignCallback<T> implements MethodInterceptor {
                                 try {
                                     return invoke(resource, loadBalanceKey, method, objects, first, operationType);
                                 } catch (Throwable e) {
+                                    logger.error("multi thread concurrent invoke error, class = {}, method = {}, resource = {}",
+                                            className, method.getName(), resource.getUrl(), e);
                                     throw new ExecutionException(e);
                                 }
                             }));
@@ -233,30 +235,39 @@ public class FeignCallback<T> implements MethodInterceptor {
                         }
                         return ret;
                     } else if (multiWriteType == MultiWriteType.ASYNC_MULTI_THREAD) {
-                        Object ret = null;
                         ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
+                        Future<Object> targetFuture = null;
                         for (int i=0; i<list.size(); i++) {
-                            boolean first = i == 0;
                             Resource resource = list.get(i);
-                            if (first) {
-                                ret = invoke(resource, loadBalanceKey, method, objects, true, operationType);
-                            } else {
-                                try {
-                                    env.getMultiWriteAsyncExec().submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
-                                        try {
-                                            //走异步了，则也要有熔断
-                                            return invoke(resource, loadBalanceKey, method, objects, false, operationType);
-                                        } catch (Throwable e) {
-                                            throw new ExecutionException(e);
-                                        }
-                                    }));
-                                } catch (Exception e) {
-                                    //走异步了，则异常都不上抛
-                                    logger.error("async multi write error, resource = {}", resource, e);
+                            boolean first = i == 0;
+                            Future<Object> future = null;
+                            try {
+                                future = env.getMultiWriteAsyncExec().submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
+                                    try {
+                                        return invoke(resource, loadBalanceKey, method, objects, first, operationType);
+                                    } catch (Throwable e) {
+                                        logger.error("async multi thread invoke error, class = {}, method = {}, resource = {}",
+                                                className, method.getName(), resource.getUrl(), e);
+                                        throw new ExecutionException(e);
+                                    }
+                                }));
+                            } catch (Exception e) {
+                                if (!first) {
+                                    logger.error("submit async multi thread task error, class = {}, method = {}, resource = {}",
+                                            className, method.getName(), resource.getUrl(), e);
+                                } else {
+                                    throw e;
                                 }
                             }
+                            if (first) {
+                                targetFuture = future;
+                            }
                         }
-                        return ret;
+                        if (targetFuture != null) {
+                            return targetFuture.get();
+                        } else {
+                            throw new IllegalStateException("wil not invoke here");
+                        }
                     } else {
                         throw new IllegalArgumentException("unknown multiWriteType");
                     }

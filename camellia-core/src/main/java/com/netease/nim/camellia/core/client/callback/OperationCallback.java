@@ -86,15 +86,28 @@ public class OperationCallback<T> implements MethodInterceptor {
                         incrWrite(resource2, method);
                         return method.invoke(client1, objects);
                     case MULTI:
+                        List<Resource> writeResources = writeOperation.getWriteResources();
+                        if (writeResources.size() == 1) {
+                            Resource resource3 = writeResources.get(0);
+                            T client2 = clientMap.get(resource3);
+                            incrWrite(resource3, method);
+                            return method.invoke(client2, objects);
+                        }
                         MultiWriteType multiWriteType = env.getMultiWriteType();
                         if (multiWriteType == MultiWriteType.MULTI_THREAD_CONCURRENT) {
                             ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
                             List<Future<Object>> futureList = new ArrayList<>();
-                            for (final Resource resource : writeOperation.getWriteResources()) {
+                            for (Resource resource : writeOperation.getWriteResources()) {
                                 final T client2 = clientMap.get(resource);
                                 Future<Object> future = env.getMultiWriteConcurrentExec().submit(strategy.wrapperCallable(() -> {
-                                    incrWrite(resource, method);
-                                    return method.invoke(client2, objects);
+                                    try {
+                                        incrWrite(resource, method);
+                                        return method.invoke(client2, objects);
+                                    } catch (Exception e) {
+                                        logger.error("multi thread concurrent invoke error, class = {}, method = {}, resource = {}",
+                                                className, method.getName(), resource.getUrl(), e);
+                                        throw e;
+                                    }
                                 }));
                                 futureList.add(future);
                             }
@@ -123,27 +136,41 @@ public class OperationCallback<T> implements MethodInterceptor {
                             return ret;
                         } else if (multiWriteType == MultiWriteType.ASYNC_MULTI_THREAD) {
                             ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
-                            Object ret = null;
+                            Future<Object> targetFuture = null;
                             for (int i=0; i<writeOperation.getWriteResources().size(); i++) {
                                 Resource resource = writeOperation.getWriteResources().get(i);
+                                boolean first = i == 0;
                                 T client2 = clientMap.get(resource);
                                 incrWrite(resource, method);
-                                boolean first = i == 0;
-                                if (first) {
-                                    ret = method.invoke(client2, objects);
-                                } else {
-                                    try {
-                                        env.getMultiWriteAsyncExec().submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
+                                Future<Object> future = null;
+                                try {
+                                    future = env.getMultiWriteAsyncExec().submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
+                                        try {
                                             incrWrite(resource, method);
                                             return method.invoke(client2, objects);
-                                        }));
-                                    } catch (Exception e) {
-                                        //走异步了，则异常都不上抛
-                                        logger.error("async multi write error, resource = {}", resource, e);
+                                        } catch (Exception e) {
+                                            logger.error("async multi thread invoke error, class = {}, method = {}, resource = {}",
+                                                    className, method.getName(), resource.getUrl(), e);
+                                            throw e;
+                                        }
+                                    }));
+                                } catch (Exception e) {
+                                    if (!first) {
+                                        logger.error("submit async multi thread task error, class = {}, method = {}, resource = {}",
+                                                className, method.getName(), resource.getUrl(), e);
+                                    } else {
+                                        throw e;
                                     }
                                 }
+                                if (first) {
+                                    targetFuture = future;
+                                }
                             }
-                            return ret;
+                            if (targetFuture != null) {
+                                return targetFuture.get();
+                            } else {
+                                throw new IllegalStateException("wil not invoke here");
+                            }
                         } else {
                             throw new IllegalArgumentException("unknown multiWriteType");
                         }
