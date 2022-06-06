@@ -268,6 +268,32 @@ public class FeignCallback<T> implements MethodInterceptor {
                         } else {
                             throw new IllegalStateException("wil not invoke here");
                         }
+                    } else if (multiWriteType == MultiWriteType.MISC_ASYNC_MULTI_THREAD) {
+                        ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
+                        Object target = null;
+                        for (int i=0; i<list.size(); i++) {
+                            Resource resource = list.get(i);
+                            boolean first = i == 0;
+                            if (first) {
+                                target = invoke(resource, loadBalanceKey, method, objects, true, operationType);
+                            } else {
+                                try {
+                                    env.getMultiWriteAsyncExec().submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
+                                        try {
+                                            return invoke(resource, loadBalanceKey, method, objects, false, operationType);
+                                        } catch (Throwable e) {
+                                            logger.error("async multi thread invoke error, class = {}, method = {}, resource = {}",
+                                                    className, method.getName(), resource.getUrl(), e);
+                                            throw new ExecutionException(e);
+                                        }
+                                    }));
+                                } catch (Exception e) {
+                                    logger.error("submit async multi thread task error, class = {}, method = {}, resource = {}",
+                                            className, method.getName(), resource.getUrl(), e);
+                                }
+                            }
+                        }
+                        return target;
                     } else {
                         throw new IllegalArgumentException("unknown multiWriteType");
                     }

@@ -302,6 +302,33 @@ public class CamelliaNakedClient<R, W> {
                     } else {
                         throw new IllegalStateException("wil not invoke here");
                     }
+                } else if (multiWriteType == MultiWriteType.MISC_ASYNC_MULTI_THREAD) {
+                    ThreadContextSwitchStrategy strategy = feignEnv.getProxyEnv().getThreadContextSwitchStrategy();
+                    W target = null;
+                    for (int i = 0; i < writeResources.size(); i++) {
+                        Resource resource = writeResources.get(i);
+                        boolean first = i == 0;
+                        if (first) {
+                            target = invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
+                        } else {
+                            try {
+                                feignEnv.getProxyEnv().getMultiWriteAsyncExec()
+                                        .submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
+                                            try {
+                                                return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
+                                            } catch (Exception e) {
+                                                logger.error("async multi thread invoke error, bid = {}, bgroup = {}, resource = {}",
+                                                        bid, bgroup, resource.getUrl(), e);
+                                                throw e;
+                                            }
+                                        }));
+                            } catch (Exception e) {
+                                logger.error("submit async multi thread task error, bid = {}, bgroup = {}, resource = {}",
+                                        bid, bgroup, resource.getUrl(), e);
+                            }
+                        }
+                    }
+                    return target;
                 }
             }
             throw new CamelliaNakedClientNoRetriableException("unknown operationType");
