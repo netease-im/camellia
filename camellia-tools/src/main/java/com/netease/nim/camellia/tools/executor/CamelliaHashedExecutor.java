@@ -171,11 +171,21 @@ public class CamelliaHashedExecutor {
     public int getQueueSize() {
         int queueSize = 0;
         for (WorkThread workThread : workThreads) {
-            if (workThread.isActive()) {
-                queueSize += workThread.queueSize();
-            }
+            queueSize += workThread.queueSize();
         }
         return queueSize;
+    }
+
+    /**
+     * 获取完成的任务数量
+     * @return 数量
+     */
+    public long getCompletedTaskCount() {
+        long completedTaskCount = 0;
+        for (WorkThread workThread : workThreads) {
+            completedTaskCount += workThread.getCompletedTaskCount();
+        }
+        return completedTaskCount;
     }
 
     public static interface RejectedExecutionHandler {
@@ -209,6 +219,8 @@ public class CamelliaHashedExecutor {
         private final CamelliaHashedExecutor executor;
         private final AtomicBoolean active = new AtomicBoolean(false);
 
+        private final AtomicLong completedTaskCount = new AtomicLong(0);
+
         public WorkThread(CamelliaHashedExecutor executor, int queueSize) {
             this.queue = new LinkedBlockingQueue<>(queueSize);
             this.executor = executor;
@@ -227,6 +239,10 @@ public class CamelliaHashedExecutor {
             return queue.size();
         }
 
+        public long getCompletedTaskCount() {
+            return completedTaskCount.get();
+        }
+
         @Override
         public void run() {
             while (!executor.shutdown.get()) {
@@ -238,6 +254,7 @@ public class CamelliaHashedExecutor {
                             task.run();
                         } finally {
                             active.set(false);
+                            completedTaskCount.incrementAndGet();
                         }
                     }
                 } catch (Exception e) {
