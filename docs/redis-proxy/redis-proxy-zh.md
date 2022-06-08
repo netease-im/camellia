@@ -197,10 +197,13 @@ OK
 
 ### 拦截器
 camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访问的目的，此外proxy提供了几个默认的命令拦截器实现，可以按需使用：  
-* TroubleTrickKeysCommandInterceptor 用于临时屏蔽某些key的访问    
+* TroubleTrickKeysCommandInterceptor 用于临时屏蔽某些key的访问
 * MultiWriteCommandInterceptor 用于自定义配置双写策略(key级别)
 * RateLimitCommandInterceptor 用于控制客户端请求速率（支持全局速率控制，也支持bid/bgroup级别的速率控制）
 * MqMultiWriteCommandInterceptor 用于基于mq（如kafka等）的异步双写
+* DynamicCommandInterceptorWrapper 可以组合多个CommandInterceptor的一个包装类
+* IPCheckerCommandInterceptor 可以根据客户端ip进行权限校验，支持黑名单模式和白名单模式
+* DelayDoubleDeleteCommandInterceptor 透明的支持缓存key的延迟双删
 
 具体可见：[拦截器](interceptor.md)
 

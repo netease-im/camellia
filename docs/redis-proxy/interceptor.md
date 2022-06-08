@@ -7,6 +7,7 @@ camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访
 * MqMultiWriteCommandInterceptor 用于基于mq（如kafka等）的异步双写
 * DynamicCommandInterceptorWrapper 可以组合多个CommandInterceptor的一个包装类
 * IPCheckerCommandInterceptor 可以根据客户端ip进行权限校验，支持黑名单模式和白名单模式
+* DelayDoubleDeleteCommandInterceptor 透明的支持缓存key的延迟双删
 
 ### 自定义CommandInterceptor
 如果你想添加一个自定义的方法拦截器，则应该实现CommandInterceptor接口，类似于这样：
@@ -366,4 +367,59 @@ ip.white.list=2.2.2.2,5.5.5.5,3.3.3.0/24,6.6.0.0/16
 #白名单示例（表示bid=1,bgroup=default的白名单配置）：
 1.default.ip.check.mode=2
 1.default.ip.white.list=2.2.2.2,5.5.5.5,3.3.3.0/24,6.6.0.0/16
+```
+
+
+### DelayDoubleDeleteCommandInterceptor
+#### 用途
+为了确保缓存和数据库的一致性，有一种策略是缓存双删，可以在业务上实现，也可以在proxy上透明的实现  
+如果配置了DelayDoubleDeleteCommandInterceptor，则proxy会拦截所有DEL命令，如果key前缀匹配，则会触发一个延迟的DEL任务，表现在redis-server层就是会收到2次DEL命令
+
+#### 配置示例
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  password: pass123
+  transpond:
+    type: local
+    local:
+      resource: redis://@127.0.0.1:6379
+  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.command.async.interceptor.DelayDoubleDeleteCommandInterceptor
+```
+
+随后你可以在camellia-redis-proxy.properties里配置如下：
+```
+#首先要开启，默认是false
+delay.double.del.enable=true
+
+#其次要配置延迟双删的秒数，如果<=0，则不生效，默认-1
+double.del.delay.seconds=5
+
+#最后还要配置匹配哪些key去做延迟删除，是一个json array，如果不配置也不生效
+##如果所有DEL命令中的key都要延迟双删，则配置前缀为空串
+#double.del.key.prefix=[""]
+##如果只是部分命令，如只有dao_cache和cache前缀的key才延迟双删，则可以如下配置
+#double.del.key.prefix=["dao_cache", "cache"]
+
+```
+
+你也可以根据bid和bgroup分别配置，如下：
+```
+#首先要开启，默认是false
+1.default.delay.double.del.enable=true
+
+#其次要配置延迟双删的秒数，如果<=0，则不生效，默认-1
+1.default.double.del.delay.seconds=5
+
+#最后还要配置匹配哪些key去做延迟删除，是一个json array，如果不配置也不生效
+##如果所有DEL命令中的key都要延迟双删，则配置前缀为空串
+#1.default.double.del.key.prefix=[""]
+##如果只是部分命令，如只有dao_cache和cache前缀的key才延迟双删，则可以如下配置
+#1.default.double.del.key.prefix=["dao_cache", "cache"]
+
 ```
