@@ -6,7 +6,7 @@
 
 # 1.0.59（2022/06/xx）
 ### 新增
-* camellia-core、camellia-feign的双写支持MISC_ASYNC_MULTI_THREAD模式
+* camellia-core、camellia-feign调整异步双写线程模型，并新增支持MISC_ASYNC_MULTI_THREAD模式
 * camellia-redis-proxy支持缓存透明双删，具体见：[interceptor](/docs/redis-proxy/interceptor.md)
 
 ### 更新
