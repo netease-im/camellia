@@ -4,8 +4,20 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.0.59（2022/06/xx）
+### 新增
+* camellia-core、camellia-feign的双写支持MISC_ASYNC_MULTI_THREAD模式
+* camellia-redis-proxy支持缓存透明双删，具体见：[interceptor](/docs/redis-proxy/interceptor.md)
 
-# 1.0.58（2022/05/xx）
+### 更新
+* camellia-dashboard新增几个api
+* CamelliaHashedExecutor支持获取完成任务数
+
+### fix
+* 无
+
+
+# 1.0.58（2022/05/16）
 ### 新增
 * camellia-redis-proxy的detect接口支持返回key总数/qps等信息，具体见：[detect](/docs/redis-proxy/detect.md)
 

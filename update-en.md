@@ -5,7 +5,7 @@
 * camellia-redis-proxy support monitor data visualization in prometheus
 
 
-# 1.0.58（2022/05/xx）
+# 1.0.58（2022/05/16）
 ### add
 * camellia-redis-proxy detect api support key count and qps
 
