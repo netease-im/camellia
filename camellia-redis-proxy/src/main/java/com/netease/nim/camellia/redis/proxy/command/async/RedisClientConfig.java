@@ -21,6 +21,8 @@ public class RedisClientConfig {
     private long checkIdleConnectionThresholdSeconds;
     private int closeIdleConnectionDelaySeconds;
 
+    private boolean skipCommandSpendTimeMonitor;//是否跳过统计后端redis响应时间
+
     public String getHost() {
         return host;
     }
@@ -115,5 +117,13 @@ public class RedisClientConfig {
 
     public void setCloseIdleConnectionDelaySeconds(int closeIdleConnectionDelaySeconds) {
         this.closeIdleConnectionDelaySeconds = closeIdleConnectionDelaySeconds;
+    }
+
+    public boolean isSkipCommandSpendTimeMonitor() {
+        return skipCommandSpendTimeMonitor;
+    }
+
+    public void setSkipCommandSpendTimeMonitor(boolean skipCommandSpendTimeMonitor) {
+        this.skipCommandSpendTimeMonitor = skipCommandSpendTimeMonitor;
     }
 }

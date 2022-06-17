@@ -386,7 +386,7 @@ public class RedisClient implements AsyncClient {
     }
 
     private long _startTime() {
-        if (RedisMonitor.isUpstreamRedisSpendTimeMonitorEnable()) {
+        if (RedisMonitor.isUpstreamRedisSpendTimeMonitorEnable() && !redisClientConfig.isSkipCommandSpendTimeMonitor()) {
             return System.nanoTime();
         } else {
             return -1;

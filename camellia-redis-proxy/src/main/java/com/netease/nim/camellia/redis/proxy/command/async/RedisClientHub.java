@@ -182,6 +182,7 @@ public class RedisClientHub {
             config.setCloseIdleConnection(false);
             config.setCloseIdleConnectionDelaySeconds(closeIdleConnectionDelaySeconds);
             config.setCheckIdleConnectionThresholdSeconds(checkIdleConnectionThresholdSeconds);
+            config.setSkipCommandSpendTimeMonitor(true);
             RedisClient client = new RedisClient(config);
             client.start();
             if (client.isValid()) {
