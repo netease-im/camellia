@@ -10,9 +10,9 @@ import com.netease.nim.camellia.core.util.SysUtils;
 public class ProxyConstants {
 
     public static final boolean shardingConcurrentEnable = true;
-    public static final int shardingConcurrentExecPoolSize = SysUtils.getCpuNum() * 16;
+    public static final int shardingConcurrentExecPoolSize = SysUtils.getCpuNum() * 32;
 
-    public static final int multiWriteConcurrentExecPoolSize = SysUtils.getCpuNum() * 16;
-    public static final int multiWriteAsyncExecPoolSize = SysUtils.getCpuNum() * 16;
+    public static final int multiWriteConcurrentExecPoolSize = SysUtils.getCpuNum() * 32;
+    public static final int multiWriteAsyncExecPoolSize = SysUtils.getCpuNum() * 32;
     public static final int multiWriteAsyncExecQueueSize = 100000;
 }
