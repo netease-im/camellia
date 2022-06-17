@@ -12,6 +12,8 @@
 ### 更新
 * camellia-dashboard新增几个api
 * CamelliaHashedExecutor支持获取完成任务数
+* 调整了ProxyConstants的默认参数，调大了双写和分片使用的内部线程池的默认线程数
+* camellia-redis-proxy在统计后端redis响应时间时，跳过发布订阅命令和阻塞型命令
 
 ### fix
 * 无
