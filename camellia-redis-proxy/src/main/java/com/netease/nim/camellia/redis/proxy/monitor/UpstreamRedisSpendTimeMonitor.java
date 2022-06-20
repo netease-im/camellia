@@ -45,7 +45,6 @@ public class UpstreamRedisSpendTimeMonitor {
 
             for (Map.Entry<String, LongAdder> entry : spendCountMap.entrySet()) {
                 String key = entry.getKey();
-                key = PasswordMaskUtils.maskAddr(key);
                 long count = entry.getValue().sumThenReset();
                 if (count == 0) continue;
                 MaxValue nanoMax = spendMaxMap.get(key);
@@ -61,7 +60,7 @@ public class UpstreamRedisSpendTimeMonitor {
                     avgSpendMs = sum / (1000000.0 * count);
                 }
                 Stats.UpstreamRedisSpendStats upstreamRedisSpendStats = new Stats.UpstreamRedisSpendStats();
-                upstreamRedisSpendStats.setAddr(key);
+                upstreamRedisSpendStats.setAddr(PasswordMaskUtils.maskAddr(key));
                 upstreamRedisSpendStats.setCount(count);
                 upstreamRedisSpendStats.setAvgSpendMs(avgSpendMs);
                 upstreamRedisSpendStats.setMaxSpendMs(maxSpendMs);
