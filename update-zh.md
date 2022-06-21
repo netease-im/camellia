@@ -4,19 +4,20 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
-# 1.0.59（2022/06/xx）
+# 1.0.59（2022/06/21）
 ### 新增
 * camellia-core、camellia-feign调整异步双写线程模型，并新增支持MISC_ASYNC_MULTI_THREAD模式
 * camellia-redis-proxy支持缓存透明双删，具体见：[interceptor](/docs/redis-proxy/interceptor.md)
+* camellia-dashboard新增几个管理api
 
 ### 更新
-* camellia-dashboard新增几个api
 * CamelliaHashedExecutor支持获取完成任务数
 * 调整了ProxyConstants的默认参数，调大了双写和分片使用的内部线程池的默认线程数
 * camellia-redis-proxy在统计后端redis响应时间时，跳过发布订阅命令和阻塞型命令
+* 升级fastjson版本，从1.2.76升级到1.2.83
 
 ### fix
-* 修复了后端redis有密码且开启mask的情况下，监控的后端redis响应时间为0的问题
+* 修复了后端redis有密码且开启密码mask的情况下，监控的后端redis响应时间为0的问题
 
 
 # 1.0.58（2022/05/16）

@@ -4,6 +4,21 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+# 1.0.59（2022/06/21）
+### add
+* camellia-core/camellia-feign adjust thread mode, provide new MultiWriteType MISC_ASYNC_MULTI_THREAD
+* camellia-redis-proxy support cache double-delete
+* camellia-dashboard provide some new api
+
+### update
+* CamelliaHashedExecutor support getCompletedTaskCount
+* update ProxyConstants default conf, increment default sharding/multi-write threads pool size
+* camellia-redis-proxy skip monitor upstream redis spend time for pub-sub commands and blocking commands
+* bump fastjson from 1.2.76 to 1.2.83
+
+### fix
+* fix upstream redis spend time = 0 when upstream-redis has password
+
 
 # 1.0.58（2022/05/16）
 ### add
