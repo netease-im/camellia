@@ -4,24 +4,24 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-feign</artifactId>
-	<version>1.0.59</version>
+	<version>1.0.60-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia</artifactId>
-		<version>1.0.59</version>
+		<version>1.0.60-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-core</artifactId>
-			<version>1.0.59</version>
+			<version>1.0.60-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-tools</artifactId>
-			<version>1.0.59</version>
+			<version>1.0.60-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.openfeign</groupId>
