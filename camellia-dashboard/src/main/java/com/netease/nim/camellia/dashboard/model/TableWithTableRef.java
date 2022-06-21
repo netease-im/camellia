@@ -4,7 +4,6 @@ package com.netease.nim.camellia.dashboard.model;
  * Create with IntelliJ IDEA
  *
  * @author ChenHongliang
- * @date 2022/5/6 11:45
  */
 public class TableWithTableRef {
     private Table table;

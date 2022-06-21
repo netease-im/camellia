@@ -6,7 +6,6 @@ import java.util.List;
  * Create with IntelliJ IDEA
  *
  * @author ChenHongliang
- * @date 2022/5/18 21:18
  */
 public class TablePage {
     private List<Table> tables;

@@ -25,6 +25,8 @@ public class ResourceCheckService implements ApplicationContextAware, Initializi
 
     /**
      * 只要有一个check成功，即成功
+     * @param url url
+     * @return 结果
      */
     public boolean check(String url) {
         for (IResourceChecker checker : checkerMap.values()) {

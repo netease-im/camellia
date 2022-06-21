@@ -6,7 +6,6 @@ import java.util.List;
  * Create with IntelliJ IDEA
  *
  * @author ChenHongliang
- * @date 2022/5/18 22:01
  */
 public class TableRefPage {
     private List<TableRef> TableRefs;

@@ -6,7 +6,6 @@ import java.util.List;
  * Create with IntelliJ IDEA
  *
  * @author ChenHongliang
- * @date 2022/5/25 17:20
  */
 public class ResourceInfoPage {
     private List<ResourceInfo> resourceInfos;
