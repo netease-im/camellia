@@ -115,6 +115,7 @@ public class AdminController {
     public WebResult getResourceTableAll(@RequestParam(value = "tid", required = false) Long tid,
                                          @RequestParam(value = "validFlag", required = false) Integer validFlag,
                                          @RequestParam(value = "info",required = false) String info,
+                                         @RequestParam(value = "detail",required = false) String detail,
                                          @RequestParam Integer pageNum,
                                          @RequestParam Integer pageSize) {
         if(validFlag!=null && validFlag!=1 && validFlag!=0){
@@ -125,10 +126,11 @@ public class AdminController {
         LogBean.get().addProps("info", info);
         LogBean.get().addProps("pageNum", pageNum);
         LogBean.get().addProps("pageSize", pageSize);
-        TablePage listTidValidFlagInfo = tableService.getListTidValidFlagInfo(tid, validFlag, info, pageSize, pageNum);
+        LogBean.get().addProps("detail", detail);
+        TablePage listTidValidFlagInfo = tableService.getListTidValidFlagInfo(tid, validFlag, info, pageSize, pageNum,detail);
         JSONArray tables = new JSONArray();
-        for (Table table : listTidValidFlagInfo.getTables()) {
-            tables.add(table.toJson());
+        for (Table table1 : listTidValidFlagInfo.getTables()) {
+            tables.add(table1.toJson());
         }
         JSONObject ret=new JSONObject();
         ret.put("count",listTidValidFlagInfo.getCount());
@@ -212,13 +214,14 @@ public class AdminController {
         return WebResult.success(ret);
     }
 
-    @ApiOperation(value = "查询单个资源表引用关系", notes = "根据tid,bid,bgroup,onlyValid")
+    @ApiOperation(value = "查询资源表引用关系", notes = "根据tid,bid,bgroup,validFlag,info,resourceInfo模糊搜索")
     @GetMapping("/getTableRefAll")
     public WebResult getTableRefAll(@RequestParam(value = "bid", required = false) Long bid,
                                     @RequestParam(value = "bgroup", required = false) String bgroup,
                                     @RequestParam(value = "tid", required = false) Long tid,
                                     @RequestParam(value = "validFlag", required = false) Integer validFlag,
                                     @RequestParam(value = "info",required = false)String info,
+                                    @RequestParam(value = "resourceInfo",required = false)String resourceInfo,
                                     @RequestParam Integer pageNum,
                                     @RequestParam Integer pageSize) {
         if(validFlag!=null && validFlag!=1 && validFlag!=0){
@@ -229,14 +232,15 @@ public class AdminController {
         LogBean.get().addProps("tid", tid);
         LogBean.get().addProps("validFlag", validFlag);
         LogBean.get().addProps("info", info);
+        LogBean.get().addProps("resourceInfo", resourceInfo);
 
         LogBean.get().addProps("pageNum", pageNum);
         LogBean.get().addProps("pageSize", pageSize);
 
-        TableRefPage tableRefPage=tableRefService.getRefsList(tid, bid, bgroup, validFlag,info,pageNum,pageSize);
+        TableRefPage tableRefPage=tableRefService.getRefsList(tid, bid, bgroup, validFlag,info,resourceInfo,pageNum,pageSize);
 
         JSONArray ret1 = new JSONArray();
-        for (TableRef tableRef : tableRefPage.getTableRefs()) {
+        for (TableRefAddition tableRef : tableRefPage.getTableRefs()) {
             ret1.add(tableRef.toJson());
         }
         JSONObject ret=new JSONObject();
@@ -329,6 +333,19 @@ public class AdminController {
         LogBean.get().addProps("ret",resourceInfoPage);
         return WebResult.success(resourceInfoPage);
     }
+
+    @ApiOperation(value = "用url模糊匹配url和info", notes = "返回前几个")
+    @GetMapping("/resourcesQuery")
+    public WebResult getResourceQuery(@RequestParam(value = "url" ) String url,
+                                     @RequestParam(value = "size",defaultValue = "5") Integer size) {
+        if(!StringUtil.isNullOrEmpty(url))
+            LogBean.get().addProps("url", url);
+        LogBean.get().addProps("size", size);
+        List<ResourceInfo> resourceInfoList=resourceInfoService.queryListByUrl(url,size);
+        LogBean.get().addProps("ret",resourceInfoList);
+        return WebResult.success(resourceInfoList);
+    }
+
 
 
     @ApiOperation(value = "一个mock接口", notes = "用于在指定tid和分片key的情况下确定分片结果，使用的是默认的分片函数")

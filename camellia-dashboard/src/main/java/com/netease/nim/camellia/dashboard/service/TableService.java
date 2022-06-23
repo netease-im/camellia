@@ -13,7 +13,6 @@ import com.netease.nim.camellia.dashboard.exception.AppException;
 import com.netease.nim.camellia.dashboard.model.*;
 import com.netease.nim.camellia.dashboard.util.LogBean;
 import com.netease.nim.camellia.dashboard.util.ResourceInfoTidsUtil;
-import io.netty.util.internal.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -241,34 +240,14 @@ public class TableService {
     }
 
 
-    public TablePage getListTidValidFlagInfo(Long tid, Integer validFlag, String info,Integer pageSize,Integer pageNum) {
+    public TablePage getListTidValidFlagInfo(Long tid, Integer validFlag, String info,Integer pageSize,Integer pageNum,String detail) {
         Integer currentNum = (pageNum - 1) * pageSize;
 
         TablePage tablePage = new TablePage();
-        if (tid != null) {
-            Table table = tableDao.get(tid);
-            if(table==null){
-                tablePage.setCount(0);
-                tablePage.setTables(new ArrayList<>());
-                return tablePage;
-            }
-            if ((validFlag == null || table.getValidFlag().equals(validFlag)) && (StringUtil.isNullOrEmpty(info) || table.getInfo().contains(info))) {
-                List<Table> tables = Collections.singletonList(table);
-                tablePage.setTables(tables);
-                tablePage.setCount(tables.size());
-            }
-            else {
-                tablePage.setCount(0);
-                tablePage.setTables(new ArrayList<>());
-                return tablePage;
-            }
-        }
-        else {
-            List<Table> tables=tableDao.getPageValidFlagInfo(validFlag,info,currentNum,pageSize);
-            Integer count=tableDao.countPageValidFlagInfo(validFlag,info);
-            tablePage.setTables(tables);
-            tablePage.setCount(count);
-        }
+        List<Table> tables = tableDao.getPageValidFlagInfo(validFlag,info,tid,detail,currentNum,pageSize);
+        Integer count = tableDao.countPageValidFlagInfo(validFlag,info,tid,detail);
+        tablePage.setTables(tables);
+        tablePage.setCount(count);
         return tablePage;
     }
 }

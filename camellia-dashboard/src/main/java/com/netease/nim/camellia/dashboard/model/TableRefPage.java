@@ -8,14 +8,14 @@ import java.util.List;
  * @author ChenHongliang
  */
 public class TableRefPage {
-    private List<TableRef> TableRefs;
+    private List<TableRefAddition> TableRefs;
     private Integer count;
 
-    public List<TableRef> getTableRefs() {
+    public List<TableRefAddition> getTableRefs() {
         return TableRefs;
     }
 
-    public void setTableRefs(List<TableRef> tableRefs) {
+    public void setTableRefs(List<TableRefAddition> tableRefs) {
         TableRefs = tableRefs;
     }
 

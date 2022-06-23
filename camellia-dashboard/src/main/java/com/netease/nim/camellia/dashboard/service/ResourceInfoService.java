@@ -7,16 +7,13 @@ import com.netease.nim.camellia.dashboard.model.ResourceInfo;
 import com.netease.nim.camellia.dashboard.model.ResourceInfoPage;
 import com.netease.nim.camellia.dashboard.util.LogBean;
 import com.netease.nim.camellia.dashboard.util.ResourceInfoTidsUtil;
-import io.netty.util.internal.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 /**
- *
  * Created by caojiajun on 2019/11/21.
  */
 @Service
@@ -75,30 +72,20 @@ public class ResourceInfoService {
         return resourceInfoDaoWrapper.getByUrl(url);
     }
 
-    public List<ResourceInfo> getList(Integer pageNum,Integer pageSize) {
-        int currentNum=(pageNum-1)*pageSize;
-        return resourceInfoDaoWrapper.getPageList(currentNum,pageSize);
+    public ResourceInfoPage queryPageUrl(String url, Integer pageNum, Integer pageSize) {
+        ResourceInfoPage infoPage = new ResourceInfoPage();
+        int currentNum = (pageNum - 1) * pageSize;
+        List<ResourceInfo> pageList = resourceInfoDaoWrapper.getPageList(url, currentNum, pageSize);
+        int count = resourceInfoDaoWrapper.queryCount(url);
+        infoPage.setCount(count);
+        infoPage.setResourceInfos(pageList);
+
+        return infoPage;
     }
 
-    public ResourceInfoPage queryPageUrl(String url, Integer pageNum, Integer pageSize) {
-        ResourceInfoPage infoPage=new ResourceInfoPage();
-        int currentNum=(pageNum-1)*pageSize;
-        if(StringUtil.isNullOrEmpty(url)){
-            List<ResourceInfo> pageList = resourceInfoDaoWrapper.getPageList(currentNum, pageSize);
-            int count=resourceInfoDaoWrapper.queryCount();
-            infoPage.setCount(count);
-            infoPage.setResourceInfos(pageList);
-        }else {
-            ResourceInfo byUrl = resourceInfoDaoWrapper.getByUrl(url);
-            if(byUrl!=null) {
-                infoPage.setResourceInfos(Collections.singletonList(byUrl));
-                infoPage.setCount(1);
-            }
-            else {
-                infoPage.setResourceInfos(null);
-                infoPage.setCount(0);
-            }
-        }
-        return infoPage;
+    public List<ResourceInfo> queryListByUrl(String url, Integer size) {
+        List<ResourceInfo> pageList = resourceInfoDaoWrapper.queryListByUrl(url, size);
+
+        return pageList;
     }
 }

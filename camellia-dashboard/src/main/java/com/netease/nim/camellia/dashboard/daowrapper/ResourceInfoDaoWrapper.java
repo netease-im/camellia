@@ -42,11 +42,16 @@ public class ResourceInfoDaoWrapper {
         return 1;
     }
 
-    public List<ResourceInfo> getPageList(int currentNum, Integer pageSize) {
-        return resourceInfoDao.getPageList(currentNum,pageSize);
+    public List<ResourceInfo> getPageList(String url,int currentNum, Integer pageSize) {
+        return resourceInfoDao.getPageList(url,currentNum,pageSize);
     }
 
-    public int queryCount() {
-        return resourceInfoDao.countAll();
+    public int queryCount(String url) {
+        return resourceInfoDao.countAll(url);
+    }
+
+    public List<ResourceInfo> queryListByUrl(String url, Integer size) {
+        return resourceInfoDao.queryListByUrl(url,size);
+
     }
 }
