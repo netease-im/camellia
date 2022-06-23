@@ -2,8 +2,10 @@ package com.netease.nim.camellia.dashboard.daowrapper;
 
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.dashboard.conf.DashboardProperties;
+import com.netease.nim.camellia.dashboard.dao.TableRefAdditionDao;
 import com.netease.nim.camellia.dashboard.dao.TableRefDao;
 import com.netease.nim.camellia.dashboard.model.TableRef;
+import com.netease.nim.camellia.dashboard.model.TableRefAddition;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.core.util.CacheUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,9 @@ public class TableRefDaoWrapper {
 
     @Autowired
     private TableRefDao mapper;
+
+    @Autowired
+    private TableRefAdditionDao additionDao;
 
     @Autowired
     private CamelliaRedisTemplate template;
@@ -58,15 +63,15 @@ public class TableRefDaoWrapper {
         return mapper.findByBid(bid);
     }
 
-    public List<TableRef> getByTidBidBgroupValidFlag(Long tid,Long bid,String bgroup,Integer validFlag,String info,Integer currentNum,Integer pageSize) {
-        return mapper.findByTidBidBGroupValid(tid,bid,bgroup,validFlag,info,currentNum,pageSize);
+    public List<TableRefAddition> getByTidBidBgroupValidFlag(Long tid, Long bid, String bgroup, Integer validFlag, String info,String resourceInfo ,Integer currentNum, Integer pageSize) {
+        return additionDao.findByTidBidBGroupValid(tid,bid,bgroup,validFlag,info,resourceInfo,currentNum,pageSize);
     }
 
     public List<TableRef> getList() {
         return mapper.findAll();
     }
 
-    public Integer countByTidBidBgroupValidFlag(Long tid, Long bid, String bgroup, Integer validFlag,String info) {
-        return mapper.countByTidBidBGroupValid(tid,bid,bgroup,validFlag,info);
+    public Integer countByTidBidBgroupValidFlag(Long tid, Long bid, String bgroup, Integer validFlag,String info,String resourceInfo) {
+        return additionDao.countByTidBidBGroupValid(tid,bid,bgroup,validFlag,info,resourceInfo);
     }
 }

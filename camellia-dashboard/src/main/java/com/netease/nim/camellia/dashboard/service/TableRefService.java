@@ -96,12 +96,12 @@ public class TableRefService {
         }
     }
 
-    public TableRefPage getRefsList(Long tid, Long bid, String bgroup, Integer validFlag,String info,Integer pageNum,Integer pageSize){
+    public TableRefPage getRefsList(Long tid, Long bid, String bgroup, Integer validFlag,String info,String resourceInfo,Integer pageNum,Integer pageSize){
         TableRefPage tableRefPage=new TableRefPage();
         Integer currentNum = (pageNum - 1) * pageSize;
-        List<TableRef> byTidBidBgroupValidFlag = tableRefDao.getByTidBidBgroupValidFlag(tid, bid, bgroup, validFlag,info,currentNum,pageSize);
+        List<TableRefAddition> byTidBidBgroupValidFlag = tableRefDao.getByTidBidBgroupValidFlag(tid, bid, bgroup, validFlag,info,resourceInfo,currentNum,pageSize);
         tableRefPage.setTableRefs(byTidBidBgroupValidFlag);
-        Integer count=tableRefDao.countByTidBidBgroupValidFlag(tid, bid, bgroup, validFlag,info);
+        Integer count=tableRefDao.countByTidBidBgroupValidFlag(tid, bid, bgroup, validFlag,info,resourceInfo);
         tableRefPage.setCount(count);
         return tableRefPage;
     }
