@@ -70,6 +70,7 @@ public class CamelliaNakedClient<R, W> {
     private String className;
     private CamelliaFeignDynamicOptionGetter dynamicOptionGetter;
     private CamelliaFeignFallbackFactory<W> fallbackFactory;
+    private CamelliaNakedClientFailureListener<R> failureListener;
 
     private final Map<String, FeignResourcePool> map = new HashMap<>();
 
@@ -149,10 +150,22 @@ public class CamelliaNakedClient<R, W> {
         }
 
         public <R, W> CamelliaNakedClient<R, W> build(CamelliaNakedRequestInvoker<R, W> invoker) {
-            return build(invoker, null);
+            return build(invoker, null, null);
         }
 
-        public <R, W> CamelliaNakedClient<R, W> build(CamelliaNakedRequestInvoker<R, W> invoker, CamelliaFeignFallbackFactory<W> fallbackFactory) {
+        public <R, W> CamelliaNakedClient<R, W> build(CamelliaNakedRequestInvoker<R, W> invoker,
+                                                      CamelliaFeignFallbackFactory<W> fallbackFactory) {
+            return build(invoker, fallbackFactory, null);
+        }
+
+        public <R, W> CamelliaNakedClient<R, W> build(CamelliaNakedRequestInvoker<R, W> invoker,
+                                                      CamelliaNakedClientFailureListener<R> failureListener) {
+            return build(invoker, null, failureListener);
+        }
+
+        public <R, W> CamelliaNakedClient<R, W> build(CamelliaNakedRequestInvoker<R, W> invoker,
+                                                      CamelliaFeignFallbackFactory<W> fallbackFactory,
+                                                      CamelliaNakedClientFailureListener<R> failureListener) {
             CamelliaNakedClient<R, W> client = new CamelliaNakedClient<>();
             client.bid = bid;
             client.bgroup = bgroup;
@@ -163,8 +176,9 @@ public class CamelliaNakedClient<R, W> {
             client.name = name;
             client.resourceTable = resourceTable;
             client.dynamicOptionGetter = dynamicOptionGetter;
-            client.fallbackFactory = fallbackFactory;
             client.invoker = invoker;
+            client.fallbackFactory = fallbackFactory;
+            client.failureListener = failureListener;
             client.init();
             return client;
         }
@@ -199,6 +213,25 @@ public class CamelliaNakedClient<R, W> {
      */
     public W sendRequest(OperationType operationType, R request, Object routeKey, Object loadBalanceKey) throws CamelliaNakedClientException {
         return sendRequest(operationType, request, routeKey, loadBalanceKey, defaultMaxRetry);
+    }
+
+    /**
+     * 发送失败重试请求
+     * @param context 失败上下文
+     * @return 响应
+     */
+    public W sendRetry(CamelliaNakedClientFailureContext<R> context) {
+        return sendRetry(context, defaultMaxRetry);
+    }
+
+    /**
+     * 发送失败重试请求
+     * @param context 失败上下文
+     * @param maxRetry 最大重试次数
+     * @return 响应
+     */
+    public W sendRetry(CamelliaNakedClientFailureContext<R> context, int maxRetry) {
+        return invoke(context.getOperationType(), context.getResource(), context.getRequest(), maxRetry, context.getLoadBalanceKey(), context.getBgroup());
     }
 
     /**
@@ -394,9 +427,23 @@ public class CamelliaNakedClient<R, W> {
             throw throwException;
         } catch (CamelliaNakedClientException e) {
             success = feignEnv.getFallbackExceptionChecker().isSkipError(e);
+            if (!success && failureListener != null) {
+                try {
+                    failureListener.onFailure(new CamelliaNakedClientFailureContext<>(bid, bgroup, operationType, request, loadBalanceKey, resource, e));
+                } catch (Exception ex) {
+                    logger.error("onFailure error", ex);
+                }
+            }
             throw e;
         } catch (Exception e) {
             success = feignEnv.getFallbackExceptionChecker().isSkipError(e);
+            if (!success && failureListener != null) {
+                try {
+                    failureListener.onFailure(new CamelliaNakedClientFailureContext<>(bid, bgroup, operationType, request, loadBalanceKey, resource, e));
+                } catch (Exception ex) {
+                    logger.error("onFailure error", ex);
+                }
+            }
             throw new CamelliaNakedClientNoRetriableException(e);
         } finally {
             if (circuitBreaker != null) {

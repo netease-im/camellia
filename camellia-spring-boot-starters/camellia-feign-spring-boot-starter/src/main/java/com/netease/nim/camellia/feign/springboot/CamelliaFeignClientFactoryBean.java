@@ -2,6 +2,7 @@ package com.netease.nim.camellia.feign.springboot;
 
 import com.netease.nim.camellia.feign.CamelliaFeignClient;
 import com.netease.nim.camellia.feign.CamelliaFeignClientFactory;
+import com.netease.nim.camellia.feign.CamelliaFeignFailureListener;
 import com.netease.nim.camellia.feign.CamelliaFeignFallbackFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -25,12 +26,15 @@ public class CamelliaFeignClientFactoryBean implements FactoryBean<Object>, Bean
         CamelliaFeignClient annotation = type.getAnnotation(CamelliaFeignClient.class);
         Class<?> fallbackFactoryClazz = null;
         Class<?> fallbackClazz = null;
+        Class<?> failureListenerClazz = null;
         if (annotation != null) {
             fallbackFactoryClazz = annotation.fallbackFactory();
             fallbackClazz = annotation.fallback();
+            failureListenerClazz = annotation.failureListener();
         }
         Object fallbackFactory = null;
         Object fallback = null;
+        Object failureListener = null;
         if (beanFactory != null) {
             factory = beanFactory.getBean(CamelliaFeignClientFactory.class);
             try {
@@ -39,6 +43,9 @@ public class CamelliaFeignClientFactoryBean implements FactoryBean<Object>, Bean
                 }
                 if (fallbackFactory == null && fallbackClazz != null && !void.class.isAssignableFrom(fallbackClazz)) {
                     fallback = beanFactory.getBean(fallbackClazz);
+                }
+                if (failureListenerClazz != null && !void.class.isAssignableFrom(failureListenerClazz)) {
+                    failureListener = beanFactory.getBean(failureListenerClazz);
                 }
             } catch (Exception ignore) {
             }
@@ -51,13 +58,16 @@ public class CamelliaFeignClientFactoryBean implements FactoryBean<Object>, Bean
                 if (fallbackFactory == null && fallbackClazz != null) {
                     fallback = applicationContext.getBean(fallbackClazz);
                 }
+                if (failureListenerClazz != null) {
+                    failureListener = beanFactory.getBean(failureListenerClazz);
+                }
             } catch (Exception ignore) {
             }
         }
         if (fallbackFactory != null) {
-            return factory.getService(type, (CamelliaFeignFallbackFactory) fallbackFactory);
+            return factory.getService(type, (CamelliaFeignFallbackFactory) fallbackFactory, (CamelliaFeignFailureListener) failureListener);
         } else if (fallback != null) {
-            return factory.getService(type, (CamelliaFeignFallbackFactory) new CamelliaFeignFallbackFactory.Default<>(fallback));
+            return factory.getService(type, (CamelliaFeignFallbackFactory) new CamelliaFeignFallbackFactory.Default<>(fallback), (CamelliaFeignFailureListener) failureListener);
         } else {
             return factory.getService(type);
         }

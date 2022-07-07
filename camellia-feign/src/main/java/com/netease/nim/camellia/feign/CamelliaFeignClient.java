@@ -27,5 +27,7 @@ public @interface CamelliaFeignClient {
     Class<?> fallback() default void.class;
     //fallbackFactory的优先级高于fallback
     Class<?> fallbackFactory() default void.class;
+    //请求失败的回调
+    Class<?> failureListener() default void.class;
 
 }

@@ -84,6 +84,7 @@ public class FeignDynamicRouteCallback<T> implements MethodInterceptor {
                     param.setMonitor(monitor);
                     param.setDynamicOption(camelliaFeignDynamicOptionGetter.getDynamicOption(bid, bgroup));
                     param.setUpdater(new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, checkIntervalMillis));
+                    param.setBgroup(bgroup);
                     client = ProxyClientFactory.createProxy(param.getApiType(), new FeignCallback<>(param));
                     clientMap.put(bgroup, client);
                 }

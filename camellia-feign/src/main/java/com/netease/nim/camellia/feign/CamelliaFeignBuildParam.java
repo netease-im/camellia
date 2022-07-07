@@ -9,6 +9,8 @@ import com.netease.nim.camellia.feign.route.FeignResourceTableUpdater;
  */
 public class CamelliaFeignBuildParam<T> {
 
+    private long bid;
+    private String bgroup;
     private Class<T> apiType;
     private CamelliaFeignFallbackFactory<T> fallbackFactory;
     private CamelliaFeignProps feignProps;
@@ -16,12 +18,15 @@ public class CamelliaFeignBuildParam<T> {
     private CamelliaFeignEnv feignEnv;
     private DynamicOption dynamicOption;
     private Monitor monitor;
+    private CamelliaFeignFailureListener failureListener;
 
     public CamelliaFeignBuildParam() {
     }
 
-    public CamelliaFeignBuildParam(Class<T> apiType, CamelliaFeignFallbackFactory<T> fallbackFactory, CamelliaFeignProps feignProps, FeignResourceTableUpdater updater,
-                                   CamelliaFeignEnv feignEnv, DynamicOption dynamicOption, Monitor monitor) {
+    public CamelliaFeignBuildParam(long bid, String bgroup, Class<T> apiType, CamelliaFeignFallbackFactory<T> fallbackFactory, CamelliaFeignProps feignProps, FeignResourceTableUpdater updater,
+                                   CamelliaFeignEnv feignEnv, DynamicOption dynamicOption, Monitor monitor, CamelliaFeignFailureListener failureListener) {
+        this.bid = bid;
+        this.bgroup = bgroup;
         this.apiType = apiType;
         this.fallbackFactory = fallbackFactory;
         this.feignProps = feignProps;
@@ -29,10 +34,27 @@ public class CamelliaFeignBuildParam<T> {
         this.feignEnv = feignEnv;
         this.dynamicOption = dynamicOption;
         this.monitor = monitor;
+        this.failureListener = failureListener;
     }
 
     public CamelliaFeignBuildParam<T> duplicate() {
-        return new CamelliaFeignBuildParam<>(apiType, fallbackFactory, feignProps, updater, feignEnv, dynamicOption, monitor);
+        return new CamelliaFeignBuildParam<>(bid, bgroup, apiType, fallbackFactory, feignProps, updater, feignEnv, dynamicOption, monitor, failureListener);
+    }
+
+    public long getBid() {
+        return bid;
+    }
+
+    public void setBid(long bid) {
+        this.bid = bid;
+    }
+
+    public String getBgroup() {
+        return bgroup;
+    }
+
+    public void setBgroup(String bgroup) {
+        this.bgroup = bgroup;
     }
 
     public Class<T> getApiType() {
@@ -89,5 +111,13 @@ public class CamelliaFeignBuildParam<T> {
 
     public void setMonitor(Monitor monitor) {
         this.monitor = monitor;
+    }
+
+    public CamelliaFeignFailureListener getFailureListener() {
+        return failureListener;
+    }
+
+    public void setFailureListener(CamelliaFeignFailureListener failureListener) {
+        this.failureListener = failureListener;
     }
 }

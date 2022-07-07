@@ -42,12 +42,14 @@ public class FeignCallback<T> implements MethodInterceptor {
 
     private static final Logger logger = LoggerFactory.getLogger(FeignCallback.class);
 
+    private final long bid;
+    private final String bgroup;
     private final Map<String, FeignResourcePool> map = new HashMap<>();
     private final Map<String, CamelliaCircuitBreaker> circuitBreakerMap = new HashMap<>();
     private ResourceChooser resourceChooser;
     private final CamelliaFeignEnv feignEnv;
     private final FeignClientFactory<T> factory;
-    private final Class<T> clazz;
+    private final Class<T> apiType;
     private final CamelliaFeignFallbackFactory<T> fallbackFactory;
     private final CircuitBreakerConfig circuitBreakerConfig;
     private final CamelliaServerSelector<FeignResource> serverSelector;
@@ -56,28 +58,32 @@ public class FeignCallback<T> implements MethodInterceptor {
     private final DynamicOption dynamicOption;
     private final String className;
     private final Monitor monitor;
+    private final CamelliaFeignFailureListener failureListener;
 
     public FeignCallback(CamelliaFeignBuildParam<T> buildParam) {
-        this.clazz = buildParam.getApiType();
-        this.className = clazz.getName();
+        this.bid = buildParam.getBid();
+        this.bgroup = buildParam.getBgroup();
+        this.apiType = buildParam.getApiType();
+        this.className = apiType.getName();
+        this.failureListener = buildParam.getFailureListener();
         this.monitor = buildParam.getMonitor();
         this.feignEnv = buildParam.getFeignEnv();
         this.dynamicOption = buildParam.getDynamicOption();
-        this.factory = new FeignClientFactory.Default<>(clazz, buildParam.getFeignProps(), buildParam.getDynamicOption());
+        this.factory = new FeignClientFactory.Default<>(apiType, buildParam.getFeignProps(), buildParam.getDynamicOption());
         this.fallbackFactory = buildParam.getFallbackFactory();
         this.circuitBreakerConfig = buildParam.getDynamicOption() == null ? null : buildParam.getDynamicOption().getCircuitBreakerConfig();
         if (circuitBreakerConfig != null) {
             String name = circuitBreakerConfig.getName();
             if (name == null) {
-                name = "apiType=" + clazz.getSimpleName();
+                name = "apiType=" + apiType.getSimpleName();
             } else {
-                name = name + ",apiType=" + clazz.getSimpleName();
+                name = name + ",apiType=" + apiType.getSimpleName();
             }
             circuitBreakerConfig.setName(name);
         }
         this.serverSelector = buildParam.getDynamicOption() == null ? new RandomCamelliaServerSelector<>() : buildParam.getDynamicOption().getServerSelector();
-        annotationValueGetterCache.preheatAnnotationValueByParameterField(clazz, LoadBalanceKey.class);
-        readWriteOperationCache.preheat(clazz);
+        annotationValueGetterCache.preheatAnnotationValueByParameterField(apiType, LoadBalanceKey.class);
+        readWriteOperationCache.preheat(apiType);
         FeignResourceTableUpdater updater = buildParam.getUpdater();
         refresh(updater.getResourceTable(), true);
         updater.addCallback(resourceTable -> refresh(resourceTable, false));
@@ -113,7 +119,7 @@ public class FeignCallback<T> implements MethodInterceptor {
             }
             this.resourceChooser = new ResourceChooser(resourceTable, feignEnv.getProxyEnv());
         } catch (Exception e) {
-            logger.error("refresh error, class = {}", clazz.getName(), e);
+            logger.error("refresh error, class = {}", apiType.getName(), e);
             if (throwError) {
                 throw e;
             }
@@ -167,6 +173,15 @@ public class FeignCallback<T> implements MethodInterceptor {
             success = feignEnv.getFallbackExceptionChecker().isSkipError(error);
             if (!(error instanceof CamelliaCircuitBreakerException)) {
                 pool.onError(feignResource);
+            }
+            if (!success && failureListener != null) {
+                try {
+                    CamelliaFeignFailureContext failureContext = new CamelliaFeignFailureContext(bid, bgroup, apiType, operationType,
+                            resource, loadBalanceKey, readWriteOperationCache.getGenericString(method), objects, error);
+                    failureListener.onFailure(failureContext);
+                } catch (Exception ex) {
+                    logger.error("onFailure error", ex);
+                }
             }
             throw error;
         } finally {

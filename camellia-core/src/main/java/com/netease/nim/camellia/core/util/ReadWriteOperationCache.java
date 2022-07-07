@@ -18,6 +18,7 @@ public class ReadWriteOperationCache {
 
     private final Map<Method, Byte> annotationCache = new HashMap<>();
     private final Map<Method, String> fullNameCache = new HashMap<>();
+    private final Map<Method, String> genericStringCache = new HashMap<>();
 
     public void preheat(Class<?> clazz) {
         for (Method method : clazz.getMethods()) {
@@ -67,5 +68,15 @@ public class ReadWriteOperationCache {
         string = fullName.toString();
         fullNameCache.put(method, string);
         return string;
+    }
+
+    public String getGenericString(Method method) {
+        String string = genericStringCache.get(method);
+        if (string != null) {
+            return string;
+        }
+        String genericString = method.toGenericString();
+        genericStringCache.put(method, genericString);
+        return genericString;
     }
 }
