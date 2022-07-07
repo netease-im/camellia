@@ -12,9 +12,9 @@ import java.util.List;
 /**
  * Created by caojiajun on 2021/10/18
  */
-public class NacosProxyDamicConfSupport implements ProxyDynamicConfSupport {
+public class NacosProxyDynamicConfSupport implements ProxyDynamicConfSupport {
 
-    private static final Logger logger = LoggerFactory.getLogger(NacosProxyDamicConfSupport.class);
+    private static final Logger logger = LoggerFactory.getLogger(NacosProxyDynamicConfSupport.class);
 
     private ConfigService configService;
     private final List<ReloadCallback> reloadCallbackList = new ArrayList<>();

@@ -32,9 +32,9 @@ public class CamelliaRedisProxyNacosConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyNacosConfiguration.class);
 
     @Bean
-    public NacosProxyDamicConfSupport nacosConfigService(CamelliaRedisProxyNacosProperties properties) {
+    public NacosProxyDynamicConfSupport nacosConfigService(CamelliaRedisProxyNacosProperties properties) {
         try {
-            NacosProxyDamicConfSupport support = new NacosProxyDamicConfSupport();
+            NacosProxyDynamicConfSupport support = new NacosProxyDynamicConfSupport();
             if (properties.isEnable()) {
                 Properties nacosProps = new Properties();
                 if (properties.getServerAddr() != null) {
@@ -42,14 +42,12 @@ public class CamelliaRedisProxyNacosConfiguration {
                 }
                 Map<String, String> nacosConf = properties.getNacosConf();
                 if (nacosConf != null) {
-                    for (Map.Entry<String, String> entry : nacosConf.entrySet()) {
-                        nacosProps.put(entry.getKey(), entry.getValue());
-                    }
+                    nacosProps.putAll(nacosConf);
                 }
                 ConfigService configService = NacosFactory.createConfigService(nacosProps);
                 support.setConfigService(configService);
                 for (CamelliaRedisProxyNacosProperties.ConfFile confFile : properties.getConfFileList()) {
-                    NacosProxyDamicConfSupport.ReloadCallback reloadCallback = () -> {
+                    NacosProxyDynamicConfSupport.ReloadCallback reloadCallback = () -> {
                         String content = configService.getConfig(confFile.getDataId(), confFile.getGroup(), properties.getTimeoutMs());
                         updateConf(content, confFile.getFileName());
                     };
