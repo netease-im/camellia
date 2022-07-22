@@ -189,6 +189,8 @@ curl 'http://127.0.0.1:8081/sendDelayMsg?topic=topic1&msg=abc&delaySeconds=10'
 随后，你可以观察delay-queue-server和consumer的日志
 
 ## 接口文档
+* 对于java客户端，使用sdk基本满足了需求，如果是其他语言，可以基于delay-queue-server的服务器api自行封装sdk
+* 服务器接口文档如下：
 
 ### 发送消息
 POST /camellia/delayQueue/sendMsg HTTP/1.1  
