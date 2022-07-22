@@ -188,9 +188,46 @@ curl 'http://127.0.0.1:8081/sendDelayMsg?topic=topic1&msg=abc&delaySeconds=10'
 ```
 随后，你可以观察delay-queue-server和consumer的日志
 
+对于producer和consumer，除了引入spring-boot-starter，也可以引入裸的sdk包，自己去new一个CamelliaDelayQueueSdk实例，随后进行消息的发送和消费监听：  
+```
+<dependency>
+    <groupId>com.netease.nim</groupId>
+    <artifactId>camellia-delay-queue-sdk</artifactId>
+    <version>a.b.c</version>
+</dependency>
+```
+示例代码：  
+```java
+public class TestMain {
+
+    private static final Logger logger = LoggerFactory.getLogger(ConsumerService1.class);
+
+    public static void main(String[] args) {
+        CamelliaDelayQueueSdkConfig config = new CamelliaDelayQueueSdkConfig();
+        config.setUrl("http://127.0.0.1:8080");
+        CamelliaDelayQueueSdk sdk = new CamelliaDelayQueueSdk(config);
+        
+        //发送消息
+        sdk.sendMsg("topic1", "abc", 10, TimeUnit.SECONDS);
+        
+        //消费消息
+        sdk.addMsgListener("topic1", delayMsg -> {
+            try {
+                logger.info("onMsg, time-gap = {}, delayMsg = {}", 
+                        System.currentTimeMillis() - delayMsg.getTriggerTime(), JSONObject.toJSONString(delayMsg));
+                return true;
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                return false;
+            }
+        });
+    }
+}
+```
+
 ## 接口文档
-* 对于java客户端，使用sdk基本满足了需求，如果是其他语言，可以基于delay-queue-server的服务器api自行封装sdk
-* 服务器接口文档如下：
+对于java客户端，使用sdk基本满足了需求，如果是其他语言，可以基于delay-queue-server的服务器api自行封装sdk  
+服务器接口文档如下：  
 
 ### 发送消息
 POST /camellia/delayQueue/sendMsg HTTP/1.1  
