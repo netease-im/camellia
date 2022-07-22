@@ -1016,13 +1016,4 @@ camellia-redis-zk-registry:
 ```  
 
 ### performance report
-[v1.0.19](performance-report-8.md)
-
-history performance report  
-[route to redis cluster（v1.0.4）](performance-report-1.md)  
-[sharding（v1.0.4）](performance-report-2.md)  
-[double write（v1.0.4）](performance-report-3.md)  
-[negative tests（v1.0.4）](performance-report-4.md)  
-[virtual machine（v1.0.7）](performance-report-5.md)  
-[use redis-benchmark（v1.0.8 vs v1.0.9）](performance-report-6.md)    
-[use netease npt platform（v1.0.8 vs v1.0.9）](performance-report-7.md)
+[v1.0.37](performance-report.md)

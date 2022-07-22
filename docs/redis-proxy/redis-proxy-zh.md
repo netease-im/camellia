@@ -268,14 +268,4 @@ camellia-redis-proxy默认通过在application.yml里配置全类名的方式来
 * 等等
 
 ## 性能测试报告
-[基于v1.0.37的性能测试报告](performance-report-9.md)
-
-历史性能测试报告  
-[代理到redis cluster（v1.0.4）](performance-report-1.md)  
-[分片（v1.0.4）](performance-report-2.md)  
-[双写（v1.0.4）](performance-report-3.md)  
-[异常测试（v1.0.4）](performance-report-4.md)  
-[云主机环境测试（v1.0.7）](performance-report-5.md)  
-[使用redis-benchmark（v1.0.8 vs v1.0.9）](performance-report-6-zh.md)    
-[使用网易NPT性能测试平台（v1.0.8 vs v1.0.9）](performance-report-7.md)  
-[基于v1.0.19的性能测试报告](performance-report-8.md)
+[基于v1.0.37的性能测试报告](performance-report.md)
