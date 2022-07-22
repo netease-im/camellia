@@ -64,7 +64,8 @@ camellia主要包括以下功能模块：
 基于redis实现的延迟队列服务：  
 * 独立部署delay-queue-server服务器，支持水平扩展，支持多topic，以http协议对外提供服务
 * 提供了一个java-sdk，并且支持以spring-boot方式快速接入
-* 支持丰富的监控数据
+* 支持丰富的监控数据  
+[快速开始](/docs/delay-queue/delay-queue.md)
 
 ## 版本
 最新版本是1.0.59，已经发布到maven中央仓库（2022/06/21）  
