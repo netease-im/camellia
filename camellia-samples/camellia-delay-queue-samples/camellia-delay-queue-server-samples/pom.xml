@@ -37,11 +37,6 @@
 			<artifactId>camellia-delay-queue-server-spring-boot-starter</artifactId>
 			<version>1.0.60-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-spring-boot-starter</artifactId>
-			<version>1.0.60-SNAPSHOT</version>
-		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
