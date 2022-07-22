@@ -37,10 +37,26 @@ camellia主要包括以下功能模块：
 * 趋势递增的id生成算法（支持设置单元标记，支持多单元id同步）         
 [快速开始](/docs/id-gen/id-gen.md)
 
+### camellia-delay-queue
+基于redis实现的延迟队列服务：
+* 独立部署delay-queue-server服务器，支持水平扩展，支持多topic，以http协议对外提供服务
+* 提供了一个java-sdk，并且支持以spring-boot方式快速接入
+* 支持丰富的监控数据    
+[快速开始](/docs/delay-queue/delay-queue.md)
+
 ### camellia-hbase
 * 基于hbase-client封装的hbase客户端，主要的类是CamelliaHBaseTemplate  
 * 支持读写分离、双（多）写   
 [快速开始](/docs/hbase-template/hbase-template.md)
+
+### camellia-feign
+整合了camellia-core和open-feign，从而你的feign客户端可以：
+* 支持动态路由
+* 支持根据请求参数做自定义路由
+* 支持根据请求参数做自定义负载均衡
+* 支持双写、支持读写分离
+* 支持动态调整参数，如超时时间  
+  [快速开始](/docs/feign/feign.md)
 
 ### camellia-tools
 提供了一些工具类，包括：  
@@ -50,22 +66,6 @@ camellia主要包括以下功能模块：
 * 线程池工具类CamelliaHashedExecutor，提供哈希策略，相同hashKey确保顺序执行   
 * 熔断器工具类CamelliaCircuitBreaker，支持动态配置  
 [快速开始](/docs/tools/tools.md)  
-
-### camellia-feign
-整合了camellia-core和open-feign，从而你的feign客户端可以：
-* 支持动态路由
-* 支持根据请求参数做自定义路由
-* 支持根据请求参数做自定义负载均衡
-* 支持双写、支持读写分离
-* 支持动态调整参数，如超时时间  
-[快速开始](/docs/feign/feign.md)
-
-### camellia-delay-queue
-基于redis实现的延迟队列服务：  
-* 独立部署delay-queue-server服务器，支持水平扩展，支持多topic，以http协议对外提供服务
-* 提供了一个java-sdk，并且支持以spring-boot方式快速接入
-* 支持丰富的监控数据  
-[快速开始](/docs/delay-queue/delay-queue.md)
 
 ## 版本
 最新版本是1.0.59，已经发布到maven中央仓库（2022/06/21）  
