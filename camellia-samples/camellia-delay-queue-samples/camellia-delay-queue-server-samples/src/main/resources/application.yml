@@ -1,0 +1,19 @@
+
+server:
+  port: 8080
+spring:
+  application:
+    name: camellia-delay-queue-server
+
+camellia-redis:
+  type: local
+  local:
+    resource: redis://@127.0.0.1:6379
+  redis-conf:
+    jedis:
+      max-idle: 8
+      min-idle: 0
+      max-active: 8
+      max-wait-millis: 2000
+      timeout: 2000
+

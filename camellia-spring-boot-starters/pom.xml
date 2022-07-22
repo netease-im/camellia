@@ -17,6 +17,7 @@
 
     <modules>
         <module>camellia-dashboard-spring-boot-starter</module>
+        <module>camellia-delay-queue-spring-boot-starters</module>
         <module>camellia-feign-spring-boot-starter</module>
         <module>camellia-id-gen-spring-boot-starters</module>
         <module>camellia-redis-spring-boot-starter</module>

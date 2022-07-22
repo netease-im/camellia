@@ -1,0 +1,10 @@
+
+server:
+  port: 8081
+spring:
+  application:
+    name: camellia-delay-queue-producer
+
+
+camellia-delay-queue-sdk:
+  url: http://127.0.0.1:8080
