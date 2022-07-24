@@ -1,6 +1,6 @@
 
 server:
-  port: 8082
+  port: 8081
 spring:
   application:
     name: camellia-delay-queue-consumer
@@ -8,3 +8,15 @@ spring:
 
 camellia-delay-queue-sdk:
   url: http://127.0.0.1:8080
+  listener-config:
+    ack-timeout-millis: 30000 #消费时告知服务器的消费ack超时时间，默认30s，添加listener时可以单独设置，如果未设置，则走本默认配置
+    pull-batch: 1 #每次pullMsg时的批量大小，默认1，添加listener时可以单独设置，如果未设置，则走本默认配置，需要特别注意pull-batch和ack-timeout-millis的关系，避免消费ack被服务器判断未超时导致重复消费
+    pull-interval-time-millis: 100 #pullMsg的轮询间隔，默认100ms，添加listener时可以单独设置，如果未设置，则走本默认配置
+    pull-threads: 1 #每个listener的默认pullMsg线程数量，默认1，添加listener时可以单独设置，如果未设置，则走本默认配置
+  connect-timeout-millis: 5000 #到server的http超时配置，默认5000，一般不需要特殊配置
+  read-timeout-millis: 5000 #到server的http超时配置，默认5000，一般不需要特殊配置
+  write-timeout-millis: 500 #到server的http超时配置，默认5000，一般不需要特殊配置
+  max-requests: 4096 #到server的http配置，一般不需要特殊配置
+  max-requests-per-host: 1024 #到server的http配置，一般不需要特殊配置
+  max-idle-connections: 1024 #到server的http配置，一般不需要特殊配置
+  keep-alive-seconds: 30 #到server的http配置，一般不需要特殊配置
