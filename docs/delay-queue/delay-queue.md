@@ -74,12 +74,12 @@ spring:
     name: camellia-delay-queue-server
 
 camellia-delay-queue-server:
-  #  namespace: default #命名空间，默认default
-  #  schedule-thread-num: 4 #定时器的线程池大小，默认是cpu数，一般不需要特殊配置
-  #  msg-schedule-millis: 100 #定时器的轮询间隔，代表了延迟消息的时间精确度，默认100ms，一般不需要特殊配置
-  #  topic-schedule-seconds: 600 #扫描topic是否活跃的间隔，默认600s，一般不需要特殊配置
-  #  check-trigger-thread-num: 32 #扫描消息是否可消费的线程池大小，默认是cpu数*4，一般不需要特殊配置
-  #  check-timeout-thread-num: 32 #扫描消息是否消息超时的线程池大小，默认是cpu数*4，一般不需要特殊配置
+#  namespace: default #命名空间，默认default
+#  schedule-thread-num: 4 #定时器的线程池大小，默认是cpu数，一般不需要特殊配置
+#  msg-schedule-millis: 100 #定时器的轮询间隔，代表了延迟消息的时间精确度，默认100ms，一般不需要特殊配置
+#  topic-schedule-seconds: 600 #扫描topic是否活跃的间隔，默认600s，一般不需要特殊配置
+#  check-trigger-thread-num: 32 #扫描消息是否可消费的线程池大小，默认是cpu数*4，一般不需要特殊配置
+#  check-timeout-thread-num: 32 #扫描消息是否消息超时的线程池大小，默认是cpu数*4，一般不需要特殊配置
   ttl-millis: 3600001 #消息延迟时间到达转为可消费状态后，多久没有被成功消费后被删除，默认1h，提交消息时可以对每条消息都设置，如果不设置则走这个默认值
   max-retry: 11 #消息延迟时间到达转为可消费状态后，最多被消费几次后还未成功ack后，也会标记为删除，默认10次，提交消息时可以对每条消息都设置，如果不设置则走这个默认值
   ack-timeout-millis: 30001 #每次消息被消费后的ack超时时间，消费者来拉取时可以设置，如果没有设置，则使用本默认值
@@ -110,6 +110,7 @@ camellia-redis:
       max-active: 16
       max-attempts: 5
       timeout: 2000
+
 ```
 随后，启动即可
 
