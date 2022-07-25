@@ -74,15 +74,15 @@ spring:
     name: camellia-delay-queue-server
 
 camellia-delay-queue-server:
+  ttl-millis: 3600000 #消息延迟时间到达转为可消费状态后，多久没有被成功消费后被删除，默认1h，提交消息时可以对每条消息都设置，如果不设置则走这个默认值
+  max-retry: 10 #消息延迟时间到达转为可消费状态后，最多被消费几次后还未成功ack后，也会标记为删除，默认10次，提交消息时可以对每条消息都设置，如果不设置则走这个默认值
+  ack-timeout-millis: 30000 #每次消息被消费后的ack超时时间，消费者来拉取时可以设置，如果没有设置，则使用本默认值
 #  namespace: default #命名空间，默认default
 #  schedule-thread-num: 4 #定时器的线程池大小，默认是cpu数，一般不需要特殊配置
 #  msg-schedule-millis: 100 #定时器的轮询间隔，代表了延迟消息的时间精确度，默认100ms，一般不需要特殊配置
 #  topic-schedule-seconds: 600 #扫描topic是否活跃的间隔，默认600s，一般不需要特殊配置
 #  check-trigger-thread-num: 32 #扫描消息是否可消费的线程池大小，默认是cpu数*4，一般不需要特殊配置
 #  check-timeout-thread-num: 32 #扫描消息是否消息超时的线程池大小，默认是cpu数*4，一般不需要特殊配置
-  ttl-millis: 3600001 #消息延迟时间到达转为可消费状态后，多久没有被成功消费后被删除，默认1h，提交消息时可以对每条消息都设置，如果不设置则走这个默认值
-  max-retry: 11 #消息延迟时间到达转为可消费状态后，最多被消费几次后还未成功ack后，也会标记为删除，默认10次，提交消息时可以对每条消息都设置，如果不设置则走这个默认值
-  ack-timeout-millis: 30001 #每次消息被消费后的ack超时时间，消费者来拉取时可以设置，如果没有设置，则使用本默认值
 #  end-life-msg-expire-millis: 3000000 #消息到达终态（成功消息or过期or重试次数超限等），消息继续保留用于查询的缓存时间，默认5分钟
 #  topic-active-tag-timeout-millis: 1800000 #一个topic多久不活跃（没有待消费的消息，也没有针对该topic的增删改查操作）会被回收相关资源，默认30分钟
 
@@ -129,7 +129,6 @@ camellia-redis:
 ```
 增加application.yml文件，主要是配置delay-queue-server的地址（可以基于nginx配置一个域名，也可以基于注册中心）
 ```yaml
-
 server:
   port: 8081
 spring:
@@ -141,16 +140,17 @@ camellia-delay-queue-sdk:
   url: http://127.0.0.1:8080
   listener-config:
     ack-timeout-millis: 30000 #消费时告知服务器的消费ack超时时间，默认30s，添加listener时可以单独设置，如果未设置，则走本默认配置
-    pull-batch: 1 #每次pullMsg时的批量大小，默认1，添加listener时可以单独设置，如果未设置，则走本默认配置，需要特别注意pull-batch和ack-timeout-millis的关系，避免消费ack被服务器判断未超时导致重复消费
+    pull-batch: 1 #每次pullMsg时的批量大小，默认1，添加listener时可以单独设置，如果未设置，则走本默认配置，需要特别注意pull-batch和ack-timeout-millis的关系，避免未及时ack被服务器判断超时导致重复消费
     pull-interval-time-millis: 100 #pullMsg的轮询间隔，默认100ms，添加listener时可以单独设置，如果未设置，则走本默认配置
     pull-threads: 1 #每个listener的默认pullMsg线程数量，默认1，添加listener时可以单独设置，如果未设置，则走本默认配置
-  connect-timeout-millis: 5000 #到server的http超时配置，默认5000，一般不需要特殊配置
-  read-timeout-millis: 5000 #到server的http超时配置，默认5000，一般不需要特殊配置
-  write-timeout-millis: 500 #到server的http超时配置，默认5000，一般不需要特殊配置
-  max-requests: 4096 #到server的http配置，一般不需要特殊配置
-  max-requests-per-host: 1024 #到server的http配置，一般不需要特殊配置
-  max-idle-connections: 1024 #到server的http配置，一般不需要特殊配置
-  keep-alive-seconds: 30 #到server的http配置，一般不需要特殊配置
+  http-config:
+    connect-timeout-millis: 5000 #到server的http超时配置，默认5000，一般不需要特殊配置
+    read-timeout-millis: 5000 #到server的http超时配置，默认5000，一般不需要特殊配置
+    write-timeout-millis: 500 #到server的http超时配置，默认5000，一般不需要特殊配置
+    max-requests: 4096 #到server的http配置，一般不需要特殊配置
+    max-requests-per-host: 1024 #到server的http配置，一般不需要特殊配置
+    max-idle-connections: 1024 #到server的http配置，一般不需要特殊配置
+    keep-alive-seconds: 30 #到server的http配置，一般不需要特殊配置
 ```
 编写生产入口代码，spring会自动注入CamelliaDelayQueueSdk  
 ```java
@@ -186,7 +186,6 @@ public class ProducerController {
 ```
 增加application.yml文件，主要是配置delay-queue-server的地址（可以基于nginx配置一个域名，也可以基于注册中心）
 ```yaml
-
 server:
   port: 8081
 spring:
@@ -198,16 +197,17 @@ camellia-delay-queue-sdk:
   url: http://127.0.0.1:8080
   listener-config:
     ack-timeout-millis: 30000 #消费时告知服务器的消费ack超时时间，默认30s，添加listener时可以单独设置，如果未设置，则走本默认配置
-    pull-batch: 1 #每次pullMsg时的批量大小，默认1，添加listener时可以单独设置，如果未设置，则走本默认配置，需要特别注意pull-batch和ack-timeout-millis的关系，避免消费ack被服务器判断未超时导致重复消费
+    pull-batch: 1 #每次pullMsg时的批量大小，默认1，添加listener时可以单独设置，如果未设置，则走本默认配置，需要特别注意pull-batch和ack-timeout-millis的关系，避免未及时ack被服务器判断超时导致重复消费
     pull-interval-time-millis: 100 #pullMsg的轮询间隔，默认100ms，添加listener时可以单独设置，如果未设置，则走本默认配置
     pull-threads: 1 #每个listener的默认pullMsg线程数量，默认1，添加listener时可以单独设置，如果未设置，则走本默认配置
-  connect-timeout-millis: 5000 #到server的http超时配置，默认5000，一般不需要特殊配置
-  read-timeout-millis: 5000 #到server的http超时配置，默认5000，一般不需要特殊配置
-  write-timeout-millis: 500 #到server的http超时配置，默认5000，一般不需要特殊配置
-  max-requests: 4096 #到server的http配置，一般不需要特殊配置
-  max-requests-per-host: 1024 #到server的http配置，一般不需要特殊配置
-  max-idle-connections: 1024 #到server的http配置，一般不需要特殊配置
-  keep-alive-seconds: 30 #到server的http配置，一般不需要特殊配置
+  http-config:
+    connect-timeout-millis: 5000 #到server的http超时配置，默认5000，一般不需要特殊配置
+    read-timeout-millis: 5000 #到server的http超时配置，默认5000，一般不需要特殊配置
+    write-timeout-millis: 500 #到server的http超时配置，默认5000，一般不需要特殊配置
+    max-requests: 4096 #到server的http配置，一般不需要特殊配置
+    max-requests-per-host: 1024 #到server的http配置，一般不需要特殊配置
+    max-idle-connections: 1024 #到server的http配置，一般不需要特殊配置
+    keep-alive-seconds: 30 #到server的http配置，一般不需要特殊配置
 ```
 编写CamelliaDelayMsgListener：
 ```java
@@ -281,6 +281,11 @@ public class TestMain {
 }
 ```
 
+## 一个简单的性能测试
+* 台式机（cpu=i5-10500），使用idea直接跑（没有调启动参数），先启动camellia-delay-queue-server-samples，再启动PerformanceTest.java（源码见 [sample-code](/camellia-samples/camellia-delay-queue-samples)）  
+* 100个topic，每个topic1000条消息，每个topic设置10个消费线程，每条消息延迟10s-70s不等（随机），10w条消息在41s内发送完毕  
+* 消费端的延迟（实际消费时间和预期消费时间的GAP），平均43ms，最大798ms，可以看到没有delay不稳定的情况  
+
 ## 接口文档
 对于java客户端，使用sdk基本满足了需求，如果是其他语言，可以基于delay-queue-server的服务器api自行封装sdk  
 服务器接口文档如下：  
@@ -292,6 +297,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 |参数|类型|是否必填|说明|
 |:---:|:---:|:---:|:---:|
 |topic|string|是|topic|
+|msgId|string|否|消息id，topic内唯一，如果不填则由服务器生成|
 |msg|string|是|消息内容|
 |delayMillis|number|是|延迟时间，单位ms|
 |ttlMillis|number|否|过期时间，单位ms，若不填或者小于等于0，则使用服务器默认配置（可以在服务器的application.yml里配置）|

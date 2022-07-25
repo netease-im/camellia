@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.delayqueue.sdk.springboot;
 
 import com.netease.nim.camellia.delayqueue.sdk.CamelliaDelayMsgListener;
-import com.netease.nim.camellia.delayqueue.sdk.CamelliaDelayMsgListenerConfig;
 import com.netease.nim.camellia.delayqueue.sdk.CamelliaDelayQueueSdk;
 import com.netease.nim.camellia.delayqueue.sdk.CamelliaDelayQueueSdkConfig;
 import com.netease.nim.camellia.delayqueue.sdk.api.DelayQueueServerDiscovery;
@@ -34,24 +33,24 @@ public class CamelliaDelayQueueSdkConfiguration implements ApplicationContextAwa
         sdkConfig.setUrl(properties.getUrl());
         sdkConfig.setListenerConfig(properties.getListenerConfig());
         sdkConfig.setDiscoveryReloadIntervalSeconds(properties.getDiscoveryReloadIntervalSeconds());
-        sdkConfig.setConnectTimeoutMillis(properties.getConnectTimeoutMillis());
-        sdkConfig.setReadTimeoutMillis(properties.getReadTimeoutMillis());
-        sdkConfig.setWriteTimeoutMillis(properties.getWriteTimeoutMillis());
-        sdkConfig.setMaxIdleConnections(properties.getMaxIdleConnections());
-        sdkConfig.setMaxRequests(properties.getMaxRequests());
-        sdkConfig.setMaxRequestsPerHost(properties.getMaxRequestsPerHost());
-        sdkConfig.setKeepAliveSeconds(properties.getKeepAliveSeconds());
+        sdkConfig.getHttpConfig().setConnectTimeoutMillis(properties.getHttpConfig().getConnectTimeoutMillis());
+        sdkConfig.getHttpConfig().setReadTimeoutMillis(properties.getHttpConfig().getReadTimeoutMillis());
+        sdkConfig.getHttpConfig().setWriteTimeoutMillis(properties.getHttpConfig().getWriteTimeoutMillis());
+        sdkConfig.getHttpConfig().setMaxIdleConnections(properties.getHttpConfig().getMaxIdleConnections());
+        sdkConfig.getHttpConfig().setMaxRequests(properties.getHttpConfig().getMaxRequests());
+        sdkConfig.getHttpConfig().setMaxRequestsPerHost(properties.getHttpConfig().getMaxRequestsPerHost());
+        sdkConfig.getHttpConfig().setKeepAliveSeconds(properties.getHttpConfig().getKeepAliveSeconds());
         Map<String, CamelliaDelayMsgListener> beans = applicationContext.getBeansOfType(CamelliaDelayMsgListener.class);
         CamelliaDelayQueueSdk sdk = new CamelliaDelayQueueSdk(sdkConfig);
 
         for (CamelliaDelayMsgListener listener : beans.values()) {
-            com.netease.nim.camellia.delayqueue.sdk.springboot.CamelliaDelayMsgListenerConfig config = listener.getClass().getAnnotation(com.netease.nim.camellia.delayqueue.sdk.springboot.CamelliaDelayMsgListenerConfig.class);
+            CamelliaDelayMsgListenerConfig config = listener.getClass().getAnnotation(CamelliaDelayMsgListenerConfig.class);
             if (config != null) {
-                CamelliaDelayMsgListenerConfig listenerConfig = new CamelliaDelayMsgListenerConfig();
-                listenerConfig.setAckTimeoutMillis(config.ackTimeoutMillis());
-                listenerConfig.setPullBatch(config.pullBatch());
-                listenerConfig.setPullThreads(config.pullThreads());
-                listenerConfig.setPullIntervalTimeMillis(config.pullIntervalTimeMillis());
+                com.netease.nim.camellia.delayqueue.sdk.CamelliaDelayMsgListenerConfig listenerConfig = new com.netease.nim.camellia.delayqueue.sdk.CamelliaDelayMsgListenerConfig();
+                listenerConfig.setAckTimeoutMillis(config.ackTimeoutMillis() < 0 ? sdkConfig.getListenerConfig().getAckTimeoutMillis() : config.ackTimeoutMillis());
+                listenerConfig.setPullBatch(config.pullBatch() < 0 ? sdkConfig.getListenerConfig().getPullBatch() : config.pullBatch());
+                listenerConfig.setPullThreads(config.pullThreads() < 0 ? sdkConfig.getListenerConfig().getPullThreads() : config.pullThreads());
+                listenerConfig.setPullIntervalTimeMillis(config.pullIntervalTimeMillis() < 0 ? sdkConfig.getListenerConfig().getPullIntervalTimeMillis() : config.pullIntervalTimeMillis());
                 sdk.addMsgListener(config.topic(), listenerConfig, listener);
             }
         }

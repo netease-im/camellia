@@ -27,7 +27,33 @@ public class CamelliaDelayQueueSdk {
     public CamelliaDelayQueueSdk(CamelliaDelayQueueSdkConfig sdkConfig) {
         this.sdkConfig = sdkConfig;
         this.api = new CamelliaDelayQueueApi(sdkConfig);
-        logger.info("CamelliaDelayQueueSdk init success");
+        logger.info("CamelliaDelayQueueSdk init success, sdkConfig = {}", JSONObject.toJSONString(sdkConfig));
+    }
+
+    /**
+     * 发送一条延迟消息
+     * @param topic topic
+     * @param msgId 消息id，topic内唯一，如果不填则由服务器生成
+     * @param msg 消息
+     * @param delayMillis 延迟时间，单位ms，如果小于等于0，表示立即消费
+     * @param ttlMillis 过期时间，单位ms，如果小于等于0，则取服务器配置
+     * @param maxRetry 消费最大重试次数，如果小于0，则取服务器配置
+     * @return CamelliaDelayMsg
+     */
+    public CamelliaDelayMsg sendMsg(String topic, String msgId, String msg, long delayMillis, long ttlMillis, int maxRetry) {
+        CamelliaDelayMsgSendRequest request = new CamelliaDelayMsgSendRequest();
+        request.setTopic(topic);
+        request.setMsg(msg);
+        request.setDelayMillis(delayMillis);
+        request.setTtlMillis(ttlMillis);
+        request.setMaxRetry(maxRetry);
+        request.setMsgId(msgId);
+        CamelliaDelayMsgSendResponse response = api.sendMsg(request);
+        CamelliaDelayMsgErrorCode errorCode = CamelliaDelayMsgErrorCode.getByValue(response.getCode());
+        if (errorCode == CamelliaDelayMsgErrorCode.SUCCESS) {
+            return response.getDelayMsg();
+        }
+        throw new CamelliaDelayQueueException(errorCode, response.getMsg());
     }
 
     /**
@@ -40,18 +66,23 @@ public class CamelliaDelayQueueSdk {
      * @return CamelliaDelayMsg
      */
     public CamelliaDelayMsg sendMsg(String topic, String msg, long delayMillis, long ttlMillis, int maxRetry) {
-        CamelliaDelayMsgSendRequest request = new CamelliaDelayMsgSendRequest();
-        request.setTopic(topic);
-        request.setMsg(msg);
-        request.setDelayMillis(delayMillis);
-        request.setTtlMillis(ttlMillis);
-        request.setMaxRetry(maxRetry);
-        CamelliaDelayMsgSendResponse response = api.sendMsg(request);
-        CamelliaDelayMsgErrorCode errorCode = CamelliaDelayMsgErrorCode.getByValue(response.getCode());
-        if (errorCode == CamelliaDelayMsgErrorCode.SUCCESS) {
-            return response.getDelayMsg();
-        }
-        throw new CamelliaDelayQueueException(errorCode, response.getMsg());
+        return sendMsg(topic, null, msg, delayMillis, ttlMillis, maxRetry);
+    }
+
+    /**
+     * 发送一条延迟消息
+     * @param topic topic
+     * @param msgId 消息id，topic内唯一，如果不填则由服务器生成
+     * @param msg 数据
+     * @param delay 延迟的时间
+     * @param delayTimeUnit 延迟的时间单位
+     * @param ttl 延迟到期后消息的过期时间
+     * @param ttlTimeUnit 延迟到期后消息的过期时间的单位
+     * @param maxRetry 消费最大重试次数，如果小于0，则取服务器配置
+     * @return CamelliaDelayMsg
+     */
+    public CamelliaDelayMsg sendMsg(String topic, String msgId, String msg, long delay, TimeUnit delayTimeUnit, long ttl, TimeUnit ttlTimeUnit, int maxRetry) {
+        return sendMsg(topic, msgId, msg, delayTimeUnit.toMillis(delay), ttlTimeUnit.toMillis(ttl), maxRetry);
     }
 
     /**
@@ -95,12 +126,37 @@ public class CamelliaDelayQueueSdk {
     /**
      * 发送一条延迟消息
      * @param topic topic
+     * @param msgId 消息id，topic内唯一，如果不填则由服务器生成
+     * @param msg 数据
+     * @param delay 延迟的时间
+     * @param delayTimeUnit 延迟的时间单位
+     * @return CamelliaDelayMsg
+     */
+    public CamelliaDelayMsg sendMsg(String topic, String msgId, String msg, long delay, TimeUnit delayTimeUnit) {
+        return sendMsg(topic, msgId, msg, delayTimeUnit.toMillis(delay), -1, -1);
+    }
+
+    /**
+     * 发送一条延迟消息
+     * @param topic topic
      * @param msg 数据
      * @param triggerTime 消费的时间戳，单位ms
      * @return CamelliaDelayMsg
      */
     public CamelliaDelayMsg sendMsgByTriggerTime(String topic, String msg, long triggerTime) {
         return sendMsg(topic, msg, triggerTime - System.currentTimeMillis(), -1, -1);
+    }
+
+    /**
+     * 发送一条延迟消息
+     * @param topic topic
+     * @param msgId 消息id，topic内唯一，如果不填则由服务器生成
+     * @param msg 数据
+     * @param triggerTime 消费的时间戳，单位ms
+     * @return CamelliaDelayMsg
+     */
+    public CamelliaDelayMsg sendMsgByTriggerTime(String topic, String msgId, String msg, long triggerTime) {
+        return sendMsg(topic, msgId, msg, triggerTime - System.currentTimeMillis(), -1, -1);
     }
 
     /**
@@ -245,6 +301,7 @@ public class CamelliaDelayQueueSdk {
                                     try {
                                         ack = listener.onMsg(delayMsg);
                                     } catch (Exception e) {
+                                        logger.error("listener onMsg error, will ack false and retry, delayMsg = {}", JSONObject.toJSONString(delayMsg), e);
                                         ack = false;
                                     }
                                     CamelliaDelayMsgAckRequest ackRequest = new CamelliaDelayMsgAckRequest();

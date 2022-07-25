@@ -72,7 +72,11 @@ public class CamelliaDelayQueueServer {
             CamelliaDelayMsg msg = new CamelliaDelayMsg();
             msg.setTopic(topic);
             msg.setMsg(request.getMsg());
-            msg.setMsgId(genMsgId());
+            if (request.getMsgId() == null) {
+                msg.setMsgId(genMsgId());
+            } else {
+                msg.setMsgId(request.getMsgId());
+            }
             long now = System.currentTimeMillis();
             msg.setProduceTime(now);
             long delayMillis = request.getDelayMillis();

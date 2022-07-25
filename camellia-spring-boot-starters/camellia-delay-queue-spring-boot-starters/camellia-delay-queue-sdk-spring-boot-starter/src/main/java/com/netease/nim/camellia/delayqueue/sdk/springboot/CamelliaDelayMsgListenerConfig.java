@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.delayqueue.sdk.springboot;
 
-import com.netease.nim.camellia.delayqueue.common.conf.CamelliaDelayQueueConstants;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -16,11 +15,11 @@ public @interface CamelliaDelayMsgListenerConfig {
 
     String topic();
 
-    long ackTimeoutMillis() default CamelliaDelayQueueConstants.ackTimeoutMillis;
+    long ackTimeoutMillis() default -1;//小于0则使用sdk默认值
 
-    int pullBatch() default CamelliaDelayQueueConstants.pullBatch;
+    int pullBatch() default -1;//小于0则使用sdk默认值
 
-    int pullIntervalTimeMillis() default CamelliaDelayQueueConstants.pullIntervalTimeMillis;//轮询间隔，单位ms，默认100ms
+    int pullIntervalTimeMillis() default -1;//小于0则使用sdk默认值
 
-    int pullThreads() default CamelliaDelayQueueConstants.pullThreads;//pull线程池大小，默认1
+    int pullThreads() default -1;//小于0则使用sdk默认值
 }

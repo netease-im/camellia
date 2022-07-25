@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+       <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+              <encoder>
+                     <pattern>%d %-5p %t %X %c{1}:%L - %m%n</pattern>
+              </encoder>
+       </appender>
+
+       <logger name="com.netease.nim" level="INFO" additivity="false" >
+              <appender-ref ref="STDOUT" />
+       </logger>
+       <root level="INFO">
+              <appender-ref ref="STDOUT" />
+       </root>
+
+</configuration>

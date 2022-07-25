@@ -7,6 +7,8 @@ public class CamelliaDelayMsgSendRequest {
 
     //归属的topic
     private String topic;
+    //消息id，如果不填，则由服务器生成，如果客户端生成，则需要自己保证唯一性，如果相同的msgId，则服务器会覆盖
+    private String msgId;
     //消息内容
     private String msg;
     //延迟时长，单位ms
@@ -22,6 +24,14 @@ public class CamelliaDelayMsgSendRequest {
 
     public void setTopic(String topic) {
         this.topic = topic;
+    }
+
+    public String getMsgId() {
+        return msgId;
+    }
+
+    public void setMsgId(String msgId) {
+        this.msgId = msgId;
     }
 
     public String getMsg() {

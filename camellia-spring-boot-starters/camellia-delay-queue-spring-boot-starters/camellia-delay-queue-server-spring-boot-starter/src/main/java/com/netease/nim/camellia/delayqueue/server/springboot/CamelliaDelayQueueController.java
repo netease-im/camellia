@@ -24,12 +24,14 @@ public class CamelliaDelayQueueController {
 
     @PostMapping("/sendMsg")
     public CamelliaDelayMsgSendResponse sendMsg(@RequestParam("topic") String topic,
+                                                @RequestParam(value = "msgId", required = false) String msgId,
                                                 @RequestParam("msg") String msg,
                                                 @RequestParam("delayMillis") long delayMillis,
                                                 @RequestParam(value = "ttlMillis", required = false, defaultValue = "-1") long ttlMillis,
                                                 @RequestParam(value = "maxRetry", required = false, defaultValue = "-1") int maxRetry) {
         CamelliaDelayMsgSendRequest request = new CamelliaDelayMsgSendRequest();
         request.setTopic(topic);
+        request.setMsgId(msgId);
         request.setMsg(msg);
         request.setDelayMillis(delayMillis);
         request.setTtlMillis(ttlMillis);

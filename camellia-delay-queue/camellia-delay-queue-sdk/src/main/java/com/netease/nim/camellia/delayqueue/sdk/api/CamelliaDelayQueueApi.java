@@ -89,8 +89,9 @@ public class CamelliaDelayQueueApi {
         });
     }
 
-    private OkHttpClient initOkHttpClient(CamelliaDelayQueueSdkConfig config) {
+    private OkHttpClient initOkHttpClient(CamelliaDelayQueueSdkConfig sdkConfig) {
         Dispatcher dispatcher = new Dispatcher();
+        CamelliaDelayQueueSdkConfig.CamelliaDelayMsgHttpConfig config = sdkConfig.getHttpConfig();
         dispatcher.setMaxRequests(config.getMaxRequests());
         dispatcher.setMaxRequestsPerHost(config.getMaxRequestsPerHost());
         return new OkHttpClient.Builder()
@@ -177,6 +178,9 @@ public class CamelliaDelayQueueApi {
             params.put("delayMillis", request.getDelayMillis());
             params.put("ttlMillis", request.getTtlMillis());
             params.put("maxRetry", request.getMaxRetry());
+            if (request.getMsgId() != null) {
+                params.put("msgId", request.getMsgId());
+            }
             return invoke(okHttpClient, server.getUrl() + "/camellia/delayQueue/sendMsg",
                     params, CamelliaDelayMsgSendResponse.class);
         } catch (Exception e) {
