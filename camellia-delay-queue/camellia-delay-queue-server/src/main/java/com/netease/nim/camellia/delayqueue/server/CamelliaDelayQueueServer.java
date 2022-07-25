@@ -104,7 +104,19 @@ public class CamelliaDelayQueueServer {
                 msg.setMaxRetry(maxRetry);
             }
             //消息存储
-            saveOrUpdateMsg(msg, false);
+            boolean ok = saveOrUpdateMsg(msg, true, false);
+            if (!ok) {
+                //如果已经存在了，则返回老消息，用于消息去重
+                String msgKey = msgKey(topic, msg.getMsgId());
+                String value = template.get(msgKey);
+                CamelliaDelayMsg delayMsg = JSONObject.parseObject(value, CamelliaDelayMsg.class);
+                CamelliaDelayMsgSendResponse response = new CamelliaDelayMsgSendResponse();
+                response.setCode(CamelliaDelayMsgErrorCode.SUCCESS.getValue());
+                response.setMsg("success");
+                response.setDelayMsg(delayMsg);
+                CamelliaDelayQueueMonitor.sendMsg(request, response);
+                return response;
+            }
             if (msg.getStatus() == CamelliaDelayMsgStatus.WAITING.getValue()) {
                 //如果是等待状态，则塞到zset中
                 String waitingQueueKey = waitingQueueKey(msg.getTopic());
@@ -247,7 +259,7 @@ public class CamelliaDelayQueueServer {
             if (!result.inLifeMsgMap.isEmpty()) {
                 CamelliaDelayMsg delayMsg = result.inLifeMsgMap.get(msgId);
                 delayMsg.setStatus(CamelliaDelayMsgStatus.DELETE.getValue());
-                saveOrUpdateMsg(delayMsg, true);
+                saveOrUpdateMsg(delayMsg, false,true);
                 response.setCode(CamelliaDelayMsgErrorCode.SUCCESS.getValue());
                 response.setMsg("success");
                 CamelliaDelayQueueMonitor.deleteMsg(request, response);
@@ -336,7 +348,7 @@ public class CamelliaDelayQueueServer {
                 if (value != null) {
                     CamelliaDelayMsg delayMsg = JSONObject.parseObject(value, CamelliaDelayMsg.class);
                     delayMsg.setStatus(CamelliaDelayMsgStatus.CONSUME_OK.getValue());
-                    saveOrUpdateMsg(delayMsg, true);
+                    saveOrUpdateMsg(delayMsg, false,true);
                 }
                 String ackQueueKey = ackQueueKey(topic);
                 template.zrem(ackQueueKey, msgId);
@@ -720,7 +732,7 @@ public class CamelliaDelayQueueServer {
                 } else {
                     delayMsg.setStatus(CamelliaDelayMsgStatus.RETRY_EXHAUST.getValue());
                 }
-                saveOrUpdateMsg(delayMsg, true);
+                saveOrUpdateMsg(delayMsg, false, true);
                 result.endLifeMsgMap.put(delayMsg.getMsgId(), delayMsg);
                 continue;
             }
@@ -729,14 +741,14 @@ public class CamelliaDelayQueueServer {
                 //如果超过了最大重试次数，则设置为RETRY_EXHAUST
                 if (retry > delayMsg.getMaxRetry()) {
                     delayMsg.setStatus(CamelliaDelayMsgStatus.RETRY_EXHAUST.getValue());
-                    saveOrUpdateMsg(delayMsg, true);
+                    saveOrUpdateMsg(delayMsg, false, true);
                     result.endLifeMsgMap.put(delayMsg.getMsgId(), delayMsg);
                     continue;
                 }
                 //设置为CONSUMING，并返回
                 delayMsg.setStatus(CamelliaDelayMsgStatus.CONSUMING.getValue());
                 delayMsg.setRetry(retry + 1);
-                saveOrUpdateMsg(delayMsg, false);
+                saveOrUpdateMsg(delayMsg, false, false);
             }
             result.inLifeMsgMap.put(delayMsg.getMsgId(), delayMsg);
         }
@@ -746,13 +758,19 @@ public class CamelliaDelayQueueServer {
         return result;
     }
 
-    private void saveOrUpdateMsg(CamelliaDelayMsg delayMsg, boolean endLife) {
+    private boolean saveOrUpdateMsg(CamelliaDelayMsg delayMsg, boolean checkExists, boolean endLife) {
         long now = System.currentTimeMillis();
         String msgKey = msgKey(delayMsg.getTopic(), delayMsg.getMsgId());
-        if (!endLife) {
-            template.psetex(msgKey, delayMsg.getExpireTime() - now + serverConfig.getEndLifeMsgExpireMillis() * 3, JSONObject.toJSONString(delayMsg));
+        if (checkExists) {
+            String set = template.set(msgKey, JSONObject.toJSONString(delayMsg), "NX", "PX", delayMsg.getExpireTime() - now + serverConfig.getEndLifeMsgExpireMillis() * 3);
+            return set != null && set.equalsIgnoreCase("ok");
         } else {
-            template.psetex(msgKey, serverConfig.getEndLifeMsgExpireMillis(), JSONObject.toJSONString(delayMsg));
+            if (!endLife) {
+                template.psetex(msgKey, delayMsg.getExpireTime() - now + serverConfig.getEndLifeMsgExpireMillis() * 3, JSONObject.toJSONString(delayMsg));
+            } else {
+                template.psetex(msgKey, serverConfig.getEndLifeMsgExpireMillis(), JSONObject.toJSONString(delayMsg));
+            }
+            return true;
         }
     }
 

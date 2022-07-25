@@ -19,7 +19,7 @@
 * topic，delay-queue-server通过topic来区分不同的延迟队列
 * namespace，每个delay-queue-server都会有一个命名空间，不同的server可以通过不同的redis地址来隔离，也可以通过不同的namespace来隔离
 * msg，提交给delay-queue-server的消息，是一个字符串，不建议太长，避免占用过多的redis内存资源
-* msgId，用于标识一条消息（topic内唯一），可以发送消息时指定，也可以不指定由服务器生成，当客户端指定时，相同msgId的消息重复发送会直接覆盖，此外，你可以基于这个msgId去进行查询和删除msg
+* msgId，用于标识一条消息（topic内唯一），可以发送消息时指定，也可以不指定由服务器生成，当客户端指定时，相同msgId的消息重复发送会被去重（只有第一次能成功），此外，你可以基于这个msgId去进行查询和删除msg
 * delayMillis，消息的延迟时间，单位ms，表示提交msg之后多久可以被消费
 * ttlMillis，表示消息的过期时间，指的是消息状态转变为可消费后，多久之内如果未被成功消费，则会被删除
 * maxRetry，表示消费时的最大重试次数，最多消费次数是maxRetry+1，ttlMillis和maxRetry任一一个满足，消息将不再被投递给消费者
@@ -297,7 +297,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 |参数|类型|是否必填|说明|
 |:---:|:---:|:---:|:---:|
 |topic|string|是|topic|
-|msgId|string|否|消息id，topic内唯一，如果不填则由服务器生成|
+|msgId|string|否|消息id，topic内唯一，如果不填则由服务器生成；相同msgId的消息重复发送会被去重（只有第一次有效）|
 |msg|string|是|消息内容|
 |delayMillis|number|是|延迟时间，单位ms|
 |ttlMillis|number|否|过期时间，单位ms，若不填或者小于等于0，则使用服务器默认配置（可以在服务器的application.yml里配置）|
