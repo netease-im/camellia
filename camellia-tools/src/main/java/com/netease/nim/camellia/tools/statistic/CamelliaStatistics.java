@@ -21,7 +21,15 @@ public class CamelliaStatistics {
     public CamelliaStatsData getStatsDataAndReset() {
         long sum = this.sum.sumThenReset();
         long count = this.count.sumThenReset();
-        long max = maxValue.getAndSet(0);
+        long max = this.maxValue.getAndSet(0);
+        double avg = (double) sum / count;
+        return new CamelliaStatsData(count, avg, max, sum);
+    }
+
+    public CamelliaStatsData getStatsData() {
+        long sum = this.sum.sum();
+        long count = this.count.sum();
+        long max = maxValue.get();
         double avg = (double) sum / count;
         return new CamelliaStatsData(count, avg, max, sum);
     }
