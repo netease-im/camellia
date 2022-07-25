@@ -108,8 +108,7 @@ public class PerformanceTest {
         System.out.println("total statistics");
         long produceCount = msgNum*topicNum;
         double produceSpend = (produceEnd - produceStart) / 1000000.0;
-        double produceQps = produceSpend / produceCount;
         System.out.println("produce-count=" + produceCount + ",produce-spend-time=" + produceSpend + "ms");
-        System.out.println("consumer-time-gap=" + JSONObject.toJSONString(statistics));
+        System.out.println("consumer-time-gap=" + JSONObject.toJSONString(statistics.getStatsDataAndReset()));
     }
 }

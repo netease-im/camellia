@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
  * Created by caojiajun on 2022/7/21
  */
 @Component
-@CamelliaDelayMsgListenerConfig(topic = "topic1")
+@CamelliaDelayMsgListenerConfig(topic = "topic1", pullThreads = 3)
 public class ConsumerService1 implements CamelliaDelayMsgListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ConsumerService1.class);

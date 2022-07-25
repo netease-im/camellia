@@ -15,11 +15,11 @@ public @interface CamelliaDelayMsgListenerConfig {
 
     String topic();
 
-    long ackTimeoutMillis() default -1;//小于0则使用sdk默认值
+    long ackTimeoutMillis() default -1;//小于等于0则使用sdk默认值
 
-    int pullBatch() default -1;//小于0则使用sdk默认值
+    int pullBatch() default -1;//小于等于0则使用sdk默认值
 
-    int pullIntervalTimeMillis() default -1;//小于0则使用sdk默认值
+    int pullIntervalTimeMillis() default -1;//小于等于0则使用sdk默认值
 
-    int pullThreads() default -1;//小于0则使用sdk默认值
+    int pullThreads() default -1;//小于等于0则使用sdk默认值
 }

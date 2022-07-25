@@ -217,7 +217,7 @@ camellia-delay-queue-sdk:
  * Created by caojiajun on 2022/7/21
  */
 @Component
-@CamelliaDelayMsgListenerConfig(topic = "topic1")
+@CamelliaDelayMsgListenerConfig(topic = "topic1", pullThreads = 3)
 public class ConsumerService1 implements CamelliaDelayMsgListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ConsumerService1.class);
@@ -300,8 +300,8 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 |msgId|string|否|消息id，topic内唯一，如果不填则由服务器生成；相同msgId的消息重复发送会被去重（只有第一次有效）|
 |msg|string|是|消息内容|
 |delayMillis|number|是|延迟时间，单位ms|
-|ttlMillis|number|否|过期时间，单位ms，若不填或者小于等于0，则使用服务器默认配置（可以在服务器的application.yml里配置）|
-|maxRetry|number|否|消费最大重试次数，若不填或者小于0，则使用服务器默认配置（可以在服务器的application.yml里配置）|
+|ttlMillis|number|否|过期时间，单位ms，若不填或者小于等于0，则使用服务器默认配置|
+|maxRetry|number|否|消费最大重试次数，若不填或者小于0，则使用服务器默认配置|
 
 响应  
 ```json
@@ -347,8 +347,8 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 |参数|类型|是否必填|说明|
 |:---:|:---:|:---:|:---:|
 |topic|string|是|topic|
-|ackTimeoutMillis|number|否|拉到的消息，多久之内ack，如果超时未ack，服务器将重试，如果不填或者小于0则使用服务器默认配置（可以在服务器的application.yml里配置）|
-|batch|number|否|最多拉多少条，如果不填或者小于0则使用服务器默认配置（可以在服务器的application.yml里配置）|
+|ackTimeoutMillis|number|否|拉到的消息，多久之内ack，如果超时未ack，服务器将重试，如果不填或者小于0则使用服务器默认配置|
+|batch|number|否|最多拉多少条，如果不填或者小于0则使用服务器默认配置|
 
 响应
 ```json

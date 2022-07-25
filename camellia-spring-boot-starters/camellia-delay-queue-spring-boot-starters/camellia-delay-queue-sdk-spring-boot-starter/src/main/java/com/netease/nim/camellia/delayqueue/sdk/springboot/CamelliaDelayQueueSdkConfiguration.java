@@ -47,10 +47,10 @@ public class CamelliaDelayQueueSdkConfiguration implements ApplicationContextAwa
             CamelliaDelayMsgListenerConfig config = listener.getClass().getAnnotation(CamelliaDelayMsgListenerConfig.class);
             if (config != null) {
                 com.netease.nim.camellia.delayqueue.sdk.CamelliaDelayMsgListenerConfig listenerConfig = new com.netease.nim.camellia.delayqueue.sdk.CamelliaDelayMsgListenerConfig();
-                listenerConfig.setAckTimeoutMillis(config.ackTimeoutMillis() < 0 ? sdkConfig.getListenerConfig().getAckTimeoutMillis() : config.ackTimeoutMillis());
-                listenerConfig.setPullBatch(config.pullBatch() < 0 ? sdkConfig.getListenerConfig().getPullBatch() : config.pullBatch());
-                listenerConfig.setPullThreads(config.pullThreads() < 0 ? sdkConfig.getListenerConfig().getPullThreads() : config.pullThreads());
-                listenerConfig.setPullIntervalTimeMillis(config.pullIntervalTimeMillis() < 0 ? sdkConfig.getListenerConfig().getPullIntervalTimeMillis() : config.pullIntervalTimeMillis());
+                listenerConfig.setAckTimeoutMillis(config.ackTimeoutMillis() <= 0 ? sdkConfig.getListenerConfig().getAckTimeoutMillis() : config.ackTimeoutMillis());
+                listenerConfig.setPullBatch(config.pullBatch() <= 0 ? sdkConfig.getListenerConfig().getPullBatch() : config.pullBatch());
+                listenerConfig.setPullThreads(config.pullThreads() <= 0 ? sdkConfig.getListenerConfig().getPullThreads() : config.pullThreads());
+                listenerConfig.setPullIntervalTimeMillis(config.pullIntervalTimeMillis() <= 0 ? sdkConfig.getListenerConfig().getPullIntervalTimeMillis() : config.pullIntervalTimeMillis());
                 sdk.addMsgListener(config.topic(), listenerConfig, listener);
             }
         }
