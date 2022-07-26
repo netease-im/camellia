@@ -39,6 +39,9 @@ public class CamelliaDelayQueueConstants {
     //服务器判断一个topic不活跃后，多久回收相关资源，单位ms，默认30分钟
     public static final long topicActiveTagTimeoutMillis = 30*60*1000L;
 
+    //服务器监控数据刷新周期，默认1分钟
+    public static final int monitorIntervalSeconds = 60;
+
     //sdk每次pull消息的批量大小，默认1
     public static final int pullBatch = 1;
 

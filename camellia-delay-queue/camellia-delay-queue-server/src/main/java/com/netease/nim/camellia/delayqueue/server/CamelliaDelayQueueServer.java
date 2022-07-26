@@ -54,6 +54,7 @@ public class CamelliaDelayQueueServer {
 
         startSchedule();
         logger.info("CamelliaDelayQueueServer start success, config = {}", JSONObject.toJSONString(serverConfig));
+        CamelliaDelayQueueMonitor.init(serverConfig.getMonitorIntervalSeconds());
     }
 
     /**
@@ -393,11 +394,38 @@ public class CamelliaDelayQueueServer {
         String readyQueueKey = readyQueueKey(topic);
         String ackQueueKey = ackQueueKey(topic);
         try (ICamelliaRedisPipeline pipeline = template.pipelined()) {
+            long now = System.currentTimeMillis();
+            Response<Long> min1 = pipeline.zcount(waitingQueueKey, 0, now + 60*1000L);
+            Response<Long> min10 = pipeline.zcount(waitingQueueKey, now + 60*1000L, now + 10*60*1000L);
+            Response<Long> min30 = pipeline.zcount(waitingQueueKey, now + 10*60*1000L, now + 30*60*1000L);
+            Response<Long> hour1 = pipeline.zcount(waitingQueueKey, now + 30*60*1000L, now + 60*60*1000L);
+            Response<Long> hour6 = pipeline.zcount(waitingQueueKey, now + 60*60*1000L, now + 6*60*60*1000L);
+            Response<Long> day1 = pipeline.zcount(waitingQueueKey, now + 6*60*60*1000L, now + 24*60*60*1000L);
+            Response<Long> day7 = pipeline.zcount(waitingQueueKey, now + 24*60*60*1000L, now + 7*24*60*60*1000L);
+            Response<Long> day30 = pipeline.zcount(waitingQueueKey, now + 7*24*60*60*1000L, 30*24*60*60*1000L);
+            Response<Long> dayN = pipeline.zcount(waitingQueueKey, now + 30*24*60*60*1000L, Long.MAX_VALUE);
             Response<Long> waitingQueueSize = pipeline.zcard(waitingQueueKey);
             Response<Long> readyQueueSize = pipeline.llen(readyQueueKey);
             Response<Long> ackQueueSize = pipeline.zcard(ackQueueKey);
             pipeline.sync();
-            return new CamelliaDelayQueueTopicInfo(topic, waitingQueueSize.get(), readyQueueSize.get(), ackQueueSize.get());
+
+            CamelliaDelayQueueTopicInfo topicInfo = new CamelliaDelayQueueTopicInfo();
+            topicInfo.setTopic(topic);
+            topicInfo.setWaitingQueueSize(waitingQueueSize.get());
+            topicInfo.setReadyQueueSize(readyQueueSize.get());
+            topicInfo.setAckQueueSize(ackQueueSize.get());
+            CamelliaDelayQueueTopicInfo.WaitingQueueInfo waitingQueueInfo = new CamelliaDelayQueueTopicInfo.WaitingQueueInfo();
+            waitingQueueInfo.setSizeOf0To1min(min1.get());
+            waitingQueueInfo.setSizeOf1minTo10min(min10.get());
+            waitingQueueInfo.setSizeOf10minTo30min(min30.get());
+            waitingQueueInfo.setSizeOf30minTo1hour(hour1.get());
+            waitingQueueInfo.setSizeOf1hourTo6hour(hour6.get());
+            waitingQueueInfo.setSizeOf6hourTo1day(day1.get());
+            waitingQueueInfo.setSizeOf1dayTo7day(day7.get());
+            waitingQueueInfo.setSizeOf7dayTo30day(day30.get());
+            waitingQueueInfo.setSizeOf30dayToInfinite(dayN.get());
+            topicInfo.setWaitingQueueInfo(waitingQueueInfo);
+            return topicInfo;
         }
     }
 

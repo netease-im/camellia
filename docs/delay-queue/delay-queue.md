@@ -77,6 +77,7 @@ camellia-delay-queue-server:
   ttl-millis: 3600000 #消息延迟时间到达转为可消费状态后，多久没有被成功消费后被删除，默认1h，提交消息时可以对每条消息都设置，如果不设置则走这个默认值
   max-retry: 10 #消息延迟时间到达转为可消费状态后，最多被消费几次后还未成功ack后，也会标记为删除，默认10次，提交消息时可以对每条消息都设置，如果不设置则走这个默认值
   ack-timeout-millis: 30000 #每次消息被消费后的ack超时时间，消费者来拉取时可以设置，如果没有设置，则使用本默认值
+#  monitorIntervalSeconds: 60 #监控数据刷新周期，默认60s
 #  namespace: default #命名空间，默认default
 #  schedule-thread-num: 4 #定时器的线程池大小，默认是cpu数，一般不需要特殊配置
 #  msg-schedule-millis: 100 #定时器的轮询间隔，代表了延迟消息的时间精确度，默认100ms，一般不需要特殊配置
@@ -428,6 +429,14 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
   }
 }
 ```
+消息状态：
+* 1表示消息处于等待状态
+* 2表示消息已经到期，等待消费
+* 3表示消息正在被消费，尚未收到ack
+* 4表示消息已经被成功消费，收到了ack
+* 5表示消息过期了，没有被消费过
+* 6表示消息被消费过，但是没有正确收到ack，最终由于超过了最大重试次数或者超过了ttl而被丢弃
+* 7表示消息被主动删除了
 
 ### 获取监控数据
 GET /camellia/delayQueue/getMonitorData HTTP/1.1
@@ -496,14 +505,26 @@ GET /camellia/delayQueue/getTopicInfo HTTP/1.1
 ```json
 {
   "code": 200,
-  "data": {
-    "topic": "topic1",
-    "waitingQueueSize": 11,
+  "data":     {
+    "topic": "topic-46",
+    "waitingQueueSize": 451,
+    "waitingQueueInfo": {
+      "sizeOf0To1min": 451,
+      "sizeOf1minTo10min": 0,
+      "sizeOf10minTo30min": 0,
+      "sizeOf30minTo1hour": 0,
+      "sizeOf1hourTo6hour": 0,
+      "sizeOf6hourTo1day": 0,
+      "sizeOf1dayTo7day": 0,
+      "sizeOf7dayTo30day": 0,
+      "sizeOf30dayToInfinite": 0
+    },
     "readyQueueSize": 0,
     "ackQueueSize": 0
   }
 }
 ```
+可以查询等待队列、就绪队列、ack队列的大小，还可以了解等待队列的延迟分布情况
 
 ### 获取topic信息列表
 GET /camellia/delayQueue/getTopicInfoList HTTP/1.1
@@ -514,16 +535,38 @@ GET /camellia/delayQueue/getTopicInfoList HTTP/1.1
   "code": 200,
   "data": [
     {
-      "topic": "topic",
-      "waitingQueueSize": 0,
+      "topic": "topic-46",
+      "waitingQueueSize": 564,
+      "waitingQueueInfo": {
+        "sizeOf0To1min": 464,
+        "sizeOf1minTo10min": 10,
+        "sizeOf10minTo30min": 20,
+        "sizeOf30minTo1hour": 30,
+        "sizeOf1hourTo6hour": 40,
+        "sizeOf6hourTo1day": 0,
+        "sizeOf1dayTo7day": 0,
+        "sizeOf7dayTo30day": 0,
+        "sizeOf30dayToInfinite": 0
+      },
       "readyQueueSize": 0,
       "ackQueueSize": 0
     },
     {
-      "topic": "topic1",
-      "waitingQueueSize": 0,
+      "topic": "topic-53",
+      "waitingQueueSize": 464,
+      "waitingQueueInfo": {
+        "sizeOf0To1min": 464,
+        "sizeOf1minTo10min": 0,
+        "sizeOf10minTo30min": 0,
+        "sizeOf30minTo1hour": 0,
+        "sizeOf1hourTo6hour": 0,
+        "sizeOf6hourTo1day": 0,
+        "sizeOf1dayTo7day": 0,
+        "sizeOf7dayTo30day": 0,
+        "sizeOf30dayToInfinite": 0
+      },
       "readyQueueSize": 0,
-      "ackQueueSize": 0
+      "ackQueueSize": 2
     }
   ]
 }

@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -25,6 +26,8 @@ public class CamelliaDelayQueueMonitor {
     private static final Logger logger = LoggerFactory.getLogger(CamelliaDelayQueueMonitor.class);
     private static final Logger statsLogger = LoggerFactory.getLogger("camellia-delay-queue-stats");
 
+    private static final AtomicBoolean initOk = new AtomicBoolean(false);
+
     //统计消息量
     private static ConcurrentHashMap<String, CamelliaDelayMsgCounter> msgCountMap = new ConcurrentHashMap<>();
     //统计下行消息延迟，表示消息到达触发时间，到消息实际被consumer消费的时间间隔，如果很大，说明消费者消费有瓶颈
@@ -33,8 +36,13 @@ public class CamelliaDelayQueueMonitor {
     private static ConcurrentHashMap<String, CamelliaStatistics> readyQueueTimeGapMap = new ConcurrentHashMap<>();
 
     private static CamelliaDelayQueueMonitorData monitorData = new CamelliaDelayQueueMonitorData();
-    static {
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(CamelliaDelayQueueMonitor::calcMonitorData, 60, 60, TimeUnit.SECONDS);
+
+    public static void init(int monitorIntervalSeconds) {
+        if (initOk.compareAndSet(false, true)) {
+            Executors.newSingleThreadScheduledExecutor()
+                    .scheduleAtFixedRate(CamelliaDelayQueueMonitor::calcMonitorData, monitorIntervalSeconds, monitorIntervalSeconds, TimeUnit.SECONDS);
+            logger.info("CamelliaDelayQueueMonitor init success, monitorIntervalSeconds = {}", monitorIntervalSeconds);
+        }
     }
 
     public static CamelliaDelayQueueMonitorData getMonitorData() {

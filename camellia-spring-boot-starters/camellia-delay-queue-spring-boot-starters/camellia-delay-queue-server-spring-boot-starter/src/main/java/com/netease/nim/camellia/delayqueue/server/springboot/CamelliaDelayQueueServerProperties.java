@@ -24,6 +24,8 @@ public class CamelliaDelayQueueServerProperties {
     private long ackTimeoutMillis = CamelliaDelayQueueConstants.ackTimeoutMillis;
     private long topicActiveTagTimeoutMillis = CamelliaDelayQueueConstants.topicActiveTagTimeoutMillis;
 
+    private int monitorIntervalSeconds = CamelliaDelayQueueConstants.monitorIntervalSeconds;
+
     public String getNamespace() {
         return namespace;
     }
@@ -110,5 +112,13 @@ public class CamelliaDelayQueueServerProperties {
 
     public void setTopicActiveTagTimeoutMillis(long topicActiveTagTimeoutMillis) {
         this.topicActiveTagTimeoutMillis = topicActiveTagTimeoutMillis;
+    }
+
+    public int getMonitorIntervalSeconds() {
+        return monitorIntervalSeconds;
+    }
+
+    public void setMonitorIntervalSeconds(int monitorIntervalSeconds) {
+        this.monitorIntervalSeconds = monitorIntervalSeconds;
     }
 }

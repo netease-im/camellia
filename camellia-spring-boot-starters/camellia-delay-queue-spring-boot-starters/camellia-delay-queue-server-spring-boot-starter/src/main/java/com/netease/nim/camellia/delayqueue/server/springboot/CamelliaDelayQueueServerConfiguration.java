@@ -34,6 +34,7 @@ public class CamelliaDelayQueueServerConfiguration {
         serverConfig.setScheduleThreadNum(properties.getScheduleThreadNum());
         serverConfig.setEndLifeMsgExpireMillis(properties.getEndLifeMsgExpireMillis());
         serverConfig.setTopicActiveTagTimeoutMillis(properties.getTopicActiveTagTimeoutMillis());
+        serverConfig.setMonitorIntervalSeconds(properties.getMonitorIntervalSeconds());
         if (template == null) {
             throw new IllegalArgumentException("redis template not found");
         }
