@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.delayqueue.server.springboot;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.delayqueue.common.domain.*;
 import com.netease.nim.camellia.delayqueue.server.CamelliaDelayQueueMonitor;
@@ -104,5 +105,50 @@ public class CamelliaDelayQueueController {
         json.put("code", 200);
         json.put("data", topicInfoList);
         return json;
+    }
+
+    //暴露给哨兵系统的接口，按照哨兵的格式组装
+    @GetMapping(value = "/getMonitorString", produces = "text/plain;charset=UTF-8")
+    public String getMonitorString() {
+        JSONObject monitorJson = new JSONObject();
+
+        //monitorData
+        CamelliaDelayQueueMonitorData monitorData = CamelliaDelayQueueMonitor.getMonitorData();
+
+        JSONArray requestStatsJsonArray = new JSONArray();
+        requestStatsJsonArray.addAll(monitorData.getRequestStatsList());
+        monitorJson.put("requestStats", requestStatsJsonArray);
+
+        JSONArray pullMsgTimeGapStatsJsonArray = new JSONArray();
+        pullMsgTimeGapStatsJsonArray.addAll(monitorData.getPullMsgTimeGapStatsList());
+        monitorJson.put("pullMsgTimeGapStats", pullMsgTimeGapStatsJsonArray);
+
+        JSONArray readyQueueTimeGapJsonArray = new JSONArray();
+        readyQueueTimeGapJsonArray.addAll(monitorData.getReadyQueueTimeGapStatsList());
+        monitorJson.put("readyQueueTimeGapStats", readyQueueTimeGapJsonArray);
+
+        //topicInfoList
+        List<CamelliaDelayQueueTopicInfo> topicInfoList = server.getTopicInfoList();
+        JSONArray topicInfoJsonArray = new JSONArray();
+        for (CamelliaDelayQueueTopicInfo topicInfo : topicInfoList) {
+            JSONObject json = new JSONObject();
+            json.put("topic", topicInfo.getTopic());
+            json.put("waitingQueueSize", topicInfo.getWaitingQueueSize());
+            json.put("ackQueueSize", topicInfo.getAckQueueSize());
+            json.put("readyQueueSize", topicInfo.getReadyQueueSize());
+            topicInfoJsonArray.add(json);
+        }
+        monitorJson.put("topicInfoStats", topicInfoJsonArray);
+
+        JSONArray waitingQueueStatsJsonArray = new JSONArray();
+        for (CamelliaDelayQueueTopicInfo topicInfo : topicInfoList) {
+            CamelliaDelayQueueTopicInfo.WaitingQueueInfo waitingQueueInfo = topicInfo.getWaitingQueueInfo();
+            JSONObject json = JSONObject.parseObject(JSONObject.toJSONString(waitingQueueInfo));
+            json.put("topic", topicInfo.getTopic());
+            waitingQueueStatsJsonArray.add(json);
+        }
+        monitorJson.put("waitingQueueStats", waitingQueueStatsJsonArray);
+
+        return monitorJson.toJSONString();
     }
 }

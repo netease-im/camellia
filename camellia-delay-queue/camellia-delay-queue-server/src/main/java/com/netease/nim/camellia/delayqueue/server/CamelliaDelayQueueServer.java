@@ -47,8 +47,8 @@ public class CamelliaDelayQueueServer {
         checkExpireExecutor = new ThreadPoolExecutor(serverConfig.getCheckTimeoutThreadNum(), serverConfig.getCheckTimeoutThreadNum(),
                 0, TimeUnit.SECONDS, new LinkedBlockingDeque<>(100000),
                 new CamelliaThreadFactory("camellia-delay-msg-check-expire"), new ThreadPoolExecutor.AbortPolicy());
-        msgScheduledExecutor = new ScheduledThreadPoolExecutor(serverConfig.getScheduleThreadNum());
-        topicScheduledExecutor = new ScheduledThreadPoolExecutor(serverConfig.getScheduleThreadNum());
+        msgScheduledExecutor = new ScheduledThreadPoolExecutor(serverConfig.getScheduleThreadNum(), new CamelliaThreadFactory("msg-schedule"));
+        topicScheduledExecutor = new ScheduledThreadPoolExecutor(serverConfig.getScheduleThreadNum(), new CamelliaThreadFactory("topic-schedule"));
 
         lockManager = new CamelliaRedisLockManager(template, serverConfig.getScheduleThreadNum(), 5000, 5000);
 
@@ -476,14 +476,14 @@ public class CamelliaDelayQueueServer {
         long topicScheduleSeconds = serverConfig.getTopicScheduleSeconds();
         topicScheduledExecutor.scheduleAtFixedRate(() -> {
             try {
-                //topicsKeyTmp
-                String topicsKeyTmp = topicsKeyTmp();
-                Long topicNumTmp = template.zcard(topicsKeyTmp);
-                scheduleTopic(topicsKeyTmp, topicNumTmp);
                 //topicsKey
                 String topicsKey = topicsKey();
                 Long topicNum = template.zcard(topicsKey);
                 scheduleTopic(topicsKey, topicNum);
+                //topicsKeyTmp
+                String topicsKeyTmp = topicsKeyTmp();
+                Long topicNumTmp = template.zcard(topicsKeyTmp);
+                scheduleTopic(topicsKeyTmp, topicNumTmp);
             } catch (Exception e) {
                 logger.error("topic schedule error", e);
             }
@@ -681,16 +681,26 @@ public class CamelliaDelayQueueServer {
                 template.zadd(topicsKeyTmp(), System.currentTimeMillis(), topic);
                 template.zrem(topicsKey(), topic);
                 CamelliaDelayQueueMonitor.checkTopicInactive(topic);
+                template.psetex(inactiveTag(topic), serverConfig.getTopicScheduleSeconds()*1000L*4, String.valueOf(System.currentTimeMillis()));
             } else {
-                //如果下一次仍然不活跃，则从topicsKeyTmp中移除，此时彻底删除
-                template.zrem(topicsKeyTmp(), topic);
-                CamelliaDelayQueueMonitor.checkTopicRemove(topic);
+                String inactiveTime = template.get(inactiveTag(topic));
+                if (inactiveTime == null) {
+                    template.psetex(inactiveTag(topic), serverConfig.getTopicScheduleSeconds()*1000L*4, String.valueOf(System.currentTimeMillis()));
+                } else {
+                    //如果下一次仍然不活跃，则从topicsKeyTmp中移除，此时彻底删除
+                    if (System.currentTimeMillis() - Long.parseLong(inactiveTime) > serverConfig.getTopicScheduleSeconds()*1000L) {
+                        template.zrem(topicsKeyTmp(), topic);
+                        CamelliaDelayQueueMonitor.checkTopicRemove(topic);
+                    }
+                }
             }
         } else {
             //如果活跃，则扔回topicsKey
             template.zadd(topicsKey(), System.currentTimeMillis(), topic);
             //如果活跃，则topicsKeyTmp中不应该存在
             template.zrem(topicsKeyTmp(), topic);
+            //如果活跃，则删除不活跃标记
+            template.del(inactiveTag(topic));
         }
     }
 
@@ -859,5 +869,10 @@ public class CamelliaDelayQueueServer {
     //string
     public String checkActiveLockKey(String topic) {
         return CacheUtil.buildCacheKey("camellia_delay_queue_check_active", serverConfig.getNamespace(), topic, "~lock");
+    }
+
+    //string
+    private String inactiveTag(String topic) {
+        return CacheUtil.buildCacheKey("camellia_delay_queue_inactive_tag", topic);
     }
 }
