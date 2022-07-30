@@ -4,6 +4,20 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+# 1.0.60（2022/08/xx）
+### add
+* add camellia-delay-queue module
+* camellia-feign support failureListener, include CamelliaNakedClient and CamelliaFeignClient
+* camellia-tools provide CamelliaStatistics for calculate sum/count/avg/max
+
+### update
+* CamelliaRedisTemplate add available check for redis-cluster init
+* rename NacosProxyDamicConfSupport to NacosProxyDynamicConfSupport
+
+### fix
+* fix camellia-dashboard FeignChecker not effective
+
+
 # 1.0.59（2022/06/21）
 ### add
 * camellia-core/camellia-feign adjust thread mode, provide new MultiWriteType MISC_ASYNC_MULTI_THREAD

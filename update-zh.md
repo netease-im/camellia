@@ -4,6 +4,20 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.0.60（2022/08/xx）
+### 新增
+* 新增camellia-delay-queue模块，可以用于实现延迟队列功能，具体见：[delay-queue](/docs/delay-queue/delay-queue.md)
+* camellia-feign新增failureListener，包括CamelliaNakedClient和CamelliaFeignClient都支持，可以用于监控，也可以用于失败重试
+* camellia-tools新增CamelliaStatistics工具类，可以用于计数、求和、平均值、最大值等的统计
+
+### 更新
+* CamelliaRedisTemplate初始化redis-cluster时增加可用性判断（jedis/v2.9.3没有这个判断，新版本jedis有这个）
+* 重命名NacosProxyDamicConfSupport为NacosProxyDynamicConfSupport
+
+### fix
+* fix了camellia-dashboard中FeignChecker没有生效的问题（缺失了@Component注解）
+
+
 # 1.0.59（2022/06/21）
 ### 新增
 * camellia-core、camellia-feign调整异步双写线程模型，并新增支持MISC_ASYNC_MULTI_THREAD模式
