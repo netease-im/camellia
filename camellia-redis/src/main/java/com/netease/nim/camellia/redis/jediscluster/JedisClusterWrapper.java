@@ -24,6 +24,13 @@ public class JedisClusterWrapper extends JedisCluster {
             cache = (JedisClusterInfoCache)cacheField.get(this.connectionHandler);
             slots = JedisClusterInfoCache.class.getDeclaredField("slots");
             slots.setAccessible(true);
+            JedisPool pool = cache.getSlotPool(0);
+            if (pool == null) {
+                //jedis-2.9.3 will not throw exception if JedisCluster init fail, so throw exception here
+                throw new CamelliaRedisException("init jedis cluster info cache error");
+            }
+        } catch (CamelliaRedisException e) {
+            throw e;
         } catch (Exception e) {
             throw new CamelliaRedisException(e);
         }
