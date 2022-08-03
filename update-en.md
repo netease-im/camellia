@@ -16,6 +16,7 @@
 
 ### fix
 * fix camellia-dashboard FeignChecker not effective
+* fix SideCarFirstProxySelector of RedisProxyJedisPool offline proxy failure
 
 
 # 1.0.59（2022/06/21）

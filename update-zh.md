@@ -16,7 +16,7 @@
 
 ### fix
 * fix了camellia-dashboard中FeignChecker没有生效的问题（缺失了@Component注解）
-
+* fix了RedisProxyJedisPool的SideCarFirstProxySelector下线proxy失败的问题
 
 # 1.0.59（2022/06/21）
 ### 新增
