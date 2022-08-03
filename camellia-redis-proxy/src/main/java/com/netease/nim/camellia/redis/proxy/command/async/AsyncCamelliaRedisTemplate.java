@@ -5,10 +5,7 @@ import com.netease.nim.camellia.core.client.env.Monitor;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
-import com.netease.nim.camellia.core.util.ExceptionUtils;
-import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
-import com.netease.nim.camellia.core.util.ResourceChooser;
+import com.netease.nim.camellia.core.util.*;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
@@ -1057,8 +1054,14 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     }
 
     private synchronized void init(ResourceTable resourceTable) {
+        //初始化每个Resource，会做基本的校验
+        Set<Resource> resources = ResourceUtil.getAllResources(resourceTable);
+        for (Resource resource : resources) {
+            factory.get(resource.getUrl());
+        }
+        //初始化ResourceChooser
         this.resourceChooser = new ResourceChooser(resourceTable, env.getProxyEnv());
-
+        //判断路由类型
         ResourceTable.Type type = resourceChooser.getType();
         if (type == ResourceTable.Type.SHADING) {
             isSingletonStandaloneRedisOrRedisSentinel = false;
