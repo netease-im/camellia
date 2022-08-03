@@ -124,35 +124,37 @@ public class SideCarFirstProxySelector implements IProxySelector {
         try {
             synchronized (lock) {
                 if (proxy == null) return;
+                if (isOnlyOneProxy()) {
+                    logger.warn("proxySet.size <= 1, skip remove proxy! proxy = {}", proxy);
+                    return;
+                }
                 if (proxy.getHost().equals(localhost)) {
-                    if (proxySetSameRegion.isEmpty() && proxySetOtherRegion.isEmpty()) {
-                        logger.warn("proxySet.size = 1, skip remove proxy! proxy = {}", proxy.toString());
-                    } else {
-                        sideCarProxy = null;
-                        dynamicSideCarProxy = null;
-                    }
+                    sideCarProxy = null;
+                    dynamicSideCarProxy = null;
                     return;
                 }
                 String region = regionResolver.resolve(proxy.getHost());
                 if (Objects.equals(region, localRegion)) {
-                    if (sideCarProxy == null && proxySetOtherRegion.isEmpty()) {
-                        logger.warn("proxySet.size = 1, skip remove proxy! proxy = {}", proxy.toString());
-                    } else {
-                        proxySetSameRegion.remove(proxy);
-                        dynamicProxyListSameRegion = new ArrayList<>(proxySetSameRegion);
-                    }
+                    proxySetSameRegion.remove(proxy);
+                    dynamicProxyListSameRegion = new ArrayList<>(proxySetSameRegion);
                 } else {
-                    if (sideCarProxy == null && proxySetSameRegion.isEmpty()) {
-                        logger.warn("proxySet.size = 1, skip remove proxy! proxy = {}", proxy.toString());
-                    } else {
-                        proxySetOtherRegion.remove(proxy);
-                        dynamicProxyListOtherRegion = new ArrayList<>(proxySetOtherRegion);
-                    }
+                    proxySetOtherRegion.remove(proxy);
+                    dynamicProxyListOtherRegion = new ArrayList<>(proxySetOtherRegion);
                 }
             }
         } catch (Exception e) {
             logger.error("remove error", e);
         }
+    }
+
+    private boolean isOnlyOneProxy() {
+        int count = 0;
+        if (sideCarProxy != null) {
+            count ++;
+        }
+        count += proxySetOtherRegion.size();
+        count += proxySetSameRegion.size();
+        return count <= 1;
     }
 
     @Override
