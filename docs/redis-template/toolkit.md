@@ -107,3 +107,29 @@ public class CounterCacheSamples {
     }
 }
 ```
+
+### 频控（详情见CamelliaFreq）
+* 支持单机频控，也支持集群频控，还支持混合
+* 频控参数详见CamelliaFreqConfig
+
+```java
+public class FreqSamples {
+
+    private static void test1() throws InterruptedException {
+        CamelliaFreq freq = new CamelliaFreq(new CamelliaRedisTemplate("redis://@127.0.0.1:6379"));
+        String freqKey = "k1";
+        CamelliaFreqConfig config = new CamelliaFreqConfig();
+        config.setThreshold(2);
+        config.setCheckTime(1000);
+        config.setBanTime(2000);
+        for (int i = 0; i < 20; i++) {
+            CamelliaFreqResponse response = freq.checkFreqPass(freqKey, CamelliaFreqType.CLUSTER, config);
+            System.out.println(response.isPass());
+            TimeUnit.MILLISECONDS.sleep(200);
+        }
+        TimeUnit.SECONDS.sleep(3);
+        CamelliaFreqResponse response = freq.checkFreqPass(freqKey, CamelliaFreqType.CLUSTER, config);
+        System.out.println(response.isPass());
+    }
+}
+```

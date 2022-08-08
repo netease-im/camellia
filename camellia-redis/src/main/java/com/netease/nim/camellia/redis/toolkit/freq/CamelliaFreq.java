@@ -20,6 +20,11 @@ public class CamelliaFreq {
         this.clusterFreq = new CamelliaClusterFreq(template);
     }
 
+    public CamelliaFreq(CamelliaRedisTemplate template) {
+        this.standaloneFreq = new CamelliaStandaloneFreq();
+        this.clusterFreq = new CamelliaClusterFreq(template);
+    }
+
     public CamelliaFreq(int standaloneCapacity) {
         this.standaloneFreq = new CamelliaStandaloneFreq(standaloneCapacity);
     }
