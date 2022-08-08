@@ -9,6 +9,7 @@
 * add camellia-delay-queue module
 * camellia-feign support failureListener, include CamelliaNakedClient and CamelliaFeignClient
 * camellia-tools provide CamelliaStatistics for calculate sum/count/avg/max
+* camellia-redis provide CamelliaFreq for freq, include standalone/cluster mode
 
 ### update
 * CamelliaRedisTemplate add available check for redis-cluster init
