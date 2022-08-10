@@ -11,7 +11,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 * base on camellia-core and jedis(2.9.3)，main class is CamelliaRedisTemplate, can invoke redis-standalone/redis-sentinel/redis-cluster in identical way，support pipeline    
 * support client sharding/read-write-separate/double-write   
 * support read from slave(redis-sentinel)
-* provide CamelliaRedisLock、CamelliaFreq utils
+* provide CamelliaRedisLock、CamelliaFreq utils  
 [QUICK START](/docs/redis-template/redis-template.md)
 
 ### camellia-redis-proxy  
@@ -42,17 +42,14 @@ delay queue base on redis:
 * support client read-write-separate/double-write  
 [QUICK START](/docs/hbase-template/hbase-template.md)  
 
-### camellia-id-gen
-* provide some id gen algorithm, such as snowflake、segment、strict       
-[QUICK START](/docs/id-gen/id-gen.md)
-
 ### camellia-feign
 join camellia-core and open-feign, so your feign-client have this feature: 
 * support dynamic route
 * support custom route by request param
 * support custom load balance policy by request param
 * support read-write-separate/double-write
-* support dynamic conf, such like timeout
+* support dynamic conf, such like timeout  
+[QUICK START](/docs/feign/feign.md)
 
 ### camellia-tools
 * provide some tools, such as：
