@@ -187,10 +187,12 @@ public class CamelliaFeignClientFactory {
     /**
      * 生成一个重试的service
      * @param failureContext failureContext
+     * @param fallbackFactory fallback工厂
+     * @param failureListener 失败回调
      * @return 实例
      */
-    public <T> T getRetryService(CamelliaFeignFailureContext failureContext) {
-        Class<?> apiType = failureContext.getApiType();
+    public <T> T getRetryService(CamelliaFeignFailureContext failureContext, CamelliaFeignFallbackFactory<T> fallbackFactory, CamelliaFeignFailureListener failureListener) {
+        Class<T> apiType = (Class<T>) failureContext.getApiType();
         Resource resource = failureContext.getResource();
         String lockKey = apiType.getName() + "|" + resource.getUrl();
         ConcurrentHashMap<String, Object> subMap = retryMap.get(apiType);
@@ -220,11 +222,17 @@ public class CamelliaFeignClientFactory {
                             .client(feignProps.getClient())
                             .requestInterceptors(feignProps.getRequestInterceptors())
                             .resourceTable(resource.getUrl())
+                            .dynamicOptionGetter(dynamicOptionGetter)
+                            .bid(failureContext.getBid())
+                            .bgroup(failureContext.getBgroup())
+                            .camelliaApi(camelliaApi)
+                            .checkIntervalMillis(checkIntervalMillis)
+                            .failureListener(failureListener)
                             .feignEnv(feignEnv);
                     if (feignProps.isDecode404()) {
                         builder.decode404();
                     }
-                    target = builder.target(apiType);
+                    target = builder.target(apiType, fallbackFactory);
                     subMap.put(resource.getUrl(), target);
                     logger.info("camellia feign retry service = {} init success, resource = {}", apiType.getName(), resource.getUrl());
                 }

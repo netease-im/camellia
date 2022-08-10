@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 
 /**
  * Created by caojiajun on 2022/3/30
@@ -16,9 +18,13 @@ public class TestFeignController {
 
     @Autowired
     private ITestFeignService testFeignService;
+    private static final AtomicLong id = new AtomicLong(0);
 
     @PostMapping("/getUser")
     public UserResponse getUser(@RequestBody User user) {
+        if (id.incrementAndGet() % 3 != 0) {//1次成功2次失败
+            throw new RuntimeException();
+        }
         if (user.getUid() == 222) {
             throw new RuntimeException();
         }

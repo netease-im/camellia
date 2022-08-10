@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.feign;
 
+import com.netease.nim.camellia.core.util.ExceptionUtils;
 import com.netease.nim.camellia.feign.exception.CamelliaFeignException;
 
 import java.lang.reflect.Method;
@@ -15,7 +16,7 @@ public class CamelliaFeignRetryClient<T> {
 
     private final ConcurrentHashMap<String, Method> methodMap = new ConcurrentHashMap<>();
 
-    public CamelliaFeignRetryClient(Class<?> apiType, CamelliaFeignClientFactory factory) {
+    public CamelliaFeignRetryClient(Class<T> apiType, CamelliaFeignClientFactory factory) {
         this.apiType = apiType;
         this.factory = factory;
         for (Method method : apiType.getMethods()) {
@@ -30,10 +31,24 @@ public class CamelliaFeignRetryClient<T> {
      * @throws CamelliaFeignException 异常
      */
     public Object sendRetry(CamelliaFeignFailureContext failureContext) throws CamelliaFeignException {
+        return sendRetry(failureContext, null, null);
+    }
+
+    /**
+     * 发送一个失败重试请求
+     * @param failureContext 上下文
+     * @param fallbackFactory fallback工厂
+     * @param failureListener 失败回调
+     * @return 响应
+     * @throws CamelliaFeignException 异常
+     */
+    public Object sendRetry(CamelliaFeignFailureContext failureContext,
+                            CamelliaFeignFallbackFactory<T> fallbackFactory,
+                            CamelliaFeignFailureListener failureListener) throws CamelliaFeignException {
         if (!failureContext.getApiType().equals(apiType)) {
             throw new IllegalArgumentException("apiType not match");
         }
-        Object retryService = factory.getRetryService(failureContext);
+        T retryService = factory.getRetryService(failureContext, fallbackFactory, failureListener);
         Method method = methodMap.get(failureContext.getMethod());
         if (method == null) {
             throw new IllegalArgumentException("unknown method = " + failureContext.getMethod());
@@ -41,7 +56,8 @@ public class CamelliaFeignRetryClient<T> {
         try {
             return method.invoke(retryService, failureContext.getObjects());
         } catch (Exception e) {
-            throw new CamelliaFeignException(e);
+            Throwable error = ExceptionUtils.onError(e);
+            throw new CamelliaFeignException(error);
         }
     }
 }
