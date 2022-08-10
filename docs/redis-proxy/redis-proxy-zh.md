@@ -4,13 +4,13 @@
 camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 
 ## 特性
-* 支持代理到redis、redis sentinel、redis cluster
+* 支持代理到redis-standalone、redis-sentinel、redis-cluster
 * 支持设置密码
 * 支持阻塞式命令，如BLPOP/BRPOP/BRPOPLPUSH/BZPOPMIN/BZPOPMAX等
 * 支持pubsub命令
-* 支持事务命令（MULTI/EXEC/DISCARD/WATCH/UNWATCH），当前仅当代理到redis/redis-sentinel且无分片/无读写分离时支持
+* 支持事务命令（MULTI/EXEC/DISCARD/WATCH/UNWATCH），当前仅当代理到redis-standalone/redis-sentinel且无分片/无读写分离时支持
 * 支持redis5.0的Streams命令
-* 支持SCAN命令（代理到redis/redis-sentinel/redis-cluster均支持，自定义分片时也支持）
+* 支持SCAN命令（代理到redis-standalone/redis-sentinel/redis-cluster均支持，自定义分片时也支持）
 * 支持自定义分片
 * 支持读写分离
 * 支持读slave（redis-sentinel/redis-cluster均支持配置读从节点）
@@ -254,7 +254,7 @@ camellia-redis-proxy默认通过在application.yml里配置全类名的方式来
 * 关于scan和lua的相关说明，以及使用redis-shake进行数据迁移的说明，具体见：[misc](misc.md)
 
 ## 应用场景
-* 业务开始使用单点redis或者redis-sentinel，现在需要切换到redis-cluster，但是客户端需要改造（比如jedis访问redis-sentinel和redis-cluster是不一样的），此时你可以使用proxy，从而做到不改造（使用四层代理LB）或者很少的改造（使用注册中心）
+* 业务开始使用redis-standalone或者redis-sentinel，现在需要切换到redis-cluster，但是客户端需要改造（比如jedis访问redis-sentinel和redis-cluster是不一样的），此时你可以使用proxy，从而做到不改造（使用四层代理LB）或者很少的改造（使用注册中心）
 * 使用双写功能进行集群的迁移
 * 使用双写的功能进行集群灾备，比如双写到另外的机房
 * 使用分片功能应对单集群容量不足的问题（单个redis-cluster集群有节点和容量上限）
