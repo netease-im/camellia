@@ -8,33 +8,43 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
   
 ## Instruction
 ### camellia-redis  
-* base on camellia-core and jedis(2.9.3)，main class is CamelliaRedisTemplate, can invoke redis/redis-sentinel/redis-cluster in identical way，support pipeline    
+* base on camellia-core and jedis(2.9.3)，main class is CamelliaRedisTemplate, can invoke redis-standalone/redis-sentinel/redis-cluster in identical way，support pipeline    
 * support client sharding/read-write-separate/double-write   
-* support jedis adaptor to migrate from jedis easily   
-* support spring-redis-template adaptor  
+* support read from slave(redis-sentinel)
+* provide CamelliaRedisLock、CamelliaFreq utils
 [QUICK START](/docs/redis-template/redis-template.md)
+
 ### camellia-redis-proxy  
-* base on netty4, support redis/redis-sentinel/redis-cluster  
+high performance redis-proxy:  
+* base on netty4, support redis-standalone/redis-sentinel/redis-cluster  
 * support sharding/read-write-separate/double-write on proxy  
 * support multi-route-conf            
 * support tps/rt/big-key/hot-key/slow-command monitor  
 * support custom command interceptor, support hot-key-cache(GET command)，support value converter and so on    
 [QUICK START](/docs/redis-proxy/redis-proxy-en.md)  
+
+### camellia-id-gen
+provide some id gen algorithm:   
+* snowflake, support setting region tag
+* strict-increment id-gen
+* db-segment id-gen, support setting region tag         
+[QUICK START](/docs/id-gen/id-gen.md)
+
+### camellia-delay-queue
+delay queue base on redis:   
+* independent deployment of delay-queue-server, scale out, support multi-topic, support http-api
+* provide java-sdk, support spring-boot-starter
+* provide monitor data    
+[QUICK START](/docs/delay-queue/delay-queue.md)
+
 ### camellia-hbase  
 * base on camellia-core and hbase-client，main class is CamelliaHBaseTemplate    
 * support client read-write-separate/double-write  
 [QUICK START](/docs/hbase-template/hbase-template.md)  
+
 ### camellia-id-gen
 * provide some id gen algorithm, such as snowflake、segment、strict       
 [QUICK START](/docs/id-gen/id-gen.md)
-### camellia-tools  
-* provide some tools, such as：    
-* compress utils CamelliaCompressor   
-* encrypt utils CamelliaEncryptor   
-* local cache utils CamelliaLoadingCache   
-* thread pool utils CamelliaHashedExecutor   
-* dynamic conf CamelliaCircuitBreaker  
-[QUICK START](/docs/tools/tools.md)   
 
 ### camellia-feign
 join camellia-core and open-feign, so your feign-client have this feature: 
@@ -43,6 +53,15 @@ join camellia-core and open-feign, so your feign-client have this feature:
 * support custom load balance policy by request param
 * support read-write-separate/double-write
 * support dynamic conf, such like timeout
+
+### camellia-tools
+* provide some tools, such as：
+* compress utils CamelliaCompressor
+* encrypt utils CamelliaEncryptor
+* local cache utils CamelliaLoadingCache
+* thread pool utils CamelliaHashedExecutor
+* dynamic conf CamelliaCircuitBreaker  
+[QUICK START](/docs/tools/tools.md)
 
 ## Version
 latest version is 1.0.59, have deploy to maven central repository on 2022/06/21  
