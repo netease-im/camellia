@@ -143,9 +143,6 @@ public class CamelliaRedisProxyUtil {
     public static CamelliaTranspondProperties.Type parseType(TranspondProperties properties) {
         CamelliaTranspondProperties.Type type = null;
         switch (properties.getType()) {
-            case AUTO:
-                type = CamelliaTranspondProperties.Type.AUTO;
-                break;
             case LOCAL:
                 type = CamelliaTranspondProperties.Type.LOCAL;
                 break;

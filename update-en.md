@@ -11,6 +11,7 @@
 * camellia-tools provide CamelliaStatistics for calculate sum/count/avg/max
 * camellia-redis provide CamelliaFreq for freq, include standalone/cluster mode
 * camellia-redis-proxy add valid check when dynamic route conf update
+* camellia-redis-proxy add route, resource init in async mode, improve multi-tenancy isolation
 
 ### update
 * CamelliaRedisTemplate add available check for redis-cluster init

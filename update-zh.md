@@ -11,6 +11,7 @@
 * camellia-tools新增CamelliaStatistics工具类，可以用于计数、求和、平均值、最大值等的统计
 * camellia-redis新增CamelliaFreq工具类，可以用于频控，包括单机频控和集群频控
 * camellia-redis-proxy在动态路由刷新时，生效之前增加对新路由的检查
+* camellia-redis-proxy新增路由时，资源初始化改成异步，提升多租户间的隔离能力
 
 ### 更新
 * CamelliaRedisTemplate初始化redis-cluster时增加可用性判断（jedis/v2.9.3没有这个判断，新版本jedis有这个）

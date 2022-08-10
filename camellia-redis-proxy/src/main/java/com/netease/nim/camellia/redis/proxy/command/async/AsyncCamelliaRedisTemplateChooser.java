@@ -7,7 +7,9 @@ import com.netease.nim.camellia.core.api.ResourceTableUpdateCallback;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.core.util.CamelliaMapUtils;
 import com.netease.nim.camellia.core.util.ShardingFuncUtil;
+import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
@@ -15,13 +17,15 @@ import com.netease.nim.camellia.core.util.LockMap;
 import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -35,7 +39,6 @@ public class AsyncCamelliaRedisTemplateChooser {
     private AsyncCamelliaRedisEnv env;
     private CamelliaApi apiService;
 
-    private final LockMap lockMap = new LockMap();
     private AsyncCamelliaRedisTemplate remoteInstance;
     private AsyncCamelliaRedisTemplate localInstance;
     private AsyncCamelliaRedisTemplate customInstance;
@@ -48,52 +51,136 @@ public class AsyncCamelliaRedisTemplateChooser {
     }
 
     public AsyncCamelliaRedisTemplate choose(Long bid, String bgroup) {
+        try {
+            return chooseAsync(bid, bgroup).get();
+        } catch (Exception e) {
+            ErrorLogCollector.collect(AsyncCamelliaRedisTemplateChooser.class, "choose AsyncCamelliaRedisTemplate error", e);
+            return null;
+        }
+    }
+
+    public CompletableFuture<AsyncCamelliaRedisTemplate> chooseAsync(Long bid, String bgroup) {
         CamelliaTranspondProperties.Type type = properties.getType();
         if (type == CamelliaTranspondProperties.Type.LOCAL) {
-            return localInstance;
+            return wrapper(localInstance);
         } else if (type == CamelliaTranspondProperties.Type.REMOTE) {
             CamelliaTranspondProperties.RemoteProperties remote = properties.getRemote();
             if (!remote.isDynamic()) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("not dynamic, return default remoteInstance");
-                }
-                return remoteInstance;
+                return wrapper(remoteInstance);
             }
             if (bid == null || bid <= 0 || bgroup == null) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("not dynamic, return default remoteInstance");
-                }
-                return remoteInstance;
+                return wrapper(remoteInstance);
             }
-            return initOrCreateRemoteInstance(bid, bgroup);
+            return initAsync(bid, bgroup, remoteInstanceMap, this::initRemoteInstance);
         } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
             CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
             if (!custom.isDynamic()) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("not dynamic, return default customInstance");
-                }
-                return customInstance;
+                return wrapper(customInstance);
             }
             if (bid == null || bid <= 0 || bgroup == null) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("not dynamic, return default customInstance");
-                }
-                return customInstance;
+                return wrapper(customInstance);
             }
-            return initOrCreateCustomInstance(bid, bgroup);
-        } else if (type == CamelliaTranspondProperties.Type.AUTO) {
-            if (bid == null || bid <= 0 || bgroup == null) {
-                if (localInstance != null) return localInstance;
-                if (remoteInstance != null) return remoteInstance;
-                if (customInstance != null) return customInstance;
-                logger.warn("no bid/bgroup, return null");
-                return null;
-            }
-            AsyncCamelliaRedisTemplate template = initOrCreateRemoteInstance(bid, bgroup);
-            if (template != null) return template;
-            return initOrCreateCustomInstance(bid, bgroup);
+            return initAsync(bid, bgroup, customInstanceMap, this::initCustomInstance);
         }
         return null;
+    }
+
+    private CompletableFuture<AsyncCamelliaRedisTemplate> wrapper(AsyncCamelliaRedisTemplate template) {
+        CompletableFuture<AsyncCamelliaRedisTemplate> future = new CompletableFuture<>();
+        future.complete(template);
+        return future;
+    }
+
+    private final LockMap lockMap = new LockMap();
+    private final ConcurrentHashMap<String, AtomicBoolean> initTagMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, LinkedBlockingQueue<CompletableFuture<AsyncCamelliaRedisTemplate>>> futureQueueMap = new ConcurrentHashMap<>();
+    private final ExecutorService exec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(10000), new DefaultThreadFactory("async-redis-template-init"));
+
+    private CompletableFuture<AsyncCamelliaRedisTemplate> initAsync(long bid, String bgroup,
+                                                                    ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> map,
+                                                                    AsyncCamelliaRedisTemplateInitializer initializer) {
+        String key = bid + "|" + bgroup;
+        AsyncCamelliaRedisTemplate template = map.get(key);
+        if (template != null) {
+            AtomicBoolean initTag = _getInitTag(key);
+            if (initTag.get()) {
+                synchronized (lockMap.getLockObj(key)) {
+                    if (initTag.get()) {
+                        CompletableFuture<AsyncCamelliaRedisTemplate> future = new CompletableFuture<>();
+                        boolean offer = _getFutureQueue(key).offer(future);
+                        if (!offer) {
+                            future.complete(null);
+                            ErrorLogCollector.collect(AsyncCamelliaRedisTemplateChooser.class, "init AsyncCamelliaRedisTemplate async fail, queue full");
+                        }
+                        return future;
+                    } else {
+                        return wrapper(template);
+                    }
+                }
+            } else {
+                return wrapper(template);
+            }
+        }
+        CompletableFuture<AsyncCamelliaRedisTemplate> future = new CompletableFuture<>();
+        AtomicBoolean initTag = _getInitTag(key);
+        if (initTag.compareAndSet(false, true)) {
+            try {
+                exec.submit(() -> {
+                    AsyncCamelliaRedisTemplate redisTemplate = null;
+                    try {
+                        redisTemplate = initializer.init(bid, bgroup);
+                        map.put(key, redisTemplate);
+                        future.complete(redisTemplate);
+                    } catch (Exception e) {
+                        ErrorLogCollector.collect(AsyncCamelliaRedisTemplateChooser.class, "init AsyncCamelliaRedisTemplate error", e);
+                        future.complete(null);
+                    } finally {
+                        clearFutureQueue(key, initTag, redisTemplate);
+                    }
+                });
+            } catch (Exception e) {
+                ErrorLogCollector.collect(AsyncCamelliaRedisTemplateChooser.class, "submit AsyncCamelliaRedisTemplate init task error", e);
+                clearFutureQueue(key, initTag, null);
+            }
+        } else {
+            LinkedBlockingQueue<CompletableFuture<AsyncCamelliaRedisTemplate>> queue = CamelliaMapUtils.computeIfAbsent(futureQueueMap, key,
+                    k -> new LinkedBlockingQueue<>(1000000));
+            boolean offer = queue.offer(future);
+            if (!offer) {
+                future.complete(null);
+                ErrorLogCollector.collect(AsyncCamelliaRedisTemplateChooser.class, "init AsyncCamelliaRedisTemplate async fail, queue full");
+            }
+        }
+        return future;
+    }
+
+    private void clearFutureQueue(String key, AtomicBoolean initTag, AsyncCamelliaRedisTemplate template) {
+        synchronized (lockMap.getLockObj(key)) {
+            LinkedBlockingQueue<CompletableFuture<AsyncCamelliaRedisTemplate>> queue = _getFutureQueue(key);
+            CompletableFuture<AsyncCamelliaRedisTemplate> completableFuture = queue.poll();
+            while (completableFuture != null) {
+                try {
+                    completableFuture.complete(template);
+                } catch (Exception e) {
+                    ErrorLogCollector.collect(AsyncCamelliaRedisTemplateChooser.class, "future complete error", e);
+                }
+                completableFuture = queue.poll();
+            }
+            initTag.compareAndSet(true, false);
+        }
+    }
+
+    private AtomicBoolean _getInitTag(String key) {
+        return CamelliaMapUtils.computeIfAbsent(initTagMap, key, k -> new AtomicBoolean(false));
+    }
+
+    private LinkedBlockingQueue<CompletableFuture<AsyncCamelliaRedisTemplate>> _getFutureQueue(String key) {
+        return CamelliaMapUtils.computeIfAbsent(futureQueueMap, key, k -> new LinkedBlockingQueue<>(1000000));
+    }
+
+    private interface AsyncCamelliaRedisTemplateInitializer {
+        AsyncCamelliaRedisTemplate init(long bid, String bgroup);
     }
 
     private void init() {
@@ -104,15 +191,11 @@ public class AsyncCamelliaRedisTemplateChooser {
         initEnv();
         logger.info("CamelliaRedisProxy init, type = {}", type);
         if (type == CamelliaTranspondProperties.Type.LOCAL) {
-            initLocal(true);
+            initLocal();
         } else if (type == CamelliaTranspondProperties.Type.REMOTE) {
-            initRemote(true);
+            initRemote();
         } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
-            initCustom(true);
-        } else if (type == CamelliaTranspondProperties.Type.AUTO) {
-            initLocal(false);
-            initRemote(false);
-            initCustom(false);
+            initCustom();
         }
         if (properties.getRedisConf().isPreheat()) {
             if (localInstance != null) {
@@ -127,40 +210,10 @@ public class AsyncCamelliaRedisTemplateChooser {
         }
     }
 
-    private void initRemote(boolean throwError) {
-        CamelliaTranspondProperties.RemoteProperties remote = properties.getRemote();
-        if (remote == null) {
-            if (throwError) {
-                throw new IllegalArgumentException("remote is null");
-            } else {
-                return;
-            }
-        }
-        String url = remote.getUrl();
-        if (url == null) {
-            if (throwError) {
-                throw new IllegalArgumentException("remote.url is null");
-            } else {
-                return;
-            }
-        }
-        apiService = CamelliaApiUtil.init(url, remote.getConnectTimeoutMillis(), remote.getReadTimeoutMillis());
-        logger.info("ApiService init, url = {}", url);
-        boolean dynamic = remote.isDynamic();
-        logger.info("Remote dynamic = {}", dynamic);
-        if (remote.getBid() > 0 && remote.getBgroup() != null) {
-            remoteInstance = initOrCreateRemoteInstance(remote.getBid(), remote.getBgroup());
-        }
-    }
-
-    private void initLocal(boolean throwError) {
+    private void initLocal() {
         CamelliaTranspondProperties.LocalProperties local = properties.getLocal();
         if (local == null) {
-            if (throwError) {
-                throw new IllegalArgumentException("local is null");
-            } else {
-                return;
-            }
+            throw new IllegalArgumentException("local is null");
         }
         ResourceTable resourceTable = local.getResourceTable();
         if (resourceTable != null) {
@@ -171,88 +224,82 @@ public class AsyncCamelliaRedisTemplateChooser {
                 localInstance = new AsyncCamelliaRedisTemplate(env, resourceTableFilePath, local.getCheckIntervalMillis());
             }
         }
-        if (localInstance == null && throwError) {
+        if (localInstance == null) {
             throw new IllegalArgumentException("local.resourceTable/local.resourceTableFilePath is null");
         }
     }
 
-    private void initCustom(boolean throwError) {
+    private void initRemote() {
+        CamelliaTranspondProperties.RemoteProperties remote = properties.getRemote();
+        if (remote == null) {
+            throw new IllegalArgumentException("remote is null");
+        }
+        String url = remote.getUrl();
+        if (url == null) {
+            throw new IllegalArgumentException("remote.url is null");
+        }
+        apiService = CamelliaApiUtil.init(url, remote.getConnectTimeoutMillis(), remote.getReadTimeoutMillis());
+        logger.info("ApiService init, url = {}", url);
+        boolean dynamic = remote.isDynamic();
+        logger.info("Remote dynamic = {}", dynamic);
+        if (remote.getBid() > 0 && remote.getBgroup() != null) {
+            remoteInstance = initRemoteInstance(remote.getBid(), remote.getBgroup());
+            remoteInstanceMap.put(remote.getBid() + "|" + remote.getBgroup(), remoteInstance);
+        }
+    }
+
+    private void initCustom() {
         CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
         if (custom == null) {
-            if (throwError) {
-                throw new IllegalArgumentException("custom is null");
-            } else {
-                return;
-            }
+            throw new IllegalArgumentException("custom is null");
         }
         ProxyRouteConfUpdater proxyRouteConfUpdater = custom.getProxyRouteConfUpdater();
         if (proxyRouteConfUpdater == null) {
-            if (throwError) {
-                throw new IllegalArgumentException("proxyRouteConfUpdater is null");
-            } else {
-                return;
-            }
+            throw new IllegalArgumentException("proxyRouteConfUpdater is null");
         }
         boolean dynamic = custom.isDynamic();
         logger.info("Custom dynamic = {}", dynamic);
         if (custom.getBid() > 0 && custom.getBgroup() != null) {
-            customInstance = initOrCreateCustomInstance(custom.getBid(), custom.getBgroup());
+            customInstance = initCustomInstance(custom.getBid(), custom.getBgroup());
+            customInstanceMap.put(custom.getBid() + "|" + custom.getBgroup(), customInstance);
         }
     }
 
-    private AsyncCamelliaRedisTemplate initOrCreateCustomInstance(long bid, String bgroup) {
+    private AsyncCamelliaRedisTemplate initCustomInstance(long bid, String bgroup) {
         CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
         if (custom == null) return null;
-        String key = bid + "|" + bgroup;
-        AsyncCamelliaRedisTemplate template = customInstanceMap.get(key);
-        if (template == null) {
-            synchronized (lockMap.getLockObj(key)) {
-                template = customInstanceMap.get(key);
-                if (template == null) {
-                    ProxyRouteConfUpdater updater = custom.getProxyRouteConfUpdater();
-                    template = new AsyncCamelliaRedisTemplate(env, bid, bgroup, updater, custom.getReloadIntervalMillis());
-                    //更新的callback和删除的callback
-                    ResourceTableUpdateCallback updateCallback = template.getUpdateCallback();
-                    ResourceTableRemoveCallback templateRemoveCallback = template.getRemoveCallback();
-                    ResourceTableRemoveCallback removeCallback = () -> {
-                        customInstanceMap.remove(key);
-                        templateRemoveCallback.callback();
-                        Set<ChannelInfo> channelMap = ChannelMonitor.getChannelMap(bid, bgroup);
-                        int size = channelMap.size();
-                        for (ChannelInfo channelInfo : channelMap) {
-                            try {
-                                channelInfo.getCtx().close();
-                            } catch (Exception e) {
-                                logger.error("force close client connect error, bid = {}, bgroup = {}, consid = {}", bid, bgroup, channelInfo.getConsid(), e);
-                            }
-                        }
-                        logger.info("force close client connect for resourceTable remove, bid = {}, bgroup = {}, count = {}", bid, bgroup, size);
-                    };
-                    updater.addCallback(bid, bgroup, updateCallback, removeCallback);
-                    customInstanceMap.put(key, template);
-                    logger.info("AsyncCamelliaRedisTemplate init, bid = {}, bgroup = {}", bid, bgroup);
+        ProxyRouteConfUpdater updater = custom.getProxyRouteConfUpdater();
+        AsyncCamelliaRedisTemplate template = new AsyncCamelliaRedisTemplate(env, bid, bgroup, updater, custom.getReloadIntervalMillis());
+        //更新的callback和删除的callback
+        ResourceTableUpdateCallback updateCallback = template.getUpdateCallback();
+        ResourceTableRemoveCallback templateRemoveCallback = template.getRemoveCallback();
+        ResourceTableRemoveCallback removeCallback = () -> {
+            customInstanceMap.remove(bid + "|" + bgroup);
+            templateRemoveCallback.callback();
+            Set<ChannelInfo> channelMap = ChannelMonitor.getChannelMap(bid, bgroup);
+            int size = channelMap.size();
+            for (ChannelInfo channelInfo : channelMap) {
+                try {
+                    channelInfo.getCtx().close();
+                } catch (Exception e) {
+                    logger.error("force close client connect error, bid = {}, bgroup = {}, consid = {}", bid, bgroup, channelInfo.getConsid(), e);
                 }
             }
-        }
+            logger.info("force close client connect for resourceTable remove, bid = {}, bgroup = {}, count = {}", bid, bgroup, size);
+        };
+        updater.addCallback(bid, bgroup, updateCallback, removeCallback);
+        logger.info("AsyncCamelliaRedisTemplate init, bid = {}, bgroup = {}", bid, bgroup);
         return template;
     }
 
-    private AsyncCamelliaRedisTemplate initOrCreateRemoteInstance(long bid, String bgroup) {
+    private AsyncCamelliaRedisTemplate initRemoteInstance(long bid, String bgroup) {
         if (apiService == null) return null;
-        String key = bid + "|" + bgroup;
-        AsyncCamelliaRedisTemplate template = remoteInstanceMap.get(key);
-        if (template == null) {
-            synchronized (lockMap.getLockObj(key)) {
-                template = remoteInstanceMap.get(key);
-                if (template == null) {
-                    boolean monitorEnable = properties.getRemote().isMonitorEnable();
-                    long checkIntervalMillis = properties.getRemote().getCheckIntervalMillis();
-                    template = new AsyncCamelliaRedisTemplate(env, apiService, bid, bgroup, monitorEnable, checkIntervalMillis);
-                    remoteInstanceMap.put(key, template);
-                    logger.info("AsyncCamelliaRedisTemplate init, bid = {}, bgroup = {}", bid, bgroup);
-                }
-            }
-        }
+        CamelliaTranspondProperties.RemoteProperties remote = properties.getRemote();
+        if (remote == null) return null;
+        boolean monitorEnable = remote.isMonitorEnable();
+        long checkIntervalMillis = remote.getCheckIntervalMillis();
+        AsyncCamelliaRedisTemplate template = new AsyncCamelliaRedisTemplate(env, apiService, bid, bgroup, monitorEnable, checkIntervalMillis);
+        logger.info("AsyncCamelliaRedisTemplate init, bid = {}, bgroup = {}", bid, bgroup);
         return template;
     }
 

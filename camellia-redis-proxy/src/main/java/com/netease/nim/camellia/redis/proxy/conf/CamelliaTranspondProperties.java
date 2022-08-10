@@ -21,7 +21,6 @@ public class CamelliaTranspondProperties {
     public static enum Type {
         LOCAL,
         REMOTE,
-        AUTO,
         CUSTOM,
         ;
     }

@@ -317,39 +317,47 @@ public class CommandsTransponder {
 
     private void flush(Long bid, String bgroup, List<AsyncTask> tasks, List<Command> commands) {
         try {
-            AsyncCamelliaRedisTemplate template = null;
-            try {
-                template = chooser.choose(bid, bgroup);
-            } catch (Exception e) {
-                String log = "AsyncCamelliaRedisTemplateChooser choose error"
-                        + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e;
-                ErrorLogCollector.collect(CommandsTransponder.class, log, e);
-            }
-            if (template == null) {
+            CompletableFuture<AsyncCamelliaRedisTemplate> future = chooser.chooseAsync(bid, bgroup);
+            if (future == null) {
                 for (AsyncTask task : tasks) {
                     task.replyCompleted(ErrorReply.NOT_AVAILABLE);
                 }
-            } else {
-                List<CompletableFuture<Reply>> futureList;
-                try {
-                    futureList = template.sendCommand(commands);
-                } catch (Exception e) {
-                    String log = "AsyncCamelliaRedisTemplateChooser sendCommand error"
-                            + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e;
-                    ErrorLogCollector.collect(CommandsTransponder.class, log, e);
-                    for (AsyncTask task : tasks) {
-                        task.replyCompleted(ErrorReply.NOT_AVAILABLE);
-                    }
-                    return;
-                }
-                for (int i = 0; i < tasks.size(); i++) {
-                    AsyncTask task = tasks.get(i);
-                    CompletableFuture<Reply> completableFuture = futureList.get(i);
-                    completableFuture.thenAccept(task::replyCompleted);
-                }
+                return;
             }
-        } finally {
-            tasks.clear();
+            future.thenAccept(template -> {
+                try {
+                    if (template == null) {
+                        for (AsyncTask task : tasks) {
+                            task.replyCompleted(ErrorReply.NOT_AVAILABLE);
+                        }
+                    } else {
+                        List<CompletableFuture<Reply>> futureList;
+                        try {
+                            futureList = template.sendCommand(commands);
+                        } catch (Exception e) {
+                            String log = "AsyncCamelliaRedisTemplateChooser sendCommand error"
+                                    + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e;
+                            ErrorLogCollector.collect(CommandsTransponder.class, log, e);
+                            for (AsyncTask task : tasks) {
+                                task.replyCompleted(ErrorReply.NOT_AVAILABLE);
+                            }
+                            return;
+                        }
+                        for (int i = 0; i < tasks.size(); i++) {
+                            AsyncTask task = tasks.get(i);
+                            CompletableFuture<Reply> completableFuture = futureList.get(i);
+                            completableFuture.thenAccept(task::replyCompleted);
+                        }
+                    }
+                } catch (Exception e) {
+                    ErrorLogCollector.collect(CommandsTransponder.class, "flush commands error", e);
+                }
+            });
+        } catch (Exception e) {
+            ErrorLogCollector.collect(CommandsTransponder.class, "flush commands error", e);
+            for (AsyncTask task : tasks) {
+                task.replyCompleted(ErrorReply.NOT_AVAILABLE);
+            }
         }
     }
 }

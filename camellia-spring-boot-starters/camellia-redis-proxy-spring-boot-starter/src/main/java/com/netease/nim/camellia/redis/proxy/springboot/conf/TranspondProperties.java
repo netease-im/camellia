@@ -45,7 +45,6 @@ public class TranspondProperties {
         LOCAL,
         REMOTE,
         CUSTOM,
-        AUTO,
         ;
     }
 
