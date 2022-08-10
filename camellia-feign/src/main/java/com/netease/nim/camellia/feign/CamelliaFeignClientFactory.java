@@ -232,9 +232,6 @@ public class CamelliaFeignClientFactory {
                             .requestInterceptors(feignProps.getRequestInterceptors())
                             .resourceTable(resource.getUrl())
                             .dynamicOptionGetter(dynamicOptionGetter)
-                            .bid(failureContext.getBid())
-                            .bgroup(failureContext.getBgroup())
-                            .camelliaApi(camelliaApi)
                             .checkIntervalMillis(checkIntervalMillis)
                             .failureListener(failureListener)
                             .feignEnv(feignEnv);
