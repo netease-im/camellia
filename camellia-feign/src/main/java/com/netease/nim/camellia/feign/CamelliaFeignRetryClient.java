@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class CamelliaFeignRetryClient<T> {
 
     private final CamelliaFeignClientFactory factory;
-    private final Class<?> apiType;
+    private final Class<T> apiType;
 
     private final ConcurrentHashMap<String, Method> methodMap = new ConcurrentHashMap<>();
 

@@ -187,6 +187,15 @@ public class CamelliaFeignClientFactory {
     /**
      * 生成一个重试的service
      * @param failureContext failureContext
+     * @return 实例
+     */
+    public <T> T getRetryService(CamelliaFeignFailureContext failureContext) {
+        return getRetryService(failureContext, null, null);
+    }
+
+    /**
+     * 生成一个重试的service
+     * @param failureContext failureContext
      * @param fallbackFactory fallback工厂
      * @param failureListener 失败回调
      * @return 实例
