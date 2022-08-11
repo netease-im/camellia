@@ -16,7 +16,7 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.7</version>
+			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
@@ -26,7 +26,7 @@
 		<dependency>
 			<groupId>com.googlecode.concurrentlinkedhashmap</groupId>
 			<artifactId>concurrentlinkedhashmap-lru</artifactId>
-			<version>1.4.2</version>
+			<version>${concurrentlinkedhashmap.version}</version>
 		</dependency>
     </dependencies>
 	<build>

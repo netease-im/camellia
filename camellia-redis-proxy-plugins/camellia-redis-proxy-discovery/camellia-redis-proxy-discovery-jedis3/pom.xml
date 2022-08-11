@@ -22,7 +22,7 @@
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>3.6.3</version>
+            <version>${jedis3.version}</version>
         </dependency>
         <dependency>
             <groupId>com.netease.nim</groupId>

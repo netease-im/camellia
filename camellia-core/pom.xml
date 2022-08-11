@@ -16,32 +16,32 @@
 		<dependency>
 			<groupId>cglib</groupId>
 			<artifactId>cglib</artifactId>
-			<version>3.3.0</version>
+			<version>${cglib.version}</version>
 		</dependency>
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-core</artifactId>
-            <version>9.4.0</version>
+            <version>${feign.version}</version>
         </dependency>
+		<dependency>
+			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-jackson</artifactId>
+			<version>${feign.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
-			<version>3.11.0</version>
+			<version>${okhttp.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.7</version>
+			<version>${slf4j.version}</version>
 		</dependency>
-        <dependency>
-            <groupId>io.github.openfeign</groupId>
-            <artifactId>feign-jackson</artifactId>
-            <version>9.4.0</version>
-        </dependency>
 		<dependency>
 			<groupId>com.googlecode.concurrentlinkedhashmap</groupId>
 			<artifactId>concurrentlinkedhashmap-lru</artifactId>
-			<version>1.4.2</version>
+			<version>${concurrentlinkedhashmap.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
