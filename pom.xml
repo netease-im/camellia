@@ -33,7 +33,8 @@
 		<spring-web.version>5.0.10.RELEASE</spring-web.version>
 		<spring-cloud-starter-config.version>2.0.0.M9</spring-cloud-starter-config.version>
 		<cglib.version>3.3.0</cglib.version>
-		<feign.version>11.9</feign.version>
+		<feign9.version>9.4.0</feign9.version>
+		<feign11.version>11.2</feign11.version>
 		<okhttp.version>3.14.0</okhttp.version>
 		<slf4j.version>1.7.7</slf4j.version>
 		<netty.version>4.1.63.Final</netty.version>

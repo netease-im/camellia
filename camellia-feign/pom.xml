@@ -26,12 +26,12 @@
 		<dependency>
 			<groupId>io.github.openfeign</groupId>
 			<artifactId>feign-core</artifactId>
-			<version>${feign.version}</version>
+			<version>${feign11.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.openfeign</groupId>
 			<artifactId>feign-okhttp</artifactId>
-			<version>${feign.version}</version>
+			<version>${feign11.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>

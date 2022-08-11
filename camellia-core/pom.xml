@@ -21,12 +21,12 @@
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-core</artifactId>
-            <version>${feign.version}</version>
+            <version>${feign9.version}</version>
         </dependency>
 		<dependency>
 			<groupId>io.github.openfeign</groupId>
 			<artifactId>feign-jackson</artifactId>
-			<version>${feign.version}</version>
+			<version>${feign9.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
