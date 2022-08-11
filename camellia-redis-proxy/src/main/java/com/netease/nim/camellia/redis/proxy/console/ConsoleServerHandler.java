@@ -37,6 +37,7 @@ public class ConsoleServerHandler extends SimpleChannelInboundHandler<Object> {
     private ConsoleResult handlerRequest(CustomRequestObject requestObject) {
         try {
             String uri = requestObject.getUriNoParam();
+            if (uri == null) return ConsoleResult.error();
             if (uri.equalsIgnoreCase("/online")) {
                 return consoleService.online();
             } else if (uri.equalsIgnoreCase("/offline")) {
