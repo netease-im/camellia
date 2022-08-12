@@ -27,14 +27,24 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<java.version>1.8</java.version>
 		<spring.boot.version>2.0.6.RELEASE</spring.boot.version>
 		<spring.cloud.version>Finchley.RELEASE</spring.cloud.version>
 		<spring-cloud-openfeign.version>2.0.0.RELEASE</spring-cloud-openfeign.version>
+		<spring-boot-maven-plugin.version>2.0.6.RELEASE</spring-boot-maven-plugin.version>
 		<spring-web.version>5.0.10.RELEASE</spring-web.version>
 		<spring-cloud-starter-config.version>2.0.0.M9</spring-cloud-starter-config.version>
+		<maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
+		<maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
+		<maven-source-plugin.version>3.1.0</maven-source-plugin.version>
+		<maven-deploy-plugin.version>3.0.0-M1</maven-deploy-plugin.version>
+		<maven-release-plugin.version>2.5.3</maven-release-plugin.version>
+		<maven-javadoc-plugin.version>2.9.1</maven-javadoc-plugin.version>
+		<maven-gpg-plugin.version>1.5</maven-gpg-plugin.version>
+		<fastjson.version>1.2.83</fastjson.version>
 		<cglib.version>3.3.0</cglib.version>
-		<feign9.version>9.4.0</feign9.version>
-		<feign11.version>11.2</feign11.version>
+		<openFeign9.version>9.4.0</openFeign9.version>
+		<openFeign11.version>11.8</openFeign11.version>
 		<okhttp.version>3.14.0</okhttp.version>
 		<slf4j.version>1.7.7</slf4j.version>
 		<netty.version>4.1.63.Final</netty.version>
@@ -71,7 +81,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-source-plugin</artifactId>
-						<version>3.0.1</version>
+						<version>${maven-source-plugin.version}</version>
 						<executions>
 							<execution>
 								<id>attach-sources</id>
@@ -84,7 +94,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>2.9.1</version>
+						<version>${maven-javadoc-plugin.version}</version>
 						<configuration>
 							<docencoding>UTF-8</docencoding>
 							<encoding>UTF-8</encoding>
@@ -102,7 +112,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.5</version>
+						<version>${maven-gpg-plugin.version}</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
@@ -133,7 +143,7 @@
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
-			<version>1.2.83</version>
+			<version>${fastjson.version}</version>
 		</dependency>
 	</dependencies>
 
