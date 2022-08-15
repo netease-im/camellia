@@ -161,15 +161,12 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         if (pipeline != null) return pipeline;
         final ResponseQueable queable = new ResponseQueable(env);
         final RedisClientPool redisClientPool = new RedisClientPool.DefaultRedisClientPool(env.getJedisPoolFactory(), env.getJedisClusterFactory());
-        ResourceTable resourceTable = ResourceTransferUtil.transfer(response.getResourceTable(), new ResourceTransferUtil.ResourceTransferFunc() {
-            @Override
-            public Resource transfer(Resource resource) {
-                if (resource == null) return null;
-                PipelineResource pipelineResource = new PipelineResource(resource);
-                pipelineResource.setQueable(queable);
-                pipelineResource.setClientPool(redisClientPool);
-                return pipelineResource;
-            }
+        ResourceTable resourceTable = ResourceTransferUtil.transfer(response.getResourceTable(), resource -> {
+            if (resource == null) return null;
+            PipelineResource pipelineResource = new PipelineResource(resource);
+            pipelineResource.setQueable(queable);
+            pipelineResource.setClientPool(redisClientPool);
+            return pipelineResource;
         });
         ProxyEnv env = factory.getEnv();
         //pipeline的proxy对象在分片和双写场景下，不能使用分片并发和多写并发，因为在某些场景下可能有并发问题（获取Client、Client发出指令、把Response对象放到ResponseQueable这三个操作）
@@ -1710,23 +1707,20 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
 
     @Override
     public Object eval(final byte[] script, final int keyCount, final byte[]... params) {
-        return writeInvoke(new WriteInvoker() {
-            @Override
-            public Object invoke(Resource resource, ICamelliaRedis redis) {
-                if (LogUtil.isDebugEnabled()) {
-                    List<String> list = new ArrayList<>();
-                    for (int i=0; i<keyCount; i++) {
-                        list.add(SafeEncoder.encode(params[i]));
-                    }
-                    LogUtil.debugLog(redis.getClass().getSimpleName(), "eval", resource, SafeEncoder.encode(script), list.toArray(new String[0]));
+        return writeInvoke((resource, redis) -> {
+            if (LogUtil.isDebugEnabled()) {
+                List<String> list = new ArrayList<>();
+                for (int i=0; i<keyCount; i++) {
+                    list.add(SafeEncoder.encode(params[i]));
                 }
-                try {
-                    return redis.eval(script, keyCount, params);
-                } finally {
-                    Monitor monitor = factory.getEnv().getMonitor();
-                    if (monitor != null) {
-                        monitor.incrWrite(resource.getUrl(), redis.getClass().getName(), "eval(byte[],int,byte[])");
-                    }
+                LogUtil.debugLog(redis.getClass().getSimpleName(), "eval", resource, SafeEncoder.encode(script), list.toArray(new String[0]));
+            }
+            try {
+                return redis.eval(script, keyCount, params);
+            } finally {
+                Monitor monitor = factory.getEnv().getMonitor();
+                if (monitor != null) {
+                    monitor.incrWrite(resource.getUrl(), redis.getClass().getName(), "eval(byte[],int,byte[])");
                 }
             }
         }, keyCount, params);
@@ -1734,23 +1728,20 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
 
     @Override
     public Object evalsha(final byte[] sha1, final int keyCount, final byte[]... params) {
-        return writeInvoke(new WriteInvoker() {
-            @Override
-            public Object invoke(Resource resource, ICamelliaRedis redis) {
-                if (LogUtil.isDebugEnabled()) {
-                    List<String> list = new ArrayList<>();
-                    for (int i=0; i<keyCount; i++) {
-                        list.add(SafeEncoder.encode(params[i]));
-                    }
-                    LogUtil.debugLog(redis.getClass().getSimpleName(), "evalsha", resource, SafeEncoder.encode(sha1), list.toArray(new String[0]));
+        return writeInvoke((resource, redis) -> {
+            if (LogUtil.isDebugEnabled()) {
+                List<String> list = new ArrayList<>();
+                for (int i=0; i<keyCount; i++) {
+                    list.add(SafeEncoder.encode(params[i]));
                 }
-                try {
-                    return redis.evalsha(sha1, keyCount, params);
-                } finally {
-                    Monitor monitor = factory.getEnv().getMonitor();
-                    if (monitor != null) {
-                        monitor.incrWrite(resource.getUrl(), redis.getClass().getName(), "evalsha(byte[],int,byte[])");
-                    }
+                LogUtil.debugLog(redis.getClass().getSimpleName(), "evalsha", resource, SafeEncoder.encode(sha1), list.toArray(new String[0]));
+            }
+            try {
+                return redis.evalsha(sha1, keyCount, params);
+            } finally {
+                Monitor monitor = factory.getEnv().getMonitor();
+                if (monitor != null) {
+                    monitor.incrWrite(resource.getUrl(), redis.getClass().getName(), "evalsha(byte[],int,byte[])");
                 }
             }
         }, keyCount, params);
@@ -1994,13 +1985,10 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
                                                     String bgroup,
                                                     String md5) {
             CamelliaApiResponse response = service.getResourceTable(bid, bgroup, md5);
-            ResourceTable resourceTable = ResourceTransferUtil.transfer(response.getResourceTable(), new ResourceTransferUtil.ResourceTransferFunc() {
-                @Override
-                public Resource transfer(Resource resource) {
-                    ResourceWrapper resourceWrapper = new ResourceWrapper(resource);
-                    resourceWrapper.setEnv(env);
-                    return resourceWrapper;
-                }
+            ResourceTable resourceTable = ResourceTransferUtil.transfer(response.getResourceTable(), resource -> {
+                ResourceWrapper resourceWrapper = new ResourceWrapper(resource);
+                resourceWrapper.setEnv(env);
+                return resourceWrapper;
             });
             response.setResourceTable(resourceTable);
             return response;
