@@ -2832,7 +2832,9 @@ public class CamelliaJedis implements ICamelliaRedis {
     public Object eval(byte[] script, int keyCount, byte[]... params) {
         Jedis jedis = jedisPool.getResource();
         try {
-            return jedis.eval(script, keyCount, params);
+            Client client = jedis.getClient();
+            client.eval(script, keyCount, params);
+            return client.getOne();
         } finally {
             CloseUtil.closeQuietly(jedis);
         }
@@ -2842,7 +2844,9 @@ public class CamelliaJedis implements ICamelliaRedis {
     public Object evalsha(byte[] sha1, int keyCount, byte[]... params) {
         Jedis jedis = jedisPool.getResource();
         try {
-            return jedis.evalsha(sha1, keyCount, params);
+            Client client = jedis.getClient();
+            client.evalsha(sha1, keyCount, params);
+            return client.getOne();
         } finally {
             CloseUtil.closeQuietly(jedis);
         }

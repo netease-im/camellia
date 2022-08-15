@@ -16,6 +16,7 @@
 ### 更新
 * CamelliaRedisTemplate初始化redis-cluster时增加可用性判断（jedis/v2.9.3没有这个判断，新版本jedis有这个）
 * 重命名NacosProxyDamicConfSupport为NacosProxyDynamicConfSupport
+* CamelliaRedisTemplate执行eval/evalsha命令时使用超时配置（jedis2.9.3会移除超时，高版本jedis不会，和高版本保持一致）
 
 ### fix
 * fix了camellia-dashboard中FeignChecker没有生效的问题（缺失了@Component注解）

@@ -19,6 +19,8 @@ import redis.clients.util.SafeEncoder;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static redis.clients.jedis.Protocol.toByteArray;
+
 /**
  * 封装了JedisCluster的接口
  * Created by caojiajun on 2019/7/22.
@@ -1851,12 +1853,26 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
 
     @Override
     public Object eval(byte[] script, int keyCount, byte[]... params) {
-        return jedisCluster.eval(script, keyCount, params);
+        return new JedisClusterCommand<Object>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public Object execute(Jedis connection) {
+                Client client = connection.getClient();
+                client.eval(script, toByteArray(keyCount), params);
+                return client.getOne();
+            }
+        }.runBinary(keyCount, params);
     }
 
     @Override
     public Object evalsha(byte[] sha1, int keyCount, byte[]... params) {
-        return jedisCluster.evalsha(sha1, keyCount, params);
+        return new JedisClusterCommand<Object>(jedisCluster.getConnectionHandler(), jedisCluster.getMaxAttempts()) {
+            @Override
+            public Object execute(Jedis connection) {
+                Client client = connection.getClient();
+                client.evalsha(sha1, toByteArray(keyCount), params);
+                return client.getOne();
+            }
+        }.runBinary(keyCount, params);
     }
 
     @Override

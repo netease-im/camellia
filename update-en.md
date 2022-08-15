@@ -16,6 +16,7 @@
 ### update
 * CamelliaRedisTemplate add available check for redis-cluster init
 * rename NacosProxyDamicConfSupport to NacosProxyDynamicConfSupport
+* CamelliaRedisTemplate eval/evalsha with the specified timeout
 
 ### fix
 * fix camellia-dashboard FeignChecker not effective
