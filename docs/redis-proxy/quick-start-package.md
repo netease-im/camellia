@@ -3,7 +3,7 @@
 
 下载最新版安装包并解压（v1.0.60）：
 ```
-wget https://github.com/netease-im/camellia/releases/download/v1.0.60/camellia-redis-proxy-1.0.60.tar.gz
+wget https://github.com/netease-im/camellia/releases/download/1.0.60/camellia-redis-proxy-1.0.60.tar.gz
 tar zxvf camellia-redis-proxy-1.0.60.tar.gz
 cd camellia-redis-proxy-1.0.60/
 ```
@@ -34,7 +34,7 @@ java -XX:+UseG1GC -XX:+UseContainerSupport -Xms2048m -Xmx2048m -server org.sprin
 
 特别的，在某些业务场景中下，可能希望proxy的可执行文件与配置文件application.yml分开，此时可以把tar包重新打成jar包，并配合spring提供的spring.config.location参数来指定application.yml，具体如下：
 ```
-wget https://github.com/netease-im/camellia/releases/download/v1.0.60/camellia-redis-proxy-1.0.60.tar.gz
+wget https://github.com/netease-im/camellia/releases/download/1.0.60/camellia-redis-proxy-1.0.60.tar.gz
 tar zxvf camellia-redis-proxy-1.0.60.tar.gz
 cd camellia-redis-proxy-1.0.60/
 jar -cvf0M camellia-redis-proxy.jar BOOT-INF/ META-INF/ org/
