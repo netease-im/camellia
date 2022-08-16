@@ -32,11 +32,17 @@ public class CamelliaClusterFreq {
             boolean pass = current <= freqConfig.getThreshold();
             if (!pass) {
                 if (freqConfig.getBanTime() > 0) {
-                    template.pexpire(freqKey, freqConfig.getBanTime());
+                    if (freqConfig.isDelayBanEnable()) {//如果惩罚时间顺延，则再惩罚时间范围内，每多一次请求，ban都会被顺延
+                        template.pexpire(freqKey, freqConfig.getBanTime());
+                    } else {
+                        if (current <= freqConfig.getThreshold() + delta) {//不顺延，则只有到达阈值的那一次设置ban时间
+                            template.pexpire(freqKey, freqConfig.getBanTime());
+                        }
+                    }
                 }
             }
             return new CamelliaFreqResponse(pass, current, CamelliaFreqType.CLUSTER);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error("checkFreqPass error, freqKey = {}, delta = {}, freqConfig = {}", freqKey, delta, JSONObject.toJSONString(freqConfig), e);
         }
         return CamelliaFreqResponse.DEFAULT_PASS;

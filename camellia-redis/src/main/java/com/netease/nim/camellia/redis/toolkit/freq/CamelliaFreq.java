@@ -67,7 +67,7 @@ public class CamelliaFreq {
                 return clusterFreq.checkFreqPass(freqKey, delta, freqConfig);
             }
             return CamelliaFreqResponse.DEFAULT_PASS;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error("checkFreqPass error, return pass, freqKey = {}, delta = {}, freqConfig = {}", freqKey, delta, JSONObject.toJSONString(freqConfig), e);
             return CamelliaFreqResponse.DEFAULT_PASS;
         }

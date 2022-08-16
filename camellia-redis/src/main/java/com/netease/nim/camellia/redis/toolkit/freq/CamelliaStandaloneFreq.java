@@ -49,11 +49,17 @@ public class CamelliaStandaloneFreq {
             boolean pass = current <= freqConfig.getThreshold();
             if (!pass) {
                 if (freqConfig.getBanTime() > 0) {
-                    counter.expireTime = System.currentTimeMillis() + freqConfig.getBanTime();
+                    if (freqConfig.isDelayBanEnable()) {
+                        counter.expireTime = System.currentTimeMillis() + freqConfig.getBanTime();
+                    } else {
+                        if (current <= freqConfig.getThreshold() + delta) {
+                            counter.expireTime = System.currentTimeMillis() + freqConfig.getBanTime();
+                        }
+                    }
                 }
             }
             return new CamelliaFreqResponse(pass, current, CamelliaFreqType.STANDALONE);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error("checkFreqPass error, return pass, freqKey = {}, delta = {}, freqConfig = {}", freqKey, delta, JSONObject.toJSONString(freqConfig), e);
             return CamelliaFreqResponse.DEFAULT_PASS;
         }
