@@ -23,7 +23,7 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-core</artifactId>
-    <version>a.b.c</version>
+    <version>1.0.60</version>
 </dependency>
 ```
 示例如下：
@@ -79,12 +79,12 @@ public class CamelliaSnowflakeIdGenTest {
     <dependency>
         <groupId>com.netease.nim</groupId>
         <artifactId>camellia-id-gen-snowflake-spring-boot-starter</artifactId>
-        <version>a.b.c</version>
+        <version>1.0.60</version>
     </dependency>
     <dependency>
         <groupId>com.netease.nim</groupId>
         <artifactId>camellia-redis-spring-boot-starter</artifactId>
-        <version>a.b.c</version>
+        <version>1.0.60</version>
     </dependency>
 </dependencies>
 ```

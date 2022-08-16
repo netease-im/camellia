@@ -4,7 +4,7 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
-# 1.0.60（2022/08/xx）
+# 1.0.60（2022/08/16）
 ### add
 * add camellia-delay-queue module
 * camellia-feign support failureListener, include CamelliaNakedClient and CamelliaFeignClient

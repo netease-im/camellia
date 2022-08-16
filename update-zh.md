@@ -4,7 +4,7 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
-# 1.0.60（2022/08/xx）
+# 1.0.60（2022/08/16）
 ### 新增
 * 新增camellia-delay-queue模块，可以用于实现延迟队列功能，具体见：[delay-queue](/docs/delay-queue/delay-queue.md)
 * camellia-feign新增failureListener，包括CamelliaNakedClient和CamelliaFeignClient都支持，可以用于监控，也可以用于失败重试
