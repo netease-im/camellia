@@ -10,7 +10,6 @@ import javax.persistence.Id;
  * Create with IntelliJ IDEA
  *
  * @author ChenHongliang
- * @date 2022/6/7 11:38
  */
 @Entity
 public class TableRefAddition  {

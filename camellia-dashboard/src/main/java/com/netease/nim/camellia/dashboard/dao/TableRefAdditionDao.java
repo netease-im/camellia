@@ -12,7 +12,6 @@ import java.util.List;
  * Create with IntelliJ IDEA
  *
  * @author ChenHongliang
- * @date 2022/6/7 16:37
  */
 @Repository
 public interface TableRefAdditionDao extends JpaRepository<TableRefAddition, Long> {
