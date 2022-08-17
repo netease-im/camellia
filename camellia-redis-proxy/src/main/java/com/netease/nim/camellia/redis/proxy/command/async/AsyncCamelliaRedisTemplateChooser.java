@@ -38,6 +38,7 @@ public class AsyncCamelliaRedisTemplateChooser {
     private final CamelliaTranspondProperties properties;
     private AsyncCamelliaRedisEnv env;
     private CamelliaApi apiService;
+    private boolean multiTenancySupport = true;//是否支持多租户
 
     private AsyncCamelliaRedisTemplate remoteInstance;
     private AsyncCamelliaRedisTemplate localInstance;
@@ -52,7 +53,21 @@ public class AsyncCamelliaRedisTemplateChooser {
 
     public AsyncCamelliaRedisTemplate choose(Long bid, String bgroup) {
         try {
-            return chooseAsync(bid, bgroup).get();
+            if (!multiTenancySupport) {
+                CamelliaTranspondProperties.Type type = properties.getType();
+                if (type == CamelliaTranspondProperties.Type.LOCAL) {
+                    return localInstance;
+                } else if (type == CamelliaTranspondProperties.Type.REMOTE) {
+                    return remoteInstance;
+                } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
+                    return customInstance;
+                } else {
+                    return null;
+                }
+            }
+            CompletableFuture<AsyncCamelliaRedisTemplate> future = chooseAsync(bid, bgroup);
+            if (future == null) return null;
+            return future.get();
         } catch (Exception e) {
             ErrorLogCollector.collect(AsyncCamelliaRedisTemplateChooser.class, "choose AsyncCamelliaRedisTemplate error", e);
             return null;
@@ -83,6 +98,10 @@ public class AsyncCamelliaRedisTemplateChooser {
             return initAsync(bid, bgroup, customInstanceMap, this::initCustomInstance);
         }
         return null;
+    }
+
+    public boolean isMultiTenancySupport() {
+        return multiTenancySupport;
     }
 
     private CompletableFuture<AsyncCamelliaRedisTemplate> wrapper(AsyncCamelliaRedisTemplate template) {
@@ -227,6 +246,7 @@ public class AsyncCamelliaRedisTemplateChooser {
         if (localInstance == null) {
             throw new IllegalArgumentException("local.resourceTable/local.resourceTableFilePath is null");
         }
+        multiTenancySupport = false;
     }
 
     private void initRemote() {
@@ -246,6 +266,7 @@ public class AsyncCamelliaRedisTemplateChooser {
             remoteInstance = initRemoteInstance(remote.getBid(), remote.getBgroup());
             remoteInstanceMap.put(remote.getBid() + "|" + remote.getBgroup(), remoteInstance);
         }
+        multiTenancySupport = remote.isDynamic();
     }
 
     private void initCustom() {
@@ -263,6 +284,7 @@ public class AsyncCamelliaRedisTemplateChooser {
             customInstance = initCustomInstance(custom.getBid(), custom.getBgroup());
             customInstanceMap.put(custom.getBid() + "|" + custom.getBgroup(), customInstance);
         }
+        multiTenancySupport = custom.isDynamic();
     }
 
     private AsyncCamelliaRedisTemplate initCustomInstance(long bid, String bgroup) {
