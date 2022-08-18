@@ -65,6 +65,14 @@ public class AsyncCamelliaRedisTemplateChooser {
                     return null;
                 }
             }
+            if (bid == null || bid <= 0 || bgroup == null) {
+                CamelliaTranspondProperties.Type type = properties.getType();
+                if (type == CamelliaTranspondProperties.Type.REMOTE) {
+                    return remoteInstance;
+                } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
+                    return customInstance;
+                }
+            }
             CompletableFuture<AsyncCamelliaRedisTemplate> future = chooseAsync(bid, bgroup);
             if (future == null) return null;
             return future.get();

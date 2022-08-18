@@ -317,7 +317,7 @@ public class CommandsTransponder {
 
     private void flush(Long bid, String bgroup, List<AsyncTask> tasks, List<Command> commands) {
         try {
-            if (!chooser.isMultiTenancySupport()) {
+            if (!chooser.isMultiTenancySupport() || bid == null || bid <= 0 || bgroup == null) {
                 AsyncCamelliaRedisTemplate template = chooser.choose(bid, bgroup);
                 flush0(template, bid, bgroup, tasks, commands);
                 return;
