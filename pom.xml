@@ -12,6 +12,7 @@
 	<description>camellia framework</description>
 	<modules>
 		<module>camellia-core</module>
+		<module>camellia-console</module>
 		<module>camellia-dashboard</module>
 		<module>camellia-delay-queue</module>
 		<module>camellia-feign</module>

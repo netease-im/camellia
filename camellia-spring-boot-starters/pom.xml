@@ -16,6 +16,7 @@
     </parent>
 
     <modules>
+        <module>camellia-console-spring-boot-starter</module>
         <module>camellia-dashboard-spring-boot-starter</module>
         <module>camellia-delay-queue-spring-boot-starters</module>
         <module>camellia-feign-spring-boot-starter</module>
@@ -33,6 +34,7 @@
         <module>camellia-spring-redis-eureka-discovery-spring-boot-starter</module>
         <module>camellia-redis-eureka-base</module>
         <module>camellia-spring-redis-base</module>
+
     </modules>
 
 </project>

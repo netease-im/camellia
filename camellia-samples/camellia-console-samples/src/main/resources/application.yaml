@@ -1,0 +1,43 @@
+server:
+  port: 8088
+spring:
+  application:
+    name: camellia-console
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/camellia_console?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+    hikari:
+      minimum-idle: 5
+      idle-timeout: 180000
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+
+camellia-console:
+  heart-call-seconds: 60
+  reload-seconds: 200
+
+camellia-redis:
+  type: local
+  local:
+    resource: redis://@127.0.0.1:6379
+  redis-conf:
+    jedis:
+      max-idle: 8
+      min-idle: 0
+      max-active: 8
+      max-wait-millis: 2000
+      timeout: 2000
+
+jwt:
+  key: camellia
+  failureTime: 86400000
+
+open:
+  auth:
+    url: http://localhost:8900/auth/open
+    appCode: cdefede5ad12423692b168b4bc5fa9c3
