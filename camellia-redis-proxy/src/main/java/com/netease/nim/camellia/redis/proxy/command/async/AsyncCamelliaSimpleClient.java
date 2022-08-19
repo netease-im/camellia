@@ -29,10 +29,14 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
 
     @Override
     public void preheat() {
-        logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
+        if(logger.isInfoEnabled()) {
+            logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
+        }
         RedisClientAddr addr = getAddr();
         boolean result = RedisClientHub.preheat(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
-        logger.info("preheat result = {}, url = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()));
+        if(logger.isInfoEnabled()) {
+            logger.info("preheat result = {}, url = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()));
+        }
     }
 
     public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
