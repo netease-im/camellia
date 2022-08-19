@@ -46,6 +46,10 @@ public class DiscoveryResourcePool implements FeignResourcePool {
         if (serverSelector == null) {
             throw new IllegalArgumentException("serverSelector is empty");
         }
+        reload();
+        if (originalList.isEmpty()) {
+            throw new IllegalArgumentException("server list is empty");
+        }
         discovery.setCallback(new CamelliaDiscovery.Callback<FeignServerInfo>() {
             @Override
             public void add(FeignServerInfo server) {
@@ -57,10 +61,6 @@ public class DiscoveryResourcePool implements FeignResourcePool {
                 DiscoveryResourcePool.this.remove(toFeignResource(server));
             }
         });
-        reload();
-        if (originalList.isEmpty()) {
-            throw new IllegalArgumentException("server list is empty");
-        }
         //兜底1分钟reload一次
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(DiscoveryResourcePool.class))
                 .scheduleAtFixedRate(this::reload, 1, 1, TimeUnit.MINUTES);
