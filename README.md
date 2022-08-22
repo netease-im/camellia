@@ -24,7 +24,7 @@ camellia主要包括以下功能模块：
 * 支持读从节点（redis-sentinel、redis-cluster都支持）
 * 支持丰富的监控，如TPS、RT、热key、大key、慢查询、连接数等     
 * 支持自定义方法拦截，支持热key缓存（GET命令），支持透明的数据转换（如解压缩、加解密）等  
-* 支持整合hbase实现string/zset/set等数据结构的冷热分离存储操作    
+* 支持整合hbase实现string/zset/hash等数据结构的冷热分离存储操作    
 * 支持整合mq（如kafka）实现异地的数据双写同步  
 [快速开始](/docs/redis-proxy/redis-proxy-zh.md)  
 
