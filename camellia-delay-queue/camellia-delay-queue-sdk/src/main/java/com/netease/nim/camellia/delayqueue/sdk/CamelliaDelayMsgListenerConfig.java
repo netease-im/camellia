@@ -12,6 +12,8 @@ public class CamelliaDelayMsgListenerConfig {
     private int pullBatch = CamelliaDelayQueueConstants.pullBatch;
     private int pullIntervalTimeMillis = CamelliaDelayQueueConstants.pullIntervalTimeMillis;//轮询间隔，单位ms，默认100ms
     private int pullThreads = CamelliaDelayQueueConstants.pullThreads;//pull线程池大小，默认1
+    private boolean longPollingEnable = true;//是否启用长轮询
+    private long longPollingTimeoutMillis = CamelliaDelayQueueConstants.longPollingTimeoutMillis;//长轮询的超时
 
     public long getAckTimeoutMillis() {
         return ackTimeoutMillis;
@@ -43,5 +45,21 @@ public class CamelliaDelayMsgListenerConfig {
 
     public void setPullThreads(int pullThreads) {
         this.pullThreads = pullThreads;
+    }
+
+    public boolean isLongPollingEnable() {
+        return longPollingEnable;
+    }
+
+    public void setLongPollingEnable(boolean longPollingEnable) {
+        this.longPollingEnable = longPollingEnable;
+    }
+
+    public long getLongPollingTimeoutMillis() {
+        return longPollingTimeoutMillis;
+    }
+
+    public void setLongPollingTimeoutMillis(long longPollingTimeoutMillis) {
+        this.longPollingTimeoutMillis = longPollingTimeoutMillis;
     }
 }

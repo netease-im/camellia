@@ -23,10 +23,10 @@ public class PerformanceTest {
         config.setUrl("http://127.0.0.1:8080");
         CamelliaDelayQueueSdk sdk = new CamelliaDelayQueueSdk(config);
 
-        int topicNum = 100;
+        int topicNum = 2;
         int msgNum = 1000;
-        int pullBatch = 100;
-        int pullThread = 10;
+        int pullBatch = 1;
+        int pullThread = 100;
         CountDownLatch totalLatch = new CountDownLatch(topicNum);
         CountDownLatch produceSpendStartLatch = new CountDownLatch(1);
         CountDownLatch produceSpendEndLatch = new CountDownLatch(topicNum);

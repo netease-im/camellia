@@ -285,11 +285,20 @@ public class CamelliaDelayQueueSdk {
                         request.setAckTimeoutMillis(config.getAckTimeoutMillis());
                         CamelliaDelayMsgPullResponse response;
                         try {
-                            response = api.pullMsg(request);
+                            if (config.isLongPollingEnable()) {
+                                response = api.longPollingMsg(request, config.getLongPollingTimeoutMillis());
+                            } else {
+                                response = api.pullMsg(request);
+                            }
                         } catch (Exception e) {
-                            logger.error("camellia delay queue pullMsg error, topic = {}, will sleep {} ms and retry",
-                                    topic, config.getPullIntervalTimeMillis(), e);
-                            sleepToNextTime();
+                            if (config.isLongPollingEnable()) {
+                                logger.error("camellia delay queue pullMsg error, topic = {}, will retry",
+                                        topic, e);
+                            } else {
+                                logger.error("camellia delay queue pullMsg error, topic = {}, will sleep {} ms and retry",
+                                        topic, config.getPullIntervalTimeMillis(), e);
+                                sleepToNextTime();
+                            }
                             continue;
                         }
                         CamelliaDelayMsgErrorCode errorCode = CamelliaDelayMsgErrorCode.getByValue(response.getCode());
@@ -331,6 +340,7 @@ public class CamelliaDelayQueueSdk {
         }
 
         private void sleepToNextTime() {
+            if (config.isLongPollingEnable()) return;
             try {
                 TimeUnit.MILLISECONDS.sleep(config.getPullIntervalTimeMillis());
             } catch (InterruptedException e) {

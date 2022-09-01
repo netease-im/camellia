@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.delayqueue.server.springboot;
 
+import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.delayqueue.common.conf.CamelliaDelayQueueConstants;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -25,6 +26,12 @@ public class CamelliaDelayQueueServerProperties {
     private long topicActiveTagTimeoutMillis = CamelliaDelayQueueConstants.topicActiveTagTimeoutMillis;
 
     private int monitorIntervalSeconds = CamelliaDelayQueueConstants.monitorIntervalSeconds;
+
+    private int longPollingScheduledThreadSize = SysUtils.getCpuNum() * 4;
+    private int longPollingMsgReadyCallbackThreadSize = SysUtils.getCpuNum() * 4;
+    private int longPollingMsgReadyCallbackQueueSize = 100000;
+    private int longPollingTaskQueueSize = 100000;
+    private long longPollingTimeoutMillis = 10000;
 
     public String getNamespace() {
         return namespace;
@@ -120,5 +127,45 @@ public class CamelliaDelayQueueServerProperties {
 
     public void setMonitorIntervalSeconds(int monitorIntervalSeconds) {
         this.monitorIntervalSeconds = monitorIntervalSeconds;
+    }
+
+    public int getLongPollingScheduledThreadSize() {
+        return longPollingScheduledThreadSize;
+    }
+
+    public void setLongPollingScheduledThreadSize(int longPollingScheduledThreadSize) {
+        this.longPollingScheduledThreadSize = longPollingScheduledThreadSize;
+    }
+
+    public int getLongPollingMsgReadyCallbackThreadSize() {
+        return longPollingMsgReadyCallbackThreadSize;
+    }
+
+    public void setLongPollingMsgReadyCallbackThreadSize(int longPollingMsgReadyCallbackThreadSize) {
+        this.longPollingMsgReadyCallbackThreadSize = longPollingMsgReadyCallbackThreadSize;
+    }
+
+    public int getLongPollingMsgReadyCallbackQueueSize() {
+        return longPollingMsgReadyCallbackQueueSize;
+    }
+
+    public void setLongPollingMsgReadyCallbackQueueSize(int longPollingMsgReadyCallbackQueueSize) {
+        this.longPollingMsgReadyCallbackQueueSize = longPollingMsgReadyCallbackQueueSize;
+    }
+
+    public int getLongPollingTaskQueueSize() {
+        return longPollingTaskQueueSize;
+    }
+
+    public void setLongPollingTaskQueueSize(int longPollingTaskQueueSize) {
+        this.longPollingTaskQueueSize = longPollingTaskQueueSize;
+    }
+
+    public long getLongPollingTimeoutMillis() {
+        return longPollingTimeoutMillis;
+    }
+
+    public void setLongPollingTimeoutMillis(long longPollingTimeoutMillis) {
+        this.longPollingTimeoutMillis = longPollingTimeoutMillis;
     }
 }

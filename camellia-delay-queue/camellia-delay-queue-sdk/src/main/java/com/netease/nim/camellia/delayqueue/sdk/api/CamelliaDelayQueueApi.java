@@ -169,6 +169,39 @@ public class CamelliaDelayQueueApi {
         }
     }
 
+    private <T> T longPolling(OkHttpClient okHttpClient, String url, Map<String, Object> params, Class<T> clazz, long timeoutMillis) {
+        try {
+            StringBuilder builder = new StringBuilder();
+            for (Map.Entry<String, Object> entry : params.entrySet()) {
+                builder.append(URLEncoder.encode(entry.getKey(), "utf-8")).append("=")
+                        .append(URLEncoder.encode(String.valueOf(entry.getValue()), "utf-8")).append("&");
+            }
+            if (builder.length() > 0) {
+                builder.deleteCharAt(builder.length() - 1);
+            }
+            RequestBody requestBody = RequestBody.create(MediaType.parse("application/x-www-form-urlencoded"), builder.toString());
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(requestBody)
+                    .build();
+            OkHttpClient client = okHttpClient.newBuilder().connectTimeout(timeoutMillis * 2, TimeUnit.MILLISECONDS)
+                    .readTimeout(timeoutMillis * 2, TimeUnit.MILLISECONDS)
+                    .writeTimeout(timeoutMillis * 2, TimeUnit.MILLISECONDS)
+                    .build();
+            Response response = client.newCall(request).execute();
+            int httpCode = response.code();
+            if (httpCode != 200) {
+                throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.UNKNOWN, "http.code=" + httpCode);
+            }
+            String string = response.body().string();
+            return JSONObject.parseObject(string, clazz);
+        } catch (CamelliaDelayQueueException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.UNKNOWN, e);
+        }
+    }
+
     public CamelliaDelayMsgSendResponse sendMsg(CamelliaDelayMsgSendRequest request) {
         DelayQueueServer server = nextDelayQueueServer();
         try {
@@ -209,9 +242,25 @@ public class CamelliaDelayQueueApi {
             Map<String, Object> params = new HashMap<>();
             params.put("topic", request.getTopic());
             params.put("batch", request.getBatch());
-            params.put("timeoutMillis", request.getAckTimeoutMillis());
+            params.put("ackTimeoutMillis", request.getAckTimeoutMillis());
             return invoke(okHttpClient, server.getUrl() + "/camellia/delayQueue/pullMsg",
                     params, CamelliaDelayMsgPullResponse.class);
+        } catch (Exception e) {
+            onError(server);
+            throw e;
+        }
+    }
+
+    public CamelliaDelayMsgPullResponse longPollingMsg(CamelliaDelayMsgPullRequest request, long longPollingTimeoutMillis) {
+        DelayQueueServer server = nextDelayQueueServer();
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("topic", request.getTopic());
+            params.put("batch", request.getBatch());
+            params.put("ackTimeoutMillis", request.getAckTimeoutMillis());
+            params.put("longPollingTimeoutMillis", longPollingTimeoutMillis);
+            return longPolling(okHttpClient, server.getUrl() + "/camellia/delayQueue/longPollingMsg",
+                    params, CamelliaDelayMsgPullResponse.class, longPollingTimeoutMillis);
         } catch (Exception e) {
             onError(server);
             throw e;

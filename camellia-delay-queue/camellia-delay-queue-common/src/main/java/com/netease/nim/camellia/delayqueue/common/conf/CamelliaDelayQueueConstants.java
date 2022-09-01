@@ -63,4 +63,16 @@ public class CamelliaDelayQueueConstants {
     public static final int maxRequestsPerHost = 1024;
     public static final int maxIdleConnections = 1024;
     public static final int keepAliveSeconds = 30;
+
+    //长轮询相关的配置
+    //长轮询的服务器延迟线程池大小
+    public static final int longPollingScheduledThreadSize = SysUtils.getCpuNum() * 4;
+    //长轮询的消息就绪回调的线程池大小
+    public static final int longPollingMsgReadyCallbackThreadSize = SysUtils.getCpuNum() * 4;
+    //长轮询的消息就绪回调线程池的队列大小
+    public static final int longPollingMsgReadyCallbackQueueSize = 100000;
+    //长轮询任务队列大小
+    public static final int longPollingTaskQueueSize = 100000;
+    //长轮询默认超时时间
+    public static final long longPollingTimeoutMillis = 10000;
 }

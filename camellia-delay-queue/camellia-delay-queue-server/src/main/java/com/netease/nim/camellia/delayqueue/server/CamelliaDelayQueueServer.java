@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.delayqueue.server;
 
 import com.alibaba.fastjson.JSONObject;
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.core.util.CacheUtil;
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.delayqueue.common.domain.*;
@@ -9,9 +10,12 @@ import com.netease.nim.camellia.delayqueue.common.exception.CamelliaDelayQueueEx
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
 import com.netease.nim.camellia.redis.toolkit.lock.CamelliaRedisLockManager;
+import com.netease.nim.camellia.redis.util.CloseUtil;
 import com.netease.nim.camellia.tools.cache.CamelliaLocalCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.Response;
 
 import java.nio.charset.StandardCharsets;
@@ -35,6 +39,8 @@ public class CamelliaDelayQueueServer {
     private final ScheduledExecutorService topicScheduledExecutor;
     private final CamelliaRedisLockManager lockManager;
 
+
+
     public CamelliaDelayQueueServer(CamelliaDelayQueueServerConfig serverConfig, CamelliaRedisTemplate template) {
         this.serverConfig = serverConfig;
         this.template = template;
@@ -53,6 +59,7 @@ public class CamelliaDelayQueueServer {
         lockManager = new CamelliaRedisLockManager(template, serverConfig.getScheduleThreadNum(), 5000, 5000);
 
         startSchedule();
+        initMsgReadyPubSub();
         logger.info("CamelliaDelayQueueServer start success, config = {}", JSONObject.toJSONString(serverConfig));
         CamelliaDelayQueueMonitor.init(serverConfig.getMonitorIntervalSeconds());
     }
@@ -126,6 +133,7 @@ public class CamelliaDelayQueueServer {
                 //如果是就绪状态，则塞到就绪set中
                 String readyQueueKey = readyQueueKey(msg.getTopic());
                 template.lpush(readyQueueKey, msg.getMsgId());
+                publishMsgReadyEvent(msg.getTopic());
             } else {
                 throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG);
             }
@@ -153,6 +161,14 @@ public class CamelliaDelayQueueServer {
             CamelliaDelayQueueMonitor.sendMsg(request, response);
             return response;
         }
+    }
+
+    /**
+     * 是否有待消费的消息
+     */
+    public boolean hasReadyMsg(String topic) {
+        String readyQueueKey = readyQueueKey(topic);
+        return template.llen(readyQueueKey) > 0;
     }
 
     //从list中rpop，如果有，则zadd到zset中
@@ -588,8 +604,88 @@ public class CamelliaDelayQueueServer {
                 args.addAll(result.inLifeMsgMap.keySet());
                 template.eval(ZREM_LPUSH_SCRIPT, keys, args);
                 CamelliaDelayQueueMonitor.triggerMsgReady(topic, result.inLifeMsgMap);
+                publishMsgReadyEvent(topic);
             }
         }
+    }
+
+    private final ConcurrentHashMap<CamelliaDelayMsgReadyCallback, Boolean> callbackSet = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> eventMap = new ConcurrentHashMap<>();
+
+    /**
+     * 增加一个消息就绪的回调
+     */
+    public void addMsgReadyCallback(CamelliaDelayMsgReadyCallback callback) {
+        callbackSet.put(callback, true);
+    }
+
+    private void initMsgReadyPubSub() {
+        subscribeMsgReadyEvent();
+        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("msg-ready-event-publish"))
+                .scheduleAtFixedRate(() -> {
+                    try {
+                        ConcurrentHashMap.KeySetView<String, Long> topics = eventMap.keySet();
+                        for (String topic : topics) {
+                            eventMap.remove(topic);
+                            publishMsgReadyEvent0(topic);
+                        }
+                    } catch (Exception e) {
+                        logger.error(e.getMessage(), e);
+                    }
+                }, 100, 100, TimeUnit.MILLISECONDS);
+    }
+
+    //发布有消息ready的通知，不是立即
+    private void publishMsgReadyEvent(String topic) {
+        eventMap.put(topic, System.currentTimeMillis());
+    }
+
+    //发布有消息ready的通知
+    private void publishMsgReadyEvent0(String topic) {
+        JSONObject event = new JSONObject();
+        event.put("topic", topic);
+        Jedis jedis = template.getWriteJedis("");
+        try {
+            jedis.publish(publishChannel(), event.toJSONString());
+        } catch (Exception e) {
+            logger.error("publish msg ready error, topic = {}", topic, e);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    //订阅消息ready的通知
+    private void subscribeMsgReadyEvent() {
+        new Thread(() -> {
+            while (true) {
+                Jedis jedis = null;
+                try {
+                    jedis = template.getWriteJedis("");
+                    jedis.subscribe(new JedisPubSub() {
+                        @Override
+                        public void onMessage(String channel, String message) {
+                            try {
+                                JSONObject json = JSONObject.parseObject(message);
+                                String topic = json.getString("topic");
+                                for (CamelliaDelayMsgReadyCallback callback : callbackSet.keySet()) {
+                                    try {
+                                        callback.callback(topic);
+                                    } catch (Exception e) {
+                                        logger.error("CamelliaDelayMsgReadyCallback error, topic = {}", topic);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                logger.error("subscribeMsgReadyEvent error, channel = {}, message = {}", channel, message, e);
+                            }
+                        }
+                    }, publishChannel());
+                } catch (Exception e) {
+                    logger.error("subscribeMsgReadyEvent error", e);
+                } finally {
+                    CloseUtil.closeQuietly(jedis);
+                }
+            }
+        }, "msg-ready-event-subscribe").start();
     }
 
     //扫描正在消费的消息，取出timeout的去重试
@@ -873,6 +969,11 @@ public class CamelliaDelayQueueServer {
 
     //string
     private String inactiveTag(String topic) {
-        return CacheUtil.buildCacheKey("camellia_delay_queue_inactive_tag", topic);
+        return CacheUtil.buildCacheKey("camellia_delay_queue_inactive_tag", serverConfig.getNamespace(), topic);
+    }
+
+    //pub-sub channel
+    private String publishChannel() {
+        return CacheUtil.buildCacheKey("camellia_delay_queue_publish", serverConfig.getNamespace());
     }
 }

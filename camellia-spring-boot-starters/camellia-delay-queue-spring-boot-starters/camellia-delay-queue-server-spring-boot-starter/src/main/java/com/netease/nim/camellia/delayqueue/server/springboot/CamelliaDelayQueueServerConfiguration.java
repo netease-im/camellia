@@ -40,4 +40,12 @@ public class CamelliaDelayQueueServerConfiguration {
         }
         return new CamelliaDelayQueueServer(serverConfig, template);
     }
+
+    @Bean
+    public CamelliaDelayQueueLongPollingTaskExecutor camelliaDelayQueueLongPollingTaskExecutor(CamelliaDelayQueueServerProperties properties) {
+        CamelliaDelayQueueServer server = camelliaDelayQueueServer(properties);
+        return new CamelliaDelayQueueLongPollingTaskExecutor(server,
+                properties.getLongPollingTaskQueueSize(), properties.getLongPollingMsgReadyCallbackThreadSize(),
+                properties.getLongPollingMsgReadyCallbackQueueSize(), properties.getLongPollingTaskQueueSize(), properties.getLongPollingTimeoutMillis());
+    }
 }
