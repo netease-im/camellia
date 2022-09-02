@@ -1,6 +1,8 @@
 package com.netease.nim.camellia.delayqueue.sdk.springboot;
 
 
+import com.netease.nim.camellia.delayqueue.common.conf.CamelliaDelayQueueConstants;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -23,7 +25,9 @@ public @interface CamelliaDelayMsgListenerConfig {
 
     int pullThreads() default -1;//小于等于0则使用sdk默认值
 
-    boolean longPollingEnable() default true;//是否启用长轮询
+    int consumeThreads() default -1;//小于等于0则使用sdk默认值
+
+    boolean longPollingEnable() default CamelliaDelayQueueConstants.longPollingEnable;//是否启用长轮询
 
     long longPollingTimeoutMillis() default -1;//长轮询的超时时间
 }

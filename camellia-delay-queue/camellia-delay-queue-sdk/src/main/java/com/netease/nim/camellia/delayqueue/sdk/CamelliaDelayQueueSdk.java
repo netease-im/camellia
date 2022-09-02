@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.delayqueue.sdk;
 
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.delayqueue.common.domain.*;
 import com.netease.nim.camellia.delayqueue.sdk.api.*;
 import com.netease.nim.camellia.delayqueue.common.exception.CamelliaDelayMsgErrorCode;
@@ -256,6 +257,7 @@ public class CamelliaDelayQueueSdk {
         private final CamelliaDelayMsgListener listener;
         private final long id;
         private volatile boolean running = true;
+        private final ExecutorService consumerExec;
 
         public PullMsgTask(CamelliaDelayQueueApi api, String topic,
                            CamelliaDelayMsgListenerConfig config, CamelliaDelayMsgListener listener) {
@@ -264,6 +266,9 @@ public class CamelliaDelayQueueSdk {
             this.config = config;
             this.listener = listener;
             this.id = idGen.incrementAndGet();
+            this.consumerExec = new ThreadPoolExecutor(config.getConsumeThreads(), config.getConsumeThreads(),
+                    0, TimeUnit.SECONDS, new SynchronousQueue<>(),
+                    new CamelliaThreadFactory("camellia-delay-queue-consume-msg[\" + topic + \"]"), new ThreadPoolExecutor.CallerRunsPolicy());
         }
 
         public long getId() {
@@ -272,9 +277,11 @@ public class CamelliaDelayQueueSdk {
 
         public void close() {
             running = false;
+            consumerExec.shutdown();
         }
 
         public void start() {
+
             for (int i = 0; i<config.getPullThreads(); i++) {
                 new Thread(() -> {
                     logger.info("camellia delay queue pull task thread start, thread = {}", Thread.currentThread().getName());
@@ -306,33 +313,41 @@ public class CamelliaDelayQueueSdk {
                             List<CamelliaDelayMsg> delayMsgList = response.getDelayMsgList();
                             if (delayMsgList != null && !delayMsgList.isEmpty()) {
                                 for (CamelliaDelayMsg delayMsg : delayMsgList) {
-                                    boolean ack;
-                                    try {
-                                        ack = listener.onMsg(delayMsg);
-                                    } catch (Exception e) {
-                                        logger.error("listener onMsg error, will ack false and retry, delayMsg = {}", JSONObject.toJSONString(delayMsg), e);
-                                        ack = false;
-                                    }
-                                    CamelliaDelayMsgAckRequest ackRequest = new CamelliaDelayMsgAckRequest();
-                                    ackRequest.setTopic(delayMsg.getTopic());
-                                    ackRequest.setMsgId(delayMsg.getMsgId());
-                                    ackRequest.setAck(ack);
-                                    if (logger.isDebugEnabled()) {
-                                        logger.debug("ack request = {}", JSONObject.toJSONString(ackRequest));
-                                    }
-                                    try {
-                                        CamelliaDelayMsgAckResponse ackResponse = api.ackMsg(ackRequest);
-                                        if (logger.isDebugEnabled()) {
-                                            logger.debug("ack response = {}", JSONObject.toJSONString(ackResponse));
+                                    consumerExec.submit(() -> {
+                                        try {
+                                            boolean ack;
+                                            try {
+                                                ack = listener.onMsg(delayMsg);
+                                            } catch (Exception e) {
+                                                logger.error("listener onMsg error, will ack false and retry, delayMsg = {}", JSONObject.toJSONString(delayMsg), e);
+                                                ack = false;
+                                            }
+                                            CamelliaDelayMsgAckRequest ackRequest = new CamelliaDelayMsgAckRequest();
+                                            ackRequest.setTopic(delayMsg.getTopic());
+                                            ackRequest.setMsgId(delayMsg.getMsgId());
+                                            ackRequest.setAck(ack);
+                                            if (logger.isDebugEnabled()) {
+                                                logger.debug("ack request = {}", JSONObject.toJSONString(ackRequest));
+                                            }
+                                            try {
+                                                CamelliaDelayMsgAckResponse ackResponse = api.ackMsg(ackRequest);
+                                                if (logger.isDebugEnabled()) {
+                                                    logger.debug("ack response = {}", JSONObject.toJSONString(ackResponse));
+                                                }
+                                            } catch (Exception e) {
+                                                logger.error("ack error, request = {}", JSONObject.toJSONString(request), e);
+                                            }
+                                        } catch (Exception e) {
+                                            logger.error("onMsg error, delayMsg = {}", JSONObject.toJSONString(delayMsg), e);
                                         }
-                                    } catch (Exception e) {
-                                        logger.error("ack error, request = {}", JSONObject.toJSONString(request), e);
-                                    }
+                                    });
                                 }
                                 continue;
                             }
                         }
-                        sleepToNextTime();
+                        if (!config.isLongPollingEnable()) {
+                            sleepToNextTime();
+                        }
                     }
                     logger.info("camellia delay queue pull task thread close, thread = {}", Thread.currentThread().getName());
                 }, "camellia-delay-queue-pull-msg[" + topic + "][id=" + id + "]["+ i + "]").start();
@@ -340,7 +355,6 @@ public class CamelliaDelayQueueSdk {
         }
 
         private void sleepToNextTime() {
-            if (config.isLongPollingEnable()) return;
             try {
                 TimeUnit.MILLISECONDS.sleep(config.getPullIntervalTimeMillis());
             } catch (InterruptedException e) {

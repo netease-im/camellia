@@ -5,7 +5,7 @@
 
 ## 特性
 * 基于redis实现，底层使用CamelliaRedisTemplate，支持redis-standalone、redis-sentinel、redis-cluster
-* 对外以http接口方式暴露服务，语言无关，对于消费端当前基于pull模型，未来会提供push模型
+* 对外以http接口方式暴露服务，语言无关，对于消费端当前基于pull模型（支持长轮询，也支持短轮询），未来会提供push模型
 * 提供了camellia-delay-queue-server-spring-boot-starter，快速部署delay-queue-server集群
 * 支持节点水平扩展，支持多topic
 * 提供丰富的监控数据
@@ -144,6 +144,7 @@ camellia-delay-queue-sdk:
     pull-batch: 1 #每次pullMsg时的批量大小，默认1，添加listener时可以单独设置，如果未设置，则走本默认配置，需要特别注意pull-batch和ack-timeout-millis的关系，避免未及时ack被服务器判断超时导致重复消费
     pull-interval-time-millis: 100 #pullMsg的轮询间隔，默认100ms，添加listener时可以单独设置，如果未设置，则走本默认配置
     pull-threads: 1 #每个listener的默认pullMsg线程数量，默认1，添加listener时可以单独设置，如果未设置，则走本默认配置
+    consume-threads: 1 #每个listener的消息消费线程数量，默认1，添加listener时可以单独设置，如果未设置，则走本默认配置
   http-config:
     connect-timeout-millis: 5000 #到server的http超时配置，默认5000，一般不需要特殊配置
     read-timeout-millis: 5000 #到server的http超时配置，默认5000，一般不需要特殊配置
@@ -199,8 +200,11 @@ camellia-delay-queue-sdk:
   listener-config:
     ack-timeout-millis: 30000 #消费时告知服务器的消费ack超时时间，默认30s，添加listener时可以单独设置，如果未设置，则走本默认配置
     pull-batch: 1 #每次pullMsg时的批量大小，默认1，添加listener时可以单独设置，如果未设置，则走本默认配置，需要特别注意pull-batch和ack-timeout-millis的关系，避免未及时ack被服务器判断超时导致重复消费
-    pull-interval-time-millis: 100 #pullMsg的轮询间隔，默认100ms，添加listener时可以单独设置，如果未设置，则走本默认配置
+    pull-interval-time-millis: 100 #pullMsg的轮询间隔，默认100ms，添加listener时可以单独设置，如果未设置，则走本默认配置，短轮询时本配置生效
     pull-threads: 1 #每个listener的默认pullMsg线程数量，默认1，添加listener时可以单独设置，如果未设置，则走本默认配置
+    consume-threads: 1 #每个listener的消息消费线程数量，默认1，添加listener时可以单独设置，如果未设置，则走本默认配置
+    long-polling-enable: true #是否开启长轮询，默认true
+    long-polling-timeout-millis: 10000 #长轮询的超时时间，默认10s
   http-config:
     connect-timeout-millis: 5000 #到server的http超时配置，默认5000，一般不需要特殊配置
     read-timeout-millis: 5000 #到server的http超时配置，默认5000，一般不需要特殊配置
@@ -218,7 +222,7 @@ camellia-delay-queue-sdk:
  * Created by caojiajun on 2022/7/21
  */
 @Component
-@CamelliaDelayMsgListenerConfig(topic = "topic1", pullThreads = 3)
+@CamelliaDelayMsgListenerConfig(topic = "topic1", pullThreads = 1, consumeThreads = 3)
 public class ConsumerService1 implements CamelliaDelayMsgListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ConsumerService1.class);
@@ -341,7 +345,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 }
 ```
 
-### pull消息用于消费
+### pull消息用于消费（短轮询接口，不管有没有消息立即返回）
 POST /camellia/delayQueue/pullMsg HTTP/1.1  
 Content-Type:application/x-www-form-urlencoded;charset=utf-8
 
@@ -350,6 +354,50 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 |topic|string|是|topic|
 |ackTimeoutMillis|number|否|拉到的消息，多久之内ack，如果超时未ack，服务器将重试，如果不填或者小于0则使用服务器默认配置|
 |batch|number|否|最多拉多少条，如果不填或者小于0则使用服务器默认配置|
+
+响应
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "delayMsgList":
+  [
+    {
+      "topic": "topic1",
+      "msgId": "6faa7316bc504f97aa6dd03ae12a2170",
+      "msg": "abc",
+      "produceTime": 1658492212132,
+      "triggerTime": 1658492222132,
+      "expireTime": 1658492242132,
+      "maxRetry": 3,
+      "retry": 0,
+      "status": 1
+    },
+    {
+      "topic": "topic1",
+      "msgId": "6faa7316bc504f97aa6dd03ae12a2171",
+      "msg": "def",
+      "produceTime": 1658492212132,
+      "triggerTime": 1658492222132,
+      "expireTime": 1658492242132,
+      "maxRetry": 3,
+      "retry": 0,
+      "status": 1
+    }
+  ]
+}
+```
+
+### pull消息用于消费（长轮询接口，如果有消息立即返回，如果没有消息，会hold住连接直到longPollingTimeoutMillis）
+POST /camellia/delayQueue/longPollingMsg HTTP/1.1  
+Content-Type:application/x-www-form-urlencoded;charset=utf-8
+
+|参数|类型|是否必填|说明|
+|:---:|:---:|:---:|:---:|
+|topic|string|是|topic|
+|ackTimeoutMillis|number|否|拉到的消息，多久之内ack，如果超时未ack，服务器将重试，如果不填或者小于0则使用服务器默认配置|
+|batch|number|否|最多拉多少条，如果不填或者小于0则使用服务器默认配置|
+|longPollingTimeoutMillis|number|否|长轮询的服务器超时时间，客户端http超时时间务必超过本参数，如果不填或者小于0则使用服务器默认配置|
 
 响应
 ```json

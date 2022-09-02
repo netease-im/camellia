@@ -23,10 +23,12 @@ public class PerformanceTest {
         config.setUrl("http://127.0.0.1:8080");
         CamelliaDelayQueueSdk sdk = new CamelliaDelayQueueSdk(config);
 
-        int topicNum = 2;
-        int msgNum = 1000;
+        int topicNum = 10;
+        int msgNum = 500;
         int pullBatch = 1;
-        int pullThread = 100;
+        int pullThread = 1;
+        int consumeThread = 50;
+        boolean longPollingEnable = true;
         CountDownLatch totalLatch = new CountDownLatch(topicNum);
         CountDownLatch produceSpendStartLatch = new CountDownLatch(1);
         CountDownLatch produceSpendEndLatch = new CountDownLatch(topicNum);
@@ -76,6 +78,8 @@ public class PerformanceTest {
                     CamelliaDelayMsgListenerConfig listenerConfig = new CamelliaDelayMsgListenerConfig();
                     listenerConfig.setPullBatch(pullBatch);
                     listenerConfig.setPullThreads(pullThread);
+                    listenerConfig.setConsumeThreads(consumeThread);
+                    listenerConfig.setLongPollingEnable(longPollingEnable);
                     sdk.addMsgListener(topic, listenerConfig, delayMsg -> {
                         try {
                             if (consumerNum.incrementAndGet() % 100 == 0) {

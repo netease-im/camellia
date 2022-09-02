@@ -48,8 +48,11 @@ public class CamelliaDelayQueueConstants {
     //sdk轮询间隔，单位ms，默认100ms
     public static final int pullIntervalTimeMillis = 100;
 
-    //sdk轮询的线程数，默认1
+    //sdk轮询的线程数，默认1，如果开启长轮询，则代表了连接数
     public static final int pullThreads = 1;
+
+    //sdk消费的线程数，默认1
+    public static final int consumeThreads = 1;
 
     //sdk走发现模式时兜底的reload间隔，默认60s
     public static final int discoveryReloadIntervalSeconds = 60;
@@ -65,6 +68,9 @@ public class CamelliaDelayQueueConstants {
     public static final int keepAliveSeconds = 30;
 
     //长轮询相关的配置
+
+    //是否开启长轮询（SDK）
+    public static final boolean longPollingEnable = true;
     //长轮询的服务器延迟线程池大小
     public static final int longPollingScheduledThreadSize = SysUtils.getCpuNum() * 4;
     //长轮询的消息就绪回调的线程池大小
