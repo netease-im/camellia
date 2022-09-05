@@ -299,7 +299,7 @@ public class CamelliaDelayQueueSdk {
                             }
                         } catch (Exception e) {
                             if (config.isLongPollingEnable()) {
-                                logger.error("camellia delay queue pullMsg error, topic = {}, will retry",
+                                logger.error("camellia delay queue longPollingMsg error, topic = {}, will retry",
                                         topic, e);
                             } else {
                                 logger.error("camellia delay queue pullMsg error, topic = {}, will sleep {} ms and retry",

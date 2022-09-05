@@ -10,6 +10,7 @@
 * 支持节点水平扩展，支持多topic
 * 提供丰富的监控数据
 * 提供了一个java-sdk，也提供了camellia-delay-queue-sdk-spring-boot-starter，方便快速接入
+* 注意事项：1.0.61版本开始支持长轮询，且java-sdk默认使用长轮询，如果有升级，请注意升级顺序（需要先升级server，再升级sdk）
 
 ## 服务架构
 <img src="camellia-delay-queue.jpg" width="60%" height="60%">
@@ -38,7 +39,8 @@
 
 * 服务器会启动多个扫描线程，扫描topic和消息的状态，当部署多节点时，各个节点会使用分布式锁来避免并发操作，同时也能提高效率
 * 多个数据结构之间的状态转换，使用了redis的lua脚本来保证原子性
-* 对外暴露的核心接口包括：sendMsg、pullMsg、ackMsg、getMsg、deleteMsg
+* 通过redis的pubsub通道来实现长轮询的通知通道
+* 对外暴露的核心接口包括：sendMsg、longPollingMsg、pullMsg、ackMsg、getMsg、deleteMsg
 * 此外还提供了getMonitorData、getTopicInfo、getTopicInfoList这样的监控接口用于暴露数据
 
 
