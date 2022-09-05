@@ -223,6 +223,7 @@ camellia-redis-proxy提供了key/value的自定义转换功能，从而你可以
 * 客户端接入（java之SpringRedisTemplate)
 * 客户端接入（其他语言）
 * 注意事项（容器环境部署）
+* 部署最佳实践
 
 具体可见：[部署和接入](deploy.md)
 
