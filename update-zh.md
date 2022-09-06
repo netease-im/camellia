@@ -4,6 +4,20 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.0.61（2022/09/xx）
+### 新增
+* camellia-delay-queue支持使用长轮询接口消费延迟消息，具体见：[delay-queue](/docs/delay-queue/delay-queue.md)
+* 新增camellia-console模块，用于管理多组camellia-dashboard集群
+* 新增CamelliaStatisticsManager用于管理多个CamelliaStatistics对象
+
+### 更新
+* camellia-redis-proxy优化了AsyncCamelliaRedisTemplate的初始化逻辑
+
+### fix
+* fix了camellia-redis-proxy使用分片或者代理到redis-cluster时执行ZINTERSTORE/ZUNIONSTORE/ZDIFFSTORE命令失败的问题
+* fix了camellia-feign中，当后端服务异常的情况下，调用方进程启动时，由于DiscoveryResourcePool初始化失败产生的内存泄漏问题
+
+
 # 1.0.60（2022/08/16）
 ### 新增
 * 新增camellia-delay-queue模块，可以用于实现延迟队列功能，具体见：[delay-queue](/docs/delay-queue/delay-queue.md)

@@ -4,6 +4,20 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+# 1.0.61（2022/09/xx）
+### add
+* camellia-delay-queue support long-polling to consume msg
+* provide camellia-console module, so you can manager multi camellia-dashboard clusters
+* provide CamelliaStatisticsManager to manage multi CamelliaStatistics instances
+
+### update
+* optimize camellia-redis-proxy's AsyncCamelliaRedisTemplate init logic
+
+### fix
+* fix camellia-redis-proxy invoke ZINTERSTORE/ZUNIONSTORE/ZDIFFSTORE command error when route to redis-cluster or sharding-redis
+* fix camellia-feign memory leak in DiscoveryResourcePool init fail case
+
+
 # 1.0.60（2022/08/16）
 ### add
 * add camellia-delay-queue module
