@@ -230,7 +230,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                     case ZUNIONSTORE:
                     case ZDIFFSTORE:
                         int keyCount = (int) Utils.bytesToNum(command.getObjects()[2]);
-                        checkSlotCommandsAndSend(command, commandFlusher, future, 3, 3 + keyCount, command.getObjects()[1]);
+                        checkSlotCommandsAndSend(command, commandFlusher, future, 3, 2 + keyCount, command.getObjects()[1]);
                         break;
                     case ZDIFF:
                     case ZUNION:

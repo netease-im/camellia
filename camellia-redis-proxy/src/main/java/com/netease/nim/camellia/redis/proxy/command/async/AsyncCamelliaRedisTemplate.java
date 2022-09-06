@@ -991,7 +991,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 future = new CompletableFuture<>();
                 future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
             } else {
-                future = writeCommandWithDynamicKeyCount(command, commandFlusher, 3, 3 + keyCount, objects[1]);
+                future = writeCommandWithDynamicKeyCount(command, commandFlusher, 3, 2 + keyCount, objects[1]);
             }
         }
         return future;
