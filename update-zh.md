@@ -4,7 +4,7 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
-# 1.0.61（2022/09/xx）
+# 1.0.61（2022/09/06）
 ### 新增
 * camellia-delay-queue支持使用长轮询接口消费延迟消息，具体见：[delay-queue](/docs/delay-queue/delay-queue.md)
 * 新增camellia-console模块，用于管理多组camellia-dashboard集群
