@@ -7,7 +7,7 @@
 # 1.0.61（2022/09/06）
 ### 新增
 * camellia-delay-queue支持使用长轮询接口消费延迟消息，具体见：[delay-queue](/docs/delay-queue/delay-queue.md)
-* 新增camellia-console模块，用于管理多组camellia-dashboard集群
+* 新增camellia-console模块，用于管理多组camellia-dashboard集群，感谢[@HongliangChen-963](https://github.com/HongliangChen-963)提供该模块
 * 新增CamelliaStatisticsManager用于管理多个CamelliaStatistics对象
 
 ### 更新
