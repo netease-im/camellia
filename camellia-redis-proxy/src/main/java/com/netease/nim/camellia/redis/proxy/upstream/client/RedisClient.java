@@ -114,17 +114,17 @@ public class RedisClient implements AsyncClient {
                             pipeline.addLast(new CommandPackEncoder(RedisClient.this, queue));
                         }
                     });
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("{} try connect...", clientName);
             }
             ChannelFuture channelFuture = bootstrap.connect(host, port).sync();
             this.channel = channelFuture.channel();
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("{} connect success", clientName);
             }
             valid = true;
             if (password != null) {
-                logger.warn("{} need password, try auth", clientName);
+                logger.info("{} need password, try auth", clientName);
                 boolean authSuccess = false;
                 CompletableFuture<Reply> future;
                 if (userName == null) {
@@ -135,7 +135,7 @@ public class RedisClient implements AsyncClient {
                 Reply reply = future.get(connectTimeoutMillis, TimeUnit.MILLISECONDS);
                 if (reply instanceof StatusReply) {
                     if (((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.OK.getStatus())) {
-                        if(logger.isInfoEnabled()) {
+                        if (logger.isInfoEnabled()) {
                             logger.info("{} auth success", clientName);
                         }
                         authSuccess = true;
@@ -176,14 +176,14 @@ public class RedisClient implements AsyncClient {
             try {
                 if (isIdle()) {
                     closing = true;
-                    if(logger.isInfoEnabled()) {
+                    if (logger.isInfoEnabled()) {
                         logger.info("{} will close after {} seconds because connection is idle, idle.seconds = {}", clientName, closeIdleConnectionDelaySeconds, checkIdleThresholdSeconds);
                     }
                     try {
                         ExecutorUtils.newTimeout(timeout -> {
                             try {
                                 if (isIdle()) {
-                                    if(logger.isInfoEnabled()) {
+                                    if (logger.isInfoEnabled()) {
                                         logger.info("{} will close because connection is idle", clientName);
                                     }
                                     _stop(true);
