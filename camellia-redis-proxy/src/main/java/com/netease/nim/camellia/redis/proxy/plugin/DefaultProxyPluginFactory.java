@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.plugin;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,11 +110,7 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
             if (pluginEnum != null) {
                 clazz = pluginEnum.getClazz();
             } else {
-                try {
-                    clazz = Class.forName(classOrAlias);
-                } catch (ClassNotFoundException e) {
-                    clazz = Thread.currentThread().getContextClassLoader().loadClass(classOrAlias);
-                }
+                clazz = BeanInitUtils.parseClass(classOrAlias);
             }
             return (ProxyPlugin) beanFactory.getBean(clazz);
         } catch (Exception e) {

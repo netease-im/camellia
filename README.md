@@ -46,7 +46,7 @@ camellia主要包括以下功能模块：
 ### camellia-hbase
 * 基于hbase-client封装的hbase客户端，主要的类是CamelliaHBaseTemplate  
 * 支持读写分离、双（多）写   
-* 支持动态配置变更
+* 支持动态配置变更  
 [快速开始](/docs/hbase-template/hbase-template.md)
 
 ### camellia-feign
