@@ -16,7 +16,7 @@ public interface ProxyPlugin {
     }
 
     /**
-     * 从小到大依次执行
+     * 从大到小依次执行，请求和响应可以分开定义
      * @return 优先级
      */
     default ProxyPluginOrder order() {
