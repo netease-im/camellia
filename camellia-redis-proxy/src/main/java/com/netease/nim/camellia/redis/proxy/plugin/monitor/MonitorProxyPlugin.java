@@ -18,11 +18,15 @@ public class MonitorProxyPlugin implements ProxyPlugin {
 
     @Override
     public void init(ProxyBeanFactory factory) {
-        slowCommandThresholdNanoTime = ProxyDynamicConf.getLong("slow.command.threshold.millis", 2000);
-        ProxyDynamicConf.registerCallback(() -> slowCommandThresholdNanoTime = ProxyDynamicConf.getLong("slow.command.threshold.millis", slowCommandThresholdNanoTime));
+        reloadConf();
+        ProxyDynamicConf.registerCallback(this::reloadConf);
 
         String slowCommandMonitorCallbackClassName = ProxyDynamicConf.getString("slow.command.monitor.callback.className", DummySlowCommandMonitorCallback.class.getName());
         slowCommandMonitorCallback = (SlowCommandMonitorCallback) factory.getBean(BeanInitUtils.parseClass(slowCommandMonitorCallbackClassName));
+    }
+
+    private void reloadConf() {
+        slowCommandThresholdNanoTime = ProxyDynamicConf.getLong("slow.command.threshold.millis", 2000) * 1000000L;
     }
 
     @Override
