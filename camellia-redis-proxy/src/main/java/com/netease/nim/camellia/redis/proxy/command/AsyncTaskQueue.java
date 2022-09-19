@@ -101,7 +101,7 @@ public class AsyncTaskQueue {
                         return;
                     }
                 } catch (Exception e) {
-                    ErrorLogCollector.collect(AsyncTaskQueue.class, "doReplyFilter error", e);
+                    ErrorLogCollector.collect(AsyncTaskQueue.class, "executeReply error", e);
                 }
             }
         }

@@ -114,7 +114,7 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
                         return false;
                     }
                 } catch (Exception e) {
-                    ErrorLogCollector.collect(CommandsTransponder.class, "doRequestFilter error", e);
+                    ErrorLogCollector.collect(CommandsTransponder.class, "executeRequest error", e);
                 }
             }
         }
@@ -134,7 +134,7 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
                         return false;
                     }
                 } catch (Exception e) {
-                    ErrorLogCollector.collect(AsyncTask.class, "doReplyFilter error", e);
+                    ErrorLogCollector.collect(AsyncTask.class, "executeReply error", e);
                 }
             }
         }
