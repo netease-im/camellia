@@ -68,7 +68,7 @@ public class MonitorProxyPlugin implements ProxyPlugin {
             if (startNanoTime > 0) {
                 long spend = System.nanoTime() - startNanoTime;
                 CommandSpendMonitor.incr(commandContext.getBid(), commandContext.getBgroup(), command.getName(), spend);
-                if (spend > slowCommandThresholdNanoTime) {
+                if (spend > slowCommandThresholdNanoTime && !command.isBlocking()) {
                     double spendMillis = spend / 1000000.0;
                     long thresholdMillis = slowCommandThresholdNanoTime / 1000000;
                     SlowCommandMonitor.slowCommand(command, spendMillis, thresholdMillis);
