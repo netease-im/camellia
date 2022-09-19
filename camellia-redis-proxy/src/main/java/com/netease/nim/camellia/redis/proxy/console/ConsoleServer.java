@@ -1,8 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.console;
 
 import com.netease.nim.camellia.core.util.SysUtils;
-import com.netease.nim.camellia.redis.proxy.command.async.info.ProxyInfoUtils;
+import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -49,7 +50,7 @@ public class ConsoleServer {
                     channelFuture.addListener((FutureListener<Void>) future -> {
                         if (future.isSuccess()) {
                             logger.info("Console Server start listen at port {}", port);
-                            ProxyInfoUtils.updateConsolePort(port);
+                            GlobalRedisProxyEnv.consolePort = port;
                         } else {
                             logger.error("Console Server start listen fail! at port {}, cause={}", port, future.cause());
                         }

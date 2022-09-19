@@ -3,8 +3,7 @@ package com.netease.nim.camellia.redis.proxy.springboot;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.*;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
-import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
+import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
@@ -12,8 +11,6 @@ import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyPr
 import com.netease.nim.camellia.redis.proxy.springboot.conf.NettyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.TranspondProperties;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 
@@ -23,9 +20,7 @@ import java.net.URL;
  */
 public class CamelliaRedisProxyUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyUtil.class);
-
-    public static CamelliaServerProperties parse(CamelliaRedisProxyProperties properties, CamelliaRedisProxyConfigurerSupport support, String applicationName, int port) {
+    public static CamelliaServerProperties parse(CamelliaRedisProxyProperties properties, ProxyBeanFactory proxyBeanFactory, String applicationName, int port) {
         CamelliaServerProperties serverProperties = new CamelliaServerProperties();
         if (properties.getPort() == Constants.Server.serverPortRandSig) {
             serverProperties.setPort(Constants.Server.serverPortRandSig);
@@ -42,17 +37,10 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setPassword(properties.getPassword());
         serverProperties.setMonitorEnable(properties.isMonitorEnable());
         serverProperties.setMonitorIntervalSeconds(properties.getMonitorIntervalSeconds());
-        serverProperties.setMonitorCallback(support.getMonitorCallback());
         serverProperties.setMonitorCallbackClassName(properties.getMonitorCallbackClassName());
-        serverProperties.setCommandSpendTimeMonitorEnable(properties.isCommandSpendTimeMonitorEnable());
-        serverProperties.setUpstreamRedisSpendTimeMonitorEnable(properties.isUpstreamRedisSpendTimeMonitorEnable());
-        serverProperties.setSlowCommandThresholdMillisTime(properties.getSlowCommandThresholdMillisTime());
-        serverProperties.setCommandInterceptorClassName(properties.getCommandInterceptorClassName());
-        serverProperties.setCommandInterceptor(support.getCommandInterceptor());
-        serverProperties.setSlowCommandCallbackClassName(properties.getSlowCommandCallbackClassName());
-        serverProperties.setSlowCommandMonitorCallback(support.getSlowCommandMonitorCallback());
         serverProperties.setClientAuthProviderClassName(properties.getClientAuthProviderClassName());
-        serverProperties.setClientAuthProvider(support.getClientAuthProvider());
+        serverProperties.setProxyBeanFactory(proxyBeanFactory);
+        serverProperties.setPlugins(properties.getPlugins());
         NettyProperties netty = properties.getNetty();
         serverProperties.setBossThread(netty.getBossThread());
         if (netty.getWorkThread() > 0) {
@@ -73,70 +61,6 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setWriteBufferWaterMarkLow(netty.getWriteBufferWaterMarkLow());
         serverProperties.setWriteBufferWaterMarkHigh(netty.getWriteBufferWaterMarkHigh());
 
-        serverProperties.setConnectLimiterClassName(properties.getConnectLimiterClassName());
-        serverProperties.setConnectLimiter(support.getConnectLimiter());
-
-        CamelliaRedisProxyProperties.HotKeyMonitorConfig hotKeyMonitorConfig = properties.getHotKeyMonitorConfig();
-        CamelliaServerProperties.HotKeyMonitorConfig config = new CamelliaServerProperties.HotKeyMonitorConfig();
-        config.setCheckCacheMaxCapacity(hotKeyMonitorConfig.getCheckCacheMaxCapacity());
-        config.setCheckMillis(hotKeyMonitorConfig.getCheckMillis());
-        config.setCheckThreshold(hotKeyMonitorConfig.getCheckThreshold());
-        config.setHotKeyMonitorCallbackClassName(hotKeyMonitorConfig.getHotKeyMonitorCallbackClassName());
-        config.setHotKeyMonitorCallback(support.getHotKeyMonitorCallback());
-        config.setMaxHotKeyCount(hotKeyMonitorConfig.getMaxHotKeyCount());
-        serverProperties.setHotKeyMonitorConfig(config);
-        serverProperties.setHotKeyMonitorEnable(properties.isHotKeyMonitorEnable());
-
-        CamelliaRedisProxyProperties.HotKeyCacheConfig hotKeyCacheConfig = properties.getHotKeyCacheConfig();
-        CamelliaServerProperties.HotKeyCacheConfig cacheConfig = new CamelliaServerProperties.HotKeyCacheConfig();
-        cacheConfig.setCounterCheckThreshold(hotKeyCacheConfig.getCounterCheckThreshold());
-        cacheConfig.setCounterCheckMillis(hotKeyCacheConfig.getCounterCheckMillis());
-        cacheConfig.setCounterMaxCapacity(hotKeyCacheConfig.getCounterMaxCapacity());
-        cacheConfig.setCacheExpireMillis(hotKeyCacheConfig.getCacheExpireMillis());
-        cacheConfig.setCacheKeyCheckerClassName(hotKeyCacheConfig.getHotKeyCacheKeyCheckerClassName());
-        cacheConfig.setHotKeyCacheKeyChecker(support.getHotKeyCacheKeyChecker());
-        cacheConfig.setCacheMaxCapacity(hotKeyCacheConfig.getCacheMaxCapacity());
-        cacheConfig.setHotKeyCacheStatsCallbackClassName(hotKeyCacheConfig.getHotKeyCacheStatsCallbackClassName());
-        cacheConfig.setHotKeyCacheStatsCallback(support.getHotKeyCacheStatsCallback());
-        cacheConfig.setHotKeyCacheStatsCallbackIntervalSeconds(hotKeyCacheConfig.getHotKeyCacheStatsCallbackIntervalSeconds());
-        cacheConfig.setNeedCacheNull(hotKeyCacheConfig.isNeedCacheNull());
-        serverProperties.setHotKeyCacheConfig(cacheConfig);
-        serverProperties.setHotKeyCacheEnable(properties.isHotKeyCacheEnable());
-
-        CamelliaRedisProxyProperties.BigKeyMonitorConfig bigKeyMonitorConfig = properties.getBigKeyMonitorConfig();
-        CamelliaServerProperties.BigKeyMonitorConfig config1 = new CamelliaServerProperties.BigKeyMonitorConfig();
-        config1.setBigKeyMonitorCallbackClassName(bigKeyMonitorConfig.getBigKeyMonitorCallbackClassName());
-        config1.setBigKeyMonitorCallback(support.getBigKeyMonitorCallback());
-        config1.setHashSizeThreshold(bigKeyMonitorConfig.getHashSizeThreshold());
-        config1.setListSizeThreshold(bigKeyMonitorConfig.getListSizeThreshold());
-        config1.setZsetSizeThreshold(bigKeyMonitorConfig.getZsetSizeThreshold());
-        config1.setSetSizeThreshold(bigKeyMonitorConfig.getSetSizeThreshold());
-        config1.setStringSizeThreshold(bigKeyMonitorConfig.getStringSizeThreshold());
-        serverProperties.setBigKeyMonitorConfig(config1);
-        serverProperties.setBigKeyMonitorEnable(properties.isBigKeyMonitorEnable());
-
-        CamelliaRedisProxyProperties.ConverterConfig converterConfig = properties.getConverterConfig();
-        serverProperties.setConverterEnable(properties.isConverterEnable());
-        CamelliaServerProperties.ConverterConfig config2 = new CamelliaServerProperties.ConverterConfig();
-
-        config2.setKeyConverterClassName(converterConfig.getKeyConverterClassName());
-        config2.setKeyConverter(support.getKeyConverter());
-        config2.setStringConverterClassName(converterConfig.getStringConverterClassName());
-        config2.setStringConverter(support.getStringConverter());
-        config2.setHashConverterClassName(converterConfig.getHashConverterClassName());
-        config2.setHashConverter(support.getHashConverter());
-        config2.setListConverterClassName(converterConfig.getListConverterClassName());
-        config2.setListConverter(support.getListConverter());
-        config2.setSetConverterClassName(converterConfig.getSetConverterClassName());
-        config2.setSetConverter(support.getSetConverter());
-        config2.setZsetConverterClassName(converterConfig.getZsetConverterClassName());
-        config2.setzSetConverter(support.getzSetConverter());
-
-        serverProperties.setConverterConfig(config2);
-
-        serverProperties.setProxyDynamicConfHookClassName(properties.getProxyDynamicConfHookClassName());
-        serverProperties.setProxyDynamicConfHook(support.getProxyDynamicConfHook());
-        serverProperties.setMonitorDataMaskPassword(properties.isMonitorDataMaskPassword());
         return serverProperties;
     }
 
@@ -229,44 +153,21 @@ public class CamelliaRedisProxyUtil {
         return remoteProperties;
     }
 
-    public static CamelliaTranspondProperties.CustomProperties parse(TranspondProperties.CustomProperties properties, CamelliaRedisProxyConfigurerSupport support) {
+    public static CamelliaTranspondProperties.CustomProperties parse(TranspondProperties.CustomProperties properties) {
         if (properties == null) return null;
         CamelliaTranspondProperties.CustomProperties customProperties = new CamelliaTranspondProperties.CustomProperties();
         customProperties.setBid(properties.getBid());
         customProperties.setBgroup(properties.getBgroup());
         customProperties.setDynamic(properties.isDynamic());
         customProperties.setReloadIntervalMillis(properties.getReloadIntervalMillis());
-        ProxyRouteConfUpdater proxyRouteConfUpdater = support.getProxyRouteConfUpdater();
-        if (proxyRouteConfUpdater != null) {
-            logger.info("ProxyRouteConfUpdater init success, class = {}", proxyRouteConfUpdater.getClass().getName());
-        } else {
-            String className = properties.getProxyRouteConfUpdaterClassName();
-            if (className == null) {
-                throw new IllegalArgumentException("proxyRouteConfUpdaterClassName missing");
-            }
-            try {
-                Class<?> clazz;
-                try {
-                    clazz = Class.forName(className);
-                } catch (ClassNotFoundException e) {
-                    clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
-                }
-                proxyRouteConfUpdater = (ProxyRouteConfUpdater) clazz.newInstance();
-                logger.info("ProxyRouteConfUpdater init success, class = {}", className);
-            } catch (Exception e) {
-                logger.error("ProxyRouteConfUpdater init error, class = {}", className, e);
-                throw new CamelliaRedisException(e);
-            }
-        }
-        customProperties.setProxyRouteConfUpdater(proxyRouteConfUpdater);
+        customProperties.setProxyRouteConfUpdaterClassName(properties.getProxyRouteConfUpdaterClassName());
         return customProperties;
     }
 
-    public static CamelliaTranspondProperties.RedisConfProperties parse(TranspondProperties.RedisConfProperties properties, CamelliaRedisProxyConfigurerSupport support) {
+    public static CamelliaTranspondProperties.RedisConfProperties parse(TranspondProperties.RedisConfProperties properties) {
         if (properties == null) return null;
         CamelliaTranspondProperties.RedisConfProperties redisConfProperties = new CamelliaTranspondProperties.RedisConfProperties();
         redisConfProperties.setShardingFunc(properties.getShardingFunc());
-        redisConfProperties.setShardingFuncInstance(support.getShardingFunc());
         redisConfProperties.setConnectTimeoutMillis(properties.getConnectTimeoutMillis());
         redisConfProperties.setFailBanMillis(properties.getFailBanMillis());
         redisConfProperties.setFailCountThreshold(properties.getFailCountThreshold());
@@ -280,7 +181,6 @@ public class CamelliaRedisProxyUtil {
         redisConfProperties.setCheckIdleConnectionThresholdSeconds(properties.getCheckIdleConnectionThresholdSeconds());
         redisConfProperties.setCloseIdleConnectionDelaySeconds(properties.getCloseIdleConnectionDelaySeconds());
         redisConfProperties.setProxyDiscoveryFactoryClassName(properties.getProxyDiscoveryFactoryClassName());
-        redisConfProperties.setProxyDiscoveryFactory(support.getProxyDiscoveryFactory());
         return redisConfProperties;
     }
 

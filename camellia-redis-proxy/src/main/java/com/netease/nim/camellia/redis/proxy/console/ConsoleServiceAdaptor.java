@@ -1,10 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.console;
 
 import com.alibaba.fastjson.JSONObject;
-import com.netease.nim.camellia.redis.proxy.command.async.info.ProxyInfoUtils;
-import com.netease.nim.camellia.redis.proxy.command.async.info.UpstreamInfoUtils;
+import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
+import com.netease.nim.camellia.redis.proxy.info.UpstreamInfoUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
+import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
 import com.netease.nim.camellia.redis.proxy.netty.ServerStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,18 +91,8 @@ public class ConsoleServiceAdaptor implements ConsoleService {
 
     @Override
     public ConsoleResult monitor() {
-        JSONObject monitorJson = new JSONObject();
-        JSONObject statsJson = RedisMonitor.getStatsJson();
-        monitorJson.putAll(statsJson);
-        JSONObject slowCommandStatsJson = SlowCommandMonitor.getSlowCommandStatsJson();
-        monitorJson.putAll(slowCommandStatsJson);
-        JSONObject hotKeyStatsJson = HotKeyMonitor.getHotKeyStatsJson();
-        monitorJson.putAll(hotKeyStatsJson);
-        JSONObject bigKeyStatsJson = BigKeyMonitor.getBigKeyStatsJson();
-        monitorJson.putAll(bigKeyStatsJson);
-        JSONObject hotKeyCacheStatsJson = HotKeyCacheMonitor.getHotKeyCacheStatsJson();
-        monitorJson.putAll(hotKeyCacheStatsJson);
-        return ConsoleResult.success(monitorJson.toJSONString());
+        Stats stats = ProxyMonitorCollector.getStats();
+        return ConsoleResult.success(StatsJsonConverter.converter(stats));
     }
 
     @Override

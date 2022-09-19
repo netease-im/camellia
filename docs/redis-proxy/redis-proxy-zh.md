@@ -16,19 +16,11 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持读slave（redis-sentinel/redis-cluster均支持配置读从节点）
 * 支持双（多）写，可以直接双写，也可以基于mq（如kafka）双写
 * 支持双（多）读
-* 支持路由配置在线变更
-* 支持多配置，即业务A路由到redis1，B业务路由到redis2（可以通过不同的clientname区分，也可以通过不同的password区分）
-* 支持自定义方法拦截器，可以用于实现一些自定义规则（如自定义key/value不得超过多少字节、临时屏蔽某些key不能被访问、或者基于拦截器自定义双写策略等）
-* 支持监控，可以监控各命令的调用量、方法耗时等，支持设置监控回调MonitorCallback
-* 支持慢查询监控，支持设置SlowCommandMonitorCallback
-* 支持热key监控，支持设置HotKeyMonitorCallback
-* 支持热key在proxy层的本地缓存（仅支持GET命令），支持设置HotKeyCacheStatsCallback
-* 支持大key监控，支持设置BigKeyMonitorCallback
-* 支持key的自定义转换（如添加不同前缀，从而划分成不同的命名空间）
-* 支持value的自定义转换（当前支持string/hash/set/list/zset相关命令，可以用于透明的实现数据的解压缩和加解密等）
-* 支持监控配置（如开关、阈值等）的在线变更
+* 支持多租户，即租户A路由到redis1，租户B路由到redis2（可以通过不同的clientname区分，也可以通过不同的password区分）
+* 支持多租户动态路由，支持自定义的动态路由数据源
+* 支持自定义插件，并且内置了很多插件，可以按需使用（包括：大key监控、热key监控、热key缓存、key命名空间等等）
+* 支持丰富的监控，可以监控客户端连接数、调用量、方法耗时、大key、热key、后端redis连接数和耗时等，并且支持以http接口形式获取监控数据
 * 支持info命令获取服务器相关信息（包括后端redis集群的信息）
-* 提供了一个httpAPI用于获取监控指标数据
 * 提供了一个spring-boot-starter，可以快速搭建proxy集群
 * 提供了一个默认的注册发现实现组件（依赖zookeeper），如果端侧是java，则可以很简单的将JedisPool替换为RedisProxyJedisPool，即可接入redis proxy  
 * 提供了一个spring-boot-starter用于SpringRedisTemplate以注册发现模式接入proxy
@@ -164,54 +156,35 @@ OK
 ```
 
 ## 快速开始二（基于安装包）
-参见：[quick-start-package](quick-start-package.md)
+参见：[quick-start-package](quickstart/quick-start-package.md)
 
 ## 快速开始三（基于fatJar和sample-code)
-参见：[quick-start-fat-jar](quick-start-fat-jar.md)
+参见：[quick-start-fat-jar](quickstart/quick-start-fat-jar.md)
 
 ## 快速开始四（不使用spring-boot-stater)
-参见：[quick-start-no-spring-boot](quick-start-no-spring-boot.md)
+参见：[quick-start-no-spring-boot](quickstart/quick-start-no-spring-boot.md)
 
 ## 源码解读
-具体可见：[代码结构](proxy-code.md)
+具体可见：[代码结构](code/proxy-code.md)
 
 ## 路由配置
 路由配置表示了camellia-redis-proxy在收到客户端的redis命令之后的转发规则，包括：
+* 最简单的示例
 * 支持的后端redis类型
-* 动态配置
-* json-file配置示例（双写、读写分离、分片等）
-* 集成camellia-dashboard
-* 集成ProxyRouteConfUpdater自定义管理多组动态配置
-* 使用自定义ClientAuthProvider来实现通过不同的登录密码来指向不同路由配置
-* 不同的双（多）写模式
-* 自定义分片函数
+* 动态配置和复杂配置（读写分离、分片等）
+* 多租户支持
+* 使用camellia-dashboard管理多租户动态路由
+* 集成ProxyRouteConfUpdater自定义管理多租户动态路由
 
-具体可见：[路由配置](route.md)
+具体可见：[路由配置](auth/route.md)
 
-## 控制
-### 控制客户端连接
-* camellia-redis-proxy支持配置客户端的连接数上限（支持全局的连接数，也支持bid/bgroup级别的）
-* camellia-redis-proxy支持配置关闭空闲的客户端连接数（该功能可能导致请求数较少的客户端请求异常，慎重配置） 
+## 插件体系
+* 1.1.x版本开始，重构了监控、大key、热key等功能，统一作为插件化体系的一部分，用户可以通过简单的配置按需引入内置的插件
+* 插件使用统一的接口来拦截和控制请求和响应
+* proxy内置了很多插件，可以通过简单配置后即可直接使用
+* 你也可以实现自定义插件
 
-具体可见：[客户端连接控制](connectlimit.md)
-
-### 拦截器
-camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访问的目的，此外proxy提供了几个默认的命令拦截器实现，可以按需使用：  
-* TroubleTrickKeysCommandInterceptor 用于临时屏蔽某些key的访问
-* MultiWriteCommandInterceptor 用于自定义配置双写策略(key级别)
-* RateLimitCommandInterceptor 用于控制客户端请求速率（支持全局速率控制，也支持bid/bgroup级别的速率控制）
-* MqMultiWriteCommandInterceptor 用于基于mq（如kafka等）的异步双写
-* DynamicCommandInterceptorWrapper 可以组合多个CommandInterceptor的一个包装类
-* IPCheckerCommandInterceptor 可以根据客户端ip进行权限校验，支持黑名单模式和白名单模式
-* DelayDoubleDeleteCommandInterceptor 透明的支持缓存key的延迟双删
-
-具体可见：[拦截器](interceptor.md)
-
-## key/value的自定义转换
-camellia-redis-proxy提供了key/value的自定义转换功能，从而你可以自定义的实现数据的解压缩、加解密等功能  
-当前支持string/hash/set/list/zset相关命令的value自定义转换    
-
-具体可见：[转换](converter.md)
+具体可见：[插件](plugin/plugin.md)
 
 ## 部署和接入
 在生产环境，需要部署至少2个proxy实例来保证高可用，并且proxy是可以水平扩展的，包括：
@@ -225,34 +198,27 @@ camellia-redis-proxy提供了key/value的自定义转换功能，从而你可以
 * 注意事项（容器环境部署）
 * 部署最佳实践
 
-具体可见：[部署和接入](deploy.md)
+具体可见：[部署和接入](deploy/deploy.md)
 
 ## 监控
 camellia-redis-proxy提供了丰富的监控功能，包括：
-* 请求tps、请求rt
-* 慢查询监控
-* 热key监控
-* 大key监控
-* 热key缓存功能
-* 通过httpAPI获取监控数据
-* 监控配置的动态修改
-* 通过info命令获取服务器相关信息（包括后端redis集群的信息）
+* 提供的监控项
+* 监控数据获取方式
+* 通过info命令获取服务器相关信息
 * 把proxy当做一个监控redis集群状态的平台（通过http接口暴露）
 
-具体可见：[监控](monitor.md)
-
-## 通过spring自动注入自定义回调
-camellia-redis-proxy默认通过在application.yml里配置全类名的方式来自定义一些功能（如监控回调、自定义动态路由等），1.0.38版本开始，支持使用spring来托管相关类的初始化  
-
-具体可见：[spring-autowire](spring-autowire.md)
-
-## 其他配置
-* netty配置，具体见：[netty-conf](netty-conf.md)
-* 使用nacos托管proxy配置，具体见：[nacos-conf](nacos-conf.md)
+具体可见：[监控](monitor/monitor.md)
 
 ## 其他
-* 关于双（多）写的若干问题，具体见：[multi-write](multi-write.md)
-* 关于scan和lua的相关说明，以及使用redis-shake进行数据迁移的说明，具体见：[misc](misc.md)
+* 如何控制客户端连接数，具体见[客户端连接控制](other/connectlimit.md)
+* netty配置，具体见：[netty-conf](other/netty-conf.md)
+* 使用nacos托管proxy配置，具体见：[nacos-conf](other/nacos-conf.md)
+* 关于双（多）写的若干问题，具体见：[multi-write](other/multi-write.md)
+* 关于scan和相关说明，具体见：[scan](other/scan.md)
+* 关于lua的相关说明，具体见：[lua](other/lua.md)
+* 使用redis-shake进行数据迁移的说明，具体见：[redis-shake](other/redis-shake.md)
+* 关于自定义分片函数，具体见：[sharding](other/sharding.md)
+* 如何使用spring管理bean生成，具体见：[spring](other/spring.md)
 
 ## 应用场景
 * 业务开始使用redis-standalone或者redis-sentinel，现在需要切换到redis-cluster，但是客户端需要改造（比如jedis访问redis-sentinel和redis-cluster是不一样的），此时你可以使用proxy，从而做到不改造（使用四层代理LB）或者很少的改造（使用注册中心）
@@ -269,4 +235,4 @@ camellia-redis-proxy默认通过在application.yml里配置全类名的方式来
 * 等等
 
 ## 性能测试报告
-[基于v1.0.37的性能测试报告](performance-report.md)
+[基于v1.0.37的性能测试报告](performance/performance-report.md)

@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
+import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.CommandsEncodeUtil;

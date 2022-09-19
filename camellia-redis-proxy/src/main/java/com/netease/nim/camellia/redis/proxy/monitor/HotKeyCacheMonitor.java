@@ -1,18 +1,17 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
-import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.CommandHotKeyCacheConfig;
-import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.HotKeyCacheStats;
+import com.netease.nim.camellia.redis.proxy.auth.IdentityInfo;
+import com.netease.nim.camellia.redis.proxy.monitor.model.HotKeyCacheStats;
+import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.HotKeyCacheInfo;
 import com.netease.nim.camellia.core.util.CamelliaMapUtils;
-import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.plugin.hotkey.HotKeyMonitor;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -25,24 +24,20 @@ public class HotKeyCacheMonitor {
 
     private static ConcurrentHashMap<String, HotKeyCacheStatsBean> statsMap = new ConcurrentHashMap<>();
 
-    public static void init(int seconds) {
-        ExecutorUtils.scheduleAtFixedRate(HotKeyCacheMonitor::calc, seconds, seconds, TimeUnit.SECONDS);
-    }
-
-    public static void hotKeyCache(CommandContext commandContext, HotKeyCacheStats hotKeyCacheStats,
-                                   CommandHotKeyCacheConfig commandHotKeyCacheConfig) {
+    public static void hotKeyCache(IdentityInfo identityInfo, HotKeyCacheInfo hotKeyCacheInfo,
+                                   long checkMillis, long checkThreshold) {
         try {
-            String bid = commandContext.getBid() == null ? "default" : String.valueOf(commandContext.getBid());
-            String bgroup = commandContext.getBgroup() == null ? "default" : commandContext.getBgroup();
-            for (HotKeyCacheStats.Stats stats : hotKeyCacheStats.getStatsList()) {
+            String bid = identityInfo.getBid() == null ? "default" : String.valueOf(identityInfo.getBid());
+            String bgroup = identityInfo.getBgroup() == null ? "default" : identityInfo.getBgroup();
+            for (HotKeyCacheInfo.Stats stats : hotKeyCacheInfo.getStatsList()) {
                 String keyStr = Utils.bytesToString(stats.getKey());
                 String uniqueKey = bid + "|" + bgroup + "|" + keyStr;
                 HotKeyCacheStatsBean statsBean = CamelliaMapUtils.computeIfAbsent(statsMap, uniqueKey, k -> new HotKeyCacheStatsBean());
                 statsBean.bid = bid;
                 statsBean.bgroup = bgroup;
                 statsBean.key = keyStr;
-                statsBean.checkMillis = commandHotKeyCacheConfig.getCounterCheckMillis();
-                statsBean.checkThreshold = commandHotKeyCacheConfig.getCounterCheckThreshold();
+                statsBean.checkMillis = checkMillis;
+                statsBean.checkThreshold = checkThreshold;
                 statsBean.hitCount.addAndGet(stats.getHitCount());
             }
         } catch (Exception e) {
@@ -50,36 +45,21 @@ public class HotKeyCacheMonitor {
         }
     }
 
-    private static JSONObject monitorJson = new JSONObject();
-    private static void calc() {
-        try {
-            JSONObject json = new JSONObject();
-            if (statsMap.isEmpty()) {
-                monitorJson = json;
-                return;
-            }
-            ConcurrentHashMap<String, HotKeyCacheStatsBean> statsMap = HotKeyCacheMonitor.statsMap;
-            HotKeyCacheMonitor.statsMap = new ConcurrentHashMap<>();
-            JSONArray hotKeyCacheStatsJsonArray = new JSONArray();
-            for (HotKeyCacheStatsBean statsBean : statsMap.values()) {
-                JSONObject hotKeyCacheStatsJson = new JSONObject();
-                hotKeyCacheStatsJson.put("bid", statsBean.bid);
-                hotKeyCacheStatsJson.put("bgroup", statsBean.bgroup);
-                hotKeyCacheStatsJson.put("key", statsBean.key);
-                hotKeyCacheStatsJson.put("hitCount", statsBean.hitCount.get());
-                hotKeyCacheStatsJson.put("checkMillis", statsBean.checkMillis);
-                hotKeyCacheStatsJson.put("checkThreshold", statsBean.checkThreshold);
-                hotKeyCacheStatsJsonArray.add(hotKeyCacheStatsJson);
-            }
-            json.put("hotKeyCacheStats", hotKeyCacheStatsJsonArray);
-            monitorJson = json;
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+    public static List<HotKeyCacheStats> collect() {
+        ConcurrentHashMap<String, HotKeyCacheStatsBean> statsMap = HotKeyCacheMonitor.statsMap;
+        HotKeyCacheMonitor.statsMap = new ConcurrentHashMap<>();
+        List<HotKeyCacheStats> list = new ArrayList<>();
+        for (HotKeyCacheStatsBean statsBean : statsMap.values()) {
+            HotKeyCacheStats stats = new HotKeyCacheStats();
+            stats.setBid(statsBean.bid);
+            stats.setBgroup(statsBean.bgroup);
+            stats.setKey(statsBean.key);
+            stats.setHitCount(statsBean.hitCount.get());
+            stats.setCheckMillis(statsBean.checkMillis);
+            stats.setCheckThreshold(statsBean.checkThreshold);
+            list.add(stats);
         }
-    }
-
-    public static JSONObject getHotKeyCacheStatsJson() {
-        return monitorJson;
+        return list;
     }
 
     private static class HotKeyCacheStatsBean {

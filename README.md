@@ -13,19 +13,20 @@ camellia主要包括以下功能模块：
 * 屏蔽了访问redis-standalone/redis-sentinel/redis-cluster的区别（jedis访问上述三种redis服务器的api是不一样的）   
 * 支持pipeline、mget、mset等操作（jedis不支持使用pipeline访问redis-cluster，也不支持跨slot场景下使用mget、mset命令访问redis-cluster）    
 * 支持透明的访问从节点（当前支持redis-sentinel）
-* 支持自定义分片、读写分离、双（多）写、双（多）读  
+* 支持自定义分片、读写分离、双（多）写、双（多）读 
+* 支持动态配置变更
 * 提供了一些常有的工具类，如分布式锁、计数器缓存、频控等  
 [快速开始](/docs/redis-template/redis-template.md)
 
 ### camellia-redis-proxy
-* 基于netty4开发的一款redis代理，支持redis-standalone/redis-sentinel/redis-cluster    
+* 基于netty4开发的一款高性能redis代理，支持redis-standalone/redis-sentinel/redis-cluster    
 * 支持自定义分片、读写分离、双（多）写、双（多）读   
 * 支持多租户（可以同时代理多组路由，可以通过不同的登录密码来区分）     
+* 支持多租户动态路由，支持自定义的动态路由数据源
 * 支持读从节点（redis-sentinel、redis-cluster都支持）
-* 支持丰富的监控，如TPS、RT、热key、大key、慢查询、连接数等     
-* 支持自定义方法拦截，支持热key缓存（GET命令），支持透明的数据转换（如解压缩、加解密）等  
-* 支持整合hbase实现string/zset/hash等数据结构的冷热分离存储操作    
-* 支持整合mq（如kafka）实现异地的数据双写同步  
+* 支持自定义插件，并且内置了很多插件，可以按需使用（包括：大key监控、热key监控、热key缓存、key命名空间等等） 
+* 支持丰富的监控，如TPS、RT、热key、大key、慢查询、连接数等   
+* 支持整合hbase实现string/zset/hash等数据结构的冷热分离存储操作     
 [快速开始](/docs/redis-proxy/redis-proxy-zh.md)  
 
 ### camellia-id-gen
@@ -45,6 +46,7 @@ camellia主要包括以下功能模块：
 ### camellia-hbase
 * 基于hbase-client封装的hbase客户端，主要的类是CamelliaHBaseTemplate  
 * 支持读写分离、双（多）写   
+* 支持动态配置变更
 [快速开始](/docs/hbase-template/hbase-template.md)
 
 ### camellia-feign

@@ -1,10 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
-import com.netease.nim.camellia.redis.proxy.command.async.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
-import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -35,10 +33,11 @@ public class CamelliaRedisProxyServer {
         this.serverHandler = new ServerHandler(invoker);
         this.bossGroup = bossGroup;
         this.workGroup = workGroup;
-        ConfigInitUtil.initProxyDynamicConfHook(serverProperties);
-        ConfigInitUtil.initConnectLimiter(serverProperties);
         if (bossGroup instanceof NioEventLoopGroup && workGroup instanceof NioEventLoopGroup) {
-            ProxyInfoUtils.updateThread(((NioEventLoopGroup) bossGroup).executorCount(), ((NioEventLoopGroup) workGroup).executorCount());
+            GlobalRedisProxyEnv.bossThread = ((NioEventLoopGroup) bossGroup).executorCount();
+            GlobalRedisProxyEnv.bossGroup = bossGroup;
+            GlobalRedisProxyEnv.workThread = ((NioEventLoopGroup) workGroup).executorCount();
+            GlobalRedisProxyEnv.workGroup = workGroup;
         }
     }
 
@@ -54,9 +53,6 @@ public class CamelliaRedisProxyServer {
         GlobalRedisProxyEnv.bossThread = bossThread;
         GlobalRedisProxyEnv.workGroup = workGroup;
         GlobalRedisProxyEnv.bossGroup = bossGroup;
-        ConfigInitUtil.initProxyDynamicConfHook(serverProperties);
-        ConfigInitUtil.initConnectLimiter(serverProperties);
-        ProxyInfoUtils.updateThread(bossThread, workThread);
     }
 
     public void start() throws Exception {
@@ -96,7 +92,7 @@ public class CamelliaRedisProxyServer {
         logger.info("CamelliaRedisProxyServer, tcp_no_delay = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
                 serverProperties.isTcpNoDelay(), serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh());
         logger.info("CamelliaRedisProxyServer start at port: {}", port);
-        ProxyInfoUtils.updatePort(port);
+        GlobalRedisProxyEnv.port = port;
         this.port = port;
     }
 

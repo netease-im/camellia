@@ -1,12 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
-import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
-import com.netease.nim.camellia.redis.proxy.command.async.AsyncCommandInvoker;
+import com.netease.nim.camellia.redis.proxy.command.AsyncCommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
+import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
 import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
@@ -62,18 +62,8 @@ public class CamelliaRedisProxyStarter {
      */
     public static String getRedisProxyMonitorString() {
         try {
-            JSONObject monitorJson = new JSONObject();
-            JSONObject statsJson = RedisMonitor.getStatsJson();
-            monitorJson.putAll(statsJson);
-            JSONObject slowCommandStatsJson = SlowCommandMonitor.getSlowCommandStatsJson();
-            monitorJson.putAll(slowCommandStatsJson);
-            JSONObject hotKeyStatsJson = HotKeyMonitor.getHotKeyStatsJson();
-            monitorJson.putAll(hotKeyStatsJson);
-            JSONObject bigKeyStatsJson = BigKeyMonitor.getBigKeyStatsJson();
-            monitorJson.putAll(bigKeyStatsJson);
-            JSONObject hotKeyCacheStatsJson = HotKeyCacheMonitor.getHotKeyCacheStatsJson();
-            monitorJson.putAll(hotKeyCacheStatsJson);
-            return monitorJson.toJSONString();
+            Stats stats = ProxyMonitorCollector.getStats();
+            return StatsJsonConverter.converter(stats);
         } catch (Exception e) {
             logger.error("getRedisProxyMonitorString error", e);
             return "";

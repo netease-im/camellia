@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.command;
 
 
-import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
@@ -21,6 +20,7 @@ public class Command {
     private List<byte[]> keys = null;
     private String keysStr = null;
     private CommandContext commandContext;
+    private long startNanoTime = -1;
 
     public Command(byte[][] objects) {
         this.objects = objects;
@@ -47,6 +47,14 @@ public class Command {
     public void clearKeysCache() {
         keysStr = null;
         keys = null;
+    }
+
+    public void initStartNanoTime() {
+        this.startNanoTime = System.nanoTime();
+    }
+
+    public long getStartNanoTime() {
+        return startNanoTime;
     }
 
     public List<byte[]> getKeys() {

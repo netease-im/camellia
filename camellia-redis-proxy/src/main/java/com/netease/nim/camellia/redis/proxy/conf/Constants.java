@@ -1,14 +1,13 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.core.util.SysUtils;
-import com.netease.nim.camellia.redis.proxy.command.async.bigkey.LoggingBigKeyMonitorCallback;
-import com.netease.nim.camellia.redis.proxy.command.async.connectlimit.DynamicConfConnectLimiter;
-import com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHotKeyMonitorCallback;
-import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.DummyHotKeyCacheKeyChecker;
-import com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.LoggingHotKeyCacheStatsCallback;
-import com.netease.nim.camellia.redis.proxy.command.async.route.DynamicConfProxyRouteConfUpdater;
-import com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback;
-import com.netease.nim.camellia.redis.proxy.command.auth.ClientAuthByConfigProvider;
+import com.netease.nim.camellia.redis.proxy.plugin.bigkey.LoggingBigKeyMonitorCallback;
+import com.netease.nim.camellia.redis.proxy.plugin.hotkey.LoggingHotKeyMonitorCallback;
+import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.DummyHotKeyCacheKeyChecker;
+import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.LoggingHotKeyCacheStatsCallback;
+import com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfUpdater;
+import com.netease.nim.camellia.redis.proxy.plugin.monitor.LoggingSlowCommandMonitorCallback;
+import com.netease.nim.camellia.redis.proxy.auth.ClientAuthByConfigProvider;
 import com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback;
 
 /**
@@ -23,14 +22,9 @@ public class Constants {
         public static final int consolePort = 16379;
         public static final int consolePortRandSig = -16379;
         public static final boolean monitorEnable = false;
-        public static final boolean commandSpendTimeMonitorEnable = false;
-        public static final boolean upstreamRedisSpendTimeMonitorEnable = false;//检测后段redis
-        public static final String monitorCallbackClassName = LoggingMonitorCallback.class.getName();
-        public static final long slowCommandThresholdMillisTime = 2000L;
-        public static final String slowCommandMonitorCallbackClassName = LoggingSlowCommandMonitorCallback.class.getName();
-        public static final String clientAuthByConfigProvider = ClientAuthByConfigProvider.class.getName();
-        public static final String connectLimiterClassName = DynamicConfConnectLimiter.class.getName();
         public static final int monitorIntervalSeconds = 60;
+        public static final String monitorCallbackClassName = LoggingMonitorCallback.class.getName();
+        public static final String clientAuthByConfigProvider = ClientAuthByConfigProvider.class.getName();
 
         public static final int workThread = SysUtils.getCpuNum();
         public static final int commandDecodeMaxBatchSize = 256;
@@ -47,35 +41,19 @@ public class Constants {
         public static final int writeBufferWaterMarkLow = 128 * 1024;
         public static final int writeBufferWaterMarkHigh = 512 * 1024;
 
-        public static final boolean hotKeyMonitorEnable = false;
-        public static final long hotKeyMonitorCheckMillis = 1000L;
         public static final int hotKeyMonitorCheckCacheMaxCapacity = 100000;
-        public static final long hotKeyMonitorCheckThreshold = 100;
+        public static final long hotKeyMonitorCheckThreshold = 500;
         public static final int hotKeyMonitorMaxHotKeyCount = 32;
-        public static final String hotKeyMonitorCallbackClassName = LoggingHotKeyMonitorCallback.class.getName();
 
-        public static final boolean hotKeyCacheEnable = false;
         public static final long hotKeyCacheExpireMillis = 10000;
         public static final int hotKeyCacheMaxCapacity = 1000;
         public static final long hotKeyCacheCounterCheckMillis = 1000;
         public static final int hotKeyCacheCounterMaxCapacity = 100000;
         public static final long hotKeyCacheCounterCheckThreshold = 100;
         public static final boolean hotKeyCacheNeedCacheNull = true;
-        public static final String hotKeyCacheKeyCheckerClassName = DummyHotKeyCacheKeyChecker.class.getName();
-        public static final long hotKeyCacheStatsCallbackIntervalSeconds = 60;
-        public static final String hotKeyCacheStatsCallbackClassName = LoggingHotKeyCacheStatsCallback.class.getName();
+        public static final long hotKeyCacheStatsCallbackIntervalSeconds = 10;
 
-        public static final boolean bigKeyMonitorEnable = false;
-        public static final int bigKeyStringSizeThreshold = 1024 * 1024 * 2;
-        public static final int bigKeyListSizeThreshold = 10000;
-        public static final int bigKeyZsetSizeThreshold = 10000;
-        public static final int bigKeyHashSizeThreshold = 10000;
-        public static final int bigKeySetSizeThreshold = 10000;
-        public static final String bigKeyMonitorCallbackClassName = LoggingBigKeyMonitorCallback.class.getName();
-
-        public static final boolean converterEnable = false;
-
-        public static final boolean monitorDataMaskPassword = false;//对外暴露的监控数据是否把密码隐藏（用*代替）
+        public static final boolean monitorDataMaskPassword = true;//对外暴露的监控数据是否把密码隐藏（用*代替）
     }
 
     public static class Transpond {

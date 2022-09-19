@@ -1,9 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
-import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
-import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
-import com.netease.nim.camellia.redis.proxy.command.async.route.ProxyRouteConfUpdater;
 
 /**
  *
@@ -180,19 +177,11 @@ public class CamelliaTranspondProperties {
     }
 
     public static class CustomProperties {
-        private ProxyRouteConfUpdater proxyRouteConfUpdater;
         private long bid;
         private String bgroup;
         private boolean dynamic = Constants.Custom.dynamic;
         private long reloadIntervalMillis = Constants.Custom.reloadIntervalMillis;
-
-        public ProxyRouteConfUpdater getProxyRouteConfUpdater() {
-            return proxyRouteConfUpdater;
-        }
-
-        public void setProxyRouteConfUpdater(ProxyRouteConfUpdater proxyRouteConfUpdater) {
-            this.proxyRouteConfUpdater = proxyRouteConfUpdater;
-        }
+        private String proxyRouteConfUpdaterClassName = Constants.Custom.proxyRouteConfUpdaterClassName;
 
         public long getBid() {
             return bid;
@@ -224,6 +213,14 @@ public class CamelliaTranspondProperties {
 
         public void setReloadIntervalMillis(long reloadIntervalMillis) {
             this.reloadIntervalMillis = reloadIntervalMillis;
+        }
+
+        public String getProxyRouteConfUpdaterClassName() {
+            return proxyRouteConfUpdaterClassName;
+        }
+
+        public void setProxyRouteConfUpdaterClassName(String proxyRouteConfUpdaterClassName) {
+            this.proxyRouteConfUpdaterClassName = proxyRouteConfUpdaterClassName;
         }
     }
 
@@ -287,7 +284,6 @@ public class CamelliaTranspondProperties {
     public static class RedisConfProperties {
         //分片函数
         private String shardingFunc;
-        private ShardingFunc shardingFuncInstance;
         private int redisClusterMaxAttempts = Constants.Transpond.redisClusterMaxAttempts;
         private int heartbeatIntervalSeconds = Constants.Transpond.heartbeatIntervalSeconds;
         private long heartbeatTimeoutMillis = Constants.Transpond.heartbeatTimeoutMillis;
@@ -301,7 +297,6 @@ public class CamelliaTranspondProperties {
         public long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;//判断一个连接空闲的阈值，单位秒
         public int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;//判断一个连接空闲后，再过多少秒去执行关闭操作
         private String proxyDiscoveryFactoryClassName;
-        private ProxyDiscoveryFactory proxyDiscoveryFactory;
 
         public String getShardingFunc() {
             return shardingFunc;
@@ -309,14 +304,6 @@ public class CamelliaTranspondProperties {
 
         public void setShardingFunc(String shardingFunc) {
             this.shardingFunc = shardingFunc;
-        }
-
-        public ShardingFunc getShardingFuncInstance() {
-            return shardingFuncInstance;
-        }
-
-        public void setShardingFuncInstance(ShardingFunc shardingFuncInstance) {
-            this.shardingFuncInstance = shardingFuncInstance;
         }
 
         public int getRedisClusterMaxAttempts() {
@@ -421,14 +408,6 @@ public class CamelliaTranspondProperties {
 
         public void setProxyDiscoveryFactoryClassName(String proxyDiscoveryFactoryClassName) {
             this.proxyDiscoveryFactoryClassName = proxyDiscoveryFactoryClassName;
-        }
-
-        public ProxyDiscoveryFactory getProxyDiscoveryFactory() {
-            return proxyDiscoveryFactory;
-        }
-
-        public void setProxyDiscoveryFactory(ProxyDiscoveryFactory proxyDiscoveryFactory) {
-            this.proxyDiscoveryFactory = proxyDiscoveryFactory;
         }
     }
 }

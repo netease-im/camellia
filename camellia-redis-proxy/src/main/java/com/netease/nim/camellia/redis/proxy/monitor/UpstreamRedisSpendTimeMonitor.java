@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
-import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
+import com.netease.nim.camellia.redis.proxy.monitor.model.UpstreamRedisSpendStats;
+import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
 import com.netease.nim.camellia.core.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.MaxValue;
 import org.slf4j.Logger;
@@ -20,8 +21,7 @@ public class UpstreamRedisSpendTimeMonitor {
     private static ConcurrentHashMap<String, LongAdder> spendTotalMap = new ConcurrentHashMap<>();
     private static ConcurrentHashMap<String, MaxValue> spendMaxMap = new ConcurrentHashMap<>();
 
-    public static void incrUpstreamRedisSpendTime(RedisClientAddr addr, long spendNanoTime) {
-        if (!RedisMonitor.isUpstreamRedisSpendTimeMonitorEnable()) return;
+    public static void incr(RedisClientAddr addr, long spendNanoTime) {
         try {
             CamelliaMapUtils.computeIfAbsent(spendCountMap, addr.getUrl(), k -> new LongAdder()).increment();
             CamelliaMapUtils.computeIfAbsent(spendTotalMap, addr.getUrl(), k -> new LongAdder()).add(spendNanoTime);
@@ -32,44 +32,39 @@ public class UpstreamRedisSpendTimeMonitor {
         }
     }
 
-    public static List<Stats.UpstreamRedisSpendStats> calc() {
-        List<Stats.UpstreamRedisSpendStats> list = new ArrayList<>();
-        try {
-            ConcurrentHashMap<String, LongAdder> spendCountMap = UpstreamRedisSpendTimeMonitor.spendCountMap;
-            ConcurrentHashMap<String, LongAdder> spendTotalMap = UpstreamRedisSpendTimeMonitor.spendTotalMap;
-            ConcurrentHashMap<String, MaxValue> spendMaxMap = UpstreamRedisSpendTimeMonitor.spendMaxMap;
+    public static List<UpstreamRedisSpendStats> collect() {
+        List<UpstreamRedisSpendStats> list = new ArrayList<>();
+        ConcurrentHashMap<String, LongAdder> spendCountMap = UpstreamRedisSpendTimeMonitor.spendCountMap;
+        ConcurrentHashMap<String, LongAdder> spendTotalMap = UpstreamRedisSpendTimeMonitor.spendTotalMap;
+        ConcurrentHashMap<String, MaxValue> spendMaxMap = UpstreamRedisSpendTimeMonitor.spendMaxMap;
 
-            UpstreamRedisSpendTimeMonitor.spendCountMap = new ConcurrentHashMap<>();
-            UpstreamRedisSpendTimeMonitor.spendTotalMap = new ConcurrentHashMap<>();
-            UpstreamRedisSpendTimeMonitor.spendMaxMap = new ConcurrentHashMap<>();
+        UpstreamRedisSpendTimeMonitor.spendCountMap = new ConcurrentHashMap<>();
+        UpstreamRedisSpendTimeMonitor.spendTotalMap = new ConcurrentHashMap<>();
+        UpstreamRedisSpendTimeMonitor.spendMaxMap = new ConcurrentHashMap<>();
 
-            for (Map.Entry<String, LongAdder> entry : spendCountMap.entrySet()) {
-                String key = entry.getKey();
-                long count = entry.getValue().sumThenReset();
-                if (count == 0) continue;
-                MaxValue nanoMax = spendMaxMap.get(key);
-                double maxSpendMs = 0;
-                if (nanoMax != null) {
-                    maxSpendMs = nanoMax.getAndSet(0) / 1000000.0;
-                }
-                double avgSpendMs = 0;
-                LongAdder nanoSum = spendTotalMap.get(key);
-                long sum;
-                if (nanoSum != null) {
-                    sum = nanoSum.sumThenReset();
-                    avgSpendMs = sum / (1000000.0 * count);
-                }
-                Stats.UpstreamRedisSpendStats upstreamRedisSpendStats = new Stats.UpstreamRedisSpendStats();
-                upstreamRedisSpendStats.setAddr(PasswordMaskUtils.maskAddr(key));
-                upstreamRedisSpendStats.setCount(count);
-                upstreamRedisSpendStats.setAvgSpendMs(avgSpendMs);
-                upstreamRedisSpendStats.setMaxSpendMs(maxSpendMs);
-                list.add(upstreamRedisSpendStats);
+        for (Map.Entry<String, LongAdder> entry : spendCountMap.entrySet()) {
+            String key = entry.getKey();
+            long count = entry.getValue().sumThenReset();
+            if (count == 0) continue;
+            MaxValue nanoMax = spendMaxMap.get(key);
+            double maxSpendMs = 0;
+            if (nanoMax != null) {
+                maxSpendMs = nanoMax.getAndSet(0) / 1000000.0;
             }
-            return list;
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            return list;
+            double avgSpendMs = 0;
+            LongAdder nanoSum = spendTotalMap.get(key);
+            long sum;
+            if (nanoSum != null) {
+                sum = nanoSum.sumThenReset();
+                avgSpendMs = sum / (1000000.0 * count);
+            }
+            UpstreamRedisSpendStats upstreamRedisSpendStats = new UpstreamRedisSpendStats();
+            upstreamRedisSpendStats.setAddr(PasswordMaskUtils.maskAddr(key));
+            upstreamRedisSpendStats.setCount(count);
+            upstreamRedisSpendStats.setAvgSpendMs(avgSpendMs);
+            upstreamRedisSpendStats.setMaxSpendMs(maxSpendMs);
+            list.add(upstreamRedisSpendStats);
         }
+        return list;
     }
 }

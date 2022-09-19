@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
+import com.netease.nim.camellia.redis.proxy.monitor.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,16 +24,16 @@ public class LoggingMonitorCallback implements MonitorCallback {
             logger.info("total.read.count={}", stats.getTotalReadCount());
             logger.info("total.write.count={}", stats.getTotalWriteCount());
             logger.info("====total====");
-            for (Stats.TotalStats totalStats : stats.getTotalStatsList()) {
+            for (TotalStats totalStats : stats.getTotalStatsList()) {
                 logger.info("total.command.{}, count={}", totalStats.getCommand(), totalStats.getCount());
             }
             logger.info("====bidbgroup====");
-            for (Stats.BidBgroupStats bgroupStats : stats.getBidBgroupStatsList()) {
+            for (BidBgroupStats bgroupStats : stats.getBidBgroupStatsList()) {
                 logger.info("bidbgroup.{}.{}, count={}", bgroupStats.getBid() == null ? "default" : bgroupStats.getBid(),
                         bgroupStats.getBgroup() == null ? "default" : bgroupStats.getBgroup(), bgroupStats.getCount());
             }
             logger.info("====detail====");
-            for (Stats.DetailStats detailStats : stats.getDetailStatsList()) {
+            for (DetailStats detailStats : stats.getDetailStatsList()) {
                 logger.info("detail.{}.{}.{}, count={}", detailStats.getBid() == null ? "default" : detailStats.getBid(),
                         detailStats.getBgroup() == null ? "default" : detailStats.getBgroup(), detailStats.getCommand(), detailStats.getCount());
             }
@@ -41,43 +42,72 @@ public class LoggingMonitorCallback implements MonitorCallback {
                 logger.info("fail[{}], count = {}", entry.getKey(), entry.getValue());
             }
             logger.info("====spend.stats====");
-            for (Stats.SpendStats spendStats : stats.getSpendStatsList()) {
+            for (SpendStats spendStats : stats.getSpendStatsList()) {
                 logger.info("command={},count={},avgSpendMs={},maxSpendMs={}", spendStats.getCommand(), spendStats.getCount(), spendStats.getAvgSpendMs(), spendStats.getMaxSpendMs());
             }
             logger.info("====bidbgroup.spend.stats====");
-            for (Stats.BidBgroupSpendStats spendStats : stats.getBidBgroupSpendStatsList()) {
+            for (BidBgroupSpendStats spendStats : stats.getBidBgroupSpendStatsList()) {
                 logger.info("bid={},bgroup={},command={},count={},avgSpendMs={},maxSpendMs={}", spendStats.getBid() == null ? "default" : spendStats.getBid(),
                         spendStats.getBgroup() == null ? "default" : spendStats.getBgroup(), spendStats.getCommand(), spendStats.getCount(), spendStats.getAvgSpendMs(), spendStats.getMaxSpendMs());
             }
             logger.info("====resource.stats====");
-            for (Stats.ResourceStats resourceStats : stats.getResourceStatsList()) {
+            for (ResourceStats resourceStats : stats.getResourceStatsList()) {
                 logger.info("resource={},count={}", resourceStats.getResource(), resourceStats.getCount());
             }
             logger.info("====resource.command.stats====");
-            for (Stats.ResourceCommandStats resourceCommandStats : stats.getResourceCommandStatsList()) {
+            for (ResourceCommandStats resourceCommandStats : stats.getResourceCommandStatsList()) {
                 logger.info("resource={},command={},count={}", resourceCommandStats.getResource(), resourceCommandStats.getCommand(), resourceCommandStats.getCount());
             }
             logger.info("====bidbgroup.resource.command.stats====");
-            for (Stats.ResourceBidBgroupCommandStats commandStats : stats.getResourceBidBgroupCommandStatsList()) {
+            for (ResourceBidBgroupCommandStats commandStats : stats.getResourceBidBgroupCommandStatsList()) {
                 logger.info("bid={},bgroup={},resource={},command={},count={}", commandStats.getBid() == null ? "default" : commandStats.getBid(),
                         commandStats.getBgroup() == null ? "default" : commandStats.getBgroup(), commandStats.getResource(), commandStats.getCommand(), commandStats.getCount());
             }
             logger.info("====route.conf====");
-            for (Stats.RouteConf routeConf : stats.getRouteConfList()) {
+            for (RouteConf routeConf : stats.getRouteConfList()) {
                 logger.info("bid={},bgroup={},routeConf={},updateTime={}", routeConf.getBid() == null ? "default" : routeConf.getBid(),
                         routeConf.getBgroup() == null ? "default" : routeConf.getBgroup(), routeConf.getResourceTable(), routeConf.getUpdateTime());
             }
             logger.info("====redis.connect.stats====");
-            Stats.RedisConnectStats redisConnectStats = stats.getRedisConnectStats();
+            RedisConnectStats redisConnectStats = stats.getRedisConnectStats();
             logger.info("redis.total.connect.count={}", redisConnectStats.getConnectCount());
-            for (Stats.RedisConnectStats.Detail detail : redisConnectStats.getDetailList()) {
+            for (RedisConnectStats.Detail detail : redisConnectStats.getDetailList()) {
                 logger.info("redis.addr={},connect.count={}", detail.getAddr(), detail.getConnectCount());
             }
             logger.info("====upstream.redis.spend.stats====");
-            List<Stats.UpstreamRedisSpendStats> upstreamRedisSpendStatsList = stats.getUpstreamRedisSpendStatsList();
-            for (Stats.UpstreamRedisSpendStats upstreamRedisSpendStats : upstreamRedisSpendStatsList) {
+            List<UpstreamRedisSpendStats> upstreamRedisSpendStatsList = stats.getUpstreamRedisSpendStatsList();
+            for (UpstreamRedisSpendStats upstreamRedisSpendStats : upstreamRedisSpendStatsList) {
                 logger.info("addr={},count={},avgSpendMs={},maxSpendMs={}", upstreamRedisSpendStats.getAddr(),
                         upstreamRedisSpendStats.getCount(), upstreamRedisSpendStats.getAvgSpendMs(), upstreamRedisSpendStats.getMaxSpendMs());
+            }
+            logger.info("====big.key.stats====");
+            List<BigKeyStats> bigKeyStatsList = stats.getBigKeyStatsList();
+            for (BigKeyStats bigKeyStats : bigKeyStatsList) {
+                logger.info("bid={},bgroup={},commandType={},command={},key={},size={},threshold={}", bigKeyStats.getBid(),
+                        bigKeyStats.getBgroup(), bigKeyStats.getCommandType(), bigKeyStats.getCommand(), bigKeyStats.getKey(),
+                        bigKeyStats.getSize(), bigKeyStats.getThreshold());
+            }
+            logger.info("====hot.key.stats====");
+            List<HotKeyStats> hotKeyStatsList = stats.getHotKeyStatsList();
+            for (HotKeyStats hotKeyStats : hotKeyStatsList) {
+                logger.info("bid={},bgroup={},key={},times={},max={},avg={},checkMillis={},checkThreshold={}", hotKeyStats.getBid(),
+                        hotKeyStats.getBgroup(), hotKeyStats.getKey(), hotKeyStats.getTimes(), hotKeyStats.getMax(),
+                        hotKeyStats.getAvg(), hotKeyStats.getCheckMillis(), hotKeyStats.getCheckThreshold());
+            }
+            logger.info("====hot.key.cache.stats====");
+            List<HotKeyCacheStats> hotKeyCacheStatsList = stats.getHotKeyCacheStatsList();
+            for (HotKeyCacheStats hotKeyCacheStats : hotKeyCacheStatsList) {
+                logger.info("bid={},bgroup={},key={},hitCount={},checkMillis={},checkThreshold={}", hotKeyCacheStats.getBid(),
+                        hotKeyCacheStats.getBgroup(), hotKeyCacheStats.getKey(),
+                        hotKeyCacheStats.getHitCount(), hotKeyCacheStats.getCheckMillis(), hotKeyCacheStats.getCheckThreshold());
+            }
+
+            logger.info("====slow.command.stats====");
+            List<SlowCommandStats> slowCommandStatsList = stats.getSlowCommandStatsList();
+            for (SlowCommandStats slowCommandStats : slowCommandStatsList) {
+                logger.info("bid={},bgroup={},command={},keys={},spendMillis={},thresholdMillis={}", slowCommandStats.getBid(),
+                        slowCommandStats.getBgroup(), slowCommandStats.getCommand(),
+                        slowCommandStats.getKeys(), slowCommandStats.getSpendMillis(), slowCommandStats.getThresholdMillis());
             }
             logger.info("<<<<<<<END<<<<<<<");
         } catch (Exception e) {

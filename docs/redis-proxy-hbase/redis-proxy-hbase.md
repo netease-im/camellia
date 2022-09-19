@@ -82,14 +82,12 @@ camellia-redis-proxy:
   monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback #监控回调类
   command-spend-time-monitor-enable: true #是否开启请求耗时的监控，只有monitor-enable=true才有效
   slow-command-threshold-millis-time: 2000 #慢查询的阈值，单位毫秒，只有command-spend-time-monitor-enable=true才有效
-  slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback #慢查询的回调类
   hot-key-monitor-enable: true #是否监控热key
   hot-key-monitor-config:
     check-millis: 1000 #热key的检查周期
     check-threshold: 100 #热key的阈值，检查周期内请求次数超过该阈值被判定为热key
     check-cache-max-capacity: 1000 #检查的计数器集合的size，本身是LRU的
     max-hot-key-count: 100 #每次回调的热key个数的最大值（前N个）
-    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHotKeyMonitorCallback #热key的回调类
   big-key-monitor-enable: true #大key检测
   big-key-monitor-config:
     string-size-threshold: 2097152 #字符串类型，value大小超过多少认为是大key
@@ -97,7 +95,6 @@ camellia-redis-proxy:
     zset-size-threshold: 2000 #zset类型，集合大小超过多少认为是大key
     list-size-threshold: 2000 #list类型，集合大小超过多少认为是大key
     set-size-threshold: 2000 #set类型，集合大小超过多少认为是大key
-    big-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.bigkey.LoggingBigKeyMonitorCallback #大key的回调类
 
 #see CamelliaHBaseProperties
 camellia-hbase:

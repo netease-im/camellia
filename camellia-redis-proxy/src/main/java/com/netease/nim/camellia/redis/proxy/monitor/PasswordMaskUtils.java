@@ -4,7 +4,9 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTransferUtil;
-import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
+import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
 
 import java.util.ArrayList;
@@ -17,7 +19,9 @@ import java.util.List;
  */
 public class PasswordMaskUtils {
 
-    public static boolean maskEnable = false;
+    private static boolean isMaskEnable() {
+        return ProxyDynamicConf.getBoolean("monitor.data.mask.password.enable", Constants.Server.monitorDataMaskPassword);
+    }
 
     public static String maskResource(Resource resource) {
         if (resource == null) return null;
@@ -25,7 +29,7 @@ public class PasswordMaskUtils {
     }
 
     public static String maskResource(String url) {
-        if (!maskEnable) return url;
+        if (!isMaskEnable()) return url;
         try {
             int i = url.indexOf("://");
             int j = url.lastIndexOf("@");
@@ -61,7 +65,7 @@ public class PasswordMaskUtils {
 
     public static String maskAddr(String addr) {
         try {
-            if (!maskEnable) return addr;
+            if (!isMaskEnable()) return addr;
             int i = addr.lastIndexOf("@");
             if (i == 0) return addr;
             String substring = addr.substring(0, i);
@@ -78,7 +82,7 @@ public class PasswordMaskUtils {
     }
 
     public static ResourceTable maskResourceTable(ResourceTable resourceTable) {
-        if (!maskEnable) return resourceTable;
+        if (!isMaskEnable()) return resourceTable;
         String readableResourceTable = ReadableResourceTableUtil.readableResourceTable(resourceTable);
         ResourceTable resourceTable1 = ReadableResourceTableUtil.parseTable(readableResourceTable);
         return ResourceTransferUtil.transfer(resourceTable1,

@@ -14,16 +14,6 @@ camellia-redis-proxy提供了自定义命令拦截器来达到控制客户端访
 ```java
 package com.netease.nim.camellia.redis.proxy.samples;
 
-import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.command.async.CommandContext;
-import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptResponse;
-import com.netease.nim.camellia.redis.proxy.command.async.interceptor.CommandInterceptor;
-import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.util.List;
-
 public class CustomCommandInterceptor implements CommandInterceptor {
 
     private static final CommandInterceptResponse KEY_TOO_LONG = new CommandInterceptResponse(false, "key too long");
@@ -231,7 +221,6 @@ camellia-redis-proxy:
     type: local
     local:
       resource: redis://@127.0.0.1:6379
-  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.mq.common.MqMultiWriteCommandInterceptor
 ```
 MqMultiWriteCommandInterceptor依赖MqPackSender接口，camellia提供了一个默认实现（KafkaMqPackSender）  
 随后你需要在camellia-redis-proxy.properties里配置启用KafkaMqPackSender，并配置好kafka的地址，如下：  
@@ -239,7 +228,7 @@ MqMultiWriteCommandInterceptor依赖MqPackSender接口，camellia提供了一个
 #生产端kafka的地址和topic，反斜杠分隔
 mq.multi.write.producer.kafka.urls=127.0.0.1:9092,127.0.0.1:9093/camellia_multi_write_kafka
 #使用KafkaMqPackSender来进行mq的异步写入
-mq.multi.write.sender.class.name=com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackSender
+mq.multi.write.sender.className=com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackSender
 ```
 上面的例子表示所有到proxy的写请求（限制性命令不支持，如阻塞型命令、发布订阅命令等），均会写入kafka  
 随后，你需要再启动一个proxy作为kafka的消费者，如下：  
@@ -256,7 +245,6 @@ camellia-redis-proxy:
     type: local
     local:
       resource: redis://@127.0.0.1:6378
-  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.mq.kafka.KafkaMqPackConsumer
 ```
 上面的例子表示启用KafkaMqPackConsumer作为方法拦截器，该拦截器会从kafka消费信息，并根据上下文写入到后端的redis中  
 为了正确工作，你还需要在camellia-redis-proxy.properties配置kafka的地址和topic，如下  

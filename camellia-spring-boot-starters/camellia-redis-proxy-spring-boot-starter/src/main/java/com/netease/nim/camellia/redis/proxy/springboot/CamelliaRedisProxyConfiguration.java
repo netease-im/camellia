@@ -1,12 +1,14 @@
 package com.netease.nim.camellia.redis.proxy.springboot;
 
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
-import com.netease.nim.camellia.redis.proxy.command.async.AsyncCommandInvoker;
+import com.netease.nim.camellia.redis.proxy.command.AsyncCommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleService;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleServiceAdaptor;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.plugin.DefaultBeanFactory;
+import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.NettyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.TranspondProperties;
@@ -42,12 +44,12 @@ public class CamelliaRedisProxyConfiguration {
     @Value("${spring.application.name:camellia-redis-proxy}")
     private String applicationName;
 
-    @Autowired
-    private CamelliaRedisProxyConfigurerSupport configurerSupport;
+    @Autowired(required = false)
+    public SpringProxyBeanFactory proxyBeanFactory;
 
     @Bean
     public CamelliaServerProperties camelliaServerProperties(CamelliaRedisProxyProperties properties) {
-        return CamelliaRedisProxyUtil.parse(properties, configurerSupport, applicationName, port);
+        return CamelliaRedisProxyUtil.parse(properties, proxyBeanFactory, applicationName, port);
     }
 
     @Bean
@@ -59,8 +61,8 @@ public class CamelliaRedisProxyConfiguration {
         transpondProperties.setType(CamelliaRedisProxyUtil.parseType(transpond));
         transpondProperties.setLocal(CamelliaRedisProxyUtil.parse(transpond.getLocal()));
         transpondProperties.setRemote(CamelliaRedisProxyUtil.parse(transpond.getRemote()));
-        transpondProperties.setCustom(CamelliaRedisProxyUtil.parse(transpond.getCustom(), configurerSupport));
-        transpondProperties.setRedisConf(CamelliaRedisProxyUtil.parse(transpond.getRedisConf(), configurerSupport));
+        transpondProperties.setCustom(CamelliaRedisProxyUtil.parse(transpond.getCustom()));
+        transpondProperties.setRedisConf(CamelliaRedisProxyUtil.parse(transpond.getRedisConf()));
         transpondProperties.setNettyProperties(CamelliaRedisProxyUtil.parse(transpond.getNetty()));
 
         GlobalRedisProxyEnv.bossGroup = bossGroup(properties).get();

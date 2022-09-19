@@ -3,19 +3,16 @@ package com.netease.nim.camellia.redis.proxy.hbase;
 import com.netease.nim.camellia.core.util.ExceptionUtils;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
-import com.netease.nim.camellia.redis.proxy.command.AuthCommandProcessor;
+import com.netease.nim.camellia.redis.proxy.auth.AuthCommandProcessor;
+import com.netease.nim.camellia.redis.proxy.command.AsyncTask;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
-import com.netease.nim.camellia.redis.proxy.command.async.bigkey.BigKeyHunter;
-import com.netease.nim.camellia.redis.proxy.command.async.bigkey.CommandBigKeyMonitorConfig;
-import com.netease.nim.camellia.redis.proxy.command.async.hotkey.CommandHotKeyMonitorConfig;
-import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunter;
-import com.netease.nim.camellia.redis.proxy.command.async.hotkey.HotKeyHunterManager;
-import com.netease.nim.camellia.redis.proxy.command.async.spendtime.CommandSpendTimeConfig;
+import com.netease.nim.camellia.redis.proxy.command.CommandsTransponder;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
+import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.*;
@@ -39,120 +36,115 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
     private final Map<String, Method> methodMap = new HashMap<>();
     private final RedisHBaseCommandProcessor processor;
     private final AuthCommandProcessor authCommandProcessor;
-
-    private CommandSpendTimeConfig commandSpendTimeConfig;
-    private HotKeyHunter hotKeyHunter;
-    private BigKeyHunter bigKeyHunter;
+    private final DefaultProxyPluginFactory proxyPluginFactory;
+    private ProxyPluginInitResp proxyPluginInitResp;
 
     public RedisHBaseCommandInvoker(CamelliaRedisTemplate redisTemplate, CamelliaHBaseTemplate hBaseTemplate, CamelliaServerProperties serverProperties) {
         processor = new RedisHBaseCommandProcessor(redisTemplate, hBaseTemplate);
 
-        if (serverProperties.isMonitorEnable()) {
-            MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);
-            RedisMonitor.init(serverProperties, monitorCallback);
-        }
+        MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);
+        ProxyMonitorCollector.init(serverProperties, monitorCallback);
 
         Class<? extends IRedisHBaseCommandProcessor> clazz = IRedisHBaseCommandProcessor.class;
         CommandMethodUtil.initCommandFinderMethods(clazz, methodMap);
 
-        int monitorIntervalSeconds = serverProperties.getMonitorIntervalSeconds();
-        CommandSpendTimeConfig commandSpendTimeConfig = ConfigInitUtil.initCommandSpendTimeConfig(serverProperties);
-        if (commandSpendTimeConfig != null) {
-            SlowCommandMonitor.init(monitorIntervalSeconds);
-            this.commandSpendTimeConfig = commandSpendTimeConfig;
-        }
-        CommandHotKeyMonitorConfig commandHotKeyMonitorConfig = ConfigInitUtil.initCommandHotKeyMonitorConfig(serverProperties);
-        if (commandHotKeyMonitorConfig != null) {
-            HotKeyMonitor.init(monitorIntervalSeconds);
-            HotKeyHunterManager hotKeyHunterManager = new HotKeyHunterManager(commandHotKeyMonitorConfig);
-            this.hotKeyHunter = hotKeyHunterManager.get(null, null);
-        }
-        CommandBigKeyMonitorConfig commandBigKeyMonitorConfig = ConfigInitUtil.initBigKeyMonitorConfig(serverProperties);
-        if (commandBigKeyMonitorConfig != null) {
-            BigKeyMonitor.init(monitorIntervalSeconds);
-            this.bigKeyHunter = new BigKeyHunter(commandBigKeyMonitorConfig);
-        }
         this.authCommandProcessor = new AuthCommandProcessor(ConfigInitUtil.initClientAuthProvider(serverProperties));
+        this.proxyPluginFactory = new DefaultProxyPluginFactory(serverProperties.getPlugins(), serverProperties.getProxyBeanFactory());
+        this.proxyPluginInitResp = proxyPluginFactory.initPlugins();
+        proxyPluginFactory.registerPluginUpdate(() -> proxyPluginInitResp = proxyPluginFactory.initPlugins());
     }
 
     @Override
     public void invoke(ChannelHandlerContext ctx, ChannelInfo channelInfo, List<Command> commands) {
         if (commands.isEmpty()) return;
         for (Command command : commands) {
-            if (RedisMonitor.isMonitorEnable()) {
-                RedisMonitor.incr(null, null, command.getName());
-            }
-            Reply reply = null;
-            long startTime = 0;
-            if (RedisMonitor.isCommandSpendTimeMonitorEnable()) {
-                startTime = System.nanoTime();
-            }
+            Reply reply;
             try {
+                boolean requestPluginPass = executeRequest(ctx, channelInfo, command);
+                if (!requestPluginPass) {
+                    continue;
+                }
                 if (command.getRedisCommand() == RedisCommand.AUTH) {
                     reply = authCommandProcessor.invokeAuthCommand(channelInfo, command);
-                    ctx.writeAndFlush(reply);
-                    debugLog(reply, channelInfo);
                 } else if (command.getRedisCommand() == RedisCommand.QUIT) {
                     ctx.close();
                     return;
                 } else {
                     if (authCommandProcessor.isPasswordRequired() && channelInfo.getChannelStats() == ChannelInfo.ChannelStats.NO_AUTH) {
-                        ctx.writeAndFlush(ErrorReply.NO_AUTH);
-                        debugLog(ErrorReply.NO_AUTH, channelInfo);
-                        continue;
+                        reply = ErrorReply.NO_AUTH;
+                    } else {
+                        Method method = methodMap.get(command.getName());
+                        if (method == null) {
+                            logger.warn("only support zset relevant commands, return NOT_SUPPORT, command = {}, consid = {}", command.getName(), channelInfo.getConsid());
+                            reply = ErrorReply.NOT_SUPPORT;
+                        } else {
+                            //invoke start
+                            reply = (Reply) CommandInvokerUtil.invoke(method, command, processor);
+                            //invoke end
+                        }
                     }
-                    Method method = methodMap.get(command.getName());
-                    if (method == null) {
-                        logger.warn("only support zset relevant commands, return NOT_SUPPORT, command = {}, consid = {}", command.getName(), channelInfo.getConsid());
-                        ctx.writeAndFlush(ErrorReply.NOT_SUPPORT);
-                        debugLog(ErrorReply.NOT_SUPPORT, channelInfo);
-                        return;
-                    }
-                    if (hotKeyHunter != null) {
-                        hotKeyHunter.incr(command.getKeys());
-                    }
-                    if (bigKeyHunter != null) {
-                        bigKeyHunter.checkRequest(command);
-                    }
-                    //
-                    reply = (Reply) CommandInvokerUtil.invoke(method, command, processor);
+                }
+                if (executeReply(ctx, channelInfo, command, reply, false)) {
                     ctx.writeAndFlush(reply);
                     debugLog(reply, channelInfo);
-                    //
-                    if (bigKeyHunter != null) {
-                        bigKeyHunter.checkReply(command, reply);
-                    }
                 }
             } catch (Throwable e) {
                 reply = handlerError(e, command.getName());
-                ctx.writeAndFlush(reply);
-                debugLog(reply, channelInfo);
-            } finally {
-                if (startTime > 0) {
-                    long spendNanoTime = System.nanoTime() - startTime;
-                    CommandSpendMonitor.incrCommandSpendTime(null, null, command.getName(), spendNanoTime);
-                    if (this.commandSpendTimeConfig != null && spendNanoTime > this.commandSpendTimeConfig.getSlowCommandThresholdNanoTime()) {
-                        double spendMillis = spendNanoTime / 1000000.0;
-                        long slowCommandThresholdMillisTime = this.commandSpendTimeConfig.getSlowCommandThresholdMillisTime();
-                        SlowCommandMonitor.slowCommand(command, spendMillis, slowCommandThresholdMillisTime);
-                        if (this.commandSpendTimeConfig.getSlowCommandMonitorCallback() != null) {
-                            try {
-                                this.commandSpendTimeConfig.getSlowCommandMonitorCallback().callback(command, reply,
-                                        spendMillis, slowCommandThresholdMillisTime);
-                            } catch (Exception e) {
-                                ErrorLogCollector.collect(RedisHBaseCommandInvoker.class, "SlowCommandCallback error", e);
-                            }
-                        }
-                    }
+                if (executeReply(ctx, channelInfo, command, reply, false)) {
+                    ctx.writeAndFlush(reply);
+                    debugLog(reply, channelInfo);
                 }
             }
         }
     }
 
+    private boolean executeRequest(ChannelHandlerContext ctx, ChannelInfo channelInfo, Command command) {
+        List<ProxyPlugin> requestPlugins = proxyPluginInitResp.getRequestPlugins();
+        if (!requestPlugins.isEmpty()) {
+            ProxyRequest request = new ProxyRequest(command, null);
+            for (ProxyPlugin plugin : requestPlugins) {
+                try {
+                    ProxyPluginResponse response = plugin.executeRequest(request);
+                    if (!response.isPass()) {
+                        Reply reply = response.getReply();
+                        if (executeReply(ctx, channelInfo, command, reply, true)) {
+                            ctx.writeAndFlush(reply);
+                            debugLog(reply, channelInfo);
+                        }
+                        return false;
+                    }
+                } catch (Exception e) {
+                    ErrorLogCollector.collect(CommandsTransponder.class, "doRequestFilter error", e);
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean executeReply(ChannelHandlerContext ctx, ChannelInfo channelInfo, Command command, Reply reply, boolean fromPlugin) {
+        List<ProxyPlugin> replyPlugins = proxyPluginInitResp.getReplyPlugins();
+        if (!replyPlugins.isEmpty()) {
+            ProxyReply proxyReply = new ProxyReply(command, reply, fromPlugin);
+            for (ProxyPlugin plugin : replyPlugins) {
+                try {
+                    ProxyPluginResponse response = plugin.executeReply(proxyReply);
+                    if (!response.isPass()) {
+                        ctx.writeAndFlush(reply);
+                        debugLog(reply, channelInfo);
+                        return false;
+                    }
+                } catch (Exception e) {
+                    ErrorLogCollector.collect(AsyncTask.class, "doReplyFilter error", e);
+                }
+            }
+        }
+        return true;
+    }
+
     private Reply handlerError(Throwable e, String msg) {
         e = ExceptionUtils.onError(e);
         String message = ErrorHandlerUtil.redisErrorMessage(e);
-        String log = "invoke error, msg = " + msg + ",e=" + e.toString();
+        String log = "invoke error, msg = " + msg + ",e=" + e;
         ErrorLogCollector.collect(RedisHBaseCommandInvoker.class, log);
         return new ErrorReply(message);
     }

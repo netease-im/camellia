@@ -2,9 +2,9 @@ package com.netease.nim.camellia.redis.proxy.netty;
 
 
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
-import com.netease.nim.camellia.redis.proxy.command.async.AsyncTaskQueue;
-import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
-import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
+import com.netease.nim.camellia.redis.proxy.command.AsyncTaskQueue;
+import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
+import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;

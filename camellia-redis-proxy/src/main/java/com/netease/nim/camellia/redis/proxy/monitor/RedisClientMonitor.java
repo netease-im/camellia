@@ -1,8 +1,10 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
-import com.netease.nim.camellia.redis.proxy.command.async.RedisClient;
-import com.netease.nim.camellia.redis.proxy.command.async.RedisClientAddr;
-import com.netease.nim.camellia.redis.proxy.command.async.RedisClientConfig;
+import com.netease.nim.camellia.redis.proxy.monitor.model.RedisConnectStats;
+import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
+import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
+import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
+import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientConfig;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,25 +76,20 @@ public class RedisClientMonitor {
         return redisClientMap;
     }
 
-    public static Stats.RedisConnectStats calc() {
-        Stats.RedisConnectStats redisConnectStats = new Stats.RedisConnectStats();
-        try {
-            List<Stats.RedisConnectStats.Detail> detailList = new ArrayList<>();
-            for (Map.Entry<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> entry : redisClientMap.entrySet()) {
-                RedisClientAddr key = entry.getKey();
-                ConcurrentHashMap<String, RedisClient> subMap = entry.getValue();
-                if (subMap.isEmpty()) continue;
-                redisConnectStats.setConnectCount(redisConnectStats.getConnectCount() + subMap.size());
-                Stats.RedisConnectStats.Detail detail = new Stats.RedisConnectStats.Detail();
-                detail.setAddr(PasswordMaskUtils.maskAddr(key.getUrl()));
-                detail.setConnectCount(subMap.size());
-                detailList.add(detail);
-            }
-            redisConnectStats.setDetailList(detailList);
-            return redisConnectStats;
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            return redisConnectStats;
+    public static RedisConnectStats collect() {
+        RedisConnectStats redisConnectStats = new RedisConnectStats();
+        List<RedisConnectStats.Detail> detailList = new ArrayList<>();
+        for (Map.Entry<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> entry : redisClientMap.entrySet()) {
+            RedisClientAddr key = entry.getKey();
+            ConcurrentHashMap<String, RedisClient> subMap = entry.getValue();
+            if (subMap.isEmpty()) continue;
+            redisConnectStats.setConnectCount(redisConnectStats.getConnectCount() + subMap.size());
+            RedisConnectStats.Detail detail = new RedisConnectStats.Detail();
+            detail.setAddr(PasswordMaskUtils.maskAddr(key.getUrl()));
+            detail.setConnectCount(subMap.size());
+            detailList.add(detail);
         }
+        redisConnectStats.setDetailList(detailList);
+        return redisConnectStats;
     }
 }

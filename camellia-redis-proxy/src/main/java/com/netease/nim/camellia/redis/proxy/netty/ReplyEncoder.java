@@ -1,8 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
+import com.netease.nim.camellia.redis.proxy.monitor.CommandFailMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ReplyPack;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.monitor.RedisMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import io.netty.buffer.ByteBuf;
@@ -33,9 +34,9 @@ public class ReplyEncoder extends MessageToByteEncoder<Object> {
         if (object instanceof ReplyPack) {
             ReplyPack pack = (ReplyPack) object;
             if (ctx.channel().isActive()) {
-                if (RedisMonitor.isMonitorEnable()) {
+                if (ProxyMonitorCollector.isMonitorEnable()) {
                     if (pack.getReply() instanceof ErrorReply) {
-                        RedisMonitor.incrFail(((ErrorReply) pack.getReply()).getError());
+                        CommandFailMonitor.incr(((ErrorReply) pack.getReply()).getError());
                     }
                 }
                 //avoid out of order
@@ -63,23 +64,23 @@ public class ReplyEncoder extends MessageToByteEncoder<Object> {
                     packMap.put(id, pack);
                 }
             } else {
-                if (RedisMonitor.isMonitorEnable()) {
-                    RedisMonitor.incrFail("ChannelNotActive");
+                if (ProxyMonitorCollector.isMonitorEnable()) {
+                    CommandFailMonitor.incr("ChannelNotActive");
                 }
                 ErrorLogCollector.collect(ReplyEncoder.class, "channel not active, remote.ip=" + ctx.channel().remoteAddress());
             }
         } else if (object instanceof Reply) {
             if (ctx.channel().isActive()) {
                 Reply reply = (Reply) object;
-                if (RedisMonitor.isMonitorEnable()) {
+                if (ProxyMonitorCollector.isMonitorEnable()) {
                     if (reply instanceof ErrorReply) {
-                        RedisMonitor.incrFail(((ErrorReply) reply).getError());
+                        CommandFailMonitor.incr(((ErrorReply) reply).getError());
                     }
                 }
                 reply.write(out);
             } else {
-                if (RedisMonitor.isMonitorEnable()) {
-                    RedisMonitor.incrFail("ChannelNotActive");
+                if (ProxyMonitorCollector.isMonitorEnable()) {
+                    CommandFailMonitor.incr("ChannelNotActive");
                 }
                 ErrorLogCollector.collect(ReplyEncoder.class, "channel not active, remote.ip=" + ctx.channel().remoteAddress());
             }

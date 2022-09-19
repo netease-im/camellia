@@ -11,50 +11,10 @@ camellia-redis-proxy:
   #port: 6380 #优先级高于server.port，如果缺失，则使用server.port
   #application-name: camellia-redis-proxy-server  #优先级高于spring.application.name，如果缺失，则使用spring.application.name
   password: pass123   #proxy的密码
-  monitor-enable: true  #是否开启监控
-  monitor-interval-seconds: 60 #监控回调的间隔
-  monitor-data-mask-password: false #监控相关数据（包括日志）是否把密码隐藏，默认false（例：用***代替abc）
-  monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback #监控回调类
-  command-spend-time-monitor-enable: true #是否开启请求耗时的监控，只有monitor-enable=true才有效
-  slow-command-threshold-millis-time: 1000 #慢查询的阈值，单位毫秒，只有command-spend-time-monitor-enable=true才有效
-  slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback #慢查询的回调类
-  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor #方法拦截器
-  converter-enable: false #是否开启value转换
-  converter-config:
-    string-converter-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomStringConverter #string相关命令的自定义转换器
-  hot-key-monitor-enable: true #是否监控热key
-  hot-key-monitor-config:
-    check-millis: 1000 #热key的检查周期
-    check-threshold: 100 #热key的阈值，检查周期内请求次数超过该阈值被判定为热key
-    check-cache-max-capacity: 1000 #检查的计数器集合的size，本身是LRU的
-    max-hot-key-count: 100 #每次回调的热key个数的最大值（前N个）
-    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHotKeyMonitorCallback #热key的回调类
-  hot-key-cache-enable: true #热key缓存开关
-  hot-key-cache-config:
-    counter-check-millis: 1000 #检查周期，单位毫秒
-    counter-check-threshold: 100 #检查阈值，超过才算热key，才触发热key的缓存
-    counter-max-capacity: 1000 #检查计数器集合的size，本身是LRU的
-    need-cache-null: true #是否缓存null
-    cache-max-capacity: 1000 #缓存集合的size，本身是LRU的
-    cache-expire-millis: 5000 #缓存时间，单位毫秒
-    hot-key-cache-stats-callback-interval-seconds: 20 #热key缓存的统计数据回调周期
-    hot-key-cache-stats-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.LoggingHotKeyCacheStatsCallback #热key缓存的回调类
-    hot-key-cache-key-checker-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkeycache.DummyHotKeyCacheKeyChecker #判断这个key是否需要缓存的接口
-  big-key-monitor-enable: true #大key检测
-  big-key-monitor-config:
-    string-size-threshold: 2097152 #字符串类型，value大小超过多少认为是大key
-    hash-size-threshold: 2000 #hash类型，集合大小超过多少认为是大key
-    zset-size-threshold: 2000 #zset类型，集合大小超过多少认为是大key
-    list-size-threshold: 2000 #list类型，集合大小超过多少认为是大key
-    set-size-threshold: 2000 #set类型，集合大小超过多少认为是大key
-    big-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.bigkey.LoggingBigKeyMonitorCallback #大key的回调类
   transpond:
     type: local #使用本地配置
     local:
       resource: redis://@127.0.0.1:6379 #转发的redis地址
-    redis-conf:
-      multi-write-mode: first_resource_only #双写的模式，默认第一个地址返回就返回
-      sharding-func: com.netease.nim.camellia.redis.proxy.samples.CustomShardingFunc #分片函数
 
 camellia-redis-zk-registry: #需要引入相关的依赖才有效
   enable: false #是否注册到zk
@@ -180,15 +140,12 @@ camellia-redis-proxy:
   monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.monitor.LoggingMonitorCallback #监控回调类
   command-spend-time-monitor-enable: true #是否开启请求耗时的监控，只有monitor-enable=true才有效
   slow-command-threshold-millis-time: 1000 #慢查询的阈值，单位毫秒，只有command-spend-time-monitor-enable=true才有效
-  slow-command-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.spendtime.LoggingSlowCommandMonitorCallback #慢查询的回调类
-  command-interceptor-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomCommandInterceptor #方法拦截器
   hot-key-monitor-enable: true #是否监控热key
   hot-key-monitor-config:
     check-millis: 1000 #热key的检查周期
     check-threshold: 10 #热key的阈值，检查周期内请求次数超过该阈值被判定为热key
     check-cache-max-capacity: 1000 #检查的计数器集合的size，本身是LRU的
     max-hot-key-count: 100 #每次回调的热key个数的最大值（前N个）
-    hot-key-monitor-callback-class-name: com.netease.nim.camellia.redis.proxy.command.async.hotkey.LoggingHotKeyMonitorCallback #热key的回调类
   proxy-dynamic-conf-hook-class-name: com.netease.nim.camellia.redis.proxy.samples.CustomProxyDynamicConfHook #设置动态配置变更的hook
   transpond:
     type: local #使用本地配置

@@ -1,7 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
-import com.netease.nim.camellia.redis.proxy.command.async.AsyncCamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.proxy.monitor.model.RouteConf;
+import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,32 +37,27 @@ public class RouteConfMonitor {
         return templateMap;
     }
 
-    public static List<Stats.RouteConf> calc() {
-        List<Stats.RouteConf> routeConfList = new ArrayList<>();
-        try {
-            for (Map.Entry<String, AsyncCamelliaRedisTemplate> entry : templateMap.entrySet()) {
-                String key = entry.getKey();
-                String[] split = key.split("\\|");
-                Long bid = null;
-                if (!split[0].equals("null")) {
-                    bid = Long.parseLong(split[0]);
-                }
-                String bgroup = null;
-                if (!split[1].equals("null")) {
-                    bgroup = split[1];
-                }
-                String resourceTable = ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(entry.getValue().getResourceTable()));
-                Stats.RouteConf routeConf = new Stats.RouteConf();
-                routeConf.setBid(bid);
-                routeConf.setBgroup(bgroup);
-                routeConf.setResourceTable(resourceTable);
-                routeConf.setUpdateTime(entry.getValue().getResourceTableUpdateTime());
-                routeConfList.add(routeConf);
+    public static List<RouteConf> collect() {
+        List<RouteConf> routeConfList = new ArrayList<>();
+        for (Map.Entry<String, AsyncCamelliaRedisTemplate> entry : templateMap.entrySet()) {
+            String key = entry.getKey();
+            String[] split = key.split("\\|");
+            Long bid = null;
+            if (!split[0].equals("null")) {
+                bid = Long.parseLong(split[0]);
             }
-            return routeConfList;
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            return routeConfList;
+            String bgroup = null;
+            if (!split[1].equals("null")) {
+                bgroup = split[1];
+            }
+            String resourceTable = ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(entry.getValue().getResourceTable()));
+            RouteConf routeConf = new RouteConf();
+            routeConf.setBid(bid);
+            routeConf.setBgroup(bgroup);
+            routeConf.setResourceTable(resourceTable);
+            routeConf.setUpdateTime(entry.getValue().getResourceTableUpdateTime());
+            routeConfList.add(routeConf);
         }
+        return routeConfList;
     }
 }

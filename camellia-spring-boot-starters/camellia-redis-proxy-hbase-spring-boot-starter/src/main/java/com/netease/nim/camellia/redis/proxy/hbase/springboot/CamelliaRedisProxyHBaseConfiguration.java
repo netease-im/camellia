@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.hbase.RedisHBaseCommandInvoker;
+import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.springboot.CamelliaRedisProxyConfiguration;
 import com.netease.nim.camellia.redis.proxy.springboot.CamelliaRedisProxyConfigurerSupport;
 import com.netease.nim.camellia.redis.proxy.springboot.CamelliaRedisProxyUtil;
@@ -36,14 +37,14 @@ public class CamelliaRedisProxyHBaseConfiguration {
     @Value("${spring.application.name:camellia-redis-proxy}")
     private String applicationName;
 
-    @Autowired
-    private CamelliaRedisProxyConfigurerSupport configurerSupport;
+    @Autowired(required = false)
+    private ProxyBeanFactory proxyBeanFactory;
 
     @Bean
     public CommandInvoker commandInvoker(CamelliaRedisTemplate redisTemplate,
                                          CamelliaHBaseTemplate hBaseTemplate,
                                          CamelliaRedisProxyProperties properties) {
-        CamelliaServerProperties serverProperties = CamelliaRedisProxyUtil.parse(properties, configurerSupport, applicationName, port);
+        CamelliaServerProperties serverProperties = CamelliaRedisProxyUtil.parse(properties, proxyBeanFactory, applicationName, port);
         return new RedisHBaseCommandInvoker(redisTemplate, hBaseTemplate, serverProperties);
     }
 }
