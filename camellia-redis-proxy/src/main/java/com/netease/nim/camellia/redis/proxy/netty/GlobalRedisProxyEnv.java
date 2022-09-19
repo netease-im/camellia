@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
+import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplateChooser;
 import io.netty.channel.EventLoopGroup;
 
@@ -19,4 +20,6 @@ public class GlobalRedisProxyEnv {
 
     public static int port;
     public static int consolePort;
+
+    public static ProxyDiscoveryFactory discoveryFactory;
 }

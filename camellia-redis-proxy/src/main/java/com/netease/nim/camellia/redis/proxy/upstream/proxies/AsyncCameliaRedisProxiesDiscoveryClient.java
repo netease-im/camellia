@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.discovery.common.IProxyDiscovery;
 import com.netease.nim.camellia.redis.proxy.discovery.common.Proxy;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
@@ -37,7 +38,10 @@ public class AsyncCameliaRedisProxiesDiscoveryClient extends AsyncCamelliaSimple
 
     public AsyncCameliaRedisProxiesDiscoveryClient(RedisProxiesDiscoveryResource resource) {
         this.resource = resource;
-        this.proxyDiscovery = CamelliaProxyDiscoveryFactory.getProxyDiscovery(resource.getProxyName());
+        if (GlobalRedisProxyEnv.discoveryFactory == null) {
+            throw new CamelliaRedisException("proxy discovery not init");
+        }
+        this.proxyDiscovery = GlobalRedisProxyEnv.discoveryFactory.getProxyDiscovery(resource.getProxyName());
         if (proxyDiscovery == null) {
             throw new CamelliaRedisException("proxy discovery init fail, resource = " + resource.getUrl());
         }

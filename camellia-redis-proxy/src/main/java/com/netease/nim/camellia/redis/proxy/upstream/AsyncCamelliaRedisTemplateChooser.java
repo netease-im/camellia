@@ -9,9 +9,8 @@ import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.CamelliaMapUtils;
 import com.netease.nim.camellia.core.util.SysUtils;
-import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
-import com.netease.nim.camellia.redis.proxy.upstream.proxies.CamelliaProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
 import com.netease.nim.camellia.redis.proxy.route.ProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
@@ -389,8 +388,7 @@ public class AsyncCamelliaRedisTemplateChooser {
 
         logger.info("multi write mode = {}", redisConf.getMultiWriteMode());
 
-        ProxyDiscoveryFactory proxyDiscoveryFactory = ConfigInitUtil.initProxyDiscoveryFactory(redisConf, proxyBeanFactory);
-        CamelliaProxyDiscoveryFactory.init(proxyDiscoveryFactory);
+        GlobalRedisProxyEnv.discoveryFactory = ConfigInitUtil.initProxyDiscoveryFactory(redisConf, proxyBeanFactory);
 
         ProxyEnv proxyEnv = builder.build();
 
