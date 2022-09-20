@@ -15,7 +15,7 @@ camellia主要包括以下功能模块：
 * 支持透明的访问从节点（当前支持redis-sentinel）
 * 支持自定义分片、读写分离、双（多）写、双（多）读 
 * 支持动态配置变更
-* 提供了一些常有的工具类，如分布式锁、计数器缓存、频控等  
+* 提供了一些常用的工具类，如分布式锁、计数器缓存、频控等  
 [快速开始](/docs/redis-template/redis-template.md)
 
 ### camellia-redis-proxy
@@ -24,7 +24,7 @@ camellia主要包括以下功能模块：
 * 支持多租户（可以同时代理多组路由，可以通过不同的登录密码来区分）     
 * 支持多租户动态路由，支持自定义的动态路由数据源
 * 支持读从节点（redis-sentinel、redis-cluster都支持）
-* 支持自定义插件，并且内置了很多插件，可以按需使用（包括：大key监控、热key监控、热key缓存、key命名空间等等） 
+* 支持自定义插件，并且内置了很多插件，可以按需使用（包括：大key监控、热key监控、热key缓存、key命名空间、ip黑白名单、速率控制等等） 
 * 支持丰富的监控，如TPS、RT、热key、大key、慢查询、连接数等   
 * 支持整合hbase实现string/zset/hash等数据结构的冷热分离存储操作     
 [快速开始](/docs/redis-proxy/redis-proxy-zh.md)  
