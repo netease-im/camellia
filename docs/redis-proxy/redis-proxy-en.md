@@ -17,21 +17,14 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support double(multi) write
 * support double(multi) read 
 * support route config refresh online
-* support multi-config(need camellia-dashboard), then proxy will route business-A to redis1, business-B to redis2 
-* support custom CommandInterceptor, then you can intercept illegal command, such as too long key/value、lack of standardization of key
+* support multi-tenancy, then proxy will route business-A to redis1, business-B to redis2 
+* support plugin, and build in some plugin, such as bigKeyPlugin, hotKeyPlugin, converterPlugin and so on
 * support monitor, such as commands request count、commands spend time, support setting MonitorCallback
-* support monitor slow command, support setting SlowCommandMonitorCallback
-* support monitor hot key, support setting HotKeyMonitorCallback
-* support hot key local cache(only support GET command), support setting HotKeyCacheStatsCallback
-* support monitor big key, support setting BigKeyMonitorCallback
-* support convert key, so you can divide keys into different namespace
-* support convert value of string/hash/set/list/zset commands, you can use this feature to data-encryption/data-compress
-* provider monitor config(such as on-off、threshold) refresh online 
-* provider a http api to get monitor metric data
-* provide a spring-boot-starter，you can quick start a proxy cluster
-* provide a default register/discovery component depends on zookeeper, if client's language is java, then you can adjust slightly by use RedisProxyJedisPool instead of JedisPool  
-* provide a spring-boot-starter, then you can use proxy in register/discovery mode when client is SpringRedisTemplate
-  
+* provider http api to get monitor metric data
+* provide spring-boot-starter，you can quick start a proxy cluster
+* provide default register/discovery component depends on zookeeper, if client's language is java, then you can adjust slightly by use RedisProxyJedisPool instead of JedisPool  
+* provide spring-boot-starter, then you can use proxy in register/discovery mode when client is SpringRedisTemplate
+
 
 ## Supported Commands
 * Full Supported
@@ -86,7 +79,7 @@ PFCOUNT,PFMERGE,
 ##BitMap
 BITOP,
 ##Script
-EVAL,EVALSHA,
+EVAL,EVALSHA,EVAL_RO,EVALSHA_RO,SCRIPT,
 ##Stream
 XREADGROUP,XREAD,
 ##Geo
