@@ -4,6 +4,18 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+
+# 1.1.0（2022/09/21）
+### add
+* refactor camellia-redis-proxy plugins and monitor
+
+### update
+* none
+
+### fix
+* none
+
+
 # 1.0.61（2022/09/06）
 ### add
 * camellia-delay-queue support long-polling to consume msg
