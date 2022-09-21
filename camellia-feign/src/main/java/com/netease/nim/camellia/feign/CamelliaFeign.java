@@ -235,7 +235,7 @@ public final class CamelliaFeign {
                 Class<?> failureListenerClazz = annotation.failureListener();
                 if (failureListenerClazz != null) {
                     try {
-                        failureListener = (CamelliaFeignFailureListener) failureListenerClazz.newInstance();
+                        failureListener = (CamelliaFeignFailureListener) failureListenerClazz.getConstructor().newInstance();
                     } catch (Exception ignore) {
                     }
                 }
@@ -259,7 +259,7 @@ public final class CamelliaFeign {
                 Class<?> fallbackFactoryClazz = annotation.fallbackFactory();
                 if (fallbackFactoryClazz != null) {
                     try {
-                        fallbackFactory = (CamelliaFeignFallbackFactory<T>) fallbackFactoryClazz.newInstance();
+                        fallbackFactory = (CamelliaFeignFallbackFactory<T>) fallbackFactoryClazz.getConstructor().newInstance();
                     } catch (Exception ignore) {
                     }
                 }
@@ -267,7 +267,7 @@ public final class CamelliaFeign {
                     Class<?> fallbackClass = annotation.fallback();
                     if (fallbackClass != null) {
                         try {
-                            T fallback = (T) fallbackClass.newInstance();
+                            T fallback = (T) fallbackClass.getConstructor().newInstance();
                             fallbackFactory = new CamelliaFeignFallbackFactory.Default<>(fallback);
                         } catch (Exception ignore) {
                         }

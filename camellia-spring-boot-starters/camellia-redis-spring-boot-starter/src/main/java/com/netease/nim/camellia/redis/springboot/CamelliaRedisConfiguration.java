@@ -119,7 +119,7 @@ public class CamelliaRedisConfiguration {
                 } catch (ClassNotFoundException e) {
                     clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
                 }
-                updater = (RedisTemplateResourceTableUpdater) clazz.newInstance();
+                updater = (RedisTemplateResourceTableUpdater) clazz.getConstructor().newInstance();
                 logger.info("RedisTemplateResourceTableUpdater init success, class = {}", className);
             } catch (Exception e) {
                 logger.error("RedisTemplateResourceTableUpdater init error, class = {}", className, e);
