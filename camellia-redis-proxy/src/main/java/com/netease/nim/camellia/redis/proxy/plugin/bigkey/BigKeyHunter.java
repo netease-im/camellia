@@ -346,22 +346,22 @@ public class BigKeyHunter {
     }
 
     private int stringSizeThreshold(Long bid, String bgroup) {
-        return ProxyDynamicConf.getInt("string.big.key.size.threshold", bid, bgroup, 2*1024*1024);
+        return ProxyDynamicConf.getInt("big.key.monitor.string.threshold", bid, bgroup, 2*1024*1024);
     }
 
     private int hashSizeThreshold(Long bid, String bgroup) {
-        return ProxyDynamicConf.getInt("hash.big.key.size.threshold", bid, bgroup, 5000);
+        return ProxyDynamicConf.getInt("big.key.monitor.hash.threshold", bid, bgroup, 5000);
     }
 
     private int setSizeThreshold(Long bid, String bgroup) {
-        return ProxyDynamicConf.getInt("set.big.key.size.threshold", bid, bgroup, 5000);
+        return ProxyDynamicConf.getInt("big.key.monitor.set.threshold", bid, bgroup, 5000);
     }
 
     private int zsetSizeThreshold(Long bid, String bgroup) {
-        return ProxyDynamicConf.getInt("zset.big.key.size.threshold", bid, bgroup, 5000);
+        return ProxyDynamicConf.getInt("big.key.monitor.zset.threshold", bid, bgroup, 5000);
     }
 
     private int listSizeThreshold(Long bid, String bgroup) {
-        return ProxyDynamicConf.getInt("list.big.key.size.threshold", bid, bgroup, 5000);
+        return ProxyDynamicConf.getInt("big.key.monitor.list.threshold", bid, bgroup, 5000);
     }
 }

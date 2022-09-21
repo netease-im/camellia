@@ -35,9 +35,9 @@ public class HotKeyHunter {
         reloadHotKeyConfig();
         ProxyDynamicConf.registerCallback(this::reloadHotKeyConfig);
         this.callback = callback;
-        int checkCacheMaxCapacity = ProxyDynamicConf.getInt("hot.key.check.cache.max.capacity",
+        int checkCacheMaxCapacity = ProxyDynamicConf.getInt("hot.key.monitor.cache.max.capacity",
                 identityInfo.getBid(), identityInfo.getBgroup(), Constants.Server.hotKeyMonitorCheckCacheMaxCapacity);
-        this.checkMillis = ProxyDynamicConf.getLong("hot.key.check.counter.check.millis",
+        this.checkMillis = ProxyDynamicConf.getLong("hot.key.monitor.counter.check.millis",
                 identityInfo.getBid(), identityInfo.getBgroup(), Constants.Server.hotKeyCacheCounterCheckMillis);
         this.counter = new LRUCounter(checkCacheMaxCapacity,
                 checkCacheMaxCapacity, checkMillis);
@@ -49,11 +49,11 @@ public class HotKeyHunter {
     private void reloadHotKeyConfig() {
         Long bid = identityInfo.getBid();
         String bgroup = identityInfo.getBgroup();
-        this.maxHotKeyCount = ProxyDynamicConf.getInt("hot.key.check.monitor.max.hot.key.count",
+        this.maxHotKeyCount = ProxyDynamicConf.getInt("hot.key.monitor.max.hot.key.count",
                 bid, bgroup, Constants.Server.hotKeyMonitorMaxHotKeyCount);
-        this.checkThreshold = ProxyDynamicConf.getLong("hot.key.check.counter.check.threshold",
+        this.checkThreshold = ProxyDynamicConf.getLong("hot.key.monitor.counter.check.threshold",
                 bid, bgroup, Constants.Server.hotKeyMonitorCheckThreshold);
-        this.enable = ProxyDynamicConf.getBoolean("hot.key.check.enable", bid, bgroup, true);
+        this.enable = ProxyDynamicConf.getBoolean("hot.key.monitor.enable", bid, bgroup, true);
     }
 
     public void incr(byte[]... keys) {

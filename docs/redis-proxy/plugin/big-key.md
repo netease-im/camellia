@@ -38,21 +38,21 @@ big.key.monitor.enable=true
 
 #阈值
 ##默认2M
-string.big.key.size.threshold=2097152
+big.key.monitor.string.threshold=2097152
 ##默认5000
-hash.big.key.size.threshold=5000
-set.big.key.size.threshold=5000
-zset.big.key.size.threshold=5000
-list.big.key.size.threshold=5000
+big.key.monitor.hash.threshold=5000
+big.key.monitor.set.threshold=5000
+big.key.monitor.zset.threshold=5000
+big.key.monitor.list.threshold=5000
 
 #阈值（租户级别）
 ##默认2M
-1.default.string.big.key.size.threshold=2097152
+1.default.big.key.monitor.string.threshold=2097152
 ##默认5000
-1.default.hash.big.key.size.threshold=5000
-1.default.set.big.key.size.threshold=5000
-1.default.zset.big.key.size.threshold=5000
-1.default.list.big.key.size.threshold=5000
+1.default.big.key.monitor.hash.threshold=5000
+1.default.big.key.monitor.set.threshold=5000
+1.default.big.key.monitor.zset.threshold=5000
+1.default.big.key.monitor.list.threshold=5000
 
 ##监控数据默认通过/monitor进行对外暴露（默认60s刷新一次数据），如果需要实时推送，可以设置callback（实现BigKeyMonitorCallback接口即可）
 ###默认的callback不做任何处理

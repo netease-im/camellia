@@ -42,43 +42,40 @@ public class ZkProxyDiscovery extends AbstractCamelliaDiscovery<Proxy> implement
         this.path = basePath + "/" + applicationName;
         reload();
         PathChildrenCache cache = new PathChildrenCache(this.client, path, true);
-        cache.getListenable().addListener(new PathChildrenCacheListener() {
-            @Override
-            public void childEvent(CuratorFramework curatorClient, PathChildrenCacheEvent event) {
-                try {
-                    if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED) {
-                        ChildData childData = event.getData();
-                        String path = childData.getPath();
-                        byte[] data = childData.getData();
-                        if (data == null) {
-                            data = curatorClient.getData().forPath(path);
-                        }
-                        if (data == null) {
-                            logger.warn("child_added, but data is null, path = {}", path);
-                        } else {
-                            InstanceInfo instanceInfo = InstanceInfoSerializeUtil.deserialize(data);
-                            int index = path.lastIndexOf("/") + 1;
-                            String id = path.substring(index);
-                            map.put(id, instanceInfo);
-                            invokeAddCallback(instanceInfo.getProxy());
-                            logger.info("instanceInfo add, path = {}, instanceInfo = {}", path, JSONObject.toJSONString(instanceInfo));
-                        }
-                    } else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
-                        ChildData childData = event.getData();
-                        String path = childData.getPath();
+        cache.getListenable().addListener((curatorClient, event) -> {
+            try {
+                if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED) {
+                    ChildData childData = event.getData();
+                    String path = childData.getPath();
+                    byte[] data = childData.getData();
+                    if (data == null) {
+                        data = curatorClient.getData().forPath(path);
+                    }
+                    if (data == null) {
+                        logger.warn("child_added, but data is null, path = {}", path);
+                    } else {
+                        InstanceInfo instanceInfo = InstanceInfoSerializeUtil.deserialize(data);
                         int index = path.lastIndexOf("/") + 1;
                         String id = path.substring(index);
-                        InstanceInfo instanceInfo = map.remove(id);
-                        if (instanceInfo != null) {
-                            invokeRemoveCallback(instanceInfo.getProxy());
-                            logger.info("instanceInfo remove, path = {}, instanceInfo = {}", path, JSONObject.toJSONString(instanceInfo));
-                        } else {
-                            logger.info("instanceInfo try remove, but not found, path = {}", path);
-                        }
+                        map.put(id, instanceInfo);
+                        invokeAddCallback(instanceInfo.getProxy());
+                        logger.info("instanceInfo add, path = {}, instanceInfo = {}", path, JSONObject.toJSONString(instanceInfo));
                     }
-                } catch (Exception e) {
-                    logger.error("PathChildrenCache listener error", e);
+                } else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
+                    ChildData childData = event.getData();
+                    String path = childData.getPath();
+                    int index = path.lastIndexOf("/") + 1;
+                    String id = path.substring(index);
+                    InstanceInfo instanceInfo = map.remove(id);
+                    if (instanceInfo != null) {
+                        invokeRemoveCallback(instanceInfo.getProxy());
+                        logger.info("instanceInfo remove, path = {}, instanceInfo = {}", path, JSONObject.toJSONString(instanceInfo));
+                    } else {
+                        logger.info("instanceInfo try remove, but not found, path = {}", path);
+                    }
                 }
+            } catch (Exception e) {
+                logger.error("PathChildrenCache listener error", e);
             }
         });
         try {
@@ -88,14 +85,11 @@ public class ZkProxyDiscovery extends AbstractCamelliaDiscovery<Proxy> implement
         }
         //兜底逻辑，固定间隔
         long initialDelaySeconds = ThreadLocalRandom.current().nextLong(60) + reloadIntervalSeconds;
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(ZkProxyDiscovery.class)).scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    reload();
-                } catch (Exception e) {
-                    logger.error("reload error", e);
-                }
+        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(ZkProxyDiscovery.class)).scheduleAtFixedRate(() -> {
+            try {
+                reload();
+            } catch (Exception e) {
+                logger.error("reload error", e);
             }
         }, initialDelaySeconds, reloadIntervalSeconds, TimeUnit.SECONDS);
     }
