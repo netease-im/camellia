@@ -70,6 +70,10 @@ public class CamelliaRedisProxyStarter {
         }
     }
 
+    public static boolean isStart() {
+        return startOk.get();
+    }
+
     public static CamelliaServerProperties getServerProperties() {
         return serverProperties;
     }
