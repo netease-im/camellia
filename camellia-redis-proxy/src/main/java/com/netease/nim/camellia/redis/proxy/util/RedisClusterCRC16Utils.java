@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
+import java.util.List;
+
 public final class RedisClusterCRC16Utils {
 
     private static final int[] LOOKUP_TABLE = {0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5,
@@ -62,6 +64,19 @@ public final class RedisClusterCRC16Utils {
 
     public static int getCRC16(byte[] bytes) {
         return getCRC16(bytes, 0, bytes.length);
+    }
+
+    public static int checkSlot(List<byte[]> keys) {
+        if (keys.isEmpty()) return -1;
+        int slot = -1;
+        for (byte[] key : keys) {
+            int nextSlot = getSlot(key);
+            if (slot != -1 && slot != nextSlot) {
+                return -1;
+            }
+            slot = nextSlot;
+        }
+        return slot;
     }
 
 }

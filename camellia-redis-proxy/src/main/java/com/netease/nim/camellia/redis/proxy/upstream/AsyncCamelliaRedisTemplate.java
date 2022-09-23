@@ -228,23 +228,13 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     continue;
                 }
                 Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
-                AsyncClient client = factory.get(resource.getUrl());
-                CompletableFuture<Reply> future;
-                switch (redisCommand) {
-                    case PUBSUB:
-                    case PUBLISH:
-                    case SUBSCRIBE:
-                    case PSUBSCRIBE:
-                    case UNSUBSCRIBE:
-                    case PUNSUBSCRIBE:
-                        future = commandFlusher.sendCommand(client, command);
-                        incrWrite(resource, command);
-                        break;
-                    default:
-                        future = new CompletableFuture<>();
-                        future.complete(ErrorReply.NOT_SUPPORT);
-                        futureList.add(future);
-                        break;
+                String url = resource.getUrl();
+                AsyncClient client = factory.get(url);
+                CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
+                if (redisCommand.getType() == RedisCommand.Type.READ) {
+                    incrRead(url, command);
+                } else {
+                    incrWrite(url, command);
                 }
                 futureList.add(future);
                 continue;
@@ -257,25 +247,15 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     futureList.add(future);
                     continue;
                 }
-                CompletableFuture<Reply> future;
-                switch (redisCommand) {
-                    case KEYS:
-                    case WATCH:
-                    case UNWATCH:
-                    case MULTI:
-                    case EXEC:
-                    case RANDOMKEY:
-                    case DISCARD:
-                        Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
-                        String url = resource.getUrl();
-                        AsyncClient client = factory.get(url);
-                        future = commandFlusher.sendCommand(client, command);
-                        incrRead(resource, command);
-                        break;
-                    default:
-                        future = new CompletableFuture<>();
-                        future.complete(ErrorReply.NOT_SUPPORT);
-                        break;
+                Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
+                String url = resource.getUrl();
+                AsyncClient client = factory.get(url);
+                CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
+                incrRead(resource, command);
+                if (redisCommand.getType() == RedisCommand.Type.READ) {
+                    incrRead(url, command);
+                } else {
+                    incrWrite(url, command);
                 }
                 futureList.add(future);
                 continue;

@@ -34,6 +34,11 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
     public abstract Resource getResource();
 
     @Override
+    public String getUrl() {
+        return getResource().getUrl();
+    }
+
+    @Override
     public void preheat() {
         if(logger.isInfoEnabled()) {
             logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
@@ -80,12 +85,12 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
                     PubSubUtils.sendByBindClient(bindClient, asyncTaskQueue, command, future, first);
                     byte[][] objects = command.getObjects();
                     if (objects != null && objects.length > 1) {
-                        for (int j=1; j<objects.length; j++) {
+                        for (int j = 1; j < objects.length; j++) {
                             byte[] channel = objects[j];
                             if (redisCommand == RedisCommand.SUBSCRIBE) {
-                                command.getChannelInfo().addSubscribeChannels(channel);
+                                channelInfo.addSubscribeChannels(channel);
                             } else {
-                                command.getChannelInfo().addPSubscribeChannels(channel);
+                                channelInfo.addPSubscribeChannels(channel);
                             }
                         }
                     }
@@ -95,15 +100,15 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
             } else if (redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
                 if (bindClient != null) {
                     if (command.getObjects() != null && command.getObjects().length > 1) {
-                        for (int j=1; j<command.getObjects().length; j++) {
+                        for (int j = 1; j < command.getObjects().length; j++) {
                             byte[] channel = command.getObjects()[j];
                             if (redisCommand == RedisCommand.UNSUBSCRIBE) {
-                                command.getChannelInfo().removeSubscribeChannels(channel);
+                                channelInfo.removeSubscribeChannels(channel);
                             } else {
-                                command.getChannelInfo().removePSubscribeChannels(channel);
+                                channelInfo.removePSubscribeChannels(channel);
                             }
-                            if (!command.getChannelInfo().hasSubscribeChannels()) {
-                                command.getChannelInfo().setBindClient(null);
+                            if (!channelInfo.hasSubscribeChannels()) {
+                                channelInfo.setBindClient(null);
                                 bindClient.startIdleCheck();
                             }
                         }

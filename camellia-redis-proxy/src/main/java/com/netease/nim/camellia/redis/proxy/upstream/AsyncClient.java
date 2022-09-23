@@ -15,4 +15,6 @@ public interface AsyncClient {
     void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> futureList);
 
     void preheat();
+
+    String getUrl();
 }

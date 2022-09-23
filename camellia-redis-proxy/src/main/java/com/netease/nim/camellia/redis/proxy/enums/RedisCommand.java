@@ -204,6 +204,11 @@ public enum RedisCommand {
     PSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, true, CommandKeyType.None),
     PUNSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, false, CommandKeyType.None),
     PUBSUB(CommandSupportType.PARTIALLY_SUPPORT_1, Type.READ, CommandType.PUB_SUB, false, CommandKeyType.None),
+    MULTI(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.TRANSACTION, false, CommandKeyType.None),
+    DISCARD(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.TRANSACTION, false, CommandKeyType.None),
+    EXEC(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.TRANSACTION, false, CommandKeyType.None),
+    WATCH(CommandSupportType.PARTIALLY_SUPPORT_1, Type.READ, CommandType.TRANSACTION, false, CommandKeyType.SIMPLE_MULTI),
+    UNWATCH(CommandSupportType.PARTIALLY_SUPPORT_1, Type.READ, CommandType.TRANSACTION, false, CommandKeyType.None),
 
     /**
      * Partially Support
@@ -211,11 +216,6 @@ public enum RedisCommand {
      */
     KEYS(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, false, CommandKeyType.None),
     RANDOMKEY(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, false, CommandKeyType.None),
-    MULTI(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, false, CommandKeyType.None),
-    DISCARD(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, false, CommandKeyType.None),
-    EXEC(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, false, CommandKeyType.None),
-    WATCH(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TRANSACTION, false, CommandKeyType.SIMPLE_MULTI),
-    UNWATCH(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TRANSACTION, false, CommandKeyType.None),
 
     /**
      * NOT_SUPPORT

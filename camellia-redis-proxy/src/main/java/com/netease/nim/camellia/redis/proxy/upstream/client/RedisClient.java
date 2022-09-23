@@ -407,4 +407,9 @@ public class RedisClient implements AsyncClient {
     public void preheat() {
         //do nothing
     }
+
+    @Override
+    public String getUrl() {
+        return addr.getUrl();
+    }
 }

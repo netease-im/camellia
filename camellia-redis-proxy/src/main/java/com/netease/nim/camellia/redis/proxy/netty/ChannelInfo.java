@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.AsyncTaskQueue;
+import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
 import com.netease.nim.camellia.redis.proxy.util.BytesKey;
@@ -29,11 +30,13 @@ public class ChannelInfo {
     private final AsyncTaskQueue asyncTaskQueue;
     private volatile ConcurrentHashMap<String, RedisClient> redisClientsMapForBlockingCommand;
     private RedisClient bindClient = null;
+    private int bindSlot = -1;
     private boolean inTransaction = false;
     private boolean inSubscribe = false;
     private final SocketAddress clientSocketAddress;
     private volatile ConcurrentHashMap<BytesKey, Boolean> subscribeChannels;
     private volatile ConcurrentHashMap<BytesKey, Boolean> psubscribeChannels;
+    private Command cachedMultiCommand;
 
     private String clientName;
     private Long bid;
@@ -167,6 +170,23 @@ public class ChannelInfo {
 
     public void setBindClient(RedisClient bindClient) {
         this.bindClient = bindClient;
+    }
+
+    public void setBindClient(int bindSlot, RedisClient bindClient) {
+        this.bindClient = bindClient;
+        this.bindSlot = bindSlot;
+    }
+
+    public int getBindSlot() {
+        return bindSlot;
+    }
+
+    public void updateCachedMultiCommand(Command command) {
+        this.cachedMultiCommand = command;
+    }
+
+    public Command getCachedMultiCommand() {
+        return this.cachedMultiCommand;
     }
 
     public void addSubscribeChannels(byte[]...channels) {
