@@ -233,7 +233,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
                 if (redisCommand.getType() == RedisCommand.Type.READ) {
                     incrRead(url, command);
-                } else {
+                } else if (redisCommand.getType() == RedisCommand.Type.WRITE) {
                     incrWrite(url, command);
                 }
                 futureList.add(future);
@@ -251,10 +251,9 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 String url = resource.getUrl();
                 AsyncClient client = factory.get(url);
                 CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
-                incrRead(resource, command);
                 if (redisCommand.getType() == RedisCommand.Type.READ) {
                     incrRead(url, command);
-                } else {
+                } else if (redisCommand.getType() == RedisCommand.Type.WRITE) {
                     incrWrite(url, command);
                 }
                 futureList.add(future);
