@@ -123,15 +123,17 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
             Command command = commands.get(0);
             if (isPassThroughCommand(command)) {
                 byte[][] args = command.getObjects();
-                byte[] key = args[1];
-                int slot = RedisClusterCRC16Utils.getSlot(key);
-                RedisClient client = getClient(slot);
-                if (client != null) {
-                    client.sendCommand(commands, Collections.singletonList(new CompletableFutureWrapper(this, futureList.get(0), command)));
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("sendCommand, command = {}, key = {}, slot = {}", command.getName(), Utils.bytesToString(key), slot);
+                if (args.length >= 2) {
+                    byte[] key = args[1];
+                    int slot = RedisClusterCRC16Utils.getSlot(key);
+                    RedisClient client = getClient(slot);
+                    if (client != null) {
+                        client.sendCommand(commands, Collections.singletonList(new CompletableFutureWrapper(this, futureList.get(0), command)));
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("sendCommand, command = {}, key = {}, slot = {}", command.getName(), Utils.bytesToString(key), slot);
+                        }
+                        return;
                     }
-                    return;
                 }
             }
         }
@@ -222,6 +224,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
             }
 
             if (command.getRedisCommand().getCommandKeyType() != RedisCommand.CommandKeyType.SIMPLE_SINGLE) {
+                //这些命令比较特殊，需要把后端的结果merge起来之后再返回给客户端
                 boolean continueOk = false;
                 switch (redisCommand) {
                     case MGET: {
@@ -267,19 +270,26 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                         }
                         break;
                     }
-                    case XINFO:
-                    case XGROUP:
-                        xinfoOrXgroup(command, commandFlusher, future);
-                        continueOk = true;
-                        break;
                 }
                 if (continueOk) continue;
             }
 
             byte[][] args = command.getObjects();
-            byte[] key = args[1];
-            int slot = RedisClusterCRC16Utils.getSlot(key);
-
+            int slot;
+            byte[] key;
+            if (redisCommand.getCommandKeyType() == RedisCommand.CommandKeyType.SIMPLE_SINGLE && args.length >= 2) {
+                key = args[1];
+                slot = RedisClusterCRC16Utils.getSlot(key);
+            } else {
+                List<byte[]> keys = command.getKeys();
+                if (keys.isEmpty()) {
+                    key = Utils.EMPTY_ARRAY;
+                    slot = ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE);
+                } else {//按道理走到这里的都是只有一个key的命令，且不是blocking的
+                    key = keys.get(0);
+                    slot = RedisClusterCRC16Utils.getSlot(keys.get(0));
+                }
+            }
             RedisClient client = getClient(slot);
             if (logger.isDebugEnabled()) {
                 logger.debug("sendCommand, command = {}, key = {}, slot = {}", command.getName(), Utils.bytesToString(key), slot);
