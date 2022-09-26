@@ -4,6 +4,17 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.1.1（2022/09/xx）
+### 新增
+* camellia-redis-proxy代理redis-cluster时也支持TRANSACTION系列命令（MULTI/EXEC/DISCARD/WATCH/UNWATCH）
+
+### 更新
+* 优化了AsyncCamelliaRedisTemplate和AsyncCamelliaRedisClusterClient的代码实现
+
+### fix
+* 无
+
+
 # 1.1.0（2022/09/21）
 ### 新增
 * 重构camellia-redis-proxy插件和监控体系，相关功能统一为新的框架下面，具体见：[redis-proxy](/docs/redis-proxy/redis-proxy-zh.md)
