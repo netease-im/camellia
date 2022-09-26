@@ -745,6 +745,10 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
 
     private void mset(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
         byte[][] args = command.getObjects();
+        if ((args.length - 1) % 2 != 0) {
+            future.complete(new ErrorReply("wrong number of arguments for 'mset' command"));
+            return;
+        }
         List<CompletableFuture<Reply>> futureList = new ArrayList<>();
         for (int i = 1; i < args.length; i++, i++) {
             byte[] key = args[i];
