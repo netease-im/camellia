@@ -7,9 +7,9 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持代理到redis-standalone、redis-sentinel、redis-cluster
 * 支持设置密码
 * 支持阻塞式命令，如BLPOP/BRPOP/BRPOPLPUSH/BZPOPMIN/BZPOPMAX等
-* 支持pubsub命令
-* 支持事务命令（MULTI/EXEC/DISCARD/WATCH/UNWATCH），当前仅当代理到redis-standalone/redis-sentinel且无分片/无读写分离时支持
-* 支持redis5.0的Streams命令
+* 支持PUBSUB系列命令，代理到redis-standalone/redis-sentinel/redis-cluster均支持
+* 支持事务命令（MULTI/EXEC/DISCARD/WATCH/UNWATCH），代理到redis-standalone/redis-sentinel/redis-cluster均支持
+* 支持redis5.0的STREAMS系列命令
 * 支持SCAN命令（代理到redis-standalone/redis-sentinel/redis-cluster均支持，自定义分片时也支持）
 * 支持自定义分片
 * 支持读写分离
