@@ -10,6 +10,7 @@
 
 ### update
 * optimize code of AsyncCamelliaRedisTemplate and AsyncCamelliaRedisClusterClient
+* modify HotKeyProxyPlugin request order greater than HotKeyCacheProxyPlugin
 
 ### fix
 * none

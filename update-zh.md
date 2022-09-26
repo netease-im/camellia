@@ -10,6 +10,7 @@
 
 ### 更新
 * 优化了AsyncCamelliaRedisTemplate和AsyncCamelliaRedisClusterClient的代码实现
+* 调整了内建ProxyPlugin的默认顺序（热key监控修改为优先于热key缓存监控）
 
 ### fix
 * 无
