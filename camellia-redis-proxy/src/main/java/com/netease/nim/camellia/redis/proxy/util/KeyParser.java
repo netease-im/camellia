@@ -3,8 +3,6 @@ package com.netease.nim.camellia.redis.proxy.util;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,8 +13,6 @@ import java.util.List;
  * Created by caojiajun on 2020/10/22
  */
 public class KeyParser {
-
-    private static final Logger logger = LoggerFactory.getLogger(KeyParser.class);
 
     public static List<byte[]> findKeys(Command command) {
         if (command == null || command.getRedisCommand() == null) return Collections.emptyList();

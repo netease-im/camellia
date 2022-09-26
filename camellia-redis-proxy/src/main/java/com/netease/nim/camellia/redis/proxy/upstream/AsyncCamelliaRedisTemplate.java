@@ -195,7 +195,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         List<CompletableFuture<Reply>> futureList = new ArrayList<>(commands.size());
 
         if (isPassThroughCommand(commands)) {
-            String url = getReadResource(Utils.EMPTY_ARRAY).getUrl();
+            String url = resourceChooser.getReadResource(Utils.EMPTY_ARRAY).getUrl();
             for (Command command : commands) {
                 CompletableFuture<Reply> future = new CompletableFuture<>();
                 RedisCommand redisCommand = command.getRedisCommand();
@@ -261,90 +261,59 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             }
 
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.RESTRICTIVE_SUPPORT) {
-                CompletableFuture<Reply> future;
-                switch (redisCommand) {
-                    case EVAL:
-                    case EVALSHA:
-                        future = doEvalOrEvalSha(command, commandFlusher, false);
-                        break;
-                    case EVAL_RO:
-                    case EVALSHA_RO:
-                        future = doEvalOrEvalSha(command, commandFlusher, true);
-                        break;
-                    case PFCOUNT:
-                    case SDIFF:
-                    case SINTER:
-                    case SUNION:
-                        if (command.getObjects().length < 2) {
-                            future = new CompletableFuture<>();
-                            future.complete(ErrorReply.argNumWrong(redisCommand));
+                CompletableFuture<Reply> future = null;
+                if (redisCommand.getType() == RedisCommand.Type.READ) {
+                    ResourceTable.Type type = resourceChooser.getType();
+                    Resource resource = null;
+                    if (type == ResourceTable.Type.SIMPLE) {
+                        resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
+                    } else if (type == ResourceTable.Type.SHADING) {
+                        List<byte[]> keys = command.getKeys();
+                        if (keys.isEmpty()) {
+                            resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
+                        } else if (keys.size() == 1) {
+                            resource = resourceChooser.getReadResource(keys.get(0));
                         } else {
-                            future = readCommandWithDynamicKeyCount(command, commandFlusher, 1, command.getObjects().length - 1);
+                            resource = checkReadResources(keys);
                         }
-                        break;
-                    case PFMERGE:
-                    case SINTERSTORE:
-                    case SUNIONSTORE:
-                    case SDIFFSTORE:
-                    case RPOPLPUSH:
-                        if (command.getObjects().length < 2) {
-                            future = new CompletableFuture<>();
-                            future.complete(ErrorReply.argNumWrong(redisCommand));
-                        } else {
-                            future = writeCommandWithDynamicKeyCount(command, commandFlusher, 1, command.getObjects().length - 1);
-                        }
-                        break;
-                    case RENAME:
-                    case RENAMENX:
-                    case SMOVE:
-                    case LMOVE:
-                    case GEOSEARCHSTORE:
-                    case ZRANGESTORE:
-                    case BLMOVE:
-                        if (command.getObjects().length < 3) {
-                            future = new CompletableFuture<>();
-                            future.complete(ErrorReply.argNumWrong(redisCommand));
-                        } else {
-                            future = writeCommandWithDynamicKeyCount(command, commandFlusher, 1, 2);
-                        }
-                        break;
-                    case ZINTERSTORE:
-                    case ZUNIONSTORE:
-                    case ZDIFFSTORE:
-                        future = zinterstoreOrZunionstore(command, commandFlusher);
-                        break;
-                    case BITOP:
-                        future = bitop(command, commandFlusher);
-                        break;
-                    case MSETNX:
-                        future = msetnx(command, commandFlusher);
-                        break;
-                    case BLPOP:
-                    case BRPOP:
-                    case BRPOPLPUSH:
-                    case BZPOPMAX:
-                    case BZPOPMIN:
-                        future = writeCommandWithDynamicKeyCount(command, commandFlusher, 1, command.getObjects().length - 2);
-                        break;
-                    case XREAD:
-                    case XREADGROUP:
-                        future = xreadOrXreadgroup(command, commandFlusher);
-                        break;
-                    case ZDIFF:
-                    case ZUNION:
-                    case ZINTER:
-                        if (command.getObjects().length < 3) {
-                            future = new CompletableFuture<>();
-                            future.complete(ErrorReply.argNumWrong(redisCommand));
-                        } else {
-                            int keyCount = (int) Utils.bytesToNum(command.getObjects()[1]);
-                            future = writeCommandWithDynamicKeyCount(command, commandFlusher, 2, 1 + keyCount);
-                        }
-                        break;
-                    default:
+                    }
+                    if (resource == null) {
                         future = new CompletableFuture<>();
-                        future.complete(ErrorReply.NOT_SUPPORT);
-                        break;
+                        future.complete(new ErrorReply("ERR keys in request not in same resources"));
+                    } else {
+                        future = doRead(resource, commandFlusher, command);
+                    }
+                } else if (redisCommand.getType() == RedisCommand.Type.WRITE) {
+                    ResourceTable.Type type = resourceChooser.getType();
+                    List<Resource> writeResources = null;
+                    if (type == ResourceTable.Type.SIMPLE) {
+                        writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
+                    } else if (type == ResourceTable.Type.SHADING) {
+                        List<byte[]> keys = command.getKeys();
+                        if (keys.isEmpty()) {
+                            writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
+                        } else if (keys.size() == 1) {
+                            writeResources = resourceChooser.getWriteResources(keys.get(0));
+                        } else {
+                            writeResources = checkWriteResources(keys);
+                        }
+                    }
+                    if (writeResources == null) {
+                        future = new CompletableFuture<>();
+                        future.complete(new ErrorReply("ERR keys in request not in same resources"));
+                    } else if (writeResources.size() > 1) {
+                        if (command.isBlocking()) {
+                            future = new CompletableFuture<>();
+                            future.complete(new ErrorReply("ERR blocking command do not support multi-write"));
+                        }
+                    }
+                    if (future == null) {
+                        future = doWrite(writeResources, commandFlusher, command);
+                    }
+                }
+                if (future == null) {
+                    future = new CompletableFuture<>();
+                    future.complete(ErrorReply.SYNTAX_ERROR);
                 }
                 futureList.add(future);
                 continue;
@@ -468,29 +437,25 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 if (continueOk) continue;
             }
 
-            if (redisCommand.getCommandKeyType() != RedisCommand.CommandKeyType.SIMPLE_SINGLE) {
-                CompletableFuture<Reply> completableFuture1 = null;
-                switch (redisCommand) {
-                    case XGROUP:
-                        completableFuture1 = xgroup(command, commandFlusher);
-                        break;
-                    case XINFO:
-                        completableFuture1 = xinfo(command, commandFlusher);
-                        break;
-                }
-                if (completableFuture1 != null) {
-                    futureList.add(completableFuture1);
-                    continue;
-                }
-            }
-
             RedisCommand.Type type = redisCommand.getType();
             if (type == RedisCommand.Type.READ) {
-                Resource resource = getReadResource(command);
+                List<byte[]> keys = command.getKeys();
+                Resource resource;
+                if (keys.isEmpty()) {
+                    resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
+                } else {//按道理走到这里的都是只有一个key的命令，且不是blocking的
+                    resource = resourceChooser.getReadResource(keys.get(0));
+                }
                 CompletableFuture<Reply> future = doRead(resource, commandFlusher, command);
                 futureList.add(future);
             } else if (type == RedisCommand.Type.WRITE) {
-                List<Resource> writeResources = getWriteResources(command);
+                List<Resource> writeResources;
+                List<byte[]> keys = command.getKeys();
+                if (keys.isEmpty()) {
+                    writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
+                } else {//按道理走到这里的都是只有一个key的命令，且不是blocking的
+                    writeResources = resourceChooser.getWriteResources(keys.get(0));
+                }
                 CompletableFuture<Reply> future = doWrite(writeResources, commandFlusher, command);
                 futureList.add(future);
             } else {
@@ -499,81 +464,6 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
         commandFlusher.flush();
         return futureList;
-    }
-
-    private CompletableFuture<Reply> xreadOrXreadgroup(Command command, CommandFlusher commandFlusher) {
-        byte[][] objects = command.getObjects();
-        int index = -1;
-        for (int i = 1; i < objects.length; i++) {
-            String string = new String(objects[i], Utils.utf8Charset);
-            if (string.equalsIgnoreCase(RedisKeyword.STREAMS.name())) {
-                index = i;
-                break;
-            }
-        }
-        if (index == -1) {
-            CompletableFuture<Reply> future = new CompletableFuture<>();
-            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
-            return future;
-        }
-        int last = objects.length - index - 1;
-        if (last <= 0) {
-            CompletableFuture<Reply> future = new CompletableFuture<>();
-            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
-            return future;
-        }
-        if (last % 2 != 0) {
-            CompletableFuture<Reply> future = new CompletableFuture<>();
-            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
-            return future;
-        }
-        int keyCount = last / 2;
-        return writeCommandWithDynamicKeyCount(command, commandFlusher, index + 1, index + keyCount);
-    }
-
-    private CompletableFuture<Reply> xgroup(Command command, CommandFlusher commandFlusher) {
-        byte[][] objects = command.getObjects();
-        if (objects.length < 3) {
-            CompletableFuture<Reply> future = new CompletableFuture<>();
-            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
-            return future;
-        }
-        byte[] key = objects[2];
-        List<Resource> writeResources = resourceChooser.getWriteResources(key);
-        return doWrite(writeResources, commandFlusher, command);
-    }
-
-    private CompletableFuture<Reply> xinfo(Command command, CommandFlusher commandFlusher) {
-        byte[][] objects = command.getObjects();
-        if (objects.length < 3) {
-            CompletableFuture<Reply> future = new CompletableFuture<>();
-            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
-            return future;
-        }
-        byte[] key = objects[2];
-        Resource resource = resourceChooser.getReadResource(key);
-        return doRead(resource, commandFlusher, command);
-    }
-
-    private CompletableFuture<Reply> doEvalOrEvalSha(Command command, CommandFlusher commandFlusher, boolean readonly) {
-        RedisCommand redisCommand = command.getRedisCommand();
-        byte[][] objects = command.getObjects();
-        if (objects.length <= 2) {
-            CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-            completableFuture.complete(ErrorReply.argNumWrong(redisCommand));
-            return completableFuture;
-        }
-        if (resourceChooser.getType() == ResourceTable.Type.SHADING) {
-            return evalOrEvalSha(redisCommand, command, commandFlusher, readonly);
-        } else {
-            if (readonly) {
-                Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
-                return doRead(resource, commandFlusher, command);
-            } else {
-                List<Resource> writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
-                return doWrite(writeResources, commandFlusher, command);
-            }
-        }
     }
 
     private CompletableFuture<Reply> doRead(Resource resource, CommandFlusher commandFlusher, Command command) {
@@ -594,71 +484,34 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         return AsyncUtils.finalReply(list, multiWriteMode);
     }
 
-    private CompletableFuture<Reply> evalOrEvalSha(RedisCommand redisCommand, Command command, CommandFlusher commandFlusher, boolean readOnly) {
-        byte[][] objects = command.getObjects();
-        long keyCount = Utils.bytesToNum(objects[2]);
-        if (keyCount == 0) {
-            if (readOnly) {
-                Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
-                return doRead(resource, commandFlusher, command);
-            } else {
-                List<Resource> writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
-                return doWrite(writeResources, commandFlusher, command);
-            }
-        } else if (keyCount == 1) {
-            if (objects.length < 4) {
-                CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-                completableFuture.complete(ErrorReply.argNumWrong(redisCommand));
-                return completableFuture;
-            }
-            byte[] key = objects[3];
-            if (readOnly) {
-                Resource resource = resourceChooser.getReadResource(key);
-                return doRead(resource, commandFlusher, command);
-            } else {
-                List<Resource> writeResources = resourceChooser.getWriteResources(key);
-                return doWrite(writeResources, commandFlusher, command);
-            }
-        } else if (keyCount < 0) {
-            CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-            completableFuture.complete(new ErrorReply("ERR Number of keys can't be negative"));
-            return completableFuture;
-        } else {
-            //判断一下是否所有key分片计算后是指向的同一组resource
-            if (objects.length < 3 + keyCount) {
-                CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-                completableFuture.complete(ErrorReply.argNumWrong(redisCommand));
-                return completableFuture;
-            }
-            if (readOnly) {
-                ResourceChooser.ReadResourceBean resources = resourceChooser.getReadResources(objects[3]);
-                for (int i = 4; i < 3 + keyCount; i++) {
-                    byte[] key = objects[i];
-                    ResourceChooser.ReadResourceBean readResources = resourceChooser.getReadResources(key);
-                    boolean checkReadResourcesEqual = ResourceChooser.checkReadResourcesEqual(resources, readResources);
-                    if (!checkReadResourcesEqual) {
-                        CompletableFuture<Reply> future = new CompletableFuture<>();
-                        future.complete(new ErrorReply("ERR keys in request not in same resources"));
-                        return future;
-                    }
+    private Resource checkReadResources(List<byte[]> keys) {
+        ResourceChooser.ReadResourceBean resources = null;
+        for (byte[] key : keys) {
+            ResourceChooser.ReadResourceBean nextResources = resourceChooser.getReadResources(key);
+            if (resources != null) {
+                boolean checkReadResourcesEqual = ResourceChooser.checkReadResourcesEqual(resources, nextResources);
+                if (!checkReadResourcesEqual) {
+                    return null;
                 }
-                Resource readResource = ResourceChooser.getReadResource(resources);
-                return doRead(readResource, commandFlusher, command);
-            } else {
-                List<Resource> resources = resourceChooser.getWriteResources(objects[3]);
-                for (int i = 4; i < 3 + keyCount; i++) {
-                    byte[] key = objects[i];
-                    List<Resource> writeResources = resourceChooser.getWriteResources(key);
-                    boolean checkWriteResourcesEqual = ResourceChooser.checkWriteResourcesEqual(resources, writeResources);
-                    if (!checkWriteResourcesEqual) {
-                        CompletableFuture<Reply> future = new CompletableFuture<>();
-                        future.complete(new ErrorReply("ERR keys in request not in same resources"));
-                        return future;
-                    }
-                }
-                return doWrite(resources, commandFlusher, command);
             }
+            resources = nextResources;
         }
+        return ResourceChooser.getReadResource(resources);
+    }
+
+    private List<Resource> checkWriteResources(List<byte[]> keys) {
+        List<Resource> resources = null;
+        for (byte[] key : keys) {
+            List<Resource> nextResources = resourceChooser.getWriteResources(key);
+            if (resources != null) {
+                boolean checkWriteResourcesEqual = ResourceChooser.checkWriteResourcesEqual(resources, nextResources);
+                if (!checkWriteResourcesEqual) {
+                    return null;
+                }
+            }
+            resources = nextResources;
+        }
+        return resources;
     }
 
     private CompletableFuture<Reply> mset(Command command, CommandFlusher commandFlusher) {
@@ -673,7 +526,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         for (int i = 1; i < args.length; i++, i++) {
             byte[] key = args[i];
             byte[] value = args[i + 1];
-            List<Resource> resources = getWriteResources(key);
+            List<Resource> resources = resourceChooser.getWriteResources(key);
             for (int j = 0; j < resources.size(); j++) {
                 Resource resource = resources.get(j);
                 List<byte[]> list = map.get(resource.getUrl());
@@ -741,7 +594,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             byte[] key = args[i];
             BytesKey redisKey = new BytesKey(key);
             redisKeys.add(redisKey);
-            Resource resource = getReadResource(key);
+            Resource resource = resourceChooser.getReadResource(key);
             List<BytesKey> list = map.get(resource.getUrl());
             if (list == null) {
                 list = map.computeIfAbsent(resource.getUrl(), k -> new ArrayList<>(args.length - 1));
@@ -809,7 +662,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         //拆成N个命令进行投递，不做聚合，因为如果分片逻辑下，可能某个resource同时为双写的第1个地址和第2个地址
         for (int i = 1; i < args.length; i++) {
             byte[] key = args[i];
-            List<Resource> resources = getWriteResources(key);
+            List<Resource> resources = resourceChooser.getWriteResources(key);
             for (int j = 0; j < resources.size(); j++) {
                 Resource resource = resources.get(j);
                 AsyncClient client = factory.get(resource.getUrl());
@@ -861,7 +714,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         byte[][] args = command.getObjects();
         for (int i = 1; i < args.length; i++) {
             byte[] key = args[i];
-            Resource resource = getReadResource(key);
+            Resource resource = resourceChooser.getReadResource(key);
             List<byte[]> list = map.get(resource.getUrl());
             if (list == null) {
                 list = new ArrayList<>();
@@ -888,150 +741,6 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         CompletableFuture<Reply> future = new CompletableFuture<>();
         AsyncUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
         return future;
-    }
-
-    private CompletableFuture<Reply> readCommandWithDynamicKeyCount(Command command, CommandFlusher commandFlusher, int start, int end) {
-        byte[][] objects = command.getObjects();
-        if (resourceChooser.getType() == ResourceTable.Type.SHADING) {
-            String url = null;
-            for (int i = start; i <= end; i++) {
-                byte[] key = objects[i];
-                Resource resource = resourceChooser.getReadResource(key);
-                if (url != null && !url.equals(resource.getUrl())) {
-                    CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-                    completableFuture.complete(new ErrorReply("ERR keys in request not in same resources"));
-                    return completableFuture;
-                }
-                url = resource.getUrl();
-            }
-            AsyncClient client = factory.get(url);
-            incrRead(url, command);
-            return commandFlusher.sendCommand(client, command);
-        } else {
-            Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
-            return doRead(resource, commandFlusher, command);
-        }
-    }
-
-    private CompletableFuture<Reply> msetnx(Command command, CommandFlusher commandFlusher) {
-        CompletableFuture<Reply> future;
-        byte[][] objects = command.getObjects();
-        if (objects.length < 3 || objects.length % 2 != 1) {
-            future = new CompletableFuture<>();
-            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
-        } else {
-            ResourceTable.Type type = resourceChooser.getType();
-            if (type == ResourceTable.Type.SIMPLE) {
-                List<Resource> writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
-                future = doWrite(writeResources, commandFlusher, command);
-            } else if (type == ResourceTable.Type.SHADING) {
-                List<Resource> writeResources = null;
-                for (int i = 1; i < objects.length; i += 2) {
-                    byte[] key = objects[i];
-                    List<Resource> resources = resourceChooser.getWriteResources(key);
-                    if (writeResources != null) {
-                        boolean writeResourcesEqual = ResourceChooser.checkWriteResourcesEqual(writeResources, resources);
-                        if (!writeResourcesEqual) {
-                            future = new CompletableFuture<>();
-                            future.complete(new ErrorReply("ERR keys in request not in same resources"));
-                            return future;
-                        }
-                    }
-                    writeResources = resources;
-                }
-                future = doWrite(writeResources, commandFlusher, command);
-            } else {
-                future = new CompletableFuture<>();
-                future.complete(ErrorReply.NOT_SUPPORT);
-            }
-        }
-        return future;
-    }
-
-    private CompletableFuture<Reply> bitop(Command command, CommandFlusher commandFlusher) {
-        CompletableFuture<Reply> future;
-        byte[][] objects = command.getObjects();
-        if (objects.length < 4) {
-            future = new CompletableFuture<>();
-            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
-        } else {
-            future = writeCommandWithDynamicKeyCount(command, commandFlusher, 2, objects.length - 1);
-        }
-        return future;
-    }
-
-    private CompletableFuture<Reply> zinterstoreOrZunionstore(Command command, CommandFlusher commandFlusher) {
-        CompletableFuture<Reply> future;
-        byte[][] objects = command.getObjects();
-        if (objects.length < 4) {
-            future = new CompletableFuture<>();
-            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
-        } else {
-            int keyCount = (int) Utils.bytesToNum(objects[2]);
-            if (keyCount <= 0) {
-                future = new CompletableFuture<>();
-                future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
-            } else {
-                future = writeCommandWithDynamicKeyCount(command, commandFlusher, 3, 2 + keyCount, objects[1]);
-            }
-        }
-        return future;
-    }
-
-    private CompletableFuture<Reply> writeCommandWithDynamicKeyCount(Command command, CommandFlusher commandFlusher, int start, int end, byte[]... otherKeys) {
-        byte[][] objects = command.getObjects();
-        ResourceTable.Type type = resourceChooser.getType();
-        if (type == ResourceTable.Type.SIMPLE) {
-            List<Resource> writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
-            return doWrite(writeResources, commandFlusher, command);
-        } else if (type == ResourceTable.Type.SHADING) {
-            if (objects.length <= end) {
-                CompletableFuture<Reply> future = new CompletableFuture<>();
-                future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
-                return future;
-            }
-            List<Resource> writeResources = null;
-            for (int i = start; i <= end; i++) {
-                byte[] key = objects[i];
-                List<Resource> resources = resourceChooser.getWriteResources(key);
-                if (writeResources != null) {
-                    boolean writeResourcesEqual = ResourceChooser.checkWriteResourcesEqual(writeResources, resources);
-                    if (!writeResourcesEqual) {
-                        CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-                        completableFuture.complete(new ErrorReply("ERR keys in request not in same resources"));
-                        return completableFuture;
-                    }
-                }
-                writeResources = resources;
-            }
-            if (otherKeys != null && writeResources != null) {
-                for (byte[] otherKey : otherKeys) {
-                    List<Resource> resources = resourceChooser.getWriteResources(otherKey);
-                    boolean writeResourcesEqual = ResourceChooser.checkWriteResourcesEqual(writeResources, resources);
-                    if (!writeResourcesEqual) {
-                        CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-                        completableFuture.complete(new ErrorReply("ERR keys in request not in same resources"));
-                        return completableFuture;
-                    }
-                    writeResources = resources;
-                }
-            }
-            if (writeResources == null || writeResources.isEmpty()) {
-                CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-                completableFuture.complete(new ErrorReply("ERR keys in request not in same resources"));
-                return completableFuture;
-            }
-            if (writeResources.size() > 1 && command.isBlocking()) {
-                CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-                completableFuture.complete(new ErrorReply("ERR blocking command do not support multi-write"));
-                return completableFuture;
-            }
-            return doWrite(writeResources, commandFlusher, command);
-        } else {
-            CompletableFuture<Reply> future = new CompletableFuture<>();
-            future.complete(ErrorReply.NOT_SUPPORT);
-            return future;
-        }
     }
 
     private synchronized void init(ResourceTable resourceTable) {
@@ -1182,24 +891,6 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 logger.warn("ReloadTask is running, skip run, bid = {}, bgroup = {}, md5 = {}", bid, bgroup, md5);
             }
         }
-    }
-
-    private Resource getReadResource(byte[] key) {
-        return resourceChooser.getReadResource(key);
-    }
-
-    private List<Resource> getWriteResources(byte[] key) {
-        return resourceChooser.getWriteResources(key);
-    }
-
-    private Resource getReadResource(Command command) {
-        byte[] key = command.getObjects()[1];
-        return resourceChooser.getReadResource(key);
-    }
-
-    private List<Resource> getWriteResources(Command command) {
-        byte[] key = command.getObjects()[1];
-        return resourceChooser.getWriteResources(key);
     }
 
     private static final String className = AsyncCamelliaRedisTemplate.class.getSimpleName();

@@ -90,7 +90,10 @@ GEOSEARCHSTORE,
 only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel or redis-cluster)
 ```
 ##PUBSUB
-SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB
+SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
+##TRANSACTION
+#keys must in same slot
+MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ```
 
 * Partially Supported 2   
@@ -98,7 +101,6 @@ only support while have singleton-upstream(no custom sharding) (standalone-redis
 ```
 ##DataBase
 KEYS,RANDOMKEY,
-MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ``` 
 
 ## Quick Start

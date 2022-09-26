@@ -85,23 +85,28 @@ public class Command {
     public boolean isBlocking() {
         RedisCommand redisCommand = getRedisCommand();
         if (redisCommand == null) return false;
-        if (redisCommand.isBlocking()) {
+        RedisCommand.Blocking blocking = redisCommand.isBlocking();
+        if (blocking == RedisCommand.Blocking.TRUE) {
             return true;
         }
-        if (hasCheckBlocking) {
-            return blocking;
+        if (blocking == RedisCommand.Blocking.FALSE) {
+            return false;
         }
+        if (hasCheckBlocking) {
+            return this.blocking;
+        }
+        //下面这些命令是否blocking取决于参数
         if (redisCommand == RedisCommand.XREAD || redisCommand == RedisCommand.XREADGROUP) {
             for (byte[] object : getObjects()) {
                 String string = new String(object, Utils.utf8Charset);
                 if (string.equalsIgnoreCase(RedisKeyword.BLOCK.name())) {
-                    blocking = true;
+                    this.blocking = true;
                     break;
                 }
             }
         }
         hasCheckBlocking = true;
-        return blocking;
+        return this.blocking;
     }
 
     public ChannelInfo getChannelInfo() {
