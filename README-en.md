@@ -61,7 +61,7 @@ join camellia-core and open-feign, so your feign-client have this feature:
 [QUICK START](/docs/tools/tools.md)
 
 ## Version
-latest version is 1.1.0, have deploy to maven central repository on 2022/09/21  
+latest version is 1.1.1, have deploy to maven central repository on 2022/09/26  
 [CHANGE_LOG](/update-en.md)  
 
 ## User List
