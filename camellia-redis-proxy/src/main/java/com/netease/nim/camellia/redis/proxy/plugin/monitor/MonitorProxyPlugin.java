@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.monitor.SlowCommandMonitor;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 
 /**
  * Created by caojiajun on 2022/9/13
@@ -15,6 +16,7 @@ public class MonitorProxyPlugin implements ProxyPlugin {
 
     private long slowCommandThresholdNanoTime;
     private SlowCommandMonitorCallback slowCommandMonitorCallback;
+    private String CALLBACK_NAME;
 
     @Override
     public void init(ProxyBeanFactory factory) {
@@ -23,6 +25,7 @@ public class MonitorProxyPlugin implements ProxyPlugin {
 
         String slowCommandMonitorCallbackClassName = ProxyDynamicConf.getString("slow.command.monitor.callback.className", DummySlowCommandMonitorCallback.class.getName());
         slowCommandMonitorCallback = (SlowCommandMonitorCallback) factory.getBean(BeanInitUtils.parseClass(slowCommandMonitorCallbackClassName));
+        CALLBACK_NAME = slowCommandMonitorCallback.getClass().getName();
     }
 
     private void reloadConf() {
@@ -72,7 +75,7 @@ public class MonitorProxyPlugin implements ProxyPlugin {
                     double spendMillis = spend / 1000000.0;
                     long thresholdMillis = slowCommandThresholdNanoTime / 1000000;
                     SlowCommandMonitor.slowCommand(command, spendMillis, thresholdMillis);
-                    slowCommandMonitorCallback.callback(command, reply.getReply(), spendMillis, thresholdMillis);
+                    ExecutorUtils.submitCallbackTask(CALLBACK_NAME, () -> slowCommandMonitorCallback.callback(command, reply.getReply(), spendMillis, thresholdMillis));
                 }
             }
         }

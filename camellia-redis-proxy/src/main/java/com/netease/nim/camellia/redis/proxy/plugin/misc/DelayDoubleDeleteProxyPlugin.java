@@ -80,7 +80,7 @@ public class DelayDoubleDeleteProxyPlugin implements ProxyPlugin {
             }
             if (keyPrefix.contains("")) {
                 //所有key都要双删
-                ExecutorUtils.newTimeout(timeout -> {
+                ExecutorUtils.submitDelayTask(() -> {
                     try {
                         AsyncCamelliaRedisTemplate template = request.getChooser().choose(bid, bgroup);
                         template.sendCommand(Collections.singletonList(command));
@@ -100,7 +100,7 @@ public class DelayDoubleDeleteProxyPlugin implements ProxyPlugin {
                         }
                     }
                     if (needDoubleDel) {
-                        ExecutorUtils.newTimeout(timeout -> {
+                        ExecutorUtils.submitDelayTask(() -> {
                             try {
                                 AsyncCamelliaRedisTemplate template = request.getChooser().choose(bid, bgroup);
                                 template.sendCommand(Collections.singletonList(new Command(new byte[][]{RedisCommand.DEL.raw(), key})));

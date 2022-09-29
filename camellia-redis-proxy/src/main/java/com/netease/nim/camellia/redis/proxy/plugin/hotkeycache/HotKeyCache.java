@@ -36,6 +36,8 @@ public class HotKeyCache {
     private long hotKeyCheckThreshold;
 
     private final HotKeyCacheKeyChecker keyChecker;
+
+    private final String CALLBACK_NAME;
     private final HotKeyCacheStatsCallback callback;
 
     private boolean cacheNull;
@@ -47,6 +49,7 @@ public class HotKeyCache {
         this.identityInfo = identityInfo;
         this.keyChecker = hotKeyCacheConfig.getHotKeyCacheKeyChecker();
         this.callback = hotKeyCacheConfig.getHotKeyCacheStatsCallback();
+        this.CALLBACK_NAME = this.callback.getClass().getName();
         this.cacheExpireMillis = ProxyDynamicConf.getLong("hot.key.cache.expire.millis",
                 identityInfo.getBid(), identityInfo.getBgroup(), Constants.Server.hotKeyCacheExpireMillis);
         ProxyDynamicConf.registerCallback(this::reloadHotKeyCacheConfig);
@@ -86,9 +89,7 @@ public class HotKeyCache {
                 HotKeyCacheInfo hotKeyCacheStats = new HotKeyCacheInfo();
                 hotKeyCacheStats.setStatsList(list);
                 HotKeyCacheMonitor.hotKeyCache(identityInfo, hotKeyCacheStats, counterCheckMillis, hotKeyCheckThreshold);
-                if (callback != null) {
-                    callback.callback(identityInfo, hotKeyCacheStats, counterCheckMillis, hotKeyCheckThreshold);
-                }
+                ExecutorUtils.submitCallbackTask(CALLBACK_NAME, () -> callback.callback(identityInfo, hotKeyCacheStats, counterCheckMillis, hotKeyCheckThreshold));
             } catch (Exception e) {
                 logger.error("hot key cache stats callback error", e);
             }

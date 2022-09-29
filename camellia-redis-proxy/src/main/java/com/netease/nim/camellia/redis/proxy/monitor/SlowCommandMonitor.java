@@ -21,13 +21,13 @@ public class SlowCommandMonitor {
     private static final int defaultMaxCount = 100;
     private static final LinkedBlockingQueue<SlowCommandStats> queue;
     static {
-        queue = new LinkedBlockingQueue<>(ProxyDynamicConf.getInt("slow.command.monitor.json.max.count", defaultMaxCount) * 10);
+        queue = new LinkedBlockingQueue<>(ProxyDynamicConf.getInt("slow.command.monitor.collect.max.count", defaultMaxCount) * 10);
     }
 
     public static void slowCommand(Command command, double spendMillis, long thresholdMillis) {
         try {
             if (spendMillis <= thresholdMillis) return;
-            if (queue.size() >= ProxyDynamicConf.getInt("slow.command.monitor.json.max.count", defaultMaxCount)) {
+            if (queue.size() >= ProxyDynamicConf.getInt("slow.command.monitor.collect.max.count", defaultMaxCount)) {
                 return;
             }
             Long bid = command.getCommandContext().getBid();

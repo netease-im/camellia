@@ -180,7 +180,7 @@ public class RedisClient implements AsyncClient {
                         logger.info("{} will close after {} seconds because connection is idle, idle.seconds = {}", clientName, closeIdleConnectionDelaySeconds, checkIdleThresholdSeconds);
                     }
                     try {
-                        ExecutorUtils.newTimeout(timeout -> {
+                        ExecutorUtils.submitDelayTask(() -> {
                             try {
                                 if (isIdle()) {
                                     if (logger.isInfoEnabled()) {

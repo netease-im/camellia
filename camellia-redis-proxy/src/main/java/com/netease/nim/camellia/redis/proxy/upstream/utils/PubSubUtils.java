@@ -139,7 +139,7 @@ public class PubSubUtils {
             if (reply instanceof IntegerReply) {
                 if (((IntegerReply) reply).getInteger() <= 0) {
                     asyncTaskQueue.getChannelInfo().setInSubscribe(false);
-                    ExecutorUtils.newTimeout(timeout -> client.stop(true), 60, TimeUnit.SECONDS);
+                    ExecutorUtils.submitDelayTask(() -> client.stop(true), 60, TimeUnit.SECONDS);
                 }
             }
         }

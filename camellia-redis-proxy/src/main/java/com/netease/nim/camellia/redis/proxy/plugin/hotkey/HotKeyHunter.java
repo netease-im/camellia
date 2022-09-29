@@ -20,6 +20,8 @@ public class HotKeyHunter {
 
     private static final Logger logger = LoggerFactory.getLogger(HotKeyHunter.class);
 
+    private final String CALLBACK_NAME;
+
     private boolean enable;
     private final HotKeyMonitorCallback callback;
     private final LRUCounter counter;
@@ -35,6 +37,7 @@ public class HotKeyHunter {
         reloadHotKeyConfig();
         ProxyDynamicConf.registerCallback(this::reloadHotKeyConfig);
         this.callback = callback;
+        this.CALLBACK_NAME = callback.getClass().getName();
         int checkCacheMaxCapacity = ProxyDynamicConf.getInt("hot.key.monitor.cache.max.capacity",
                 identityInfo.getBid(), identityInfo.getBgroup(), Constants.Server.hotKeyMonitorCheckCacheMaxCapacity);
         this.checkMillis = ProxyDynamicConf.getLong("hot.key.monitor.counter.check.millis",
@@ -87,7 +90,7 @@ public class HotKeyHunter {
                 }
             }
             HotKeyMonitor.hotKey(identityInfo, hotKeys, checkMillis, checkThreshold);
-            callback.callback(identityInfo, hotKeys, checkMillis, checkThreshold);
+            ExecutorUtils.submitCallbackTask(CALLBACK_NAME, () -> callback.callback(identityInfo, hotKeys, checkMillis, checkThreshold));
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

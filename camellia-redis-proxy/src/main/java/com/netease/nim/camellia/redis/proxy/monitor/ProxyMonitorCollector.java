@@ -25,6 +25,7 @@ public class ProxyMonitorCollector {
 
     private static final AtomicBoolean initOk = new AtomicBoolean(false);
     private static MonitorCallback monitorCallback;
+    private static String CALLBACK_NAME;
     private static int intervalSeconds;
 
     private static boolean monitorEnable;
@@ -40,6 +41,9 @@ public class ProxyMonitorCollector {
             ExecutorUtils.scheduleAtFixedRate(ProxyMonitorCollector::collect, seconds, seconds, TimeUnit.SECONDS);
             ProxyMonitorCollector.monitorEnable = serverProperties.isMonitorEnable();
             ProxyMonitorCollector.monitorCallback = monitorCallback;
+            if (monitorCallback != null) {
+                ProxyMonitorCollector.CALLBACK_NAME = monitorCallback.getClass().getName();
+            }
             ProxyDynamicConf.registerCallback(ProxyMonitorCollector::reloadConf);
             reloadConf();
             logger.info("RedisMonitor init success, intervalSeconds = {}, monitorEnable = {}", intervalSeconds, monitorEnable);
@@ -121,7 +125,7 @@ public class ProxyMonitorCollector {
             ProxyMonitorCollector.stats = stats;
 
             if (monitorCallback != null) {
-                monitorCallback.callback(stats);
+                ExecutorUtils.submitCallbackTask(CALLBACK_NAME, () -> monitorCallback.callback(stats));
             }
             ProxyInfoUtils.updateStats(stats);
         } catch (Exception e) {
