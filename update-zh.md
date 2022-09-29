@@ -13,7 +13,7 @@
 * 自定义监控回调（MonitorCallback、SlowCommandMonitorCallback、HotKeyCacheStatsCallback、HotKeyMonitorCallback、BigKeyMonitorCallback）走独立的线程池执行回调，避免不合理的自定义监控回调实现阻塞proxy主流程
 
 ### fix
-* 无
+* redis-proxy随机端口功能没有校验端口是否被占用
 
 
 # 1.1.1（2022/09/26）

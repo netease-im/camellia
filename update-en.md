@@ -13,7 +13,7 @@
 * custom monitor callback running in isolation thread pool
 
 ### fix
-* none
+* redis-proxy random port mode do not check available
 
 
 # 1.1.1（2022/09/26）

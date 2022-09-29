@@ -84,7 +84,7 @@ public class CamelliaRedisProxyServer {
         int port = serverProperties.getPort();
         //如果设置为这个特殊的负数端口，则会随机选择一个可用的端口
         if (port == Constants.Server.serverPortRandSig) {
-            port = SocketUtils.findRandomPort();
+            port = SocketUtils.findRandomAvailablePort();
         }
         serverBootstrap.bind(port).sync();
         logger.info("CamelliaRedisProxyServer, so_backlog = {}, so_sendbuf = {}, so_rcvbuf = {}, so_keepalive = {}",

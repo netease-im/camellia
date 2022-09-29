@@ -24,7 +24,7 @@ public class ConsoleServer {
 
     public ConsoleServer(int port, ConsoleService consoleService) {
         if (port == Constants.Server.consolePortRandSig) {
-            port = SocketUtils.findRandomPort();
+            port = SocketUtils.findRandomAvailablePort();
         } else if (port < 0) {
             port = Constants.Server.consolePort;
         }
