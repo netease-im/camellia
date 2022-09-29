@@ -4,6 +4,17 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.1.2（2022/10/xx）
+### 新增
+* CamelliaRedisProxyStarter支持启动console-server
+
+### 更新
+* 自定义监控回调（MonitorCallback、SlowCommandMonitorCallback、HotKeyCacheStatsCallback、HotKeyMonitorCallback、BigKeyMonitorCallback）走独立的线程池执行回调，避免不合理的自定义监控回调实现阻塞proxy主流程
+
+### fix
+* 无
+
+
 # 1.1.1（2022/09/26）
 ### 新增
 * camellia-redis-proxy代理redis-cluster时也支持TRANSACTION系列命令（MULTI/EXEC/DISCARD/WATCH/UNWATCH）

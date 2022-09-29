@@ -4,6 +4,17 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+# 1.1.2（2022/10/xx）
+### add
+* CamelliaRedisProxyStarter support start console-server
+
+### update
+* custom monitor callback running in isolation thread pool
+
+### fix
+* none
+
+
 # 1.1.1（2022/09/26）
 ### add
 * camellia-redis-proxy support TRANSACTION commands(MULTI/EXEC/DISCARD/WATCH/UNWATCH) when route to redis-cluster
