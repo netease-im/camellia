@@ -5,6 +5,10 @@ import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.command.AsyncCommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
+import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.console.ConsoleServer;
+import com.netease.nim.camellia.redis.proxy.console.ConsoleService;
+import com.netease.nim.camellia.redis.proxy.console.ConsoleServiceAdaptor;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
 import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
@@ -32,6 +36,18 @@ public class CamelliaRedisProxyStarter {
     private static final CamelliaTranspondProperties transpondProperties = new CamelliaTranspondProperties();
 
     public static void start() {
+        start(0, null);
+    }
+
+    public static void start(boolean enableConsole) {
+        if (enableConsole) {
+            start(Constants.Server.consolePort, new ConsoleServiceAdaptor());
+        } else {
+            start();
+        }
+    }
+
+    public static void start(int consolePort, ConsoleService consoleService) {
         if (starting.compareAndSet(false, true)) {
             try {
                 if (startOk.get()) {
@@ -48,6 +64,10 @@ public class CamelliaRedisProxyStarter {
                 CamelliaRedisProxyServer server = new CamelliaRedisProxyServer(serverProperties, bossGroup, workGroup, commandInvoker);
                 server.start();
                 logger.info("CamelliaRedisProxyServer start success");
+                if (consolePort != 0 && consoleService != null) {
+                    ConsoleServer consoleServer = new ConsoleServer(consolePort, consoleService);
+                    consoleServer.start();
+                }
                 startOk.set(true);
             } catch (Throwable e) {
                 logger.error("CamelliaRedisProxyServer start error", e);

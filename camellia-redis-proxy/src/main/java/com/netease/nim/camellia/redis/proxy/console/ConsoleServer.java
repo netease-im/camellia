@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.console;
 
 import com.netease.nim.camellia.core.util.SysUtils;
-import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
