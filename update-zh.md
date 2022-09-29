@@ -7,6 +7,7 @@
 # 1.1.2（2022/10/xx）
 ### 新增
 * CamelliaRedisProxyStarter支持启动console-server
+* RedisProxyRedisConnectionFactory实现DisposableBean接口，支持destroy方法
 
 ### 更新
 * 自定义监控回调（MonitorCallback、SlowCommandMonitorCallback、HotKeyCacheStatsCallback、HotKeyMonitorCallback、BigKeyMonitorCallback）走独立的线程池执行回调，避免不合理的自定义监控回调实现阻塞proxy主流程

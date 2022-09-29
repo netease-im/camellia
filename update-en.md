@@ -7,6 +7,7 @@
 # 1.1.2（2022/10/xx）
 ### add
 * CamelliaRedisProxyStarter support start console-server
+* RedisProxyRedisConnectionFactory implements DisposableBean, support destroy method
 
 ### update
 * custom monitor callback running in isolation thread pool

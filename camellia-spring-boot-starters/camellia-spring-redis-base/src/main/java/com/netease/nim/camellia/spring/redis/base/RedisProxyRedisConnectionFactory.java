@@ -3,6 +3,7 @@ package com.netease.nim.camellia.spring.redis.base;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPoolException;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.ExceptionTranslationStrategy;
 import org.springframework.data.redis.PassThroughExceptionTranslationStrategy;
@@ -17,7 +18,7 @@ import redis.clients.jedis.Jedis;
  *
  * Created by caojiajun on 2020/12/2
  */
-public class RedisProxyRedisConnectionFactory implements RedisConnectionFactory {
+public class RedisProxyRedisConnectionFactory implements RedisConnectionFactory, DisposableBean {
 
     private static final ExceptionTranslationStrategy EXCEPTION_TRANSLATION
             = new PassThroughExceptionTranslationStrategy(JedisConverters.exceptionConverter());
@@ -65,5 +66,10 @@ public class RedisProxyRedisConnectionFactory implements RedisConnectionFactory 
             }
         }
         return EXCEPTION_TRANSLATION.translate(e);
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        redisProxyJedisPool.close();
     }
 }
