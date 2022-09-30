@@ -76,10 +76,8 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
         for (ProxyNode initNode : initNodes) {
             addHeartbeatTarget(initNode);
         }
-        checkHeartbeatReply();
         //检查是否所有心跳成功的对象都有回包了
-        int delaySeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.init.delay.check.seconds", 10);
-        schedule.schedule(this::checkHeartbeatReply, delaySeconds, TimeUnit.SECONDS);
+        checkHeartbeatReply();
     }
 
     private void checkHeartbeatReply() {
