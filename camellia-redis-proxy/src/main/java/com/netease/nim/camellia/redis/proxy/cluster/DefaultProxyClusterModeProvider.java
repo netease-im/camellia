@@ -5,7 +5,7 @@ import com.netease.nim.camellia.core.util.CamelliaMapUtils;
 import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -50,9 +49,10 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
         //初始化
         initConf();
         //定时给所有节点发送心跳
-        schedule.scheduleAtFixedRate(this::sendHeartbeat, 5, 5, TimeUnit.SECONDS);
+        int intervalSeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.interval.seconds", 5);
+        schedule.scheduleAtFixedRate(this::sendHeartbeat, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
         //定时校验心跳超时的节点列表，并移除
-        schedule.scheduleAtFixedRate(this::checkOnlineNodes, 5, 5, TimeUnit.SECONDS);
+        schedule.scheduleAtFixedRate(this::checkOnlineNodes, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
     }
 
     private void initConf() {
@@ -78,7 +78,8 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
         }
         checkHeartbeatReply();
         //检查是否所有心跳成功的对象都有回包了
-        schedule.schedule(this::checkHeartbeatReply, 10, TimeUnit.SECONDS);
+        int delaySeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.init.delay.check.seconds", 10);
+        schedule.schedule(this::checkHeartbeatReply, delaySeconds, TimeUnit.SECONDS);
     }
 
     private void checkHeartbeatReply() {
@@ -90,7 +91,8 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
                 if (!heartbeatMap.containsKey(node)) {
                     logger.warn("proxy check heartbeat reply fail, node = {}", node);
                     //检查失败，则再等一下
-                    schedule.schedule(this::checkHeartbeatReply, 10, TimeUnit.SECONDS);
+                    int delaySeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.init.delay.check.seconds", 10);
+                    schedule.schedule(this::checkHeartbeatReply, delaySeconds, TimeUnit.SECONDS);
                     return;
                 }
             }
@@ -111,7 +113,8 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
                 continue;
             }
             Long lastHeartbeatTime = heartbeatMap.get(node);
-            if (lastHeartbeatTime == null || System.currentTimeMillis() - lastHeartbeatTime > 30*1000L) {
+            int timeoutSeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.timeout.seconds", 20);
+            if (lastHeartbeatTime == null || System.currentTimeMillis() - lastHeartbeatTime > timeoutSeconds*1000L) {
                 offlineNodes.add(node);
             }
         }
@@ -142,7 +145,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
             RedisClient client = RedisClientHub.get(node.getHost(), node.getCport(), null, null);
             if (client != null) {
                 CompletableFuture<Reply> future = client.sendCommand(RedisCommand.CLUSTER.raw(),
-                        Utils.stringToBytes("PROXY-HEARTBEAT"), Utils.stringToBytes(current().toString()),
+                        Utils.stringToBytes(RedisKeyword.PROXY_HEARTBEAT.name()), Utils.stringToBytes(current().toString()),
                         Utils.stringToBytes(String.valueOf(status.getValue())));
                 Reply reply = future.get(10, TimeUnit.SECONDS);
                 if (reply instanceof BulkReply) {

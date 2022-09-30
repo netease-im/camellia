@@ -12,7 +12,7 @@ camellia-redis-proxy:
   password: pass123   #proxy的密码，如果设置了自定义的client-auth-provider-class-name，则密码参数无效
   monitor-enable: false  #是否开启监控
   monitor-interval-seconds: 60 #监控回调的间隔
-  #cluster-mode-enable: true
+#  cluster-mode-enable: true #cluster-mode，把proxy伪装成cluster，需要在camellia-redis-proxy.properties配置proxy.cluster.mode.nodes
   plugins: #
     - monitorPlugin
     - bigKeyPlugin
