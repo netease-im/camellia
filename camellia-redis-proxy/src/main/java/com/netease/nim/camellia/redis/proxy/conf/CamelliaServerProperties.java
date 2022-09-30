@@ -12,6 +12,7 @@ import java.util.List;
  */
 public class CamelliaServerProperties {
     private int port = Constants.Server.severPort;
+    private int cport = -1;
     private String applicationName;
     private String password;
     private boolean monitorEnable = Constants.Server.monitorEnable;
@@ -20,6 +21,9 @@ public class CamelliaServerProperties {
     private String monitorCallbackClassName = Constants.Server.monitorCallbackClassName;
     private String clientAuthProviderClassName = Constants.Server.clientAuthByConfigProvider;
     private List<String> plugins = new ArrayList<>();
+
+    private boolean clusterModeEnable = Constants.Server.clusterModeEnable;
+    private String clusterModeProviderClassName = Constants.Server.clusterModeProviderClassName;
 
     private int bossThread = 1;
     private int workThread = Constants.Server.workThread;
@@ -42,6 +46,30 @@ public class CamelliaServerProperties {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public int getCport() {
+        return cport;
+    }
+
+    public void setCport(int cport) {
+        this.cport = cport;
+    }
+
+    public boolean isClusterModeEnable() {
+        return clusterModeEnable;
+    }
+
+    public void setClusterModeEnable(boolean clusterModeEnable) {
+        this.clusterModeEnable = clusterModeEnable;
+    }
+
+    public String getClusterModeProviderClassName() {
+        return clusterModeProviderClassName;
+    }
+
+    public void setClusterModeProviderClassName(String clusterModeProviderClassName) {
+        this.clusterModeProviderClassName = clusterModeProviderClassName;
     }
 
     public String getApplicationName() {

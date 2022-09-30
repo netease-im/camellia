@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.zk.registry.springboot;
+package com.netease.nim.camellia.redis.proxy.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

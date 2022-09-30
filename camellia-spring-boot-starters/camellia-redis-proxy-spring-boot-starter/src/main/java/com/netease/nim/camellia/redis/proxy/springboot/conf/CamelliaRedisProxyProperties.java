@@ -35,6 +35,21 @@ public class CamelliaRedisProxyProperties {
     private int consolePort = Constants.Server.consolePort;
 
     /**
+     * proxy是否启用cluster模式，伪装成redis-cluster
+     */
+    private boolean clusterModeEnable = Constants.Server.clusterModeEnable;
+
+    /**
+     * cluster模式下的cport
+     */
+    private int cport = -1;
+
+    /**
+     * cluster模式的实现方式，可以自定义
+     */
+    private String clusterModeProviderClassName = Constants.Server.clusterModeProviderClassName;
+
+    /**
      * 是否开启监控，会记录每个命令的调用次数，see @RedisMonitor
      */
     private boolean monitorEnable = Constants.Server.monitorEnable;
@@ -99,6 +114,30 @@ public class CamelliaRedisProxyProperties {
 
     public void setConsolePort(int consolePort) {
         this.consolePort = consolePort;
+    }
+
+    public boolean isClusterModeEnable() {
+        return clusterModeEnable;
+    }
+
+    public void setClusterModeEnable(boolean clusterModeEnable) {
+        this.clusterModeEnable = clusterModeEnable;
+    }
+
+    public int getCport() {
+        return cport;
+    }
+
+    public void setCport(int cport) {
+        this.cport = cport;
+    }
+
+    public String getClusterModeProviderClassName() {
+        return clusterModeProviderClassName;
+    }
+
+    public void setClusterModeProviderClassName(String clusterModeProviderClassName) {
+        this.clusterModeProviderClassName = clusterModeProviderClassName;
     }
 
     public boolean isMonitorEnable() {

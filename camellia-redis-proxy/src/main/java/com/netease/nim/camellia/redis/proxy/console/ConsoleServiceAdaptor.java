@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.console;
 
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.info.UpstreamInfoUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
@@ -56,6 +57,7 @@ public class ConsoleServiceAdaptor implements ConsoleService {
     @Override
     public ConsoleResult offline() {
         ServerStatus.setStatus(ServerStatus.Status.OFFLINE);
+        ClusterModeStatus.setStatus(ClusterModeStatus.Status.OFFLINE);
         if (ServerStatus.isIdle()) {
             logger.info("offline success");
             return ConsoleResult.success("is idle");

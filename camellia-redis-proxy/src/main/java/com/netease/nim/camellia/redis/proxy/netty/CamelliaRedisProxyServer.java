@@ -93,7 +93,17 @@ public class CamelliaRedisProxyServer {
                 serverProperties.isTcpNoDelay(), serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh());
         logger.info("CamelliaRedisProxyServer start at port: {}", port);
         GlobalRedisProxyEnv.port = port;
+        if (serverProperties.isClusterModeEnable()) {
+            int cport = serverProperties.getCport();
+            if (cport <= 0) {
+                cport = port + 10000;
+            }
+            serverBootstrap.bind(cport).sync();
+            GlobalRedisProxyEnv.cport = cport;
+            logger.info("CamelliaRedisProxyServer start with cluster mode at cport: {}", cport);
+        }
         this.port = port;
+        GlobalRedisProxyEnv.invokeCallback();
     }
 
     public int getPort() {

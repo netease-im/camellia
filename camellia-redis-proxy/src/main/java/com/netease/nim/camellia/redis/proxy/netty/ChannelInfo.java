@@ -38,6 +38,8 @@ public class ChannelInfo {
     private volatile ConcurrentHashMap<BytesKey, Boolean> psubscribeChannels;
     private Command cachedMultiCommand;
 
+    private long lastCommandMoveTime;
+
     private String clientName;
     private Long bid;
     private String bgroup;
@@ -248,6 +250,14 @@ public class ChannelInfo {
 
     public void setInSubscribe(boolean inSubscribe) {
         this.inSubscribe = inSubscribe;
+    }
+
+    public long getLastCommandMoveTime() {
+        return lastCommandMoveTime;
+    }
+
+    public void setLastCommandMoveTime(long lastCommandMoveTime) {
+        this.lastCommandMoveTime = lastCommandMoveTime;
     }
 
     public static enum ChannelStats {

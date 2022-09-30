@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command;
 
+import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
+import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.auth.AuthCommandProcessor;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
@@ -8,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultProxyPluginFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.FastThreadLocal;
@@ -36,8 +39,16 @@ public class AsyncCommandInvoker implements CommandInvoker {
         ProxyMonitorCollector.init(serverProperties, monitorCallback);
 
         AuthCommandProcessor authCommandProcessor = new AuthCommandProcessor(ConfigInitUtil.initClientAuthProvider(serverProperties));
+
+        ProxyClusterModeProcessor clusterModeProcessor = null;
+        if (serverProperties.isClusterModeEnable()) {
+            ProxyClusterModeProvider provider = (ProxyClusterModeProvider)serverProperties.getProxyBeanFactory()
+                    .getBean(BeanInitUtils.parseClass(serverProperties.getClusterModeProviderClassName()));
+            clusterModeProcessor = new ProxyClusterModeProcessor(provider);
+        }
+
         DefaultProxyPluginFactory proxyPluginFactory = new DefaultProxyPluginFactory(serverProperties.getPlugins(), serverProperties.getProxyBeanFactory());
-        this.commandInvokeConfig = new CommandInvokeConfig(authCommandProcessor, proxyPluginFactory);
+        this.commandInvokeConfig = new CommandInvokeConfig(authCommandProcessor, clusterModeProcessor, proxyPluginFactory);
     }
 
     private static final FastThreadLocal<CommandsTransponder> threadLocal = new FastThreadLocal<>();

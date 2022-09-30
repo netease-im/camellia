@@ -18,6 +18,8 @@ public enum RedisCommand {
     AUTH(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     HELLO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     QUIT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    CLUSTER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    ASKING(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     SET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     GET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.SIMPLE_MULTI),
@@ -240,8 +242,7 @@ public enum RedisCommand {
     TIME(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     MIGRATE(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     WAIT(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
-    CLUSTER(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
-    ASKING(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
+
     READONLY(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
 
     ;

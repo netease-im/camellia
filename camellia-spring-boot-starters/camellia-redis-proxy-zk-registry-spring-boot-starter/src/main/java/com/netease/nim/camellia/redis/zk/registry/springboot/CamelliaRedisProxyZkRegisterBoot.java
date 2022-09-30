@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.zk.registry.springboot;
 import com.netease.nim.camellia.redis.proxy.discovery.common.Proxy;
 import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkProxyRegistry;
 import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkRegistryException;
+import com.netease.nim.camellia.redis.proxy.util.InetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

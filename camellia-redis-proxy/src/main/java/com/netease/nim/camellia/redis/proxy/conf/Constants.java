@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.core.util.SysUtils;
+import com.netease.nim.camellia.redis.proxy.cluster.DefaultProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.plugin.bigkey.LoggingBigKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkey.LoggingHotKeyMonitorCallback;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.DummyHotKeyCacheKeyChecker;
@@ -25,6 +26,8 @@ public class Constants {
         public static final int monitorIntervalSeconds = 60;
         public static final String monitorCallbackClassName = LoggingMonitorCallback.class.getName();
         public static final String clientAuthByConfigProvider = ClientAuthByConfigProvider.class.getName();
+        public static final boolean clusterModeEnable = false;
+        public static final String clusterModeProviderClassName = DefaultProxyClusterModeProvider.class.getName();
 
         public static final int workThread = SysUtils.getCpuNum();
         public static final int commandDecodeMaxBatchSize = 256;

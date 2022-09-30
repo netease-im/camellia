@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.auth.AuthCommandProcessor;
 import com.netease.nim.camellia.redis.proxy.auth.ClientCommandUtil;
 import com.netease.nim.camellia.redis.proxy.auth.ConnectLimiter;
 import com.netease.nim.camellia.redis.proxy.auth.HelloCommandUtil;
+import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
@@ -35,6 +36,7 @@ public class CommandsTransponder {
     private static final Logger logger = LoggerFactory.getLogger(CommandsTransponder.class);
 
     private final AuthCommandProcessor authCommandProcessor;
+    private final ProxyClusterModeProcessor clusterModeProcessor;
     private final AsyncCamelliaRedisTemplateChooser chooser;
     private final ProxyPluginFactory proxyPluginFactory;
 
@@ -45,6 +47,7 @@ public class CommandsTransponder {
     public CommandsTransponder(AsyncCamelliaRedisTemplateChooser chooser, CommandInvokeConfig commandInvokeConfig) {
         this.chooser = chooser;
         this.authCommandProcessor = commandInvokeConfig.getAuthCommandProcessor();
+        this.clusterModeProcessor = commandInvokeConfig.getClusterModeProcessor();
         this.proxyPluginFactory = commandInvokeConfig.getProxyPluginFactory();
         this.proxyPluginInitResp = proxyPluginFactory.initPlugins();
         proxyPluginFactory.registerPluginUpdate(() -> proxyPluginInitResp = proxyPluginFactory.initPlugins());
@@ -113,6 +116,8 @@ public class CommandsTransponder {
                     hasCommandsSkip = true;
                     continue;
                 }
+
+
 
                 //auth命令
                 if (redisCommand == RedisCommand.AUTH) {
@@ -190,6 +195,30 @@ public class CommandsTransponder {
                 if (redisCommand == RedisCommand.QUIT) {
                     channelInfo.getCtx().close();
                     return;
+                }
+
+                if (redisCommand == RedisCommand.ASKING) {
+                    task.replyCompleted(StatusReply.OK);
+                    hasCommandsSkip = true;
+                    continue;
+                }
+
+                //cluster mode
+                if (clusterModeProcessor != null) {
+                    if (redisCommand == RedisCommand.CLUSTER) {
+                        Reply reply = clusterModeProcessor.clusterCommands(command);
+                        task.replyCompleted(reply);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+                    if (commands.size() == 1) {//pipeline过来的命令就不move了
+                        Reply moveReply = clusterModeProcessor.isCommandMove(command);
+                        if (moveReply != null) {
+                            task.replyCompleted(moveReply);
+                            hasCommandsSkip = true;
+                            continue;
+                        }
+                    }
                 }
 
                 //订阅命令需要特殊处理
