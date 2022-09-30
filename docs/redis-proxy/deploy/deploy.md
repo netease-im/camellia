@@ -25,7 +25,9 @@
    
 此时，你需要在客户端侧实现一下负载均衡策略
 
-* 伪redis-cluster模式  
+* 伪redis-cluster模式，如下：  
+<img src="redis-proxy-cluster.jpg" width="60%" height="60%">
+
 这种模式下，可以把proxy集群当作一个redis-cluster集群去访问，从而不需要外部服务即可组成高可用集群  
 
 * 特别的，如果应用程序是java，则还可以同进程部署，如下：
@@ -67,7 +69,7 @@ camellia-redis-zk-registry:
 此时你需要自己从zk上获取proxy的地址列表，然后自己实现一下客户端侧的负载均衡策略，但是如果你客户端是java，则camellia帮你做了一个实现，参考下节
 
 ### 伪redis-cluster模式
-这种模式下，可以把proxy集群当作一个redis-cluster集群去访问，从而不需要外部服务即可组成高可用集群
+这种模式下，可以把proxy集群当作一个redis-cluster集群去访问，从而不需要外部服务即可组成高可用集群  
 ```yaml
 server:
   port: 6380
@@ -89,10 +91,23 @@ camellia-redis-proxy:
 ```     
 随后你需要在camellia-redis-proxy.properties里选择若干个个proxy节点配置，如下：
 ```
+#随机挑选几个proxy节点配置即可（都配上当然更好），格式为ip:port@cport
 proxy.cluster.mode.nodes=192.168.3.218:6380@16380,192.168.3.218:6390@16390
 ```
 启动即可proxy即可  
-节点宕机、节点扩容，proxy集群内部会自动感知   
+节点宕机、节点扩容，proxy集群内部会通过心跳自动感知（心跳通过cport和自定义的redis协议去实现）         
+
+其他可以配置的参数：
+```
+#proxy节点间的心跳间隔，表示了心跳请求的频率
+proxy.cluster.mode.heartbeat.interval.seconds=5
+#proxy节点间的心跳超时，20s没有收到心跳，则会剔除该节点
+proxy.cluster.mode.heartbeat.timeout.seconds=20
+#proxy节点的ip，默认会自动获取本机ip，一般不需要配置
+proxy.cluster.mode.current.node.host=10.1.1.1
+```
+
+通过console的/online接口和/offline接口可以完成节点的上下线
 
 ### 随机端口
 有一些业务场景（比如测试环境混部）容易出现端口冲突情况，你可能希望proxy启动时支持随机选择可用端口，则你可以这样配置
