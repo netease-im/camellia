@@ -193,6 +193,7 @@ OK
 在生产环境，需要部署至少2个proxy实例来保证高可用，并且proxy是可以水平扩展的，包括：
 * 部署模式
 * 集成Zookeeper
+* 伪redis-cluster模式
 * 随机端口
 * 优雅上下线
 * 客户端接入（java之jedis）

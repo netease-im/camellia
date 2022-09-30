@@ -4,6 +4,7 @@
 ## 大纲
 * 部署模式
 * 集成Zookeeper
+* 伪redis-cluster模式
 * 随机端口
 * 优雅上下线
 * 客户端接入（java之jedis）
