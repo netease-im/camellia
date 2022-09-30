@@ -78,7 +78,7 @@ public class ProxyClusterModeProcessor {
         synchronized (lock) {
             if (refreshing.compareAndSet(false, true)) {
                 try {
-                    List<ProxyNode> list = this.provider.discovery();
+                    List<ProxyNode> list = new ArrayList<>(this.provider.discovery());
                     Collections.sort(list);
                     onlineNodes = list;
                     if (onlineNodes.isEmpty()) return;

@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
+import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
@@ -18,8 +19,6 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Created by caojiajun on 2022/9/30
@@ -35,14 +34,10 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
 
     private final List<ProxyNodeChangeListener> listenerList = new ArrayList<>();
 
-    private final Set<ProxyNode> onlineNodes = new HashSet<>();
-    private final Set<ProxyNode> pendingNodes = new HashSet<>();
+    private final ConcurrentHashSet<ProxyNode> onlineNodes = new ConcurrentHashSet<>();
+    private final ConcurrentHashSet<ProxyNode> pendingNodes = new ConcurrentHashSet<>();
     private final ConcurrentHashMap<ProxyNode, AtomicLong> heartbeatTargetNodes = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<ProxyNode, Long> heartbeatMap = new ConcurrentHashMap<>();
-
-    private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
-    private final Lock r = rwl.readLock();
-    private final Lock w = rwl.writeLock();
 
     @Override
     public void init() {
@@ -188,12 +183,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
 
     @Override
     public List<ProxyNode> discovery() {
-        r.lock();
-        try {
-            return new ArrayList<>(onlineNodes);
-        } finally {
-            r.unlock();
-        }
+        return new ArrayList<>(onlineNodes);
     }
 
     @Override
@@ -242,38 +232,28 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
 
     private void triggerNodeRemove(ProxyNode node) {
         if (onlineNodes.contains(node)) {
-            w.lock();
-            try {
-                logger.info("onlineNodes remove = {}", node);
-                onlineNodes.remove(node);
-                for (ProxyNodeChangeListener listener : listenerList) {
-                    try {
-                        listener.removeNode(node);
-                    } catch (Exception e) {
-                        logger.error("removeNode callback error, node = {}", node, e);
-                    }
+            logger.info("onlineNodes remove = {}", node);
+            onlineNodes.remove(node);
+            for (ProxyNodeChangeListener listener : listenerList) {
+                try {
+                    listener.removeNode(node);
+                } catch (Exception e) {
+                    logger.error("removeNode callback error, node = {}", node, e);
                 }
-            } finally {
-                w.unlock();
             }
         }
     }
 
     private void triggerNodeAdd(ProxyNode node) {
         if (!onlineNodes.contains(node)) {
-            w.lock();
-            try {
-                onlineNodes.add(node);
-                logger.info("onlineNodes add = {}", node);
-                for (ProxyNodeChangeListener listener : listenerList) {
-                    try {
-                        listener.addNode(node);
-                    } catch (Exception e) {
-                        logger.error("removeNode callback error, node = {}", node, e);
-                    }
+            onlineNodes.add(node);
+            logger.info("onlineNodes add = {}", node);
+            for (ProxyNodeChangeListener listener : listenerList) {
+                try {
+                    listener.addNode(node);
+                } catch (Exception e) {
+                    logger.error("removeNode callback error, node = {}", node, e);
                 }
-            } finally {
-                w.unlock();
             }
         }
     }
