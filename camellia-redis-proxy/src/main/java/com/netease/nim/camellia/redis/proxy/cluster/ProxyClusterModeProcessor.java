@@ -5,10 +5,10 @@ import com.netease.nim.camellia.core.util.MD5Util;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.*;
-import com.netease.nim.camellia.redis.proxy.upstream.cluster.RedisClusterSlotInfo;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -42,7 +41,7 @@ public class ProxyClusterModeProcessor {
 
     private final AtomicBoolean refreshing = new AtomicBoolean(false);
 
-    private boolean clusterModeMoveEnable;
+    private boolean clusterModeCommandMoveEnable;
 
     private boolean init = false;
 
@@ -72,7 +71,7 @@ public class ProxyClusterModeProcessor {
     }
 
     private void reloadConf() {
-        clusterModeMoveEnable = ProxyDynamicConf.getBoolean("cluster.mode.move.enable", true);
+        clusterModeCommandMoveEnable = ProxyDynamicConf.getBoolean("cluster.mode.command.move.enable", true);
     }
 
     private void refresh() {
@@ -99,7 +98,7 @@ public class ProxyClusterModeProcessor {
      */
     public Reply isCommandMove(Command command) {
         if (!init) return null;
-        if (!clusterModeMoveEnable) return null;//不开启move，则直接返回null
+        if (!clusterModeCommandMoveEnable) return null;//不开启move，则直接返回null
         if (onlineNodes.isEmpty()) return null;
         if (refreshing.get()) return null;//正在更新slot信息，则别move了
         if (command.isBlocking()) return null;//blocking的command也别move了吧
@@ -114,12 +113,8 @@ public class ProxyClusterModeProcessor {
         byte[] key = keys.get(0);
         int slot = RedisClusterCRC16Utils.getSlot(key);
         if (slot < slotStart || slot > slotEnd) {
-            int randomSlot = ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE);
-            if (randomSlot >= slotStart && randomSlot <= slotEnd) {
-                //随机到自己了，那下次再move吧
-                return null;
-            }
-            ProxyNode node = slotMap.get(randomSlot);
+            ProxyNode node = slotMap.get(slot);
+            if (node.equals(currentNode)) return null;
             channelInfo.setLastCommandMoveTime(TimeCache.currentMillis);//记录一下上一次move的时间
             return new ErrorReply("MOVED " + slot + " " + node.getHost() + ":" + node.getPort());
         }
@@ -142,13 +137,13 @@ public class ProxyClusterModeProcessor {
             return ErrorReply.NOT_AVAILABLE;
         }
         String arg = Utils.bytesToString(objects[1]);
-        if (arg.equalsIgnoreCase("INFO")) {
+        if (arg.equalsIgnoreCase(RedisKeyword.INFO.name())) {
             return clusterInfo == null ? ErrorReply.NOT_AVAILABLE : clusterInfo;
-        } else if (arg.equalsIgnoreCase("NODES")) {
+        } else if (arg.equalsIgnoreCase(RedisKeyword.NODES.name())) {
             return clusterNodes == null ? ErrorReply.NOT_AVAILABLE : clusterNodes;
-        } else if (arg.equalsIgnoreCase("SLOTS")) {
+        } else if (arg.equalsIgnoreCase(RedisKeyword.SLOTS.name())) {
             return clusterSlots == null ? ErrorReply.NOT_AVAILABLE : clusterSlots;
-        } else if (arg.equalsIgnoreCase("PROXY-HEARTBEAT")) {//camellia定义的proxy间心跳
+        } else if (arg.equalsIgnoreCase(RedisKeyword.PROXY_HEARTBEAT.name())) {//camellia定义的proxy间心跳
             if (objects.length >= 4) {
                 ProxyNode node = ProxyNode.parseString(Utils.bytesToString(objects[2]));
                 if (node == null) {

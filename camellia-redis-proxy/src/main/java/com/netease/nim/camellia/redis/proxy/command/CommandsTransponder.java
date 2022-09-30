@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.auth.ClientCommandUtil;
 import com.netease.nim.camellia.redis.proxy.auth.ConnectLimiter;
 import com.netease.nim.camellia.redis.proxy.auth.HelloCommandUtil;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
+import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
@@ -147,7 +148,12 @@ public class CommandsTransponder {
 
                 //如果需要密码，但是没有auth，则返回NO_AUTH
                 if (authCommandProcessor.isPasswordRequired()) {
-                    if (channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK) {
+                    boolean skipAuth = false;
+                    if (redisCommand == RedisCommand.CLUSTER) {
+                        byte[][] args = command.getObjects();
+                        skipAuth = args.length >= 2 && Utils.bytesToString(args[1]).equalsIgnoreCase(RedisKeyword.PROXY_HEARTBEAT.name());
+                    }
+                    if (channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK && !skipAuth) {
                         task.replyCompleted(ErrorReply.NO_AUTH);
                         hasCommandsSkip = true;
                         continue;

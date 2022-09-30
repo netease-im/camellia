@@ -18,5 +18,6 @@ public enum RedisKeyword {
     BEFORE, AFTER,
     WITHCOORD, WITHDIST, WITHHASH,
     STREAMS,BLOCK,
+    SLOTS, NODES, INFO, PROXY_HEARTBEAT,
     ;
 }

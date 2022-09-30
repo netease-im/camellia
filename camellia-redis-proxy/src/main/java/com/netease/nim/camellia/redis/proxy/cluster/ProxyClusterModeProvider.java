@@ -14,8 +14,11 @@ import java.util.List;
  */
 public interface ProxyClusterModeProvider {
 
+    /**
+     * 初始化的方法
+     */
     default void init() {
-
+        //ProxyClusterModeProcessor会调用
     }
 
     /**

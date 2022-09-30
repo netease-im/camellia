@@ -89,7 +89,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
             if (failCount.get() == 0) {
                 if (!heartbeatMap.containsKey(node)) {
                     logger.warn("proxy check heartbeat reply fail, node = {}", node);
-                    //检查失败，则继续下一个
+                    //检查失败，则再等一下
                     schedule.schedule(this::checkHeartbeatReply, 10, TimeUnit.SECONDS);
                     return;
                 }
