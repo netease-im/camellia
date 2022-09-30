@@ -101,18 +101,18 @@ public class ProxyClusterModeProcessor {
         if (!clusterModeCommandMoveEnable) return null;//不开启move，则直接返回null
         if (onlineNodes.isEmpty()) return null;
         if (refreshing.get()) return null;//正在更新slot信息，则别move了
-        if (command.isBlocking()) return null;//blocking的command也别move了吧
-        List<byte[]> keys = command.getKeys();
-        if (keys.isEmpty()) return null;
         ChannelInfo channelInfo = command.getChannelInfo();
         long lastCommandMoveTime = channelInfo.getLastCommandMoveTime();
         if (TimeCache.currentMillis - lastCommandMoveTime <= 30*1000L) {
             //30s内只move一次
             return null;
         }
+        if (command.isBlocking()) return null;//blocking的command也别move了吧
+        List<byte[]> keys = command.getKeys();
+        if (keys.isEmpty()) return null;
         byte[] key = keys.get(0);
         int slot = RedisClusterCRC16Utils.getSlot(key);
-        if (slot < slotStart || slot > slotEnd) {
+        if (ClusterModeStatus.getStatus() == ClusterModeStatus.Status.OFFLINE || slot < slotStart || slot > slotEnd) {
             ProxyNode node = slotMap.get(slot);
             if (node.equals(currentNode)) return null;
             channelInfo.setLastCommandMoveTime(TimeCache.currentMillis);//记录一下上一次move的时间
