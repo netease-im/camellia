@@ -28,7 +28,7 @@
 * 伪redis-cluster模式，如下：  
 <img src="redis-proxy-cluster.jpg" width="60%" height="60%">
 
-这种模式下，可以把proxy集群当作一个redis-cluster集群去访问，从而不需要外部服务即可组成高可用集群  
+此时，可以把proxy集群当作一个redis-cluster集群去访问，从而不需要外部服务即可组成高可用集群  
 
 * 特别的，如果应用程序是java，则还可以同进程部署，如下：
 <img src="redis-proxy-in-process.png" width="40%" height="40%">  
@@ -94,7 +94,7 @@ camellia-redis-proxy:
 #随机挑选几个proxy节点配置即可（都配上当然更好），格式为ip:port@cport
 proxy.cluster.mode.nodes=192.168.3.218:6380@16380,192.168.3.218:6390@16390
 ```
-启动即可proxy即可  
+依次启动所有proxy即可    
 节点宕机、节点扩容，proxy集群内部会通过心跳自动感知（心跳通过cport和自定义的redis协议去实现）         
 
 其他可以配置的参数：
