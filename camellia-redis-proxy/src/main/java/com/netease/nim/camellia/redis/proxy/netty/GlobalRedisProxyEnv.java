@@ -25,8 +25,8 @@ public class GlobalRedisProxyEnv {
     public static int workThread;
     public static EventLoopGroup workGroup;
 
-    public static int port = 6380;
-    public static int cport = 16380;
+    public static int port;
+    public static int cport;
     public static int consolePort;
 
     public static ProxyDiscoveryFactory discoveryFactory;

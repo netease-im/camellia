@@ -51,6 +51,9 @@ public class ConsoleServiceAdaptor implements ConsoleService {
     public ConsoleResult online() {
         logger.info("online success");
         ServerStatus.setStatus(ServerStatus.Status.ONLINE);
+        if (ClusterModeStatus.getStatus() == ClusterModeStatus.Status.OFFLINE) {
+            ClusterModeStatus.setStatus(ClusterModeStatus.Status.ONLINE);
+        }
         return ConsoleResult.success();
     }
 

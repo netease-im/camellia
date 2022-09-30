@@ -39,13 +39,14 @@ public interface ProxyClusterModeProvider {
             throw new IllegalStateException("not found non loopback address");
         }
         int port = GlobalRedisProxyEnv.port;
-        if (port == 0) {
+        int cport = GlobalRedisProxyEnv.cport;
+        if (port == 0 || cport == 0) {
             throw new IllegalStateException("redis proxy not start");
         }
         ProxyNode node = new ProxyNode();
         node.setHost(inetAddress.getHostAddress());
         node.setPort(port);
-        node.setCport(GlobalRedisProxyEnv.cport);
+        node.setCport(cport);
         return node;
     }
 

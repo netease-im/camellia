@@ -6,6 +6,7 @@ import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
@@ -45,9 +46,9 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
         initConf();
         //定时给所有节点发送心跳
         int intervalSeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.interval.seconds", 5);
-        schedule.scheduleAtFixedRate(this::sendHeartbeat, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
+        schedule.scheduleAtFixedRate(this::sendHeartbeat, 0, intervalSeconds, TimeUnit.SECONDS);
         //定时校验心跳超时的节点列表，并移除
-        schedule.scheduleAtFixedRate(this::checkOnlineNodes, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
+        schedule.scheduleAtFixedRate(this::checkOnlineNodes, 0, intervalSeconds, TimeUnit.SECONDS);
     }
 
     private void initConf() {
@@ -91,9 +92,11 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
             }
         }
         //如果所有心跳目标对象都有回包了，则把proxy设置为在线状态
-        triggerNodeAdd(current());
-        ClusterModeStatus.setStatus(ClusterModeStatus.Status.ONLINE);
-        logger.info("proxy cluster mode status upgrade {} -> {}", ClusterModeStatus.Status.PENDING, ClusterModeStatus.Status.ONLINE);
+        if (ClusterModeStatus.getStatus() == ClusterModeStatus.Status.PENDING) {
+            triggerNodeAdd(current());
+            ClusterModeStatus.setStatus(ClusterModeStatus.Status.ONLINE);
+            logger.info("proxy cluster mode status upgrade {} -> {}", ClusterModeStatus.Status.PENDING, ClusterModeStatus.Status.ONLINE);
+        }
     }
 
     private void checkOnlineNodes() {
@@ -115,6 +118,11 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
             heartbeatMap.remove(node);
             pendingNodes.remove(node);
             triggerNodeRemove(node);
+        }
+        if (!onlineNodes.contains(current())) {
+            if (ClusterModeStatus.getStatus() == ClusterModeStatus.Status.ONLINE) {
+                triggerNodeAdd(current());
+            }
         }
     }
 
@@ -189,7 +197,22 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
     @Override
     public ProxyNode current() {
         if (current != null) return current;
-        current = ProxyClusterModeProvider.super.current();
+        String host = ProxyDynamicConf.getString("proxy.cluster.mode.current.node.host", null);
+        if (host != null) {
+            ProxyNode current = new ProxyNode();
+            current.setHost(host);
+            int port = GlobalRedisProxyEnv.port;
+            int cport = GlobalRedisProxyEnv.cport;
+            if (port == 0 || cport == 0) {
+                throw new IllegalStateException("redis proxy not start");
+            }
+            current.setPort(port);
+            current.setCport(cport);
+            this.current = current;
+        } else {
+            this.current = ProxyClusterModeProvider.super.current();
+        }
+        logger.info("current proxy node = {}", current.toString());
         return current;
     }
 

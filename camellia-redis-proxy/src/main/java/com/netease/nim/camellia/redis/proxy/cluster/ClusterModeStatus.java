@@ -1,20 +1,15 @@
 package com.netease.nim.camellia.redis.proxy.cluster;
 
 
-import com.netease.nim.camellia.redis.proxy.netty.ServerStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Created by caojiajun on 2022/9/30
  */
 public class ClusterModeStatus {
 
-    private static final Logger logger = LoggerFactory.getLogger(ClusterModeStatus.class);
-
-    private static ClusterModeStatus.Status status = Status.OFFLINE;
+    private static ClusterModeStatus.Status status = Status.NOT_INIT;
 
     public enum Status {
+        NOT_INIT(0),
         OFFLINE(1),
         PENDING(2),
         ONLINE(3),
