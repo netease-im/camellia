@@ -8,6 +8,7 @@
 ### add
 * CamelliaRedisProxyStarter support start console-server
 * RedisProxyRedisConnectionFactory implements DisposableBean, support destroy method
+* camellia-redis-proxy support cluster-mode, so proxy-cluster will be regarded as redis-cluster
 
 ### update
 * custom monitor callback running in isolation thread pool

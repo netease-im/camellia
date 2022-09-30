@@ -13,7 +13,7 @@
 * 部署最佳实践
 
 ### 部署模式
-通常来说，有两种方式来部署多实例的架构：  
+通常来说，有三种方式来部署多实例的架构：  
 * 前置四层代理(如lvs/阿里slb), 如下:   
 <img src="redis-proxy-lb.png" width="60%" height="60%">  
 
@@ -23,6 +23,9 @@
 <img src="redis-proxy-zk.png" width="60%" height="60%">
    
 此时，你需要在客户端侧实现一下负载均衡策略
+
+* 伪redis-cluster模式  
+这种模式下，可以把proxy集群当作一个redis-cluster集群去访问，从而不需要外部服务即可组成高可用集群  
 
 * 特别的，如果应用程序是java，则还可以同进程部署，如下：
 <img src="redis-proxy-in-process.png" width="40%" height="40%">  
@@ -61,6 +64,34 @@ camellia-redis-zk-registry:
 ```
 则启动后redis proxy会注册到zk(127.0.0.1:2181,127.0.0.2:2181)  
 此时你需要自己从zk上获取proxy的地址列表，然后自己实现一下客户端侧的负载均衡策略，但是如果你客户端是java，则camellia帮你做了一个实现，参考下节
+
+### 伪redis-cluster模式
+这种模式下，可以把proxy集群当作一个redis-cluster集群去访问，从而不需要外部服务即可组成高可用集群
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  #port: -6379 #优先级高于server.port，如果缺失，则使用server.port，如果设置为-6379则会随机一个可用端口
+  #application-name: camellia-redis-proxy-server  #优先级高于spring.application.name，如果缺失，则使用spring.application.name
+  console-port: 16379 #console端口，默认是16379，如果设置为-16379则会随机一个可用端口
+  cport: 16380 #cluster-mode下的心跳端口，默认是proxy端口+10000
+  password: pass123
+  cluster-mode-enable: true #cluster-mode，把proxy伪装成cluster，需要在camellia-redis-proxy.properties配置proxy.cluster.mode.nodes
+  transpond:
+    type: local
+    local:
+      resource: redis://@127.0.0.1:6379
+```     
+随后你需要在camellia-redis-proxy.properties里选择若干个个proxy节点配置，如下：
+```
+proxy.cluster.mode.nodes=192.168.3.218:6380@16380,192.168.3.218:6390@16390
+```
+启动即可proxy即可  
+节点宕机、节点扩容，proxy集群内部会自动感知   
 
 ### 随机端口
 有一些业务场景（比如测试环境混部）容易出现端口冲突情况，你可能希望proxy启动时支持随机选择可用端口，则你可以这样配置
