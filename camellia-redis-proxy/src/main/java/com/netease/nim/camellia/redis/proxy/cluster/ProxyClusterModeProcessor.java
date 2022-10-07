@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.cluster;
 
 
 import com.netease.nim.camellia.core.util.MD5Util;
+import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -9,20 +10,25 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import io.netty.util.concurrent.DefaultThreadFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by caojiajun on 2022/9/29
  */
 public class ProxyClusterModeProcessor {
+
+    private static final ThreadPoolExecutor heartbeatExecutor = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(),
+            0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new DefaultThreadFactory("proxy-heartbeat-receiver"), new ThreadPoolExecutor.AbortPolicy());
 
     private final Object lock = new Object();
 
@@ -44,6 +50,8 @@ public class ProxyClusterModeProcessor {
     private boolean clusterModeCommandMoveEnable;
 
     private boolean init = false;
+
+    private boolean currentNodeOnline = true;
 
     public ProxyClusterModeProcessor(ProxyClusterModeProvider provider) {
         this.provider = provider;
@@ -86,6 +94,7 @@ public class ProxyClusterModeProcessor {
                     clusterInfo = initClusterInfo();
                     clusterSlots = initClusterSlots();
                     clusterNodes = initClusterNodes();
+                    currentNodeOnline = onlineNodes.contains(currentNode);
                 } finally {
                     refreshing.compareAndSet(true, false);
                 }
@@ -112,7 +121,7 @@ public class ProxyClusterModeProcessor {
         if (keys.isEmpty()) return null;
         byte[] key = keys.get(0);
         int slot = RedisClusterCRC16Utils.getSlot(key);
-        if (ClusterModeStatus.getStatus() == ClusterModeStatus.Status.OFFLINE || slot < slotStart || slot > slotEnd) {
+        if (!currentNodeOnline || slot < slotStart || slot > slotEnd) {
             ProxyNode node = slotMap.get(slot);
             if (node.equals(currentNode)) return null;
             channelInfo.setLastCommandMoveTime(TimeCache.currentMillis);//记录一下上一次move的时间
@@ -124,45 +133,66 @@ public class ProxyClusterModeProcessor {
     /**
      * cluster相关命令
      */
-    public Reply clusterCommands(Command command) {
+    public CompletableFuture<Reply> clusterCommands(Command command) {
         RedisCommand redisCommand = command.getRedisCommand();
         if (redisCommand != RedisCommand.CLUSTER) {
-            return ErrorReply.NOT_SUPPORT;
+            return wrapper(ErrorReply.NOT_SUPPORT);
         }
         byte[][] objects = command.getObjects();
         if (objects.length <= 1) {
-            return ErrorReply.argNumWrong(redisCommand);
+            return wrapper(ErrorReply.argNumWrong(redisCommand));
         }
         if (!init) {
-            return ErrorReply.NOT_AVAILABLE;
+            return wrapper(ErrorReply.NOT_AVAILABLE);
         }
         String arg = Utils.bytesToString(objects[1]);
         if (arg.equalsIgnoreCase(RedisKeyword.INFO.name())) {
-            return clusterInfo == null ? ErrorReply.NOT_AVAILABLE : clusterInfo;
+            return wrapper(clusterInfo == null ? ErrorReply.NOT_AVAILABLE : clusterInfo);
         } else if (arg.equalsIgnoreCase(RedisKeyword.NODES.name())) {
-            return clusterNodes == null ? ErrorReply.NOT_AVAILABLE : clusterNodes;
+            return wrapper(clusterNodes == null ? ErrorReply.NOT_AVAILABLE : clusterNodes);
         } else if (arg.equalsIgnoreCase(RedisKeyword.SLOTS.name())) {
-            return clusterSlots == null ? ErrorReply.NOT_AVAILABLE : clusterSlots;
+            return wrapper(clusterSlots == null ? ErrorReply.NOT_AVAILABLE : clusterSlots);
         } else if (arg.equalsIgnoreCase(RedisKeyword.PROXY_HEARTBEAT.name())) {//camellia定义的proxy间心跳
             if (objects.length >= 4) {
                 ProxyNode node = ProxyNode.parseString(Utils.bytesToString(objects[2]));
                 if (node == null) {
-                    return ErrorReply.argNumWrong(redisCommand);
+                    return wrapper(ErrorReply.argNumWrong(redisCommand));
                 }
                 ClusterModeStatus.Status status = ClusterModeStatus.Status.getByValue((int) Utils.bytesToNum(objects[3]));
                 if (status == null) {
-                    return ErrorReply.argNumWrong(redisCommand);
+                    return wrapper(ErrorReply.argNumWrong(redisCommand));
                 }
                 ProxyHeartbeatRequest request = new ProxyHeartbeatRequest();
                 request.setNode(node);
                 request.setStatus(status);
-                return provider.proxyHeartbeat(request);
+                CompletableFuture<Reply> future = new CompletableFuture<>();
+                try {
+                    heartbeatExecutor.submit(() -> {
+                        try {
+                            Reply reply = provider.proxyHeartbeat(request);
+                            future.complete(reply);
+                        } catch (Exception e) {
+                            ErrorLogCollector.collect(ProxyClusterModeProcessor.class, "proxyHeartbeat error", e);
+                            future.complete(ErrorReply.NOT_AVAILABLE);
+                        }
+                    });
+                } catch (Exception e) {
+                    ErrorLogCollector.collect(ProxyClusterModeProcessor.class, "submit proxyHeartbeat task error", e);
+                    future.complete(ErrorReply.NOT_AVAILABLE);
+                }
+                return future;
             } else {
-                return ErrorReply.argNumWrong(redisCommand);
+                return wrapper(ErrorReply.argNumWrong(redisCommand));
             }
         } else {
-            return ErrorReply.NOT_SUPPORT;
+            return wrapper(ErrorReply.NOT_SUPPORT);
         }
+    }
+
+    private CompletableFuture<Reply> wrapper(Reply reply) {
+        CompletableFuture<Reply> future = new CompletableFuture<>();
+        future.complete(reply);
+        return future;
     }
 
     private Reply initClusterInfo() {

@@ -212,8 +212,8 @@ public class CommandsTransponder {
                 //cluster mode
                 if (clusterModeProcessor != null) {
                     if (redisCommand == RedisCommand.CLUSTER) {
-                        Reply reply = clusterModeProcessor.clusterCommands(command);
-                        task.replyCompleted(reply);
+                        CompletableFuture<Reply> future = clusterModeProcessor.clusterCommands(command);
+                        future.thenAccept(task::replyCompleted);
                         hasCommandsSkip = true;
                         continue;
                     }
@@ -224,6 +224,12 @@ public class CommandsTransponder {
                             hasCommandsSkip = true;
                             continue;
                         }
+                    }
+                } else {
+                    if (redisCommand == RedisCommand.CLUSTER) {
+                        task.replyCompleted(ErrorReply.NOT_SUPPORT);
+                        hasCommandsSkip = true;
+                        continue;
                     }
                 }
 

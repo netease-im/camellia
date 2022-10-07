@@ -31,6 +31,9 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
     private static final ScheduledExecutorService schedule = Executors.newScheduledThreadPool(SysUtils.getCpuNum(),
             new DefaultThreadFactory("proxy-cluster-mode-schedule"));
 
+    private static final ThreadPoolExecutor heartbeatExecutor = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(),
+            0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new DefaultThreadFactory("proxy-heartbeat-sender"), new ThreadPoolExecutor.AbortPolicy());
+
     private ProxyNode current;
 
     private final List<ProxyNodeChangeListener> listenerList = new ArrayList<>();
@@ -130,11 +133,16 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
         try {
             Set<ProxyNode> heartbeatNodes = new HashSet<>(onlineNodes);
             heartbeatNodes.addAll(pendingNodes);
-            heartbeatTargetNodes.entrySet().removeIf(entry -> entry.getValue().get() > 3);//心跳连续三次失败，则剔除出去
+            int times = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.request.fail.times", 3);
+            heartbeatTargetNodes.entrySet().removeIf(entry -> entry.getValue().get() > times);//心跳连续三次失败，则剔除出去
             heartbeatNodes.addAll(heartbeatTargetNodes.keySet());
             for (ProxyNode node : heartbeatNodes) {
                 if (node.equals(current())) continue;//不需要发给自己心跳
-                heartbeat(node, ClusterModeStatus.getStatus());
+                try {
+                    heartbeatExecutor.submit(() -> heartbeat(node, ClusterModeStatus.getStatus()));
+                } catch (Exception e) {
+                    logger.error("submit heartbeat task error, node = {}", node, e);
+                }
             }
         } catch (Exception e) {
             logger.error("sendHeartbeat error", e);
@@ -148,7 +156,8 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
                 CompletableFuture<Reply> future = client.sendCommand(RedisCommand.CLUSTER.raw(),
                         Utils.stringToBytes(RedisKeyword.PROXY_HEARTBEAT.name()), Utils.stringToBytes(current().toString()),
                         Utils.stringToBytes(String.valueOf(status.getValue())));
-                Reply reply = future.get(10, TimeUnit.SECONDS);
+                int timeoutSeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.request.timeout.seconds", 10);
+                Reply reply = future.get(timeoutSeconds, TimeUnit.SECONDS);
                 if (reply instanceof BulkReply) {
                     String heartbeatResp = Utils.bytesToString(((BulkReply) reply).getRaw());
                     ProxyClusterModeHeartbeatResp resp = parseHeartbeatResp(heartbeatResp);
