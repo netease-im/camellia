@@ -1,12 +1,12 @@
 
-## MqMultiWriteProxyPlugin
+## MqMultiWriteProxyPlugin和KafkaMqPackConsumerProxyPlugin
 
 ### 说明
 * 基于mq（当前支持kafka）的异步双写plugin
 * 这个plugin不是内置的（因为要引入kafka-sdk），因此需要依赖引入，并且配置全类名
 * 需要跨机房或者异地机房的redis数据双写同步，可以用于数据的迁移或者容灾
 * 备注一：只有proxy完整支持的命令集合中的写命令支持本模式，对于那些限制性支持的命令（如阻塞型命令、发布订阅命令等）是不支持使用MultiWriteProxyPlugin来双写的
-* 备注二：redis事务包裹的写命令使用MultiWriteCommandInterceptor双写时可能主路由执行失败而双写成功
+* 备注二：redis事务包裹的写命令使用MqMultiWriteProxyPlugin双写时可能主路由执行失败而双写成功  
 
 ### 架构简图
 <img src="redis-proxy-mq-multi-write.png" width="50%" height="50%">
