@@ -12,6 +12,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
 import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
@@ -35,6 +36,8 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
             0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new DefaultThreadFactory("proxy-heartbeat-sender"), new ThreadPoolExecutor.AbortPolicy());
 
     private ProxyNode current;
+
+    private final ConcurrentHashSet<ProxyNode> initNodes = new ConcurrentHashSet<>();
 
     private final List<ProxyNodeChangeListener> listenerList = new ArrayList<>();
 
@@ -69,6 +72,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
         if (initNodes.isEmpty()) {
             throw new IllegalArgumentException("parse 'proxy.cluster.mode.nodes' error");
         }
+        this.initNodes.addAll(initNodes);
         //把proxy设置为PENDING状态
         ClusterModeStatus.setStatus(ClusterModeStatus.Status.PENDING);
 
@@ -133,6 +137,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
         try {
             Set<ProxyNode> heartbeatNodes = new HashSet<>(onlineNodes);
             heartbeatNodes.addAll(pendingNodes);
+            heartbeatNodes.addAll(initNodes);
             int times = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.request.fail.times", 3);
             heartbeatTargetNodes.entrySet().removeIf(entry -> entry.getValue().get() > times);//心跳连续三次失败，则剔除出去
             heartbeatNodes.addAll(heartbeatTargetNodes.keySet());
@@ -174,14 +179,10 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
                     return;
                 }
             }
-            if (logger.isDebugEnabled()) {
-                logger.debug("proxy cluster mode heartbeat fail, node = {}", node);
-            }
+            ErrorLogCollector.collect(DefaultProxyClusterModeProvider.class, "proxy cluster mode heartbeat fail, node = " + node);
             heartbeatTargetFail(node);//心跳失败
         } catch (Exception e) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("proxy cluster mode heartbeat error, node = {}", node, e);
-            }
+            ErrorLogCollector.collect(DefaultProxyClusterModeProvider.class, "proxy cluster mode heartbeat error, node = " + node, e);
             heartbeatTargetFail(node);//心跳失败
         }
     }
