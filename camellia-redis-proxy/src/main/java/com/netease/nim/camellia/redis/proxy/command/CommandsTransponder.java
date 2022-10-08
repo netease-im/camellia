@@ -118,8 +118,6 @@ public class CommandsTransponder {
                     continue;
                 }
 
-
-
                 //auth命令
                 if (redisCommand == RedisCommand.AUTH) {
                     boolean hasBidBgroup = channelInfo.getBid() != null && channelInfo.getBgroup() != null;

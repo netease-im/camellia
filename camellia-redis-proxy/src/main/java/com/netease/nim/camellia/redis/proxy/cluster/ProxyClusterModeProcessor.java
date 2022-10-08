@@ -93,6 +93,12 @@ public class ProxyClusterModeProcessor {
                 try {
                     List<ProxyNode> list = new ArrayList<>(this.provider.discovery());
                     Collections.sort(list);
+                    if (list.equals(onlineNodes)) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("onlineNodes not modify, skip refresh");
+                        }
+                        return;
+                    }
                     onlineNodes = list;
                     if (onlineNodes.isEmpty()) {
                         logger.warn("refresh proxy cluster mode nodes done, onlineNodes is empty");
@@ -229,7 +235,7 @@ public class ProxyClusterModeProcessor {
         builder.append("cluster_stats_messages_received:0").append("\r\n");
         builder.append("total_cluster_links_buffer_limit_exceeded:0").append("\r\n");
         String str = builder.toString();
-        logger.info("cluster info refresh, cluster_info: \r\n {}", str);
+        logger.info("cluster info refresh, cluster_info: \r\n{}", str);
         return new BulkReply(Utils.stringToBytes(str));
     }
 
@@ -263,7 +269,7 @@ public class ProxyClusterModeProcessor {
             builder.append("\r\n");
         }
         String str = builder.toString();
-        logger.info("cluster nodes refresh, cluster_nodes: \r\n {}", str);
+        logger.info("cluster nodes refresh, cluster_nodes: \r\n{}", str);
         return new BulkReply(Utils.stringToBytes(str));
     }
 
