@@ -26,8 +26,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, List<Command> commandList) {
         try {
-            ServerStatus.updateLastUseTime();
             ChannelInfo channelInfo = ChannelInfo.get(ctx);
+            if (!channelInfo.isFromCport()) {
+                ServerStatus.updateLastUseTime();
+            }
             invoker.invoke(ctx, channelInfo, commandList);
         } catch (Exception e) {
             ctx.close();

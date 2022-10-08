@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.auth.HelloCommandUtil;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
+import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -111,37 +112,56 @@ public class CommandsTransponder {
                 }
 
                 RedisCommand redisCommand = command.getRedisCommand();
-                //ping命令直接返回
-                if (redisCommand == RedisCommand.PING) {
-                    task.replyCompleted(StatusReply.PONG);
+
+                //不支持的命令直接返回NOT_SUPPORT
+                if (redisCommand == null || redisCommand.getSupportType() == RedisCommand.CommandSupportType.NOT_SUPPORT) {
+                    task.replyCompleted(ErrorReply.NOT_SUPPORT);
+                    ErrorLogCollector.collect(CommandsTransponder.class, "not support command = " + command.getName());
                     hasCommandsSkip = true;
                     continue;
                 }
 
-                //auth命令
-                if (redisCommand == RedisCommand.AUTH) {
-                    boolean hasBidBgroup = channelInfo.getBid() != null && channelInfo.getBgroup() != null;
-                    Reply reply = authCommandProcessor.invokeAuthCommand(channelInfo, command);
-                    if (!hasBidBgroup) {
-                        boolean pass = checkConnectLimit(channelInfo);
-                        if (!pass) return;
+                //DB类型的命令，before auth
+                if (redisCommand.getCommandType() == RedisCommand.CommandType.DB) {
+                    //ping命令直接返回
+                    if (redisCommand == RedisCommand.PING) {
+                        task.replyCompleted(StatusReply.PONG);
+                        hasCommandsSkip = true;
+                        continue;
                     }
-                    task.replyCompleted(reply);
-                    hasCommandsSkip = true;
-                    continue;
-                }
 
-                //hello命令
-                if (redisCommand == RedisCommand.HELLO) {
-                    boolean hasBidBgroup = channelInfo.getBid() != null && channelInfo.getBgroup() != null;
-                    Reply reply = HelloCommandUtil.invokeHelloCommand(channelInfo, authCommandProcessor, command);
-                    if (!hasBidBgroup) {
-                        boolean pass = checkConnectLimit(channelInfo);
-                        if (!pass) return;
+                    //command命令，直接返回个空吧
+                    if (redisCommand == RedisCommand.COMMAND) {
+                        task.replyCompleted(MultiBulkReply.EMPTY);
+                        hasCommandsSkip = true;
+                        continue;
                     }
-                    task.replyCompleted(reply);
-                    hasCommandsSkip = true;
-                    continue;
+
+                    //auth命令
+                    if (redisCommand == RedisCommand.AUTH) {
+                        boolean hasBidBgroup = channelInfo.getBid() != null && channelInfo.getBgroup() != null;
+                        Reply reply = authCommandProcessor.invokeAuthCommand(channelInfo, command);
+                        if (!hasBidBgroup) {
+                            boolean pass = checkConnectLimit(channelInfo);
+                            if (!pass) return;
+                        }
+                        task.replyCompleted(reply);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+
+                    //hello命令
+                    if (redisCommand == RedisCommand.HELLO) {
+                        boolean hasBidBgroup = channelInfo.getBid() != null && channelInfo.getBgroup() != null;
+                        Reply reply = HelloCommandUtil.invokeHelloCommand(channelInfo, authCommandProcessor, command);
+                        if (!hasBidBgroup) {
+                            boolean pass = checkConnectLimit(channelInfo);
+                            if (!pass) return;
+                        }
+                        task.replyCompleted(reply);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
                 }
 
                 //如果需要密码，但是没有auth，则返回NO_AUTH
@@ -158,83 +178,87 @@ public class CommandsTransponder {
                     }
                 }
 
-                //select命令只支持select 0
-                if (redisCommand == RedisCommand.SELECT) {
-                    byte[][] objects = command.getObjects();
-                    if (objects.length == 2) {
-                        if ("0".equals(Utils.bytesToString(command.getObjects()[1]))) {
-                            task.replyCompleted(StatusReply.OK);
+                //DB类型的命令，after auth
+                if (redisCommand.getCommandType() == RedisCommand.CommandType.DB) {
+                    //select命令只支持select 0
+                    if (redisCommand == RedisCommand.SELECT) {
+                        byte[][] objects = command.getObjects();
+                        if (objects.length == 2) {
+                            if ("0".equals(Utils.bytesToString(command.getObjects()[1]))) {
+                                task.replyCompleted(StatusReply.OK);
+                            } else {
+                                task.replyCompleted(new ErrorReply("ERR DB index is out of range"));
+                            }
                         } else {
-                            task.replyCompleted(new ErrorReply("ERR DB index is out of range"));
+                            task.replyCompleted(ErrorReply.argNumWrong(redisCommand));
                         }
-                    } else {
-                        task.replyCompleted(ErrorReply.argNumWrong(redisCommand));
+                        hasCommandsSkip = true;
+                        continue;
                     }
-                    hasCommandsSkip = true;
-                    continue;
-                }
 
-                //info命令
-                if (redisCommand == RedisCommand.INFO) {
-                    CompletableFuture<Reply> future = ProxyInfoUtils.getInfoReply(command, chooser);
-                    future.thenAccept(task::replyCompleted);
-                    hasCommandsSkip = true;
-                    continue;
-                }
-
-                //client命令，可以用于选择路由
-                if (redisCommand == RedisCommand.CLIENT) {
-                    boolean hasBidBgroup = channelInfo.getBid() != null && channelInfo.getBgroup() != null;
-                    Reply reply = ClientCommandUtil.invokeClientCommand(channelInfo, command);
-                    if (!hasBidBgroup) {
-                        boolean pass = checkConnectLimit(channelInfo);
-                        if (!pass) return;
-                    }
-                    task.replyCompleted(reply);
-                    hasCommandsSkip = true;
-                    continue;
-                }
-
-                //quit命令直接断开连接
-                if (redisCommand == RedisCommand.QUIT) {
-                    channelInfo.getCtx().close();
-                    return;
-                }
-
-                if (redisCommand == RedisCommand.ASKING) {
-                    task.replyCompleted(StatusReply.OK);
-                    hasCommandsSkip = true;
-                    continue;
-                }
-
-                //cluster mode
-                if (clusterModeProcessor != null) {
-                    if (redisCommand == RedisCommand.CLUSTER) {
-                        CompletableFuture<Reply> future = clusterModeProcessor.clusterCommands(command);
+                    //info命令
+                    if (redisCommand == RedisCommand.INFO) {
+                        CompletableFuture<Reply> future = ProxyInfoUtils.getInfoReply(command, chooser);
                         future.thenAccept(task::replyCompleted);
                         hasCommandsSkip = true;
                         continue;
                     }
-                    if (commands.size() == 1) {//pipeline过来的命令就不move了
-                        Reply moveReply = clusterModeProcessor.isCommandMove(command);
-                        if (moveReply != null) {
-                            task.replyCompleted(moveReply);
+
+                    //client命令，可以用于选择路由
+                    if (redisCommand == RedisCommand.CLIENT) {
+                        boolean hasBidBgroup = channelInfo.getBid() != null && channelInfo.getBgroup() != null;
+                        Reply reply = ClientCommandUtil.invokeClientCommand(channelInfo, command);
+                        if (!hasBidBgroup) {
+                            boolean pass = checkConnectLimit(channelInfo);
+                            if (!pass) return;
+                        }
+                        task.replyCompleted(reply);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+
+                    //quit命令直接断开连接
+                    if (redisCommand == RedisCommand.QUIT) {
+                        channelInfo.getCtx().close();
+                        return;
+                    }
+
+                    if (redisCommand == RedisCommand.ASKING) {
+                        task.replyCompleted(StatusReply.OK);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+
+                    //cluster mode
+                    if (clusterModeProcessor != null) {
+                        if (redisCommand == RedisCommand.CLUSTER) {
+                            CompletableFuture<Reply> future = clusterModeProcessor.clusterCommands(command);
+                            future.thenAccept(task::replyCompleted);
+                            hasCommandsSkip = true;
+                            continue;
+                        }
+                        if (commands.size() == 1) {//pipeline过来的命令就不move了
+                            Reply moveReply = clusterModeProcessor.isCommandMove(command);
+                            if (moveReply != null) {
+                                task.replyCompleted(moveReply);
+                                hasCommandsSkip = true;
+                                continue;
+                            }
+                        }
+                    } else {
+                        if (redisCommand == RedisCommand.CLUSTER) {
+                            task.replyCompleted(ErrorReply.NOT_SUPPORT);
                             hasCommandsSkip = true;
                             continue;
                         }
                     }
-                } else {
-                    if (redisCommand == RedisCommand.CLUSTER) {
-                        task.replyCompleted(ErrorReply.NOT_SUPPORT);
-                        hasCommandsSkip = true;
-                        continue;
-                    }
                 }
 
-                //订阅命令需要特殊处理
+                //订阅命令特殊处理
                 if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
                     channelInfo.setInSubscribe(true);
                 }
+
                 if (channelInfo.isInSubscribe()) {
                     if (redisCommand != RedisCommand.SUBSCRIBE && redisCommand != RedisCommand.PSUBSCRIBE
                             && redisCommand != RedisCommand.UNSUBSCRIBE && redisCommand != RedisCommand.PUNSUBSCRIBE) {
@@ -242,13 +266,6 @@ public class CommandsTransponder {
                         hasCommandsSkip = true;
                         continue;
                     }
-                }
-
-                //其他不支持的命令直接返回NOT_SUPPORT
-                if (redisCommand == null || redisCommand.getSupportType() == RedisCommand.CommandSupportType.NOT_SUPPORT) {
-                    task.replyCompleted(ErrorReply.NOT_SUPPORT);
-                    hasCommandsSkip = true;
-                    continue;
                 }
 
                 tasks.add(task);

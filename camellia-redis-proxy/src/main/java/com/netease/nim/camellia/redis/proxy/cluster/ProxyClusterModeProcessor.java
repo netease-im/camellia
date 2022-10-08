@@ -200,6 +200,7 @@ public class ProxyClusterModeProcessor {
                 return wrapper(ErrorReply.argNumWrong(redisCommand));
             }
         } else {
+            ErrorLogCollector.collect(ProxyClusterModeProcessor.class, "not support cluster command, arg = " + arg);
             return wrapper(ErrorReply.NOT_SUPPORT);
         }
     }

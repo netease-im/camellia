@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.util.BytesKey;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,6 +35,7 @@ public class ChannelInfo {
     private boolean inTransaction = false;
     private boolean inSubscribe = false;
     private final SocketAddress clientSocketAddress;
+    private final boolean fromCport;
     private volatile ConcurrentHashMap<BytesKey, Boolean> subscribeChannels;
     private volatile ConcurrentHashMap<BytesKey, Boolean> psubscribeChannels;
     private Command cachedMultiCommand;
@@ -50,6 +52,7 @@ public class ChannelInfo {
         this.clientSocketAddress = null;
         this.asyncTaskQueue = null;
         this.mock = true;
+        this.fromCport = false;
     }
 
     private ChannelInfo(ChannelHandlerContext ctx) {
@@ -58,6 +61,7 @@ public class ChannelInfo {
         this.clientSocketAddress = ctx.channel().remoteAddress();
         this.asyncTaskQueue = new AsyncTaskQueue(this);
         this.mock = false;
+        this.fromCport = ((InetSocketAddress) ctx.channel().localAddress()).getPort() == GlobalRedisProxyEnv.cport;
     }
 
     /**
@@ -258,6 +262,10 @@ public class ChannelInfo {
 
     public void setLastCommandMoveTime(long lastCommandMoveTime) {
         this.lastCommandMoveTime = lastCommandMoveTime;
+    }
+
+    public boolean isFromCport() {
+        return fromCport;
     }
 
     public static enum ChannelStats {
