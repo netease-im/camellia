@@ -34,6 +34,8 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
     private static final ThreadPoolExecutor heartbeatExecutor = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(),
             0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new DefaultThreadFactory("proxy-heartbeat-sender"), new ThreadPoolExecutor.AbortPolicy());
 
+    private boolean init = false;
+
     private ProxyNode current;
 
     private final ConcurrentHashSet<ProxyNode> initNodes = new ConcurrentHashSet<>();
@@ -46,7 +48,8 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
     private final ConcurrentHashMap<ProxyNode, Long> heartbeatMap = new ConcurrentHashMap<>();
 
     @Override
-    public void init() {
+    public synchronized void init() {
+        if (init) return;
         //初始化
         initConf();
         //定时给所有节点发送心跳
@@ -54,6 +57,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
         schedule.scheduleAtFixedRate(this::sendHeartbeat, 0, intervalSeconds, TimeUnit.SECONDS);
         //定时校验心跳超时的节点列表，并移除
         schedule.scheduleAtFixedRate(this::checkOnlineNodes, 0, intervalSeconds, TimeUnit.SECONDS);
+        init = true;
     }
 
     private void initConf() {
