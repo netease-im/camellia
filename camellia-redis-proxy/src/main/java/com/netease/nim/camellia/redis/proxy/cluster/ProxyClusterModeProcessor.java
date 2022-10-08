@@ -49,6 +49,7 @@ public class ProxyClusterModeProcessor {
     private final AtomicBoolean refreshing = new AtomicBoolean(false);
 
     private boolean clusterModeCommandMoveEnable;
+    private int clusterModeCommandIntervalSeconds;
 
     private boolean init = false;
 
@@ -83,6 +84,7 @@ public class ProxyClusterModeProcessor {
 
     private void reloadConf() {
         clusterModeCommandMoveEnable = ProxyDynamicConf.getBoolean("proxy.cluster.mode.command.move.enable", true);
+        clusterModeCommandIntervalSeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.command.move.interval.seconds", 30);
     }
 
     private void refresh() {
@@ -119,7 +121,7 @@ public class ProxyClusterModeProcessor {
         if (refreshing.get()) return null;//正在更新slot信息，则别move了
         ChannelInfo channelInfo = command.getChannelInfo();
         long lastCommandMoveTime = channelInfo.getLastCommandMoveTime();
-        if (TimeCache.currentMillis - lastCommandMoveTime <= 30*1000L) {
+        if (TimeCache.currentMillis - lastCommandMoveTime <= clusterModeCommandIntervalSeconds*1000L) {
             //30s内只move一次
             return null;
         }
