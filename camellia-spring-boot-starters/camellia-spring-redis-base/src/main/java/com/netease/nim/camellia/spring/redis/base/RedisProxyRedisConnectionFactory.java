@@ -70,6 +70,6 @@ public class RedisProxyRedisConnectionFactory implements RedisConnectionFactory,
 
     @Override
     public void destroy() throws Exception {
-        redisProxyJedisPool.close();
+        redisProxyJedisPool.destroy();
     }
 }

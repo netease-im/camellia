@@ -393,6 +393,11 @@ public class RedisProxyJedisPool extends JedisPool {
         }
     }
 
+    @Override
+    public void destroy() {
+        close();
+    }
+
     private final CamelliaDiscovery.Callback<Proxy> callback = new CamelliaDiscovery.Callback<Proxy>() {
         @Override
         public void add(Proxy proxy) {
@@ -493,7 +498,7 @@ public class RedisProxyJedisPool extends JedisPool {
                         proxyJedisPool.add(proxy);
                     }
                     Set<Proxy> oldSet = new HashSet<>(proxySet);
-                    oldSet.removeAll(list);
+                    list.forEach(oldSet::remove);
                     if (!oldSet.isEmpty()) {
                         for (Proxy proxy : oldSet) {
                             proxyJedisPool.remove(proxy);
