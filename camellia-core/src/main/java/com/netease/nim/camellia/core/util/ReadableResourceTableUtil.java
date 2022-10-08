@@ -24,7 +24,7 @@ public class ReadableResourceTableUtil {
             return ResourceTableUtil.simpleTable(new Resource(string));
         }
         if (jsonObject == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("resource table is empty");
         }
         String type = jsonObject.getString("type");
         ResourceTable resourceTable = new ResourceTable();
@@ -36,7 +36,7 @@ public class ReadableResourceTableUtil {
             simpleTable.setResourceOperation(resourceOperation);
             resourceTable.setSimpleTable(simpleTable);
             if (!CheckUtil.checkResourceTable(resourceTable)) {
-                throw new IllegalArgumentException("check table fail");
+                throw new IllegalArgumentException("check simple resource table fail");
             }
             return resourceTable;
         } else if (type.equalsIgnoreCase(ResourceTable.Type.SHADING.name()) || type.equalsIgnoreCase("sharding")) {//之前的错别字，这里兼容一下
@@ -58,11 +58,11 @@ public class ReadableResourceTableUtil {
             shardingTable.setResourceOperationMap(map);
             resourceTable.setShadingTable(shardingTable);
             if (!CheckUtil.checkResourceTable(resourceTable)) {
-                throw new IllegalArgumentException("check table fail");
+                throw new IllegalArgumentException("check sharding resource table fail");
             }
             return resourceTable;
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("unknown resource table type, only support [simple|sharding]");
     }
 
     public static String readableResourceTable(ResourceTable resourceTable) {
@@ -107,7 +107,7 @@ public class ReadableResourceTableUtil {
             jsonObject.put("operation", shardingJson);
             return jsonObject.toJSONString();
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("unknown resource table type, only support [simple|sharding]");
     }
 
     public static ResourceOperation parseResourceOperation(Object object) {
@@ -131,11 +131,11 @@ public class ReadableResourceTableUtil {
                 resourceOperation.setReadOperation(readOperation);
                 resourceOperation.setWriteOperation(writeOperation);
             } else {
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("unknown resource operation type, only support [simple|rw_separate]");
             }
             return resourceOperation;
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("resource operation should be string or json");
     }
 
     public static Object readableResourceOperation(ResourceOperation resourceOperation) {
@@ -148,7 +148,7 @@ public class ReadableResourceTableUtil {
             jsonObject.put("write", readableResourceWriteOperation(resourceOperation.getWriteOperation()));
             return jsonObject;
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("unknown resource operation type");
     }
 
     public static ResourceReadOperation parseResourceReadOperation(Object object) {
@@ -166,7 +166,7 @@ public class ReadableResourceTableUtil {
                 readOperation.setType(ResourceReadOperation.Type.SIMPLE);
                 JSONArray resources = jsonObject.getJSONArray("resources");
                 if (resources.size() != 1) {
-                    throw new IllegalArgumentException();
+                    throw new IllegalArgumentException("simple read operation type only support one resource");
                 }
                 readOperation.setReadResource(new Resource(resources.get(0).toString()));
             } else if (type.equalsIgnoreCase(ResourceReadOperation.Type.ORDER.name())) {
@@ -186,11 +186,11 @@ public class ReadableResourceTableUtil {
                 }
                 readOperation.setReadResources(list);
             } else {
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("unknown read operation type, only support [simple|order|random]");
             }
             return readOperation;
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("read operation should be string or json");
     }
 
     public static ResourceWriteOperation parseResourceWriteOperation(Object object) {
@@ -208,7 +208,7 @@ public class ReadableResourceTableUtil {
                 writeOperation.setType(ResourceWriteOperation.Type.SIMPLE);
                 JSONArray resources = jsonObject.getJSONArray("resources");
                 if (resources.size() != 1) {
-                    throw new IllegalArgumentException();
+                    throw new IllegalArgumentException("simple write operation type only support one resource");
                 }
                 writeOperation.setWriteResource(new Resource(resources.get(0).toString()));
             } else if (type.equalsIgnoreCase(ResourceWriteOperation.Type.MULTI.name())) {
@@ -220,11 +220,11 @@ public class ReadableResourceTableUtil {
                 }
                 writeOperation.setWriteResources(list);
             } else {
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("unknown write operation type, only support [simple|multi]");
             }
             return writeOperation;
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("write operation should be string or json");
     }
 
     public static Object readableResourceReadOperation(ResourceReadOperation resourceReadOperation) {
