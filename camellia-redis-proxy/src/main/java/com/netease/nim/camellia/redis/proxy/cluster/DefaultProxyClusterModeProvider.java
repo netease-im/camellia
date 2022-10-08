@@ -12,7 +12,6 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
 import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
-import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
@@ -174,15 +173,15 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
                     }
                     addHeartbeatTarget(node);//心跳成功
                     if (logger.isDebugEnabled()) {
-                        logger.debug("proxy cluster mode heartbeat success, node = {}", node);
+                        logger.debug("proxy cluster mode heartbeat success, node = {}, resp = {}", node, heartbeatResp);
                     }
                     return;
                 }
             }
-            ErrorLogCollector.collect(DefaultProxyClusterModeProvider.class, "proxy cluster mode heartbeat fail, node = " + node);
+            logger.warn("proxy cluster mode heartbeat fail, node = {}", node);
             heartbeatTargetFail(node);//心跳失败
         } catch (Exception e) {
-            ErrorLogCollector.collect(DefaultProxyClusterModeProvider.class, "proxy cluster mode heartbeat error, node = " + node, e);
+            logger.warn("proxy cluster mode heartbeat error, node = {}, ex = {}", node, e.toString());
             heartbeatTargetFail(node);//心跳失败
         }
     }
@@ -285,7 +284,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
                 try {
                     listener.addNode(node);
                 } catch (Exception e) {
-                    logger.error("removeNode callback error, node = {}", node, e);
+                    logger.error("addNode callback error, node = {}", node, e);
                 }
             }
         }

@@ -10,11 +10,10 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.*;
-import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
-import com.netease.nim.camellia.redis.proxy.util.TimeCache;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.redis.proxy.util.*;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,6 +25,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by caojiajun on 2022/9/29
  */
 public class ProxyClusterModeProcessor {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProxyClusterModeProcessor.class);
 
     private static final ThreadPoolExecutor heartbeatExecutor = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(),
             0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new DefaultThreadFactory("proxy-heartbeat-receiver"), new ThreadPoolExecutor.AbortPolicy());
@@ -75,11 +76,13 @@ public class ProxyClusterModeProcessor {
         });
         reloadConf();
         ProxyDynamicConf.registerCallback(this::reloadConf);
+        int seconds = ProxyDynamicConf.getInt("proxy.cluster.mode.refresh.nodes.interval.seconds", 60);
+        ExecutorUtils.scheduleAtFixedRate(this::refresh, seconds, seconds, TimeUnit.SECONDS);
         init = true;
     }
 
     private void reloadConf() {
-        clusterModeCommandMoveEnable = ProxyDynamicConf.getBoolean("cluster.mode.command.move.enable", true);
+        clusterModeCommandMoveEnable = ProxyDynamicConf.getBoolean("proxy.cluster.mode.command.move.enable", true);
     }
 
     private void refresh() {
@@ -89,12 +92,16 @@ public class ProxyClusterModeProcessor {
                     List<ProxyNode> list = new ArrayList<>(this.provider.discovery());
                     Collections.sort(list);
                     onlineNodes = list;
-                    if (onlineNodes.isEmpty()) return;
+                    if (onlineNodes.isEmpty()) {
+                        logger.warn("refresh proxy cluster mode nodes done, onlineNodes is empty");
+                        return;
+                    }
                     currentNode = this.provider.current();
                     clusterInfo = initClusterInfo();
                     clusterSlots = initClusterSlots();
                     clusterNodes = initClusterNodes();
                     currentNodeOnline = onlineNodes.contains(currentNode);
+                    logger.info("refresh proxy cluster mode nodes success, onlineNodes = {}, currentNodeOnline = {}", onlineNodes, currentNodeOnline);
                 } finally {
                     refreshing.compareAndSet(true, false);
                 }
@@ -219,7 +226,9 @@ public class ProxyClusterModeProcessor {
         builder.append("cluster_stats_messages_sent:0").append("\r\n");
         builder.append("cluster_stats_messages_received:0").append("\r\n");
         builder.append("total_cluster_links_buffer_limit_exceeded:0").append("\r\n");
-        return new BulkReply(Utils.stringToBytes(builder.toString()));
+        String str = builder.toString();
+        logger.info("cluster info refresh, cluster_info: \r\n {}", str);
+        return new BulkReply(Utils.stringToBytes(str));
     }
 
     private Reply initClusterNodes() {
@@ -251,7 +260,9 @@ public class ProxyClusterModeProcessor {
             slotCurrent ++;
             builder.append("\r\n");
         }
-        return new BulkReply(Utils.stringToBytes(builder.toString()));
+        String str = builder.toString();
+        logger.info("cluster nodes refresh, cluster_nodes: \r\n {}", str);
+        return new BulkReply(Utils.stringToBytes(str));
     }
 
     private Reply initClusterSlots() {
