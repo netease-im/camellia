@@ -336,10 +336,10 @@ public enum RedisCommand {
         //only support while keys in this command location at the same server or same slot, especially, blocking command don't support multi-write
         RESTRICTIVE_SUPPORT(2),
 
-        //only support while have singleton-upstream(no custom sharding) [standalone-redis or redis-sentinel or redis-cluster]
+        //only support while have singleton-upstream(no custom sharding) [redis-standalone or redis-sentinel or redis-cluster]
         PARTIALLY_SUPPORT_1(3),
 
-        //only support while have singleton-upstream(no custom sharding) [standalone-redis or redis-sentinel]
+        //only support while have singleton-upstream(no custom sharding) [redis-standalone or redis-sentinel]
         PARTIALLY_SUPPORT_2(4),
 
         //not support

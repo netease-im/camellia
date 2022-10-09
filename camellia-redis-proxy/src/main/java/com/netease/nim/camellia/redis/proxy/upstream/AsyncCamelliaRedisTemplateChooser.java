@@ -307,12 +307,12 @@ public class AsyncCamelliaRedisTemplateChooser {
         CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
         if (custom == null) return null;
         AsyncCamelliaRedisTemplate template = new AsyncCamelliaRedisTemplate(env, bid, bgroup, updater, custom.getReloadIntervalMillis());
-        //更新的callback和删除的callback
-        ResourceTableUpdateCallback updateCallback = template.getUpdateCallback();
-        ResourceTableRemoveCallback templateRemoveCallback = template.getRemoveCallback();
+        //更新的callback
+        ResourceTableUpdateCallback updateCallback = template::update;
+        //删除的callback
         ResourceTableRemoveCallback removeCallback = () -> {
             customInstanceMap.remove(bid + "|" + bgroup);
-            templateRemoveCallback.callback();
+            template.shutdown();
             Set<ChannelInfo> channelMap = ChannelMonitor.getChannelMap(bid, bgroup);
             int size = channelMap.size();
             for (ChannelInfo channelInfo : channelMap) {
@@ -324,6 +324,7 @@ public class AsyncCamelliaRedisTemplateChooser {
             }
             logger.info("force close client connect for resourceTable remove, bid = {}, bgroup = {}, count = {}", bid, bgroup, size);
         };
+        //添加callback
         updater.addCallback(bid, bgroup, updateCallback, removeCallback);
         logger.info("AsyncCamelliaRedisTemplate init, bid = {}, bgroup = {}", bid, bgroup);
         return template;

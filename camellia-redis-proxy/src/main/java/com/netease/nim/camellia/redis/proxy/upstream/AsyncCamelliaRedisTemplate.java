@@ -8,6 +8,7 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.*;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.enums.ProxyRouteType;
 import com.netease.nim.camellia.redis.proxy.route.ProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -18,7 +19,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.utils.AsyncUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.ScanCursorCalculator;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
-import com.netease.nim.camellia.redis.resource.RedisType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     private static final Logger logger = LoggerFactory.getLogger(AsyncCamelliaRedisTemplate.class);
 
     private static final ScheduledExecutorService scheduleExecutor
-            = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(ReloadTask.class));
+            = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(AsyncCamelliaRedisTemplate.class));
 
     private static final long defaultBid = -1;
     private static final String defaultBgroup = "local";
@@ -46,23 +46,16 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
     private final long bid;
     private final String bgroup;
+    private final MultiWriteMode multiWriteMode;
+
     private AsyncCamelliaRedisEnv env;
     private Monitor monitor;
     private ResourceChooser resourceChooser;
 
+    private ProxyRouteType proxyRouteType;
     private AsyncClient singletonClient;
-    private boolean isSingletonStandaloneRedisOrRedisSentinel;
-    private boolean isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster;
-
-    private final MultiWriteMode multiWriteMode;
 
     private ScanCursorCalculator cursorCalculator;
-
-    private final ResourceTableUpdateCallback updateCallback = resourceTable -> {
-        RedisResourceUtil.checkResourceTable(resourceTable);
-        init(resourceTable);
-    };
-    private final ResourceTableRemoveCallback removeCallback = this::shutdown;
 
     public AsyncCamelliaRedisTemplate(ResourceTable resourceTable) {
         this(AsyncCamelliaRedisEnv.defaultRedisEnv(), resourceTable);
@@ -95,14 +88,14 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             throw new CamelliaRedisException("resourceTable is null");
         }
         RedisResourceUtil.checkResourceTable(response.getResourceTable());
-        this.init(response.getResourceTable());
+        this.update(response.getResourceTable());
         if (logger.isInfoEnabled()) {
             logger.info("AsyncCamelliaRedisTemplate init success, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}", bid, bgroup, md5,
                     ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(response.getResourceTable())));
         }
         if (reload) {
-            ReloadTask reloadTask = new ReloadTask(this, service, bid, bgroup, md5);
-            this.future = scheduleExecutor.scheduleAtFixedRate(reloadTask, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
+            DashboardReloadTask dashboardReloadTask = new DashboardReloadTask(this, service, bid, bgroup, md5);
+            this.future = scheduleExecutor.scheduleAtFixedRate(dashboardReloadTask, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
             if (monitorEnable) {
                 Monitor monitor = new RemoteMonitor(bid, bgroup, service);
                 ProxyEnv proxyEnv = new ProxyEnv.Builder(env.getProxyEnv()).monitor(monitor).build();
@@ -125,7 +118,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         this.multiWriteMode = env.getMultiWriteMode();
         ResourceTable resourceTable = updater.getResourceTable(bid, bgroup);
         RedisResourceUtil.checkResourceTable(resourceTable);
-        this.init(resourceTable);
+        this.update(resourceTable);
         if (logger.isInfoEnabled()) {
             logger.info("AsyncCamelliaRedisTemplate init success, bid = {}, bgroup = {}, resourceTable = {}, ProxyRouteConfUpdater = {}", bid, bgroup,
                     ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(resourceTable)), updater.getClass().getName());
@@ -141,56 +134,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
     }
 
-    public ResourceTable getResourceTable() {
-        return resourceChooser.getResourceTable();
-    }
-
-    public long getResourceTableUpdateTime() {
-        return resourceChooser.getCreateTime();
-    }
-
-    public ResourceTableUpdateCallback getUpdateCallback() {
-        return updateCallback;
-    }
-
-    public ResourceTableRemoveCallback getRemoveCallback() {
-        return removeCallback;
-    }
-
-    public void preheat() {
-        Set<Resource> allResources = this.resourceChooser.getAllResources();
-        for (Resource resource : allResources) {
-            AsyncClient client = factory.get(resource.getUrl());
-            client.preheat();
-        }
-    }
-
-    public void shutdown() {
-        if (future != null) {
-            future.cancel(false);
-        }
-        if (bid == -1) {
-            RouteConfMonitor.deregisterRedisTemplate(null, null);
-        } else {
-            RouteConfMonitor.deregisterRedisTemplate(bid, bgroup);
-        }
-        if (logger.isInfoEnabled()) {
-            logger.info("AsyncCamelliaRedisTemplate shutdown, bid = {}, bgroup = {}", bid, bgroup);
-        }
-    }
-
-    private boolean isPassThroughCommand(List<Command> commands) {
-        if (!isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster) return false;
-        for (Command command : commands) {
-            RedisCommand redisCommand = command.getRedisCommand();
-            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1
-                    || redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2) {
-                return false;
-            }
-        }
-        return true;
-    }
-
+    @Override
     public List<CompletableFuture<Reply>> sendCommand(List<Command> commands) {
         List<CompletableFuture<Reply>> futureList = new ArrayList<>(commands.size());
 
@@ -221,7 +165,8 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             RedisCommand redisCommand = command.getRedisCommand();
 
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1) {
-                if (!isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster) {
+                if (proxyRouteType != ProxyRouteType.REDIS_STANDALONE && proxyRouteType != ProxyRouteType.REDIS_SENTINEL
+                        && proxyRouteType != ProxyRouteType.REDIS_CLUSTER) {
                     CompletableFuture<Reply> future = new CompletableFuture<>();
                     future.complete(ErrorReply.NOT_SUPPORT);
                     futureList.add(future);
@@ -241,7 +186,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             }
 
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2) {
-                if (!isSingletonStandaloneRedisOrRedisSentinel) {
+                if (proxyRouteType != ProxyRouteType.REDIS_STANDALONE && proxyRouteType != ProxyRouteType.REDIS_SENTINEL) {
                     CompletableFuture<Reply> future = new CompletableFuture<>();
                     future.complete(ErrorReply.NOT_SUPPORT);
                     futureList.add(future);
@@ -311,7 +256,8 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
             if (redisCommand == RedisCommand.SCAN) {
                 try {
-                    if (isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster) {
+                    if (proxyRouteType == ProxyRouteType.REDIS_STANDALONE || proxyRouteType == ProxyRouteType.REDIS_SENTINEL
+                            || proxyRouteType == ProxyRouteType.REDIS_CLUSTER) {
                         Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
                         CompletableFuture<Reply> future = doRead(resource, commandFlusher, command);
                         futureList.add(future);
@@ -465,6 +411,75 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
         commandFlusher.flush();
         return futureList;
+    }
+
+    @Override
+    public ResourceTable getResourceTable() {
+        return resourceChooser.getResourceTable();
+    }
+
+    @Override
+    public long getResourceTableUpdateTime() {
+        return resourceChooser.getCreateTime();
+    }
+
+    @Override
+    public void preheat() {
+        Set<Resource> allResources = this.resourceChooser.getAllResources();
+        for (Resource resource : allResources) {
+            AsyncClient client = factory.get(resource.getUrl());
+            client.preheat();
+        }
+    }
+
+    @Override
+    public synchronized void update(ResourceTable resourceTable) {
+        RedisResourceUtil.checkResourceTable(resourceTable);
+        //初始化每个Resource，会做基本的校验
+        Set<Resource> resources = ResourceUtil.getAllResources(resourceTable);
+        for (Resource resource : resources) {
+            factory.get(resource.getUrl());
+        }
+        //初始化ResourceChooser
+        this.resourceChooser = new ResourceChooser(resourceTable, env.getProxyEnv());
+        this.proxyRouteType = ProxyRouteType.fromResourceTable(resourceTable);
+        if (this.proxyRouteType == ProxyRouteType.REDIS_STANDALONE ||
+                this.proxyRouteType == ProxyRouteType.REDIS_SENTINEL ||
+                this.proxyRouteType == ProxyRouteType.REDIS_CLUSTER) {
+            try {
+                singletonClient = factory.get(resourceChooser.getReadResource(Utils.EMPTY_ARRAY).getUrl());
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                singletonClient = null;
+            }
+        }
+    }
+
+    @Override
+    public void shutdown() {
+        if (future != null) {
+            future.cancel(false);
+        }
+        if (bid == -1) {
+            RouteConfMonitor.deregisterRedisTemplate(null, null);
+        } else {
+            RouteConfMonitor.deregisterRedisTemplate(bid, bgroup);
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info("AsyncCamelliaRedisTemplate shutdown, bid = {}, bgroup = {}", bid, bgroup);
+        }
+    }
+
+    private boolean isPassThroughCommand(List<Command> commands) {
+        if (proxyRouteType == ProxyRouteType.COMPLEX) return false;
+        for (Command command : commands) {
+            RedisCommand redisCommand = command.getRedisCommand();
+            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1
+                    || redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private CompletableFuture<Reply> doRead(Resource resource, CommandFlusher commandFlusher, Command command) {
@@ -744,43 +759,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         return future;
     }
 
-    private synchronized void init(ResourceTable resourceTable) {
-        //初始化每个Resource，会做基本的校验
-        Set<Resource> resources = ResourceUtil.getAllResources(resourceTable);
-        for (Resource resource : resources) {
-            factory.get(resource.getUrl());
-        }
-        //初始化ResourceChooser
-        this.resourceChooser = new ResourceChooser(resourceTable, env.getProxyEnv());
-        //判断路由类型
-        ResourceTable.Type type = resourceChooser.getType();
-        if (type == ResourceTable.Type.SHADING) {
-            isSingletonStandaloneRedisOrRedisSentinel = false;
-            isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster = false;
-            return;
-        }
-        Set<Resource> allResources = resourceChooser.getAllResources();
-        if (allResources.size() != 1) {
-            isSingletonStandaloneRedisOrRedisSentinel = false;
-            isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster = false;
-            return;
-        }
-        try {
-            singletonClient = factory.get(resourceChooser.getReadResource(Utils.EMPTY_ARRAY).getUrl());
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            singletonClient = null;
-        }
-        isSingletonStandaloneRedisOrRedisSentinelOrRedisCluster = true;
-        for (Resource resource : allResources) {
-            String url = resource.getUrl();
-            if (url.startsWith(RedisType.Redis.getPrefix()) || url.startsWith(RedisType.RedisSentinel.getPrefix())) {
-                isSingletonStandaloneRedisOrRedisSentinel = true;
-                return;
-            }
-        }
-        isSingletonStandaloneRedisOrRedisSentinel = false;
-    }
+
 
     private static class ProxyRouteConfUpdaterReloadTask implements Runnable {
 
@@ -815,7 +794,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     String newJson = ReadableResourceTableUtil.readableResourceTable(resourceTable);
                     String oldJson = ReadableResourceTableUtil.readableResourceTable(this.resourceTable);
                     if (!newJson.equals(oldJson)) {
-                        template.init(resourceTable);
+                        template.update(resourceTable);
                         this.resourceTable = resourceTable;
                         if (logger.isInfoEnabled()) {
                             logger.info("reload success, bid = {}, bgroup = {}, resourceTable = {}", bid, bgroup,
@@ -839,7 +818,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
     }
 
-    private static class ReloadTask implements Runnable {
+    private static class DashboardReloadTask implements Runnable {
 
         private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -849,7 +828,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         private final String bgroup;
         private String md5;
 
-        ReloadTask(AsyncCamelliaRedisTemplate template, CamelliaApi service, long bid, String bgroup, String md5) {
+        DashboardReloadTask(AsyncCamelliaRedisTemplate template, CamelliaApi service, long bid, String bgroup, String md5) {
             this.template = template;
             this.service = service;
             this.bid = bid;
@@ -875,7 +854,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                                 bid, bgroup, ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(response.getResourceTable())), e);
                         return;
                     }
-                    template.init(response.getResourceTable());
+                    template.update(response.getResourceTable());
                     this.md5 = response.getMd5();
                     if (logger.isInfoEnabled()) {
                         logger.info("reload success, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}", bid, bgroup, md5,
@@ -889,7 +868,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     running.set(false);
                 }
             } else {
-                logger.warn("ReloadTask is running, skip run, bid = {}, bgroup = {}, md5 = {}", bid, bgroup, md5);
+                logger.warn("DashboardReloadTask is running, skip run, bid = {}, bgroup = {}, md5 = {}", bid, bgroup, md5);
             }
         }
     }
