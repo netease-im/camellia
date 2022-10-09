@@ -5,17 +5,17 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 
 ## 特性
 * 支持代理到redis-standalone、redis-sentinel、redis-cluster
+* 支持自定义分片
+* 支持读写分离
+* 支持双（多）写，可以proxy直连双写，也可以基于mq（如kafka）双写，也可以基于插件体系自定义双写规则
+* 支持双（多）读
 * 支持设置密码
 * 支持阻塞式命令，如BLPOP/BRPOP/BRPOPLPUSH/BZPOPMIN/BZPOPMAX等
 * 支持PUBSUB系列命令，代理到redis-standalone/redis-sentinel/redis-cluster均支持
 * 支持事务命令（MULTI/EXEC/DISCARD/WATCH/UNWATCH），代理到redis-standalone/redis-sentinel/redis-cluster均支持
 * 支持redis5.0的STREAMS系列命令
 * 支持SCAN命令（代理到redis-standalone/redis-sentinel/redis-cluster均支持，自定义分片时也支持）
-* 支持自定义分片
-* 支持读写分离
 * 支持读slave（redis-sentinel/redis-cluster均支持配置读从节点）
-* 支持双（多）写，可以直接双写，也可以基于mq（如kafka）双写
-* 支持双（多）读
 * 支持多租户，即租户A路由到redis1，租户B路由到redis2（可以通过不同的clientname区分，也可以通过不同的password区分）
 * 支持多租户动态路由，支持自定义的动态路由数据源
 * 支持自定义插件，并且内置了很多插件，可以按需使用（包括：大key监控、热key监控、热key缓存、key命名空间、ip黑白名单、速率控制等等）
@@ -92,8 +92,7 @@ GEOSEARCHSTORE,
 ```
 ##PUBSUB
 SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
-##TRANSACTION
-#keys must in same slot
+##TRANSACTION(keys must in same slot)
 MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ```
 

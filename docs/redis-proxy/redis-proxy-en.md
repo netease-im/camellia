@@ -5,6 +5,9 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 
 ## Features
 * support redis-standalone、redis-sentinel、redis-cluster
+* support read write separation
+* support double(multi) write
+* support double(multi) read
 * support set password
 * support blocking commands, such as BLPOP/BRPOP/BRPOPLPUSH/BZPOPMIN/BZPOPMAX and so on
 * support pub-sub commands
@@ -12,10 +15,7 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support stream commands of redis5.0
 * support scan command of redis-standalone/redis-sentinel/redis-cluster, even custom sharding
 * support custom sharding
-* support read write separation
 * support read from slave(in redis-sentinel master-slave mode，support read slave, and proxy will automatic process node-down/master-switch/node-expansion）
-* support double(multi) write
-* support double(multi) read 
 * support route config refresh online
 * support multi-tenancy, then proxy will route business-A to redis1, business-B to redis2 
 * support plugin, and build in some plugin, such as bigKeyPlugin, hotKeyPlugin, converterPlugin and so on
@@ -91,8 +91,7 @@ only support while have singleton-upstream(no custom sharding) (standalone-redis
 ```
 ##PUBSUB
 SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
-##TRANSACTION
-#keys must in same slot
+##TRANSACTION(keys must in same slot)
 MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ```
 
