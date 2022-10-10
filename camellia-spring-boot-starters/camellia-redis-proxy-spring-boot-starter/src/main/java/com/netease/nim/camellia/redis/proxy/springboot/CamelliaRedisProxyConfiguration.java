@@ -7,8 +7,6 @@ import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleService;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleServiceAdaptor;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
-import com.netease.nim.camellia.redis.proxy.plugin.DefaultBeanFactory;
-import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.NettyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.TranspondProperties;
@@ -17,12 +15,14 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -34,9 +34,11 @@ import org.springframework.context.annotation.Import;
 @Configuration
 @Import(CamelliaRedisProxyConfigurerSupport.class)
 @EnableConfigurationProperties({CamelliaRedisProxyProperties.class, NettyProperties.class, TranspondProperties.class})
-public class CamelliaRedisProxyConfiguration {
+public class CamelliaRedisProxyConfiguration implements ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyConfiguration.class);
+
+    private ApplicationContext applicationContext;
 
     @Value("${server.port:6379}")
     private int port;
@@ -44,12 +46,14 @@ public class CamelliaRedisProxyConfiguration {
     @Value("${spring.application.name:camellia-redis-proxy}")
     private String applicationName;
 
-    @Autowired(required = false)
-    public SpringProxyBeanFactory proxyBeanFactory;
+    @Bean
+    public SpringProxyBeanFactory springProxyBeanFactory() {
+        return new SpringProxyBeanFactory(applicationContext);
+    }
 
     @Bean
     public CamelliaServerProperties camelliaServerProperties(CamelliaRedisProxyProperties properties) {
-        return CamelliaRedisProxyUtil.parse(properties, proxyBeanFactory, applicationName, port);
+        return CamelliaRedisProxyUtil.parse(properties, springProxyBeanFactory(), applicationName, port);
     }
 
     @Bean
@@ -109,6 +113,11 @@ public class CamelliaRedisProxyConfiguration {
     public ConsoleService consoleService(CamelliaRedisProxyProperties properties) {
         CamelliaServerProperties serverProperties = camelliaServerProperties(properties);
         return new ConsoleServiceAdaptor(serverProperties.getPort());
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
     }
 
     private static class EventLoopGroupGetter {
