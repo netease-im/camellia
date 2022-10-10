@@ -15,8 +15,8 @@
 * custom monitor callback running in isolation thread pool
 
 ### fix
-* redis-proxy random port mode do not check available
-
+* camellia-redis-proxy random port mode do not check available
+* fix SpringProxyBeanFactory not available in camellia-redis-proxy
 
 # 1.1.1（2022/09/26）
 ### add
