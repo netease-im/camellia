@@ -9,6 +9,7 @@
 * CamelliaRedisProxyStarter support start console-server
 * RedisProxyRedisConnectionFactory implements DisposableBean, support destroy method
 * camellia-redis-proxy support cluster-mode, so proxy-cluster will be regarded as redis-cluster
+* camellia-id-gen-sdk provide DelayQueueServerDiscoveryFactory to manager multi delay-queue-server clusters base on discovery
 
 ### update
 * custom monitor callback running in isolation thread pool
