@@ -130,6 +130,12 @@ public class CommandsTransponder {
                         continue;
                     }
 
+                    //quit命令直接断开连接
+                    if (redisCommand == RedisCommand.QUIT) {
+                        channelInfo.getCtx().close();
+                        return;
+                    }
+
                     //command命令，直接返回个空吧
                     if (redisCommand == RedisCommand.COMMAND) {
                         task.replyCompleted(MultiBulkReply.EMPTY);
@@ -217,12 +223,7 @@ public class CommandsTransponder {
                         continue;
                     }
 
-                    //quit命令直接断开连接
-                    if (redisCommand == RedisCommand.QUIT) {
-                        channelInfo.getCtx().close();
-                        return;
-                    }
-
+                    //ASKING命令直接回OK
                     if (redisCommand == RedisCommand.ASKING) {
                         task.replyCompleted(StatusReply.OK);
                         hasCommandsSkip = true;
