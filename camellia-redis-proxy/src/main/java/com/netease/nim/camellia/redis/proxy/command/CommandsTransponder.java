@@ -136,13 +136,6 @@ public class CommandsTransponder {
                         return;
                     }
 
-                    //command命令，直接返回个空吧
-                    if (redisCommand == RedisCommand.COMMAND) {
-                        task.replyCompleted(MultiBulkReply.EMPTY);
-                        hasCommandsSkip = true;
-                        continue;
-                    }
-
                     //auth命令
                     if (redisCommand == RedisCommand.AUTH) {
                         boolean hasBidBgroup = channelInfo.getBid() != null && channelInfo.getBgroup() != null;

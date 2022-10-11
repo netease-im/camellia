@@ -10,6 +10,7 @@
 * RedisProxyRedisConnectionFactory实现DisposableBean接口，支持destroy方法
 * camellia-redis-proxy新增cluster-mode，从而可以把proxy集群伪装成redis-cluster
 * camellia-id-gen-sdk新增DelayQueueServerDiscoveryFactory方便管理多个基于注册发现的delay-queue-server集群
+* camellia-redis-proxy支持COMMAND命令，透传给后端
 
 ### 更新
 * 自定义监控回调（MonitorCallback、SlowCommandMonitorCallback、HotKeyCacheStatsCallback、HotKeyMonitorCallback、BigKeyMonitorCallback）走独立的线程池执行回调，避免不合理的自定义监控回调实现阻塞proxy主流程
