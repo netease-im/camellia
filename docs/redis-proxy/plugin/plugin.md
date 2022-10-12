@@ -118,7 +118,7 @@ public enum BuildInProxyPluginEnum {
 * HotKeyCacheProxyPlugin，用于热key缓存，支持GET命令，具体见：[hot-key-cache](hot-key-cache.md)
 * ConverterProxyPlugin，用于key/value的转换，如加解密，key命名空间等，具体见：[converter](converter.md)
 * MultiWriteProxyPlugin，用于自定义双写（可以到key级别），具体见：[multi-write](multi-write.md)
-* DelayDoubleDeleteProxyPlugin，用于透明到进行缓存双删（仅拦截DEL命令），具体见：[delay-double-delete](delay-double-delete.md)
+* DelayDoubleDeleteProxyPlugin，用于透明的进行缓存双删（仅拦截DEL命令），具体见：[delay-double-delete](delay-double-delete.md)
 * TroubleTrickKeysProxyPlugin，用于临时拦截问题key的某些命令，具体见：[trouble-trick-keys](trouble-trick-keys.md)
 * RateLimitProxyPlugin，用于进行频率控制，支持租户级别进行控制，具体见：[rate-limit](rate-limit.md)
 * IPCheckProxyPlugin，用于控制客户端接入，支持ip黑白名单，具体见：[ip-checker](ip-checker.md)

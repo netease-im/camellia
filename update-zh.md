@@ -4,7 +4,7 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
-# 1.1.2（2022/10/xx）
+# 1.1.2（2022/10/12）
 ### 新增
 * CamelliaRedisProxyStarter支持启动console-server
 * RedisProxyRedisConnectionFactory实现DisposableBean接口，支持destroy方法

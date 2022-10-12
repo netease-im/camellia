@@ -2,7 +2,7 @@
 ## DelayDoubleDeleteProxyPlugin
 
 ### 说明
-* 一个用于透明地进行延迟缓存双删来保证db/缓存一致性的plugin
+* 一个用于透明的进行延迟缓存双删来保证db/缓存一致性的plugin
 * 只会拦截DEL命令进行延迟的二次删除
 
 ### 启用方式
