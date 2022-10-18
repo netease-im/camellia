@@ -34,6 +34,7 @@ public class Utils {
     static {
         for (int i = 0; i < NUM_MAP_LENGTH; i++) {
             numMapWithCRLF[i] = convert(i, true);
+            numMap[i] = convert(i, false);
         }
     }
 
