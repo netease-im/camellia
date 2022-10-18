@@ -36,11 +36,15 @@ public abstract class AbstractCamelliaDiscovery<T> implements CamelliaDiscovery<
 
     @Override
     public final void setCallback(Callback<T> callback) {
-        callbackSet.add(callback);
+        synchronized (callbackSet) {
+            callbackSet.add(callback);
+        }
     }
 
     @Override
     public final void clearCallback(Callback<T> callback) {
-        callbackSet.remove(callback);
+        synchronized (callbackSet) {
+            callbackSet.remove(callback);
+        }
     }
 }

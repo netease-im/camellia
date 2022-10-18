@@ -38,7 +38,7 @@ public enum RedisType {
     RedisClusterSlaves("redis-cluster-slaves://", RedisClusterSlavesResource.class),
 
     //格式：redis-proxies://password@127.0.0.1:6379,127.0.0.1:6380
-    //仅camellia-redis-proxy支持
+    //CamelliaRedisTemplate和camellia-redis-proxy同时支持
     RedisProxies("redis-proxies://", RedisProxiesResource.class),//camellia-redis-proxy会随机挑选一个proxy节点，并当做普通redis去访问
 
     //格式：redis-proxies-discovery://password@proxyName

@@ -2,15 +2,16 @@ package com.netease.nim.camellia.redis.jedis;
 
 import com.netease.nim.camellia.redis.conf.CamelliaRedisConstants;
 import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyContext;
-import com.netease.nim.camellia.redis.resource.CamelliaRedisProxyResource;
-import com.netease.nim.camellia.redis.resource.RedisResource;
-import com.netease.nim.camellia.redis.resource.RedisSentinelResource;
-import com.netease.nim.camellia.redis.resource.RedisSentinelSlavesResource;
+import com.netease.nim.camellia.redis.proxy.discovery.common.DetectedLocalConfProxyDiscovery;
+import com.netease.nim.camellia.redis.proxy.discovery.common.Proxy;
+import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
+import com.netease.nim.camellia.redis.resource.*;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisSentinelPool;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -51,6 +52,13 @@ public interface JedisPoolFactory {
     JedisPool getJedisSentinelSlavesPool(RedisSentinelSlavesResource redisSentinelSlavesResource);
 
     /**
+     * 获取RedisProxiesJedisPool对象
+     * @param redisProxiesResource RedisProxiesResource资源定义
+     * @return RedisProxiesJedisPool对象
+     */
+    JedisPool getRedisProxiesJedisPool(RedisProxiesResource redisProxiesResource);
+
+    /**
      * 一个默认实现
      */
     JedisPoolFactory DEFAULT = new DefaultJedisPoolFactory();
@@ -64,6 +72,7 @@ public interface JedisPoolFactory {
         private final ConcurrentHashMap<String, JedisPool> map1 = new ConcurrentHashMap<>();
         private final ConcurrentHashMap<String, JedisSentinelPool> map2 = new ConcurrentHashMap<>();
         private final ConcurrentHashMap<String, JedisSentinelSlavesPool> map3 = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<String, RedisProxyJedisPool> map4 = new ConcurrentHashMap<>();
         private final GenericObjectPoolConfig poolConfig;
         private final int timeout;
         private final long redisSentinelSlavesCheckIntervalMillis;
@@ -157,6 +166,32 @@ public interface JedisPoolFactory {
                 }
             }
             return jedisSentinelSlavesPool;
+        }
+
+        @Override
+        public JedisPool getRedisProxiesJedisPool(RedisProxiesResource redisProxiesResource) {
+            RedisProxyJedisPool redisProxyJedisPool = map4.get(redisProxiesResource.getUrl());
+            if (redisProxyJedisPool == null) {
+                synchronized (lock) {
+                    redisProxyJedisPool = map4.get(redisProxiesResource.getUrl());
+                    if (redisProxyJedisPool == null) {
+                        List<RedisProxiesResource.Node> nodes = redisProxiesResource.getNodes();
+                        List<Proxy> list = new ArrayList<>();
+                        for (RedisProxiesResource.Node node : nodes) {
+                            list.add(new Proxy(node.getHost(), node.getPort()));
+                        }
+                        DetectedLocalConfProxyDiscovery discovery = new DetectedLocalConfProxyDiscovery(list);
+                        redisProxyJedisPool = new RedisProxyJedisPool.Builder()
+                                .timeout(timeout)
+                                .poolConfig(poolConfig)
+                                .password(redisProxiesResource.getPassword())
+                                .proxyDiscovery(discovery)
+                                .build();
+                        map4.put(redisProxiesResource.getUrl(), redisProxyJedisPool);
+                    }
+                }
+            }
+            return redisProxyJedisPool;
         }
     }
 
