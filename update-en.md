@@ -4,6 +4,17 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+# 1.1.3（2022/10/xx）
+### add
+* CamelliaRedisTemplate support RedisProxiesResource
+
+### update
+* camellia-delay-queue, deleteMsg api support release redis memory right now(default false)
+
+### fix
+* camellia-delay-queue, when delay msg has delete or consumer, same msgId msg send will duplicate ignore 
+
+
 # 1.1.2（2022/10/12）
 ### add
 * CamelliaRedisProxyStarter support start console-server

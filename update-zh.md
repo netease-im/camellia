@@ -4,6 +4,17 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.1.3（2022/10/xx）
+### 新增
+* CamelliaRedisTemplate支持RedisProxiesResource这种redis资源配置
+
+### 更新
+* camellia-delay-queue，deleteMsg支持立即释放redis内存（默认false）
+
+### fix
+* camellia-delay-queue，当消息被消费或者删除后，此时相同的msgId的消息重新发送会被去重
+
+
 # 1.1.2（2022/10/12）
 ### 新增
 * CamelliaRedisProxyStarter支持启动console-server

@@ -338,6 +338,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 |:---:|:---:|:---:|:---:|
 |topic|string|是|topic|
 |msgId|string|是|消息id|
+|release|boolean|否|是否立即释放redis内存，默认false|
 
 响应
 ```json
