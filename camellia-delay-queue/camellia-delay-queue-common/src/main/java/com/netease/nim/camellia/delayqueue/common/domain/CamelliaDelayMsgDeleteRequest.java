@@ -9,6 +9,8 @@ public class CamelliaDelayMsgDeleteRequest {
     private String topic;
     //消息id，topic内唯一
     private String msgId;
+    //是否立即释放redis内存资源，默认false
+    private boolean release;
 
     public String getTopic() {
         return topic;
@@ -24,5 +26,13 @@ public class CamelliaDelayMsgDeleteRequest {
 
     public void setMsgId(String msgId) {
         this.msgId = msgId;
+    }
+
+    public boolean isRelease() {
+        return release;
+    }
+
+    public void setRelease(boolean release) {
+        this.release = release;
     }
 }

@@ -91,10 +91,12 @@ public class CamelliaDelayQueueController {
 
     @PostMapping("/deleteMsg")
     public CamelliaDelayMsgDeleteResponse deleteMsg(@RequestParam("topic") String topic,
-                                                    @RequestParam("msgId") String msgId) {
+                                                    @RequestParam("msgId") String msgId,
+                                                    @RequestParam(value = "release", required = false, defaultValue = "false") boolean release) {
         CamelliaDelayMsgDeleteRequest request = new CamelliaDelayMsgDeleteRequest();
         request.setTopic(topic);
         request.setMsgId(msgId);
+        request.setRelease(release);
         return server.deleteMsg(request);
     }
 

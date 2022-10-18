@@ -118,12 +118,24 @@ public class CamelliaDelayQueueServer {
                 String msgKey = msgKey(topic, msg.getMsgId());
                 String value = template.get(msgKey);
                 CamelliaDelayMsg delayMsg = JSONObject.parseObject(value, CamelliaDelayMsg.class);
-                CamelliaDelayMsgSendResponse response = new CamelliaDelayMsgSendResponse();
-                response.setCode(CamelliaDelayMsgErrorCode.SUCCESS.getValue());
-                response.setMsg("success");
-                response.setDelayMsg(delayMsg);
-                CamelliaDelayQueueMonitor.sendMsg(request, response);
-                return response;
+                if (delayMsg != null) {
+                    //如果老消息已经endLife了，则需要替换掉，而不是被去重
+                    CamelliaDelayMsgStatus status = CamelliaDelayMsgStatus.getByValue(delayMsg.getStatus());
+                    if (status != null && status.isEndLife()) {
+                        ok = saveOrUpdateMsg(msg, false, false);
+                        if (ok) {
+                            delayMsg = null;
+                        }
+                    }
+                }
+                if (delayMsg != null) {
+                    CamelliaDelayMsgSendResponse response = new CamelliaDelayMsgSendResponse();
+                    response.setCode(CamelliaDelayMsgErrorCode.SUCCESS.getValue());
+                    response.setMsg("success");
+                    response.setDelayMsg(delayMsg);
+                    CamelliaDelayQueueMonitor.sendMsg(request, response);
+                    return response;
+                }
             }
             if (msg.getStatus() == CamelliaDelayMsgStatus.WAITING.getValue()) {
                 //如果是等待状态，则塞到zset中
@@ -272,11 +284,16 @@ public class CamelliaDelayQueueServer {
             }
             active(topic);
             MsgCheckStatusResult result = checkMsgLife(topic, Collections.singletonList(msgId), false);
+            if (request.isRelease()) {
+                deleteMsg(topic, msgId);//直接删除吧
+            }
             CamelliaDelayMsgDeleteResponse response = new CamelliaDelayMsgDeleteResponse();
             if (!result.inLifeMsgMap.isEmpty()) {
                 CamelliaDelayMsg delayMsg = result.inLifeMsgMap.get(msgId);
                 delayMsg.setStatus(CamelliaDelayMsgStatus.DELETE.getValue());
-                saveOrUpdateMsg(delayMsg, false,true);
+                if (!request.isRelease()) {
+                    saveOrUpdateMsg(delayMsg, false, true);
+                }
                 response.setCode(CamelliaDelayMsgErrorCode.SUCCESS.getValue());
                 response.setMsg("success");
                 CamelliaDelayQueueMonitor.deleteMsg(request, response);
@@ -890,6 +907,15 @@ public class CamelliaDelayQueueServer {
             CamelliaDelayQueueMonitor.triggerMsgEndLife(topic, result.endLifeMsgMap);
         }
         return result;
+    }
+
+    private void deleteMsg(String topic, String msgId) {
+        String msgKey = msgKey(topic, msgId);
+        template.del(msgKey);
+        String waitingQueueKey = waitingQueueKey(topic);
+        template.zrem(waitingQueueKey, msgId);
+        String readyQueueKey = readyQueueKey(topic);
+        template.lrem(readyQueueKey, 1, msgId);
     }
 
     private boolean saveOrUpdateMsg(CamelliaDelayMsg delayMsg, boolean checkExists, boolean endLife) {

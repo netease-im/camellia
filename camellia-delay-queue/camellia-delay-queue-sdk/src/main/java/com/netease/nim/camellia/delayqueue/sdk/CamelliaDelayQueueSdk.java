@@ -167,9 +167,21 @@ public class CamelliaDelayQueueSdk {
      * @return 删除结果，如果消息不存在或者已经被消费了或者已经处于丢弃状态，则会返回false
      */
     public boolean deleteMsg(String topic, String msgId) {
+        return deleteMsg(topic, msgId, false);
+    }
+
+    /**
+     * 删除一条延迟消息
+     * @param topic topic
+     * @param msgId 消息id
+     * @param release 是否立即释放redis资源
+     * @return 删除结果，如果消息不存在或者已经被消费了或者已经处于丢弃状态，则会返回false
+     */
+    public boolean deleteMsg(String topic, String msgId, boolean release) {
         CamelliaDelayMsgDeleteRequest request = new CamelliaDelayMsgDeleteRequest();
         request.setTopic(topic);
         request.setMsgId(msgId);
+        request.setRelease(release);
         CamelliaDelayMsgDeleteResponse response = api.deleteMsg(request);
         CamelliaDelayMsgErrorCode errorCode = CamelliaDelayMsgErrorCode.getByValue(response.getCode());
         if (errorCode == CamelliaDelayMsgErrorCode.SUCCESS) {
