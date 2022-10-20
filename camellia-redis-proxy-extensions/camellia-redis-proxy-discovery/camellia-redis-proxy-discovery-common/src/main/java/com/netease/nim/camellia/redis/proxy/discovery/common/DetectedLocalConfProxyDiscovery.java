@@ -24,7 +24,7 @@ public class DetectedLocalConfProxyDiscovery extends AbstractCamelliaDiscovery<P
 
     private final AtomicBoolean running = new AtomicBoolean(false);
 
-    private final List<Proxy> originalList;
+    private List<Proxy> originalList;
     private List<Proxy> aliveList = new ArrayList<>();
 
     /**
@@ -32,31 +32,42 @@ public class DetectedLocalConfProxyDiscovery extends AbstractCamelliaDiscovery<P
      * @param config 10.1.1.1:6380,10.1.1.2:6380
      */
     public DetectedLocalConfProxyDiscovery(String config, int detectIntervalSeconds) {
-        originalList = new ArrayList<>();
+        init(parseConfig(config), detectIntervalSeconds);
+    }
+
+    public DetectedLocalConfProxyDiscovery(String config) {
+        init(parseConfig(config), 10);
+    }
+
+    public DetectedLocalConfProxyDiscovery(List<Proxy> list) {
+        init(list, 10);
+    }
+
+    public DetectedLocalConfProxyDiscovery(List<Proxy> list, int detectIntervalSeconds) {
+        init(list, detectIntervalSeconds);
+    }
+
+    private void init(List<Proxy> list, int detectIntervalSeconds) {
+        this.originalList = list;
+        checkAndUpdate();
+        if (aliveList.isEmpty()) {
+            throw new IllegalArgumentException("all proxy node is not alive");
+        }
+        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("detected-local-proxy-discovery"))
+                .scheduleAtFixedRate(this::checkAndUpdate, detectIntervalSeconds, detectIntervalSeconds, TimeUnit.SECONDS);
+    }
+
+    private List<Proxy> parseConfig(String config) {
+        List<Proxy> originalList = new ArrayList<>();
         String[] split = config.split(",");
         for (String str : split) {
             String[] split1 = str.split(":");
             originalList.add(new Proxy(split1[0], Integer.parseInt(split1[1])));
         }
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("detected-local-proxy-discovery"))
-                .scheduleAtFixedRate(this::schedule, detectIntervalSeconds, detectIntervalSeconds, TimeUnit.SECONDS);
+        return originalList;
     }
 
-    public DetectedLocalConfProxyDiscovery(String config) {
-        this(config, 10);
-    }
-
-    public DetectedLocalConfProxyDiscovery(List<Proxy> list) {
-        this(list, 10);
-    }
-
-    public DetectedLocalConfProxyDiscovery(List<Proxy> list, int detectIntervalSeconds) {
-        this.originalList = list;
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("detected-local-proxy-discovery"))
-                .scheduleAtFixedRate(this::schedule, detectIntervalSeconds, detectIntervalSeconds, TimeUnit.SECONDS);
-    }
-
-    private void schedule() {
+    private void checkAndUpdate() {
         if (running.compareAndSet(false, true)) {
             try {
                 List<Proxy> aliveList = new ArrayList<>();
@@ -64,6 +75,11 @@ public class DetectedLocalConfProxyDiscovery extends AbstractCamelliaDiscovery<P
                     if (checkAlive(proxy)) {
                         aliveList.add(proxy);
                     }
+                }
+
+                if (aliveList.isEmpty()) {
+                    logger.warn("all proxy node is not alive, proxy.list = {}", originalList);
+                    return;
                 }
 
                 Set<Proxy> newSet = new HashSet<>(aliveList);
@@ -97,11 +113,7 @@ public class DetectedLocalConfProxyDiscovery extends AbstractCamelliaDiscovery<P
                     }
                 }
 
-                if (aliveList.isEmpty()) {
-                    this.aliveList = new ArrayList<>(originalList);
-                } else {
-                    this.aliveList = new ArrayList<>(aliveList);
-                }
+                this.aliveList = new ArrayList<>(aliveList);
             } catch (Exception e) {
                 logger.error("schedule error", e);
             } finally {
