@@ -298,7 +298,7 @@ public class RedisClusterSlotInfo {
                             }
                         }
                         if (success) {
-                            logger.info("renew success, url = {}", maskUrl);
+                            logger.info("renew success, url = {}, master-slave-info:\r\n{}", maskUrl, masterSlaveInfo());
                         } else {
                             ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew fail, url = " + maskUrl);
                         }
@@ -317,6 +317,25 @@ public class RedisClusterSlotInfo {
             }
         }
         return null;
+    }
+
+    private String masterSlaveInfo() {
+        Map<Node, List<Node>> masterSlaveMap = new HashMap<>(this.masterSlaveMap);
+        StringBuilder builder = new StringBuilder();
+        for (Map.Entry<Node, List<Node>> entry : masterSlaveMap.entrySet()) {
+            Node master = entry.getKey();
+            builder.append("master=").append(master.getHost()).append(":").append(master.getPort());
+            List<Node> slaves = entry.getValue();
+            if (slaves != null && slaves.size() > 0) {
+                int i = 0;
+                for (Node slave : slaves) {
+                    builder.append(",slave").append(i).append("=").append(slave.getHost()).append(":").append(slave.getPort());
+                    i ++;
+                }
+            }
+            builder.append("\r\n");
+        }
+        return builder.toString();
     }
 
     private boolean tryRenew(String host, int port, String userName, String password) {
