@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.netty;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -100,10 +101,11 @@ public class CamelliaRedisProxyServer {
             }
             serverBootstrap.bind(cport).sync();
             GlobalRedisProxyEnv.cport = cport;
-            logger.info("CamelliaRedisProxyServer start with cluster mode at cport: {}", cport);
+            logger.info("CamelliaRedisProxyServer start in cluster mode at cport: {}", cport);
         }
+        logger.info("CamelliaRedisProxyServer start success, version = {}", ProxyInfoUtils.VERSION);
         this.port = port;
-        GlobalRedisProxyEnv.invokeCallback();
+        GlobalRedisProxyEnv.invokeStartOkCallback();
     }
 
     public int getPort() {

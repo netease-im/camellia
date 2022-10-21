@@ -36,7 +36,7 @@ public class GlobalRedisProxyEnv {
         callbackSet.add(callback);
     }
 
-    public static void invokeCallback() {
+    public static void invokeStartOkCallback() {
         for (Runnable runnable : callbackSet) {
             try {
                 runnable.run();
