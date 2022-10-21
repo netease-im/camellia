@@ -287,12 +287,24 @@ public class RedisClusterSlotInfo {
                 return redisClusterRenewExec.submit(() -> {
                     try {
                         boolean success = false;
-                        for (Node node : masterNodeSet) {
+                        List<RedisClusterResource.Node> initNodes = new ArrayList<>(this.nodes);
+                        Collections.shuffle(initNodes);
+                        for (RedisClusterResource.Node node : initNodes) {
                             success = tryRenew(node.getHost(), node.getPort(), userName, password);
                             if (success) break;
                         }
                         if (!success) {
-                            for (RedisClusterResource.Node node : nodes) {
+                            List<Node> masterNodes = new ArrayList<>(this.masterNodeList);
+                            Collections.shuffle(masterNodes);
+                            for (Node node : masterNodes) {
+                                success = tryRenew(node.getHost(), node.getPort(), userName, password);
+                                if (success) break;
+                            }
+                        }
+                        if (!success) {
+                            List<Node> slaveNodes = new ArrayList<>(this.slaveNodeSet);
+                            Collections.shuffle(slaveNodes);
+                            for (Node node : slaveNodes) {
                                 success = tryRenew(node.getHost(), node.getPort(), userName, password);
                                 if (success) break;
                             }
