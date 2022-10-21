@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.upstream.cluster.RedisClusterSlotInfo;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
@@ -244,7 +245,7 @@ public class ProxyClusterModeProcessor {
         StringBuilder builder = new StringBuilder();
         int i=0;
         int size = onlineNodes.size();
-        int slotsPerNode = 16384 / size;
+        int slotsPerNode = RedisClusterSlotInfo.SLOT_SIZE / size;
         long slotCurrent = 0;
         for (ProxyNode proxyNode : onlineNodes) {
             i++;
@@ -261,7 +262,7 @@ public class ProxyClusterModeProcessor {
             builder.append(i).append(" ");
             builder.append("connected").append(" ");
             if (i == size) {
-                builder.append(slotCurrent).append("-").append(16383);
+                builder.append(slotCurrent).append("-").append(RedisClusterSlotInfo.SLOT_SIZE - 1);
             } else {
                 builder.append(slotCurrent).append("-").append(slotCurrent + slotsPerNode);
             }
@@ -277,7 +278,7 @@ public class ProxyClusterModeProcessor {
     private Reply initClusterSlots() {
         int i=0;
         int size = onlineNodes.size();
-        int slotsPerNode = 16384 / size;
+        int slotsPerNode = RedisClusterSlotInfo.SLOT_SIZE / size;
         long slotCurrent = 0;
         List<MultiBulkReply> replies = new ArrayList<>();
         for (ProxyNode proxyNode : onlineNodes) {
@@ -285,7 +286,7 @@ public class ProxyClusterModeProcessor {
             IntegerReply slotStart = new IntegerReply(slotCurrent);
             IntegerReply slotEnd;
             if (i == size) {
-                slotEnd = new IntegerReply(16383L);
+                slotEnd = new IntegerReply((long)(RedisClusterSlotInfo.SLOT_SIZE - 1));
             } else {
                 slotEnd = new IntegerReply(slotCurrent + slotsPerNode);
             }
