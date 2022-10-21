@@ -47,6 +47,10 @@ public class CamelliaRedisProxyStarter {
         }
     }
 
+    public static void start(int consolePort) {
+        start(consolePort, new ConsoleServiceAdaptor());
+    }
+
     public static void start(int consolePort, ConsoleService consoleService) {
         if (starting.compareAndSet(false, true)) {
             try {

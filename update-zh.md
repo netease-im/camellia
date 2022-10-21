@@ -10,6 +10,7 @@
 
 ### 更新
 * camellia-delay-queue，deleteMsg支持立即释放redis内存（默认false）
+* 优化了camellia-redis-proxy代理redis-cluster时的renew策略，优先使用地址串中的ip:port，其次使用master节点，再次使用slave节点，并且加一个随机
 
 ### fix
 * camellia-delay-queue，当消息被消费或者删除后，此时相同的msgId的消息重新发送会被去重

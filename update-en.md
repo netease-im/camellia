@@ -10,6 +10,7 @@
 
 ### update
 * camellia-delay-queue, deleteMsg api support release redis memory right now(default false)
+* optimize camellia-redis-proxy renew logic when upstream is redis-cluster
 
 ### fix
 * camellia-delay-queue, when delay msg has delete or consumer, same msgId msg send will duplicate ignore 
