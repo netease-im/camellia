@@ -13,7 +13,8 @@
 * optimize camellia-redis-proxy renew logic when upstream is redis-cluster
 
 ### fix
-* camellia-delay-queue, when delay msg has delete or consumer, same msgId msg send will duplicate ignore 
+* camellia-delay-queue, when delay msg has delete or consumer, same msgId msg send will duplicate ignore
+* fix redis-benchmark do not work when proxy start with password(from v1.1.0), root case: error handler when auth and other commands submit in pipeline
 
 
 # 1.1.2（2022/10/12）

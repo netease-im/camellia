@@ -92,6 +92,7 @@ public class CommandsTransponder {
 
                 List<ProxyPlugin> requestPlugins = proxyPluginInitResp.getRequestPlugins();
                 if (!requestPlugins.isEmpty()) {
+                    boolean isContinue = false;
                     //执行插件
                     ProxyRequest request = new ProxyRequest(command, chooser);
                     for (ProxyPlugin plugin : proxyPluginInitResp.getRequestPlugins()) {
@@ -100,15 +101,16 @@ public class CommandsTransponder {
                             if (!response.isPass()) {
                                 task.replyCompleted(response.getReply(), true);
                                 hasCommandsSkip = true;
+                                isContinue = true;
                                 break;
                             }
                         } catch (Exception e) {
                             ErrorLogCollector.collect(CommandsTransponder.class, "executeRequest error", e);
                         }
                     }
-                }
-                if (hasCommandsSkip) {
-                    continue;
+                    if (isContinue) {
+                        continue;
+                    }
                 }
 
                 RedisCommand redisCommand = command.getRedisCommand();

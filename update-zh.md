@@ -14,7 +14,7 @@
 
 ### fix
 * camellia-delay-queue，当消息被消费或者删除后，此时相同的msgId的消息重新发送会被去重
-
+* 修复proxy配置密码时，redis-benchmark无法工作的问题（v1.1.0引入），根因：当auth和其他命令通过pipeline一起提交时，proxy没有正确处理
 
 # 1.1.2（2022/10/12）
 ### 新增
