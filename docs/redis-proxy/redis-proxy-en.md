@@ -102,6 +102,25 @@ only support while have singleton-upstream(no custom sharding) (standalone-redis
 KEYS,RANDOMKEY,
 ``` 
 
+* Partially Supported 3   
+only support in special case or special parameter
+```
+##DataBase
+#only support 'select 0'
+SELECT,
+#only support 'CONFIG GET XXX'
+CONFIG,
+#only support RESP2
+HELLO,
+#only proxy start with cluster-mode support
+#only support: 'cluster info', 'cluster nodes', 'cluser slots', 'cluser proxy_heartbeat'
+CLUSTER,
+#direct reply OK for proxy start with cluster-mode
+ASKING,
+#proxy info
+INFO,
+``` 
+
 ## Quick Start
 1) you need a spring-boot project first, then add dependency in your pom.xml，like this（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
 ```

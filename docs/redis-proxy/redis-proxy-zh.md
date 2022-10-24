@@ -32,7 +32,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 ```
 ##DataBase
 PING,AUTH,HELLO,ECHO,CLIENT,QUIT,EXISTS,DEL,TYPE,EXPIRE,
-EXPIREAT,TTL,PERSIST,PEXPIRE,PEXPIREAT,PTTL,SORT,UNLINK,TOUCH,DUMP,RESTORE,SCAN,COMMAND,CONFIG,
+EXPIREAT,TTL,PERSIST,PEXPIRE,PEXPIREAT,PTTL,SORT,UNLINK,TOUCH,DUMP,RESTORE,SCAN,COMMAND,
 ##String
 SET,GET,GETSET,MGET,SETNX,SETEX,MSET,DECRBY,DECR,INCRBY,INCR,APPEND,
 STRLEN,INCRBYFLOAT,PSETEX,SETRANGE,GETRANGE,SUBSTR,GETEX,GETDEL,
@@ -101,6 +101,25 @@ MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ```
 ##DataBase
 KEYS,RANDOMKEY,
+``` 
+
+* 部分支持3
+仅支持部分参数
+```
+##DataBase
+#only support 'select 0'
+SELECT,
+#only support 'CONFIG GET XXX'
+CONFIG,
+#only support RESP2
+HELLO,
+#only proxy start with cluster-mode support
+#only support: 'cluster info', 'cluster nodes', 'cluser slots', 'cluser proxy_heartbeat'
+CLUSTER,
+#direct reply OK for proxy start with cluster-mode
+ASKING,
+#proxy info
+INFO,
 ``` 
 
 ## 快速开始一

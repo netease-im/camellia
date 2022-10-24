@@ -14,15 +14,9 @@ public enum RedisCommand {
      * FULL_SUPPORT
      */
     PING(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
-    INFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     AUTH(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
-    HELLO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     QUIT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
-    CLUSTER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
-    ASKING(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     COMMAND(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
-    CONFIG(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
-    SELECT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     SCAN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     SCRIPT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.SCRIPT, Blocking.FALSE, CommandKeyType.None),
     SET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
@@ -222,6 +216,16 @@ public enum RedisCommand {
     RANDOMKEY(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
 
     /**
+     *
+     */
+    INFO(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    HELLO(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    CLUSTER(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    ASKING(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    CONFIG(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    SELECT(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+
+    /**
      * NOT_SUPPORT
      */
     FLUSHDB(CommandSupportType.NOT_SUPPORT, Type.WRITE, null, Blocking.FALSE, null),
@@ -340,6 +344,9 @@ public enum RedisCommand {
 
         //only support while have singleton-upstream(no custom sharding) [redis-standalone or redis-sentinel]
         PARTIALLY_SUPPORT_2(4),
+
+        //only support in special case or special parameter
+        PARTIALLY_SUPPORT_3(5),
 
         //not support
         NOT_SUPPORT(Integer.MAX_VALUE),
