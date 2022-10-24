@@ -7,6 +7,7 @@
 # 1.1.3（2022/10/xx）
 ### add
 * CamelliaRedisTemplate support RedisProxiesResource
+* camellia-redis-proxy provide CommandDisableProxyPlugin, you can configure in the camellia-redis-proxy.properties to disable some commands
 
 ### update
 * camellia-delay-queue, deleteMsg api support release redis memory right now(default false)

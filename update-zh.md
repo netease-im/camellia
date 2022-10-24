@@ -7,6 +7,7 @@
 # 1.1.3（2022/10/xx）
 ### 新增
 * CamelliaRedisTemplate支持RedisProxiesResource这种redis资源配置
+* camellia-redis-proxy新增CommandDisableProxyPlugin，可以限制某些命令在proxy上的访问
 
 ### 更新
 * camellia-delay-queue，deleteMsg支持立即释放redis内存（默认false）

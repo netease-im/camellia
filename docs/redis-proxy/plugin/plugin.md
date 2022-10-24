@@ -122,6 +122,7 @@ public enum BuildInProxyPluginEnum {
 * TroubleTrickKeysProxyPlugin，用于临时拦截问题key的某些命令，具体见：[trouble-trick-keys](trouble-trick-keys.md)
 * RateLimitProxyPlugin，用于进行频率控制，支持租户级别进行控制，具体见：[rate-limit](rate-limit.md)
 * IPCheckProxyPlugin，用于控制客户端接入，支持ip黑白名单，具体见：[ip-checker](ip-checker.md)
+* CommandDisableProxyPlugin，用于屏蔽某些命令，具体见：[command-disable](command-disable.md)
 
 ### 其他camellia提供的插件（不是内置，需要额外引入maven依赖）
 * MqMultiWriteProducerProxyPlugin，用于使用mq进行异步双写，具体见：[mq-multi-write](mq-multi-write.md)
