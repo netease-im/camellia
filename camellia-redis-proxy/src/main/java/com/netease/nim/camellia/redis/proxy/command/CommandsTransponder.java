@@ -7,7 +7,6 @@ import com.netease.nim.camellia.redis.proxy.auth.HelloCommandUtil;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
-import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
