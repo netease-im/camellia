@@ -21,6 +21,7 @@ public enum RedisCommand {
     CLUSTER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     ASKING(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     COMMAND(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    CONFIG(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     SELECT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     SCAN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     SCRIPT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.SCRIPT, Blocking.FALSE, CommandKeyType.None),
@@ -234,7 +235,6 @@ public enum RedisCommand {
     SHUTDOWN(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     MONITOR(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     SLAVEOF(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
-    CONFIG(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     SYNC(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     DEBUG(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     SLOWLOG(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
@@ -243,7 +243,6 @@ public enum RedisCommand {
     TIME(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     MIGRATE(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     WAIT(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
-
     READONLY(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
 
     ;

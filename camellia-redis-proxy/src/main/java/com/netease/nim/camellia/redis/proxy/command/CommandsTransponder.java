@@ -225,6 +225,19 @@ public class CommandsTransponder {
                         continue;
                     }
 
+                    //CONFIG命令只支持GET
+                    if (redisCommand == RedisCommand.CONFIG) {
+                        byte[][] objects = command.getObjects();
+                        if (objects.length > 1) {
+                            String arg = Utils.bytesToString(objects[1]);
+                            if (!arg.equalsIgnoreCase(RedisKeyword.GET.name())) {
+                                task.replyCompleted(new ErrorReply("command 'CONFIG' only support GET"));
+                                hasCommandsSkip = true;
+                                continue;
+                            }
+                        }
+                    }
+
                     //cluster mode
                     if (clusterModeProcessor != null) {
                         if (redisCommand == RedisCommand.CLUSTER) {
