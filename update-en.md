@@ -4,7 +4,7 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
-# 1.1.3（2022/10/xx）
+# 1.1.3（2022/10/24）
 ### add
 * CamelliaRedisTemplate support RedisProxiesResource
 * camellia-redis-proxy provide CommandDisableProxyPlugin, you can configure in the camellia-redis-proxy.properties to disable some commands
