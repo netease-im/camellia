@@ -92,7 +92,7 @@ public class CommandsTransponder {
 
                 List<ProxyPlugin> requestPlugins = proxyPluginInitResp.getRequestPlugins();
                 if (!requestPlugins.isEmpty()) {
-                    boolean isContinue = false;
+                    boolean pluginBreak = false;
                     //执行插件
                     ProxyRequest request = new ProxyRequest(command, chooser);
                     for (ProxyPlugin plugin : proxyPluginInitResp.getRequestPlugins()) {
@@ -101,14 +101,14 @@ public class CommandsTransponder {
                             if (!response.isPass()) {
                                 task.replyCompleted(response.getReply(), true);
                                 hasCommandsSkip = true;
-                                isContinue = true;
+                                pluginBreak = true;
                                 break;
                             }
                         } catch (Exception e) {
                             ErrorLogCollector.collect(CommandsTransponder.class, "executeRequest error", e);
                         }
                     }
-                    if (isContinue) {
+                    if (pluginBreak) {
                         continue;
                     }
                 }
