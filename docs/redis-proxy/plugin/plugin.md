@@ -78,19 +78,21 @@ public enum BuildInProxyPluginEnum {
     MONITOR_PLUGIN("monitorPlugin", MonitorProxyPlugin.class, Integer.MAX_VALUE, Integer.MIN_VALUE),
     //控制访问权限，ip黑白名单
     IP_CHECKER_PLUGIN("ipCheckerPlugin", IPCheckProxyPlugin.class, Integer.MAX_VALUE - 10000, 0),
+    //屏蔽某些命令
+    COMMAND_DISABLE_PLUGIN("commandDisablePlugin", CommandDisableProxyPlugin.class, Integer.MAX_VALUE - 20000, 0),
     //用于控制请求速率
-    RATE_LIMIT_PLUGIN("rateLimitPlugin", RateLimitProxyPlugin.class, Integer.MAX_VALUE - 20000, 0),
+    RATE_LIMIT_PLUGIN("rateLimitPlugin", RateLimitProxyPlugin.class, Integer.MAX_VALUE - 30000, 0),
     //用于拦截非法的key，直接快速失败
-    TROUBLE_TRICK_KEYS_PLUGIN("troubleTrickKeys", TroubleTrickKeysProxyPlugin.class, Integer.MAX_VALUE - 30000, 0),
+    TROUBLE_TRICK_KEYS_PLUGIN("troubleTrickKeys", TroubleTrickKeysProxyPlugin.class, Integer.MAX_VALUE - 40000, 0),
 
-    //用于热key缓存（仅支持GET命令）
-    HOT_KEY_CACHE_PLUGIN("hotKeyCachePlugin", HotKeyCacheProxyPlugin.class, 20000, Integer.MIN_VALUE + 10000),
     //用于监控热key
-    HOT_KEY_PLUGIN("hotKeyPlugin", HotKeyProxyPlugin.class, 10000, 0),
+    HOT_KEY_PLUGIN("hotKeyPlugin", HotKeyProxyPlugin.class, 20000, 0),
+    //用于热key缓存（仅支持GET命令）
+    HOT_KEY_CACHE_PLUGIN("hotKeyCachePlugin", HotKeyCacheProxyPlugin.class, 10000, Integer.MIN_VALUE + 10000),
 
     //用于监控大key
     BIG_KEY_PLUGIN("bigKeyPlugin", BigKeyProxyPlugin.class, 0, 0),
-    //用于缓存双删（仅拦截DELETE命令）
+    //用于缓存双删（仅拦截DEL命令）
     DELAY_DOUBLE_DELETE_PLUGIN("delayDoubleDeletePlugin", DelayDoubleDeleteProxyPlugin.class, 0, 0),
     //用于自定义双写规则（key维度的）
     MULTI_WRITE_PLUGIN("multiWritePlugin", MultiWriteProxyPlugin.class, 0, 0),
