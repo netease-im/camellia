@@ -9,6 +9,7 @@ import com.netease.nim.camellia.core.util.*;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.ProxyRouteType;
+import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.route.ProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -165,6 +166,37 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             RedisCommand redisCommand = command.getRedisCommand();
 
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1) {
+                if (resourceChooser.getResourceTable().getType() == ResourceTable.Type.SHADING) {
+                    command.getChannelInfo().setInSubscribe(false);
+                    CompletableFuture<Reply> future = new CompletableFuture<>();
+                    future.complete(ErrorReply.NOT_SUPPORT);
+                    futureList.add(future);
+                    continue;
+                }
+                if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE
+                        || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
+                    List<Resource> writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
+                    if (writeResources == null || writeResources.isEmpty()) {
+                        command.getChannelInfo().setInSubscribe(false);
+                        CompletableFuture<Reply> future = new CompletableFuture<>();
+                        future.complete(ErrorReply.NOT_AVAILABLE);
+                        futureList.add(future);
+                        continue;
+                    }
+                    CompletableFuture<Reply> future;
+                    if (writeResources.size() != 1) {
+                        Resource resource = writeResources.get(0);
+                        future = doWrite(Collections.singletonList(resource), commandFlusher, command);
+                    } else {
+                        future = doWrite(writeResources, commandFlusher, command);
+                    }
+                    futureList.add(future);
+                    continue;
+                }
+                //other commands
+            }
+
+            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2) {
                 if (proxyRouteType != ProxyRouteType.REDIS_STANDALONE && proxyRouteType != ProxyRouteType.REDIS_SENTINEL
                         && proxyRouteType != ProxyRouteType.REDIS_CLUSTER) {
                     CompletableFuture<Reply> future = new CompletableFuture<>();
@@ -185,7 +217,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 continue;
             }
 
-            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2) {
+            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_3) {
                 if (proxyRouteType != ProxyRouteType.REDIS_STANDALONE && proxyRouteType != ProxyRouteType.REDIS_SENTINEL) {
                     CompletableFuture<Reply> future = new CompletableFuture<>();
                     future.complete(ErrorReply.NOT_SUPPORT);
@@ -434,6 +466,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
     @Override
     public synchronized void update(ResourceTable resourceTable) {
+        List<Resource> oldWriteResources = this.resourceChooser.getAllWriteResources();
         RedisResourceUtil.checkResourceTable(resourceTable);
         //初始化每个Resource，会做基本的校验
         Set<Resource> resources = ResourceUtil.getAllResources(resourceTable);
@@ -451,6 +484,21 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 singletonClient = null;
+            }
+        }
+        List<Resource> newWriteResources = this.resourceChooser.getAllWriteResources();
+        if (!oldWriteResources.isEmpty() && !newWriteResources.isEmpty()
+                && !ResourceUtil.resourceEquals(oldWriteResources.get(0), newWriteResources.get(0))) {
+            Set<ChannelInfo> channelMap = ChannelMonitor.getChannelMap(bid, bgroup);
+            for (ChannelInfo channelInfo : channelMap) {
+                try {
+                    if (channelInfo.isInSubscribe()) {
+                        logger.warn("route conf update, force close subscribe channel = {}, consid = {}", channelInfo.getCtx().channel(), channelInfo.getConsid());
+                        channelInfo.getCtx().close();
+                    }
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                }
             }
         }
     }
@@ -475,7 +523,8 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         for (Command command : commands) {
             RedisCommand redisCommand = command.getRedisCommand();
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1
-                    || redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2) {
+                    || redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2
+                    || redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_3) {
                 return false;
             }
         }

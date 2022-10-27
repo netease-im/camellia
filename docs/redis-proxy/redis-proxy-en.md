@@ -87,22 +87,27 @@ GEOSEARCHSTORE,
 ```
 
 * Partially Supported 1   
+  only support while no custom sharding
+```
+##PUBSUB(will sub first write redis resource, pub all write redis resource)
+SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
+```
+
+* Partially Supported 2   
 only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel or redis-cluster)
 ```
-##PUBSUB
-SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
 ##TRANSACTION(keys must in same slot)
 MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ```
 
-* Partially Supported 2   
+* Partially Supported 3   
 only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel)   
 ```
 ##DataBase
 KEYS,RANDOMKEY,
 ``` 
 
-* Partially Supported 3   
+* Partially Supported 4   
 only support in special case or special parameter
 ```
 ##DataBase

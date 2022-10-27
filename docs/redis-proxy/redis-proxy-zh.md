@@ -88,22 +88,27 @@ GEOSEARCHSTORE,
 ```
 
 * 部分支持1
+  当且仅当路由不是自定义分片
+```
+##PUBSUB(will sub first write redis resource, pub all write redis resource)
+SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
+```
+
+* 部分支持2
 当且仅当路由后端是单个redis或者单个redis-sentinel或者单个redis-cluster  
 ```
-##PUBSUB
-SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
 ##TRANSACTION(keys must in same slot)
 MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ```
 
-* 部分支持2
+* 部分支持3
 当且仅当路由后端是单个redis或者单个redis-sentinel  
 ```
 ##DataBase
 KEYS,RANDOMKEY,
 ``` 
 
-* 部分支持3
+* 部分支持4
 仅支持部分参数
 ```
 ##DataBase
