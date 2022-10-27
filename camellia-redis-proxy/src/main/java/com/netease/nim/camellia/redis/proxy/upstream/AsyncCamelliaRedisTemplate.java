@@ -16,6 +16,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.AsyncUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.ScanCursorCalculator;
 import com.netease.nim.camellia.redis.proxy.util.*;
@@ -167,7 +168,15 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1) {
                 if (resourceChooser.getResourceTable().getType() == ResourceTable.Type.SHADING) {
-                    command.getChannelInfo().setInSubscribe(false);
+                    ChannelInfo channelInfo = command.getChannelInfo();
+                    channelInfo.setInSubscribe(false);
+                    if (!channelInfo.isInTransaction()) {
+                        RedisClient bindClient = channelInfo.getBindClient();
+                        if (bindClient != null) {
+                            channelInfo.setBindClient(-1, null);
+                            bindClient.startIdleCheck();
+                        }
+                    }
                     CompletableFuture<Reply> future = new CompletableFuture<>();
                     future.complete(ErrorReply.NOT_SUPPORT);
                     futureList.add(future);
@@ -177,7 +186,15 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
                     List<Resource> writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
                     if (writeResources == null || writeResources.isEmpty()) {
-                        command.getChannelInfo().setInSubscribe(false);
+                        ChannelInfo channelInfo = command.getChannelInfo();
+                        channelInfo.setInSubscribe(false);
+                        if (!channelInfo.isInTransaction()) {
+                            RedisClient bindClient = channelInfo.getBindClient();
+                            if (bindClient != null) {
+                                channelInfo.setBindClient(-1, null);
+                                bindClient.startIdleCheck();
+                            }
+                        }
                         CompletableFuture<Reply> future = new CompletableFuture<>();
                         future.complete(ErrorReply.NOT_AVAILABLE);
                         futureList.add(future);
@@ -466,7 +483,10 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
     @Override
     public synchronized void update(ResourceTable resourceTable) {
-        List<Resource> oldWriteResources = this.resourceChooser.getAllWriteResources();
+        List<Resource> oldWriteResources = null;
+        if (this.resourceChooser != null) {
+            oldWriteResources = this.resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
+        }
         RedisResourceUtil.checkResourceTable(resourceTable);
         //初始化每个Resource，会做基本的校验
         Set<Resource> resources = ResourceUtil.getAllResources(resourceTable);
@@ -486,9 +506,14 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 singletonClient = null;
             }
         }
-        List<Resource> newWriteResources = this.resourceChooser.getAllWriteResources();
-        if (!oldWriteResources.isEmpty() && !newWriteResources.isEmpty()
-                && !ResourceUtil.resourceEquals(oldWriteResources.get(0), newWriteResources.get(0))) {
+        //check need force close subscribe channel
+        boolean needCloseSubscribeChannel = this.resourceChooser.getResourceTable().getType() == ResourceTable.Type.SHADING;
+        if (!needCloseSubscribeChannel) {
+            List<Resource> newWriteResources = this.resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
+            needCloseSubscribeChannel = oldWriteResources != null && !oldWriteResources.isEmpty() && !newWriteResources.isEmpty()
+                    && !ResourceUtil.resourceEquals(oldWriteResources.get(0), newWriteResources.get(0));
+        }
+        if (needCloseSubscribeChannel) {
             Set<ChannelInfo> channelMap = ChannelMonitor.getChannelMap(bid, bgroup);
             for (ChannelInfo channelInfo : channelMap) {
                 try {
