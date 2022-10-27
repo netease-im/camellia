@@ -153,6 +153,7 @@ public class CamelliaRedisProxyUtil {
         remoteProperties.setCheckIntervalMillis(properties.getCheckIntervalMillis());
         remoteProperties.setConnectTimeoutMillis(properties.getConnectTimeoutMillis());
         remoteProperties.setReadTimeoutMillis(properties.getReadTimeoutMillis());
+        remoteProperties.setHeaderMap(properties.getHeaderMap());
         return remoteProperties;
     }
 

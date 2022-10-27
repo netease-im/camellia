@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
  * Created by caojiajun on 2020/3/23.
  */
 @ConfigurationProperties(prefix = "camellia-hbase")
@@ -160,6 +159,15 @@ public class CamelliaHBaseProperties {
         private int connectTimeoutMillis = 10000;
         private int readTimeoutMillis = 60000;
         private HBaseConf hBaseConf = new HBaseConf();
+        private Map<String, String> headerMap = new HashMap<>();
+
+        public Map<String, String> getHeaderMap() {
+            return headerMap;
+        }
+
+        public void setHeaderMap(Map<String, String> headerMap) {
+            this.headerMap = headerMap;
+        }
 
         public String getUrl() {
             return url;
@@ -265,6 +273,7 @@ public class CamelliaHBaseProperties {
                     this.xmlFile = xmlFile;
                 }
             }
+
             public static class YML {
                 private Map<String, String> conf = new HashMap<>();
 
@@ -284,7 +293,6 @@ public class CamelliaHBaseProperties {
             }
         }
     }
-
 
 
     public static enum Type {

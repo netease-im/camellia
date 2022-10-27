@@ -99,7 +99,7 @@ public class CamelliaHBaseConfiguration {
             }
         } else if (type == CamelliaHBaseProperties.Type.REMOTE) {
             CamelliaHBaseProperties.Remote remote = properties.getRemote();
-            CamelliaApi camelliaApi = CamelliaApiUtil.init(remote.getUrl(), remote.getConnectTimeoutMillis(), remote.getReadTimeoutMillis());
+            CamelliaApi camelliaApi = CamelliaApiUtil.init(remote.getUrl(), remote.getConnectTimeoutMillis(), remote.getReadTimeoutMillis(), remote.getHeaderMap());
             CamelliaHBaseProperties.Remote.HBaseConf hBaseConf = remote.gethBaseConf();
             CamelliaHBaseProperties.Remote.HBaseConf.ConfType confType = hBaseConf.getConfType();
             CamelliaHBaseEnv env;

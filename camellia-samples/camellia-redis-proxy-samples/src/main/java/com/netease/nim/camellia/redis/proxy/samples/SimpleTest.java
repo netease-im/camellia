@@ -6,7 +6,9 @@ import com.netease.nim.camellia.redis.proxy.plugin.BuildInProxyPluginEnum;
 import com.netease.nim.camellia.redis.proxy.samples.route.CustomProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.util.CamelliaRedisProxyStarter;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 不使用spring-boot-starter，手工启动一个proxy的方法
@@ -46,7 +48,10 @@ public class SimpleTest {
         CamelliaTranspondProperties transpondProperties = CamelliaRedisProxyStarter.getTranspondProperties();
         transpondProperties.setType(CamelliaTranspondProperties.Type.REMOTE);
         CamelliaTranspondProperties.RemoteProperties remoteProperties = new CamelliaTranspondProperties.RemoteProperties();
-        remoteProperties.setUrl("https://127.0.0.1:8080");
+        remoteProperties.setUrl("http://127.0.0.1:8080");
+        Map<String, String> headerMap=new HashMap<>();
+        headerMap.put("api-key", "secureToken");
+        remoteProperties.setHeaderMap(headerMap);
         remoteProperties.setBid(1);
         remoteProperties.setBgroup("default");
         transpondProperties.setRemote(remoteProperties);

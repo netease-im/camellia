@@ -4,8 +4,10 @@ import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- *
  * Created by caojiajun on 2019/11/6.
  */
 @ConfigurationProperties(prefix = "camellia-redis-proxy.transpond")
@@ -292,6 +294,19 @@ public class TranspondProperties {
          * dashboard的请求read超时
          */
         private int readTimeoutMillis = Constants.Remote.readTimeoutMillis;
+
+        /**
+         * dashboard's headers
+         */
+        private Map<String, String> headerMap = new HashMap<>();
+
+        public Map<String, String> getHeaderMap() {
+            return headerMap;
+        }
+
+        public void setHeaderMap(Map<String, String> headerMap) {
+            this.headerMap = headerMap;
+        }
 
         public String getUrl() {
             return url;

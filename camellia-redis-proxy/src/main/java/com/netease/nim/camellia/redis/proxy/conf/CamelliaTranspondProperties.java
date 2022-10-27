@@ -2,8 +2,10 @@ package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.core.model.ResourceTable;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- *
  * Created by caojiajun on 2019/11/6.
  */
 public class CamelliaTranspondProperties {
@@ -110,6 +112,15 @@ public class CamelliaTranspondProperties {
         private long checkIntervalMillis = Constants.Remote.checkIntervalMillis;
         private int connectTimeoutMillis = Constants.Remote.connectTimeoutMillis;
         private int readTimeoutMillis = Constants.Remote.readTimeoutMillis;
+        private Map<String, String> headerMap = new HashMap<>();
+
+        public Map<String, String> getHeaderMap() {
+            return headerMap;
+        }
+
+        public void setHeaderMap(Map<String, String> headerMap) {
+            this.headerMap = headerMap;
+        }
 
         public String getUrl() {
             return url;

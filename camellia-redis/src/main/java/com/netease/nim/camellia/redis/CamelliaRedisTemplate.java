@@ -79,25 +79,25 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
 
     public CamelliaRedisTemplate(CamelliaRedisEnv env, String url, long bid, String bgroup,
                                  boolean monitorEnable, long checkIntervalMillis,
-                                 int connectTimeoutMillis, int readTimeoutMillis) {
-        this(env, CamelliaApiUtil.init(url, connectTimeoutMillis, readTimeoutMillis), bid, bgroup, monitorEnable, checkIntervalMillis);
+                                 int connectTimeoutMillis, int readTimeoutMillis , Map<String, String> headerMap) {
+        this(env, CamelliaApiUtil.init(url, connectTimeoutMillis, readTimeoutMillis, headerMap), bid, bgroup, monitorEnable, checkIntervalMillis);
     }
 
     public CamelliaRedisTemplate(CamelliaRedisEnv env, String url, long bid, String bgroup,
-                                 boolean monitorEnable, long checkIntervalMillis) {
-        this(env, CamelliaApiUtil.init(url), bid, bgroup, monitorEnable, checkIntervalMillis);
+                                 boolean monitorEnable, long checkIntervalMillis, Map<String, String> headerMap) {
+        this(env, CamelliaApiUtil.init(url, headerMap), bid, bgroup, monitorEnable, checkIntervalMillis);
     }
 
     public CamelliaRedisTemplate(CamelliaRedisEnv env, CamelliaApi service, long bid, String bgroup) {
         this(env, service, bid, bgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
     }
 
-    public CamelliaRedisTemplate(CamelliaRedisEnv env, String url, long bid, String bgroup) {
-        this(env, CamelliaApiUtil.init(url), bid, bgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
+    public CamelliaRedisTemplate(CamelliaRedisEnv env, String url, long bid, String bgroup, Map<String, String> headerMap) {
+        this(env, CamelliaApiUtil.init(url,headerMap ), bid, bgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
     }
 
-    public CamelliaRedisTemplate(String url, long bid, String bgroup, boolean monitorEnable, long checkIntervalMillis) {
-        this(CamelliaRedisEnv.defaultRedisEnv(), url, bid, bgroup, monitorEnable, checkIntervalMillis);
+    public CamelliaRedisTemplate(String url, long bid, String bgroup, boolean monitorEnable, long checkIntervalMillis, Map<String, String> headerMap) {
+        this(CamelliaRedisEnv.defaultRedisEnv(), url, bid, bgroup, monitorEnable, checkIntervalMillis, headerMap);
     }
 
     public CamelliaRedisTemplate(CamelliaRedisEnv env, ResourceTable resourceTable) {

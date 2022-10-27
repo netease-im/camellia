@@ -2,6 +2,9 @@ package com.netease.nim.camellia.feign.springboot;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by caojiajun on 2022/3/30
  */
@@ -31,6 +34,15 @@ public class CamelliaFeignProperties {
         private boolean enable;//是否走camellia-dashboard
         private String url;//camellia-dashboard的url
         private long checkIntervalMillis = 5000;
+        private Map<String, String> headerMap = new HashMap<>(); // headers of camellia-dashboard
+
+        public Map<String, String> getHeaderMap() {
+            return headerMap;
+        }
+
+        public void setHeaderMap(Map<String, String> headerMap) {
+            this.headerMap = headerMap;
+        }
 
         public boolean isEnable() {
             return enable;

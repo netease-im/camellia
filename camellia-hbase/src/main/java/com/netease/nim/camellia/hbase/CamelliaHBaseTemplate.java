@@ -12,9 +12,9 @@ import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 
 import java.util.List;
+import java.util.Map;
 
 /**
- *
  * Created by caojiajun on 2020/3/20.
  */
 public class CamelliaHBaseTemplate implements ICamelliaHBaseTemplate {
@@ -41,25 +41,25 @@ public class CamelliaHBaseTemplate implements ICamelliaHBaseTemplate {
 
     public CamelliaHBaseTemplate(CamelliaHBaseEnv env, String url, long bid, String bgroup,
                                  boolean monitorEnable, long checkIntervalMillis,
-                                 int connectTimeoutMillis, int readTimeoutMillis) {
-        this(env, CamelliaApiUtil.init(url, connectTimeoutMillis, readTimeoutMillis), bid, bgroup, monitorEnable, checkIntervalMillis);
+                                 int connectTimeoutMillis, int readTimeoutMillis, Map<String, String> headerMap) {
+        this(env, CamelliaApiUtil.init(url, connectTimeoutMillis, readTimeoutMillis, headerMap), bid, bgroup, monitorEnable, checkIntervalMillis);
     }
 
     public CamelliaHBaseTemplate(CamelliaHBaseEnv env, String url, long bid, String bgroup,
-                                 boolean monitorEnable, long checkIntervalMillis) {
-        this(env, CamelliaApiUtil.init(url), bid, bgroup, monitorEnable, checkIntervalMillis);
+                                 boolean monitorEnable, long checkIntervalMillis, Map<String, String> headerMap) {
+        this(env, CamelliaApiUtil.init(url, headerMap), bid, bgroup, monitorEnable, checkIntervalMillis);
     }
 
     public CamelliaHBaseTemplate(CamelliaHBaseEnv env, CamelliaApi service, long bid, String bgroup) {
         this(env, service, bid, bgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
     }
 
-    public CamelliaHBaseTemplate(CamelliaHBaseEnv env, String url, long bid, String bgroup) {
-        this(env, CamelliaApiUtil.init(url), bid, bgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
+    public CamelliaHBaseTemplate(CamelliaHBaseEnv env, String url, long bid, String bgroup, Map<String, String> headerMap) {
+        this(env, CamelliaApiUtil.init(url, headerMap), bid, bgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
     }
 
-    public CamelliaHBaseTemplate(String url, long bid, String bgroup, boolean monitorEnable, long checkIntervalMillis) {
-        this(CamelliaHBaseEnv.defaultHBaseEnv(), url, bid, bgroup, monitorEnable, checkIntervalMillis);
+    public CamelliaHBaseTemplate(String url, long bid, String bgroup, boolean monitorEnable, long checkIntervalMillis, Map<String, String> headerMap) {
+        this(CamelliaHBaseEnv.defaultHBaseEnv(), url, bid, bgroup, monitorEnable, checkIntervalMillis, headerMap);
     }
 
     public CamelliaHBaseTemplate(CamelliaHBaseEnv env, ResourceTable resourceTable) {
