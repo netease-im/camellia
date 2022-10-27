@@ -2,6 +2,9 @@ package com.netease.nim.camellia.redis.springboot;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  *
@@ -145,7 +148,18 @@ public class CamelliaRedisProperties {
          * dashboard的请求read超时
          */
         private int readTimeoutMillis = 60000;
+        /**
+         * dashboard's headers
+         */
+        private Map<String, String> headerMap = new HashMap<>();
 
+        public Map<String, String> getHeaderMap() {
+            return headerMap;
+        }
+
+        public void setHeaderMap(Map<String, String> headerMap) {
+            this.headerMap = headerMap;
+        }
 
         public String getUrl() {
             return url;
