@@ -26,7 +26,6 @@ import java.util.*;
 
 
 /**
- *
  * Created by caojiajun on 2019/7/22.
  */
 public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
@@ -79,8 +78,19 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
 
     public CamelliaRedisTemplate(CamelliaRedisEnv env, String url, long bid, String bgroup,
                                  boolean monitorEnable, long checkIntervalMillis,
-                                 int connectTimeoutMillis, int readTimeoutMillis , Map<String, String> headerMap) {
+                                 int connectTimeoutMillis, int readTimeoutMillis) {
+        this(env, CamelliaApiUtil.init(url, connectTimeoutMillis, readTimeoutMillis), bid, bgroup, monitorEnable, checkIntervalMillis);
+    }
+
+    public CamelliaRedisTemplate(CamelliaRedisEnv env, String url, long bid, String bgroup,
+                                 boolean monitorEnable, long checkIntervalMillis,
+                                 int connectTimeoutMillis, int readTimeoutMillis, Map<String, String> headerMap) {
         this(env, CamelliaApiUtil.init(url, connectTimeoutMillis, readTimeoutMillis, headerMap), bid, bgroup, monitorEnable, checkIntervalMillis);
+    }
+
+    public CamelliaRedisTemplate(CamelliaRedisEnv env, String url, long bid, String bgroup,
+                                 boolean monitorEnable, long checkIntervalMillis) {
+        this(env, CamelliaApiUtil.init(url), bid, bgroup, monitorEnable, checkIntervalMillis);
     }
 
     public CamelliaRedisTemplate(CamelliaRedisEnv env, String url, long bid, String bgroup,
@@ -92,8 +102,16 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         this(env, service, bid, bgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
     }
 
+    public CamelliaRedisTemplate(CamelliaRedisEnv env, String url, long bid, String bgroup) {
+        this(env, CamelliaApiUtil.init(url), bid, bgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
+    }
+
     public CamelliaRedisTemplate(CamelliaRedisEnv env, String url, long bid, String bgroup, Map<String, String> headerMap) {
-        this(env, CamelliaApiUtil.init(url,headerMap ), bid, bgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
+        this(env, CamelliaApiUtil.init(url, headerMap), bid, bgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
+    }
+
+    public CamelliaRedisTemplate(String url, long bid, String bgroup, boolean monitorEnable, long checkIntervalMillis) {
+        this(CamelliaRedisEnv.defaultRedisEnv(), url, bid, bgroup, monitorEnable, checkIntervalMillis);
     }
 
     public CamelliaRedisTemplate(String url, long bid, String bgroup, boolean monitorEnable, long checkIntervalMillis, Map<String, String> headerMap) {
@@ -1554,8 +1572,8 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
             throw new CamelliaRedisException("keysvalues not match");
         }
         Map<byte[], byte[]> map = new HashMap<>();
-        for (int i=0; i<keysvalues.length / 2; i++) {
-            map.put(keysvalues[i*2], keysvalues[i*2+1]);
+        for (int i = 0; i < keysvalues.length / 2; i++) {
+            map.put(keysvalues[i * 2], keysvalues[i * 2 + 1]);
         }
         return factory.getProxy().mset(map);
     }
@@ -1568,8 +1586,8 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
             throw new CamelliaRedisException("keysvalues not match");
         }
         Map<byte[], byte[]> map = new HashMap<>();
-        for (int i=0; i<keysvalues.length / 2; i++) {
-            map.put(SafeEncoder.encode(keysvalues[i*2]), SafeEncoder.encode(keysvalues[i*2+1]));
+        for (int i = 0; i < keysvalues.length / 2; i++) {
+            map.put(SafeEncoder.encode(keysvalues[i * 2]), SafeEncoder.encode(keysvalues[i * 2 + 1]));
         }
         return factory.getProxy().mset(map);
     }
@@ -1653,9 +1671,11 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     public Object eval(byte[] script, List<byte[]> keys, List<byte[]> args) {
         return eval(script, toByteArray(keys.size()), getParamsWithBinary(keys, args));
     }
+
     private static byte[] toByteArray(final int value) {
         return SafeEncoder.encode(String.valueOf(value));
     }
+
     private static byte[][] getParamsWithBinary(List<byte[]> keys, List<byte[]> args) {
         final int keyCount = keys.size();
         final int argCount = args.size();
@@ -1710,7 +1730,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         return writeInvoke((resource, redis) -> {
             if (LogUtil.isDebugEnabled()) {
                 List<String> list = new ArrayList<>();
-                for (int i=0; i<keyCount; i++) {
+                for (int i = 0; i < keyCount; i++) {
                     list.add(SafeEncoder.encode(params[i]));
                 }
                 LogUtil.debugLog(redis.getClass().getSimpleName(), "eval", resource, SafeEncoder.encode(script), list.toArray(new String[0]));
@@ -1731,7 +1751,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         return writeInvoke((resource, redis) -> {
             if (LogUtil.isDebugEnabled()) {
                 List<String> list = new ArrayList<>();
-                for (int i=0; i<keyCount; i++) {
+                for (int i = 0; i < keyCount; i++) {
                     list.add(SafeEncoder.encode(params[i]));
                 }
                 LogUtil.debugLog(redis.getClass().getSimpleName(), "evalsha", resource, SafeEncoder.encode(sha1), list.toArray(new String[0]));
@@ -1938,18 +1958,19 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         List<Resource> writeResources;
         if (keyCount < 0) {
             throw new CamelliaRedisException("ERR Number of keys can't be negative");
-        } if (keyCount == 0) {
+        }
+        if (keyCount == 0) {
             writeResources = chooser.getWriteResources(new byte[0]);
         } else if (keyCount == 1) {
             writeResources = chooser.getWriteResources(params[0]);
         } else {
             writeResources = chooser.getWriteResources(params[0]);
-            for (int i=1; i<keyCount; i++) {
+            for (int i = 1; i < keyCount; i++) {
                 List<Resource> resources = chooser.getWriteResources(params[i]);
                 if (writeResources.size() != resources.size()) {
                     throw new CamelliaRedisException("ERR keys in request not in same resources");
                 }
-                for (int j=0; j<writeResources.size(); j++) {
+                for (int j = 0; j < writeResources.size(); j++) {
                     Resource resource1 = writeResources.get(j);
                     Resource resource2 = resources.get(j);
                     if (!resource1.getUrl().equals(resource2.getUrl())) {
