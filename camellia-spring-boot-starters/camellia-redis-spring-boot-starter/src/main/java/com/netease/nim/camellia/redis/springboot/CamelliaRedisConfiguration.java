@@ -25,6 +25,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import redis.clients.jedis.JedisPoolConfig;
 
+import java.util.Map;
+
 
 /**
  *
@@ -104,7 +106,8 @@ public class CamelliaRedisConfiguration {
             int connectTimeoutMillis = remote.getConnectTimeoutMillis();
             int readTimeoutMillis = remote.getReadTimeoutMillis();
             long checkIntervalMillis = remote.getCheckIntervalMillis();
-            return new CamelliaRedisTemplate(redisEnv, url, bid, bgroup, monitor, checkIntervalMillis, connectTimeoutMillis, readTimeoutMillis);
+            Map<String, String> headerMap = remote.getHeaderMap();
+            return new CamelliaRedisTemplate(redisEnv, url, bid, bgroup, monitor, checkIntervalMillis, connectTimeoutMillis, readTimeoutMillis, headerMap);
         } else if (type == CamelliaRedisProperties.Type.CUSTOM) {
             CamelliaRedisProperties.Custom custom = properties.getCustom();
             String className = custom.getResourceTableUpdaterClassName();

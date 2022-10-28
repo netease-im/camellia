@@ -35,8 +35,10 @@ public class Application {
 
     //基于dashboard的动态配置
     private static void testRemoteConf() {
+        Map<String, String> headerMap = new HashMap<>();
+        headerMap.put("api-key", "secureToken");
         ReloadableProxyFactory<Cache> factory = new ReloadableProxyFactory.Builder<Cache>()
-                .service(CamelliaApiUtil.init("http://127.0.0.1:8080"))//dashboard的地址
+                .service(CamelliaApiUtil.init("http://127.0.0.1:8080", headerMap))//dashboard的地址
                 .bid(1L)//业务类型
                 .bgroup("default")//业务分组
                 .clazz(Cache.class)//代理对象

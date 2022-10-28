@@ -18,6 +18,9 @@ import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  * Created by caojiajun on 2022/3/1
@@ -33,6 +36,7 @@ public final class CamelliaFeign {
         private CamelliaFeignDynamicOptionGetter camelliaFeignDynamicOptionGetter;
         private CamelliaFeignEnv feignEnv = CamelliaFeignEnv.defaultFeignEnv();
         private String camelliaUrl;
+        private Map<String, String> camelliaHeaderMap = new HashMap<>();
         private CamelliaApi camelliaApi;
         private long checkIntervalMillis = 5000;
         private long bid = -1;
@@ -81,6 +85,11 @@ public final class CamelliaFeign {
 
         public Builder camelliaUrl(String camelliaUrl) {
             this.camelliaUrl = camelliaUrl;
+            return this;
+        }
+
+        public Builder camelliaHeaderMap(Map<String, String> camelliaHeaderMap) {
+            this.camelliaHeaderMap = camelliaHeaderMap;
             return this;
         }
 
@@ -200,7 +209,7 @@ public final class CamelliaFeign {
                 CamelliaApi camelliaApi = this.camelliaApi;
                 if (camelliaApi == null) {
                     if (camelliaUrl != null) {
-                        camelliaApi = CamelliaApiUtil.init(camelliaUrl);
+                        camelliaApi = CamelliaApiUtil.init(camelliaUrl, camelliaHeaderMap);
                     }
                 }
                 String defaultBgroup = camelliaFeignDynamicOptionGetter.getDefaultBgroup(bid);

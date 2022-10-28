@@ -272,7 +272,8 @@ public class AsyncCamelliaRedisTemplateChooser {
         if (url == null) {
             throw new IllegalArgumentException("remote.url is null");
         }
-        apiService = CamelliaApiUtil.init(url, remote.getConnectTimeoutMillis(), remote.getReadTimeoutMillis());
+
+        apiService = CamelliaApiUtil.init(url, remote.getConnectTimeoutMillis(), remote.getReadTimeoutMillis(), remote.getHeaderMap());
         logger.info("ApiService init, url = {}", url);
         boolean dynamic = remote.isDynamic();
         logger.info("Remote dynamic = {}", dynamic);

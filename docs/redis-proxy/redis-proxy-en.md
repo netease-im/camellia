@@ -424,8 +424,10 @@ camellia-redis-proxy:
       bgroup: default
       url: http://127.0.0.1:8080
       check-interval-millis: 5000
+      header-map: # custom header map for request to camellia-dashboard (optional)
+        api-key: secretToken # header name: api-key, header value: secretToken
 ```
-it means config will get from camellia-dashboard, config named bid=1 and bgroup=default will be used.   
+it means config will get from camellia-dashboard, config named bid=1 and bgroup=default will be used.
 furthermore, config will reload if config changed in camellia-dashboard, redis proxy use http protocol to check config if change, default check interval is 5s.  
 
 ### 8) config from camellia-dashboard with multi-config  
@@ -445,6 +447,8 @@ camellia-redis-proxy:
       url: http://127.0.0.1:8080
       check-interval-millis: 5000
       dynamic: true
+      header-map: # custom header map for request to camellia-dashboard (optional)
+        api-key: secretToken # header name: api-key, header value: secretToken
 ```
 it means redis proxy support route business-A to redis1, business-B to redis2.   
 this feature requires redis-cli declare business type, client can use client setname command to declare, client name with camellia_10_default means use config with bid=10 and bgroup=defualt from camellia-dashboard.

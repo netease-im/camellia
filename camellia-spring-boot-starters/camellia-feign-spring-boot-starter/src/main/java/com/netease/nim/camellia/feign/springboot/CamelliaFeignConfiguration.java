@@ -78,7 +78,7 @@ public class CamelliaFeignConfiguration {
         CamelliaApi camelliaApi = null;
         long checkIntervalMillis = 5000;
         if (remote != null && remote.isEnable()) {
-            camelliaApi = CamelliaApiUtil.init(remote.getUrl());
+            camelliaApi = CamelliaApiUtil.init(remote.getUrl(), remote.getHeaderMap());
             checkIntervalMillis = remote.getCheckIntervalMillis();
         }
         return new CamelliaFeignClientFactory(camelliaFeignEnv(), camelliaApi, checkIntervalMillis, feignProps(), dynamicOptionGetter(properties));
