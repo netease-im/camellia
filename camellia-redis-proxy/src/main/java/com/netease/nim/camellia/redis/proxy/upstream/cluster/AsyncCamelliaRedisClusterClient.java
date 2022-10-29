@@ -147,14 +147,17 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
 
             RedisClient bindClient = channelInfo.getBindClient();
             int bindSlot = channelInfo.getBindSlot();
-            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1) {
-                if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
-                    transaction(command, future, channelInfo, commandFlusher, redisCommand, bindSlot, bindClient);
-                    continue;
-                }
 
+            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1) {
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.PUB_SUB) {
                     pubsub(command, future, channelInfo, commandFlusher, redisCommand, bindClient);
+                    continue;
+                }
+            }
+
+            if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2) {
+                if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
+                    transaction(command, future, channelInfo, commandFlusher, redisCommand, bindSlot, bindClient);
                     continue;
                 }
             }
@@ -696,7 +699,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
         if (bindClient != null) return false;
         RedisCommand redisCommand = command.getRedisCommand();
         RedisCommand.CommandSupportType supportType = redisCommand.getSupportType();
-        if (supportType == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1
+        if (supportType == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2
                 || supportType == RedisCommand.CommandSupportType.RESTRICTIVE_SUPPORT) {
             return false;
         }

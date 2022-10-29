@@ -5,10 +5,7 @@ import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -55,10 +52,13 @@ public class ChannelMonitor {
     }
 
     public static Map<String, ChannelInfo> getChannelMap() {
-        return Collections.unmodifiableMap(map);
+        return new HashMap<>(map);
     }
 
     public static Set<ChannelInfo> getChannelMap(long bid, String bgroup) {
+        if (bid == -1) {
+            return new HashSet<>(map.values());
+        }
         ConcurrentHashMap<String, ChannelInfo> map = bidbgroupMap.get(bid + "|" + bgroup);
         if (map == null) return new HashSet<>();
         return new HashSet<>(map.values());

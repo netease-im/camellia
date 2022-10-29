@@ -36,7 +36,7 @@ public enum BuildInProxyPluginEnum {
 
     //用于监控大key
     BIG_KEY_PLUGIN("bigKeyPlugin", BigKeyProxyPlugin.class, 0, 0),
-    //用于缓存双删（仅拦截DELETE命令）
+    //用于缓存双删（仅拦截DEL命令）
     DELAY_DOUBLE_DELETE_PLUGIN("delayDoubleDeletePlugin", DelayDoubleDeleteProxyPlugin.class, 0, 0),
     //用于自定义双写规则（key维度的）
     MULTI_WRITE_PLUGIN("multiWritePlugin", MultiWriteProxyPlugin.class, 0, 0),

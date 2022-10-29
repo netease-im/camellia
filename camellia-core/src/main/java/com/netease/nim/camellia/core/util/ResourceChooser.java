@@ -29,7 +29,7 @@ public class ResourceChooser {
 
     private final Set<Resource> allResources;
     private final List<Resource> allReadResources;
-    private final List<Resource> allWriteReources;
+    private final List<Resource> allWriteResources;
 
     private final long createTime = System.currentTimeMillis();
 
@@ -48,7 +48,7 @@ public class ResourceChooser {
         readResources.addAll(ResourceUtil.getAllReadResources(resourceTable));
         writeResources.addAll(ResourceUtil.getAllWriteResources(resourceTable));
         this.allReadResources = new ArrayList<>(readResources);
-        this.allWriteReources = new ArrayList<>(writeResources);
+        this.allWriteResources = new ArrayList<>(writeResources);
     }
 
     public ResourceTable getResourceTable() {
@@ -68,7 +68,7 @@ public class ResourceChooser {
     }
 
     public List<Resource> getAllWriteResources() {
-        return allWriteReources;
+        return allWriteResources;
     }
 
     public Set<Resource> getAllResources() {

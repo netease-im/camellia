@@ -61,7 +61,7 @@ BF.ADD,BF.EXISTS,BF.INFO,BF.INSERT,BF.LOADCHUNK,BF.MADD,BF.MEXISTS,BF.SCANDUMP,
 ```
 
 * 限制性支持
-当前仅当以下命令涉及的key被分在相同分片，或者被分在redis cluster的相同slot下  
+当且仅当以下命令涉及的key被分在相同分片，或者被分在redis cluster的相同slot下  
 特别的，如果是阻塞式的命令，则不允许双（多）写  
 ```
 ##DataBase
@@ -88,22 +88,27 @@ GEOSEARCHSTORE,
 ```
 
 * 部分支持1
-当前仅当路由后端是单个redis或者单个redis-sentinel或者单个redis-cluster  
+  当且仅当路由不是自定义分片
 ```
-##PUBSUB
+##PUBSUB(will sub first write redis resource, pub all write redis resource)
 SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
+```
+
+* 部分支持2
+当且仅当路由后端是单个redis或者单个redis-sentinel或者单个redis-cluster  
+```
 ##TRANSACTION(keys must in same slot)
 MULTI,DISCARD,EXEC,WATCH,UNWATCH,
 ```
 
-* 部分支持2
-当前仅当路由后端是单个redis或者单个redis-sentinel  
+* 部分支持3
+当且仅当路由后端是单个redis或者单个redis-sentinel  
 ```
 ##DataBase
 KEYS,RANDOMKEY,
 ``` 
 
-* 部分支持3
+* 部分支持4
 仅支持部分参数
 ```
 ##DataBase

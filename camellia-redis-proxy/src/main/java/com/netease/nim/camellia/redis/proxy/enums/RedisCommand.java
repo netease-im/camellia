@@ -153,8 +153,7 @@ public enum RedisCommand {
 
     /**
      * Restrictive Support
-     * support only when all the keys in these command route to same redis-server or same redis-cluster slot
-     * especially, blocking command don't support multi-write
+     * only support while keys in this command location at the same server or same slot, especially, blocking command don't support multi-write
      */
     EVAL(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SCRIPT, Blocking.FALSE, CommandKeyType.COMPLEX),
     EVALSHA(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SCRIPT, Blocking.FALSE, CommandKeyType.COMPLEX),
@@ -193,8 +192,8 @@ public enum RedisCommand {
     BLMOVE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.LIST, Blocking.TRUE, CommandKeyType.COMPLEX),
 
     /**
-     * Partially Support
-     * only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel or redis-cluster)
+     * Partially Support-1
+     * only support while no custom sharding
      */
     SUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, Blocking.TRUE, CommandKeyType.None),
     PUBLISH(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, Blocking.FALSE, CommandKeyType.None),
@@ -202,28 +201,34 @@ public enum RedisCommand {
     PSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, Blocking.TRUE, CommandKeyType.None),
     PUNSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, Blocking.FALSE, CommandKeyType.None),
     PUBSUB(CommandSupportType.PARTIALLY_SUPPORT_1, Type.READ, CommandType.PUB_SUB, Blocking.FALSE, CommandKeyType.None),
-    MULTI(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.None),
-    DISCARD(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.None),
-    EXEC(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.None),
-    WATCH(CommandSupportType.PARTIALLY_SUPPORT_1, Type.READ, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.SIMPLE_MULTI),
-    UNWATCH(CommandSupportType.PARTIALLY_SUPPORT_1, Type.READ, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.None),
 
     /**
-     * Partially Support
-     * only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel)
+     * Partially Support-2
+     * only support while have singleton-upstream(no custom sharding) [redis-standalone or redis-sentinel or redis-cluster]
      */
-    KEYS(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
-    RANDOMKEY(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    MULTI(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.None),
+    DISCARD(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.None),
+    EXEC(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.None),
+    WATCH(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.SIMPLE_MULTI),
+    UNWATCH(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.None),
 
     /**
-     *
+     * Partially Support-3
+     * only support while have singleton-upstream(no custom sharding) [redis-standalone or redis-sentinel]
      */
-    INFO(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
-    HELLO(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
-    CLUSTER(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
-    ASKING(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
-    CONFIG(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
-    SELECT(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    KEYS(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    RANDOMKEY(CommandSupportType.PARTIALLY_SUPPORT_3, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+
+    /**
+     * Partially Support-4
+     * only support in special case or special parameter
+     */
+    INFO(CommandSupportType.PARTIALLY_SUPPORT_4, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    HELLO(CommandSupportType.PARTIALLY_SUPPORT_4, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    CLUSTER(CommandSupportType.PARTIALLY_SUPPORT_4, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    ASKING(CommandSupportType.PARTIALLY_SUPPORT_4, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    CONFIG(CommandSupportType.PARTIALLY_SUPPORT_4, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    SELECT(CommandSupportType.PARTIALLY_SUPPORT_4, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
 
     /**
      * NOT_SUPPORT
@@ -339,14 +344,17 @@ public enum RedisCommand {
         //only support while keys in this command location at the same server or same slot, especially, blocking command don't support multi-write
         RESTRICTIVE_SUPPORT(2),
 
-        //only support while have singleton-upstream(no custom sharding) [redis-standalone or redis-sentinel or redis-cluster]
+        //only support while no custom sharding
         PARTIALLY_SUPPORT_1(3),
 
-        //only support while have singleton-upstream(no custom sharding) [redis-standalone or redis-sentinel]
+        //only support while have singleton-upstream(no custom sharding) [redis-standalone or redis-sentinel or redis-cluster]
         PARTIALLY_SUPPORT_2(4),
 
-        //only support in special case or special parameter
+        //only support while have singleton-upstream(no custom sharding) [redis-standalone or redis-sentinel]
         PARTIALLY_SUPPORT_3(5),
+
+        //only support in special case or special parameter
+        PARTIALLY_SUPPORT_4(6),
 
         //not support
         NOT_SUPPORT(Integer.MAX_VALUE),

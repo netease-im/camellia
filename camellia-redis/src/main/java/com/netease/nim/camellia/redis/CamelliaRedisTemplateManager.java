@@ -57,12 +57,20 @@ public class CamelliaRedisTemplateManager {
         this.checkIntervalMillis = checkIntervalMillis;
     }
 
+    public CamelliaRedisTemplateManager(String url, int poolSize, int timeout) {
+        this(CamelliaApiUtil.init(url), 0, poolSize, poolSize, timeout, timeout, defaultMonitorEnable, defaultCheckMillis);
+    }
+
     public CamelliaRedisTemplateManager(String url, int poolSize, int timeout, Map<String, String> headerMap) {
         this(CamelliaApiUtil.init(url, headerMap), 0, poolSize, poolSize, timeout, timeout, defaultMonitorEnable, defaultCheckMillis);
     }
 
     public CamelliaRedisTemplateManager(CamelliaApi service, int poolSize, int timeout) {
         this(service, 0, poolSize, poolSize, timeout, timeout, defaultMonitorEnable, defaultCheckMillis);
+    }
+
+    public CamelliaRedisTemplateManager(String url, int minIdle, int maxIdle, int maxTotal, int maxWaitMillis, int timeout) {
+        this(CamelliaApiUtil.init(url), minIdle, maxIdle, maxTotal, maxWaitMillis, timeout, defaultMonitorEnable, defaultCheckMillis);
     }
 
     public CamelliaRedisTemplateManager(String url, int minIdle, int maxIdle, int maxTotal, int maxWaitMillis, int timeout, Map<String, String> headerMap) {
@@ -74,8 +82,17 @@ public class CamelliaRedisTemplateManager {
     }
 
     public CamelliaRedisTemplateManager(String url, int minIdle, int maxIdle, int maxTotal, int maxWaitMillis,
+                                        int timeout, boolean monitorEnable, long checkIntervalMillis) {
+        this(CamelliaApiUtil.init(url), minIdle, maxIdle, maxTotal, maxWaitMillis, timeout, monitorEnable, checkIntervalMillis);
+    }
+
+    public CamelliaRedisTemplateManager(String url, int minIdle, int maxIdle, int maxTotal, int maxWaitMillis,
                                         int timeout, boolean monitorEnable, long checkIntervalMillis, Map<String, String> headerMap) {
         this(CamelliaApiUtil.init(url, headerMap), minIdle, maxIdle, maxTotal, maxWaitMillis, timeout, monitorEnable, checkIntervalMillis);
+    }
+
+    public CamelliaRedisTemplateManager(String url, JedisPoolConfig poolConfig, int timeout) {
+        this(CamelliaApiUtil.init(url), poolConfig, timeout, defaultMonitorEnable, defaultCheckMillis);
     }
 
     public CamelliaRedisTemplateManager(String url, JedisPoolConfig poolConfig, int timeout, Map<String, String> headerMap) {
@@ -87,8 +104,18 @@ public class CamelliaRedisTemplateManager {
     }
 
     public CamelliaRedisTemplateManager(String url, JedisPoolConfig poolConfig, int timeout, boolean monitorEnable,
+                                        long checkIntervalMillis) {
+        this(CamelliaApiUtil.init(url), poolConfig, timeout, monitorEnable, checkIntervalMillis);
+    }
+
+    public CamelliaRedisTemplateManager(String url, JedisPoolConfig poolConfig, int timeout, boolean monitorEnable,
                                         long checkIntervalMillis, Map<String, String> headerMap) {
         this(CamelliaApiUtil.init(url, headerMap), poolConfig, timeout, monitorEnable, checkIntervalMillis);
+    }
+
+    public CamelliaRedisTemplateManager(CamelliaRedisEnv redisEnv, String url, boolean monitorEnable,
+                                        long checkIntervalMillis) {
+        this(redisEnv, CamelliaApiUtil.init(url), monitorEnable, checkIntervalMillis);
     }
 
     public CamelliaRedisTemplateManager(CamelliaRedisEnv redisEnv, String url, boolean monitorEnable,
@@ -100,12 +127,20 @@ public class CamelliaRedisTemplateManager {
         this(redisEnv, service, defaultMonitorEnable, defaultCheckMillis);
     }
 
+    public CamelliaRedisTemplateManager(CamelliaRedisEnv redisEnv, String url) {
+        this(redisEnv, CamelliaApiUtil.init(url), defaultMonitorEnable, defaultCheckMillis);
+    }
+
     public CamelliaRedisTemplateManager(CamelliaRedisEnv redisEnv, String url, Map<String, String> headerMap) {
         this(redisEnv, CamelliaApiUtil.init(url, headerMap), defaultMonitorEnable, defaultCheckMillis);
     }
 
     public CamelliaRedisTemplateManager(CamelliaApi service) {
         this(CamelliaRedisEnv.defaultRedisEnv(), service, defaultMonitorEnable, defaultCheckMillis);
+    }
+
+    public CamelliaRedisTemplateManager(String url) {
+        this(CamelliaRedisEnv.defaultRedisEnv(), CamelliaApiUtil.init(url), defaultMonitorEnable, defaultCheckMillis);
     }
 
     public CamelliaRedisTemplateManager(String url, Map<String, String> headerMap) {
