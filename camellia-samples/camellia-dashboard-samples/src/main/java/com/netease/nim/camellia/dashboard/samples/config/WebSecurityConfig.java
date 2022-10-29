@@ -3,7 +3,7 @@ package com.netease.nim.camellia.dashboard.samples.config;
 import com.netease.nim.camellia.dashboard.samples.security.RestAuthenticationEntryPoint;
 import com.netease.nim.camellia.dashboard.samples.security.filter.ApiKeyAuthenticationFilter;
 import com.netease.nim.camellia.dashboard.samples.security.provider.ApiKeyAuthenticationProvider;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -23,61 +23,61 @@ import java.util.Collections;
    - Configuration: Adds a new Spring configuration
    - Enable web security: Overrides the default web security configuration
 */
-@RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-  private final ApiKeyAuthenticationProvider apiKeyAuthenticationProvider;
+    @Autowired
+    private ApiKeyAuthenticationProvider apiKeyAuthenticationProvider;
 
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
 
-    http.cors()
-        .and()
-        .sessionManagement()
-        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        .and()
-        .csrf()
-        .disable()
-        .formLogin()
-        .disable()
-        .httpBasic()
-        .disable()
-        .exceptionHandling()
-        .authenticationEntryPoint(new RestAuthenticationEntryPoint())
-        .and()
-        .authorizeRequests()
+        http.cors()
+                .and()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .csrf()
+                .disable()
+                .formLogin()
+                .disable()
+                .httpBasic()
+                .disable()
+                .exceptionHandling()
+                .authenticationEntryPoint(new RestAuthenticationEntryPoint())
+                .and()
+                .authorizeRequests()
 
-        // White list endpoints
-        .antMatchers("/", "/error", "/api/all", "/api/auth/**", "/oauth2/**")
-        .permitAll()
-        //
-        .anyRequest()
-        .authenticated();
+                // White list endpoints
+                .antMatchers("/", "/error", "/api/all", "/api/auth/**", "/oauth2/**")
+                .permitAll()
+                //
+                .anyRequest()
+                .authenticated();
 
-    // Add our custom Token based authentication filter
-    http.addFilterBefore(
-        new ApiKeyAuthenticationFilter(authenticationManager()),
-        AnonymousAuthenticationFilter.class);
-  }
+        // Add our custom Token based authentication filter
+        http.addFilterBefore(
+                new ApiKeyAuthenticationFilter(authenticationManager()),
+                AnonymousAuthenticationFilter.class);
+    }
 
-  @Bean
-  public AuthenticationManager authenticationManager() {
-    return new ProviderManager(Collections.singletonList(apiKeyAuthenticationProvider));
-  }
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        return new ProviderManager(Collections.singletonList(apiKeyAuthenticationProvider));
+    }
 
-  @Override
-  public void configure(WebSecurity web) {
-    web.ignoring().mvcMatchers(HttpMethod.OPTIONS, "/**");
-    web.ignoring()
-        .mvcMatchers(
-            "/swagger-ui.html/**",
-            "/configuration/**",
-            "/swagger-resources/**",
-            "/v2/api-docs",
-            "/webjars/**",
-            "/swagger**");
-  }
+    @Override
+    public void configure(WebSecurity web) {
+        web.ignoring().mvcMatchers(HttpMethod.OPTIONS, "/**");
+        web.ignoring()
+                .mvcMatchers(
+                        "/swagger-ui.html/**",
+                        "/configuration/**",
+                        "/swagger-resources/**",
+                        "/v2/api-docs",
+                        "/webjars/**",
+                        "/swagger**");
+    }
 }

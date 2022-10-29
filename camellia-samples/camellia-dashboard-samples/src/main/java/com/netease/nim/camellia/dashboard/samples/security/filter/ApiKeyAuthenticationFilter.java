@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.dashboard.samples.security.filter;
 
 import com.netease.nim.camellia.dashboard.samples.security.model.ApiKeyAuthenticationToken;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,7 +13,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 
-@Slf4j
 public class ApiKeyAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 
     public static final String API_KEY_HEADER_NAME = "api-key";
