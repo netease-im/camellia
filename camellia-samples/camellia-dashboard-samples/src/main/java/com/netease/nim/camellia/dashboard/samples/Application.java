@@ -8,12 +8,11 @@ import org.springframework.context.annotation.ComponentScan;
 
 
 /**
- *
  * Created by caojiajun on 2019/11/13.
  */
 @SpringBootApplication
 @EnableCamelliaDashboard
-@ComponentScan(basePackageClasses = CamelliaDashboardScanBase.class)
+@ComponentScan(basePackageClasses = {CamelliaDashboardScanBase.class, Application.class})
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);

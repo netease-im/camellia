@@ -21,6 +21,9 @@ camellia-dashboard:
   local-cache-expire-seconds: 5
   stats-expire-seconds: 180
   stats-key-expire-hours: 6
+  security: # Config security
+    enabled: false # Enable api-key authentication. Default is false
+    secure-token: secretToken # If enabled is true, secret token for security -> header must contain "api-key: secretToken"
 
 camellia-redis:
   type: local
