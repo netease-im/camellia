@@ -27,10 +27,11 @@ public class CamelliaDelayQueueServerProperties {
 
     private int monitorIntervalSeconds = CamelliaDelayQueueConstants.monitorIntervalSeconds;
 
-    private int longPollingScheduledThreadSize = SysUtils.getCpuNum() * 4;
-    private int longPollingMsgReadyCallbackThreadSize = SysUtils.getCpuNum() * 4;
-    private int longPollingMsgReadyCallbackQueueSize = 100000;
-    private int longPollingTaskQueueSize = 100000;
+    private int longPollingScheduledThreadSize = CamelliaDelayQueueConstants.longPollingScheduledThreadSize;
+    private int longPollingScheduledQueueSize = CamelliaDelayQueueConstants.longPollingScheduledQueueSize;
+    private int longPollingMsgReadyCallbackThreadSize = CamelliaDelayQueueConstants.longPollingMsgReadyCallbackThreadSize;
+    private int longPollingMsgReadyCallbackQueueSize = CamelliaDelayQueueConstants.longPollingMsgReadyCallbackQueueSize;
+    private int longPollingTaskQueueSize = CamelliaDelayQueueConstants.longPollingTaskQueueSize;
     private long longPollingTimeoutMillis = 10000;
 
     public String getNamespace() {
@@ -167,5 +168,13 @@ public class CamelliaDelayQueueServerProperties {
 
     public void setLongPollingTimeoutMillis(long longPollingTimeoutMillis) {
         this.longPollingTimeoutMillis = longPollingTimeoutMillis;
+    }
+
+    public int getLongPollingScheduledQueueSize() {
+        return longPollingScheduledQueueSize;
+    }
+
+    public void setLongPollingScheduledQueueSize(int longPollingScheduledQueueSize) {
+        this.longPollingScheduledQueueSize = longPollingScheduledQueueSize;
     }
 }

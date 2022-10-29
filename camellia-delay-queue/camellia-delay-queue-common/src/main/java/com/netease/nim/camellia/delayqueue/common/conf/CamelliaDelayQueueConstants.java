@@ -73,6 +73,8 @@ public class CamelliaDelayQueueConstants {
     public static final boolean longPollingEnable = true;
     //长轮询的服务器延迟线程池大小
     public static final int longPollingScheduledThreadSize = SysUtils.getCpuNum() * 4;
+    //长轮询的服务器延迟线程池的队列大小
+    public static final int longPollingScheduledQueueSize = 100000;
     //长轮询的消息就绪回调的线程池大小
     public static final int longPollingMsgReadyCallbackThreadSize = SysUtils.getCpuNum() * 4;
     //长轮询的消息就绪回调线程池的队列大小

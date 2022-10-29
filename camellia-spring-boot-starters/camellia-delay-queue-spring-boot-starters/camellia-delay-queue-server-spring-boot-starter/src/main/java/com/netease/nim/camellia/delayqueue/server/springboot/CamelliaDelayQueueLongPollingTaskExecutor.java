@@ -6,6 +6,8 @@ import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.delayqueue.common.conf.CamelliaDelayQueueConstants;
 import com.netease.nim.camellia.delayqueue.common.domain.CamelliaDelayMsgPullResponse;
 import com.netease.nim.camellia.delayqueue.server.CamelliaDelayQueueServer;
+import io.netty.util.HashedWheelTimer;
+import io.netty.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,8 +22,9 @@ public class CamelliaDelayQueueLongPollingTaskExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaDelayQueueLongPollingTaskExecutor.class);
 
-    private final ScheduledExecutorService scheduledExecutor;
+    private final HashedWheelTimer timer = new HashedWheelTimer();
     private final ThreadPoolExecutor executor;
+    private final ThreadPoolExecutor scheduleExecutor;
     private final int taskQueueSize;
     private final long longPollingTimeoutMillis;
 
@@ -30,28 +33,29 @@ public class CamelliaDelayQueueLongPollingTaskExecutor {
 
     private final CamelliaDelayQueueServer server;
 
-    public CamelliaDelayQueueLongPollingTaskExecutor(CamelliaDelayQueueServer server,
-                                                     int scheduledThreadSize, int msgReadyCallbackThreadSize,
-                                                     int msgReadyCallbackQueueSize, int taskQueueSize, long longPollingTimeoutMillis) {
+    public CamelliaDelayQueueLongPollingTaskExecutor(CamelliaDelayQueueServer server, int taskQueueSize,
+                                                     int scheduledThreadSize, int longPollingScheduledQueueSize, int msgReadyCallbackThreadSize,
+                                                     int msgReadyCallbackQueueSize, long longPollingTimeoutMillis) {
         this.server = server;
         this.server.addMsgReadyCallback(this::msgReadyCallback);
-        this.scheduledExecutor = new ScheduledThreadPoolExecutor(scheduledThreadSize,
-                new CamelliaThreadFactory("long-polling-schedule"));
+        this.scheduleExecutor = new ThreadPoolExecutor(scheduledThreadSize, scheduledThreadSize, 0, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(longPollingScheduledQueueSize), new CamelliaThreadFactory("long-polling-schedule-executor"),
+                new ThreadPoolExecutor.CallerRunsPolicy());
         this.executor = new ThreadPoolExecutor(msgReadyCallbackThreadSize, msgReadyCallbackThreadSize,
                 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(msgReadyCallbackQueueSize), new CamelliaThreadFactory("msg-ready-callback"),
                 new ThreadPoolExecutor.AbortPolicy());
         this.taskQueueSize = taskQueueSize;
         this.longPollingTimeoutMillis = longPollingTimeoutMillis;
-        logger.info("CamelliaDelayQueueLongPollingTaskExecutor start success, scheduledThreadSize = {}, " +
-                "msgReadyCallbackThreadSize = {}, msgReadyCallbackQueueSize = {}, taskQueueSize = {}, longPollingTimeoutMillis = {}",
-                scheduledThreadSize, msgReadyCallbackQueueSize, msgReadyCallbackQueueSize, taskQueueSize, longPollingTimeoutMillis);
+        logger.info("CamelliaDelayQueueLongPollingTaskExecutor start success, taskQueueSize = {}, scheduledThreadSize = {}, longPollingScheduledQueueSize = {}, " +
+                "msgReadyCallbackThreadSize = {}, msgReadyCallbackQueueSize = {}, longPollingTimeoutMillis = {}",
+                taskQueueSize, scheduledThreadSize, longPollingScheduledQueueSize, msgReadyCallbackQueueSize, msgReadyCallbackQueueSize, longPollingTimeoutMillis);
     }
 
     public CamelliaDelayQueueLongPollingTaskExecutor(CamelliaDelayQueueServer server) {
-        this(server, CamelliaDelayQueueConstants.longPollingScheduledThreadSize,
-                CamelliaDelayQueueConstants.longPollingMsgReadyCallbackThreadSize,
-                CamelliaDelayQueueConstants.longPollingMsgReadyCallbackQueueSize,
-                CamelliaDelayQueueConstants.longPollingTaskQueueSize, CamelliaDelayQueueConstants.longPollingTimeoutMillis);
+        this(server, CamelliaDelayQueueConstants.longPollingTaskQueueSize,
+                CamelliaDelayQueueConstants.longPollingScheduledThreadSize, CamelliaDelayQueueConstants.longPollingScheduledQueueSize,
+                CamelliaDelayQueueConstants.longPollingMsgReadyCallbackThreadSize, CamelliaDelayQueueConstants.longPollingMsgReadyCallbackQueueSize,
+                CamelliaDelayQueueConstants.longPollingTimeoutMillis);
     }
 
     /**
@@ -69,9 +73,8 @@ public class CamelliaDelayQueueLongPollingTaskExecutor {
         if (longPollingTimeoutMillis <= 0) {
             longPollingTimeoutMillis = this.longPollingTimeoutMillis;
         }
-        ScheduledFuture<?> future = scheduledExecutor.schedule(() -> CamelliaDelayQueueLongPollingTaskExecutor.this.notify(task),
-                longPollingTimeoutMillis, TimeUnit.MILLISECONDS);
-        task.setFuture(future);
+        Timeout timeout = timer.newTimeout(t -> scheduleExecutor.submit(() -> CamelliaDelayQueueLongPollingTaskExecutor.this.notify(task)), longPollingTimeoutMillis, TimeUnit.MILLISECONDS);
+        task.setCancelCallback(timeout::cancel);
     }
 
     //消息就绪的回调，长轮询提前返回
