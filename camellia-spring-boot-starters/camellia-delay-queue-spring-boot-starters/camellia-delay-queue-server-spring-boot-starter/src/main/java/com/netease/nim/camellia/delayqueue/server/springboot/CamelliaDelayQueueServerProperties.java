@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.delayqueue.server.springboot;
 
-import com.netease.nim.camellia.core.util.SysUtils;
 import com.netease.nim.camellia.delayqueue.common.conf.CamelliaDelayQueueConstants;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -32,7 +31,7 @@ public class CamelliaDelayQueueServerProperties {
     private int longPollingMsgReadyCallbackThreadSize = CamelliaDelayQueueConstants.longPollingMsgReadyCallbackThreadSize;
     private int longPollingMsgReadyCallbackQueueSize = CamelliaDelayQueueConstants.longPollingMsgReadyCallbackQueueSize;
     private int longPollingTaskQueueSize = CamelliaDelayQueueConstants.longPollingTaskQueueSize;
-    private long longPollingTimeoutMillis = 10000;
+    private long longPollingTimeoutMillis = CamelliaDelayQueueConstants.longPollingTimeoutMillis;
 
     public String getNamespace() {
         return namespace;
