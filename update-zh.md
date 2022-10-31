@@ -4,6 +4,18 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.1.4（2022/11/xx）
+### 新增
+* 访问camellia-dashboard的相关API时支持自定义header头，感谢[@tasszz2k](https://github.com/tasszz2k)提供该功能
+* camellia-redis-proxy在配置双写时也支持PUBSUB系列命令
+
+### 更新
+* 无
+
+### fix
+* 修复camellia-delay-queue使用长轮询时线程池泄漏的问题
+
+
 # 1.1.3（2022/10/24）
 ### 新增
 * CamelliaRedisTemplate支持RedisProxiesResource这种redis资源配置
