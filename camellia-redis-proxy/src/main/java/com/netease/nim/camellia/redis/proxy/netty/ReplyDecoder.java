@@ -16,82 +16,95 @@ import java.util.List;
 public class ReplyDecoder extends ByteToMessageDecoder {
 
     private Marker marker;
+    private int bulkSize = Integer.MIN_VALUE;
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
-        if (marker == null) {
-            if (in.readableBytes() > 1) {
-                byte b = in.readByte();
-                this.marker = Marker.byValue(b);
+        while (true) {
+            if (marker == null) {
+                if (in.readableBytes() > 1) {
+                    byte b = in.readByte();
+                    this.marker = Marker.byValue(b);
+                } else {
+                    return;
+                }
             }
-        }
-        if (in.readableBytes() > 0) {
-            int readerIndex = in.readerIndex();
-            if (marker == Marker.StatusReply) {
-                ByteBuf byteBuf = readLine(in);
-                if (byteBuf == null) {
-                    in.readerIndex(readerIndex);
-                    return;
-                }
-                CharSequence charSequence = byteBuf.readCharSequence(byteBuf.readableBytes(), StandardCharsets.UTF_8);
-                StatusReply reply = new StatusReply(charSequence.toString());
-                out.add(reply);
-                marker = null;
-            } else if (marker == Marker.BulkReply) {
-                ByteBuf byteBuf = readLine(in);
-                if (byteBuf == null) {
-                    in.readerIndex(readerIndex);
-                    return;
-                }
-                int size = (int)parseRedisNumber(byteBuf);
-                if (size == -1) {
-                    out.add(BulkReply.NIL_REPLY);
+            if (in.readableBytes() > 0) {
+                int readerIndex = in.readerIndex();
+                if (marker == Marker.StatusReply) {
+                    ByteBuf byteBuf = readLine(in);
+                    if (byteBuf == null) {
+                        in.readerIndex(readerIndex);
+                        return;
+                    }
+                    CharSequence charSequence = byteBuf.readCharSequence(byteBuf.readableBytes(), StandardCharsets.UTF_8);
+                    StatusReply reply = new StatusReply(charSequence.toString());
+                    out.add(reply);
                     marker = null;
-                    return;
-                }
-                if (in.readableBytes() >= size + 2) {
-                    byte[] data = new byte[size];
-                    in.readBytes(data);
-                    in.skipBytes(2);
-                    out.add(new BulkReply(data));
+                } else if (marker == Marker.BulkReply) {
+                    if (bulkSize == Integer.MIN_VALUE) {
+                        ByteBuf byteBuf = readLine(in);
+                        if (byteBuf == null) {
+                            in.readerIndex(readerIndex);
+                            return;
+                        }
+                        bulkSize = (int) parseRedisNumber(byteBuf);
+                        if (bulkSize == -1) {
+                            out.add(BulkReply.NIL_REPLY);
+                            marker = null;
+                            bulkSize = Integer.MIN_VALUE;
+                            continue;
+                        }
+                        readerIndex = in.readerIndex();
+                    }
+                    if (in.readableBytes() >= bulkSize + 2) {
+                        byte[] data = new byte[bulkSize];
+                        in.readBytes(data);
+                        in.skipBytes(2);
+                        out.add(new BulkReply(data));
+                        marker = null;
+                        bulkSize = Integer.MIN_VALUE;
+                    } else {
+                        in.readerIndex(readerIndex);
+                        return;
+                    }
+                } else if (marker == Marker.IntegerReply) {
+                    ByteBuf byteBuf = readLine(in);
+                    if (byteBuf == null) {
+                        in.readerIndex(readerIndex);
+                        return;
+                    }
+                    long l = parseRedisNumber(byteBuf);
+                    out.add(new IntegerReply(l));
                     marker = null;
-                } else {
-                    in.readerIndex(readerIndex);
+                } else if (marker == Marker.MultiBulkReply) {
+                    ByteBuf byteBuf = readLine(in);
+                    if (byteBuf == null) {
+                        in.readerIndex(readerIndex);
+                        return;
+                    }
+                    long l = parseRedisNumber(byteBuf);
+                    if (l == -1) {
+                        out.add(MultiBulkReply.NIL_REPLY);
+                    } else if (l == 0) {
+                        out.add(MultiBulkReply.EMPTY);
+                    } else {
+                        out.add(new MultiBulkHeaderReply((int) l));
+                    }
+                    marker = null;
+                } else if (marker == Marker.ErrorReply) {
+                    ByteBuf byteBuf = readLine(in);
+                    if (byteBuf == null) {
+                        in.readerIndex(readerIndex);
+                        return;
+                    }
+                    CharSequence charSequence = byteBuf.readCharSequence(byteBuf.readableBytes(), StandardCharsets.UTF_8);
+                    ErrorReply reply = new ErrorReply(charSequence.toString());
+                    out.add(reply);
+                    marker = null;
                 }
-            } else if (marker == Marker.ErrorReply) {
-                ByteBuf byteBuf = readLine(in);
-                if (byteBuf == null) {
-                    in.readerIndex(readerIndex);
-                    return;
-                }
-                CharSequence charSequence = byteBuf.readCharSequence(byteBuf.readableBytes(), StandardCharsets.UTF_8);
-                ErrorReply reply = new ErrorReply(charSequence.toString());
-                out.add(reply);
-                marker = null;
-            } else if (marker == Marker.IntegerReply) {
-                ByteBuf byteBuf = readLine(in);
-                if (byteBuf == null) {
-                    in.readerIndex(readerIndex);
-                    return;
-                }
-                long l = parseRedisNumber(byteBuf);
-                out.add(new IntegerReply(l));
-                marker = null;
-            } else if (marker == Marker.MultiBulkReply) {
-                ByteBuf byteBuf = readLine(in);
-                if (byteBuf == null) {
-                    in.readerIndex(readerIndex);
-                    return;
-                }
-                long l = parseRedisNumber(byteBuf);
-                if (l == -1) {
-                    out.add(MultiBulkReply.NIL_REPLY);
-                } else if (l == 0) {
-                    out.add(MultiBulkReply.EMPTY);
-                } else {
-                    out.add(new MultiBulkHeaderReply((int) l));
-                }
-                marker = null;
+            } else {
+                return;
             }
         }
     }
