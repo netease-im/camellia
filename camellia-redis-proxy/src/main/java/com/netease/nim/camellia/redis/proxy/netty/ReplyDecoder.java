@@ -1,132 +1,156 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.reply.*;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ReplayingDecoder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.util.ByteProcessor;
+import io.netty.util.CharsetUtil;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
- *
- * Created by caojiajun on 2019/12/17.
+ * Created by caojiajun on 2022/11/2
  */
-public class ReplyDecoder extends ReplayingDecoder<Void> {
+public class ReplyDecoder extends ByteToMessageDecoder {
 
-    private static final Logger logger = LoggerFactory.getLogger(ReplyDecoder.class);
-
-    private boolean isMultiBulkReply = false;
-    private Reply[] replies = null;
-    private int index = -1;
+    private Marker marker;
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        try {
-            if (!isMultiBulkReply) {
-                Reply reply = decodeReply(in, 0);
-                checkpoint();
-                try {
-                    out.add(reply);
-                } finally {
-                    this.isMultiBulkReply = false;
-                    this.replies = null;
-                    this.index = -1;
-                }
-            } else {
-                //可能存在大包，使用checkpoint做一下优化
-                if (replies == null || index == -1) {
-                    logger.warn("will not invoke here");
-                    throw new IllegalArgumentException();
-                }
-                for (int i=index; i<replies.length; i++) {
-                    Reply reply = decodeReply(in, 1);
-                    this.replies[i] = reply;
-                    checkpoint();
-                    this.index++;
-                }
-                try {
-                    MultiBulkReply multiBulkReply = new MultiBulkReply(this.replies);
-                    out.add(multiBulkReply);
-                } finally {
-                    this.isMultiBulkReply = false;
-                    this.replies = null;
-                    this.index = -1;
-                }
-            }
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    private Reply decodeReply(ByteBuf in, int level) throws Exception {
-        byte b = in.readByte();
-        Marker marker = Marker.byValue(b);
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
         if (marker == null) {
-            throw new IllegalArgumentException("unknown reply marker");
+            if (in.readableBytes() > 1) {
+                byte b = in.readByte();
+                this.marker = Marker.byValue(b);
+            }
         }
-        switch (marker) {
-            case StatusReply:
-                String status = readString(in);
-                return new StatusReply(status);
-            case ErrorReply:
-                String error = readString(in);
-                return new ErrorReply(error);
-            case IntegerReply:
-                long l = Utils.readLong(in);
-                return new IntegerReply(l);
-            case BulkReply:
-                int num = (int) Utils.readLong(in);
-                if (num == -1) {
-                    return BulkReply.NIL_REPLY;
-                } else {
-                    byte[] bulk = new byte[num];
-                    in.readBytes(bulk);
-                    in.skipBytes(2);
-                    return new BulkReply(bulk);
+        if (in.readableBytes() > 0) {
+            int readerIndex = in.readerIndex();
+            if (marker == Marker.StatusReply) {
+                ByteBuf byteBuf = readLine(in);
+                if (byteBuf == null) {
+                    in.readerIndex(readerIndex);
+                    return;
                 }
-            case MultiBulkReply://可能存在大包，使用checkpoint做一下优化
-                int size = (int) Utils.readLong(in);
+                CharSequence charSequence = byteBuf.readCharSequence(byteBuf.readableBytes(), StandardCharsets.UTF_8);
+                StatusReply reply = new StatusReply(charSequence.toString());
+                out.add(reply);
+                marker = null;
+            } else if (marker == Marker.BulkReply) {
+                ByteBuf byteBuf = readLine(in);
+                if (byteBuf == null) {
+                    in.readerIndex(readerIndex);
+                    return;
+                }
+                int size = (int)parseRedisNumber(byteBuf);
                 if (size == -1) {
-                    return MultiBulkReply.NIL_REPLY;
-                } else {
-                    if (level == 0) {
-                        checkpoint();
-                        this.isMultiBulkReply = true;
-                        this.replies = new Reply[size];
-                        this.index = 0;
-                        for (int i = index; i < size; i++) {
-                            Reply reply = decodeReply(in, level + 1);
-                            this.replies[i] = reply;
-                            checkpoint();
-                            this.index++;
-                        }
-                        return new MultiBulkReply(this.replies);
-                    } else {
-                        Reply[] replies = new Reply[size];
-                        for (int i = 0; i < size; i++) {
-                            Reply reply = decodeReply(in, level + 1);
-                            replies[i] = reply;
-                        }
-                        return new MultiBulkReply(replies);
-                    }
+                    out.add(BulkReply.NIL_REPLY);
+                    marker = null;
+                    return;
                 }
-            default:
-                throw new IllegalArgumentException("not reply support marker");
+                if (in.readableBytes() >= size + 2) {
+                    byte[] data = new byte[size];
+                    in.readBytes(data);
+                    in.skipBytes(2);
+                    out.add(new BulkReply(data));
+                    marker = null;
+                } else {
+                    in.readerIndex(readerIndex);
+                }
+            } else if (marker == Marker.ErrorReply) {
+                ByteBuf byteBuf = readLine(in);
+                if (byteBuf == null) {
+                    in.readerIndex(readerIndex);
+                    return;
+                }
+                CharSequence charSequence = byteBuf.readCharSequence(byteBuf.readableBytes(), StandardCharsets.UTF_8);
+                ErrorReply reply = new ErrorReply(charSequence.toString());
+                out.add(reply);
+                marker = null;
+            } else if (marker == Marker.IntegerReply) {
+                ByteBuf byteBuf = readLine(in);
+                if (byteBuf == null) {
+                    in.readerIndex(readerIndex);
+                    return;
+                }
+                long l = parseRedisNumber(byteBuf);
+                out.add(new IntegerReply(l));
+                marker = null;
+            } else if (marker == Marker.MultiBulkReply) {
+                ByteBuf byteBuf = readLine(in);
+                if (byteBuf == null) {
+                    in.readerIndex(readerIndex);
+                    return;
+                }
+                long l = parseRedisNumber(byteBuf);
+                if (l == -1) {
+                    out.add(MultiBulkReply.NIL_REPLY);
+                } else if (l == 0) {
+                    out.add(MultiBulkReply.EMPTY);
+                } else {
+                    out.add(new MultiBulkHeaderReply((int) l));
+                }
+                marker = null;
+            }
         }
     }
 
-    private String readString(ByteBuf in) {
-        StringBuilder builder = new StringBuilder();
-        byte s = in.readByte();
-        while (s != Utils.CR) {
-            builder.append((char) s);
-            s = in.readByte();
+    private static final int POSITIVE_LONG_MAX_LENGTH = 19; // length of Long.MAX_VALUE
+    private static final int EOL_LENGTH = 2;
+
+    private final NumberProcessor numberProcessor = new NumberProcessor();
+
+    private long parseRedisNumber(ByteBuf byteBuf) {
+        final int readableBytes = byteBuf.readableBytes();
+        final boolean negative = readableBytes > 0 && byteBuf.getByte(byteBuf.readerIndex()) == '-';
+        final int extraOneByteForNegative = negative ? 1 : 0;
+        if (readableBytes <= extraOneByteForNegative) {
+            throw new IllegalArgumentException("no number to parse: " + byteBuf.toString(CharsetUtil.US_ASCII));
         }
-        in.skipBytes(1);
-        return builder.toString();
+        if (readableBytes > POSITIVE_LONG_MAX_LENGTH + extraOneByteForNegative) {
+            throw new IllegalArgumentException("too many characters to be a valid RESP Integer: " +
+                    byteBuf.toString(CharsetUtil.US_ASCII));
+        }
+        if (negative) {
+            numberProcessor.reset();
+            byteBuf.skipBytes(extraOneByteForNegative);
+            byteBuf.forEachByte(numberProcessor);
+            return -1 * numberProcessor.content();
+        }
+        numberProcessor.reset();
+        byteBuf.forEachByte(numberProcessor);
+        return numberProcessor.content();
     }
 
+    private static final class NumberProcessor implements ByteProcessor {
+        private long result;
+        @Override
+        public boolean process(byte value) {
+            if (value < '0' || value > '9') {
+                throw new IllegalArgumentException("bad byte in number: " + value);
+            }
+            result = result * 10 + (value - '0');
+            return true;
+        }
+        public long content() {
+            return result;
+        }
+        public void reset() {
+            result = 0;
+        }
+    }
+
+    private static ByteBuf readLine(ByteBuf in) {
+        if (!in.isReadable(EOL_LENGTH)) {
+            return null;
+        }
+        final int lfIndex = in.forEachByte(ByteProcessor.FIND_LF);
+        if (lfIndex < 0) {
+            return null;
+        }
+        ByteBuf data = in.readSlice(lfIndex - in.readerIndex() - 1); // `-1` is for CR
+        in.skipBytes(2);
+        return data;
+    }
 }

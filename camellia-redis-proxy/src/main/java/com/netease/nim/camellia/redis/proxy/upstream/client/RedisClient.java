@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.client;
 
 import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.proxy.netty.*;
 import com.netease.nim.camellia.redis.proxy.upstream.AsyncClient;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
@@ -9,10 +10,6 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.RedisClientMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
-import com.netease.nim.camellia.redis.proxy.netty.ClientHandler;
-import com.netease.nim.camellia.redis.proxy.netty.CommandPack;
-import com.netease.nim.camellia.redis.proxy.netty.CommandPackEncoder;
-import com.netease.nim.camellia.redis.proxy.netty.ReplyDecoder;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
@@ -110,6 +107,7 @@ public class RedisClient implements AsyncClient {
                         protected void initChannel(Channel channel) {
                             ChannelPipeline pipeline = channel.pipeline();
                             pipeline.addLast(new ReplyDecoder());
+                            pipeline.addLast(new ReplyAggregateDecoder());
                             pipeline.addLast(new ClientHandler(queue, clientName));
                             pipeline.addLast(new CommandPackEncoder(RedisClient.this, queue));
                         }
