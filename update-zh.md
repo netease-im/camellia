@@ -10,7 +10,7 @@
 * camellia-redis-proxy在配置双写时也支持PUBSUB系列命令
 
 ### 更新
-* 无
+* camellia-redis-proxy重构并优化了ReplyDecoder的实现和性能
 
 ### fix
 * 修复camellia-delay-queue使用长轮询时线程池泄漏的问题

@@ -10,7 +10,7 @@
 * camellia-redis-proxy support PUB-SUB commands when configure multi-write route conf
 
 ### update
-* none
+* camellia-redis-proxy refactor and optimize ReplyDecoder to improve performance
 
 ### fix
 * fix camellia-delay-queue thread leak when use long-polling
