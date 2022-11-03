@@ -7,11 +7,11 @@ import java.io.IOException;
 /**
  * Created by caojiajun on 2022/11/2
  */
-public class MultiBulkHeaderReply implements Reply {
+public class MultiBulkReplyHeader implements Reply {
 
     private final int size;
 
-    public MultiBulkHeaderReply(int size) {
+    public MultiBulkReplyHeader(int size) {
         this.size = size;
     }
 

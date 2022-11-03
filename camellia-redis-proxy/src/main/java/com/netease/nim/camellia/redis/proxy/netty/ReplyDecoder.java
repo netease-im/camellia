@@ -89,7 +89,7 @@ public class ReplyDecoder extends ByteToMessageDecoder {
                     } else if (l == 0) {
                         out.add(MultiBulkReply.EMPTY);
                     } else {
-                        out.add(new MultiBulkHeaderReply((int) l));
+                        out.add(new MultiBulkReplyHeader((int) l));
                     }
                     marker = null;
                 } else if (marker == Marker.ErrorReply) {
