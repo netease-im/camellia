@@ -165,6 +165,27 @@ public class CamelliaHashedExecutor {
     }
 
     /**
+     * 获取某个hashKey下的等待队列大小
+     * @param hashKey hashKey
+     * @return 大小
+     */
+    public int getQueueSize(String hashKey) {
+        return getQueueSize(hashKey.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * 获取某个hashKey下的等待队列大小
+     * @param hashKey hashKey
+     * @return 大小
+     */
+    public int getQueueSize(byte[] hashKey) {
+        if (!initOk.get()) return 0;
+        int index = Math.abs(Arrays.hashCode(hashKey)) % workThreads.size();
+        WorkThread workThread = workThreads.get(index);
+        return workThread.queueSize();
+    }
+
+    /**
      * 获取等待队列的大小
      * @return 大小
      */
