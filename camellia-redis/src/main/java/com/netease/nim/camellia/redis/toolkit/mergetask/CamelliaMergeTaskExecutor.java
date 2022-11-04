@@ -73,7 +73,7 @@ public class CamelliaMergeTaskExecutor {
                 //check task result cache
                 V v = getLocalResultCache(task);
                 if (v != null) {
-                    future.complete(new CamelliaMergeTaskResult<>(CamelliaMergeTaskResult.Type.LOCAL_CACHE_HIT, v));
+                    future.complete(new CamelliaMergeTaskResult<>(CamelliaMergeTaskResult.Type.LOCAL_CACHE_HIT_SYNC, v));
                     return future;
                 }
                 //check task pending count
@@ -87,7 +87,7 @@ public class CamelliaMergeTaskExecutor {
                             return future;
                         }
                         setLocalResultCache(task, v);
-                        future.complete(new CamelliaMergeTaskResult<>(CamelliaMergeTaskResult.Type.EXEC, v));
+                        future.complete(new CamelliaMergeTaskResult<>(CamelliaMergeTaskResult.Type.EXEC_SYNC, v));
                     } catch (Exception e) {
                         logger.error("merge task direct execute error, tag = {}, key = {}", task.getTag(), task.getKey().serialize(), e);
                         future.completeExceptionally(e);
@@ -97,7 +97,7 @@ public class CamelliaMergeTaskExecutor {
                 //CamelliaHashedExecutor execute in single thread with same taskKey
                 executor.submit(taskKey, () -> {
                     V result = null;
-                    CamelliaMergeTaskResult.Type resultType = CamelliaMergeTaskResult.Type.LOCAL_CACHE_HIT;
+                    CamelliaMergeTaskResult.Type resultType = CamelliaMergeTaskResult.Type.LOCAL_CACHE_HIT_ASYNC;
                     try {
                         //check task result cache
                         result = getLocalResultCache(task);
@@ -109,7 +109,7 @@ public class CamelliaMergeTaskExecutor {
                                 future.completeExceptionally(e);
                                 return;
                             }
-                            resultType = CamelliaMergeTaskResult.Type.EXEC;
+                            resultType = CamelliaMergeTaskResult.Type.EXEC_ASYNC;
                             //build task result cache
                             setLocalResultCache(task, result);
                         }
@@ -131,12 +131,12 @@ public class CamelliaMergeTaskExecutor {
                 if (resultSerializer == null) {
                     throw new IllegalArgumentException("resultSerializer is null");
                 }
-                CamelliaMergeTaskResult.Type resultType = CamelliaMergeTaskResult.Type.LOCAL_CACHE_HIT;
+                CamelliaMergeTaskResult.Type resultType = CamelliaMergeTaskResult.Type.LOCAL_CACHE_HIT_SYNC;
                 //check task result cache
                 V v = getLocalResultCache(task);
                 if (v == null) {
                     v = getRedisResultCache(task);
-                    resultType = CamelliaMergeTaskResult.Type.REDIS_CACHE_HIT;
+                    resultType = CamelliaMergeTaskResult.Type.REDIS_CACHE_HIT_SYNC;
                 }
                 if (v != null) {
                     future.complete(new CamelliaMergeTaskResult<>(resultType, v));
@@ -155,7 +155,7 @@ public class CamelliaMergeTaskExecutor {
                         //build task result cache
                         setLocalResultCache(task, v);
                         setRedisResultCache(task, v);
-                        future.complete(new CamelliaMergeTaskResult<>(CamelliaMergeTaskResult.Type.EXEC, v));
+                        future.complete(new CamelliaMergeTaskResult<>(CamelliaMergeTaskResult.Type.EXEC_SYNC, v));
                     } catch (Exception e) {
                         logger.error("merge task execute error, tag = {}, key = {}", task.getTag(), task.getKey().serialize(), e);
                         future.completeExceptionally(e);
@@ -165,13 +165,13 @@ public class CamelliaMergeTaskExecutor {
                 //CamelliaHashedExecutor execute in single thread with same taskKey
                 executor.submit(taskKey, () -> {
                     V result = null;
-                    CamelliaMergeTaskResult.Type resultType1 = CamelliaMergeTaskResult.Type.LOCAL_CACHE_HIT;
+                    CamelliaMergeTaskResult.Type resultType1 = CamelliaMergeTaskResult.Type.LOCAL_CACHE_HIT_ASYNC;
                     try {
                         //check task result cache
                         result = getLocalResultCache(task);
                         if (result == null) {
                             result = getRedisResultCache(task);
-                            resultType1 = CamelliaMergeTaskResult.Type.REDIS_CACHE_HIT;
+                            resultType1 = CamelliaMergeTaskResult.Type.REDIS_CACHE_HIT_ASYNC;
                         }
                         if (result == null) {
                             //acquire lock in cluster mode
@@ -192,7 +192,7 @@ public class CamelliaMergeTaskExecutor {
                                         future.completeExceptionally(e);
                                         return;
                                     }
-                                    resultType1 = CamelliaMergeTaskResult.Type.EXEC;
+                                    resultType1 = CamelliaMergeTaskResult.Type.EXEC_ASYNC;
                                     //build task result cache
                                     setLocalResultCache(task, result);
                                     setRedisResultCache(task, result);

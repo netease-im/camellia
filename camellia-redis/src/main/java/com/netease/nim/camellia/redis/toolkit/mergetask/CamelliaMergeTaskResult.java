@@ -5,9 +5,12 @@ package com.netease.nim.camellia.redis.toolkit.mergetask;
  */
 public class CamelliaMergeTaskResult<V> {
     public static enum Type {
-        EXEC,
-        LOCAL_CACHE_HIT,
-        REDIS_CACHE_HIT,
+        EXEC_SYNC,
+        EXEC_ASYNC,
+        LOCAL_CACHE_HIT_ASYNC,
+        REDIS_CACHE_HIT_ASYNC,
+        LOCAL_CACHE_HIT_SYNC,
+        REDIS_CACHE_HIT_SYNC,
         ;
     }
 
