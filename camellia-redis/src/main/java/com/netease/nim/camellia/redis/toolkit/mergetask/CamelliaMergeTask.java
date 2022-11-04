@@ -59,6 +59,6 @@ public interface CamelliaMergeTask<K extends CamelliaMergeTaskKey, V> {
      * @param key 通过getKey方法获取输入
      * @return 任务执行结果
      */
-    V exec(K key);
+    V exec(K key) throws Exception;
 
 }

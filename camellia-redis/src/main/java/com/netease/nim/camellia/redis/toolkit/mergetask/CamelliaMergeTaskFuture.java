@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by caojiajun on 2022/11/4
  */
-public class CamelliaMergeTaskFuture<V> extends CompletableFuture<V> {
+public class CamelliaMergeTaskFuture<V> extends CompletableFuture<CamelliaMergeTaskResult<V>> {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaMergeTaskFuture.class);
 
@@ -25,7 +25,7 @@ public class CamelliaMergeTaskFuture<V> extends CompletableFuture<V> {
     }
 
     @Override
-    public boolean complete(V value) {
+    public boolean complete(CamelliaMergeTaskResult<V> value) {
         //只回调一次
         if (done.compareAndSet(false, true)) {
             if (callback != null) {
