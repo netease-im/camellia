@@ -1,8 +1,15 @@
 package com.netease.nim.camellia.redis.toolkit.mergetask;
 
-import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.core.util.CamelliaMapUtils;
+import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 /**
@@ -10,52 +17,59 @@ import java.util.function.Function;
  */
 public class CamelliaMergeTaskCache {
 
-    private final ConcurrentLinkedHashMap<String, ConcurrentLinkedHashMap<String, Boolean>> taskCache;
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaMergeTaskCache.class);
 
-    private final Function<String, ConcurrentLinkedHashMap<String, Boolean>> mappingFunction;
+    private final ConcurrentHashMap<String, ConcurrentHashMap<String, CamelliaMergeTaskFuture<?>>> taskCache;
+    private final Function<String, ConcurrentHashMap<String, CamelliaMergeTaskFuture<?>>> mappingFunction;
+    private final ExecutorService exec = Executors.newSingleThreadExecutor(new CamelliaThreadFactory("camellia-merge-task-cache"));
 
-    public CamelliaMergeTaskCache(int taskCapacity, int taskIdCapacity) {
-        taskCache = new ConcurrentLinkedHashMap.Builder<String, ConcurrentLinkedHashMap<String, Boolean>>()
-                .initialCapacity(taskCapacity)
-                .maximumWeightedCapacity(taskCapacity)
-                .build();
-        mappingFunction = k -> new ConcurrentLinkedHashMap.Builder<String, Boolean>().initialCapacity(taskIdCapacity).maximumWeightedCapacity(taskIdCapacity).build();
+    public CamelliaMergeTaskCache() {
+        taskCache = new ConcurrentHashMap<>();
+        mappingFunction = k -> new ConcurrentHashMap<>();
     }
 
-    private ConcurrentLinkedHashMap<String, Boolean> getTaskMap(String taskKey) {
+    private ConcurrentHashMap<String, CamelliaMergeTaskFuture<?>> getTaskMap(String taskKey) {
         return CamelliaMapUtils.computeIfAbsent(taskCache, taskKey, mappingFunction);
     }
 
-    public void addTask(String taskKey, String taskId) {
-        ConcurrentLinkedHashMap<String, Boolean> map = getTaskMap(taskKey);
-        map.put(taskId, true);
+    public void addTask(String taskKey, String taskId, CamelliaMergeTaskFuture<?> future) {
+        exec.submit(() -> {
+            try {
+                ConcurrentHashMap<String, CamelliaMergeTaskFuture<?>> map = getTaskMap(taskKey);
+                map.put(taskId, future);
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+        });
     }
 
     public void removeTask(String taskKey, String taskId) {
-        ConcurrentLinkedHashMap<String, Boolean> map = taskCache.get(taskKey);
-        if (map != null) {
-            map.remove(taskId);
-            if (map.isEmpty()) {
-                ConcurrentLinkedHashMap<String, Boolean> remove = taskCache.remove(taskKey);
-                if (remove != null && !remove.isEmpty()) {
-                    map = getTaskMap(taskKey);
-                    map.putAll(remove);
+        exec.submit(() -> {
+            try {
+                ConcurrentHashMap<String, CamelliaMergeTaskFuture<?>> map = taskCache.get(taskKey);
+                if (map != null) {
+                    map.remove(taskId);
+                    if (map.isEmpty()) {
+                        taskCache.remove(taskKey);
+                    }
                 }
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
             }
-        }
+        });
     }
 
     public int size(String taskKey) {
-        ConcurrentLinkedHashMap<String, Boolean> map = taskCache.get(taskKey);
+        ConcurrentHashMap<String, CamelliaMergeTaskFuture<?>> map = taskCache.get(taskKey);
         if (map == null) return 0;
-        if (map.isEmpty()) {
-            ConcurrentLinkedHashMap<String, Boolean> remove = taskCache.remove(taskKey);
-            if (remove != null && !remove.isEmpty()) {
-                map = getTaskMap(taskKey);
-                map.putAll(remove);
-            }
-            return 0;
-        }
         return map.size();
+    }
+
+    public Map<String, CamelliaMergeTaskFuture<?>> getFutureMap(String taskKey) {
+        ConcurrentHashMap<String, CamelliaMergeTaskFuture<?>> map = taskCache.get(taskKey);
+        if (map != null) {
+            return new HashMap<>(map);
+        }
+        return null;
     }
 }

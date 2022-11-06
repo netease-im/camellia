@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -23,8 +24,7 @@ public class CamelliaMergeTaskExecutor {
     private final CamelliaRedisTemplate template;
     private final CamelliaMergeTaskCache taskCache;
     private CamelliaRedisLockManager lockManager;
-
-    private final CamelliaLocalCache resultCache = new CamelliaLocalCache();
+    private final CamelliaLocalCache resultCache;
 
     public CamelliaMergeTaskExecutor() {
         this(new CamelliaHashedExecutor("camellia-merge-task",
@@ -36,23 +36,23 @@ public class CamelliaMergeTaskExecutor {
     }
 
     public CamelliaMergeTaskExecutor(CamelliaHashedExecutor executor, CamelliaRedisTemplate template) {
-        this(executor, template, 1000, 2000);
+        this(executor, template, 10000);
     }
 
     /**
      * @param executor 任务执行线程池
      * @param template redis客户端，只有集群合并才需要
-     * @param taskCapacity 任务
+     * @param resultCacheCapacity 任务结果缓存容量
      */
-    public CamelliaMergeTaskExecutor(CamelliaHashedExecutor executor, CamelliaRedisTemplate template, int taskCapacity, int taskIdCapacity) {
+    public CamelliaMergeTaskExecutor(CamelliaHashedExecutor executor, CamelliaRedisTemplate template, int resultCacheCapacity) {
         this.executor = executor;
         this.template = template;
         if (template != null) {
             this.lockManager = new CamelliaRedisLockManager(template);
         }
-        this.taskCache = new CamelliaMergeTaskCache(taskCapacity, taskIdCapacity);
+        this.taskCache = new CamelliaMergeTaskCache();
+        this.resultCache = new CamelliaLocalCache(resultCacheCapacity);
     }
-
 
     /**
      * 任务合并执行器
@@ -66,8 +66,8 @@ public class CamelliaMergeTaskExecutor {
         CamelliaMergeTaskType type = task.getType();
         String taskId = UUID.randomUUID().toString();
         String taskKey = new String(taskKey(task), StandardCharsets.UTF_8);
-        taskCache.addTask(taskKey, taskId);
         CamelliaMergeTaskFuture<V> future = new CamelliaMergeTaskFuture<>(() -> taskCache.removeTask(taskKey, taskId));
+        taskCache.addTask(taskKey, taskId, future);
         try {
             if (type == CamelliaMergeTaskType.STANDALONE) {
                 //check task result cache
@@ -88,6 +88,8 @@ public class CamelliaMergeTaskExecutor {
                         }
                         setLocalResultCache(task, v);
                         future.complete(new CamelliaMergeTaskResult<>(CamelliaMergeTaskResult.Type.EXEC_SYNC, v));
+                        //other task complete
+                        otherTaskComplete(taskKey, v);
                     } catch (Exception e) {
                         logger.error("merge task direct execute error, tag = {}, key = {}", task.getTag(), task.getKey().serialize(), e);
                         future.completeExceptionally(e);
@@ -96,6 +98,7 @@ public class CamelliaMergeTaskExecutor {
                 }
                 //CamelliaHashedExecutor execute in single thread with same taskKey
                 executor.submit(taskKey, () -> {
+                    if (future.isDone()) return;
                     V result = null;
                     CamelliaMergeTaskResult.Type resultType = CamelliaMergeTaskResult.Type.LOCAL_CACHE_HIT_ASYNC;
                     try {
@@ -112,6 +115,8 @@ public class CamelliaMergeTaskExecutor {
                             resultType = CamelliaMergeTaskResult.Type.EXEC_ASYNC;
                             //build task result cache
                             setLocalResultCache(task, result);
+                            //other task complete
+                            otherTaskComplete(taskKey, result);
                         }
                         future.complete(new CamelliaMergeTaskResult<>(resultType, result));
                     } catch (Exception e) {
@@ -156,6 +161,8 @@ public class CamelliaMergeTaskExecutor {
                         setLocalResultCache(task, v);
                         setRedisResultCache(task, v);
                         future.complete(new CamelliaMergeTaskResult<>(CamelliaMergeTaskResult.Type.EXEC_SYNC, v));
+                        //other task complete
+                        otherTaskComplete(taskKey, v);
                     } catch (Exception e) {
                         logger.error("merge task execute error, tag = {}, key = {}", task.getTag(), task.getKey().serialize(), e);
                         future.completeExceptionally(e);
@@ -164,6 +171,7 @@ public class CamelliaMergeTaskExecutor {
                 }
                 //CamelliaHashedExecutor execute in single thread with same taskKey
                 executor.submit(taskKey, () -> {
+                    if (future.isDone()) return;
                     V result = null;
                     CamelliaMergeTaskResult.Type resultType1 = CamelliaMergeTaskResult.Type.LOCAL_CACHE_HIT_ASYNC;
                     try {
@@ -196,6 +204,8 @@ public class CamelliaMergeTaskExecutor {
                                     //build task result cache
                                     setLocalResultCache(task, result);
                                     setRedisResultCache(task, result);
+                                    //other task complete
+                                    otherTaskComplete(taskKey, result);
                                 }
                             } finally {
                                 lockManager.release(lockKey);
@@ -271,6 +281,16 @@ public class CamelliaMergeTaskExecutor {
             template.psetex(taskKey(task), task.resultCacheMillis(), serialize);
         } catch (Exception e) {
             logger.error("merge task set redis cache result error, tag = {}, key = {}", task, task.getKey().serialize());
+        }
+    }
+
+    private <V> void otherTaskComplete(String taskKey, V result) {
+        Map<String, CamelliaMergeTaskFuture<?>> map = taskCache.getFutureMap(taskKey);
+        if (map != null) {
+            //other task complete
+            for (Map.Entry<String, CamelliaMergeTaskFuture<?>> entry : map.entrySet()) {
+                entry.getValue().complete(new CamelliaMergeTaskResult(CamelliaMergeTaskResult.Type.COMPLETE_BY_OTHER_TASK_DIRECT, result));
+            }
         }
     }
 }

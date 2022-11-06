@@ -55,4 +55,8 @@ public class CamelliaMergeTaskFuture<V> extends CompletableFuture<CamelliaMergeT
         }
         return false;
     }
+
+    public boolean isDone() {
+        return done.get();
+    }
 }
