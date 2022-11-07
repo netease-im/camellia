@@ -126,7 +126,6 @@ public class CamelliaMergeTaskExecutor {
                             resultType = CamelliaMergeTaskResult.Type.EXEC_ASYNC;
                             //build task result cache
                             setLocalResultCache(task, result);
-
                         }
                         future.complete(new CamelliaMergeTaskResult<>(resultType, result));
                     } catch (Exception e) {
@@ -218,7 +217,6 @@ public class CamelliaMergeTaskExecutor {
                                     //build task result cache
                                     setLocalResultCache(task, result);
                                     setRedisResultCache(task, result);
-
                                 }
                             } finally {
                                 lockManager.release(lockKey);
@@ -264,9 +262,13 @@ public class CamelliaMergeTaskExecutor {
     }
 
     private <K extends CamelliaMergeTaskKey, V> void setLocalResultCache(CamelliaMergeTask<K, V> task, V result) {
-        if (task.resultCacheMillis() <= 0) return;
+        _setLocalResultCache(task, result, task.resultCacheMillis());
+    }
+
+    private <K extends CamelliaMergeTaskKey, V> void _setLocalResultCache(CamelliaMergeTask<K, V> task, V result, long expireMillis) {
+        if (expireMillis <= 0) return;
         byte[] data = task.getResultSerializer().serialize(result);
-        resultCache.put(task.getTag(), task.getKey().serialize(), data, task.resultCacheMillis());
+        resultCache.put(task.getTag(), task.getKey().serialize(), data, expireMillis);
     }
 
     private <K extends CamelliaMergeTaskKey, V> byte[] taskKey(CamelliaMergeTask<K, V> task) {
@@ -278,7 +280,7 @@ public class CamelliaMergeTaskExecutor {
     }
 
     private <K extends CamelliaMergeTaskKey, V> V getRedisResultCache(CamelliaMergeTask<K, V> task) {
-        if (task.resultCacheMillis() <=0) return null;
+        if (task.resultCacheMillis() <= 0) return null;
         byte[] value = null;
         try {
             value = template.get(taskKey(task));
@@ -291,6 +293,12 @@ public class CamelliaMergeTaskExecutor {
                 result = task.getResultSerializer().deserialize(value);
             } catch (Exception e) {
                 logger.error("merge task deserialize redis cache result error, tag = {}, key = {}", task, task.getKey().serialize());
+            }
+        }
+        if (result != null) {
+            Long pttl = template.pttl(taskKey(task));
+            if (pttl > 0) {
+                _setLocalResultCache(task, result, pttl);
             }
         }
         return result;
