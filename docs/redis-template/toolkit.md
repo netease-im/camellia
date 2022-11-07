@@ -174,7 +174,7 @@ public class FreqSamples {
 ```
 
 ### 任务合并框架（详情见CamelliaMergeTask和CamelliaMergeTaskExecutor）
-* 有相同请求参数的查询请求，高并发或者高tps查询，对于数据一致性要求不是那么高
+* 适用场景：有相同请求参数的查询请求，高并发或者高tps查询，对于数据一致性要求不是那么高
 * 此时为了避免每次请求都落到底层（DB或者复杂的cache计算），CamelliaMergeTask会控制相同查询请求的并发，穿透过去一个请求，并把结果分发给等待队列中的其他请求
 * 此外，还可以对结果进行短暂的缓存，从而提高请求merge的效果
 * 支持单机合并，也支持集群合并（需要redis）
