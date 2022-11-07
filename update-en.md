@@ -8,6 +8,7 @@
 ### add
 * camellia-dashboard support custom header, thanks [@tasszz2k](https://github.com/tasszz2k) provide this function
 * camellia-redis-proxy support PUB-SUB commands when configure multi-write route conf
+* provide CamelliaMergeTask and CamelliaMergeTaskExecutor
 
 ### update
 * camellia-redis-proxy refactor and optimize ReplyDecoder to improve performance

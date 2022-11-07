@@ -8,6 +8,7 @@
 ### 新增
 * 访问camellia-dashboard的相关API时支持自定义header头，感谢[@tasszz2k](https://github.com/tasszz2k)提供该功能
 * camellia-redis-proxy在配置双写时也支持PUBSUB系列命令
+* 新增任务合并工具类，具体见：[toolkit](/docs/redis-template/toolkit.md)
 
 ### 更新
 * camellia-redis-proxy重构并优化了ReplyDecoder的实现和性能

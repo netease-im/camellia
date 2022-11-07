@@ -11,7 +11,7 @@ public class CamelliaMergeTaskResult<V> {
         REDIS_CACHE_HIT_ASYNC,
         LOCAL_CACHE_HIT_SYNC,
         REDIS_CACHE_HIT_SYNC,
-        COMPLETE_BY_OTHER_TASK_DIRECT,
+        COMPLETE_BY_RELATED_TASK_DIRECT,
         ;
     }
 

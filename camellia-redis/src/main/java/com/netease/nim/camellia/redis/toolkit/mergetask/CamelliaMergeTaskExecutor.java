@@ -27,8 +27,12 @@ public class CamelliaMergeTaskExecutor {
     private final CamelliaLocalCache resultCache;
 
     public CamelliaMergeTaskExecutor() {
+        this((CamelliaRedisTemplate) null);
+    }
+
+    public CamelliaMergeTaskExecutor(CamelliaRedisTemplate template) {
         this(new CamelliaHashedExecutor("camellia-merge-task",
-                Runtime.getRuntime().availableProcessors() * 4, 100000, new CamelliaHashedExecutor.CallerRunsPolicy()));
+                Runtime.getRuntime().availableProcessors() * 4, 100000, new CamelliaHashedExecutor.CallerRunsPolicy()), template);
     }
 
     public CamelliaMergeTaskExecutor(CamelliaHashedExecutor executor) {
@@ -64,6 +68,10 @@ public class CamelliaMergeTaskExecutor {
      */
     public <K extends CamelliaMergeTaskKey, V> CamelliaMergeTaskFuture<V> submit(CamelliaMergeTask<K, V> task) {
         CamelliaMergeTaskType type = task.getType();
+        CamelliaMergeTaskResultSerializer<V> resultSerializer = task.getResultSerializer();
+        if (resultSerializer == null) {
+            throw new IllegalArgumentException("resultSerializer is null");
+        }
         String taskId = UUID.randomUUID().toString();
         String taskKey = new String(taskKey(task), StandardCharsets.UTF_8);
         CamelliaMergeTaskFuture<V> future = new CamelliaMergeTaskFuture<>(() -> taskCache.removeTask(taskKey, taskId));
@@ -81,18 +89,21 @@ public class CamelliaMergeTaskExecutor {
                     try {
                         //execute direct
                         try {
-                            v = task.exec(task.getKey());
+                            v = task.execute(task.getKey());
                         } catch (Exception e) {
                             future.completeExceptionally(e);
                             return future;
                         }
                         setLocalResultCache(task, v);
                         future.complete(new CamelliaMergeTaskResult<>(CamelliaMergeTaskResult.Type.EXEC_SYNC, v));
-                        //other task complete
-                        otherTaskComplete(taskKey, v);
                     } catch (Exception e) {
                         logger.error("merge task direct execute error, tag = {}, key = {}", task.getTag(), task.getKey().serialize(), e);
                         future.completeExceptionally(e);
+                    } finally {
+                        if (v != null) {
+                            //other task complete
+                            relatedTaskComplete(task, taskKey, v);
+                        }
                     }
                     return future;
                 }
@@ -107,7 +118,7 @@ public class CamelliaMergeTaskExecutor {
                         if (result == null) {
                             //execute
                             try {
-                                result = task.exec(task.getKey());
+                                result = task.execute(task.getKey());
                             } catch (Exception e) {
                                 future.completeExceptionally(e);
                                 return;
@@ -115,8 +126,7 @@ public class CamelliaMergeTaskExecutor {
                             resultType = CamelliaMergeTaskResult.Type.EXEC_ASYNC;
                             //build task result cache
                             setLocalResultCache(task, result);
-                            //other task complete
-                            otherTaskComplete(taskKey, result);
+
                         }
                         future.complete(new CamelliaMergeTaskResult<>(resultType, result));
                     } catch (Exception e) {
@@ -126,15 +136,16 @@ public class CamelliaMergeTaskExecutor {
                         } else {
                             future.completeExceptionally(e);
                         }
+                    } finally {
+                        if (result != null) {
+                            //other task complete
+                            relatedTaskComplete(task, taskKey, result);
+                        }
                     }
                 });
             } else if (type == CamelliaMergeTaskType.CLUSTER) {
                 if (template == null) {
                     throw new IllegalArgumentException("redis template is null");
-                }
-                CamelliaMergeTaskResultSerializer<V> resultSerializer = task.getResultSerializer();
-                if (resultSerializer == null) {
-                    throw new IllegalArgumentException("resultSerializer is null");
                 }
                 CamelliaMergeTaskResult.Type resultType = CamelliaMergeTaskResult.Type.LOCAL_CACHE_HIT_SYNC;
                 //check task result cache
@@ -152,7 +163,7 @@ public class CamelliaMergeTaskExecutor {
                     try {
                         //execute direct
                         try {
-                            v = task.exec(task.getKey());
+                            v = task.execute(task.getKey());
                         } catch (Exception e) {
                             future.completeExceptionally(e);
                             return future;
@@ -161,11 +172,14 @@ public class CamelliaMergeTaskExecutor {
                         setLocalResultCache(task, v);
                         setRedisResultCache(task, v);
                         future.complete(new CamelliaMergeTaskResult<>(CamelliaMergeTaskResult.Type.EXEC_SYNC, v));
-                        //other task complete
-                        otherTaskComplete(taskKey, v);
                     } catch (Exception e) {
                         logger.error("merge task execute error, tag = {}, key = {}", task.getTag(), task.getKey().serialize(), e);
                         future.completeExceptionally(e);
+                    } finally {
+                        if (v != null) {
+                            //other task complete
+                            relatedTaskComplete(task, taskKey, v);
+                        }
                     }
                     return future;
                 }
@@ -195,7 +209,7 @@ public class CamelliaMergeTaskExecutor {
                                 if (result == null) {
                                     //execute
                                     try {
-                                        result = task.exec(task.getKey());
+                                        result = task.execute(task.getKey());
                                     } catch (Exception e) {
                                         future.completeExceptionally(e);
                                         return;
@@ -204,8 +218,7 @@ public class CamelliaMergeTaskExecutor {
                                     //build task result cache
                                     setLocalResultCache(task, result);
                                     setRedisResultCache(task, result);
-                                    //other task complete
-                                    otherTaskComplete(taskKey, result);
+
                                 }
                             } finally {
                                 lockManager.release(lockKey);
@@ -218,6 +231,11 @@ public class CamelliaMergeTaskExecutor {
                             future.complete(new CamelliaMergeTaskResult<>(resultType1, result));
                         } else {
                             future.completeExceptionally(e);
+                        }
+                    } finally {
+                        if (result != null) {
+                            //other task complete
+                            relatedTaskComplete(task, taskKey, result);
                         }
                     }
                 });
@@ -232,6 +250,7 @@ public class CamelliaMergeTaskExecutor {
     }
 
     private <K extends CamelliaMergeTaskKey, V> V getLocalResultCache(CamelliaMergeTask<K, V> task) {
+        if (task.resultCacheMillis() <= 0) return null;
         V result = null;
         try {
             byte[] value = resultCache.get(task.getTag(), task.getKey().serialize(), byte[].class);
@@ -245,6 +264,7 @@ public class CamelliaMergeTaskExecutor {
     }
 
     private <K extends CamelliaMergeTaskKey, V> void setLocalResultCache(CamelliaMergeTask<K, V> task, V result) {
+        if (task.resultCacheMillis() <= 0) return;
         byte[] data = task.getResultSerializer().serialize(result);
         resultCache.put(task.getTag(), task.getKey().serialize(), data, task.resultCacheMillis());
     }
@@ -258,6 +278,7 @@ public class CamelliaMergeTaskExecutor {
     }
 
     private <K extends CamelliaMergeTaskKey, V> V getRedisResultCache(CamelliaMergeTask<K, V> task) {
+        if (task.resultCacheMillis() <=0) return null;
         byte[] value = null;
         try {
             value = template.get(taskKey(task));
@@ -277,6 +298,7 @@ public class CamelliaMergeTaskExecutor {
 
     private <K extends CamelliaMergeTaskKey, V> void setRedisResultCache(CamelliaMergeTask<K, V> task, V result) {
         try {
+            if (task.resultCacheMillis() <= 0) return;
             byte[] serialize = task.getResultSerializer().serialize(result);
             template.psetex(taskKey(task), task.resultCacheMillis(), serialize);
         } catch (Exception e) {
@@ -284,12 +306,14 @@ public class CamelliaMergeTaskExecutor {
         }
     }
 
-    private <V> void otherTaskComplete(String taskKey, V result) {
+    private <K extends CamelliaMergeTaskKey, V> void relatedTaskComplete(CamelliaMergeTask<K, V> task, String taskKey, V result) {
         Map<String, CamelliaMergeTaskFuture<?>> map = taskCache.getFutureMap(taskKey);
-        if (map != null) {
+        if (map != null && !map.isEmpty()) {
+            byte[] data = task.getResultSerializer().serialize(result);
             //other task complete
             for (Map.Entry<String, CamelliaMergeTaskFuture<?>> entry : map.entrySet()) {
-                entry.getValue().complete(new CamelliaMergeTaskResult(CamelliaMergeTaskResult.Type.COMPLETE_BY_OTHER_TASK_DIRECT, result));
+                entry.getValue().complete(new CamelliaMergeTaskResult(CamelliaMergeTaskResult.Type.COMPLETE_BY_RELATED_TASK_DIRECT,
+                        task.getResultSerializer().deserialize(data)));
             }
         }
     }
