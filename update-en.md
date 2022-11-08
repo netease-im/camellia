@@ -4,7 +4,7 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
-# 1.1.4（2022/11/xx）
+# 1.1.4（2022/11/08）
 ### add
 * camellia-dashboard support custom header, thanks [@tasszz2k](https://github.com/tasszz2k) provide this function
 * camellia-redis-proxy support PUB-SUB commands when configure multi-write route conf
