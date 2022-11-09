@@ -23,4 +23,19 @@ public class MultiBulkReplyHeader implements Reply {
     public void write(ByteBuf byteBuf) throws IOException {
         //do nothing
     }
+
+    private static final int CACHE_SIZE = 2048;
+    private static final MultiBulkReplyHeader[] headers = new MultiBulkReplyHeader[CACHE_SIZE];
+    static {
+        for (int i=0; i<CACHE_SIZE; i++) {
+            headers[i] = new MultiBulkReplyHeader(i);
+        }
+    }
+    public static MultiBulkReplyHeader gen(int size) {
+        if (size < CACHE_SIZE) {
+            return headers[size];
+        } else {
+            return new MultiBulkReplyHeader(size);
+        }
+    }
 }
