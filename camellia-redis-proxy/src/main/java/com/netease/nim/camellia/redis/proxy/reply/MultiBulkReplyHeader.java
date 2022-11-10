@@ -24,7 +24,7 @@ public class MultiBulkReplyHeader implements Reply {
         //do nothing
     }
 
-    private static final int CACHE_SIZE = 2048;
+    private static final int CACHE_SIZE = 10000;
     private static final MultiBulkReplyHeader[] headers = new MultiBulkReplyHeader[CACHE_SIZE];
     static {
         for (int i=0; i<CACHE_SIZE; i++) {
