@@ -94,6 +94,12 @@ public class StatsJsonConverter {
             spendJson.put("count", spendStats.getCount());
             spendJson.put("avgSpendMs", spendStats.getAvgSpendMs());
             spendJson.put("maxSpendMs", spendStats.getMaxSpendMs());
+            spendJson.put("spendMsP50", spendStats.getSpendMsP50());
+            spendJson.put("spendMsP75", spendStats.getSpendMsP75());
+            spendJson.put("spendMsP90", spendStats.getSpendMsP90());
+            spendJson.put("spendMsP95", spendStats.getSpendMsP95());
+            spendJson.put("spendMsP99", spendStats.getSpendMsP99());
+            spendJson.put("spendMsP999", spendStats.getSpendMsP999());
             spendJsonArray.add(spendJson);
         }
         monitorJson.put("spendStats", spendJsonArray);
@@ -107,6 +113,12 @@ public class StatsJsonConverter {
             spendJson.put("count", bidBgroupSpendStats.getCount());
             spendJson.put("avgSpendMs", bidBgroupSpendStats.getAvgSpendMs());
             spendJson.put("maxSpendMs", bidBgroupSpendStats.getMaxSpendMs());
+            spendJson.put("spendMsP50", bidBgroupSpendStats.getSpendMsP50());
+            spendJson.put("spendMsP75", bidBgroupSpendStats.getSpendMsP75());
+            spendJson.put("spendMsP90", bidBgroupSpendStats.getSpendMsP90());
+            spendJson.put("spendMsP95", bidBgroupSpendStats.getSpendMsP95());
+            spendJson.put("spendMsP99", bidBgroupSpendStats.getSpendMsP99());
+            spendJson.put("spendMsP999", bidBgroupSpendStats.getSpendMsP999());
             bidBgroupSpendJsonArray.add(spendJson);
         }
         monitorJson.put("bidBgroupSpendStats", bidBgroupSpendJsonArray);
@@ -192,6 +204,12 @@ public class StatsJsonConverter {
             json.put("count", spendStats.getCount());
             json.put("avgSpendMs", spendStats.getAvgSpendMs());
             json.put("maxSpendMs", spendStats.getMaxSpendMs());
+            json.put("spendMsP50", spendStats.getSpendMsP50());
+            json.put("spendMsP75", spendStats.getSpendMsP75());
+            json.put("spendMsP90", spendStats.getSpendMsP90());
+            json.put("spendMsP95", spendStats.getSpendMsP95());
+            json.put("spendMsP99", spendStats.getSpendMsP99());
+            json.put("spendMsP999", spendStats.getSpendMsP999());
             upstreamRedisSpendStatsJsonArray.add(json);
         }
         monitorJson.put("upstreamRedisSpendStats", upstreamRedisSpendStatsJsonArray);

@@ -1,9 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.plugin.monitor;
 
 import com.netease.nim.camellia.core.util.CamelliaMapUtils;
+import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.monitor.model.BidBgroupSpendStats;
 import com.netease.nim.camellia.redis.proxy.monitor.model.SpendStats;
 import com.netease.nim.camellia.redis.proxy.util.MaxValue;
+import com.netease.nim.camellia.redis.proxy.util.PValueCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,9 +23,11 @@ public class CommandSpendMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(CommandSpendMonitor.class);
 
-    private static final ConcurrentHashMap<String, LongAdder> commandSpendCountMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, LongAdder> commandSpendTotalMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, MaxValue> commandSpendMaxMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, LongAdder> commandSpendCountMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, LongAdder> commandSpendTotalMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, MaxValue> commandSpendMaxMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, PValueCollector> commandPValueMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, PValueCollector> bidBgroupCommandPValueMap = new ConcurrentHashMap<>();
 
     public static void incr(Long bid, String bgroup, String command, long spendNanoTime) {
         try {
@@ -32,6 +36,13 @@ public class CommandSpendMonitor {
             CamelliaMapUtils.computeIfAbsent(commandSpendTotalMap, key, k -> new LongAdder()).add(spendNanoTime);
             MaxValue maxValue = CamelliaMapUtils.computeIfAbsent(commandSpendMaxMap, key, k -> new MaxValue());
             maxValue.update(spendNanoTime);
+            int time = (int)(spendNanoTime / 10000);//0.00ms
+            PValueCollector collector1 = CamelliaMapUtils.computeIfAbsent(bidBgroupCommandPValueMap, key,
+                    k -> new PValueCollector(ProxyMonitorCollector.getMonitorPValueExpectMaxSpendMs() * 100));
+            collector1.update(time);
+            PValueCollector collector2 = CamelliaMapUtils.computeIfAbsent(commandPValueMap, command,
+                    k -> new PValueCollector(ProxyMonitorCollector.getMonitorPValueExpectMaxSpendMs() * 100));
+            collector2.update(time);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -43,6 +54,19 @@ public class CommandSpendMonitor {
     }
 
     public static CommandSpendStats collect() {
+
+        ConcurrentHashMap<String, LongAdder> commandSpendCountMap = CommandSpendMonitor.commandSpendCountMap;
+        ConcurrentHashMap<String, LongAdder> commandSpendTotalMap = CommandSpendMonitor.commandSpendTotalMap;
+        ConcurrentHashMap<String, MaxValue> commandSpendMaxMap = CommandSpendMonitor.commandSpendMaxMap;
+        ConcurrentHashMap<String, PValueCollector> commandPValueMap = CommandSpendMonitor.commandPValueMap;
+        ConcurrentHashMap<String, PValueCollector> bidBgroupCommandPValueMap = CommandSpendMonitor.bidBgroupCommandPValueMap;
+
+        CommandSpendMonitor.commandSpendCountMap = new ConcurrentHashMap<>();
+        CommandSpendMonitor.commandSpendTotalMap = new ConcurrentHashMap<>();
+        CommandSpendMonitor.commandSpendMaxMap = new ConcurrentHashMap<>();
+        CommandSpendMonitor.commandPValueMap = new ConcurrentHashMap<>();
+        CommandSpendMonitor.bidBgroupCommandPValueMap = new ConcurrentHashMap<>();
+
         List<BidBgroupSpendStats> list = new ArrayList<>();
         ConcurrentHashMap<String, AtomicLong> spendSumMap = new ConcurrentHashMap<>();
         ConcurrentHashMap<String, SpendStats> spendStatsMap = new ConcurrentHashMap<>();
@@ -79,6 +103,18 @@ public class CommandSpendMonitor {
             bidBgroupSpendStats.setAvgSpendMs(avgSpendMs);
             bidBgroupSpendStats.setMaxSpendMs(maxSpendMs);
             bidBgroupSpendStats.setCount(count);
+
+            PValueCollector collector = bidBgroupCommandPValueMap.get(key);
+            if (collector != null) {
+                PValueCollector.PValue pValue = collector.getPValueAndReset();
+                bidBgroupSpendStats.setSpendMsP50(pValue.getP50() / 100.0);
+                bidBgroupSpendStats.setSpendMsP75(pValue.getP75() / 100.0);
+                bidBgroupSpendStats.setSpendMsP90(pValue.getP90() / 100.0);
+                bidBgroupSpendStats.setSpendMsP95(pValue.getP95() / 100.0);
+                bidBgroupSpendStats.setSpendMsP99(pValue.getP99() / 100.0);
+                bidBgroupSpendStats.setSpendMsP999(pValue.getP999() / 100.0);
+            }
+
             list.add(bidBgroupSpendStats);
 
             SpendStats spendStats = CamelliaMapUtils.computeIfAbsent(spendStatsMap, command, string -> {
@@ -100,6 +136,16 @@ public class CommandSpendMonitor {
                 spendStats.setAvgSpendMs(0.0);
             } else {
                 spendStats.setAvgSpendMs(sum.get() / (1000000.0 * spendStats.getCount()));
+            }
+            PValueCollector collector = commandPValueMap.get(command);
+            if (collector != null) {
+                PValueCollector.PValue pValue = collector.getPValueAndReset();
+                spendStats.setSpendMsP50(pValue.getP50() / 100.0);
+                spendStats.setSpendMsP75(pValue.getP75() / 100.0);
+                spendStats.setSpendMsP90(pValue.getP90() / 100.0);
+                spendStats.setSpendMsP95(pValue.getP95() / 100.0);
+                spendStats.setSpendMsP99(pValue.getP99() / 100.0);
+                spendStats.setSpendMsP999(pValue.getP999() / 100.0);
             }
         }
         CommandSpendStats commandSpendStats = new CommandSpendStats();
