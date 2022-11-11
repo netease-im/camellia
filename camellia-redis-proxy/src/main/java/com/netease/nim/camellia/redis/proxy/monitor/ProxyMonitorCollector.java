@@ -31,7 +31,7 @@ public class ProxyMonitorCollector {
     private static boolean monitorEnable;
     private static boolean commandSpendTimeMonitorEnable;
     private static boolean upstreamRedisSpendTimeMonitorEnable;
-    private static int monitorPValueExpectMaxSpendMs;
+    private static int monitorQuantileExpectMaxSpendMs;
 
     private static Stats stats = new Stats();
 
@@ -55,7 +55,7 @@ public class ProxyMonitorCollector {
         ProxyMonitorCollector.monitorEnable = ProxyDynamicConf.getBoolean("monitor.enable", ProxyMonitorCollector.monitorEnable);
         ProxyMonitorCollector.commandSpendTimeMonitorEnable = ProxyDynamicConf.getBoolean("command.spend.time.monitor.enable", true);
         ProxyMonitorCollector.upstreamRedisSpendTimeMonitorEnable = ProxyDynamicConf.getBoolean("upstream.redis.spend.time.monitor.enable", true);
-        ProxyMonitorCollector.monitorPValueExpectMaxSpendMs = ProxyDynamicConf.getInt("monitor.pvalue.expect.max.spend.ms", 500);
+        ProxyMonitorCollector.monitorQuantileExpectMaxSpendMs = ProxyDynamicConf.getInt("monitor.quantile.expect.max.spend.ms", 500);
     }
 
     /**
@@ -81,10 +81,10 @@ public class ProxyMonitorCollector {
     }
 
     /**
-     * 统计耗时的P50、P90、P99等值，预期的最大值
+     * 统计耗时的P50、P90、P99等分位数时，预期的最大值
      */
-    public static int getMonitorPValueExpectMaxSpendMs() {
-        return monitorPValueExpectMaxSpendMs;
+    public static int getMonitorQuantileExpectMaxSpendMs() {
+        return monitorQuantileExpectMaxSpendMs;
     }
 
     /**
