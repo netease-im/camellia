@@ -90,7 +90,6 @@ public class ReloadableLocalFileCamelliaApi implements CamelliaApi {
 
     @Override
     public DataWithMd5Response<List<IpCheckerDto>> getIpCheckerList(String md5) {
-        //TODO: Implement this method
-        return null;
+        throw new UnsupportedOperationException();
     }
 }

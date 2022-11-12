@@ -21,7 +21,7 @@ public interface CamelliaApi {
     @RequestLine("POST /camellia/api/reportStats")
     boolean reportStats(ResourceStats resourceStats);
 
-    @RequestLine("GET /camellia/api/permissions/ip-checkers")
+    @RequestLine("GET /camellia/api/permissions/ip-checkers?md5={md5}")
     DataWithMd5Response<List<IpCheckerDto>> getIpCheckerList(@Param("md5") String md5);
 
 }

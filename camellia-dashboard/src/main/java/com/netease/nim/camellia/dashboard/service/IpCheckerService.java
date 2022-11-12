@@ -74,7 +74,7 @@ public class IpCheckerService implements IIpCheckerService {
 
     @Override
     public IpChecker create(CreateOrUpdateIpCheckerRequest request) {
-        if (!IpCheckerUtil.checkValidIpList(request.getIpList())) {
+        if (!IpCheckerUtil.isValidIpList(request.getIpList())) {
             throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(), "ipList is invalid");
         }
 
@@ -89,7 +89,7 @@ public class IpCheckerService implements IIpCheckerService {
 
     @Override
     public IpChecker update(Long id, CreateOrUpdateIpCheckerRequest request) {
-        if (!IpCheckerUtil.checkValidIpList(request.getIpList())) {
+        if (!IpCheckerUtil.isValidIpList(request.getIpList())) {
             throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(), "ipList is invalid");
         }
 

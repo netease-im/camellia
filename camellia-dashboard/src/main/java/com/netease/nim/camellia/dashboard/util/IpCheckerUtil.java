@@ -4,10 +4,7 @@ import com.netease.nim.camellia.core.model.IpCheckerDto;
 import com.netease.nim.camellia.dashboard.dto.CreateOrUpdateIpCheckerRequest;
 import com.netease.nim.camellia.dashboard.model.IpChecker;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -19,20 +16,11 @@ public class IpCheckerUtil {
     private static final String REGEX_SPLIT_IP = ", ";
     private static final Pattern IP_PATTERN = Pattern.compile("^(\\d{1,3}\\.){3}\\d{1,3}(/\\d{1,2})*$");
 
-    public static String parseIpListToString(Collection<String> ipList) {
-        return ipList.toString();
-    }
-
-    public static Set<String> parseIpListToSet(String ipListString) {
-        String substring = ipListString.substring(1, ipListString.length() - 1);
-        return new HashSet<>(Arrays.asList(substring.split(REGEX_SPLIT_IP)));
-    }
-
     public static boolean checkValidIp(String ip) {
         return IP_PATTERN.matcher(ip).matches();
     }
 
-    public static boolean checkValidIpList(Collection<String> ipList) {
+    public static boolean isValidIpList(Collection<String> ipList) {
         if (ipList == null || ipList.isEmpty()) {
             return false;
         }

@@ -45,7 +45,6 @@ public class LocalCamelliaApi implements CamelliaApi {
 
     @Override
     public DataWithMd5Response<List<IpCheckerDto>> getIpCheckerList(String md5) {
-        // TODO: implement this
-        return null;
+        throw new UnsupportedOperationException();
     }
 }
