@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.dashboard.dto;
 
-import com.netease.nim.camellia.dashboard.constant.IpCheckMode;
+
+import com.netease.nim.camellia.core.enums.IpCheckMode;
 
 import javax.validation.constraints.NotNull;
 import java.util.Set;

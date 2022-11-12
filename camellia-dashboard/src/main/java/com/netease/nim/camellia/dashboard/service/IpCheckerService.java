@@ -3,8 +3,9 @@ package com.netease.nim.camellia.dashboard.service;
 import com.netease.nim.camellia.core.api.CamelliaApiCode;
 import com.netease.nim.camellia.core.api.DataWithMd5Response;
 import com.netease.nim.camellia.core.api.PageCriteria;
+import com.netease.nim.camellia.core.enums.IpCheckMode;
+import com.netease.nim.camellia.core.model.IpCheckerDto;
 import com.netease.nim.camellia.core.util.MD5Util;
-import com.netease.nim.camellia.dashboard.constant.IpCheckMode;
 import com.netease.nim.camellia.dashboard.daowrapper.IpCheckerDaoWrapper;
 import com.netease.nim.camellia.dashboard.dto.CreateOrUpdateIpCheckerRequest;
 import com.netease.nim.camellia.dashboard.exception.AppException;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,8 +32,8 @@ public class IpCheckerService implements IIpCheckerService {
     private IpCheckerDaoWrapper ipCheckerDao;
 
     @Override
-    public DataWithMd5Response<List<IpChecker>> getList(String md5) {
-        DataWithMd5Response<List<IpChecker>> response = new DataWithMd5Response<>();
+    public DataWithMd5Response<List<IpCheckerDto>> getList(String md5) {
+        DataWithMd5Response<List<IpCheckerDto>> response = new DataWithMd5Response<>();
 
         List<IpChecker> list;
         try {
@@ -49,7 +51,13 @@ public class IpCheckerService implements IIpCheckerService {
         }
         response.setCode(CamelliaApiCode.SUCCESS.getCode());
         response.setMd5(newMd5);
-        response.setData(list);
+
+        // Set data
+        List<IpCheckerDto> data = new ArrayList<>();
+        for (IpChecker ipChecker : list) {
+            data.add(IpCheckerUtil.convertToDto(ipChecker));
+        }
+        response.setData(data);
         return response;
     }
 
@@ -95,5 +103,14 @@ public class IpCheckerService implements IIpCheckerService {
         ipChecker.setIpList(request.getIpList());
         ipCheckerDao.update(ipChecker);
         return ipChecker;
+    }
+
+    @Override
+    public void delete(Long id) {
+        boolean isExisted = ipCheckerDao.existById(id);
+        if (!isExisted) {
+            throw new AppException(CamelliaApiCode.NOT_EXISTS.getCode(), "IpChecker is not existed");
+        }
+        ipCheckerDao.delete(id);
     }
 }

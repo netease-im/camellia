@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.dashboard.util;
 
+import com.netease.nim.camellia.core.model.IpCheckerDto;
 import com.netease.nim.camellia.dashboard.dto.CreateOrUpdateIpCheckerRequest;
 import com.netease.nim.camellia.dashboard.model.IpChecker;
 
@@ -46,4 +47,14 @@ public class IpCheckerUtil {
         ipChecker.setIpList(request.getIpList());
         return ipChecker;
     }
+
+    public static IpCheckerDto convertToDto(IpChecker ipChecker) {
+        IpCheckerDto dto = new IpCheckerDto();
+        dto.setBid(ipChecker.getBid());
+        dto.setBgroup(ipChecker.getBgroup());
+        dto.setMode(ipChecker.getMode());
+        dto.setIpList(ipChecker.getIpList());
+        return dto;
+    }
+
 }

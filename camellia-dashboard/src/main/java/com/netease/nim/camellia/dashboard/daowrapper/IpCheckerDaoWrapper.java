@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.dashboard.daowrapper;
 
-import com.netease.nim.camellia.dashboard.constant.IpCheckMode;
+import com.netease.nim.camellia.core.enums.IpCheckMode;
 import com.netease.nim.camellia.dashboard.dao.IpCheckerDao;
 import com.netease.nim.camellia.dashboard.model.IpChecker;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
@@ -66,5 +66,13 @@ public class IpCheckerDaoWrapper {
         ipChecker.setUpdateTime(save.getUpdateTime());
         // TODO: Update Cache
         return 1;
+    }
+
+    public boolean existById(Long id) {
+        return ipCheckerDao.existsById(id);
+    }
+
+    public void delete(Long id) {
+        ipCheckerDao.deleteById(id);
     }
 }

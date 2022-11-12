@@ -2,7 +2,8 @@ package com.netease.nim.camellia.dashboard.service;
 
 import com.netease.nim.camellia.core.api.DataWithMd5Response;
 import com.netease.nim.camellia.core.api.PageCriteria;
-import com.netease.nim.camellia.dashboard.constant.IpCheckMode;
+import com.netease.nim.camellia.core.enums.IpCheckMode;
+import com.netease.nim.camellia.core.model.IpCheckerDto;
 import com.netease.nim.camellia.dashboard.dto.CreateOrUpdateIpCheckerRequest;
 import com.netease.nim.camellia.dashboard.model.IpChecker;
 import org.springframework.data.domain.Page;
@@ -14,7 +15,7 @@ import java.util.List;
  * @since 09/11/2022
  */
 public interface IIpCheckerService {
-    DataWithMd5Response<List<IpChecker>> getList(String md5);
+    DataWithMd5Response<List<IpCheckerDto>> getList(String md5);
 
     IpChecker findById(Long id);
 
@@ -23,4 +24,6 @@ public interface IIpCheckerService {
     IpChecker create(CreateOrUpdateIpCheckerRequest ipChecker);
 
     IpChecker update(Long id, CreateOrUpdateIpCheckerRequest request);
+
+    void delete(Long id);
 }

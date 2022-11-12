@@ -1,8 +1,10 @@
 package com.netease.nim.camellia.core.api;
 
+import com.netease.nim.camellia.core.model.IpCheckerDto;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.CheckUtil;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -39,5 +41,11 @@ public class LocalCamelliaApi implements CamelliaApi {
     @Override
     public boolean reportStats(ResourceStats resourceStats) {
         return true;
+    }
+
+    @Override
+    public DataWithMd5Response<List<IpCheckerDto>> getIpCheckerList(String md5) {
+        // TODO: implement this
+        return null;
     }
 }

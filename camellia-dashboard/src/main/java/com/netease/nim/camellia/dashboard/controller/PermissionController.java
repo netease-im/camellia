@@ -2,10 +2,9 @@ package com.netease.nim.camellia.dashboard.controller;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.netease.nim.camellia.core.api.DataWithMd5Response;
 import com.netease.nim.camellia.core.api.PageCriteria;
+import com.netease.nim.camellia.core.enums.IpCheckMode;
 import com.netease.nim.camellia.dashboard.conf.DashboardProperties;
-import com.netease.nim.camellia.dashboard.constant.IpCheckMode;
 import com.netease.nim.camellia.dashboard.dto.CreateOrUpdateIpCheckerRequest;
 import com.netease.nim.camellia.dashboard.model.IpChecker;
 import com.netease.nim.camellia.dashboard.service.IIpCheckerService;
@@ -16,8 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 
 /**
@@ -32,15 +29,6 @@ public class PermissionController {
     @Autowired
     private IIpCheckerService ipCheckerService;
 
-    @ApiOperation(value = "Get ip checker all", notes = "This is a heartbeat interface, the client pulls it regularly (such as 5s), and judges whether there is an update through the MD5 value")
-    @GetMapping("/ip-checkers/all")
-    public DataWithMd5Response<List<IpChecker>> getIpCheckerList(@RequestParam(value = "md5", required = false) String md5) {
-        LogBean.get().addProps("md5", md5);
-        DataWithMd5Response<List<IpChecker>> response = ipCheckerService.getList(md5);
-        LogBean.get().addProps("response", response);
-        return response;
-    }
-
     @ApiOperation(value = "Find ip checker by id", notes = "Find ip checker by id")
     @GetMapping("/ip-checkers/{id}")
     public WebResult findIpCheckerById(@PathVariable("id") Long id) {
@@ -54,7 +42,7 @@ public class PermissionController {
 
     @ApiOperation(value = "Create ip checker", notes = "create ip checker")
     @PostMapping("/ip-checkers")
-    public WebResult CreateChecker(@RequestBody CreateOrUpdateIpCheckerRequest request
+    public WebResult CreateIpChecker(@RequestBody CreateOrUpdateIpCheckerRequest request
     ) {
         LogBean.get().addProps("bid", request.getBid());
         LogBean.get().addProps("bgroup", request.getBgroup());
@@ -69,7 +57,7 @@ public class PermissionController {
 
     @ApiOperation(value = "Create ip checker", notes = "create ip checker")
     @PutMapping("/ip-checkers/{id}")
-    public WebResult CreateChecker(
+    public WebResult UpdateIpChecker(
             @PathVariable("id") Long id,
             @RequestBody CreateOrUpdateIpCheckerRequest request
     ) {
@@ -85,6 +73,15 @@ public class PermissionController {
         return WebResult.success(ipCheckerJson);
     }
 
+    @ApiOperation(value = "Create ip checker", notes = "create ip checker")
+    @DeleteMapping("/ip-checkers/{id}")
+    public WebResult DeleteIpChecker(
+            @PathVariable("id") Long id
+    ) {
+        LogBean.get().addProps("id", id);
+        ipCheckerService.delete(id);
+        return WebResult.success();
+    }
 
     @ApiOperation(value = "Find ip checkers by conditions", notes = "Find ip checkers by conditions")
     @GetMapping("/ip-checkers")

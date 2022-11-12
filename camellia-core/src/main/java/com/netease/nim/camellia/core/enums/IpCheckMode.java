@@ -1,9 +1,5 @@
-package com.netease.nim.camellia.dashboard.constant;
+package com.netease.nim.camellia.core.enums;
 
-/**
- * @author tasszz2k
- * @since 09/11/2022
- */
 public enum IpCheckMode {
     BLACK(1),
     WHITE(2),
@@ -20,9 +16,9 @@ public enum IpCheckMode {
     }
 
     public static IpCheckMode getByValue(int value) {
-        for (IpCheckMode mode : IpCheckMode.values()) {
-            if (mode.value == value) {
-                return mode;
+        for (IpCheckMode ipCheckMode : IpCheckMode.values()) {
+            if (ipCheckMode.value == value) {
+                return ipCheckMode;
             }
         }
         return UNKNOWN;

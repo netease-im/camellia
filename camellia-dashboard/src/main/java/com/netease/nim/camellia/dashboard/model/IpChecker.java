@@ -1,8 +1,7 @@
 package com.netease.nim.camellia.dashboard.model;
 
 import com.alibaba.fastjson.JSONObject;
-import com.netease.nim.camellia.dashboard.constant.IpCheckMode;
-import com.netease.nim.camellia.dashboard.util.IpCheckerUtil;
+import com.netease.nim.camellia.core.enums.IpCheckMode;
 import com.netease.nim.camellia.dashboard.util.StringCollectionConverter;
 
 import javax.persistence.Table;
@@ -74,6 +73,21 @@ public class IpChecker extends BaseEntity {
     public void setIpList(Set<String> ipList) {
         this.ipList = ipList;
     }
+
+    @PostLoad
+    void fillTransient() {
+        if (modeValue != null) {
+            this.mode = IpCheckMode.getByValue(modeValue);
+        }
+    }
+
+    @PrePersist
+    void fillPersistent() {
+        if (mode != null) {
+            this.modeValue = mode.getValue();
+        }
+    }
+
 
     @Override
     public String toString() {
