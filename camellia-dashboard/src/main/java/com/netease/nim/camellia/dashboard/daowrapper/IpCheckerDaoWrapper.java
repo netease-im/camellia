@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.dashboard.daowrapper;
 
+import com.alibaba.fastjson.JSONArray;
 import com.netease.nim.camellia.core.enums.IpCheckMode;
 import com.netease.nim.camellia.dashboard.dao.IpCheckerDao;
 import com.netease.nim.camellia.dashboard.model.IpChecker;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,7 +21,8 @@ import java.util.Optional;
 @Service
 public class IpCheckerDaoWrapper {
 
-    private static final String tag = "camellia_ip_checker";
+    private static final String TAG = "camellia_ip_checker";
+    private static final String IP_CHECKER_ALL_CACHE_KEY = TAG + "_all";
 
     @Autowired
     private IpCheckerDao ipCheckerDao;
@@ -29,8 +32,15 @@ public class IpCheckerDaoWrapper {
 
 
     public List<IpChecker> getList() {
-        //TODO: Read from cache
-        return ipCheckerDao.findAll();
+        String value = template.get(IP_CHECKER_ALL_CACHE_KEY);
+        // The 1st time, fetch data from the database and update the redis cache
+        if (value == null) {
+            return updateCache();
+        }
+        if (value.length() > 0) {
+            return JSONArray.parseArray(value, IpChecker.class);
+        }
+        return Collections.emptyList();
     }
 
     public IpChecker findById(Long id) {
@@ -55,7 +65,7 @@ public class IpCheckerDaoWrapper {
         ipChecker.setId(save.getId());
         ipChecker.setCreateTime(save.getCreateTime());
         ipChecker.setUpdateTime(save.getUpdateTime());
-        // TODO: Update cache
+        updateCache();
         return 1;
     }
 
@@ -64,7 +74,7 @@ public class IpCheckerDaoWrapper {
         ipChecker.setUpdateTime(now);
         IpChecker save = ipCheckerDao.save(ipChecker);
         ipChecker.setUpdateTime(save.getUpdateTime());
-        // TODO: Update Cache
+        updateCache();
         return 1;
     }
 
@@ -74,5 +84,25 @@ public class IpCheckerDaoWrapper {
 
     public void delete(Long id) {
         ipCheckerDao.deleteById(id);
+        updateCache();
     }
+
+    /**
+     * Update redis cache anytime the data in the database changes,
+     * so that the data in the cache is always consistent with the data in the database
+     * Key: camellia_ip_checker_all
+     * Value: JSONArray
+     *
+     * @return List of IpChecker
+     */
+    private List<IpChecker> updateCache() {
+        List<IpChecker> list = ipCheckerDao.findAll();
+        // Convert list to JSONArray
+        JSONArray json = new JSONArray();
+        json.addAll(list);
+        String value = json.toJSONString();
+        template.set(IP_CHECKER_ALL_CACHE_KEY, value);
+        return list;
+    }
+
 }

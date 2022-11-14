@@ -46,7 +46,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
     public void init(ProxyBeanFactory factory) {
         try {
             // FIXME: I don't know how to get the apiService from factory. So I try getting it from AsyncCamelliaRedisTemplateChooser
-            // And I think it's not a good idea to get it from AsyncCamelliaRedisTemplateChooser. But this is the only way I can think of.
+            // And I think it's not a good idea to get it from AsyncCamelliaRedisTemplateChooser. But this is the only way I can do.
             this.apiService = AsyncCamelliaRedisTemplateChooser.apiService;
             int seconds = ProxyDynamicConf.getInt(PROXY_PLUGIN_UPDATE_INTERVAL_SECONDS_KEY, 10);
             ExecutorUtils.scheduleAtFixedRate(this::reload, seconds, seconds, TimeUnit.SECONDS);
