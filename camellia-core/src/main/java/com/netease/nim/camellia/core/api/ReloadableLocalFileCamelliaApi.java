@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.core.api;
 
+import com.netease.nim.camellia.core.model.IpCheckerDto;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.model.ResourceTableChecker;
 import com.netease.nim.camellia.core.util.*;
@@ -7,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.List;
 
 /**
  *
@@ -84,5 +86,10 @@ public class ReloadableLocalFileCamelliaApi implements CamelliaApi {
     @Override
     public boolean reportStats(ResourceStats resourceStats) {
         return true;
+    }
+
+    @Override
+    public DataWithMd5Response<List<IpCheckerDto>> getIpCheckerList(String md5) {
+        throw new UnsupportedOperationException();
     }
 }
