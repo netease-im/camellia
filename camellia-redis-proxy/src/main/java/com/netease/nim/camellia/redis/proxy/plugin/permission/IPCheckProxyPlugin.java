@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.plugin.permission;
 
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.core.enums.IpCheckMode;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
@@ -43,6 +44,10 @@ public class IPCheckProxyPlugin implements ProxyPlugin {
 
     private static final ProxyPluginResponse FORBIDDEN = new ProxyPluginResponse(false, "ip forbidden");
     private final Map<String, IpCheckInfo> cache = new HashMap<>();
+    private final ConcurrentLinkedHashMap<String, Boolean> checkCache = new ConcurrentLinkedHashMap.Builder<String, Boolean>()
+            .initialCapacity(1000)
+            .maximumWeightedCapacity(10000)
+            .build();
 
     @Override
     public void init(ProxyBeanFactory factory) {
@@ -70,22 +75,49 @@ public class IPCheckProxyPlugin implements ProxyPlugin {
         };
     }
 
-
-
+    /**
+     * when proxy configure in multi-tenancy
+     * first commands like AUTH/HELLO will check ip of global config
+     * other commands will check bid/brgoup config
+     *
+     * @param request the context of the request command
+     * @return ProxyPluginResponse
+     */
     @Override
     public ProxyPluginResponse executeRequest(ProxyRequest request) {
         try {
             Command command = request.getCommand();
             CommandContext commandContext = command.getCommandContext();
+            String consid = command.getChannelInfo().getConsid();
+            String key = null;
+            if (consid != null) {
+                key = consid + "|" + commandContext.getBid() + "|" + commandContext.getBgroup();
+            }
+            if (key != null) {
+                Boolean checkCache = this.checkCache.get(key);
+                if (checkCache != null) {
+                    if (checkCache) {
+                        return ProxyPluginResponse.SUCCESS;
+                    } else {
+                        return FORBIDDEN;
+                    }
+                }
+            }
             SocketAddress clientSocketAddress = commandContext.getClientSocketAddress();
             if (clientSocketAddress instanceof InetSocketAddress) {
                 String ip = ((InetSocketAddress) clientSocketAddress).getAddress().getHostAddress();
                 if (ip != null) {
                     if (!checkIp(commandContext.getBid(), commandContext.getBgroup(), ip)) {
                         ErrorLogCollector.collect(IPCheckProxyPlugin.class, "ip = " + ip + " check fail");
+                        if (key != null) {
+                            this.checkCache.put(key, Boolean.FALSE);
+                        }
                         return FORBIDDEN;
                     }
                 }
+            }
+            if (key != null) {
+                this.checkCache.put(key, Boolean.TRUE);
             }
             return ProxyPluginResponse.SUCCESS;
         } catch (Exception e) {
