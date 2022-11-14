@@ -26,7 +26,7 @@ public class UpstreamRedisSpendTimeMonitor {
             CamelliaMapUtils.computeIfAbsent(spendCountMap, addr.getUrl(), k -> new LongAdder()).increment();
             CamelliaMapUtils.computeIfAbsent(spendTotalMap, addr.getUrl(), k -> new LongAdder()).add(spendNanoTime);
             QuantileCollector collector = CamelliaMapUtils.computeIfAbsent(quantileMap, addr.getUrl(),
-                    k -> new QuantileCollector(ProxyMonitorCollector.getMonitorQuantileExpectMaxSpendMs()*100));
+                    k -> new QuantileCollector());
             collector.update((int)(spendNanoTime / 10000));//0.00ms
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

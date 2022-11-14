@@ -15,19 +15,26 @@ public class CamelliaStatisticsManager {
     private static final Logger logger = LoggerFactory.getLogger(CamelliaStatisticsManager.class);
     private ConcurrentHashMap<String, CamelliaStatistics> map = new ConcurrentHashMap<>();
 
-    private int expectedMaxValue = 5000;
+    private int expectMaxValue = -1;
+    private boolean quantileExact = false;
 
     public CamelliaStatisticsManager() {
     }
 
-    public CamelliaStatisticsManager(int expectedMaxValue) {
-        this.expectedMaxValue = expectedMaxValue;
+    public CamelliaStatisticsManager(boolean quantileExact, int expectMaxValue) {
+        this.quantileExact = quantileExact;
+        this.expectMaxValue = expectMaxValue;
+        if (quantileExact) {
+            if (expectMaxValue <= 0) {
+                throw new IllegalArgumentException("expectMaxValue should > 0");
+            }
+        }
     }
 
     public void update(String key, long value) {
         CamelliaStatistics statistics = map.get(key);
         if (statistics == null) {
-            statistics = map.computeIfAbsent(key, k -> new CamelliaStatistics(expectedMaxValue));
+            statistics = map.computeIfAbsent(key, k -> new CamelliaStatistics(quantileExact, expectMaxValue));
         }
         statistics.update(value);
     }
