@@ -10,6 +10,8 @@ public enum CamelliaApiCode {
     NOT_EXISTS(404),
     PARAM_ERROR(414),
     FORBIDDEN(403),
+
+    CONFLICT(409),
     ;
 
     private final int code;

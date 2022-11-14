@@ -1,10 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.plugin.permission;
 
+import com.netease.nim.camellia.core.enums.IpCheckMode;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.discovery.common.IPMatcher;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
+import com.netease.nim.camellia.redis.proxy.plugin.permission.model.IpCheckInfo;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * 一个支持设置客户端ip校验的Plugin，支持黑名单和白名单两种模式
@@ -131,86 +130,6 @@ public class IPCheckProxyPlugin implements ProxyPlugin {
                     ErrorLogCollector.collect(IPCheckProxyPlugin.class, "load ip black/white list error, conf = " + str, e);
                 }
             }
-        }
-    }
-
-    private enum IpCheckMode {
-        BLACK(1),
-        WHITE(2),
-        UNKNOWN(0),
-        ;
-        private final int value;
-
-        IpCheckMode(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
-
-        public static IpCheckMode getByValue(int value) {
-            for (IpCheckMode mode : IpCheckMode.values()) {
-                if (mode.value == value) {
-                    return mode;
-                }
-            }
-            return UNKNOWN;
-        }
-    }
-
-    private static class IpCheckInfo {
-        private final IpCheckMode mode;
-        private final Set<IPMatcher> ipMatcherSet = new HashSet<>();
-        private final Set<String> ipSet = new HashSet<>();
-
-        public IpCheckInfo(IpCheckMode mode) {
-            this.mode = mode;
-        }
-
-        public void addIp(String ip) {
-            ipSet.add(ip);
-        }
-
-        public void addIpWithMask(String ip, String mask) {
-            ipMatcherSet.add(new IPMatcher(ip, mask));
-        }
-
-        public boolean check(String ip) {
-            if (mode == IpCheckMode.WHITE) {
-                if (!ipSet.isEmpty()) {
-                    for (String whiteIp : ipSet) {
-                        if (ip.equals(whiteIp)) {
-                            return true;
-                        }
-                    }
-                }
-                if (!ipMatcherSet.isEmpty()) {
-                    for (IPMatcher ipMatcher : ipMatcherSet) {
-                        if (ipMatcher.match(ip)) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            } else if (mode == IpCheckMode.BLACK) {
-                if (!ipSet.isEmpty()) {
-                    for (String whiteIp : ipSet) {
-                        if (ip.equals(whiteIp)) {
-                            return false;
-                        }
-                    }
-                }
-                if (!ipMatcherSet.isEmpty()) {
-                    for (IPMatcher ipMatcher : ipMatcherSet) {
-                        if (ipMatcher.match(ip)) {
-                            return false;
-                        }
-                    }
-                }
-                return true;
-            }
-            return true;
         }
     }
 }

@@ -29,3 +29,21 @@ CREATE TABLE `camellia_table_ref` (
   `update_time` varchar(64) DEFAULT NULL comment '更新时间',
   unique key (`bid`, `bgroup`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='资源引用表';
+
+
+create table ip_checker
+(
+    id          bigint(64) auto_increment comment 'Auto increment field'
+        primary key,
+    bid         bigint(64)    null comment 'bid',
+    bgroup      varchar(64)   null comment 'bgroup',
+    `ipCheckMode`        tinyint(1)    not null comment '0=UNKNOWN, 1=BLACK, 2=WHITE',
+    ip_list     varchar(1024) not null comment 'support ip, also supports network segment, comma separated.ex:2.2.2.2,5.5.5.5,3.3.3.0/24,6.6.0.0/16',
+    create_time varchar(64)   null comment 'create time',
+    update_time varchar(64)   null comment 'Update time',
+    constraint bid_bgroup_unique
+        unique (bid, bgroup)
+)
+    comment 'IP checker table' charset = utf8;
+
+
