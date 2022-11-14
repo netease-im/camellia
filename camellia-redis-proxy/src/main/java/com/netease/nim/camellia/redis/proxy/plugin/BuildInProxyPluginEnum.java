@@ -23,7 +23,7 @@ public enum BuildInProxyPluginEnum {
     MONITOR_PLUGIN("monitorPlugin", MonitorProxyPlugin.class, Integer.MAX_VALUE, Integer.MIN_VALUE),
     //控制访问权限，ip黑白名单
     IP_CHECKER_PLUGIN("ipCheckerPlugin", IPCheckProxyPlugin.class, Integer.MAX_VALUE - 10000, 0),
-    // Dynamic IP Checker, configured by camellia-dashboard
+    //Dynamic IP Checker, configured by camellia-dashboard
     DYNAMIC_IP_CHECKER_PLUGIN("dynamicIpCheckerPlugin", DynamicIpCheckProxyPlugin.class, Integer.MAX_VALUE - 10000, 0),
 
     //屏蔽某些命令

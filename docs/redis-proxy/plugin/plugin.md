@@ -74,10 +74,14 @@ proxy.plugin.list=monitorPlugin,bigKeyPlugin,com.xxx.xxx.CustomProxyPlugin
 ### 内置插件
 ```java
 public enum BuildInProxyPluginEnum {
+
     //用于监控，主要是监控请求量和响应时间以及慢查询
     MONITOR_PLUGIN("monitorPlugin", MonitorProxyPlugin.class, Integer.MAX_VALUE, Integer.MIN_VALUE),
     //控制访问权限，ip黑白名单
     IP_CHECKER_PLUGIN("ipCheckerPlugin", IPCheckProxyPlugin.class, Integer.MAX_VALUE - 10000, 0),
+    //Dynamic IP Checker, configured by camellia-dashboard
+    DYNAMIC_IP_CHECKER_PLUGIN("dynamicIpCheckerPlugin", DynamicIpCheckProxyPlugin.class, Integer.MAX_VALUE - 10000, 0),
+
     //屏蔽某些命令
     COMMAND_DISABLE_PLUGIN("commandDisablePlugin", CommandDisableProxyPlugin.class, Integer.MAX_VALUE - 20000, 0),
     //用于控制请求速率
@@ -124,6 +128,7 @@ public enum BuildInProxyPluginEnum {
 * TroubleTrickKeysProxyPlugin，用于临时拦截问题key的某些命令，具体见：[trouble-trick-keys](trouble-trick-keys.md)
 * RateLimitProxyPlugin，用于进行频率控制，支持租户级别进行控制，具体见：[rate-limit](rate-limit.md)
 * IPCheckProxyPlugin，用于控制客户端接入，支持ip黑白名单，具体见：[ip-checker](ip-checker.md)
+* DynamicIpCheckProxyPlugin，用于控制客户端接入，支持ip黑白名单，通过camellia-dashboard托管配置，具体见：[dynamic-ip-checker](dynamic-ip-checker.md)
 * CommandDisableProxyPlugin，用于屏蔽某些命令，具体见：[command-disable](command-disable.md)
 
 ### 其他camellia提供的插件（不是内置，需要额外引入maven依赖）
