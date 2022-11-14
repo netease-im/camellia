@@ -1,7 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.plugin.permission;
 
+import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiCode;
+import com.netease.nim.camellia.core.api.CamelliaApiUtil;
 import com.netease.nim.camellia.core.api.DataWithMd5Response;
 import com.netease.nim.camellia.core.model.IpCheckerDto;
 import com.netease.nim.camellia.redis.proxy.command.Command;
@@ -9,7 +11,6 @@ import com.netease.nim.camellia.redis.proxy.command.CommandContext;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.plugin.permission.model.IpCheckInfo;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplateChooser;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.IpCheckerUtil;
@@ -35,7 +36,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
     protected static final String PROXY_PLUGIN_UPDATE_INTERVAL_SECONDS_KEY = "proxy.plugin.update.interval.seconds";
 
     // This key is applied for all bid and bgroup if bid and bgroup is null
-    public static final String DEFAULT_KEY = IpCheckerUtil.buildIpCheckerKey(0L, "0");
+    public static final String DEFAULT_KEY = IpCheckerUtil.buildIpCheckerKey(-1L, "default");
 
     protected final Map<String, IpCheckInfo> cache = new HashMap<>();
     private String md5;
@@ -45,9 +46,17 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
     @Override
     public void init(ProxyBeanFactory factory) {
         try {
-            // FIXME: I don't know how to get the apiService from factory. So I try getting it from AsyncCamelliaRedisTemplateChooser
-            // And I think it's not a good idea to get it from AsyncCamelliaRedisTemplateChooser. But this is the only way I can do.
-            this.apiService = AsyncCamelliaRedisTemplateChooser.apiService;
+            //proxy route conf may not configured by camellia-dashboard, so init CamelliaApi independent
+            String url = ProxyDynamicConf.getString("camellia.dashboard.url", null);
+            int connectTimeoutMillis = ProxyDynamicConf.getInt("camellia.dashboard.connectTimeoutMillis", 10000);
+            int readTimeoutMillis = ProxyDynamicConf.getInt("camellia.dashboard.readTimeoutMillis", 60000);
+            Map<String, String> headerMap = new HashMap<>();
+            String string = ProxyDynamicConf.getString("camellia.dashboard.headerMap", "{}");
+            JSONObject json = JSONObject.parseObject(string);
+            for (Map.Entry<String, Object> entry : json.entrySet()) {
+                headerMap.put(entry.getKey(), String.valueOf(entry.getValue()));
+            }
+            apiService = CamelliaApiUtil.init(url, connectTimeoutMillis, readTimeoutMillis, headerMap);
             int seconds = ProxyDynamicConf.getInt(PROXY_PLUGIN_UPDATE_INTERVAL_SECONDS_KEY, 5);
             ExecutorUtils.scheduleAtFixedRate(this::reload, seconds, seconds, TimeUnit.SECONDS);
             reload();

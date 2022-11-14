@@ -5,7 +5,6 @@ import com.netease.nim.camellia.core.client.env.Monitor;
 import com.netease.nim.camellia.core.client.env.MultiWriteType;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.hub.standard.StandardProxyGenerator;
-import com.netease.nim.camellia.core.model.IpCheckerDto;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ResourceChooser;
@@ -2021,9 +2020,5 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
             return service.reportStats(resourceStats);
         }
 
-        @Override
-        public DataWithMd5Response<List<IpCheckerDto>> getIpCheckerList(String md5) {
-           throw new UnsupportedOperationException();
-        }
     }
 }

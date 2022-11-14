@@ -22,6 +22,8 @@ public interface CamelliaApi {
     boolean reportStats(ResourceStats resourceStats);
 
     @RequestLine("GET /camellia/api/permissions/ip-checkers?md5={md5}")
-    DataWithMd5Response<List<IpCheckerDto>> getIpCheckerList(@Param("md5") String md5);
+    default DataWithMd5Response<List<IpCheckerDto>> getIpCheckerList(@Param("md5") String md5) {
+        throw new UnsupportedOperationException();
+    };
 
 }
