@@ -2,10 +2,7 @@ package com.netease.nim.camellia.redis.proxy.plugin.permission;
 
 import com.alibaba.fastjson.JSONObject;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
-import com.netease.nim.camellia.core.api.CamelliaApi;
-import com.netease.nim.camellia.core.api.CamelliaApiCode;
-import com.netease.nim.camellia.core.api.CamelliaApiUtil;
-import com.netease.nim.camellia.core.api.DataWithMd5Response;
+import com.netease.nim.camellia.core.api.*;
 import com.netease.nim.camellia.core.model.IpCheckerDto;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
@@ -46,7 +43,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
     protected final Map<String, IpCheckInfo> cache = new HashMap<>();
     private String md5;
 
-    private CamelliaApi apiService;
+    private CamelliaMiscApi api;
 
     @Override
     public void init(ProxyBeanFactory factory) {
@@ -61,7 +58,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
             for (Map.Entry<String, Object> entry : json.entrySet()) {
                 headerMap.put(entry.getKey(), String.valueOf(entry.getValue()));
             }
-            apiService = CamelliaApiUtil.init(url, connectTimeoutMillis, readTimeoutMillis, headerMap);
+            api = CamelliaApiUtil.initMiscApi(url, connectTimeoutMillis, readTimeoutMillis, headerMap);
             int seconds = ProxyDynamicConf.getInt("dynamic.ip.check.plugin.config.update.interval.seconds", 5);
             ExecutorUtils.scheduleAtFixedRate(this::reload, seconds, seconds, TimeUnit.SECONDS);
             reload();
@@ -108,7 +105,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
      */
     private List<IpCheckerDto> fetchIpCheckerData() {
         try {
-            DataWithMd5Response<List<IpCheckerDto>> response = apiService.getIpCheckerList(md5);
+            DataWithMd5Response<List<IpCheckerDto>> response = api.getIpCheckerList(md5);
             if (response != null && CamelliaApiCode.SUCCESS.getCode() == response.getCode() && response.getData() != null) {
                 String newMd5 = response.getMd5();
                 if (hasChange(newMd5)) {
