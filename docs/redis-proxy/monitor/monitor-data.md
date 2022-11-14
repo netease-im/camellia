@@ -71,12 +71,24 @@
       "maxSpendMs": 16.464333,  //最大rt
       "count": 143565,  //请求数
       "avgSpendMs": 1.1236299562985408,  //平均rt
+      "spendMsP50": 1.03,
+      "spendMsP75": 1.63,
+      "spendMsP90": 1.73,
+      "spendMsP95": 1.83,
+      "spendMsP99": 1.93,
+      "spendMsP999": 2.03,
       "command": "hgetall"  //命令
     },
     {
       "maxSpendMs": 0.041476,
       "count": 206,
       "avgSpendMs": 0.0021440485436893205,
+      "spendMsP50": 1.03,
+      "spendMsP75": 1.63,
+      "spendMsP90": 1.73,
+      "spendMsP95": 1.83,
+      "spendMsP99": 1.93,
+      "spendMsP999": 2.03,
       "command": "ping"
     }
   ],
@@ -87,6 +99,12 @@
       "count": 263,
       "bid": 9,
       "avgSpendMs": 0.7394532509505704,
+      "spendMsP50": 1.03,
+      "spendMsP75": 1.63,
+      "spendMsP90": 1.73,
+      "spendMsP95": 1.83,
+      "spendMsP99": 1.93,
+      "spendMsP999": 2.03,
       "command": "incrby"
     },
     {
@@ -95,6 +113,12 @@
       "count": 21,
       "bid": 9,
       "avgSpendMs": 0.7418927142857142,
+      "spendMsP50": 1.03,
+      "spendMsP75": 1.63,
+      "spendMsP90": 1.73,
+      "spendMsP95": 1.83,
+      "spendMsP99": 1.93,
+      "spendMsP999": 2.03,
       "command": "hget"
     }
   ],
@@ -268,12 +292,24 @@
       "maxSpendMs": 8.689271,
       "count": 184,
       "addr": "abc@10.201.48.171:6379",
+      "spendMsP50": 1.03,
+      "spendMsP75": 1.63,
+      "spendMsP90": 1.73,
+      "spendMsP95": 1.83,
+      "spendMsP99": 1.93,
+      "spendMsP999": 2.03,
       "avgSpendMs": 3.060518804347826
     },
     {
       "maxSpendMs": 0.176157,
       "count": 19,
       "addr": "@10.177.0.69:8803",
+      "spendMsP50": 1.03,
+      "spendMsP75": 1.63,
+      "spendMsP90": 1.73,
+      "spendMsP95": 1.83,
+      "spendMsP99": 1.93,
+      "spendMsP999": 2.03,
       "avgSpendMs": 0.12276473684210526
     }
   ]

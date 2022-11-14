@@ -1,9 +1,10 @@
 package com.netease.nim.camellia.redis.proxy.plugin.monitor;
 
 import com.netease.nim.camellia.core.util.CamelliaMapUtils;
+import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.monitor.model.BidBgroupSpendStats;
 import com.netease.nim.camellia.redis.proxy.monitor.model.SpendStats;
-import com.netease.nim.camellia.redis.proxy.util.MaxValue;
+import com.netease.nim.camellia.redis.proxy.util.QuantileCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,17 +22,23 @@ public class CommandSpendMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(CommandSpendMonitor.class);
 
-    private static final ConcurrentHashMap<String, LongAdder> commandSpendCountMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, LongAdder> commandSpendTotalMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, MaxValue> commandSpendMaxMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, LongAdder> commandSpendCountMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, LongAdder> commandSpendTotalMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, QuantileCollector> commandQuantileMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, QuantileCollector> bidBgroupCommandQuantileMap = new ConcurrentHashMap<>();
 
     public static void incr(Long bid, String bgroup, String command, long spendNanoTime) {
         try {
             String key = bid + "|" + bgroup + "|" + command;
             CamelliaMapUtils.computeIfAbsent(commandSpendCountMap, key, k -> new LongAdder()).increment();
             CamelliaMapUtils.computeIfAbsent(commandSpendTotalMap, key, k -> new LongAdder()).add(spendNanoTime);
-            MaxValue maxValue = CamelliaMapUtils.computeIfAbsent(commandSpendMaxMap, key, k -> new MaxValue());
-            maxValue.update(spendNanoTime);
+            int time = (int)(spendNanoTime / 10000);//0.00ms
+            QuantileCollector collector1 = CamelliaMapUtils.computeIfAbsent(bidBgroupCommandQuantileMap, key,
+                    k -> new QuantileCollector(ProxyMonitorCollector.getMonitorQuantileExpectMaxSpendMs() * 100));
+            collector1.update(time);
+            QuantileCollector collector2 = CamelliaMapUtils.computeIfAbsent(commandQuantileMap, command,
+                    k -> new QuantileCollector(ProxyMonitorCollector.getMonitorQuantileExpectMaxSpendMs() * 100));
+            collector2.update(time);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -43,6 +50,17 @@ public class CommandSpendMonitor {
     }
 
     public static CommandSpendStats collect() {
+
+        ConcurrentHashMap<String, LongAdder> commandSpendCountMap = CommandSpendMonitor.commandSpendCountMap;
+        ConcurrentHashMap<String, LongAdder> commandSpendTotalMap = CommandSpendMonitor.commandSpendTotalMap;
+        ConcurrentHashMap<String, QuantileCollector> commandQuantileMap = CommandSpendMonitor.commandQuantileMap;
+        ConcurrentHashMap<String, QuantileCollector> bidBgroupCommandQuantileMap = CommandSpendMonitor.bidBgroupCommandQuantileMap;
+
+        CommandSpendMonitor.commandSpendCountMap = new ConcurrentHashMap<>();
+        CommandSpendMonitor.commandSpendTotalMap = new ConcurrentHashMap<>();
+        CommandSpendMonitor.commandQuantileMap = new ConcurrentHashMap<>();
+        CommandSpendMonitor.bidBgroupCommandQuantileMap = new ConcurrentHashMap<>();
+
         List<BidBgroupSpendStats> list = new ArrayList<>();
         ConcurrentHashMap<String, AtomicLong> spendSumMap = new ConcurrentHashMap<>();
         ConcurrentHashMap<String, SpendStats> spendStatsMap = new ConcurrentHashMap<>();
@@ -50,11 +68,6 @@ public class CommandSpendMonitor {
             String key = entry.getKey();
             long count = entry.getValue().sumThenReset();
             if (count == 0) continue;
-            MaxValue nanoMax = commandSpendMaxMap.get(key);
-            double maxSpendMs = 0;
-            if (nanoMax != null) {
-                maxSpendMs = nanoMax.getAndSet(0) / 1000000.0;
-            }
             double avgSpendMs = 0;
             LongAdder nanoSum = commandSpendTotalMap.get(key);
             long sum = 0;
@@ -77,8 +90,20 @@ public class CommandSpendMonitor {
             bidBgroupSpendStats.setBgroup(bgroup);
             bidBgroupSpendStats.setCommand(command);
             bidBgroupSpendStats.setAvgSpendMs(avgSpendMs);
-            bidBgroupSpendStats.setMaxSpendMs(maxSpendMs);
             bidBgroupSpendStats.setCount(count);
+
+            QuantileCollector collector = bidBgroupCommandQuantileMap.get(key);
+            if (collector != null) {
+                QuantileCollector.QuantileValue quantileValue = collector.getQuantileValueAndReset();
+                bidBgroupSpendStats.setSpendMsP50(quantileValue.getP50() / 100.0);
+                bidBgroupSpendStats.setSpendMsP75(quantileValue.getP75() / 100.0);
+                bidBgroupSpendStats.setSpendMsP90(quantileValue.getP90() / 100.0);
+                bidBgroupSpendStats.setSpendMsP95(quantileValue.getP95() / 100.0);
+                bidBgroupSpendStats.setSpendMsP99(quantileValue.getP99() / 100.0);
+                bidBgroupSpendStats.setSpendMsP999(quantileValue.getP999() / 100.0);
+                bidBgroupSpendStats.setMaxSpendMs(quantileValue.getMax() / 100.0);
+            }
+
             list.add(bidBgroupSpendStats);
 
             SpendStats spendStats = CamelliaMapUtils.computeIfAbsent(spendStatsMap, command, string -> {
@@ -100,6 +125,17 @@ public class CommandSpendMonitor {
                 spendStats.setAvgSpendMs(0.0);
             } else {
                 spendStats.setAvgSpendMs(sum.get() / (1000000.0 * spendStats.getCount()));
+            }
+            QuantileCollector collector = commandQuantileMap.get(command);
+            if (collector != null) {
+                QuantileCollector.QuantileValue quantileValue = collector.getQuantileValueAndReset();
+                spendStats.setSpendMsP50(quantileValue.getP50() / 100.0);
+                spendStats.setSpendMsP75(quantileValue.getP75() / 100.0);
+                spendStats.setSpendMsP90(quantileValue.getP90() / 100.0);
+                spendStats.setSpendMsP95(quantileValue.getP95() / 100.0);
+                spendStats.setSpendMsP99(quantileValue.getP99() / 100.0);
+                spendStats.setSpendMsP999(quantileValue.getP999() / 100.0);
+                spendStats.setMaxSpendMs(quantileValue.getMax() / 100.0);
             }
         }
         CommandSpendStats commandSpendStats = new CommandSpendStats();

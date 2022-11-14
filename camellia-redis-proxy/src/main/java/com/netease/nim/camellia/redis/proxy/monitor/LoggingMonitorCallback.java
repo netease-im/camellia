@@ -43,12 +43,16 @@ public class LoggingMonitorCallback implements MonitorCallback {
             }
             logger.info("====spend.stats====");
             for (SpendStats spendStats : stats.getSpendStatsList()) {
-                logger.info("command={},count={},avgSpendMs={},maxSpendMs={}", spendStats.getCommand(), spendStats.getCount(), spendStats.getAvgSpendMs(), spendStats.getMaxSpendMs());
+                logger.info("command={},count={},avgSpendMs={},maxSpendMs={},spendMsP50={},spendMsP75={},spendMsP90={},spendMsP95={},spendMsP99={},spendMsP999={}",
+                        spendStats.getCommand(), spendStats.getCount(), spendStats.getAvgSpendMs(), spendStats.getMaxSpendMs(), spendStats.getSpendMsP50(),
+                        spendStats.getSpendMsP75(), spendStats.getSpendMsP90(), spendStats.getSpendMsP95(), spendStats.getSpendMsP99(), spendStats.getSpendMsP999());
             }
             logger.info("====bidbgroup.spend.stats====");
             for (BidBgroupSpendStats spendStats : stats.getBidBgroupSpendStatsList()) {
-                logger.info("bid={},bgroup={},command={},count={},avgSpendMs={},maxSpendMs={}", spendStats.getBid() == null ? "default" : spendStats.getBid(),
-                        spendStats.getBgroup() == null ? "default" : spendStats.getBgroup(), spendStats.getCommand(), spendStats.getCount(), spendStats.getAvgSpendMs(), spendStats.getMaxSpendMs());
+                logger.info("bid={},bgroup={},command={},count={},avgSpendMs={},maxSpendMs={},spendMsP50={},spendMsP75={},spendMsP90={},spendMsP95={},spendMsP99={},spendMsP999={}", spendStats.getBid() == null ? "default" : spendStats.getBid(),
+                        spendStats.getBgroup() == null ? "default" : spendStats.getBgroup(), spendStats.getCommand(), spendStats.getCount(), spendStats.getAvgSpendMs(), spendStats.getMaxSpendMs(),
+                        spendStats.getSpendMsP50(), spendStats.getSpendMsP75(), spendStats.getSpendMsP90(),
+                        spendStats.getSpendMsP95(), spendStats.getSpendMsP99(), spendStats.getSpendMsP999());
             }
             logger.info("====resource.stats====");
             for (ResourceStats resourceStats : stats.getResourceStatsList()) {
@@ -77,8 +81,10 @@ public class LoggingMonitorCallback implements MonitorCallback {
             logger.info("====upstream.redis.spend.stats====");
             List<UpstreamRedisSpendStats> upstreamRedisSpendStatsList = stats.getUpstreamRedisSpendStatsList();
             for (UpstreamRedisSpendStats upstreamRedisSpendStats : upstreamRedisSpendStatsList) {
-                logger.info("addr={},count={},avgSpendMs={},maxSpendMs={}", upstreamRedisSpendStats.getAddr(),
-                        upstreamRedisSpendStats.getCount(), upstreamRedisSpendStats.getAvgSpendMs(), upstreamRedisSpendStats.getMaxSpendMs());
+                logger.info("addr={},count={},avgSpendMs={},maxSpendMs={},spendMsP50={},spendMsP75={},spendMsP90={},spendMsP95={},spendMsP99={},spendMsP999={}", upstreamRedisSpendStats.getAddr(),
+                        upstreamRedisSpendStats.getCount(), upstreamRedisSpendStats.getAvgSpendMs(), upstreamRedisSpendStats.getMaxSpendMs(), upstreamRedisSpendStats.getSpendMsP50(),
+                        upstreamRedisSpendStats.getSpendMsP75(), upstreamRedisSpendStats.getSpendMsP90(), upstreamRedisSpendStats.getSpendMsP95(),
+                        upstreamRedisSpendStats.getSpendMsP99(), upstreamRedisSpendStats.getSpendMsP999());
             }
             logger.info("====big.key.stats====");
             List<BigKeyStats> bigKeyStatsList = stats.getBigKeyStatsList();
