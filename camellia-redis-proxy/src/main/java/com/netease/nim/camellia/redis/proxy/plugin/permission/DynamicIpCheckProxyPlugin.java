@@ -48,7 +48,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
             // FIXME: I don't know how to get the apiService from factory. So I try getting it from AsyncCamelliaRedisTemplateChooser
             // And I think it's not a good idea to get it from AsyncCamelliaRedisTemplateChooser. But this is the only way I can do.
             this.apiService = AsyncCamelliaRedisTemplateChooser.apiService;
-            int seconds = ProxyDynamicConf.getInt(PROXY_PLUGIN_UPDATE_INTERVAL_SECONDS_KEY, 10);
+            int seconds = ProxyDynamicConf.getInt(PROXY_PLUGIN_UPDATE_INTERVAL_SECONDS_KEY, 5);
             ExecutorUtils.scheduleAtFixedRate(this::reload, seconds, seconds, TimeUnit.SECONDS);
             reload();
         } catch (Exception e) {
