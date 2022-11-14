@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.hbase;
 
 import com.netease.nim.camellia.core.api.*;
-import com.netease.nim.camellia.core.model.IpCheckerDto;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ResourceTableUtil;
@@ -140,11 +139,6 @@ public class CamelliaHBaseTemplate implements ICamelliaHBaseTemplate {
         @Override
         public boolean reportStats(ResourceStats resourceStats) {
             return service.reportStats(resourceStats);
-        }
-
-        @Override
-        public DataWithMd5Response<List<IpCheckerDto>> getIpCheckerList(String md5) {
-            throw new UnsupportedOperationException();
         }
     }
 

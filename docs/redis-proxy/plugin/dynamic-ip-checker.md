@@ -5,8 +5,6 @@
 * Supports blacklist mode, also supports whitelist mode, 
 * Configuration supports dynamic change via `Camellia-dashboard`
 
-**NOTE:** This plugin only supports Transpond type `Remote`
-
 ### Enable method
 ````yaml
 server:
@@ -37,6 +35,8 @@ camellia-redis-proxy:
 ````properties
 #The interval of updating the plugin configuration, the default is 5 seconds
 proxy.plugin.update.interval.seconds=5
+camellia.dashboard.url=http://127.0.0.1:8080
+camellia.dashboard.headerMap={"api-key": "secretToken"}
 ````
 
 ### API management (Camellia-dashboard)
@@ -71,5 +71,5 @@ proxy.plugin.update.interval.seconds=5
   }
 }
 ```
-**NOTE:** **bid = 0 , bgroup = "0"** means that the configuration is global, and the configuration is applied for all. 
+**NOTE:** **bid = -1 , bgroup = "default"** means that the configuration is global, and the configuration is applied for all. 
 If you want to configure a specific bid and bgroup, you need to create a new configuration, and it will override the global configuration.

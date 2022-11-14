@@ -1,49 +1,66 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
+ * 0.00-10.00ms 0.01ms 1001-buckets total-1001-buckets
+ * 10.01-50.00ms 0.05ms 800-buckets total-1801-buckets
+ * 50.01-100.00ms 0.1ms 500-buckets total-2301-buckets
+ * 100.01-500.00ms 1ms 400-buckets total-2701-buckets
+ * 500.01-2000.00ms 50ms 30-buckets total-2731-buckets
+ * 2000.01-10000.00ms 200ms 40-buckets total-2771-buckets
+ * total 2771-buckets
  * Created by caojiajun on 2022/11/11
  */
 public class QuantileCollector {
 
-    private final int expectedMaxValue;
-    private AtomicLong[] distribute;//已经分散了，AtomicLong和LongAdder性能区别应该不大，但是可以省很多内存
+    private static final int CAPACITY = 2771;
+
+    private LongAdder[] distribute;
     private final MaxValue maxValue = new MaxValue();
 
-    public QuantileCollector(int expectedMaxValue) {
-        this.expectedMaxValue = expectedMaxValue;
+    public QuantileCollector() {
         init();
     }
 
     private void init() {
-        distribute = new AtomicLong[expectedMaxValue];
-        for (int i=0; i<expectedMaxValue; i++) {
-            distribute[i] = new AtomicLong(0);
+        distribute = new LongAdder[CAPACITY];
+        for (int i=0; i<CAPACITY; i++) {
+            distribute[i] = new LongAdder();
         }
     }
 
     public void update(int value) {
         if (value < 0) return;
         maxValue.update(value);
-        AtomicLong distributeCounter;
-        if (value >= distribute.length) {
-            distributeCounter = distribute[distribute.length - 1];
-        } else {
+        LongAdder distributeCounter;
+        if (value <= 1000) {//0.00-10.00
             distributeCounter = distribute[value];
+        } else if (value <= 5000) {//10.01-50.00
+            distributeCounter = distribute[1001 + (value - 1001) / 5];
+        } else if (value <= 10000) {//50.01-100.00
+            distributeCounter = distribute[1801 + (value - 5001) / 10];
+        } else if (value <= 50000) {
+            distributeCounter = distribute[2301 + (value - 10001) / 100];
+        } else if (value <= 200000) {
+            distributeCounter = distribute[2701 + (value - 50001) / 5000];
+        } else if (value <= 1000000) {
+            distributeCounter = distribute[2731 + (value - 200001) / 20000];
+        } else {
+            distributeCounter = distribute[CAPACITY - 1];
         }
         if (distributeCounter != null) {
-            distributeCounter.incrementAndGet();
+            distributeCounter.increment();
         }
     }
 
     public QuantileValue getQuantileValueAndReset() {
-        AtomicLong[] distribute = this.distribute;
+        LongAdder[] distribute = this.distribute;
         long max = this.maxValue.getAndSet(0);
         init();
         long count = 0;
-        for (AtomicLong adder : distribute) {
-            count += adder.get();
+        for (LongAdder adder : distribute) {
+            count += adder.sum();
         }
         long c = 0;
         long p50Position = (long) (count * 0.5);
@@ -58,51 +75,59 @@ public class QuantileCollector {
         long p95 = -1;
         long p99 = -1;
         long p999 = -1;
-        long lastIndexNum = distribute[distribute.length - 1].get();
         for (int i=0; i < distribute.length; i++) {
-            c += distribute[i].get();
+            long current = distribute[i].sum();
+            c += current;
             if (p50 == -1 && c >= p50Position) {
-                p50 = i;
+                long offset = current - (c - p50Position);
+                p50 = index2Real(i, current, offset, max);
             }
             if (p75 == -1 && c >= p75Position) {
-                p75 = i;
+                long offset = current - (c - p75Position);
+                p75 = index2Real(i, current, offset, max);;
             }
             if (p90 == -1 && c >= p90Position) {
-                p90 = i;
+                long offset = current - (c - p90Position);
+                p90 = index2Real(i, current, offset, max);;
             }
             if (p95 == -1 && c >= p95Position) {
-                p95 = i;
+                long offset = current - (c - p95Position);
+                p95 = index2Real(i, current, offset, max);;
             }
             if (p99 == -1 && c >= p99Position) {
-                p99 = i;
+                long offset = current - (c - p99Position);
+                p99 = index2Real(i, current, offset, max);;
             }
             if (p999 == -1 && c >= p999Position) {
-                p999 = i;
+                long offset = current - (c - p999Position);
+                p999 = index2Real(i, current, offset, max);;
             }
-        }
-        if (p50 == distribute.length - 1) {
-            p50 = quantileExceed(max, distribute.length - 1, lastIndexNum, count, p50Position);
-        }
-        if (p75 == distribute.length - 1) {
-            p75 = quantileExceed(max, distribute.length - 1, lastIndexNum, count, p75Position);
-        }
-        if (p90 == distribute.length - 1) {
-            p90 = quantileExceed(max, distribute.length - 1, lastIndexNum, count, p90Position);
-        }
-        if (p95 == distribute.length - 1) {
-            p95 = quantileExceed(max, distribute.length - 1, lastIndexNum, count, p95Position);
-        }
-        if (p99 == distribute.length - 1) {
-            p99 = quantileExceed(max, distribute.length - 1, lastIndexNum, count, p99Position);
-        }
-        if (p999 == distribute.length - 1) {
-            p999 = quantileExceed(max, distribute.length - 1, lastIndexNum, count, p999Position);
         }
         return new QuantileValue(p50, p75, p90, p95, p99, p999, max);
     }
 
-    private long quantileExceed(long max, int maxIndex, long lastIndexNum, long count, long quantilePosition) {
-        return Math.round(max - ((max - maxIndex + 1) / (lastIndexNum * 1.0)) * (count - quantilePosition));
+    private long index2Real(int index, long current, long offset, long max) {
+        if (index >= 0 && index <= 1000) {
+            return index;
+        } else if (index <= 1801) {
+            double rate = offset / (current*1.0);
+            return 1000 + (index - 1000 + 1) * 5L + (long)(5 * rate);
+        } else if (index <= 2301) {
+            double rate = offset / (current*1.0);
+            return 5000 + (index - 1801 + 1) * 10L + (long)(10 * rate);
+        } else if (index <= 2701) {
+            double rate = offset / (current*1.0);
+            return 10000 + (index - 2301 + 1) * 100L + (long)(100 * rate);
+        } else if (index <= 2731) {
+            double rate = offset / (current*1.0);
+            return 50000 + (index - 2701 + 1) * 5000L + (long)(5000 * rate);
+        } else if (index < 2770) {
+            double rate = offset / (current*1.0);
+            return 200000 + (index - 2731 + 1) * 20000L + (long)(20000 * rate);
+        } else if (index == 2770) {
+            return 1000000L + (long)(offset / (current*1.0) * (max - 1000000L));
+        }
+        return 0;
     }
 
     public static class QuantileValue {

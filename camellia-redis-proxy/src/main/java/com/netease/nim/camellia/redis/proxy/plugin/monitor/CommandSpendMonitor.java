@@ -34,10 +34,10 @@ public class CommandSpendMonitor {
             CamelliaMapUtils.computeIfAbsent(commandSpendTotalMap, key, k -> new LongAdder()).add(spendNanoTime);
             int time = (int)(spendNanoTime / 10000);//0.00ms
             QuantileCollector collector1 = CamelliaMapUtils.computeIfAbsent(bidBgroupCommandQuantileMap, key,
-                    k -> new QuantileCollector(ProxyMonitorCollector.getMonitorQuantileExpectMaxSpendMs() * 100));
+                    k -> new QuantileCollector());
             collector1.update(time);
             QuantileCollector collector2 = CamelliaMapUtils.computeIfAbsent(commandQuantileMap, command,
-                    k -> new QuantileCollector(ProxyMonitorCollector.getMonitorQuantileExpectMaxSpendMs() * 100));
+                    k -> new QuantileCollector());
             collector2.update(time);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

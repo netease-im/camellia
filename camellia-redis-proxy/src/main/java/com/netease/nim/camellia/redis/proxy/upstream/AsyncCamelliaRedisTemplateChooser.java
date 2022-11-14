@@ -39,7 +39,7 @@ public class AsyncCamelliaRedisTemplateChooser {
 
     private final CamelliaTranspondProperties properties;
     private AsyncCamelliaRedisEnv env;
-    public static CamelliaApi apiService;
+    private CamelliaApi apiService;
     private ProxyRouteConfUpdater updater;
 
     private boolean multiTenancySupport = true;//是否支持多租户
