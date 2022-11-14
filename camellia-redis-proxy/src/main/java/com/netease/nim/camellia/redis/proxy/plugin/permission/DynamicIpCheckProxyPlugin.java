@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
     private static final Logger logger = LoggerFactory.getLogger(DynamicIpCheckProxyPlugin.class);
     protected static final ProxyPluginResponse FORBIDDEN = new ProxyPluginResponse(false, "ip forbidden");
-    protected static final String PROXY_PLUGIN_UPDATE_INTERVAL_SECONDS_KEY = "proxy.plugin.update.interval.seconds";
 
     // This key is applied for all bid and bgroup if bid and bgroup is null
     public static final String DEFAULT_KEY = IpCheckerUtil.buildIpCheckerKey(-1L, "default");
@@ -63,7 +62,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
                 headerMap.put(entry.getKey(), String.valueOf(entry.getValue()));
             }
             apiService = CamelliaApiUtil.init(url, connectTimeoutMillis, readTimeoutMillis, headerMap);
-            int seconds = ProxyDynamicConf.getInt(PROXY_PLUGIN_UPDATE_INTERVAL_SECONDS_KEY, 5);
+            int seconds = ProxyDynamicConf.getInt("dynamic.ip.check.plugin.config.update.interval.seconds", 5);
             ExecutorUtils.scheduleAtFixedRate(this::reload, seconds, seconds, TimeUnit.SECONDS);
             reload();
         } catch (Exception e) {
