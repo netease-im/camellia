@@ -49,22 +49,23 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
     @Override
     public void init(ProxyBeanFactory factory) {
         try {
-            //proxy route conf may not configured by camellia-dashboard, so init CamelliaApi independent
             String url = ProxyDynamicConf.getString("camellia.dashboard.url", null);
             int connectTimeoutMillis = ProxyDynamicConf.getInt("camellia.dashboard.connectTimeoutMillis", 10000);
             int readTimeoutMillis = ProxyDynamicConf.getInt("camellia.dashboard.readTimeoutMillis", 60000);
             Map<String, String> headerMap = new HashMap<>();
             String string = ProxyDynamicConf.getString("camellia.dashboard.headerMap", "{}");
-            JSONObject json = JSONObject.parseObject(string);
-            for (Map.Entry<String, Object> entry : json.entrySet()) {
-                headerMap.put(entry.getKey(), String.valueOf(entry.getValue()));
+            if (string != null && string.trim().length() > 0) {
+                JSONObject json = JSONObject.parseObject(string);
+                for (Map.Entry<String, Object> entry : json.entrySet()) {
+                    headerMap.put(entry.getKey(), String.valueOf(entry.getValue()));
+                }
             }
             api = CamelliaApiUtil.initMiscApi(url, connectTimeoutMillis, readTimeoutMillis, headerMap);
             int seconds = ProxyDynamicConf.getInt("dynamic.ip.check.plugin.config.update.interval.seconds", 5);
             ExecutorUtils.scheduleAtFixedRate(this::reload, seconds, seconds, TimeUnit.SECONDS);
             reload();
         } catch (Exception e) {
-            logger.error("init dynamic IP Check Proxy error", e);
+            logger.error("init dynamic IP Check Proxy Plugin error", e);
         }
     }
 
