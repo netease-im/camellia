@@ -16,6 +16,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 
 /**
  * @author tasszz2k
@@ -42,7 +44,7 @@ public class PermissionController {
 
     @ApiOperation(value = "Create ip checker", notes = "create ip checker")
     @PostMapping("/ip-checkers")
-    public WebResult CreateIpChecker(@RequestBody CreateOrUpdateIpCheckerRequest request
+    public WebResult CreateIpChecker(@RequestBody @Valid CreateOrUpdateIpCheckerRequest request
     ) {
         LogBean.get().addProps("bid", request.getBid());
         LogBean.get().addProps("bgroup", request.getBgroup());
@@ -59,7 +61,7 @@ public class PermissionController {
     @PutMapping("/ip-checkers/{id}")
     public WebResult UpdateIpChecker(
             @PathVariable("id") Long id,
-            @RequestBody CreateOrUpdateIpCheckerRequest request
+            @RequestBody @Valid CreateOrUpdateIpCheckerRequest request
     ) {
         LogBean.get().addProps("id", id);
         LogBean.get().addProps("bid", request.getBid());
