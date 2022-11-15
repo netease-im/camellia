@@ -98,6 +98,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
                                 }));
         cache.clear();
         cache.putAll(newData);
+        checkCache.clear();
     }
 
     /**
