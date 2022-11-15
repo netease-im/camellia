@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 一个支持设置客户端ip校验的Plugin，支持黑名单和白名单两种模式
@@ -43,7 +43,7 @@ public class IPCheckProxyPlugin implements ProxyPlugin {
     private static final Logger logger = LoggerFactory.getLogger(IPCheckProxyPlugin.class);
 
     private static final ProxyPluginResponse FORBIDDEN = new ProxyPluginResponse(false, "ip forbidden");
-    private final Map<String, IpCheckInfo> cache = new HashMap<>();
+    private final Map<String, IpCheckInfo> cache = new ConcurrentHashMap<>();
     private final ConcurrentLinkedHashMap<String, Boolean> checkCache = new ConcurrentLinkedHashMap.Builder<String, Boolean>()
             .initialCapacity(1000)
             .maximumWeightedCapacity(10000)
@@ -54,6 +54,7 @@ public class IPCheckProxyPlugin implements ProxyPlugin {
         ProxyDynamicConf.registerCallback(() -> {
             try {
                 cache.clear();
+                checkCache.clear();
             } catch (Exception e) {
                 logger.error("cache clear error", e);
             }

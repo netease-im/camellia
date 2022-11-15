@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -40,7 +41,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
             .maximumWeightedCapacity(10000)
             .build();
 
-    protected final Map<String, IpCheckInfo> cache = new HashMap<>();
+    protected final Map<String, IpCheckInfo> cache = new ConcurrentHashMap<>();
     private String md5;
 
     private CamelliaMiscApi api;
@@ -115,7 +116,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
                 }
             }
         } catch (Exception e) {
-            ErrorLogCollector.collect(IPCheckProxyPlugin.class, "cannot fetch ip checker config from camellia-dashboard", e);
+            ErrorLogCollector.collect(DynamicIpCheckProxyPlugin.class, "cannot fetch ip checker config from camellia-dashboard", e);
         }
         return null;
     }
@@ -215,7 +216,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
                         ipCheckInfo.addIp(ip);
                     }
                 } catch (Exception e) {
-                    ErrorLogCollector.collect(IPCheckProxyPlugin.class, "load ip black/white list error, conf = " + ip, e);
+                    ErrorLogCollector.collect(DynamicIpCheckProxyPlugin.class, "load ip black/white list error, conf = " + ip, e);
                 }
             }
         }
