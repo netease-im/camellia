@@ -2,11 +2,8 @@ package com.netease.nim.camellia.dashboard.controller;
 
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiResponse;
-import com.netease.nim.camellia.core.api.DataWithMd5Response;
 import com.netease.nim.camellia.core.api.ResourceStats;
-import com.netease.nim.camellia.core.model.IpCheckerDto;
 import com.netease.nim.camellia.dashboard.conf.DashboardProperties;
-import com.netease.nim.camellia.dashboard.model.IpChecker;
 import com.netease.nim.camellia.dashboard.service.IIpCheckerService;
 import com.netease.nim.camellia.dashboard.service.ResourceTableService;
 import com.netease.nim.camellia.dashboard.service.StatsService;
@@ -16,8 +13,6 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 
 /**
@@ -59,14 +54,5 @@ public class ApiController implements CamelliaApi {
         String ip = LogBean.get().getIp();
         statsService.stats(ip, resourceStats);
         return true;
-    }
-
-    @ApiOperation(value = "Get ip checker all", notes = "This is a heartbeat interface, the client pulls it regularly (such as 5s), and judges whether there is an update through the MD5 value")
-    @GetMapping("/permissions/ip-checkers")
-    public DataWithMd5Response<List<IpCheckerDto>> getIpCheckerList(@RequestParam(value = "md5", required = false) String md5) {
-        LogBean.get().addProps("md5", md5);
-        DataWithMd5Response<List<IpCheckerDto>> response = ipCheckerService.getList(md5);
-        LogBean.get().addProps("response", response);
-        return response;
     }
 }

@@ -34,7 +34,8 @@ camellia-redis-proxy:
 - The interval of updating the plugin configuration
 ````properties
 #The interval of updating the plugin configuration, the default is 5 seconds
-proxy.plugin.update.interval.seconds=5
+dynamic.ip.check.plugin.config.update.interval.seconds=5
+#camellia-dashboard configuration
 camellia.dashboard.url=http://127.0.0.1:8080
 camellia.dashboard.headerMap={"api-key": "secretToken"}
 ````

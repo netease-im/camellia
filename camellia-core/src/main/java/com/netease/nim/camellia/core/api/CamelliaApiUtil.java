@@ -11,19 +11,41 @@ import java.util.Map;
  * Created by caojiajun on 2019/11/25.
  */
 public class CamelliaApiUtil {
+
     public static CamelliaApi init(String url) {
         return init(url, null);
+    }
+
+    public static CamelliaMiscApi initMiscApi(String url) {
+        return initMiscApi(url, null);
     }
 
     public static CamelliaApi init(String url, Map<String, String> headerMap) {
         return init(url, 10000, 60000, headerMap);
     }
 
+    public static CamelliaMiscApi initMiscApi(String url, Map<String, String> headerMap) {
+        return initMiscApi(url, 10000, 60000, headerMap);
+    }
+
+
     public static CamelliaApi init(String url, int connectTimeoutMillis, int readTimeoutMillis) {
         return init(url, connectTimeoutMillis, readTimeoutMillis, null);
     }
 
+    public static CamelliaMiscApi initMiscApi(String url, int connectTimeoutMillis, int readTimeoutMillis) {
+        return initMiscApi(url, connectTimeoutMillis, readTimeoutMillis, null);
+    }
+
     public static CamelliaApi init(String url, int connectTimeoutMillis, int readTimeoutMillis, Map<String, String> headerMap) {
+        return init(CamelliaApi.class, url, connectTimeoutMillis, readTimeoutMillis, headerMap);
+    }
+
+    public static CamelliaMiscApi initMiscApi(String url, int connectTimeoutMillis, int readTimeoutMillis, Map<String, String> headerMap) {
+        return init(CamelliaMiscApi.class, url, connectTimeoutMillis, readTimeoutMillis, headerMap);
+    }
+
+    private static <T> T init(Class<T> clazz, String url, int connectTimeoutMillis, int readTimeoutMillis, Map<String, String> headerMap) {
         return Feign.builder()
                 .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder())
@@ -38,6 +60,6 @@ public class CamelliaApiUtil {
                     }
                 })
                 .options(new Request.Options(connectTimeoutMillis, readTimeoutMillis))
-                .target(CamelliaApi.class, url);
+                .target(clazz, url);
     }
 }
