@@ -217,7 +217,7 @@ public final class CamelliaFeign {
                     bgroup = defaultBgroup;
                 }
                 if (camelliaApi != null) {
-                    updater = new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, checkIntervalMillis);
+                    updater = new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, resourceTable, checkIntervalMillis);
                     this.camelliaApi = camelliaApi;
                 }
             }
@@ -289,7 +289,7 @@ public final class CamelliaFeign {
             if (camelliaFeignDynamicOptionGetter != null && camelliaFeignDynamicOptionGetter.getDynamicRouteConfGetter(bid) != null && bid > 0 && camelliaApi != null ) {
                 //如果设置了DynamicRouteConfGetter，则允许根据请求参数做动态路由下发
                 return ProxyClientFactory.createProxy(apiType, new FeignDynamicRouteCallback<>(defaultFeignClient, buildParam, camelliaFeignDynamicOptionGetter,
-                        bid, bgroup, camelliaApi, checkIntervalMillis));
+                        bid, bgroup, camelliaApi, resourceTable, checkIntervalMillis));
             } else {
                 return defaultFeignClient;
             }

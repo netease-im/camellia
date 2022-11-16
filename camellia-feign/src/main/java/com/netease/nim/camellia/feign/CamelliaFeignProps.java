@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class CamelliaFeignProps {
 
-    private static final okhttp3.OkHttpClient okHttpClient;
+    public static final okhttp3.OkHttpClient okHttpClient;
     static {
         Dispatcher dispatcher = new Dispatcher();
         dispatcher.setMaxRequests(2048);

@@ -89,7 +89,7 @@ public interface CamelliaFeignDynamicOptionGetter {
                 circuitBreakerConfig.setName("bid=" + bid + ",bgroup=" + bgroup);
             }
             return new DynamicOption.Builder()
-                    .readTimeoutTimeout(readTimeoutGetter, readTimeoutUnitGetter)
+                    .readTimeout(readTimeoutGetter, readTimeoutUnitGetter)
                     .connectTimeout(connectTimeoutGetter, connectTimeoutUnitGetter)
                     .followRedirects(followRedirectsGetter)
                     .circuitBreakerConfig(circuitBreakerConfig)

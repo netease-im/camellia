@@ -581,7 +581,7 @@ public class CamelliaNakedClient<R, W> {
             synchronized (updaterMap) {
                 updater = updaterMap.get(bgroup);
                 if (updater == null) {
-                    updater = new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, checkIntervalMillis);
+                    updater = new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, resourceTable, checkIntervalMillis);
                     ResourceTable resourceTable = updater.getResourceTable();
                     ResourceChooser resourceChooser = new ResourceChooser(resourceTable, feignEnv.getProxyEnv());
                     updater.addCallback(table -> resourceChooserMap.put(bgroup, new ResourceChooser(table, feignEnv.getProxyEnv())));

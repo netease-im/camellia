@@ -5,6 +5,7 @@ import com.netease.nim.camellia.core.api.RemoteMonitor;
 import com.netease.nim.camellia.core.client.annotation.RouteKey;
 import com.netease.nim.camellia.core.client.callback.ProxyClientFactory;
 import com.netease.nim.camellia.core.client.env.Monitor;
+import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.AnnotationValueGetterCache;
 import com.netease.nim.camellia.core.util.ExceptionUtils;
 import com.netease.nim.camellia.feign.client.DynamicOption;
@@ -31,14 +32,16 @@ public class FeignDynamicRouteCallback<T> implements MethodInterceptor {
     private final CamelliaFeignDynamicOptionGetter camelliaFeignDynamicOptionGetter;
     private final CamelliaApi camelliaApi;
     private final long checkIntervalMillis;
+    private final ResourceTable defaultResourceTable;
 
     public FeignDynamicRouteCallback(T defaultFeignClient, CamelliaFeignBuildParam<T> buildParam, CamelliaFeignDynamicOptionGetter camelliaFeignDynamicOptionGetter,
-                                     long bid, String defaultBgroup, CamelliaApi camelliaApi, long checkIntervalMillis) {
+                                     long bid, String defaultBgroup, CamelliaApi camelliaApi, ResourceTable defaultResourceTable, long checkIntervalMillis) {
         this.defaultFeignClient = defaultFeignClient;
         this.buildParam = buildParam;
         this.bid = bid;
         this.defaultBgroup = defaultBgroup;
         this.camelliaApi = camelliaApi;
+        this.defaultResourceTable = defaultResourceTable;
         this.checkIntervalMillis = checkIntervalMillis;
         this.camelliaFeignDynamicOptionGetter = camelliaFeignDynamicOptionGetter;
         annotationValueGetterCache.preheatAnnotationValueByParameterField(buildParam.getApiType(), RouteKey.class);
@@ -83,7 +86,7 @@ public class FeignDynamicRouteCallback<T> implements MethodInterceptor {
                     }
                     param.setMonitor(monitor);
                     param.setDynamicOption(camelliaFeignDynamicOptionGetter.getDynamicOption(bid, bgroup));
-                    param.setUpdater(new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, checkIntervalMillis));
+                    param.setUpdater(new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, defaultResourceTable, checkIntervalMillis));
                     param.setBgroup(bgroup);
                     client = ProxyClientFactory.createProxy(param.getApiType(), new FeignCallback<>(param));
                     clientMap.put(bgroup, client);

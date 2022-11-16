@@ -26,23 +26,34 @@ public class CamelliaDashboardFeignResourceTableUpdater extends FeignResourceTab
     private final long bid;
     private final String bgroup;
     private String md5;
+    private final ResourceTable defaultResourceTable;
 
-    public CamelliaDashboardFeignResourceTableUpdater(CamelliaApi camelliaApi, long bid, String bgroup, long checkIntervalMillis) {
+    public CamelliaDashboardFeignResourceTableUpdater(CamelliaApi camelliaApi, long bid, String bgroup, ResourceTable defaultResourceTable, long checkIntervalMillis) {
         this.camelliaApi = camelliaApi;
         this.bid = bid;
         this.bgroup = bgroup;
+        this.defaultResourceTable = defaultResourceTable;
         executorService.scheduleAtFixedRate(this::refresh, checkIntervalMillis, checkIntervalMillis, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public ResourceTable getResourceTable() {
         CamelliaApiResponse response = camelliaApi.getResourceTable(bid, bgroup, null);
+        if (response.getCode() == CamelliaApiCode.NOT_EXISTS.getCode()) {
+            return defaultResourceTable;
+        }
         return response.getResourceTable();
     }
 
     private void refresh() {
         try {
             CamelliaApiResponse response = camelliaApi.getResourceTable(bid, bgroup, md5);
+            if (response.getCode() == CamelliaApiCode.NOT_EXISTS.getCode()) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("not exists, bid = {}, bgroup = {}, md5 = {}", bid, bgroup, md5);
+                }
+                return;
+            }
             if (response.getCode() == CamelliaApiCode.NOT_MODIFY.getCode()) {
                 if (logger.isTraceEnabled()) {
                     logger.trace("not modify, bid = {}, bgroup = {}, md5 = {}", bid, bgroup, md5);
