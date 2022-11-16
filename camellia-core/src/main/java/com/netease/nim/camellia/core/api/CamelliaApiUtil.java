@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.core.api;
 
+import com.netease.nim.camellia.core.conf.CamelliaConfig;
 import feign.Feign;
 import feign.Request;
 import feign.jackson.JacksonDecoder;
@@ -46,6 +47,16 @@ public class CamelliaApiUtil {
     }
 
     private static <T> T init(Class<T> clazz, String url, int connectTimeoutMillis, int readTimeoutMillis, Map<String, String> headerMap) {
+        if (CamelliaApi.class.isAssignableFrom(clazz)) {
+            if (url.startsWith("file://")) {
+                String[] split = url.split("//");
+                if (split.length == 2) {
+                    String fileName = split[1];
+                    CamelliaConfig camelliaConfig = new CamelliaConfig(fileName);
+                    return (T) new FileBasedCamelliaApi(camelliaConfig);
+                }
+            }
+        }
         return Feign.builder()
                 .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder())
