@@ -13,6 +13,7 @@
 
 ### 更新
 * camellia-feign初始化时，如果依赖的后端服务整体宕机了，当前服务不是报错而是打印warn日志
+* camellia-feign使用动态路由时，如果远端（camellia-dashboard）返回404，则使用本地路由代替，而不是报错 
 
 ### fix
 * 无

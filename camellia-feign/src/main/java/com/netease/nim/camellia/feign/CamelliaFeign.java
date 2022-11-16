@@ -205,6 +205,11 @@ public final class CamelliaFeign {
                     bgroup = annotation.bgroup();
                 }
             }
+            if (resourceTable == null) {
+                if (annotation != null && annotation.route() != null && annotation.route().trim().length() != 0) {
+                    resourceTable = ReadableResourceTableUtil.parseTable(annotation.route());
+                }
+            }
             if (bid > 0) {
                 CamelliaApi camelliaApi = this.camelliaApi;
                 if (camelliaApi == null) {

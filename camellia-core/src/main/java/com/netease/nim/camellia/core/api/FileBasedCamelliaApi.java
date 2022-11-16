@@ -25,7 +25,7 @@ public class FileBasedCamelliaApi implements CamelliaApi {
             return response;
         }
         String newMd5 = MD5Util.md5(string);
-        if (newMd5.equalsIgnoreCase(md5)) {
+        if (newMd5.equals(md5)) {
             CamelliaApiResponse response = new CamelliaApiResponse();
             response.setCode(CamelliaApiCode.NOT_MODIFY.getCode());
             return response;

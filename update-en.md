@@ -13,6 +13,7 @@
 
 ### update
 * during camellia-feign initialization, if upstream services down, logging warn log instead of throw exception
+* when use camellia-dashboard manage camellia-feign dynamic resource-table, if remote return 404, use local resource-table rather than throw exception
 
 ### fix
 * none
