@@ -274,3 +274,12 @@ camellia-feign支持为每个service设置fallback或者fallbackFactory（所谓
 * spring自动注入的fallback实例
 * 尝试使用无参构造方法去初始化注解中fallbackFactory实例
 * 尝试使用无参构造方法去初始化注解中fallback实例
+
+## 关于动态参数（如超时、熔断）
+* camellia-feign使用DynamicValueGetter<T>的方式来提供动态参数，你可以自行实现（如对接到你们的配置中心）
+* camellia-feign默认使用DefaultCamelliaFeignDynamicOptionGetter来获取动态参数，此时参数实际上是静态的
+* 此外，camellia-feign还提供了一个FileBasedCamelliaFeignDynamicOptionGetter，支持使用本地配置文件（properties）来动态修改参数
+
+## 关于动态路由
+* 一般来说，你需要引入camellia-dashboard来配置和下发动态的路由配置
+* 此外你也可以使用FileBasedCamelliaApi，从而使用本地配置文件（properties）来模拟camellia-dashboard
