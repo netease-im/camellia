@@ -48,7 +48,7 @@ public class DiscoveryResourcePool implements FeignResourcePool {
         }
         reload();
         if (originalList.isEmpty()) {
-            throw new IllegalArgumentException("server list is empty");
+            logger.warn("server list is empty, camellia-feign-service = {}", discoveryResource.getUrl());
         }
         discovery.setCallback(new CamelliaDiscovery.Callback<FeignServerInfo>() {
             @Override
