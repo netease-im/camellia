@@ -8,9 +8,11 @@
 ### add
 * CamelliaStatistic support quantile stats, like p50/p75/p90/p90/p95/p99/p999
 * camellia-redis-proxy rt monitor support quantile stats, like p50/p75/p90/p90/p95/p99/p999
+* provide FileBasedCamelliaApi, support use local properties file to simulate camellia-dashboard
+* camellia-feign support use local properties file to provide dynamic option, such as timeout\circuit\route 
 
 ### update
-* none
+* during camellia-feign initialization, if upstream services down, logging warn log instead of throw exception
 
 ### fix
 * none

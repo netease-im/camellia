@@ -8,9 +8,11 @@
 ### 新增
 * CamelliaStatistic工具类支持统计分位数（p50、p75、p90、p90、p95、p99、p999）
 * camellia-redis-proxy的耗时监控支持统计分位数（p50、p75、p90、p90、p95、p99、p999），具体见：[monitor-data](/docs/redis-proxy/monitor/monitor-data.md)
+* 提供FileBasedCamelliaApi，支持使用本地properties配置文件模拟camellia-dashboard
+* camellia-feign支持使用本地配置文件提供动态参数的能力（如超时、熔断、路由等参数）
 
 ### 更新
-* 无
+* camellia-feign初始化时，如果依赖的后端服务整体宕机了，当前服务不是报错而是打印warn日志
 
 ### fix
 * 无
