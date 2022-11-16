@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.core.util;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -23,7 +24,14 @@ public class ExceptionUtils {
                 } else {
                     e = targetException;
                 }
-            } else {
+            } else if (e instanceof UndeclaredThrowableException) {
+                if (e.getCause() == null) {
+                    break;
+                } else {
+                    e = e.getCause();
+                }
+            }
+            else {
                 break;
             }
         }
