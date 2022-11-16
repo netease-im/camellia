@@ -96,7 +96,7 @@ public class DynamicOption {
             return this;
         }
 
-        public Builder readTimeoutTimeout(DynamicValueGetter<Long> readTimeout, DynamicValueGetter<TimeUnit> readTimeoutUnit) {
+        public Builder readTimeout(DynamicValueGetter<Long> readTimeout, DynamicValueGetter<TimeUnit> readTimeoutUnit) {
             dynamicOption.readTimeout = readTimeout;
             dynamicOption.readTimeoutUnit = readTimeoutUnit;
             return this;
