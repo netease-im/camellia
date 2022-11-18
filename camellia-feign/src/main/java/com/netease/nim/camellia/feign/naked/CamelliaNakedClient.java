@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 
 public class CamelliaNakedClient<R, W> {
 
@@ -281,15 +282,27 @@ public class CamelliaNakedClient<R, W> {
                     ThreadContextSwitchStrategy strategy = feignEnv.getProxyEnv().getThreadContextSwitchStrategy();
                     List<Future<W>> futureList = new ArrayList<>();
                     for (Resource resource : writeResources) {
-                        Future<W> future = feignEnv.getProxyEnv().getMultiWriteConcurrentExec()
-                                .submit(strategy.wrapperCallable(() -> {
-                                    try {
-                                        return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
-                                    } catch (Exception e) {
-                                        logger.error("multi thread concurrent invoke error, bid = {}, bgroup = {}, resource = {}", bid, bgroup, resource.getUrl(), e);
-                                        throw e;
-                                    }
-                                }));
+                        Future<W> future;
+                        try {
+                            future = feignEnv.getProxyEnv().getMultiWriteConcurrentExec()
+                                    .submit(strategy.wrapperCallable(() -> {
+                                        try {
+                                            return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
+                                        } catch (Exception e) {
+                                            logger.error("multi thread concurrent invoke error, bid = {}, bgroup = {}, resource = {}", bid, bgroup, resource.getUrl(), e);
+                                            throw e;
+                                        }
+                                    }));
+                        } catch (RejectedExecutionException e) {
+                            try {
+                                if (failureListener != null) {
+                                    failureListener.onFailure(new CamelliaNakedClientFailureContext<>(bid, bgroup, operationType, request, loadBalanceKey, resource, e));
+                                }
+                            } catch (Exception ex) {
+                                logger.error("onFailure error", ex);
+                            }
+                            throw e;
+                        }
                         futureList.add(future);
                     }
                     W result = null;
@@ -319,6 +332,13 @@ public class CamelliaNakedClient<R, W> {
                                         }
                                     }));
                         } catch (Exception e) {
+                            if (e instanceof RejectedExecutionException && failureListener != null) {
+                                try {
+                                    failureListener.onFailure(new CamelliaNakedClientFailureContext<>(bid, bgroup, operationType, request, loadBalanceKey, resource, e));
+                                } catch (Exception ex) {
+                                    logger.error("onFailure error", ex);
+                                }
+                            }
                             if (!first) {
                                 logger.error("submit async multi thread task error, bid = {}, bgroup = {}, resource = {}",
                                         bid, bgroup, resource.getUrl(), e);
@@ -358,6 +378,13 @@ public class CamelliaNakedClient<R, W> {
                             } catch (Exception e) {
                                 logger.error("submit async multi thread task error, bid = {}, bgroup = {}, resource = {}",
                                         bid, bgroup, resource.getUrl(), e);
+                                if (e instanceof RejectedExecutionException && failureListener != null) {
+                                    try {
+                                        failureListener.onFailure(new CamelliaNakedClientFailureContext<>(bid, bgroup, operationType, request, loadBalanceKey, resource, e));
+                                    } catch (Exception ex) {
+                                        logger.error("onFailure error", ex);
+                                    }
+                                }
                             }
                         }
                     }

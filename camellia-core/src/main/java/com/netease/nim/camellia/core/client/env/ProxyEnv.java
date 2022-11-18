@@ -19,6 +19,8 @@ public class ProxyEnv {
     private int shardingConcurrentExecPoolSize = ProxyConstants.shardingConcurrentExecPoolSize;
     //批量操作的并发线程池
     private ExecutorService shardingConcurrentExec;
+    //批量操作的并发线程池的拒绝策略
+    private RejectedExecutionHandler shardingConcurrentExecRejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
 
     //多写操作类型
     private MultiWriteType multiWriteType = MultiWriteType.MULTI_THREAD_CONCURRENT;
@@ -27,6 +29,8 @@ public class ProxyEnv {
     private int multiWriteConcurrentExecPoolSize = ProxyConstants.multiWriteConcurrentExecPoolSize;
     //多写操作（多线程并发）的线程池
     private ExecutorService multiWriteConcurrentExec;
+    //多写操作（多线程并发）的线程池的拒绝策略
+    private RejectedExecutionHandler multiWriteConcurrentExecRejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
 
     //多写操作（异步）的线程池大小
     private int multiWriteAsyncExecPoolSize = ProxyConstants.multiWriteAsyncExecPoolSize;
@@ -34,6 +38,8 @@ public class ProxyEnv {
     private int multiWriteAsyncExecQueueSize = ProxyConstants.multiWriteAsyncExecQueueSize;
     //多写操作（异步）的线程池
     private CamelliaHashedExecutor multiWriteAsyncExec;
+    //多写操作（异步）的线程池的拒绝策略
+    private CamelliaHashedExecutor.RejectedExecutionHandler multiWriteAsyncExecRejectedExecutionHandler = new CamelliaHashedExecutor.CallerRunsPolicy();
 
     //监控bean，若为null，表示不监控
     private Monitor monitor;
@@ -47,14 +53,20 @@ public class ProxyEnv {
         initExec();
     }
 
-    private ProxyEnv(boolean shardingConcurrentEnable, int shardingConcurrentExecPoolSize, MultiWriteType multiWriteType,
-                    int multiWriteConcurrentExecPoolSize, int multiWriteAsyncExecPoolSize, int multiWriteAsyncExecQueueSize, Monitor monitor, ShardingFunc shardingFunc) {
+    private ProxyEnv(boolean shardingConcurrentEnable, int shardingConcurrentExecPoolSize, RejectedExecutionHandler shardingConcurrentExecRejectedExecutionHandler,
+                     MultiWriteType multiWriteType,
+                     int multiWriteConcurrentExecPoolSize, RejectedExecutionHandler multiWriteConcurrentExecRejectedExecutionHandler,
+                     int multiWriteAsyncExecPoolSize, int multiWriteAsyncExecQueueSize, CamelliaHashedExecutor.RejectedExecutionHandler multiWriteAsyncExecRejectedExecutionHandler,
+                     Monitor monitor, ShardingFunc shardingFunc) {
         this.shardingConcurrentEnable = shardingConcurrentEnable;
         this.shardingConcurrentExecPoolSize = shardingConcurrentExecPoolSize;
+        this.shardingConcurrentExecRejectedExecutionHandler = shardingConcurrentExecRejectedExecutionHandler;
         this.multiWriteType = multiWriteType;
         this.multiWriteConcurrentExecPoolSize = multiWriteConcurrentExecPoolSize;
+        this.multiWriteConcurrentExecRejectedExecutionHandler = multiWriteConcurrentExecRejectedExecutionHandler;
         this.multiWriteAsyncExecPoolSize = multiWriteAsyncExecPoolSize;
         this.multiWriteAsyncExecQueueSize = multiWriteAsyncExecQueueSize;
+        this.multiWriteAsyncExecRejectedExecutionHandler = multiWriteAsyncExecRejectedExecutionHandler;
         this.monitor = monitor;
         this.shardingFunc = shardingFunc;
         initExec();
@@ -62,10 +74,10 @@ public class ProxyEnv {
 
     private void initExec() {
         shardingConcurrentExec = new ThreadPoolExecutor(shardingConcurrentExecPoolSize, shardingConcurrentExecPoolSize, 0, TimeUnit.SECONDS,
-                new SynchronousQueue<>(), new CamelliaThreadFactory(ShardingCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
+                new SynchronousQueue<>(), new CamelliaThreadFactory(ShardingCallback.class), shardingConcurrentExecRejectedExecutionHandler);
         multiWriteConcurrentExec = new ThreadPoolExecutor(multiWriteConcurrentExecPoolSize, multiWriteConcurrentExecPoolSize, 0, TimeUnit.SECONDS,
-                new SynchronousQueue<>(), new CamelliaThreadFactory(OperationCallback.class), new ThreadPoolExecutor.CallerRunsPolicy());
-        multiWriteAsyncExec = new CamelliaHashedExecutor("multi-write-async", multiWriteAsyncExecPoolSize, multiWriteAsyncExecQueueSize, new CamelliaHashedExecutor.CallerRunsPolicy());
+                new SynchronousQueue<>(), new CamelliaThreadFactory(OperationCallback.class), multiWriteConcurrentExecRejectedExecutionHandler);
+        multiWriteAsyncExec = new CamelliaHashedExecutor("multi-write-async", multiWriteAsyncExecPoolSize, multiWriteAsyncExecQueueSize, multiWriteAsyncExecRejectedExecutionHandler);
     }
 
     public static ProxyEnv defaultProxyEnv() {
@@ -113,8 +125,9 @@ public class ProxyEnv {
         }
 
         public Builder(ProxyEnv proxyEnv) {
-            this.proxyEnv = new ProxyEnv(proxyEnv.shardingConcurrentEnable, proxyEnv.shardingConcurrentExecPoolSize, proxyEnv.multiWriteType,
-                    proxyEnv.multiWriteConcurrentExecPoolSize, proxyEnv.multiWriteAsyncExecPoolSize, proxyEnv.multiWriteAsyncExecQueueSize,
+            this.proxyEnv = new ProxyEnv(proxyEnv.shardingConcurrentEnable, proxyEnv.shardingConcurrentExecPoolSize, proxyEnv.shardingConcurrentExecRejectedExecutionHandler, proxyEnv.multiWriteType,
+                    proxyEnv.multiWriteConcurrentExecPoolSize, proxyEnv.multiWriteConcurrentExecRejectedExecutionHandler, proxyEnv.multiWriteAsyncExecPoolSize, proxyEnv.multiWriteAsyncExecQueueSize,
+                    proxyEnv.multiWriteAsyncExecRejectedExecutionHandler,
                     proxyEnv.monitor, proxyEnv.shardingFunc);
             this.proxyEnv.shardingConcurrentExec = proxyEnv.shardingConcurrentExec;
             this.proxyEnv.multiWriteConcurrentExec = proxyEnv.multiWriteConcurrentExec;
@@ -134,6 +147,13 @@ public class ProxyEnv {
             return this;
         }
 
+        public Builder shardingConcurrentExecRejectedExecutionHandler(RejectedExecutionHandler shardingConcurrentExecRejectedExecutionHandler) {
+            if (shardingConcurrentExecRejectedExecutionHandler != null) {
+                proxyEnv.shardingConcurrentExecRejectedExecutionHandler = shardingConcurrentExecRejectedExecutionHandler;
+            }
+            return this;
+        }
+
         public Builder multiWriteType(MultiWriteType multiWriteType) {
             proxyEnv.multiWriteType = multiWriteType;
             return this;
@@ -142,6 +162,13 @@ public class ProxyEnv {
         public Builder multiWriteConcurrentExecPoolSize(int multiWriteConcurrentExecPoolSize) {
             if (multiWriteConcurrentExecPoolSize > 0) {
                 proxyEnv.multiWriteConcurrentExecPoolSize = multiWriteConcurrentExecPoolSize;
+            }
+            return this;
+        }
+
+        public Builder multiWriteConcurrentExecRejectedExecutionHandler(RejectedExecutionHandler multiWriteConcurrentExecRejectedExecutionHandler) {
+            if (multiWriteConcurrentExecRejectedExecutionHandler != null) {
+                proxyEnv.multiWriteConcurrentExecRejectedExecutionHandler = multiWriteConcurrentExecRejectedExecutionHandler;
             }
             return this;
         }
@@ -156,6 +183,13 @@ public class ProxyEnv {
         public Builder multiWriteAsyncExecQueueSize(int multiWriteAsyncExecQueueSize) {
             if (multiWriteAsyncExecQueueSize > 0) {
                 proxyEnv.multiWriteAsyncExecQueueSize = multiWriteAsyncExecQueueSize;
+            }
+            return this;
+        }
+
+        public Builder multiWriteAsyncExecRejectedExecutionHandler(CamelliaHashedExecutor.RejectedExecutionHandler multiWriteAsyncExecRejectedExecutionHandler) {
+            if (multiWriteAsyncExecRejectedExecutionHandler != null) {
+                proxyEnv.multiWriteAsyncExecRejectedExecutionHandler = multiWriteAsyncExecRejectedExecutionHandler;
             }
             return this;
         }

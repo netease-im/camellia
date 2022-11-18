@@ -34,6 +34,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
  * Created by caojiajun on 2022/3/1
@@ -217,15 +218,29 @@ public class FeignCallback<T> implements MethodInterceptor {
                         for (int i=0; i<list.size(); i++) {
                             Resource resource = list.get(i);
                             boolean first = i == 0;
-                            Future<Object> future = env.getMultiWriteConcurrentExec().submit(strategy.wrapperCallable(() -> {
+                            Future<Object> future;
+                            try {
+                                future = env.getMultiWriteConcurrentExec().submit(strategy.wrapperCallable(() -> {
+                                    try {
+                                        return invoke(resource, loadBalanceKey, method, objects, first, operationType);
+                                    } catch (Throwable e) {
+                                        logger.error("multi thread concurrent invoke error, class = {}, method = {}, resource = {}",
+                                                className, method.getName(), resource.getUrl(), e);
+                                        throw new ExecutionException(e);
+                                    }
+                                }));
+                            } catch (RejectedExecutionException e) {
                                 try {
-                                    return invoke(resource, loadBalanceKey, method, objects, first, operationType);
-                                } catch (Throwable e) {
-                                    logger.error("multi thread concurrent invoke error, class = {}, method = {}, resource = {}",
-                                            className, method.getName(), resource.getUrl(), e);
-                                    throw new ExecutionException(e);
+                                    if (failureListener != null) {
+                                        CamelliaFeignFailureContext failureContext = new CamelliaFeignFailureContext(bid, bgroup, apiType, operationType,
+                                                resource, loadBalanceKey, readWriteOperationCache.getGenericString(method), objects, e);
+                                        failureListener.onFailure(failureContext);
+                                    }
+                                } catch (Exception ex) {
+                                    logger.error("onFailure error", ex);
                                 }
-                            }));
+                                throw e;
+                            }
                             futureList.add(future);
                         }
                         Object ret = null;
@@ -267,6 +282,15 @@ public class FeignCallback<T> implements MethodInterceptor {
                                     }
                                 }));
                             } catch (Exception e) {
+                                if (e instanceof RejectedExecutionException && failureListener != null) {
+                                    try {
+                                        CamelliaFeignFailureContext failureContext = new CamelliaFeignFailureContext(bid, bgroup, apiType, operationType,
+                                                resource, loadBalanceKey, readWriteOperationCache.getGenericString(method), objects, e);
+                                        failureListener.onFailure(failureContext);
+                                    } catch (Exception ex) {
+                                        logger.error("onFailure error", ex);
+                                    }
+                                }
                                 if (!first) {
                                     logger.error("submit async multi thread task error, class = {}, method = {}, resource = {}",
                                             className, method.getName(), resource.getUrl(), e);
@@ -305,6 +329,15 @@ public class FeignCallback<T> implements MethodInterceptor {
                                 } catch (Exception e) {
                                     logger.error("submit async multi thread task error, class = {}, method = {}, resource = {}",
                                             className, method.getName(), resource.getUrl(), e);
+                                    if (e instanceof RejectedExecutionException && failureListener != null) {
+                                        try {
+                                            CamelliaFeignFailureContext failureContext = new CamelliaFeignFailureContext(bid, bgroup, apiType, operationType,
+                                                    resource, loadBalanceKey, readWriteOperationCache.getGenericString(method), objects, e);
+                                            failureListener.onFailure(failureContext);
+                                        } catch (Exception ex) {
+                                            logger.error("onFailure error", ex);
+                                        }
+                                    }
                                 }
                             }
                         }
