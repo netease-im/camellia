@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -73,7 +72,7 @@ public class CamelliaNakedClient<R, W> {
     private CamelliaFeignFallbackFactory<W> fallbackFactory;
     private CamelliaNakedClientFailureListener<R> failureListener;
 
-    private final Map<String, FeignResourcePool> map = new HashMap<>();
+    private final Map<String, FeignResourcePool> map = new ConcurrentHashMap<>();
 
     private ResourceChooser resourceChooser;
     private final ConcurrentHashMap<String, ResourceChooser> resourceChooserMap = new ConcurrentHashMap<>();

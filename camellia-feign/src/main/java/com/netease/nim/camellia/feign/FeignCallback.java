@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
@@ -45,8 +46,8 @@ public class FeignCallback<T> implements MethodInterceptor {
 
     private final long bid;
     private final String bgroup;
-    private final Map<String, FeignResourcePool> map = new HashMap<>();
-    private final Map<String, CamelliaCircuitBreaker> circuitBreakerMap = new HashMap<>();
+    private final Map<String, FeignResourcePool> map = new ConcurrentHashMap<>();
+    private final Map<String, CamelliaCircuitBreaker> circuitBreakerMap = new ConcurrentHashMap<>();
     private ResourceChooser resourceChooser;
     private final CamelliaFeignEnv feignEnv;
     private final FeignClientFactory<T> factory;
