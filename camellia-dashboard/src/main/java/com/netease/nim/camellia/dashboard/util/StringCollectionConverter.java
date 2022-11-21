@@ -4,14 +4,12 @@ package com.netease.nim.camellia.dashboard.util;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
 import java.util.*;
 
 /**
  * @author tasszz2k
  * @since 11/11/2022
  */
-@Converter
 public class StringCollectionConverter implements AttributeConverter<Collection<String>, String> {
     private static final String GROUP_DELIMITER = ", ";
 
