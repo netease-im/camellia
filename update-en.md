@@ -10,10 +10,12 @@
 * camellia-redis-proxy rt monitor support quantile stats, like p50/p75/p90/p90/p95/p99/p999
 * provide FileBasedCamelliaApi, support use local properties file to simulate camellia-dashboard
 * camellia-feign support use local properties file to provide dynamic option, such as timeout\circuit\route 
+* camellia-core multi-write/sharding thread pool executor support setting RejectedExecutionHandler
 
 ### update
 * during camellia-feign initialization, if upstream services down, logging warn log instead of throw exception
 * when use camellia-dashboard manage camellia-feign dynamic resource-table, if remote return 404, use local resource-table rather than throw exception
+* when camellia-feign setting multi-write thread pool executor's RejectedExecutionHandler into Abort, the reject task will call CamelliaFeignFailureListener
 
 ### fix
 * none

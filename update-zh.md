@@ -10,10 +10,12 @@
 * camellia-redis-proxy的耗时监控支持统计分位数（p50、p75、p90、p90、p95、p99、p999），具体见：[monitor-data](/docs/redis-proxy/monitor/monitor-data.md)
 * 提供FileBasedCamelliaApi，支持使用本地properties配置文件模拟camellia-dashboard
 * camellia-feign支持使用本地配置文件提供动态参数的能力（如超时、熔断、路由等参数）
+* camellia-core双写/分片执行线程池支持设置拒绝策略
 
 ### 更新
 * camellia-feign初始化时，如果依赖的后端服务整体宕机了，当前服务不是报错而是打印warn日志
-* camellia-feign使用动态路由时，如果远端（camellia-dashboard）返回404，则使用本地路由代替，而不是报错 
+* camellia-feign使用动态路由时，如果远端（camellia-dashboard）返回404，则使用本地路由代替，而不是报错  
+* camellia-feign在设置双写线程池设置为Abort策略后，如果触发RejectedExecutionException，也回调CamelliaFeignFailureListener
 
 ### fix
 * 无
