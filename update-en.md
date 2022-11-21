@@ -4,7 +4,7 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
-# 1.1.5（2022/11/xx）
+# 1.1.5（2022/11/21）
 ### add
 * CamelliaStatistic support quantile stats, like p50/p75/p90/p90/p95/p99/p999
 * camellia-redis-proxy rt monitor support quantile stats, like p50/p75/p90/p90/p95/p99/p999

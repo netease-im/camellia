@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>camellia-console</artifactId>
-    <version>1.1.5-SNAPSHOT</version>
+    <version>1.1.5</version>
 
     <parent>
         <groupId>com.netease.nim</groupId>
         <artifactId>camellia</artifactId>
-        <version>1.1.5-SNAPSHOT</version>
+        <version>1.1.5</version>
     </parent>
 
     <dependencyManagement>
@@ -75,7 +75,7 @@
         <dependency>
             <groupId>com.netease.nim</groupId>
             <artifactId>camellia-feign</artifactId>
-            <version>1.1.5-SNAPSHOT</version>
+            <version>1.1.5</version>
         </dependency>
 
 
