@@ -1,9 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.model.UpstreamRedisSpendStats;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
 import com.netease.nim.camellia.core.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.QuantileCollector;
+import com.netease.nim.camellia.redis.proxy.util.QuantileCollectorPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +19,8 @@ public class UpstreamRedisSpendTimeMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(UpstreamRedisSpendTimeMonitor.class);
 
+    private static int count = 0;
+
     private static ConcurrentHashMap<String, LongAdder> spendCountMap = new ConcurrentHashMap<>();
     private static ConcurrentHashMap<String, LongAdder> spendTotalMap = new ConcurrentHashMap<>();
     private static ConcurrentHashMap<String, QuantileCollector> quantileMap = new ConcurrentHashMap<>();
@@ -26,7 +30,7 @@ public class UpstreamRedisSpendTimeMonitor {
             CamelliaMapUtils.computeIfAbsent(spendCountMap, addr.getUrl(), k -> new LongAdder()).increment();
             CamelliaMapUtils.computeIfAbsent(spendTotalMap, addr.getUrl(), k -> new LongAdder()).add(spendNanoTime);
             QuantileCollector collector = CamelliaMapUtils.computeIfAbsent(quantileMap, addr.getUrl(),
-                    k -> new QuantileCollector());
+                    k -> QuantileCollectorPool.borrowQuantileCollector());
             collector.update((int)(spendNanoTime / 10000));//0.00ms
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -34,14 +38,20 @@ public class UpstreamRedisSpendTimeMonitor {
     }
 
     public static List<UpstreamRedisSpendStats> collect() {
+        count ++;
         List<UpstreamRedisSpendStats> list = new ArrayList<>();
         ConcurrentHashMap<String, LongAdder> spendCountMap = UpstreamRedisSpendTimeMonitor.spendCountMap;
         ConcurrentHashMap<String, LongAdder> spendTotalMap = UpstreamRedisSpendTimeMonitor.spendTotalMap;
         ConcurrentHashMap<String, QuantileCollector> quantileMap = UpstreamRedisSpendTimeMonitor.quantileMap;
 
-        UpstreamRedisSpendTimeMonitor.spendCountMap = new ConcurrentHashMap<>();
-        UpstreamRedisSpendTimeMonitor.spendTotalMap = new ConcurrentHashMap<>();
-        UpstreamRedisSpendTimeMonitor.quantileMap = new ConcurrentHashMap<>();
+        boolean clear = false;
+        if (count >= ProxyDynamicConf.getInt("monitor.cache.reset.interval.periods", 60)) {
+            UpstreamRedisSpendTimeMonitor.spendCountMap = new ConcurrentHashMap<>();
+            UpstreamRedisSpendTimeMonitor.spendTotalMap = new ConcurrentHashMap<>();
+            UpstreamRedisSpendTimeMonitor.quantileMap = new ConcurrentHashMap<>();
+            count = 0;
+            clear = true;
+        }
 
         for (Map.Entry<String, LongAdder> entry : spendCountMap.entrySet()) {
             String key = entry.getKey();
@@ -71,6 +81,14 @@ public class UpstreamRedisSpendTimeMonitor {
                 upstreamRedisSpendStats.setMaxSpendMs(quantileValue.getMax() / 100.0);
             }
             list.add(upstreamRedisSpendStats);
+        }
+        if (clear) {
+            for (Map.Entry<String, QuantileCollector> entry : quantileMap.entrySet()) {
+                QuantileCollector collector = entry.getValue();
+                collector.reset();
+                QuantileCollectorPool.returnQuantileCollector(collector);
+            }
+            quantileMap.clear();
         }
         return list;
     }

@@ -4,6 +4,17 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.1.6（2022/11/xx）
+### 新增
+* 无
+
+### 更新
+* camellia-redis-proxy优化了统计模块的实现，优化内存和GC
+
+### fix
+* 无
+
+
 # 1.1.5（2022/11/21）
 ### 新增
 * CamelliaStatistic工具类支持统计分位数（p50、p75、p90、p90、p95、p99、p999）

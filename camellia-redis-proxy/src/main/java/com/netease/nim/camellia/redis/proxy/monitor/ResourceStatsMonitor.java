@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
 import com.netease.nim.camellia.core.util.CamelliaMapUtils;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.model.ResourceBidBgroupCommandStats;
 import com.netease.nim.camellia.redis.proxy.monitor.model.ResourceBidBgroupStats;
 import com.netease.nim.camellia.redis.proxy.monitor.model.ResourceCommandStats;
@@ -17,6 +18,8 @@ import java.util.concurrent.atomic.LongAdder;
 public class ResourceStatsMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceStatsMonitor.class);
+
+    private static int count = 0;
 
     private static ConcurrentHashMap<String, LongAdder> resourceCommandBidBgroupMap = new ConcurrentHashMap<>();
 
@@ -39,11 +42,15 @@ public class ResourceStatsMonitor {
     }
 
     public static ResourceStatsCollect collect() {
+        count ++;
         ConcurrentHashMap<String, ResourceStats> resourceStatsMap = new ConcurrentHashMap<>();
         ConcurrentHashMap<String, ResourceCommandStats> resourceCommandStatsMap = new ConcurrentHashMap<>();
 
         ConcurrentHashMap<String, LongAdder> resourceCommandBidBgroupMap = ResourceStatsMonitor.resourceCommandBidBgroupMap;
-        ResourceStatsMonitor.resourceCommandBidBgroupMap = new ConcurrentHashMap<>();
+        if (count >= ProxyDynamicConf.getInt("monitor.cache.reset.interval.periods", 60)) {
+            ResourceStatsMonitor.resourceCommandBidBgroupMap = new ConcurrentHashMap<>();
+            count = 0;
+        }
         List<ResourceBidBgroupCommandStats> resourceBidBgroupCommandStatsList = new ArrayList<>();
         ConcurrentHashMap<String, ResourceBidBgroupStats> resourceBidBgroupStatsMap = new ConcurrentHashMap<>();
         for (Map.Entry<String, LongAdder> entry : resourceCommandBidBgroupMap.entrySet()) {
@@ -64,7 +71,7 @@ public class ResourceStatsMonitor {
             stats.setBgroup(bgroup);
             stats.setResource(url);
             stats.setCommand(command);
-            stats.setCount(entry.getValue().sum());
+            stats.setCount(entry.getValue().sumThenReset());
             resourceBidBgroupCommandStatsList.add(stats);
 
             ResourceStats resourceStats = CamelliaMapUtils.computeIfAbsent(resourceStatsMap, url, string -> {

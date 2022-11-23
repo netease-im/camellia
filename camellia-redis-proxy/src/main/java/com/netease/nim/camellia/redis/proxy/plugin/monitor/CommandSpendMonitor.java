@@ -1,10 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.plugin.monitor;
 
 import com.netease.nim.camellia.core.util.CamelliaMapUtils;
-import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.model.BidBgroupSpendStats;
 import com.netease.nim.camellia.redis.proxy.monitor.model.SpendStats;
 import com.netease.nim.camellia.redis.proxy.util.QuantileCollector;
+import com.netease.nim.camellia.redis.proxy.util.QuantileCollectorPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,8 @@ public class CommandSpendMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(CommandSpendMonitor.class);
 
+    private static int count = 0;
+
     private static ConcurrentHashMap<String, LongAdder> commandSpendCountMap = new ConcurrentHashMap<>();
     private static ConcurrentHashMap<String, LongAdder> commandSpendTotalMap = new ConcurrentHashMap<>();
     private static ConcurrentHashMap<String, QuantileCollector> commandQuantileMap = new ConcurrentHashMap<>();
@@ -34,10 +37,10 @@ public class CommandSpendMonitor {
             CamelliaMapUtils.computeIfAbsent(commandSpendTotalMap, key, k -> new LongAdder()).add(spendNanoTime);
             int time = (int)(spendNanoTime / 10000);//0.00ms
             QuantileCollector collector1 = CamelliaMapUtils.computeIfAbsent(bidBgroupCommandQuantileMap, key,
-                    k -> new QuantileCollector());
+                    k -> QuantileCollectorPool.borrowQuantileCollector());
             collector1.update(time);
             QuantileCollector collector2 = CamelliaMapUtils.computeIfAbsent(commandQuantileMap, command,
-                    k -> new QuantileCollector());
+                    k -> QuantileCollectorPool.borrowQuantileCollector());
             collector2.update(time);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -50,16 +53,20 @@ public class CommandSpendMonitor {
     }
 
     public static CommandSpendStats collect() {
-
+        count ++;
         ConcurrentHashMap<String, LongAdder> commandSpendCountMap = CommandSpendMonitor.commandSpendCountMap;
         ConcurrentHashMap<String, LongAdder> commandSpendTotalMap = CommandSpendMonitor.commandSpendTotalMap;
         ConcurrentHashMap<String, QuantileCollector> commandQuantileMap = CommandSpendMonitor.commandQuantileMap;
         ConcurrentHashMap<String, QuantileCollector> bidBgroupCommandQuantileMap = CommandSpendMonitor.bidBgroupCommandQuantileMap;
-
-        CommandSpendMonitor.commandSpendCountMap = new ConcurrentHashMap<>();
-        CommandSpendMonitor.commandSpendTotalMap = new ConcurrentHashMap<>();
-        CommandSpendMonitor.commandQuantileMap = new ConcurrentHashMap<>();
-        CommandSpendMonitor.bidBgroupCommandQuantileMap = new ConcurrentHashMap<>();
+        boolean clear = false;
+        if (count >= ProxyDynamicConf.getInt("monitor.cache.reset.interval.periods", 60)) {
+            CommandSpendMonitor.commandSpendCountMap = new ConcurrentHashMap<>();
+            CommandSpendMonitor.commandSpendTotalMap = new ConcurrentHashMap<>();
+            CommandSpendMonitor.commandQuantileMap = new ConcurrentHashMap<>();
+            CommandSpendMonitor.bidBgroupCommandQuantileMap = new ConcurrentHashMap<>();
+            count = 0;
+            clear = true;
+        }
 
         List<BidBgroupSpendStats> list = new ArrayList<>();
         ConcurrentHashMap<String, AtomicLong> spendSumMap = new ConcurrentHashMap<>();
@@ -137,6 +144,20 @@ public class CommandSpendMonitor {
                 spendStats.setSpendMsP999(quantileValue.getP999() / 100.0);
                 spendStats.setMaxSpendMs(quantileValue.getMax() / 100.0);
             }
+        }
+        if (clear) {
+            for (Map.Entry<String, QuantileCollector> entry : commandQuantileMap.entrySet()) {
+                QuantileCollector collector = entry.getValue();
+                collector.reset();
+                QuantileCollectorPool.returnQuantileCollector(collector);
+            }
+            commandQuantileMap.clear();
+            for (Map.Entry<String, QuantileCollector> entry : bidBgroupCommandQuantileMap.entrySet()) {
+                QuantileCollector collector = entry.getValue();
+                collector.reset();
+                QuantileCollectorPool.returnQuantileCollector(collector);
+            }
+            bidBgroupCommandQuantileMap.clear();
         }
         CommandSpendStats commandSpendStats = new CommandSpendStats();
         commandSpendStats.bidBgroupSpendStatsList = list;

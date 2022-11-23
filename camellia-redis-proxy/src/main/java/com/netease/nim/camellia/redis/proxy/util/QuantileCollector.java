@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -16,17 +17,24 @@ public class QuantileCollector {
 
     private static final int CAPACITY = 2771;
 
+    private final AtomicBoolean initOk = new AtomicBoolean(false);
     private LongAdder[] distribute;
+
     private final MaxValue maxValue = new MaxValue();
 
     public QuantileCollector() {
-        init();
     }
 
-    private void init() {
-        distribute = new LongAdder[CAPACITY];
-        for (int i=0; i<CAPACITY; i++) {
-            distribute[i] = new LongAdder();
+    public boolean isInit() {
+        return initOk.get();
+    }
+
+    public void init() {
+        if (initOk.compareAndSet(false, true)) {
+            distribute = new LongAdder[CAPACITY];
+            for (int i = 0; i < CAPACITY; i++) {
+                distribute[i] = new LongAdder();
+            }
         }
     }
 
@@ -54,13 +62,22 @@ public class QuantileCollector {
         }
     }
 
-    public QuantileValue getQuantileValueAndReset() {
-        LongAdder[] distribute = this.distribute;
-        long max = this.maxValue.getAndSet(0);
-        init();
-        long count = 0;
+    public void reset() {
+        this.maxValue.getAndSet(0);
         for (LongAdder adder : distribute) {
-            count += adder.sum();
+            adder.reset();
+        }
+    }
+
+    public QuantileValue getQuantileValueAndReset() {
+        long max = this.maxValue.getAndSet(0);
+        long[] tmp = new long[distribute.length];
+        long count = 0;
+        for (int i=0; i < distribute.length; i++) {
+            LongAdder adder = distribute[i];
+            long sum = adder.sumThenReset();
+            tmp[i] = sum;
+            count += sum;
         }
         long c = 0;
         long p50Position = (long) (count * 0.5);
@@ -75,8 +92,8 @@ public class QuantileCollector {
         long p95 = -1;
         long p99 = -1;
         long p999 = -1;
-        for (int i=0; i < distribute.length; i++) {
-            long current = distribute[i].sum();
+        for (int i=0; i < tmp.length; i++) {
+            long current = tmp[i];
             c += current;
             if (p50 == -1 && c >= p50Position) {
                 long offset = current - (c - p50Position);

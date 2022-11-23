@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.plugin.monitor;
 
 import com.netease.nim.camellia.core.util.CamelliaMapUtils;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.model.BidBgroupStats;
 import com.netease.nim.camellia.redis.proxy.monitor.model.DetailStats;
@@ -22,6 +23,7 @@ public class CommandCountMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(CommandCountMonitor.class);
 
+    private static int count = 0;
     private static ConcurrentHashMap<String, LongAdder> map = new ConcurrentHashMap<>();
 
     public static void incr(Long bid, String bgroup, String command) {
@@ -44,6 +46,7 @@ public class CommandCountMonitor {
     }
 
     public static CommandCounterStats collect() {
+        count ++;
         long totalCount = 0;
         long totalReadCount = 0;
         long totalWriteCount = 0;
@@ -52,10 +55,13 @@ public class CommandCountMonitor {
         List<DetailStats> detailStatsList = new ArrayList<>();
 
         ConcurrentHashMap<String, LongAdder> map = CommandCountMonitor.map;
-        CommandCountMonitor.map = new ConcurrentHashMap<>();
+        if (count >= ProxyDynamicConf.getInt("monitor.cache.reset.interval.periods", 60)) {
+            CommandCountMonitor.map = new ConcurrentHashMap<>();
+            count = 0;
+        }
         for (Map.Entry<String, LongAdder> entry : map.entrySet()) {
             String[] split = entry.getKey().split("\\|");
-            long count = entry.getValue().longValue();
+            long count = entry.getValue().sumThenReset();
             Long bid = null;
             if (!split[0].equalsIgnoreCase("null")) {
                 bid = Long.parseLong(split[0]);
