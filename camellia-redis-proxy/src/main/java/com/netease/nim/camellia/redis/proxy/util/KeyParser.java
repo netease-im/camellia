@@ -57,6 +57,9 @@ public class KeyParser {
                 case ZINTERSTORE:
                 case ZUNIONSTORE:
                 case ZDIFFSTORE:
+                case EXZINTERSTORE:
+                case EXZUNIONSTORE:
+                case EXZDIFFSTORE:
                     if (objects.length >= 4) {
                         int keyCount = (int) Utils.bytesToNum(objects[2]);
                         if (keyCount > 0) {
@@ -68,6 +71,11 @@ public class KeyParser {
                 case ZDIFF:
                 case ZUNION:
                 case ZINTER:
+                case ZINTERCARD:
+                case EXZDIFF:
+                case EXZUNION:
+                case EXZINTER:
+                case EXZINTERCARD:
                     if (objects.length >= 3) {
                         int keyCount = (int) Utils.bytesToNum(objects[1]);
                         if (keyCount > 0) {
@@ -85,6 +93,8 @@ public class KeyParser {
                 case BRPOPLPUSH:
                 case BZPOPMAX:
                 case BZPOPMIN:
+                case EXBZPOPMAX:
+                case EXBZPOPMIN:
                     dynamicKey(command, keys, 1, objects.length - 2);
                     break;
                 case XREAD:
