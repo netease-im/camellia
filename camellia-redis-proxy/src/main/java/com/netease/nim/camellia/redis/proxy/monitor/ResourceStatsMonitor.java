@@ -64,6 +64,8 @@ public class ResourceStatsMonitor {
             if (!split[1].equals("null")) {
                 bgroup = split[1];
             }
+            long count = entry.getValue().sumThenReset();
+            if (count == 0) continue;
             String url = PasswordMaskUtils.maskResource(split[2]);
             String command = split[3];
             ResourceBidBgroupCommandStats stats = new ResourceBidBgroupCommandStats();
@@ -71,7 +73,7 @@ public class ResourceStatsMonitor {
             stats.setBgroup(bgroup);
             stats.setResource(url);
             stats.setCommand(command);
-            stats.setCount(entry.getValue().sumThenReset());
+            stats.setCount(count);
             resourceBidBgroupCommandStatsList.add(stats);
 
             ResourceStats resourceStats = CamelliaMapUtils.computeIfAbsent(resourceStatsMap, url, string -> {

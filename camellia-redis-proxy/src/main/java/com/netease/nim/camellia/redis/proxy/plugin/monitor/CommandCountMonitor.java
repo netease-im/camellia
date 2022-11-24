@@ -62,6 +62,7 @@ public class CommandCountMonitor {
         for (Map.Entry<String, LongAdder> entry : map.entrySet()) {
             String[] split = entry.getKey().split("\\|");
             long count = entry.getValue().sumThenReset();
+            if (count == 0) continue;
             Long bid = null;
             if (!split[0].equalsIgnoreCase("null")) {
                 bid = Long.parseLong(split[0]);
