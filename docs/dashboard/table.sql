@@ -5,8 +5,8 @@ CREATE TABLE `camellia_resource_info` (
   `url` varchar(1024) NOT NULL comment '资源url',
   `info` varchar(1024) NOT NULL comment '描述',
   `tids` varchar(1024) DEFAULT NULL comment '引用的tids',
-  `create_time` varchar(2000) DEFAULT NULL comment '创建时间',
-  `update_time` varchar(64) DEFAULT NULL comment '更新时间'
+  `create_time` bigint(64) DEFAULT NULL comment '创建时间',
+  `update_time` bigint(64) DEFAULT NULL comment '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='资源信息表';
 
 CREATE TABLE `camellia_table` (
@@ -14,8 +14,8 @@ CREATE TABLE `camellia_table` (
   `detail` varchar(4096) NOT NULL comment '详情',
   `info` varchar(1024) NOT NULL comment '描述',
   `valid_flag` tinyint(4) DEFAULT NULL comment '是否valid',
-  `create_time` varchar(2000) DEFAULT NULL comment '创建时间',
-  `update_time` varchar(64) DEFAULT NULL comment '更新时间'
+  `create_time` bigint(64) DEFAULT NULL comment '创建时间',
+  `update_time` bigint(64) DEFAULT NULL comment '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='资源表';
 
 CREATE TABLE `camellia_table_ref` (
@@ -25,8 +25,8 @@ CREATE TABLE `camellia_table_ref` (
   `tid` bigint(64) NOT NULL comment 'tid',
   `info` varchar(1024) NOT NULL comment '描述',
   `valid_flag` tinyint(4) DEFAULT NULL comment '是否valid',
-  `create_time` varchar(2000) DEFAULT NULL comment '创建时间',
-  `update_time` varchar(64) DEFAULT NULL comment '更新时间',
+  `create_time` bigint(64) DEFAULT NULL comment '创建时间',
+  `update_time` bigint(64) DEFAULT NULL comment '更新时间',
   unique key (`bid`, `bgroup`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='资源引用表';
 
@@ -36,8 +36,8 @@ create table `camellia_ip_checker` (
   `bgroup` varchar(64) NOT NULL comment 'bgroup',
   `ipCheckMode` tinyint(1) NOT NULL comment '0=UNKNOWN, 1=BLACK, 2=WHITE',
   `ip_list` varchar(1024) NOT NULL comment 'support ip, also supports network segment, comma separated.ex:2.2.2.2,5.5.5.5,3.3.3.0/24,6.6.0.0/16',
-  `create_time` varchar(64) NOT NULL comment 'create time',
-  `update_time` varchar(64) NOT NULL comment 'Update time',
+  `create_time` bigint(64) NOT NULL comment 'create time',
+  `update_time` bigint(64) NOT NULL comment 'Update time',
   unique key (`bid`, `bgroup`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='IP checker table';
 
