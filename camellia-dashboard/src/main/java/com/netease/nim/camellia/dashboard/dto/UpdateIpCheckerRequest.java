@@ -10,32 +10,11 @@ import java.util.Set;
  * @author tasszz2k
  * @since 11/11/2022
  */
-public class CreateOrUpdateIpCheckerRequest {
-
-    @NotNull
-    private Long bid;
-    @NotNull
-    private String bgroup;
+public class UpdateIpCheckerRequest {
     @NotNull
     private IpCheckMode mode;
     @NotNull
     private Set<String> ipList;
-
-    public Long getBid() {
-        return bid;
-    }
-
-    public void setBid(Long bid) {
-        this.bid = bid;
-    }
-
-    public String getBgroup() {
-        return bgroup;
-    }
-
-    public void setBgroup(String bgroup) {
-        this.bgroup = bgroup;
-    }
 
     public Set<String> getIpList() {
         return ipList;

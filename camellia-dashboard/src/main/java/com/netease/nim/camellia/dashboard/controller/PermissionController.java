@@ -5,7 +5,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.api.PageCriteria;
 import com.netease.nim.camellia.core.enums.IpCheckMode;
 import com.netease.nim.camellia.dashboard.conf.DashboardProperties;
-import com.netease.nim.camellia.dashboard.dto.CreateOrUpdateIpCheckerRequest;
+import com.netease.nim.camellia.dashboard.dto.CreateIpCheckerRequest;
+import com.netease.nim.camellia.dashboard.dto.UpdateIpCheckerRequest;
 import com.netease.nim.camellia.dashboard.model.IpChecker;
 import com.netease.nim.camellia.dashboard.service.IIpCheckerService;
 import com.netease.nim.camellia.dashboard.util.LogBean;
@@ -44,7 +45,7 @@ public class PermissionController {
 
     @ApiOperation(value = "Create ip checker", notes = "create ip checker")
     @PostMapping("/ip-checkers")
-    public WebResult CreateIpChecker(@RequestBody @Valid CreateOrUpdateIpCheckerRequest request
+    public WebResult CreateIpChecker(@RequestBody @Valid CreateIpCheckerRequest request
     ) {
         LogBean.get().addProps("bid", request.getBid());
         LogBean.get().addProps("bgroup", request.getBgroup());
@@ -61,11 +62,9 @@ public class PermissionController {
     @PutMapping("/ip-checkers/{id}")
     public WebResult UpdateIpChecker(
             @PathVariable("id") Long id,
-            @RequestBody @Valid CreateOrUpdateIpCheckerRequest request
+            @RequestBody @Valid UpdateIpCheckerRequest request
     ) {
         LogBean.get().addProps("id", id);
-        LogBean.get().addProps("bid", request.getBid());
-        LogBean.get().addProps("bgroup", request.getBgroup());
         LogBean.get().addProps("mode", request.getMode());
         LogBean.get().addProps("ipList", request.getIpList());
 

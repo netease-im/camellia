@@ -8,7 +8,8 @@ import com.netease.nim.camellia.core.enums.IpCheckMode;
 import com.netease.nim.camellia.core.model.IpCheckerDto;
 import com.netease.nim.camellia.core.util.MD5Util;
 import com.netease.nim.camellia.dashboard.daowrapper.IpCheckerDaoWrapper;
-import com.netease.nim.camellia.dashboard.dto.CreateOrUpdateIpCheckerRequest;
+import com.netease.nim.camellia.dashboard.dto.CreateIpCheckerRequest;
+import com.netease.nim.camellia.dashboard.dto.UpdateIpCheckerRequest;
 import com.netease.nim.camellia.dashboard.exception.AppException;
 import com.netease.nim.camellia.dashboard.model.IpChecker;
 import com.netease.nim.camellia.dashboard.util.IpCheckerUtil;
@@ -71,7 +72,11 @@ public class IpCheckerService implements IIpCheckerService {
 
     @Override
     public IpChecker findById(Long id) {
-        return ipCheckerDao.findById(id);
+        IpChecker ipChecker = ipCheckerDao.findById(id);
+        if (ipChecker == null) {
+            throw new AppException(CamelliaApiCode.NOT_EXISTS.getCode(), "IpChecker is not existed");
+        }
+        return ipChecker;
     }
 
     @Override
@@ -81,7 +86,7 @@ public class IpCheckerService implements IIpCheckerService {
     }
 
     @Override
-    public IpChecker create(CreateOrUpdateIpCheckerRequest request) {
+    public IpChecker create(CreateIpCheckerRequest request) {
         if (!IpCheckerUtil.isValidIpList(request.getIpList())) {
             throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(), "ipList is invalid");
         }
@@ -96,17 +101,13 @@ public class IpCheckerService implements IIpCheckerService {
     }
 
     @Override
-    public IpChecker update(Long id, CreateOrUpdateIpCheckerRequest request) {
+    public IpChecker update(Long id, UpdateIpCheckerRequest request) {
         if (!IpCheckerUtil.isValidIpList(request.getIpList())) {
             throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(), "ipList is invalid");
         }
 
-        IpChecker ipChecker = ipCheckerDao.findById(id);
-        if (ipChecker == null) {
-            throw new AppException(CamelliaApiCode.NOT_EXISTS.getCode(), "IpChecker is not existed");
-        }
-        ipChecker.setBid(request.getBid());
-        ipChecker.setBgroup(request.getBgroup());
+        IpChecker ipChecker = findById(id);
+
         ipChecker.setMode(request.getMode());
         ipChecker.setIpList(request.getIpList());
         ipCheckerDao.update(ipChecker);

@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.dashboard.util;
 
 import com.netease.nim.camellia.core.model.IpCheckerDto;
-import com.netease.nim.camellia.dashboard.dto.CreateOrUpdateIpCheckerRequest;
+import com.netease.nim.camellia.dashboard.dto.CreateIpCheckerRequest;
 import com.netease.nim.camellia.dashboard.model.IpChecker;
 
 import java.util.Collection;
@@ -27,7 +27,7 @@ public class IpCheckerUtil {
         return ipList.stream().allMatch(IpCheckerUtil::checkValidIp);
     }
 
-    public static IpChecker convertToModel(CreateOrUpdateIpCheckerRequest request) {
+    public static IpChecker convertToModel(CreateIpCheckerRequest request) {
         IpChecker ipChecker = new IpChecker();
         ipChecker.setBid(request.getBid());
         ipChecker.setBgroup(request.getBgroup());
