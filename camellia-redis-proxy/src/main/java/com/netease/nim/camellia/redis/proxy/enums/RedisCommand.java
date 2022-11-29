@@ -150,7 +150,6 @@ public enum RedisCommand {
     BFMADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     BFMEXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     BFSCANDUMP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-
     EXHSET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXHGET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TAIR_HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXHMSET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
@@ -177,7 +176,6 @@ public enum RedisCommand {
     EXHGETALL(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TAIR_HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXHGETALLWITHVER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TAIR_HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXHSCAN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TAIR_HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-
     EXZADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXZINCRBY(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXZSCORE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
@@ -199,11 +197,8 @@ public enum RedisCommand {
     EXZLEXCOUNT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXZRANDMEMBER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXZSCAN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-
     EXZPOPMAX(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXZPOPMIN(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-
-
     EXSET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXGET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TAIR_STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXSETVER(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
@@ -255,7 +250,6 @@ public enum RedisCommand {
     ZRANGESTORE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.ZSET, Blocking.FALSE, CommandKeyType.COMPLEX),
     LMOVE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.LIST, Blocking.FALSE, CommandKeyType.COMPLEX),
     BLMOVE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.LIST, Blocking.TRUE, CommandKeyType.COMPLEX),
-
     EXZUNIONSTORE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.COMPLEX),
     EXZUNION(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.COMPLEX),
     EXZINTERSTORE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.COMPLEX),
@@ -263,7 +257,6 @@ public enum RedisCommand {
     EXZINTERCARD(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.COMPLEX),
     EXZDIFFSTORE(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.COMPLEX),
     EXZDIFF(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.COMPLEX),
-
     EXBZPOPMIN(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TAIR_ZSET, Blocking.TRUE, CommandKeyType.COMPLEX),
     EXBZPOPMAX(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TAIR_ZSET, Blocking.TRUE, CommandKeyType.COMPLEX),
 

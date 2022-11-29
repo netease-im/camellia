@@ -6,6 +6,7 @@
 
 # 1.1.6（2022/11/23）
 ### 新增
+* camellia-redis-proxy新增对ZINTERCARD命令的支持
 * camellia-redis-proxy新增对TairZSet、TairHash、TairString的支持
 
 ### 更新
