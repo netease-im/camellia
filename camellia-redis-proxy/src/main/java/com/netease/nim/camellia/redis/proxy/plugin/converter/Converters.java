@@ -182,6 +182,7 @@ public class Converters {
                 case ZDIFF:
                 case ZUNION:
                 case ZINTER:
+                case ZINTERCARD:
                     if (objects.length >= 3) {
                         int keyCount2 = (int) Utils.bytesToNum(objects[1]);
                         if (keyCount2 > 0) {
