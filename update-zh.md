@@ -4,6 +4,20 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.1.7（2022/11/xx）
+### 新增
+* camellia-redis-proxy新增对ZINTERCARD命令的支持
+* camellia-redis-proxy新增对TairZSet、TairHash、TairString的支持
+* camellia-redis-proxy新增对RedisJSON的支持
+* camellia-redis-proxy新增对RedisSearch的支持
+
+### 更新
+* 调整了camellia-dashboard配置camellia-redis-proxy的ip黑白名单的配置接口，感谢[@tasszz2k](https://github.com/tasszz2k)
+
+### fix
+* 无
+
+
 # 1.1.6（2022/11/23）
 ### 新增
 * camellia-redis-proxy新增对ZINTERCARD命令的支持
