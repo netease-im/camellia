@@ -6,10 +6,11 @@
 
 # 1.1.6（2022/11/23）
 ### add
-* none
+* camellia-redis-proxy support TairZSet、TairHash、TairString
 
 ### update
 * camellia-redis-proxy optimize monitor function on memory/gc
+* modify the error code of camellia-dashboard api for ip-permission, thanks [@tasszz2k](https://github.com/tasszz2k)
 
 ### fix
 * none
