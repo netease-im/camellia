@@ -15,6 +15,8 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持事务命令（MULTI/EXEC/DISCARD/WATCH/UNWATCH），代理到redis-standalone/redis-sentinel/redis-cluster均支持
 * 支持redis5.0的STREAMS系列命令
 * 支持SCAN命令（代理到redis-standalone/redis-sentinel/redis-cluster均支持，自定义分片时也支持）
+* 支持阿里TairZSet、TairHash、TairString系列命令
+* 支持RedisJSON和RedisSearch系列命令
 * 支持读slave（redis-sentinel/redis-cluster均支持配置读从节点）
 * 支持多租户，即租户A路由到redis1，租户B路由到redis2（可以通过不同的clientname区分，也可以通过不同的password区分）
 * 支持多租户动态路由，支持自定义的动态路由数据源
