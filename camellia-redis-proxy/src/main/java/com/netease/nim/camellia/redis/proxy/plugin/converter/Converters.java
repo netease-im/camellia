@@ -244,6 +244,14 @@ public class Converters {
                         objects[2] = convertedKey;
                     }
                     break;
+                case JSON_MGET:
+                    if (objects.length >= 3) {
+                        for (int i=1; i<objects.length - 1; i++) {
+                            byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                            objects[i] = convertedKey;
+                        }
+                    }
+                    break;
                 default:
                     break;
             }
