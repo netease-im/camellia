@@ -126,6 +126,11 @@ public class KeyParser {
                         keys.add(objects[2]);
                     }
                     break;
+                case JSON_MGET:
+                    if (objects.length >= 3) {
+                        dynamicKey(command, keys, 1, objects.length - 2);
+                    }
+                    break;
                 default:
                     break;
             }
