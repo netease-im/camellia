@@ -9,6 +9,7 @@
 * camellia-redis-proxy support ZINTERCARD command
 * camellia-redis-proxy support TairZSet、TairHash、TairString commands
 * camellia-redis-proxy support RedisJSON commands
+* camellia-redis-proxy support RedisSearch commands
 
 ### update
 * camellia-redis-proxy optimize monitor function on memory/gc

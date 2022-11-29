@@ -9,6 +9,7 @@
 * camellia-redis-proxy新增对ZINTERCARD命令的支持
 * camellia-redis-proxy新增对TairZSet、TairHash、TairString的支持
 * camellia-redis-proxy新增对RedisJSON的支持
+* camellia-redis-proxy新增对RedisSearch的支持
 
 ### 更新
 * camellia-redis-proxy优化了统计模块的实现，优化内存和GC

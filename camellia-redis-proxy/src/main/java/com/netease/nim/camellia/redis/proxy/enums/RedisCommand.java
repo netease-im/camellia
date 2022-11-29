@@ -209,7 +209,6 @@ public enum RedisCommand {
     EXAPPEND(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXPREPEND(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXGAE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-
     JSON_ARRAPPEND(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     JSON_ARRINDEX(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     JSON_ARRINSERT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
@@ -302,6 +301,28 @@ public enum RedisCommand {
     EXEC(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.None),
     WATCH(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.SIMPLE_MULTI),
     UNWATCH(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.TRANSACTION, Blocking.FALSE, CommandKeyType.None),
+    FT_LIST(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_AGGREGATE(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_ALIASADD(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_ALIASDEL(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_ALIASUPDATE(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_ALTER(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_CONFIG(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_CREATE(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_CURSOR(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_DICTADD(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_DICTDEL(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_DICTDUMP(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_DROPINDEX(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_EXPLAIN(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_EXPLAINCLI(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_INFO(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_PROFILE(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_SEARCH(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_SPELLCHECK(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_SYNDUMP(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_SYNUPDATE(CommandSupportType.PARTIALLY_SUPPORT_2, Type.WRITE, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
+    FT_TAGVALS(CommandSupportType.PARTIALLY_SUPPORT_2, Type.READ, CommandType.SEARCH, Blocking.FALSE, CommandKeyType.None),
 
     /**
      * Partially Support-3
@@ -360,6 +381,8 @@ public enum RedisCommand {
             this.strRaw = "bf." + name().toLowerCase().substring(3);
         } else if (commandType == CommandType.JSON) {
             this.strRaw = "json." + name().toLowerCase().substring(5);
+        } else if (commandType == CommandType.SEARCH) {
+            this.strRaw = "ft." + name().toLowerCase().substring(3);
         } else {
             this.strRaw = name().toLowerCase();
         }
