@@ -42,7 +42,8 @@ public class AsyncCamelliaRedisSentinelSlavesClient extends AsyncCamelliaSimpleC
                     sentinelAvailable = true;
                 }
                 if (masterResponse.getMaster() != null) {
-                    this.master = new RedisClientAddr(masterResponse.getMaster().getHost(), masterResponse.getMaster().getPort(), redisSentinelSlavesResource.getUserName(), redisSentinelSlavesResource.getPassword());
+                    this.master = new RedisClientAddr(masterResponse.getMaster().getHost(), masterResponse.getMaster().getPort(),
+                            redisSentinelSlavesResource.getUserName(), redisSentinelSlavesResource.getPassword(), redisSentinelSlavesResource.getDb());
                     logger.info("redis-sentinel-slaves init, url = {}, master = {}", PasswordMaskUtils.maskResource(redisSentinelSlavesResource.getUrl()), PasswordMaskUtils.maskAddr(this.master));
                     break;
                 }
@@ -56,7 +57,8 @@ public class AsyncCamelliaRedisSentinelSlavesClient extends AsyncCamelliaSimpleC
             if (slavesResponse.getSlaves() != null) {
                 List<RedisClientAddr> slaves = new ArrayList<>();
                 for (HostAndPort slave : slavesResponse.getSlaves()) {
-                    slaves.add(new RedisClientAddr(slave.getHost(), slave.getPort(), redisSentinelSlavesResource.getUserName(), redisSentinelSlavesResource.getPassword()));
+                    slaves.add(new RedisClientAddr(slave.getHost(), slave.getPort(), redisSentinelSlavesResource.getUserName(),
+                            redisSentinelSlavesResource.getPassword(), redisSentinelSlavesResource.getDb()));
                 }
                 this.slaves = slaves;
                 logger.info("redis-sentinel-slaves init, url = {}, slaves = {}", PasswordMaskUtils.maskResource(redisSentinelSlavesResource.getUrl()), PasswordMaskUtils.maskAddrs(slaves));
@@ -88,7 +90,7 @@ public class AsyncCamelliaRedisSentinelSlavesClient extends AsyncCamelliaSimpleC
                                 }
                             } else {
                                 String password = AsyncCamelliaRedisSentinelSlavesClient.this.redisSentinelSlavesResource.getPassword();
-                                RedisClientAddr newMaster = new RedisClientAddr(master.getHost(), master.getPort(), redisSentinelSlavesResource.getUserName(), password);
+                                RedisClientAddr newMaster = new RedisClientAddr(master.getHost(), master.getPort(), redisSentinelSlavesResource.getUserName(), password, redisSentinelSlavesResource.getDb());
 
                                 boolean needUpdate = false;
                                 if (oldMaster == null) {
@@ -122,7 +124,7 @@ public class AsyncCamelliaRedisSentinelSlavesClient extends AsyncCamelliaSimpleC
                         String password = AsyncCamelliaRedisSentinelSlavesClient.this.redisSentinelSlavesResource.getPassword();
                         List<RedisClientAddr> newSlaves = new ArrayList<>();
                         for (HostAndPort slave : slaves) {
-                            newSlaves.add(new RedisClientAddr(slave.getHost(), slave.getPort(), redisSentinelSlavesResource.getUserName(), password));
+                            newSlaves.add(new RedisClientAddr(slave.getHost(), slave.getPort(), redisSentinelSlavesResource.getUserName(), password, redisSentinelSlavesResource.getDb()));
                         }
                         List<RedisClientAddr> oldSlaves = AsyncCamelliaRedisSentinelSlavesClient.this.slaves;
                         boolean needUpdate = false;
@@ -167,13 +169,13 @@ public class AsyncCamelliaRedisSentinelSlavesClient extends AsyncCamelliaSimpleC
         logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
         if (master != null) {
             logger.info("try preheat, url = {}, master = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(master));
-            boolean result = RedisClientHub.preheat(master.getHost(), master.getPort(), master.getUserName(), master.getPassword());
+            boolean result = RedisClientHub.preheat(master.getHost(), master.getPort(), master.getUserName(), master.getPassword(), master.getDb());
             logger.info("preheat result = {}, url = {}, master = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(master));
         }
         if (slaves != null) {
             for (RedisClientAddr slave : slaves) {
                 logger.info("try preheat, url = {}, slave = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(slave));
-                boolean result = RedisClientHub.preheat(slave.getHost(), slave.getPort(), slave.getUserName(), slave.getPassword());
+                boolean result = RedisClientHub.preheat(slave.getHost(), slave.getPort(), slave.getUserName(), slave.getPassword(), slave.getDb());
                 logger.info("preheat result = {}, url = {}, slave = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(slave));
             }
         }

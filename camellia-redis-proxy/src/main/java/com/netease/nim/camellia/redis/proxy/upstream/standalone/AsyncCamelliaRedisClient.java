@@ -15,7 +15,7 @@ public class AsyncCamelliaRedisClient extends AsyncCamelliaSimpleClient {
 
     public AsyncCamelliaRedisClient(RedisResource redisResource) {
         this.redisResource = redisResource;
-        this.addr = new RedisClientAddr(redisResource.getHost(), redisResource.getPort(), redisResource.getUserName(), redisResource.getPassword());
+        this.addr = new RedisClientAddr(redisResource.getHost(), redisResource.getPort(), redisResource.getUserName(), redisResource.getPassword(), redisResource.getDb());
     }
 
     @Override

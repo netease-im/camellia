@@ -14,6 +14,7 @@ public class RedisClientAddr {
     private final String userName;
     private final String password;
     private final boolean readonly;
+    private final int db;
 
     private final String url;
 
@@ -23,22 +24,40 @@ public class RedisClientAddr {
         this(host, port, userName, password, false);
     }
 
+    public RedisClientAddr(String host, int port, String userName, String password, int db) {
+        this(host, port, userName, password, false, db);
+    }
+
     public RedisClientAddr(String host, int port, String userName, String password, boolean readonly) {
+        this(host, port, userName, password, readonly, 0);
+    }
+
+    public RedisClientAddr(String host, int port, String userName, String password, boolean readonly, int db) {
         this.host = host;
         this.port = port;
         this.password = password;
         this.userName = userName;
         this.readonly = readonly;
+        this.db = db;
         StringBuilder builder = new StringBuilder();
         if (userName != null && password != null) {
             builder.append(userName).append(":").append(password);
         } else if (userName == null && password != null) {
             builder.append(password);
         }
+        boolean withParam = false;
         if (readonly) {
             builder.append("@").append(host).append(":").append(port).append("?readonly=").append(true);
+            withParam = true;
         } else {
             builder.append("@").append(host).append(":").append(port);
+        }
+        if (db > 0) {
+            if (withParam) {
+                builder.append("&db=").append(db);
+            } else {
+                builder.append("?db=").append(db);
+            }
         }
         this.url = builder.toString();
     }
@@ -57,6 +76,10 @@ public class RedisClientAddr {
 
     public String getUserName() {
         return userName;
+    }
+
+    public int getDb() {
+        return db;
     }
 
     public String getUrl() {

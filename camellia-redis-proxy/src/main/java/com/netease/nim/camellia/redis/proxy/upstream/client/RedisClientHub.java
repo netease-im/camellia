@@ -175,6 +175,7 @@ public class RedisClientHub {
             config.setUserName(addr.getUserName());
             config.setPassword(addr.getPassword());
             config.setReadonly(addr.isReadonly());
+            config.setDb(addr.getDb());
             config.setEventLoopGroup(loopGroup);
             config.setHeartbeatTimeoutMillis(-1);
             config.setHeartbeatIntervalSeconds(-1);
@@ -200,15 +201,19 @@ public class RedisClientHub {
     }
 
     public static boolean preheat(String host, int port, String userName, String password) {
+        return preheat(host, port, userName, password, 0);
+    }
+
+    public static boolean preheat(String host, int port, String userName, String password, int db) {
         EventLoopGroup workGroup = GlobalRedisProxyEnv.workGroup;
         int workThread = GlobalRedisProxyEnv.workThread;
-        RedisClientAddr addr = new RedisClientAddr(host, port, userName, password);
+        RedisClientAddr addr = new RedisClientAddr(host, port, userName, password, db);
         if (workGroup != null && workThread > 0) {
             logger.info("try preheat, addr = {}", PasswordMaskUtils.maskAddr(addr));
             for (int i = 0; i < GlobalRedisProxyEnv.workThread; i++) {
                 EventLoop eventLoop = workGroup.next();
                 updateEventLoop(eventLoop);
-                RedisClient redisClient = get(new RedisClientAddr(host, port, userName, password));
+                RedisClient redisClient = get(new RedisClientAddr(host, port, userName, password, db));
                 if (redisClient == null) {
                     logger.error("preheat fail, addr = {}", PasswordMaskUtils.maskAddr(addr));
                     throw new CamelliaRedisException("preheat fail, addr = " + PasswordMaskUtils.maskAddr(addr));
@@ -310,6 +315,7 @@ public class RedisClientHub {
                     config.setUserName(addr.getUserName());
                     config.setPassword(addr.getPassword());
                     config.setReadonly(addr.isReadonly());
+                    config.setDb(addr.getDb());
                     config.setEventLoopGroup(eventLoop);
                     config.setHeartbeatTimeoutMillis(heartbeatTimeoutMillis);
                     config.setHeartbeatIntervalSeconds(heartbeatIntervalSeconds);

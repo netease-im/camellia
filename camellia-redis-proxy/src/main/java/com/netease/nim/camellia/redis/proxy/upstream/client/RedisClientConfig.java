@@ -12,6 +12,7 @@ public class RedisClientConfig {
     private String userName;
     private String password;
     private boolean readonly;
+    private int db;
     private EventLoopGroup eventLoopGroup;
     private int heartbeatIntervalSeconds;
     private long heartbeatTimeoutMillis;
@@ -61,6 +62,14 @@ public class RedisClientConfig {
 
     public void setReadonly(boolean readonly) {
         this.readonly = readonly;
+    }
+
+    public int getDb() {
+        return db;
+    }
+
+    public void setDb(int db) {
+        this.db = db;
     }
 
     public EventLoopGroup getEventLoopGroup() {

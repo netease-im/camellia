@@ -58,15 +58,23 @@ public class RedisResourceUtil {
                 String userName = userNameAndPassword[0];
                 String password = userNameAndPassword[1];
 
+                int db = 0;
                 String split = substring.substring(index + 1);
-                String[] split2 = split.split(":");
+                String hostAndPortString;
+                if (split.contains("?")) {
+                    Map<String, String> params = getParams(split.split("\\?")[1]);
+                    String dbStr = params.get("db");
+                    if (dbStr != null) {
+                        db = Integer.parseInt(dbStr);
+                    }
+                    hostAndPortString = split.split("\\?")[0];
+                } else {
+                    hostAndPortString = split;
+                }
+                String[] split2 = hostAndPortString.split(":");
                 String host = split2[0];
                 int port = Integer.parseInt(split2[1]);
-                RedisResource redisResource = new RedisResource(host, port, userName, password);
-                if (!redisResource.getUrl().equals(resource.getUrl())) {
-                    throw new CamelliaRedisException("resource url not equals");
-                }
-                return redisResource;
+                return new RedisResource(host, port, userName, password, db);
             } else if (url.startsWith(RedisType.RedisSentinel.getPrefix())) {
                 String substring = url.substring(RedisType.RedisSentinel.getPrefix().length());
                 if (!substring.contains("@")) {
@@ -86,7 +94,7 @@ public class RedisResourceUtil {
 
                 int index2 = split.indexOf("/");
                 String hostPorts = split.substring(0, index2);
-                String master = split.substring(index2 + 1);
+                String masterWithParams = split.substring(index2 + 1);
 
                 String[] split2 = hostPorts.split(",");
                 List<RedisSentinelResource.Node> nodeList = new ArrayList<>();
@@ -96,17 +104,27 @@ public class RedisResourceUtil {
                     int port = Integer.parseInt(split3[1]);
                     nodeList.add(new RedisSentinelResource.Node(host, port));
                 }
-                RedisSentinelResource redisSentinelResource = new RedisSentinelResource(master, nodeList, userName, password);
-                if (!redisSentinelResource.getUrl().equals(resource.getUrl())) {
-                    throw new CamelliaRedisException("resource url not equals");
+
+                String master;
+                int db = 0;
+                if (masterWithParams.contains("?")) {
+                    int i = masterWithParams.indexOf("?");
+                    master = masterWithParams.substring(0, i);
+                    String queryString = masterWithParams.substring(i + 1);
+                    Map<String, String> params = getParams(queryString);
+                    String dbStr = params.get("db");
+                    if (dbStr != null) {
+                        db = Integer.parseInt(dbStr);
+                    }
+                } else {
+                    master = masterWithParams;
                 }
-                return redisSentinelResource;
+                return new RedisSentinelResource(master, nodeList, userName, password, db);
             } else if (url.startsWith(RedisType.RedisCluster.getPrefix())) {
                 String substring = url.substring(RedisType.RedisCluster.getPrefix().length());
                 if (!substring.contains("@")) {
                     throw new CamelliaRedisException("missing @");
                 }
-
                 int index = substring.lastIndexOf("@");
                 String[] userNameAndPassword = getUserNameAndPassword(substring.substring(0, index));
                 String userName = userNameAndPassword[0];
@@ -207,6 +225,7 @@ public class RedisResourceUtil {
                 }
                 String master;
                 boolean withMaster = false;
+                int db = 0;
                 if (masterWithParams.contains("?")) {
                     int i = masterWithParams.indexOf("?");
                     master = masterWithParams.substring(0, i);
@@ -219,10 +238,14 @@ public class RedisResourceUtil {
                         }
                         withMaster = Boolean.parseBoolean(withMasterStr);
                     }
+                    String dbStr = params.get("db");
+                    if (dbStr != null) {
+                        db = Integer.parseInt(dbStr);
+                    }
                 } else {
                     master = masterWithParams;
                 }
-                return new RedisSentinelSlavesResource(master, nodeList, userName, password, withMaster);
+                return new RedisSentinelSlavesResource(master, nodeList, userName, password, withMaster, db);
             } else if (url.startsWith(RedisType.RedisClusterSlaves.getPrefix())) {
                 String substring = url.substring(RedisType.RedisClusterSlaves.getPrefix().length());
                 if (!substring.contains("@")) {

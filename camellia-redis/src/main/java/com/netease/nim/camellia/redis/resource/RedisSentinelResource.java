@@ -20,12 +20,18 @@ public class RedisSentinelResource extends Resource {
     private final List<Node> nodes;
     private final String password;
     private final String userName;
+    private final int db;
 
     public RedisSentinelResource(String master, List<Node> nodes, String userName, String password) {
+        this(master, nodes, userName, password, 0);
+    }
+
+    public RedisSentinelResource(String master, List<Node> nodes, String userName, String password, int db) {
         this.master = master;
         this.nodes = nodes;
         this.password = password;
         this.userName = userName;
+        this.db = db;
         StringBuilder url = new StringBuilder();
         url.append(RedisType.RedisSentinel.getPrefix());
         if (userName != null && password != null) {
@@ -41,6 +47,9 @@ public class RedisSentinelResource extends Resource {
         url.deleteCharAt(url.length() - 1);
         url.append("/");
         url.append(master);
+        if (db > 0) {
+            url.append("?db=").append(db);
+        }
         this.setUrl(url.toString());
     }
 
@@ -62,6 +71,10 @@ public class RedisSentinelResource extends Resource {
 
     public String getUserName() {
         return userName;
+    }
+
+    public int getDb() {
+        return db;
     }
 
     public static class Node {

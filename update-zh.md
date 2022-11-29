@@ -10,6 +10,8 @@
 * camellia-redis-proxy新增对TairZSet、TairHash、TairString的支持
 * camellia-redis-proxy新增对RedisJSON的支持
 * camellia-redis-proxy新增对RedisSearch的支持
+* camellia-redis-proxy代理到redis-standalone/redis-sentinel时，支持设置后端的db
+* CamelliaRedisTemplate请求redis-standalone/redis-sentinel时，支持设置db
 
 ### 更新
 * 调整了camellia-dashboard配置camellia-redis-proxy的ip黑白名单的配置接口，感谢[@tasszz2k](https://github.com/tasszz2k)

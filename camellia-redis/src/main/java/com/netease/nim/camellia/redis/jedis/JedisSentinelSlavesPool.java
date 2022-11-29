@@ -33,6 +33,7 @@ public class JedisSentinelSlavesPool extends JedisPool {
     private final GenericObjectPoolConfig poolConfig;
     private final int timeout;
     private final String password;
+    private final int db;
     private HostAndPort master;
     private List<HostAndPort> slaves;
 
@@ -47,6 +48,7 @@ public class JedisSentinelSlavesPool extends JedisPool {
         this.timeout = timeout;
         this.password = redisSentinelSlavesResource.getPassword();
         this.redisSentinelSlavesResource = redisSentinelSlavesResource;
+        this.db = redisSentinelSlavesResource.getDb();
         for (RedisSentinelResource.Node node : redisSentinelSlavesResource.getNodes()) {
             if (redisSentinelSlavesResource.isWithMaster()) {
                 MasterListener masterListener = new MasterListener(this, redisSentinelSlavesResource.getMaster(), node.getHost(), node.getPort());
@@ -201,7 +203,7 @@ public class JedisSentinelSlavesPool extends JedisPool {
     private void initPool(HostAndPort hostAndPort) {
         JedisPool jedisPool = poolMap.get(hostAndPort.getUrl());
         if (jedisPool == null) {
-            jedisPool = new JedisPool(poolConfig, hostAndPort.getHost(), hostAndPort.getPort(), timeout, password);
+            jedisPool = new JedisPool(poolConfig, hostAndPort.getHost(), hostAndPort.getPort(), timeout, password, db);
             poolMap.put(hostAndPort.getUrl(), jedisPool);
         }
     }

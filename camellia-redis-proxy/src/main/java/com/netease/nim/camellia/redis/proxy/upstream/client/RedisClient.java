@@ -21,6 +21,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
@@ -47,6 +48,7 @@ public class RedisClient implements AsyncClient {
     private final int port;
     private final String userName;
     private final String password;
+    private final int db;
 
     private final EventLoopGroup eventLoopGroup;
     private final String clientName;
@@ -77,7 +79,8 @@ public class RedisClient implements AsyncClient {
         this.port = config.getPort();
         this.userName = config.getUserName();
         this.password = config.getPassword();
-        this.addr = new RedisClientAddr(host, port, userName, password, config.isReadonly());
+        this.db = config.getDb();
+        this.addr = new RedisClientAddr(host, port, userName, password, config.isReadonly(), config.getDb());
         this.eventLoopGroup = config.getEventLoopGroup();
         this.heartbeatIntervalSeconds = config.getHeartbeatIntervalSeconds();
         this.heartbeatTimeoutMillis = config.getHeartbeatTimeoutMillis();
@@ -150,6 +153,9 @@ public class RedisClient implements AsyncClient {
             //建完连接先ping一下，确保连接此时是可用的
             if (!ping(connectTimeoutMillis)) {
                 throw new CamelliaRedisException("ping fail");
+            }
+            if (db > 0) {
+                sendCommand(RedisCommand.SELECT.raw(), String.valueOf(db).getBytes(StandardCharsets.UTF_8));
             }
             if (addr.isReadonly()) {
                 sendCommand(new byte[][]{RedisCommand.READONLY.raw()});

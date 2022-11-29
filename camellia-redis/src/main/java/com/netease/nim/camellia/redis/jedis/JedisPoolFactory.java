@@ -134,12 +134,23 @@ public interface JedisPoolFactory {
                             sentinels.add(node.getHost() + ":" + node.getPort());
                         }
                         String password = redisSentinelResource.getPassword();
+                        int db = redisSentinelResource.getDb();
                         if (password == null || password.length() == 0) {
-                            jedisSentinelPool = new JedisSentinelPool(redisSentinelResource.getMaster(), sentinels,
-                                    poolConfig, timeout);
+                            if (db == 0) {
+                                jedisSentinelPool = new JedisSentinelPool(redisSentinelResource.getMaster(), sentinels,
+                                        poolConfig, timeout);
+                            } else {
+                                jedisSentinelPool = new JedisSentinelPool(redisSentinelResource.getMaster(), sentinels,
+                                        poolConfig, timeout, null, db);
+                            }
                         } else {
-                            jedisSentinelPool = new JedisSentinelPool(redisSentinelResource.getMaster(), sentinels,
-                                    poolConfig, timeout, password);
+                            if (db == 0) {
+                                jedisSentinelPool = new JedisSentinelPool(redisSentinelResource.getMaster(), sentinels,
+                                        poolConfig, timeout, password);
+                            } else {
+                                jedisSentinelPool = new JedisSentinelPool(redisSentinelResource.getMaster(), sentinels,
+                                        poolConfig, timeout, password, db);
+                            }
                         }
                         map2.put(redisSentinelResource.getUrl(), jedisSentinelPool);
                     }

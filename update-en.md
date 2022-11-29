@@ -10,6 +10,8 @@
 * camellia-redis-proxy support TairZSet、TairHash、TairString commands
 * camellia-redis-proxy support RedisJSON commands
 * camellia-redis-proxy support RedisSearch commands
+* camellia-redis-proxy support select db when upstream is redis-standalone or redis-sentinel
+* CamelliaRedisTemplate support select db when upstream is redis-standalone or redis-sentinel
 
 ### update
 * modify the error code of camellia-dashboard api for ip-permission, thanks [@tasszz2k](https://github.com/tasszz2k)
