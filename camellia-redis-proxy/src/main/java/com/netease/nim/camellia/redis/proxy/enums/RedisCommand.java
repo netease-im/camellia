@@ -142,14 +142,14 @@ public enum RedisCommand {
     DUMP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     RESTORE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     ZRANDMEMBER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ZSET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-    BFADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-    BFEXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-    BFINFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-    BFINSERT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-    BFLOADCHUNK(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-    BFMADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-    BFMEXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
-    BFSCANDUMP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    BF_ADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    BF_EXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    BF_INFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    BF_INSERT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    BF_LOADCHUNK(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    BF_MADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    BF_MEXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    BF_SCANDUMP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXHSET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXHGET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TAIR_HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXHMSET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
@@ -209,6 +209,28 @@ public enum RedisCommand {
     EXAPPEND(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXPREPEND(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXGAE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+
+    JSON_ARRAPPEND(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_ARRINDEX(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_ARRINSERT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_ARRLEN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_ARRPOP(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_ARRTRIM(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_CLEAR(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_DEL(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_FORGET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_GET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_MGET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.JSON, Blocking.FALSE, CommandKeyType.COMPLEX),
+    JSON_NUMINCRBY(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_NUMMULTBY(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_OBJKEYS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_OBJLEN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_RESP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_SET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_STRAPPEND(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_STRLEN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_TOGGLE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    JSON_TYPE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
 
     /**
      * Restrictive Support
@@ -335,7 +357,9 @@ public enum RedisCommand {
 
     RedisCommand(CommandSupportType supportType, Type type, CommandType commandType, Blocking blocking, CommandKeyType commandKeyType) {
         if (commandType == CommandType.BF) {
-            this.strRaw = "bf." + name().toLowerCase().substring(2);
+            this.strRaw = "bf." + name().toLowerCase().substring(3);
+        } else if (commandType == CommandType.JSON) {
+            this.strRaw = "json." + name().toLowerCase().substring(5);
         } else {
             this.strRaw = name().toLowerCase();
         }
@@ -405,6 +429,8 @@ public enum RedisCommand {
         TAIR_HASH,
         TAIR_ZSET,
         TAIR_STRING,
+        JSON,
+        SEARCH,
         ;
     }
 

@@ -273,6 +273,20 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                         }
                         break;
                     }
+                    case JSON_MGET: {
+                        int argLen = command.getObjects().length;
+                        int keyCount = argLen - 2;
+                        if (keyCount > 1) {
+                            int initializerSize = commandFlusher.getInitializerSize();
+                            if (keyCount > initializerSize) {
+                                commandFlusher.updateInitializerSize(keyCount);
+                            }
+                            jsonMget(command, commandFlusher, future);
+                            commandFlusher.updateInitializerSize(initializerSize);
+                            continueOk = true;
+                        }
+                        break;
+                    }
                 }
                 if (continueOk) continue;
             }
@@ -705,6 +719,45 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
         }
         RedisCommand.CommandKeyType commandKeyType = redisCommand.getCommandKeyType();
         return commandKeyType == RedisCommand.CommandKeyType.SIMPLE_SINGLE && !command.isBlocking();
+    }
+
+    private void jsonMget(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
+        byte[][] args = command.getObjects();
+        List<CompletableFuture<Reply>> futureList = new ArrayList<>();
+
+        byte[] path = args[args.length - 1];
+        for (int i = 1; i < args.length - 1; i++) {
+            byte[] key = args[i];
+            int slot = RedisClusterCRC16Utils.getSlot(key);
+            RedisClient client = getClient(slot);
+            Command subCommand = new Command(new byte[][]{RedisCommand.JSON_MGET.raw(), key, path});
+            CompletableFuture<Reply> subFuture = new CompletableFuture<>();
+            CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, subFuture, subCommand);
+            commandFlusher.sendCommand(client, subCommand, futureWrapper);
+            futureList.add(subFuture);
+        }
+        if (futureList.size() == 1) {
+            CompletableFuture<Reply> completableFuture = futureList.get(0);
+            completableFuture.thenAccept(reply -> {
+                if (reply instanceof ErrorReply) {
+                    future.complete(reply);
+                } else {
+                    future.complete(new MultiBulkReply(new Reply[]{reply}));
+                }
+            });
+            return;
+        }
+        AsyncUtils.allOf(futureList).thenAccept(replies -> {
+            Reply[] retRelies = new Reply[replies.size()];
+            for (int i = 0; i < replies.size(); i++) {
+                retRelies[i] = replies.get(i);
+                if (retRelies[i] instanceof ErrorReply) {
+                    future.complete(retRelies[i]);
+                    return;
+                }
+            }
+            future.complete(new MultiBulkReply(retRelies));
+        });
     }
 
     private void mget(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {

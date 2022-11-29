@@ -394,6 +394,14 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         }
                         break;
                     }
+                    case JSON_MGET: {
+                        if (command.getObjects().length > 3) {
+                            CompletableFuture<Reply> future = jsonMget(command, commandFlusher);
+                            futureList.add(future);
+                            continueOk = true;
+                        }
+                        break;
+                    }
                     case TOUCH:
                     case UNLINK:
                     case DEL: {
@@ -702,6 +710,77 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             for (BytesKey redisKey : list) {
                 subCommandArgs.add(redisKey.getKey());
             }
+            urlList.add(url);
+            Command subCommand = new Command(subCommandArgs.toArray(new byte[0][0]));
+            subCommand.setChannelInfo(command.getChannelInfo());
+            CompletableFuture<Reply> future = commandFlusher.sendCommand(client, subCommand);
+            incrRead(url, command);
+            futures.add(future);
+        }
+        if (futures.size() == 1) {
+            return futures.get(0);
+        }
+        CompletableFuture<Reply> future = new CompletableFuture<>();
+        AsyncUtils.allOf(futures).thenAccept(replies -> {
+            Map<BytesKey, Reply> replyMap = new HashMap<>();
+            for (int i = 0; i < urlList.size(); i++) {
+                String url = urlList.get(i);
+                List<BytesKey> keyList = map.get(url);
+                Reply reply = replies.get(i);
+                if (reply instanceof MultiBulkReply) {
+                    MultiBulkReply multiBulkReply = (MultiBulkReply) reply;
+                    Reply[] subReplies = multiBulkReply.getReplies();
+                    for (int j = 0; j < subReplies.length; j++) {
+                        Reply subReply = subReplies[j];
+                        BytesKey redisKey = keyList.get(j);
+                        replyMap.put(redisKey, subReply);
+                    }
+                } else if (reply instanceof ErrorReply) {
+                    future.complete(reply);
+                    return;
+                } else {
+                    future.complete(ErrorReply.NOT_AVAILABLE);
+                    return;
+                }
+            }
+            Reply[] retReplies = new Reply[redisKeys.size()];
+            for (int i = 0; i < redisKeys.size(); i++) {
+                BytesKey redisKey = redisKeys.get(i);
+                retReplies[i] = replyMap.get(redisKey);
+            }
+            future.complete(new MultiBulkReply(retReplies));
+        });
+        return future;
+    }
+
+    private CompletableFuture<Reply> jsonMget(Command command, CommandFlusher commandFlusher) {
+        List<BytesKey> redisKeys = new ArrayList<>();
+        Map<String, List<BytesKey>> map = new HashMap<>();
+        byte[][] args = command.getObjects();
+        byte[] path = args[args.length - 1];
+        for (int i = 1; i < args.length - 1; i++) {
+            byte[] key = args[i];
+            BytesKey redisKey = new BytesKey(key);
+            redisKeys.add(redisKey);
+            Resource resource = resourceChooser.getReadResource(key);
+            List<BytesKey> list = map.get(resource.getUrl());
+            if (list == null) {
+                list = map.computeIfAbsent(resource.getUrl(), k -> new ArrayList<>(args.length - 2));
+            }
+            list.add(redisKey);
+        }
+        List<String> urlList = new ArrayList<>();
+        List<CompletableFuture<Reply>> futures = new ArrayList<>();
+        for (Map.Entry<String, List<BytesKey>> entry : map.entrySet()) {
+            String url = entry.getKey();
+            AsyncClient client = factory.get(url);
+            List<BytesKey> list = entry.getValue();
+            List<byte[]> subCommandArgs = new ArrayList<>(list.size() + 1);
+            subCommandArgs.add(args[0]);
+            for (BytesKey redisKey : list) {
+                subCommandArgs.add(redisKey.getKey());
+            }
+            subCommandArgs.add(path);
             urlList.add(url);
             Command subCommand = new Command(subCommandArgs.toArray(new byte[0][0]));
             subCommand.setChannelInfo(command.getChannelInfo());
