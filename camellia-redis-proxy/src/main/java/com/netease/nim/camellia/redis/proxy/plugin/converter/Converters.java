@@ -167,6 +167,9 @@ public class Converters {
                 case ZINTERSTORE:
                 case ZUNIONSTORE:
                 case ZDIFFSTORE:
+                case EXZINTERSTORE:
+                case EXZUNIONSTORE:
+                case EXZDIFFSTORE:
                     if (objects.length >= 4) {
                         int keyCount1 = (int) Utils.bytesToNum(objects[2]);
                         if (keyCount1 > 0) {
@@ -183,6 +186,10 @@ public class Converters {
                 case ZUNION:
                 case ZINTER:
                 case ZINTERCARD:
+                case EXZDIFF:
+                case EXZUNION:
+                case EXZINTER:
+                case EXZINTERCARD:
                     if (objects.length >= 3) {
                         int keyCount2 = (int) Utils.bytesToNum(objects[1]);
                         if (keyCount2 > 0) {
@@ -206,6 +213,8 @@ public class Converters {
                 case BRPOPLPUSH:
                 case BZPOPMAX:
                 case BZPOPMIN:
+                case EXBZPOPMAX:
+                case EXBZPOPMIN:
                     for (int i = 1; i < objects.length - 1; i++) {
                         byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, objects[i]);
                         objects[i] = convertedKey;
