@@ -4,7 +4,7 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
-# 1.1.7（2022/11/xx）
+# 1.1.7（2022/11/30）
 ### add
 * camellia-redis-proxy support ZINTERCARD command
 * camellia-redis-proxy support TairZSet、TairHash、TairString commands
