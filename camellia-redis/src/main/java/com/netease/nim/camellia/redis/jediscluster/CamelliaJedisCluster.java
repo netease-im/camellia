@@ -779,38 +779,35 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
             final JedisPool jedisPool = entry.getKey();
             final List<byte[]> list = entry.getValue();
             if (list == null || list.isEmpty()) continue;
-            Future<Long> future = env.getConcurrentExec().submit(new Callable<Long>() {
-                @Override
-                public Long call() throws Exception {
-                    Jedis jedis = null;
-                    try {
-                        jedis = jedisPool.getResource();
-                        Pipeline pipelined = jedis.pipelined();
-                        List<Response<Long>> responseList = new ArrayList<>();
-                        for (byte[] key : list) {
-                            Response<Long> response = pipelined.del(key);
-                            responseList.add(response);
-                        }
-                        pipelined.sync();
-                        Long ret = 0L;
-                        for (int i=0; i<responseList.size(); i++) {
-                            Response<Long> response = responseList.get(i);
-                            try {
-                                ret += response.get();
-                            } catch (Exception e) {
-                                byte[] key = list.get(i);
-                                handlerException(key, e, failMap);
-                            }
-                        }
-                        return ret;
-                    } catch (Exception e) {
-                        for (byte[] key : list) {
+            Future<Long> future = env.getConcurrentExec().submit(() -> {
+                Jedis jedis = null;
+                try {
+                    jedis = jedisPool.getResource();
+                    Pipeline pipelined = jedis.pipelined();
+                    List<Response<Long>> responseList = new ArrayList<>();
+                    for (byte[] key : list) {
+                        Response<Long> response = pipelined.del(key);
+                        responseList.add(response);
+                    }
+                    pipelined.sync();
+                    Long ret = 0L;
+                    for (int i=0; i<responseList.size(); i++) {
+                        Response<Long> response = responseList.get(i);
+                        try {
+                            ret += response.get();
+                        } catch (Exception e) {
+                            byte[] key = list.get(i);
                             handlerException(key, e, failMap);
                         }
-                        return 0L;
-                    } finally {
-                        CloseUtil.closeQuietly(jedis);
                     }
+                    return ret;
+                } catch (Exception e) {
+                    for (byte[] key : list) {
+                        handlerException(key, e, failMap);
+                    }
+                    return 0L;
+                } finally {
+                    CloseUtil.closeQuietly(jedis);
                 }
             });
             futureList.add(future);
@@ -819,12 +816,9 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
         if (!failMap.isEmpty()) {
             List<Future<Long>> failFutureList = new ArrayList<>();
             for (final Map.Entry<byte[], Exception> entry : failMap.entrySet()) {
-                Future<Long> future = env.getConcurrentExec().submit(new Callable<Long>() {
-                    @Override
-                    public Long call() throws Exception {
-                        byte[] key = entry.getKey();
-                        return jedisCluster.del(key);
-                    }
+                Future<Long> future = env.getConcurrentExec().submit(() -> {
+                    byte[] key = entry.getKey();
+                    return jedisCluster.del(key);
                 });
                 failFutureList.add(future);
             }
@@ -844,38 +838,35 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
             final JedisPool jedisPool = entry.getKey();
             final List<byte[]> list = entry.getValue();
             if (list == null || list.isEmpty()) continue;
-            Future<Long> future = env.getConcurrentExec().submit(new Callable<Long>() {
-                @Override
-                public Long call() throws Exception {
-                    Jedis jedis = null;
-                    try {
-                        jedis = jedisPool.getResource();
-                        Pipeline pipelined = jedis.pipelined();
-                        List<Response<Boolean>> responseList = new ArrayList<>();
-                        for (byte[] key : list) {
-                            Response<Boolean> response = pipelined.exists(key);
-                            responseList.add(response);
-                        }
-                        pipelined.sync();
-                        Long ret = 0L;
-                        for (int i=0; i<responseList.size(); i++) {
-                            Response<Boolean> response = responseList.get(i);
-                            try {
-                                ret += response.get() ? 1L : 0L;
-                            } catch (Exception e) {
-                                byte[] key = list.get(i);
-                                handlerException(key, e, failMap);
-                            }
-                        }
-                        return ret;
-                    } catch (Exception e) {
-                        for (byte[] key : list) {
+            Future<Long> future = env.getConcurrentExec().submit(() -> {
+                Jedis jedis = null;
+                try {
+                    jedis = jedisPool.getResource();
+                    Pipeline pipelined = jedis.pipelined();
+                    List<Response<Boolean>> responseList = new ArrayList<>();
+                    for (byte[] key : list) {
+                        Response<Boolean> response = pipelined.exists(key);
+                        responseList.add(response);
+                    }
+                    pipelined.sync();
+                    long ret = 0L;
+                    for (int i=0; i<responseList.size(); i++) {
+                        Response<Boolean> response = responseList.get(i);
+                        try {
+                            ret += response.get() ? 1L : 0L;
+                        } catch (Exception e) {
+                            byte[] key = list.get(i);
                             handlerException(key, e, failMap);
                         }
-                        return 0L;
-                    } finally {
-                        CloseUtil.closeQuietly(jedis);
                     }
+                    return ret;
+                } catch (Exception e) {
+                    for (byte[] key : list) {
+                        handlerException(key, e, failMap);
+                    }
+                    return 0L;
+                } finally {
+                    CloseUtil.closeQuietly(jedis);
                 }
             });
             futureList.add(future);
@@ -884,12 +875,9 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
         if (!failMap.isEmpty()) {
             List<Future<Long>> failFutureList = new ArrayList<>();
             for (final Map.Entry<byte[], Exception> entry : failMap.entrySet()) {
-                Future<Long> future = env.getConcurrentExec().submit(new Callable<Long>() {
-                    @Override
-                    public Long call() throws Exception {
-                        Boolean exists = jedisCluster.exists(entry.getKey());
-                        return exists ? 1L : 0L;
-                    }
+                Future<Long> future = env.getConcurrentExec().submit(() -> {
+                    Boolean exists = jedisCluster.exists(entry.getKey());
+                    return exists ? 1L : 0L;
                 });
                 failFutureList.add(future);
             }
@@ -926,50 +914,47 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
         if (keys == null) return Collections.emptyMap();
         if (keys.length == 0) return Collections.emptyMap();
         Map<JedisPool, List<byte[]>> map = toMap(keys);
-        List<Future> futureList = new ArrayList<>();
+        List<Future<?>> futureList = new ArrayList<>();
         final ConcurrentHashMap<byte[], Exception> failMap = new ConcurrentHashMap<>();
         final Map<byte[], byte[]> retMap = new HashMap<>();
         for (Map.Entry<JedisPool, List<byte[]>> entry : map.entrySet()) {
             final JedisPool jedisPool = entry.getKey();
             final List<byte[]> list = entry.getValue();
             if (list == null || list.isEmpty()) continue;
-            Future<?> future = env.getConcurrentExec().submit(new Runnable() {
-                @Override
-                public void run() {
-                    Jedis jedis = null;
-                    try {
-                        jedis = jedisPool.getResource();
-                        Pipeline pipelined = jedis.pipelined();
-                        List<Response<byte[]>> responseList = new ArrayList<>();
-                        for (byte[] key : list) {
-                            Response<byte[]> response = pipelined.get(key);
-                            responseList.add(response);
-                        }
-                        pipelined.sync();
-                        for (int i=0; i<list.size(); i++) {
-                            byte[] key = list.get(i);
-                            Response<byte[]> response = responseList.get(i);
-                            try {
-                                synchronized (retMap) {
-                                    retMap.put(key, response.get());
-                                }
-                            } catch (Exception e) {
-                                handlerException(key, e, failMap);
+            Future<?> future = env.getConcurrentExec().submit(() -> {
+                Jedis jedis = null;
+                try {
+                    jedis = jedisPool.getResource();
+                    Pipeline pipelined = jedis.pipelined();
+                    List<Response<byte[]>> responseList = new ArrayList<>();
+                    for (byte[] key : list) {
+                        Response<byte[]> response = pipelined.get(key);
+                        responseList.add(response);
+                    }
+                    pipelined.sync();
+                    for (int i=0; i<list.size(); i++) {
+                        byte[] key = list.get(i);
+                        Response<byte[]> response = responseList.get(i);
+                        try {
+                            synchronized (retMap) {
+                                retMap.put(key, response.get());
                             }
-                        }
-                    } catch (Exception e) {
-                        for (byte[] key : list) {
+                        } catch (Exception e) {
                             handlerException(key, e, failMap);
                         }
-                    } finally {
-                        CloseUtil.closeQuietly(jedis);
                     }
+                } catch (Exception e) {
+                    for (byte[] key : list) {
+                        handlerException(key, e, failMap);
+                    }
+                } finally {
+                    CloseUtil.closeQuietly(jedis);
                 }
             });
             futureList.add(future);
         }
         try {
-            for (Future future : futureList) {
+            for (Future<?> future : futureList) {
                 future.get();
             }
         } catch (Exception e) {
@@ -978,14 +963,11 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
         if (!failMap.isEmpty()) {
             List<Future<?>> failFutureList = new ArrayList<>();
             for (final Map.Entry<byte[], Exception> entry : failMap.entrySet()) {
-                Future<?> future = env.getConcurrentExec().submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        byte[] key = entry.getKey();
-                        byte[] value = jedisCluster.get(key);
-                        synchronized (retMap) {
-                            retMap.put(key, value);
-                        }
+                Future<?> future = env.getConcurrentExec().submit(() -> {
+                    byte[] key = entry.getKey();
+                    byte[] value = jedisCluster.get(key);
+                    synchronized (retMap) {
+                        retMap.put(key, value);
                     }
                 });
                 failFutureList.add(future);
@@ -1014,49 +996,46 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
             addToMap(map, jedisPool, entry);
         }
         final ConcurrentHashMap<byte[], byte[]> failMap = new ConcurrentHashMap<>();
-        List<Future> futureList = new ArrayList<>();
+        List<Future<?>> futureList = new ArrayList<>();
         for (Map.Entry<JedisPool, List<Map.Entry<byte[], byte[]>>> entry : map.entrySet()) {
             final JedisPool jedisPool = entry.getKey();
             final List<Map.Entry<byte[], byte[]>> list = entry.getValue();
             if (list == null || list.isEmpty()) continue;
-            Future future = env.getConcurrentExec().submit(new Runnable() {
-                @Override
-                public void run() {
-                    Jedis jedis = null;
-                    try {
-                        jedis = jedisPool.getResource();
-                        Pipeline pipelined = jedis.pipelined();
-                        List<Response<String>> responseList = new ArrayList<>();
-                        for (Map.Entry<byte[], byte[]> subEntry : list) {
-                            Response<String> response = pipelined.set(subEntry.getKey(), subEntry.getValue());
-                            responseList.add(response);
-                        }
-                        pipelined.sync();
-                        for (int i=0; i<responseList.size(); i++) {
-                            Response<String> response = responseList.get(i);
-                            try {
-                                String ret = response.get();
-                                if (!ret.equalsIgnoreCase(OK)) {
-                                    throw new CamelliaRedisException(ret);
-                                }
-                            } catch (Exception e) {
-                                Map.Entry<byte[], byte[]> subEntry = list.get(i);
-                                msetHandlerException(e, subEntry.getKey(), subEntry.getValue(), failMap);
+            Future<?> future = env.getConcurrentExec().submit(() -> {
+                Jedis jedis = null;
+                try {
+                    jedis = jedisPool.getResource();
+                    Pipeline pipelined = jedis.pipelined();
+                    List<Response<String>> responseList = new ArrayList<>();
+                    for (Map.Entry<byte[], byte[]> subEntry : list) {
+                        Response<String> response = pipelined.set(subEntry.getKey(), subEntry.getValue());
+                        responseList.add(response);
+                    }
+                    pipelined.sync();
+                    for (int i=0; i<responseList.size(); i++) {
+                        Response<String> response = responseList.get(i);
+                        try {
+                            String ret = response.get();
+                            if (!ret.equalsIgnoreCase(OK)) {
+                                throw new CamelliaRedisException(ret);
                             }
-                        }
-                    } catch (Exception e) {
-                        for (Map.Entry<byte[], byte[]> subEntry : list) {
+                        } catch (Exception e) {
+                            Map.Entry<byte[], byte[]> subEntry = list.get(i);
                             msetHandlerException(e, subEntry.getKey(), subEntry.getValue(), failMap);
                         }
-                    } finally {
-                        CloseUtil.closeQuietly(jedis);
                     }
+                } catch (Exception e) {
+                    for (Map.Entry<byte[], byte[]> subEntry : list) {
+                        msetHandlerException(e, subEntry.getKey(), subEntry.getValue(), failMap);
+                    }
+                } finally {
+                    CloseUtil.closeQuietly(jedis);
                 }
             });
             futureList.add(future);
         }
         try {
-            for (Future future : futureList) {
+            for (Future<?> future : futureList) {
                 future.get();
             }
         } catch (Exception e) {
@@ -1065,19 +1044,16 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
         if (!failMap.isEmpty()) {
             List<Future<?>> failFutureList = new ArrayList<>();
             for (final Map.Entry<byte[], byte[]> entry : failMap.entrySet()) {
-                Future<?> future = env.getConcurrentExec().submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        String set = jedisCluster.set(entry.getKey(), entry.getValue());
-                        if (!set.equalsIgnoreCase(OK)) {
-                            throw new CamelliaRedisException(set);
-                        }
+                Future<?> future = env.getConcurrentExec().submit(() -> {
+                    String set = jedisCluster.set(entry.getKey(), entry.getValue());
+                    if (!set.equalsIgnoreCase(OK)) {
+                        throw new CamelliaRedisException(set);
                     }
                 });
                 failFutureList.add(future);
             }
             try {
-                for (Future future : failFutureList) {
+                for (Future<?> future : failFutureList) {
                     future.get();
                 }
             } catch (Exception e) {
