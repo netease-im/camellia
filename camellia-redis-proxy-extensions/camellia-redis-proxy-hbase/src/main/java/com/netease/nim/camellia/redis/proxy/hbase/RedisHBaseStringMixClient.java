@@ -246,20 +246,24 @@ public class RedisHBaseStringMixClient {
     }
 
     public String psetex(byte[] key, long milliseconds, byte[] value) {
-        try {
-            if (value.length > stringValueThreshold()) {
-                String psetex = redisTemplate.psetex(redisKey(key), stringValueExpireMillis(milliseconds), value);
-                flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, hbaseRowKey(key), value, System.currentTimeMillis() + milliseconds,"psetx");
-                RedisHBaseMonitor.incr("psetex(byte[], byte[])", OperationType.REDIS_HBASE.name());
-                RedisHBaseMonitor.incrValueSize("string", value.length, true);
-                return psetex;
-            } else {
-                RedisHBaseMonitor.incr("psetex(byte[], byte[])", OperationType.REDIS_ONLY.name());
-                RedisHBaseMonitor.incrValueSize("string", value.length, false);
-                return redisTemplate.psetex(redisKey(key), milliseconds, value);
+        Response<String> response;
+        try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
+            try {
+                if (value.length > stringValueThreshold()) {
+                    response = pipeline.psetex(redisKey(key), stringValueExpireMillis(milliseconds), value);
+                    flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, hbaseRowKey(key), value, System.currentTimeMillis() + milliseconds, "psetx");
+                    RedisHBaseMonitor.incr("psetex(byte[], byte[])", OperationType.REDIS_HBASE.name());
+                    RedisHBaseMonitor.incrValueSize("string", value.length, true);
+                } else {
+                    RedisHBaseMonitor.incr("psetex(byte[], byte[])", OperationType.REDIS_ONLY.name());
+                    RedisHBaseMonitor.incrValueSize("string", value.length, false);
+                    response = pipeline.psetex(redisKey(key), milliseconds, value);
+                }
+            } finally {
+                pipeline.del(nullCacheKey(key));
             }
-        } finally {
-            redisTemplate.del(nullCacheKey(key));
+            pipeline.sync();
+            return response.get();
         }
     }
 
