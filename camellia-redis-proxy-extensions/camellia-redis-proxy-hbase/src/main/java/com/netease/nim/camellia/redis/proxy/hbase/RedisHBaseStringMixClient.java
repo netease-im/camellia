@@ -228,43 +228,41 @@ public class RedisHBaseStringMixClient {
     }
 
     public String setex(byte[] key, int seconds, byte[] value) {
-        try {
+        Response<String> response;
+        try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
             if (value.length > stringValueThreshold()) {
-                String setex = redisTemplate.setex(redisKey(key), (int)(stringValueExpireMillis(seconds * 1000L) / 1000L), value);
+                response = pipeline.setex(redisKey(key), (int) (stringValueExpireMillis(seconds * 1000L) / 1000L), value);
                 flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, hbaseRowKey(key), value, System.currentTimeMillis() + seconds * 1000L,"setex");
                 RedisHBaseMonitor.incr("setex(byte[], byte[])", OperationType.REDIS_HBASE.name());
                 RedisHBaseMonitor.incrValueSize("string", value.length, true);
-                return setex;
             } else {
                 RedisHBaseMonitor.incr("setex(byte[], byte[])", OperationType.REDIS_ONLY.name());
                 RedisHBaseMonitor.incrValueSize("string", value.length, false);
-                return redisTemplate.setex(redisKey(key), seconds, value);
+                response = pipeline.setex(redisKey(key), seconds, value);
             }
-        } finally {
-            redisTemplate.del(nullCacheKey(key));
+            pipeline.del(nullCacheKey(key));
+            pipeline.sync();
         }
+        return response.get();
     }
 
     public String psetex(byte[] key, long milliseconds, byte[] value) {
         Response<String> response;
         try (ICamelliaRedisPipeline pipeline = redisTemplate.pipelined()) {
-            try {
-                if (value.length > stringValueThreshold()) {
-                    response = pipeline.psetex(redisKey(key), stringValueExpireMillis(milliseconds), value);
-                    flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, hbaseRowKey(key), value, System.currentTimeMillis() + milliseconds, "psetx");
-                    RedisHBaseMonitor.incr("psetex(byte[], byte[])", OperationType.REDIS_HBASE.name());
-                    RedisHBaseMonitor.incrValueSize("string", value.length, true);
-                } else {
-                    RedisHBaseMonitor.incr("psetex(byte[], byte[])", OperationType.REDIS_ONLY.name());
-                    RedisHBaseMonitor.incrValueSize("string", value.length, false);
-                    response = pipeline.psetex(redisKey(key), milliseconds, value);
-                }
-            } finally {
-                pipeline.del(nullCacheKey(key));
+            if (value.length > stringValueThreshold()) {
+                response = pipeline.psetex(redisKey(key), stringValueExpireMillis(milliseconds), value);
+                flushHBasePut(hBaseAsyncWriteExecutor, hBaseTemplate, key, hbaseRowKey(key), value, System.currentTimeMillis() + milliseconds, "psetx");
+                RedisHBaseMonitor.incr("psetex(byte[], byte[])", OperationType.REDIS_HBASE.name());
+                RedisHBaseMonitor.incrValueSize("string", value.length, true);
+            } else {
+                RedisHBaseMonitor.incr("psetex(byte[], byte[])", OperationType.REDIS_ONLY.name());
+                RedisHBaseMonitor.incrValueSize("string", value.length, false);
+                response = pipeline.psetex(redisKey(key), milliseconds, value);
             }
+            pipeline.del(nullCacheKey(key));
             pipeline.sync();
-            return response.get();
         }
+        return response.get();
     }
 
     public List<byte[]> mget(byte[]... keys) {
