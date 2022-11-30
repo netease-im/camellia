@@ -7,7 +7,7 @@ import java.util.Arrays;
  * Created by caojiajun on 2019/12/11.
  */
 public class BytesKey {
-    private byte[] key;
+    private final byte[] key;
     private int hashCode;
 
     public BytesKey(byte[] key) {
@@ -16,10 +16,6 @@ public class BytesKey {
 
     public byte[] getKey() {
         return key;
-    }
-
-    public void setKey(byte[] key) {
-        this.key = key;
     }
 
     @Override
