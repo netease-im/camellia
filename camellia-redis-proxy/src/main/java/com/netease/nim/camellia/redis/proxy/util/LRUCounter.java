@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.netease.nim.camellia.core.util.BytesKey;
 
 import java.util.Map;
 import java.util.TreeSet;

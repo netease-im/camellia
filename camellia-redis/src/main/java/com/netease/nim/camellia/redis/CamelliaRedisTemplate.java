@@ -7,6 +7,7 @@ import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.hub.standard.StandardProxyGenerator;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.core.util.BytesKey;
 import com.netease.nim.camellia.core.util.ResourceChooser;
 import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTransferUtil;
@@ -1553,13 +1554,13 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         Map<byte[], byte[]> mget = factory.getProxy().mget(keys);
         if (mget == null) return null;
         List<byte[]> list = new ArrayList<>(keys.length);
-        Map<String, byte[]> map = new HashMap<>();
+        Map<BytesKey, byte[]> map = new HashMap<>();
         for (Map.Entry<byte[], byte[]> entry : mget.entrySet()) {
             byte[] key = entry.getKey();
-            map.put(SafeEncoder.encode(key), entry.getValue());
+            map.put(new BytesKey(key), entry.getValue());
         }
         for (byte[] key : keys) {
-            list.add(map.get(SafeEncoder.encode(key)));
+            list.add(map.get(new BytesKey(key)));
         }
         return list;
     }

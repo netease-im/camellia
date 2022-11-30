@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.plugin.hotkeycache;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.netease.nim.camellia.core.util.BytesKey;
 import com.netease.nim.camellia.core.util.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.auth.IdentityInfo;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;

@@ -1,5 +1,6 @@
-package com.netease.nim.camellia.redis.proxy.util;
+package com.netease.nim.camellia.core.util;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -38,6 +39,7 @@ public class BytesKey {
 
     @Override
     public String toString() {
-        return Utils.bytesToString(key);
+        if (key == null) return null;
+        return new String(key, StandardCharsets.UTF_8);
     }
 }

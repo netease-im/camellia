@@ -8,7 +8,7 @@ import com.netease.nim.camellia.redis.proxy.hbase.monitor.OperationType;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
 import com.netease.nim.camellia.redis.proxy.hbase.util.FreqUtils;
 import com.netease.nim.camellia.redis.proxy.hbase.util.HBaseValue;
-import com.netease.nim.camellia.redis.proxy.util.BytesKey;
+import com.netease.nim.camellia.core.util.BytesKey;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
