@@ -22,14 +22,10 @@
 
 # 1.1.6（2022/11/23）
 ### 新增
-* camellia-redis-proxy新增对ZINTERCARD命令的支持
-* camellia-redis-proxy新增对TairZSet、TairHash、TairString的支持
-* camellia-redis-proxy新增对RedisJSON的支持
-* camellia-redis-proxy新增对RedisSearch的支持
+* 无
 
 ### 更新
 * camellia-redis-proxy优化了统计模块的实现，优化内存和GC
-* 调整了camellia-dashboard配置camellia-redis-proxy的ip黑白名单的配置接口，感谢[@tasszz2k](https://github.com/tasszz2k)
 
 ### fix
 * 无
