@@ -110,9 +110,8 @@ public class CamelliaRedisProxyConfiguration implements ApplicationContextAware 
 
     @Bean
     @ConditionalOnMissingBean(value = ConsoleService.class)
-    public ConsoleService consoleService(CamelliaRedisProxyProperties properties) {
-        CamelliaServerProperties serverProperties = camelliaServerProperties(properties);
-        return new ConsoleServiceAdaptor(serverProperties.getPort());
+    public ConsoleService consoleService() {
+        return new ConsoleServiceAdaptor();
     }
 
     @Override

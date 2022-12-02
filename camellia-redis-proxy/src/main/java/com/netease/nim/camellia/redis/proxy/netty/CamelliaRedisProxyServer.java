@@ -94,6 +94,7 @@ public class CamelliaRedisProxyServer {
                 serverProperties.isTcpNoDelay(), serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh());
         logger.info("CamelliaRedisProxyServer start at port: {}", port);
         GlobalRedisProxyEnv.port = port;
+        this.port = port;
         if (serverProperties.isClusterModeEnable()) {
             int cport = serverProperties.getCport();
             if (cport <= 0) {
@@ -104,7 +105,6 @@ public class CamelliaRedisProxyServer {
             logger.info("CamelliaRedisProxyServer start in cluster mode at cport: {}", cport);
         }
         logger.info("CamelliaRedisProxyServer start success, version = {}", ProxyInfoUtils.VERSION);
-        this.port = port;
         GlobalRedisProxyEnv.invokeStartOkCallback();
     }
 

@@ -3,8 +3,6 @@ package com.netease.nim.camellia.redis.proxy.samples;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleResult;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleServiceAdaptor;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -16,13 +14,7 @@ import java.util.Map;
  * Created by caojiajun on 2019/11/28.
  */
 @Component
-public class MyConsoleService extends ConsoleServiceAdaptor implements InitializingBean {
-
-    @Value("${server.port:6379}")
-    private int port;
-
-    @Value("${spring.application.name:camellia-redis-proxy}")
-    private String applicationName;
+public class MyConsoleService extends ConsoleServiceAdaptor {
 
     @Override
     public ConsoleResult online() {
@@ -44,8 +36,4 @@ public class MyConsoleService extends ConsoleServiceAdaptor implements Initializ
         return super.custom(params);
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        setServerPort(port);
-    }
 }

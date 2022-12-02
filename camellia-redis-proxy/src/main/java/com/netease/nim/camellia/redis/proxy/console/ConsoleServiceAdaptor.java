@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.info.UpstreamInfoUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.netty.ServerStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,19 +73,23 @@ public class ConsoleServiceAdaptor implements ConsoleService {
 
     @Override
     public ConsoleResult check() {
-        if (serverPort <= 0) {
+        int port = serverPort;
+        if (port <= 0) {
+            port = GlobalRedisProxyEnv.port;
+        }
+        if (port <= 0) {
             return ConsoleResult.success();
         }
         Socket socket = new Socket();
         try {
-            socket.connect(new InetSocketAddress("127.0.0.1", serverPort), 200);
+            socket.connect(new InetSocketAddress("127.0.0.1", port), 200);
             if (logger.isDebugEnabled()) {
-                logger.debug("check serverPort = " + serverPort + " success");
+                logger.debug("check serverPort = " + port + " success");
             }
-            return ConsoleResult.success("check serverPort = " + serverPort + " success");
+            return ConsoleResult.success("check serverPort = " + port + " success");
         } catch (IOException e) {
-            logger.error("check serverPort = " + serverPort + " fail");
-            return ConsoleResult.error("check serverPort = " + serverPort + " error");
+            logger.error("check serverPort = " + port + " fail");
+            return ConsoleResult.error("check serverPort = " + port + " error");
         } finally {
             try {
                 socket.close();
