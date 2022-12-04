@@ -127,11 +127,6 @@ camellia-redis-proxy:
     type: local
     local:
       resource: redis://@127.0.0.1:6379
-
-camellia-redis-zk-registry:
-  enable: true
-  zk-url: 127.0.0.1:2181,127.0.0.2:2181
-  base-path: /camellia
 ```
 如果你设置成特殊的-6379和-16379，则proxy以及内嵌的console就会随机选择一个可用的端口进行监听   
 你可以调用ProxyInfoUtils的getPort()和getConsolePort()方法获取实际生效的端口   

@@ -12,6 +12,21 @@
 
 ### 配置
 ```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  #port: -6379 #优先级高于server.port，如果缺失，则使用server.port，如果设置为-6379则会随机一个可用端口
+  #application-name: camellia-redis-proxy-server  #优先级高于spring.application.name，如果缺失，则使用spring.application.name
+  password: pass123
+  transpond:
+    type: local
+    local:
+      resource: redis://@127.0.0.1:6379
+
 camellia-redis-proxy-nacos:
   enable: false #是否从nacos获取配置文件
   server-addr: 127.0.0.1:8848 #nacos地址
