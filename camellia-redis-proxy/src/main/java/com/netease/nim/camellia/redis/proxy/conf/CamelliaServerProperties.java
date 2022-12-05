@@ -4,7 +4,9 @@ import com.netease.nim.camellia.redis.proxy.plugin.DefaultBeanFactory;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -21,6 +23,8 @@ public class CamelliaServerProperties {
     private String monitorCallbackClassName = Constants.Server.monitorCallbackClassName;
     private String clientAuthProviderClassName = Constants.Server.clientAuthByConfigProvider;
     private List<String> plugins = new ArrayList<>();
+
+    private Map<String, String> config = new HashMap<>();
 
     private boolean clusterModeEnable = Constants.Server.clusterModeEnable;
     private String clusterModeProviderClassName = Constants.Server.clusterModeProviderClassName;
@@ -136,6 +140,14 @@ public class CamelliaServerProperties {
 
     public void setPlugins(List<String> plugins) {
         this.plugins = plugins;
+    }
+
+    public Map<String, String> getConfig() {
+        return config;
+    }
+
+    public void setConfig(Map<String, String> config) {
+        this.config = config;
     }
 
     public int getBossThread() {

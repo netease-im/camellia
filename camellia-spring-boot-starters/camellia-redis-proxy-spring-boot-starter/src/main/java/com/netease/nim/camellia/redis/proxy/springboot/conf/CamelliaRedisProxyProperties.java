@@ -4,7 +4,9 @@ import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by caojiajun on 2019/11/13.
@@ -78,6 +80,12 @@ public class CamelliaRedisProxyProperties {
      * netty相关参数
      */
     private NettyProperties netty = new NettyProperties();
+
+    /**
+     * 自定义参数，可以通过ProxyDynamicConf获取
+     * 可以被camellia-redis-proxy.properties覆盖
+     */
+    private Map<String, String> config = new HashMap<>();
 
     /**
      * 转发配置
@@ -186,6 +194,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setNetty(NettyProperties netty) {
         this.netty = netty;
+    }
+
+    public Map<String, String> getConfig() {
+        return config;
+    }
+
+    public void setConfig(Map<String, String> config) {
+        this.config = config;
     }
 
     public TranspondProperties getTranspond() {

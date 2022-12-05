@@ -41,6 +41,7 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setClientAuthProviderClassName(properties.getClientAuthProviderClassName());
         serverProperties.setProxyBeanFactory(proxyBeanFactory);
         serverProperties.setPlugins(properties.getPlugins());
+        serverProperties.setConfig(properties.getConfig());
         NettyProperties netty = properties.getNetty();
         serverProperties.setBossThread(netty.getBossThread());
         if (netty.getWorkThread() > 0) {

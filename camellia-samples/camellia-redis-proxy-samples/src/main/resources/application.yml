@@ -6,22 +6,24 @@ spring:
     name: camellia-redis-proxy-server
 
 camellia-redis-proxy:
-  #port: 6380 #优先级高于server.port，如果缺失，则使用server.port，如果设置为-6379则会随机一个可用端口
-  #application-name: camellia-redis-proxy-server  #优先级高于spring.application.name，如果缺失，则使用spring.application.name
-  console-port: 16379 #console端口，默认是16379，如果设置为-16379则会随机一个可用端口，如果设置为0，则不启动console
-  password: pass123   #proxy的密码，如果设置了自定义的client-auth-provider-class-name，则密码参数无效
-  monitor-enable: false  #是否开启监控
-  monitor-interval-seconds: 60 #监控回调的间隔
-#  cluster-mode-enable: true #cluster-mode，把proxy伪装成cluster，需要在camellia-redis-proxy.properties配置proxy.cluster.mode.nodes
-  plugins: #
+  #port: 6380 #priority greater than server.port, if missing, use server.port; if setting -6379, proxy will choose a random port
+  #application-name: camellia-redis-proxy-server  #priority greater than spring.application.name, if missing, use spring.application.name
+  console-port: 16379 #console port, default 16379, if setting -16379, proxy will choose a random port, if setting 0, will disable console
+  password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
+  monitor-enable: false  #monitor enable/disable configure
+  monitor-interval-seconds: 60 #monitor data refresh interval seconds
+#  cluster-mode-enable: true #cluster-mode, if setting true, proxy-cluster disguised as a redis-cluster, should configure proxy.cluster.mode.nodes=xx in camellia-redis-proxy.properties
+  plugins: #plugin list
     - monitorPlugin
     - bigKeyPlugin
     - hotKeyPlugin
+#  config: #you can get this config from ProxyDynamicConf.java, priority less than camellia-redis-proxy.properties
+#    k: v
   transpond:
-    type: local #使用本地配置
+    type: local #local、remote、custom
     local:
-      type: simple
-      resource: redis://@127.0.0.1:6379 #转发的redis地址
+      type: simple #simple、complex
+      resource: redis://@127.0.0.1:6379 #target transpond redis address
 #      resource: redis-sentinel://@127.0.0.1:26379/master1
 #      resource: redis-sentinel-slaves://@127.0.0.1:26379/master1
 #      resource: redis-cluster://@nim-redis-perftest-jd-1.v1.yunxin.jd1.vpc:7000,nim-redis-perftest-jd-2.v1.yunxin.jd1.vpc:7006,nim-redis-perftest-jd-3.v1.yunxin.jd1.vpc:7010
@@ -35,8 +37,8 @@ camellia-redis-proxy:
 #      header-map: # custom header map for request to camellia-dashboard (optional)
 #        api-key: secretToken # header name: api-key, header value: secretToken
 #    redis-conf:
-#      multi-write-mode: first_resource_only #双写的模式，默认第一个地址返回就返回
-#      close-idle-connection: true #是否关闭空闲连接，默认true
-#      check-idle-connection-threshold-seconds: 600  #多久算空闲连接，默认600s
-#      preheat: true #预热开关
+#      multi-write-mode: first_resource_only #multi write mode, see MultiWriteMode.java, FIRST_RESOURCE_ONLY/ALL_RESOURCES_NO_CHECKALL_RESOURCES_CHECK_ERROR
+#      close-idle-connection: true #if close upstream idle redis-connection, default true
+#      check-idle-connection-threshold-seconds: 600  #upstream redis-connection idle check threshold, default 600s
+#      preheat: true #preheat upstream redis-connection, default true
 

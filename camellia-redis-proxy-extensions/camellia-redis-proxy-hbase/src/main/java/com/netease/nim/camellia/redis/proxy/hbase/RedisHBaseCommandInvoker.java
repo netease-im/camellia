@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.command.CommandsTransponder;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
@@ -40,6 +41,8 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
     private ProxyPluginInitResp proxyPluginInitResp;
 
     public RedisHBaseCommandInvoker(CamelliaRedisTemplate redisTemplate, CamelliaHBaseTemplate hBaseTemplate, CamelliaServerProperties serverProperties) {
+        ProxyDynamicConf.updateInitConf(serverProperties.getConfig());
+
         processor = new RedisHBaseCommandProcessor(redisTemplate, hBaseTemplate);
 
         MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);

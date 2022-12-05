@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command;
 
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProvider;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.auth.AuthCommandProcessor;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
@@ -32,6 +33,8 @@ public class AsyncCommandInvoker implements CommandInvoker {
     private final CommandInvokeConfig commandInvokeConfig;
 
     public AsyncCommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
+        ProxyDynamicConf.updateInitConf(serverProperties.getConfig());
+
         this.chooser = new AsyncCamelliaRedisTemplateChooser(transpondProperties, serverProperties.getProxyBeanFactory());
         GlobalRedisProxyEnv.chooser = chooser;
 

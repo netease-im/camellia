@@ -19,6 +19,8 @@ public class ProxyDynamicConf {
 
     private static final Logger logger = LoggerFactory.getLogger(ProxyDynamicConf.class);
 
+    private static final Map<String, String> initConf = new HashMap<>();//通过yml文件配置的初始配置，可以被camellia-redis-proxy.properties覆盖
+
     private static Map<String, String> conf = new HashMap<>();
     private static final Set<DynamicConfCallback> callbackSet = new HashSet<>();
     private static final String fileName = "camellia-redis-proxy.properties";
@@ -36,16 +38,35 @@ public class ProxyDynamicConf {
     }
 
     /**
+     * 设置来自yml文件的初始配置，可以被camellia-redis-proxy.properties覆盖
+     */
+    public static void updateInitConf(Map<String, String> initConf) {
+        if (initConf != null && !initConf.isEmpty()) {
+            ProxyDynamicConf.initConf.putAll(initConf);
+            reload();
+        }
+    }
+
+    /**
      * 检查本地配置文件是否有变更，如果有，则重新加载，并且会清空缓存，并触发监听者的回调
      */
     public static void reload() {
+        Map<String, String> newConf = new HashMap<>(initConf);
         URL url = ProxyDynamicConf.class.getClassLoader().getResource(fileName);
         if (url == null) {
             if (logger.isDebugEnabled()) {
                 logger.debug("{} not exists", fileName);
             }
-            clearCache();
-            triggerCallback();
+            if (newConf.equals(new HashMap<>(ProxyDynamicConf.conf))) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("conf not modify");
+                }
+            } else {
+                ProxyDynamicConf.conf = newConf;
+                logger.info("conf reload success");
+                clearCache();
+                triggerCallback();
+            }
             return;
         }
         try {
@@ -55,25 +76,28 @@ public class ProxyDynamicConf {
             } catch (IOException e) {
                 props.load(ProxyDynamicConf.class.getClassLoader().getResourceAsStream(fileName));
             }
-            Map<String, String> conf = ConfigurationUtil.propertiesToMap(props);
+            Map<String, String> conf1 = ConfigurationUtil.propertiesToMap(props);
+            if (conf1 != null) {
+                newConf.putAll(conf1);
+            }
 
             //如果想用另外一个文件来配置，可以在camellia-redis-proxy.properties中配置dynamic.conf.file.path=xxx
             //xxx需要是文件的绝对路径
-            String filePath = conf.get("dynamic.conf.file.path");
+            String filePath = newConf.get("dynamic.conf.file.path");
             if (filePath != null) {
                 try {
                     Properties props1 = new Properties();
                     props1.load(new FileInputStream(filePath));
-                    Map<String, String> conf1 = ConfigurationUtil.propertiesToMap(props1);
-                    if (conf1 != null) {
-                        conf.putAll(conf1);
+                    Map<String, String> conf2 = ConfigurationUtil.propertiesToMap(props1);
+                    if (conf2 != null) {
+                        newConf.putAll(conf2);
                     }
                 } catch (Exception e) {
                     logger.error("dynamic.conf.file.path={} load error, use classpath:{} default", filePath, fileName, e);
                 }
             }
 
-            if (conf.equals(new HashMap<>(ProxyDynamicConf.conf))) {
+            if (newConf.equals(new HashMap<>(ProxyDynamicConf.conf))) {
                 if (logger.isDebugEnabled()) {
                     if (filePath != null) {
                         logger.debug("classpath:{} and {} not modify", fileName, filePath);
@@ -82,7 +106,7 @@ public class ProxyDynamicConf {
                     }
                 }
             } else {
-                ProxyDynamicConf.conf = conf;
+                ProxyDynamicConf.conf = newConf;
                 if (filePath != null) {
                     logger.info("classpath:{} and {} reload success", fileName, filePath);
                 } else {
@@ -101,8 +125,9 @@ public class ProxyDynamicConf {
      */
     public static void reload(Map<String, String> conf) {
         try {
-            HashMap<String, String> newConf = new HashMap<>(conf);
-            if (ProxyDynamicConf.conf.equals(newConf)) {
+            HashMap<String, String> newConf = new HashMap<>(initConf);
+            newConf.putAll(conf);
+            if (newConf.equals(new HashMap<>(ProxyDynamicConf.conf))) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("conf not modify");
                 }
