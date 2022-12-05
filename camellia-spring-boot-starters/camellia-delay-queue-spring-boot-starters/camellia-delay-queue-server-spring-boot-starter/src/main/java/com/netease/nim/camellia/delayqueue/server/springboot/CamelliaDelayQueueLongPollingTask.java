@@ -42,6 +42,10 @@ public class CamelliaDelayQueueLongPollingTask {
         this.cancelCallback = cancelCallback;
     }
 
+    public boolean isDone() {
+        return done.get();
+    }
+
     public void cancel() {
         if (cancelCallback != null) {
             cancelCallback.run();

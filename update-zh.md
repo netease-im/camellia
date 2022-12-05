@@ -12,7 +12,7 @@
 * camellia-redis-proxy-samples中移除zk和nacos的依赖（如果需要，自行添加相关依赖即可）
 
 ### fix
-* 无
+* fix camellia-delay-queue使用长轮询时，运行一段时间后长轮询失效的问题（没有hold住连接）
 
 
 # 1.1.7（2022/11/30）

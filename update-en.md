@@ -5,14 +5,14 @@
 * camellia-redis-proxy support monitor data visualization in prometheus
 
 # 1.1.8（2022/12/xx）
-### 新增
+### add
 * camellia-redis-proxy support configure custom k-v config(ProxyDynamicConf.java) by application.yml, priority is lower than camellia-redis-proxy.properties  
 
-### 更新
+### update
 * camellia-redis-proxy-samples remove zk/nacos dependency, if need, add related dependencies by self
 
 ### fix
-* none
+* fix camellia-delay-queue use long-polling mode, do not hold http request after run for a period of time
 
 
 # 1.1.7（2022/11/30）
