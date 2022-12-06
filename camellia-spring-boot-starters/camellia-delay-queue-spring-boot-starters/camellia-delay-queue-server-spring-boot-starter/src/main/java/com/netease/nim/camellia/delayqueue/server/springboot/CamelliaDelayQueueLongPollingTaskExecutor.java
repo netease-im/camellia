@@ -33,6 +33,7 @@ public class CamelliaDelayQueueLongPollingTaskExecutor {
     private final ConcurrentHashMap<String, AtomicBoolean> callbackStatusMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, LinkedBlockingQueue<CamelliaDelayQueueLongPollingTask>> map = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, AtomicBoolean> lockMap = new ConcurrentHashMap<>();
+    private final AtomicBoolean lock = new AtomicBoolean(false);
 
     private final CamelliaDelayQueueServer server;
 
@@ -87,47 +88,52 @@ public class CamelliaDelayQueueLongPollingTaskExecutor {
 
     //清理掉已经完成的任务，清理空闲无用的topicq
     private void clearExpireTask() {
-        try {
-            for (Map.Entry<String, LinkedBlockingQueue<CamelliaDelayQueueLongPollingTask>> entry : map.entrySet()) {
-                String topic = entry.getKey();
-                LinkedBlockingQueue<CamelliaDelayQueueLongPollingTask> queue = entry.getValue();
-                if (queue == null || queue.isEmpty()) {
-                    LinkedBlockingQueue<CamelliaDelayQueueLongPollingTask> remove = map.remove(topic);
-                    lockMap.remove(topic);
-                    if (remove != null && !remove.isEmpty()) {
-                        LinkedBlockingQueue<CamelliaDelayQueueLongPollingTask> newQueue = CamelliaMapUtils.computeIfAbsent(map,
-                                topic, t -> new LinkedBlockingQueue<>(taskQueueSize));
-                        while (!remove.isEmpty()) {
-                            CamelliaDelayQueueLongPollingTask task = remove.poll();
-                            if (task == null) {
-                                break;
+        if (lock.compareAndSet(false, true)) {
+            try {
+                for (Map.Entry<String, LinkedBlockingQueue<CamelliaDelayQueueLongPollingTask>> entry : map.entrySet()) {
+                    String topic = entry.getKey();
+                    LinkedBlockingQueue<CamelliaDelayQueueLongPollingTask> queue = entry.getValue();
+                    if (queue == null || queue.isEmpty()) {
+                        LinkedBlockingQueue<CamelliaDelayQueueLongPollingTask> remove = map.remove(topic);
+                        if (remove != null && !remove.isEmpty()) {
+                            LinkedBlockingQueue<CamelliaDelayQueueLongPollingTask> newQueue = CamelliaMapUtils.computeIfAbsent(map,
+                                    topic, t -> new LinkedBlockingQueue<>(taskQueueSize));
+                            while (!remove.isEmpty()) {
+                                CamelliaDelayQueueLongPollingTask task = remove.poll();
+                                if (task == null) {
+                                    break;
+                                }
+                                if (task.isDone()) {
+                                    continue;
+                                }
+                                boolean offer = newQueue.offer(task);
+                                if (!offer) {
+                                    notify(task);
+                                }
                             }
-                            if (task.isDone()) {
-                                continue;
-                            }
-                            boolean offer = newQueue.offer(task);
-                            if (!offer) {
-                                notify(task);
-                            }
+                        } else {
+                            lockMap.remove(topic);
                         }
+                        continue;
                     }
-                    continue;
+                    AtomicBoolean lock = CamelliaMapUtils.computeIfAbsent(lockMap, topic, k -> new AtomicBoolean(false));
+                    if (lock.compareAndSet(false, true)) {
+                        clearExecutor.submit(() -> {
+                            try {
+                                queue.removeIf(CamelliaDelayQueueLongPollingTask::isDone);
+                            } catch (Exception e) {
+                                logger.error("clearExpireTask error, topic = {}", topic, e);
+                            } finally {
+                                lock.compareAndSet(true, false);
+                            }
+                        });
+                    }
                 }
-                AtomicBoolean lock = CamelliaMapUtils.computeIfAbsent(lockMap, topic, k -> new AtomicBoolean(false));
-                if (lock.compareAndSet(false, true)) {
-                    clearExecutor.submit(() -> {
-                        try {
-                            queue.removeIf(CamelliaDelayQueueLongPollingTask::isDone);
-                        } catch (Exception e) {
-                            logger.error("clearExpireTask error, topic = {}", topic, e);
-                        } finally {
-                            lock.compareAndSet(true, false);
-                        }
-                    });
-                }
+            } catch (Exception e) {
+                logger.error("clearExpireTask error", e);
+            } finally {
+                lock.compareAndSet(true, false);
             }
-        } catch (Exception e) {
-            logger.error("clearExpireTask error", e);
         }
     }
 
