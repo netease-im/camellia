@@ -10,6 +10,7 @@
 
 ### update
 * camellia-redis-proxy-samples remove zk/nacos dependency, if need, add related dependencies by self
+* camellia-redis-proxy update SCAN command without MATCH args when use ConverterProxyPlugin and KeyConverter
 
 ### fix
 * fix camellia-delay-queue use long-polling mode, do not hold http request after run for a period of time

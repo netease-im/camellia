@@ -11,7 +11,7 @@ import java.util.List;
 
 public class Command {
 
-    private final byte[][] objects;
+    private byte[][] objects;
     private String name;
     private RedisCommand redisCommand;
     private ChannelInfo channelInfo;
@@ -24,6 +24,16 @@ public class Command {
 
     public Command(byte[][] objects) {
         this.objects = objects;
+    }
+
+    public void updateObjects(byte[][] args) {
+        this.objects = args;
+        this.name = null;
+        this.keys = null;
+        this.keysStr = null;
+        this.hasCheckBlocking = false;
+        this.blocking = false;
+        this.redisCommand = null;
     }
 
     public String getName() {

@@ -270,9 +270,6 @@ public class Converters {
                 objects[1] = convertedKey;
             }
         } else if (redisCommand == RedisCommand.SCAN) {
-            if (objects.length < 3) {
-                return;
-            }
             int matchIndex = -1;
             for (int i = 2; i < objects.length; i ++) {
                 if (i == matchIndex + 1) {
@@ -282,6 +279,14 @@ public class Converters {
                 if ("MATCH".equalsIgnoreCase(new String(objects[i], Utils.utf8Charset))) {
                     matchIndex = i;
                 }
+            }
+            if (matchIndex == -1) {
+                byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, Utils.stringToBytes("*"));
+                byte[][] args = new byte[objects.length + 2][];
+                System.arraycopy(objects, 0, args, 0, objects.length);
+                args[objects.length] = Utils.stringToBytes(RedisKeyword.MATCH.name());
+                args[objects.length + 1] = convertedKey;
+                command.updateObjects(args);
             }
         } else if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE
                 || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
