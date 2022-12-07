@@ -284,7 +284,7 @@ public class Converters {
                 byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, Utils.stringToBytes("*"));
                 byte[][] args = new byte[objects.length + 2][];
                 System.arraycopy(objects, 0, args, 0, objects.length);
-                args[objects.length] = Utils.stringToBytes(RedisKeyword.MATCH.name());
+                args[objects.length] = RedisKeyword.MATCH.getRaw();
                 args[objects.length + 1] = convertedKey;
                 command.updateObjects(args);
             }

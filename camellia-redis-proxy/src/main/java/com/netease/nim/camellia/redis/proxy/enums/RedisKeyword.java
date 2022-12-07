@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.enums;
 
+import com.netease.nim.camellia.redis.proxy.util.Utils;
+
 /**
  *
  * Created by caojiajun on 2019/11/18.
@@ -20,4 +22,14 @@ public enum RedisKeyword {
     STREAMS,BLOCK,
     SLOTS, NODES, INFO, PROXY_HEARTBEAT,
     ;
+
+    private final byte[] raw;
+
+    RedisKeyword() {
+        raw = Utils.stringToBytes(name());
+    }
+
+    public byte[] getRaw() {
+        return raw;
+    }
 }
