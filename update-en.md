@@ -7,6 +7,7 @@
 # 1.1.8（2022/12/xx）
 ### add
 * camellia-redis-proxy support configure custom k-v config(ProxyDynamicConf.java) by application.yml, priority is lower than camellia-redis-proxy.properties  
+* camellia-redis-proxy provider DefaultTenancyNamespaceKeyConverter, you can isolate the key(different key prefix) in different tenancy(bid/bgroup)
 
 ### update
 * camellia-redis-proxy-samples remove zk/nacos dependency, if need, add related dependencies by self
