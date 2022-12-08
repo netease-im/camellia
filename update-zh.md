@@ -8,6 +8,7 @@
 ### 新增
 * camellia-redis-proxy支持通过application.yml配置ProxyDynamicConf中自定义的k-v配置项（优先级低于camellia-redis-proxy.properties）
 * camellia-redis-proxy提供了DefaultTenancyNamespaceKeyConverter，可以基于租户（bid/bgroup）进行key的命名空间隔离
+* camellia-redis-proxy新增对ZMPOP和BZMPOP命令的支持（redis7.0）
 
 ### 更新
 * camellia-redis-proxy-samples中移除zk和nacos的依赖（如果需要，自行添加相关依赖即可）

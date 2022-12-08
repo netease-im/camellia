@@ -280,6 +280,8 @@ public enum RedisCommand {
     EXZDIFF(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.TAIR_ZSET, Blocking.FALSE, CommandKeyType.COMPLEX),
     EXBZPOPMIN(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TAIR_ZSET, Blocking.TRUE, CommandKeyType.COMPLEX),
     EXBZPOPMAX(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TAIR_ZSET, Blocking.TRUE, CommandKeyType.COMPLEX),
+    ZMPOP(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.ZSET, Blocking.FALSE, CommandKeyType.COMPLEX),
+    BZMPOP(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.ZSET, Blocking.TRUE, CommandKeyType.COMPLEX),
 
     /**
      * Partially Support-1

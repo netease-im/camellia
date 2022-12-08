@@ -190,10 +190,22 @@ public class Converters {
                 case EXZUNION:
                 case EXZINTER:
                 case EXZINTERCARD:
+                case ZMPOP:
                     if (objects.length >= 3) {
                         int keyCount2 = (int) Utils.bytesToNum(objects[1]);
                         if (keyCount2 > 0) {
                             for (int i = 2; i < 2 + keyCount2; i++) {
+                                byte[] convertedKey2 = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                                objects[i] = convertedKey2;
+                            }
+                        }
+                    }
+                    break;
+                case BZMPOP:
+                    if (objects.length >= 4) {
+                        int keyCount2 = (int) Utils.bytesToNum(objects[2]);
+                        if (keyCount2 > 0) {
+                            for (int i = 3; i < 3 + keyCount2; i++) {
                                 byte[] convertedKey2 = keyConverter.convert(commandContext, redisCommand, objects[i]);
                                 objects[i] = convertedKey2;
                             }
@@ -343,7 +355,8 @@ public class Converters {
             }
         } else if (redisCommand == RedisCommand.BLPOP || redisCommand == RedisCommand.BRPOP
                 || redisCommand == RedisCommand.BZPOPMAX || redisCommand == RedisCommand.BZPOPMIN
-                || redisCommand == RedisCommand.EXBZPOPMAX || redisCommand == RedisCommand.EXBZPOPMIN) {
+                || redisCommand == RedisCommand.EXBZPOPMAX || redisCommand == RedisCommand.EXBZPOPMIN
+                || redisCommand == RedisCommand.ZMPOP || redisCommand == RedisCommand.BZMPOP) {
             if (reply instanceof MultiBulkReply) {
                 Reply[] replies = ((MultiBulkReply) reply).getReplies();
                 if (replies != null && replies.length >= 2) {

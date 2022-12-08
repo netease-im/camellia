@@ -76,10 +76,19 @@ public class KeyParser {
                 case EXZUNION:
                 case EXZINTER:
                 case EXZINTERCARD:
+                case ZMPOP:
                     if (objects.length >= 3) {
                         int keyCount = (int) Utils.bytesToNum(objects[1]);
                         if (keyCount > 0) {
                             dynamicKey(command, keys, 2, 2 + keyCount - 1);
+                        }
+                    }
+                    break;
+                case BZMPOP:
+                    if (objects.length >= 4) {
+                        int keyCount = (int) Utils.bytesToNum(objects[2]);
+                        if (keyCount > 0) {
+                            dynamicKey(command, keys, 3, 3 + keyCount - 1);
                         }
                     }
                     break;
