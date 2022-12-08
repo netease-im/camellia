@@ -15,6 +15,7 @@
 
 ### fix
 * fix camellia-delay-queue使用长轮询时，运行一段时间后长轮询失效的问题（没有hold住连接）
+* fix camellia-redis-proxy当使用ConverterProxyPlugin进行key转换时，没有处理TairZSet的EXBZPOPMAX/EXBZPOPMIN的回包中的key
 
 
 # 1.1.7（2022/11/30）

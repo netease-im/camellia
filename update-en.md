@@ -15,6 +15,7 @@
 
 ### fix
 * fix camellia-delay-queue use long-polling mode, do not hold http request after run for a period of time
+* fix camellia-redis-proxy do not handler the key in reply of EXBZPOPMAX/EXBZPOPMIN commands when use ConverterProxyPlugin
 
 
 # 1.1.7（2022/11/30）

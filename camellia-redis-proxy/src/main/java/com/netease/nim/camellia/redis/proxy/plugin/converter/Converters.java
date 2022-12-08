@@ -342,7 +342,8 @@ public class Converters {
                 reverseConvertKeyList(redisCommand, commandContext, (MultiBulkReply) replies[1]);
             }
         } else if (redisCommand == RedisCommand.BLPOP || redisCommand == RedisCommand.BRPOP
-                || redisCommand == RedisCommand.BZPOPMAX || redisCommand == RedisCommand.BZPOPMIN) {
+                || redisCommand == RedisCommand.BZPOPMAX || redisCommand == RedisCommand.BZPOPMIN
+                || redisCommand == RedisCommand.EXBZPOPMAX || redisCommand == RedisCommand.EXBZPOPMIN) {
             if (reply instanceof MultiBulkReply) {
                 Reply[] replies = ((MultiBulkReply) reply).getReplies();
                 if (replies != null && replies.length >= 2) {
