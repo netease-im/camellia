@@ -1,32 +1,53 @@
+## Control the number of client connections
 
-## 控制客户端连接数
-* camellia-redis-proxy支持配置客户端的连接数上限（支持全局的连接数，也支持bid/bgroup级别的）
-* camellia-redis-proxy支持配置关闭空闲的客户端连接（该功能可能导致请求数较少的客户端请求异常，慎重配置） 
+* camellia-redis-proxy supports configuring the upper limit of the number of connections on the client side (supports
+  the global number of connections, supports every bid/bgroup level by only 1 configuration, and also supports each
+  bid/bgroup level)
+* camellia-redis-proxy supports configuration to close idle client connections (this function may cause abnormal client
+  requests with a small number of requests, configure it carefully)
 
-## 配置客户端最大连接数
-### 原理
-* proxy提供了ConnectLimiter来配置客户端最大连接数，你可以自定义实现ConnectLimiter接口（比如从业务的配置中心动态获取最大连接数的配置），并通过在application.yaml里配置全类名或者使用spring自动注入的方式启用  
-* 最大连接数的配置通过读取camellia-redis-proxy.properties相关配置来获取，支持动态变更  
-* 当触发全局的最大连接数时，新的客户端连接会被直接关闭；当触发bid/bgroup级别的最大连接数时，会在新连接执行AUTH/CLIENT/HELLO等命令进行bid/bgroup绑定时返回错误信息并关闭连接    
+## Configure the maximum number of client connections
 
-camellia-redis-proxy.properties配置如下（默认不限制）：
-```
-#配置全局的最大连接数限制，如果小于0，则表示不限制
+### Principle
+
+* The proxy provides ConnectLimiter to configure the maximum number of client connections. You can customize the
+  implementation of the ConnectLimiter interface (for example, dynamically obtain the configuration of the maximum
+  number of connections from the business configuration center), and configure the full class name in application.yaml
+  or use spring Automatic injection is enabled
+* The configuration of the maximum number of connections is obtained by reading the related configuration of
+  camellia-redis-proxy.properties, which supports dynamic changes
+* When the global maximum number of connections is triggered, the new client connection will be closed directly; when
+  the maximum number of connections at the bid/bgroup level is triggered, commands such as AUTH/CLIENT/HELLO will be
+  executed on the new connection to bind bid/bgroup returns an error message and closes the connection
+
+camellia-redis-proxy.properties is configured as follows (unlimited by default):
+
+````
+#Configure the global maximum connection limit, if it is less than 0, it means no limit
 max.client.connect=100000
 
-#配置某个bid/bgroup的最大连接数限制：
-#表示归属于bid=1,bgroup=default的最大连接数限制，如果小于0，则表示不限制
+#Configure every bid/bgroup level maximum connection limit (limit each bid/bgroup), if it is less than 0, it means no limit
+# default bid = -1, default bgroup = default
+-1.default.max.client.connect=100000 
+
+#Configure the maximum number of connections for a bid/bgroup:
+#Indicates the maximum number of connections belonging to bid=1, bgroup=default, if it is less than 0, it means no limit
 1.default.max.client.connect=10000
-```
+````
 
-## 配置检测/关闭空闲的客户端连接
-### 原理
-* 使用了netty提供的IdleStateHandler来检测空闲的客户端连接，如果配置了空闲时关闭，则空闲的客户端连接会被服务器强制关闭
-* 当客户端连接使用了subscribe/psubscribe命令进行订阅时，不会触发空闲连接关闭，但是会打印空闲连接日志  
-* 该功能可能导致请求数较少的客户端请求异常，请谨慎使用  
+## Configure to detect/close idle client connections
 
-### 配置示例
-```yaml
+### Principle
+
+* The IdleStateHandler provided by netty is used to detect idle client connections. If it is configured to close when
+  idle, the idle client connections will be forcibly closed by the server
+* When the client connection uses the subscribe/psubscribe command to subscribe, the idle connection will not be closed,
+  but the idle connection log will be printed
+* This function may cause abnormal client requests with a small number of requests, please use it with caution
+
+### Configuration example
+
+````yaml
 server:
   port: 6380
 spring:
@@ -36,30 +57,34 @@ spring:
 camellia-redis-proxy:
   password: pass123
   netty:
-    reader-idle-time-seconds: 600 #只有三个参数都大于等于0，才会开启空闲连接检测
-    writer-idle-time-seconds: 0 #只有三个参数都大于等于0，才会开启空闲连接检测
-    all-idle-time-seconds: 0 #只有三个参数都大于等于0，才会开启空闲连接检测
+    reader-idle-time-seconds: 600 #Only if all three parameters are greater than or equal to 0, the idle connection detection will be enabled
+    writer-idle-time-seconds: 0 #Only if all three parameters are greater than or equal to 0, the idle connection detection will be enabled
+    all-idle-time-seconds: 0 #Only if all three parameters are greater than or equal to 0, the idle connection detection will be enabled
   transpond:
     type: local
     local:
       resource: redis://@127.0.0.1:6379
-```
-上述例子表示开启空闲连接检测，当一个连接600s内没有任何可读的数据，则判定为空闲连接，此时会打印一条日志，如果需要关闭空闲连接，则需要在camellia-redis-proxy.properties里配置，配置支持动态变更：  
-```
-#触发reader-idle事件时是否关闭空闲连接，默认false
-##全局配置
+````
+
+The above example means to enable idle connection detection. When a connection does not have any readable data within
+600s, it is determined as an idle connection, and a log will be printed at this time. If you need to close the idle
+connection, you need to be in camellia-redis-proxy.properties Configuration, configuration supports dynamic changes:
+
+````
+#Whether the idle connection is closed when the reader-idle event is triggered, the default is false
+##Global configuration
 reader.idle.client.connection.force.close.enable=true
-##bid/bgroup级别的配置，优先级高于全局配置
+##bid/bgroup level configuration, the priority is higher than the global configuration
 1.default.reader.idle.client.connection.force.close.enable=true
 
-#触发writer-idle事件时是否关闭空闲连接，默认false
-##全局配置
+#Whether the idle connection is closed when the writer-idle event is triggered, the default is false
+##Global configuration
 writer.idle.client.connection.force.close.enable=true
-##bid/bgroup级别的配置，优先级高于全局配置
+##bid/bgroup level configuration, the priority is higher than the global configuration
 1.default.writer.idle.client.connection.force.close.enable=true
 
-#触发all-idle事件时是否关闭空闲连接，默认false
+#Whether the idle connection is closed when the all-idle event is triggered, the default is false
 all.idle.client.connection.force.close.enable=true
-##bid/bgroup级别的配置，优先级高于全局配置
+##bid/bgroup level configuration, the priority is higher than the global configuration
 1.default.all.idle.client.connection.force.close.enable=true
-```
+````

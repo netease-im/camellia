@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.auth;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.util.TenantUtils;
 
 /**
  * 最大连接数限制，可以自定义实现ConnectLimiter的实现类，动态调整最大连接数
@@ -11,12 +12,15 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
  */
 public class ConnectLimiter {
 
+    private static final int DEFAULT_THRESHOLD = -1;
+
     /**
      * proxy支持的最大客户端连接数，默认不限制
+     *
      * @return 最大连接数
      */
     public static int connectThreshold() {
-        int threshold = ProxyDynamicConf.getInt("max.client.connect", -1);
+        int threshold = ProxyDynamicConf.getInt("max.client.connect", DEFAULT_THRESHOLD);
         if (threshold < 0) {
             return Integer.MAX_VALUE;
         }
@@ -24,13 +28,17 @@ public class ConnectLimiter {
     }
 
     /**
-     * proxy支持的归属于bid/bgroup的最大连接数，默认不限制
-     * @param bid bid
+     * The maximum number of connections belonging to the bid/bgroup supported by the proxy is not limited by default
+     * Return global connect threshold if bid/bgroup is not set
+     *
+     * @param bid    bid
      * @param bgroup bgroup
-     * @return 最大连接数
+     * @return Maximum number of connections
      */
     public static int connectThreshold(long bid, String bgroup) {
-        int threshold = ProxyDynamicConf.getInt(bid + "." + bgroup + ".max.client.connect", -1);
+        int globalThreshold = ProxyDynamicConf.getInt(TenantUtils.DEFAULT_BID + "." + TenantUtils.DEFAULT_BGROUP + ".max.client.connect", DEFAULT_THRESHOLD);
+        int threshold = ProxyDynamicConf.getInt(bid + "." + bgroup + ".max.client.connect", globalThreshold);
+
         if (threshold < 0) {
             return Integer.MAX_VALUE;
         }
