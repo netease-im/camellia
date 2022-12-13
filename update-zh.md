@@ -13,7 +13,8 @@
 ### 更新
 * camellia-redis-proxy-samples中移除zk和nacos的依赖（如果需要，自行添加相关依赖即可）
 * camellia-redis-proxy使用ConverterProxyPlugin和KeyConverter进行key命名空间隔离时，SCAN命令不带MATCH字段时也需要执行KeyConverter#convert
-* 使用堆外内存优化了BulkReply的编解码性能
+* camellia-redis-proxy使用堆外内存优化了BulkReply的编解码性能
+* camellia-redis-proxy支持全局配置租户级别的连接数上限，感谢[@tasszz2k](https://github.com/tasszz2k)
 
 ### fix
 * fix camellia-delay-queue使用长轮询时，运行一段时间后长轮询失效的问题（没有hold住连接）

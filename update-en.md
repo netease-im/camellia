@@ -14,6 +14,7 @@
 * camellia-redis-proxy-samples remove zk/nacos dependency, if need, add related dependencies by self
 * camellia-redis-proxy update SCAN command without MATCH args when use ConverterProxyPlugin and KeyConverter
 * camellia-redis-proxy performance improved for BulkReply encode/decode by direct buf
+* camellia-redis-proxy Support connect limit for each tenant(bid, bgroup) by only 1 global configuration, thanks [@tasszz2k](https://github.com/tasszz2k)
 
 ### fix
 * fix camellia-delay-queue use long-polling mode, do not hold http request after run for a period of time
