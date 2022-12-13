@@ -4,7 +4,7 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
-# 1.1.8（2022/12/xx）
+# 1.1.8（2022/12/13）
 ### 新增
 * camellia-redis-proxy支持通过application.yml配置ProxyDynamicConf中自定义的k-v配置项（优先级低于camellia-redis-proxy.properties）
 * camellia-redis-proxy提供了DefaultTenancyNamespaceKeyConverter，可以基于租户（bid/bgroup）进行key的命名空间隔离

@@ -4,7 +4,7 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
-# 1.1.8（2022/12/xx）
+# 1.1.8（2022/12/13）
 ### add
 * camellia-redis-proxy support configure custom k-v config(ProxyDynamicConf.java) by application.yml, priority is lower than camellia-redis-proxy.properties  
 * camellia-redis-proxy provider DefaultTenancyNamespaceKeyConverter, you can isolate the key(different key prefix) in different tenancy(bid/bgroup)
