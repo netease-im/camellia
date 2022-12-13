@@ -141,7 +141,7 @@ converter.string.className=com.xxxx.CustomStringConverter
 这个转换器会对不同的租户设置不同的key前缀，从而进行key的命名空间隔离  
 ```
 #以bid=1,bgroup=default为例，key=abc，会被转换为key=1|default|abc
-converter.string.className=com.netease.nim.camellia.redis.proxy.plugin.converter.DefaultTenancyNamespaceKeyConverter
+converter.key.className=com.netease.nim.camellia.redis.proxy.plugin.converter.DefaultTenancyNamespaceKeyConverter
 ```
 
 ### 使用CamelliaCompressor/CamelliaEncryptor来做透明的解压缩或者加解密
