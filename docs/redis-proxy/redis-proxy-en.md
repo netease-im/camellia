@@ -507,4 +507,5 @@ public class Test {
 ```
 
 ### performance report
-[v1.0.37](performance/performance-report.md)
+[v1.0.37](performance/performance-report.md)   
+[performance-report](performance/performance.md)  
