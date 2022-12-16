@@ -5,7 +5,7 @@
 |node|specs|
 |:---:|:---:|
 |redis-proxy|4C8G VM |
-|redis-cluster|4C8G VM 4-master/0-slave|
+|redis-cluster|4C8G VM <br>4-master/0-slave|
 |redis-benchmark client|4C8G VM |
 
 ### direct to redis
