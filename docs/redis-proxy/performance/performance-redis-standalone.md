@@ -53,6 +53,9 @@ camellia-redis-proxy:
       resource: redis://@x.x.x.x:6379 #转发的redis地址
 
 ```
+```
+java -XX:+UseG1GC -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher
+```
 
 ### camellia-1.0.37
 ```

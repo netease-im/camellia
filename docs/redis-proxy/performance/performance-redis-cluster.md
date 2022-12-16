@@ -38,10 +38,10 @@ LRANGE_600 (first 600 elements): 22727.27 requests per second, p50=6.791 msec
 ./redis-benchmark -n 10000000 -t set,get -P 16 -q -p 6101 -h x.x.x.x --cluster -a xxxx
 Cluster has 4 master nodes:
 
-Master 0: 4dbb76a2f1313a0be583c69289975bf1c4b23f21 10.189.28.171:6101
-Master 1: e5690b4c19542b0df12ae05a5d7223e7605cf323 10.189.28.171:6102
-Master 2: 12dba35d91ddadd83d85ca7a7b7d74f35dee39b5 10.189.28.171:6104
-Master 3: b3afaab2aa8a82cb2e5ec4e7124e74435da43c64 10.189.28.171:6103
+Master 0: 4dbb76a2f1313a0be583c69289975bf1c4b23f21 x.x.x.x:6101
+Master 1: e5690b4c19542b0df12ae05a5d7223e7605cf323 x.x.x.x:6102
+Master 2: 12dba35d91ddadd83d85ca7a7b7d74f35dee39b5 x.x.x.x:6104
+Master 3: b3afaab2aa8a82cb2e5ec4e7124e74435da43c64 x.x.x.x:6103
 
 SET: 2099076.50 requests per second, p50=0.279 msec
 GET: 2104377.25 requests per second, p50=0.263 msec
@@ -50,10 +50,10 @@ GET: 2104377.25 requests per second, p50=0.263 msec
 ./redis-benchmark -n 1000000 -t mset -q -p 6101 -h x.x.x.x --cluster -a xxxx
 Cluster has 4 master nodes:
 
-Master 0: 4dbb76a2f1313a0be583c69289975bf1c4b23f21 10.189.28.171:6101
-Master 1: e5690b4c19542b0df12ae05a5d7223e7605cf323 10.189.28.171:6102
-Master 2: 12dba35d91ddadd83d85ca7a7b7d74f35dee39b5 10.189.28.171:6104
-Master 3: b3afaab2aa8a82cb2e5ec4e7124e74435da43c64 10.189.28.171:6103
+Master 0: 4dbb76a2f1313a0be583c69289975bf1c4b23f21 x.x.x.x:6101
+Master 1: e5690b4c19542b0df12ae05a5d7223e7605cf323 x.x.x.x:6102
+Master 2: 12dba35d91ddadd83d85ca7a7b7d74f35dee39b5 x.x.x.x:6104
+Master 3: b3afaab2aa8a82cb2e5ec4e7124e74435da43c64 x.x.x.x:6103
 
 MSET (10 keys): 181587.08 requests per second, p50=0.215 msec
 
@@ -73,8 +73,11 @@ camellia-redis-proxy:
   transpond:
     type: local #使用本地配置
     local:
-      resource: redis://@x.x.x.x:6379 #转发的redis地址
+      resource: redis-cluster://xxxx@x.x.x.x:6101,x.x.x.x:6102,x.x.x.x:6103,x.x.x.x:6104 #转发的redis地址
 
+```
+```
+java -XX:+UseG1GC -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher
 ```
 
 ### camellia-1.0.37
