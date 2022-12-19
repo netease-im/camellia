@@ -343,7 +343,7 @@ public class CamelliaDelayQueueServer {
             }
             response.setCode(CamelliaDelayMsgErrorCode.SUCCESS.getValue());
             response.setMsg("success");
-            response.setDelayMsg(result.inLifeMsgMap.get(msgId));
+            response.setDelayMsg(delayMsg);
             CamelliaDelayQueueMonitor.getMsg(request, response);
             return response;
         } catch (CamelliaDelayQueueException e) {
