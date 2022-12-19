@@ -30,6 +30,7 @@
         <module>camellia-id-gen-segment-samples</module>
         <module>camellia-id-gen-strict-samples</module>
         <module>camellia-spring-redis-samples</module>
+        <module>camellia-cache-samples</module>
     </modules>
 
 </project>
