@@ -33,12 +33,14 @@ public class CamelliaCacheConfiguration extends CachingConfigurerSupport {
 
     @Bean
     @ConditionalOnMissingBean(value = CamelliaCacheSerializer.class)
-    public CamelliaCacheSerializer<Object> camelliaCacheSerializer() {
+    public CamelliaCacheSerializer<Object> camelliaCacheSerializer(CamelliaCacheProperties camelliaCacheProperties) {
         Jackson2JsonCamelliaCacheSerializer<Object> jackson2JsonCamelliaSerializer = new Jackson2JsonCamelliaCacheSerializer<>(Object.class);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
         jackson2JsonCamelliaSerializer.setObjectMapper(objectMapper);
+        jackson2JsonCamelliaSerializer.updateCompress(camelliaCacheProperties.isCompressEnable(), camelliaCacheProperties.getCompressThreshold());
+        logger.info("camellia-cache, compress-enable = {}, compress-threshold = {}", camelliaCacheProperties.isCompressEnable(), camelliaCacheProperties.getCompressThreshold());
         return jackson2JsonCamelliaSerializer;
     }
 
@@ -71,7 +73,7 @@ public class CamelliaCacheConfiguration extends CachingConfigurerSupport {
         logger.info("camellia-cache, syncLoadMaxRetry = {}", CamelliaCacheEnv.syncLoadMaxRetry);
         logger.info("camellia-cache, syncLoadSleepMillis = {}", CamelliaCacheEnv.syncLoadSleepMillis);
 
-        CamelliaCacheSerializer<Object> serializer = camelliaCacheSerializer();
+        CamelliaCacheSerializer<Object> serializer = camelliaCacheSerializer(camelliaCacheProperties);
         logger.info("camellia-cache, serializer = {}", serializer.getClass().getName());
         if (cachePrefixGetter != null) {
             logger.info("camellia-cache, cachePrefixGetter = {}", cachePrefixGetter.getClass().getName());

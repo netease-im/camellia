@@ -3,6 +3,7 @@ package com.netease.nim.camellia.cache.spring;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.netease.nim.camellia.tools.compress.CamelliaCompressor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -12,6 +13,9 @@ public class Jackson2JsonCamelliaCacheSerializer<T> implements CamelliaCacheSeri
     private final JavaType javaType;
 
     private ObjectMapper objectMapper = new ObjectMapper();
+
+    private boolean compressEnable;
+    private CamelliaCompressor compressor = new CamelliaCompressor();
 
     private static boolean isEmpty(@Nullable byte[] data) {
         return (data == null || data.length == 0);
@@ -26,11 +30,16 @@ public class Jackson2JsonCamelliaCacheSerializer<T> implements CamelliaCacheSeri
         this.javaType = javaType;
     }
 
-    @SuppressWarnings("unchecked")
+    public void updateCompress(boolean compressEnable, int compressThreshold) {
+        this.compressEnable = compressEnable;
+        this.compressor = new CamelliaCompressor(compressThreshold);
+    }
+
     public T deserialize(@Nullable byte[] bytes) throws CamelliaCacheSerializerException {
         if (isEmpty(bytes)) {
             return null;
         }
+        bytes = compressor.decompress(bytes);
         try {
             return this.objectMapper.readValue(bytes, 0, bytes.length, javaType);
         } catch (Exception ex) {
@@ -40,12 +49,15 @@ public class Jackson2JsonCamelliaCacheSerializer<T> implements CamelliaCacheSeri
 
     @Override
     public byte[] serialize(@Nullable Object t) throws CamelliaCacheSerializerException {
-
         if (t == null) {
             return EMPTY_ARRAY;
         }
         try {
-            return this.objectMapper.writeValueAsBytes(t);
+            byte[] bytes = this.objectMapper.writeValueAsBytes(t);
+            if (compressEnable) {
+                bytes = compressor.compress(bytes);
+            }
+            return bytes;
         } catch (Exception ex) {
             throw new CamelliaCacheSerializerException("Could not write JSON: " + ex.getMessage(), ex);
         }

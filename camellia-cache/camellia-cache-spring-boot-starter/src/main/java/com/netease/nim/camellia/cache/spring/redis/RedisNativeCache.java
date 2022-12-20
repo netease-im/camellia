@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.cache.spring.redis;
 
+import com.netease.nim.camellia.cache.core.CamelliaCacheEnv;
 import com.netease.nim.camellia.cache.spring.CamelliaCacheSerializer;
 import com.netease.nim.camellia.cache.spring.CamelliaCacheSerializerException;
 import com.netease.nim.camellia.cache.spring.RemoteNativeCache;
@@ -26,6 +27,10 @@ public class RedisNativeCache extends RemoteNativeCache {
     @Override
     public void put(String key, Object value) {
         byte[] raw = serializer.serialize(value);
+        if (raw.length > CamelliaCacheEnv.maxCacheValue) {
+            logger.warn("cache value.length[{}] exceed threshold[{}], key = {}", raw.length, CamelliaCacheEnv.maxCacheValue, key);
+            return;
+        }
         template.set(SafeEncoder.encode(key), raw);
         if (logger.isDebugEnabled()) {
             logger.debug("put, key = {}", key);
@@ -35,6 +40,10 @@ public class RedisNativeCache extends RemoteNativeCache {
     @Override
     public void put(String key, Object value, long expireMillis) {
         byte[] raw = serializer.serialize(value);
+        if (raw.length > CamelliaCacheEnv.maxCacheValue) {
+            logger.warn("cache value.length[{}] exceed threshold[{}], key = {}", raw.length, CamelliaCacheEnv.maxCacheValue, key);
+            return;
+        }
         template.psetex(SafeEncoder.encode(key), expireMillis, raw);
         if (logger.isDebugEnabled()) {
             logger.debug("put, key = {}, expireMillis = {}", key, expireMillis);
@@ -48,8 +57,13 @@ public class RedisNativeCache extends RemoteNativeCache {
         for (Map.Entry<String, Object> entry : kvs.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
+            byte[] raw = serializer.serialize(value);
+            if (raw.length > CamelliaCacheEnv.maxCacheValue) {
+                logger.warn("cache value.length[{}] exceed threshold[{}], key = {}", raw.length, CamelliaCacheEnv.maxCacheValue, key);
+                continue;
+            }
             list.add(SafeEncoder.encode(key));
-            list.add(serializer.serialize(value));
+            list.add(raw);
         }
         template.mset(list.toArray(new byte[0][0]));
         if (logger.isDebugEnabled()) {
@@ -64,7 +78,12 @@ public class RedisNativeCache extends RemoteNativeCache {
             for (Map.Entry<String, Object> entry : kvs.entrySet()) {
                 String key = entry.getKey();
                 Object value = entry.getValue();
-                pipelined.psetex(SafeEncoder.encode(key), expireMillis, serializer.serialize(value));
+                byte[] raw = serializer.serialize(value);
+                if (raw.length > CamelliaCacheEnv.maxCacheValue) {
+                    logger.warn("cache value.length[{}] exceed threshold[{}], key = {}", raw.length, CamelliaCacheEnv.maxCacheValue, key);
+                    continue;
+                }
+                pipelined.psetex(SafeEncoder.encode(key), expireMillis, raw);
             }
             pipelined.sync();
         } finally {

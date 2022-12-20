@@ -42,10 +42,10 @@ public class CamelliaProxyCachingConfiguration extends ProxyCachingConfiguration
                         interceptor.setCacheManager((CacheManager) cacheManager);
                     }
                 }
-            } catch (NoSuchFieldException ignore) {
+            } catch (Exception ignore) {
             }
 
-            Object keyGenerator = null;
+            Object keyGenerator;
             try {
                 Field keyGeneratorField = this.getClass().getField("keyGenerator");
                 keyGeneratorField.setAccessible(true);
@@ -60,7 +60,7 @@ public class CamelliaProxyCachingConfiguration extends ProxyCachingConfiguration
                         interceptor.setKeyGenerator((KeyGenerator) keyGenerator);
                     }
                 }
-            } catch (NoSuchFieldException ignore) {
+            } catch (Exception ignore) {
             }
             try {
                 Field errorHandlerField = this.getClass().getField("errorHandler");
@@ -73,10 +73,10 @@ public class CamelliaProxyCachingConfiguration extends ProxyCachingConfiguration
                             interceptor.setErrorHandler(handler);
                         }
                     } else if (errorHandler instanceof CacheErrorHandler) {
-                        interceptor.setErrorHandler((CacheErrorHandler) keyGenerator);
+                        interceptor.setErrorHandler((CacheErrorHandler) errorHandler);
                     }
                 }
-            } catch (NoSuchFieldException ignore) {
+            } catch (Exception ignore) {
             }
             return interceptor;
         } catch (Exception e) {

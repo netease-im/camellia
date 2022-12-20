@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.cache.spring;
 
+import com.netease.nim.camellia.cache.core.CamelliaCacheEnv;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -7,11 +8,13 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "camellia-cache")
 public class CamelliaCacheProperties {
 
-    private String cachePrefix = null;
-    private int multiOpBatchSize = 500;
-    private long syncLoadExpireMillis = 1000;
-    private int syncLoadMaxRetry = 1;
-    private long syncLoadSleepMillis = 100;
+    private int multiOpBatchSize = CamelliaCacheEnv.multiOpBatchSize;
+    private long syncLoadExpireMillis = CamelliaCacheEnv.syncLoadExpireMillis;
+    private int syncLoadMaxRetry = CamelliaCacheEnv.syncLoadMaxRetry;
+    private long syncLoadSleepMillis = CamelliaCacheEnv.syncLoadSleepMillis;
+    private boolean compressEnable = false;
+    private int compressThreshold = 1024;
+    private int maxCacheValue = CamelliaCacheEnv.maxCacheValue;//缓存value的最大值
     private Local local = new Local();
 
     public static class Local {
@@ -41,14 +44,6 @@ public class CamelliaCacheProperties {
 
     public void setLocal(Local local) {
         this.local = local;
-    }
-
-    public String getCachePrefix() {
-        return cachePrefix;
-    }
-
-    public void setCachePrefix(String cachePrefix) {
-        this.cachePrefix = cachePrefix;
     }
 
     public int getMultiOpBatchSize() {
@@ -81,5 +76,29 @@ public class CamelliaCacheProperties {
 
     public void setSyncLoadSleepMillis(long syncLoadSleepMillis) {
         this.syncLoadSleepMillis = syncLoadSleepMillis;
+    }
+
+    public boolean isCompressEnable() {
+        return compressEnable;
+    }
+
+    public void setCompressEnable(boolean compressEnable) {
+        this.compressEnable = compressEnable;
+    }
+
+    public int getCompressThreshold() {
+        return compressThreshold;
+    }
+
+    public void setCompressThreshold(int compressThreshold) {
+        this.compressThreshold = compressThreshold;
+    }
+
+    public int getMaxCacheValue() {
+        return maxCacheValue;
+    }
+
+    public void setMaxCacheValue(int maxCacheValue) {
+        this.maxCacheValue = maxCacheValue;
     }
 }

@@ -12,5 +12,6 @@ public class CamelliaCacheEnv {
     public static int syncLoadMaxRetry = 1;
     //等待避免缓存穿透时并发操作的锁时两次等待的时间间隔
     public static long syncLoadSleepMillis = 100;
-
+    //缓存value值的最大值，超过则不存入缓存中
+    public static int maxCacheValue = 2*1024*1024;
 }
