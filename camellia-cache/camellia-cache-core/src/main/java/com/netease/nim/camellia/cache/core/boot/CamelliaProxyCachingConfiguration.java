@@ -2,6 +2,7 @@ package com.netease.nim.camellia.cache.core.boot;
 
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.AbstractCachingConfiguration;
 import org.springframework.cache.annotation.ProxyCachingConfiguration;
 import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.cache.interceptor.CacheInterceptor;
@@ -29,7 +30,7 @@ public class CamelliaProxyCachingConfiguration extends ProxyCachingConfiguration
             CacheInterceptor interceptor = new CamelliaCacheInterceptor();
             interceptor.setCacheOperationSources(cacheOperationSource());
             try {
-                Field cacheManagerField = this.getClass().getField("cacheManager");
+                Field cacheManagerField = AbstractCachingConfiguration.class.getDeclaredField("cacheManager");
                 cacheManagerField.setAccessible(true);
                 Object cacheManager = cacheManagerField.get(this);
                 if (cacheManager != null) {
@@ -47,7 +48,7 @@ public class CamelliaProxyCachingConfiguration extends ProxyCachingConfiguration
 
             Object keyGenerator;
             try {
-                Field keyGeneratorField = this.getClass().getField("keyGenerator");
+                Field keyGeneratorField = AbstractCachingConfiguration.class.getDeclaredField("keyGenerator");
                 keyGeneratorField.setAccessible(true);
                 keyGenerator = keyGeneratorField.get(this);
                 if (keyGenerator != null) {
@@ -63,7 +64,7 @@ public class CamelliaProxyCachingConfiguration extends ProxyCachingConfiguration
             } catch (Exception ignore) {
             }
             try {
-                Field errorHandlerField = this.getClass().getField("errorHandler");
+                Field errorHandlerField = AbstractCachingConfiguration.class.getDeclaredField("errorHandler");
                 errorHandlerField.setAccessible(true);
                 Object errorHandler = errorHandlerField.get(this);
                 if (errorHandler != null) {
