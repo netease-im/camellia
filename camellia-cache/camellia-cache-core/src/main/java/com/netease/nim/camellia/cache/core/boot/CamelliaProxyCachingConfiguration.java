@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.cache.core.boot;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.AbstractCachingConfiguration;
@@ -22,6 +24,8 @@ import java.util.function.Supplier;
 @Configuration
 public class CamelliaProxyCachingConfiguration extends ProxyCachingConfiguration {
 
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaProxyCachingConfiguration.class);
+
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
     @Override
@@ -38,9 +42,11 @@ public class CamelliaProxyCachingConfiguration extends ProxyCachingConfiguration
                         CacheManager manager = ((Supplier<CacheManager>) cacheManager).get();
                         if (manager != null) {
                             interceptor.setCacheManager(manager);
+                            logger.info("camellia-cache, cacheManager = {}", manager.getClass().getName());
                         }
                     } else if (cacheManager instanceof CacheManager) {
                         interceptor.setCacheManager((CacheManager) cacheManager);
+                        logger.info("camellia-cache, cacheManager = {}", cacheManager.getClass().getName());
                     }
                 }
             } catch (Exception ignore) {
@@ -56,9 +62,11 @@ public class CamelliaProxyCachingConfiguration extends ProxyCachingConfiguration
                         KeyGenerator generator = ((Supplier<KeyGenerator>) keyGenerator).get();
                         if (generator != null) {
                             interceptor.setKeyGenerator(generator);
+                            logger.info("camellia-cache, KeyGenerator = {}", generator.getClass().getName());
                         }
                     } else if (keyGenerator instanceof KeyGenerator) {
                         interceptor.setKeyGenerator((KeyGenerator) keyGenerator);
+                        logger.info("camellia-cache, KeyGenerator = {}", keyGenerator.getClass().getName());
                     }
                 }
             } catch (Exception ignore) {
@@ -72,9 +80,11 @@ public class CamelliaProxyCachingConfiguration extends ProxyCachingConfiguration
                         CacheErrorHandler handler = ((Supplier<CacheErrorHandler>) errorHandler).get();
                         if (handler != null) {
                             interceptor.setErrorHandler(handler);
+                            logger.info("camellia-cache, CacheErrorHandler = {}", handler.getClass().getName());
                         }
                     } else if (errorHandler instanceof CacheErrorHandler) {
                         interceptor.setErrorHandler((CacheErrorHandler) errorHandler);
+                        logger.info("camellia-cache, CacheErrorHandler = {}", errorHandler.getClass().getName());
                     }
                 }
             } catch (Exception ignore) {
