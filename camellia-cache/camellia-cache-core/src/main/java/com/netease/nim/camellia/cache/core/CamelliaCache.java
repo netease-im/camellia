@@ -332,7 +332,7 @@ public class CamelliaCache implements Cache {
                 }
                 //db查询不到的，回填null到cache
                 if (missIds.size() > dbResult.size()) {
-                    missKeys.removeAll(toPutKeys);
+                    toPutKeys.forEach(missKeys::remove);
                     for (String missKey : missKeys) {
                         if (cacheConfig.isCacheNull()) {
                             batchPutKV.put(deBuildCacheKey(missKey), NullCache.INSTANCE);
@@ -454,7 +454,7 @@ public class CamelliaCache implements Cache {
     }
 
     //增加一个本地缓存，提高一点性能
-    private final Map<Class, Map<String, Field>> fieldCache = new HashMap<>();
+    private final Map<Class<?>, Map<String, Field>> fieldCache = new HashMap<>();
     private Object getValue(Object obj, String keyField) throws NoSuchFieldException, IllegalAccessException {
         Class<?> clazz = obj.getClass();
         Map<String, Field> subMap = fieldCache.get(clazz);
