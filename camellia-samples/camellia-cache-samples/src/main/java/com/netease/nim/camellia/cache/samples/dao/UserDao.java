@@ -24,12 +24,17 @@ public class UserDao {
 
     private static final Logger logger = LoggerFactory.getLogger(UserDao.class);
 
-    private static Map<Long, Map<String, User>> map = new HashMap<>();
+    private static final Map<Long, Map<String, User>> map = new HashMap<>();
 
     public UserDao() {
         long appid1 = 100;
         Map<String, User> map1 = new HashMap<>();
         map1.put("acc1", new User(appid1, "acc1", 10));
+        StringBuilder builder = new StringBuilder();
+        for (int i=0; i<2000; i++) {
+            builder.append("a");
+        }
+        map1.get("acc1").setExt(builder.toString());
         map1.put("acc2", new User(appid1, "acc2", 12));
         map1.put("acc3", new User(appid1, "acc3", 15));
         map.put(appid1, map1);

@@ -9,6 +9,7 @@ public class User {
     private long appid;
     private String accid;
     private int age;
+    private String ext;
 
     public User() {
     }
@@ -41,6 +42,14 @@ public class User {
 
     public void setAge(int age) {
         this.age = age;
+    }
+
+    public String getExt() {
+        return ext;
+    }
+
+    public void setExt(String ext) {
+        this.ext = ext;
     }
 
     @Override
