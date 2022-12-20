@@ -58,7 +58,7 @@ base on spring-cache:
 * support mget/mevict by annotation
 * support setting different ttl, support setting cache null value
 * support custom serialize/deserialize, default use jackson, support cache value compress
-* support dynamic cache clear by update cache key prefix
+* support dynamic cache clear by update cache key prefix  
 [QUICK START](/docs/cache/cache.md)
 
 ### camellia-tools
