@@ -7,12 +7,6 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 ![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.netease.nim/camellia/badge.svg)
   
 ## Instruction
-### camellia-redis  
-* base on camellia-core and jedis(2.9.3)，main class is CamelliaRedisTemplate, can invoke redis-standalone/redis-sentinel/redis-cluster in identical way，support pipeline    
-* support client sharding/read-write-separate/double-write   
-* support read from slave(redis-sentinel)
-* provide CamelliaRedisLock、CamelliaFreq utils  
-[QUICK START](/docs/redis-template/redis-template.md)
 
 ### camellia-redis-proxy  
 high performance redis-proxy:  
@@ -37,12 +31,19 @@ delay queue base on redis:
 * provide monitor data    
 [QUICK START](/docs/delay-queue/delay-queue.md)
 
-### camellia-hbase  
+### camellia-redis(enhanced-redis-client)
+* base on camellia-core and jedis(2.9.3)，main class is CamelliaRedisTemplate, can invoke redis-standalone/redis-sentinel/redis-cluster in identical way，support pipeline
+* support client sharding/read-write-separate/double-write
+* support read from slave(redis-sentinel)
+* provide CamelliaRedisLock、CamelliaFreq utils  
+[QUICK START](/docs/redis-template/redis-template.md)
+
+### camellia-hbase(enhanced-hbase-client)  
 * base on camellia-core and hbase-client，main class is CamelliaHBaseTemplate    
 * support client read-write-separate/double-write  
 [QUICK START](/docs/hbase-template/hbase-template.md)  
 
-### camellia-feign
+### camellia-feign(enhanced-feign-client)  
 join camellia-core and open-feign, so your feign-client have this feature: 
 * support dynamic route
 * support custom route by request param
@@ -50,6 +51,15 @@ join camellia-core and open-feign, so your feign-client have this feature:
 * support read-write-separate/double-write
 * support dynamic conf, such like timeout  
 [QUICK START](/docs/feign/feign.md)
+
+### camellia-cache(enhanced-spring-cache)  
+base on spring-cache:  
+* support redis, support local-cache(Caffeine)
+* support mget/mevict by annotation
+* support setting different ttl, support setting cache null value
+* support custom serialize/deserialize, default use jackson, support cache value compress
+* support dynamic cache clear by update cache key prefix
+[QUICK START](/docs/cache/cache.md)
 
 ### camellia-tools
 * provide some tools, such as：

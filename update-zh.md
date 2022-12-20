@@ -4,6 +4,17 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+# 1.1.9（2022/12/xx）
+### 新增
+* 新增camellia-cache模块，增强spring-cache，具体见：[cache](/docs/cache/cache.md)
+
+### 更新
+* 无
+
+### fix
+* camellia-delay-queue的getMsg接口，在消息已经被消费，且消息还在缓存中的情况下，获取的结果是200，但是没有消息内容
+
+
 # 1.1.8（2022/12/13）
 ### 新增
 * camellia-redis-proxy支持通过application.yml配置ProxyDynamicConf中自定义的k-v配置项（优先级低于camellia-redis-proxy.properties）

@@ -4,6 +4,17 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+# 1.1.9（2022/12/xx）
+### add
+* provide camellia-cache module, enhance spring-cache
+
+### update
+* none
+
+### fix
+* getMsg api of camellia-delay-queue, when msg is ack, getMsg return 200, but msg not return
+
+
 # 1.1.8（2022/12/13）
 ### add
 * camellia-redis-proxy support configure custom k-v config(ProxyDynamicConf.java) by application.yml, priority is lower than camellia-redis-proxy.properties  
