@@ -33,11 +33,16 @@ public class CamelliaCache implements Cache {
 
     @Override
     public ValueWrapper get(Object key) {
+        String cachePrefix = getCachePrefix();
+        return _get(cachePrefix, key);
+    }
+
+    private ValueWrapper _get(String cachePrefix, Object key) {
         if (isMultiGetActive(key)) {
-            Object result = multiGet(key);
+            Object result = multiGet(cachePrefix, key);
             return () -> result;
         }
-        String cacheKey = buildCacheKey(key);
+        String cacheKey = buildCacheKey(cachePrefix, key);
         Object result = nativeCache.get(cacheKey);
         if (logger.isDebugEnabled()) {
             logger.debug("CamelliaCache get, key = {}", cacheKey);
@@ -51,10 +56,11 @@ public class CamelliaCache implements Cache {
 
     @Override
     public <T> T get(Object key, Class<T> type) {
+        String cachePrefix = getCachePrefix();
         if (isMultiGetActive(key)) {
-            return multiGet(key);
+            return multiGet(cachePrefix, key);
         }
-        String cacheKey = buildCacheKey(key);
+        String cacheKey = buildCacheKey(cachePrefix, key);
         Object value = nativeCache.get(cacheKey);
         if (logger.isDebugEnabled()) {
             logger.debug("CamelliaCache get, key = {}, class = {}", cacheKey, type);
@@ -71,11 +77,12 @@ public class CamelliaCache implements Cache {
 
     @Override
     public void evict(Object key) {
+        String cachePrefix = getCachePrefix();
         if (isMultiEvictActive(key)) {
-            multiEvict(key);
+            multiEvict(cachePrefix, key);
             return;
         }
-        String cacheKey = buildCacheKey(key);
+        String cacheKey = buildCacheKey(cachePrefix, key);
         nativeCache.delete(cacheKey);
         if (logger.isDebugEnabled()) {
             logger.debug("CamelliaCache evict, key = {}", cacheKey);
@@ -84,6 +91,11 @@ public class CamelliaCache implements Cache {
 
     @Override
     public void put(Object key, Object value) {
+        String cachePrefix = getCachePrefix();
+        _put(cachePrefix, key, value);
+    }
+
+    private void _put(String cachePrefix, Object key, Object value) {
         if (value == null) {
             if (cacheConfig.isCacheNull()) {
                 value = NullCache.INSTANCE;
@@ -91,7 +103,7 @@ public class CamelliaCache implements Cache {
                 return;
             }
         }
-        String cacheKey = buildCacheKey(key);
+        String cacheKey = buildCacheKey(cachePrefix, key);
         long expireMillis = cacheConfig.getExpireMillis();
         if (expireMillis > 0) {
             nativeCache.put(cacheKey, value, expireMillis);
@@ -106,9 +118,12 @@ public class CamelliaCache implements Cache {
         }
     }
 
-    private String buildCacheKey(Object key) {
-        if (cachePrefixGetter == null) return String.valueOf(key);
-        String cachePrefix = cachePrefixGetter.get();
+    private String getCachePrefix() {
+        if (cachePrefixGetter == null) return null;
+        return cachePrefixGetter.get();
+    }
+
+    private String buildCacheKey(String cachePrefix, Object key) {
         if (cachePrefix != null) {
             return cachePrefix + key;
         } else {
@@ -116,11 +131,7 @@ public class CamelliaCache implements Cache {
         }
     }
 
-    private String deBuildCacheKey(String cacheKey) {
-        if (cachePrefixGetter == null) {
-            return cacheKey;
-        }
-        String cachePrefix = cachePrefixGetter.get();
+    private String deBuildCacheKey(String cachePrefix, String cacheKey) {
         if (cachePrefix != null) {
             return cacheKey.substring(cachePrefix.length());
         } else {
@@ -130,15 +141,15 @@ public class CamelliaCache implements Cache {
 
     @Override
     public <T> T get(Object key, Callable<T> valueLoader) {
-
+        String cachePrefix = getCachePrefix();
         try {
-            ValueWrapper value = get(key);
+            ValueWrapper value = _get(cachePrefix, key);
             if (value != null) {
                 return (T) value.get();
             }
 
             if (isMultiGetActive(key)) {
-                return multiGet(key);
+                return multiGet(cachePrefix, key);
             }
         } catch (Exception e) {
             logger.error("get of valueLoader error", e);
@@ -150,11 +161,10 @@ public class CamelliaCache implements Cache {
             }
         }
 
-        String cacheKey = buildCacheKey(key);
+        String cacheKey = buildCacheKey(cachePrefix, key);
         String lockKey = cacheKey + "~lock";
         try {
             T result;
-
             long expireMillis = CamelliaCacheEnv.syncLoadExpireMillis;
             long sleepMillis = CamelliaCacheEnv.syncLoadSleepMillis;
             int retry = CamelliaCacheEnv.syncLoadMaxRetry;
@@ -164,12 +174,12 @@ public class CamelliaCache implements Cache {
             }
             if (lock) {
                 result = valueLoader.call();
-                put(key, result);
+                _put(cachePrefix, key, result);
                 nativeCache.releaseLock(lockKey);
                 return result;
             } else {
                 while (retry -- > 0) {
-                    ValueWrapper valueWrapper = get(key);
+                    ValueWrapper valueWrapper = _get(cachePrefix, key);
                     if (valueWrapper != null) {
                         return (T) valueWrapper.get();
                     }
@@ -180,7 +190,7 @@ public class CamelliaCache implements Cache {
                     }
                 }
                 result = valueLoader.call();
-                put(key, result);
+                _put(cachePrefix, key, result);
                 return result;
             }
         } catch (Exception e) {
@@ -270,7 +280,7 @@ public class CamelliaCache implements Cache {
     //#.*表示List中的元素，#.id表示List中的元素的id字段
     //第一组的#表示参数中的List，第二组的#表示返回的List
     //mget|2|(xxxxx)(#.*)(yyyy)(#.id)|(xxxxx)(#.name)(yyyy)(#.id)
-    private <T> T multiGet(Object key) {
+    private <T> T multiGet(String cachePrefix, Object key) {
         try {
             String k = String.valueOf(key);
             String[] split = k.split("\\|");
@@ -282,7 +292,7 @@ public class CamelliaCache implements Cache {
             Object[] arguments = invocation.getArguments();
             List listObj = (List) arguments[listIndex];
             //生成一组key
-            List<String> toGetKeys = assembleCacheKeyList(getExpression, listObj);
+            List<String> toGetKeys = assembleCacheKeyList(cachePrefix, getExpression, listObj);
 
             //返回
             List<Object> result = new ArrayList<>();
@@ -326,7 +336,7 @@ public class CamelliaCache implements Cache {
                 }
                 Map<String, Object> batchPutKV = new HashMap<>();
                 //db查询结果，回填到cache
-                List<String> toPutKeys = assembleCacheKeyList(putExpression, dbResult);
+                List<String> toPutKeys = assembleCacheKeyList(cachePrefix, putExpression, dbResult);
                 for (int i=0; i<toPutKeys.size(); i++) {
                     batchPutKV.put(toPutKeys.get(i), dbResult.get(i));
                 }
@@ -335,7 +345,7 @@ public class CamelliaCache implements Cache {
                     toPutKeys.forEach(missKeys::remove);
                     for (String missKey : missKeys) {
                         if (cacheConfig.isCacheNull()) {
-                            batchPutKV.put(deBuildCacheKey(missKey), NullCache.INSTANCE);
+                            batchPutKV.put(deBuildCacheKey(cachePrefix, missKey), NullCache.INSTANCE);
                         }
                     }
                 }
@@ -358,7 +368,7 @@ public class CamelliaCache implements Cache {
     //1表示第二个参数是List
     //#.*表示List中的元素，#.id表示List中的元素的id字段
     //mevict|1|(xxxxx)(#.*)(yyyy)(#.id)
-    private void multiEvict(Object key) {
+    private void multiEvict(String cachePrefix, Object key) {
         try {
             String k = String.valueOf(key);
             String[] split = k.split("\\|");
@@ -372,7 +382,7 @@ public class CamelliaCache implements Cache {
             List listObj = (List) arguments[listIndex];
 
             //生成一组key
-            List<String> toEvictKeys = assembleCacheKeyList(expression, listObj);
+            List<String> toEvictKeys = assembleCacheKeyList(cachePrefix, expression, listObj);
 
             if (logger.isDebugEnabled()) {
                 logger.debug("CamelliaCache multiEvict, keys = {}", toEvictKeys);
@@ -391,7 +401,7 @@ public class CamelliaCache implements Cache {
     }
 
     //(xxxxx)(#.*)(yyyy)(#.id)
-    private List<String> assembleCacheKeyList(String expression, List list) throws NoSuchFieldException, IllegalAccessException {
+    private List<String> assembleCacheKeyList(String cachePrefix, String expression, List list) throws NoSuchFieldException, IllegalAccessException {
         List<String> items = parseBracket(expression);
         List<String> keys = new ArrayList<>();
         for (Object obj : list) {
@@ -409,7 +419,7 @@ public class CamelliaCache implements Cache {
                     key.append(item);
                 }
             }
-            keys.add(buildCacheKey(key.toString()));
+            keys.add(buildCacheKey(cachePrefix, key.toString()));
         }
         return keys;
     }
@@ -477,9 +487,10 @@ public class CamelliaCache implements Cache {
 
     @Override
     public ValueWrapper putIfAbsent(Object key, Object value) {
-        ValueWrapper wrapper = get(key);
+        String cachePrefix = getCachePrefix();
+        ValueWrapper wrapper = _get(cachePrefix, key);
         if (wrapper == null) {
-            put(key, value);
+            _put(cachePrefix, key, value);
             return null;
         } else {
             return wrapper;
@@ -503,7 +514,6 @@ public class CamelliaCache implements Cache {
         List<List<String>> res = new ArrayList<>();
         if (collection.size() < splitSize) {
             res.add(new ArrayList<>(collection));
-            return res;
         } else {
             List<String> tmp = new ArrayList<>();
             for (String t : collection) {
@@ -516,8 +526,8 @@ public class CamelliaCache implements Cache {
             if (!tmp.isEmpty()) {
                 res.add(tmp);
             }
-            return res;
         }
+        return res;
     }
 }
 
