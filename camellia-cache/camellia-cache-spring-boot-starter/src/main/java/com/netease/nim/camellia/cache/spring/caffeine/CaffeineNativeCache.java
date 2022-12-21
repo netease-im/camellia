@@ -3,7 +3,9 @@ package com.netease.nim.camellia.cache.spring.caffeine;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Expiry;
+import com.netease.nim.camellia.cache.core.CamelliaCacheEnv;
 import com.netease.nim.camellia.cache.spring.CamelliaCacheSerializer;
+import com.netease.nim.camellia.cache.spring.CamelliaCacheSerializerException;
 import com.netease.nim.camellia.cache.spring.LocalNativeCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,7 +109,19 @@ public class CaffeineNativeCache extends LocalNativeCache {
         Item item = cache.getIfPresent(key);
         if (item == null || item.isExpire()) return null;
         if (isSafe) {
-            return serializer.deserialize((byte[]) item.getValue());
+            try {
+                return serializer.deserialize((byte[]) item.getValue());
+            } catch (CamelliaCacheSerializerException e) {
+                if (CamelliaCacheEnv.serializerErrorLogEnable) {
+                    logger.error("deserialize error, will del key = {}", key, e);
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("deserialize error, will del key = {}", key, e);
+                    }
+                }
+                cache.invalidate(key);
+                return null;
+            }
         } else {
             return item.getValue();
         }
@@ -126,7 +140,19 @@ public class CaffeineNativeCache extends LocalNativeCache {
                 ret.add(null);
             } else {
                 if (isSafe) {
-                    ret.add(serializer.deserialize((byte[]) item.getValue()));
+                    try {
+                        ret.add(serializer.deserialize((byte[]) item.getValue()));
+                    } catch (CamelliaCacheSerializerException e) {
+                        if (CamelliaCacheEnv.serializerErrorLogEnable) {
+                            logger.error("deserialize error, will del key = {}", key, e);
+                        } else {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("deserialize error, will del key = {}", key, e);
+                            }
+                        }
+                        cache.invalidate(key);
+                        ret.add(null);
+                    }
                 } else {
                     ret.add(item.getValue());
                 }

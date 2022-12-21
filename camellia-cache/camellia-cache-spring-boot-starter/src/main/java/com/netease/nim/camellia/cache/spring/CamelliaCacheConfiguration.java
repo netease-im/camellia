@@ -68,10 +68,14 @@ public class CamelliaCacheConfiguration extends CachingConfigurerSupport {
         CamelliaCacheEnv.syncLoadExpireMillis = camelliaCacheProperties.getSyncLoadExpireMillis();
         CamelliaCacheEnv.syncLoadMaxRetry = camelliaCacheProperties.getSyncLoadMaxRetry();
         CamelliaCacheEnv.syncLoadSleepMillis = camelliaCacheProperties.getSyncLoadSleepMillis();
+        CamelliaCacheEnv.maxCacheValue = camelliaCacheProperties.getMaxCacheValue();
+        CamelliaCacheEnv.serializerErrorLogEnable = camelliaCacheProperties.isSerializerErrorLogEnable();
         logger.info("camellia-cache, multiOpBatchSize = {}", CamelliaCacheEnv.multiOpBatchSize);
         logger.info("camellia-cache, syncLoadExpireMillis = {}", CamelliaCacheEnv.syncLoadExpireMillis);
         logger.info("camellia-cache, syncLoadMaxRetry = {}", CamelliaCacheEnv.syncLoadMaxRetry);
         logger.info("camellia-cache, syncLoadSleepMillis = {}", CamelliaCacheEnv.syncLoadSleepMillis);
+        logger.info("camellia-cache, maxCacheValue = {}", CamelliaCacheEnv.maxCacheValue);
+        logger.info("camellia-cache, serializerErrorLogEnable = {}", CamelliaCacheEnv.serializerErrorLogEnable);
 
         CamelliaCacheSerializer<Object> serializer = camelliaCacheSerializer(camelliaCacheProperties);
         logger.info("camellia-cache, serializer = {}", serializer.getClass().getName());

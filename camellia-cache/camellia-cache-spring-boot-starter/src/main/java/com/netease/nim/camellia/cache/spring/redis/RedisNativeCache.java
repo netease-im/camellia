@@ -100,7 +100,13 @@ public class RedisNativeCache extends RemoteNativeCache {
         try {
             return serializer.deserialize(bytes);
         } catch (CamelliaCacheSerializerException e) {
-            logger.error("deserialize error", e);
+            if (CamelliaCacheEnv.serializerErrorLogEnable) {
+                logger.error("deserialize error, will del key = {}", key, e);
+            } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("deserialize error, will del key = {}", key, e);
+                }
+            }
             template.del(key);
             return null;
         } finally {
@@ -127,7 +133,13 @@ public class RedisNativeCache extends RemoteNativeCache {
                 try {
                     ret.add(serializer.deserialize(value));
                 } catch (CamelliaCacheSerializerException e) {
-                    logger.error("deserialize error", e);
+                    if (CamelliaCacheEnv.serializerErrorLogEnable) {
+                        logger.error("deserialize error, will del key = {}", list.get(index), e);
+                    } else {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("deserialize error, will del key = {}", list.get(index), e);
+                        }
+                    }
                     template.del(list.get(index));
                     ret.add(null);
                 }

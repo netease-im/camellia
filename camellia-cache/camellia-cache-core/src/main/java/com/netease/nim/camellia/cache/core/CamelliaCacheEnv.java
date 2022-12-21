@@ -14,4 +14,6 @@ public class CamelliaCacheEnv {
     public static long syncLoadSleepMillis = 100;
     //缓存value值的最大值，超过则不存入缓存中
     public static int maxCacheValue = 2*1024*1024;
+    //反序列化失败的情况下，要不要打印error日志，如果是false，则只打印debug日志
+    public static boolean serializerErrorLogEnable = true;
 }

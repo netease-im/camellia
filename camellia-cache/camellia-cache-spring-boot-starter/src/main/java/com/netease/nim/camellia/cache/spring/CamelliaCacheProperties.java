@@ -15,6 +15,7 @@ public class CamelliaCacheProperties {
     private boolean compressEnable = false;
     private int compressThreshold = 1024;
     private int maxCacheValue = CamelliaCacheEnv.maxCacheValue;//缓存value的最大值
+    private boolean serializerErrorLogEnable = CamelliaCacheEnv.serializerErrorLogEnable;
     private Local local = new Local();
 
     public static class Local {
@@ -100,5 +101,13 @@ public class CamelliaCacheProperties {
 
     public void setMaxCacheValue(int maxCacheValue) {
         this.maxCacheValue = maxCacheValue;
+    }
+
+    public boolean isSerializerErrorLogEnable() {
+        return serializerErrorLogEnable;
+    }
+
+    public void setSerializerErrorLogEnable(boolean serializerErrorLogEnable) {
+        this.serializerErrorLogEnable = serializerErrorLogEnable;
     }
 }
