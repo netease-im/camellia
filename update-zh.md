@@ -4,7 +4,7 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
-# 1.1.9（2022/12/xx）
+# 1.1.9（2022/12/21）
 ### 新增
 * 新增camellia-cache模块，增强spring-cache，具体见：[cache](/docs/cache/cache.md)
 * camellia-redis-proxy新增对LMPOP和BLMPOP命令的支持（redis7.0）

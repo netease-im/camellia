@@ -13,12 +13,12 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-cache-spring-boot-starter</artifactId>
-    <version>1.1.9-SNAPSHOT</version>
+    <version>1.1.9</version>
 </dependency>
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-spring-boot-starter</artifactId>
-    <version>1.1.9-SNAPSHOT</version>
+    <version>1.1.9</version>
 </dependency>
 ```
 
