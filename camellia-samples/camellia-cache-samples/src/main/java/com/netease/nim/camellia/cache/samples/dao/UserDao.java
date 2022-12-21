@@ -49,6 +49,9 @@ public class UserDao {
     /**
      * sync=true表示缓存穿透的情况下，只允许一个请求去底层捞数据
      * 其他的会等待获取到锁的请求操作完成缓存回填完成后，直接从缓存里取；若等待一段时间之后缓存中依然没有数据，此时会穿透到底层去捞数据
+     * @param appid appid
+     * @param accid accid
+     * @return result
      */
     @Cacheable(key = "'user_'.concat(#appid).concat('_').concat(#accid)", sync = true)
     public User get(long appid, String accid) {
@@ -68,6 +71,10 @@ public class UserDao {
      * (user_)(#.appid)(_)(#.accid) 表示了缓存回填时的key的拼装规则，括号分隔，#是方法返回的List<User>
      *
      * 备注：#.*表示List中的元素，#.appid表示List中的元素的appid字段
+     *
+     * @param appid appid
+     * @param accidList accidList
+     * @return result
      */
     @Cacheable(key = "'mget|1|(user_'.concat(#appid).concat('_)(#.*)|(user_)(#.appid)(_)(#.accid)')")
     public List<User> getBatch(long appid, List<String> accidList) {
@@ -131,6 +138,9 @@ public class UserDao {
      * (user_)(#.appid)(_)(#.accid) 表示了mevict的key的拼装规则，#是参数里的List<User> userList
      *
      * 备注：#.*表示List中的元素，#.appid表示List中的元素的appid字段
+
+     * @param userList userList
+     * @return result
      */
     @CacheEvict(key = "'mevict|0|(user_)(#.appid)(_)(#.accid)'")
     public int updateBatch(List<User> userList) {
