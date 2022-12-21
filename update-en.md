@@ -7,6 +7,7 @@
 # 1.1.9（2022/12/xx）
 ### add
 * provide camellia-cache module, enhance spring-cache
+* camellia-redis-proxy support LMPOP、BLMPOP command(redis7.0)
 
 ### update
 * optimize camellia-id-gen-sdk, any error from id-gen-server should trigger retry and node-ban, not only network error

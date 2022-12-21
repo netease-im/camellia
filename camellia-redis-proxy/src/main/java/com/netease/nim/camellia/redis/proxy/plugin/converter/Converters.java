@@ -191,6 +191,7 @@ public class Converters {
                 case EXZINTER:
                 case EXZINTERCARD:
                 case ZMPOP:
+                case LMPOP:
                     if (objects.length >= 3) {
                         int keyCount2 = (int) Utils.bytesToNum(objects[1]);
                         if (keyCount2 > 0) {
@@ -201,6 +202,7 @@ public class Converters {
                         }
                     }
                     break;
+                case BLMPOP:
                 case BZMPOP:
                     if (objects.length >= 4) {
                         int keyCount2 = (int) Utils.bytesToNum(objects[2]);
@@ -356,7 +358,8 @@ public class Converters {
         } else if (redisCommand == RedisCommand.BLPOP || redisCommand == RedisCommand.BRPOP
                 || redisCommand == RedisCommand.BZPOPMAX || redisCommand == RedisCommand.BZPOPMIN
                 || redisCommand == RedisCommand.EXBZPOPMAX || redisCommand == RedisCommand.EXBZPOPMIN
-                || redisCommand == RedisCommand.ZMPOP || redisCommand == RedisCommand.BZMPOP) {
+                || redisCommand == RedisCommand.ZMPOP || redisCommand == RedisCommand.BZMPOP
+                || redisCommand == RedisCommand.LMPOP || redisCommand == RedisCommand.BLMPOP) {
             if (reply instanceof MultiBulkReply) {
                 Reply[] replies = ((MultiBulkReply) reply).getReplies();
                 if (replies != null && replies.length >= 2) {
@@ -409,8 +412,10 @@ public class Converters {
             return;
         }
         byte[] raw = ((BulkReply) reply).getRaw();
-        byte[] bytes = keyConverter.reverseConvert(commandContext, redisCommand, raw);
-        ((BulkReply) reply).updateRaw(bytes);
+        if (raw != null) {
+            byte[] bytes = keyConverter.reverseConvert(commandContext, redisCommand, raw);
+            ((BulkReply) reply).updateRaw(bytes);
+        }
     }
 
     private void stringConvertReply(RedisCommand redisCommand, CommandContext commandContext, Command command, Reply reply) {

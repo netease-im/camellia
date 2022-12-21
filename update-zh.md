@@ -7,6 +7,7 @@
 # 1.1.9（2022/12/xx）
 ### 新增
 * 新增camellia-cache模块，增强spring-cache，具体见：[cache](/docs/cache/cache.md)
+* camellia-redis-proxy新增对LMPOP和BLMPOP命令的支持（redis7.0）
 
 ### 更新
 * 优化camellia-id-gen-sdk，id-gen-server的任何异常（不只是网络异常）都要触发节点屏蔽和请求重试

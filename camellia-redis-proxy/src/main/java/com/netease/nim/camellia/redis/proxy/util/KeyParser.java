@@ -77,6 +77,7 @@ public class KeyParser {
                 case EXZINTER:
                 case EXZINTERCARD:
                 case ZMPOP:
+                case LMPOP:
                     if (objects.length >= 3) {
                         int keyCount = (int) Utils.bytesToNum(objects[1]);
                         if (keyCount > 0) {
@@ -85,6 +86,7 @@ public class KeyParser {
                     }
                     break;
                 case BZMPOP:
+                case BLMPOP:
                     if (objects.length >= 4) {
                         int keyCount = (int) Utils.bytesToNum(objects[2]);
                         if (keyCount > 0) {
