@@ -126,11 +126,7 @@ public class CamelliaIdGenInvoker {
                 return idGenCall.call(idGenServer);
             } catch (CamelliaIdGenException e) {
                 cause = e;
-                if (e.getCode() == CamelliaIdGenException.NETWORK_ERROR) {
-                    onError(idGenServer);
-                    continue;
-                }
-                throw e;
+                onError(idGenServer);
             } catch (Exception e) {
                 cause = new CamelliaIdGenException(e);
                 onError(idGenServer);

@@ -9,7 +9,7 @@
 * provide camellia-cache module, enhance spring-cache
 
 ### update
-* none
+* optimize camellia-id-gen-sdk, any error from id-gen-server should trigger retry and node-ban, not only network error
 
 ### fix
 * getMsg api of camellia-delay-queue, when msg is ack, getMsg return 200, but msg not return

@@ -9,7 +9,7 @@
 * 新增camellia-cache模块，增强spring-cache，具体见：[cache](/docs/cache/cache.md)
 
 ### 更新
-* 无
+* 优化camellia-id-gen-sdk，id-gen-server的任何异常（不只是网络异常）都要触发节点屏蔽和请求重试
 
 ### fix
 * camellia-delay-queue的getMsg接口，在消息已经被消费，且消息还在缓存中的情况下，获取的结果是200，但是没有消息内容
