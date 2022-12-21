@@ -46,9 +46,10 @@ public class UserDao {
         map.put(appid2, map2);
     }
 
+
+    // sync=true表示缓存穿透的情况下，只允许一个请求去底层捞数据
+    // 其他的会等待获取到锁的请求操作完成缓存回填完成后，直接从缓存里取；若等待一段时间之后缓存中依然没有数据，此时会穿透到底层去捞数据
     /**
-     * sync=true表示缓存穿透的情况下，只允许一个请求去底层捞数据
-     * 其他的会等待获取到锁的请求操作完成缓存回填完成后，直接从缓存里取；若等待一段时间之后缓存中依然没有数据，此时会穿透到底层去捞数据
      * @param appid appid
      * @param accid accid
      * @return result
@@ -64,14 +65,13 @@ public class UserDao {
         return ret;
     }
 
-    /**
-     * mget操作
-     * 1表示第2个参数是一个List类型的参数（0开始算）
-     * (user_'.concat(#appid).concat('_)(#.*) 表示了mget时的key的拼装规则，括号分隔，#是参数里的List<String> accidList
-     * (user_)(#.appid)(_)(#.accid) 表示了缓存回填时的key的拼装规则，括号分隔，#是方法返回的List<User>
-     *
-     * 备注：#.*表示List中的元素，#.appid表示List中的元素的appid字段
-     *
+     // mget操作
+     // 1表示第2个参数是一个List类型的参数（0开始算）
+     // (user_'.concat(#appid).concat('_)(#.*) 表示了mget时的key的拼装规则，括号分隔，#是参数里的List<String> accidList
+     // (user_)(#.appid)(_)(#.accid) 表示了缓存回填时的key的拼装规则，括号分隔，#是方法返回的List<User>
+     //
+     // 备注：#.*表示List中的元素，#.appid表示List中的元素的appid字段
+     /**
      * @param appid appid
      * @param accidList accidList
      * @return result
@@ -132,13 +132,14 @@ public class UserDao {
         return ret;
     }
 
-    /**
-     * mevict操作
-     * 0表示第1个参数是List类型的参数（0开始算）
-     * (user_)(#.appid)(_)(#.accid) 表示了mevict的key的拼装规则，#是参数里的List<User> userList
-     *
-     * 备注：#.*表示List中的元素，#.appid表示List中的元素的appid字段
 
+    // mevict操作
+    // 0表示第1个参数是List类型的参数（0开始算）
+    // (user_)(#.appid)(_)(#.accid) 表示了mevict的key的拼装规则，#是参数里的List<User> userList
+    //
+    // 备注：#.*表示List中的元素，#.appid表示List中的元素的appid字段
+    /**
+     *
      * @param userList userList
      * @return result
      */
