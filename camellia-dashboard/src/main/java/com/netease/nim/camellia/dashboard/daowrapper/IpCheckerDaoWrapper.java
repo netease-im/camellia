@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.dashboard.daowrapper;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.netease.nim.camellia.core.enums.IpCheckMode;
 import com.netease.nim.camellia.dashboard.dao.IpCheckerDao;
@@ -38,7 +39,7 @@ public class IpCheckerDaoWrapper {
             return updateCache();
         }
         if (value.length() > 0) {
-            return JSONArray.parseArray(value, IpChecker.class);
+            return JSON.parseArray(value, IpChecker.class);
         }
         return Collections.emptyList();
     }

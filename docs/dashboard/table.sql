@@ -42,3 +42,19 @@ create table `camellia_ip_checker` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='IP checker table';
 
 
+create table camellia.camellia_rate_limit
+(
+    `id`           bigint(64) auto_increment comment 'Auto increment field' primary key,
+    `bid`          bigint(64)  null comment 'bid',
+    `bgroup`       varchar(64) null comment 'bgroup',
+    `check_millis` int         not null default 1000 comment 'check_millis',
+    `max_count`    int         not null default -1 comment 'max_count',
+    `create_time`  bigint(64)  null comment 'create time',
+    `update_time`  bigint(64)  null comment 'Update time',
+    constraint bid_bgroup_unique
+        unique (bid, bgroup)
+)
+    comment 'Rate Limit Table' charset = utf8;
+
+
+
