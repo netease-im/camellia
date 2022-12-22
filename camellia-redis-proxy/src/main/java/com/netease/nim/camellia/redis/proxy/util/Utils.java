@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- *
  * Created by caojiajun on 2019/11/5.
  */
 public class Utils {
@@ -31,6 +30,7 @@ public class Utils {
     private static final int NUM_MAP_LENGTH = 256;
     private static final byte[][] numMap = new byte[NUM_MAP_LENGTH][];
     private static final byte[][] numMapWithCRLF = new byte[NUM_MAP_LENGTH][];
+
     static {
         for (int i = 0; i < NUM_MAP_LENGTH; i++) {
             numMapWithCRLF[i] = convert(i, true);
@@ -179,7 +179,7 @@ public class Utils {
                 if (reply instanceof MultiBulkReply) {
                     Reply[] replies1 = ((MultiBulkReply) reply).getReplies();
                     size = Math.max(replies1.length, size);
-                    for (int i=0; i<replies1.length; i++) {
+                    for (int i = 0; i < replies1.length; i++) {
                         Reply reply1 = replies1[i];
                         if (reply1 instanceof IntegerReply) {
                             Long integer = ((IntegerReply) reply1).getInteger();
@@ -198,7 +198,7 @@ public class Utils {
                 }
             }
             Reply[] replies1 = new Reply[size];
-            for (int i=0; i<size; i++) {
+            for (int i = 0; i < size; i++) {
                 AtomicLong atomicLong = map.get(i);
                 replies1[i] = new IntegerReply(atomicLong == null ? 0 : atomicLong.get());
             }
@@ -249,4 +249,16 @@ public class Utils {
             return ErrorReply.NOT_AVAILABLE;
         }
     }
+
+    /**
+     * Check if config has been changed
+     *
+     * @param md5    old md5
+     * @param newMd5 new md5
+     * @return true if config has been changed
+     */
+    public static boolean hasChange(String md5, String newMd5) {
+        return md5 == null || (newMd5 != null && !md5.equals(newMd5));
+    }
+
 }

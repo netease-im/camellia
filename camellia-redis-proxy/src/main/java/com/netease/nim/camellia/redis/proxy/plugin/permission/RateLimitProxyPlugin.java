@@ -5,12 +5,11 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
+import com.netease.nim.camellia.redis.proxy.plugin.permission.model.Counter;
+import com.netease.nim.camellia.redis.proxy.plugin.permission.model.RateLimitConf;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.LongAdder;
 
 /**
  * 可以用于控制客户端的请求速率，支持全局级别的速率控制，也支持bid/bgroup级别
@@ -55,11 +54,11 @@ public class RateLimitProxyPlugin implements ProxyPlugin {
             Command command = request.getCommand();
             CommandContext commandContext = command.getCommandContext();
             RateLimitConf rateLimitConf = getRateLimitConf();
-            if (rateLimitConf.maxCount == 0) {
+            if (rateLimitConf.getMaxCount() == 0) {
                 return TOO_FREQUENCY;
-            } else if (rateLimitConf.maxCount > 0) {
-                long current = getCounter().incrementAndGet(rateLimitConf.checkMillis);
-                if (current > rateLimitConf.maxCount) {
+            } else if (rateLimitConf.getMaxCount() > 0) {
+                long current = getCounter().incrementAndGet(rateLimitConf.getCheckMillis());
+                if (current > rateLimitConf.getMaxCount()) {
                     return TOO_FREQUENCY;
                 }
             }
@@ -67,11 +66,11 @@ public class RateLimitProxyPlugin implements ProxyPlugin {
             String bgroup = commandContext.getBgroup();
             if (bid != null && bgroup != null) {
                 RateLimitConf rateLimitConf1 = getRateLimitConf(bid, bgroup);
-                if (rateLimitConf1.maxCount == 0) {
+                if (rateLimitConf1.getMaxCount() == 0) {
                     return TOO_FREQUENCY;
-                } else if (rateLimitConf1.maxCount > 0) {
-                    long current = getCounter(bid, bgroup).incrementAndGet(rateLimitConf1.checkMillis);
-                    if (current > rateLimitConf1.maxCount) {
+                } else if (rateLimitConf1.getMaxCount() > 0) {
+                    long current = getCounter(bid, bgroup).incrementAndGet(rateLimitConf1.getCheckMillis());
+                    if (current > rateLimitConf1.getMaxCount()) {
                         return TOO_FREQUENCY;
                     }
                 }
@@ -111,36 +110,4 @@ public class RateLimitProxyPlugin implements ProxyPlugin {
         });
     }
 
-    private static class RateLimitConf {
-        long checkMillis;
-        long maxCount;
-
-        public RateLimitConf(long checkMillis, long maxCount) {
-            this.checkMillis = checkMillis;
-            this.maxCount = maxCount;
-        }
-    }
-
-    private static class Counter {
-        private volatile long timestamp = TimeCache.currentMillis;
-        private final LongAdder count = new LongAdder();
-        private final AtomicBoolean lock = new AtomicBoolean();
-
-        long incrementAndGet(long expireMillis) {
-            if (TimeCache.currentMillis - timestamp > expireMillis) {
-                if (lock.compareAndSet(false, true)) {
-                    try {
-                        if (TimeCache.currentMillis - timestamp > expireMillis) {
-                            timestamp = TimeCache.currentMillis;
-                            count.reset();
-                        }
-                    } finally {
-                        lock.compareAndSet(true, false);
-                    }
-                }
-            }
-            count.increment();
-            return count.sum();
-        }
-    }
 }
