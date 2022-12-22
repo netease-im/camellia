@@ -66,5 +66,7 @@ camellia.dashboard.headerMap={"api-key": "secretToken"}
   }
 }
 ```
-**NOTE:** **bid = -1 , bgroup = "default"** means that the configuration is global, and the configuration is applied for all. 
-If you want to configure a specific bid and bgroup, you need to create a new configuration, and it will override the global configuration.
+**NOTE:**
+- **bid = -2 , bgroup = "default"** means that the configuration is global, and the configuration is _applied for all_.
+- **bid = -1 , bgroup = "default"** means that the configuration is configured _for each bid/bgroup_
+- If you want to configure a specific bid and bgroup, you need to create a new configuration, and it will override the configuration.
