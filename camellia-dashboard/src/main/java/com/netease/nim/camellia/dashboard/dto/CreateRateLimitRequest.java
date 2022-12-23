@@ -10,7 +10,7 @@ import javax.validation.constraints.NotBlank;
  */
 public class CreateRateLimitRequest {
 
-    @Min(value = -1, message = "bid must be equal -1 or greater than 0")
+    @Min(value = -2, message = "bid must be equal -1,-2 or greater than 0")
     private Long bid;
     @NotBlank
     private String bgroup;

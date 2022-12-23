@@ -162,7 +162,7 @@ public class RateLimitService implements IRateLimitService {
     }
 
     private void throwIfInvalidTenant(long bid, String bgroup) {
-        if (bid <= 0 && bid != TenantConstant.DEFAULT_BID) {
+        if (bid <= 0 && bid != TenantConstant.DEFAULT_BID && bid != TenantConstant.GLOBAL_BID) {
             throw new AppException(CamelliaApiCode.PARAM_ERROR.getCode(), "bid is required");
         }
         if (StringUtils.isEmpty(bgroup)) {
