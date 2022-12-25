@@ -1,23 +1,21 @@
 package com.netease.nim.camellia.redis.proxy.plugin.permission;
 
-import com.alibaba.fastjson.JSONObject;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
-import com.netease.nim.camellia.core.api.*;
+import com.netease.nim.camellia.core.api.CamelliaApiCode;
+import com.netease.nim.camellia.core.api.CamelliaMiscApi;
+import com.netease.nim.camellia.core.api.DataWithMd5Response;
 import com.netease.nim.camellia.core.model.IpCheckerDto;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.plugin.permission.model.IpCheckInfo;
-import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
-import com.netease.nim.camellia.redis.proxy.util.IpCheckerUtil;
+import com.netease.nim.camellia.redis.proxy.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,7 +32,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
     protected static final ProxyPluginResponse FORBIDDEN = new ProxyPluginResponse(false, "ip forbidden");
 
     // This key is applied for all bid and bgroup if bid and bgroup is null
-    public static final String DEFAULT_KEY = IpCheckerUtil.buildIpCheckerKey(-1L, "default");
+    public static final String DEFAULT_KEY = TenantUtils.buildKey(-1L, "default");
 
     private final ConcurrentLinkedHashMap<String, Boolean> checkCache = new ConcurrentLinkedHashMap.Builder<String, Boolean>()
             .initialCapacity(1000)
@@ -49,19 +47,8 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
     @Override
     public void init(ProxyBeanFactory factory) {
         try {
-            String url = ProxyDynamicConf.getString("camellia.dashboard.url", null);
-            int connectTimeoutMillis = ProxyDynamicConf.getInt("camellia.dashboard.connectTimeoutMillis", 10000);
-            int readTimeoutMillis = ProxyDynamicConf.getInt("camellia.dashboard.readTimeoutMillis", 60000);
-            Map<String, String> headerMap = new HashMap<>();
-            String string = ProxyDynamicConf.getString("camellia.dashboard.headerMap", "{}");
-            if (string != null && string.trim().length() > 0) {
-                JSONObject json = JSONObject.parseObject(string);
-                for (Map.Entry<String, Object> entry : json.entrySet()) {
-                    headerMap.put(entry.getKey(), String.valueOf(entry.getValue()));
-                }
-            }
-            api = CamelliaApiUtil.initMiscApi(url, connectTimeoutMillis, readTimeoutMillis, headerMap);
-            int seconds = ProxyDynamicConf.getInt("dynamic.ip.check.plugin.config.update.interval.seconds", 5);
+            api = CamelliaMiscApiUtil.initFromDynamicConfig();
+            int seconds = ProxyDynamicConf.getInt("dynamic.plugin.config.update.interval.seconds", 5);
             ExecutorUtils.scheduleAtFixedRate(this::reload, seconds, seconds, TimeUnit.SECONDS);
             reload();
         } catch (Exception e) {
@@ -92,7 +79,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
         Map<String, IpCheckInfo> newData = ipCheckers.stream()
                 .collect(
                         Collectors.toMap(
-                                ipChecker -> IpCheckerUtil.buildIpCheckerKey(ipChecker.getBid(), ipChecker.getBgroup()),
+                                ipChecker -> TenantUtils.buildKey(ipChecker.getBid(), ipChecker.getBgroup()),
                                 ipChecker -> {
                                     IpCheckInfo ipCheckInfo = new IpCheckInfo(ipChecker.getMode());
                                     load(ipCheckInfo, ipChecker.getIpList());
@@ -111,7 +98,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
             DataWithMd5Response<List<IpCheckerDto>> response = api.getIpCheckerList(md5);
             if (response != null && CamelliaApiCode.SUCCESS.getCode() == response.getCode() && response.getData() != null) {
                 String newMd5 = response.getMd5();
-                if (hasChange(newMd5)) {
+                if (Utils.hasChange(this.md5, newMd5)) {
                     this.md5 = newMd5;
                     return response.getData();
                 }
@@ -185,7 +172,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
      * @return is accessible ip
      */
     public boolean checkIp(Long bid, String bgroup, String ip) {
-        String key = IpCheckerUtil.buildIpCheckerKey(bid, bgroup);
+        String key = TenantUtils.buildKey(bid, bgroup);
         IpCheckInfo ipCheckInfo = cache.get(key);
         if (ipCheckInfo != null) {
             return ipCheckInfo.check(ip);
@@ -221,16 +208,6 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
                 }
             }
         }
-    }
-
-    /**
-     * Check if config has been changed
-     *
-     * @param newMd5 new md5
-     * @return true if config has been changed
-     */
-    private boolean hasChange(String newMd5) {
-        return this.md5 == null || (newMd5 != null && !this.md5.equals(newMd5));
     }
 
 }

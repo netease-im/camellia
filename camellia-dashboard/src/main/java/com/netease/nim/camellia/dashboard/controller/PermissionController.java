@@ -6,9 +6,13 @@ import com.netease.nim.camellia.core.api.PageCriteria;
 import com.netease.nim.camellia.core.enums.IpCheckMode;
 import com.netease.nim.camellia.dashboard.conf.DashboardProperties;
 import com.netease.nim.camellia.dashboard.dto.CreateIpCheckerRequest;
+import com.netease.nim.camellia.dashboard.dto.CreateRateLimitRequest;
 import com.netease.nim.camellia.dashboard.dto.UpdateIpCheckerRequest;
+import com.netease.nim.camellia.dashboard.dto.UpdateRateLimitRequest;
 import com.netease.nim.camellia.dashboard.model.IpChecker;
+import com.netease.nim.camellia.dashboard.model.RateLimit;
 import com.netease.nim.camellia.dashboard.service.IIpCheckerService;
+import com.netease.nim.camellia.dashboard.service.IRateLimitService;
 import com.netease.nim.camellia.dashboard.util.LogBean;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -32,6 +36,9 @@ public class PermissionController {
     @Autowired
     private IIpCheckerService ipCheckerService;
 
+    @Autowired
+    private IRateLimitService rateLimitService;
+
     @ApiOperation(value = "Find ip checker by id", notes = "Find ip checker by id")
     @GetMapping("/ip-checkers/{id}")
     public WebResult findIpCheckerById(@PathVariable("id") Long id) {
@@ -45,22 +52,22 @@ public class PermissionController {
 
     @ApiOperation(value = "Create ip checker", notes = "create ip checker")
     @PostMapping("/ip-checkers")
-    public WebResult CreateIpChecker(@RequestBody @Valid CreateIpCheckerRequest request
+    public WebResult createIpChecker(@RequestBody @Valid CreateIpCheckerRequest request
     ) {
         LogBean.get().addProps("bid", request.getBid());
         LogBean.get().addProps("bgroup", request.getBgroup());
         LogBean.get().addProps("mode", request.getMode());
         LogBean.get().addProps("ipList", request.getIpList());
 
-        IpChecker ipchecker = ipCheckerService.create(request);
-        JSONObject ipCheckerJson = ipchecker.toJson();
+        IpChecker ipChecker = ipCheckerService.create(request);
+        JSONObject ipCheckerJson = ipChecker.toJson();
         LogBean.get().addProps("ipChecker", ipCheckerJson);
         return WebResult.success(ipCheckerJson);
     }
 
-    @ApiOperation(value = "Create ip checker", notes = "create ip checker")
+    @ApiOperation(value = "Update ip checker", notes = "update ip checker")
     @PutMapping("/ip-checkers/{id}")
-    public WebResult UpdateIpChecker(
+    public WebResult updateIpChecker(
             @PathVariable("id") Long id,
             @RequestBody @Valid UpdateIpCheckerRequest request
     ) {
@@ -68,15 +75,15 @@ public class PermissionController {
         LogBean.get().addProps("mode", request.getMode());
         LogBean.get().addProps("ipList", request.getIpList());
 
-        IpChecker ipchecker = ipCheckerService.update(id, request);
-        JSONObject ipCheckerJson = ipchecker.toJson();
+        IpChecker ipChecker = ipCheckerService.update(id, request);
+        JSONObject ipCheckerJson = ipChecker.toJson();
         LogBean.get().addProps("ipChecker", ipCheckerJson);
         return WebResult.success(ipCheckerJson);
     }
 
-    @ApiOperation(value = "Create ip checker", notes = "create ip checker")
+    @ApiOperation(value = "Delete ip checker", notes = "delete ip checker")
     @DeleteMapping("/ip-checkers/{id}")
-    public WebResult DeleteIpChecker(
+    public WebResult deleteIpChecker(
             @PathVariable("id") Long id
     ) {
         LogBean.get().addProps("id", id);
@@ -121,5 +128,92 @@ public class PermissionController {
         LogBean.get().addProps("paging", paging);
         return WebResult.success(response);
     }
+
+
+    /*
+      ======================= Rate Limit =======================
+     */
+    @ApiOperation(value = "Find rate limit configuration by id", notes = "Find rate limit configuration by id")
+    @GetMapping("/rate-limit/{id}")
+    public WebResult findRateLimitById(@PathVariable("id") Long id) {
+        LogBean.get().addProps("id", id);
+        RateLimit rateLimit = rateLimitService.findById(id);
+        JSONObject rateLimitJson = rateLimit.toJson();
+        LogBean.get().addProps("rateLimit", rateLimitJson);
+        return WebResult.success(rateLimitJson);
+    }
+
+
+    @ApiOperation(value = "Create rate limit configuration", notes = "create rate limit configuration")
+    @PostMapping("/rate-limit")
+    public WebResult createRateLimit(@RequestBody @Valid CreateRateLimitRequest request
+    ) {
+        LogBean.get().addProps("bid", request.getBid());
+        LogBean.get().addProps("bgroup", request.getBgroup());
+        LogBean.get().addProps("millis", request.getCheckMillis());
+        LogBean.get().addProps("maxCount", request.getMaxCount());
+        RateLimit rateLimit = rateLimitService.create(request);
+        JSONObject rateLimitJson = rateLimit.toJson();
+        LogBean.get().addProps("rateLimit", rateLimitJson);
+        return WebResult.success(rateLimitJson);
+    }
+
+    @ApiOperation(value = "Update rate limit configuration", notes = "update rate limit configuration")
+    @PutMapping("/rate-limit/{id}")
+    public WebResult updateRateLimit(
+            @PathVariable("id") long id,
+            @RequestBody @Valid UpdateRateLimitRequest request
+    ) {
+        LogBean.get().addProps("id", id);
+        LogBean.get().addProps("millis", request.getCheckMillis());
+        LogBean.get().addProps("maxCount", request.getMaxCount());
+        rateLimitService.update(id, request);
+        return WebResult.success();
+    }
+
+    @ApiOperation(value = "Delete rate limit configuration", notes = "delete rate limit configuration")
+    @DeleteMapping("/rate-limit/{id}")
+    public WebResult deleteRateLimit(
+            @PathVariable("id") long id
+    ) {
+        LogBean.get().addProps("id", id);
+        rateLimitService.delete(id);
+        return WebResult.success();
+    }
+
+    @ApiOperation(value = "Find rate limit configurations by conditions", notes = "Find rate limit configurations by conditions")
+    @GetMapping("/rate-limit")
+    public WebResult searchRateLimitConfigurations(
+            @RequestParam(value = "bid", required = false) Long bid,
+            @RequestParam(value = "bgroup", required = false) String bgroup,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "limit", required = false) Integer limit
+    ) {
+        LogBean.get().addProps("bid", bid);
+        LogBean.get().addProps("bgroup", bgroup);
+        LogBean.get().addProps("page", page);
+        LogBean.get().addProps("limit", limit);
+        PageCriteria pageCriteria = new PageCriteria(page, limit);
+
+        Page<RateLimit> rateLimits = rateLimitService.searchRateLimitConfigurations(bid, bgroup, pageCriteria);
+
+        JSONObject response = new JSONObject();
+        JSONObject paging = new JSONObject();
+        paging.put("limit", pageCriteria.getLimit());
+        paging.put("page", pageCriteria.getPage());
+        paging.put("total", rateLimits.getTotalElements());
+        response.put("paging", paging);
+
+        JSONArray content = new JSONArray();
+        for (RateLimit rateLimit : rateLimits.getContent()) {
+            content.add(rateLimit.toJson());
+        }
+        response.put("content", content);
+
+        LogBean.get().addProps("rateLimits", content);
+        LogBean.get().addProps("paging", paging);
+        return WebResult.success(response);
+    }
+
 
 }

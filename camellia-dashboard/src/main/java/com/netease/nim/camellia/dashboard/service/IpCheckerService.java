@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.dashboard.service;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSON;
 import com.netease.nim.camellia.core.api.CamelliaApiCode;
 import com.netease.nim.camellia.core.api.DataWithMd5Response;
 import com.netease.nim.camellia.core.api.PageCriteria;
@@ -44,7 +44,7 @@ public class IpCheckerService implements IIpCheckerService {
         String newMd5 = camelliaLocalCache.get("md5", "ip-checker", String.class);
         if (newMd5 == null) {
             data = getData();
-            newMd5 = MD5Util.md5(JSONObject.toJSONString(data));
+            newMd5 = MD5Util.md5(JSON.toJSONString(data));
             camelliaLocalCache.put("md5", "ip-checker", newMd5, 3);
         }
         if (newMd5.equals(md5)) {

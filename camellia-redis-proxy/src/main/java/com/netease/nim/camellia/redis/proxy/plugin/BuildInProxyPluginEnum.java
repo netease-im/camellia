@@ -8,10 +8,7 @@ import com.netease.nim.camellia.redis.proxy.plugin.misc.DelayDoubleDeleteProxyPl
 import com.netease.nim.camellia.redis.proxy.plugin.misc.MultiWriteProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.misc.TroubleTrickKeysProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.monitor.MonitorProxyPlugin;
-import com.netease.nim.camellia.redis.proxy.plugin.permission.CommandDisableProxyPlugin;
-import com.netease.nim.camellia.redis.proxy.plugin.permission.DynamicIpCheckProxyPlugin;
-import com.netease.nim.camellia.redis.proxy.plugin.permission.IPCheckProxyPlugin;
-import com.netease.nim.camellia.redis.proxy.plugin.permission.RateLimitProxyPlugin;
+import com.netease.nim.camellia.redis.proxy.plugin.permission.*;
 
 /**
  * 一些内置的plugin，可以通过别名直接开启，而不需要全类目
@@ -30,6 +27,8 @@ public enum BuildInProxyPluginEnum {
     COMMAND_DISABLE_PLUGIN("commandDisablePlugin", CommandDisableProxyPlugin.class, Integer.MAX_VALUE - 20000, 0),
     //用于控制请求速率
     RATE_LIMIT_PLUGIN("rateLimitPlugin", RateLimitProxyPlugin.class, Integer.MAX_VALUE - 30000, 0),
+    //Dynamic Rate Limit, configured by camellia-dashboard
+    DYNAMIC_RATE_LIMIT_PLUGIN("dynamicRateLimitPlugin", DynamicRateLimitProxyPlugin.class, Integer.MAX_VALUE - 30000, 0),
     //用于拦截非法的key，直接快速失败
     TROUBLE_TRICK_KEYS_PLUGIN("troubleTrickKeys", TroubleTrickKeysProxyPlugin.class, Integer.MAX_VALUE - 40000, 0),
 

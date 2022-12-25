@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.auth;
 
+import com.netease.nim.camellia.core.constant.TenantConstant;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.util.TenantUtils;
 
 /**
  * 最大连接数限制，可以自定义实现ConnectLimiter的实现类，动态调整最大连接数
@@ -11,6 +11,9 @@ import com.netease.nim.camellia.redis.proxy.util.TenantUtils;
  * Created by caojiajun on 2021/10/15
  */
 public class ConnectLimiter {
+    private ConnectLimiter() {
+        throw new IllegalStateException("Utility class");
+    }
 
     private static final int DEFAULT_THRESHOLD = -1;
 
@@ -36,7 +39,7 @@ public class ConnectLimiter {
      * @return Maximum number of connections
      */
     public static int connectThreshold(long bid, String bgroup) {
-        int globalThreshold = ProxyDynamicConf.getInt(TenantUtils.DEFAULT_BID + "." + TenantUtils.DEFAULT_BGROUP + ".max.client.connect", DEFAULT_THRESHOLD);
+        int globalThreshold = ProxyDynamicConf.getInt(TenantConstant.DEFAULT_BID + "." + TenantConstant.DEFAULT_BGROUP + ".max.client.connect", DEFAULT_THRESHOLD);
         int threshold = ProxyDynamicConf.getInt(bid + "." + bgroup + ".max.client.connect", globalThreshold);
 
         if (threshold < 0) {
