@@ -4,6 +4,17 @@
 * camellia-redis-proxy support client-cache feature of redis6.0
 * camellia-redis-proxy support monitor data visualization in prometheus
 
+# 1.1.10（2022/12/xx）
+### add
+* camellia-redis-proxy provide DynamicRateLimitProxyPlugin, which support dynamic configure by camellia-dashboard, thanks [@tasszz2k](https://github.com/tasszz2k)
+
+### update
+* none
+
+### fix
+* none
+
+
 # 1.1.9（2022/12/21）
 ### add
 * provide camellia-cache module, enhance spring-cache

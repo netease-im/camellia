@@ -4,6 +4,18 @@
 * camellia-redis-proxy支持redis6.0的client-cache特性
 * camellia-redis-proxy支持监控数据可视化到prometheus等平台
 
+
+# 1.1.10（2022/12/xx）
+### 新增
+* camellia-redis-proxy提供了DynamicRateLimitProxyPlugin，支持使用camellia-dashboard进行动态配置，感谢[@tasszz2k](https://github.com/tasszz2k)
+
+### 更新
+* 无
+
+### fix
+* 无
+
+
 # 1.1.9（2022/12/21）
 ### 新增
 * 新增camellia-cache模块，增强spring-cache，具体见：[cache](/docs/cache/cache.md)
