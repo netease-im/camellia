@@ -106,6 +106,12 @@ public class ConsoleServiceAdaptor implements ConsoleService {
     }
 
     @Override
+    public ConsoleResult prometheus() {
+        Stats stats = ProxyMonitorCollector.getStats();
+        return ConsoleResult.success(StatsPrometheusConverter.converter(stats));
+    }
+
+    @Override
     public ConsoleResult reload() {
         ProxyDynamicConf.reload();
         logger.info("proxy dynamic conf reload success");

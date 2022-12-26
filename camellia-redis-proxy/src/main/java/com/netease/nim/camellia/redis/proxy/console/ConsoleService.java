@@ -19,6 +19,8 @@ public interface ConsoleService {
 
     ConsoleResult monitor();
 
+    ConsoleResult prometheus();
+
     ConsoleResult reload();
 
     ConsoleResult info(Map<String, List<String>> params);
