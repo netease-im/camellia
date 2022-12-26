@@ -86,6 +86,8 @@ public enum BuildInProxyPluginEnum {
     COMMAND_DISABLE_PLUGIN("commandDisablePlugin", CommandDisableProxyPlugin.class, Integer.MAX_VALUE - 20000, 0),
     //用于控制请求速率
     RATE_LIMIT_PLUGIN("rateLimitPlugin", RateLimitProxyPlugin.class, Integer.MAX_VALUE - 30000, 0),
+    //Dynamic Rate Limit, configured by camellia-dashboard
+    DYNAMIC_RATE_LIMIT_PLUGIN("dynamicRateLimitPlugin", DynamicRateLimitProxyPlugin.class, Integer.MAX_VALUE - 30000, 0),
     //用于拦截非法的key，直接快速失败
     TROUBLE_TRICK_KEYS_PLUGIN("troubleTrickKeys", TroubleTrickKeysProxyPlugin.class, Integer.MAX_VALUE - 40000, 0),
 
@@ -127,6 +129,7 @@ public enum BuildInProxyPluginEnum {
 * DelayDoubleDeleteProxyPlugin，用于透明的进行缓存双删（仅拦截DEL命令），具体见：[delay-double-delete](delay-double-delete.md)
 * TroubleTrickKeysProxyPlugin，用于临时拦截问题key的某些命令，具体见：[trouble-trick-keys](trouble-trick-keys.md)
 * RateLimitProxyPlugin，用于进行频率控制，支持租户级别进行控制，具体见：[rate-limit](rate-limit.md)
+* DynamicRateLimitProxyPlugin，用于进行频率控制，支持租户级别进行控制，通过camellia-dashboard托管配置，具体见：[dynamic-rate-limit](dynamic-rate-limit.md)
 * IPCheckProxyPlugin，用于控制客户端接入，支持ip黑白名单，具体见：[ip-checker](ip-checker.md)
 * DynamicIpCheckProxyPlugin，用于控制客户端接入，支持ip黑白名单，通过camellia-dashboard托管配置，具体见：[dynamic-ip-checker](dynamic-ip-checker.md)
 * CommandDisableProxyPlugin，用于屏蔽某些命令，具体见：[command-disable](command-disable.md)
