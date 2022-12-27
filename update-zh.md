@@ -13,7 +13,7 @@
 * 无
 
 ### fix
-* 无
+* 修复CamelliaRedisTemplate使用RedisResource时select db不生效的问题 
 
 
 # 1.1.9（2022/12/21）

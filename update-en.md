@@ -12,7 +12,7 @@
 * none
 
 ### fix
-* none
+* fix CamelliaRedisTemplate select db when use RedisResource
 
 
 # 1.1.9（2022/12/21）

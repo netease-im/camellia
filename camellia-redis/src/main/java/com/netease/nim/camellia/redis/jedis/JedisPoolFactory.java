@@ -109,10 +109,10 @@ public interface JedisPoolFactory {
                         String password = redisResource.getPassword();
                         if (password == null || password.length() == 0) {
                             jedisPool = new JedisPool(poolConfig, redisResource.getHost(),
-                                    redisResource.getPort(), timeout);
+                                    redisResource.getPort(), timeout, null, redisResource.getDb(), null);
                         } else {
                             jedisPool = new JedisPool(poolConfig, redisResource.getHost(),
-                                    redisResource.getPort(), timeout, redisResource.getPassword());
+                                    redisResource.getPort(), timeout, redisResource.getPassword(), redisResource.getDb(), null);
                         }
                         map1.put(redisResource.getUrl(), jedisPool);
                     }
@@ -136,21 +136,11 @@ public interface JedisPoolFactory {
                         String password = redisSentinelResource.getPassword();
                         int db = redisSentinelResource.getDb();
                         if (password == null || password.length() == 0) {
-                            if (db == 0) {
-                                jedisSentinelPool = new JedisSentinelPool(redisSentinelResource.getMaster(), sentinels,
-                                        poolConfig, timeout);
-                            } else {
-                                jedisSentinelPool = new JedisSentinelPool(redisSentinelResource.getMaster(), sentinels,
-                                        poolConfig, timeout, null, db);
-                            }
+                            jedisSentinelPool = new JedisSentinelPool(redisSentinelResource.getMaster(), sentinels,
+                                    poolConfig, timeout, null, db);
                         } else {
-                            if (db == 0) {
-                                jedisSentinelPool = new JedisSentinelPool(redisSentinelResource.getMaster(), sentinels,
-                                        poolConfig, timeout, password);
-                            } else {
-                                jedisSentinelPool = new JedisSentinelPool(redisSentinelResource.getMaster(), sentinels,
-                                        poolConfig, timeout, password, db);
-                            }
+                            jedisSentinelPool = new JedisSentinelPool(redisSentinelResource.getMaster(), sentinels,
+                                    poolConfig, timeout, password, db);
                         }
                         map2.put(redisSentinelResource.getUrl(), jedisSentinelPool);
                     }
