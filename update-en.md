@@ -13,6 +13,7 @@
 
 ### fix
 * fix CamelliaRedisTemplate select db when use RedisResource
+* fix Chinese disorderly code of camellia-delay-queue, thanks [@ax3353](https://github.com/ax3353)
 
 
 # 1.1.9（2022/12/21）

@@ -14,7 +14,7 @@
 
 ### fix
 * 修复CamelliaRedisTemplate使用RedisResource时select db不生效的问题 
-
+* 修复了camellia-delay-queue中文乱码的问题的，感谢[@ax3353](https://github.com/ax3353)
 
 # 1.1.9（2022/12/21）
 ### 新增
