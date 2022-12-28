@@ -44,6 +44,7 @@ public class CamelliaDelayQueueController {
         request.setTopic(topic);
         request.setAckTimeoutMillis(ackTimeoutMillis);
         request.setBatch(batch);
+        httpServletResponse.setCharacterEncoding("utf-8");
         //先直接取，如果取得到，直接返回，不需要异步hold连接
         try {
             CamelliaDelayMsgPullResponse response = server.pullMsg(request);
