@@ -1,8 +1,4 @@
 [中文版](update-zh.md)
-# future(TODO)  
-* camellia-redis-proxy support a way for Lettuce to use camellia-redis-proxy depends on register-discovery mode easily
-* camellia-redis-proxy support client-cache feature of redis6.0
-* camellia-redis-proxy support monitor data visualization in prometheus
 
 # 1.1.10（2022/12/xx）
 ### add
