@@ -3,21 +3,22 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-delay-queue</artifactId>
+	<artifactId>camellia-redis-spring-boot-starters</artifactId>
 	<version>1.1.10-SNAPSHOT</version>
 
 	<packaging>pom</packaging>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia</artifactId>
+		<artifactId>camellia-redis-client</artifactId>
 		<version>1.1.10-SNAPSHOT</version>
 	</parent>
 
 	<modules>
-		<module>camellia-delay-queue-common</module>
-		<module>camellia-delay-queue-sdk</module>
-		<module>camellia-delay-queue-server</module>
-		<module>camellia-delay-queue-spring-boot-starters</module>
+		<module>camellia-redis-eureka-base</module>
+		<module>camellia-redis-eureka-spring-boot-starter</module>
+		<module>camellia-redis-spring-boot-starter</module>
+		<module>camellia-redis-spring-template-adaptor-spring-boot-starter</module>
+		<module>camellia-redis-zk-discovery-spring-boot-starter</module>
 	</modules>
 </project>

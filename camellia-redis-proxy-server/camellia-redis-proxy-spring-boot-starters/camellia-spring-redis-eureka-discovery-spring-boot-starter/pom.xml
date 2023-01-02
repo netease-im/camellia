@@ -3,14 +3,15 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-redis-samples</artifactId>
+	<artifactId>camellia-spring-redis-eureka-discovery-spring-boot-starter</artifactId>
 	<version>1.1.10-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia-samples</artifactId>
+		<artifactId>camellia-redis-proxy-spring-boot-starters</artifactId>
 		<version>1.1.10-SNAPSHOT</version>
 	</parent>
+
 
 	<dependencyManagement>
 		<dependencies>
@@ -21,13 +22,20 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring.cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-spring-boot-starter</artifactId>
+			<artifactId>camellia-redis-eureka-base</artifactId>
 			<version>1.1.10-SNAPSHOT</version>
 		</dependency>
 		<dependency>
@@ -36,16 +44,20 @@
 			<version>1.1.10-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-zk-discovery-spring-boot-starter</artifactId>
-			<version>1.1.10-SNAPSHOT</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-autoconfigure</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-spring-template-adaptor-spring-boot-starter</artifactId>
-			<version>1.1.10-SNAPSHOT</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
 	</dependencies>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -55,31 +67,24 @@
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
+					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>${maven-deploy-plugin.version}</version>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>${maven-source-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
-		<resources>
-			<resource>
-				<directory>src/main/java</directory>
-				<includes>
-					<include>**/*</include>
-				</includes>
-			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-				<includes>
-					<include>**/*</include>
-				</includes>
-			</resource>
-		</resources>
 	</build>
 
 	<repositories>
@@ -92,4 +97,5 @@
 			</snapshots>
 		</repository>
 	</repositories>
+
 </project>

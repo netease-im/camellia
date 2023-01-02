@@ -17,5 +17,6 @@
 	<modules>
 		<module>camellia-id-gen-core</module>
 		<module>camellia-id-gen-sdk</module>
+		<module>camellia-id-gen-spring-boot-starters</module>
 	</modules>
 </project>

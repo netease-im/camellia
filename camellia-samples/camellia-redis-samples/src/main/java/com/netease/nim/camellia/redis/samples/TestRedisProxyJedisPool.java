@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis.samples;
 
-import com.netease.nim.camellia.redis.proxy.discovery.common.RegionResolver;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
 import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkProxyDiscovery;
 import redis.clients.jedis.Jedis;

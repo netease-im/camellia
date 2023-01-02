@@ -11,20 +11,17 @@
 	<packaging>pom</packaging>
 	<description>camellia framework</description>
 	<modules>
+		<module>camellia-admin</module>
 		<module>camellia-core</module>
-		<module>camellia-console</module>
 		<module>camellia-cache</module>
-		<module>camellia-dashboard</module>
-		<module>camellia-delay-queue</module>
-		<module>camellia-feign</module>
-		<module>camellia-hbase</module>
-		<module>camellia-redis</module>
+		<module>camellia-feign-client</module>
+		<module>camellia-hbase-client</module>
+		<module>camellia-redis-client</module>
 		<module>camellia-id-gen</module>
+		<module>camellia-delay-queue</module>
+		<module>camellia-redis-proxy-server</module>
 		<module>camellia-tools</module>
-		<module>camellia-redis-proxy</module>
-		<module>camellia-redis-proxy-extensions</module>
 		<module>camellia-samples</module>
-		<module>camellia-spring-boot-starters</module>
 	</modules>
 
 	<properties>

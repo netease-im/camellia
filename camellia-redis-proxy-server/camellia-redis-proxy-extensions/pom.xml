@@ -2,22 +2,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
-	<artifactId>camellia-delay-queue</artifactId>
+	<artifactId>camellia-redis-proxy-extensions</artifactId>
 	<version>1.1.10-SNAPSHOT</version>
 
 	<packaging>pom</packaging>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia</artifactId>
+		<artifactId>camellia-redis-proxy-server</artifactId>
 		<version>1.1.10-SNAPSHOT</version>
 	</parent>
 
 	<modules>
-		<module>camellia-delay-queue-common</module>
-		<module>camellia-delay-queue-sdk</module>
-		<module>camellia-delay-queue-server</module>
-		<module>camellia-delay-queue-spring-boot-starters</module>
+		<module>camellia-redis-proxy-discovery</module>
+		<module>camellia-redis-proxy-hbase</module>
+		<module>camellia-redis-proxy-mq</module>
 	</modules>
 </project>

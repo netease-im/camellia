@@ -3,14 +3,15 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-redis-samples</artifactId>
+	<artifactId>camellia-dashboard</artifactId>
 	<version>1.1.10-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia-samples</artifactId>
+		<artifactId>camellia-admin</artifactId>
 		<version>1.1.10-SNAPSHOT</version>
 	</parent>
+
 
 	<dependencyManagement>
 		<dependencies>
@@ -26,26 +27,60 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-core</artifactId>
+			<version>1.1.10-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-tools</artifactId>
+			<version>1.1.10-SNAPSHOT</version>
+		</dependency>
+		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-spring-boot-starter</artifactId>
 			<version>1.1.10-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-spring-redis-base</artifactId>
+			<artifactId>camellia-hbase</artifactId>
 			<version>1.1.10-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-zk-discovery-spring-boot-starter</artifactId>
+			<artifactId>camellia-feign</artifactId>
 			<version>1.1.10-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-spring-template-adaptor-spring-boot-starter</artifactId>
-			<version>1.1.10-SNAPSHOT</version>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-config</artifactId>
+			<version>${spring-cloud-starter-config.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+			<version>${swagger.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger-ui</artifactId>
+			<version>${swagger.version}</version>
 		</dependency>
 	</dependencies>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -55,31 +90,24 @@
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
+					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>${maven-deploy-plugin.version}</version>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>${maven-source-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
-		<resources>
-			<resource>
-				<directory>src/main/java</directory>
-				<includes>
-					<include>**/*</include>
-				</includes>
-			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-				<includes>
-					<include>**/*</include>
-				</includes>
-			</resource>
-		</resources>
 	</build>
 
 	<repositories>
@@ -92,4 +120,5 @@
 			</snapshots>
 		</repository>
 	</repositories>
+
 </project>
