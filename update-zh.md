@@ -5,7 +5,7 @@
 * camellia-redis-proxy提供了DynamicRateLimitProxyPlugin，支持使用camellia-dashboard进行动态配置，感谢[@tasszz2k](https://github.com/tasszz2k)
 
 ### 更新
-* 无
+* 调整了项目maven结构
 
 ### fix
 * 修复CamelliaRedisTemplate使用RedisResource时select db不生效的问题 

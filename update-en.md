@@ -5,7 +5,7 @@
 * camellia-redis-proxy provide DynamicRateLimitProxyPlugin, which support dynamic configure by camellia-dashboard, thanks [@tasszz2k](https://github.com/tasszz2k)
 
 ### update
-* none
+* refactor project maven module
 
 ### fix
 * fix CamelliaRedisTemplate select db when use RedisResource
