@@ -19,7 +19,7 @@
 		<module>camellia-redis-client</module>
 		<module>camellia-id-gen</module>
 		<module>camellia-delay-queue</module>
-		<module>camellia-redis-proxy-server</module>
+		<module>camellia-redis-proxy</module>
 		<module>camellia-tools</module>
 		<module>camellia-samples</module>
 	</modules>

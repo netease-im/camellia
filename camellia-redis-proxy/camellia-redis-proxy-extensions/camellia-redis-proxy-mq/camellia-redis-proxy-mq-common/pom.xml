@@ -3,30 +3,27 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-redis-proxy-hbase</artifactId>
+	<artifactId>camellia-redis-proxy-mq-common</artifactId>
 	<version>1.1.10-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia-redis-proxy-extensions</artifactId>
+		<artifactId>camellia-redis-proxy-mq</artifactId>
 		<version>1.1.10-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-proxy</artifactId>
+			<artifactId>camellia-redis-proxy-core</artifactId>
 			<version>1.1.10-SNAPSHOT</version>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.msgpack/msgpack-core -->
 		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-hbase</artifactId>
-			<version>1.1.10-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>redis.clients</groupId>
-			<artifactId>jedis</artifactId>
-			<version>${jedis.version}</version>
+			<groupId>org.msgpack</groupId>
+			<artifactId>msgpack-core</artifactId>
+			<version>${msgpack.version}</version>
 		</dependency>
     </dependencies>
 	<build>
