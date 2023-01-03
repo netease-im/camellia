@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netease.nim.camellia.cache.core.*;
 import com.netease.nim.camellia.cache.spring.caffeine.CaffeineNativeCacheInitializer;
-import com.netease.nim.camellia.cache.spring.redis.RedisNativeNativeCacheInitializer;
+import com.netease.nim.camellia.cache.spring.redis.RedisNativeCacheInitializer;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +52,7 @@ public class CamelliaCacheConfiguration extends CachingConfigurerSupport {
 
     @ConditionalOnMissingBean(value = RemoteNativeCacheInitializer.class)
     public RemoteNativeCacheInitializer remoteNativeCacheInitializer() {
-        return new RedisNativeNativeCacheInitializer();
+        return new RedisNativeCacheInitializer();
     }
 
     @ConditionalOnMissingBean(value = LocalNativeCacheInitializer.class)
@@ -103,8 +103,8 @@ public class CamelliaCacheConfiguration extends CachingConfigurerSupport {
         logger.info("local camellia-cache init success, LocalNativeCacheInitializer = {}", localNativeCacheInitializer.getClass().getName());
         //remote cache, default redis
         RemoteNativeCacheInitializer remoteNativeCacheInitializer = remoteNativeCacheInitializer();
-        if (remoteNativeCacheInitializer instanceof RedisNativeNativeCacheInitializer) {
-            ((RedisNativeNativeCacheInitializer) remoteNativeCacheInitializer).setRedisTemplate(redisTemplate);
+        if (remoteNativeCacheInitializer instanceof RedisNativeCacheInitializer) {
+            ((RedisNativeCacheInitializer) remoteNativeCacheInitializer).setRedisTemplate(redisTemplate);
         }
         RemoteNativeCache remoteNativeCache = remoteNativeCacheInitializer.init(serializer);
         if (remoteNativeCache != null) {

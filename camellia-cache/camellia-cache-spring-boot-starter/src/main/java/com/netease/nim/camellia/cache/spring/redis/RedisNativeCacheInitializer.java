@@ -6,7 +6,7 @@ import com.netease.nim.camellia.cache.spring.RemoteNativeCacheInitializer;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 
 
-public class RedisNativeNativeCacheInitializer implements RemoteNativeCacheInitializer {
+public class RedisNativeCacheInitializer implements RemoteNativeCacheInitializer {
 
     private CamelliaRedisTemplate redisTemplate;
 
