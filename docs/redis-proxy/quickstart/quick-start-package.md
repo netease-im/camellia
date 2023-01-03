@@ -1,11 +1,11 @@
 
 ## 快速开始（基于安装包）
 
-下载最新版安装包并解压（v1.1.9）：
+下载最新版安装包并解压（v1.1.10）：
 ```
-wget https://github.com/netease-im/camellia/releases/download/1.1.9/camellia-redis-proxy-1.1.9.tar.gz
-tar zxvf camellia-redis-proxy-1.1.9.tar.gz
-cd camellia-redis-proxy-1.1.9/
+wget https://github.com/netease-im/camellia/releases/download/1.1.10/camellia-redis-proxy-1.1.10.tar.gz
+tar zxvf camellia-redis-proxy-1.1.10.tar.gz
+cd camellia-redis-proxy-1.1.10/
 ```
 按需修改BOOT-INF/classes/下的配置文件：
 * application.yml
@@ -34,9 +34,9 @@ java -XX:+UseG1GC -XX:+UseContainerSupport -Xms4096m -Xmx4096m -server org.sprin
 
 特别的，在某些业务场景中下，可能希望proxy的可执行文件与配置文件application.yml分开，此时可以把tar包重新打成jar包，并配合spring提供的spring.config.location参数来指定application.yml，具体如下：
 ```
-wget https://github.com/netease-im/camellia/releases/download/1.1.9/camellia-redis-proxy-1.1.9.tar.gz
-tar zxvf camellia-redis-proxy-1.1.9.tar.gz
-cd camellia-redis-proxy-1.1.9/
+wget https://github.com/netease-im/camellia/releases/download/1.1.10/camellia-redis-proxy-1.1.10.tar.gz
+tar zxvf camellia-redis-proxy-1.1.10.tar.gz
+cd camellia-redis-proxy-1.1.10/
 jar -cvf0M camellia-redis-proxy.jar BOOT-INF/ META-INF/ org/
 ```
 此时，就会生成一个camellia-redis-proxy.jar，随后使用java -jar命令启动即可，如下：

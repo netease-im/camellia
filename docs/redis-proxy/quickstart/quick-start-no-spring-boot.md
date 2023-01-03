@@ -5,8 +5,8 @@
 ```
 <dependency>
     <groupId>com.netease.nim</groupId>
-    <artifactId>camellia-redis-proxy</artifactId>
-    <version>1.1.9</version>
+    <artifactId>camellia-redis-proxy-core</artifactId>
+    <version>1.1.10</version>
 </dependency>
 ```
 

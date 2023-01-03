@@ -71,7 +71,7 @@ base on spring-cache:
 [QUICK START](/docs/tools/tools.md)
 
 ## Version
-latest version is 1.1.9, have deploy to maven central repository on 2022/12/21  
+latest version is 1.1.10, have deploy to maven central repository on 2023/01/03  
 [CHANGE_LOG](/update-en.md)  
 
 ## User List

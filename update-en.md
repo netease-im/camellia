@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.1.10（2022/12/xx）
+# 1.1.10（2023/01/03）
 ### add
 * camellia-redis-proxy provide DynamicRateLimitProxyPlugin, which support dynamic configure by camellia-dashboard, thanks [@tasszz2k](https://github.com/tasszz2k)
 
