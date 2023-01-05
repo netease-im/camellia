@@ -56,6 +56,8 @@ public class ConsoleServerHandler extends SimpleChannelInboundHandler<Object> {
                 return consoleService.custom(requestObject.getParams());
             } else if (uri.equalsIgnoreCase("/detect")) {
                 return consoleService.detect(requestObject.getParams());
+            }else if (uri.equalsIgnoreCase("/prometheus")) {
+                return consoleService.prometheus();
             }
             return ConsoleResult.error();
         } catch (Exception e) {
