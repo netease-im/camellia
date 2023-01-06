@@ -4,7 +4,7 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.core.util.CamelliaMapUtils;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.model.BigKeyStats;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;

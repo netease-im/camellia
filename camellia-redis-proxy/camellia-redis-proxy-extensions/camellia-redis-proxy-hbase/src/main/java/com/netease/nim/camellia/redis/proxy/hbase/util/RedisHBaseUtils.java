@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.hbase.util;
 
-import com.netease.nim.camellia.core.util.MD5Util;
+import com.netease.nim.camellia.tools.utils.MD5Util;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.proxy.hbase.HBaseAsyncWriteExecutor;

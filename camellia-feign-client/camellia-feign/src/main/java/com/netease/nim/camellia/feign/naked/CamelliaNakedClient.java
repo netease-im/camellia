@@ -11,7 +11,7 @@ import com.netease.nim.camellia.core.discovery.CamelliaServerSelector;
 import com.netease.nim.camellia.core.discovery.RandomCamelliaServerSelector;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
-import com.netease.nim.camellia.core.util.ExceptionUtils;
+import com.netease.nim.camellia.tools.utils.ExceptionUtils;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceChooser;
 import com.netease.nim.camellia.feign.CamelliaFeignEnv;

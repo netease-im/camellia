@@ -25,6 +25,7 @@ import com.netease.nim.camellia.feign.route.FeignResourceTableUpdater;
 import com.netease.nim.camellia.tools.circuitbreaker.CamelliaCircuitBreaker;
 import com.netease.nim.camellia.tools.circuitbreaker.CamelliaCircuitBreakerException;
 import com.netease.nim.camellia.tools.circuitbreaker.CircuitBreakerConfig;
+import com.netease.nim.camellia.tools.utils.ExceptionUtils;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 import org.slf4j.Logger;

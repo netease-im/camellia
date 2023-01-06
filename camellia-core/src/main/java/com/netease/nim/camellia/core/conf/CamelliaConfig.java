@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.core.conf;
 
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

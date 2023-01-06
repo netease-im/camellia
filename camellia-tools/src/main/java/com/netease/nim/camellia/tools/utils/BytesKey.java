@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.core.util;
+package com.netease.nim.camellia.tools.utils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;

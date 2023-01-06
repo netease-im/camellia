@@ -7,8 +7,8 @@ import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
 import com.netease.nim.camellia.core.client.hub.IProxyHub;
-import com.netease.nim.camellia.core.util.CamelliaMapUtils;
-import com.netease.nim.camellia.core.util.ExceptionUtils;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
+import com.netease.nim.camellia.tools.utils.ExceptionUtils;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 

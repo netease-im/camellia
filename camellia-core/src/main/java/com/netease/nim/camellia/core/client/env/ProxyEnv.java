@@ -3,7 +3,7 @@ package com.netease.nim.camellia.core.client.env;
 import com.netease.nim.camellia.core.client.callback.OperationCallback;
 import com.netease.nim.camellia.core.client.callback.ShardingCallback;
 import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 
 import java.util.concurrent.*;
 

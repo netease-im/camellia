@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.hbase;
 
-import com.netease.nim.camellia.core.util.ExceptionUtils;
+import com.netease.nim.camellia.tools.utils.ExceptionUtils;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.proxy.auth.AuthCommandProcessor;

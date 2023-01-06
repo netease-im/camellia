@@ -8,7 +8,7 @@ import com.netease.nim.camellia.core.model.operation.ResourceOperation;
 import com.netease.nim.camellia.core.model.operation.ResourceReadOperation;
 import com.netease.nim.camellia.core.model.operation.ResourceWriteOperation;
 import com.netease.nim.camellia.core.util.CheckUtil;
-import com.netease.nim.camellia.core.util.ExceptionUtils;
+import com.netease.nim.camellia.tools.utils.ExceptionUtils;
 import com.netease.nim.camellia.core.util.ReadWriteOperationCache;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;

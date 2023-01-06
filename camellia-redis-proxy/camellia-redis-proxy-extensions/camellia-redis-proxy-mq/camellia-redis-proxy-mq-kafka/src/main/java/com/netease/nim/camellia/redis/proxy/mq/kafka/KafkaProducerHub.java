@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.mq.kafka;
 
-import com.netease.nim.camellia.core.util.LockMap;
+import com.netease.nim.camellia.tools.utils.LockMap;
 
 import java.util.concurrent.ConcurrentHashMap;
 

@@ -3,7 +3,7 @@ package com.netease.nim.camellia.dashboard.service;
 import com.netease.nim.camellia.core.api.CamelliaApiCode;
 import com.netease.nim.camellia.core.api.CamelliaApiResponse;
 import com.netease.nim.camellia.core.model.ResourceTable;
-import com.netease.nim.camellia.core.util.MD5Util;
+import com.netease.nim.camellia.tools.utils.MD5Util;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.dashboard.conf.DashboardProperties;
 import com.netease.nim.camellia.dashboard.model.Table;

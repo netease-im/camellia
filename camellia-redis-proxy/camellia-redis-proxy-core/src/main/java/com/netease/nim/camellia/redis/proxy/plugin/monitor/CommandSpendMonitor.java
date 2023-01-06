@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.plugin.monitor;
 
-import com.netease.nim.camellia.core.util.CamelliaMapUtils;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.model.BidBgroupSpendStats;
 import com.netease.nim.camellia.redis.proxy.monitor.model.SpendStats;

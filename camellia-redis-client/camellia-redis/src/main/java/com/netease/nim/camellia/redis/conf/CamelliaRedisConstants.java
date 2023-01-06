@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.conf;
 
-import com.netease.nim.camellia.core.util.SysUtils;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 
 /**
  *

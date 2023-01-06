@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.client;
 
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.netty.*;
 import com.netease.nim.camellia.redis.proxy.upstream.AsyncClient;

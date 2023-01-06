@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
-import com.netease.nim.camellia.core.util.SysUtils;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.proxy.cluster.DefaultProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthByConfigProvider;

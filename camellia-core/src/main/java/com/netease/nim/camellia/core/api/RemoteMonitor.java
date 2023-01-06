@@ -2,9 +2,9 @@ package com.netease.nim.camellia.core.api;
 
 
 import com.netease.nim.camellia.core.client.env.Monitor;
-import com.netease.nim.camellia.core.util.CamelliaMapUtils;
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
-import com.netease.nim.camellia.core.util.SysUtils;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

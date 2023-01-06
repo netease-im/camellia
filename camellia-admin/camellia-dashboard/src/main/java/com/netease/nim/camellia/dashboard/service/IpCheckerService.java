@@ -6,7 +6,7 @@ import com.netease.nim.camellia.core.api.DataWithMd5Response;
 import com.netease.nim.camellia.core.api.PageCriteria;
 import com.netease.nim.camellia.core.enums.IpCheckMode;
 import com.netease.nim.camellia.core.model.IpCheckerDto;
-import com.netease.nim.camellia.core.util.MD5Util;
+import com.netease.nim.camellia.tools.utils.MD5Util;
 import com.netease.nim.camellia.dashboard.daowrapper.IpCheckerDaoWrapper;
 import com.netease.nim.camellia.dashboard.dto.CreateIpCheckerRequest;
 import com.netease.nim.camellia.dashboard.dto.UpdateIpCheckerRequest;

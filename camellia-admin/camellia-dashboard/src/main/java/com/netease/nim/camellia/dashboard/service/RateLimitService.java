@@ -7,7 +7,7 @@ import com.netease.nim.camellia.core.api.PageCriteria;
 import com.netease.nim.camellia.core.constant.RateLimitConstant;
 import com.netease.nim.camellia.core.constant.TenantConstant;
 import com.netease.nim.camellia.core.model.RateLimitDto;
-import com.netease.nim.camellia.core.util.MD5Util;
+import com.netease.nim.camellia.tools.utils.MD5Util;
 import com.netease.nim.camellia.dashboard.daowrapper.RateLimitDaoWrapper;
 import com.netease.nim.camellia.dashboard.dto.CreateRateLimitRequest;
 import com.netease.nim.camellia.dashboard.dto.UpdateRateLimitRequest;

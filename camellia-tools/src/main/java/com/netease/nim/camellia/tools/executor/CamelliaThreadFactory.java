@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.core.util;
+package com.netease.nim.camellia.tools.executor;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;

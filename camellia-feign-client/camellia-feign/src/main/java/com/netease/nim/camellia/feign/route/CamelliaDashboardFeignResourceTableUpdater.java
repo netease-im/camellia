@@ -4,7 +4,7 @@ import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiCode;
 import com.netease.nim.camellia.core.api.CamelliaApiResponse;
 import com.netease.nim.camellia.core.model.ResourceTable;
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

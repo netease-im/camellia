@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.plugin.permission;
 
-import com.netease.nim.camellia.core.util.CamelliaMapUtils;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;

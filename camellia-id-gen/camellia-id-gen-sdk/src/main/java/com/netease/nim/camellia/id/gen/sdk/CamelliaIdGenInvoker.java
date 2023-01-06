@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.id.gen.sdk;
 
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.id.gen.common.CamelliaIdGenException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

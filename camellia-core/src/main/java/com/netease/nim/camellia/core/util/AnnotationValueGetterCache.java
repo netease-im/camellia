@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.core.util;
 
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

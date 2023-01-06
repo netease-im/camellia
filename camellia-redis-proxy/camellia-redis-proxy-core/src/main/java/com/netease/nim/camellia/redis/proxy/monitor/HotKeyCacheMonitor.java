@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.monitor;
 import com.netease.nim.camellia.redis.proxy.auth.IdentityInfo;
 import com.netease.nim.camellia.redis.proxy.monitor.model.HotKeyCacheStats;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.HotKeyCacheInfo;
-import com.netease.nim.camellia.core.util.CamelliaMapUtils;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkey.HotKeyMonitor;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;

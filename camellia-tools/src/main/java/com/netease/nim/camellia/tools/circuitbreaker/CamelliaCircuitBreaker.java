@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.tools.circuitbreaker;
 
+import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +19,8 @@ public class CamelliaCircuitBreaker {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaCircuitBreaker.class);
 
-    private static final ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
+    private static final ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
+            new DefaultThreadFactory("camellia-circuit-breaker-schedule"));
     private static final AtomicLong idGen = new AtomicLong();
 
     private final CircuitBreakerConfig config;

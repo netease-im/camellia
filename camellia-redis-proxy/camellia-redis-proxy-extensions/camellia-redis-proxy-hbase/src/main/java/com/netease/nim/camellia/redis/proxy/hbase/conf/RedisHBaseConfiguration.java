@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.hbase.conf;
 
 import com.alibaba.fastjson.JSONObject;
-import com.netease.nim.camellia.core.util.SysUtils;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

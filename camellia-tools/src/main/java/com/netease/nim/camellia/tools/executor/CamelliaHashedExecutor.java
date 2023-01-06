@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.tools.executor;
 
+import com.netease.nim.camellia.tools.base.DynamicValueGetter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,15 +16,14 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Created by caojiajun on 2021/8/9
  */
-public class CamelliaHashedExecutor {
+public class CamelliaHashedExecutor implements CamelliaExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaHashedExecutor.class);
 
-    private static final int defaultPoolSize = Runtime.getRuntime().availableProcessors() * 2;
-    private static final int defaultQueueSize = 100000;
-    private static final RejectedExecutionHandler defaultRejectedPolicy = new AbortPolicy();
+    public static final int defaultPoolSize = Runtime.getRuntime().availableProcessors() * 2;
+    public static final int defaultQueueSize = 100000;
+    public static final RejectedExecutionHandler defaultRejectedPolicy = new AbortPolicy();
 
-    private static final AtomicLong executorIdGen = new AtomicLong(1);
     private final AtomicLong workerIdGen = new AtomicLong(1);
 
     private final ReentrantLock lock = new ReentrantLock();
@@ -31,9 +31,10 @@ public class CamelliaHashedExecutor {
 
     private final String name;
     private final int poolSize;
-    private final int queueSize;
+    private int queueSize;
+    private DynamicValueGetter<Integer> dynamicQueueSize;
     private final List<WorkThread> workThreads;
-    private final RejectedExecutionHandler rejectedExecutionHandler;
+    private final DynamicValueGetter<RejectedExecutionHandler> rejectedExecutionHandler;
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
 
     public CamelliaHashedExecutor(String name) {
@@ -44,6 +45,10 @@ public class CamelliaHashedExecutor {
         this(name, poolSize, defaultQueueSize, defaultRejectedPolicy);
     }
 
+    public CamelliaHashedExecutor(String name, int poolSize, DynamicValueGetter<Integer> dynamicQueueSize) {
+        this(name, poolSize, dynamicQueueSize, defaultRejectedPolicy);
+    }
+
     public CamelliaHashedExecutor(String name, int poolSize, int queueSize) {
         this(name, poolSize, queueSize, defaultRejectedPolicy);
     }
@@ -52,12 +57,28 @@ public class CamelliaHashedExecutor {
         this(name, defaultPoolSize, defaultQueueSize, rejectedExecutionHandler);
     }
 
+    public CamelliaHashedExecutor(String name, int poolSize, DynamicValueGetter<Integer> dynamicQueueSize, RejectedExecutionHandler rejectedExecutionHandler) {
+        this(new CamelliaHashedExecutorConfig(name, poolSize, dynamicQueueSize, () -> rejectedExecutionHandler));
+    }
+
+    public CamelliaHashedExecutor(CamelliaHashedExecutorConfig config) {
+        this.name = CamelliaExecutorMonitor.genExecutorName(config.getName());
+        this.poolSize = config.getPoolSize();
+        this.dynamicQueueSize = config.getDynamicQueueSize();
+        this.workThreads = new ArrayList<>(poolSize);
+        this.rejectedExecutionHandler = config.getRejectedExecutionHandler();
+
+        CamelliaExecutorMonitor.register(this);
+    }
+
     public CamelliaHashedExecutor(String name, int poolSize, int queueSize, RejectedExecutionHandler rejectedExecutionHandler) {
-        this.name = name + "-" + executorIdGen.getAndIncrement();
+        this.name = CamelliaExecutorMonitor.genExecutorName(name);
         this.poolSize = poolSize;
         this.queueSize = queueSize;
         this.workThreads = new ArrayList<>(poolSize);
-        this.rejectedExecutionHandler = rejectedExecutionHandler;
+        this.rejectedExecutionHandler = () -> rejectedExecutionHandler;
+
+        CamelliaExecutorMonitor.register(this);
     }
 
     private void initWorkThreads() {
@@ -66,7 +87,12 @@ public class CamelliaHashedExecutor {
         try {
             if (!initOk.get()) {
                 for (int i = 0; i < poolSize; i++) {
-                    WorkThread workThread = new WorkThread(this, queueSize);
+                    WorkThread workThread;
+                    if (dynamicQueueSize != null) {
+                        workThread = new WorkThread(this, dynamicQueueSize);
+                    } else {
+                        workThread = new WorkThread(this, queueSize);
+                    }
                     workThread.start();
                     workThreads.add(workThread);
                 }
@@ -94,7 +120,7 @@ public class CamelliaHashedExecutor {
         FutureTask<Void> task = new FutureTask<>(runnable, null);
         boolean success = workThreads.get(index).submit(task);
         if (!success) {
-            rejectedExecutionHandler.rejectedExecution(task, this);
+            rejectedExecutionHandler.get().rejectedExecution(task, this);
         }
         return task;
     }
@@ -118,7 +144,7 @@ public class CamelliaHashedExecutor {
         FutureTask<T> task = new FutureTask<>(callable);
         boolean success = workThreads.get(index).submit(task);
         if (!success) {
-            rejectedExecutionHandler.rejectedExecution(task, this);
+            rejectedExecutionHandler.get().rejectedExecution(task, this);
         }
         return task;
     }
@@ -127,6 +153,7 @@ public class CamelliaHashedExecutor {
         return submit(hashKey.getBytes(StandardCharsets.UTF_8), callable);
     }
 
+    @Override
     public String getName() {
         return name;
     }
@@ -209,6 +236,22 @@ public class CamelliaHashedExecutor {
         return completedTaskCount;
     }
 
+    public CamelliaExecutorStats getStats() {
+        CamelliaExecutorStats stats = new CamelliaExecutorStats();
+        if (initOk.get()) {
+            stats.setActiveThread(getActiveCount());
+            stats.setThread(workThreads.size());
+            stats.setCompletedTaskCount(getCompletedTaskCount());
+            stats.setPendingTask(getQueueSize());
+        } else {
+            stats.setActiveThread(0);
+            stats.setThread(0);
+            stats.setPendingTask(0);
+            stats.setCompletedTaskCount(0);
+        }
+        return stats;
+    }
+
     public static interface RejectedExecutionHandler {
         void rejectedExecution(Runnable runnable, CamelliaHashedExecutor executor);
     }
@@ -236,7 +279,7 @@ public class CamelliaHashedExecutor {
 
     private static class WorkThread extends Thread {
 
-        private final LinkedBlockingQueue<FutureTask<?>> queue;
+        private final BlockingQueue<FutureTask<?>> queue;
         private final CamelliaHashedExecutor executor;
         private final AtomicBoolean active = new AtomicBoolean(false);
 
@@ -244,6 +287,12 @@ public class CamelliaHashedExecutor {
 
         public WorkThread(CamelliaHashedExecutor executor, int queueSize) {
             this.queue = new LinkedBlockingQueue<>(queueSize);
+            this.executor = executor;
+            setName("camellia-hashed-executor-" + executor.getName() + "-" + executor.workerIdGen.getAndIncrement());
+        }
+
+        public WorkThread(CamelliaHashedExecutor executor, DynamicValueGetter<Integer> dynamicQueueSize) {
+            this.queue = new DynamicCapacityLinkedBlockingQueue<>(dynamicQueueSize);
             this.executor = executor;
             setName("camellia-hashed-executor-" + executor.getName() + "-" + executor.workerIdGen.getAndIncrement());
         }

@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.discovery.zk;
 
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.discovery.AbstractCamelliaDiscovery;
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.redis.proxy.discovery.common.IProxyDiscovery;
 import com.netease.nim.camellia.redis.proxy.discovery.common.Proxy;
 import org.apache.curator.framework.CuratorFramework;

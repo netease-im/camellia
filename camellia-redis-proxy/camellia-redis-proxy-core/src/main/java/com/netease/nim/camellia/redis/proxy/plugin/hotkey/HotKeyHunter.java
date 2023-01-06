@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.plugin.hotkey;
 import com.netease.nim.camellia.redis.proxy.auth.IdentityInfo;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.core.util.BytesKey;
+import com.netease.nim.camellia.tools.utils.BytesKey;
 import com.netease.nim.camellia.redis.proxy.util.LRUCounter;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;

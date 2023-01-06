@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.id.gen.springboot.segment;
 
 import com.alibaba.fastjson.JSONObject;
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.id.gen.common.IDLoader;
 import com.netease.nim.camellia.id.gen.sdk.CamelliaIdGenHttpUtils;
 import okhttp3.ConnectionPool;

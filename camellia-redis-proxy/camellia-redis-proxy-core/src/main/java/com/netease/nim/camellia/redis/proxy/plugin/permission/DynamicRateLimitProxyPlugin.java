@@ -6,7 +6,7 @@ import com.netease.nim.camellia.core.api.DataWithMd5Response;
 import com.netease.nim.camellia.core.constant.RateLimitConstant;
 import com.netease.nim.camellia.core.constant.TenantConstant;
 import com.netease.nim.camellia.core.model.RateLimitDto;
-import com.netease.nim.camellia.core.util.CamelliaMapUtils;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;

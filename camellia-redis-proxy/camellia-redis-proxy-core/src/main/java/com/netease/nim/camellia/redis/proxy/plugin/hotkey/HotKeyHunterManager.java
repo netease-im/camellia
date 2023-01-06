@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.plugin.hotkey;
 
 import com.netease.nim.camellia.redis.proxy.auth.IdentityInfo;
-import com.netease.nim.camellia.core.util.LockMap;
+import com.netease.nim.camellia.tools.utils.LockMap;
 
 import java.util.concurrent.ConcurrentHashMap;
 

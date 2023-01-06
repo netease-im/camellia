@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.monitor;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.model.UpstreamRedisSpendStats;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
-import com.netease.nim.camellia.core.util.CamelliaMapUtils;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.QuantileCollector;
 import com.netease.nim.camellia.redis.proxy.util.QuantileCollectorPool;
 import org.slf4j.Logger;

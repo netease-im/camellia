@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
-import com.netease.nim.camellia.core.util.SysUtils;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 import io.netty.util.HashedWheelTimer;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;

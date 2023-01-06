@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.toolkit.lock;
 
 
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 
 import java.nio.charset.StandardCharsets;

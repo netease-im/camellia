@@ -4,7 +4,7 @@ import com.netease.nim.camellia.core.api.ReloadableLocalFileCamelliaApi;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
-import com.netease.nim.camellia.core.util.FileUtil;
+import com.netease.nim.camellia.tools.utils.FileUtil;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.redis.CamelliaRedisEnv;

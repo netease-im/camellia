@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.delayqueue.common.conf;
 
-import com.netease.nim.camellia.core.util.SysUtils;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 
 /**
  * Created by caojiajun on 2022/7/14

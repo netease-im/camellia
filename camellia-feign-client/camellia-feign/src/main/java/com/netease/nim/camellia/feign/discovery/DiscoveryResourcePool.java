@@ -3,7 +3,7 @@ package com.netease.nim.camellia.feign.discovery;
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 import com.netease.nim.camellia.core.discovery.CamelliaServerSelector;
 import com.netease.nim.camellia.core.discovery.CamelliaServerHealthChecker;
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.feign.resource.FeignDiscoveryResource;
 import com.netease.nim.camellia.feign.resource.FeignResource;
 import com.netease.nim.camellia.tools.cache.CamelliaLocalCache;

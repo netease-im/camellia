@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.core.util;
+package com.netease.nim.camellia.tools.utils;
 
 import java.util.Map;
 import java.util.function.Function;

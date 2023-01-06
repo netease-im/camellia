@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.id.gen.strict;
 
-import com.netease.nim.camellia.core.util.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.id.gen.common.CamelliaIdGenConstants;
 import com.netease.nim.camellia.id.gen.common.IDLoader;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;

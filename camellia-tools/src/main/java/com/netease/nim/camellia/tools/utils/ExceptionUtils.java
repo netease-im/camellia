@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.core.util;
+package com.netease.nim.camellia.tools.utils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;

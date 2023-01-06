@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.cluster;
 
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.core.util.SysUtils;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;

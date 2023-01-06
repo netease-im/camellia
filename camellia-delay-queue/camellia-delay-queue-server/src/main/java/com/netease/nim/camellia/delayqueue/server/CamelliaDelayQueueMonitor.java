@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.delayqueue.server;
 
 import com.alibaba.fastjson.JSONObject;
-import com.netease.nim.camellia.core.util.CamelliaMapUtils;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.delayqueue.common.domain.*;
 import com.netease.nim.camellia.delayqueue.common.exception.CamelliaDelayMsgErrorCode;
 import com.netease.nim.camellia.tools.statistic.CamelliaStatistics;

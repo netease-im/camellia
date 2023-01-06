@@ -2,7 +2,7 @@ package com.netease.nim.camellia.core.client.hub;
 
 
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
-import com.netease.nim.camellia.core.util.MathUtil;
+import com.netease.nim.camellia.tools.utils.MathUtil;
 
 import java.util.Map;
 

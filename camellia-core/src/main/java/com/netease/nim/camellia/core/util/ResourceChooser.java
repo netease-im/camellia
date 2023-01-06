@@ -6,6 +6,7 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.model.operation.ResourceOperation;
 import com.netease.nim.camellia.core.model.operation.ResourceReadOperation;
 import com.netease.nim.camellia.core.model.operation.ResourceWriteOperation;
+import com.netease.nim.camellia.tools.utils.MathUtil;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;

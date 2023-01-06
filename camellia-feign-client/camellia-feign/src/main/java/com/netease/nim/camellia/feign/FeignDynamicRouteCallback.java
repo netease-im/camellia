@@ -7,7 +7,7 @@ import com.netease.nim.camellia.core.client.callback.ProxyClientFactory;
 import com.netease.nim.camellia.core.client.env.Monitor;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.AnnotationValueGetterCache;
-import com.netease.nim.camellia.core.util.ExceptionUtils;
+import com.netease.nim.camellia.tools.utils.ExceptionUtils;
 import com.netease.nim.camellia.feign.client.DynamicOption;
 import com.netease.nim.camellia.feign.conf.CamelliaFeignDynamicOptionGetter;
 import com.netease.nim.camellia.feign.route.CamelliaDashboardFeignResourceTableUpdater;

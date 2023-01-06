@@ -2,7 +2,7 @@ package com.netease.nim.camellia.core.api;
 
 import com.netease.nim.camellia.core.conf.CamelliaConfig;
 import com.netease.nim.camellia.core.model.ResourceTable;
-import com.netease.nim.camellia.core.util.MD5Util;
+import com.netease.nim.camellia.tools.utils.MD5Util;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 
 /**

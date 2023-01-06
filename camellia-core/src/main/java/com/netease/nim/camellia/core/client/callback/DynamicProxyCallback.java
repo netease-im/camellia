@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.core.client.callback;
 
 import com.netease.nim.camellia.core.api.ReloadableProxyFactory;
-import com.netease.nim.camellia.core.util.ExceptionUtils;
+import com.netease.nim.camellia.tools.utils.ExceptionUtils;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 

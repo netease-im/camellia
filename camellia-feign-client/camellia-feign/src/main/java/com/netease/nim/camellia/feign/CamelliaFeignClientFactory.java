@@ -2,7 +2,7 @@ package com.netease.nim.camellia.feign;
 
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.core.util.LockMap;
+import com.netease.nim.camellia.tools.utils.LockMap;
 import com.netease.nim.camellia.feign.conf.CamelliaFeignDynamicOptionGetter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

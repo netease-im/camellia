@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.cluster;
 
 
-import com.netease.nim.camellia.core.util.MD5Util;
-import com.netease.nim.camellia.core.util.SysUtils;
+import com.netease.nim.camellia.tools.utils.MD5Util;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
