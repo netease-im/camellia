@@ -50,6 +50,10 @@ public class MqMultiWriteProducerProxyPlugin implements ProxyPlugin {
             if (type != RedisCommand.Type.WRITE) {
                 return ProxyPluginResponse.SUCCESS;
             }
+            //阻塞性命令不支持
+            if (command.isBlocking()) {
+                return ProxyPluginResponse.SUCCESS;
+            }
             MqPack mqPack = new MqPack();
             mqPack.setCommand(command);
             mqPack.setBid(bid);

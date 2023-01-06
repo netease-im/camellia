@@ -173,7 +173,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                         continue;
                     }
                     RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(slot);
-                    bindClient = RedisClientHub.newClient(node.getAddr());
+                    bindClient = command.getChannelInfo().acquireBindRedisClient(node.getAddr());
                     if (bindClient == null) {
                         future.complete(ErrorReply.NOT_AVAILABLE);
                         continue;
@@ -336,7 +336,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
             }
             if (bindClient == null) {
                 RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(slot);
-                bindClient = RedisClientHub.newClient(node.getAddr());
+                bindClient = command.getChannelInfo().acquireBindRedisClient(node.getAddr());
                 channelInfo.setBindClient(slot, bindClient);
             }
             commandFlusher.sendCommand(bindClient, command, future);
@@ -391,7 +391,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                     future.complete(ErrorReply.NOT_AVAILABLE);
                     return;
                 }
-                bindClient = RedisClientHub.newClient(node.getAddr());
+                bindClient = command.getChannelInfo().acquireBindRedisClient(node.getAddr());
                 channelInfo.setBindClient(bindClient);
                 first = true;
             }
@@ -550,13 +550,12 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                             String[] strings = parseTargetHostAndSlot(error);
                             RedisClientAddr addr = new RedisClientAddr(strings[1], Integer.parseInt(strings[2]), clusterClient.userName, clusterClient.password);
                             if (command.isBlocking()) {
-                                RedisClient redisClient = command.getChannelInfo().tryGetExistsRedisClientForBlockingCommand(addr);
+                                RedisClient redisClient = command.getChannelInfo().tryAcquireBindRedisClient(addr);
                                 if (redisClient != null && redisClient.isValid()) {
                                     ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
                                             "MOVED, [BlockingCommand] [RedisClient tryGet success], command = " + command.getName() + ", attempts = " + attempts);
                                     redisClient.sendCommand(Collections.singletonList(command), Collections.singletonList(this));
                                     redisClient.startIdleCheck();
-                                    command.getChannelInfo().addRedisClientForBlockingCommand(redisClient);
                                 } else {
                                     CompletableFuture<RedisClient> future = RedisClientHub.newAsync(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
                                     future.thenAccept(client -> {
@@ -571,7 +570,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                                                         "MOVED, [BlockingCommand] [RedisClient newAsync success], command = " + command.getName() + ", attempts = " + attempts);
                                                 client.sendCommand(Collections.singletonList(command), Collections.singletonList(CompletableFutureWrapper.this));
                                                 client.startIdleCheck();
-                                                command.getChannelInfo().addRedisClientForBlockingCommand(client);
+                                                command.getChannelInfo().updateBindRedisClientCache(client);
                                             }
                                         } catch (Exception e) {
                                             ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
@@ -616,13 +615,12 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                             String[] strings = parseTargetHostAndSlot(error);
                             RedisClientAddr addr = new RedisClientAddr(strings[1], Integer.parseInt(strings[2]), clusterClient.userName, clusterClient.password);
                             if (command.isBlocking()) {
-                                RedisClient redisClient = command.getChannelInfo().tryGetExistsRedisClientForBlockingCommand(addr);
+                                RedisClient redisClient = command.getChannelInfo().tryAcquireBindRedisClient(addr);
                                 if (redisClient != null && redisClient.isValid()) {
                                     ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
                                             "ASK, [BlockingCommand] [RedisClient tryGet success], command = " + command.getName() + ", attempts = " + attempts);
                                     redisClient.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), this));
                                     redisClient.startIdleCheck();
-                                    command.getChannelInfo().addRedisClientForBlockingCommand(redisClient);
                                 } else {
                                     CompletableFuture<RedisClient> future = RedisClientHub.newAsync(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
                                     future.thenAccept(client -> {
@@ -637,7 +635,7 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
                                                         "ASK, [BlockingCommand] [RedisClient newAsync success], command = " + command.getName() + ", attempts = " + attempts);
                                                 client.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), CompletableFutureWrapper.this));
                                                 client.startIdleCheck();
-                                                command.getChannelInfo().addRedisClientForBlockingCommand(client);
+                                                command.getChannelInfo().updateBindRedisClientCache(client);
                                             }
                                         } catch (Exception e) {
                                             ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class,
@@ -859,28 +857,17 @@ public class AsyncCamelliaRedisClusterClient implements AsyncClient {
             future.complete(ErrorReply.NOT_AVAILABLE);
             return;
         }
-        RedisClient client = command.getChannelInfo().tryGetExistsRedisClientForBlockingCommand(node.getAddr());
+        RedisClient client = command.getChannelInfo().acquireBindRedisClient(node.getAddr());
         if (client == null || !client.isValid()) {
-            client = RedisClientHub.newClient(node.getAddr());
-            if (client == null) {
-                ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class, "blockingCommand newClient, node=" + node.getAddr() + " fail");
-                future.complete(ErrorReply.NOT_AVAILABLE);
-                return;
-            }
+            ErrorLogCollector.collect(AsyncCamelliaRedisClusterClient.class, "blockingCommand newClient, node=" + node.getAddr() + " fail");
+            future.complete(ErrorReply.NOT_AVAILABLE);
+            return;
         }
         commandFlusher.flush();
         commandFlusher.clear();
         CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, future, command);
         client.sendCommand(Collections.singletonList(command), Collections.singletonList(futureWrapper));
         client.startIdleCheck();
-        command.getChannelInfo().addRedisClientForBlockingCommand(client);
     }
 
-    private void xinfoOrXgroup(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
-        byte[] key = command.getObjects()[2];
-        int slot = RedisClusterCRC16Utils.getSlot(key);
-        RedisClient client = getClient(slot);
-        CompletableFutureWrapper futureWrapper = new CompletableFutureWrapper(this, future, command);
-        commandFlusher.sendCommand(client, command, futureWrapper);
-    }
 }

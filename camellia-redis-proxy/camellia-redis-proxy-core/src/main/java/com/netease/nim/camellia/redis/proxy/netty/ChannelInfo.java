@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.command.AsyncTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
+import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
@@ -29,7 +30,7 @@ public class ChannelInfo {
     private ChannelStats channelStats = ChannelStats.NO_AUTH;
     private final ChannelHandlerContext ctx;
     private final AsyncTaskQueue asyncTaskQueue;
-    private volatile ConcurrentHashMap<String, RedisClient> redisClientsMapForBlockingCommand;
+    private volatile ConcurrentHashMap<String, RedisClient> bindRedisClientCache;
     private RedisClient bindClient = null;
     private int bindSlot = -1;
     private boolean inTransaction = false;
@@ -85,23 +86,26 @@ public class ChannelInfo {
         return asyncTaskQueue;
     }
 
-    public void addRedisClientForBlockingCommand(RedisClient redisClient) {
+    public void updateBindRedisClientCache(RedisClient redisClient) {
         if (mock) {
-            throw new CamelliaRedisException("mock channel info do not support");
+            return;
         }
-        if (redisClientsMapForBlockingCommand == null) {
+        if (bindRedisClientCache == null) {
             synchronized (this) {
-                if (redisClientsMapForBlockingCommand == null) {
-                    redisClientsMapForBlockingCommand = new ConcurrentHashMap<>();
+                if (bindRedisClientCache == null) {
+                    bindRedisClientCache = new ConcurrentHashMap<>();
                 }
             }
         }
-        redisClientsMapForBlockingCommand.put(redisClient.getAddr().getUrl(), redisClient);
+        bindRedisClientCache.put(redisClient.getAddr().getUrl(), redisClient);
     }
 
-    public RedisClient tryGetExistsRedisClientForBlockingCommand(RedisClientAddr addr) {
-        if (redisClientsMapForBlockingCommand != null && !redisClientsMapForBlockingCommand.isEmpty()) {
-            RedisClient client = redisClientsMapForBlockingCommand.get(addr.getUrl());
+    public RedisClient tryAcquireBindRedisClient(RedisClientAddr addr) {
+        if (mock) {
+            return null;
+        }
+        if (bindRedisClientCache != null && !bindRedisClientCache.isEmpty()) {
+            RedisClient client = bindRedisClientCache.get(addr.getUrl());
             if (client != null && client.isValid()) {
                 return client;
             }
@@ -109,8 +113,32 @@ public class ChannelInfo {
         return null;
     }
 
-    public ConcurrentHashMap<String, RedisClient> getRedisClientsMapForBlockingCommand() {
-        return redisClientsMapForBlockingCommand;
+    public RedisClient acquireBindRedisClient(RedisClientAddr addr) {
+        if (mock) {
+            return null;
+        }
+        if (bindRedisClientCache != null && !bindRedisClientCache.isEmpty()) {
+            RedisClient client = bindRedisClientCache.get(addr.getUrl());
+            if (client != null && client.isValid()) {
+                client.stopIdleCheck();
+                return client;
+            }
+        }
+        RedisClient client = RedisClientHub.newClient(addr);
+        if (client == null) return null;
+        if (bindRedisClientCache == null) {
+            synchronized (this) {
+                if (bindRedisClientCache == null) {
+                    bindRedisClientCache = new ConcurrentHashMap<>();
+                }
+            }
+        }
+        bindRedisClientCache.put(addr.getUrl(), client);
+        return client;
+    }
+
+    public ConcurrentHashMap<String, RedisClient> getBindRedisClientCache() {
+        return bindRedisClientCache;
     }
 
     public void clear() {
@@ -179,6 +207,9 @@ public class ChannelInfo {
     }
 
     public void setBindClient(int bindSlot, RedisClient bindClient) {
+        if (bindSlot >= 0 && bindClient == null) {
+            return;
+        }
         this.bindClient = bindClient;
         this.bindSlot = bindSlot;
     }

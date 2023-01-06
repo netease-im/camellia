@@ -210,12 +210,29 @@ public class RedisClient implements AsyncClient {
     }
 
     public void startIdleCheck() {
+        if (idleCheckScheduledFuture != null && closeIdleConnection) {
+            return;
+        }
         synchronized (this) {
             if (idleCheckScheduledFuture == null) {
                 lastCommandTime = TimeCache.currentMillis;
                 closeIdleConnection = true;
                 idleCheckScheduledFuture = idleCheckScheduled.scheduleAtFixedRate(this::checkIdle,
                         checkIdleThresholdSeconds, checkIdleThresholdSeconds, TimeUnit.SECONDS);
+            }
+        }
+    }
+
+    public void stopIdleCheck() {
+        if (idleCheckScheduledFuture == null && !closeIdleConnection) {
+            return;
+        }
+        synchronized (this) {
+            lastCommandTime = TimeCache.currentMillis;
+            closeIdleConnection = false;
+            if (idleCheckScheduledFuture != null) {
+                idleCheckScheduledFuture.cancel(false);
+                idleCheckScheduledFuture = null;
             }
         }
     }

@@ -63,6 +63,10 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
             if (type != RedisCommand.Type.WRITE) {
                 return ProxyPluginResponse.SUCCESS;
             }
+            //阻塞性命令不支持
+            if (command.isBlocking()) {
+                return ProxyPluginResponse.SUCCESS;
+            }
             RedisCommand.CommandKeyType commandKeyType = redisCommand.getCommandKeyType();
             Long bid = command.getChannelInfo().getBid();
             String bgroup = command.getChannelInfo().getBgroup();

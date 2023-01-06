@@ -76,7 +76,7 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
             if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
                 boolean first = false;
                 if (bindClient == null) {
-                    bindClient = RedisClientHub.newClient(getAddr());
+                    bindClient = command.getChannelInfo().acquireBindRedisClient(getAddr());
                     channelInfo.setBindClient(bindClient);
                     first = true;
                 }
@@ -120,7 +120,7 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
                 }
             } else if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
                 if (bindClient == null) {
-                    bindClient = RedisClientHub.newClient(getAddr());
+                    bindClient = command.getChannelInfo().acquireBindRedisClient(getAddr());
                     channelInfo.setBindClient(bindClient);
                 }
                 if (bindClient == null) {
@@ -212,14 +212,10 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
             return;
         }
         Command lastBlockingCommand = commands.get(commands.size() - 1);
-        RedisClient client = lastBlockingCommand.getChannelInfo().tryGetExistsRedisClientForBlockingCommand(addr);
-        if (client == null || !client.isValid()) {
-            client = RedisClientHub.newClient(addr);
-        }
+        RedisClient client = lastBlockingCommand.getChannelInfo().acquireBindRedisClient(addr);
         if (client != null) {
             client.sendCommand(commands, completableFutureList);
             client.startIdleCheck();
-            lastBlockingCommand.getChannelInfo().addRedisClientForBlockingCommand(client);
         } else {
             String log = "RedisClient[" + PasswordMaskUtils.maskAddr(addr) + "] is null, command return NOT_AVAILABLE, RedisResource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {

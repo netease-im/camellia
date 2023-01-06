@@ -46,13 +46,13 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
         if (channelInfo != null) {
             channelInfo.clear();
             ChannelMonitor.remove(channelInfo);
-            ConcurrentHashMap<String, RedisClient> map = channelInfo.getRedisClientsMapForBlockingCommand();
+            ConcurrentHashMap<String, RedisClient> map = channelInfo.getBindRedisClientCache();
             if (map != null) {
                 for (Map.Entry<String, RedisClient> entry : map.entrySet()) {
                     RedisClient redisClient = entry.getValue();
                     if (redisClient == null || !redisClient.isValid()) continue;
                     if (logger.isDebugEnabled()) {
-                        logger.debug("redis client will close for blocking command interrupt by client, consid = {}, client.addr = {}, upstream.redis.client = {}",
+                        logger.debug("bind redis client cache will close interrupt by proxy client, consid = {}, client.addr = {}, upstream.redis.client = {}",
                                 channelInfo.getConsid(), ctx.channel().remoteAddress(), redisClient.getClientName());
                     }
                     redisClient.stop(true);
