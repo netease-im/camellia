@@ -1,5 +1,17 @@
 [中文版](update-zh.md)
 
+# 1.1.11（2023/01/xx）
+### add
+* camellia-redis-proxy support prometheus/grafana, thanks [@tasszz2k](https://github.com/tasszz2k)
+* camellia-tools provide CamelliaDynamicExecutor and CamelliaDynamicIsolationExecutor, provide CamelliaExecutorMonitor to monitor thread-pool
+
+### update
+* some utils from camellia-core package, move to camellia-tools package
+
+### fix
+* fix camellia-redis-proxy upstream redis connection leak when use TRANSACTION commands in high qps.
+
+
 # 1.1.10（2023/01/03）
 ### add
 * camellia-redis-proxy provide DynamicRateLimitProxyPlugin, which support dynamic configure by camellia-dashboard, thanks [@tasszz2k](https://github.com/tasszz2k)
