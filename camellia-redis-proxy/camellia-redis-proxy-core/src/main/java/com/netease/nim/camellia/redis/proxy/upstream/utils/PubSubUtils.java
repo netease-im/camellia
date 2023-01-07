@@ -11,14 +11,12 @@ import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -38,13 +36,15 @@ public class PubSubUtils {
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
             futures.add(completableFuture);
             completableFuture.thenAccept(reply -> {
-                beforeCheckSubscribeReply(reply);
+                Long subscribeChannelCount = tryGetSubscribeChannelCount(reply);
                 if (first) {
                     future.complete(reply);
                 } else {
                     asyncTaskQueue.reply(redisCommand, reply);
                 }
-                checkSubscribeReply(reply, asyncTaskQueue);
+                if (subscribeChannelCount != null && subscribeChannelCount <= 0) {
+                    asyncTaskQueue.getChannelInfo().setInSubscribe(false);
+                }
             });
         }
         if (client.queueSize() < 8) {
@@ -54,9 +54,11 @@ public class PubSubUtils {
                     if (client.queueSize() < 8 && client.isValid()) {
                         sendByBindClient(client, asyncTaskQueue, null, null, false, redisCommand);
                     }
-                    beforeCheckSubscribeReply(reply);
+                    Long subscribeChannelCount = tryGetSubscribeChannelCount(reply);
                     asyncTaskQueue.reply(redisCommand, reply);
-                    checkSubscribeReply(reply, asyncTaskQueue);
+                    if (subscribeChannelCount != null && subscribeChannelCount <= 0) {
+                        asyncTaskQueue.getChannelInfo().setInSubscribe(false);
+                    }
                 });
                 futures.add(completableFuture);
             }
@@ -108,23 +110,7 @@ public class PubSubUtils {
         }
     }
 
-    public static void beforeCheckSubscribeReply(Reply reply) {
-        try {
-            if (reply instanceof MultiBulkReply) {
-                Reply[] replies = ((MultiBulkReply) reply).getReplies();
-                if (replies.length > 0) {
-                    Reply firstReply = replies[0];
-                    if (firstReply instanceof BulkReply) {
-                        ((BulkReply) firstReply).getRaw();
-                    }
-                }
-            }
-        } catch (Exception e) {
-            ErrorLogCollector.collect(PubSubUtils.class, "beforeCheckSubscribeReply error", e);
-        }
-    }
-
-    public static void checkSubscribeReply(Reply reply, AsyncTaskQueue asyncTaskQueue) {
+    private static Long tryGetSubscribeChannelCount(Reply reply) {
         try {
             if (reply instanceof MultiBulkReply) {
                 Reply[] replies = ((MultiBulkReply) reply).getReplies();
@@ -134,30 +120,31 @@ public class PubSubUtils {
                         byte[] raw = ((BulkReply) firstReply).getRaw();
                         String str = Utils.bytesToString(raw);
                         if (str.equalsIgnoreCase(RedisCommand.SUBSCRIBE.strRaw())) {
-                            checkSubscribe(replies, asyncTaskQueue);
+                            return subscribeChannelCount(replies);
                         } else if (str.equalsIgnoreCase(RedisCommand.UNSUBSCRIBE.strRaw())) {
-                            checkSubscribe(replies, asyncTaskQueue);
+                            return subscribeChannelCount(replies);
                         } else if (str.equalsIgnoreCase(RedisCommand.PSUBSCRIBE.strRaw())) {
-                            checkSubscribe(replies, asyncTaskQueue);
+                            return subscribeChannelCount(replies);
                         } else if (str.equalsIgnoreCase(RedisCommand.PUNSUBSCRIBE.strRaw())) {
-                            checkSubscribe(replies, asyncTaskQueue);
+                            return subscribeChannelCount(replies);
                         }
                     }
                 }
             }
+            return null;
         } catch (Exception e) {
-            ErrorLogCollector.collect(PubSubUtils.class, "checkSubscribeReply error", e);
+            ErrorLogCollector.collect(PubSubUtils.class, "tryGetSubscribeChannelCount error", e);
+            return null;
         }
     }
 
-    private static void checkSubscribe(Reply[] replies, AsyncTaskQueue asyncTaskQueue) {
+    private static Long subscribeChannelCount(Reply[] replies) {
         if (replies != null && replies.length >= 2) {
             Reply reply = replies[2];
             if (reply instanceof IntegerReply) {
-                if (((IntegerReply) reply).getInteger() <= 0) {
-                    asyncTaskQueue.getChannelInfo().setInSubscribe(false);
-                }
+                return ((IntegerReply) reply).getInteger();
             }
         }
+        return null;
     }
 }
