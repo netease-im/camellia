@@ -36,12 +36,14 @@ public class PubSubUtils {
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
             futures.add(completableFuture);
             completableFuture.thenAccept(reply -> {
+                //parse reply must before send reply to client
                 Long subscribeChannelCount = tryGetSubscribeChannelCount(reply);
                 if (first) {
                     future.complete(reply);
                 } else {
                     asyncTaskQueue.reply(redisCommand, reply);
                 }
+                //after send reply, update channel subscribe status
                 if (subscribeChannelCount != null && subscribeChannelCount <= 0) {
                     asyncTaskQueue.getChannelInfo().setInSubscribe(false);
                 }
@@ -54,8 +56,10 @@ public class PubSubUtils {
                     if (client.queueSize() < 8 && client.isValid()) {
                         sendByBindClient(client, asyncTaskQueue, null, null, false, redisCommand);
                     }
+                    //parse reply must before send reply to client
                     Long subscribeChannelCount = tryGetSubscribeChannelCount(reply);
                     asyncTaskQueue.reply(redisCommand, reply);
+                    //after send reply, update channel subscribe status
                     if (subscribeChannelCount != null && subscribeChannelCount <= 0) {
                         asyncTaskQueue.getChannelInfo().setInSubscribe(false);
                     }
