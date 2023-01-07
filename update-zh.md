@@ -10,6 +10,7 @@
 
 ### fix
 * 修复camellia-redis-proxy在使用TRANSACTION系列命令时，如果有较高的客户端qps，导致的后端redis连接泄漏的问题
+* 修复camellia-redis-proxy使用PUBSUB系列命令时一个reply编解码的并发问题，1.1.8引入
 
 
 # 1.1.10（2023/01/03）
@@ -22,6 +23,7 @@
 ### fix
 * 修复CamelliaRedisTemplate使用RedisResource时select db不生效的问题 
 * 修复了camellia-delay-queue的中文乱码问题，感谢[@ax3353](https://github.com/ax3353)
+
 
 # 1.1.9（2022/12/21）
 ### 新增

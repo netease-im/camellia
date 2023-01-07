@@ -10,6 +10,7 @@
 
 ### fix
 * fix camellia-redis-proxy upstream redis connection leak when use TRANSACTION commands in high qps.
+* fix camellia-redis-proxy a concurrent issue of reply decode when use PUBSUB commands(bug from v1.1.8)
 
 
 # 1.1.10（2023/01/03）

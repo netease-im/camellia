@@ -38,23 +38,23 @@ public class PubSubUtils {
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
             futures.add(completableFuture);
             completableFuture.thenAccept(reply -> {
+                checkSubscribeReply(reply, asyncTaskQueue);
                 if (first) {
                     future.complete(reply);
                 } else {
                     asyncTaskQueue.reply(redisCommand, reply);
                 }
-                checkSubscribeReply(reply, asyncTaskQueue);
             });
         }
         if (client.queueSize() < 8) {
             for (int j = 0; j < 16; j++) {
                 CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
                 completableFuture.thenAccept(reply -> {
+                    checkSubscribeReply(reply, asyncTaskQueue);
                     if (client.queueSize() < 8 && client.isValid()) {
                         sendByBindClient(client, asyncTaskQueue, null, null, false, redisCommand);
                     }
                     asyncTaskQueue.reply(redisCommand, reply);
-                    checkSubscribeReply(reply, asyncTaskQueue);
                 });
                 futures.add(completableFuture);
             }
