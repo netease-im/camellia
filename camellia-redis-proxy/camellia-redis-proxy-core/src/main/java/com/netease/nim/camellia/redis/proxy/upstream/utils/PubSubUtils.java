@@ -38,23 +38,25 @@ public class PubSubUtils {
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
             futures.add(completableFuture);
             completableFuture.thenAccept(reply -> {
-                checkSubscribeReply(reply, asyncTaskQueue);
+                beforeCheckSubscribeReply(reply);
                 if (first) {
                     future.complete(reply);
                 } else {
                     asyncTaskQueue.reply(redisCommand, reply);
                 }
+                checkSubscribeReply(reply, asyncTaskQueue);
             });
         }
         if (client.queueSize() < 8) {
             for (int j = 0; j < 16; j++) {
                 CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
                 completableFuture.thenAccept(reply -> {
-                    checkSubscribeReply(reply, asyncTaskQueue);
                     if (client.queueSize() < 8 && client.isValid()) {
                         sendByBindClient(client, asyncTaskQueue, null, null, false, redisCommand);
                     }
+                    beforeCheckSubscribeReply(reply);
                     asyncTaskQueue.reply(redisCommand, reply);
+                    checkSubscribeReply(reply, asyncTaskQueue);
                 });
                 futures.add(completableFuture);
             }
@@ -103,6 +105,22 @@ public class PubSubUtils {
                     }
                 }
             }
+        }
+    }
+
+    public static void beforeCheckSubscribeReply(Reply reply) {
+        try {
+            if (reply instanceof MultiBulkReply) {
+                Reply[] replies = ((MultiBulkReply) reply).getReplies();
+                if (replies.length > 0) {
+                    Reply firstReply = replies[0];
+                    if (firstReply instanceof BulkReply) {
+                        ((BulkReply) firstReply).getRaw();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            ErrorLogCollector.collect(PubSubUtils.class, "beforeCheckSubscribeReply error", e);
         }
     }
 
