@@ -9,7 +9,7 @@
 * some utils from camellia-core package, move to camellia-tools package
 
 ### fix
-* fix camellia-redis-proxy upstream redis connection leak when use TRANSACTION commands in high qps.
+* fix camellia-redis-proxy upstream redis connection leak when use TRANSACTION commands in high qps, thanks [@phuc1998](https://github.com/phuc1998) and [@tasszz2k](https://github.com/tasszz2k) find this bug
 * fix camellia-redis-proxy a concurrent issue of reply decode when use PUBSUB commands(bug from v1.1.8)
 
 

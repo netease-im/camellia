@@ -9,7 +9,7 @@
 * camellia-core包下面部分utils类，迁移到camellia-tools
 
 ### fix
-* 修复camellia-redis-proxy在使用TRANSACTION系列命令时，如果有较高的客户端qps，导致的后端redis连接泄漏的问题
+* 修复camellia-redis-proxy在使用TRANSACTION系列命令时，如果有较高的客户端qps，导致的后端redis连接泄漏的问题, 感谢[@phuc1998](https://github.com/phuc1998) 和 [@tasszz2k](https://github.com/tasszz2k) 发现了这个bug 
 * 修复camellia-redis-proxy使用PUBSUB系列命令时一个reply编解码的并发问题，1.1.8引入
 
 
