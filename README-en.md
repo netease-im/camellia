@@ -66,8 +66,10 @@ base on spring-cache:
 * compress utils CamelliaCompressor
 * encrypt utils CamelliaEncryptor
 * local cache utils CamelliaLoadingCache
-* thread pool utils CamelliaHashedExecutor
-* dynamic conf CamelliaCircuitBreaker  
+* dynamic conf CamelliaCircuitBreaker
+* thread pool utils CamelliaHashedExecutor with same hash key job run sequence  
+* thread pool utils CamelliaDynamicExecutor with dynamic conf  
+* thread pool utils CamelliaDynamicIsolationExecutor with dynamic isolate for fast/slow job  
 [QUICK START](/docs/tools/tools.md)
 
 ## Version
