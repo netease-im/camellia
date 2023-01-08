@@ -46,8 +46,8 @@ public class CamelliaLocalCache {
             bean = new CacheBean(value, System.currentTimeMillis() + expireMillis);
         }
         cache.put(uniqueKey, bean);
-        if (logger.isDebugEnabled()) {
-            logger.debug("local cache put, tag = {}, key = {}, expireMillis = {}", tag, key, expireMillis);
+        if (logger.isTraceEnabled()) {
+            logger.trace("local cache put, tag = {}, key = {}, expireMillis = {}", tag, key, expireMillis);
         }
     }
 
@@ -66,8 +66,8 @@ public class CamelliaLocalCache {
             bean = new CacheBean(value, System.currentTimeMillis() + expireSeconds * 1000L);
         }
         cache.put(uniqueKey, bean);
-        if (logger.isDebugEnabled()) {
-            logger.debug("local cache put, tag = {}, key = {}, expireSeconds = {}", tag, key, expireSeconds);
+        if (logger.isTraceEnabled()) {
+            logger.trace("local cache put, tag = {}, key = {}, expireSeconds = {}", tag, key, expireSeconds);
         }
     }
 
@@ -90,8 +90,8 @@ public class CamelliaLocalCache {
             cache.remove(uniqueKey);
         }
         CacheBean cacheBean = cache.putIfAbsent(uniqueKey, bean);
-        if (logger.isDebugEnabled()) {
-            logger.debug("local cache put, tag = {}, key = {}, expireSeconds = {}", tag, key, expireSeconds);
+        if (logger.isTraceEnabled()) {
+            logger.trace("local cache put, tag = {}, key = {}, expireSeconds = {}", tag, key, expireSeconds);
         }
         return cacheBean == null;
     }
@@ -112,8 +112,8 @@ public class CamelliaLocalCache {
                 ret = bean::getValue;
             }
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug("local cache get, tag = {}, key = {}, hit = {}", tag, key, ret != null);
+        if (logger.isTraceEnabled()) {
+            logger.trace("local cache get, tag = {}, key = {}, hit = {}", tag, key, ret != null);
         }
         return ret;
     }
@@ -134,8 +134,8 @@ public class CamelliaLocalCache {
                 ret = (T) bean.getValue();
             }
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug("local cache get, tag = {}, key = {}, class = {}, hit = {}",
+        if (logger.isTraceEnabled()) {
+            logger.trace("local cache get, tag = {}, key = {}, class = {}, hit = {}",
                     tag, key, clazz.getSimpleName(), ret != null);
         }
         return ret;
@@ -147,8 +147,8 @@ public class CamelliaLocalCache {
     public void evict(String tag, Object key) {
         String uniqueKey = buildCacheKey(tag, key);
         cache.remove(uniqueKey);
-        if (logger.isDebugEnabled()) {
-            logger.debug("local cache evict, tag = {}, key = {}", tag, key);
+        if (logger.isTraceEnabled()) {
+            logger.trace("local cache evict, tag = {}, key = {}", tag, key);
         }
     }
 
