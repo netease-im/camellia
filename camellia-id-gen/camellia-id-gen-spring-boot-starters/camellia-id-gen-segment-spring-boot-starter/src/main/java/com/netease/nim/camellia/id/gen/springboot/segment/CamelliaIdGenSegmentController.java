@@ -30,6 +30,7 @@ public class CamelliaIdGenSegmentController {
     public IdGenResult genIds(@RequestParam("tag") String tag,
                               @RequestParam("count") int count) {
         try {
+            CamelliaIdGenSegmentServerStatus.updateLastUseTime();
             List<Long> ids = camelliaSegmentIdGen.genIds(tag, count);
             if (logger.isDebugEnabled()) {
                 logger.debug("genIds, tag = {}, count = {}, ids = {}", tag, count, ids);
@@ -47,6 +48,7 @@ public class CamelliaIdGenSegmentController {
     @GetMapping("/genId")
     public IdGenResult genId(@RequestParam("tag") String tag) {
         try {
+            CamelliaIdGenSegmentServerStatus.updateLastUseTime();
             long id = camelliaSegmentIdGen.genId(tag);
             if (logger.isDebugEnabled()) {
                 logger.debug("genId, tag = {}, id = {}", tag, id);
@@ -64,6 +66,7 @@ public class CamelliaIdGenSegmentController {
     @GetMapping("/decodeRegionId")
     public IdGenResult decodeRegionId(@RequestParam("id") long id) {
         try {
+            CamelliaIdGenSegmentServerStatus.updateLastUseTime();
             long regionId = camelliaSegmentIdGen.decodeRegionId(id);
             if (logger.isDebugEnabled()) {
                 logger.debug("decodeRegionId, id = {}, regionId = {}", id, regionId);
@@ -81,6 +84,7 @@ public class CamelliaIdGenSegmentController {
     @PostMapping("/update")
     public IdGenResult update(@RequestParam("tag") String tag, @RequestParam("id") long id) {
         try {
+            CamelliaIdGenSegmentServerStatus.updateLastUseTime();
             boolean result = camelliaSegmentIdGen.getIdLoader().update(tag, id);
             if (logger.isDebugEnabled()) {
                 logger.debug("update, tag = {}, id = {}, result = {}", tag, id, result);
@@ -98,6 +102,7 @@ public class CamelliaIdGenSegmentController {
     @GetMapping("/selectTagIdMaps")
     public IdGenResult selectTagIdMaps() {
         try {
+            CamelliaIdGenSegmentServerStatus.updateLastUseTime();
             Map<String, Long> map = camelliaSegmentIdGen.getIdLoader().selectTagIdMaps();
             if (logger.isDebugEnabled()) {
                 logger.debug("selectTagIdMaps, map = {}", map);
@@ -115,6 +120,7 @@ public class CamelliaIdGenSegmentController {
     @GetMapping("/selectId")
     public IdGenResult selectId(@RequestParam("tag") String tag) {
         try {
+            CamelliaIdGenSegmentServerStatus.updateLastUseTime();
             Long id = camelliaSegmentIdGen.getIdLoader().selectId(tag);
             if (logger.isDebugEnabled()) {
                 logger.debug("selectId, tag = {}, id = {}", id, tag);
@@ -132,6 +138,7 @@ public class CamelliaIdGenSegmentController {
     @GetMapping("/sync")
     public IdGenResult sync() {
         try {
+            CamelliaIdGenSegmentServerStatus.updateLastUseTime();
             boolean success = idSyncInMultiRegionService.sync();
             if (logger.isDebugEnabled()) {
                 logger.debug("sync, result = {}", success);

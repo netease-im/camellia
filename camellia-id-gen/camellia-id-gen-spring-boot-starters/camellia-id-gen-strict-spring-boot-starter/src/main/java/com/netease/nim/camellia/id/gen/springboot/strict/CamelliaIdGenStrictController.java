@@ -23,6 +23,7 @@ public class CamelliaIdGenStrictController {
     @GetMapping("/genId")
     public IdGenResult genId(@RequestParam("tag") String tag) {
         try {
+            CamelliaIdGenStrictServerStatus.updateLastUseTime();
             long id = camelliaStrictIdGen.genId(tag);
             if (logger.isDebugEnabled()) {
                 logger.debug("genId, tag = {}, id = {}", tag, id);
@@ -40,6 +41,7 @@ public class CamelliaIdGenStrictController {
     @GetMapping("/peekId")
     public IdGenResult peekId(@RequestParam("tag") String tag) {
         try {
+            CamelliaIdGenStrictServerStatus.updateLastUseTime();
             long id = camelliaStrictIdGen.peekId(tag);
             if (logger.isDebugEnabled()) {
                 logger.debug("peekId, tag = {}, id = {}", tag, id);
@@ -57,6 +59,7 @@ public class CamelliaIdGenStrictController {
     @GetMapping("/decodeRegionId")
     public IdGenResult decodeRegionId(@RequestParam("id") long id) {
         try {
+            CamelliaIdGenStrictServerStatus.updateLastUseTime();
             long regionId = camelliaStrictIdGen.decodeRegionId(id);
             if (logger.isDebugEnabled()) {
                 logger.debug("decodeRegionId, id = {}, regionId = {}", id, regionId);
@@ -74,6 +77,7 @@ public class CamelliaIdGenStrictController {
     @PostMapping("/update")
     public IdGenResult update(@RequestParam("tag") String tag, @RequestParam("id") long id) {
         try {
+            CamelliaIdGenStrictServerStatus.updateLastUseTime();
             boolean result = camelliaStrictIdGen.getIdLoader().update(tag, id);
             if (logger.isDebugEnabled()) {
                 logger.debug("update, tag = {}, id = {}, result = {}", tag, id, result);

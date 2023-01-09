@@ -40,6 +40,7 @@ public class CamelliaDelayQueueController {
                                @RequestParam(value = "longPollingTimeoutMillis", required = false, defaultValue = "-1") long longPollingTimeoutMillis,
                                HttpServletRequest httpServletRequest,
                                HttpServletResponse httpServletResponse) {
+        CamelliaDelayQueueServerStatus.updateLastUseTime();
         CamelliaDelayMsgPullRequest request = new CamelliaDelayMsgPullRequest();
         request.setTopic(topic);
         request.setAckTimeoutMillis(ackTimeoutMillis);
@@ -80,6 +81,7 @@ public class CamelliaDelayQueueController {
                                                 @RequestParam("delayMillis") long delayMillis,
                                                 @RequestParam(value = "ttlMillis", required = false, defaultValue = "-1") long ttlMillis,
                                                 @RequestParam(value = "maxRetry", required = false, defaultValue = "-1") int maxRetry) {
+        CamelliaDelayQueueServerStatus.updateLastUseTime();
         CamelliaDelayMsgSendRequest request = new CamelliaDelayMsgSendRequest();
         request.setTopic(topic);
         request.setMsgId(msgId);
@@ -94,6 +96,7 @@ public class CamelliaDelayQueueController {
     public CamelliaDelayMsgDeleteResponse deleteMsg(@RequestParam("topic") String topic,
                                                     @RequestParam("msgId") String msgId,
                                                     @RequestParam(value = "release", required = false, defaultValue = "false") boolean release) {
+        CamelliaDelayQueueServerStatus.updateLastUseTime();
         CamelliaDelayMsgDeleteRequest request = new CamelliaDelayMsgDeleteRequest();
         request.setTopic(topic);
         request.setMsgId(msgId);
@@ -105,6 +108,7 @@ public class CamelliaDelayQueueController {
     public CamelliaDelayMsgPullResponse pullMsg(@RequestParam("topic") String topic,
                                                 @RequestParam(value = "ackTimeoutMillis", required = false, defaultValue = "-1") long ackTimeoutMillis,
                                                 @RequestParam(value = "batch", required = false, defaultValue = "-1") int batch) {
+        CamelliaDelayQueueServerStatus.updateLastUseTime();
         CamelliaDelayMsgPullRequest request = new CamelliaDelayMsgPullRequest();
         request.setTopic(topic);
         request.setAckTimeoutMillis(ackTimeoutMillis);
@@ -116,6 +120,7 @@ public class CamelliaDelayQueueController {
     public CamelliaDelayMsgAckResponse ackMsg(@RequestParam("topic") String topic,
                                               @RequestParam("msgId") String msgId,
                                               @RequestParam("ack") boolean ack) {
+        CamelliaDelayQueueServerStatus.updateLastUseTime();
         CamelliaDelayMsgAckRequest request = new CamelliaDelayMsgAckRequest();
         request.setTopic(topic);
         request.setMsgId(msgId);
@@ -126,6 +131,7 @@ public class CamelliaDelayQueueController {
     @PostMapping("/getMsg")
     public CamelliaDelayMsgGetResponse getMsg(@RequestParam("topic") String topic,
                                               @RequestParam("msgId") String msgId) {
+        CamelliaDelayQueueServerStatus.updateLastUseTime();
         CamelliaDelayMsgGetRequest request = new CamelliaDelayMsgGetRequest();
         request.setTopic(topic);
         request.setMsgId(msgId);

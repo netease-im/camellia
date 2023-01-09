@@ -27,6 +27,7 @@ public class CamelliaIdGenSnowflakeController {
     @GetMapping("/genId")
     public IdGenResult genId() {
         try {
+            CamelliaIdGenSnowflakeServerStatus.updateLastUseTime();
             long id = camelliaSnowflakeIdGen.genId();
             if (logger.isDebugEnabled()) {
                 logger.debug("genId, id = {}", id);
@@ -44,6 +45,7 @@ public class CamelliaIdGenSnowflakeController {
     @GetMapping("/decodeTs")
     public IdGenResult decodeTs(@RequestParam("id") long id) {
         try {
+            CamelliaIdGenSnowflakeServerStatus.updateLastUseTime();
             long ts = camelliaSnowflakeIdGen.decodeTs(id);
             if (logger.isDebugEnabled()) {
                 logger.debug("decodeTs, id = {}, ts = {}", id, ts);
@@ -61,6 +63,7 @@ public class CamelliaIdGenSnowflakeController {
     @GetMapping("/decodeRegionId")
     public IdGenResult decodeRegionId(@RequestParam("id") long id) {
         try {
+            CamelliaIdGenSnowflakeServerStatus.updateLastUseTime();
             long regionId = camelliaSnowflakeIdGen.decodeRegionId(id);
             if (logger.isDebugEnabled()) {
                 logger.debug("decodeRegionId, id = {}, regionId = {}", id, regionId);
@@ -78,6 +81,7 @@ public class CamelliaIdGenSnowflakeController {
     @GetMapping("/decodeSequence")
     public IdGenResult decodeSequence(@RequestParam("id") long id) {
         try {
+            CamelliaIdGenSnowflakeServerStatus.updateLastUseTime();
             long regionId = camelliaSnowflakeIdGen.decodeSequence(id);
             if (logger.isDebugEnabled()) {
                 logger.debug("decodeSequence, id = {}, regionId = {}", id, regionId);
@@ -95,6 +99,7 @@ public class CamelliaIdGenSnowflakeController {
     @GetMapping("/decodeWorkerId")
     public IdGenResult decodeWorkerId(@RequestParam("id") long id) {
         try {
+            CamelliaIdGenSnowflakeServerStatus.updateLastUseTime();
             long regionId = camelliaSnowflakeIdGen.decodeWorkerId(id);
             if (logger.isDebugEnabled()) {
                 logger.debug("decodeWorkerId, id = {}, regionId = {}", id, regionId);
