@@ -84,9 +84,10 @@ docker-compose up
 - Monitor:
   - You can access prometheus via: [localhost:9090](localhost:9090)
   - You can access grafana via: [localhost:3000](localhost:3000) _(username: admin, password: admin)_
+![img.png](grafana-sample.png)
 - Visualize on Grafana:
   - Import [redis-proxy-grafana.json](redis-proxy-grafana.json)
-  - Alternately, you can create a custom dashboard that uses Prometheus metrics.  
+  - Alternately, you can create a custom dashboard that uses Prometheus metrics.
 - Sample `/prometheus` data:
 ```
 # HELP redis_proxy_connect_count Redis Proxy Connect Count
