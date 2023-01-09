@@ -4,6 +4,18 @@
       "connect": 53
     }
   ],
+  "bidBgroupConnectStats": [
+    {
+      "bid": "1",
+      "bgroup": "default",
+      "connect": 10
+    },
+    {
+      "bid": "2",
+      "bgroup": "default",
+      "connect": 20
+    }
+  ],
   "countStats": [
     {
       "count": 422214,

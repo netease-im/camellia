@@ -10,6 +10,18 @@
       "connect": 53  //客户端连接数，虽然是一个数组，但是其实只有一个
     }
   ],
+  "bidBgroupConnectStats": [//按bid/bgroup分别统计客户端连接数
+    {
+      "bid": "1",
+      "bgroup": "default",
+      "connect": 10
+    },
+    {
+      "bid": "2",
+      "bgroup": "default",
+      "connect": 20
+    }
+  ],
   "countStats": [
     {
       "count": 422214,  //总请求量

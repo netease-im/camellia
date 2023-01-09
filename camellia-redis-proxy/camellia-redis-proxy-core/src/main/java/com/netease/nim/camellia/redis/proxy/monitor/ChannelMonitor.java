@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
+import com.netease.nim.camellia.redis.proxy.monitor.model.BidBgroupConnectStats;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
@@ -66,6 +67,19 @@ public class ChannelMonitor {
 
     public static int connect() {
         return map.size();
+    }
+
+    public static List<BidBgroupConnectStats> bidBgroupConnect() {
+        List<BidBgroupConnectStats> list = new ArrayList<>();
+        for (Map.Entry<String, ConcurrentHashMap<String, ChannelInfo>> entry : bidbgroupMap.entrySet()) {
+            BidBgroupConnectStats stats = new BidBgroupConnectStats();
+            String[] split = entry.getKey().split("\\|");
+            stats.setBid(Long.parseLong(split[0]));
+            stats.setBgroup(split[1]);
+            stats.setConnect(entry.getValue().size());
+            list.add(stats);
+        }
+        return list;
     }
 
     public static int bidBgroupConnect(long bid, String bgroup) {

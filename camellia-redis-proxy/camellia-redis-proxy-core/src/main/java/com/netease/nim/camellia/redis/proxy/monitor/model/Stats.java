@@ -14,6 +14,7 @@ public class Stats {
 
     private int intervalSeconds;
     private long clientConnectCount;
+    private List<BidBgroupConnectStats> bidBgroupConnectStatsList = new ArrayList<>();
     private long count;
     private long totalReadCount;
     private long totalWriteCount;
@@ -49,6 +50,14 @@ public class Stats {
 
     public void setClientConnectCount(long clientConnectCount) {
         this.clientConnectCount = clientConnectCount;
+    }
+
+    public List<BidBgroupConnectStats> getBidBgroupConnectStatsList() {
+        return bidBgroupConnectStatsList;
+    }
+
+    public void setBidBgroupConnectStatsList(List<BidBgroupConnectStats> bidBgroupConnectStatsList) {
+        this.bidBgroupConnectStatsList = bidBgroupConnectStatsList;
     }
 
     public long getCount() {
@@ -123,22 +132,6 @@ public class Stats {
         this.bidBgroupSpendStatsList = bidBgroupSpendStatsList;
     }
 
-    public List<ResourceCommandStats> getResourceCommandStatsList() {
-        return resourceCommandStatsList;
-    }
-
-    public void setResourceCommandStatsList(List<ResourceCommandStats> resourceCommandStatsList) {
-        this.resourceCommandStatsList = resourceCommandStatsList;
-    }
-
-    public List<ResourceBidBgroupCommandStats> getResourceBidBgroupCommandStatsList() {
-        return resourceBidBgroupCommandStatsList;
-    }
-
-    public void setResourceBidBgroupCommandStatsList(List<ResourceBidBgroupCommandStats> resourceBidBgroupCommandStatsList) {
-        this.resourceBidBgroupCommandStatsList = resourceBidBgroupCommandStatsList;
-    }
-
     public List<ResourceStats> getResourceStatsList() {
         return resourceStatsList;
     }
@@ -147,12 +140,28 @@ public class Stats {
         this.resourceStatsList = resourceStatsList;
     }
 
+    public List<ResourceCommandStats> getResourceCommandStatsList() {
+        return resourceCommandStatsList;
+    }
+
+    public void setResourceCommandStatsList(List<ResourceCommandStats> resourceCommandStatsList) {
+        this.resourceCommandStatsList = resourceCommandStatsList;
+    }
+
     public List<ResourceBidBgroupStats> getResourceBidBgroupStatsList() {
         return resourceBidBgroupStatsList;
     }
 
     public void setResourceBidBgroupStatsList(List<ResourceBidBgroupStats> resourceBidBgroupStatsList) {
         this.resourceBidBgroupStatsList = resourceBidBgroupStatsList;
+    }
+
+    public List<ResourceBidBgroupCommandStats> getResourceBidBgroupCommandStatsList() {
+        return resourceBidBgroupCommandStatsList;
+    }
+
+    public void setResourceBidBgroupCommandStatsList(List<ResourceBidBgroupCommandStats> resourceBidBgroupCommandStatsList) {
+        this.resourceBidBgroupCommandStatsList = resourceBidBgroupCommandStatsList;
     }
 
     public List<RouteConf> getRouteConfList() {
@@ -195,19 +204,19 @@ public class Stats {
         this.hotKeyStatsList = hotKeyStatsList;
     }
 
-    public List<SlowCommandStats> getSlowCommandStatsList() {
-        return slowCommandStatsList;
-    }
-
-    public void setSlowCommandStatsList(List<SlowCommandStats> slowCommandStatsList) {
-        this.slowCommandStatsList = slowCommandStatsList;
-    }
-
     public List<HotKeyCacheStats> getHotKeyCacheStatsList() {
         return hotKeyCacheStatsList;
     }
 
     public void setHotKeyCacheStatsList(List<HotKeyCacheStats> hotKeyCacheStatsList) {
         this.hotKeyCacheStatsList = hotKeyCacheStatsList;
+    }
+
+    public List<SlowCommandStats> getSlowCommandStatsList() {
+        return slowCommandStatsList;
+    }
+
+    public void setSlowCommandStatsList(List<SlowCommandStats> slowCommandStatsList) {
+        this.slowCommandStatsList = slowCommandStatsList;
     }
 }

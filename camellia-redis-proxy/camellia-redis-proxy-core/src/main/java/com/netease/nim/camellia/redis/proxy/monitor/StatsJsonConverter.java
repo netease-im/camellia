@@ -27,6 +27,17 @@ public class StatsJsonConverter {
         connectJsonArray.add(connectJson);
         monitorJson.put("connectStats", connectJsonArray);
 
+        List<BidBgroupConnectStats> bidBgroupConnectStatsList = stats.getBidBgroupConnectStatsList();
+        JSONArray bidBgroupConnectStatsJsonArray = new JSONArray();
+        for (BidBgroupConnectStats connectStats : bidBgroupConnectStatsList) {
+            JSONObject json = new JSONObject();
+            json.put("bid", String.valueOf(connectStats.getBid()));
+            json.put("bgroup", String.valueOf(connectStats.getBgroup()));
+            json.put("connect", connectStats.getConnect());
+            bidBgroupConnectStatsJsonArray.add(json);
+        }
+        monitorJson.put("bidBgroupConnectStats", bidBgroupConnectStatsJsonArray);
+
         JSONArray countJsonArray = new JSONArray();
         JSONObject countJson = new JSONObject();
         countJson.put("count", stats.getCount());
