@@ -25,6 +25,7 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
  *   <li>single curly brace: {key -> 1|default|{key
  *   <li>single curly brace: key} -> 1|default|key}
  *   <li>not a pair of curly braces: prefix}:{key} -> 1|default|prefix}:{1|default|key}
+ *   <li>not a pair of curly braces: {{key} -> 1|default|{1|default|{key}
  *   <li>multiple hashtag key:{key1}{key2} -> 1|default|key:{1|default|key1}{key2}
  * </ul>
  *
@@ -34,7 +35,7 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
  *   <li>mset k1 v1 {k1} {k1} {k1}:key {k1}:key key:{k1} key:{k1} {k1}:key:{k1} {k1}:key:{k1}
  *   <li>mget k1 {k1} {k1}:key key:{k1} {k1}:key:{k1}
  * </ul>
- *
+ * <p>
  * Created by caojiajun on 2022/12/7
  */
 public class DefaultTenancyNamespaceKeyConverter implements KeyConverter {
@@ -166,7 +167,7 @@ public class DefaultTenancyNamespaceKeyConverter implements KeyConverter {
             return null;
         }
         for (int i = 0; i < key.length; i++) {
-            if (key[i] == OPEN_CURLY_BRACE[0]) {
+            if (key[i] == OPEN_CURLY_BRACE[0] && openCurlyBraceIndex == -1) {
                 openCurlyBraceIndex = i;
             } else if (key[i] == CLOSE_CURLY_BRACE[0]) {
                 if (openCurlyBraceIndex >= 0 && i - openCurlyBraceIndex > 1) {
