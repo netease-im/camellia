@@ -7,7 +7,7 @@
 * 线程池工具类CamelliaHashedExecutor，提供哈希策略，相同hashKey确保顺序执行  
 * 熔断器工具类CamelliaCircuitBreaker，支持动态配置
 * 线程池工具类CamelliaDynamicExecutor，可以动态修改线程池的参数
-* 线程池工具类CamelliaDynamicIsolationExecutor，支持根据isolationKey统计任务执行时间，并根据执行快慢进行动态隔离（使用不同的底层线程池执行），从而避免慢任务影响快任务的执行
+* 线程池工具类CamelliaDynamicIsolationExecutor，支持根据isolationKey对快慢任务做自动的隔离，避免慢任务影响快任务
 
 ## maven依赖
 ```
@@ -351,7 +351,7 @@ public class CircuitBreakerSamples {
 * 5）[执行阶段] 如果某个isolationKey的最新统计数据和当前线程池不匹配，则转交给匹配的线程池
 * 6）[执行阶段] 如果某个线程池执行任务延迟超过阈值（默认300ms），且其他线程池有空闲的（有空闲的线程），则转交给其他线程池（fast会找fastBackup+isolation，fastBackup会找fast+isolation，slow会找slowBackup+isolation，slowBackup会找slow+isolation）
 * 7）[执行阶段] 如果某个isolationKey在fastExecutor/slowExecutor中占有线程数比例超过阈值（默认0.3），则转交给fastBackUpExecutor/slowBackupExecutor执行
-* 8）[执行阶段] 如果某个isolationKey在fastBackUpExecutor/slowBackupExecutor占有线程数比例也超过阈值（默认0.5），则转交给isolationExecutor执行
+* 8）[执行阶段] 如果某个isolationKey在fastBackUpExecutor/slowBackupExecutor占有线程数比例也超过阈值（默认0.3），则转交给isolationExecutor执行
 * 9）[选择阶段] 在白名单列表里的isolationKey，直接在whiteListExecutor中执行；[提交阶段] 如果whiteListExecutor繁忙，则转交给isolationExecutor
 * 10）最终所有任务都会把isolationExecutor作为兜底，如果isolationExecutor因为繁忙处理不了任务，则走fallback回调告诉任务提交者任务被放弃执行了
 * 11）可以设置任务过期时间（默认不过期），任务如果过期而被放弃也会走fallback
