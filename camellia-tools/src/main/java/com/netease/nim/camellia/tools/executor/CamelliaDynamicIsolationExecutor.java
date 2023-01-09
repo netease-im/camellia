@@ -294,7 +294,7 @@ public class CamelliaDynamicIsolationExecutor implements CamelliaExecutor {
     }
 
     private void doTask0(String isolationKey, Semaphore semaphore, TaskWrapper<?> task, Type type, Fallback fallback) {
-        latencyCache.put(LATENCY_TAG, type.name(), task.getLatency(), 5);
+        latencyCache.put(LATENCY_TAG, type.name(), task.getLatency(), config.getTaskSpendThresholdMs().get() * 32);
         currentType.set(type);
         if (task.isExpire()) {
             fallback.fallback(isolationKey, FallbackReason.TASK_EXPIRE);
