@@ -51,7 +51,7 @@ public class StatsPrometheusConverter {
 
             // ====bid-bgroup====
             sb.append("# HELP redis_proxy_bid_bgroup Redis Proxy Bid Bgroup\n");
-            sb.append("# TYPE redis_proxy_bid_bgroup gauge\n");
+            sb.append("# TYPE redis_proxy_bid_bgroup counter\n");
             for (BidBgroupStats bgroupStats : stats.getBidBgroupStatsList()) {
                 String bid = bgroupStats.getBid() == null ? DEFAULT : String.valueOf(bgroupStats.getBid());
                 String bgroup = bgroupStats.getBgroup() == null ? DEFAULT : bgroupStats.getBgroup();
@@ -117,14 +117,14 @@ public class StatsPrometheusConverter {
             sb.append("# HELP redis_proxy_resource_stats Redis Proxy Resource Stats\n");
             sb.append("# TYPE redis_proxy_resource_stats counter\n");
             for (ResourceStats resourceStats : stats.getResourceStatsList()) {
-                sb.append(String.format("redis_proxy_resource_stats{\"resource\"=\"%s\",} %d%n", resourceStats.getResource(), resourceStats.getCount()));
+                sb.append(String.format("redis_proxy_resource_stats{resource=\"%s\",} %d%n", resourceStats.getResource(), resourceStats.getCount()));
             }
 
             // ====resource.command.stats====
             sb.append("# HELP redis_proxy_resource_command_stats Redis Proxy Resource Command Stats\n");
             sb.append("# TYPE redis_proxy_resource_command_stats counter\n");
             for (ResourceCommandStats resourceCommandStats : stats.getResourceCommandStatsList()) {
-                sb.append(String.format("redis_proxy_resource_command_stats{\"resource\"=\"%s\",command=\"%s\",} %d%n",
+                sb.append(String.format("redis_proxy_resource_command_stats{resource=\"%s\",command=\"%s\",} %d%n",
                         resourceCommandStats.getResource(), resourceCommandStats.getCommand(), resourceCommandStats.getCount()));
             }
 
@@ -134,7 +134,7 @@ public class StatsPrometheusConverter {
             for (ResourceBidBgroupCommandStats commandStats : stats.getResourceBidBgroupCommandStatsList()) {
                 String bid = commandStats.getBid() == null ? DEFAULT : String.valueOf(commandStats.getBid());
                 String bgroup = commandStats.getBgroup() == null ? DEFAULT : commandStats.getBgroup();
-                sb.append(String.format("redis_proxy_bid_bgroup_resource_command_stats{\"bid\"=\"%s\",bgroup=\"%s\",resource=\"%s\",command=\"%s\",} %d%n",
+                sb.append(String.format("redis_proxy_bid_bgroup_resource_command_stats{bid=\"%s\",bgroup=\"%s\",resource=\"%s\",command=\"%s\",} %d%n",
                         bid,
                         bgroup,
                         commandStats.getResource(), commandStats.getCommand(), commandStats.getCount()));
@@ -142,14 +142,16 @@ public class StatsPrometheusConverter {
 
             // ====route.conf====
             sb.append("# HELP redis_proxy_route_conf Redis Proxy Route Conf\n");
-            sb.append("# TYPE redis_proxy_route_conf gauge");
+            sb.append("# TYPE redis_proxy_route_conf gauge\n");
             for (RouteConf routeConf : stats.getRouteConfList()) {
                 String bid = routeConf.getBid() == null ? DEFAULT : String.valueOf(routeConf.getBid());
                 String bgroup = routeConf.getBgroup() == null ? DEFAULT : routeConf.getBgroup();
+                String resourceTable = routeConf.getResourceTable();
+                String normalizeResourceTable = resourceTable.replace("\"", "");
                 sb.append(String.format("redis_proxy_route_conf{bid=\"%s\",bgroup=\"%s\",routeConf=\"%s\",updateTime=\"%d\",} 1%n",
                         bid,
                         bgroup,
-                        routeConf.getResourceTable(),
+                        normalizeResourceTable,
                         routeConf.getUpdateTime()));
             }
             // ====redis.connect.stats====
