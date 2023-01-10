@@ -2,11 +2,12 @@
 
 # 1.1.11（2023/01/xx）
 ### 新增
-* camellia-redis-proxy新增对prometheus/grafana的支持，感谢[@tasszz2k](https://github.com/tasszz2k)
+* camellia-redis-proxy新增对prometheus/grafana的支持，感谢[@tasszz2k](https://github.com/tasszz2k) ，具体见：[prometheus-grafana](/docs/redis-proxy/monitor/prometheus-grafana.md)
 * camellia-tools新增CamelliaDynamicExecutor和CamelliaDynamicIsolationExecutor工具类，以及线程池监控工具CamelliaExecutorMonitor
 
 ### 更新
 * camellia-core包下面部分utils类，迁移到camellia-tools
+* camellia-redis-proxy优化了默认提供的DefaultTenancyNamespaceKeyConverter在包含hashtag的key的行为，从而兼容更多场景, 感谢[@phuc1998](https://github.com/phuc1998) 和 [@tasszz2k](https://github.com/tasszz2k) 发现了这个bug
 
 ### fix
 * 修复camellia-redis-proxy在使用TRANSACTION系列命令时，如果有较高的客户端qps，导致的后端redis连接泄漏的问题, 感谢[@phuc1998](https://github.com/phuc1998) 和 [@tasszz2k](https://github.com/tasszz2k) 发现了这个bug 

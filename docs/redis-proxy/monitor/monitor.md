@@ -64,3 +64,6 @@ proxy实现了info命令，支持返回如下信息：Server/Clients/Route/Upstr
 ### 把proxy当做一个监控redis集群状态的平台（通过http接口暴露）
 你可以使用http接口去请求proxy，并把需要探测的redis地址传递给proxy，proxy会以json格式返回目标redis集群的信息  
 详见[detect](detect.md)
+
+### 使用prometheus和grafana监控proxy集群  
+详见[prometheus-grafana](prometheus-grafana.md)

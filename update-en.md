@@ -2,11 +2,12 @@
 
 # 1.1.11（2023/01/xx）
 ### add
-* camellia-redis-proxy support prometheus/grafana, thanks [@tasszz2k](https://github.com/tasszz2k)
+* camellia-redis-proxy support prometheus/grafana, thanks [@tasszz2k](https://github.com/tasszz2k) 
 * camellia-tools provide CamelliaDynamicExecutor and CamelliaDynamicIsolationExecutor, provide CamelliaExecutorMonitor to monitor thread-pool
 
 ### update
 * some utils from camellia-core package, move to camellia-tools package
+* camellia-redis-proxy optimize the DefaultTenancyNamespaceKeyConverter when redis-key contains hashtag, thanks [@phuc1998](https://github.com/phuc1998) and [@tasszz2k](https://github.com/tasszz2k)   
 
 ### fix
 * fix camellia-redis-proxy upstream redis connection leak when use TRANSACTION commands in high qps, thanks [@phuc1998](https://github.com/phuc1998) and [@tasszz2k](https://github.com/tasszz2k) find this bug
