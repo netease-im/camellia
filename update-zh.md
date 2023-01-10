@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.1.11（2023/01/xx）
+# 1.1.11（2023/01/10）
 ### 新增
 * camellia-redis-proxy新增对prometheus/grafana的支持，感谢[@tasszz2k](https://github.com/tasszz2k) ，具体见：[prometheus-grafana](/docs/redis-proxy/monitor/prometheus-grafana.md)
 * camellia-tools新增CamelliaDynamicExecutor和CamelliaDynamicIsolationExecutor工具类，以及线程池监控工具CamelliaExecutorMonitor

@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.1.11（2023/01/xx）
+# 1.1.11（2023/01/10）
 ### add
 * camellia-redis-proxy support prometheus/grafana, thanks [@tasszz2k](https://github.com/tasszz2k) 
 * camellia-tools provide CamelliaDynamicExecutor and CamelliaDynamicIsolationExecutor, provide CamelliaExecutorMonitor to monitor thread-pool
