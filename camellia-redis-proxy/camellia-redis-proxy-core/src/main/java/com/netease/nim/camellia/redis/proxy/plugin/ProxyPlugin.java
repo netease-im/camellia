@@ -8,6 +8,7 @@ public interface ProxyPlugin {
 
     /**
      * 初始化方法
+     * @param factory ProxyBeanFactory
      */
     default void init(ProxyBeanFactory factory) {
     }
@@ -23,6 +24,7 @@ public interface ProxyPlugin {
     /**
      * 请求（此时命令刚到proxy，还未到后端redis）
      * @param request 请求command的上下文
+     * @return ProxyPluginResponse
      */
     default ProxyPluginResponse executeRequest(ProxyRequest request) {
         return ProxyPluginResponse.SUCCESS;
@@ -31,6 +33,7 @@ public interface ProxyPlugin {
     /**
      * 响应（此时命令已经从后端redis响应，即将返回给客户端）
      * @param reply 响应reply上下文
+     * @return ProxyPluginResponse
      */
     default ProxyPluginResponse executeReply(ProxyReply reply) {
         return ProxyPluginResponse.SUCCESS;

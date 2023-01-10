@@ -20,6 +20,7 @@ public class CommandFailMonitor {
 
     /**
      * command fail incr
+     * @param failReason fail reason
      */
     public static void incr(String failReason) {
         try {

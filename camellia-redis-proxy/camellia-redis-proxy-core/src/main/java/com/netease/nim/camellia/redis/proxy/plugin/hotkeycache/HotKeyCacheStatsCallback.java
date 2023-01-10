@@ -10,6 +10,10 @@ public interface HotKeyCacheStatsCallback {
 
     /**
      * callback the hot key cache stats
+     * @param identityInfo IdentityInfo
+     * @param hotKeyCacheStats HotKeyCacheInfo
+     * @param checkMillis checkMillis
+     * @param checkThreshold checkThreshold
      */
     void callback(IdentityInfo identityInfo, HotKeyCacheInfo hotKeyCacheStats, long checkMillis, long checkThreshold);
 }

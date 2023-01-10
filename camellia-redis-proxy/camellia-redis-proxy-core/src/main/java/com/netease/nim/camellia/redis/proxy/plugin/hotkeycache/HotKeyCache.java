@@ -100,6 +100,8 @@ public class HotKeyCache {
 
     /**
      * 获取本地缓存
+     * @param key key
+     * @return HotValue
      */
     public HotValue getCache(byte[] key) {
         if (!enable) return null;
@@ -141,6 +143,8 @@ public class HotKeyCache {
 
     /**
      * 重建缓存
+     * @param key key
+     * @param value value
      */
     public void tryBuildHotKeyCache(byte[] key, byte[] value) {
         if (!enable) return;

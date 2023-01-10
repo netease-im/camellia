@@ -12,9 +12,9 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
  * <h3>Normal cases </h3>
  *
  * <ul>
- *   <li>original key: key -> 1|default|key
- *   <li>original key: {key} -> 1|default|{1|default|key}
- *   <li>original key: key:{key} -> 1|default|key:{1|default|key}
+ *   <li>original key: key - 1|default|key
+ *   <li>original key: {key} - 1|default|{1|default|key}
+ *   <li>original key: key:{key} - 1|default|key:{1|default|key}
  * </ul>
  *
  * <h3>Special cases </h3>
@@ -22,11 +22,11 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
  * <i>the original key contains an odd number of curly braces or not a pair of curly braces</i>
  *
  * <ul>
- *   <li>single curly brace: {key -> 1|default|{key
- *   <li>single curly brace: key} -> 1|default|key}
- *   <li>not a pair of curly braces: prefix}:{key} -> 1|default|prefix}:{1|default|key}
- *   <li>not a pair of curly braces: {{key} -> 1|default|{1|default|{key}
- *   <li>multiple hashtag key:{key1}{key2} -> 1|default|key:{1|default|key1}{key2}
+ *   <li>single curly brace: {key - 1|default|{key
+ *   <li>single curly brace: key} - 1|default|key}
+ *   <li>not a pair of curly braces: prefix}:{key} - 1|default|prefix}:{1|default|key}
+ *   <li>not a pair of curly braces: {{key} - 1|default|{1|default|{key}
+ *   <li>multiple hashtag key:{key1}{key2} - 1|default|key:{1|default|key1}{key2}
  * </ul>
  *
  * <h3>Test case: </h3>

@@ -66,6 +66,7 @@ public class ProxyMonitorCollector {
 
     /**
      * 对命令耗时监控专门加一个子开关
+     * @return isCommandSpendTimeMonitorEnable
      */
     public static boolean isCommandSpendTimeMonitorEnable() {
         return monitorEnable && commandSpendTimeMonitorEnable;
@@ -73,6 +74,7 @@ public class ProxyMonitorCollector {
 
     /**
      * 对上游耗时监控专门加一个子开关
+     * @return isUpstreamRedisSpendTimeMonitorEnable
      */
     public static boolean isUpstreamRedisSpendTimeMonitorEnable() {
         return monitorEnable && upstreamRedisSpendTimeMonitorEnable;
@@ -80,6 +82,7 @@ public class ProxyMonitorCollector {
 
     /**
      * get Stats
+     * @return Stats
      */
     public static Stats getStats() {
         return stats;

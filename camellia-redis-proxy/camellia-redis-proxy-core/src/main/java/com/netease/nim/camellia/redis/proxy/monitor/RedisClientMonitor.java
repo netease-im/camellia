@@ -24,6 +24,7 @@ public class RedisClientMonitor {
 
     /**
      * 统计RedisClient，增加
+     * @param redisClient RedisClient
      */
     public static void addRedisClient(RedisClient redisClient) {
         try {
@@ -48,6 +49,7 @@ public class RedisClientMonitor {
 
     /**
      * 统计RedisClient，减少
+     * @param redisClient RedisClient
      */
     public static void removeRedisClient(RedisClient redisClient) {
         try {

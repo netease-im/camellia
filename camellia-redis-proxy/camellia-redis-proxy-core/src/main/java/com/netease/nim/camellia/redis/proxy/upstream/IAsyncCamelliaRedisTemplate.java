@@ -15,16 +15,20 @@ public interface IAsyncCamelliaRedisTemplate {
 
     /**
      * 发送命令
+     * @param commands commands
+     * @return reply future list
      */
     List<CompletableFuture<Reply>> sendCommand(List<Command> commands);
 
     /**
      * 获取路由表
+     * @return ResourceTable
      */
     ResourceTable getResourceTable();
 
     /**
      * 获取路由表更新时间
+     * @return update time
      */
     long getResourceTableUpdateTime();
 
@@ -40,6 +44,7 @@ public interface IAsyncCamelliaRedisTemplate {
 
     /**
      * 更新路由表
+     * @param resourceTable ResourceTable
      */
     void update(ResourceTable resourceTable);
 }

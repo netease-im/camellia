@@ -83,6 +83,7 @@ public class CamelliaRedisProxyStarter {
 
     /**
      * 获取监控数据
+     * @return monitor string
      */
     public static String getRedisProxyMonitorString() {
         try {

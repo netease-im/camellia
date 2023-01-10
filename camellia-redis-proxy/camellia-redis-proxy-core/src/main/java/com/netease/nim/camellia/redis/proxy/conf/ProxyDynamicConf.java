@@ -39,6 +39,7 @@ public class ProxyDynamicConf {
 
     /**
      * 设置来自yml文件的初始配置，可以被camellia-redis-proxy.properties覆盖
+     * @param initConf conf
      */
     public static void updateInitConf(Map<String, String> initConf) {
         if (initConf != null && !initConf.isEmpty()) {
@@ -122,6 +123,7 @@ public class ProxyDynamicConf {
 
     /**
      * 直接把配置设置进来（k-v的map）
+     * @param conf conf
      */
     public static void reload(Map<String, String> conf) {
         try {

@@ -208,7 +208,7 @@ public class RedisClusterSlotInfo {
 
     /**
      * get client by index, node list is sorted by url.
-     *
+     * @param index index
      * @return RedisClient
      */
     public RedisClient getClientByIndex(int index) {

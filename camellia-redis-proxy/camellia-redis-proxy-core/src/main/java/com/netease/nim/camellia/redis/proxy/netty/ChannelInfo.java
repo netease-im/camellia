@@ -67,6 +67,8 @@ public class ChannelInfo {
 
     /**
      * 初始化ChannelInfo
+     * @param ctx ChannelHandlerContext
+     * @return ChannelInfo ChannelInfo
      */
     public static ChannelInfo init(ChannelHandlerContext ctx) {
         ChannelInfo channelInfo = new ChannelInfo(ctx);
@@ -76,6 +78,8 @@ public class ChannelInfo {
 
     /**
      * 获取ChannelInfo
+     * @param ctx ChannelHandlerContext
+     * @return ChannelInfo
      */
     public static ChannelInfo get(ChannelHandlerContext ctx) {
         if (ctx == null) return null;

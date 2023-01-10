@@ -29,6 +29,7 @@ public class BigKeyHunter {
 
     /**
      * 校验请求
+     * @param command Command
      */
     public void checkRequest(Command command) {
         if (command == null) return;
@@ -138,6 +139,8 @@ public class BigKeyHunter {
 
     /**
      * 校验响应
+     * @param command Command
+     * @param reply Reply
      */
     public void checkReply(Command command, Reply reply) {
         if (command == null) return;

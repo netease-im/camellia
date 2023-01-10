@@ -22,6 +22,7 @@ public class QuantileCollectorPool {
 
     /**
      * 获取一个QuantileCollector
+     * @return QuantileCollector
      */
     public static QuantileCollector borrowQuantileCollector() {
         QuantileCollector collector = pool.poll();
@@ -36,6 +37,7 @@ public class QuantileCollectorPool {
 
     /**
      * 回收一个QuantileCollector
+     * @param collector QuantileCollector
      */
     public static void returnQuantileCollector(QuantileCollector collector) {
         pool.offer(collector);

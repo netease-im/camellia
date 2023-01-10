@@ -23,6 +23,7 @@ public interface ProxyClusterModeProvider {
 
     /**
      * 获得集群内所有proxy节点的地址列表
+     * @return proxy node list
      */
     default List<ProxyNode> discovery() {
         List<ProxyNode> list = new ArrayList<>();
@@ -32,6 +33,7 @@ public interface ProxyClusterModeProvider {
 
     /**
      * 获取当前的proxy节点地址
+     * @return proxy node
      */
     default ProxyNode current() {
         InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress();
@@ -52,11 +54,14 @@ public interface ProxyClusterModeProvider {
 
     /**
      * 增加一个节点变更的回调
+     * @param listener ProxyNodeChangeListener
      */
     void addNodeChangeListener(ProxyNodeChangeListener listener);
 
     /**
      * proxy间的心跳
+     * @param request ProxyHeartbeatRequest
+     * @return reply
      */
     default Reply proxyHeartbeat(ProxyHeartbeatRequest request) {
         return StatusReply.OK;

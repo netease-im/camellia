@@ -120,6 +120,8 @@ public class ProxyClusterModeProcessor {
 
     /**
      * 命令是否要重定向
+     * @param command Command
+     * @return reply
      */
     public Reply isCommandMove(Command command) {
         if (!init) return null;
@@ -148,6 +150,8 @@ public class ProxyClusterModeProcessor {
 
     /**
      * cluster相关命令
+     * @param command Command
+     * @return reply
      */
     public CompletableFuture<Reply> clusterCommands(Command command) {
         RedisCommand redisCommand = command.getRedisCommand();
