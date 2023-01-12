@@ -84,9 +84,11 @@ public class CamelliaRedisProxyServer {
                         p.addLast(serverHandler);
                     }
                 });
+        boolean tcpQuickAck = false;
         if (Epoll.isAvailable()) {
             if (serverProperties.isTcpQuickAck()) {
                 serverBootstrap.option(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
+                tcpQuickAck = true;
             }
         }
         int port = serverProperties.getPort();
@@ -98,7 +100,7 @@ public class CamelliaRedisProxyServer {
         logger.info("CamelliaRedisProxyServer, so_backlog = {}, so_sendbuf = {}, so_rcvbuf = {}, so_keepalive = {}",
                 serverProperties.getSoBacklog(), serverProperties.getSoSndbuf(), serverProperties.getSoRcvbuf(), serverProperties.isSoKeepalive());
         logger.info("CamelliaRedisProxyServer, tcp_no_delay = {}, tcp_quick_ack = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
-                serverProperties.isTcpNoDelay(), serverProperties.isTcpQuickAck(), serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh());
+                serverProperties.isTcpNoDelay(), tcpQuickAck, serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh());
         logger.info("CamelliaRedisProxyServer start at port: {}", port);
         GlobalRedisProxyEnv.port = port;
         this.port = port;
