@@ -23,7 +23,7 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-core</artifactId>
-    <version>1.1.11</version>
+    <version>1.1.12</version>
 </dependency>
 ```
 示例如下：
@@ -69,12 +69,12 @@ public class CamelliaSegmentIdGenTest {
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-segment-spring-boot-starter</artifactId>
-    <version>1.1.11</version>
+    <version>1.1.12</version>
 </dependency>
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-id-loader</artifactId>
-    <version>1.1.11</version>
+    <version>1.1.12</version>
 </dependency>
 ```
 编写启动类：
@@ -166,7 +166,7 @@ curl -d "tag=a&id=100" http://127.0.0.1:8083/camellia/id/gen/segment/update
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-sdk</artifactId>
-    <version>1.1.11</version>
+    <version>1.1.12</version>
 </dependency>
 ```
 解析regionId：  
