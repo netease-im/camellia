@@ -6,9 +6,10 @@
 
 ### update
 * camellia-redis-proxy support setting TCP_QUICKACK option (when proxy run in linux system, and epoll available), default false
+* rollback the performance improve for BulkReply by direct buf (from 1.1.8), the reason is memory leak in some cases, such as: client connection disconnect before Reply write, the BulkReply will not release
 
 ### fix
-* none
+* camellia-redis-proxy fix memory leak when client connection disconnect before Reply write, the BulkReply will not release(bug from v1.1.8)
 
 
 # 1.1.11（2023/01/10）
