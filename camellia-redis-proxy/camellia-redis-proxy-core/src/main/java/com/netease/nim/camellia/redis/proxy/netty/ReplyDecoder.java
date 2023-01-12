@@ -58,9 +58,10 @@ public class ReplyDecoder extends ByteToMessageDecoder {
                         readerIndex = in.readerIndex();
                     }
                     if (in.readableBytes() >= bulkSize + 2) {
-                        ByteBuf byteBuf = in.readRetainedSlice(bulkSize);
+                        byte[] raw = new byte[bulkSize];
+                        in.readBytes(raw);
                         in.skipBytes(2);
-                        out.add(new BulkReply(byteBuf));
+                        out.add(new BulkReply(raw));
                         marker = null;
                         bulkSize = Integer.MIN_VALUE;
                     } else {
