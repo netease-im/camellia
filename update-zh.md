@@ -1,5 +1,16 @@
 [ENGLISH](update-en.md)
 
+# 1.1.12（2023/01/xx）
+### 新增
+* 无
+
+### 更新
+* camellia-redis-proxy支持设置TCP_QUICKACK参数（当proxy运行在linux中，且epoll可用），默认false
+
+### fix
+* 无
+
+
 # 1.1.11（2023/01/10）
 ### 新增
 * camellia-redis-proxy新增对prometheus/grafana的支持，感谢[@tasszz2k](https://github.com/tasszz2k) ，具体见：[prometheus-grafana](/docs/redis-proxy/monitor/prometheus-grafana.md)

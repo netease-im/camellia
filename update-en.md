@@ -1,5 +1,16 @@
 [中文版](update-zh.md)
 
+# 1.1.12（2023/01/xx）
+### add
+* none
+
+### update
+* camellia-redis-proxy support setting TCP_QUICKACK option (when proxy run in linux system, and epoll available), default false
+
+### fix
+* none
+
+
 # 1.1.11（2023/01/10）
 ### add
 * camellia-redis-proxy support prometheus/grafana, thanks [@tasszz2k](https://github.com/tasszz2k) 
