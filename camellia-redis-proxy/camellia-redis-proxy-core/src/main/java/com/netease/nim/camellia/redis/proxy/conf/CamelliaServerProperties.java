@@ -19,7 +19,7 @@ public class CamelliaServerProperties {
     private String password;
     private boolean monitorEnable = Constants.Server.monitorEnable;
     private int monitorIntervalSeconds = Constants.Server.monitorIntervalSeconds;
-    private ProxyBeanFactory proxyBeanFactory = new DefaultBeanFactory();
+    private ProxyBeanFactory proxyBeanFactory = DefaultBeanFactory.INSTANCE;
     private String monitorCallbackClassName = Constants.Server.monitorCallbackClassName;
     private String clientAuthProviderClassName = Constants.Server.clientAuthByConfigProvider;
     private List<String> plugins = new ArrayList<>();
@@ -36,6 +36,7 @@ public class CamelliaServerProperties {
     private int soSndbuf = Constants.Server.soSndbuf;
     private int soRcvbuf = Constants.Server.soRcvbuf;
     private boolean soKeepalive = Constants.Server.soKeepalive;
+    private boolean tcpQuickAck = Constants.Server.tcpQuickAck;
     private int readerIdleTimeSeconds = Constants.Server.readerIdleTimeSeconds;
     private int writerIdleTimeSeconds = Constants.Server.writerIdleTimeSeconds;
     private int allIdleTimeSeconds = Constants.Server.allIdleTimeSeconds;
@@ -58,22 +59,6 @@ public class CamelliaServerProperties {
 
     public void setCport(int cport) {
         this.cport = cport;
-    }
-
-    public boolean isClusterModeEnable() {
-        return clusterModeEnable;
-    }
-
-    public void setClusterModeEnable(boolean clusterModeEnable) {
-        this.clusterModeEnable = clusterModeEnable;
-    }
-
-    public String getClusterModeProviderClassName() {
-        return clusterModeProviderClassName;
-    }
-
-    public void setClusterModeProviderClassName(String clusterModeProviderClassName) {
-        this.clusterModeProviderClassName = clusterModeProviderClassName;
     }
 
     public String getApplicationName() {
@@ -150,6 +135,22 @@ public class CamelliaServerProperties {
         this.config = config;
     }
 
+    public boolean isClusterModeEnable() {
+        return clusterModeEnable;
+    }
+
+    public void setClusterModeEnable(boolean clusterModeEnable) {
+        this.clusterModeEnable = clusterModeEnable;
+    }
+
+    public String getClusterModeProviderClassName() {
+        return clusterModeProviderClassName;
+    }
+
+    public void setClusterModeProviderClassName(String clusterModeProviderClassName) {
+        this.clusterModeProviderClassName = clusterModeProviderClassName;
+    }
+
     public int getBossThread() {
         return bossThread;
     }
@@ -204,6 +205,14 @@ public class CamelliaServerProperties {
 
     public void setSoKeepalive(boolean soKeepalive) {
         this.soKeepalive = soKeepalive;
+    }
+
+    public boolean isTcpQuickAck() {
+        return tcpQuickAck;
+    }
+
+    public void setTcpQuickAck(boolean tcpQuickAck) {
+        this.tcpQuickAck = tcpQuickAck;
     }
 
     public int getReaderIdleTimeSeconds() {

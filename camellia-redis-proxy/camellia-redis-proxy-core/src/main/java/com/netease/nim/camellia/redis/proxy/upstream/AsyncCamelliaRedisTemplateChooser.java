@@ -7,6 +7,7 @@ import com.netease.nim.camellia.core.api.ResourceTableUpdateCallback;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.redis.proxy.plugin.DefaultBeanFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
@@ -53,7 +54,7 @@ public class AsyncCamelliaRedisTemplateChooser {
 
     public AsyncCamelliaRedisTemplateChooser(CamelliaTranspondProperties properties, ProxyBeanFactory proxyBeanFactory) {
         this.properties = properties;
-        this.proxyBeanFactory = proxyBeanFactory;
+        this.proxyBeanFactory = proxyBeanFactory != null ? proxyBeanFactory : DefaultBeanFactory.INSTANCE;
         init();
     }
 
@@ -370,12 +371,13 @@ public class AsyncCamelliaRedisTemplateChooser {
 
         RedisClientHub.soKeepalive = properties.getNettyProperties().isSoKeepalive();
         RedisClientHub.tcpNoDelay = properties.getNettyProperties().isTcpNoDelay();
+        RedisClientHub.tcpQuickAck = properties.getNettyProperties().isTcpQuickAck();
         RedisClientHub.soRcvbuf = properties.getNettyProperties().getSoRcvbuf();
         RedisClientHub.soSndbuf = properties.getNettyProperties().getSoSndbuf();
         RedisClientHub.writeBufferWaterMarkLow = properties.getNettyProperties().getWriteBufferWaterMarkLow();
         RedisClientHub.writeBufferWaterMarkHigh = properties.getNettyProperties().getWriteBufferWaterMarkHigh();
-        logger.info("RedisClient, so_keepalive = {}, tcp_no_delay = {}, so_rcvbuf = {}, so_sndbuf = {}, write_buffer_water_mark_Low = {}, write_buffer_water_mark_high = {}",
-                RedisClientHub.soKeepalive, RedisClientHub.tcpNoDelay, RedisClientHub.soRcvbuf,
+        logger.info("RedisClient, so_keepalive = {}, tcp_no_delay = {}, tcp_quick_ack = {}, so_rcvbuf = {}, so_sndbuf = {}, write_buffer_water_mark_Low = {}, write_buffer_water_mark_high = {}",
+                RedisClientHub.soKeepalive, RedisClientHub.tcpNoDelay, RedisClientHub.tcpQuickAck, RedisClientHub.soRcvbuf,
                 RedisClientHub.soSndbuf, RedisClientHub.writeBufferWaterMarkLow, RedisClientHub.writeBufferWaterMarkHigh);
 
         RedisClientHub.initDynamicConf();

@@ -7,6 +7,8 @@ import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -82,6 +84,11 @@ public class CamelliaRedisProxyServer {
                         p.addLast(serverHandler);
                     }
                 });
+        if (Epoll.isAvailable()) {
+            if (serverProperties.isTcpQuickAck()) {
+                serverBootstrap.option(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
+            }
+        }
         int port = serverProperties.getPort();
         //如果设置为这个特殊的负数端口，则会随机选择一个可用的端口
         if (port == Constants.Server.serverPortRandSig) {
@@ -90,8 +97,8 @@ public class CamelliaRedisProxyServer {
         serverBootstrap.bind(port).sync();
         logger.info("CamelliaRedisProxyServer, so_backlog = {}, so_sendbuf = {}, so_rcvbuf = {}, so_keepalive = {}",
                 serverProperties.getSoBacklog(), serverProperties.getSoSndbuf(), serverProperties.getSoRcvbuf(), serverProperties.isSoKeepalive());
-        logger.info("CamelliaRedisProxyServer, tcp_no_delay = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
-                serverProperties.isTcpNoDelay(), serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh());
+        logger.info("CamelliaRedisProxyServer, tcp_no_delay = {}, tcp_quick_ack = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
+                serverProperties.isTcpNoDelay(), serverProperties.isTcpQuickAck(), serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh());
         logger.info("CamelliaRedisProxyServer start at port: {}", port);
         GlobalRedisProxyEnv.port = port;
         this.port = port;

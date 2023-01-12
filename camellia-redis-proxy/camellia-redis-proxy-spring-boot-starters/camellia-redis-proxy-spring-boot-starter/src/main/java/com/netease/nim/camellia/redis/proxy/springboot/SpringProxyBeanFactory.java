@@ -14,7 +14,7 @@ public class SpringProxyBeanFactory implements ProxyBeanFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(SpringProxyBeanFactory.class);
 
-    private final DefaultBeanFactory defaultBeanFactory = new DefaultBeanFactory();
+    private final DefaultBeanFactory defaultBeanFactory = DefaultBeanFactory.INSTANCE;
     private final ApplicationContext applicationContext;
 
     public SpringProxyBeanFactory(ApplicationContext applicationContext) {

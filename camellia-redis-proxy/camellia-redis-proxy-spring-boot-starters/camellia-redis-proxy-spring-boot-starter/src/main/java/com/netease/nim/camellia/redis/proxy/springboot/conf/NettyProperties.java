@@ -16,6 +16,7 @@ public class NettyProperties {
     private int soSndbuf = Constants.Server.soSndbuf;
     private int soRcvbuf = Constants.Server.soRcvbuf;
     private boolean soKeepalive = Constants.Server.soKeepalive;
+    private boolean tcpQuickAck = Constants.Server.tcpQuickAck;
     private int readerIdleTimeSeconds = Constants.Server.readerIdleTimeSeconds;
     private int writerIdleTimeSeconds = Constants.Server.writerIdleTimeSeconds;
     private int allIdleTimeSeconds = Constants.Server.allIdleTimeSeconds;
@@ -48,22 +49,6 @@ public class NettyProperties {
         this.tcpNoDelay = tcpNoDelay;
     }
 
-    public int getCommandDecodeMaxBatchSize() {
-        return commandDecodeMaxBatchSize;
-    }
-
-    public void setCommandDecodeMaxBatchSize(int commandDecodeMaxBatchSize) {
-        this.commandDecodeMaxBatchSize = commandDecodeMaxBatchSize;
-    }
-
-    public int getCommandDecodeBufferInitializerSize() {
-        return commandDecodeBufferInitializerSize;
-    }
-
-    public void setCommandDecodeBufferInitializerSize(int commandDecodeBufferInitializerSize) {
-        this.commandDecodeBufferInitializerSize = commandDecodeBufferInitializerSize;
-    }
-
     public int getSoBacklog() {
         return soBacklog;
     }
@@ -88,28 +73,20 @@ public class NettyProperties {
         this.soRcvbuf = soRcvbuf;
     }
 
-    public int getWriteBufferWaterMarkLow() {
-        return writeBufferWaterMarkLow;
-    }
-
-    public void setWriteBufferWaterMarkLow(int writeBufferWaterMarkLow) {
-        this.writeBufferWaterMarkLow = writeBufferWaterMarkLow;
-    }
-
-    public int getWriteBufferWaterMarkHigh() {
-        return writeBufferWaterMarkHigh;
-    }
-
-    public void setWriteBufferWaterMarkHigh(int writeBufferWaterMarkHigh) {
-        this.writeBufferWaterMarkHigh = writeBufferWaterMarkHigh;
-    }
-
     public boolean isSoKeepalive() {
         return soKeepalive;
     }
 
     public void setSoKeepalive(boolean soKeepalive) {
         this.soKeepalive = soKeepalive;
+    }
+
+    public boolean isTcpQuickAck() {
+        return tcpQuickAck;
+    }
+
+    public void setTcpQuickAck(boolean tcpQuickAck) {
+        this.tcpQuickAck = tcpQuickAck;
     }
 
     public int getReaderIdleTimeSeconds() {
@@ -136,4 +113,35 @@ public class NettyProperties {
         this.allIdleTimeSeconds = allIdleTimeSeconds;
     }
 
+    public int getWriteBufferWaterMarkLow() {
+        return writeBufferWaterMarkLow;
+    }
+
+    public void setWriteBufferWaterMarkLow(int writeBufferWaterMarkLow) {
+        this.writeBufferWaterMarkLow = writeBufferWaterMarkLow;
+    }
+
+    public int getWriteBufferWaterMarkHigh() {
+        return writeBufferWaterMarkHigh;
+    }
+
+    public void setWriteBufferWaterMarkHigh(int writeBufferWaterMarkHigh) {
+        this.writeBufferWaterMarkHigh = writeBufferWaterMarkHigh;
+    }
+
+    public int getCommandDecodeMaxBatchSize() {
+        return commandDecodeMaxBatchSize;
+    }
+
+    public void setCommandDecodeMaxBatchSize(int commandDecodeMaxBatchSize) {
+        this.commandDecodeMaxBatchSize = commandDecodeMaxBatchSize;
+    }
+
+    public int getCommandDecodeBufferInitializerSize() {
+        return commandDecodeBufferInitializerSize;
+    }
+
+    public void setCommandDecodeBufferInitializerSize(int commandDecodeBufferInitializerSize) {
+        this.commandDecodeBufferInitializerSize = commandDecodeBufferInitializerSize;
+    }
 }

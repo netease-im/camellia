@@ -8,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class DefaultBeanFactory implements ProxyBeanFactory {
 
+    public static final DefaultBeanFactory INSTANCE = new DefaultBeanFactory();
+
     private final ConcurrentHashMap<Class<?>, Object> map = new ConcurrentHashMap<>();
 
     @Override
