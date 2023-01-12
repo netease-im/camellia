@@ -17,8 +17,6 @@ import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
-import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,11 +115,6 @@ public class RedisClient implements AsyncClient {
                             pipeline.addLast(new CommandPackEncoder(RedisClient.this, queue));
                         }
                     });
-            if (Epoll.isAvailable()) {
-                if (RedisClientHub.tcpQuickAck) {
-                    bootstrap.option(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
-                }
-            }
             if (logger.isInfoEnabled()) {
                 logger.info("{} try connect...", clientName);
             }

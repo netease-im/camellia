@@ -54,7 +54,6 @@ public class RedisClientHub {
     public static int soSndbuf = Constants.Transpond.soSndbuf;
     public static int soRcvbuf = Constants.Transpond.soRcvbuf;
     public static boolean tcpNoDelay = Constants.Transpond.tcpNoDelay;
-    public static boolean tcpQuickAck = Constants.Transpond.tcpQuickAck;
     public static int writeBufferWaterMarkLow = Constants.Transpond.writeBufferWaterMarkLow;
     public static int writeBufferWaterMarkHigh = Constants.Transpond.writeBufferWaterMarkHigh;
 

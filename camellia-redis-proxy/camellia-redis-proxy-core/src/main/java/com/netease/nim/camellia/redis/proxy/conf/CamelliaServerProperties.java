@@ -36,7 +36,6 @@ public class CamelliaServerProperties {
     private int soSndbuf = Constants.Server.soSndbuf;
     private int soRcvbuf = Constants.Server.soRcvbuf;
     private boolean soKeepalive = Constants.Server.soKeepalive;
-    private boolean tcpQuickAck = Constants.Server.tcpQuickAck;
     private int readerIdleTimeSeconds = Constants.Server.readerIdleTimeSeconds;
     private int writerIdleTimeSeconds = Constants.Server.writerIdleTimeSeconds;
     private int allIdleTimeSeconds = Constants.Server.allIdleTimeSeconds;
@@ -205,14 +204,6 @@ public class CamelliaServerProperties {
 
     public void setSoKeepalive(boolean soKeepalive) {
         this.soKeepalive = soKeepalive;
-    }
-
-    public boolean isTcpQuickAck() {
-        return tcpQuickAck;
-    }
-
-    public void setTcpQuickAck(boolean tcpQuickAck) {
-        this.tcpQuickAck = tcpQuickAck;
     }
 
     public int getReaderIdleTimeSeconds() {

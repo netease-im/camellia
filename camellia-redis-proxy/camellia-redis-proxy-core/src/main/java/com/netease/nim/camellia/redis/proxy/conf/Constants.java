@@ -33,7 +33,6 @@ public class Constants {
         public static final int soSndbuf = 10 * 1024 * 1024;
         public static final int soRcvbuf = 10 * 1024 * 1024;
         public static final boolean soKeepalive = false;
-        public static final boolean tcpQuickAck = false;
         public static final int readerIdleTimeSeconds = -1;
         public static final int writerIdleTimeSeconds = -1;
         public static final int allIdleTimeSeconds = -1;
@@ -74,7 +73,6 @@ public class Constants {
         public static final int soRcvbuf = 10 * 1024 * 1024;
         public static final boolean tcpNoDelay = true;
         public static final boolean soKeepalive = true;
-        public static final boolean tcpQuickAck = false;
         public static final int writeBufferWaterMarkLow = 128 * 1024;
         public static final int writeBufferWaterMarkHigh = 512 * 1024;
     }
