@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.proxy.reply;
 
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 public class BulkReply implements Reply {
     public static final BulkReply NIL_REPLY = new BulkReply();
@@ -42,8 +41,7 @@ public class BulkReply implements Reply {
         byteBuf.writeByte(MARKER);
         byteBuf.writeBytes(Utils.numToBytes(capacity, true));
         if (capacity >= 0) {
-            ByteBuf buf = Unpooled.wrappedBuffer(raw);
-            byteBuf.writeBytes(buf);
+            byteBuf.writeBytes(raw);
             byteBuf.writeBytes(CRLF);
         }
     }
