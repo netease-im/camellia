@@ -11,30 +11,33 @@ spring:
 
 camellia-redis-proxy:
   password: pass123
-  #表示client到proxy的netty参数
+  #tcp connect between client and proxy
   netty:
-    boss-thread: 1 #默认1即可
-    work-thread: -1 #表示工作线程数，默认-1，表示自动获取cpu核数，建议不要修改
-    so-backlog: 1024 #默认1024
-    so-sndbuf: 10485760 #默认10M
-    so-rcvbuf: 10485760 #默认10M
-    write-buffer-water-mark-low: 131072 #默认128k
-    write-buffer-water-mark-high: 524288 #默认512k
-    reader-idle-time-seconds: -1 #默认-1，表示不开启检测，如果要开启检测，三个配置均需要大于等于0
-    writer-idle-time-seconds: -1 #默认-1，表示不开启检测，如果要开启检测，三个配置均需要大于等于0
-    all-idle-time-seconds: -1 #默认-1，表示不开启检测，如果要开启检测，三个配置均需要大于等于0
-    so-keepalive: false #默认false
-    tcp-no-delay: true #默认true
+    boss-thread: 1 #default 1
+    work-thread: -1 #default -1, means work thread equals to cpu-num, generally, it is optimal
+    so-backlog: 1024 #default 1024
+    so-sndbuf: 10485760 #default 10M
+    so-rcvbuf: 10485760 #default 10M
+    write-buffer-water-mark-low: 131072 #default 128k
+    write-buffer-water-mark-high: 524288 #default 512k
+    #you should set reader-idle-time-seconds/writer-idle-time-seconds/all-idle-time-seconds >= 0 to enable idle check
+    reader-idle-time-seconds: -1 #default -1, skip idle check; 
+    writer-idle-time-seconds: -1 #default -1, skip idle check; 
+    all-idle-time-seconds: -1 #default -1, skip idle check; 
+    so-keepalive: false #default false
+    tcp-no-delay: true #default true
+    tcp-quick-ack: false #default false
   transpond:
     type: local
     local:
       resource: redis://@127.0.0.1:6379
-    #表示proxy到redis的netty参数
+    #tcp connect between proxy and redis
     netty:
-      so-keepalive: true #默认true
-      so-sndbuf: 10485760 #默认10M
-      so-rcvbuf: 10485760 #默认10M
-      write-buffer-water-mark-low: 131072 #默认128k
-      write-buffer-water-mark-high: 524288 #默认512k
-      tcp-no-delay: true #默认true
+      so-keepalive: true #default true
+      so-sndbuf: 10485760 #default 10M
+      so-rcvbuf: 10485760 #default 10M
+      write-buffer-water-mark-low: 131072 #default 128k
+      write-buffer-water-mark-high: 524288 #default 512k
+      tcp-no-delay: true #default true
+      tcp-quick-ack: false #default false
 ```
