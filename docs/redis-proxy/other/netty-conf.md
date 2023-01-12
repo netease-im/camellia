@@ -26,7 +26,6 @@ camellia-redis-proxy:
     all-idle-time-seconds: -1 #default -1, skip idle check; 
     so-keepalive: false #default false
     tcp-no-delay: true #default true
-    tcp-quick-ack: false #default false
   transpond:
     type: local
     local:
@@ -39,5 +38,4 @@ camellia-redis-proxy:
       write-buffer-water-mark-low: 131072 #default 128k
       write-buffer-water-mark-high: 524288 #default 512k
       tcp-no-delay: true #default true
-      tcp-quick-ack: false #default false
 ```
