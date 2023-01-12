@@ -5,7 +5,6 @@
 * 无
 
 ### 更新
-* camellia-redis-proxy支持设置TCP_QUICKACK参数（当proxy运行在linux中，且epoll可用），默认false
 * 回滚了1.1.8中对于BulkReply的堆外内存优化（当客户端连接在收到reply之前断开连接，可能导致BulkReply中的ByteBuf没有release，引起内存泄漏）
 
 ### fix
