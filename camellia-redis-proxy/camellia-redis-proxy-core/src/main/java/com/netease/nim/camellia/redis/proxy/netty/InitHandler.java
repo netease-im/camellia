@@ -1,8 +1,10 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.auth.ConnectLimiter;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
+import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -20,6 +22,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InitHandler extends ChannelInboundHandlerAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(InitHandler.class);
+    private CamelliaServerProperties serverProperties;
+
+    public CamelliaServerProperties getServerProperties() {
+        return serverProperties;
+    }
+
+    public void setServerProperties(CamelliaServerProperties serverProperties) {
+        this.serverProperties = serverProperties;
+    }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -37,6 +48,12 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
         if (logger.isDebugEnabled()) {
             logger.debug("channel init, consid = {}", channelInfo.getConsid());
         }
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        Utils.enableQuickAck(ctx.channel(),serverProperties);
+        super.channelRead(ctx, msg);
     }
 
     @Override

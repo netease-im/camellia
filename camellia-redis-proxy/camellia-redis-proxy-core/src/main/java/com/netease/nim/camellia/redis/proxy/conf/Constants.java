@@ -52,6 +52,10 @@ public class Constants {
         public static final long hotKeyCacheStatsCallbackIntervalSeconds = 10;
 
         public static final boolean monitorDataMaskPassword = true;//对外暴露的监控数据是否把密码隐藏（用*代替）
+
+        public static final boolean isTcpQuickAck = false;// is turn quick ack tcp option
+
+
     }
 
     public static class Transpond {

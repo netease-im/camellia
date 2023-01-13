@@ -380,7 +380,6 @@ public class TranspondProperties {
         public boolean soKeepalive = Constants.Transpond.soKeepalive;
         public int writeBufferWaterMarkLow = Constants.Transpond.writeBufferWaterMarkLow;
         public int writeBufferWaterMarkHigh = Constants.Transpond.writeBufferWaterMarkHigh;
-
         public int getSoSndbuf() {
             return soSndbuf;
         }

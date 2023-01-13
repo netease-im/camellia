@@ -1,7 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollChannelOption;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -260,5 +265,16 @@ public class Utils {
     public static boolean hasChange(String md5, String newMd5) {
         return md5 == null || (newMd5 != null && !md5.equals(newMd5));
     }
-
+    
+    
+    public static void enableQuickAck(ServerBootstrap bootstrap, CamelliaServerProperties serverProperties) {
+        if(Epoll.isAvailable() && serverProperties.isTcpQuickAck()) {
+            bootstrap.childOption(EpollChannelOption.TCP_QUICKACK, serverProperties.isTcpQuickAck());
+        }
+    }
+    public static void enableQuickAck(Channel channel, CamelliaServerProperties serverProperties){
+        if(Epoll.isAvailable() && serverProperties.isTcpQuickAck()) {
+            channel.config().setOption(EpollChannelOption.TCP_QUICKACK, serverProperties.isTcpQuickAck());
+        }
+    }
 }
