@@ -190,27 +190,33 @@ public class GlobalRedisProxyEnv {
 
     public static boolean isEpollAvailable() {
         try {
-            return Epoll.isAvailable();
+            boolean available = Epoll.isAvailable();
+            logger.info("epoll available = {}", available);
+            return available;
         } catch (Throwable e) {
-            logger.warn("Epoll is unavailable, e = {}", e.toString());
+            logger.warn("epoll is unavailable, e = {}", e.toString());
             return false;
         }
     }
 
     public static boolean isIOUringAvailable() {
         try {
-            return IOUring.isAvailable();
+            boolean available = IOUring.isAvailable();
+            logger.info("io_uring available = {}", available);
+            return available;
         } catch (Throwable e) {
-            logger.warn("IOUring is unavailable, e = {}", e.toString());
+            logger.warn("io_uring is unavailable, e = {}", e.toString());
             return false;
         }
     }
 
     public static boolean isKQueueAvailable() {
         try {
-            return KQueue.isAvailable();
+            boolean available = KQueue.isAvailable();
+            logger.info("kqueue available = {}", available);
+            return available;
         } catch (Throwable e) {
-            logger.warn("KQueue is unavailable, e = {}", e.toString());
+            logger.warn("kqueue is unavailable, e = {}", e.toString());
             return false;
         }
     }
