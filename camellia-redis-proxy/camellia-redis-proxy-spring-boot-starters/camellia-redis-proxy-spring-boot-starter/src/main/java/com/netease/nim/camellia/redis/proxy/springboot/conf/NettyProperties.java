@@ -24,6 +24,15 @@ public class NettyProperties {
     private int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
     private int commandDecodeBufferInitializerSize = Constants.Server.commandDecodeBufferInitializerSize;
 
+    public boolean isQuickAck() {
+        return quickAck;
+    }
+
+    public void setQuickAck(boolean quickAck) {
+        this.quickAck = quickAck;
+    }
+
+    private boolean quickAck=Constants.Server.isTcpQuickAck;
     public int getBossThread() {
         return bossThread;
     }

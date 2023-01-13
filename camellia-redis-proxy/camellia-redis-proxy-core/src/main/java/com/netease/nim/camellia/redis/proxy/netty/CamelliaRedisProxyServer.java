@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -31,7 +32,9 @@ public class CamelliaRedisProxyServer {
 
     public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, EventLoopGroup bossGroup, EventLoopGroup workGroup, CommandInvoker invoker) {
         this.serverProperties = serverProperties;
+        this.initHandler.setServerProperties(this.serverProperties);
         this.serverHandler = new ServerHandler(invoker);
+        this.serverHandler.setServerProperties(serverProperties);
         this.bossGroup = bossGroup;
         this.workGroup = workGroup;
         if (bossGroup instanceof NioEventLoopGroup && workGroup instanceof NioEventLoopGroup) {
@@ -45,9 +48,12 @@ public class CamelliaRedisProxyServer {
     public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, CommandInvoker invoker) {
         this.serverProperties = serverProperties;
         this.serverHandler = new ServerHandler(invoker);
+        this.serverHandler.setServerProperties(serverProperties);
         int bossThread = serverProperties.getBossThread();
         int workThread = serverProperties.getWorkThread();
-        logger.info("CamelliaRedisProxyServer init, bossThread = {}, workThread = {}", bossThread, workThread);
+        if(logger.isInfoEnabled()) {
+            logger.info("CamelliaRedisProxyServer init, bossThread = {}, workThread = {}", bossThread, workThread);
+        }
         this.bossGroup = new NioEventLoopGroup(bossThread, new DefaultThreadFactory("boss-group"));
         this.workGroup = new NioEventLoopGroup(workThread, new DefaultThreadFactory("work-group"));
         GlobalRedisProxyEnv.workThread = workThread;
@@ -82,6 +88,7 @@ public class CamelliaRedisProxyServer {
                         p.addLast(serverHandler);
                     }
                 });
+        Utils.enableQuickAck(serverBootstrap,serverProperties);
         int port = serverProperties.getPort();
         //如果设置为这个特殊的负数端口，则会随机选择一个可用的端口
         if (port == Constants.Server.serverPortRandSig) {

@@ -66,7 +66,7 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setAllIdleTimeSeconds(netty.getAllIdleTimeSeconds());
         serverProperties.setWriteBufferWaterMarkLow(netty.getWriteBufferWaterMarkLow());
         serverProperties.setWriteBufferWaterMarkHigh(netty.getWriteBufferWaterMarkHigh());
-
+        serverProperties.setTcpQuickAck(netty.isQuickAck());
         return serverProperties;
     }
 
