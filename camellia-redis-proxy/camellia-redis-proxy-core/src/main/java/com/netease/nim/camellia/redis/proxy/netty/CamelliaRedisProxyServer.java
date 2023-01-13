@@ -5,13 +5,10 @@ import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,46 +23,23 @@ public class CamelliaRedisProxyServer {
     private final CamelliaServerProperties serverProperties;
     private final ServerHandler serverHandler;
     private final InitHandler initHandler = new InitHandler();
-    private final EventLoopGroup bossGroup;
-    private final EventLoopGroup workGroup;
     private int port;
 
-    public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, EventLoopGroup bossGroup, EventLoopGroup workGroup, CommandInvoker invoker) {
-        this.serverProperties = serverProperties;
-        this.initHandler.setServerProperties(this.serverProperties);
-        this.serverHandler = new ServerHandler(invoker);
-        this.serverHandler.setServerProperties(serverProperties);
-        this.bossGroup = bossGroup;
-        this.workGroup = workGroup;
-        if (bossGroup instanceof NioEventLoopGroup && workGroup instanceof NioEventLoopGroup) {
-            GlobalRedisProxyEnv.bossThread = ((NioEventLoopGroup) bossGroup).executorCount();
-            GlobalRedisProxyEnv.bossGroup = bossGroup;
-            GlobalRedisProxyEnv.workThread = ((NioEventLoopGroup) workGroup).executorCount();
-            GlobalRedisProxyEnv.workGroup = workGroup;
-        }
-    }
-
     public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, CommandInvoker invoker) {
+        GlobalRedisProxyEnv.init(serverProperties);
         this.serverProperties = serverProperties;
         this.serverHandler = new ServerHandler(invoker);
         this.serverHandler.setServerProperties(serverProperties);
-        int bossThread = serverProperties.getBossThread();
-        int workThread = serverProperties.getWorkThread();
         if(logger.isInfoEnabled()) {
-            logger.info("CamelliaRedisProxyServer init, bossThread = {}, workThread = {}", bossThread, workThread);
+            logger.info("CamelliaRedisProxyServer init, netty-io-mode = {}, bossThread = {}, workThread = {}",
+                    GlobalRedisProxyEnv.getNettyIOMode(), GlobalRedisProxyEnv.getBossThread(), GlobalRedisProxyEnv.getWorkThread());
         }
-        this.bossGroup = new NioEventLoopGroup(bossThread, new DefaultThreadFactory("boss-group"));
-        this.workGroup = new NioEventLoopGroup(workThread, new DefaultThreadFactory("work-group"));
-        GlobalRedisProxyEnv.workThread = workThread;
-        GlobalRedisProxyEnv.bossThread = bossThread;
-        GlobalRedisProxyEnv.workGroup = workGroup;
-        GlobalRedisProxyEnv.bossGroup = bossGroup;
     }
 
     public void start() throws Exception {
         ServerBootstrap serverBootstrap = new ServerBootstrap();
-        serverBootstrap.group(bossGroup, workGroup)
-                .channel(NioServerSocketChannel.class)
+        serverBootstrap.group(GlobalRedisProxyEnv.getBossGroup(), GlobalRedisProxyEnv.getWorkGroup())
+                .channel(GlobalRedisProxyEnv.getServerChannelClass())
                 .option(ChannelOption.SO_BACKLOG, serverProperties.getSoBacklog())
                 .childOption(ChannelOption.SO_SNDBUF, serverProperties.getSoSndbuf())
                 .childOption(ChannelOption.SO_RCVBUF, serverProperties.getSoRcvbuf())
@@ -88,7 +62,9 @@ public class CamelliaRedisProxyServer {
                         p.addLast(serverHandler);
                     }
                 });
-        Utils.enableQuickAck(serverBootstrap,serverProperties);
+        if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable()) {
+            serverBootstrap.childOption(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
+        }
         int port = serverProperties.getPort();
         //如果设置为这个特殊的负数端口，则会随机选择一个可用的端口
         if (port == Constants.Server.serverPortRandSig) {
@@ -100,7 +76,7 @@ public class CamelliaRedisProxyServer {
         logger.info("CamelliaRedisProxyServer, tcp_no_delay = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
                 serverProperties.isTcpNoDelay(), serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh());
         logger.info("CamelliaRedisProxyServer start at port: {}", port);
-        GlobalRedisProxyEnv.port = port;
+        GlobalRedisProxyEnv.setPort(port);
         this.port = port;
         if (serverProperties.isClusterModeEnable()) {
             int cport = serverProperties.getCport();
@@ -108,7 +84,7 @@ public class CamelliaRedisProxyServer {
                 cport = port + 10000;
             }
             serverBootstrap.bind(cport).sync();
-            GlobalRedisProxyEnv.cport = cport;
+            GlobalRedisProxyEnv.setCport(cport);
             logger.info("CamelliaRedisProxyServer start in cluster mode at cport: {}", cport);
         }
         logger.info("CamelliaRedisProxyServer start success, version = {}", ProxyInfoUtils.VERSION);

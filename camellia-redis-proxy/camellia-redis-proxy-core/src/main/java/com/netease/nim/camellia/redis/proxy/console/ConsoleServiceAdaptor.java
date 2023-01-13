@@ -75,7 +75,7 @@ public class ConsoleServiceAdaptor implements ConsoleService {
     public ConsoleResult check() {
         int port = serverPort;
         if (port <= 0) {
-            port = GlobalRedisProxyEnv.port;
+            port = GlobalRedisProxyEnv.getPort();
         }
         if (port <= 0) {
             return ConsoleResult.success();

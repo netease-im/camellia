@@ -10,13 +10,9 @@ import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.NettyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.TranspondProperties;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -59,6 +55,9 @@ public class CamelliaRedisProxyConfiguration implements ApplicationContextAware 
     @Bean
     @ConditionalOnMissingBean(value = {CommandInvoker.class})
     public CommandInvoker commandInvoker(CamelliaRedisProxyProperties properties) {
+        CamelliaServerProperties serverProperties = camelliaServerProperties(properties);
+        GlobalRedisProxyEnv.init(serverProperties);
+
         CamelliaTranspondProperties transpondProperties = new CamelliaTranspondProperties();
         TranspondProperties transpond = properties.getTranspond();
 
@@ -69,37 +68,15 @@ public class CamelliaRedisProxyConfiguration implements ApplicationContextAware 
         transpondProperties.setRedisConf(CamelliaRedisProxyUtil.parse(transpond.getRedisConf()));
         transpondProperties.setNettyProperties(CamelliaRedisProxyUtil.parse(transpond.getNetty()));
 
-        GlobalRedisProxyEnv.bossGroup = bossGroup(properties).get();
-        GlobalRedisProxyEnv.workGroup = workGroup(properties).get();
-        return new AsyncCommandInvoker(camelliaServerProperties(properties), transpondProperties);
-    }
-
-    @Bean
-    @Qualifier("bossGroup")
-    public EventLoopGroupGetter bossGroup(CamelliaRedisProxyProperties properties) {
-        int bossThread = camelliaServerProperties(properties).getBossThread();
-        logger.info("CamelliaRedisProxyServer init, bossThread = {}", bossThread);
-        GlobalRedisProxyEnv.bossThread = bossThread;
-        return new EventLoopGroupGetter(new NioEventLoopGroup(bossThread, new DefaultThreadFactory("camellia-boss-group")));
-    }
-
-    @Bean
-    @Qualifier("workGroup")
-    public EventLoopGroupGetter workGroup(CamelliaRedisProxyProperties properties) {
-        CamelliaServerProperties serverProperties = camelliaServerProperties(properties);
-        int workThread = serverProperties.getWorkThread();
-        logger.info("CamelliaRedisProxyServer init, workThread = {}", workThread);
-        GlobalRedisProxyEnv.workThread = workThread;
-        return new EventLoopGroupGetter(new NioEventLoopGroup(workThread, new DefaultThreadFactory("camellia-work-group")));
+        return new AsyncCommandInvoker(serverProperties, transpondProperties);
     }
 
     @Bean
     public CamelliaRedisProxyBoot redisProxyBoot(CamelliaRedisProxyProperties properties) throws Exception {
         CommandInvoker commandInvoker = commandInvoker(properties);
         CamelliaServerProperties serverProperties = camelliaServerProperties(properties);
-        GlobalRedisProxyEnv.bossGroup = bossGroup(properties).get();
-        GlobalRedisProxyEnv.workGroup = workGroup(properties).get();
-        return new CamelliaRedisProxyBoot(serverProperties, GlobalRedisProxyEnv.bossGroup, GlobalRedisProxyEnv.workGroup, commandInvoker);
+        GlobalRedisProxyEnv.init(serverProperties);
+        return new CamelliaRedisProxyBoot(serverProperties, commandInvoker);
     }
 
     @Bean
@@ -117,17 +94,5 @@ public class CamelliaRedisProxyConfiguration implements ApplicationContextAware 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
-    }
-
-    private static class EventLoopGroupGetter {
-        private final EventLoopGroup eventLoopGroup;
-
-        public EventLoopGroupGetter(EventLoopGroup eventLoopGroup) {
-            this.eventLoopGroup = eventLoopGroup;
-        }
-
-        public EventLoopGroup get() {
-            return eventLoopGroup;
-        }
     }
 }

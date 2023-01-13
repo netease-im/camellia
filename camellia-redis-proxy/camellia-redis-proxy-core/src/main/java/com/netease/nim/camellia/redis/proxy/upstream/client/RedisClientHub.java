@@ -12,7 +12,6 @@ import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.FastThreadLocal;
 import org.slf4j.Logger;
@@ -31,8 +30,8 @@ public class RedisClientHub {
     private static final Logger logger = LoggerFactory.getLogger(RedisClientHub.class);
 
     private static final ConcurrentHashMap<String, RedisClient> map = new ConcurrentHashMap<>();
-    public static NioEventLoopGroup eventLoopGroup = null;
-    public static NioEventLoopGroup eventLoopGroupBackup = null;
+    public static EventLoopGroup eventLoopGroup = null;
+    public static EventLoopGroup eventLoopGroupBackup = null;
 
     private static final ExecutorService redisClientAsyncInitExec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(4096), new DefaultThreadFactory("camellia-redis-client-initialize"), new ThreadPoolExecutor.AbortPolicy());
@@ -54,6 +53,7 @@ public class RedisClientHub {
     public static int soSndbuf = Constants.Transpond.soSndbuf;
     public static int soRcvbuf = Constants.Transpond.soRcvbuf;
     public static boolean tcpNoDelay = Constants.Transpond.tcpNoDelay;
+    public static boolean tcpQuickAck = Constants.Transpond.tcpQuickAck;
     public static int writeBufferWaterMarkLow = Constants.Transpond.writeBufferWaterMarkLow;
     public static int writeBufferWaterMarkHigh = Constants.Transpond.writeBufferWaterMarkHigh;
 
@@ -205,12 +205,12 @@ public class RedisClientHub {
     }
 
     public static boolean preheat(String host, int port, String userName, String password, int db) {
-        EventLoopGroup workGroup = GlobalRedisProxyEnv.workGroup;
-        int workThread = GlobalRedisProxyEnv.workThread;
+        EventLoopGroup workGroup = GlobalRedisProxyEnv.getWorkGroup();
+        int workThread = GlobalRedisProxyEnv.getWorkThread();
         RedisClientAddr addr = new RedisClientAddr(host, port, userName, password, db);
         if (workGroup != null && workThread > 0) {
             logger.info("try preheat, addr = {}", PasswordMaskUtils.maskAddr(addr));
-            for (int i = 0; i < GlobalRedisProxyEnv.workThread; i++) {
+            for (int i = 0; i < GlobalRedisProxyEnv.getWorkThread(); i++) {
                 EventLoop eventLoop = workGroup.next();
                 updateEventLoop(eventLoop);
                 RedisClient redisClient = get(new RedisClientAddr(host, port, userName, password, db));

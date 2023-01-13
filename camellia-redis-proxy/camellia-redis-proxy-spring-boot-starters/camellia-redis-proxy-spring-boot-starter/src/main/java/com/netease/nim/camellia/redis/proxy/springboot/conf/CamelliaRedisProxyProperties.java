@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.springboot.conf;
 
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.netty.NettyIOMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.ArrayList;
@@ -75,6 +76,11 @@ public class CamelliaRedisProxyProperties {
      * 插件
      */
     private List<String> plugins = new ArrayList<>();
+
+    /**
+     * netty的io模式，默认nio
+     */
+    private NettyIOMode nettyIOMode = NettyIOMode.nio;
 
     /**
      * netty相关参数
@@ -186,6 +192,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setPlugins(List<String> plugins) {
         this.plugins = plugins;
+    }
+
+    public NettyIOMode getNettyIOMode() {
+        return nettyIOMode;
+    }
+
+    public void setNettyIOMode(NettyIOMode nettyIOMode) {
+        this.nettyIOMode = nettyIOMode;
     }
 
     public NettyProperties getNetty() {

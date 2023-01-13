@@ -3,10 +3,11 @@ package com.netease.nim.camellia.redis.proxy.netty;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.epoll.EpollChannelOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,9 +46,14 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
         } catch (Exception e) {
             ctx.close();
             logger.error("error", e);
-        }
-        finally {
-            Utils.enableQuickAck(ctx.channel(),serverProperties);
+        } finally {
+            try {
+                if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable()) {
+                    ctx.channel().config().setOption(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
+                }
+            } catch (Exception e) {
+                ErrorLogCollector.collect(ServerHandler.class, "set TCP_QUICKACK error", e);
+            }
         }
     }
 }

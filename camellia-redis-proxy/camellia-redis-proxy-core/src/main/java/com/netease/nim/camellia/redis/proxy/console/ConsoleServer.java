@@ -49,7 +49,7 @@ public class ConsoleServer {
                     channelFuture.addListener((FutureListener<Void>) future -> {
                         if (future.isSuccess()) {
                             logger.info("Console Server start listen at port {}", port);
-                            GlobalRedisProxyEnv.consolePort = port;
+                            GlobalRedisProxyEnv.setConsolePort(port);
                         } else {
                             logger.error("Console Server start listen fail! at port {}, cause={}", port, future.cause());
                         }

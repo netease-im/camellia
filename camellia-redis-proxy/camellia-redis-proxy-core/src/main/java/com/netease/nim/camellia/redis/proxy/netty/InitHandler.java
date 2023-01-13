@@ -1,13 +1,13 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.auth.ConnectLimiter;
-import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.epoll.EpollChannelOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,15 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InitHandler extends ChannelInboundHandlerAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(InitHandler.class);
-    private CamelliaServerProperties serverProperties;
-
-    public CamelliaServerProperties getServerProperties() {
-        return serverProperties;
-    }
-
-    public void setServerProperties(CamelliaServerProperties serverProperties) {
-        this.serverProperties = serverProperties;
-    }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -52,7 +43,13 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        Utils.enableQuickAck(ctx.channel(),serverProperties);
+        try {
+            if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable()) {
+                ctx.channel().config().setOption(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
+            }
+        } catch (Exception e) {
+            ErrorLogCollector.collect(InitHandler.class, "set TCP_QUICKACK error", e);
+        }
         super.channelRead(ctx, msg);
     }
 

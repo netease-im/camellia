@@ -266,15 +266,4 @@ public class Utils {
         return md5 == null || (newMd5 != null && !md5.equals(newMd5));
     }
     
-    
-    public static void enableQuickAck(ServerBootstrap bootstrap, CamelliaServerProperties serverProperties) {
-        if(Epoll.isAvailable() && serverProperties.isTcpQuickAck()) {
-            bootstrap.childOption(EpollChannelOption.TCP_QUICKACK, serverProperties.isTcpQuickAck());
-        }
-    }
-    public static void enableQuickAck(Channel channel, CamelliaServerProperties serverProperties){
-        if(Epoll.isAvailable() && serverProperties.isTcpQuickAck()) {
-            channel.config().setOption(EpollChannelOption.TCP_QUICKACK, serverProperties.isTcpQuickAck());
-        }
-    }
 }

@@ -214,8 +214,8 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
         if (host != null) {
             ProxyNode current = new ProxyNode();
             current.setHost(host);
-            int port = GlobalRedisProxyEnv.port;
-            int cport = GlobalRedisProxyEnv.cport;
+            int port = GlobalRedisProxyEnv.getPort();
+            int cport = GlobalRedisProxyEnv.getCport();
             if (port == 0 || cport == 0) {
                 throw new IllegalStateException("redis proxy not start");
             }

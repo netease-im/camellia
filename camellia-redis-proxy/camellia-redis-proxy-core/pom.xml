@@ -19,6 +19,11 @@
 			<version>${netty.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>io.netty.incubator</groupId>
+			<artifactId>netty-incubator-transport-native-io_uring</artifactId>
+			<version>0.0.16.Final</version>
+		</dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>${slf4j.version}</version>

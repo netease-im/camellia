@@ -14,8 +14,6 @@ import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
 import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,14 +56,9 @@ public class CamelliaRedisProxyStarter {
                     logger.warn("CamelliaRedisProxyServer has started");
                     return;
                 }
-                EventLoopGroup bossGroup = new NioEventLoopGroup(serverProperties.getBossThread());
-                EventLoopGroup workGroup = new NioEventLoopGroup(serverProperties.getWorkThread());
-                GlobalRedisProxyEnv.workGroup = workGroup;
-                GlobalRedisProxyEnv.bossGroup = bossGroup;
-                GlobalRedisProxyEnv.workThread = serverProperties.getWorkThread();
-                GlobalRedisProxyEnv.bossThread = serverProperties.getBossThread();
+                GlobalRedisProxyEnv.init(serverProperties);
                 AsyncCommandInvoker commandInvoker = new AsyncCommandInvoker(serverProperties, transpondProperties);
-                CamelliaRedisProxyServer server = new CamelliaRedisProxyServer(serverProperties, bossGroup, workGroup, commandInvoker);
+                CamelliaRedisProxyServer server = new CamelliaRedisProxyServer(serverProperties, commandInvoker);
                 server.start();
                 logger.info("CamelliaRedisProxyServer start success");
                 if (consolePort != 0 && consoleService != null) {

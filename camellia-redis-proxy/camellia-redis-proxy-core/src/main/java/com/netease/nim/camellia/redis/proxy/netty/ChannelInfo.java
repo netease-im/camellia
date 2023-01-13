@@ -62,7 +62,7 @@ public class ChannelInfo {
         this.clientSocketAddress = ctx.channel().remoteAddress();
         this.asyncTaskQueue = new AsyncTaskQueue(this);
         this.mock = false;
-        this.fromCport = ((InetSocketAddress) ctx.channel().localAddress()).getPort() == GlobalRedisProxyEnv.cport;
+        this.fromCport = ((InetSocketAddress) ctx.channel().localAddress()).getPort() == GlobalRedisProxyEnv.getCport();
     }
 
     /**

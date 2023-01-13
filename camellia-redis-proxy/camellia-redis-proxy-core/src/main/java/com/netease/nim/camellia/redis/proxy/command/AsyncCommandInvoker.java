@@ -36,7 +36,7 @@ public class AsyncCommandInvoker implements CommandInvoker {
         ProxyDynamicConf.updateInitConf(serverProperties.getConfig());
 
         this.chooser = new AsyncCamelliaRedisTemplateChooser(transpondProperties, serverProperties.getProxyBeanFactory());
-        GlobalRedisProxyEnv.chooser = chooser;
+        GlobalRedisProxyEnv.setChooser(chooser);
 
         MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);
         ProxyMonitorCollector.init(serverProperties, monitorCallback);

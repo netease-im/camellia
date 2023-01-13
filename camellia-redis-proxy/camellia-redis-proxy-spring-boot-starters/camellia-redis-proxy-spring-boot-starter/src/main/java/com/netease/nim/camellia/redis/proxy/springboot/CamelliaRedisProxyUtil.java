@@ -44,6 +44,7 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setProxyBeanFactory(proxyBeanFactory);
         serverProperties.setPlugins(properties.getPlugins());
         serverProperties.setConfig(properties.getConfig());
+        serverProperties.setNettyIOMode(properties.getNettyIOMode());
         NettyProperties netty = properties.getNetty();
         serverProperties.setBossThread(netty.getBossThread());
         if (netty.getWorkThread() > 0) {
@@ -66,7 +67,7 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setAllIdleTimeSeconds(netty.getAllIdleTimeSeconds());
         serverProperties.setWriteBufferWaterMarkLow(netty.getWriteBufferWaterMarkLow());
         serverProperties.setWriteBufferWaterMarkHigh(netty.getWriteBufferWaterMarkHigh());
-        serverProperties.setTcpQuickAck(netty.isQuickAck());
+        serverProperties.setTcpQuickAck(netty.isTcpQuickAck());
         return serverProperties;
     }
 
@@ -196,6 +197,7 @@ public class CamelliaRedisProxyUtil {
         CamelliaTranspondProperties.NettyProperties nettyProperties = new CamelliaTranspondProperties.NettyProperties();
         nettyProperties.setSoKeepalive(properties.isSoKeepalive());
         nettyProperties.setTcpNoDelay(properties.isTcpNoDelay());
+        nettyProperties.setTcpQuickAck(properties.isTcpQuickAck());
         nettyProperties.setSoRcvbuf(properties.getSoRcvbuf());
         nettyProperties.setSoSndbuf(properties.getSoSndbuf());
         nettyProperties.setWriteBufferWaterMarkLow(properties.getWriteBufferWaterMarkLow());

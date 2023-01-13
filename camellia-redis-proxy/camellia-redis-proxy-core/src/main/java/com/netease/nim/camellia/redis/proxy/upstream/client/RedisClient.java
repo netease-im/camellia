@@ -17,7 +17,7 @@ import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
-import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.channel.epoll.EpollChannelOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +98,7 @@ public class RedisClient implements AsyncClient {
             RedisClientMonitor.addRedisClient(this);
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(eventLoopGroup)
-                    .channel(NioSocketChannel.class)
+                    .channel(GlobalRedisProxyEnv.getSocketChannelClass())
                     .option(ChannelOption.SO_KEEPALIVE, RedisClientHub.soKeepalive)
                     .option(ChannelOption.TCP_NODELAY, RedisClientHub.tcpNoDelay)
                     .option(ChannelOption.SO_SNDBUF, RedisClientHub.soSndbuf)
@@ -115,6 +115,9 @@ public class RedisClient implements AsyncClient {
                             pipeline.addLast(new CommandPackEncoder(RedisClient.this, queue));
                         }
                     });
+            if (RedisClientHub.tcpQuickAck) {
+                bootstrap.option(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
+            }
             if (logger.isInfoEnabled()) {
                 logger.info("{} try connect...", clientName);
             }

@@ -239,6 +239,7 @@ public class CamelliaTranspondProperties {
         public int soSndbuf = Constants.Transpond.soSndbuf;
         public int soRcvbuf = Constants.Transpond.soRcvbuf;
         public boolean tcpNoDelay = Constants.Transpond.tcpNoDelay;
+        public boolean tcpQuickAck = Constants.Transpond.tcpQuickAck;
         public boolean soKeepalive = Constants.Transpond.soKeepalive;
         public int writeBufferWaterMarkLow = Constants.Transpond.writeBufferWaterMarkLow;
         public int writeBufferWaterMarkHigh = Constants.Transpond.writeBufferWaterMarkHigh;
@@ -265,6 +266,14 @@ public class CamelliaTranspondProperties {
 
         public void setTcpNoDelay(boolean tcpNoDelay) {
             this.tcpNoDelay = tcpNoDelay;
+        }
+
+        public boolean isTcpQuickAck() {
+            return tcpQuickAck;
+        }
+
+        public void setTcpQuickAck(boolean tcpQuickAck) {
+            this.tcpQuickAck = tcpQuickAck;
         }
 
         public boolean isSoKeepalive() {

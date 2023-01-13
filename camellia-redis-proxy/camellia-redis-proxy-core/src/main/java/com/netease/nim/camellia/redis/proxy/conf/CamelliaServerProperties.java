@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
+import com.netease.nim.camellia.redis.proxy.netty.NettyIOMode;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultBeanFactory;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 
@@ -29,6 +30,7 @@ public class CamelliaServerProperties {
     private boolean clusterModeEnable = Constants.Server.clusterModeEnable;
     private String clusterModeProviderClassName = Constants.Server.clusterModeProviderClassName;
 
+    private NettyIOMode nettyIOMode = Constants.Server.nettyIOMode;
     private int bossThread = 1;
     private int workThread = Constants.Server.workThread;
     private boolean tcpNoDelay = Constants.Server.tcpNoDelay;
@@ -36,6 +38,7 @@ public class CamelliaServerProperties {
     private int soSndbuf = Constants.Server.soSndbuf;
     private int soRcvbuf = Constants.Server.soRcvbuf;
     private boolean soKeepalive = Constants.Server.soKeepalive;
+    public boolean tcpQuickAck =  Constants.Server.tcpQuickAck;
     private int readerIdleTimeSeconds = Constants.Server.readerIdleTimeSeconds;
     private int writerIdleTimeSeconds = Constants.Server.writerIdleTimeSeconds;
     private int allIdleTimeSeconds = Constants.Server.allIdleTimeSeconds;
@@ -43,16 +46,6 @@ public class CamelliaServerProperties {
     private int writeBufferWaterMarkHigh = Constants.Server.writeBufferWaterMarkHigh;
     private int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
     private int commandDecodeBufferInitializerSize = Constants.Server.commandDecodeBufferInitializerSize;
-    public boolean tcpQuickAck =  Constants.Server.isTcpQuickAck;
-
-    public boolean isTcpQuickAck() {
-        return tcpQuickAck;
-    }
-
-    public void setTcpQuickAck(boolean tcpQuickAck) {
-        this.tcpQuickAck = tcpQuickAck;
-    }
-
 
     public int getPort() {
         return port;
@@ -160,6 +153,14 @@ public class CamelliaServerProperties {
         this.clusterModeProviderClassName = clusterModeProviderClassName;
     }
 
+    public NettyIOMode getNettyIOMode() {
+        return nettyIOMode;
+    }
+
+    public void setNettyIOMode(NettyIOMode nettyIOMode) {
+        this.nettyIOMode = nettyIOMode;
+    }
+
     public int getBossThread() {
         return bossThread;
     }
@@ -182,6 +183,14 @@ public class CamelliaServerProperties {
 
     public void setTcpNoDelay(boolean tcpNoDelay) {
         this.tcpNoDelay = tcpNoDelay;
+    }
+
+    public boolean isTcpQuickAck() {
+        return tcpQuickAck;
+    }
+
+    public void setTcpQuickAck(boolean tcpQuickAck) {
+        this.tcpQuickAck = tcpQuickAck;
     }
 
     public int getSoBacklog() {

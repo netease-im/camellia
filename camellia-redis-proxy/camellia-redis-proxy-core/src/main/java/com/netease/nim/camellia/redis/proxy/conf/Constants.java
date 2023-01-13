@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
+import com.netease.nim.camellia.redis.proxy.netty.NettyIOMode;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.proxy.cluster.DefaultProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfUpdater;
@@ -28,7 +29,9 @@ public class Constants {
         public static final int commandDecodeMaxBatchSize = 256;
         public static final int commandDecodeBufferInitializerSize = 32;
 
+        public static final NettyIOMode nettyIOMode = NettyIOMode.nio;
         public static final boolean tcpNoDelay = true;
+        public static final boolean tcpQuickAck = false;
         public static final int soBacklog = 1024;
         public static final int soSndbuf = 10 * 1024 * 1024;
         public static final int soRcvbuf = 10 * 1024 * 1024;
@@ -52,10 +55,6 @@ public class Constants {
         public static final long hotKeyCacheStatsCallbackIntervalSeconds = 10;
 
         public static final boolean monitorDataMaskPassword = true;//对外暴露的监控数据是否把密码隐藏（用*代替）
-
-        public static final boolean isTcpQuickAck = false;// is turn quick ack tcp option
-
-
     }
 
     public static class Transpond {
@@ -76,6 +75,7 @@ public class Constants {
         public static final int soSndbuf = 10 * 1024 * 1024;
         public static final int soRcvbuf = 10 * 1024 * 1024;
         public static final boolean tcpNoDelay = true;
+        public static final boolean tcpQuickAck = false;
         public static final boolean soKeepalive = true;
         public static final int writeBufferWaterMarkLow = 128 * 1024;
         public static final int writeBufferWaterMarkHigh = 512 * 1024;

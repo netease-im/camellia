@@ -12,6 +12,7 @@ public class NettyProperties {
     private int bossThread = 1;
     private int workThread = -1;
     private boolean tcpNoDelay = Constants.Server.tcpNoDelay;
+    private boolean tcpQuickAck = Constants.Server.tcpQuickAck;
     private int soBacklog = Constants.Server.soBacklog;
     private int soSndbuf = Constants.Server.soSndbuf;
     private int soRcvbuf = Constants.Server.soRcvbuf;
@@ -24,15 +25,6 @@ public class NettyProperties {
     private int commandDecodeMaxBatchSize = Constants.Server.commandDecodeMaxBatchSize;
     private int commandDecodeBufferInitializerSize = Constants.Server.commandDecodeBufferInitializerSize;
 
-    public boolean isQuickAck() {
-        return quickAck;
-    }
-
-    public void setQuickAck(boolean quickAck) {
-        this.quickAck = quickAck;
-    }
-
-    private boolean quickAck=Constants.Server.isTcpQuickAck;
     public int getBossThread() {
         return bossThread;
     }
@@ -55,6 +47,14 @@ public class NettyProperties {
 
     public void setTcpNoDelay(boolean tcpNoDelay) {
         this.tcpNoDelay = tcpNoDelay;
+    }
+
+    public boolean isTcpQuickAck() {
+        return tcpQuickAck;
+    }
+
+    public void setTcpQuickAck(boolean tcpQuickAck) {
+        this.tcpQuickAck = tcpQuickAck;
     }
 
     public int getSoBacklog() {

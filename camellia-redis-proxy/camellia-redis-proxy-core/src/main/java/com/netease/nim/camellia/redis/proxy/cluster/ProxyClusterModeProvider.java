@@ -40,8 +40,8 @@ public interface ProxyClusterModeProvider {
         if (inetAddress == null) {
             throw new IllegalStateException("not found non loopback address");
         }
-        int port = GlobalRedisProxyEnv.port;
-        int cport = GlobalRedisProxyEnv.cport;
+        int port = GlobalRedisProxyEnv.getPort();
+        int cport = GlobalRedisProxyEnv.getCport();
         if (port == 0 || cport == 0) {
             throw new IllegalStateException("redis proxy not start");
         }

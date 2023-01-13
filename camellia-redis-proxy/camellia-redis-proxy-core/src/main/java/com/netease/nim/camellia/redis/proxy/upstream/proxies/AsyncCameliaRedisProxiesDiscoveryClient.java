@@ -38,10 +38,10 @@ public class AsyncCameliaRedisProxiesDiscoveryClient extends AsyncCamelliaSimple
 
     public AsyncCameliaRedisProxiesDiscoveryClient(RedisProxiesDiscoveryResource resource) {
         this.resource = resource;
-        if (GlobalRedisProxyEnv.discoveryFactory == null) {
+        if (GlobalRedisProxyEnv.getDiscoveryFactory() == null) {
             throw new CamelliaRedisException("proxy discovery not init");
         }
-        this.proxyDiscovery = GlobalRedisProxyEnv.discoveryFactory.getProxyDiscovery(resource.getProxyName());
+        this.proxyDiscovery = GlobalRedisProxyEnv.getDiscoveryFactory().getProxyDiscovery(resource.getProxyName());
         if (proxyDiscovery == null) {
             throw new CamelliaRedisException("proxy discovery init fail, resource = " + resource.getUrl());
         }
