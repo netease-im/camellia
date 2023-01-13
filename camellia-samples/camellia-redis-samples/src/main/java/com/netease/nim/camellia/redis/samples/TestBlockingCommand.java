@@ -19,7 +19,7 @@ public class TestBlockingCommand {
         testConsume();
     }
 
-    private static void testProduce() {
+    public static void testProduce() {
         new Thread(() -> {
             CamelliaRedisTemplate template = new CamelliaRedisTemplate(url);
             AtomicLong data = new AtomicLong();
@@ -35,7 +35,7 @@ public class TestBlockingCommand {
         }).start();
     }
 
-    private static void testConsume() {
+    public static void testConsume() {
         new Thread(() -> {
             CamelliaRedisTemplate template = new CamelliaRedisTemplate(url);
             while (true) {
