@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -18,6 +19,9 @@ import java.util.concurrent.TimeUnit;
 public class CamelliaIdGenInvoker {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaIdGenInvoker.class);
+
+    private static final ScheduledExecutorService schedule = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(),
+            new CamelliaThreadFactory("id-gen-sdk", true));
 
     private final IdGenServerDiscovery discovery;
     private List<IdGenServer> all;
@@ -41,8 +45,8 @@ public class CamelliaIdGenInvoker {
             throw new CamelliaIdGenException("id gen server is empty");
         }
         this.dynamic = new ArrayList<>(all);
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("id-gen-sdk", true))
-                .scheduleAtFixedRate(this::reload, config.getDiscoveryReloadIntervalSeconds(), config.getDiscoveryReloadIntervalSeconds(), TimeUnit.SECONDS);
+        schedule.scheduleAtFixedRate(this::reload, config.getDiscoveryReloadIntervalSeconds(),
+                config.getDiscoveryReloadIntervalSeconds(), TimeUnit.SECONDS);
         this.discovery.setCallback(new CamelliaDiscovery.Callback<IdGenServer>() {
             @Override
             public void add(IdGenServer server) {
