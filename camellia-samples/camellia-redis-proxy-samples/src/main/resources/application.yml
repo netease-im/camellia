@@ -1,6 +1,6 @@
 
 server:
-  port: 26380
+  port: 6380
 spring:
   application:
     name: camellia-redis-proxy-server
