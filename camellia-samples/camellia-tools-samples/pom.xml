@@ -4,19 +4,19 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-tools-samples</artifactId>
-	<version>1.1.12</version>
+	<version>1.1.13-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-samples</artifactId>
-		<version>1.1.12</version>
+		<version>1.1.13-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-tools</artifactId>
-			<version>1.1.12</version>
+			<version>1.1.13-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.ben-manes.caffeine</groupId>
