@@ -22,6 +22,13 @@
 			<groupId>io.netty.incubator</groupId>
 			<artifactId>netty-incubator-transport-native-io_uring</artifactId>
 			<version>0.0.16.Final</version>
+			<classifier>linux-x86_64</classifier>
+		</dependency>
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-transport-native-epoll</artifactId>
+			<version>${netty.version}</version>
+			<classifier>linux-x86_64</classifier>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
