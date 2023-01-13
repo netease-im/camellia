@@ -83,7 +83,12 @@ public class CamelliaStatistics {
         long sum = this.sum.sumThenReset();
         long count = this.count.sumThenReset();
         long max = this.maxValue.getAndSet(0);
-        double avg = (double) sum / count;
+        double avg;
+        if (count == 0) {
+            avg = 0.0;
+        } else {
+            avg = (double) sum / count;
+        }
 
         long p50Position = (long) (count * 0.5);
         long p75Position = (long) (count * 0.75);
