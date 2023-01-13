@@ -72,6 +72,7 @@ public class GlobalRedisProxyEnv {
                 serverChannelClass = EpollServerSocketChannel.class;
                 socketChannelClass = EpollSocketChannel.class;
                 serverTcpQuickAck = serverProperties.isTcpQuickAck();
+                nettyIOMode = NettyIOMode.epoll;
             } else if (nettyIOMode == NettyIOMode.kqueue && isKQueueAvailable()) {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new KQueueEventLoopGroup(bossThread, new DefaultThreadFactory("camellia-boss-group"));
@@ -79,6 +80,7 @@ public class GlobalRedisProxyEnv {
                 workGroup = new KQueueEventLoopGroup(workThread, new DefaultThreadFactory("camellia-work-group"));
                 serverChannelClass = KQueueServerSocketChannel.class;
                 socketChannelClass = KQueueSocketChannel.class;
+                nettyIOMode = NettyIOMode.kqueue;
             } else if (nettyIOMode == NettyIOMode.io_uring && isIOUringAvailable()) {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new IOUringEventLoopGroup(bossThread, new DefaultThreadFactory("camellia-boss-group"));
@@ -86,6 +88,7 @@ public class GlobalRedisProxyEnv {
                 workGroup = new IOUringEventLoopGroup(workThread, new DefaultThreadFactory("camellia-work-group"));
                 serverChannelClass = IOUringServerSocketChannel.class;
                 socketChannelClass = IOUringSocketChannel.class;
+                nettyIOMode = NettyIOMode.io_uring;
             } else {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new NioEventLoopGroup(bossThread, new DefaultThreadFactory("camellia-boss-group"));
@@ -93,6 +96,7 @@ public class GlobalRedisProxyEnv {
                 workGroup = new NioEventLoopGroup(workThread, new DefaultThreadFactory("camellia-work-group"));
                 serverChannelClass = NioServerSocketChannel.class;
                 socketChannelClass = NioSocketChannel.class;
+                nettyIOMode = NettyIOMode.nio;
             }
             initOk.set(true);
         }
