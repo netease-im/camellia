@@ -2,19 +2,21 @@ package com.netease.nim.camellia.id.gen.sdk;
 
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Created by caojiajun on 2021/9/27
  */
 public class CamelliaIdGenSdkConfig {
 
+    //segment发号器中后台异步load线程池
     public static final ThreadPoolExecutor defaultAsyncLoadThreadPool = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() * 2,
             Runtime.getRuntime().availableProcessors() * 2, 0, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(10240), new CamelliaThreadFactory("camellia-id-gen-sdk", true));
+            new LinkedBlockingQueue<>(10240), new CamelliaThreadFactory("camellia-id-segment-gen-sdk-async-load", true));
+
+    //discovery模式下，兜底的reload线程池
+    private static final ScheduledExecutorService defaultScheduleThreadPool = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(),
+            new CamelliaThreadFactory("camellia-id-gen-sdk-schedule", true));
 
     private String url;
     private IdGenServerDiscovery discovery;
@@ -27,6 +29,7 @@ public class CamelliaIdGenSdkConfig {
     private int maxRequestsPerHost = 1024;
     private int maxIdleConnections = 1024;
     private int keepAliveSeconds = 30;
+    private ScheduledExecutorService scheduleThreadPool = defaultScheduleThreadPool;
 
     private SegmentIdGenSdkConfig segmentIdGenSdkConfig = new SegmentIdGenSdkConfig();
 
@@ -183,5 +186,13 @@ public class CamelliaIdGenSdkConfig {
 
     public void setKeepAliveSeconds(int keepAliveSeconds) {
         this.keepAliveSeconds = keepAliveSeconds;
+    }
+
+    public ScheduledExecutorService getScheduleThreadPool() {
+        return scheduleThreadPool;
+    }
+
+    public void setScheduleThreadPool(ScheduledExecutorService scheduleThreadPool) {
+        this.scheduleThreadPool = scheduleThreadPool;
     }
 }
