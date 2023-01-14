@@ -18,6 +18,7 @@
 		<module>camellia-delay-queue-common</module>
 		<module>camellia-delay-queue-sdk</module>
 		<module>camellia-delay-queue-server</module>
+		<module>camellia-delay-queue-server-bootstrap</module>
 		<module>camellia-delay-queue-spring-boot-starters</module>
 	</modules>
 </project>
