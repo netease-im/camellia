@@ -2,7 +2,6 @@ package com.netease.nim.camellia.delayqueue.sdk.api;
 
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
-import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.delayqueue.common.domain.*;
 import com.netease.nim.camellia.delayqueue.common.exception.CamelliaDelayMsgErrorCode;
 import com.netease.nim.camellia.delayqueue.common.exception.CamelliaDelayQueueException;
@@ -16,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +52,7 @@ public class CamelliaDelayQueueApi {
             throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG, "delay queue server is empty");
         }
         this.dynamic = new ArrayList<>(all);
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("delay-queue-sdk", true))
+        sdkConfig.getScheduleThreadPool()
                 .scheduleAtFixedRate(this::reload, sdkConfig.getDiscoveryReloadIntervalSeconds(), sdkConfig.getDiscoveryReloadIntervalSeconds(), TimeUnit.SECONDS);
         this.discovery.setCallback(new CamelliaDiscovery.Callback<DelayQueueServer>() {
             @Override

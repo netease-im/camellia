@@ -2,14 +2,23 @@ package com.netease.nim.camellia.delayqueue.sdk;
 
 import com.netease.nim.camellia.delayqueue.common.conf.CamelliaDelayQueueConstants;
 import com.netease.nim.camellia.delayqueue.sdk.api.DelayQueueServerDiscovery;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by caojiajun on 2022/7/7
  */
 public class CamelliaDelayQueueSdkConfig {
 
+    //discovery模式下，兜底的reload线程池
+    private static final ScheduledExecutorService defaultScheduleThreadPool = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(),
+            new CamelliaThreadFactory("camellia-delay-queue-sdk-schedule", true));
+
     private String url;
     private DelayQueueServerDiscovery discovery;
+    private ScheduledExecutorService scheduleThreadPool = defaultScheduleThreadPool;
     private CamelliaDelayMsgListenerConfig listenerConfig = new CamelliaDelayMsgListenerConfig();
     private CamelliaDelayMsgHttpConfig httpConfig = new CamelliaDelayMsgHttpConfig();
 
@@ -95,6 +104,14 @@ public class CamelliaDelayQueueSdkConfig {
 
     public void setDiscovery(DelayQueueServerDiscovery discovery) {
         this.discovery = discovery;
+    }
+
+    public ScheduledExecutorService getScheduleThreadPool() {
+        return scheduleThreadPool;
+    }
+
+    public void setScheduleThreadPool(ScheduledExecutorService scheduleThreadPool) {
+        this.scheduleThreadPool = scheduleThreadPool;
     }
 
     public CamelliaDelayMsgListenerConfig getListenerConfig() {
