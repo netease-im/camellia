@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>camellia-id-gen-server-bootstraps</artifactId>
+    <version>1.1.13-SNAPSHOT</version>
+
+    <packaging>pom</packaging>
+
+    <parent>
+        <groupId>com.netease.nim</groupId>
+        <artifactId>camellia-id-gen</artifactId>
+        <version>1.1.13-SNAPSHOT</version>
+    </parent>
+
+    <modules>
+        <module>camellia-id-gen-segment-server-bootstrap</module>
+        <module>camellia-id-gen-strict-server-bootstrap</module>
+        <module>camellia-id-gen-snowflake-server-bootstrap</module>
+    </modules>
+
+</project>
