@@ -39,7 +39,7 @@ public class GlobalRedisProxyEnv {
 
     private static final AtomicBoolean initOk = new AtomicBoolean(false);
 
-    private static NettyIOMode nettyIOMode = NettyIOMode.nio;
+    private static NettyTransportMode nettyTransportMode = NettyTransportMode.nio;
 
     private static int bossThread;
     private static EventLoopGroup bossGroup;
@@ -63,8 +63,8 @@ public class GlobalRedisProxyEnv {
         if (initOk.get()) return;
         synchronized (GlobalRedisProxyEnv.class) {
             if (initOk.get()) return;
-            GlobalRedisProxyEnv.nettyIOMode = serverProperties.getNettyIOMode();
-            if (nettyIOMode == NettyIOMode.epoll && isEpollAvailable()) {
+            GlobalRedisProxyEnv.nettyTransportMode = serverProperties.getNettyTransportMode();
+            if (nettyTransportMode == NettyTransportMode.epoll && isEpollAvailable()) {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new EpollEventLoopGroup(bossThread, new DefaultThreadFactory("camellia-boss-group"));
                 workThread = serverProperties.getWorkThread();
@@ -72,23 +72,23 @@ public class GlobalRedisProxyEnv {
                 serverChannelClass = EpollServerSocketChannel.class;
                 socketChannelClass = EpollSocketChannel.class;
                 serverTcpQuickAck = serverProperties.isTcpQuickAck();
-                nettyIOMode = NettyIOMode.epoll;
-            } else if (nettyIOMode == NettyIOMode.kqueue && isKQueueAvailable()) {
+                nettyTransportMode = NettyTransportMode.epoll;
+            } else if (nettyTransportMode == NettyTransportMode.kqueue && isKQueueAvailable()) {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new KQueueEventLoopGroup(bossThread, new DefaultThreadFactory("camellia-boss-group"));
                 workThread = serverProperties.getWorkThread();
                 workGroup = new KQueueEventLoopGroup(workThread, new DefaultThreadFactory("camellia-work-group"));
                 serverChannelClass = KQueueServerSocketChannel.class;
                 socketChannelClass = KQueueSocketChannel.class;
-                nettyIOMode = NettyIOMode.kqueue;
-            } else if (nettyIOMode == NettyIOMode.io_uring && isIOUringAvailable()) {
+                nettyTransportMode = NettyTransportMode.kqueue;
+            } else if (nettyTransportMode == NettyTransportMode.io_uring && isIOUringAvailable()) {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new IOUringEventLoopGroup(bossThread, new DefaultThreadFactory("camellia-boss-group"));
                 workThread = serverProperties.getWorkThread();
                 workGroup = new IOUringEventLoopGroup(workThread, new DefaultThreadFactory("camellia-work-group"));
                 serverChannelClass = IOUringServerSocketChannel.class;
                 socketChannelClass = IOUringSocketChannel.class;
-                nettyIOMode = NettyIOMode.io_uring;
+                nettyTransportMode = NettyTransportMode.io_uring;
             } else {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new NioEventLoopGroup(bossThread, new DefaultThreadFactory("camellia-boss-group"));
@@ -96,7 +96,7 @@ public class GlobalRedisProxyEnv {
                 workGroup = new NioEventLoopGroup(workThread, new DefaultThreadFactory("camellia-work-group"));
                 serverChannelClass = NioServerSocketChannel.class;
                 socketChannelClass = NioSocketChannel.class;
-                nettyIOMode = NettyIOMode.nio;
+                nettyTransportMode = NettyTransportMode.nio;
             }
             initOk.set(true);
         }
@@ -180,12 +180,12 @@ public class GlobalRedisProxyEnv {
         return discoveryFactory;
     }
 
-    public static NettyIOMode getNettyIOMode() {
-        return nettyIOMode;
+    public static NettyTransportMode getNettyTransportMode() {
+        return nettyTransportMode;
     }
 
     public static boolean isServerTcpQuickAckEnable() {
-        return nettyIOMode == NettyIOMode.epoll && serverTcpQuickAck;
+        return nettyTransportMode == NettyTransportMode.epoll && serverTcpQuickAck;
     }
 
     public static boolean isEpollAvailable() {

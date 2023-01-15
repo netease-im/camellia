@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
-import com.netease.nim.camellia.redis.proxy.netty.NettyIOMode;
+import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultBeanFactory;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 
@@ -30,7 +30,7 @@ public class CamelliaServerProperties {
     private boolean clusterModeEnable = Constants.Server.clusterModeEnable;
     private String clusterModeProviderClassName = Constants.Server.clusterModeProviderClassName;
 
-    private NettyIOMode nettyIOMode = Constants.Server.nettyIOMode;
+    private NettyTransportMode nettyTransportMode = Constants.Server.nettyTransportMode;
     private int bossThread = 1;
     private int workThread = Constants.Server.workThread;
     private boolean tcpNoDelay = Constants.Server.tcpNoDelay;
@@ -153,12 +153,12 @@ public class CamelliaServerProperties {
         this.clusterModeProviderClassName = clusterModeProviderClassName;
     }
 
-    public NettyIOMode getNettyIOMode() {
-        return nettyIOMode;
+    public NettyTransportMode getNettyTransportMode() {
+        return nettyTransportMode;
     }
 
-    public void setNettyIOMode(NettyIOMode nettyIOMode) {
-        this.nettyIOMode = nettyIOMode;
+    public void setNettyTransportMode(NettyTransportMode nettyTransportMode) {
+        this.nettyTransportMode = nettyTransportMode;
     }
 
     public int getBossThread() {

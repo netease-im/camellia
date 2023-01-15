@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
-import com.netease.nim.camellia.redis.proxy.netty.NettyIOMode;
+import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.proxy.cluster.DefaultProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfUpdater;
@@ -29,7 +29,7 @@ public class Constants {
         public static final int commandDecodeMaxBatchSize = 256;
         public static final int commandDecodeBufferInitializerSize = 32;
 
-        public static final NettyIOMode nettyIOMode = NettyIOMode.nio;
+        public static final NettyTransportMode nettyTransportMode = NettyTransportMode.nio;
         public static final boolean tcpNoDelay = true;
         public static final boolean tcpQuickAck = false;
         public static final int soBacklog = 1024;

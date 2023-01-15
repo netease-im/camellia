@@ -7,7 +7,7 @@ import com.netease.nim.camellia.core.api.ResourceTableUpdateCallback;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
-import com.netease.nim.camellia.redis.proxy.netty.NettyIOMode;
+import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultBeanFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.tools.utils.SysUtils;
@@ -363,14 +363,14 @@ public class AsyncCamelliaRedisTemplateChooser {
                 RedisClientHub.connectTimeoutMillis, RedisClientHub.heartbeatIntervalSeconds, RedisClientHub.heartbeatTimeoutMillis);
         RedisClientHub.failCountThreshold = redisConf.getFailCountThreshold();
         RedisClientHub.failBanMillis = redisConf.getFailBanMillis();
-        NettyIOMode nettyIOMode = GlobalRedisProxyEnv.getNettyIOMode();
-        if (nettyIOMode == NettyIOMode.epoll) {
+        NettyTransportMode nettyTransportMode = GlobalRedisProxyEnv.getNettyTransportMode();
+        if (nettyTransportMode == NettyTransportMode.epoll) {
             RedisClientHub.eventLoopGroup = new EpollEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client"));
             RedisClientHub.eventLoopGroupBackup = new EpollEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client-backup"));
-        } else if (nettyIOMode == NettyIOMode.kqueue) {
+        } else if (nettyTransportMode == NettyTransportMode.kqueue) {
             RedisClientHub.eventLoopGroup = new KQueueEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client"));
             RedisClientHub.eventLoopGroupBackup = new KQueueEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client-backup"));
-        } else if (nettyIOMode == NettyIOMode.io_uring) {
+        } else if (nettyTransportMode == NettyTransportMode.io_uring) {
             RedisClientHub.eventLoopGroup = new IOUringEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client"));
             RedisClientHub.eventLoopGroupBackup = new IOUringEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client-backup"));
         } else {
@@ -391,7 +391,7 @@ public class AsyncCamelliaRedisTemplateChooser {
         RedisClientHub.soSndbuf = properties.getNettyProperties().getSoSndbuf();
         RedisClientHub.writeBufferWaterMarkLow = properties.getNettyProperties().getWriteBufferWaterMarkLow();
         RedisClientHub.writeBufferWaterMarkHigh = properties.getNettyProperties().getWriteBufferWaterMarkHigh();
-        RedisClientHub.tcpQuickAck = GlobalRedisProxyEnv.getNettyIOMode() == NettyIOMode.epoll && properties.getNettyProperties().isTcpQuickAck();
+        RedisClientHub.tcpQuickAck = GlobalRedisProxyEnv.getNettyTransportMode() == NettyTransportMode.epoll && properties.getNettyProperties().isTcpQuickAck();
         logger.info("RedisClient, so_keepalive = {}, tcp_no_delay = {}, tcp_quick_ack = {}, so_rcvbuf = {}, so_sndbuf = {}, write_buffer_water_mark_Low = {}, write_buffer_water_mark_high = {}",
                 RedisClientHub.soKeepalive, RedisClientHub.tcpNoDelay, RedisClientHub.tcpQuickAck, RedisClientHub.soRcvbuf,
                 RedisClientHub.soSndbuf, RedisClientHub.writeBufferWaterMarkLow, RedisClientHub.writeBufferWaterMarkHigh);
