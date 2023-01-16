@@ -5,6 +5,7 @@ import com.netease.nim.camellia.core.discovery.ReloadableDiscoveryFactory;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by caojiajun on 2022/3/8
@@ -12,6 +13,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RedisProxyDiscoveryFactory extends ReloadableDiscoveryFactory<Proxy> {
 
     private final ConcurrentHashMap<String, IProxyDiscovery> map = new ConcurrentHashMap<>();
+
+    public RedisProxyDiscoveryFactory(NamedServerListGetter<Proxy> getter, int reloadIntervalSeconds, ScheduledExecutorService schedule) {
+        super(getter, reloadIntervalSeconds, schedule);
+    }
 
     public RedisProxyDiscoveryFactory(NamedServerListGetter<Proxy> getter, int reloadIntervalSeconds) {
         super(getter, reloadIntervalSeconds);

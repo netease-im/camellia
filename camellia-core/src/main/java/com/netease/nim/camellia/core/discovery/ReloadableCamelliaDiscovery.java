@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -18,6 +19,8 @@ public class ReloadableCamelliaDiscovery<T> extends AbstractCamelliaDiscovery<T>
 
     private static final Logger logger = LoggerFactory.getLogger(ReloadableCamelliaDiscovery.class);
 
+    private static final ScheduledExecutorService defaultSchedule = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(), new CamelliaThreadFactory(ReloadableCamelliaDiscovery.class));
+
     private final AtomicBoolean initOk = new AtomicBoolean(false);
 
     private ServerListGetter<T> serverListGetter;
@@ -27,15 +30,21 @@ public class ReloadableCamelliaDiscovery<T> extends AbstractCamelliaDiscovery<T>
     }
 
     public ReloadableCamelliaDiscovery(ServerListGetter<T> serverListGetter, long reloadIntervalSeconds) {
-        init(serverListGetter, reloadIntervalSeconds);
+        init(serverListGetter, reloadIntervalSeconds, defaultSchedule);
     }
 
-    protected void init(ServerListGetter<T> serverListGetter, long reloadIntervalSeconds) {
+    public ReloadableCamelliaDiscovery(ServerListGetter<T> serverListGetter, long reloadIntervalSeconds, ScheduledExecutorService schedule) {
+        init(serverListGetter, reloadIntervalSeconds, schedule);
+    }
+
+    protected void init(ServerListGetter<T> serverListGetter, long reloadIntervalSeconds, ScheduledExecutorService schedule) {
         if (initOk.compareAndSet(false, true)) {
             this.serverListGetter = serverListGetter;
             this.set = new HashSet<>(serverListGetter.findAll());
-            Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(ReloadableCamelliaDiscovery.class))
-                    .scheduleAtFixedRate(new RefreshThread<>(this), reloadIntervalSeconds, reloadIntervalSeconds, TimeUnit.SECONDS);
+            if (schedule == null) {
+                schedule = defaultSchedule;
+            }
+            schedule.scheduleAtFixedRate(new RefreshThread<>(this), reloadIntervalSeconds, reloadIntervalSeconds, TimeUnit.SECONDS);
         } else {
             throw new IllegalStateException("duplicate init");
         }

@@ -5,6 +5,7 @@ import com.netease.nim.camellia.core.discovery.ReloadableDiscoveryFactory;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by caojiajun on 2022/10/9
@@ -12,6 +13,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DelayQueueServerDiscoveryFactory extends ReloadableDiscoveryFactory<DelayQueueServer> {
 
     private final ConcurrentHashMap<String, DelayQueueServerDiscovery> map = new ConcurrentHashMap<>();
+
+    public DelayQueueServerDiscoveryFactory(NamedServerListGetter<DelayQueueServer> getter, int reloadIntervalSeconds, ScheduledExecutorService schedule) {
+        super(getter, reloadIntervalSeconds, schedule);
+    }
 
     public DelayQueueServerDiscoveryFactory(NamedServerListGetter<DelayQueueServer> getter, int reloadIntervalSeconds) {
         super(getter, reloadIntervalSeconds);
