@@ -1,5 +1,21 @@
 [ENGLISH](update-en.md)
 
+# 1.1.13（2023/01/xx）
+### 新增
+* camellia-redis-proxy支持使用transport_native_epoll、transport_native_kqueue、transport_native_io_uring，默认使用jdk_nio
+* camellia-redis-proxy支持配置TCP_QUICKACK参数，当前仅当使用transport_native_epoll时支持
+
+### 更新
+* id-gen-sdk底层线程池默认使用共享模式，减少初始化多个sdk实例时的线程数量占用
+* delay-queue-sdk底层线程池默认使用共享模式，减少初始化多个sdk实例时的线程数量占用
+* RedisProxyJedisPool底层线程池默认使用共享模式，减少初始化多个实例时的线程数量占用
+* id-gen-server新增bootstrap模块，提供直接运行的安装包
+* delay-queue-server新增bootstrap模块，提供直接运行的安装包
+
+### fix
+* 无
+
+
 # 1.1.12（2023/01/12）
 ### 新增
 * 无

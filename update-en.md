@@ -1,5 +1,21 @@
 [中文版](update-zh.md)
 
+# 1.1.13（2023/01/xx）
+### add
+* camellia-redis-proxy support use transport_native_epoll、transport_native_kqueue、transport_native_io_uring, default use jdk_nio
+* camellia-redis-proxy support configure TCP_QUICKACK option, only support in transport_native_epoll mode
+
+### update
+* id-gen-sdk use shared schedule thread pool default, decrease the thread num when init multi sdk instance
+* delay-queue-sdk use shared schedule thread pool default, decrease the thread num when init multi sdk instance
+* RedisProxyJedisPool use shared schedule thread pool default, decrease the thread num when init multi instance
+* id-gen-server add bootstrap module, provide *.tar.gz to run directly
+* delay-queue-server add bootstrap module, provide *.tar.gz to run directly
+
+### fix
+* none
+
+
 # 1.1.12（2023/01/12）
 ### add
 * none
