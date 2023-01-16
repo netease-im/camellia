@@ -31,6 +31,7 @@ public class RedisProxyJedisPool extends JedisPool {
     private static final int defaultTimeout = 2000;
     private static final int defaultMaxRetry = 5;
     private static final boolean defaultSideCarFirst = false;
+    private static final ScheduledExecutorService defaultSchedule = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(), new CamelliaThreadFactory(RedisProxyJedisPool.class));
     private static String defaultLocalHost = "";
     static {
         try {
@@ -51,7 +52,7 @@ public class RedisProxyJedisPool extends JedisPool {
     private final int timeout;
     private final String password;
     private final int maxRetry;
-    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(RedisProxyJedisPool.class));
+    private final ScheduledExecutorService scheduledExecutorService;
     private final IProxySelector proxySelector;
     private final boolean jedisPoolLazyInit;
     private final int jedisPoolInitialSize;
@@ -179,6 +180,13 @@ public class RedisProxyJedisPool extends JedisPool {
     public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
                                int timeout, String password, int refreshSeconds, int maxRetry, boolean sideCarFirst, String localhost,
                                RegionResolver regionResolver, IProxySelector proxySelector, boolean jedisPoolLazyInit, int jedisPoolInitialSize) {
+        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, refreshSeconds, maxRetry, sideCarFirst, localhost, regionResolver,
+                proxySelector, jedisPoolLazyInit, jedisPoolInitialSize, defaultSchedule);
+    }
+
+    public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
+                               int timeout, String password, int refreshSeconds, int maxRetry, boolean sideCarFirst, String localhost,
+                               RegionResolver regionResolver, IProxySelector proxySelector, boolean jedisPoolLazyInit, int jedisPoolInitialSize, ScheduledExecutorService scheduledExecutorService) {
         this.bid = bid;
         this.bgroup = bgroup;
         this.jedisPoolLazyInit = jedisPoolLazyInit;
@@ -207,12 +215,13 @@ public class RedisProxyJedisPool extends JedisPool {
         this.timeout = timeout;
         this.password = password;
         this.maxRetry = maxRetry;
+        this.scheduledExecutorService = scheduledExecutorService == null ? defaultSchedule : scheduledExecutorService;
         init();
         if (jedisPoolLazyInit) {
-            scheduledExecutorService.scheduleAtFixedRate(new RefreshThread(this),
+            this.scheduledExecutorService.scheduleAtFixedRate(new RefreshThread(this),
                     5, refreshSeconds, TimeUnit.SECONDS);
         } else {
-            scheduledExecutorService.scheduleAtFixedRate(new RefreshThread(this),
+            this.scheduledExecutorService.scheduleAtFixedRate(new RefreshThread(this),
                     refreshSeconds, refreshSeconds, TimeUnit.SECONDS);
         }
         RedisProxyJedisPoolContext.init(this);
@@ -246,6 +255,7 @@ public class RedisProxyJedisPool extends JedisPool {
         private String localhost = defaultLocalHost;
         private RegionResolver regionResolver;
         private IProxySelector proxySelector;
+        private ScheduledExecutorService scheduledExecutorService = defaultSchedule;
 
         public Builder() {
         }
@@ -320,9 +330,14 @@ public class RedisProxyJedisPool extends JedisPool {
             return this;
         }
 
+        public Builder scheduledExecutorService(ScheduledExecutorService scheduledExecutorService) {
+            this.scheduledExecutorService = scheduledExecutorService;
+            return this;
+        }
+
         public RedisProxyJedisPool build() {
             return new RedisProxyJedisPool(bid, bgroup, proxyDiscovery, poolConfig, timeout, password,
-                    refreshSeconds, maxRetry, sideCarFirst, localhost, regionResolver, proxySelector, jedisPoolLazyInit, jedisPoolInitialSize);
+                    refreshSeconds, maxRetry, sideCarFirst, localhost, regionResolver, proxySelector, jedisPoolLazyInit, jedisPoolInitialSize, scheduledExecutorService);
         }
     }
 
