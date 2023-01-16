@@ -37,6 +37,10 @@ public class ReloadableCamelliaDiscovery<T> extends AbstractCamelliaDiscovery<T>
         init(serverListGetter, reloadIntervalSeconds, schedule);
     }
 
+    protected void init(ServerListGetter<T> serverListGetter, long reloadIntervalSeconds) {
+        init(serverListGetter, reloadIntervalSeconds, null);
+    }
+
     protected void init(ServerListGetter<T> serverListGetter, long reloadIntervalSeconds, ScheduledExecutorService schedule) {
         if (initOk.compareAndSet(false, true)) {
             this.serverListGetter = serverListGetter;
