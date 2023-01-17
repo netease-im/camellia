@@ -349,7 +349,8 @@ public class RedisProxyAffinityJedisPool extends JedisPool {
         }
         public RedisProxyAffinityJedisPool build() {
             return new RedisProxyAffinityJedisPool(bid, bgroup, proxyDiscovery, poolConfig, timeout, password,
-                    refreshSeconds, maxRetry, sideCarFirst, localhost, regionResolver, proxySelector, jedisPoolLazyInit, jedisPoolInitialSize, scheduledExecutorService);
+                    refreshSeconds, maxRetry, sideCarFirst, localhost, regionResolver, proxySelector, jedisPoolLazyInit, jedisPoolInitialSize, 
+                    scheduledExecutorService,testOnBorrow);
         }
     }
 
