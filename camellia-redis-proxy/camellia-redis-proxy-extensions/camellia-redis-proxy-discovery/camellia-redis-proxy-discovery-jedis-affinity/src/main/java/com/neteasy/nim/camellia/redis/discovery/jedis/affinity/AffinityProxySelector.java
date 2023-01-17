@@ -17,7 +17,6 @@ public class AffinityProxySelector implements IProxySelector {
 
     private final ConcurrentSkipListSet<Proxy> proxySet = new ConcurrentSkipListSet<>();
     private ConcurrentLinkedQueue<Proxy> dynamicProxyList= new ConcurrentLinkedQueue<Proxy>();
-    private ConcurrentLinkedQueue<Proxy> banList = new ConcurrentLinkedQueue<Proxy>();
     private AtomicStampedReference<Integer> currentActive = new AtomicStampedReference<Integer>(10,0);
     @Override
     public Proxy next() {
@@ -40,9 +39,6 @@ public class AffinityProxySelector implements IProxySelector {
     @Override
     public void ban(Proxy proxy) {
             dynamicProxyList.remove(proxy);
-            if(!banList.contains(proxy)) {
-                banList.add(proxy);
-            }
     }
 
     @Override

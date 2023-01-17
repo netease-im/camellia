@@ -12,6 +12,7 @@ import redis.clients.jedis.JedisPoolConfig;
 
 import java.net.InetAddress;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -43,7 +44,7 @@ public class RedisProxyAffinityJedisPool extends JedisPool {
 
     private final Object lock = new Object();
 
-    private final Map<Proxy, JedisPool> jedisPoolMap = new HashMap<>();
+    private final Map<Proxy, JedisPool> jedisPoolMap = new ConcurrentHashMap<>();
 
     private final long id = idGenerator.incrementAndGet();
     private final long bid;
@@ -534,10 +535,12 @@ public class RedisProxyAffinityJedisPool extends JedisPool {
                 List<Proxy> list = proxyJedisPool.proxyDiscovery.findAll();
                 if (list != null && !list.isEmpty()) {
                     Set<Proxy> proxySet = proxyJedisPool.proxySelector.getAll();
+                    
                     for (Proxy proxy : list) {
                         proxyJedisPool.add(proxy);
                     }
-                    Set<Proxy> oldSet = new HashSet<>(proxySet);
+                    Set<Proxy> oldSet = new HashSet<>();
+                    oldSet.addAll(proxySet);
                     list.forEach(oldSet::remove);
                     if (!oldSet.isEmpty()) {
                         for (Proxy proxy : oldSet) {
