@@ -3,7 +3,6 @@ package com.netease.nim.camellia.feign.discovery;
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 import com.netease.nim.camellia.core.discovery.CamelliaServerSelector;
 import com.netease.nim.camellia.core.discovery.CamelliaServerHealthChecker;
-import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.feign.resource.FeignDiscoveryResource;
 import com.netease.nim.camellia.feign.resource.FeignResource;
 import com.netease.nim.camellia.tools.cache.CamelliaLocalCache;
@@ -12,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -35,7 +34,8 @@ public class DiscoveryResourcePool implements FeignResourcePool {
     public DiscoveryResourcePool(FeignDiscoveryResource discoveryResource,
                                  CamelliaDiscovery<FeignServerInfo> discovery,
                                  CamelliaServerSelector<FeignResource> serverSelector,
-                                 CamelliaServerHealthChecker<FeignServerInfo> healthChecker) {
+                                 CamelliaServerHealthChecker<FeignServerInfo> healthChecker,
+                                 ScheduledExecutorService scheduledExecutor) {
         this.discovery = discovery;
         this.serverSelector = serverSelector;
         this.discoveryResource = discoveryResource;
@@ -62,8 +62,7 @@ public class DiscoveryResourcePool implements FeignResourcePool {
             }
         });
         //兜底1分钟reload一次
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(DiscoveryResourcePool.class))
-                .scheduleAtFixedRate(this::reload, 1, 1, TimeUnit.MINUTES);
+        scheduledExecutor.scheduleAtFixedRate(this::reload, 1, 1, TimeUnit.MINUTES);
     }
 
     @Override

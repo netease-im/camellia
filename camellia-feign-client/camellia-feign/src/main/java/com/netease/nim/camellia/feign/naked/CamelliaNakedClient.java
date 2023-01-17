@@ -549,7 +549,7 @@ public class CamelliaNakedClient<R, W> {
                                 serverSelector = dynamicOption.getServerSelector();
                             }
                         }
-                        pool = new DiscoveryResourcePool((FeignDiscoveryResource) resource, discovery, serverSelector, healthChecker);
+                        pool = new DiscoveryResourcePool((FeignDiscoveryResource) resource, discovery, serverSelector, healthChecker, feignEnv.getScheduledExecutor());
                     } else {
                         throw new IllegalArgumentException("not support resource");
                     }
