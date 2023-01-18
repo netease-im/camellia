@@ -99,23 +99,24 @@ public class RedisClient implements AsyncClient {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(eventLoopGroup)
                     .channel(GlobalRedisProxyEnv.getSocketChannelClass())
-                    .option(ChannelOption.SO_KEEPALIVE, RedisClientHub.soKeepalive)
-                    .option(ChannelOption.TCP_NODELAY, RedisClientHub.tcpNoDelay)
-                    .option(ChannelOption.SO_SNDBUF, RedisClientHub.soSndbuf)
-                    .option(ChannelOption.SO_RCVBUF, RedisClientHub.soRcvbuf)
+                    .option(ChannelOption.SO_KEEPALIVE, redisClientConfig.isSoKeepalive())
+                    .option(ChannelOption.TCP_NODELAY, redisClientConfig.isTcpNoDelay())
+                    .option(ChannelOption.SO_SNDBUF, redisClientConfig.getSoSndbuf())
+                    .option(ChannelOption.SO_RCVBUF, redisClientConfig.getSoRcvbuf())
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
-                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(RedisClientHub.writeBufferWaterMarkLow, RedisClientHub.writeBufferWaterMarkHigh))
+                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(redisClientConfig.getWriteBufferWaterMarkLow(),
+                            redisClientConfig.getWriteBufferWaterMarkHigh()))
                     .handler(new ChannelInitializer<Channel>() {
                         @Override
                         protected void initChannel(Channel channel) {
                             ChannelPipeline pipeline = channel.pipeline();
                             pipeline.addLast(new ReplyDecoder());
                             pipeline.addLast(new ReplyAggregateDecoder());
-                            pipeline.addLast(new ClientHandler(queue, clientName));
+                            pipeline.addLast(new ClientHandler(queue, clientName, redisClientConfig.isTcpQuickAck()));
                             pipeline.addLast(new CommandPackEncoder(RedisClient.this, queue));
                         }
                     });
-            if (RedisClientHub.tcpQuickAck) {
+            if (redisClientConfig.isTcpQuickAck()) {
                 bootstrap.option(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
             }
             if (logger.isInfoEnabled()) {

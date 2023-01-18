@@ -44,7 +44,7 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
             logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
         }
         RedisClientAddr addr = getAddr();
-        boolean result = RedisClientHub.preheat(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), addr.getDb());
+        boolean result = RedisClientHub.getInstance().preheat(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), addr.getDb());
         if(logger.isInfoEnabled()) {
             logger.info("preheat result = {}, url = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()));
         }
@@ -235,7 +235,7 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
             }
             return;
         }
-        RedisClient client = RedisClientHub.get(addr);
+        RedisClient client = RedisClientHub.getInstance().get(addr);
         if (client != null) {
             client.sendCommand(commands, completableFutureList);
         } else {

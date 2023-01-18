@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -17,10 +16,12 @@ public class ClientHandler extends SimpleChannelInboundHandler<Reply> {
     private static final Logger logger = LoggerFactory.getLogger(ClientHandler.class);
     private final Queue<CompletableFuture<Reply>> queue;
     private final String clientName;
+    private final boolean tcpQuickAck;
 
-    public ClientHandler(Queue<CompletableFuture<Reply>> queue, String clientName) {
+    public ClientHandler(Queue<CompletableFuture<Reply>> queue, String clientName, boolean tcpQuickAck) {
         this.queue = queue;
         this.clientName = clientName;
+        this.tcpQuickAck = tcpQuickAck;
     }
 
     @Override
@@ -40,7 +41,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<Reply> {
             logger.error(e.getMessage(), e);
         } finally {
             try {
-                if (RedisClientHub.tcpQuickAck) {
+                if (tcpQuickAck) {
                     ctx.channel().config().setOption(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
                 }
             } catch (Exception e) {

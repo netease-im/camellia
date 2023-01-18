@@ -165,7 +165,7 @@ public class AsyncCameliaRedisProxiesDiscoveryClient extends AsyncCamelliaSimple
     }
 
     private boolean check(RedisClientAddr addr) {
-        RedisClient redisClient = RedisClientHub.get(addr);
+        RedisClient redisClient = RedisClientHub.getInstance().get(addr);
         return redisClient != null && redisClient.isValid();
     }
 }

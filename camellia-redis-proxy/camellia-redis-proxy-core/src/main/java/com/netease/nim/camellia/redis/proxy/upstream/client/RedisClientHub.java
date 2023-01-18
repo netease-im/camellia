@@ -1,6 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.upstream.client;
 
 
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
+import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.tools.utils.LockMap;
 import com.netease.nim.camellia.tools.utils.SysUtils;
@@ -12,6 +14,10 @@ import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.FastThreadLocal;
 import org.slf4j.Logger;
@@ -29,46 +35,100 @@ public class RedisClientHub {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisClientHub.class);
 
-    private static final ConcurrentHashMap<String, RedisClient> map = new ConcurrentHashMap<>();
-    public static EventLoopGroup eventLoopGroup = null;
-    public static EventLoopGroup eventLoopGroupBackup = null;
+    private final ConcurrentHashMap<String, RedisClient> map = new ConcurrentHashMap<>();
+    private EventLoopGroup eventLoopGroup = null;
+    private EventLoopGroup eventLoopGroupBackup = null;
 
-    private static final ExecutorService redisClientAsyncInitExec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
+    private final ExecutorService redisClientAsyncInitExec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(4096), new DefaultThreadFactory("camellia-redis-client-initialize"), new ThreadPoolExecutor.AbortPolicy());
 
-    private static final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, RedisClient>> eventLoopMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, RedisClient>> eventLoopMap = new ConcurrentHashMap<>();
 
-    private static final FastThreadLocal<EventLoop> eventLoopThreadLocal = new FastThreadLocal<>();
+    private final FastThreadLocal<EventLoop> eventLoopThreadLocal = new FastThreadLocal<>();
 
-    private static final ConcurrentHashMap<String, AtomicLong> failCountMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, AtomicLong> failTimestampMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, AtomicLong> failCountMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, AtomicLong> failTimestampMap = new ConcurrentHashMap<>();
 
-    public static int heartbeatIntervalSeconds = Constants.Transpond.heartbeatIntervalSeconds;
-    public static long heartbeatTimeoutMillis = Constants.Transpond.heartbeatTimeoutMillis;
-    public static int connectTimeoutMillis = Constants.Transpond.connectTimeoutMillis;
-    public static int failCountThreshold = Constants.Transpond.failCountThreshold;
-    public static long failBanMillis = Constants.Transpond.failBanMillis;
+    private int heartbeatIntervalSeconds = Constants.Transpond.heartbeatIntervalSeconds;
+    private long heartbeatTimeoutMillis = Constants.Transpond.heartbeatTimeoutMillis;
+    private int connectTimeoutMillis = Constants.Transpond.connectTimeoutMillis;
+    private int failCountThreshold = Constants.Transpond.failCountThreshold;
+    private long failBanMillis = Constants.Transpond.failBanMillis;
 
-    public static boolean soKeepalive = Constants.Transpond.soKeepalive;
-    public static int soSndbuf = Constants.Transpond.soSndbuf;
-    public static int soRcvbuf = Constants.Transpond.soRcvbuf;
-    public static boolean tcpNoDelay = Constants.Transpond.tcpNoDelay;
-    public static boolean tcpQuickAck = Constants.Transpond.tcpQuickAck;
-    public static int writeBufferWaterMarkLow = Constants.Transpond.writeBufferWaterMarkLow;
-    public static int writeBufferWaterMarkHigh = Constants.Transpond.writeBufferWaterMarkHigh;
+    private boolean soKeepalive = Constants.Transpond.soKeepalive;
+    private int soSndbuf = Constants.Transpond.soSndbuf;
+    private int soRcvbuf = Constants.Transpond.soRcvbuf;
+    private boolean tcpNoDelay = Constants.Transpond.tcpNoDelay;
+    private boolean tcpQuickAck = Constants.Transpond.tcpQuickAck;
+    private int writeBufferWaterMarkLow = Constants.Transpond.writeBufferWaterMarkLow;
+    private int writeBufferWaterMarkHigh = Constants.Transpond.writeBufferWaterMarkHigh;
 
-    public static boolean closeIdleConnection = Constants.Transpond.closeIdleConnection;
-    public static long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;
-    public static int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;
+    private boolean closeIdleConnection = Constants.Transpond.closeIdleConnection;
+    private long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;
+    private int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;
 
-    private static final ConcurrentHashMap<Object, LockMap> lockMapMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, AtomicBoolean>> initializerStatusMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Object, LockMap> lockMapMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, AtomicBoolean>> initializerStatusMap = new ConcurrentHashMap<>();
 
-    public static void updateEventLoop(EventLoop eventLoop) {
+    public static RedisClientHub instance = new RedisClientHub();
+    private RedisClientHub() {
+    }
+    public static RedisClientHub getInstance() {
+        return instance;
+    }
+
+    public void init(CamelliaTranspondProperties properties) {
+        CamelliaTranspondProperties.RedisConfProperties redisConf = properties.getRedisConf();
+        this.connectTimeoutMillis = redisConf.getConnectTimeoutMillis();
+        this.heartbeatIntervalSeconds = redisConf.getHeartbeatIntervalSeconds();
+        this.heartbeatTimeoutMillis = redisConf.getHeartbeatTimeoutMillis();
+        logger.info("RedisClient, connectTimeoutMillis = {}, heartbeatIntervalSeconds = {}, heartbeatTimeoutMillis = {}",
+                this.connectTimeoutMillis, this.heartbeatIntervalSeconds, this.heartbeatTimeoutMillis);
+        this.failCountThreshold = redisConf.getFailCountThreshold();
+        this.failBanMillis = redisConf.getFailBanMillis();
+        NettyTransportMode nettyTransportMode = GlobalRedisProxyEnv.getNettyTransportMode();
+        if (nettyTransportMode == NettyTransportMode.epoll) {
+            this.eventLoopGroup = new EpollEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client"));
+            this.eventLoopGroupBackup = new EpollEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client-backup"));
+        } else if (nettyTransportMode == NettyTransportMode.kqueue) {
+            this.eventLoopGroup = new KQueueEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client"));
+            this.eventLoopGroupBackup = new KQueueEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client-backup"));
+        } else if (nettyTransportMode == NettyTransportMode.io_uring) {
+            this.eventLoopGroup = new IOUringEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client"));
+            this.eventLoopGroupBackup = new IOUringEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client-backup"));
+        } else {
+            this.eventLoopGroup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client"));
+            this.eventLoopGroupBackup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client-backup"));
+        }
+        logger.info("RedisClient, failCountThreshold = {}, failBanMillis = {}",
+                this.failCountThreshold, this.failBanMillis);
+        this.closeIdleConnection = redisConf.isCloseIdleConnection();
+        this.checkIdleConnectionThresholdSeconds = redisConf.getCheckIdleConnectionThresholdSeconds();
+        this.closeIdleConnectionDelaySeconds = redisConf.getCloseIdleConnectionDelaySeconds();
+        logger.info("RedisClient, closeIdleConnection = {}, checkIdleConnectionThresholdSeconds = {}, closeIdleConnectionDelaySeconds = {}",
+                this.closeIdleConnection, this.checkIdleConnectionThresholdSeconds, this.closeIdleConnectionDelaySeconds);
+
+        CamelliaTranspondProperties.NettyProperties nettyProperties = properties.getNettyProperties();
+        this.soKeepalive = nettyProperties.isSoKeepalive();
+        this.tcpNoDelay = nettyProperties.isTcpNoDelay();
+        this.soRcvbuf = nettyProperties.getSoRcvbuf();
+        this.soSndbuf = nettyProperties.getSoSndbuf();
+        this.writeBufferWaterMarkLow = nettyProperties.getWriteBufferWaterMarkLow();
+        this.writeBufferWaterMarkHigh = nettyProperties.getWriteBufferWaterMarkHigh();
+        this.tcpQuickAck = GlobalRedisProxyEnv.getNettyTransportMode() == NettyTransportMode.epoll && properties.getNettyProperties().isTcpQuickAck();
+        logger.info("RedisClient, so_keepalive = {}, tcp_no_delay = {}, tcp_quick_ack = {}, so_rcvbuf = {}, so_sndbuf = {}, write_buffer_water_mark_Low = {}, write_buffer_water_mark_high = {}",
+                this.soKeepalive, this.tcpNoDelay, this.tcpQuickAck, this.soRcvbuf,
+                this.soSndbuf, this.writeBufferWaterMarkLow, this.writeBufferWaterMarkHigh);
+
+        ProxyDynamicConf.registerCallback(this::reloadConf);
+        reloadConf();
+    }
+
+    public void updateEventLoop(EventLoop eventLoop) {
         eventLoopThreadLocal.set(eventLoop);
     }
 
-    public static RedisClient tryGet(String host, int port, String userName, String password) {
+    public RedisClient tryGet(String host, int port, String userName, String password) {
         try {
             RedisClientAddr addr = new RedisClientAddr(host, port, userName, password);
             EventLoop eventLoop = eventLoopThreadLocal.get();
@@ -94,7 +154,7 @@ public class RedisClientHub {
         }
     }
 
-    public static CompletableFuture<RedisClient> newAsync(String host, int port, String userName, String password) {
+    public CompletableFuture<RedisClient> newAsync(String host, int port, String userName, String password) {
         CompletableFuture<RedisClient> future = new CompletableFuture<>();
         try {
             redisClientAsyncInitExec.submit(() -> {
@@ -116,7 +176,7 @@ public class RedisClientHub {
         }
     }
 
-    public static CompletableFuture<RedisClient> getAsync(String host, int port, String userName, String password) {
+    public CompletableFuture<RedisClient> getAsync(String host, int port, String userName, String password) {
         CompletableFuture<RedisClient> future = new CompletableFuture<>();
         try {
             redisClientAsyncInitExec.submit(() -> {
@@ -138,7 +198,7 @@ public class RedisClientHub {
         }
     }
 
-    public static RedisClient get(String host, int port, String userName, String password) {
+    public RedisClient get(String host, int port, String userName, String password) {
         try {
             RedisClientAddr addr = new RedisClientAddr(host, port, userName, password);
             return get(addr);
@@ -149,7 +209,7 @@ public class RedisClientHub {
         }
     }
 
-    public static RedisClient newClient(String host, int port, String userName, String password) {
+    public RedisClient newClient(String host, int port, String userName, String password) {
         try {
             return newClient(new RedisClientAddr(host, port, userName, password));
         } catch (Exception e) {
@@ -159,7 +219,7 @@ public class RedisClientHub {
         }
     }
 
-    public static RedisClient newClient(RedisClientAddr addr) {
+    public RedisClient newClient(RedisClientAddr addr) {
         try {
             String url = addr.getUrl();
             if (fastFail(url)) {
@@ -184,6 +244,13 @@ public class RedisClientHub {
             config.setCloseIdleConnectionDelaySeconds(closeIdleConnectionDelaySeconds);
             config.setCheckIdleConnectionThresholdSeconds(checkIdleConnectionThresholdSeconds);
             config.setSkipCommandSpendTimeMonitor(true);
+            config.setTcpNoDelay(tcpNoDelay);
+            config.setTcpQuickAck(tcpQuickAck);
+            config.setSoKeepalive(soKeepalive);
+            config.setSoRcvbuf(soRcvbuf);
+            config.setSoSndbuf(soSndbuf);
+            config.setWriteBufferWaterMarkLow(writeBufferWaterMarkLow);
+            config.setWriteBufferWaterMarkHigh(writeBufferWaterMarkHigh);
             RedisClient client = new RedisClient(config);
             client.start();
             if (client.isValid()) {
@@ -200,11 +267,11 @@ public class RedisClientHub {
         }
     }
 
-    public static boolean preheat(String host, int port, String userName, String password) {
+    public boolean preheat(String host, int port, String userName, String password) {
         return preheat(host, port, userName, password, 0);
     }
 
-    public static boolean preheat(String host, int port, String userName, String password, int db) {
+    public boolean preheat(String host, int port, String userName, String password, int db) {
         EventLoopGroup workGroup = GlobalRedisProxyEnv.getWorkGroup();
         int workThread = GlobalRedisProxyEnv.getWorkThread();
         RedisClientAddr addr = new RedisClientAddr(host, port, userName, password, db);
@@ -225,7 +292,7 @@ public class RedisClientHub {
         return false;
     }
 
-    public static RedisClient get(RedisClientAddr addr) {
+    public RedisClient get(RedisClientAddr addr) {
         try {
             RedisClient cache = addr.getCache();
             if (cache != null && cache.isValid()) {
@@ -249,7 +316,7 @@ public class RedisClientHub {
                 if (eventLoop.inEventLoop()) {
                     eventLoop = eventLoopGroupBackup.next();
                 }
-                LockMap lockMap = CamelliaMapUtils.computeIfAbsent(RedisClientHub.lockMapMap, addr.getUrl(), k -> new LockMap());
+                LockMap lockMap = CamelliaMapUtils.computeIfAbsent(this.lockMapMap, addr.getUrl(), k -> new LockMap());
                 client = tryInitRedisClient(map, lockMap, eventLoop, addr);
             }
             if (client != null && client.isValid()) {
@@ -265,7 +332,7 @@ public class RedisClientHub {
         }
     }
 
-    private static RedisClient tryGetRedisClient(EventLoop eventLoop, RedisClientAddr addr) {
+    private RedisClient tryGetRedisClient(EventLoop eventLoop, RedisClientAddr addr) {
         ConcurrentHashMap<String, RedisClient> map = CamelliaMapUtils.computeIfAbsent(eventLoopMap, eventLoop, k -> new ConcurrentHashMap<>());
         String url = addr.getUrl();
         RedisClient client = map.get(url);
@@ -279,7 +346,7 @@ public class RedisClientHub {
                 try {
                     redisClientAsyncInitExec.submit(() -> {
                         try {
-                            LockMap lockMap = CamelliaMapUtils.computeIfAbsent(RedisClientHub.lockMapMap, eventLoop, k -> new LockMap());
+                            LockMap lockMap = CamelliaMapUtils.computeIfAbsent(this.lockMapMap, eventLoop, k -> new LockMap());
                             tryInitRedisClient(map, lockMap, eventLoop, addr);
                         } catch (Exception e) {
                             ErrorLogCollector.collect(RedisClientHub.class, "tryInitRedisClient error", e);
@@ -294,12 +361,12 @@ public class RedisClientHub {
             }
             return null;
         } else {
-            LockMap lockMap = CamelliaMapUtils.computeIfAbsent(RedisClientHub.lockMapMap, eventLoop, k -> new LockMap());
+            LockMap lockMap = CamelliaMapUtils.computeIfAbsent(this.lockMapMap, eventLoop, k -> new LockMap());
             return tryInitRedisClient(map, lockMap, eventLoop, addr);
         }
     }
 
-    private static RedisClient tryInitRedisClient(ConcurrentHashMap<String, RedisClient> map, LockMap lockMap, EventLoop eventLoop, RedisClientAddr addr) {
+    private RedisClient tryInitRedisClient(ConcurrentHashMap<String, RedisClient> map, LockMap lockMap, EventLoop eventLoop, RedisClientAddr addr) {
         String url = addr.getUrl();
         RedisClient client = map.get(url);
         if (client == null || !client.isValid()) {
@@ -323,6 +390,13 @@ public class RedisClientHub {
                     config.setCloseIdleConnection(closeIdleConnection);
                     config.setCheckIdleConnectionThresholdSeconds(checkIdleConnectionThresholdSeconds);
                     config.setCloseIdleConnectionDelaySeconds(closeIdleConnectionDelaySeconds);
+                    config.setTcpNoDelay(tcpNoDelay);
+                    config.setTcpQuickAck(tcpQuickAck);
+                    config.setSoKeepalive(soKeepalive);
+                    config.setSoRcvbuf(soRcvbuf);
+                    config.setSoSndbuf(soSndbuf);
+                    config.setWriteBufferWaterMarkLow(writeBufferWaterMarkLow);
+                    config.setWriteBufferWaterMarkHigh(writeBufferWaterMarkHigh);
                     client = new RedisClient(config);
                     client.start();
                     if (client.isValid()) {
@@ -344,25 +418,20 @@ public class RedisClientHub {
         return null;
     }
 
-    public static void initDynamicConf() {
-        ProxyDynamicConf.registerCallback(RedisClientHub::reloadConf);
-        reloadConf();
-    }
-
-    private static void reloadConf() {
-        long failBanMillis = ProxyDynamicConf.getLong("redis.client.fail.ban.millis", RedisClientHub.failBanMillis);
-        if (failBanMillis != RedisClientHub.failBanMillis) {
-            logger.info("RedisClientHub failBanMillis, {} -> {}", RedisClientHub.failBanMillis, failBanMillis);
-            RedisClientHub.failBanMillis = failBanMillis;
+    private void reloadConf() {
+        long failBanMillis = ProxyDynamicConf.getLong("redis.client.fail.ban.millis", this.failBanMillis);
+        if (failBanMillis != this.failBanMillis) {
+            logger.info("RedisClientHub failBanMillis, {} -> {}", this.failBanMillis, failBanMillis);
+            this.failBanMillis = failBanMillis;
         }
-        int failCountThreshold = ProxyDynamicConf.getInt("redis.client.fail.count.threshold", RedisClientHub.failCountThreshold);
-        if (failCountThreshold != RedisClientHub.failCountThreshold) {
-            logger.info("RedisClientHub failCountThreshold, {} -> {}", RedisClientHub.failCountThreshold, failCountThreshold);
-            RedisClientHub.failCountThreshold = failCountThreshold;
+        int failCountThreshold = ProxyDynamicConf.getInt("redis.client.fail.count.threshold", this.failCountThreshold);
+        if (failCountThreshold != this.failCountThreshold) {
+            logger.info("RedisClientHub failCountThreshold, {} -> {}", this.failCountThreshold, failCountThreshold);
+            this.failCountThreshold = failCountThreshold;
         }
     }
 
-    private static boolean fastFail(String url) {
+    private boolean fastFail(String url) {
         //如果client处于不可用状态，检查不可用时长
         long failTimestamp = getFailTimestamp(url);
         if (TimeCache.currentMillis - failTimestamp < failBanMillis) {
@@ -386,37 +455,37 @@ public class RedisClientHub {
         return false;
     }
 
-    private static long getFailTimestamp(String key) {
+    private long getFailTimestamp(String key) {
         AtomicLong failTimestamp = CamelliaMapUtils.computeIfAbsent(failTimestampMap, key, k -> new AtomicLong(0L));
         return failTimestamp.get();
     }
 
-    private static void setFailTimestamp(String key) {
+    private void setFailTimestamp(String key) {
         AtomicLong failTimestamp = CamelliaMapUtils.computeIfAbsent(failTimestampMap, key, k -> new AtomicLong(0L));
         failTimestamp.set(TimeCache.currentMillis);
     }
 
-    private static void resetFailTimestamp(String key) {
+    private void resetFailTimestamp(String key) {
         AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failTimestampMap, key, k -> new AtomicLong(0L));
         failCount.set(0L);
     }
 
-    private static void resetFailCount(String key) {
+    private void resetFailCount(String key) {
         AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, key, k -> new AtomicLong());
         failCount.set(0L);
     }
 
-    private static long getFailCount(String key) {
+    private long getFailCount(String key) {
         AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, key, k -> new AtomicLong());
         return failCount.get();
     }
 
-    private static void incrFail(String key) {
+    private void incrFail(String key) {
         AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, key, k -> new AtomicLong());
         failCount.incrementAndGet();
     }
 
-    private static void resetFail(String key) {
+    private void resetFail(String key) {
         resetFailTimestamp(key);
         resetFailCount(key);
     }

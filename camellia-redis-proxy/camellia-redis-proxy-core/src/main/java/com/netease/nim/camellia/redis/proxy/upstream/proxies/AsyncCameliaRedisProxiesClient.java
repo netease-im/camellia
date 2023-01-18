@@ -45,7 +45,7 @@ public class AsyncCameliaRedisProxiesClient extends AsyncCamelliaSimpleClient {
         logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
         for (RedisClientAddr addr : list) {
             logger.info("try preheat, url = {}, proxy = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(addr));
-            boolean result = RedisClientHub.preheat(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
+            boolean result = RedisClientHub.getInstance().preheat(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
             logger.info("preheat result = {}, url = {}, proxy = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(addr));
         }
         logger.info("preheat success, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
@@ -55,7 +55,7 @@ public class AsyncCameliaRedisProxiesClient extends AsyncCamelliaSimpleClient {
         try {
             List<RedisClientAddr> dynamicList = new ArrayList<>();
             for (RedisClientAddr addr : list) {
-                RedisClient redisClient = RedisClientHub.get(addr);
+                RedisClient redisClient = RedisClientHub.getInstance().get(addr);
                 if (redisClient != null && redisClient.isValid()) {
                     dynamicList.add(addr);
                 }
@@ -114,7 +114,7 @@ public class AsyncCameliaRedisProxiesClient extends AsyncCamelliaSimpleClient {
 
 
     private boolean check(RedisClientAddr addr) {
-        RedisClient redisClient = RedisClientHub.get(addr);
+        RedisClient redisClient = RedisClientHub.getInstance().get(addr);
         return redisClient != null && redisClient.isValid();
     }
 }

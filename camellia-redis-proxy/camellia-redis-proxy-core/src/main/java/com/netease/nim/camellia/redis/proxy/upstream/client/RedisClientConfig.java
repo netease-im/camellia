@@ -24,6 +24,14 @@ public class RedisClientConfig {
 
     private boolean skipCommandSpendTimeMonitor;//是否跳过统计后端redis响应时间
 
+    private boolean soKeepalive;
+    private int soSndbuf;
+    private int soRcvbuf;
+    private boolean tcpNoDelay;
+    private boolean tcpQuickAck;
+    private int writeBufferWaterMarkLow;
+    private int writeBufferWaterMarkHigh;
+
     public String getHost() {
         return host;
     }
@@ -134,5 +142,61 @@ public class RedisClientConfig {
 
     public void setSkipCommandSpendTimeMonitor(boolean skipCommandSpendTimeMonitor) {
         this.skipCommandSpendTimeMonitor = skipCommandSpendTimeMonitor;
+    }
+
+    public boolean isSoKeepalive() {
+        return soKeepalive;
+    }
+
+    public void setSoKeepalive(boolean soKeepalive) {
+        this.soKeepalive = soKeepalive;
+    }
+
+    public int getSoSndbuf() {
+        return soSndbuf;
+    }
+
+    public void setSoSndbuf(int soSndbuf) {
+        this.soSndbuf = soSndbuf;
+    }
+
+    public int getSoRcvbuf() {
+        return soRcvbuf;
+    }
+
+    public void setSoRcvbuf(int soRcvbuf) {
+        this.soRcvbuf = soRcvbuf;
+    }
+
+    public boolean isTcpNoDelay() {
+        return tcpNoDelay;
+    }
+
+    public void setTcpNoDelay(boolean tcpNoDelay) {
+        this.tcpNoDelay = tcpNoDelay;
+    }
+
+    public boolean isTcpQuickAck() {
+        return tcpQuickAck;
+    }
+
+    public void setTcpQuickAck(boolean tcpQuickAck) {
+        this.tcpQuickAck = tcpQuickAck;
+    }
+
+    public int getWriteBufferWaterMarkLow() {
+        return writeBufferWaterMarkLow;
+    }
+
+    public void setWriteBufferWaterMarkLow(int writeBufferWaterMarkLow) {
+        this.writeBufferWaterMarkLow = writeBufferWaterMarkLow;
+    }
+
+    public int getWriteBufferWaterMarkHigh() {
+        return writeBufferWaterMarkHigh;
+    }
+
+    public void setWriteBufferWaterMarkHigh(int writeBufferWaterMarkHigh) {
+        this.writeBufferWaterMarkHigh = writeBufferWaterMarkHigh;
     }
 }

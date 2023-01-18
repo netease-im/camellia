@@ -56,7 +56,7 @@ public class CommandsTransponder {
 
     public void transpond(ChannelInfo channelInfo, List<Command> commands) {
         if (!eventLoopSetSuccess) {
-            RedisClientHub.updateEventLoop(channelInfo.getCtx().channel().eventLoop());
+            RedisClientHub.getInstance().updateEventLoop(channelInfo.getCtx().channel().eventLoop());
             eventLoopSetSuccess = true;
         }
         try {

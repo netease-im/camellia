@@ -1,6 +1,6 @@
 
 server:
-  port: 26380
+  port: 6380
 spring:
   application:
     name: camellia-redis-proxy-server
@@ -12,20 +12,20 @@ camellia-redis-proxy:
   password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
   monitor-enable: false  #monitor enable/disable configure
   monitor-interval-seconds: 60 #monitor data refresh interval seconds
-#  cluster-mode-enable: true #cluster-mode, if setting true, proxy-cluster disguised as a redis-cluster, should configure proxy.cluster.mode.nodes=xx in camellia-redis-proxy.properties
-#  netty-transport-mode: epoll
+  #  cluster-mode-enable: true #cluster-mode, if setting true, proxy-cluster disguised as a redis-cluster, should configure proxy.cluster.mode.nodes=xx in camellia-redis-proxy.properties
+  #  netty-transport-mode: epoll
   plugins: #plugin list
     - monitorPlugin
     - bigKeyPlugin
     - hotKeyPlugin
-#  config: #you can get this config from ProxyDynamicConf.java, priority less than camellia-redis-proxy.properties
-#    "k": v
+  #  config: #you can get this config from ProxyDynamicConf.java, priority less than camellia-redis-proxy.properties
+  #    "k": v
   transpond:
     type: local #local、remote、custom
     local:
       type: simple #simple、complex
-#      resource: redis://@127.0.0.1:6379 #target transpond redis address
-      resource: redis-cluster://@127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382,127.0.0.1:6383,127.0.0.1:6384
+      resource: redis://@127.0.0.1:6379 #target transpond redis address
+#      resource: redis-cluster://@127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382,127.0.0.1:6383,127.0.0.1:6384
 #      resource: redis-sentinel://@127.0.0.1:26379/master1
 #      resource: redis-sentinel-slaves://@127.0.0.1:26379/master1
 #      type: complex

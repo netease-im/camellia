@@ -531,7 +531,7 @@ public class UpstreamInfoUtils {
     private static Map<String, String> getInfoMap(String host, int port, String userName, String password, byte[][] command) {
         RedisClient redisClient = null;
         try {
-            redisClient = RedisClientHub.newClient(host, port, userName, password);
+            redisClient = RedisClientHub.getInstance().newClient(host, port, userName, password);
             if (redisClient != null) {
                 Map<String, String> map = new HashMap<>();
                 CompletableFuture<Reply> future = redisClient.sendCommand(command);
@@ -584,7 +584,7 @@ public class UpstreamInfoUtils {
     private static HostAndPort getRedisSentinelMaster(String host, int port, String masterName) {
         RedisClient redisClient = null;
         try {
-            redisClient = RedisClientHub.newClient(host, port, null, null);
+            redisClient = RedisClientHub.getInstance().newClient(host, port, null, null);
             if (redisClient != null) {
                 CompletableFuture<Reply> future1 = redisClient.sendCommand(RedisCommand.SENTINEL.raw(),
                         RedisSentinelUtils.SENTINEL_GET_MASTER_ADDR_BY_NAME, Utils.stringToBytes(masterName));
@@ -660,7 +660,7 @@ public class UpstreamInfoUtils {
     private static List<ClusterNodeInfo> clusterNodes(String host, int port, String userName, String password) {
         RedisClient redisClient = null;
         try {
-            redisClient = RedisClientHub.newClient(host, port, userName, password);
+            redisClient = RedisClientHub.getInstance().newClient(host, port, userName, password);
             if (redisClient != null) {
                 CompletableFuture<Reply> future = redisClient.sendCommand(Utils.stringToBytes("cluster"), Utils.stringToBytes("nodes"));
                 Reply reply = future.get(10, TimeUnit.SECONDS);

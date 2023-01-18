@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.command.AsyncTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
@@ -128,7 +127,7 @@ public class ChannelInfo {
                 return client;
             }
         }
-        RedisClient client = RedisClientHub.newClient(addr);
+        RedisClient client = RedisClientHub.getInstance().newClient(addr);
         if (client == null) return null;
         if (bindRedisClientCache == null) {
             synchronized (this) {
