@@ -20,6 +20,5 @@
         <module>camellia-redis-proxy-discovery-jedis2</module>
         <module>camellia-redis-proxy-discovery-jedis3</module>
         <module>camellia-redis-proxy-discovery-zk</module>
-        <module>camellia-redis-proxy-discovery-jedis-affinity</module>
     </modules>
 </project>

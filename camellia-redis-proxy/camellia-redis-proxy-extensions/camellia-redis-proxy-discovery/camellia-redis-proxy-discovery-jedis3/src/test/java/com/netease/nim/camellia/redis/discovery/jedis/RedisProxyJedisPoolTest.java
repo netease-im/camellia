@@ -1,14 +1,14 @@
-package com.neteasy.nim.camellia.redis.discovery.jedis.affinity;
+package com.netease.nim.camellia.redis.discovery.jedis;
 
+import com.netease.nim.camellia.redis.proxy.discovery.common.AffinityProxySelector;
 import com.netease.nim.camellia.redis.proxy.discovery.common.LocalConfProxyDiscovery;
 import com.netease.nim.camellia.redis.proxy.discovery.common.RandomProxySelector;
+import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -16,15 +16,41 @@ import redis.clients.jedis.JedisPoolConfig;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class RedisProxyAffinityJedisPoolTest {
-    private static final Logger logger = LoggerFactory.getLogger(RedisProxyAffinityJedisPoolTest.class);
+
+public class RedisProxyJedisPoolTest {
+
+    private static final RedisProxyJedisPool.JedisPoolInitializer mockInitializer = (proxy, poolConfig, bid, bgroup, timeout, password) -> new MockJedisPool();
+
+    private static class MockJedisPool extends JedisPool {
+
+        private final MockJedis jedis = new MockJedis();
+
+        @Override
+        public Jedis getResource() {
+            return jedis;
+        }
+
+        @Override
+        public void returnResource(Jedis resource) {
+
+        }
+    }
+
+    private static class MockJedis extends Jedis {
+        @Override
+        public void close() {
+        }
+    }
+
     AffinityProxySelector selector = new AffinityProxySelector();
-    RedisProxyAffinityJedisPool jedisPool = new RedisProxyAffinityJedisPool.Builder()
+    RedisProxyJedisPool jedisPool = new RedisProxyJedisPool.Builder()
             .jedisPoolInitialSize(3).jedisPoolLazyInit(true).poolConfig(new JedisPoolConfig())
             .proxyDiscovery(new LocalConfProxyDiscovery("127.0.0.1:26379,127.0.0.1:26380,127.0.0.1:26381"))
             .password("pass123")
-            .proxySelector(selector).testOnBorrow(true).timeout(2000).build();
+            .jedisPoolInitializer(mockInitializer)
+            .proxySelector(selector).timeout(2000).build();
     @Before
     public void setUp() throws Exception {
         
@@ -73,7 +99,7 @@ public class RedisProxyAffinityJedisPoolTest {
     @Test
     public void getResourceMultiTiems(){
         boolean isEqual = getResourceMultiTiems(jedisPool);
-        Assert.assertEquals(isEqual,true);
+        Assert.assertTrue(isEqual);
     }
 
 
@@ -84,34 +110,30 @@ public class RedisProxyAffinityJedisPoolTest {
 
         clientID = client.toString();
         pool.returnResource(client);
-        List<Callable<Boolean>> future = new ArrayList<>();
-        List<Future<Boolean>> result = new ArrayList<>();
-        List<Boolean> booleanRet = new ArrayList<>();
+        List<Runnable> future = new ArrayList<>();
+        AtomicInteger c = new AtomicInteger();
         CountDownLatch countDownLatch = new CountDownLatch(1000);
         for(int i=0 ; i < 1000; i++){
             String finalClientID = clientID;
-            future.add(new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-                    Jedis affinityClient = pool.getResource();
-                    //由于这个pool封装的比较死，无法获知选择的是哪个proxy，只能通过toString的方式获取。
-                    //如果toString一样，说明选择了同一个client
-                    String selectClient = affinityClient.toString();
-                    pool.returnResource(affinityClient);
-                    boolean isEqual = finalClientID.equals(selectClient);
-                    booleanRet.add(isEqual);
-                    countDownLatch.countDown();
-                    return isEqual;
+            future.add(() -> {
+                Jedis affinityClient = pool.getResource();
+                //由于这个pool封装的比较死，无法获知选择的是哪个proxy，只能通过toString的方式获取。
+                //如果toString一样，说明选择了同一个client
+                String selectClient = affinityClient.toString();
+                affinityClient.close();
+                boolean isEqual = finalClientID.equals(selectClient);
+                if (isEqual) {
+                    c.incrementAndGet();
                 }
+                countDownLatch.countDown();
             });
         }
-        future.forEach(f->{
-            result.add(Executors.newCachedThreadPool().submit(f));
-        });
-        countDownLatch.await(10,TimeUnit.SECONDS);
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        future.forEach(executorService::submit);
+        countDownLatch.await();
         boolean isAllSuccess = true;
-        if(isAffinity){
-            isAllSuccess = booleanRet.stream().allMatch(item->item.equals(true));
+        if (isAffinity) {
+            isAllSuccess = c.get() == 1000;
         }
         return isAllSuccess;
     }
@@ -120,11 +142,10 @@ public class RedisProxyAffinityJedisPoolTest {
      */
     @Test
     public void getResourceMultiThread() throws InterruptedException {
-        
         long start = System.currentTimeMillis();
         boolean isAllSuccess =  getResourceMultiThread(jedisPool,true);
-        logger.info("affinity selector spend {} ms",(System.currentTimeMillis()-start));
-        Assert.assertEquals(isAllSuccess,true);
+        System.out.println("affinity selector spend " + (System.currentTimeMillis()-start) + "ms");
+        Assert.assertTrue(isAllSuccess);
     }
     /**
      * 对比多线程性能测试
@@ -133,21 +154,22 @@ public class RedisProxyAffinityJedisPoolTest {
     @Test
     public void compareEfficiencyMultiThreadRandomSelector() throws InterruptedException {
         RandomProxySelector randomSelector = new RandomProxySelector();
-        RedisProxyAffinityJedisPool radomRedisPool = new RedisProxyAffinityJedisPool.Builder()
+        RedisProxyJedisPool radomRedisPool = new RedisProxyJedisPool.Builder()
                 .jedisPoolInitialSize(3).jedisPoolLazyInit(true).poolConfig(new JedisPoolConfig())
                 .proxyDiscovery(new LocalConfProxyDiscovery("127.0.0.1:26379,127.0.0.1:26380,127.0.0.1:26381"))
                 .password("pass123")
-                .proxySelector(randomSelector).testOnBorrow(true).timeout(2000).build();
+                .jedisPoolInitializer(mockInitializer)
+                .proxySelector(randomSelector)
+                .timeout(2000)
+                .build();
         long start = System.currentTimeMillis();
         getResourceMultiThread(radomRedisPool,false);
-        logger.info("random selector multi thread spend {} ms",(System.currentTimeMillis()-start));
-
-
+        System.out.println("random selector multi thread spend " + (System.currentTimeMillis()-start) + "ms");
 
         start = System.currentTimeMillis();
-        boolean isAllSuccess =  getResourceMultiThread(jedisPool,false);
-        logger.info("affinity selector multi thread spend {} ms",(System.currentTimeMillis()-start));
-        Assert.assertEquals(isAllSuccess,true);
+        boolean isAllSuccess =  getResourceMultiThread(jedisPool,true);
+        System.out.println("affinity selector multi thread spend " + (System.currentTimeMillis()-start) + "ms");
+        Assert.assertTrue(isAllSuccess);
     }
 
     /**
@@ -155,20 +177,19 @@ public class RedisProxyAffinityJedisPoolTest {
      */
     @Test
     public void getResourceMultiThreadFail(){
-
-        
         AffinityProxySelector innerTestselector = Mockito.spy(new AffinityProxySelector());
-        RedisProxyAffinityJedisPool innerJedisPoll = new RedisProxyAffinityJedisPool.Builder()
+        RedisProxyJedisPool innerJedisPoll = new RedisProxyJedisPool.Builder()
                 .jedisPoolInitialSize(3).jedisPoolLazyInit(true).poolConfig(new JedisPoolConfig())
                 .proxyDiscovery(new LocalConfProxyDiscovery("127.0.0.1:26379,127.0.0.1:26380,127.0.0.1:26381"))
                 .password("pass123")
-                .proxySelector(innerTestselector).testOnBorrow(true).timeout(2000).build();
-        
-        
-        long poolID = innerJedisPoll.getId();
+                .proxySelector(innerTestselector)
+                .jedisPoolInitializer(mockInitializer)
+                .timeout(2000).build();
+
+
         Jedis client = innerJedisPoll.getResource();
 
-        String clientID = "";
+        String clientID;
 
         clientID = client.toString();
         innerJedisPoll.returnResource(client);
@@ -192,13 +213,10 @@ public class RedisProxyAffinityJedisPoolTest {
             innerJedisPoll.returnResource(affinityClient);
             if(!clientID.equals(selectClient)){
                 isEqual=false;
-//                logger.info("发生了re select");
-            }else{
-//                System.out.println("又回到了正常");
+                System.out.println("发生了re select");
             }
-
         }
-        Assert.assertEquals(isEqual,false);
+        Assert.assertTrue(isEqual);
     }
 
     /**
@@ -208,25 +226,25 @@ public class RedisProxyAffinityJedisPoolTest {
     public void compareEfficiency(){
         //预热
         getResourceMultiTiems();
-        
-        
 
-        long start = System.currentTimeMillis();
-        
         RandomProxySelector randomSelector = new RandomProxySelector();
-        RedisProxyAffinityJedisPool radomRedisPool = new RedisProxyAffinityJedisPool.Builder()
+        RedisProxyJedisPool radomRedisPool = new RedisProxyJedisPool.Builder()
                 .jedisPoolInitialSize(3).jedisPoolLazyInit(true).poolConfig(new JedisPoolConfig())
                 .proxyDiscovery(new LocalConfProxyDiscovery("127.0.0.1:26379,127.0.0.1:26380,127.0.0.1:26381"))
                 .password("pass123")
-                .proxySelector(randomSelector).testOnBorrow(true).timeout(2000).build();
+                .proxySelector(randomSelector)
+                .jedisPoolInitializer(mockInitializer)
+                .timeout(2000)
+                .build();
+        long start = System.currentTimeMillis();
         getResourceMultiTiems(radomRedisPool);
-        logger.info("random selector spend {} ms",(System.currentTimeMillis()-start));
+        System.out.println("random selector spend " + (System.currentTimeMillis()-start) + "ms");
 
 
         start = System.currentTimeMillis();
         boolean isEqual = getResourceMultiTiems(jedisPool);
-        logger.info("affinity selector spend {} ms",(System.currentTimeMillis()-start));
-        Assert.assertEquals(isEqual,true);
+        System.out.println("affinity selector spend " + (System.currentTimeMillis()-start) + "ms");
+        Assert.assertTrue(isEqual);
     }
     
 }
