@@ -4,6 +4,7 @@
 ### add
 * camellia-redis-proxy support use transport_native_epoll、transport_native_kqueue、transport_native_io_uring, default use jdk_nio
 * camellia-redis-proxy support configure TCP_QUICKACK option, only support in transport_native_epoll mode, thanks [@tain198127](https://github.com/tain198127) , related issue: [issue-87](https://github.com/netease-im/camellia/issues/87)
+* RedisProxyJedisPool provide AffinityProxySelector, support configure affinity of proxy, thanks [@tain198127](https://github.com/tain198127) provide this feature
 
 ### update
 * id-gen-sdk use shared schedule thread pool default, decrease the thread num when init multi sdk instance

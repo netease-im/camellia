@@ -442,8 +442,8 @@ public class RedisProxyJedisPool extends JedisPool {
         if (list == null || list.isEmpty()) {
             throw new IllegalArgumentException("proxy list is empty");
         }
+        List<Proxy> sortedList = proxySelector.sort(list);
         if (jedisPoolLazyInit && list.size() > jedisPoolInitialSize) {
-            List<Proxy> sortedList = proxySelector.sort(list);
             int i = 0;
             for (Proxy proxy : sortedList) {
                 add(proxy);
@@ -453,7 +453,7 @@ public class RedisProxyJedisPool extends JedisPool {
                 }
             }
         } else {
-            for (Proxy proxy : list) {
+            for (Proxy proxy : sortedList) {
                 add(proxy);
             }
         }

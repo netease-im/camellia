@@ -4,6 +4,7 @@
 ### 新增
 * camellia-redis-proxy支持使用transport_native_epoll、transport_native_kqueue、transport_native_io_uring，默认使用jdk_nio，具体见：[netty-conf](/docs/redis-proxy/other/netty-conf.md)
 * camellia-redis-proxy支持配置TCP_QUICKACK参数，当前仅当使用transport_native_epoll时支持，感谢[@tain198127](https://github.com/tain198127) ，具体见：[netty-conf](/docs/redis-proxy/other/netty-conf.md) ，关联issue: [issue-87](https://github.com/netease-im/camellia/issues/87)
+* RedisProxyJedisPool新增AffinityProxySelector，支持亲和性配置，感谢[@tain198127](https://github.com/tain198127) 提供该功能
 
 ### 更新
 * id-gen-sdk底层线程池默认使用共享模式，减少初始化多个sdk实例时的线程数量占用
