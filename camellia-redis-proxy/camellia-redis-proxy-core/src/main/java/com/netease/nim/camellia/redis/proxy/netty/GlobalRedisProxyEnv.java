@@ -37,6 +37,9 @@ public class GlobalRedisProxyEnv {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalRedisProxyEnv.class);
 
+    private static final String BOSS_GROUP_NAME = "camellia-boss-group";
+    private static final String WORK_GROUP_NAME = "camellia-work-group";
+
     private static final AtomicBoolean initOk = new AtomicBoolean(false);
 
     private static NettyTransportMode nettyTransportMode = NettyTransportMode.nio;
@@ -66,34 +69,34 @@ public class GlobalRedisProxyEnv {
             GlobalRedisProxyEnv.nettyTransportMode = serverProperties.getNettyTransportMode();
             if (nettyTransportMode == NettyTransportMode.epoll && isEpollAvailable()) {
                 bossThread = serverProperties.getBossThread();
-                bossGroup = new EpollEventLoopGroup(bossThread, new DefaultThreadFactory("camellia-boss-group"));
+                bossGroup = new EpollEventLoopGroup(bossThread, new DefaultThreadFactory(BOSS_GROUP_NAME));
                 workThread = serverProperties.getWorkThread();
-                workGroup = new EpollEventLoopGroup(workThread, new DefaultThreadFactory("camellia-work-group"));
+                workGroup = new EpollEventLoopGroup(workThread, new DefaultThreadFactory(WORK_GROUP_NAME));
                 serverChannelClass = EpollServerSocketChannel.class;
                 socketChannelClass = EpollSocketChannel.class;
                 serverTcpQuickAck = serverProperties.isTcpQuickAck();
                 nettyTransportMode = NettyTransportMode.epoll;
             } else if (nettyTransportMode == NettyTransportMode.kqueue && isKQueueAvailable()) {
                 bossThread = serverProperties.getBossThread();
-                bossGroup = new KQueueEventLoopGroup(bossThread, new DefaultThreadFactory("camellia-boss-group"));
+                bossGroup = new KQueueEventLoopGroup(bossThread, new DefaultThreadFactory(BOSS_GROUP_NAME));
                 workThread = serverProperties.getWorkThread();
-                workGroup = new KQueueEventLoopGroup(workThread, new DefaultThreadFactory("camellia-work-group"));
+                workGroup = new KQueueEventLoopGroup(workThread, new DefaultThreadFactory(WORK_GROUP_NAME));
                 serverChannelClass = KQueueServerSocketChannel.class;
                 socketChannelClass = KQueueSocketChannel.class;
                 nettyTransportMode = NettyTransportMode.kqueue;
             } else if (nettyTransportMode == NettyTransportMode.io_uring && isIOUringAvailable()) {
                 bossThread = serverProperties.getBossThread();
-                bossGroup = new IOUringEventLoopGroup(bossThread, new DefaultThreadFactory("camellia-boss-group"));
+                bossGroup = new IOUringEventLoopGroup(bossThread, new DefaultThreadFactory(BOSS_GROUP_NAME));
                 workThread = serverProperties.getWorkThread();
-                workGroup = new IOUringEventLoopGroup(workThread, new DefaultThreadFactory("camellia-work-group"));
+                workGroup = new IOUringEventLoopGroup(workThread, new DefaultThreadFactory(WORK_GROUP_NAME));
                 serverChannelClass = IOUringServerSocketChannel.class;
                 socketChannelClass = IOUringSocketChannel.class;
                 nettyTransportMode = NettyTransportMode.io_uring;
             } else {
                 bossThread = serverProperties.getBossThread();
-                bossGroup = new NioEventLoopGroup(bossThread, new DefaultThreadFactory("camellia-boss-group"));
+                bossGroup = new NioEventLoopGroup(bossThread, new DefaultThreadFactory(BOSS_GROUP_NAME));
                 workThread = serverProperties.getWorkThread();
-                workGroup = new NioEventLoopGroup(workThread, new DefaultThreadFactory("camellia-work-group"));
+                workGroup = new NioEventLoopGroup(workThread, new DefaultThreadFactory(WORK_GROUP_NAME));
                 serverChannelClass = NioServerSocketChannel.class;
                 socketChannelClass = NioSocketChannel.class;
                 nettyTransportMode = NettyTransportMode.nio;
