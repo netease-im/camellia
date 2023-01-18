@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class RedisProxyJedisPoolTest {
 
-    private static final RedisProxyJedisPool.JedisPoolInitializer mockInitializer = (proxy, poolConfig, bid, bgroup, timeout, password) -> new MockJedisPool();
+    private static final RedisProxyJedisPool.JedisPoolInitializer mockInitializer = (context) -> new MockJedisPool();
 
     private static class MockJedisPool extends JedisPool {
 

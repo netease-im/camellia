@@ -467,7 +467,7 @@ public class RedisProxyJedisPool extends JedisPool {
                 proxySelector.add(proxy);
                 JedisPool jedisPool = jedisPoolMap.get(proxy);
                 if (jedisPool == null) {
-                    jedisPool = jedisPoolInitializer.initJedisPool(proxy, poolConfig, bid, bgroup, timeout, password);
+                    jedisPool = jedisPoolInitializer.initJedisPool(new JedisPoolInitialContext(proxy, poolConfig, bid, bgroup, timeout, password));
                     jedisPoolMap.put(proxy, jedisPool);
                 }
             } catch (Exception e) {
@@ -476,18 +476,62 @@ public class RedisProxyJedisPool extends JedisPool {
         }
     }
 
+    public static class JedisPoolInitialContext {
+        private final Proxy proxy;
+        private final GenericObjectPoolConfig poolConfig;
+        private final Long bid;
+        private final String bgroup;
+        private final int timeout;
+        private final String password;
+
+        public JedisPoolInitialContext(Proxy proxy, GenericObjectPoolConfig poolConfig, Long bid, String bgroup, int timeout, String password) {
+            this.proxy = proxy;
+            this.poolConfig = poolConfig;
+            this.bid = bid;
+            this.bgroup = bgroup;
+            this.timeout = timeout;
+            this.password = password;
+        }
+
+        public Proxy getProxy() {
+            return proxy;
+        }
+
+        public GenericObjectPoolConfig getPoolConfig() {
+            return poolConfig;
+        }
+
+        public Long getBid() {
+            return bid;
+        }
+
+        public String getBgroup() {
+            return bgroup;
+        }
+
+        public int getTimeout() {
+            return timeout;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+    }
+
     public static interface JedisPoolInitializer {
-        JedisPool initJedisPool(Proxy proxy, GenericObjectPoolConfig poolConfig, Long bid, String bgroup, int timeout, String password);
+
+        JedisPool initJedisPool(JedisPoolInitialContext context);
 
         public static class Default implements JedisPoolInitializer {
 
             @Override
-            public JedisPool initJedisPool(Proxy proxy, GenericObjectPoolConfig poolConfig, Long bid, String bgroup, int timeout, String password) {
+            public JedisPool initJedisPool(JedisPoolInitialContext context) {
                 String clientName = null;
-                if (bid > 0 && bgroup != null) {
-                    clientName = ProxyUtil.buildClientName(bid, bgroup);
+                if (context.getBid() > 0 && context.getBgroup() != null) {
+                    clientName = ProxyUtil.buildClientName(context.getBid(), context.getBgroup());
                 }
-                return new JedisPool(poolConfig, proxy.getHost(), proxy.getPort(), timeout, password, 0, clientName);
+                return new JedisPool(context.poolConfig, context.getProxy().getHost(),
+                        context.getProxy().getPort(), context.getTimeout(), context.getPassword(), 0, clientName);
             }
         }
     }
