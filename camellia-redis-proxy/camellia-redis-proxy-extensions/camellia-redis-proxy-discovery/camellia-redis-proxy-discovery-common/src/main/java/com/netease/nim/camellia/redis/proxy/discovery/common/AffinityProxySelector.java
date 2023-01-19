@@ -24,14 +24,18 @@ public class AffinityProxySelector implements IProxySelector {
     @Override
     public Proxy next(Boolean affinity) {
         //如果保持亲和性，则一直使用同一个proxy
-        if (affinity) {
-            return dynamicProxyList.peek();
+        if (Boolean.TRUE.equals(affinity)) {
+            Proxy head = dynamicProxyList.peek();
+            if(head != null){
+                return head;
+            }
         }
         return next();
     }
 
     @Override
     public void ban(Proxy proxy) {
+        logger.warn("proxy {}:{} was baned",proxy.getHost(),proxy.getPort());
         dynamicProxyList.remove(proxy);
     }
 
@@ -45,7 +49,9 @@ public class AffinityProxySelector implements IProxySelector {
     @Override
     public void remove(Proxy proxy) {
         if (dynamicProxyList.size() == 1) {
-            logger.warn("proxySet.size = 1, skip remove proxy! proxy = {}", proxy.toString());
+            if(logger.isWarnEnabled()) {
+                logger.warn("proxySet.size = 1, skip remove proxy! proxy = {}", proxy);
+            }
         } else {
             dynamicProxyList.remove(proxy);
         }
