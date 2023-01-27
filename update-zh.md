@@ -14,7 +14,7 @@
 * delay-queue-server新增bootstrap模块，提供直接运行的安装包
 
 ### fix
-* 无
+* fix了CamelliaStatistics在count=0时计算avg报错的问题
 
 
 # 1.1.12（2023/01/12）

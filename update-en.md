@@ -14,7 +14,7 @@
 * delay-queue-server add bootstrap module, provide *.tar.gz to run directly
 
 ### fix
-* none
+* fix CamelliaStatistics calc avg error when count=0
 
 
 # 1.1.12（2023/01/12）
