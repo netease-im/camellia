@@ -359,16 +359,16 @@ public class RedisProxyJedisPool extends JedisPool {
             try {
                 Proxy proxy = proxySelector.next(retry == 0);
                 if (proxy == null) {
-                    if(logger.isWarnEnabled()) {
-                        logger.warn("proxy not found and try again:{} times",retry);
+                    if (logger.isWarnEnabled()) {
+                        logger.warn("proxy not found and try again:{} times", retry);
                     }
                     retry ++;
                     continue;
                 }
                 JedisPool jedisPool = jedisPoolMap.get(proxy);
                 if (jedisPool == null) {
-                    if(logger.isWarnEnabled()) {
-                        logger.warn("jedisPool not found and try again:{} times",retry);
+                    if (logger.isWarnEnabled()) {
+                        logger.warn("jedisPool not found and try again:{} times", retry);
                     }
                     retry ++;
                     proxySelector.ban(proxy);
@@ -377,7 +377,7 @@ public class RedisProxyJedisPool extends JedisPool {
                 try {
                     return jedisPool.getResource();
                 } catch (Exception e) {
-                    logger.warn("exception is raise up and try {} times error message is:{}",retry,e.getMessage());
+                    logger.warn("exception is raise up and try {} times error message is:{}", retry, e.getMessage());
                     cause = e;
                     retry ++;
                     proxySelector.ban(proxy);
