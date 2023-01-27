@@ -5,7 +5,8 @@
 |:---:|:---:|:---:|
 |CamelliaCompressor|compress utils|[QUICK START](/docs/tools/compressor.md)|
 |CamelliaEncryptor|encrypt utils|[QUICK START](/docs/tools/encryptor.md)|
-|CamelliaLoadingCache|local cache utils|[QUICK START](/docs/tools/local_cache.md)|
+|CamelliaLoadingCache|local loading cache utils|[QUICK START](/docs/tools/loading_cache.md)|
+|CamelliaLocalCache|local cache utils|[QUICK START](/docs/tools/local_cache.md)|
 |CamelliaHashedExecutor|thread pool utils with hash policy|[QUICK START](/docs/tools/hashed_executor.md)|
 |CamelliaDynamicIsolationExecutor|thread pool utils with dynamic isolation to fast/slow tasks|[QUICK START](/docs/tools/dynamic_isolation.md)|
 |CamelliaCircuitBreaker|circuit breaker utils|[QUICK START](/docs/tools/circuit_breaker.md)|

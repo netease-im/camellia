@@ -1,22 +1,11 @@
+package com.netease.nim.camellia.tools.samples;
 
-# CamelliaLocalCache
+import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.tools.cache.CamelliaLocalCache;
 
-## 简介
-* 底层基于ConcurrentLinkedHashMap，是一个LRU的缓存   
-* 支持设置ttl（底层不会删除，但是不能get到）
-* 支持缓存null值
-
-## maven
-```
-<dependency>
-    <groupId>com.netease.nim</groupId>
-    <artifactId>camellia-tools</artifactId>
-    <version>a.b.c</version>
-</dependency>
-```
-
-## 示例
-```java
+/**
+ * Created by caojiajun on 2023/1/27
+ */
 public class LocalCacheSamples {
     public static void main(String[] args) {
         CamelliaLocalCache cache = new CamelliaLocalCache();
@@ -56,5 +45,3 @@ public class LocalCacheSamples {
         }
     }
 }
-
-```
