@@ -17,7 +17,7 @@
 ```
 
 ## 示例
-```
+```java
 public class LockSamples {
 
     public static void main(String[] args) {

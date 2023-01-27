@@ -15,7 +15,7 @@
 ```
 
 ## 示例
-```
+```java
 public class CounterCacheSamples {
 
     private static final ConcurrentHashMap<Long, AtomicLong> db = new ConcurrentHashMap<>();

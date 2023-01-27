@@ -55,19 +55,6 @@ public class CamelliaFreqConfig {
 ```
 
 ```java
-package com.netease.nim.camellia.redis.samples;
-
-import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
-import com.netease.nim.camellia.redis.toolkit.freq.CamelliaFreq;
-import com.netease.nim.camellia.redis.toolkit.freq.CamelliaFreqConfig;
-import com.netease.nim.camellia.redis.toolkit.freq.CamelliaFreqResponse;
-import com.netease.nim.camellia.redis.toolkit.freq.CamelliaFreqType;
-
-import java.util.concurrent.TimeUnit;
-
-/**
- * Created by caojiajun on 2022/8/8
- */
 public class FreqSamples {
 
     //need same CamelliaFreq instance to enable local freq

@@ -13,4 +13,5 @@
 |CamelliaCounterCache|counter cache|[QUICK START](/docs/tools/counter_cache.md)|
 |CamelliaFreq|freq utils, both support local/redis|[QUICK START](/docs/tools/freq.md)|
 |CamelliaMergeTask<br>CamelliaMergeTaskExecutor|merge task executor|[QUICK START](/docs/tools/merge_task.md)|
+|CamelliaStatistics<br>CamelliaStatisticsManager|statistics utils|[QUICK START](/docs/tools/statistics.md)|
 
