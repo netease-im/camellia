@@ -62,14 +62,13 @@ base on spring-cache:
 [QUICK START](/docs/cache/cache.md)
 
 ### camellia-tools
-* provide some tools, such as：
-* compress utils CamelliaCompressor
-* encrypt utils CamelliaEncryptor
-* local cache utils CamelliaLoadingCache
-* dynamic conf CamelliaCircuitBreaker
-* thread pool utils CamelliaHashedExecutor with same hash key job run sequence  
-* thread pool utils CamelliaDynamicExecutor with dynamic conf  
-* thread pool utils CamelliaDynamicIsolationExecutor with dynamic isolate for fast/slow job  
+provide some simple and practical tools, like:  
+* compress
+* encrypt
+* thread pool
+* distribution lock
+* circuit breaker
+* ......  
 [QUICK START](/docs/tools/tools.md)
 
 ## Version

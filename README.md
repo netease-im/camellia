@@ -70,14 +70,13 @@ camellia主要包括以下功能模块：
 [快速开始](/docs/cache/cache.md)
 
 ### camellia-tools
-提供了一些工具类，包括：  
-* 压缩工具类CamelliaCompressor，支持LZ4压缩算法，压缩时判断阈值，解压时会检查是否压缩过（向下兼容）  
-* 加解密工具类CamelliaEncryptor，支持AES相关算法，解密时会检查是否加密过（向下兼容）  
-* 本地缓存工具类CamelliaLoadingCache，提供区别于Caffeine和Guava的load策略，适用于特定场景  
-* 熔断器工具类CamelliaCircuitBreaker，支持动态配置
-* 线程池工具类CamelliaHashedExecutor，提供哈希策略，相同hashKey确保顺序执行   
-* 线程池工具类CamelliaDynamicExecutor，可以动态修改线程池的参数  
-* 线程池工具类CamelliaDynamicIsolationExecutor，支持根据isolationKey对快慢任务做自动的隔离，避免慢任务影响快任务    
+提供了一些简单实用的工具类，包括：  
+* 解压缩
+* 加解密
+* 线程池
+* 熔断
+* 分布式锁
+* ......  
 [快速开始](/docs/tools/tools.md)  
 
 ## 版本
