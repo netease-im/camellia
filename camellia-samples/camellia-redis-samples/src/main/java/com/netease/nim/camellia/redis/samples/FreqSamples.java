@@ -13,6 +13,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class FreqSamples {
 
+    //need same CamelliaFreq instance to enable local freq
+    private static final CamelliaFreq freq = new CamelliaFreq(new CamelliaRedisTemplate("redis://@127.0.0.1:6379"));
+
     public static void main(String[] args) throws InterruptedException {
         System.out.println("===test1===");
         test1();
@@ -35,7 +38,6 @@ public class FreqSamples {
     }
 
     private static void test1() throws InterruptedException {
-        CamelliaFreq freq = new CamelliaFreq(new CamelliaRedisTemplate("redis://@127.0.0.1:6379"));
         String freqKey = "k1";
         CamelliaFreqConfig config = new CamelliaFreqConfig();
         config.setThreshold(2);
@@ -52,7 +54,6 @@ public class FreqSamples {
     }
 
     private static void test2() throws InterruptedException {
-        CamelliaFreq freq = new CamelliaFreq(new CamelliaRedisTemplate("redis://@127.0.0.1:6379"));
         String freqKey = "k1";
         CamelliaFreqConfig config = new CamelliaFreqConfig();
         config.setThreshold(2);
@@ -70,7 +71,6 @@ public class FreqSamples {
     }
 
     private static void test3() throws InterruptedException {
-        CamelliaFreq freq = new CamelliaFreq(new CamelliaRedisTemplate("redis://@127.0.0.1:6379"));
         String freqKey = "k2";
         CamelliaFreqConfig config = new CamelliaFreqConfig();
         config.setThreshold(2);
@@ -87,7 +87,6 @@ public class FreqSamples {
     }
 
     private static void test4() throws InterruptedException {
-        CamelliaFreq freq = new CamelliaFreq(new CamelliaRedisTemplate("redis://@127.0.0.1:6379"));
         String freqKey = "k3";
         CamelliaFreqConfig config = new CamelliaFreqConfig();
         config.setThreshold(2);
@@ -104,7 +103,6 @@ public class FreqSamples {
     }
 
     private static void test5() throws InterruptedException {
-        CamelliaFreq freq = new CamelliaFreq(new CamelliaRedisTemplate("redis://@127.0.0.1:6379"));
         String freqKey = "k3";
         CamelliaFreqConfig config = new CamelliaFreqConfig();
         config.setThreshold(2);
@@ -122,7 +120,6 @@ public class FreqSamples {
     }
 
     private static void test6() throws InterruptedException {
-        CamelliaFreq freq = new CamelliaFreq(new CamelliaRedisTemplate("redis://@127.0.0.1:6379"));
         String freqKey = "k4";
         CamelliaFreqConfig config = new CamelliaFreqConfig();
         config.setThreshold(2);
