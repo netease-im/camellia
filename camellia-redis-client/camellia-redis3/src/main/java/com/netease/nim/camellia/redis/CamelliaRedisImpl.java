@@ -377,6 +377,20 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
         return redis.llen(key);
     }
 
+    @WriteOp
+    @Override
+    public Long linsert(@ShardingParam String key, ListPosition where, String pivot, String value) {
+        LogUtil.debugLog(resource, key);
+        return redis.linsert(key, where, pivot, value);
+    }
+
+    @WriteOp
+    @Override
+    public Long linsert(@ShardingParam byte[] key, ListPosition where, byte[] pivot, byte[] value) {
+        LogUtil.debugLog(resource, key);
+        return redis.linsert(key, where, pivot, value);
+    }
+
     @ReadOp
     @Override
     public List<String> lrange(@ShardingParam String key, long start, long end) {

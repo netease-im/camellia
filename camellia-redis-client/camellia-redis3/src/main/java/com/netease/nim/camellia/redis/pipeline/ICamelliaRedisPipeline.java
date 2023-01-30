@@ -90,6 +90,10 @@ public interface ICamelliaRedisPipeline extends Closeable {
 
     Response<byte[]> lpop(byte[] key);
 
+    Response<Long> linsert(String key, ListPosition where, String pivot, String value);
+
+    Response<Long> linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value);
+
     Response<Long> lpush(byte[] key, byte[]... string);
 
     Response<Long> lpushx(byte[] key, byte[]... bytes);

@@ -440,6 +440,16 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     @Override
+    public Long linsert(String key, ListPosition where, String pivot, String value) {
+        return factory.getProxy().linsert(key, where, pivot, value);
+    }
+
+    @Override
+    public Long linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value) {
+        return factory.getProxy().linsert(key, where, pivot, value);
+    }
+
+    @Override
     public List<byte[]> lrange(byte[] key, long start, long end) {
         return factory.getProxy().lrange(key, start, end);
     }

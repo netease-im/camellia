@@ -269,6 +269,10 @@ public interface ICamelliaRedisTemplate {
 
     Long llen(byte[] key);
 
+    Long linsert(String key, ListPosition where, String pivot, String value);
+
+    Long linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value);
+
     List<byte[]> lrange(byte[] key, long start, long end);
 
     String ltrim(byte[] key, long start, long end);

@@ -514,6 +514,26 @@ public class CamelliaJedis implements ICamelliaRedis {
     }
 
     @Override
+    public Long linsert(String key, ListPosition where, String pivot, String value) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.linsert(key, where, pivot, value);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
+    public Long linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.linsert(key, where, pivot, value);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
     public Long llen(String key) {
         Jedis jedis = jedisPool.getResource();
         try {

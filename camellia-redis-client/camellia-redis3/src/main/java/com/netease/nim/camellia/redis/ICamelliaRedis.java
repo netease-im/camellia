@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis;
 
+import com.netease.nim.camellia.redis.base.utils.CloseUtil;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.GeoRadiusParam;
 import redis.clients.jedis.params.SetParams;
@@ -373,6 +374,10 @@ public interface ICamelliaRedis {
     Long lpush(String key, String... string);
 
     Long llen(String key);
+
+    Long linsert(String key, ListPosition where, String pivot, String value);
+
+    Long linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value);
 
     List<String> lrange(String key, long start, long end);
 

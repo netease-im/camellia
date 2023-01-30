@@ -542,6 +542,34 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @WriteOp
     @Override
+    public Response<Long> linsert(@ShardingParam final String key, ListPosition where, String pivot, String value) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+        client.linsert(key, where, pivot, value);
+        return queable.getResponse(client, BuilderFactory.LONG, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.linsert(key, where, pivot, value);
+            }
+        });
+    }
+
+    @WriteOp
+    @Override
+    public Response<Long> linsert(@ShardingParam final byte[] key, ListPosition where, byte[] pivot, byte[] value) {
+        LogUtil.debugLog(resource, key);
+        Client client = clientPool.getClient(resource, key);
+        client.linsert(key, where, pivot, value);
+        return queable.getResponse(client, BuilderFactory.LONG, resource, key, new ResponseQueable.Fallback() {
+            @Override
+            public void invoke(Client client) {
+                client.linsert(key, where, pivot, value);
+            }
+        });
+    }
+
+    @WriteOp
+    @Override
     public Response<Long> lpush(@ShardingParam final byte[] key, final byte[]... string) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);

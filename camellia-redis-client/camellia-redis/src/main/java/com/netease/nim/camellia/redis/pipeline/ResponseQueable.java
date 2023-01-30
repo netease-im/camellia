@@ -69,8 +69,7 @@ public class ResponseQueable {
     <T> Response<T> getResponse(Client client, Builder<T> builder, Resource resource, Object key, Fallback fallback) {
         Queue<Item> queue = map.get(client);
         if (queue == null) {
-            queue = new LinkedList<>();
-            map.put(client, queue);
+            queue = map.computeIfAbsent(client, k -> new LinkedList<>());
         }
         Response<T> response = new Response<>(builder);
         queue.add(new Item(response, resource, key, fallback));
@@ -87,15 +86,12 @@ public class ResponseQueable {
         int attempts = env.getPipelineMaxAttempts();
 
         final int initAttempts = attempts;
-        List<Future> futureList = new ArrayList<>();
+        List<Future<?>> futureList = new ArrayList<>();
         for (final Map.Entry<Client, Queue<Item>> entry : map.entrySet()) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    Client client = entry.getKey();
-                    Queue<Item> queue = entry.getValue();
-                    handlerClient(redisClientPool, client, queue, initAttempts > 0);
-                }
+            Runnable runnable = () -> {
+                Client client = entry.getKey();
+                Queue<Item> queue = entry.getValue();
+                handlerClient(redisClientPool, client, queue, initAttempts > 0);
             };
             if (concurrentEnable) {
                 Future<?> future = env.getConcurrentExec().submit(runnable);
@@ -105,7 +101,7 @@ public class ResponseQueable {
             }
         }
         try {
-            for (Future future : futureList) {
+            for (Future<?> future : futureList) {
                 future.get();
             }
         } catch (Exception e) {
@@ -116,10 +112,7 @@ public class ResponseQueable {
 
         while (attempts > 0) {
             attempts --;
-            boolean retry = true;
-            if (attempts == 0) {
-                retry = false;
-            }
+            boolean retry = attempts != 0;
             if (fallbackList.isEmpty()) break;
             //RedisClientPool clear
             redisClientPool.clear();
@@ -152,8 +145,7 @@ public class ResponseQueable {
 
                 Queue<Item> queue = map.get(client);
                 if (queue == null) {
-                    queue = new LinkedList<>();
-                    map.put(client, queue);
+                    queue = map.computeIfAbsent(client, k -> new LinkedList<>());
                 }
                 if (withAsking) {
                     //asking response
@@ -168,15 +160,12 @@ public class ResponseQueable {
             //invoke
             concurrentEnable = map.size() > 1 && env.isPipelineConcurrentEnable();
             final boolean finalRetry = retry;
-            List<Future> retryFutureList = new ArrayList<>();
+            List<Future<?>> retryFutureList = new ArrayList<>();
             for (final Map.Entry<Client, Queue<Item>> entry : map.entrySet()) {
-                Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        Client client = entry.getKey();
-                        Queue<Item> queue = entry.getValue();
-                        handlerClient(redisClientPool, client, queue, finalRetry);
-                    }
+                Runnable runnable = () -> {
+                    Client client = entry.getKey();
+                    Queue<Item> queue = entry.getValue();
+                    handlerClient(redisClientPool, client, queue, finalRetry);
                 };
                 if (concurrentEnable) {
                     Future<?> future = env.getConcurrentExec().submit(runnable);
@@ -186,7 +175,7 @@ public class ResponseQueable {
                 }
             }
             try {
-                for (Future future : retryFutureList) {
+                for (Future<?> future : retryFutureList) {
                     future.get();
                 }
             } catch (Exception e) {
@@ -201,7 +190,7 @@ public class ResponseQueable {
             Item item = queue.poll();
             if (item != null) {
                 //只有redis cluster需要处理MOVED和ASK
-                if (item.resource != null && item.resource instanceof RedisClusterResource) {
+                if (item.resource instanceof RedisClusterResource) {
                     if (retry && o instanceof Exception) {
                         redisClientPool.handlerException(item.resource, (Exception) o);
                         if (o instanceof JedisMovedDataException || o instanceof JedisClusterException || o instanceof JedisConnectionException) {

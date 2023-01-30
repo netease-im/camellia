@@ -292,6 +292,18 @@ public class CamelliaRedisPipeline implements ICamelliaRedisPipeline {
     }
 
     @Override
+    public Response<Long> linsert(String key, ListPosition where, String pivot, String value) {
+        check();
+        return pipeline.linsert(key, where, pivot, value);
+    }
+
+    @Override
+    public Response<Long> linsert(byte[] key, ListPosition where, byte[] pivot, byte[] value) {
+        check();
+        return pipeline.linsert(key, where, pivot, value);
+    }
+
+    @Override
     public Response<Long> lpush(byte[] key, byte[]... string) {
         check();
         return pipeline.lpush(key, string);
