@@ -115,7 +115,10 @@ camellia-redis:
       timeout: 2000
 
 ```
-随后，启动即可
+随后，启动即可  
+
+### 使用按照包启动delay-queue服务器
+使用安装包快速启动delay-queue-server，具体见：[quick-start-package](quick-start-package.md)
 
 ### producer示例
 建立一个spring-boot工程，引入maven依赖：  

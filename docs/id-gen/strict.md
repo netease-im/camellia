@@ -243,6 +243,9 @@ public class CamelliaStrictIdGenSdkTest {
 }
 ```
 
+### 使用安装包启动发号器服务
+具体见：[quick-start-package](quick-start-package-strict.md)  
+
 ### 示例源码
 [源码](/camellia-samples/camellia-id-gen-strict-samples)
 

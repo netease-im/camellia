@@ -261,6 +261,9 @@ http://127.0.0.1:8083/camellia/id/gen/segment/sync
 }
 ```
 
+### 使用安装包启动发号器服务
+具体见：[quick-start-package](quick-start-package-segment.md)  
+
 ### 示例源码
 [源码](/camellia-samples/camellia-id-gen-segment-samples)
 
