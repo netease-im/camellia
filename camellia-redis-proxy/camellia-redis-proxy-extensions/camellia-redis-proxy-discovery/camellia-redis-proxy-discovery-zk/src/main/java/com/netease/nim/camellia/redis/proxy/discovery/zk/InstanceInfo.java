@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.discovery.zk;
 
 
-import com.netease.nim.camellia.redis.proxy.discovery.common.Proxy;
+import com.netease.nim.camellia.redis.base.proxy.Proxy;
 
 /**
  *

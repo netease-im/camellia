@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
-import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
+import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthByConfigProvider;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthProvider;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;

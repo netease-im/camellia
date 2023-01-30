@@ -1,7 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.upstream;
 
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.resource.*;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.upstream.cluster.AsyncCamelliaRedisClusterClient;
 import com.netease.nim.camellia.redis.proxy.upstream.proxies.AsyncCameliaRedisProxiesClient;
@@ -9,7 +10,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.proxies.AsyncCameliaRedisPr
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.AsyncCamelliaRedisSentinelClient;
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.AsyncCamelliaRedisSentinelSlavesClient;
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.AsyncCamelliaRedisClient;
-import com.netease.nim.camellia.redis.resource.*;
 
 import java.util.concurrent.ConcurrentHashMap;
 

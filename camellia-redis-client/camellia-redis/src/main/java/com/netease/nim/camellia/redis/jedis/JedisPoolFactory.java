@@ -1,11 +1,11 @@
 package com.netease.nim.camellia.redis.jedis;
 
+import com.netease.nim.camellia.redis.base.resource.*;
 import com.netease.nim.camellia.redis.conf.CamelliaRedisConstants;
 import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyContext;
 import com.netease.nim.camellia.redis.proxy.discovery.common.DetectedLocalConfProxyDiscovery;
-import com.netease.nim.camellia.redis.proxy.discovery.common.Proxy;
+import com.netease.nim.camellia.redis.base.proxy.Proxy;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
-import com.netease.nim.camellia.redis.resource.*;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;

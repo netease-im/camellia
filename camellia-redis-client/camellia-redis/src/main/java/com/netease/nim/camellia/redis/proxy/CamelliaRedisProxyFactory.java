@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy;
 
-import com.netease.nim.camellia.redis.resource.CamelliaRedisProxyResource;
+import com.netease.nim.camellia.redis.base.resource.CamelliaRedisProxyResource;
 import redis.clients.jedis.JedisPool;
 
 /**

@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.redis.eureka.base;
 
 import com.netease.nim.camellia.core.discovery.ReloadableCamelliaDiscovery;
-import com.netease.nim.camellia.redis.proxy.discovery.common.IProxyDiscovery;
-import com.netease.nim.camellia.redis.proxy.discovery.common.Proxy;
+import com.netease.nim.camellia.redis.base.proxy.IProxyDiscovery;
+import com.netease.nim.camellia.redis.base.proxy.Proxy;
 import com.netflix.appinfo.InstanceInfo;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;

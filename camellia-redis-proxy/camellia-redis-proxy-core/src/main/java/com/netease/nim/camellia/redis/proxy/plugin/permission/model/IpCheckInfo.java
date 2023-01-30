@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.plugin.permission.model;
 
 import com.netease.nim.camellia.core.enums.IpCheckMode;
-import com.netease.nim.camellia.redis.proxy.discovery.common.IPMatcher;
+import com.netease.nim.camellia.tools.utils.IPMatcher;
 
 import java.util.HashSet;
 import java.util.Set;

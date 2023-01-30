@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.spring.redis.base;
 
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPoolException;
 import org.springframework.beans.factory.DisposableBean;

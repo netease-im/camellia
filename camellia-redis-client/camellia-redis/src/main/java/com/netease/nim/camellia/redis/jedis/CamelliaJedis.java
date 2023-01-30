@@ -2,8 +2,8 @@ package com.netease.nim.camellia.redis.jedis;
 
 import com.netease.nim.camellia.redis.ICamelliaRedis;
 import com.netease.nim.camellia.redis.CamelliaRedisEnv;
+import com.netease.nim.camellia.redis.base.resource.*;
 import com.netease.nim.camellia.redis.proxy.RedisProxyResource;
-import com.netease.nim.camellia.redis.resource.*;
 import com.netease.nim.camellia.redis.util.CloseUtil;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.geo.GeoRadiusParam;

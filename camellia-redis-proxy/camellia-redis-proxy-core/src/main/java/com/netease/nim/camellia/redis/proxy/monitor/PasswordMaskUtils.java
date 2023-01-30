@@ -7,7 +7,7 @@ import com.netease.nim.camellia.core.util.ResourceTransferUtil;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
-import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;

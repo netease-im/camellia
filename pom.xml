@@ -16,10 +16,11 @@
 		<module>camellia-cache</module>
 		<module>camellia-feign-client</module>
 		<module>camellia-hbase-client</module>
+		<module>camellia-redis-base</module>
 		<module>camellia-redis-client</module>
+		<module>camellia-redis-proxy</module>
 		<module>camellia-id-gen</module>
 		<module>camellia-delay-queue</module>
-		<module>camellia-redis-proxy</module>
 		<module>camellia-tools</module>
 		<module>camellia-samples</module>
 	</modules>

@@ -10,7 +10,7 @@ import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.NettyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.TranspondProperties;
-import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
 import com.netease.nim.camellia.tools.utils.FileUtil;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 

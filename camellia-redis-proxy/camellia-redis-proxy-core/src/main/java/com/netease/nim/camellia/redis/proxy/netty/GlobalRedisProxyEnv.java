@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
-import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
+import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplateChooser;
 import io.netty.channel.EventLoopGroup;

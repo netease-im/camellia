@@ -1,6 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.discovery.jedis;
 
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
+import com.netease.nim.camellia.redis.base.proxy.IProxyDiscovery;
+import com.netease.nim.camellia.redis.base.proxy.Proxy;
+import com.netease.nim.camellia.redis.base.proxy.ProxyUtil;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.redis.proxy.discovery.common.*;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;

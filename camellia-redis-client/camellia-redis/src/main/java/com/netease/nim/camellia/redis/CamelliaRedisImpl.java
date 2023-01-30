@@ -4,7 +4,7 @@ import com.netease.nim.camellia.core.client.annotation.ReadOp;
 import com.netease.nim.camellia.core.client.annotation.ShardingParam;
 import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.resource.*;
 import com.netease.nim.camellia.redis.util.CamelliaRedisInitializer;
 import com.netease.nim.camellia.redis.util.LogUtil;

@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.route;
 
 import com.netease.nim.camellia.core.api.MultiResourceTableUpdater;
 import com.netease.nim.camellia.core.model.ResourceTable;
-import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
 
 
 /**

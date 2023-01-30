@@ -1,8 +1,10 @@
 package com.netease.nim.camellia.redis.proxy.upstream.cluster;
 
 import com.netease.nim.camellia.core.model.Resource;
+import com.netease.nim.camellia.redis.base.resource.RedisClusterResource;
+import com.netease.nim.camellia.redis.base.resource.RedisClusterSlavesResource;
 import com.netease.nim.camellia.tools.utils.SysUtils;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
@@ -12,8 +14,6 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
-import com.netease.nim.camellia.redis.resource.RedisClusterResource;
-import com.netease.nim.camellia.redis.resource.RedisClusterSlavesResource;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

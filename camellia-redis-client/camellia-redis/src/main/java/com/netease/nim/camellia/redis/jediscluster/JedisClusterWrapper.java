@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.jediscluster;
 
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.*;
 import redis.clients.util.JedisClusterCRC16;

@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.discovery.common;
+package com.netease.nim.camellia.redis.base.proxy;
 
 /**
  *

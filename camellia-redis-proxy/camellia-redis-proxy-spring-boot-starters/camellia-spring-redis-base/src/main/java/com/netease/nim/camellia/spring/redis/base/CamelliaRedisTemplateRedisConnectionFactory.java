@@ -2,7 +2,7 @@ package com.netease.nim.camellia.spring.redis.base;
 
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.adaptor.JedisPoolCamelliaAdaptor;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.ExceptionTranslationStrategy;
 import org.springframework.data.redis.PassThroughExceptionTranslationStrategy;

@@ -13,7 +13,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
 import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
-import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

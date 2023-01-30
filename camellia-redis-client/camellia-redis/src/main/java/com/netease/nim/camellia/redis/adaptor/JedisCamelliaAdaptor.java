@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.adaptor;
 
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
 import redis.clients.jedis.*;
 import redis.clients.jedis.params.geo.GeoRadiusParam;

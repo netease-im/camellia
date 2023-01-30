@@ -1,6 +1,5 @@
-package com.netease.nim.camellia.redis.proxy;
+package com.netease.nim.camellia.redis.base.proxy;
 
-import com.netease.nim.camellia.redis.proxy.discovery.common.IProxyDiscovery;
 
 /**
  *

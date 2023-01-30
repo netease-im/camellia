@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.eureka.springboot;
 
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyFactory;
-import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
+import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.ProxyJedisPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

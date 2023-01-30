@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.standalone;
 
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
-import com.netease.nim.camellia.redis.resource.RedisResource;
+import com.netease.nim.camellia.redis.base.resource.RedisResource;
 
 /**
  *

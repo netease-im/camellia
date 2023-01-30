@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.discovery.common;
 
+import com.netease.nim.camellia.redis.base.proxy.Proxy;
+
 import java.util.List;
 import java.util.Set;
 

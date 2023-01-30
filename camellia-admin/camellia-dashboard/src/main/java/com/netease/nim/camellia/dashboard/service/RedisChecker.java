@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.dashboard.service;
 
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
-import com.netease.nim.camellia.redis.resource.RedisType;
+import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.base.resource.RedisType;
 import org.springframework.stereotype.Component;
 
 /**

@@ -2,17 +2,17 @@ package com.netease.nim.camellia.redis.proxy.upstream.proxies;
 
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.resource.RedisProxiesDiscoveryResource;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.discovery.common.IProxyDiscovery;
-import com.netease.nim.camellia.redis.proxy.discovery.common.Proxy;
+import com.netease.nim.camellia.redis.base.proxy.IProxyDiscovery;
+import com.netease.nim.camellia.redis.base.proxy.Proxy;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.AsyncCamelliaSimpleClient;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
-import com.netease.nim.camellia.redis.resource.RedisProxiesDiscoveryResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

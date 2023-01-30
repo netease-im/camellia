@@ -2,8 +2,8 @@ package com.netease.nim.camellia.redis.pipeline;
 
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.CamelliaRedisEnv;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
-import com.netease.nim.camellia.redis.resource.RedisClusterResource;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.resource.RedisClusterResource;
 import redis.clients.jedis.*;
 import redis.clients.jedis.exceptions.JedisAskDataException;
 import redis.clients.jedis.exceptions.JedisClusterException;

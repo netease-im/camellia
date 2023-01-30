@@ -1,12 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.upstream.sentinel;
 
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.resource.RedisSentinelResource;
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.AsyncCamelliaSimpleClient;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.HostAndPort;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
-import com.netease.nim.camellia.redis.resource.RedisSentinelResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

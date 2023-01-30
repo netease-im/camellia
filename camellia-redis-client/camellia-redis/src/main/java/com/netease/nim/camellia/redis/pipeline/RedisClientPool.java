@@ -1,13 +1,13 @@
 package com.netease.nim.camellia.redis.pipeline;
 
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.resource.*;
 import com.netease.nim.camellia.redis.jedis.JedisPoolFactory;
 import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
 import com.netease.nim.camellia.redis.jediscluster.JedisClusterWrapper;
 import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyContext;
 import com.netease.nim.camellia.redis.proxy.RedisProxyResource;
-import com.netease.nim.camellia.redis.resource.*;
 import com.netease.nim.camellia.redis.util.CloseUtil;
 import redis.clients.jedis.*;
 import redis.clients.jedis.exceptions.JedisClusterException;

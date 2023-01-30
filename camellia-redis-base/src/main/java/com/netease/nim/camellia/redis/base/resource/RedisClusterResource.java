@@ -1,39 +1,33 @@
-package com.netease.nim.camellia.redis.resource;
+package com.netease.nim.camellia.redis.base.resource;
 
 import com.netease.nim.camellia.core.model.Resource;
+import com.netease.nim.camellia.redis.base.resource.RedisType;
 
 import java.util.List;
 
 /**
  * 格式如下：
  * 1、没有密码
- * redis-sentinel://@host:port,host:port,host:port/master
+ * redis-cluster://@host:port,host:port,host:port
  * 2、有密码
- * redis-sentinel://password@host:port,host:port,host:port/master
+ * redis-cluster://password@host:port,host:port,host:port
  * 3、有密码且有账号
- * redis-sentinel://username:password@host:port,host:port,host:port/master
+ * redis-cluster://username:password@host:port,host:port,host:port
  *
- * Created by caojiajun on 2019/10/15.
+ * Created by caojiajun on 2019/5/15.
  */
-public class RedisSentinelResource extends Resource {
-    private final String master;
+public class RedisClusterResource extends Resource {
+
     private final List<Node> nodes;
     private final String password;
     private final String userName;
-    private final int db;
 
-    public RedisSentinelResource(String master, List<Node> nodes, String userName, String password) {
-        this(master, nodes, userName, password, 0);
-    }
-
-    public RedisSentinelResource(String master, List<Node> nodes, String userName, String password, int db) {
-        this.master = master;
+    public RedisClusterResource(List<Node> nodes, String userName, String password) {
         this.nodes = nodes;
         this.password = password;
         this.userName = userName;
-        this.db = db;
         StringBuilder url = new StringBuilder();
-        url.append(RedisType.RedisSentinel.getPrefix());
+        url.append(RedisType.RedisCluster.getPrefix());
         if (userName != null && password != null) {
             url.append(userName).append(":").append(password);
         } else if (userName == null && password != null) {
@@ -45,20 +39,11 @@ public class RedisSentinelResource extends Resource {
             url.append(",");
         }
         url.deleteCharAt(url.length() - 1);
-        url.append("/");
-        url.append(master);
-        if (db > 0) {
-            url.append("?db=").append(db);
-        }
         this.setUrl(url.toString());
     }
 
-    public RedisSentinelResource(String master, List<Node> nodes, String password) {
-        this(master, nodes, null, password);
-    }
-
-    public String getMaster() {
-        return master;
+    public RedisClusterResource(List<Node> nodes, String password) {
+        this(nodes, null, password);
     }
 
     public List<Node> getNodes() {
@@ -71,10 +56,6 @@ public class RedisSentinelResource extends Resource {
 
     public String getUserName() {
         return userName;
-    }
-
-    public int getDb() {
-        return db;
     }
 
     public static class Node {

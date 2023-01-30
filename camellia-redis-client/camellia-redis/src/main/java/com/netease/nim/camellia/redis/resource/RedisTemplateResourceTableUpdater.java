@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.resource;
 
 import com.netease.nim.camellia.core.api.ResourceTableUpdater;
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
 
 
 /**
@@ -13,7 +14,7 @@ public abstract class RedisTemplateResourceTableUpdater extends ResourceTableUpd
     @Override
     public void checkResourceTable(ResourceTable resourceTable) {
         super.checkResourceTable(resourceTable);
-        RedisResourceUtil.checkResourceTable(resourceTable);
+        RedisClientResourceUtil.checkResourceTable(resourceTable);
     }
 
 }

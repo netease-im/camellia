@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.discovery.jedis;
 
 import com.netease.nim.camellia.redis.proxy.discovery.common.AffinityProxySelector;
 import com.netease.nim.camellia.redis.proxy.discovery.common.LocalConfProxyDiscovery;
-import com.netease.nim.camellia.redis.proxy.discovery.common.Proxy;
+import com.netease.nim.camellia.redis.base.proxy.Proxy;
 import com.netease.nim.camellia.redis.proxy.discovery.common.RandomProxySelector;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
 import org.junit.After;

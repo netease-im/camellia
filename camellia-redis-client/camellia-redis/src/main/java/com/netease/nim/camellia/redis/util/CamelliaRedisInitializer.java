@@ -3,10 +3,11 @@ package com.netease.nim.camellia.redis.util;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.CamelliaRedisEnv;
 import com.netease.nim.camellia.redis.ICamelliaRedis;
+import com.netease.nim.camellia.redis.base.resource.*;
 import com.netease.nim.camellia.redis.jedis.CamelliaJedis;
 import com.netease.nim.camellia.redis.jediscluster.CamelliaJedisCluster;
 import com.netease.nim.camellia.redis.proxy.RedisProxyResource;
-import com.netease.nim.camellia.redis.resource.*;
+import com.netease.nim.camellia.redis.resource.RedisClientResourceUtil;
 
 /**
  *
@@ -16,7 +17,7 @@ public class CamelliaRedisInitializer {
 
     public static ICamelliaRedis init(Resource resource, CamelliaRedisEnv env) {
         ICamelliaRedis redis;
-        Resource originalResource = RedisResourceUtil.parseResourceByUrl(resource);
+        Resource originalResource = RedisClientResourceUtil.parseResourceByUrl(resource);
         if (originalResource instanceof RedisResource) {
             redis = new CamelliaJedis((RedisResource) originalResource, env);
         } else if (originalResource instanceof RedisSentinelResource) {

@@ -2,6 +2,8 @@ package com.netease.nim.camellia.redis.proxy.discovery.common;
 
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 import com.netease.nim.camellia.core.discovery.ReloadableDiscoveryFactory;
+import com.netease.nim.camellia.redis.base.proxy.IProxyDiscovery;
+import com.netease.nim.camellia.redis.base.proxy.Proxy;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;

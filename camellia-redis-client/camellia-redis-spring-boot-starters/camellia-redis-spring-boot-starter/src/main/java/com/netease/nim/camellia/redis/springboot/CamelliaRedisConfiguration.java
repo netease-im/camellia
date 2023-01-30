@@ -4,17 +4,18 @@ import com.netease.nim.camellia.core.api.ReloadableLocalFileCamelliaApi;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.redis.resource.RedisClientResourceUtil;
 import com.netease.nim.camellia.tools.utils.FileUtil;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.redis.CamelliaRedisEnv;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.jedis.JedisPoolFactory;
 import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
 import com.netease.nim.camellia.redis.proxy.*;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.ProxyJedisPoolConfig;
-import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
 import com.netease.nim.camellia.redis.resource.RedisTemplateResourceTableUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +81,7 @@ public class CamelliaRedisConfiguration {
                     throw new IllegalArgumentException(jsonFile + " read fail");
                 }
                 ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(fileContent);
-                RedisResourceUtil.checkResourceTable(resourceTable);
+                RedisClientResourceUtil.checkResourceTable(resourceTable);
                 if (!local.isDynamic()) {
                     return new CamelliaRedisTemplate(redisEnv, resourceTable);
                 }
@@ -88,7 +89,7 @@ public class CamelliaRedisConfiguration {
                 if (filePath == null) {
                     return new CamelliaRedisTemplate(redisEnv, resourceTable);
                 }
-                ReloadableLocalFileCamelliaApi camelliaApi = new ReloadableLocalFileCamelliaApi(filePath, RedisResourceUtil.RedisResourceTableChecker);
+                ReloadableLocalFileCamelliaApi camelliaApi = new ReloadableLocalFileCamelliaApi(filePath, RedisClientResourceUtil.RedisResourceTableChecker);
                 long checkIntervalMillis = local.getCheckIntervalMillis();
                 if (checkIntervalMillis <= 0) {
                     throw new IllegalArgumentException("checkIntervalMillis <= 0");

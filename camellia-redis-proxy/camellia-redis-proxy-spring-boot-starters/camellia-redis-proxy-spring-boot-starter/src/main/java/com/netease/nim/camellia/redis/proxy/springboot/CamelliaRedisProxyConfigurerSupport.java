@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.springboot;
 
 import com.netease.nim.camellia.core.client.env.ShardingFunc;
-import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
+import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.route.ProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthProvider;

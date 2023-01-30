@@ -7,6 +7,7 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceUtil;
+import com.netease.nim.camellia.redis.base.resource.*;
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelUtils;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
@@ -19,7 +20,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.HostAndPort;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
-import com.netease.nim.camellia.redis.resource.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

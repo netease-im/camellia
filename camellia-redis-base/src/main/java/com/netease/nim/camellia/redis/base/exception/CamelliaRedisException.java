@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.exception;
+package com.netease.nim.camellia.redis.base.exception;
 
 /**
  *

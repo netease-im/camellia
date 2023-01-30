@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.discovery.zk;
 
 import com.alibaba.fastjson.JSONObject;
-import com.netease.nim.camellia.redis.proxy.discovery.common.Proxy;
+import com.netease.nim.camellia.redis.base.proxy.Proxy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.state.ConnectionState;

@@ -1,15 +1,11 @@
-package com.netease.nim.camellia.redis.resource;
+package com.netease.nim.camellia.redis.base.resource;
 
 import com.netease.nim.camellia.core.model.ResourceTableChecker;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.CheckUtil;
 import com.netease.nim.camellia.core.util.ResourceUtil;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
-import com.netease.nim.camellia.redis.proxy.*;
-import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
-import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPoolContext;
-import redis.clients.jedis.JedisPool;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 
 import java.util.*;
 
@@ -145,56 +141,6 @@ public class RedisResourceUtil {
                     throw new CamelliaRedisException("resource url not equals");
                 }
                 return redisClusterResource;
-            } else if (url.startsWith(RedisType.RedisProxy.getPrefix())) {
-                String substring = url.substring(RedisType.RedisProxy.getPrefix().length());
-                long id = Long.parseLong(substring);
-                RedisProxyJedisPool pool = RedisProxyJedisPoolContext.get(id);
-                if (pool == null) {
-                    throw new CamelliaRedisException("not found RedisProxyJedisPool with id = " + id);
-                }
-                RedisProxyResource redisProxyResource = new RedisProxyResource(pool);
-                if (!redisProxyResource.getUrl().equals(resource.getUrl())) {
-                    throw new CamelliaRedisException("resource url not equals");
-                }
-                return redisProxyResource;
-            } else if (url.startsWith(RedisType.CamelliaRedisProxy.getPrefix())) {
-                String substring = url.substring(RedisType.CamelliaRedisProxy.getPrefix().length());
-                if (!substring.contains("@")) {
-                    throw new CamelliaRedisException("missing @");
-                }
-                int index = substring.lastIndexOf("@");
-                String password = substring.substring(0, index);
-                if (password.length() == 0) {
-                    password = null;
-                }
-
-                CamelliaRedisProxyResource camelliaRedisProxyResource;
-                String proxyName;
-                if (!substring.contains("?")) {
-                    proxyName = substring.substring(index + 1);
-                    camelliaRedisProxyResource = new CamelliaRedisProxyResource(password, proxyName);
-                } else {
-                    int i = substring.lastIndexOf("?");
-                    proxyName = substring.substring(index + 1, i);
-                    String queryString = substring.substring(i + 1);
-                    Map<String, String> params = getParams(queryString);
-                    String bid = params.get("bid");
-                    String bgroup = params.get("bgroup");
-                    if (bid != null && bgroup != null) {
-                        camelliaRedisProxyResource = new CamelliaRedisProxyResource(password, proxyName, Long.parseLong(bid), bgroup);
-                    } else {
-                        camelliaRedisProxyResource = new CamelliaRedisProxyResource(password, proxyName);
-                    }
-                }
-                CamelliaRedisProxyFactory factory = CamelliaRedisProxyContext.getFactory();
-                if (factory == null) {
-                    throw new CamelliaRedisException("no CamelliaRedisProxyFactory register to CamelliaRedisProxyContext");
-                }
-                JedisPool jedisPool = factory.initOrGet(camelliaRedisProxyResource);
-                if (jedisPool == null) {
-                    throw new CamelliaRedisException("CamelliaRedisProxyFactory initOrGet JedisPool fail");
-                }
-                return camelliaRedisProxyResource;
             } else if (url.startsWith(RedisType.RedisSentinelSlaves.getPrefix())) {
                 String substring = url.substring(RedisType.RedisSentinelSlaves.getPrefix().length());
                 if (!substring.contains("@")) {
@@ -337,7 +283,7 @@ public class RedisResourceUtil {
         }
     }
 
-    private static Map<String, String> getParams(String queryString) {
+    public static Map<String, String> getParams(String queryString) {
         String[] split1 = queryString.split("&");
         Map<String, String> map = new HashMap<>();
         for (String s : split1) {
@@ -350,7 +296,7 @@ public class RedisResourceUtil {
         return map;
     }
 
-    private static String[] getUserNameAndPassword(String str) {
+    public static String[] getUserNameAndPassword(String str) {
         if (str == null) {
             return new String[2];
         }

@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.discovery.common;
 
+import com.netease.nim.camellia.redis.base.proxy.Proxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

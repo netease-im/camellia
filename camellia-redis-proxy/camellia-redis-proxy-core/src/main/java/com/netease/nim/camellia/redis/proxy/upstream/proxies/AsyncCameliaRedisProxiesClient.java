@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.proxies;
 
 import com.netease.nim.camellia.core.model.Resource;
+import com.netease.nim.camellia.redis.base.resource.RedisProxiesResource;
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.AsyncCamelliaSimpleClient;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
@@ -8,7 +9,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
-import com.netease.nim.camellia.redis.resource.RedisProxiesResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

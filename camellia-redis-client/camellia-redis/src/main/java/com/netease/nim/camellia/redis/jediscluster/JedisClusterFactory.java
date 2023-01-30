@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.jediscluster;
 
 import com.netease.nim.camellia.redis.conf.CamelliaRedisConstants;
-import com.netease.nim.camellia.redis.resource.RedisClusterResource;
+import com.netease.nim.camellia.redis.base.resource.RedisClusterResource;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisPoolConfig;

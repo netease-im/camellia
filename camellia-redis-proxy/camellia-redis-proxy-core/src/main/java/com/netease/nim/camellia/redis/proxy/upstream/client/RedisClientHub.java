@@ -6,7 +6,7 @@ import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.tools.utils.LockMap;
 import com.netease.nim.camellia.tools.utils.SysUtils;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;

@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.resource;
+package com.netease.nim.camellia.redis.base.resource;
 
 import com.netease.nim.camellia.core.model.Resource;
 

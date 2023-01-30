@@ -4,7 +4,7 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
 
 import java.util.concurrent.ConcurrentHashMap;
 

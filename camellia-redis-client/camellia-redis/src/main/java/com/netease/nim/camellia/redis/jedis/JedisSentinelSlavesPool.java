@@ -1,9 +1,9 @@
 package com.netease.nim.camellia.redis.jedis;
 
 import com.netease.nim.camellia.redis.conf.CamelliaRedisConstants;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
-import com.netease.nim.camellia.redis.resource.RedisSentinelResource;
-import com.netease.nim.camellia.redis.resource.RedisSentinelSlavesResource;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.resource.RedisSentinelResource;
+import com.netease.nim.camellia.redis.base.resource.RedisSentinelSlavesResource;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

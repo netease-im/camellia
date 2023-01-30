@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.zk.discovery.springboot;
 
-import com.netease.nim.camellia.redis.proxy.ProxyDiscoveryFactory;
-import com.netease.nim.camellia.redis.proxy.discovery.common.IProxyDiscovery;
+import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
+import com.netease.nim.camellia.redis.base.proxy.IProxyDiscovery;
 import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkClientFactory;
 import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkProxyDiscovery;
 

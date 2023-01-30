@@ -7,11 +7,15 @@ import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.hub.standard.StandardProxyGenerator;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.redis.base.resource.RedisClusterResource;
+import com.netease.nim.camellia.redis.base.resource.RedisResource;
+import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.base.resource.RedisSentinelResource;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import com.netease.nim.camellia.core.util.ResourceChooser;
 import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTransferUtil;
-import com.netease.nim.camellia.redis.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.pipeline.*;
 import com.netease.nim.camellia.redis.resource.*;
 import com.netease.nim.camellia.redis.util.CamelliaRedisInitializer;
@@ -60,7 +64,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     public CamelliaRedisTemplate(CamelliaRedisEnv env, RedisTemplateResourceTableUpdater updater) {
-        this(env, new LocalDynamicCamelliaApi(updater.getResourceTable(), RedisResourceUtil.RedisResourceTableChecker),
+        this(env, new LocalDynamicCamelliaApi(updater.getResourceTable(), RedisClientResourceUtil.RedisResourceTableChecker),
                 defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis);
         updater.addCallback(new ResourceTableUpdateCallback() {
             @Override
