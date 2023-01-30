@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.auth.ConnectLimiter;
 import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -60,20 +60,20 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
         if (channelInfo != null) {
             channelInfo.clear();
             ChannelMonitor.remove(channelInfo);
-            ConcurrentHashMap<String, RedisClient> map = channelInfo.getBindRedisClientCache();
+            ConcurrentHashMap<String, RedisConnection> map = channelInfo.getBindRedisClientCache();
             if (map != null) {
-                for (Map.Entry<String, RedisClient> entry : map.entrySet()) {
-                    RedisClient redisClient = entry.getValue();
-                    if (redisClient == null || !redisClient.isValid()) continue;
+                for (Map.Entry<String, RedisConnection> entry : map.entrySet()) {
+                    RedisConnection redisConnection = entry.getValue();
+                    if (redisConnection == null || !redisConnection.isValid()) continue;
                     if (logger.isDebugEnabled()) {
                         logger.debug("bind redis client cache will close interrupt by proxy client, consid = {}, client.addr = {}, upstream.redis.client = {}",
-                                channelInfo.getConsid(), ctx.channel().remoteAddress(), redisClient.getClientName());
+                                channelInfo.getConsid(), ctx.channel().remoteAddress(), redisConnection.getClientName());
                     }
-                    redisClient.stop(true);
+                    redisConnection.stop(true);
                 }
                 map.clear();
             }
-            RedisClient bindClient = channelInfo.getBindClient();
+            RedisConnection bindClient = channelInfo.getBindClient();
             if (bindClient != null) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("bind redis client will close for disconnect, consid = {}, client.addr = {}, upstream.redis.client = {}",

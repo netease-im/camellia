@@ -1,9 +1,9 @@
-package com.netease.nim.camellia.redis.proxy.upstream.client;
+package com.netease.nim.camellia.redis.proxy.upstream.connection;
 
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.netty.*;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncClient;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -33,17 +33,17 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * Created by caojiajun on 2019/12/17.
  */
-public class RedisClient implements AsyncClient {
+public class RedisConnection implements IUpstreamClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(RedisClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedisConnection.class);
     private static final AtomicLong id = new AtomicLong(0);
 
     private static final ScheduledExecutorService heartBeatScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-redis-client-heart-beat"));
     private static final ScheduledExecutorService idleCheckScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-redis-client-idle-check"));
 
-    private final RedisClientConfig redisClientConfig;
+    private final RedisConnectionConfig redisConnectionConfig;
 
-    private final RedisClientAddr addr;
+    private final RedisConnectionAddr addr;
     private final String host;
     private final int port;
     private final String userName;
@@ -73,14 +73,14 @@ public class RedisClient implements AsyncClient {
 
     private final Queue<CompletableFuture<Reply>> queue = new LinkedBlockingQueue<>(1024*32);
 
-    public RedisClient(RedisClientConfig config) {
-        this.redisClientConfig = config;
+    public RedisConnection(RedisConnectionConfig config) {
+        this.redisConnectionConfig = config;
         this.host = config.getHost();
         this.port = config.getPort();
         this.userName = config.getUserName();
         this.password = config.getPassword();
         this.db = config.getDb();
-        this.addr = new RedisClientAddr(host, port, userName, password, config.isReadonly(), config.getDb());
+        this.addr = new RedisConnectionAddr(host, port, userName, password, config.isReadonly(), config.getDb());
         this.eventLoopGroup = config.getEventLoopGroup();
         this.heartbeatIntervalSeconds = config.getHeartbeatIntervalSeconds();
         this.heartbeatTimeoutMillis = config.getHeartbeatTimeoutMillis();
@@ -99,24 +99,24 @@ public class RedisClient implements AsyncClient {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(eventLoopGroup)
                     .channel(GlobalRedisProxyEnv.getSocketChannelClass())
-                    .option(ChannelOption.SO_KEEPALIVE, redisClientConfig.isSoKeepalive())
-                    .option(ChannelOption.TCP_NODELAY, redisClientConfig.isTcpNoDelay())
-                    .option(ChannelOption.SO_SNDBUF, redisClientConfig.getSoSndbuf())
-                    .option(ChannelOption.SO_RCVBUF, redisClientConfig.getSoRcvbuf())
+                    .option(ChannelOption.SO_KEEPALIVE, redisConnectionConfig.isSoKeepalive())
+                    .option(ChannelOption.TCP_NODELAY, redisConnectionConfig.isTcpNoDelay())
+                    .option(ChannelOption.SO_SNDBUF, redisConnectionConfig.getSoSndbuf())
+                    .option(ChannelOption.SO_RCVBUF, redisConnectionConfig.getSoRcvbuf())
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
-                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(redisClientConfig.getWriteBufferWaterMarkLow(),
-                            redisClientConfig.getWriteBufferWaterMarkHigh()))
+                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(redisConnectionConfig.getWriteBufferWaterMarkLow(),
+                            redisConnectionConfig.getWriteBufferWaterMarkHigh()))
                     .handler(new ChannelInitializer<Channel>() {
                         @Override
                         protected void initChannel(Channel channel) {
                             ChannelPipeline pipeline = channel.pipeline();
                             pipeline.addLast(new ReplyDecoder());
                             pipeline.addLast(new ReplyAggregateDecoder());
-                            pipeline.addLast(new ClientHandler(queue, clientName, redisClientConfig.isTcpQuickAck()));
-                            pipeline.addLast(new CommandPackEncoder(RedisClient.this, queue));
+                            pipeline.addLast(new ClientHandler(queue, clientName, redisConnectionConfig.isTcpQuickAck()));
+                            pipeline.addLast(new CommandPackEncoder(RedisConnection.this, queue));
                         }
                     });
-            if (redisClientConfig.isTcpQuickAck()) {
+            if (redisConnectionConfig.isTcpQuickAck()) {
                 bootstrap.option(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
             }
             if (logger.isInfoEnabled()) {
@@ -316,7 +316,7 @@ public class RedisClient implements AsyncClient {
             }
             if (!grace) {
                 String log = clientName + " stopping, command maybe return NOT_AVAILABLE";
-                ErrorLogCollector.collect(RedisClient.class, log);
+                ErrorLogCollector.collect(RedisConnection.class, log);
             }
             try {
                 valid = false;
@@ -354,7 +354,7 @@ public class RedisClient implements AsyncClient {
                 }
                 if (count > 0 && !grace) {
                     String log = clientName + ", " + count + " commands return NOT_AVAILABLE";
-                    ErrorLogCollector.collect(RedisClient.class, log);
+                    ErrorLogCollector.collect(RedisConnection.class, log);
                 }
             } catch (Exception e) {
                 logger.error("{} stop error", clientName, e);
@@ -371,7 +371,7 @@ public class RedisClient implements AsyncClient {
         return queue.size();
     }
 
-    public RedisClientAddr getAddr() {
+    public RedisConnectionAddr getAddr() {
         return addr;
     }
 
@@ -379,8 +379,8 @@ public class RedisClient implements AsyncClient {
         return clientName;
     }
 
-    public RedisClientConfig getRedisClientConfig() {
-        return redisClientConfig;
+    public RedisConnectionConfig getRedisClientConfig() {
+        return redisConnectionConfig;
     }
 
     private CompletableFuture<Reply> sendPing() {
@@ -406,7 +406,7 @@ public class RedisClient implements AsyncClient {
             String log = clientName + " is not valid, command return NOT_AVAILABLE";
             for (CompletableFuture<Reply> future : completableFutureList) {
                 future.complete(ErrorReply.NOT_AVAILABLE);
-                ErrorLogCollector.collect(RedisClient.class, log);
+                ErrorLogCollector.collect(RedisConnection.class, log);
             }
             return;
         }
@@ -421,7 +421,7 @@ public class RedisClient implements AsyncClient {
     }
 
     private long _startTime() {
-        if (ProxyMonitorCollector.isUpstreamRedisSpendTimeMonitorEnable() && !redisClientConfig.isSkipCommandSpendTimeMonitor()) {
+        if (ProxyMonitorCollector.isUpstreamRedisSpendTimeMonitorEnable() && !redisConnectionConfig.isSkipCommandSpendTimeMonitor()) {
             return System.nanoTime();
         } else {
             return -1;

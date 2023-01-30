@@ -2,8 +2,8 @@ package com.netease.nim.camellia.redis.proxy.upstream.sentinel;
 
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.HostAndPort;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
@@ -53,38 +53,38 @@ public class RedisSentinelMasterListener extends Thread {
 
     @Override
     public void run() {
-        RedisClient redisClient = null;
+        RedisConnection redisConnection = null;
         logger.info("redis sentinel master listener thread start, resource = {}, sentinel = {}", PasswordMaskUtils.maskResource(resource.getUrl()), sentinel.getUrl());
         while (running) {
             try {
-                if (redisClient == null || !redisClient.isValid()) {
-                    if (redisClient != null && !redisClient.isValid()) {
-                        redisClient.stop();
+                if (redisConnection == null || !redisConnection.isValid()) {
+                    if (redisConnection != null && !redisConnection.isValid()) {
+                        redisConnection.stop();
                     }
-                    redisClient = RedisClientHub.getInstance().newClient(sentinel.getHost(), sentinel.getPort(), null, null);
-                    while (redisClient == null || !redisClient.isValid()) {
+                    redisConnection = RedisConnectionHub.getInstance().newClient(sentinel.getHost(), sentinel.getPort(), null, null);
+                    while (redisConnection == null || !redisConnection.isValid()) {
                         logger.error("connect to sentinel fail, sentinel = {}. sleeping 5000ms and retrying.", sentinel.getUrl());
                         try {
                             TimeUnit.MILLISECONDS.sleep(5000);
                         } catch (InterruptedException e) {
                             logger.error(e.getMessage(), e);
                         }
-                        redisClient = RedisClientHub.getInstance().newClient(sentinel.getHost(), sentinel.getPort(), null, null);
+                        redisConnection = RedisConnectionHub.getInstance().newClient(sentinel.getHost(), sentinel.getPort(), null, null);
                     }
                 }
-                if (redisClient.isValid()) {
-                    CompletableFuture<Reply> future1 = redisClient.sendCommand(RedisCommand.SENTINEL.raw(), RedisSentinelUtils.SENTINEL_GET_MASTER_ADDR_BY_NAME, Utils.stringToBytes(master));
+                if (redisConnection.isValid()) {
+                    CompletableFuture<Reply> future1 = redisConnection.sendCommand(RedisCommand.SENTINEL.raw(), RedisSentinelUtils.SENTINEL_GET_MASTER_ADDR_BY_NAME, Utils.stringToBytes(master));
                     Reply getMasterReply = future1.get(10, TimeUnit.SECONDS);
                     HostAndPort hostAndPort = RedisSentinelUtils.processMasterGet(getMasterReply);
                     if (hostAndPort != null) {
                         callback.masterUpdate(hostAndPort);
                     }
 
-                    CompletableFuture<Reply> future2 = redisClient.sendCommand(RedisCommand.SUBSCRIBE.raw(), RedisSentinelUtils.MASTER_SWITCH);
+                    CompletableFuture<Reply> future2 = redisConnection.sendCommand(RedisCommand.SUBSCRIBE.raw(), RedisSentinelUtils.MASTER_SWITCH);
                     future2.thenAccept(this::_processMasterSwitch);
-                    sendFutures(redisClient);
+                    sendFutures(redisConnection);
                     while (running) {
-                        if (!redisClient.isValid()) {
+                        if (!redisConnection.isValid()) {
                             break;
                         }
                         TimeUnit.SECONDS.sleep(10);
@@ -99,31 +99,31 @@ public class RedisSentinelMasterListener extends Thread {
                 }
             }
         }
-        if (redisClient != null && redisClient.isValid()) {
-            redisClient.stop();
+        if (redisConnection != null && redisConnection.isValid()) {
+            redisConnection.stop();
         }
         logger.info("redis sentinel master listener thread stop, resource = {}, sentinel = {}", PasswordMaskUtils.maskResource(resource.getUrl()), sentinel.getUrl());
     }
 
-    private void sendFutures(RedisClient redisClient) {
-        if (!redisClient.isValid()) return;
+    private void sendFutures(RedisConnection redisConnection) {
+        if (!redisConnection.isValid()) return;
         List<CompletableFuture<Reply>> futureList = new ArrayList<>();
         for (int i=0; i<futureBuffer; i++) {
             CompletableFuture<Reply> future = new CompletableFuture<>();
-            future.thenAccept(reply -> processMasterSwitch(redisClient, reply));
+            future.thenAccept(reply -> processMasterSwitch(redisConnection, reply));
             futureList.add(future);
         }
         futureCount.addAndGet(futureList.size());
-        redisClient.sendCommand(Collections.emptyList(), futureList);
+        redisConnection.sendCommand(Collections.emptyList(), futureList);
     }
 
-    private void processMasterSwitch(RedisClient redisClient, Reply reply) {
+    private void processMasterSwitch(RedisConnection redisConnection, Reply reply) {
         futureCount.decrementAndGet();
         try {
             _processMasterSwitch(reply);
         } finally {
             if (futureCount.get() < futureBuffer / 2) {
-                sendFutures(redisClient);
+                sendFutures(redisConnection);
             }
         }
     }

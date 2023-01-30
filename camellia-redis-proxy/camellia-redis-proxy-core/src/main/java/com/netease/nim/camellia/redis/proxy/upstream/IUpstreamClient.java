@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * Created by caojiajun on 2019/12/19.
  */
-public interface AsyncClient {
+public interface IUpstreamClient {
 
     void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> futureList);
 

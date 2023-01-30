@@ -16,8 +16,8 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.reply.*;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
-import com.netease.nim.camellia.redis.proxy.upstream.utils.AsyncUtils;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
+import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.ScanCursorCalculator;
 import com.netease.nim.camellia.redis.proxy.util.*;
 import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
@@ -34,54 +34,54 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by caojiajun on 2019/12/19.
  */
-public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
+public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate {
 
-    private static final Logger logger = LoggerFactory.getLogger(AsyncCamelliaRedisTemplate.class);
+    private static final Logger logger = LoggerFactory.getLogger(UpstreamRedisClientTemplate.class);
 
     private static final ScheduledExecutorService scheduleExecutor
-            = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(AsyncCamelliaRedisTemplate.class));
+            = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(UpstreamRedisClientTemplate.class));
 
     private static final long defaultBid = -1;
     private static final String defaultBgroup = "local";
     private static final long defaultCheckIntervalMillis = 5000;
     private static final boolean defaultMonitorEnable = false;
 
-    private final AsyncNettyClientFactory factory;
+    private final UpstreamRedisClientFactory factory;
     private ScheduledFuture<?> future;
 
     private final long bid;
     private final String bgroup;
     private final MultiWriteMode multiWriteMode;
 
-    private AsyncCamelliaRedisEnv env;
+    private RedisProxyEnv env;
     private Monitor monitor;
     private ResourceChooser resourceChooser;
 
     private ProxyRouteType proxyRouteType;
-    private AsyncClient singletonClient;
+    private IUpstreamClient singletonClient;
 
     private ScanCursorCalculator cursorCalculator;
 
-    public AsyncCamelliaRedisTemplate(ResourceTable resourceTable) {
-        this(AsyncCamelliaRedisEnv.defaultRedisEnv(), resourceTable);
+    public UpstreamRedisClientTemplate(ResourceTable resourceTable) {
+        this(RedisProxyEnv.defaultRedisEnv(), resourceTable);
     }
 
-    public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, ResourceTable resourceTable) {
+    public UpstreamRedisClientTemplate(RedisProxyEnv env, ResourceTable resourceTable) {
         this(env, new LocalCamelliaApi(resourceTable), defaultBid, defaultBgroup, defaultMonitorEnable, defaultCheckIntervalMillis, false);
     }
 
-    public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, String resourceTableFilePath, long checkIntervalMillis) {
+    public UpstreamRedisClientTemplate(RedisProxyEnv env, String resourceTableFilePath, long checkIntervalMillis) {
         this(env, new ReloadableLocalFileCamelliaApi(resourceTableFilePath, RedisResourceUtil.RedisResourceTableChecker),
                 defaultBid, defaultBgroup, defaultMonitorEnable, checkIntervalMillis, true);
     }
 
-    public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, CamelliaApi service, long bid, String bgroup,
-                                      boolean monitorEnable, long checkIntervalMillis) {
+    public UpstreamRedisClientTemplate(RedisProxyEnv env, CamelliaApi service, long bid, String bgroup,
+                                       boolean monitorEnable, long checkIntervalMillis) {
         this(env, service, bid, bgroup, monitorEnable, checkIntervalMillis, true);
     }
 
-    public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, CamelliaApi service, long bid, String bgroup,
-                                      boolean monitorEnable, long checkIntervalMillis, boolean reload) {
+    public UpstreamRedisClientTemplate(RedisProxyEnv env, CamelliaApi service, long bid, String bgroup,
+                                       boolean monitorEnable, long checkIntervalMillis, boolean reload) {
         this.env = env;
         this.bid = bid;
         this.bgroup = bgroup;
@@ -104,7 +104,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             if (monitorEnable) {
                 Monitor monitor = new RemoteMonitor(bid, bgroup, service);
                 ProxyEnv proxyEnv = new ProxyEnv.Builder(env.getProxyEnv()).monitor(monitor).build();
-                this.env = new AsyncCamelliaRedisEnv.Builder(env).proxyEnv(proxyEnv).build();
+                this.env = new RedisProxyEnv.Builder(env).proxyEnv(proxyEnv).build();
                 this.monitor = monitor;
             }
         }
@@ -115,7 +115,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
     }
 
-    public AsyncCamelliaRedisTemplate(AsyncCamelliaRedisEnv env, long bid, String bgroup, ProxyRouteConfUpdater updater, long reloadIntervalMillis) {
+    public UpstreamRedisClientTemplate(RedisProxyEnv env, long bid, String bgroup, ProxyRouteConfUpdater updater, long reloadIntervalMillis) {
         this.env = env;
         this.bid = bid;
         this.bgroup = bgroup;
@@ -159,7 +159,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             if (singletonClient != null) {
                 singletonClient.sendCommand(commands, futureList);
             } else {
-                AsyncClient client = factory.get(url);
+                IUpstreamClient client = factory.get(url);
                 client.sendCommand(commands, futureList);
             }
             return futureList;
@@ -174,7 +174,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     ChannelInfo channelInfo = command.getChannelInfo();
                     channelInfo.setInSubscribe(false);
                     if (!channelInfo.isInTransaction()) {
-                        RedisClient bindClient = channelInfo.getBindClient();
+                        RedisConnection bindClient = channelInfo.getBindClient();
                         if (bindClient != null) {
                             channelInfo.setBindClient(-1, null);
                             bindClient.startIdleCheck();
@@ -192,7 +192,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         ChannelInfo channelInfo = command.getChannelInfo();
                         channelInfo.setInSubscribe(false);
                         if (!channelInfo.isInTransaction()) {
-                            RedisClient bindClient = channelInfo.getBindClient();
+                            RedisConnection bindClient = channelInfo.getBindClient();
                             if (bindClient != null) {
                                 channelInfo.setBindClient(-1, null);
                                 bindClient.startIdleCheck();
@@ -226,7 +226,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 }
                 Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
                 String url = resource.getUrl();
-                AsyncClient client = factory.get(url);
+                IUpstreamClient client = factory.get(url);
                 CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
                 if (redisCommand.getType() == RedisCommand.Type.READ) {
                     incrRead(url, command);
@@ -246,7 +246,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 }
                 Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
                 String url = resource.getUrl();
-                AsyncClient client = factory.get(url);
+                IUpstreamClient client = factory.get(url);
                 CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
                 if (redisCommand.getType() == RedisCommand.Type.READ) {
                     incrRead(url, command);
@@ -339,7 +339,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                             continue;
                         }
                         Resource resource = allReadResources.get(currentNodeIndex);
-                        AsyncClient client = factory.get(resource.getUrl());
+                        IUpstreamClient client = factory.get(resource.getUrl());
                         CompletableFuture<Reply> f = commandFlusher.sendCommand(client, command);
                         CompletableFuture<Reply> future = new CompletableFuture<>();
                         f.thenApply((reply) -> cursorCalculator.filterScanReply(reply, currentNodeIndex, allReadResources.size())).thenAccept(future::complete);
@@ -376,7 +376,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                         futures.add(subFuture);
                     }
                     future = new CompletableFuture<>();
-                    AsyncUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeMultiIntegerReply(replies)));
+                    CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeMultiIntegerReply(replies)));
                 } else {
                     future = new CompletableFuture<>();
                     future.complete(ErrorReply.NOT_SUPPORT);
@@ -487,7 +487,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     public void preheat() {
         Set<Resource> allResources = this.resourceChooser.getAllResources();
         for (Resource resource : allResources) {
-            AsyncClient client = factory.get(resource.getUrl());
+            IUpstreamClient client = factory.get(resource.getUrl());
             client.preheat();
         }
     }
@@ -568,7 +568,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     }
 
     private CompletableFuture<Reply> doRead(Resource resource, CommandFlusher commandFlusher, Command command) {
-        AsyncClient client = factory.get(resource.getUrl());
+        IUpstreamClient client = factory.get(resource.getUrl());
         CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
         incrRead(resource.getUrl(), command);
         return future;
@@ -577,12 +577,12 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     private CompletableFuture<Reply> doWrite(List<Resource> writeResources, CommandFlusher commandFlusher, Command command) {
         List<CompletableFuture<Reply>> list = new ArrayList<>(writeResources.size());
         for (Resource resource : writeResources) {
-            AsyncClient client = factory.get(resource.getUrl());
+            IUpstreamClient client = factory.get(resource.getUrl());
             CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
             incrWrite(resource.getUrl(), command);
             list.add(future);
         }
-        return AsyncUtils.finalReply(list, multiWriteMode);
+        return CompletableFutureUtils.finalReply(list, multiWriteMode);
     }
 
     private Resource checkReadResources(List<byte[]> keys) {
@@ -648,7 +648,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         for (Map.Entry<String, List<byte[]>> entry : map.entrySet()) {
             String url = entry.getKey();
             List<byte[]> list = entry.getValue();
-            AsyncClient client = factory.get(url);
+            IUpstreamClient client = factory.get(url);
             Command subCommand = new Command(list.toArray(new byte[0][0]));
             subCommand.setChannelInfo(command.getChannelInfo());
             CompletableFuture<Reply> future = commandFlusher.sendCommand(client, subCommand);
@@ -663,11 +663,11 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 return futures.get(0);
             }
             CompletableFuture<Reply> future = new CompletableFuture<>();
-            AsyncUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeStatusReply(replies)));
+            CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeStatusReply(replies)));
             return future;
         }
         CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-        AsyncUtils.allOf(allFutures).thenAccept(replies -> {
+        CompletableFutureUtils.allOf(allFutures).thenAccept(replies -> {
             if (multiWriteMode == MultiWriteMode.ALL_RESOURCES_CHECK_ERROR) {
                 for (Reply reply : replies) {
                     if (reply instanceof ErrorReply) {
@@ -681,7 +681,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 return;
             }
             CompletableFuture<Reply> future = new CompletableFuture<>();
-            AsyncUtils.allOf(futures).thenAccept(replies1 -> future.complete(Utils.mergeStatusReply(replies1)));
+            CompletableFutureUtils.allOf(futures).thenAccept(replies1 -> future.complete(Utils.mergeStatusReply(replies1)));
             future.thenAccept(completableFuture::complete);
         });
         return completableFuture;
@@ -706,7 +706,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
         for (Map.Entry<String, List<BytesKey>> entry : map.entrySet()) {
             String url = entry.getKey();
-            AsyncClient client = factory.get(url);
+            IUpstreamClient client = factory.get(url);
             List<BytesKey> list = entry.getValue();
             List<byte[]> subCommandArgs = new ArrayList<>(list.size() + 1);
             subCommandArgs.add(args[0]);
@@ -724,7 +724,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             return futures.get(0);
         }
         CompletableFuture<Reply> future = new CompletableFuture<>();
-        AsyncUtils.allOf(futures).thenAccept(replies -> {
+        CompletableFutureUtils.allOf(futures).thenAccept(replies -> {
             Map<BytesKey, Reply> replyMap = new HashMap<>();
             for (int i = 0; i < urlList.size(); i++) {
                 String url = urlList.get(i);
@@ -776,7 +776,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
         for (Map.Entry<String, List<BytesKey>> entry : map.entrySet()) {
             String url = entry.getKey();
-            AsyncClient client = factory.get(url);
+            IUpstreamClient client = factory.get(url);
             List<BytesKey> list = entry.getValue();
             List<byte[]> subCommandArgs = new ArrayList<>(list.size() + 1);
             subCommandArgs.add(args[0]);
@@ -795,7 +795,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             return futures.get(0);
         }
         CompletableFuture<Reply> future = new CompletableFuture<>();
-        AsyncUtils.allOf(futures).thenAccept(replies -> {
+        CompletableFutureUtils.allOf(futures).thenAccept(replies -> {
             Map<BytesKey, Reply> replyMap = new HashMap<>();
             for (int i = 0; i < urlList.size(); i++) {
                 String url = urlList.get(i);
@@ -837,7 +837,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             List<Resource> resources = resourceChooser.getWriteResources(key);
             for (int j = 0; j < resources.size(); j++) {
                 Resource resource = resources.get(j);
-                AsyncClient client = factory.get(resource.getUrl());
+                IUpstreamClient client = factory.get(resource.getUrl());
                 byte[][] subCommandArg = new byte[][]{args[0], key};
                 Command subCommand = new Command(subCommandArg);
                 subCommand.setChannelInfo(command.getChannelInfo());
@@ -854,10 +854,10 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 return futures.get(0);
             }
             CompletableFuture<Reply> future = new CompletableFuture<>();
-            AsyncUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
+            CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
             return future;
         } else {
-            CompletableFuture<List<Reply>> all = AsyncUtils.allOf(allFutures);
+            CompletableFuture<List<Reply>> all = CompletableFutureUtils.allOf(allFutures);
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
             all.thenAccept(replies -> {
                 if (multiWriteMode == MultiWriteMode.ALL_RESOURCES_CHECK_ERROR) {
@@ -874,7 +874,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                     return;
                 }
                 CompletableFuture<Reply> future = new CompletableFuture<>();
-                AsyncUtils.allOf(futures).thenAccept(replies1 -> future.complete(Utils.mergeIntegerReply(replies1)));
+                CompletableFutureUtils.allOf(futures).thenAccept(replies1 -> future.complete(Utils.mergeIntegerReply(replies1)));
                 future.thenAccept(completableFuture::complete);
             });
             return completableFuture;
@@ -899,7 +899,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         for (Map.Entry<String, List<byte[]>> entry : map.entrySet()) {
             String url = entry.getKey();
             List<byte[]> list = entry.getValue();
-            AsyncClient client = factory.get(url);
+            IUpstreamClient client = factory.get(url);
 
             Command subCommand = new Command(list.toArray(new byte[0][0]));
             subCommand.setChannelInfo(command.getChannelInfo());
@@ -911,7 +911,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
             return futures.get(0);
         }
         CompletableFuture<Reply> future = new CompletableFuture<>();
-        AsyncUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
+        CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
         return future;
     }
 
@@ -920,13 +920,13 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
     private static class ProxyRouteConfUpdaterReloadTask implements Runnable {
 
         private final AtomicBoolean running = new AtomicBoolean(false);
-        private final AsyncCamelliaRedisTemplate template;
+        private final UpstreamRedisClientTemplate template;
         private final long bid;
         private final String bgroup;
         private final ProxyRouteConfUpdater updater;
         private ResourceTable resourceTable;
 
-        ProxyRouteConfUpdaterReloadTask(AsyncCamelliaRedisTemplate template, ResourceTable resourceTable, long bid, String bgroup,
+        ProxyRouteConfUpdaterReloadTask(UpstreamRedisClientTemplate template, ResourceTable resourceTable, long bid, String bgroup,
                                         ProxyRouteConfUpdater updater) {
             this.template = template;
             this.resourceTable = resourceTable;
@@ -964,7 +964,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 } catch (Exception e) {
                     Throwable ex = ExceptionUtils.onError(e);
                     String log = "reload error, bid = " + bid + ", bgroup = " + bgroup + ", updater = " + updater.getClass().getName() + ", ex = " + ex.toString();
-                    ErrorLogCollector.collect(AsyncCamelliaRedisTemplate.class, log, e);
+                    ErrorLogCollector.collect(UpstreamRedisClientTemplate.class, log, e);
                 } finally {
                     running.set(false);
                 }
@@ -978,13 +978,13 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
 
         private final AtomicBoolean running = new AtomicBoolean(false);
 
-        private final AsyncCamelliaRedisTemplate template;
+        private final UpstreamRedisClientTemplate template;
         private final CamelliaApi service;
         private final long bid;
         private final String bgroup;
         private String md5;
 
-        DashboardReloadTask(AsyncCamelliaRedisTemplate template, CamelliaApi service, long bid, String bgroup, String md5) {
+        DashboardReloadTask(UpstreamRedisClientTemplate template, CamelliaApi service, long bid, String bgroup, String md5) {
             this.template = template;
             this.service = service;
             this.bid = bid;
@@ -1019,7 +1019,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
                 } catch (Exception e) {
                     Throwable ex = ExceptionUtils.onError(e);
                     String log = "reload error, bid = " + bid + ", bgroup = " + bgroup + ", md5 = " + md5 + ", ex = " + ex.toString();
-                    ErrorLogCollector.collect(AsyncCamelliaRedisTemplate.class, log, e);
+                    ErrorLogCollector.collect(UpstreamRedisClientTemplate.class, log, e);
                 } finally {
                     running.set(false);
                 }
@@ -1029,7 +1029,7 @@ public class AsyncCamelliaRedisTemplate implements IAsyncCamelliaRedisTemplate {
         }
     }
 
-    private static final String className = AsyncCamelliaRedisTemplate.class.getSimpleName();
+    private static final String className = UpstreamRedisClientTemplate.class.getSimpleName();
 
     private void incrRead(String url, Command command) {
         if (monitor != null) {

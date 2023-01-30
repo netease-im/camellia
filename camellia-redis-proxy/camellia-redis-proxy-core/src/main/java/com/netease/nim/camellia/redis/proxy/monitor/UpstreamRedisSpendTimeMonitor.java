@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.monitor;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.model.UpstreamRedisSpendStats;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.QuantileCollector;
 import com.netease.nim.camellia.redis.proxy.util.QuantileCollectorPool;
@@ -25,7 +25,7 @@ public class UpstreamRedisSpendTimeMonitor {
     private static ConcurrentHashMap<String, LongAdder> spendTotalMap = new ConcurrentHashMap<>();
     private static ConcurrentHashMap<String, QuantileCollector> quantileMap = new ConcurrentHashMap<>();
 
-    public static void incr(RedisClientAddr addr, long spendNanoTime) {
+    public static void incr(RedisConnectionAddr addr, long spendNanoTime) {
         try {
             CamelliaMapUtils.computeIfAbsent(spendCountMap, addr.getUrl(), k -> new LongAdder()).increment();
             CamelliaMapUtils.computeIfAbsent(spendTotalMap, addr.getUrl(), k -> new LongAdder()).add(spendNanoTime);

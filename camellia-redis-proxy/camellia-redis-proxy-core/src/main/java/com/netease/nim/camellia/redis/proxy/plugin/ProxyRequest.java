@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.plugin;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateChooser;
 
 
 /**
@@ -9,9 +9,9 @@ import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplateC
  */
 public class ProxyRequest {
     private final Command command;
-    private final AsyncCamelliaRedisTemplateChooser chooser;
+    private final UpstreamRedisClientTemplateChooser chooser;
 
-    public ProxyRequest(Command command, AsyncCamelliaRedisTemplateChooser chooser) {
+    public ProxyRequest(Command command, UpstreamRedisClientTemplateChooser chooser) {
         this.command = command;
         this.chooser = chooser;
     }
@@ -20,7 +20,7 @@ public class ProxyRequest {
         return command;
     }
 
-    public AsyncCamelliaRedisTemplateChooser getChooser() {
+    public UpstreamRedisClientTemplateChooser getChooser() {
         return chooser;
     }
 }

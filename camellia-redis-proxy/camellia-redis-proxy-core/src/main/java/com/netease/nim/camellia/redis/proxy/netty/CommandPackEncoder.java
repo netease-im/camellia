@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.CommandsEncodeUtil;
@@ -26,11 +26,11 @@ public class CommandPackEncoder extends MessageToMessageEncoder<CommandPack> {
 
     private static final Logger logger = LoggerFactory.getLogger(CommandPackEncoder.class);
     private final Queue<CompletableFuture<Reply>> queue;
-    private final RedisClient redisClient;
+    private final RedisConnection redisConnection;
 
-    public CommandPackEncoder(RedisClient redisClient, Queue<CompletableFuture<Reply>> queue) {
+    public CommandPackEncoder(RedisConnection redisConnection, Queue<CompletableFuture<Reply>> queue) {
         super();
-        this.redisClient = redisClient;
+        this.redisConnection = redisConnection;
         this.queue = queue;
     }
 
@@ -40,24 +40,24 @@ public class CommandPackEncoder extends MessageToMessageEncoder<CommandPack> {
             List<Command> commands = msg.getCommands();
             long startTime = msg.getStartTime();
             for (CompletableFuture<Reply> future : msg.getCompletableFutureList()) {
-                if (!redisClient.isValid()) {
+                if (!redisConnection.isValid()) {
                     future.complete(ErrorReply.NOT_AVAILABLE);
                     continue;
                 }
                 boolean offer;
                 if (startTime > 0) {
-                    offer = queue.offer(new CompletableFutureWithTime<>(future, redisClient.getAddr(), startTime));
+                    offer = queue.offer(new CompletableFutureWithTime<>(future, redisConnection.getAddr(), startTime));
                 } else {
                     offer = queue.offer(future);
                 }
                 if (!offer) {
-                    String log = redisClient.getClientName() + ", queue full, will stop";
+                    String log = redisConnection.getClientName() + ", queue full, will stop";
                     ErrorLogCollector.collect(CommandPackEncoder.class, log);
                     future.complete(ErrorReply.NOT_AVAILABLE);
-                    redisClient.stop();
+                    redisConnection.stop();
                 }
             }
-            if (!redisClient.isValid()) {
+            if (!redisConnection.isValid()) {
                 return;
             }
             if (commands.isEmpty()) return;
@@ -68,11 +68,11 @@ public class CommandPackEncoder extends MessageToMessageEncoder<CommandPack> {
                 for (Command command : commands) {
                     commandNames.add(command.getName());
                 }
-                logger.debug("send commands to {}, commands = {}", redisClient.getClientName(), commandNames);
+                logger.debug("send commands to {}, commands = {}", redisConnection.getClientName(), commandNames);
             }
             out.add(buf);
         } catch (Exception e) {
-            logger.error("{} error", redisClient.getClientName(), e);
+            logger.error("{} error", redisConnection.getClientName(), e);
         }
     }
 }

@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.monitor;
 
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.monitor.model.RouteConf;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,9 +15,9 @@ public class RouteConfMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(RouteConfMonitor.class);
 
-    private static final ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> templateMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, UpstreamRedisClientTemplate> templateMap = new ConcurrentHashMap<>();
 
-    public static void registerRedisTemplate(Long bid, String bgroup, AsyncCamelliaRedisTemplate template) {
+    public static void registerRedisTemplate(Long bid, String bgroup, UpstreamRedisClientTemplate template) {
         try {
             templateMap.put(bid + "|" + bgroup, template);
         } catch (Exception e) {
@@ -33,13 +33,13 @@ public class RouteConfMonitor {
         }
     }
 
-    public static ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> getTemplateMap() {
+    public static ConcurrentHashMap<String, UpstreamRedisClientTemplate> getTemplateMap() {
         return templateMap;
     }
 
     public static List<RouteConf> collect() {
         List<RouteConf> routeConfList = new ArrayList<>();
-        for (Map.Entry<String, AsyncCamelliaRedisTemplate> entry : templateMap.entrySet()) {
+        for (Map.Entry<String, UpstreamRedisClientTemplate> entry : templateMap.entrySet()) {
             String key = entry.getKey();
             String[] split = key.split("\\|");
             Long bid = null;

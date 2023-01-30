@@ -1,9 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
 import com.netease.nim.camellia.redis.proxy.monitor.model.RedisConnectStats;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionConfig;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,24 +20,24 @@ public class RedisClientMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisClientMonitor.class);
 
-    private static final ConcurrentHashMap<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> redisClientMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<RedisConnectionAddr, ConcurrentHashMap<String, RedisConnection>> redisClientMap = new ConcurrentHashMap<>();
 
     /**
      * 统计RedisClient，增加
-     * @param redisClient RedisClient
+     * @param redisConnection RedisClient
      */
-    public static void addRedisClient(RedisClient redisClient) {
+    public static void addRedisClient(RedisConnection redisConnection) {
         try {
             ExecutorUtils.submitToSingleThreadExecutor(() -> {
                 try {
-                    RedisClientConfig config = redisClient.getRedisClientConfig();
-                    RedisClientAddr addr = new RedisClientAddr(config.getHost(), config.getPort(), config.getUserName(), config.getPassword());
-                    ConcurrentHashMap<String, RedisClient> subMap = redisClientMap.get(addr);
+                    RedisConnectionConfig config = redisConnection.getRedisClientConfig();
+                    RedisConnectionAddr addr = new RedisConnectionAddr(config.getHost(), config.getPort(), config.getUserName(), config.getPassword());
+                    ConcurrentHashMap<String, RedisConnection> subMap = redisClientMap.get(addr);
                     if (subMap == null) {
                         subMap = new ConcurrentHashMap<>();
                         redisClientMap.put(addr, subMap);
                     }
-                    subMap.put(redisClient.getClientName(), redisClient);
+                    subMap.put(redisConnection.getClientName(), redisConnection);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 }
@@ -49,17 +49,17 @@ public class RedisClientMonitor {
 
     /**
      * 统计RedisClient，减少
-     * @param redisClient RedisClient
+     * @param redisConnection RedisClient
      */
-    public static void removeRedisClient(RedisClient redisClient) {
+    public static void removeRedisClient(RedisConnection redisConnection) {
         try {
             ExecutorUtils.submitToSingleThreadExecutor(() -> {
                 try {
-                    RedisClientConfig config = redisClient.getRedisClientConfig();
-                    RedisClientAddr addr = new RedisClientAddr(config.getHost(), config.getPort(), config.getUserName(), config.getPassword());
-                    ConcurrentHashMap<String, RedisClient> subMap = redisClientMap.get(addr);
+                    RedisConnectionConfig config = redisConnection.getRedisClientConfig();
+                    RedisConnectionAddr addr = new RedisConnectionAddr(config.getHost(), config.getPort(), config.getUserName(), config.getPassword());
+                    ConcurrentHashMap<String, RedisConnection> subMap = redisClientMap.get(addr);
                     if (subMap != null) {
-                        subMap.remove(redisClient.getClientName());
+                        subMap.remove(redisConnection.getClientName());
                         if (subMap.isEmpty()) {
                             redisClientMap.remove(addr);
                         }
@@ -73,16 +73,16 @@ public class RedisClientMonitor {
         }
     }
 
-    public static ConcurrentHashMap<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> getRedisClientMap() {
+    public static ConcurrentHashMap<RedisConnectionAddr, ConcurrentHashMap<String, RedisConnection>> getRedisClientMap() {
         return redisClientMap;
     }
 
     public static RedisConnectStats collect() {
         RedisConnectStats redisConnectStats = new RedisConnectStats();
         List<RedisConnectStats.Detail> detailList = new ArrayList<>();
-        for (Map.Entry<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> entry : redisClientMap.entrySet()) {
-            RedisClientAddr key = entry.getKey();
-            ConcurrentHashMap<String, RedisClient> subMap = entry.getValue();
+        for (Map.Entry<RedisConnectionAddr, ConcurrentHashMap<String, RedisConnection>> entry : redisClientMap.entrySet()) {
+            RedisConnectionAddr key = entry.getKey();
+            ConcurrentHashMap<String, RedisConnection> subMap = entry.getValue();
             if (subMap.isEmpty()) continue;
             redisConnectStats.setConnectCount(redisConnectStats.getConnectCount() + subMap.size());
             RedisConnectStats.Detail detail = new RedisConnectStats.Detail();

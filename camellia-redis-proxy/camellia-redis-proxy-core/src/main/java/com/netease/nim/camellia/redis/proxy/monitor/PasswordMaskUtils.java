@@ -6,7 +6,7 @@ import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTransferUtil;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
 
 import java.util.ArrayList;
@@ -49,16 +49,16 @@ public class PasswordMaskUtils {
         }
     }
 
-    public static String maskAddrs(Collection<RedisClientAddr> addrs) {
+    public static String maskAddrs(Collection<RedisConnectionAddr> addrs) {
         if (addrs == null) return null;
         List<String> list = new ArrayList<>();
-        for (RedisClientAddr addr : addrs) {
+        for (RedisConnectionAddr addr : addrs) {
             list.add(maskAddr(addr));
         }
         return list.toString();
     }
 
-    public static String maskAddr(RedisClientAddr addr) {
+    public static String maskAddr(RedisConnectionAddr addr) {
         if (addr == null) return null;
         return maskAddr(addr.getUrl());
     }

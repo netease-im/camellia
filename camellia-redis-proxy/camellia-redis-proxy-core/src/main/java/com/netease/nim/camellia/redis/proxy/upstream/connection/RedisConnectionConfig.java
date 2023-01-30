@@ -1,11 +1,11 @@
-package com.netease.nim.camellia.redis.proxy.upstream.client;
+package com.netease.nim.camellia.redis.proxy.upstream.connection;
 
 import io.netty.channel.EventLoopGroup;
 
 /**
  * Created by caojiajun on 2021/5/14
  */
-public class RedisClientConfig {
+public class RedisConnectionConfig {
 
     private String host;
     private int port;

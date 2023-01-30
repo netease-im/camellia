@@ -7,26 +7,26 @@ import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
  *
  * Created by caojiajun on 2019/12/13.
  */
-public class AsyncCamelliaRedisEnv {
+public class RedisProxyEnv {
 
-    private AsyncNettyClientFactory clientFactory = AsyncNettyClientFactory.DEFAULT;
+    private UpstreamRedisClientFactory clientFactory = UpstreamRedisClientFactory.DEFAULT;
 
     private ProxyEnv proxyEnv = ProxyEnv.defaultProxyEnv();
     private MultiWriteMode multiWriteMode = MultiWriteMode.FIRST_RESOURCE_ONLY;
 
-    private AsyncCamelliaRedisEnv() {
+    private RedisProxyEnv() {
     }
 
-    private AsyncCamelliaRedisEnv(AsyncNettyClientFactory clientFactory, ProxyEnv proxyEnv) {
+    private RedisProxyEnv(UpstreamRedisClientFactory clientFactory, ProxyEnv proxyEnv) {
         this.clientFactory = clientFactory;
         this.proxyEnv = proxyEnv;
     }
 
-    public static AsyncCamelliaRedisEnv defaultRedisEnv() {
-        return new AsyncCamelliaRedisEnv();
+    public static RedisProxyEnv defaultRedisEnv() {
+        return new RedisProxyEnv();
     }
 
-    public AsyncNettyClientFactory getClientFactory() {
+    public UpstreamRedisClientFactory getClientFactory() {
         return clientFactory;
     }
 
@@ -39,16 +39,16 @@ public class AsyncCamelliaRedisEnv {
     }
 
     public static class Builder {
-        private final AsyncCamelliaRedisEnv redisEnv;
+        private final RedisProxyEnv redisEnv;
         public Builder() {
-            redisEnv = new AsyncCamelliaRedisEnv();
+            redisEnv = new RedisProxyEnv();
         }
 
-        public Builder(AsyncCamelliaRedisEnv redisEnv) {
-            this.redisEnv = new AsyncCamelliaRedisEnv(redisEnv.clientFactory, redisEnv.proxyEnv);
+        public Builder(RedisProxyEnv redisEnv) {
+            this.redisEnv = new RedisProxyEnv(redisEnv.clientFactory, redisEnv.proxyEnv);
         }
 
-        public Builder clientFactory(AsyncNettyClientFactory clientFactory) {
+        public Builder clientFactory(UpstreamRedisClientFactory clientFactory) {
             if (clientFactory != null) {
                 redisEnv.clientFactory = clientFactory;
             }
@@ -69,7 +69,7 @@ public class AsyncCamelliaRedisEnv {
             return this;
         }
 
-        public AsyncCamelliaRedisEnv build() {
+        public RedisProxyEnv build() {
             return redisEnv;
         }
     }

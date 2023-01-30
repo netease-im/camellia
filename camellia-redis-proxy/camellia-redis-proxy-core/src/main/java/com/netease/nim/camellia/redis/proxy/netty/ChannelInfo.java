@@ -3,9 +3,9 @@ package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.AsyncTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
@@ -29,8 +29,8 @@ public class ChannelInfo {
     private ChannelStats channelStats = ChannelStats.NO_AUTH;
     private final ChannelHandlerContext ctx;
     private final AsyncTaskQueue asyncTaskQueue;
-    private volatile ConcurrentHashMap<String, RedisClient> bindRedisClientCache;
-    private RedisClient bindClient = null;
+    private volatile ConcurrentHashMap<String, RedisConnection> bindRedisClientCache;
+    private RedisConnection bindClient = null;
     private int bindSlot = -1;
     private boolean inTransaction = false;
     private boolean inSubscribe = false;
@@ -89,7 +89,7 @@ public class ChannelInfo {
         return asyncTaskQueue;
     }
 
-    public void updateBindRedisClientCache(RedisClient redisClient) {
+    public void updateBindRedisClientCache(RedisConnection redisConnection) {
         if (mock) {
             return;
         }
@@ -100,15 +100,15 @@ public class ChannelInfo {
                 }
             }
         }
-        bindRedisClientCache.put(redisClient.getAddr().getUrl(), redisClient);
+        bindRedisClientCache.put(redisConnection.getAddr().getUrl(), redisConnection);
     }
 
-    public RedisClient tryAcquireBindRedisClient(RedisClientAddr addr) {
+    public RedisConnection tryAcquireBindRedisClient(RedisConnectionAddr addr) {
         if (mock) {
             return null;
         }
         if (bindRedisClientCache != null && !bindRedisClientCache.isEmpty()) {
-            RedisClient client = bindRedisClientCache.get(addr.getUrl());
+            RedisConnection client = bindRedisClientCache.get(addr.getUrl());
             if (client != null && client.isValid()) {
                 return client;
             }
@@ -116,18 +116,18 @@ public class ChannelInfo {
         return null;
     }
 
-    public RedisClient acquireBindRedisClient(RedisClientAddr addr) {
+    public RedisConnection acquireBindRedisClient(RedisConnectionAddr addr) {
         if (mock) {
             return null;
         }
         if (bindRedisClientCache != null && !bindRedisClientCache.isEmpty()) {
-            RedisClient client = bindRedisClientCache.get(addr.getUrl());
+            RedisConnection client = bindRedisClientCache.get(addr.getUrl());
             if (client != null && client.isValid()) {
                 client.stopIdleCheck();
                 return client;
             }
         }
-        RedisClient client = RedisClientHub.getInstance().newClient(addr);
+        RedisConnection client = RedisConnectionHub.getInstance().newClient(addr);
         if (client == null) return null;
         if (bindRedisClientCache == null) {
             synchronized (this) {
@@ -140,7 +140,7 @@ public class ChannelInfo {
         return client;
     }
 
-    public ConcurrentHashMap<String, RedisClient> getBindRedisClientCache() {
+    public ConcurrentHashMap<String, RedisConnection> getBindRedisClientCache() {
         return bindRedisClientCache;
     }
 
@@ -193,7 +193,7 @@ public class ChannelInfo {
         this.bgroup = bgroup;
     }
 
-    public RedisClient getBindClient() {
+    public RedisConnection getBindClient() {
         return bindClient;
     }
 
@@ -205,11 +205,11 @@ public class ChannelInfo {
         this.inTransaction = inTransaction;
     }
 
-    public void setBindClient(RedisClient bindClient) {
+    public void setBindClient(RedisConnection bindClient) {
         this.bindClient = bindClient;
     }
 
-    public void setBindClient(int bindSlot, RedisClient bindClient) {
+    public void setBindClient(int bindSlot, RedisConnection bindClient) {
         if (bindSlot >= 0 && bindClient == null) {
             return;
         }

@@ -12,7 +12,7 @@ import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.route.ProxyRouteConfUpdater;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.tools.utils.LockMap;
@@ -33,31 +33,31 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * Created by caojiajun on 2019/12/12.
  */
-public class AsyncCamelliaRedisTemplateChooser {
+public class UpstreamRedisClientTemplateChooser {
 
-    private static final Logger logger = LoggerFactory.getLogger(AsyncCamelliaRedisTemplateChooser.class);
+    private static final Logger logger = LoggerFactory.getLogger(UpstreamRedisClientTemplateChooser.class);
 
     private final CamelliaTranspondProperties properties;
-    private AsyncCamelliaRedisEnv env;
+    private RedisProxyEnv env;
     private CamelliaApi apiService;
     private ProxyRouteConfUpdater updater;
 
     private boolean multiTenancySupport = true;//是否支持多租户
     private final ProxyBeanFactory proxyBeanFactory;
 
-    private AsyncCamelliaRedisTemplate remoteInstance;
-    private AsyncCamelliaRedisTemplate localInstance;
-    private AsyncCamelliaRedisTemplate customInstance;
-    private final ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> remoteInstanceMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> customInstanceMap = new ConcurrentHashMap<>();
+    private UpstreamRedisClientTemplate remoteInstance;
+    private UpstreamRedisClientTemplate localInstance;
+    private UpstreamRedisClientTemplate customInstance;
+    private final ConcurrentHashMap<String, UpstreamRedisClientTemplate> remoteInstanceMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, UpstreamRedisClientTemplate> customInstanceMap = new ConcurrentHashMap<>();
 
-    public AsyncCamelliaRedisTemplateChooser(CamelliaTranspondProperties properties, ProxyBeanFactory proxyBeanFactory) {
+    public UpstreamRedisClientTemplateChooser(CamelliaTranspondProperties properties, ProxyBeanFactory proxyBeanFactory) {
         this.properties = properties;
         this.proxyBeanFactory = proxyBeanFactory != null ? proxyBeanFactory : DefaultBeanFactory.INSTANCE;
         init();
     }
 
-    public AsyncCamelliaRedisTemplate choose(Long bid, String bgroup) {
+    public UpstreamRedisClientTemplate choose(Long bid, String bgroup) {
         try {
             if (!multiTenancySupport) {
                 CamelliaTranspondProperties.Type type = properties.getType();
@@ -79,16 +79,16 @@ public class AsyncCamelliaRedisTemplateChooser {
                     return customInstance;
                 }
             }
-            CompletableFuture<AsyncCamelliaRedisTemplate> future = chooseAsync(bid, bgroup);
+            CompletableFuture<UpstreamRedisClientTemplate> future = chooseAsync(bid, bgroup);
             if (future == null) return null;
             return future.get();
         } catch (Exception e) {
-            ErrorLogCollector.collect(AsyncCamelliaRedisTemplateChooser.class, "choose AsyncCamelliaRedisTemplate error", e);
+            ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "choose AsyncCamelliaRedisTemplate error", e);
             return null;
         }
     }
 
-    public CompletableFuture<AsyncCamelliaRedisTemplate> chooseAsync(Long bid, String bgroup) {
+    public CompletableFuture<UpstreamRedisClientTemplate> chooseAsync(Long bid, String bgroup) {
         CamelliaTranspondProperties.Type type = properties.getType();
         if (type == CamelliaTranspondProperties.Type.LOCAL) {
             return wrapper(localInstance);
@@ -118,33 +118,33 @@ public class AsyncCamelliaRedisTemplateChooser {
         return multiTenancySupport;
     }
 
-    private CompletableFuture<AsyncCamelliaRedisTemplate> wrapper(AsyncCamelliaRedisTemplate template) {
-        CompletableFuture<AsyncCamelliaRedisTemplate> future = new CompletableFuture<>();
+    private CompletableFuture<UpstreamRedisClientTemplate> wrapper(UpstreamRedisClientTemplate template) {
+        CompletableFuture<UpstreamRedisClientTemplate> future = new CompletableFuture<>();
         future.complete(template);
         return future;
     }
 
     private final LockMap lockMap = new LockMap();
     private final ConcurrentHashMap<String, AtomicBoolean> initTagMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, LinkedBlockingQueue<CompletableFuture<AsyncCamelliaRedisTemplate>>> futureQueueMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, LinkedBlockingQueue<CompletableFuture<UpstreamRedisClientTemplate>>> futureQueueMap = new ConcurrentHashMap<>();
     private final ExecutorService exec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(10000), new DefaultThreadFactory("async-redis-template-init"));
 
-    private CompletableFuture<AsyncCamelliaRedisTemplate> initAsync(long bid, String bgroup,
-                                                                    ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> map,
-                                                                    AsyncCamelliaRedisTemplateInitializer initializer) {
+    private CompletableFuture<UpstreamRedisClientTemplate> initAsync(long bid, String bgroup,
+                                                                     ConcurrentHashMap<String, UpstreamRedisClientTemplate> map,
+                                                                     AsyncCamelliaRedisTemplateInitializer initializer) {
         String key = bid + "|" + bgroup;
-        AsyncCamelliaRedisTemplate template = map.get(key);
+        UpstreamRedisClientTemplate template = map.get(key);
         if (template != null) {
             AtomicBoolean initTag = _getInitTag(key);
             if (initTag.get()) {
                 synchronized (lockMap.getLockObj(key)) {
                     if (initTag.get()) {
-                        CompletableFuture<AsyncCamelliaRedisTemplate> future = new CompletableFuture<>();
+                        CompletableFuture<UpstreamRedisClientTemplate> future = new CompletableFuture<>();
                         boolean offer = _getFutureQueue(key).offer(future);
                         if (!offer) {
                             future.complete(null);
-                            ErrorLogCollector.collect(AsyncCamelliaRedisTemplateChooser.class, "init AsyncCamelliaRedisTemplate async fail, queue full");
+                            ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "init AsyncCamelliaRedisTemplate async fail, queue full");
                         }
                         return future;
                     } else {
@@ -155,48 +155,48 @@ public class AsyncCamelliaRedisTemplateChooser {
                 return wrapper(template);
             }
         }
-        CompletableFuture<AsyncCamelliaRedisTemplate> future = new CompletableFuture<>();
+        CompletableFuture<UpstreamRedisClientTemplate> future = new CompletableFuture<>();
         AtomicBoolean initTag = _getInitTag(key);
         if (initTag.compareAndSet(false, true)) {
             try {
                 exec.submit(() -> {
-                    AsyncCamelliaRedisTemplate redisTemplate = null;
+                    UpstreamRedisClientTemplate redisTemplate = null;
                     try {
                         redisTemplate = initializer.init(bid, bgroup);
                         map.put(key, redisTemplate);
                         future.complete(redisTemplate);
                     } catch (Exception e) {
-                        ErrorLogCollector.collect(AsyncCamelliaRedisTemplateChooser.class, "init AsyncCamelliaRedisTemplate error", e);
+                        ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "init AsyncCamelliaRedisTemplate error", e);
                         future.complete(null);
                     } finally {
                         clearFutureQueue(key, initTag, redisTemplate);
                     }
                 });
             } catch (Exception e) {
-                ErrorLogCollector.collect(AsyncCamelliaRedisTemplateChooser.class, "submit AsyncCamelliaRedisTemplate init task error", e);
+                ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "submit AsyncCamelliaRedisTemplate init task error", e);
                 clearFutureQueue(key, initTag, null);
             }
         } else {
-            LinkedBlockingQueue<CompletableFuture<AsyncCamelliaRedisTemplate>> queue = CamelliaMapUtils.computeIfAbsent(futureQueueMap, key,
+            LinkedBlockingQueue<CompletableFuture<UpstreamRedisClientTemplate>> queue = CamelliaMapUtils.computeIfAbsent(futureQueueMap, key,
                     k -> new LinkedBlockingQueue<>(1000000));
             boolean offer = queue.offer(future);
             if (!offer) {
                 future.complete(null);
-                ErrorLogCollector.collect(AsyncCamelliaRedisTemplateChooser.class, "init AsyncCamelliaRedisTemplate async fail, queue full");
+                ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "init AsyncCamelliaRedisTemplate async fail, queue full");
             }
         }
         return future;
     }
 
-    private void clearFutureQueue(String key, AtomicBoolean initTag, AsyncCamelliaRedisTemplate template) {
+    private void clearFutureQueue(String key, AtomicBoolean initTag, UpstreamRedisClientTemplate template) {
         synchronized (lockMap.getLockObj(key)) {
-            LinkedBlockingQueue<CompletableFuture<AsyncCamelliaRedisTemplate>> queue = _getFutureQueue(key);
-            CompletableFuture<AsyncCamelliaRedisTemplate> completableFuture = queue.poll();
+            LinkedBlockingQueue<CompletableFuture<UpstreamRedisClientTemplate>> queue = _getFutureQueue(key);
+            CompletableFuture<UpstreamRedisClientTemplate> completableFuture = queue.poll();
             while (completableFuture != null) {
                 try {
                     completableFuture.complete(template);
                 } catch (Exception e) {
-                    ErrorLogCollector.collect(AsyncCamelliaRedisTemplateChooser.class, "future complete error", e);
+                    ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "future complete error", e);
                 }
                 completableFuture = queue.poll();
             }
@@ -208,12 +208,12 @@ public class AsyncCamelliaRedisTemplateChooser {
         return CamelliaMapUtils.computeIfAbsent(initTagMap, key, k -> new AtomicBoolean(false));
     }
 
-    private LinkedBlockingQueue<CompletableFuture<AsyncCamelliaRedisTemplate>> _getFutureQueue(String key) {
+    private LinkedBlockingQueue<CompletableFuture<UpstreamRedisClientTemplate>> _getFutureQueue(String key) {
         return CamelliaMapUtils.computeIfAbsent(futureQueueMap, key, k -> new LinkedBlockingQueue<>(1000000));
     }
 
     private interface AsyncCamelliaRedisTemplateInitializer {
-        AsyncCamelliaRedisTemplate init(long bid, String bgroup);
+        UpstreamRedisClientTemplate init(long bid, String bgroup);
     }
 
     private void init() {
@@ -250,11 +250,11 @@ public class AsyncCamelliaRedisTemplateChooser {
         }
         ResourceTable resourceTable = local.getResourceTable();
         if (resourceTable != null) {
-            localInstance = new AsyncCamelliaRedisTemplate(env, resourceTable);
+            localInstance = new UpstreamRedisClientTemplate(env, resourceTable);
         } else {
             String resourceTableFilePath = local.getResourceTableFilePath();
             if (resourceTableFilePath != null) {
-                localInstance = new AsyncCamelliaRedisTemplate(env, resourceTableFilePath, local.getCheckIntervalMillis());
+                localInstance = new UpstreamRedisClientTemplate(env, resourceTableFilePath, local.getCheckIntervalMillis());
             }
         }
         if (localInstance == null) {
@@ -304,10 +304,10 @@ public class AsyncCamelliaRedisTemplateChooser {
         multiTenancySupport = custom.isDynamic();
     }
 
-    private AsyncCamelliaRedisTemplate initCustomInstance(long bid, String bgroup) {
+    private UpstreamRedisClientTemplate initCustomInstance(long bid, String bgroup) {
         CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
         if (custom == null) return null;
-        AsyncCamelliaRedisTemplate template = new AsyncCamelliaRedisTemplate(env, bid, bgroup, updater, custom.getReloadIntervalMillis());
+        UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, bid, bgroup, updater, custom.getReloadIntervalMillis());
         //更新的callback
         ResourceTableUpdateCallback updateCallback = template::update;
         //删除的callback
@@ -331,27 +331,27 @@ public class AsyncCamelliaRedisTemplateChooser {
         return template;
     }
 
-    private AsyncCamelliaRedisTemplate initRemoteInstance(long bid, String bgroup) {
+    private UpstreamRedisClientTemplate initRemoteInstance(long bid, String bgroup) {
         if (apiService == null) return null;
         CamelliaTranspondProperties.RemoteProperties remote = properties.getRemote();
         if (remote == null) return null;
         boolean monitorEnable = remote.isMonitorEnable();
         long checkIntervalMillis = remote.getCheckIntervalMillis();
-        AsyncCamelliaRedisTemplate template = new AsyncCamelliaRedisTemplate(env, apiService, bid, bgroup, monitorEnable, checkIntervalMillis);
+        UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, apiService, bid, bgroup, monitorEnable, checkIntervalMillis);
         logger.info("AsyncCamelliaRedisTemplate init, bid = {}, bgroup = {}", bid, bgroup);
         return template;
     }
 
-    public AsyncCamelliaRedisEnv getEnv() {
+    public RedisProxyEnv getEnv() {
         return env;
     }
 
     private void initEnv() {
         CamelliaTranspondProperties.RedisConfProperties redisConf = properties.getRedisConf();
 
-        AsyncNettyClientFactory clientFactory = new AsyncNettyClientFactory.Default(redisConf.getRedisClusterMaxAttempts());
+        UpstreamRedisClientFactory clientFactory = new UpstreamRedisClientFactory.Default(redisConf.getRedisClusterMaxAttempts());
 
-        RedisClientHub.getInstance().init(properties);
+        RedisConnectionHub.getInstance().init(properties);
 
         ProxyEnv.Builder builder = new ProxyEnv.Builder();
         String shardingFuncClassName = redisConf.getShardingFunc();
@@ -367,7 +367,7 @@ public class AsyncCamelliaRedisTemplateChooser {
 
         ProxyEnv proxyEnv = builder.build();
 
-        env = new AsyncCamelliaRedisEnv.Builder()
+        env = new RedisProxyEnv.Builder()
                 .proxyEnv(proxyEnv)
                 .clientFactory(clientFactory)
                 .multiWriteMode(redisConf.getMultiWriteMode())

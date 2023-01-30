@@ -6,7 +6,7 @@ import com.netease.nim.camellia.redis.proxy.command.CommandContext;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -82,7 +82,7 @@ public class DelayDoubleDeleteProxyPlugin implements ProxyPlugin {
                 //所有key都要双删
                 ExecutorUtils.submitDelayTask(() -> {
                     try {
-                        AsyncCamelliaRedisTemplate template = request.getChooser().choose(bid, bgroup);
+                        UpstreamRedisClientTemplate template = request.getChooser().choose(bid, bgroup);
                         template.sendCommand(Collections.singletonList(command));
                     } catch (Exception e) {
                         ErrorLogCollector.collect(DelayDoubleDeleteProxyPlugin.class, "delay double del invoke error", e);
@@ -102,7 +102,7 @@ public class DelayDoubleDeleteProxyPlugin implements ProxyPlugin {
                     if (needDoubleDel) {
                         ExecutorUtils.submitDelayTask(() -> {
                             try {
-                                AsyncCamelliaRedisTemplate template = request.getChooser().choose(bid, bgroup);
+                                UpstreamRedisClientTemplate template = request.getChooser().choose(bid, bgroup);
                                 template.sendCommand(Collections.singletonList(new Command(new byte[][]{RedisCommand.DEL.raw(), key})));
                             } catch (Exception e) {
                                 ErrorLogCollector.collect(DelayDoubleDeleteProxyPlugin.class, "delay double del invoke error", e);

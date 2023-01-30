@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.upstream.client;
+package com.netease.nim.camellia.redis.proxy.upstream.connection;
 
 
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
@@ -31,18 +31,18 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * Created by caojiajun on 2019/12/18.
  */
-public class RedisClientHub {
+public class RedisConnectionHub {
 
-    private static final Logger logger = LoggerFactory.getLogger(RedisClientHub.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedisConnectionHub.class);
 
-    private final ConcurrentHashMap<String, RedisClient> map = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, RedisConnection> map = new ConcurrentHashMap<>();
     private EventLoopGroup eventLoopGroup = null;
     private EventLoopGroup eventLoopGroupBackup = null;
 
     private final ExecutorService redisClientAsyncInitExec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(4096), new DefaultThreadFactory("camellia-redis-client-initialize"), new ThreadPoolExecutor.AbortPolicy());
+            new LinkedBlockingQueue<>(4096), new DefaultThreadFactory("camellia-redis-connection-initialize"), new ThreadPoolExecutor.AbortPolicy());
 
-    private final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, RedisClient>> eventLoopMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, RedisConnection>> eventLoopMap = new ConcurrentHashMap<>();
 
     private final FastThreadLocal<EventLoop> eventLoopThreadLocal = new FastThreadLocal<>();
 
@@ -70,10 +70,10 @@ public class RedisClientHub {
     private final ConcurrentHashMap<Object, LockMap> lockMapMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, AtomicBoolean>> initializerStatusMap = new ConcurrentHashMap<>();
 
-    public static RedisClientHub instance = new RedisClientHub();
-    private RedisClientHub() {
+    public static RedisConnectionHub instance = new RedisConnectionHub();
+    private RedisConnectionHub() {
     }
-    public static RedisClientHub getInstance() {
+    public static RedisConnectionHub getInstance() {
         return instance;
     }
 
@@ -82,7 +82,7 @@ public class RedisClientHub {
         this.connectTimeoutMillis = redisConf.getConnectTimeoutMillis();
         this.heartbeatIntervalSeconds = redisConf.getHeartbeatIntervalSeconds();
         this.heartbeatTimeoutMillis = redisConf.getHeartbeatTimeoutMillis();
-        logger.info("RedisClient, connectTimeoutMillis = {}, heartbeatIntervalSeconds = {}, heartbeatTimeoutMillis = {}",
+        logger.info("RedisConnection, connectTimeoutMillis = {}, heartbeatIntervalSeconds = {}, heartbeatTimeoutMillis = {}",
                 this.connectTimeoutMillis, this.heartbeatIntervalSeconds, this.heartbeatTimeoutMillis);
         this.failCountThreshold = redisConf.getFailCountThreshold();
         this.failBanMillis = redisConf.getFailBanMillis();
@@ -100,12 +100,12 @@ public class RedisClientHub {
             this.eventLoopGroup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client"));
             this.eventLoopGroupBackup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client-backup"));
         }
-        logger.info("RedisClient, failCountThreshold = {}, failBanMillis = {}",
+        logger.info("RedisConnection, failCountThreshold = {}, failBanMillis = {}",
                 this.failCountThreshold, this.failBanMillis);
         this.closeIdleConnection = redisConf.isCloseIdleConnection();
         this.checkIdleConnectionThresholdSeconds = redisConf.getCheckIdleConnectionThresholdSeconds();
         this.closeIdleConnectionDelaySeconds = redisConf.getCloseIdleConnectionDelaySeconds();
-        logger.info("RedisClient, closeIdleConnection = {}, checkIdleConnectionThresholdSeconds = {}, closeIdleConnectionDelaySeconds = {}",
+        logger.info("RedisConnection, closeIdleConnection = {}, checkIdleConnectionThresholdSeconds = {}, closeIdleConnectionDelaySeconds = {}",
                 this.closeIdleConnection, this.checkIdleConnectionThresholdSeconds, this.closeIdleConnectionDelaySeconds);
 
         CamelliaTranspondProperties.NettyProperties nettyProperties = properties.getNettyProperties();
@@ -116,7 +116,7 @@ public class RedisClientHub {
         this.writeBufferWaterMarkLow = nettyProperties.getWriteBufferWaterMarkLow();
         this.writeBufferWaterMarkHigh = nettyProperties.getWriteBufferWaterMarkHigh();
         this.tcpQuickAck = GlobalRedisProxyEnv.getNettyTransportMode() == NettyTransportMode.epoll && properties.getNettyProperties().isTcpQuickAck();
-        logger.info("RedisClient, so_keepalive = {}, tcp_no_delay = {}, tcp_quick_ack = {}, so_rcvbuf = {}, so_sndbuf = {}, write_buffer_water_mark_Low = {}, write_buffer_water_mark_high = {}",
+        logger.info("RedisConnection, so_keepalive = {}, tcp_no_delay = {}, tcp_quick_ack = {}, so_rcvbuf = {}, so_sndbuf = {}, write_buffer_water_mark_Low = {}, write_buffer_water_mark_high = {}",
                 this.soKeepalive, this.tcpNoDelay, this.tcpQuickAck, this.soRcvbuf,
                 this.soSndbuf, this.writeBufferWaterMarkLow, this.writeBufferWaterMarkHigh);
 
@@ -128,98 +128,98 @@ public class RedisClientHub {
         eventLoopThreadLocal.set(eventLoop);
     }
 
-    public RedisClient tryGet(String host, int port, String userName, String password) {
+    public RedisConnection tryGet(String host, int port, String userName, String password) {
         try {
-            RedisClientAddr addr = new RedisClientAddr(host, port, userName, password);
+            RedisConnectionAddr addr = new RedisConnectionAddr(host, port, userName, password);
             EventLoop eventLoop = eventLoopThreadLocal.get();
             if (eventLoop != null) {
-                ConcurrentHashMap<String, RedisClient> clientMap = eventLoopMap.get(eventLoop);
+                ConcurrentHashMap<String, RedisConnection> clientMap = eventLoopMap.get(eventLoop);
                 if (clientMap != null) {
-                    RedisClient client = clientMap.get(addr.getUrl());
+                    RedisConnection client = clientMap.get(addr.getUrl());
                     if (client != null && client.isValid()) {
                         return client;
                     }
                 }
             }
             String url = addr.getUrl();
-            RedisClient client = map.get(url);
+            RedisConnection client = map.get(url);
             if (client != null && client.isValid()) {
                 return client;
             }
             return null;
         } catch (Exception e) {
-            ErrorLogCollector.collect(RedisClientHub.class,
-                    "try get RedisClient error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
+            ErrorLogCollector.collect(RedisConnectionHub.class,
+                    "try get RedisConnection error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
             return null;
         }
     }
 
-    public CompletableFuture<RedisClient> newAsync(String host, int port, String userName, String password) {
-        CompletableFuture<RedisClient> future = new CompletableFuture<>();
+    public CompletableFuture<RedisConnection> newAsync(String host, int port, String userName, String password) {
+        CompletableFuture<RedisConnection> future = new CompletableFuture<>();
         try {
             redisClientAsyncInitExec.submit(() -> {
                 try {
-                    RedisClient redisClient = newClient(host, port, userName, password);
-                    future.complete(redisClient);
+                    RedisConnection redisConnection = newClient(host, port, userName, password);
+                    future.complete(redisConnection);
                 } catch (Exception e) {
-                    ErrorLogCollector.collect(RedisClientHub.class,
-                            "new RedisClient async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
+                    ErrorLogCollector.collect(RedisConnectionHub.class,
+                            "new RedisConnection async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
                     future.complete(null);
                 }
             });
             return future;
         } catch (Exception e) {
-            ErrorLogCollector.collect(RedisClientHub.class,
-                    "new RedisClient async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
+            ErrorLogCollector.collect(RedisConnectionHub.class,
+                    "new RedisConnection async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
             future.complete(null);
             return future;
         }
     }
 
-    public CompletableFuture<RedisClient> getAsync(String host, int port, String userName, String password) {
-        CompletableFuture<RedisClient> future = new CompletableFuture<>();
+    public CompletableFuture<RedisConnection> getAsync(String host, int port, String userName, String password) {
+        CompletableFuture<RedisConnection> future = new CompletableFuture<>();
         try {
             redisClientAsyncInitExec.submit(() -> {
                 try {
-                    RedisClient redisClient = get(host, port, userName, password);
-                    future.complete(redisClient);
+                    RedisConnection redisConnection = get(host, port, userName, password);
+                    future.complete(redisConnection);
                 } catch (Exception e) {
-                    ErrorLogCollector.collect(RedisClientHub.class,
-                            "get RedisClient async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
+                    ErrorLogCollector.collect(RedisConnectionHub.class,
+                            "get RedisConnection async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
                     future.complete(null);
                 }
             });
             return future;
         } catch (Exception e) {
-            ErrorLogCollector.collect(RedisClientHub.class,
-                    "get RedisClient async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
+            ErrorLogCollector.collect(RedisConnectionHub.class,
+                    "get RedisConnection async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
             future.complete(null);
             return future;
         }
     }
 
-    public RedisClient get(String host, int port, String userName, String password) {
+    public RedisConnection get(String host, int port, String userName, String password) {
         try {
-            RedisClientAddr addr = new RedisClientAddr(host, port, userName, password);
+            RedisConnectionAddr addr = new RedisConnectionAddr(host, port, userName, password);
             return get(addr);
         } catch (Exception e) {
-            ErrorLogCollector.collect(RedisClientHub.class,
-                    "get RedisClient error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
+            ErrorLogCollector.collect(RedisConnectionHub.class,
+                    "get RedisConnection error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
             return null;
         }
     }
 
-    public RedisClient newClient(String host, int port, String userName, String password) {
+    public RedisConnection newClient(String host, int port, String userName, String password) {
         try {
-            return newClient(new RedisClientAddr(host, port, userName, password));
+            return newClient(new RedisConnectionAddr(host, port, userName, password));
         } catch (Exception e) {
-            ErrorLogCollector.collect(RedisClientHub.class,
-                    "new RedisClient error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
+            ErrorLogCollector.collect(RedisConnectionHub.class,
+                    "new RedisConnection error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
             return null;
         }
     }
 
-    public RedisClient newClient(RedisClientAddr addr) {
+    public RedisConnection newClient(RedisConnectionAddr addr) {
         try {
             String url = addr.getUrl();
             if (fastFail(url)) {
@@ -229,7 +229,7 @@ public class RedisClientHub {
             if (loopGroup.inEventLoop()) {
                 loopGroup = eventLoopGroupBackup.next();
             }
-            RedisClientConfig config = new RedisClientConfig();
+            RedisConnectionConfig config = new RedisConnectionConfig();
             config.setHost(addr.getHost());
             config.setPort(addr.getPort());
             config.setUserName(addr.getUserName());
@@ -251,7 +251,7 @@ public class RedisClientHub {
             config.setSoSndbuf(soSndbuf);
             config.setWriteBufferWaterMarkLow(writeBufferWaterMarkLow);
             config.setWriteBufferWaterMarkHigh(writeBufferWaterMarkHigh);
-            RedisClient client = new RedisClient(config);
+            RedisConnection client = new RedisConnection(config);
             client.start();
             if (client.isValid()) {
                 resetFail(url);//如果client初始化成功，则重置计数器和错误时间戳
@@ -262,7 +262,7 @@ public class RedisClientHub {
                 return null;
             }
         } catch (Exception e) {
-            ErrorLogCollector.collect(RedisClientHub.class, "new RedisClient error, addr = " + addr.getUrl(), e);
+            ErrorLogCollector.collect(RedisConnectionHub.class, "new RedisConnection error, addr = " + addr.getUrl(), e);
             return null;
         }
     }
@@ -274,14 +274,14 @@ public class RedisClientHub {
     public boolean preheat(String host, int port, String userName, String password, int db) {
         EventLoopGroup workGroup = GlobalRedisProxyEnv.getWorkGroup();
         int workThread = GlobalRedisProxyEnv.getWorkThread();
-        RedisClientAddr addr = new RedisClientAddr(host, port, userName, password, db);
+        RedisConnectionAddr addr = new RedisConnectionAddr(host, port, userName, password, db);
         if (workGroup != null && workThread > 0) {
             logger.info("try preheat, addr = {}", PasswordMaskUtils.maskAddr(addr));
             for (int i = 0; i < GlobalRedisProxyEnv.getWorkThread(); i++) {
                 EventLoop eventLoop = workGroup.next();
                 updateEventLoop(eventLoop);
-                RedisClient redisClient = get(new RedisClientAddr(host, port, userName, password, db));
-                if (redisClient == null) {
+                RedisConnection redisConnection = get(new RedisConnectionAddr(host, port, userName, password, db));
+                if (redisConnection == null) {
                     logger.error("preheat fail, addr = {}", PasswordMaskUtils.maskAddr(addr));
                     throw new CamelliaRedisException("preheat fail, addr = " + PasswordMaskUtils.maskAddr(addr));
                 }
@@ -292,22 +292,22 @@ public class RedisClientHub {
         return false;
     }
 
-    public RedisClient get(RedisClientAddr addr) {
+    public RedisConnection get(RedisConnectionAddr addr) {
         try {
-            RedisClient cache = addr.getCache();
+            RedisConnection cache = addr.getCache();
             if (cache != null && cache.isValid()) {
                 return cache;
             }
             EventLoop eventLoop = eventLoopThreadLocal.get();
             if (eventLoop != null) {
-                RedisClient client = tryGetRedisClient(eventLoop, addr);
+                RedisConnection client = tryGetRedisClient(eventLoop, addr);
                 if (client != null) {
                     addr.setCache(client);
                     return client;
                 }
             }
             String url = addr.getUrl();
-            RedisClient client = map.get(url);
+            RedisConnection client = map.get(url);
             if (client != null && client.isValid()) {
                 return client;
             }
@@ -323,19 +323,19 @@ public class RedisClientHub {
                 map.put(url, client);
                 return client;
             }
-            String log = "get RedisClient fail, url = " + url;
-            ErrorLogCollector.collect(RedisClientHub.class, log);
+            String log = "get RedisConnection fail, url = " + url;
+            ErrorLogCollector.collect(RedisConnectionHub.class, log);
             return null;
         } catch (Exception e) {
-            ErrorLogCollector.collect(RedisClientHub.class, "get RedisClient error, addr = " + addr.getUrl(), e);
+            ErrorLogCollector.collect(RedisConnectionHub.class, "get RedisConnection error, addr = " + addr.getUrl(), e);
             return null;
         }
     }
 
-    private RedisClient tryGetRedisClient(EventLoop eventLoop, RedisClientAddr addr) {
-        ConcurrentHashMap<String, RedisClient> map = CamelliaMapUtils.computeIfAbsent(eventLoopMap, eventLoop, k -> new ConcurrentHashMap<>());
+    private RedisConnection tryGetRedisClient(EventLoop eventLoop, RedisConnectionAddr addr) {
+        ConcurrentHashMap<String, RedisConnection> map = CamelliaMapUtils.computeIfAbsent(eventLoopMap, eventLoop, k -> new ConcurrentHashMap<>());
         String url = addr.getUrl();
-        RedisClient client = map.get(url);
+        RedisConnection client = map.get(url);
         if (client != null && client.isValid()) {
             return client;
         }
@@ -349,13 +349,13 @@ public class RedisClientHub {
                             LockMap lockMap = CamelliaMapUtils.computeIfAbsent(this.lockMapMap, eventLoop, k -> new LockMap());
                             tryInitRedisClient(map, lockMap, eventLoop, addr);
                         } catch (Exception e) {
-                            ErrorLogCollector.collect(RedisClientHub.class, "tryInitRedisClient error", e);
+                            ErrorLogCollector.collect(RedisConnectionHub.class, "tryInitRedisConnection error", e);
                         } finally {
                             status.compareAndSet(true, false);
                         }
                     });
                 } catch (Exception e) {
-                    ErrorLogCollector.collect(RedisClientHub.class, "tryInitRedisClient submit error", e);
+                    ErrorLogCollector.collect(RedisConnectionHub.class, "tryInitRedisConnection submit error", e);
                     status.compareAndSet(true, false);
                 }
             }
@@ -366,9 +366,9 @@ public class RedisClientHub {
         }
     }
 
-    private RedisClient tryInitRedisClient(ConcurrentHashMap<String, RedisClient> map, LockMap lockMap, EventLoop eventLoop, RedisClientAddr addr) {
+    private RedisConnection tryInitRedisClient(ConcurrentHashMap<String, RedisConnection> map, LockMap lockMap, EventLoop eventLoop, RedisConnectionAddr addr) {
         String url = addr.getUrl();
-        RedisClient client = map.get(url);
+        RedisConnection client = map.get(url);
         if (client == null || !client.isValid()) {
             if (fastFail(url)) {
                 return null;
@@ -376,7 +376,7 @@ public class RedisClientHub {
             synchronized (lockMap.getLockObj(url)) {
                 client = map.get(url);
                 if (client == null || !client.isValid()) {
-                    RedisClientConfig config = new RedisClientConfig();
+                    RedisConnectionConfig config = new RedisConnectionConfig();
                     config.setHost(addr.getHost());
                     config.setPort(addr.getPort());
                     config.setUserName(addr.getUserName());
@@ -397,10 +397,10 @@ public class RedisClientHub {
                     config.setSoSndbuf(soSndbuf);
                     config.setWriteBufferWaterMarkLow(writeBufferWaterMarkLow);
                     config.setWriteBufferWaterMarkHigh(writeBufferWaterMarkHigh);
-                    client = new RedisClient(config);
+                    client = new RedisConnection(config);
                     client.start();
                     if (client.isValid()) {
-                        RedisClient oldClient = map.put(url, client);
+                        RedisConnection oldClient = map.put(url, client);
                         if (oldClient != null) {
                             oldClient.stop();
                         }
@@ -419,14 +419,14 @@ public class RedisClientHub {
     }
 
     private void reloadConf() {
-        long failBanMillis = ProxyDynamicConf.getLong("redis.client.fail.ban.millis", this.failBanMillis);
+        long failBanMillis = ProxyDynamicConf.getLong("redis.connection.fail.ban.millis", this.failBanMillis);
         if (failBanMillis != this.failBanMillis) {
-            logger.info("RedisClientHub failBanMillis, {} -> {}", this.failBanMillis, failBanMillis);
+            logger.info("RedisConnection failBanMillis, {} -> {}", this.failBanMillis, failBanMillis);
             this.failBanMillis = failBanMillis;
         }
-        int failCountThreshold = ProxyDynamicConf.getInt("redis.client.fail.count.threshold", this.failCountThreshold);
+        int failCountThreshold = ProxyDynamicConf.getInt("redis.connection.fail.count.threshold", this.failCountThreshold);
         if (failCountThreshold != this.failCountThreshold) {
-            logger.info("RedisClientHub failCountThreshold, {} -> {}", this.failCountThreshold, failCountThreshold);
+            logger.info("RedisConnection failCountThreshold, {} -> {}", this.failCountThreshold, failCountThreshold);
             this.failCountThreshold = failCountThreshold;
         }
     }
@@ -439,7 +439,7 @@ public class RedisClientHub {
             //此时去重置一下计数器，这样确保failBanMillis到期之后failCount从0开始计算
             resetFailCount(url);
             String log = "currentTimeMillis - failTimestamp < failBanMillis[" + failBanMillis + "], immediate return null, key = " + url;
-            ErrorLogCollector.collect(RedisClientHub.class, log);
+            ErrorLogCollector.collect(RedisConnectionHub.class, log);
             return true;
         }
         long failCount = getFailCount(url);
@@ -449,7 +449,7 @@ public class RedisClientHub {
             setFailTimestamp(url);
             resetFailCount(url);
             String log = "failCount > failCountThreshold[" + failCountThreshold + "], immediate return null, key = " + url;
-            ErrorLogCollector.collect(RedisClientHub.class, log);
+            ErrorLogCollector.collect(RedisConnectionHub.class, log);
             return true;
         }
         return false;

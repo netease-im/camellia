@@ -9,8 +9,8 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -159,7 +159,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
 
     private void heartbeat(ProxyNode node, ClusterModeStatus.Status status) {
         try {
-            RedisClient client = RedisClientHub.getInstance().get(node.getHost(), node.getCport(), null, null);
+            RedisConnection client = RedisConnectionHub.getInstance().get(node.getHost(), node.getCport(), null, null);
             if (client != null) {
                 CompletableFuture<Reply> future = client.sendCommand(RedisCommand.CLUSTER.raw(),
                         Utils.stringToBytes(RedisKeyword.PROXY_HEARTBEAT.name()), Utils.stringToBytes(current().toString()),

@@ -13,11 +13,11 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplate;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplateChooser;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.HostAndPort;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
@@ -78,7 +78,7 @@ public class UpstreamInfoUtils {
                         String[] split1 = split[0].split(":");
                         String host = split1[0];
                         int port = Integer.parseInt(split1[1]);
-                        RedisClientAddr addr = new RedisClientAddr(host, port, ((RedisClusterResource) resource).getUserName(), ((RedisClusterResource) resource).getPassword());
+                        RedisConnectionAddr addr = new RedisConnectionAddr(host, port, ((RedisClusterResource) resource).getUserName(), ((RedisClusterResource) resource).getPassword());
                         RedisInfo redisInfo = getRedisInfo(addr);
                         if (redisInfo != null) {
                             totalMaxMemory += redisInfo.maxMemory;
@@ -109,7 +109,7 @@ public class UpstreamInfoUtils {
             }
         } else if (resource instanceof RedisResource) {
             infoJson.put("type", "standalone");
-            RedisClientAddr addr = new RedisClientAddr(((RedisResource) resource).getHost(),
+            RedisConnectionAddr addr = new RedisConnectionAddr(((RedisResource) resource).getHost(),
                     ((RedisResource) resource).getPort(), ((RedisResource) resource).getUserName(), ((RedisResource) resource).getPassword());
             RedisInfo redisInfo = getRedisInfo(addr);
             if (redisInfo != null) {
@@ -146,7 +146,7 @@ public class UpstreamInfoUtils {
         infoJson.put("expire_key_count", expireKeyCount);
     }
 
-    private static JSONObject toNodeJson(RedisClientAddr clientAddr, RedisInfo redisInfo) {
+    private static JSONObject toNodeJson(RedisConnectionAddr clientAddr, RedisInfo redisInfo) {
         JSONObject json = new JSONObject();
         Map<String, String> map = parseKv(redisInfo.string);
         Map<String, Object> formatMap = new HashMap<>();
@@ -179,9 +179,9 @@ public class UpstreamInfoUtils {
         return jsonObject;
     }
 
-    public static String upstreamInfo(Long bid, String bgroup, AsyncCamelliaRedisTemplateChooser chooser, boolean parseJson) {
+    public static String upstreamInfo(Long bid, String bgroup, UpstreamRedisClientTemplateChooser chooser, boolean parseJson) {
         try {
-            AsyncCamelliaRedisTemplate template = chooser.choose(bid, bgroup);
+            UpstreamRedisClientTemplate template = chooser.choose(bid, bgroup);
             if (template == null) {
                 return null;
             }
@@ -235,7 +235,7 @@ public class UpstreamInfoUtils {
                     JSONObject redisNodeInfoJson = new JSONObject();
                     upstream.put("redis-node-info", redisNodeInfoJson);
 
-                    RedisClientAddr addr = new RedisClientAddr(((RedisResource) redisResource).getHost(),
+                    RedisConnectionAddr addr = new RedisConnectionAddr(((RedisResource) redisResource).getHost(),
                             ((RedisResource) redisResource).getPort(), ((RedisResource) redisResource).getUserName(), ((RedisResource) redisResource).getPassword());
                     builder.append("### redis-node-info").append("\r\n");
                     RedisInfo redisInfo = getRedisInfo(addr);
@@ -318,7 +318,7 @@ public class UpstreamInfoUtils {
                             String[] split1 = split[0].split(":");
                             String host = split1[0];
                             int port = Integer.parseInt(split1[1]);
-                            RedisInfo redisInfo = getRedisInfo(new RedisClientAddr(host, port, ((RedisClusterResource) redisResource).getUserName(), ((RedisClusterResource) redisResource).getPassword()));
+                            RedisInfo redisInfo = getRedisInfo(new RedisConnectionAddr(host, port, ((RedisClusterResource) redisResource).getUserName(), ((RedisClusterResource) redisResource).getPassword()));
                             redisNodeInfoBuilder.append("#### node").append(k).append("\r\n");
 
                             JSONObject node = new JSONObject();
@@ -426,7 +426,7 @@ public class UpstreamInfoUtils {
         private long expireKeyCount;
         private long avgTtl;
     }
-    private static RedisInfo getRedisInfo(RedisClientAddr addr) {
+    private static RedisInfo getRedisInfo(RedisConnectionAddr addr) {
         Map<String, String> map = getInfoMap(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), new byte[][] {RedisCommand.INFO.raw()});
         if (map == null) {
             return null;
@@ -529,12 +529,12 @@ public class UpstreamInfoUtils {
     }
 
     private static Map<String, String> getInfoMap(String host, int port, String userName, String password, byte[][] command) {
-        RedisClient redisClient = null;
+        RedisConnection redisConnection = null;
         try {
-            redisClient = RedisClientHub.getInstance().newClient(host, port, userName, password);
-            if (redisClient != null) {
+            redisConnection = RedisConnectionHub.getInstance().newClient(host, port, userName, password);
+            if (redisConnection != null) {
                 Map<String, String> map = new HashMap<>();
-                CompletableFuture<Reply> future = redisClient.sendCommand(command);
+                CompletableFuture<Reply> future = redisConnection.sendCommand(command);
                 Reply reply = future.get(10, TimeUnit.SECONDS);
                 if (reply instanceof BulkReply) {
                     String string = Utils.bytesToString(((BulkReply) reply).getRaw());
@@ -554,22 +554,22 @@ public class UpstreamInfoUtils {
             logger.error(e.getMessage(), e);
             return null;
         } finally {
-            if (redisClient != null) {
-                redisClient.stop(true);
+            if (redisConnection != null) {
+                redisConnection.stop(true);
             }
         }
     }
 
     private static class RedisSentinelInfo {
         RedisInfo redisInfo;
-        RedisClientAddr master;
+        RedisConnectionAddr master;
     }
     private static RedisSentinelInfo getRedisSentinelInfo(List<RedisSentinelResource.Node> sentinels, String userName, String password, String masterName) {
         RedisSentinelInfo redisSentinelInfo = new RedisSentinelInfo();
         for (RedisSentinelResource.Node node : sentinels) {
             HostAndPort master = getRedisSentinelMaster(node.getHost(), node.getPort(), masterName);
             if (master != null) {
-                RedisClientAddr addr = new RedisClientAddr(master.getHost(), master.getPort(), userName, password);
+                RedisConnectionAddr addr = new RedisConnectionAddr(master.getHost(), master.getPort(), userName, password);
                 redisSentinelInfo.master = addr;
                 RedisInfo redisInfo = getRedisInfo(addr);
                 if (redisInfo != null) {
@@ -582,11 +582,11 @@ public class UpstreamInfoUtils {
     }
 
     private static HostAndPort getRedisSentinelMaster(String host, int port, String masterName) {
-        RedisClient redisClient = null;
+        RedisConnection redisConnection = null;
         try {
-            redisClient = RedisClientHub.getInstance().newClient(host, port, null, null);
-            if (redisClient != null) {
-                CompletableFuture<Reply> future1 = redisClient.sendCommand(RedisCommand.SENTINEL.raw(),
+            redisConnection = RedisConnectionHub.getInstance().newClient(host, port, null, null);
+            if (redisConnection != null) {
+                CompletableFuture<Reply> future1 = redisConnection.sendCommand(RedisCommand.SENTINEL.raw(),
                         RedisSentinelUtils.SENTINEL_GET_MASTER_ADDR_BY_NAME, Utils.stringToBytes(masterName));
                 Reply getMasterReply = future1.get(10, TimeUnit.SECONDS);
                 return RedisSentinelUtils.processMasterGet(getMasterReply);
@@ -596,8 +596,8 @@ public class UpstreamInfoUtils {
             logger.error(e.getMessage(), e);
             return null;
         } finally {
-            if (redisClient != null) {
-                redisClient.stop(true);
+            if (redisConnection != null) {
+                redisConnection.stop(true);
             }
         }
     }
@@ -658,11 +658,11 @@ public class UpstreamInfoUtils {
     }
 
     private static List<ClusterNodeInfo> clusterNodes(String host, int port, String userName, String password) {
-        RedisClient redisClient = null;
+        RedisConnection redisConnection = null;
         try {
-            redisClient = RedisClientHub.getInstance().newClient(host, port, userName, password);
-            if (redisClient != null) {
-                CompletableFuture<Reply> future = redisClient.sendCommand(Utils.stringToBytes("cluster"), Utils.stringToBytes("nodes"));
+            redisConnection = RedisConnectionHub.getInstance().newClient(host, port, userName, password);
+            if (redisConnection != null) {
+                CompletableFuture<Reply> future = redisConnection.sendCommand(Utils.stringToBytes("cluster"), Utils.stringToBytes("nodes"));
                 Reply reply = future.get(10, TimeUnit.SECONDS);
                 if (reply instanceof BulkReply) {
                     String string = Utils.bytesToString(((BulkReply) reply).getRaw());
@@ -694,8 +694,8 @@ public class UpstreamInfoUtils {
             logger.error(e.getMessage(), e);
             return null;
         } finally {
-            if (redisClient != null) {
-                redisClient.stop(true);
+            if (redisConnection != null) {
+                redisConnection.stop(true);
             }
         }
     }

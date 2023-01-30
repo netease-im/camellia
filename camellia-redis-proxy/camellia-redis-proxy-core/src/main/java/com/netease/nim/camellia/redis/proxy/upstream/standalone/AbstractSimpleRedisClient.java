@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.standalone;
 
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncClient;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.command.AsyncTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -9,9 +9,9 @@ import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.PubSubUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import org.slf4j.Logger;
@@ -26,11 +26,11 @@ import java.util.concurrent.CompletableFuture;
  *
  * Created by caojiajun on 2020/9/23
  */
-public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
+public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(AsyncCamelliaSimpleClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractSimpleRedisClient.class);
 
-    public abstract RedisClientAddr getAddr();
+    public abstract RedisConnectionAddr getAddr();
     public abstract Resource getResource();
 
     @Override
@@ -43,8 +43,8 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
         if(logger.isInfoEnabled()) {
             logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
         }
-        RedisClientAddr addr = getAddr();
-        boolean result = RedisClientHub.getInstance().preheat(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), addr.getDb());
+        RedisConnectionAddr addr = getAddr();
+        boolean result = RedisConnectionHub.getInstance().preheat(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), addr.getDb());
         if(logger.isInfoEnabled()) {
             logger.info("preheat result = {}, url = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()));
         }
@@ -71,7 +71,7 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
             Command command = commands.get(i);
             CompletableFuture<Reply> future = completableFutureList.get(i);
             ChannelInfo channelInfo = command.getChannelInfo();
-            RedisClient bindClient = channelInfo.getBindClient();
+            RedisConnection bindClient = channelInfo.getBindClient();
             RedisCommand redisCommand = command.getRedisCommand();
             if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
                 boolean first = false;
@@ -193,7 +193,7 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
     }
 
     private boolean isPassThroughCommand(Command command) {
-        RedisClient bindClient = command.getChannelInfo().getBindClient();
+        RedisConnection bindClient = command.getChannelInfo().getBindClient();
         if (bindClient != null) return false;
         RedisCommand redisCommand = command.getRedisCommand();
         if (redisCommand == null) return false;
@@ -202,17 +202,17 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
     }
 
     private void flushBlockingCommands(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
-        RedisClientAddr addr = getAddr();
+        RedisConnectionAddr addr = getAddr();
         if (addr == null) {
             String log = "addr is null, command return NOT_AVAILABLE, RedisResource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
                 completableFuture.complete(ErrorReply.NOT_AVAILABLE);
-                ErrorLogCollector.collect(AsyncCamelliaRedisClient.class, log);
+                ErrorLogCollector.collect(RedisStandaloneClient.class, log);
             }
             return;
         }
         Command lastBlockingCommand = commands.get(commands.size() - 1);
-        RedisClient client = lastBlockingCommand.getChannelInfo().acquireBindRedisClient(addr);
+        RedisConnection client = lastBlockingCommand.getChannelInfo().acquireBindRedisClient(addr);
         if (client != null) {
             client.sendCommand(commands, completableFutureList);
             client.startIdleCheck();
@@ -220,29 +220,29 @@ public abstract class AsyncCamelliaSimpleClient implements AsyncClient {
             String log = "RedisClient[" + PasswordMaskUtils.maskAddr(addr) + "] is null, command return NOT_AVAILABLE, RedisResource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
                 completableFuture.complete(ErrorReply.NOT_AVAILABLE);
-                ErrorLogCollector.collect(AsyncCamelliaRedisClient.class, log);
+                ErrorLogCollector.collect(RedisStandaloneClient.class, log);
             }
         }
     }
 
     private void flushNoBlockingCommands(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
-        RedisClientAddr addr = getAddr();
+        RedisConnectionAddr addr = getAddr();
         if (addr == null) {
             String log = "addr is null, command return NOT_AVAILABLE, RedisResource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
                 completableFuture.complete(ErrorReply.NOT_AVAILABLE);
-                ErrorLogCollector.collect(AsyncCamelliaRedisClient.class, log);
+                ErrorLogCollector.collect(RedisStandaloneClient.class, log);
             }
             return;
         }
-        RedisClient client = RedisClientHub.getInstance().get(addr);
+        RedisConnection client = RedisConnectionHub.getInstance().get(addr);
         if (client != null) {
             client.sendCommand(commands, completableFutureList);
         } else {
             String log = "RedisClient[" + PasswordMaskUtils.maskAddr(addr) + "] is null, command return NOT_AVAILABLE, RedisResource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
                 completableFuture.complete(ErrorReply.NOT_AVAILABLE);
-                ErrorLogCollector.collect(AsyncCamelliaRedisClient.class, log);
+                ErrorLogCollector.collect(RedisStandaloneClient.class, log);
             }
         }
     }

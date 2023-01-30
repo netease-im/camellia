@@ -7,7 +7,7 @@ import com.netease.nim.camellia.redis.proxy.auth.HelloCommandUtil;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
@@ -15,8 +15,8 @@ import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplate;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateChooser;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.channel.ChannelFutureListener;
@@ -38,14 +38,14 @@ public class CommandsTransponder {
 
     private final AuthCommandProcessor authCommandProcessor;
     private final ProxyClusterModeProcessor clusterModeProcessor;
-    private final AsyncCamelliaRedisTemplateChooser chooser;
+    private final UpstreamRedisClientTemplateChooser chooser;
     private final ProxyPluginFactory proxyPluginFactory;
 
     private boolean eventLoopSetSuccess = false;
 
     private ProxyPluginInitResp proxyPluginInitResp;
 
-    public CommandsTransponder(AsyncCamelliaRedisTemplateChooser chooser, CommandInvokeConfig commandInvokeConfig) {
+    public CommandsTransponder(UpstreamRedisClientTemplateChooser chooser, CommandInvokeConfig commandInvokeConfig) {
         this.chooser = chooser;
         this.authCommandProcessor = commandInvokeConfig.getAuthCommandProcessor();
         this.clusterModeProcessor = commandInvokeConfig.getClusterModeProcessor();
@@ -56,7 +56,7 @@ public class CommandsTransponder {
 
     public void transpond(ChannelInfo channelInfo, List<Command> commands) {
         if (!eventLoopSetSuccess) {
-            RedisClientHub.getInstance().updateEventLoop(channelInfo.getCtx().channel().eventLoop());
+            RedisConnectionHub.getInstance().updateEventLoop(channelInfo.getCtx().channel().eventLoop());
             eventLoopSetSuccess = true;
         }
         try {
@@ -321,11 +321,11 @@ public class CommandsTransponder {
     private void flush(Long bid, String bgroup, List<AsyncTask> tasks, List<Command> commands) {
         try {
             if (!chooser.isMultiTenancySupport() || bid == null || bid <= 0 || bgroup == null) {
-                AsyncCamelliaRedisTemplate template = chooser.choose(bid, bgroup);
+                UpstreamRedisClientTemplate template = chooser.choose(bid, bgroup);
                 flush0(template, bid, bgroup, tasks, commands);
                 return;
             }
-            CompletableFuture<AsyncCamelliaRedisTemplate> future = chooser.chooseAsync(bid, bgroup);
+            CompletableFuture<UpstreamRedisClientTemplate> future = chooser.chooseAsync(bid, bgroup);
             if (future == null) {
                 for (AsyncTask task : tasks) {
                     task.replyCompleted(ErrorReply.NOT_AVAILABLE);
@@ -341,7 +341,7 @@ public class CommandsTransponder {
         }
     }
 
-    private void flush0(AsyncCamelliaRedisTemplate template, Long bid, String bgroup, List<AsyncTask> tasks, List<Command> commands) {
+    private void flush0(UpstreamRedisClientTemplate template, Long bid, String bgroup, List<AsyncTask> tasks, List<Command> commands) {
         try {
             if (template == null) {
                 for (AsyncTask task : tasks) {

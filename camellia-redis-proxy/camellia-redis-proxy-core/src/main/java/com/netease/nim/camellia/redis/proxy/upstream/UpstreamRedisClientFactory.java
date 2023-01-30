@@ -4,12 +4,12 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.base.resource.*;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
-import com.netease.nim.camellia.redis.proxy.upstream.cluster.AsyncCamelliaRedisClusterClient;
-import com.netease.nim.camellia.redis.proxy.upstream.proxies.AsyncCameliaRedisProxiesClient;
-import com.netease.nim.camellia.redis.proxy.upstream.proxies.AsyncCameliaRedisProxiesDiscoveryClient;
-import com.netease.nim.camellia.redis.proxy.upstream.sentinel.AsyncCamelliaRedisSentinelClient;
-import com.netease.nim.camellia.redis.proxy.upstream.sentinel.AsyncCamelliaRedisSentinelSlavesClient;
-import com.netease.nim.camellia.redis.proxy.upstream.standalone.AsyncCamelliaRedisClient;
+import com.netease.nim.camellia.redis.proxy.upstream.cluster.RedisClusterClient;
+import com.netease.nim.camellia.redis.proxy.upstream.proxies.RedisProxiesClient;
+import com.netease.nim.camellia.redis.proxy.upstream.proxies.RedisProxiesDiscoveryClient;
+import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelClient;
+import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelSlavesClient;
+import com.netease.nim.camellia.redis.proxy.upstream.standalone.RedisStandaloneClient;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,16 +17,16 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * Created by caojiajun on 2019/12/19.
  */
-public interface AsyncNettyClientFactory {
+public interface UpstreamRedisClientFactory {
 
-    AsyncClient get(String url);
+    IUpstreamClient get(String url);
 
-    AsyncNettyClientFactory DEFAULT = new Default();
+    UpstreamRedisClientFactory DEFAULT = new Default();
 
-    class Default implements AsyncNettyClientFactory {
+    class Default implements UpstreamRedisClientFactory {
 
         private final Object lock = new Object();
-        private final ConcurrentHashMap<String, AsyncClient> map = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<String, IUpstreamClient> map = new ConcurrentHashMap<>();
         private int maxAttempts = Constants.Transpond.redisClusterMaxAttempts;
 
         public Default() {
@@ -36,72 +36,72 @@ public interface AsyncNettyClientFactory {
             this.maxAttempts = maxAttempts;
         }
 
-        public AsyncClient get(RedisResource redisResource) {
-            AsyncClient client = map.get(redisResource.getUrl());
+        public IUpstreamClient get(RedisResource redisResource) {
+            IUpstreamClient client = map.get(redisResource.getUrl());
             if (client == null) {
                 client = map.computeIfAbsent(redisResource.getUrl(),
-                        k -> new AsyncCamelliaRedisClient(redisResource));
+                        k -> new RedisStandaloneClient(redisResource));
             }
             return client;
         }
 
-        public AsyncClient get(RedisClusterResource redisClusterResource) {
-            AsyncClient client = map.get(redisClusterResource.getUrl());
+        public IUpstreamClient get(RedisClusterResource redisClusterResource) {
+            IUpstreamClient client = map.get(redisClusterResource.getUrl());
             if (client == null) {
                 client = map.computeIfAbsent(redisClusterResource.getUrl(),
-                        k -> new AsyncCamelliaRedisClusterClient(redisClusterResource, maxAttempts));
+                        k -> new RedisClusterClient(redisClusterResource, maxAttempts));
             }
             return client;
         }
 
-        public AsyncClient get(RedisClusterSlavesResource redisClusterSlavesResource) {
-            AsyncClient client = map.get(redisClusterSlavesResource.getUrl());
+        public IUpstreamClient get(RedisClusterSlavesResource redisClusterSlavesResource) {
+            IUpstreamClient client = map.get(redisClusterSlavesResource.getUrl());
             if (client == null) {
                 client = map.computeIfAbsent(redisClusterSlavesResource.getUrl(),
-                        k -> new AsyncCamelliaRedisClusterClient(redisClusterSlavesResource, maxAttempts));
+                        k -> new RedisClusterClient(redisClusterSlavesResource, maxAttempts));
             }
             return client;
         }
 
-        public AsyncClient get(RedisSentinelResource redisSentinelResource) {
-            AsyncClient client = map.get(redisSentinelResource.getUrl());
+        public IUpstreamClient get(RedisSentinelResource redisSentinelResource) {
+            IUpstreamClient client = map.get(redisSentinelResource.getUrl());
             if (client == null) {
                 client = map.computeIfAbsent(redisSentinelResource.getUrl(),
-                        k -> new AsyncCamelliaRedisSentinelClient(redisSentinelResource));
+                        k -> new RedisSentinelClient(redisSentinelResource));
             }
             return client;
         }
 
-        public AsyncClient get(RedisSentinelSlavesResource redisSentinelSlavesResource) {
-            AsyncClient client = map.get(redisSentinelSlavesResource.getUrl());
+        public IUpstreamClient get(RedisSentinelSlavesResource redisSentinelSlavesResource) {
+            IUpstreamClient client = map.get(redisSentinelSlavesResource.getUrl());
             if (client == null) {
                 client = map.computeIfAbsent(redisSentinelSlavesResource.getUrl(),
-                        k -> new AsyncCamelliaRedisSentinelSlavesClient(redisSentinelSlavesResource));
+                        k -> new RedisSentinelSlavesClient(redisSentinelSlavesResource));
             }
             return client;
         }
 
-        public AsyncClient get(RedisProxiesResource redisProxiesResource) {
-            AsyncClient client = map.get(redisProxiesResource.getUrl());
+        public IUpstreamClient get(RedisProxiesResource redisProxiesResource) {
+            IUpstreamClient client = map.get(redisProxiesResource.getUrl());
             if (client == null) {
                 client = map.computeIfAbsent(redisProxiesResource.getUrl(),
-                        k -> new AsyncCameliaRedisProxiesClient(redisProxiesResource));
+                        k -> new RedisProxiesClient(redisProxiesResource));
             }
             return client;
         }
 
-        public AsyncClient get(RedisProxiesDiscoveryResource redisProxiesDiscoveryResource) {
-            AsyncClient client = map.get(redisProxiesDiscoveryResource.getUrl());
+        public IUpstreamClient get(RedisProxiesDiscoveryResource redisProxiesDiscoveryResource) {
+            IUpstreamClient client = map.get(redisProxiesDiscoveryResource.getUrl());
             if (client == null) {
                 client = map.computeIfAbsent(redisProxiesDiscoveryResource.getUrl(),
-                        k -> new AsyncCameliaRedisProxiesDiscoveryClient(redisProxiesDiscoveryResource));
+                        k -> new RedisProxiesDiscoveryClient(redisProxiesDiscoveryResource));
             }
             return client;
         }
 
         @Override
-        public AsyncClient get(String url) {
-            AsyncClient client = map.get(url);
+        public IUpstreamClient get(String url) {
+            IUpstreamClient client = map.get(url);
             if (client == null) {
                 synchronized (lock) {
                     client = map.get(url);

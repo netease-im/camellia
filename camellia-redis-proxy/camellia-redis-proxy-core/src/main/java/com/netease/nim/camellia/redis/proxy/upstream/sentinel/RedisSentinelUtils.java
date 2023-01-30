@@ -1,8 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.upstream.sentinel;
 
 import com.netease.nim.camellia.redis.proxy.upstream.utils.HostAndPort;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
@@ -31,14 +31,14 @@ public class RedisSentinelUtils {
     public static final byte[] SLAVES = Utils.stringToBytes("slaves");
 
     public static RedisSentinelMasterResponse getMasterAddr(String host, int port, String masterName) {
-        RedisClient redisClient = null;
+        RedisConnection redisConnection = null;
         boolean sentinelAvailable = false;
         HostAndPort master = null;
         try {
-            redisClient = RedisClientHub.getInstance().newClient(host, port, null, null);
-            if (redisClient != null && redisClient.isValid()) {
+            redisConnection = RedisConnectionHub.getInstance().newClient(host, port, null, null);
+            if (redisConnection != null && redisConnection.isValid()) {
                 sentinelAvailable = true;
-                CompletableFuture<Reply> future = redisClient.sendCommand(RedisCommand.SENTINEL.raw(), SENTINEL_GET_MASTER_ADDR_BY_NAME, Utils.stringToBytes(masterName));
+                CompletableFuture<Reply> future = redisConnection.sendCommand(RedisCommand.SENTINEL.raw(), SENTINEL_GET_MASTER_ADDR_BY_NAME, Utils.stringToBytes(masterName));
                 Reply reply = future.get(10, TimeUnit.SECONDS);
                 master = processMasterGet(reply);
             }
@@ -47,21 +47,21 @@ public class RedisSentinelUtils {
             logger.error("Can not get master addr, master name = {}, sentinel = {}", master, host + ":" + port, e);
             return new RedisSentinelMasterResponse(master, sentinelAvailable);
         } finally {
-            if (redisClient != null) {
-                redisClient.stop(true);
+            if (redisConnection != null) {
+                redisConnection.stop(true);
             }
         }
     }
 
     public static RedisSentinelSlavesResponse getSlaveAddrs(String host, int port, String masterName) {
-        RedisClient redisClient = null;
+        RedisConnection redisConnection = null;
         boolean sentinelAvailable = false;
         List<HostAndPort> slaves = null;
         try {
-            redisClient = RedisClientHub.getInstance().newClient(host, port, null, null);
-            if (redisClient != null && redisClient.isValid()) {
+            redisConnection = RedisConnectionHub.getInstance().newClient(host, port, null, null);
+            if (redisConnection != null && redisConnection.isValid()) {
                 sentinelAvailable = true;
-                CompletableFuture<Reply> future = redisClient.sendCommand(RedisCommand.SENTINEL.raw(), SLAVES, Utils.stringToBytes(masterName));
+                CompletableFuture<Reply> future = redisConnection.sendCommand(RedisCommand.SENTINEL.raw(), SLAVES, Utils.stringToBytes(masterName));
                 Reply reply = future.get(10, TimeUnit.SECONDS);
                 slaves = processSlaves(reply);
             }
@@ -70,8 +70,8 @@ public class RedisSentinelUtils {
             logger.error("can not get slaves addr, master name = {}, sentinel = {}", masterName, host + ":" + port, e);
             return new RedisSentinelSlavesResponse(null, sentinelAvailable);
         } finally {
-            if (redisClient != null) {
-                redisClient.stop(true);
+            if (redisConnection != null) {
+                redisConnection.stop(true);
             }
         }
     }

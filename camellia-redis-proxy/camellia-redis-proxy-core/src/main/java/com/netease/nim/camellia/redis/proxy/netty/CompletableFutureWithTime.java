@@ -1,17 +1,17 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.proxy.monitor.UpstreamRedisSpendTimeMonitor;
 
 import java.util.concurrent.CompletableFuture;
 
 public class CompletableFutureWithTime<T> extends CompletableFuture<T> {
 
-    private final RedisClientAddr addr;
+    private final RedisConnectionAddr addr;
     private final CompletableFuture<T> future;
     private final long startTime;
 
-    public CompletableFutureWithTime(CompletableFuture<T> future, RedisClientAddr addr, long startTime) {
+    public CompletableFutureWithTime(CompletableFuture<T> future, RedisConnectionAddr addr, long startTime) {
         this.future = future;
         this.addr = addr;
         this.startTime = startTime;

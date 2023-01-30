@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateChooser;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
 import io.netty.channel.epoll.Epoll;
@@ -57,7 +57,7 @@ public class GlobalRedisProxyEnv {
     private static int cport;
     private static int consolePort;
 
-    private static AsyncCamelliaRedisTemplateChooser chooser;
+    private static UpstreamRedisClientTemplateChooser chooser;
     private static ProxyDiscoveryFactory discoveryFactory;
 
     private static final Set<Runnable> callbackSet = new HashSet<>();
@@ -117,7 +117,7 @@ public class GlobalRedisProxyEnv {
         GlobalRedisProxyEnv.consolePort = consolePort;
     }
 
-    public static void setChooser(AsyncCamelliaRedisTemplateChooser chooser) {
+    public static void setChooser(UpstreamRedisClientTemplateChooser chooser) {
         GlobalRedisProxyEnv.chooser = chooser;
     }
 
@@ -175,7 +175,7 @@ public class GlobalRedisProxyEnv {
         return consolePort;
     }
 
-    public static AsyncCamelliaRedisTemplateChooser getChooser() {
+    public static UpstreamRedisClientTemplateChooser getChooser() {
         return chooser;
     }
 

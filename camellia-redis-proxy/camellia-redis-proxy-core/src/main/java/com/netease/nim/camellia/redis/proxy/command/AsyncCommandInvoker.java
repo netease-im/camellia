@@ -10,7 +10,7 @@ import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultProxyPluginFactory;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateChooser;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import io.netty.channel.ChannelHandlerContext;
@@ -29,13 +29,13 @@ public class AsyncCommandInvoker implements CommandInvoker {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncCommandInvoker.class);
 
-    private final AsyncCamelliaRedisTemplateChooser chooser;
+    private final UpstreamRedisClientTemplateChooser chooser;
     private final CommandInvokeConfig commandInvokeConfig;
 
     public AsyncCommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
         ProxyDynamicConf.updateInitConf(serverProperties.getConfig());
 
-        this.chooser = new AsyncCamelliaRedisTemplateChooser(transpondProperties, serverProperties.getProxyBeanFactory());
+        this.chooser = new UpstreamRedisClientTemplateChooser(transpondProperties, serverProperties.getProxyBeanFactory());
         GlobalRedisProxyEnv.setChooser(chooser);
 
         MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);

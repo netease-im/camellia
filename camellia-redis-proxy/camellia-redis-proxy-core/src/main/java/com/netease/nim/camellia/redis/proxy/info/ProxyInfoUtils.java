@@ -5,10 +5,10 @@ import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplate;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplateChooser;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
@@ -79,7 +79,7 @@ public class ProxyInfoUtils {
         }
     }
 
-    public static CompletableFuture<Reply> getInfoReply(Command command, AsyncCamelliaRedisTemplateChooser chooser) {
+    public static CompletableFuture<Reply> getInfoReply(Command command, UpstreamRedisClientTemplateChooser chooser) {
         CompletableFuture<Reply> future = new CompletableFuture<>();
         try {
             executor.submit(() -> {
@@ -188,7 +188,7 @@ public class ProxyInfoUtils {
         }
     }
 
-    public static Reply generateInfoReply(Command command, AsyncCamelliaRedisTemplateChooser chooser) {
+    public static Reply generateInfoReply(Command command, UpstreamRedisClientTemplateChooser chooser) {
         try {
             StringBuilder builder = new StringBuilder();
             byte[][] objects = command.getObjects();
@@ -315,9 +315,9 @@ public class ProxyInfoUtils {
     private static String getRoutes() {
         StringBuilder builder = new StringBuilder();
         builder.append("# Route").append("\r\n");
-        ConcurrentHashMap<String, AsyncCamelliaRedisTemplate> templateMap = RouteConfMonitor.getTemplateMap();
+        ConcurrentHashMap<String, UpstreamRedisClientTemplate> templateMap = RouteConfMonitor.getTemplateMap();
         builder.append("route_nums:").append(templateMap.size()).append("\r\n");
-        for (Map.Entry<String, AsyncCamelliaRedisTemplate> entry : templateMap.entrySet()) {
+        for (Map.Entry<String, UpstreamRedisClientTemplate> entry : templateMap.entrySet()) {
             String key = entry.getKey();
             String[] split = key.split("\\|");
             Long bid = null;
@@ -328,7 +328,7 @@ public class ProxyInfoUtils {
             if (!split[1].equals("null")) {
                 bgroup = split[1];
             }
-            AsyncCamelliaRedisTemplate template = entry.getValue();
+            UpstreamRedisClientTemplate template = entry.getValue();
             String routeConf = ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(template.getResourceTable()));
             builder.append("route_conf_").append(bid == null ? "default" : bid).append("_").append(bgroup == null ? "default" : bgroup).append(":").append(routeConf).append("\r\n");
         }
@@ -338,13 +338,13 @@ public class ProxyInfoUtils {
     private static String getUpstream() {
         StringBuilder builder = new StringBuilder();
         builder.append("# Upstream").append("\r\n");
-        ConcurrentHashMap<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> redisClientMap = RedisClientMonitor.getRedisClientMap();
+        ConcurrentHashMap<RedisConnectionAddr, ConcurrentHashMap<String, RedisConnection>> redisClientMap = RedisClientMonitor.getRedisClientMap();
         int upstreamRedisNums = 0;
-        for (Map.Entry<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> entry : redisClientMap.entrySet()) {
+        for (Map.Entry<RedisConnectionAddr, ConcurrentHashMap<String, RedisConnection>> entry : redisClientMap.entrySet()) {
             upstreamRedisNums += entry.getValue().size();
         }
         builder.append("upstream_redis_nums:").append(upstreamRedisNums).append("\r\n");
-        for (Map.Entry<RedisClientAddr, ConcurrentHashMap<String, RedisClient>> entry : redisClientMap.entrySet()) {
+        for (Map.Entry<RedisConnectionAddr, ConcurrentHashMap<String, RedisConnection>> entry : redisClientMap.entrySet()) {
             builder.append("upstream_redis_nums").append("[").append(PasswordMaskUtils.maskAddr(entry.getKey().getUrl())).append("]").append(":").append(entry.getValue().size()).append("\r\n");
         }
         return builder.toString();

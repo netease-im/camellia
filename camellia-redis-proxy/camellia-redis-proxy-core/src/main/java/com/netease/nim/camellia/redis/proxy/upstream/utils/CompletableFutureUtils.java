@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
  *
  * Created by caojiajun on 2019/12/12.
  */
-public class AsyncUtils {
+public class CompletableFutureUtils {
 
     public static <T> CompletableFuture<List<T>> allOf(List<CompletableFuture<T>> futuresList) {
         CompletableFuture<T>[] futures = new CompletableFuture[futuresList.size()];

@@ -17,8 +17,8 @@ import java.util.concurrent.CompletableFuture;
  */
 public class CommandFlusher {
 
-    private final Map<AsyncClient, List<Command>> commandMap = new HashMap<>();
-    private final Map<AsyncClient, List<CompletableFuture<Reply>>> futureMap = new HashMap<>();
+    private final Map<IUpstreamClient, List<Command>> commandMap = new HashMap<>();
+    private final Map<IUpstreamClient, List<CompletableFuture<Reply>>> futureMap = new HashMap<>();
 
     private int initializerSize;
 
@@ -38,7 +38,7 @@ public class CommandFlusher {
         this.initializerSize = initializerSize;
     }
 
-    public void sendCommand(AsyncClient client, Command command, CompletableFuture<Reply> future) {
+    public void sendCommand(IUpstreamClient client, Command command, CompletableFuture<Reply> future) {
         List<Command> commands = commandMap.get(client);
         if (commands == null) {
             commands = commandMap.computeIfAbsent(client, k -> new ArrayList<>(initializerSize));
@@ -51,15 +51,15 @@ public class CommandFlusher {
         futures.add(future);
     }
 
-    public CompletableFuture<Reply> sendCommand(AsyncClient client, Command command) {
+    public CompletableFuture<Reply> sendCommand(IUpstreamClient client, Command command) {
         CompletableFuture<Reply> future = new CompletableFuture<>();
         sendCommand(client, command, future);
         return future;
     }
 
     public void flush() {
-        for (Map.Entry<AsyncClient, List<Command>> entry : commandMap.entrySet()) {
-            AsyncClient client = entry.getKey();
+        for (Map.Entry<IUpstreamClient, List<Command>> entry : commandMap.entrySet()) {
+            IUpstreamClient client = entry.getKey();
             List<Command> commands = entry.getValue();
             List<CompletableFuture<Reply>> futureList = futureMap.get(client);
             if (client == null) {

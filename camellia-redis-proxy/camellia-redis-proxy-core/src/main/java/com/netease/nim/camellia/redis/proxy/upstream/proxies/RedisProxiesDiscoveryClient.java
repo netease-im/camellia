@@ -8,10 +8,10 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.base.proxy.IProxyDiscovery;
 import com.netease.nim.camellia.redis.base.proxy.Proxy;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientAddr;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClientHub;
-import com.netease.nim.camellia.redis.proxy.upstream.standalone.AsyncCamelliaSimpleClient;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
+import com.netease.nim.camellia.redis.proxy.upstream.standalone.AbstractSimpleRedisClient;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,17 +26,17 @@ import java.util.concurrent.TimeUnit;
  * 基于服务发现的proxy client
  * 对于每个proxy，都会当做一个普通的redis去访问
  */
-public class AsyncCameliaRedisProxiesDiscoveryClient extends AsyncCamelliaSimpleClient {
+public class RedisProxiesDiscoveryClient extends AbstractSimpleRedisClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(AsyncCameliaRedisProxiesDiscoveryClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedisProxiesDiscoveryClient.class);
 
     private final RedisProxiesDiscoveryResource resource;
     private final IProxyDiscovery proxyDiscovery;
-    private List<RedisClientAddr> proxyList = new ArrayList<>();
-    private List<RedisClientAddr> dynamicList;
+    private List<RedisConnectionAddr> proxyList = new ArrayList<>();
+    private List<RedisConnectionAddr> dynamicList;
     private final Object lock = new Object();
 
-    public AsyncCameliaRedisProxiesDiscoveryClient(RedisProxiesDiscoveryResource resource) {
+    public RedisProxiesDiscoveryClient(RedisProxiesDiscoveryResource resource) {
         this.resource = resource;
         if (GlobalRedisProxyEnv.getDiscoveryFactory() == null) {
             throw new CamelliaRedisException("proxy discovery not init");
@@ -53,11 +53,11 @@ public class AsyncCameliaRedisProxiesDiscoveryClient extends AsyncCamelliaSimple
         proxyDiscovery.setCallback(new CamelliaDiscovery.Callback<Proxy>() {
             @Override
             public void add(Proxy proxy) {
-                AsyncCameliaRedisProxiesDiscoveryClient.this.add(proxy);
+                RedisProxiesDiscoveryClient.this.add(proxy);
             }
             @Override
             public void remove(Proxy proxy) {
-                AsyncCameliaRedisProxiesDiscoveryClient.this.remove(proxy);
+                RedisProxiesDiscoveryClient.this.remove(proxy);
             }
         });
         int seconds = ProxyDynamicConf.getInt("redis.proxies.discovery.reload.interval.seconds", 60);
@@ -65,7 +65,7 @@ public class AsyncCameliaRedisProxiesDiscoveryClient extends AsyncCamelliaSimple
     }
 
     @Override
-    public RedisClientAddr getAddr() {
+    public RedisConnectionAddr getAddr() {
         try {
             if (proxyList.isEmpty()) return null;
             if (proxyList.size() == 1) {
@@ -77,7 +77,7 @@ public class AsyncCameliaRedisProxiesDiscoveryClient extends AsyncCamelliaSimple
                     dynamicList = new ArrayList<>(proxyList);
                 }
                 int i = ThreadLocalRandom.current().nextInt(dynamicList.size());
-                RedisClientAddr addr = dynamicList.get(i);
+                RedisConnectionAddr addr = dynamicList.get(i);
                 if (check(addr)) {
                     return addr;
                 } else {
@@ -118,7 +118,7 @@ public class AsyncCameliaRedisProxiesDiscoveryClient extends AsyncCamelliaSimple
     private void init(List<Proxy> proxies) {
         if (proxies == null || proxies.isEmpty()) return;
         synchronized (lock) {
-            List<RedisClientAddr> list = new ArrayList<>();
+            List<RedisConnectionAddr> list = new ArrayList<>();
             for (Proxy proxy : proxies) {
                 list.add(toAddr(proxy));
             }
@@ -134,7 +134,7 @@ public class AsyncCameliaRedisProxiesDiscoveryClient extends AsyncCamelliaSimple
         if (proxy == null) return;
         logger.info("proxy add, proxy = {}, resource = {}", proxy, resource);
         synchronized (lock) {
-            RedisClientAddr addr = toAddr(proxy);
+            RedisConnectionAddr addr = toAddr(proxy);
             if (!this.proxyList.contains(addr)) {
                 if (check(addr)) {
                     this.proxyList.add(addr);
@@ -148,7 +148,7 @@ public class AsyncCameliaRedisProxiesDiscoveryClient extends AsyncCamelliaSimple
         if (proxy == null) return;
         logger.info("proxy remove, proxy = {}, resource = {}", proxy, resource);
         synchronized (lock) {
-            RedisClientAddr addr = toAddr(proxy);
+            RedisConnectionAddr addr = toAddr(proxy);
             if (this.proxyList.contains(addr)) {
                 if (this.proxyList.size() > 1) {
                     this.proxyList.remove(addr);
@@ -160,12 +160,12 @@ public class AsyncCameliaRedisProxiesDiscoveryClient extends AsyncCamelliaSimple
         }
     }
 
-    private RedisClientAddr toAddr(Proxy proxy) {
-        return new RedisClientAddr(proxy.getHost(), proxy.getPort(), resource.getUserName(), resource.getPassword());
+    private RedisConnectionAddr toAddr(Proxy proxy) {
+        return new RedisConnectionAddr(proxy.getHost(), proxy.getPort(), resource.getUserName(), resource.getPassword());
     }
 
-    private boolean check(RedisClientAddr addr) {
-        RedisClient redisClient = RedisClientHub.getInstance().get(addr);
-        return redisClient != null && redisClient.isValid();
+    private boolean check(RedisConnectionAddr addr) {
+        RedisConnection redisConnection = RedisConnectionHub.getInstance().get(addr);
+        return redisConnection != null && redisConnection.isValid();
     }
 }

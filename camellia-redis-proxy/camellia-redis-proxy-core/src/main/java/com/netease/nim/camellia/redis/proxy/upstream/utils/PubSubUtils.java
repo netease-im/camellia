@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.utils;
 import com.netease.nim.camellia.redis.proxy.command.AsyncTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
-import com.netease.nim.camellia.redis.proxy.upstream.client.RedisClient;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.plugin.converter.KeyConverter;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
@@ -24,13 +24,13 @@ import java.util.concurrent.CompletableFuture;
  */
 public class PubSubUtils {
 
-    public static void sendByBindClient(RedisClient client, AsyncTaskQueue asyncTaskQueue,
+    public static void sendByBindClient(RedisConnection client, AsyncTaskQueue asyncTaskQueue,
                                         Command command, CompletableFuture<Reply> future, boolean first) {
         sendByBindClient(client, asyncTaskQueue, command, future, first, command.getRedisCommand());
     }
 
-    private static void sendByBindClient(RedisClient client, AsyncTaskQueue asyncTaskQueue,
-                                        Command command, CompletableFuture<Reply> future, boolean first, RedisCommand redisCommand) {
+    private static void sendByBindClient(RedisConnection client, AsyncTaskQueue asyncTaskQueue,
+                                         Command command, CompletableFuture<Reply> future, boolean first, RedisCommand redisCommand) {
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
         if (future != null) {
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();

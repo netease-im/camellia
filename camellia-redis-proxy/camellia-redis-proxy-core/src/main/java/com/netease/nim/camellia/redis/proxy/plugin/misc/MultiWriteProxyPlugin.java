@@ -5,8 +5,8 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.PrefixMatchHotKeyCacheKeyChecker;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncCamelliaRedisTemplateChooser;
-import com.netease.nim.camellia.redis.proxy.upstream.AsyncClient;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -49,7 +49,7 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
     public ProxyPluginResponse executeRequest(ProxyRequest request) {
         try {
             Command command = request.getCommand();
-            AsyncCamelliaRedisTemplateChooser chooser = request.getChooser();
+            UpstreamRedisClientTemplateChooser chooser = request.getChooser();
             RedisCommand redisCommand = command.getRedisCommand();
             if (redisCommand == null) {
                 return ProxyPluginResponse.SUCCESS;
@@ -108,7 +108,7 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
         }
     }
 
-    private void doMultiWrite(byte[] key, KeyContext keyContext, Command command, AsyncCamelliaRedisTemplateChooser chooser) {
+    private void doMultiWrite(byte[] key, KeyContext keyContext, Command command, UpstreamRedisClientTemplateChooser chooser) {
         try {
             MultiWriteInfo multiWriteInfo = multiWriteFunc.multiWriteInfo(new KeyInfo(key, keyContext));
             if (multiWriteInfo != null && multiWriteInfo.isMultiWriteEnable()) {
@@ -116,7 +116,7 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
                 if (urls != null && !urls.isEmpty()) {
                     for (String url : urls) {
                         try {
-                            AsyncClient client = chooser.getEnv().getClientFactory().get(url);
+                            IUpstreamClient client = chooser.getEnv().getClientFactory().get(url);
                             client.sendCommand(Collections.singletonList(command),
                                     Collections.singletonList(new CompletableFuture<>()));
                         } catch (Exception e) {
