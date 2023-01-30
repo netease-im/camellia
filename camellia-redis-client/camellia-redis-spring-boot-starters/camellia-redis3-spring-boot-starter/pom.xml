@@ -3,7 +3,7 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-redis-eureka-spring-boot-starter</artifactId>
+	<artifactId>camellia-redis3-spring-boot-starter</artifactId>
 	<version>1.2.0-SNAPSHOT</version>
 
 	<parent>
@@ -21,25 +21,38 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-dependencies</artifactId>
-				<version>${spring.cloud.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-eureka-base</artifactId>
+			<artifactId>camellia-redis-spring-boot-starter</artifactId>
 			<version>1.2.0-SNAPSHOT</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.netease.nim</groupId>
+					<artifactId>camellia-redis</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.netease.nim</groupId>
+					<artifactId>camellia-redis-toolkit</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis</artifactId>
+			<artifactId>camellia-redis3</artifactId>
+			<version>1.2.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+			<version>${jedis3.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-redis3-toolkit</artifactId>
 			<version>1.2.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>

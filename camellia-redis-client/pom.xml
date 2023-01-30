@@ -18,6 +18,7 @@
 		<module>camellia-redis</module>
 		<module>camellia-redis3</module>
 		<module>camellia-redis-toolkit</module>
+		<module>camellia-redis3-toolkit</module>
 		<module>camellia-redis-spring-boot-starters</module>
 	</modules>
 </project>

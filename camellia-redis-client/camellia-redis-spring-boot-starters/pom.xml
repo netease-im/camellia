@@ -17,8 +17,11 @@
 	<modules>
 		<module>camellia-redis-eureka-base</module>
 		<module>camellia-redis-eureka-spring-boot-starter</module>
+		<module>camellia-redis3-eureka-spring-boot-starter</module>
 		<module>camellia-redis-spring-boot-starter</module>
+		<module>camellia-redis3-spring-boot-starter</module>
 		<module>camellia-redis-spring-template-adaptor-spring-boot-starter</module>
 		<module>camellia-redis-zk-discovery-spring-boot-starter</module>
+		<module>camellia-redis3-zk-discovery-spring-boot-starter</module>
 	</modules>
 </project>

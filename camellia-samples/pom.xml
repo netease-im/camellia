@@ -22,6 +22,7 @@
         <module>camellia-delay-queue-samples</module>
         <module>camellia-feign-samples</module>
         <module>camellia-redis-samples</module>
+        <module>camellia-redis3-samples</module>
         <module>camellia-hbase-samples</module>
         <module>camellia-redis-proxy-samples</module>
         <module>camellia-redis-proxy-hbase-samples</module>
