@@ -5,14 +5,15 @@ import com.netease.nim.camellia.core.client.annotation.ShardingParam;
 import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.base.utils.LogUtil;
 import com.netease.nim.camellia.redis.base.utils.SafeEncoder;
 import com.netease.nim.camellia.redis.resource.PipelineResource;
 import com.netease.nim.camellia.redis.util.CamelliaBitPosParams;
-import com.netease.nim.camellia.redis.base.utils.LogUtil;
+import com.netease.nim.camellia.redis.util.SetParamsUtils;
 import redis.clients.jedis.*;
-import redis.clients.jedis.params.geo.GeoRadiusParam;
-import redis.clients.jedis.params.sortedset.ZAddParams;
-import redis.clients.jedis.params.sortedset.ZIncrByParams;
+import redis.clients.jedis.params.GeoRadiusParam;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZIncrByParams;
 
 import java.util.List;
 import java.util.Map;
@@ -511,20 +512,6 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
         });
     }
 
-    @WriteOp
-    @Override
-    public Response<Long> linsert(@ShardingParam final byte[] key, final BinaryClient.LIST_POSITION where, final byte[] pivot, final byte[] value) {
-        LogUtil.debugLog(resource, key);
-        Client client = clientPool.getClient(resource, key);
-        client.linsert(key, where, pivot, value);
-        return queable.getResponse(client, BuilderFactory.LONG, resource, key, new ResponseQueable.Fallback() {
-            @Override
-            public void invoke(Client client) {
-                client.linsert(key, where, pivot, value);
-            }
-        });
-    }
-
     @ReadOp
     @Override
     public Response<Long> llen(@ShardingParam final byte[] key) {
@@ -740,11 +727,11 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
     public Response<String> set(final byte[] key, final byte[] value, final byte[] nxxx, final byte[] expx, final long time) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
-        client.set(key, value, nxxx, expx, time);
+        client.set(key, value, SetParamsUtils.setParams(nxxx, expx, time));
         return queable.getResponse(client, BuilderFactory.STRING, resource, key, new ResponseQueable.Fallback() {
             @Override
             public void invoke(Client client) {
-                client.set(key, value, nxxx, expx, time);
+                client.set(key, value, SetParamsUtils.setParams(nxxx, expx, time));
             }
         });
     }
@@ -2177,20 +2164,6 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
         });
     }
 
-    @WriteOp
-    @Override
-    public Response<Long> linsert(@ShardingParam final String key, final BinaryClient.LIST_POSITION where, final String pivot, final String value) {
-        LogUtil.debugLog(resource, key);
-        Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
-        client.linsert(key, where, pivot, value);
-        return queable.getResponse(client, BuilderFactory.LONG, resource, key, new ResponseQueable.Fallback() {
-            @Override
-            public void invoke(Client client) {
-                client.linsert(key, where, pivot, value);
-            }
-        });
-    }
-
     @ReadOp
     @Override
     public Response<Long> llen(@ShardingParam final String key) {
@@ -3302,11 +3275,11 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
     public Response<Long> zadd(@ShardingParam final byte[] key, final Map<byte[], Double> scoreMembers) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
-        client.zaddBinary(key, scoreMembers);
+        client.zadd(key, scoreMembers);
         return queable.getResponse(client, BuilderFactory.LONG, resource, key, new ResponseQueable.Fallback() {
             @Override
             public void invoke(Client client) {
-                client.zaddBinary(key, scoreMembers);
+                client.zadd(key, scoreMembers);
             }
         });
     }
@@ -3316,11 +3289,11 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
     public Response<Long> zadd(@ShardingParam final byte[] key, final Map<byte[], Double> scoreMembers, final ZAddParams params) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
-        client.zaddBinary(key, scoreMembers, params);
+        client.zadd(key, scoreMembers, params);
         return queable.getResponse(client, BuilderFactory.LONG, resource, key, new ResponseQueable.Fallback() {
             @Override
             public void invoke(Client client) {
-                client.zaddBinary(key, scoreMembers, params);
+                client.zadd(key, scoreMembers, params);
             }
         });
     }
@@ -3414,11 +3387,11 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
     public Response<String> set(@ShardingParam final String key, final String value, final String nxxx) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
-        client.set(key, value, nxxx);
+        client.set(key, value, SetParamsUtils.setParams(nxxx, null, 0));
         return queable.getResponse(client, BuilderFactory.STRING, resource, key, new ResponseQueable.Fallback() {
             @Override
             public void invoke(Client client) {
-                client.set(key, value, nxxx);
+                client.set(key, value, SetParamsUtils.setParams(nxxx, null, 0));
             }
         });
     }
@@ -3428,11 +3401,11 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
     public Response<String> set(@ShardingParam final byte[] key, final byte[] value, final byte[] nxxx) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, key);
-        client.set(key, value, nxxx);
+        client.set(key, value, SetParamsUtils.setParams(nxxx, null, 0));
         return queable.getResponse(client, BuilderFactory.STRING, resource, key, new ResponseQueable.Fallback() {
             @Override
             public void invoke(Client client) {
-                client.set(key, value, nxxx);
+                client.set(key, value, SetParamsUtils.setParams(nxxx, null, 0));
             }
         });
     }
@@ -3442,11 +3415,11 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
     public Response<String> set(@ShardingParam final String key, final String value, final String nxxx, final String expx, final int time) {
         LogUtil.debugLog(resource, key);
         Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
-        client.set(key, value, nxxx, expx, time);
+        client.set(key, value, SetParamsUtils.setParams(nxxx, expx, time));
         return queable.getResponse(client, BuilderFactory.STRING, resource, key, new ResponseQueable.Fallback() {
             @Override
             public void invoke(Client client) {
-                client.set(key, value, nxxx, expx, time);
+                client.set(key, value, SetParamsUtils.setParams(nxxx, expx, time));
             }
         });
     }

@@ -3,13 +3,16 @@ package com.netease.nim.camellia.redis.jedis;
 import com.netease.nim.camellia.redis.ICamelliaRedis;
 import com.netease.nim.camellia.redis.CamelliaRedisEnv;
 import com.netease.nim.camellia.redis.base.resource.*;
-import com.netease.nim.camellia.redis.proxy.RedisProxyResource;
 import com.netease.nim.camellia.redis.base.utils.CloseUtil;
+import com.netease.nim.camellia.redis.base.utils.SafeEncoder;
+import com.netease.nim.camellia.redis.proxy.RedisProxyResource;
+import com.netease.nim.camellia.redis.util.SetParamsUtils;
 import redis.clients.jedis.*;
-import redis.clients.jedis.params.geo.GeoRadiusParam;
-import redis.clients.jedis.params.sortedset.ZAddParams;
-import redis.clients.jedis.params.sortedset.ZIncrByParams;
-import redis.clients.util.Pool;
+import redis.clients.jedis.params.GeoRadiusParam;
+import redis.clients.jedis.params.SetParams;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZIncrByParams;
+import redis.clients.jedis.util.Pool;
 
 import java.util.*;
 
@@ -61,10 +64,20 @@ public class CamelliaJedis implements ICamelliaRedis {
     }
 
     @Override
+    public String set(String key, String value, SetParams setParams) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.set(key, value, setParams);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
     public String set(String key, String value, String nxxx, String expx, long time) {
         Jedis jedis = jedisPool.getResource();
         try {
-            return jedis.set(key, value, nxxx, expx, time);
+            return jedis.set(key, value, SetParamsUtils.setParams(nxxx, expx, time));
         } finally {
             CloseUtil.closeQuietly(jedis);
         }
@@ -74,7 +87,7 @@ public class CamelliaJedis implements ICamelliaRedis {
     public String set(String key, String value, String nxxx) {
         Jedis jedis = jedisPool.getResource();
         try {
-            return jedis.set(key, value, nxxx);
+            return jedis.set(key, value, SetParamsUtils.setParams(nxxx, null, 0));
         } finally {
             CloseUtil.closeQuietly(jedis);
         }
@@ -84,7 +97,7 @@ public class CamelliaJedis implements ICamelliaRedis {
     public String set(byte[] key, byte[] value, byte[] nxxx) {
         Jedis jedis = jedisPool.getResource();
         try {
-            return jedis.set(key, value, nxxx);
+            return jedis.set(key, value, SetParamsUtils.setParams(SafeEncoder.encode(nxxx), null, 0));
         } finally {
             CloseUtil.closeQuietly(jedis);
         }
@@ -1121,16 +1134,6 @@ public class CamelliaJedis implements ICamelliaRedis {
     }
 
     @Override
-    public Long linsert(String key, BinaryClient.LIST_POSITION where, String pivot, String value) {
-        Jedis jedis = jedisPool.getResource();
-        try {
-            return jedis.linsert(key, where, pivot, value);
-        } finally {
-            CloseUtil.closeQuietly(jedis);
-        }
-    }
-
-    @Override
     public Long lpushx(String key, String... string) {
         Jedis jedis = jedisPool.getResource();
         try {
@@ -1550,10 +1553,20 @@ public class CamelliaJedis implements ICamelliaRedis {
     }
 
     @Override
+    public String set(byte[] key, byte[] value, SetParams setParams) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.set(key, value, setParams);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
     public String set(byte[] key, byte[] value, byte[] nxxx, byte[] expx, long time) {
         Jedis jedis = jedisPool.getResource();
         try {
-            return jedis.set(key, value, nxxx, expx, time);
+            return jedis.set(key, value, SetParamsUtils.setParams(nxxx, expx, time));
         } finally {
             CloseUtil.closeQuietly(jedis);
         }
@@ -2574,16 +2587,6 @@ public class CamelliaJedis implements ICamelliaRedis {
         Jedis jedis = jedisPool.getResource();
         try {
             return jedis.zremrangeByLex(key, min, max);
-        } finally {
-            CloseUtil.closeQuietly(jedis);
-        }
-    }
-
-    @Override
-    public Long linsert(byte[] key, BinaryClient.LIST_POSITION where, byte[] pivot, byte[] value) {
-        Jedis jedis = jedisPool.getResource();
-        try {
-            return jedis.linsert(key, where, pivot, value);
         } finally {
             CloseUtil.closeQuietly(jedis);
         }

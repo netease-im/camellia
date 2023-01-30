@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.hbase.util;
 
+import com.netease.nim.camellia.redis.base.utils.SafeEncoder;
 import com.netease.nim.camellia.tools.utils.MD5Util;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
@@ -13,7 +14,6 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.util.SafeEncoder;
 
 import java.util.ArrayList;
 import java.util.List;

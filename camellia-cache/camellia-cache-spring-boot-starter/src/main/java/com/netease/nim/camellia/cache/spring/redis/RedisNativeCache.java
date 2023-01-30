@@ -5,10 +5,10 @@ import com.netease.nim.camellia.cache.spring.CamelliaCacheSerializer;
 import com.netease.nim.camellia.cache.spring.CamelliaCacheSerializerException;
 import com.netease.nim.camellia.cache.spring.RemoteNativeCache;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.base.utils.SafeEncoder;
 import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.util.SafeEncoder;
 
 import java.util.*;
 

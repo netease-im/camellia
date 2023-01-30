@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.spring.redis.samples;
 
+import com.netease.nim.camellia.redis.base.utils.SafeEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -8,7 +9,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import redis.clients.util.SafeEncoder;
 
 import java.util.concurrent.TimeUnit;
 

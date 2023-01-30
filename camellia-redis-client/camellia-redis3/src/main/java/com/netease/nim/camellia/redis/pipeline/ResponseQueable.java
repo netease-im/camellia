@@ -196,7 +196,7 @@ public class ResponseQueable {
     }
 
     private void handlerClient(RedisClientPool redisClientPool, Client client, Queue<Item> queue, boolean retry) {
-        List<Object> list = client.getAll();
+        List<Object> list = client.getMany(queue.size());
         for (Object o : list) {
             Item item = queue.poll();
             if (item != null) {

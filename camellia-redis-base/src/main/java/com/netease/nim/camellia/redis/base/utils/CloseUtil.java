@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.util;
+package com.netease.nim.camellia.redis.base.utils;
 
 import java.io.Closeable;
 

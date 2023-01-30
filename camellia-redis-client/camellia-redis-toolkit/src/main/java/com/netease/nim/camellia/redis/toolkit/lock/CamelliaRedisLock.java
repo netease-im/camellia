@@ -1,9 +1,9 @@
 package com.netease.nim.camellia.redis.toolkit.lock;
 
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.base.utils.SafeEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.util.SafeEncoder;
 
 import java.util.UUID;
 import java.util.concurrent.Callable;

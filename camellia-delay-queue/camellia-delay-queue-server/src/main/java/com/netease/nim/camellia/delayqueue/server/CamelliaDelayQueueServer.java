@@ -9,7 +9,7 @@ import com.netease.nim.camellia.delayqueue.common.exception.CamelliaDelayQueueEx
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
 import com.netease.nim.camellia.redis.toolkit.lock.CamelliaRedisLockManager;
-import com.netease.nim.camellia.redis.util.CloseUtil;
+import com.netease.nim.camellia.redis.base.utils.CloseUtil;
 import com.netease.nim.camellia.tools.cache.CamelliaLocalCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

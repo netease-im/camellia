@@ -11,6 +11,8 @@ import com.netease.nim.camellia.redis.base.resource.RedisClusterResource;
 import com.netease.nim.camellia.redis.base.resource.RedisResource;
 import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
 import com.netease.nim.camellia.redis.base.resource.RedisSentinelResource;
+import com.netease.nim.camellia.redis.base.utils.CloseUtil;
+import com.netease.nim.camellia.redis.base.utils.LogUtil;
 import com.netease.nim.camellia.redis.base.utils.SafeEncoder;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import com.netease.nim.camellia.core.util.ResourceChooser;
@@ -20,12 +22,11 @@ import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.pipeline.*;
 import com.netease.nim.camellia.redis.resource.*;
 import com.netease.nim.camellia.redis.util.CamelliaRedisInitializer;
-import com.netease.nim.camellia.redis.base.utils.CloseUtil;
-import com.netease.nim.camellia.redis.base.utils.LogUtil;
 import redis.clients.jedis.*;
-import redis.clients.jedis.params.geo.GeoRadiusParam;
-import redis.clients.jedis.params.sortedset.ZAddParams;
-import redis.clients.jedis.params.sortedset.ZIncrByParams;
+import redis.clients.jedis.params.GeoRadiusParam;
+import redis.clients.jedis.params.SetParams;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZIncrByParams;
 
 import java.util.*;
 
@@ -210,6 +211,17 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     @Override
     public byte[] get(byte[] key) {
         return factory.getProxy().get(key);
+    }
+
+
+    @Override
+    public String set(byte[] key, byte[] value, SetParams setParams) {
+        return factory.getProxy().set(key, value, setParams);
+    }
+
+    @Override
+    public String set(String key, String value, SetParams setParams) {
+        return factory.getProxy().set(key, value, setParams);
     }
 
     @Override
@@ -730,11 +742,6 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     @Override
     public Long zremrangeByLex(byte[] key, byte[] min, byte[] max) {
         return factory.getProxy().zremrangeByLex(key, min, max);
-    }
-
-    @Override
-    public Long linsert(byte[] key, BinaryClient.LIST_POSITION where, byte[] pivot, byte[] value) {
-        return factory.getProxy().linsert(key, where, pivot, value);
     }
 
     @Override
@@ -1385,11 +1392,6 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     @Override
     public Long zremrangeByLex(String key, String min, String max) {
         return factory.getProxy().zremrangeByLex(key, min, max);
-    }
-
-    @Override
-    public Long linsert(String key, BinaryClient.LIST_POSITION where, String pivot, String value) {
-        return factory.getProxy().linsert(key, where, pivot, value);
     }
 
     @Override

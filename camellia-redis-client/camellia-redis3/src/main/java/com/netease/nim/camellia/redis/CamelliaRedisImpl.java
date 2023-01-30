@@ -5,13 +5,14 @@ import com.netease.nim.camellia.core.client.annotation.ShardingParam;
 import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.utils.LogUtil;
 import com.netease.nim.camellia.redis.resource.*;
 import com.netease.nim.camellia.redis.util.CamelliaRedisInitializer;
-import com.netease.nim.camellia.redis.base.utils.LogUtil;
 import redis.clients.jedis.*;
-import redis.clients.jedis.params.geo.GeoRadiusParam;
-import redis.clients.jedis.params.sortedset.ZAddParams;
-import redis.clients.jedis.params.sortedset.ZIncrByParams;
+import redis.clients.jedis.params.GeoRadiusParam;
+import redis.clients.jedis.params.SetParams;
+import redis.clients.jedis.params.ZAddParams;
+import redis.clients.jedis.params.ZIncrByParams;
 
 import java.util.List;
 import java.util.Map;
@@ -64,9 +65,22 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
 
     @WriteOp
     @Override
+    public String set(@ShardingParam byte[] key, byte[] value, SetParams setParams) {
+        return redis.set(key, value, setParams);
+    }
+
+    @WriteOp
+    @Override
     public String set(@ShardingParam String key, String value) {
         LogUtil.debugLog(resource, key);
         return redis.set(key, value);
+    }
+
+    @WriteOp
+    @Override
+    public String set(@ShardingParam String key, String value, SetParams setParams) {
+        LogUtil.debugLog(resource, key);
+        return redis.set(key, value, setParams);
     }
 
     @ReadOp
@@ -788,13 +802,6 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
     public Long zremrangeByLex(@ShardingParam String key, String min, String max) {
         LogUtil.debugLog(resource, key);
         return redis.zremrangeByLex(key, min, max);
-    }
-
-    @WriteOp
-    @Override
-    public Long linsert(@ShardingParam String key, BinaryClient.LIST_POSITION where, String pivot, String value) {
-        LogUtil.debugLog(resource, key);
-        return redis.linsert(key, where, pivot, value);
     }
 
     @WriteOp
@@ -1768,13 +1775,6 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
     public Long zremrangeByLex(@ShardingParam byte[] key, byte[] min, byte[] max) {
         LogUtil.debugLog(resource, key);
         return redis.zremrangeByLex(key, min, max);
-    }
-
-    @WriteOp
-    @Override
-    public Long linsert(@ShardingParam byte[] key, BinaryClient.LIST_POSITION where, byte[] pivot, byte[] value) {
-        LogUtil.debugLog(resource, key);
-        return redis.linsert(key, where, pivot, value);
     }
 
     @WriteOp
