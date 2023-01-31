@@ -7,12 +7,23 @@ import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateChooser;
 
 
 /**
  * Created by caojiajun on 2020/10/22
  */
 public class ConfigInitUtil {
+
+    public static IUpstreamClientTemplateChooser initUpstreamClientTemplateChooser(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
+        String className = serverProperties.getUpstreamClientTemplateChooserClassName();
+        ProxyBeanFactory proxyBeanFactory = serverProperties.getProxyBeanFactory();
+        if (className == null || className.equals(UpstreamRedisClientTemplateChooser.class.getName())) {
+            return new UpstreamRedisClientTemplateChooser(transpondProperties, proxyBeanFactory);
+        }
+        return (IUpstreamClientTemplateChooser) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
+    }
 
     public static ClientAuthProvider initClientAuthProvider(CamelliaServerProperties serverProperties) {
         String className = serverProperties.getClientAuthProviderClassName();

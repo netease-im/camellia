@@ -11,7 +11,6 @@ import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultProxyPluginFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateChooser;
-import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateChooser;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import io.netty.channel.ChannelHandlerContext;
@@ -36,7 +35,7 @@ public class CommandInvoker implements ICommandInvoker {
     public CommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
         ProxyDynamicConf.updateInitConf(serverProperties.getConfig());
 
-        this.chooser = new UpstreamRedisClientTemplateChooser(transpondProperties, serverProperties.getProxyBeanFactory());
+        this.chooser = ConfigInitUtil.initUpstreamClientTemplateChooser(serverProperties, transpondProperties);
         GlobalRedisProxyEnv.setChooser(chooser);
 
         MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);
