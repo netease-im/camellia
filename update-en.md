@@ -1,5 +1,21 @@
 [中文版](update-zh.md)
 
+# 1.2.0（2023/02/xx）
+### add
+* add camellia-redis3 module, support jedis3.x(default use v3.6.3)
+* add camellia-redis-base, the common of camellia-redis-client and camellia-redis-proxy
+* camellia-redis-proxy support custom upstream, core interface is IUpstreamClientTemplate and IUpstreamClientTemplateChooser
+* refactor camellia-redis-proxy-hbase, replace custom CommandInvoker into custom upstream, more code reuse, refactor thread module, use business thread to isolation netty worker thread and business thread 
+* camellia-tools provide CamelliaLinearInitializationExecutor to resource liner initialization
+* camellia-redis-proxy refactor multi tenant init by CamelliaLinearInitializationExecutor
+
+### update
+* camellia-redis-proxy rename core upstream service  
+
+### fix
+* none
+
+
 # 1.1.13（2023/01/30）
 ### add
 * camellia-redis-proxy support use transport_native_epoll、transport_native_kqueue、transport_native_io_uring, default use jdk_nio

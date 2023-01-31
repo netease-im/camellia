@@ -1,5 +1,21 @@
 [ENGLISH](update-en.md)
 
+# 1.2.0（2023/02/xx）
+### 新增
+* 新增camellia-redis3模块以及相关模块，支持jedis3.x（默认使用v3.6.3)
+* 把camellia-redis-client和camellia-redis-proxy的公共部分组成camellia-redis-base模块，从而camellia-redis-proxy不再依赖camellia-redis-client
+* camellia-redis-proxy支持自定义upstream模块，核心接口：IUpstreamClientTemplate和IUpstreamClientTemplateChooser
+* camellia-redis-proxy-hbase冷热分离存储，从自定义CommandInvoker改成自定义upstream，从而有更多代码复用，并且修改了线程模型（新增了工作线程池和netty-worker线程池隔离）
+* camellia-tools新增CamelliaLinearInitializationExecutor，支持资源的异步线性初始化
+* camellia-redis-proxy引入CamelliaLinearInitializationExecutor，对多租户upstream初始化逻辑进行了重构
+
+### 更新
+* camellia-redis-proxy相关核心类进行了重命名（upstream部分）
+
+### fix
+* 无
+
+
 # 1.1.13（2023/01/30）
 ### 新增
 * camellia-redis-proxy支持使用transport_native_epoll、transport_native_kqueue、transport_native_io_uring，默认使用jdk_nio，具体见：[netty-conf](/docs/redis-proxy/other/netty-conf.md)
