@@ -3,6 +3,8 @@ package com.netease.nim.camellia.redis.proxy.upstream.standalone;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.base.resource.RedisResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -10,12 +12,15 @@ import com.netease.nim.camellia.redis.base.resource.RedisResource;
  */
 public class RedisStandaloneClient extends AbstractSimpleRedisClient {
 
+    private static final Logger logger = LoggerFactory.getLogger(RedisStandaloneClient.class);
+
     private final RedisResource redisResource;
     private final RedisConnectionAddr addr;
 
     public RedisStandaloneClient(RedisResource redisResource) {
         this.redisResource = redisResource;
         this.addr = new RedisConnectionAddr(redisResource.getHost(), redisResource.getPort(), redisResource.getUserName(), redisResource.getPassword(), redisResource.getDb());
+        logger.info("RedisStandaloneClient init success, resource = {}", redisResource.getUrl());
     }
 
     @Override

@@ -38,8 +38,8 @@ public class RedisConnection implements IUpstreamClient {
     private static final Logger logger = LoggerFactory.getLogger(RedisConnection.class);
     private static final AtomicLong id = new AtomicLong(0);
 
-    private static final ScheduledExecutorService heartBeatScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-redis-client-heart-beat"));
-    private static final ScheduledExecutorService idleCheckScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-redis-client-idle-check"));
+    private static final ScheduledExecutorService heartBeatScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-redis-connection-heart-beat"));
+    private static final ScheduledExecutorService idleCheckScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-redis-connection-idle-check"));
 
     private final RedisConnectionConfig redisConnectionConfig;
 

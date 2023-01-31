@@ -62,6 +62,7 @@ public class RedisProxiesDiscoveryClient extends AbstractSimpleRedisClient {
         });
         int seconds = ProxyDynamicConf.getInt("redis.proxies.discovery.reload.interval.seconds", 60);
         ExecutorUtils.scheduleAtFixedRate(this::reload, seconds, seconds, TimeUnit.SECONDS);
+        logger.info("RedisProxiesDiscoveryClient init success, resource = {}", resource.getUrl());
     }
 
     @Override

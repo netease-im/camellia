@@ -95,7 +95,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         RedisResourceUtil.checkResourceTable(response.getResourceTable());
         this.update(response.getResourceTable());
         if (logger.isInfoEnabled()) {
-            logger.info("AsyncCamelliaRedisTemplate init success, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}", bid, bgroup, md5,
+            logger.info("UpstreamRedisClientTemplate init success, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}", bid, bgroup, md5,
                     ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(response.getResourceTable())));
         }
         if (reload) {

@@ -68,6 +68,7 @@ public class RedisClusterClient implements IUpstreamClient {
         } catch (Exception e) {
             throw new CamelliaRedisException("RedisClusterSlotInfo init fail", e);
         }
+        logger.info("RedisClusterClient init success, resource = {}", redisClusterResource.getUrl());
     }
 
     public RedisClusterClient(RedisClusterResource redisClusterResource, int maxAttempts) {
@@ -88,6 +89,7 @@ public class RedisClusterClient implements IUpstreamClient {
         } catch (Exception e) {
             throw new CamelliaRedisException("RedisClusterSlotInfo init fail", e);
         }
+        logger.info("RedisClusterClient init success, resource = {}", redisClusterResource.getUrl());
     }
 
     /**

@@ -84,7 +84,7 @@ public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTempla
             if (future == null) return null;
             return future.get();
         } catch (Exception e) {
-            ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "choose AsyncCamelliaRedisTemplate error", e);
+            ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "choose UpstreamRedisClientTemplate error", e);
             return null;
         }
     }
@@ -130,7 +130,7 @@ public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTempla
     private final ConcurrentHashMap<String, AtomicBoolean> initTagMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, LinkedBlockingQueue<CompletableFuture<IUpstreamClientTemplate>>> futureQueueMap = new ConcurrentHashMap<>();
     private final ExecutorService exec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(10000), new DefaultThreadFactory("async-redis-template-init"));
+            new LinkedBlockingQueue<>(10000), new DefaultThreadFactory("upstream-redis-client-template-init"));
 
     private CompletableFuture<IUpstreamClientTemplate> initAsync(long bid, String bgroup,
                                                                      ConcurrentHashMap<String, UpstreamRedisClientTemplate> map,
@@ -146,7 +146,7 @@ public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTempla
                         boolean offer = _getFutureQueue(key).offer(future);
                         if (!offer) {
                             future.complete(null);
-                            ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "init AsyncCamelliaRedisTemplate async fail, queue full");
+                            ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "init UpstreamRedisClientTemplate async fail, queue full");
                         }
                         return future;
                     } else {
@@ -168,14 +168,14 @@ public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTempla
                         map.put(key, redisTemplate);
                         future.complete(redisTemplate);
                     } catch (Exception e) {
-                        ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "init AsyncCamelliaRedisTemplate error", e);
+                        ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "init UpstreamRedisClientTemplate error", e);
                         future.complete(null);
                     } finally {
                         clearFutureQueue(key, initTag, redisTemplate);
                     }
                 });
             } catch (Exception e) {
-                ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "submit AsyncCamelliaRedisTemplate init task error", e);
+                ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "submit UpstreamRedisClientTemplate init task error", e);
                 clearFutureQueue(key, initTag, null);
             }
         } else {
@@ -184,7 +184,7 @@ public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTempla
             boolean offer = queue.offer(future);
             if (!offer) {
                 future.complete(null);
-                ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "init AsyncCamelliaRedisTemplate async fail, queue full");
+                ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "init UpstreamRedisClientTemplate async fail, queue full");
             }
         }
         return future;
@@ -329,7 +329,7 @@ public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTempla
         };
         //添加callback
         updater.addCallback(bid, bgroup, updateCallback, removeCallback);
-        logger.info("AsyncCamelliaRedisTemplate init, bid = {}, bgroup = {}", bid, bgroup);
+        logger.info("UpstreamRedisClientTemplate init, bid = {}, bgroup = {}", bid, bgroup);
         return template;
     }
 
@@ -340,7 +340,7 @@ public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTempla
         boolean monitorEnable = remote.isMonitorEnable();
         long checkIntervalMillis = remote.getCheckIntervalMillis();
         UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, apiService, bid, bgroup, monitorEnable, checkIntervalMillis);
-        logger.info("AsyncCamelliaRedisTemplate init, bid = {}, bgroup = {}", bid, bgroup);
+        logger.info("UpstreamRedisClientTemplate init, bid = {}, bgroup = {}", bid, bgroup);
         return template;
     }
 

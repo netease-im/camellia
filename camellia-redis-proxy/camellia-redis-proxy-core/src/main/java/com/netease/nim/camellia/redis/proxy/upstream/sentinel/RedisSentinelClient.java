@@ -64,6 +64,7 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
             masterListener.setDaemon(true);
             masterListener.start();
         }
+        logger.info("RedisSentinelClient init success, resource = {}", redisSentinelResource.getUrl());
     }
 
     @Override

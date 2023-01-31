@@ -162,6 +162,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
             listener.setDaemon(true);
             listener.start();
         }
+        logger.info("RedisSentinelSlavesClient init success, resource = {}", redisSentinelSlavesResource.getUrl());
     }
 
     @Override

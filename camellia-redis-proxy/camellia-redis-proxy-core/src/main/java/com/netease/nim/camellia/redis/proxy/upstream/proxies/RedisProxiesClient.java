@@ -38,6 +38,7 @@ public class RedisProxiesClient extends AbstractSimpleRedisClient {
         dynamicList = new ArrayList<>(list);
         int seconds = ProxyDynamicConf.getInt("redis.proxies.reload.interval.seconds", 60);
         ExecutorUtils.scheduleAtFixedRate(this::reload, seconds, seconds, TimeUnit.SECONDS);
+        logger.info("RedisProxiesClient init success, resource = {}", redisProxiesResource.getUrl());
     }
 
     @Override
