@@ -98,6 +98,7 @@ public class CamelliaExecutorStatistics {
         CamelliaDynamicExecutor,
         CamelliaHashedExecutor,
         CamelliaDynamicIsolationExecutor,
+        CamelliaLinearInitializationExecutor,
         ;
     }
 
