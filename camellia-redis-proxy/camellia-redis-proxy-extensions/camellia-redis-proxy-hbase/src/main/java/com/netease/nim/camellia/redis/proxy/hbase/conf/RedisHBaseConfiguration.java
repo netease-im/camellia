@@ -22,6 +22,21 @@ public class RedisHBaseConfiguration {
         ProxyDynamicConf.registerCallback(() -> redisKeyTypePrioriConfMap = null);
     }
 
+    //线程池大小
+    public static int executorPoolSize() {
+        return ProxyDynamicConf.getInt("executor.pool.size", Runtime.getRuntime().availableProcessors() * 16);
+    }
+
+    //线程池等待队列大小
+    public static int executorQueueSize() {
+        return ProxyDynamicConf.getInt("executor.queue.size", 100000);
+    }
+
+    //命令执行过期阈值
+    public static long taskExpireMillis() {
+        return ProxyDynamicConf.getLong("task.expire.millis", 10000L);
+    }
+
     //hbase表名
     public static String hbaseTableName() {
         return ProxyDynamicConf.getString("hbase.table.name", "nim:nim_camellia");

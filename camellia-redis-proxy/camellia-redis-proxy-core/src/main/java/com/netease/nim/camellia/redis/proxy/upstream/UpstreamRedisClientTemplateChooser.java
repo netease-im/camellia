@@ -93,23 +93,23 @@ public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTempla
     public CompletableFuture<IUpstreamClientTemplate> chooseAsync(Long bid, String bgroup) {
         CamelliaTranspondProperties.Type type = properties.getType();
         if (type == CamelliaTranspondProperties.Type.LOCAL) {
-            return wrapper(localInstance);
+            return IUpstreamClientTemplateChooser.wrapper(localInstance);
         } else if (type == CamelliaTranspondProperties.Type.REMOTE) {
             CamelliaTranspondProperties.RemoteProperties remote = properties.getRemote();
             if (!remote.isDynamic()) {
-                return wrapper(remoteInstance);
+                return IUpstreamClientTemplateChooser.wrapper(remoteInstance);
             }
             if (bid == null || bid <= 0 || bgroup == null) {
-                return wrapper(remoteInstance);
+                return IUpstreamClientTemplateChooser.wrapper(remoteInstance);
             }
             return initAsync(bid, bgroup, remoteInstanceMap, this::initRemoteInstance);
         } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
             CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
             if (!custom.isDynamic()) {
-                return wrapper(customInstance);
+                return IUpstreamClientTemplateChooser.wrapper(customInstance);
             }
             if (bid == null || bid <= 0 || bgroup == null) {
-                return wrapper(customInstance);
+                return IUpstreamClientTemplateChooser.wrapper(customInstance);
             }
             return initAsync(bid, bgroup, customInstanceMap, this::initCustomInstance);
         }
@@ -124,12 +124,6 @@ public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTempla
     @Override
     public RedisProxyEnv getEnv() {
         return env;
-    }
-
-    private CompletableFuture<IUpstreamClientTemplate> wrapper(UpstreamRedisClientTemplate template) {
-        CompletableFuture<IUpstreamClientTemplate> future = new CompletableFuture<>();
-        future.complete(template);
-        return future;
     }
 
     private final LockMap lockMap = new LockMap();
@@ -156,11 +150,11 @@ public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTempla
                         }
                         return future;
                     } else {
-                        return wrapper(template);
+                        return IUpstreamClientTemplateChooser.wrapper(template);
                     }
                 }
             } else {
-                return wrapper(template);
+                return IUpstreamClientTemplateChooser.wrapper(template);
             }
         }
         CompletableFuture<IUpstreamClientTemplate> future = new CompletableFuture<>();
