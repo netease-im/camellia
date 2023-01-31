@@ -5,8 +5,8 @@ import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateChooser;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
-import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateChooser;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -79,7 +79,7 @@ public class ProxyInfoUtils {
         }
     }
 
-    public static CompletableFuture<Reply> getInfoReply(Command command, UpstreamRedisClientTemplateChooser chooser) {
+    public static CompletableFuture<Reply> getInfoReply(Command command, IUpstreamClientTemplateChooser chooser) {
         CompletableFuture<Reply> future = new CompletableFuture<>();
         try {
             executor.submit(() -> {
@@ -188,7 +188,7 @@ public class ProxyInfoUtils {
         }
     }
 
-    public static Reply generateInfoReply(Command command, UpstreamRedisClientTemplateChooser chooser) {
+    public static Reply generateInfoReply(Command command, IUpstreamClientTemplateChooser chooser) {
         try {
             StringBuilder builder = new StringBuilder();
             byte[][] objects = command.getObjects();
@@ -338,7 +338,7 @@ public class ProxyInfoUtils {
     private static String getUpstream() {
         StringBuilder builder = new StringBuilder();
         builder.append("# Upstream").append("\r\n");
-        ConcurrentHashMap<RedisConnectionAddr, ConcurrentHashMap<String, RedisConnection>> redisClientMap = RedisClientMonitor.getRedisClientMap();
+        ConcurrentHashMap<RedisConnectionAddr, ConcurrentHashMap<String, RedisConnection>> redisClientMap = RedisConnectionMonitor.getRedisClientMap();
         int upstreamRedisNums = 0;
         for (Map.Entry<RedisConnectionAddr, ConcurrentHashMap<String, RedisConnection>> entry : redisClientMap.entrySet()) {
             upstreamRedisNums += entry.getValue().size();

@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * Created by caojiajun on 2019/12/12.
  */
-public class UpstreamRedisClientTemplateChooser {
+public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTemplateChooser {
 
     private static final Logger logger = LoggerFactory.getLogger(UpstreamRedisClientTemplateChooser.class);
 
@@ -57,7 +57,8 @@ public class UpstreamRedisClientTemplateChooser {
         init();
     }
 
-    public UpstreamRedisClientTemplate choose(Long bid, String bgroup) {
+    @Override
+    public IUpstreamClientTemplate choose(Long bid, String bgroup) {
         try {
             if (!multiTenancySupport) {
                 CamelliaTranspondProperties.Type type = properties.getType();
@@ -79,7 +80,7 @@ public class UpstreamRedisClientTemplateChooser {
                     return customInstance;
                 }
             }
-            CompletableFuture<UpstreamRedisClientTemplate> future = chooseAsync(bid, bgroup);
+            CompletableFuture<IUpstreamClientTemplate> future = chooseAsync(bid, bgroup);
             if (future == null) return null;
             return future.get();
         } catch (Exception e) {
@@ -88,7 +89,8 @@ public class UpstreamRedisClientTemplateChooser {
         }
     }
 
-    public CompletableFuture<UpstreamRedisClientTemplate> chooseAsync(Long bid, String bgroup) {
+    @Override
+    public CompletableFuture<IUpstreamClientTemplate> chooseAsync(Long bid, String bgroup) {
         CamelliaTranspondProperties.Type type = properties.getType();
         if (type == CamelliaTranspondProperties.Type.LOCAL) {
             return wrapper(localInstance);
@@ -114,23 +116,29 @@ public class UpstreamRedisClientTemplateChooser {
         return null;
     }
 
+    @Override
     public boolean isMultiTenancySupport() {
         return multiTenancySupport;
     }
 
-    private CompletableFuture<UpstreamRedisClientTemplate> wrapper(UpstreamRedisClientTemplate template) {
-        CompletableFuture<UpstreamRedisClientTemplate> future = new CompletableFuture<>();
+    @Override
+    public RedisProxyEnv getEnv() {
+        return env;
+    }
+
+    private CompletableFuture<IUpstreamClientTemplate> wrapper(UpstreamRedisClientTemplate template) {
+        CompletableFuture<IUpstreamClientTemplate> future = new CompletableFuture<>();
         future.complete(template);
         return future;
     }
 
     private final LockMap lockMap = new LockMap();
     private final ConcurrentHashMap<String, AtomicBoolean> initTagMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, LinkedBlockingQueue<CompletableFuture<UpstreamRedisClientTemplate>>> futureQueueMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, LinkedBlockingQueue<CompletableFuture<IUpstreamClientTemplate>>> futureQueueMap = new ConcurrentHashMap<>();
     private final ExecutorService exec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(10000), new DefaultThreadFactory("async-redis-template-init"));
 
-    private CompletableFuture<UpstreamRedisClientTemplate> initAsync(long bid, String bgroup,
+    private CompletableFuture<IUpstreamClientTemplate> initAsync(long bid, String bgroup,
                                                                      ConcurrentHashMap<String, UpstreamRedisClientTemplate> map,
                                                                      AsyncCamelliaRedisTemplateInitializer initializer) {
         String key = bid + "|" + bgroup;
@@ -140,7 +148,7 @@ public class UpstreamRedisClientTemplateChooser {
             if (initTag.get()) {
                 synchronized (lockMap.getLockObj(key)) {
                     if (initTag.get()) {
-                        CompletableFuture<UpstreamRedisClientTemplate> future = new CompletableFuture<>();
+                        CompletableFuture<IUpstreamClientTemplate> future = new CompletableFuture<>();
                         boolean offer = _getFutureQueue(key).offer(future);
                         if (!offer) {
                             future.complete(null);
@@ -155,7 +163,7 @@ public class UpstreamRedisClientTemplateChooser {
                 return wrapper(template);
             }
         }
-        CompletableFuture<UpstreamRedisClientTemplate> future = new CompletableFuture<>();
+        CompletableFuture<IUpstreamClientTemplate> future = new CompletableFuture<>();
         AtomicBoolean initTag = _getInitTag(key);
         if (initTag.compareAndSet(false, true)) {
             try {
@@ -177,7 +185,7 @@ public class UpstreamRedisClientTemplateChooser {
                 clearFutureQueue(key, initTag, null);
             }
         } else {
-            LinkedBlockingQueue<CompletableFuture<UpstreamRedisClientTemplate>> queue = CamelliaMapUtils.computeIfAbsent(futureQueueMap, key,
+            LinkedBlockingQueue<CompletableFuture<IUpstreamClientTemplate>> queue = CamelliaMapUtils.computeIfAbsent(futureQueueMap, key,
                     k -> new LinkedBlockingQueue<>(1000000));
             boolean offer = queue.offer(future);
             if (!offer) {
@@ -190,8 +198,8 @@ public class UpstreamRedisClientTemplateChooser {
 
     private void clearFutureQueue(String key, AtomicBoolean initTag, UpstreamRedisClientTemplate template) {
         synchronized (lockMap.getLockObj(key)) {
-            LinkedBlockingQueue<CompletableFuture<UpstreamRedisClientTemplate>> queue = _getFutureQueue(key);
-            CompletableFuture<UpstreamRedisClientTemplate> completableFuture = queue.poll();
+            LinkedBlockingQueue<CompletableFuture<IUpstreamClientTemplate>> queue = _getFutureQueue(key);
+            CompletableFuture<IUpstreamClientTemplate> completableFuture = queue.poll();
             while (completableFuture != null) {
                 try {
                     completableFuture.complete(template);
@@ -208,7 +216,7 @@ public class UpstreamRedisClientTemplateChooser {
         return CamelliaMapUtils.computeIfAbsent(initTagMap, key, k -> new AtomicBoolean(false));
     }
 
-    private LinkedBlockingQueue<CompletableFuture<UpstreamRedisClientTemplate>> _getFutureQueue(String key) {
+    private LinkedBlockingQueue<CompletableFuture<IUpstreamClientTemplate>> _getFutureQueue(String key) {
         return CamelliaMapUtils.computeIfAbsent(futureQueueMap, key, k -> new LinkedBlockingQueue<>(1000000));
     }
 
@@ -340,10 +348,6 @@ public class UpstreamRedisClientTemplateChooser {
         UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, apiService, bid, bgroup, monitorEnable, checkIntervalMillis);
         logger.info("AsyncCamelliaRedisTemplate init, bid = {}, bgroup = {}", bid, bgroup);
         return template;
-    }
-
-    public RedisProxyEnv getEnv() {
-        return env;
     }
 
     private void initEnv() {

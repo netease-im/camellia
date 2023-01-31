@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
-import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
+import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
@@ -25,7 +25,7 @@ public class CamelliaRedisProxyServer {
     private final InitHandler initHandler = new InitHandler();
     private int port;
 
-    public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, CommandInvoker invoker) {
+    public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, ICommandInvoker invoker) {
         GlobalRedisProxyEnv.init(serverProperties);
         this.serverProperties = serverProperties;
         this.serverHandler = new ServerHandler(invoker);

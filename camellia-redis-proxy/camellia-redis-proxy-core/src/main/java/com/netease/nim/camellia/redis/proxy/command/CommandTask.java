@@ -12,14 +12,14 @@ import java.util.List;
  *
  * Created by caojiajun on 2019/12/12.
  */
-public class AsyncTask {
+public class CommandTask {
 
-    private final AsyncTaskQueue taskQueue;
+    private final CommandTaskQueue taskQueue;
     private final Command command;
     private final List<ProxyPlugin> plugins;
     private Reply reply;
 
-    public AsyncTask(AsyncTaskQueue taskQueue, Command command, List<ProxyPlugin> plugins) {
+    public CommandTask(CommandTaskQueue taskQueue, Command command, List<ProxyPlugin> plugins) {
         this.command = command;
         this.taskQueue = taskQueue;
         this.plugins = plugins;
@@ -42,14 +42,14 @@ public class AsyncTask {
                             return;
                         }
                     } catch (Exception e) {
-                        ErrorLogCollector.collect(AsyncTask.class, "executeReply error", e);
+                        ErrorLogCollector.collect(CommandTask.class, "executeReply error", e);
                     }
                 }
             }
             this.reply = reply;
             this.taskQueue.callback();
         } catch (Exception e) {
-            ErrorLogCollector.collect(AsyncTask.class, e.getMessage(), e);
+            ErrorLogCollector.collect(CommandTask.class, e.getMessage(), e);
             this.reply = reply;
             this.taskQueue.callback();
         }

@@ -4,9 +4,9 @@ import com.netease.nim.camellia.tools.utils.ExceptionUtils;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.proxy.auth.AuthCommandProcessor;
-import com.netease.nim.camellia.redis.proxy.command.AsyncTask;
+import com.netease.nim.camellia.redis.proxy.command.CommandTask;
 import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
+import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.command.CommandsTransponder;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
@@ -30,7 +30,7 @@ import java.util.Map;
  *
  * Created by caojiajun on 2020/02/27.
  */
-public class RedisHBaseCommandInvoker implements CommandInvoker {
+public class RedisHBaseCommandInvoker implements ICommandInvoker {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisHBaseCommandInvoker.class);
 
@@ -137,7 +137,7 @@ public class RedisHBaseCommandInvoker implements CommandInvoker {
                         return false;
                     }
                 } catch (Exception e) {
-                    ErrorLogCollector.collect(AsyncTask.class, "executeReply error", e);
+                    ErrorLogCollector.collect(CommandTask.class, "executeReply error", e);
                 }
             }
         }

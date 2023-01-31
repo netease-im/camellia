@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
+import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.ChannelHandler;
@@ -19,7 +19,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerHandler.class);
 
-    private final CommandInvoker invoker;
+    private final ICommandInvoker invoker;
     private CamelliaServerProperties serverProperties;
 
     public CamelliaServerProperties getServerProperties() {
@@ -30,7 +30,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
         this.serverProperties = serverProperties;
     }
 
-    public ServerHandler(CommandInvoker invoker) {
+    public ServerHandler(ICommandInvoker invoker) {
         super();
         this.invoker = invoker;
     }

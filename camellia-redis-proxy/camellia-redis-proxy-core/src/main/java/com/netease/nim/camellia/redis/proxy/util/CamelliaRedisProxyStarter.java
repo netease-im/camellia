@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.util;
 
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
-import com.netease.nim.camellia.redis.proxy.command.AsyncCommandInvoker;
+import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
@@ -57,7 +57,7 @@ public class CamelliaRedisProxyStarter {
                     return;
                 }
                 GlobalRedisProxyEnv.init(serverProperties);
-                AsyncCommandInvoker commandInvoker = new AsyncCommandInvoker(serverProperties, transpondProperties);
+                CommandInvoker commandInvoker = new CommandInvoker(serverProperties, transpondProperties);
                 CamelliaRedisProxyServer server = new CamelliaRedisProxyServer(serverProperties, commandInvoker);
                 server.start();
                 logger.info("CamelliaRedisProxyServer start success");

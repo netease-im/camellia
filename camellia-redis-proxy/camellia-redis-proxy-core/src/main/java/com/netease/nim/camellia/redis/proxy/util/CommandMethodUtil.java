@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class CommandMethodUtil {
 
-    public static void initCommandFinderMethods(Class clazz, Map<String, Method> map) {
+    public static void initCommandFinderMethods(Class<?> clazz, Map<String, Method> map) {
         for (final Method method : clazz.getMethods()) {
             CommandFinder annotation = method.getAnnotation(CommandFinder.class);
             if (annotation != null) {

@@ -20,18 +20,18 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * Created by caojiajun on 2019/12/12.
  */
-public class AsyncTaskQueue {
+public class CommandTaskQueue {
 
-    private static final Logger logger = LoggerFactory.getLogger(AsyncTaskQueue.class);
+    private static final Logger logger = LoggerFactory.getLogger(CommandTaskQueue.class);
 
     private final ChannelInfo channelInfo;
-    private final Queue<AsyncTask> queue = new LinkedBlockingQueue<>(1024*32);
+    private final Queue<CommandTask> queue = new LinkedBlockingQueue<>(1024*32);
     private final AtomicBoolean callbacking = new AtomicBoolean(false);
     private final AtomicLong id = new AtomicLong(0);
 
     private List<ProxyPlugin> plugins;
 
-    public AsyncTaskQueue(ChannelInfo channelInfo) {
+    public CommandTaskQueue(ChannelInfo channelInfo) {
         this.channelInfo = channelInfo;
     }
 
@@ -39,7 +39,7 @@ public class AsyncTaskQueue {
         return channelInfo;
     }
 
-    public boolean add(AsyncTask task) {
+    public boolean add(CommandTask task) {
         if (channelInfo.isInSubscribe()) {
             return true;
         }
@@ -62,7 +62,7 @@ public class AsyncTaskQueue {
                     return;
                 }
                 do {
-                    AsyncTask task = queue.peek();
+                    CommandTask task = queue.peek();
                     Reply reply = task.getReply();
                     if (reply != null) {
                         if (logger.isDebugEnabled()) {
@@ -101,7 +101,7 @@ public class AsyncTaskQueue {
                         return;
                     }
                 } catch (Exception e) {
-                    ErrorLogCollector.collect(AsyncTaskQueue.class, "executeReply error", e);
+                    ErrorLogCollector.collect(CommandTaskQueue.class, "executeReply error", e);
                 }
             }
         }

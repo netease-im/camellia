@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.standalone;
 
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
-import com.netease.nim.camellia.redis.proxy.command.AsyncTaskQueue;
+import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
@@ -81,7 +81,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                     first = true;
                 }
                 if (bindClient != null) {
-                    AsyncTaskQueue asyncTaskQueue = command.getChannelInfo().getAsyncTaskQueue();
+                    CommandTaskQueue asyncTaskQueue = command.getChannelInfo().getAsyncTaskQueue();
                     PubSubUtils.sendByBindClient(bindClient, asyncTaskQueue, command, future, first);
                     byte[][] objects = command.getObjects();
                     if (objects != null && objects.length > 1) {

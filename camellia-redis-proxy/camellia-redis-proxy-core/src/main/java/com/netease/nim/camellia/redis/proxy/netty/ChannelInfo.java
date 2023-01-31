@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 
-import com.netease.nim.camellia.redis.proxy.command.AsyncTaskQueue;
+import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
@@ -28,7 +28,7 @@ public class ChannelInfo {
     private final String consid;
     private ChannelStats channelStats = ChannelStats.NO_AUTH;
     private final ChannelHandlerContext ctx;
-    private final AsyncTaskQueue asyncTaskQueue;
+    private final CommandTaskQueue asyncTaskQueue;
     private volatile ConcurrentHashMap<String, RedisConnection> bindRedisClientCache;
     private RedisConnection bindClient = null;
     private int bindSlot = -1;
@@ -59,7 +59,7 @@ public class ChannelInfo {
         this.ctx = ctx;
         this.consid = UUID.randomUUID().toString();
         this.clientSocketAddress = ctx.channel().remoteAddress();
-        this.asyncTaskQueue = new AsyncTaskQueue(this);
+        this.asyncTaskQueue = new CommandTaskQueue(this);
         this.mock = false;
         this.fromCport = ((InetSocketAddress) ctx.channel().localAddress()).getPort() == GlobalRedisProxyEnv.getCport();
     }
@@ -85,7 +85,7 @@ public class ChannelInfo {
         return ctx.channel().attr(ATTRIBUTE_KEY).get();
     }
 
-    public AsyncTaskQueue getAsyncTaskQueue() {
+    public CommandTaskQueue getAsyncTaskQueue() {
         return asyncTaskQueue;
     }
 

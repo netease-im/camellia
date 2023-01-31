@@ -35,6 +35,8 @@ public class RedisConnectionHub {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisConnectionHub.class);
 
+    private final AtomicBoolean init = new AtomicBoolean(false);
+
     private final ConcurrentHashMap<String, RedisConnection> map = new ConcurrentHashMap<>();
     private EventLoopGroup eventLoopGroup = null;
     private EventLoopGroup eventLoopGroupBackup = null;
@@ -78,11 +80,15 @@ public class RedisConnectionHub {
     }
 
     public void init(CamelliaTranspondProperties properties) {
+        if (!init.compareAndSet(false, true)) {
+            logger.warn("RedisConnectionHub duplicate init");
+            return;
+        }
         CamelliaTranspondProperties.RedisConfProperties redisConf = properties.getRedisConf();
         this.connectTimeoutMillis = redisConf.getConnectTimeoutMillis();
         this.heartbeatIntervalSeconds = redisConf.getHeartbeatIntervalSeconds();
         this.heartbeatTimeoutMillis = redisConf.getHeartbeatTimeoutMillis();
-        logger.info("RedisConnection, connectTimeoutMillis = {}, heartbeatIntervalSeconds = {}, heartbeatTimeoutMillis = {}",
+        logger.info("RedisConnectionHub, connectTimeoutMillis = {}, heartbeatIntervalSeconds = {}, heartbeatTimeoutMillis = {}",
                 this.connectTimeoutMillis, this.heartbeatIntervalSeconds, this.heartbeatTimeoutMillis);
         this.failCountThreshold = redisConf.getFailCountThreshold();
         this.failBanMillis = redisConf.getFailBanMillis();
@@ -100,12 +106,12 @@ public class RedisConnectionHub {
             this.eventLoopGroup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client"));
             this.eventLoopGroupBackup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-client-backup"));
         }
-        logger.info("RedisConnection, failCountThreshold = {}, failBanMillis = {}",
+        logger.info("RedisConnectionHub, failCountThreshold = {}, failBanMillis = {}",
                 this.failCountThreshold, this.failBanMillis);
         this.closeIdleConnection = redisConf.isCloseIdleConnection();
         this.checkIdleConnectionThresholdSeconds = redisConf.getCheckIdleConnectionThresholdSeconds();
         this.closeIdleConnectionDelaySeconds = redisConf.getCloseIdleConnectionDelaySeconds();
-        logger.info("RedisConnection, closeIdleConnection = {}, checkIdleConnectionThresholdSeconds = {}, closeIdleConnectionDelaySeconds = {}",
+        logger.info("RedisConnectionHub, closeIdleConnection = {}, checkIdleConnectionThresholdSeconds = {}, closeIdleConnectionDelaySeconds = {}",
                 this.closeIdleConnection, this.checkIdleConnectionThresholdSeconds, this.closeIdleConnectionDelaySeconds);
 
         CamelliaTranspondProperties.NettyProperties nettyProperties = properties.getNettyProperties();
@@ -116,7 +122,7 @@ public class RedisConnectionHub {
         this.writeBufferWaterMarkLow = nettyProperties.getWriteBufferWaterMarkLow();
         this.writeBufferWaterMarkHigh = nettyProperties.getWriteBufferWaterMarkHigh();
         this.tcpQuickAck = GlobalRedisProxyEnv.getNettyTransportMode() == NettyTransportMode.epoll && properties.getNettyProperties().isTcpQuickAck();
-        logger.info("RedisConnection, so_keepalive = {}, tcp_no_delay = {}, tcp_quick_ack = {}, so_rcvbuf = {}, so_sndbuf = {}, write_buffer_water_mark_Low = {}, write_buffer_water_mark_high = {}",
+        logger.info("RedisConnectionHub, so_keepalive = {}, tcp_no_delay = {}, tcp_quick_ack = {}, so_rcvbuf = {}, so_sndbuf = {}, write_buffer_water_mark_Low = {}, write_buffer_water_mark_high = {}",
                 this.soKeepalive, this.tcpNoDelay, this.tcpQuickAck, this.soRcvbuf,
                 this.soSndbuf, this.writeBufferWaterMarkLow, this.writeBufferWaterMarkHigh);
 
@@ -421,12 +427,12 @@ public class RedisConnectionHub {
     private void reloadConf() {
         long failBanMillis = ProxyDynamicConf.getLong("redis.connection.fail.ban.millis", this.failBanMillis);
         if (failBanMillis != this.failBanMillis) {
-            logger.info("RedisConnection failBanMillis, {} -> {}", this.failBanMillis, failBanMillis);
+            logger.info("RedisConnectionHub failBanMillis, {} -> {}", this.failBanMillis, failBanMillis);
             this.failBanMillis = failBanMillis;
         }
         int failCountThreshold = ProxyDynamicConf.getInt("redis.connection.fail.count.threshold", this.failCountThreshold);
         if (failCountThreshold != this.failCountThreshold) {
-            logger.info("RedisConnection failCountThreshold, {} -> {}", this.failCountThreshold, failCountThreshold);
+            logger.info("RedisConnectionHub failCountThreshold, {} -> {}", this.failCountThreshold, failCountThreshold);
             this.failCountThreshold = failCountThreshold;
         }
     }

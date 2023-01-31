@@ -1,12 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
-import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.reply.*;
-import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
-import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollChannelOption;
 
 import java.io.IOException;
 import java.nio.charset.Charset;

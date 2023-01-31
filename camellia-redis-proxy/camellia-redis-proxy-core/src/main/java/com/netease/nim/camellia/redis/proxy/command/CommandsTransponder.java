@@ -7,6 +7,8 @@ import com.netease.nim.camellia.redis.proxy.auth.HelloCommandUtil;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplate;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateChooser;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -15,8 +17,6 @@ import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
-import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
-import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateChooser;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.channel.ChannelFutureListener;
@@ -38,14 +38,14 @@ public class CommandsTransponder {
 
     private final AuthCommandProcessor authCommandProcessor;
     private final ProxyClusterModeProcessor clusterModeProcessor;
-    private final UpstreamRedisClientTemplateChooser chooser;
+    private final IUpstreamClientTemplateChooser chooser;
     private final ProxyPluginFactory proxyPluginFactory;
 
     private boolean eventLoopSetSuccess = false;
 
     private ProxyPluginInitResp proxyPluginInitResp;
 
-    public CommandsTransponder(UpstreamRedisClientTemplateChooser chooser, CommandInvokeConfig commandInvokeConfig) {
+    public CommandsTransponder(IUpstreamClientTemplateChooser chooser, CommandInvokeConfig commandInvokeConfig) {
         this.chooser = chooser;
         this.authCommandProcessor = commandInvokeConfig.getAuthCommandProcessor();
         this.clusterModeProcessor = commandInvokeConfig.getClusterModeProcessor();
@@ -61,7 +61,7 @@ public class CommandsTransponder {
         }
         try {
             boolean hasCommandsSkip = false;
-            AsyncTaskQueue taskQueue = channelInfo.getAsyncTaskQueue();
+            CommandTaskQueue taskQueue = channelInfo.getAsyncTaskQueue();
 
             if (logger.isDebugEnabled()) {
                 List<String> commandNameList = new ArrayList<>(commands.size());
@@ -72,7 +72,7 @@ public class CommandsTransponder {
                         commands.size(), taskQueue.getChannelInfo().getConsid(), commandNameList);
             }
 
-            List<AsyncTask> tasks = new ArrayList<>(commands.size());
+            List<CommandTask> tasks = new ArrayList<>(commands.size());
             ChannelHandlerContext ctx = channelInfo.getCtx();
 
             for (Command command : commands) {
@@ -80,7 +80,7 @@ public class CommandsTransponder {
                 command.setChannelInfo(channelInfo);
 
                 //任务队列
-                AsyncTask task = new AsyncTask(taskQueue, command, proxyPluginInitResp.getReplyPlugins());
+                CommandTask task = new CommandTask(taskQueue, command, proxyPluginInitResp.getReplyPlugins());
                 boolean add = taskQueue.add(task);
                 if (!add) {
                     taskQueue.clear();
@@ -281,7 +281,7 @@ public class CommandsTransponder {
             if (tasks.isEmpty()) return;
             if (hasCommandsSkip) {
                 commands = new ArrayList<>(tasks.size());
-                for (AsyncTask asyncTask : tasks) {
+                for (CommandTask asyncTask : tasks) {
                     commands.add(asyncTask.getCommand());
                 }
             }
@@ -318,16 +318,16 @@ public class CommandsTransponder {
         }
     }
 
-    private void flush(Long bid, String bgroup, List<AsyncTask> tasks, List<Command> commands) {
+    private void flush(Long bid, String bgroup, List<CommandTask> tasks, List<Command> commands) {
         try {
             if (!chooser.isMultiTenancySupport() || bid == null || bid <= 0 || bgroup == null) {
-                UpstreamRedisClientTemplate template = chooser.choose(bid, bgroup);
+                IUpstreamClientTemplate template = chooser.choose(bid, bgroup);
                 flush0(template, bid, bgroup, tasks, commands);
                 return;
             }
-            CompletableFuture<UpstreamRedisClientTemplate> future = chooser.chooseAsync(bid, bgroup);
+            CompletableFuture<IUpstreamClientTemplate> future = chooser.chooseAsync(bid, bgroup);
             if (future == null) {
-                for (AsyncTask task : tasks) {
+                for (CommandTask task : tasks) {
                     task.replyCompleted(ErrorReply.NOT_AVAILABLE);
                 }
                 return;
@@ -335,16 +335,16 @@ public class CommandsTransponder {
             future.thenAccept(template -> flush0(template, bid, bgroup, tasks, commands));
         } catch (Exception e) {
             ErrorLogCollector.collect(CommandsTransponder.class, "flush commands error", e);
-            for (AsyncTask task : tasks) {
+            for (CommandTask task : tasks) {
                 task.replyCompleted(ErrorReply.NOT_AVAILABLE);
             }
         }
     }
 
-    private void flush0(UpstreamRedisClientTemplate template, Long bid, String bgroup, List<AsyncTask> tasks, List<Command> commands) {
+    private void flush0(IUpstreamClientTemplate template, Long bid, String bgroup, List<CommandTask> tasks, List<Command> commands) {
         try {
             if (template == null) {
-                for (AsyncTask task : tasks) {
+                for (CommandTask task : tasks) {
                     task.replyCompleted(ErrorReply.NOT_AVAILABLE);
                 }
             } else {
@@ -355,13 +355,13 @@ public class CommandsTransponder {
                     String log = "AsyncCamelliaRedisTemplateChooser sendCommand error"
                             + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e;
                     ErrorLogCollector.collect(CommandsTransponder.class, log, e);
-                    for (AsyncTask task : tasks) {
+                    for (CommandTask task : tasks) {
                         task.replyCompleted(ErrorReply.NOT_AVAILABLE);
                     }
                     return;
                 }
                 for (int i = 0; i < tasks.size(); i++) {
-                    AsyncTask task = tasks.get(i);
+                    CommandTask task = tasks.get(i);
                     CompletableFuture<Reply> completableFuture = futureList.get(i);
                     completableFuture.thenAccept(task::replyCompleted);
                 }

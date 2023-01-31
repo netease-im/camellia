@@ -119,7 +119,7 @@ public class ProxyMonitorCollector {
             stats.setResourceBidBgroupCommandStatsList(resourceStats.resourceBidBgroupCommandStatsList);
 
             stats.setRouteConfList(RouteConfMonitor.collect());
-            stats.setRedisConnectStats(RedisClientMonitor.collect());
+            stats.setRedisConnectStats(RedisConnectionMonitor.collect());
             stats.setUpstreamRedisSpendStatsList(UpstreamRedisSpendTimeMonitor.collect());
             stats.setBigKeyStatsList(BigKeyMonitor.collect());
             stats.setHotKeyStatsList(HotKeyMonitor.collect());

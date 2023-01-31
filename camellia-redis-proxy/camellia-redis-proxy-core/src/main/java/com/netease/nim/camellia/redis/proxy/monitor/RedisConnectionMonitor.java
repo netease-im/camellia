@@ -16,9 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 统计到后端redis的连接数
  */
-public class RedisClientMonitor {
+public class RedisConnectionMonitor {
 
-    private static final Logger logger = LoggerFactory.getLogger(RedisClientMonitor.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedisConnectionMonitor.class);
 
     private static final ConcurrentHashMap<RedisConnectionAddr, ConcurrentHashMap<String, RedisConnection>> redisClientMap = new ConcurrentHashMap<>();
 
@@ -26,7 +26,7 @@ public class RedisClientMonitor {
      * 统计RedisClient，增加
      * @param redisConnection RedisClient
      */
-    public static void addRedisClient(RedisConnection redisConnection) {
+    public static void addRedisConnection(RedisConnection redisConnection) {
         try {
             ExecutorUtils.submitToSingleThreadExecutor(() -> {
                 try {
@@ -51,7 +51,7 @@ public class RedisClientMonitor {
      * 统计RedisClient，减少
      * @param redisConnection RedisClient
      */
-    public static void removeRedisClient(RedisConnection redisConnection) {
+    public static void removeRedisConnection(RedisConnection redisConnection) {
         try {
             ExecutorUtils.submitToSingleThreadExecutor(() -> {
                 try {

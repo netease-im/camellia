@@ -8,7 +8,7 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
-import com.netease.nim.camellia.redis.proxy.monitor.RedisClientMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.RedisConnectionMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
@@ -90,12 +90,12 @@ public class RedisConnection implements IUpstreamClient {
                 ? Constants.Transpond.checkIdleConnectionThresholdSeconds : config.getCheckIdleConnectionThresholdSeconds();
         this.closeIdleConnectionDelaySeconds = config.getCloseIdleConnectionDelaySeconds() <=0
                 ? Constants.Transpond.closeIdleConnectionDelaySeconds : config.getCloseIdleConnectionDelaySeconds();
-        this.clientName = "RedisClient[" + PasswordMaskUtils.maskAddr(addr.getUrl()) + "][id=" + id.incrementAndGet() + "]";
+        this.clientName = "RedisConnection[" + PasswordMaskUtils.maskAddr(addr.getUrl()) + "][id=" + id.incrementAndGet() + "]";
     }
 
     public void start() {
         try {
-            RedisClientMonitor.addRedisClient(this);
+            RedisConnectionMonitor.addRedisConnection(this);
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(eventLoopGroup)
                     .channel(GlobalRedisProxyEnv.getSocketChannelClass())
@@ -304,7 +304,7 @@ public class RedisConnection implements IUpstreamClient {
     }
 
     private void _stop(boolean grace) {
-        RedisClientMonitor.removeRedisClient(this);
+        RedisConnectionMonitor.removeRedisConnection(this);
         if (!valid && queue.isEmpty()
                 && channel == null && heartbeatScheduledFuture == null && idleCheckScheduledFuture == null) {
             return;

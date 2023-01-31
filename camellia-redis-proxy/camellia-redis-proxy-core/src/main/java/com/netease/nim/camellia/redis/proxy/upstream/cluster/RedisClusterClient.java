@@ -6,7 +6,7 @@ import com.netease.nim.camellia.redis.base.resource.RedisClusterResource;
 import com.netease.nim.camellia.redis.base.resource.RedisClusterSlavesResource;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
-import com.netease.nim.camellia.redis.proxy.command.AsyncTaskQueue;
+import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -396,7 +396,7 @@ public class RedisClusterClient implements IUpstreamClient {
                 first = true;
             }
             if (bindClient != null) {
-                AsyncTaskQueue asyncTaskQueue = channelInfo.getAsyncTaskQueue();
+                CommandTaskQueue asyncTaskQueue = channelInfo.getAsyncTaskQueue();
                 commandFlusher.flush();
                 commandFlusher.clear();
                 PubSubUtils.sendByBindClient(bindClient, asyncTaskQueue, command, future, first);

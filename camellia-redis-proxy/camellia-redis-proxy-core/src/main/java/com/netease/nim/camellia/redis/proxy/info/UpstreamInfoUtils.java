@@ -8,13 +8,12 @@ import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceUtil;
 import com.netease.nim.camellia.redis.base.resource.*;
+import com.netease.nim.camellia.redis.proxy.upstream.*;
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelUtils;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
-import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateChooser;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
@@ -179,12 +178,14 @@ public class UpstreamInfoUtils {
         return jsonObject;
     }
 
-    public static String upstreamInfo(Long bid, String bgroup, UpstreamRedisClientTemplateChooser chooser, boolean parseJson) {
+    public static String upstreamInfo(Long bid, String bgroup, IUpstreamClientTemplateChooser chooser, boolean parseJson) {
         try {
-            UpstreamRedisClientTemplate template = chooser.choose(bid, bgroup);
-            if (template == null) {
+            IUpstreamClientTemplate clientTemplate = chooser.choose(bid, bgroup);
+            if (!(clientTemplate instanceof IUpstreamRedisClientTemplate)) {
                 return null;
             }
+
+            IUpstreamRedisClientTemplate template = (IUpstreamRedisClientTemplate) clientTemplate;
 
             JSONObject jsonObject = new JSONObject();
 
