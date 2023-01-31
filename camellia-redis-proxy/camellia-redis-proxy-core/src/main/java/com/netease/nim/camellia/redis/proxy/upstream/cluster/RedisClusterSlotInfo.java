@@ -353,7 +353,7 @@ public class RedisClusterSlotInfo {
     private boolean tryRenew(String host, int port, String userName, String password) {
         RedisConnection client = null;
         try {
-            client = RedisConnectionHub.getInstance().newClient(host, port, userName, password);
+            client = RedisConnectionHub.getInstance().newConnection(host, port, userName, password);
             if (client == null || !client.isValid()) return false;
             CompletableFuture<Reply> future = client.sendCommand(RedisCommand.CLUSTER.raw(), Utils.stringToBytes("slots"));
             logger.info("tryRenew, client = {}, url = {}", client.getClientName(), maskUrl);

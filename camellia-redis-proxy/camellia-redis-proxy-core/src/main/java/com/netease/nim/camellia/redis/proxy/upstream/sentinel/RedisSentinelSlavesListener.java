@@ -52,7 +52,7 @@ public class RedisSentinelSlavesListener extends Thread {
                     if (redisConnection != null && !redisConnection.isValid()) {
                         redisConnection.stop();
                     }
-                    redisConnection = RedisConnectionHub.getInstance().newClient(sentinel.getHost(), sentinel.getPort(), null, null);
+                    redisConnection = RedisConnectionHub.getInstance().newConnection(sentinel.getHost(), sentinel.getPort(), null, null);
                     while (redisConnection == null || !redisConnection.isValid()) {
                         logger.error("connect to sentinel fail, sentinel = {}. sleeping 5000ms and retrying.", sentinel.getUrl());
                         try {
@@ -60,7 +60,7 @@ public class RedisSentinelSlavesListener extends Thread {
                         } catch (InterruptedException e) {
                             logger.error(e.getMessage(), e);
                         }
-                        redisConnection = RedisConnectionHub.getInstance().newClient(sentinel.getHost(), sentinel.getPort(), null, null);
+                        redisConnection = RedisConnectionHub.getInstance().newConnection(sentinel.getHost(), sentinel.getPort(), null, null);
                     }
                 }
                 List<HostAndPort> slaves = null;

@@ -35,7 +35,7 @@ public class RedisSentinelUtils {
         boolean sentinelAvailable = false;
         HostAndPort master = null;
         try {
-            redisConnection = RedisConnectionHub.getInstance().newClient(host, port, null, null);
+            redisConnection = RedisConnectionHub.getInstance().newConnection(host, port, null, null);
             if (redisConnection != null && redisConnection.isValid()) {
                 sentinelAvailable = true;
                 CompletableFuture<Reply> future = redisConnection.sendCommand(RedisCommand.SENTINEL.raw(), SENTINEL_GET_MASTER_ADDR_BY_NAME, Utils.stringToBytes(masterName));
@@ -58,7 +58,7 @@ public class RedisSentinelUtils {
         boolean sentinelAvailable = false;
         List<HostAndPort> slaves = null;
         try {
-            redisConnection = RedisConnectionHub.getInstance().newClient(host, port, null, null);
+            redisConnection = RedisConnectionHub.getInstance().newConnection(host, port, null, null);
             if (redisConnection != null && redisConnection.isValid()) {
                 sentinelAvailable = true;
                 CompletableFuture<Reply> future = redisConnection.sendCommand(RedisCommand.SENTINEL.raw(), SLAVES, Utils.stringToBytes(masterName));

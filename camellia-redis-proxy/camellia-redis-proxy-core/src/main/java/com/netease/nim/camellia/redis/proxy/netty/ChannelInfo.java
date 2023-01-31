@@ -127,7 +127,7 @@ public class ChannelInfo {
                 return client;
             }
         }
-        RedisConnection client = RedisConnectionHub.getInstance().newClient(addr);
+        RedisConnection client = RedisConnectionHub.getInstance().newConnection(addr);
         if (client == null) return null;
         if (bindRedisClientCache == null) {
             synchronized (this) {
