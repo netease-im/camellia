@@ -7,7 +7,6 @@ import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplate;
-import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.mq.common.MqPack;
 import com.netease.nim.camellia.redis.proxy.mq.common.MqPackSerializer;
@@ -125,7 +124,7 @@ public class KafkaMqPackConsumerProxyPlugin implements ProxyPlugin {
     private void flush(Long bid, String bgroup, List<Command> buffer) {
         if (buffer.isEmpty()) return;
         List<Command> commands = new ArrayList<>(buffer);
-        IUpstreamClientTemplate template = GlobalRedisProxyEnv.getChooser().choose(bid, bgroup);
+        IUpstreamClientTemplate template = GlobalRedisProxyEnv.getChooser().getOrInitialize(bid, bgroup);
         List<CompletableFuture<Reply>> futures = template.sendCommand(commands);
         for (int i=0; i<futures.size(); i++) {
             Command command = commands.get(i);
@@ -161,7 +160,7 @@ public class KafkaMqPackConsumerProxyPlugin implements ProxyPlugin {
                     int retry = ProxyDynamicConf.getInt("mq.multi.write.kafka.consume.retry", 3);
                     int index = 1;
                     while (retry-- > 0) {
-                        IUpstreamClientTemplate template = GlobalRedisProxyEnv.getChooser().choose(mqPack.getBid(), mqPack.getBgroup());
+                        IUpstreamClientTemplate template = GlobalRedisProxyEnv.getChooser().getOrInitialize(mqPack.getBid(), mqPack.getBgroup());
                         List<CompletableFuture<Reply>> futures = template.sendCommand(Collections.singletonList(mqPack.getCommand()));
                         boolean isRetry = false;
                         long timeoutSeconds = ProxyDynamicConf.getInt("mq.multi.write.kafka.consume.redis.timeout.seconds", 10);

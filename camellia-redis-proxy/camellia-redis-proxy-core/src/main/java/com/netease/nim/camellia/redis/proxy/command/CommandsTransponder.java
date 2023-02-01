@@ -8,7 +8,7 @@ import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplate;
-import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -38,14 +38,14 @@ public class CommandsTransponder {
 
     private final AuthCommandProcessor authCommandProcessor;
     private final ProxyClusterModeProcessor clusterModeProcessor;
-    private final IUpstreamClientTemplateChooser chooser;
+    private final IUpstreamClientTemplateFactory chooser;
     private final ProxyPluginFactory proxyPluginFactory;
 
     private boolean eventLoopSetSuccess = false;
 
     private ProxyPluginInitResp proxyPluginInitResp;
 
-    public CommandsTransponder(IUpstreamClientTemplateChooser chooser, CommandInvokeConfig commandInvokeConfig) {
+    public CommandsTransponder(IUpstreamClientTemplateFactory chooser, CommandInvokeConfig commandInvokeConfig) {
         this.chooser = chooser;
         this.authCommandProcessor = commandInvokeConfig.getAuthCommandProcessor();
         this.clusterModeProcessor = commandInvokeConfig.getClusterModeProcessor();
@@ -321,11 +321,11 @@ public class CommandsTransponder {
     private void flush(Long bid, String bgroup, List<CommandTask> tasks, List<Command> commands) {
         try {
             if (!chooser.isMultiTenancySupport() || bid == null || bid <= 0 || bgroup == null) {
-                IUpstreamClientTemplate template = chooser.choose(bid, bgroup);
+                IUpstreamClientTemplate template = chooser.getOrInitialize(bid, bgroup);
                 flush0(template, bid, bgroup, tasks, commands);
                 return;
             }
-            CompletableFuture<IUpstreamClientTemplate> future = chooser.chooseAsync(bid, bgroup);
+            CompletableFuture<IUpstreamClientTemplate> future = chooser.getOrInitializeAsync(bid, bgroup);
             if (future == null) {
                 for (CommandTask task : tasks) {
                     task.replyCompleted(ErrorReply.NOT_AVAILABLE);

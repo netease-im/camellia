@@ -4,7 +4,7 @@
 ### add
 * add camellia-redis3 module, support jedis3.x(default use v3.6.3)
 * add camellia-redis-base, the common of camellia-redis-client and camellia-redis-proxy
-* camellia-redis-proxy support custom upstream, core interface is IUpstreamClientTemplate and IUpstreamClientTemplateChooser
+* camellia-redis-proxy support custom upstream, core interface is IUpstreamClientTemplate and IUpstreamClientTemplateFactory
 * refactor camellia-redis-proxy-hbase, replace custom CommandInvoker into custom upstream, more code reuse, refactor thread module, use business thread to isolation netty worker thread and business thread 
 * camellia-tools provide CamelliaLinearInitializationExecutor to resource liner initialization
 * camellia-redis-proxy refactor multi tenant init by CamelliaLinearInitializationExecutor

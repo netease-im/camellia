@@ -5,7 +5,7 @@ import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
-import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
@@ -79,7 +79,7 @@ public class ProxyInfoUtils {
         }
     }
 
-    public static CompletableFuture<Reply> getInfoReply(Command command, IUpstreamClientTemplateChooser chooser) {
+    public static CompletableFuture<Reply> getInfoReply(Command command, IUpstreamClientTemplateFactory chooser) {
         CompletableFuture<Reply> future = new CompletableFuture<>();
         try {
             executor.submit(() -> {
@@ -188,7 +188,7 @@ public class ProxyInfoUtils {
         }
     }
 
-    public static Reply generateInfoReply(Command command, IUpstreamClientTemplateChooser chooser) {
+    public static Reply generateInfoReply(Command command, IUpstreamClientTemplateFactory chooser) {
         try {
             StringBuilder builder = new StringBuilder();
             byte[][] objects = command.getObjects();

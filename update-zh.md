@@ -4,7 +4,7 @@
 ### 新增
 * 新增camellia-redis3模块以及相关模块，支持jedis3.x（默认使用v3.6.3)
 * 把camellia-redis-client和camellia-redis-proxy的公共部分组成camellia-redis-base模块，从而camellia-redis-proxy不再依赖camellia-redis-client
-* camellia-redis-proxy支持自定义upstream模块，核心接口：IUpstreamClientTemplate和IUpstreamClientTemplateChooser
+* camellia-redis-proxy支持自定义upstream模块，核心接口：IUpstreamClientTemplate和IUpstreamClientTemplateFactory
 * camellia-redis-proxy-hbase冷热分离存储，从自定义CommandInvoker改成自定义upstream，从而有更多代码复用，并且修改了线程模型（新增了工作线程池和netty-worker线程池隔离）
 * camellia-tools新增CamelliaLinearInitializationExecutor，支持资源的异步线性初始化
 * camellia-redis-proxy引入CamelliaLinearInitializationExecutor，对多租户upstream初始化逻辑进行了重构

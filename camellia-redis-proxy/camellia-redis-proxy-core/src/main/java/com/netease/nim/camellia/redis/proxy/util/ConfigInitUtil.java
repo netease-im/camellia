@@ -7,8 +7,8 @@ import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
-import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateChooser;
-import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateFactory;
 
 
 /**
@@ -16,13 +16,13 @@ import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate
  */
 public class ConfigInitUtil {
 
-    public static IUpstreamClientTemplateChooser initUpstreamClientTemplateChooser(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
+    public static IUpstreamClientTemplateFactory initUpstreamClientTemplateChooser(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
         String className = serverProperties.getUpstreamClientTemplateChooserClassName();
         ProxyBeanFactory proxyBeanFactory = serverProperties.getProxyBeanFactory();
-        if (className == null || className.equals(UpstreamRedisClientTemplateChooser.class.getName())) {
-            return new UpstreamRedisClientTemplateChooser(transpondProperties, proxyBeanFactory);
+        if (className == null || className.equals(UpstreamRedisClientTemplateFactory.class.getName())) {
+            return new UpstreamRedisClientTemplateFactory(transpondProperties, proxyBeanFactory);
         }
-        return (IUpstreamClientTemplateChooser) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
+        return (IUpstreamClientTemplateFactory) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
     }
 
     public static ClientAuthProvider initClientAuthProvider(CamelliaServerProperties serverProperties) {

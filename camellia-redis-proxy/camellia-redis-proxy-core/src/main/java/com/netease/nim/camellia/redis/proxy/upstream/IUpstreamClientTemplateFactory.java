@@ -5,7 +5,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Created by caojiajun on 2023/1/31
  */
-public interface IUpstreamClientTemplateChooser {
+public interface IUpstreamClientTemplateFactory {
 
     /**
      * choose a IUpstreamClientTemplate instance
@@ -14,7 +14,7 @@ public interface IUpstreamClientTemplateChooser {
      * @param bgroup bgroup
      * @return instance
      */
-    IUpstreamClientTemplate choose(Long bid, String bgroup);
+    IUpstreamClientTemplate getOrInitialize(Long bid, String bgroup);
 
     /**
      * async choose a IUpstreamClientTemplate instance
@@ -22,7 +22,7 @@ public interface IUpstreamClientTemplateChooser {
      * @param bgroup bgroup
      * @return instance
      */
-    CompletableFuture<IUpstreamClientTemplate> chooseAsync(Long bid, String bgroup);
+    CompletableFuture<IUpstreamClientTemplate> getOrInitializeAsync(Long bid, String bgroup);
 
     /**
      * isMultiTenancySupport

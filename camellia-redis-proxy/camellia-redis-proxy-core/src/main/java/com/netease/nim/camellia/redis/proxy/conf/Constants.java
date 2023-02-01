@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
-import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateFactory;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.proxy.cluster.DefaultProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfUpdater;
@@ -26,7 +26,7 @@ public class Constants {
         public static final boolean clusterModeEnable = false;
         public static final String clusterModeProviderClassName = DefaultProxyClusterModeProvider.class.getName();
 
-        public static final String upstreamClientTemplateChooserClassName = UpstreamRedisClientTemplateChooser.class.getName();
+        public static final String upstreamClientTemplateChooserClassName = UpstreamRedisClientTemplateFactory.class.getName();
 
         public static final int workThread = SysUtils.getCpuNum();
         public static final int commandDecodeMaxBatchSize = 256;

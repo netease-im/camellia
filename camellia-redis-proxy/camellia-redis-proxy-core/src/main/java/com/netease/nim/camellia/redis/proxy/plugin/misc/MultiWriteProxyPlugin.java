@@ -5,7 +5,7 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.PrefixMatchHotKeyCacheKeyChecker;
-import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.upstream.RedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
@@ -50,7 +50,7 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
     public ProxyPluginResponse executeRequest(ProxyRequest request) {
         try {
             Command command = request.getCommand();
-            IUpstreamClientTemplateChooser chooser = request.getChooser();
+            IUpstreamClientTemplateFactory chooser = request.getChooser();
             RedisCommand redisCommand = command.getRedisCommand();
             if (redisCommand == null) {
                 return ProxyPluginResponse.SUCCESS;
@@ -109,7 +109,7 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
         }
     }
 
-    private void doMultiWrite(byte[] key, KeyContext keyContext, Command command, IUpstreamClientTemplateChooser chooser) {
+    private void doMultiWrite(byte[] key, KeyContext keyContext, Command command, IUpstreamClientTemplateFactory chooser) {
         try {
             RedisProxyEnv redisProxyEnv = chooser.getEnv();
             if (redisProxyEnv == null) {

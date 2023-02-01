@@ -9,9 +9,7 @@ import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultBeanFactory;
-import com.netease.nim.camellia.tools.base.DynamicConfig;
 import com.netease.nim.camellia.tools.executor.CamelliaLinearInitializationExecutor;
-import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
@@ -32,9 +30,9 @@ import java.util.concurrent.*;
  *
  * Created by caojiajun on 2019/12/12.
  */
-public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTemplateChooser {
+public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTemplateFactory {
 
-    private static final Logger logger = LoggerFactory.getLogger(UpstreamRedisClientTemplateChooser.class);
+    private static final Logger logger = LoggerFactory.getLogger(UpstreamRedisClientTemplateFactory.class);
 
     private final CamelliaTranspondProperties properties;
     private RedisProxyEnv env;
@@ -49,14 +47,15 @@ public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTempla
     private UpstreamRedisClientTemplate customInstance;
     private CamelliaLinearInitializationExecutor<String, IUpstreamClientTemplate> executor;
 
-    public UpstreamRedisClientTemplateChooser(CamelliaTranspondProperties properties, ProxyBeanFactory proxyBeanFactory) {
+    public UpstreamRedisClientTemplateFactory(CamelliaTranspondProperties properties, ProxyBeanFactory proxyBeanFactory) {
         this.properties = properties;
         this.proxyBeanFactory = proxyBeanFactory != null ? proxyBeanFactory : DefaultBeanFactory.INSTANCE;
         init();
+        logger.info("UpstreamRedisClientTemplateFactory init success");
     }
 
     @Override
-    public IUpstreamClientTemplate choose(Long bid, String bgroup) {
+    public IUpstreamClientTemplate getOrInitialize(Long bid, String bgroup) {
         try {
             if (!multiTenancySupport) {
                 CamelliaTranspondProperties.Type type = properties.getType();
@@ -78,27 +77,27 @@ public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTempla
                     return customInstance;
                 }
             }
-            CompletableFuture<IUpstreamClientTemplate> future = chooseAsync(bid, bgroup);
+            CompletableFuture<IUpstreamClientTemplate> future = getOrInitializeAsync(bid, bgroup);
             if (future == null) return null;
             return future.get();
         } catch (Exception e) {
-            ErrorLogCollector.collect(UpstreamRedisClientTemplateChooser.class, "choose UpstreamRedisClientTemplate error", e);
+            ErrorLogCollector.collect(UpstreamRedisClientTemplateFactory.class, "choose UpstreamRedisClientTemplate error", e);
             return null;
         }
     }
 
     @Override
-    public CompletableFuture<IUpstreamClientTemplate> chooseAsync(Long bid, String bgroup) {
+    public CompletableFuture<IUpstreamClientTemplate> getOrInitializeAsync(Long bid, String bgroup) {
         CamelliaTranspondProperties.Type type = properties.getType();
         if (type == CamelliaTranspondProperties.Type.LOCAL) {
-            return IUpstreamClientTemplateChooser.wrapper(localInstance);
+            return IUpstreamClientTemplateFactory.wrapper(localInstance);
         } else if (type == CamelliaTranspondProperties.Type.REMOTE) {
             CamelliaTranspondProperties.RemoteProperties remote = properties.getRemote();
             if (!remote.isDynamic()) {
-                return IUpstreamClientTemplateChooser.wrapper(remoteInstance);
+                return IUpstreamClientTemplateFactory.wrapper(remoteInstance);
             }
             if (bid == null || bid <= 0 || bgroup == null) {
-                return IUpstreamClientTemplateChooser.wrapper(remoteInstance);
+                return IUpstreamClientTemplateFactory.wrapper(remoteInstance);
             }
             if (executor != null) {
                 return executor.getOrInitialize(bid + "|" + bgroup);
@@ -106,10 +105,10 @@ public class UpstreamRedisClientTemplateChooser implements IUpstreamClientTempla
         } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
             CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
             if (!custom.isDynamic()) {
-                return IUpstreamClientTemplateChooser.wrapper(customInstance);
+                return IUpstreamClientTemplateFactory.wrapper(customInstance);
             }
             if (bid == null || bid <= 0 || bgroup == null) {
-                return IUpstreamClientTemplateChooser.wrapper(customInstance);
+                return IUpstreamClientTemplateFactory.wrapper(customInstance);
             }
             if (executor != null) {
                 return executor.getOrInitialize(bid + "|" + bgroup);

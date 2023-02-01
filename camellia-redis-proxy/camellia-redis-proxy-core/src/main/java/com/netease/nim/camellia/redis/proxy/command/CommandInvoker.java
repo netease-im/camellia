@@ -10,7 +10,7 @@ import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultProxyPluginFactory;
-import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import io.netty.channel.ChannelHandlerContext;
@@ -29,7 +29,7 @@ public class CommandInvoker implements ICommandInvoker {
 
     private static final Logger logger = LoggerFactory.getLogger(CommandInvoker.class);
 
-    private final IUpstreamClientTemplateChooser chooser;
+    private final IUpstreamClientTemplateFactory chooser;
     private final CommandInvokeConfig commandInvokeConfig;
 
     public CommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
