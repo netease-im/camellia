@@ -10,8 +10,6 @@
 * 支持配置客户端分片，从而可以多个redis/redis-sentinel/redis-cluster当做一个使用
 * 支持配置多读多写（如：双写/读写分离）
 * 支持读redis-sentinel的从节点，并自动感知主从切换、从节点扩容、从节点宕机等
-* 支持Jedis适配器，修改一行代码从Jedis迁移到CamelliaRedisTemplate
-* 支持SpringRedisTemplate适配器，不修改一行代码迁移到CamelliaRedisTemplate
 * 支持配置动态变更
 * 提供了一个spring-boot-starter，快速接入
 
@@ -74,12 +72,6 @@ public class TestSamples {
 
 ### 使用spring-boot-starter快速接入
 使用spring-boot-starter自动注入CamelliaRedisTemplate实例，参见：[spring-boot-starter](spring-boot-starter.md)
-
-### 使用Jedis适配器接入
-如果你本来使用的是原生的Jedis，则使用适配器可以修改一行代码即可切换成CamelliaRedisTemplate，参见：[jedis-adaptor](jedis-adaptor.md)  
-
-### 使用SpringRedisTemplate适配器接入
-如果你本来使用的是SpringRedisTemplate，但是也想拥有CamelliaRedisTemplate的分片、读写分离、双写等能力，使用适配器，不需要修改代码即可切换成CamelliaRedisTemplate，参见：[spring-adaptor](spring-adaptor.md)
 
 ### 几个工具类
 参见：[tools](/docs/tools/tools.md)

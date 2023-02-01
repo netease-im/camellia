@@ -11,6 +11,9 @@
 
 ### 更新
 * camellia-redis-proxy相关核心类进行了重命名（upstream部分）
+* camellia-redis移除了CamelliaRedisTemplate到SpringRedisTemplate的适配器
+* camellia-redis移除了CamelliaRedisTemplate到Jedis的适配器
+* 新增camellia-redis-toolkit模块，把camellia-redis中的toolkit相关功能（如分布式锁等）独立出来，从而可以被camellia-redis3复用
 
 ### fix
 * 无

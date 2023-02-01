@@ -11,6 +11,9 @@
 
 ### update
 * camellia-redis-proxy rename core upstream service  
+* camellia-redis remove the adaptor of CamelliaRedisTemplate to SpringRedisTemplate
+* camellia-redis remove the adaptor of CamelliaRedisTemplate to Jedis
+* add camellia-redis-toolkit module, independent the toolkits (such as CamelliaRedisLock) from camellia-redis, so the code could reuse by camellia-redis3
 
 ### fix
 * none

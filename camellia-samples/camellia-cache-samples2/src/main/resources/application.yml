@@ -1,0 +1,31 @@
+
+camellia-cache:
+  multi-op-batch-size: 500 #批量操作时，分批的大小，比如800的批量，会拆成500+300两次请求，默认500
+  sync-load-expire-millis: 1000 #使用sync=true模式时，分布式锁的超时时间，默认1000ms
+  sync-load-max-retry: 1 #使用sync=true模式时，等待线程尝试获取缓存的次数，默认1次
+  sync-load-sleep-millis: 100 #使用sync=true模式时，等待线程在每次尝试获取缓存的sleep间隔，默认100ms
+  compress-enable: false #是否开启缓存value的压缩，默认false
+  compress-threshold: 1024 #缓存value压缩的阈值，超过阈值才会压缩，默认1024个字节
+  max-cache-calue: 2097152 #缓存value的最大值，超过阈值，则不会写入缓存（仅针对中心化缓存，如redis），默认2M
+  local:
+    initial-capacity: 10000 #本地缓存的初始大小
+    max-capacity: 100000 #本地缓存的最大大小
+
+camellia-redis:
+  type: local
+  local:
+    resource: redis://@127.0.0.1:6379
+  redis-conf:
+    jedis:
+      timeout: 2000
+      min-idle: 0
+      max-idle: 32
+      max-active: 32
+      max-wait-millis: 2000
+    jedis-cluster:
+      max-wait-millis: 2000
+      min-idle: 0
+      max-idle: 8
+      max-active: 16
+      max-attempts: 5
+      timeout: 2000
