@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.1.14（2023/02/01）(1.1.13 is broken in maven central repository)
+# 1.1.14（2023/02/01）（1.1.13 is broken in maven central repository, so re-deploy in 1.1.14）
 ### add
 * camellia-redis-proxy support use transport_native_epoll、transport_native_kqueue、transport_native_io_uring, default use jdk_nio
 * camellia-redis-proxy support configure TCP_QUICKACK option, only support in transport_native_epoll mode, thanks [@tain198127](https://github.com/tain198127) , related issue: [issue-87](https://github.com/netease-im/camellia/issues/87)
