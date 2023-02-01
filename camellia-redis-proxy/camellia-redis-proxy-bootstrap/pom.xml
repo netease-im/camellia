@@ -4,19 +4,19 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis-proxy-bootstrap</artifactId>
-	<version>1.1.13</version>
+	<version>1.1.14</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-redis-proxy</artifactId>
-		<version>1.1.13</version>
+		<version>1.1.14</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
-			<version>1.1.13</version>
+			<version>1.1.14</version>
 		</dependency>
 	</dependencies>
 	<build>

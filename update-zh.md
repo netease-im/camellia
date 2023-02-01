@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.1.13（2023/01/30）
+# 1.1.14（2023/02/01）(1.1.13 is broken in maven central repository)
 ### 新增
 * camellia-redis-proxy支持使用transport_native_epoll、transport_native_kqueue、transport_native_io_uring，默认使用jdk_nio，具体见：[netty-conf](/docs/redis-proxy/other/netty-conf.md)
 * camellia-redis-proxy支持配置TCP_QUICKACK参数，当前仅当使用transport_native_epoll时支持，感谢[@tain198127](https://github.com/tain198127) ，具体见：[netty-conf](/docs/redis-proxy/other/netty-conf.md) ，关联issue: [issue-87](https://github.com/netease-im/camellia/issues/87)
