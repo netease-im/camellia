@@ -47,6 +47,12 @@ public class CamelliaHBaseConnection {
             }
             configuration.set(HBaseConstants.ZK, hBaseResource.getZk());
             configuration.set(HBaseConstants.ZK_PARENT, hBaseResource.getZkParent());
+            if (hBaseResource.getUserName() != null) {
+                configuration.set(HBaseConstants.USER_NAME, hBaseResource.getUserName());
+            }
+            if (hBaseResource.getPassword() != null) {
+                configuration.set(HBaseConstants.PASSWORD, hBaseResource.getPassword());
+            }
             this.configuration = configuration;
             this.connection = ConnectionFactory.createConnection(configuration);
         } catch (IOException e) {

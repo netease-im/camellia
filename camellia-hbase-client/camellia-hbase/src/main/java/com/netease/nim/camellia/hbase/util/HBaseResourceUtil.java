@@ -7,6 +7,8 @@ import com.netease.nim.camellia.core.util.CheckUtil;
 import com.netease.nim.camellia.core.util.ResourceUtil;
 import com.netease.nim.camellia.hbase.resource.HBaseResource;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -44,15 +46,39 @@ public class HBaseResourceUtil {
             throw new IllegalArgumentException("miss '/'");
         }
         String[] split = substring.split("/");
-        HBaseResource hBaseResource = new HBaseResource(split[0], "/" + split[1]);
-        String zk = hBaseResource.getZk();
-        String zkParent = hBaseResource.getZkParent();
+        String zk = split[0];
+        String str = split[1];
+        String zkParent;
+        String userName = null;
+        String password = null;
+        if (!str.contains("?")) {
+            zkParent = "/" + str;
+        } else {
+            String[] strings = str.split("\\?");
+            zkParent = "/" + strings[0];
+            if (strings.length > 1) {
+                Map<String, String> params = getParams(strings[1]);
+                userName = params.get("userName");
+                password = params.get("password");
+            }
+        }
+        HBaseResource hBaseResource = new HBaseResource(zk, zkParent, userName, password);
         if (zk == null || zk.length() == 0) {
             throw new IllegalArgumentException("zk is empty");
         }
-        if (zkParent == null || zkParent.length() == 0) {
-            throw new IllegalArgumentException("zkParent is empty");
-        }
         return hBaseResource;
+    }
+
+    public static Map<String, String> getParams(String queryString) {
+        String[] split1 = queryString.split("&");
+        Map<String, String> map = new HashMap<>();
+        for (String s : split1) {
+            String[] split3 = s.split("=");
+            if (split3.length != 2) continue;
+            String k = split3[0];
+            String v = split3[1];
+            map.put(k, v);
+        }
+        return map;
     }
 }

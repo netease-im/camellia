@@ -42,11 +42,17 @@ public class CamelliaHBaseInitUtil {
         CamelliaHBaseConf camelliaHBaseConf = new CamelliaHBaseConf();
         String zk = null;
         String zkParent = null;
+        String userName = null;
+        String password = null;
         for (Map.Entry<String, String> entry : configuration) {
             if (entry.getKey().equalsIgnoreCase(HBaseConstants.ZK)) {
                 zk = entry.getValue();
             } else if (entry.getKey().equalsIgnoreCase(HBaseConstants.ZK_PARENT)) {
                 zkParent = entry.getValue();
+            } else if (entry.getKey().equalsIgnoreCase(HBaseConstants.USER_NAME)) {
+                userName = entry.getValue();
+            } else if (entry.getKey().equalsIgnoreCase(HBaseConstants.PASSWORD)) {
+                password = entry.getValue();
             } else {
                 camelliaHBaseConf.addConf(entry.getKey(), entry.getValue());
             }
@@ -57,7 +63,7 @@ public class CamelliaHBaseInitUtil {
         if (zkParent == null) {
             throw new IllegalArgumentException("missing '" + HBaseConstants.ZK_PARENT + "'");
         }
-        return new HBaseResource(zk, zkParent);
+        return new HBaseResource(zk, zkParent, userName, password);
     }
 
     public static CamelliaHBaseConf initHBaseConfFromFile(String hbaseXmlFile) {
@@ -69,7 +75,8 @@ public class CamelliaHBaseInitUtil {
         configuration.addResource(new Path(url.getPath()));
         CamelliaHBaseConf camelliaHBaseConf = new CamelliaHBaseConf();
         for (Map.Entry<String, String> entry : configuration) {
-            if (!entry.getKey().equalsIgnoreCase(HBaseConstants.ZK) && entry.getKey().equalsIgnoreCase(HBaseConstants.ZK_PARENT)) {
+            if (!entry.getKey().equalsIgnoreCase(HBaseConstants.ZK) && !entry.getKey().equalsIgnoreCase(HBaseConstants.ZK_PARENT)
+                    && !entry.getKey().equalsIgnoreCase(HBaseConstants.USER_NAME) && !entry.getKey().equalsIgnoreCase(HBaseConstants.PASSWORD)) {
                 camelliaHBaseConf.addConf(entry.getKey(), entry.getValue());
             }
         }

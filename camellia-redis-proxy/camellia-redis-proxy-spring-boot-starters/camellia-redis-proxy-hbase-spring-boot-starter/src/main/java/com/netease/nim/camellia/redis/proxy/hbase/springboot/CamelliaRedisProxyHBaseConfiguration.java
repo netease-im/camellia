@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.hbase.springboot;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.hbase.springboot.CamelliaHBaseConfiguration;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
-import com.netease.nim.camellia.redis.proxy.hbase.UpstreamRedisHBaseMixClientTemplateChooser;
+import com.netease.nim.camellia.redis.proxy.hbase.UpstreamRedisHBaseMixClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.springboot.CamelliaRedisProxyConfiguration;
 import com.netease.nim.camellia.redis.proxy.springboot.CamelliaRedisProxyConfigurerSupport;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
@@ -26,8 +26,8 @@ import org.springframework.context.annotation.Import;
 public class CamelliaRedisProxyHBaseConfiguration {
 
     @Bean
-    public UpstreamRedisHBaseMixClientTemplateChooser commandInvoker(CamelliaRedisTemplate redisTemplate,
-                                                                     CamelliaHBaseTemplate hBaseTemplate) {
-        return new UpstreamRedisHBaseMixClientTemplateChooser(redisTemplate, hBaseTemplate);
+    public UpstreamRedisHBaseMixClientTemplateFactory clientTemplateFactory(CamelliaRedisTemplate redisTemplate,
+                                                                            CamelliaHBaseTemplate hBaseTemplate) {
+        return new UpstreamRedisHBaseMixClientTemplateFactory(redisTemplate, hBaseTemplate);
     }
 }
