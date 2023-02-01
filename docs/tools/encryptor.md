@@ -12,7 +12,7 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-tools</artifactId>
-    <version>1.1.13</version>
+    <version>1.1.14</version>
 </dependency>
 ```
 
