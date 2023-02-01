@@ -52,6 +52,16 @@ public class RedisProxiesClient extends AbstractSimpleRedisClient {
         logger.info("preheat success, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
     }
 
+    @Override
+    public boolean isValid() {
+        for (RedisConnectionAddr addr : list) {
+            if (check(addr)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void reload() {
         try {
             List<RedisConnectionAddr> dynamicList = new ArrayList<>();
@@ -113,9 +123,4 @@ public class RedisProxiesClient extends AbstractSimpleRedisClient {
         return redisProxiesResource;
     }
 
-
-    private boolean check(RedisConnectionAddr addr) {
-        RedisConnection redisConnection = RedisConnectionHub.getInstance().get(addr);
-        return redisConnection != null && redisConnection.isValid();
-    }
 }

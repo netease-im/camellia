@@ -119,6 +119,12 @@ public class RedisClusterClient implements IUpstreamClient {
         return redisClusterResource.getUrl();
     }
 
+    @Override
+    public boolean isValid() {
+        //todo
+        return true;
+    }
+
     public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> futureList) {
         if (commands.isEmpty()) return;
         if (commands.size() == 1) {

@@ -184,6 +184,15 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
     }
 
     @Override
+    public boolean isValid() {
+        if (check(master)) return true;
+        for (RedisConnectionAddr slave : slaves) {
+            if (check(slave)) return true;
+        }
+        return false;
+    }
+
+    @Override
     public RedisConnectionAddr getAddr() {
         int retry = 3;
         while (retry > 0) {

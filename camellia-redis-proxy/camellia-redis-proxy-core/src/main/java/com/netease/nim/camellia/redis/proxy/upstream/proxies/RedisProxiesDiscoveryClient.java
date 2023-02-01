@@ -165,8 +165,13 @@ public class RedisProxiesDiscoveryClient extends AbstractSimpleRedisClient {
         return new RedisConnectionAddr(proxy.getHost(), proxy.getPort(), resource.getUserName(), resource.getPassword());
     }
 
-    private boolean check(RedisConnectionAddr addr) {
-        RedisConnection redisConnection = RedisConnectionHub.getInstance().get(addr);
-        return redisConnection != null && redisConnection.isValid();
+    @Override
+    public boolean isValid() {
+        for (RedisConnectionAddr addr : proxyList) {
+            if (check(addr)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.base.resource.RedisResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
  *
  * Created by caojiajun on 2019/12/18.
@@ -31,5 +32,10 @@ public class RedisStandaloneClient extends AbstractSimpleRedisClient {
     @Override
     public Resource getResource() {
         return redisResource;
+    }
+
+    @Override
+    public boolean isValid() {
+        return check(getAddr());
     }
 }

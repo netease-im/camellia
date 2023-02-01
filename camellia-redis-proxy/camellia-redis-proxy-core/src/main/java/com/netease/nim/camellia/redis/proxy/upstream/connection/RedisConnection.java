@@ -362,6 +362,7 @@ public class RedisConnection implements IUpstreamClient {
         }
     }
 
+    @Override
     public boolean isValid() {
         if (closing) return false;
         return valid;

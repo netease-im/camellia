@@ -76,4 +76,9 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
     public Resource getResource() {
         return redisSentinelResource;
     }
+
+    @Override
+    public boolean isValid() {
+        return check(getAddr());
+    }
 }

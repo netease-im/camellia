@@ -4,14 +4,19 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.base.resource.*;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.cluster.RedisClusterClient;
 import com.netease.nim.camellia.redis.proxy.upstream.proxies.RedisProxiesClient;
 import com.netease.nim.camellia.redis.proxy.upstream.proxies.RedisProxiesDiscoveryClient;
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelClient;
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelSlavesClient;
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.RedisStandaloneClient;
+import com.netease.nim.camellia.redis.proxy.upstream.utils.CachedResourceChecker;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -30,10 +35,21 @@ public interface UpstreamRedisClientFactory {
         private int maxAttempts = Constants.Transpond.redisClusterMaxAttempts;
 
         public Default() {
+            schedule();
         }
 
         public Default(int maxAttempts) {
             this.maxAttempts = maxAttempts;
+            schedule();
+        }
+
+        private void schedule() {
+            int intervalSeconds = ProxyDynamicConf.getInt("check.redis.resource.valid.interval.seconds", 5);
+            ExecutorUtils.scheduleAtFixedRate(() -> {
+                for (Map.Entry<String, IUpstreamClient> entry : map.entrySet()) {
+                    CachedResourceChecker.getInstance().updateCache(new Resource(entry.getKey()), entry.getValue().isValid());
+                }
+            }, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
         }
 
         public IUpstreamClient get(RedisResource redisResource) {

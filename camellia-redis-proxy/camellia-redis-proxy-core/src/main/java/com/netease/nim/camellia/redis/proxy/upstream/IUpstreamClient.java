@@ -17,4 +17,6 @@ public interface IUpstreamClient {
     void preheat();
 
     String getUrl();
+
+    boolean isValid();
 }

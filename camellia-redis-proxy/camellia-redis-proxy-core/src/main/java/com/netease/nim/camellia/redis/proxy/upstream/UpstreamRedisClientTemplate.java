@@ -17,6 +17,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
+import com.netease.nim.camellia.redis.proxy.upstream.utils.CachedResourceChecker;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.ScanCursorCalculator;
 import com.netease.nim.camellia.redis.proxy.util.*;
@@ -267,7 +268,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     } else if (keys.size() == 1) {
                         resource = resourceChooser.getReadResource(keys.get(0));
                     } else {
-                        resource = checkReadResources(keys);
+                        resource = resourceChooser.getReadResourceWithCheckEqual(keys);
                     }
                     if (resource == null) {
                         future = new CompletableFuture<>();
@@ -283,7 +284,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     } else if (keys.size() == 1) {
                         writeResources = resourceChooser.getWriteResources(keys.get(0));
                     } else {
-                        writeResources = checkWriteResources(keys);
+                        writeResources = resourceChooser.getWriteResourcesWithCheckEqual(keys);
                     }
                     if (writeResources == null) {
                         future = new CompletableFuture<>();
@@ -506,6 +507,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         }
         //初始化ResourceChooser
         this.resourceChooser = new ResourceChooser(resourceTable, env.getProxyEnv());
+
         this.proxyRouteType = ProxyRouteType.fromResourceTable(resourceTable);
         if (this.proxyRouteType == ProxyRouteType.REDIS_STANDALONE ||
                 this.proxyRouteType == ProxyRouteType.REDIS_SENTINEL ||
@@ -516,6 +518,9 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 logger.error(e.getMessage(), e);
                 singletonClient = null;
             }
+        }
+        if (resourceChooser.isNeedResourceChecker()) {
+            resourceChooser.setResourceChecker(CachedResourceChecker.getInstance());
         }
         //check need force close subscribe channel
         boolean needCloseSubscribeChannel = this.resourceChooser.getResourceTable().getType() == ResourceTable.Type.SHADING;
@@ -583,36 +588,6 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             list.add(future);
         }
         return CompletableFutureUtils.finalReply(list, multiWriteMode);
-    }
-
-    private Resource checkReadResources(List<byte[]> keys) {
-        ResourceChooser.ReadResourceBean resources = null;
-        for (byte[] key : keys) {
-            ResourceChooser.ReadResourceBean nextResources = resourceChooser.getReadResources(key);
-            if (resources != null) {
-                boolean checkReadResourcesEqual = ResourceChooser.checkReadResourcesEqual(resources, nextResources);
-                if (!checkReadResourcesEqual) {
-                    return null;
-                }
-            }
-            resources = nextResources;
-        }
-        return ResourceChooser.getReadResource(resources);
-    }
-
-    private List<Resource> checkWriteResources(List<byte[]> keys) {
-        List<Resource> resources = null;
-        for (byte[] key : keys) {
-            List<Resource> nextResources = resourceChooser.getWriteResources(key);
-            if (resources != null) {
-                boolean checkWriteResourcesEqual = ResourceChooser.checkWriteResourcesEqual(resources, nextResources);
-                if (!checkWriteResourcesEqual) {
-                    return null;
-                }
-            }
-            resources = nextResources;
-        }
-        return resources;
     }
 
     private CompletableFuture<Reply> mset(Command command, CommandFlusher commandFlusher) {

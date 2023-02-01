@@ -101,7 +101,7 @@ public class CamelliaRedisProxyProperties {
     /**
      * 转发配置
      */
-    private TranspondProperties transpond;
+    private TranspondProperties transpond = new TranspondProperties();
 
     public String getPassword() {
         return password;
