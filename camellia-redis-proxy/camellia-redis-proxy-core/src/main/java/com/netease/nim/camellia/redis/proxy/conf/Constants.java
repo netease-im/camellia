@@ -26,7 +26,7 @@ public class Constants {
         public static final boolean clusterModeEnable = false;
         public static final String clusterModeProviderClassName = DefaultProxyClusterModeProvider.class.getName();
 
-        public static final String upstreamClientTemplateChooserClassName = UpstreamRedisClientTemplateFactory.class.getName();
+        public static final String upstreamClientTemplateFactoryClassName = UpstreamRedisClientTemplateFactory.class.getName();
 
         public static final int workThread = SysUtils.getCpuNum();
         public static final int commandDecodeMaxBatchSize = 256;

@@ -75,7 +75,7 @@ public class CamelliaRedisProxyProperties {
     /**
      * 上游（后端）客户端工厂
      */
-    private String upstreamClientTemplateChooserClassName = Constants.Server.upstreamClientTemplateChooserClassName;
+    private String upstreamClientTemplateFactoryClassName = Constants.Server.upstreamClientTemplateFactoryClassName;
 
     /**
      * 插件
@@ -191,12 +191,12 @@ public class CamelliaRedisProxyProperties {
         this.clientAuthProviderClassName = clientAuthProviderClassName;
     }
 
-    public String getUpstreamClientTemplateChooserClassName() {
-        return upstreamClientTemplateChooserClassName;
+    public String getUpstreamClientTemplateFactoryClassName() {
+        return upstreamClientTemplateFactoryClassName;
     }
 
-    public void setUpstreamClientTemplateChooserClassName(String upstreamClientTemplateChooserClassName) {
-        this.upstreamClientTemplateChooserClassName = upstreamClientTemplateChooserClassName;
+    public void setUpstreamClientTemplateFactoryClassName(String upstreamClientTemplateFactoryClassName) {
+        this.upstreamClientTemplateFactoryClassName = upstreamClientTemplateFactoryClassName;
     }
 
     public List<String> getPlugins() {

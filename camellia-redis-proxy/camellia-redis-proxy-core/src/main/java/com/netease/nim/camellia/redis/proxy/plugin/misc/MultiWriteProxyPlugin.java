@@ -50,7 +50,7 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
     public ProxyPluginResponse executeRequest(ProxyRequest request) {
         try {
             Command command = request.getCommand();
-            IUpstreamClientTemplateFactory chooser = request.getChooser();
+            IUpstreamClientTemplateFactory factory = request.getClientTemplateFactory();
             RedisCommand redisCommand = command.getRedisCommand();
             if (redisCommand == null) {
                 return ProxyPluginResponse.SUCCESS;
@@ -76,13 +76,13 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
                 List<byte[]> keys = command.getKeys();
                 if (!keys.isEmpty()) {
                     byte[] key = keys.get(0);
-                    doMultiWrite(key, keyContext, command, chooser);
+                    doMultiWrite(key, keyContext, command, factory);
                 }
             } else if (commandKeyType == RedisCommand.CommandKeyType.SIMPLE_MULTI) {
                 List<byte[]> keys = command.getKeys();
                 if (keys != null && !keys.isEmpty()) {
                     for (byte[] key : keys) {
-                        doMultiWrite(key, keyContext, new Command(new byte[][]{redisCommand.raw(), key}), chooser);
+                        doMultiWrite(key, keyContext, new Command(new byte[][]{redisCommand.raw(), key}), factory);
                     }
                 }
             } else if (commandKeyType == RedisCommand.CommandKeyType.COMPLEX) {
@@ -92,13 +92,13 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
                         for (int i = 1; i < objects.length; i += 2) {
                             byte[] key = objects[i];
                             byte[] value = objects[i + 1];
-                            doMultiWrite(key, keyContext, new Command(new byte[][]{RedisCommand.SET.raw(), key, value}), chooser);
+                            doMultiWrite(key, keyContext, new Command(new byte[][]{RedisCommand.SET.raw(), key, value}), factory);
                         }
                     }
                 } else if (redisCommand == RedisCommand.XGROUP) {
                     if (command.getObjects().length >= 3) {
                         byte[] key = command.getObjects()[2];
-                        doMultiWrite(key, keyContext, command, chooser);
+                        doMultiWrite(key, keyContext, command, factory);
                     }
                 }
             }
@@ -109,9 +109,9 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
         }
     }
 
-    private void doMultiWrite(byte[] key, KeyContext keyContext, Command command, IUpstreamClientTemplateFactory chooser) {
+    private void doMultiWrite(byte[] key, KeyContext keyContext, Command command, IUpstreamClientTemplateFactory factory) {
         try {
-            RedisProxyEnv redisProxyEnv = chooser.getEnv();
+            RedisProxyEnv redisProxyEnv = factory.getEnv();
             if (redisProxyEnv == null) {
                 ErrorLogCollector.collect(MultiWriteProxyPlugin.class, "multi write fail for redisProxyEnv is null");
                 return;

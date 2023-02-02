@@ -57,7 +57,7 @@ public class GlobalRedisProxyEnv {
     private static int cport;
     private static int consolePort;
 
-    private static IUpstreamClientTemplateFactory chooser;
+    private static IUpstreamClientTemplateFactory clientTemplateFactory;
     private static ProxyDiscoveryFactory discoveryFactory;
 
     private static final Set<Runnable> callbackSet = new HashSet<>();
@@ -117,8 +117,8 @@ public class GlobalRedisProxyEnv {
         GlobalRedisProxyEnv.consolePort = consolePort;
     }
 
-    public static void setChooser(IUpstreamClientTemplateFactory chooser) {
-        GlobalRedisProxyEnv.chooser = chooser;
+    public static void setClientTemplateFactory(IUpstreamClientTemplateFactory clientTemplateFactory) {
+        GlobalRedisProxyEnv.clientTemplateFactory = clientTemplateFactory;
     }
 
     public static void setDiscoveryFactory(ProxyDiscoveryFactory discoveryFactory) {
@@ -175,8 +175,8 @@ public class GlobalRedisProxyEnv {
         return consolePort;
     }
 
-    public static IUpstreamClientTemplateFactory getChooser() {
-        return chooser;
+    public static IUpstreamClientTemplateFactory getClientTemplateFactory() {
+        return clientTemplateFactory;
     }
 
     public static ProxyDiscoveryFactory getDiscoveryFactory() {

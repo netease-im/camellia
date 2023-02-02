@@ -9,18 +9,18 @@ import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFact
  */
 public class ProxyRequest {
     private final Command command;
-    private final IUpstreamClientTemplateFactory chooser;
+    private final IUpstreamClientTemplateFactory clientTemplateFactory;
 
-    public ProxyRequest(Command command, IUpstreamClientTemplateFactory chooser) {
+    public ProxyRequest(Command command, IUpstreamClientTemplateFactory clientTemplateFactory) {
         this.command = command;
-        this.chooser = chooser;
+        this.clientTemplateFactory = clientTemplateFactory;
     }
 
     public Command getCommand() {
         return command;
     }
 
-    public IUpstreamClientTemplateFactory getChooser() {
-        return chooser;
+    public IUpstreamClientTemplateFactory getClientTemplateFactory() {
+        return clientTemplateFactory;
     }
 }

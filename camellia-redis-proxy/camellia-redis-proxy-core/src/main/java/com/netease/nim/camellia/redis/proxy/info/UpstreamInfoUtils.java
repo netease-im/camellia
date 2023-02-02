@@ -178,9 +178,9 @@ public class UpstreamInfoUtils {
         return jsonObject;
     }
 
-    public static String upstreamInfo(Long bid, String bgroup, IUpstreamClientTemplateFactory chooser, boolean parseJson) {
+    public static String upstreamInfo(Long bid, String bgroup, IUpstreamClientTemplateFactory factory, boolean parseJson) {
         try {
-            IUpstreamClientTemplate clientTemplate = chooser.getOrInitialize(bid, bgroup);
+            IUpstreamClientTemplate clientTemplate = factory.getOrInitialize(bid, bgroup);
             if (!(clientTemplate instanceof IUpstreamRedisClientTemplate)) {
                 return null;
             }

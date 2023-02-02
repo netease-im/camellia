@@ -41,7 +41,7 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setMonitorIntervalSeconds(properties.getMonitorIntervalSeconds());
         serverProperties.setMonitorCallbackClassName(properties.getMonitorCallbackClassName());
         serverProperties.setClientAuthProviderClassName(properties.getClientAuthProviderClassName());
-        serverProperties.setUpstreamClientTemplateChooserClassName(properties.getUpstreamClientTemplateChooserClassName());
+        serverProperties.setUpstreamClientTemplateFactoryClassName(properties.getUpstreamClientTemplateFactoryClassName());
         serverProperties.setProxyBeanFactory(proxyBeanFactory);
         serverProperties.setPlugins(properties.getPlugins());
         serverProperties.setConfig(properties.getConfig());

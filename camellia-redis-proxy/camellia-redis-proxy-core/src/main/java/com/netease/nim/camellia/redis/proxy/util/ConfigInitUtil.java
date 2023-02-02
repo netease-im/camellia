@@ -16,8 +16,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate
  */
 public class ConfigInitUtil {
 
-    public static IUpstreamClientTemplateFactory initUpstreamClientTemplateChooser(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
-        String className = serverProperties.getUpstreamClientTemplateChooserClassName();
+    public static IUpstreamClientTemplateFactory initUpstreamClientTemplateFactory(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
+        String className = serverProperties.getUpstreamClientTemplateFactoryClassName();
         ProxyBeanFactory proxyBeanFactory = serverProperties.getProxyBeanFactory();
         if (className == null || className.equals(UpstreamRedisClientTemplateFactory.class.getName())) {
             return new UpstreamRedisClientTemplateFactory(transpondProperties, proxyBeanFactory);

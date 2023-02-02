@@ -79,11 +79,11 @@ public class ProxyInfoUtils {
         }
     }
 
-    public static CompletableFuture<Reply> getInfoReply(Command command, IUpstreamClientTemplateFactory chooser) {
+    public static CompletableFuture<Reply> getInfoReply(Command command, IUpstreamClientTemplateFactory factory) {
         CompletableFuture<Reply> future = new CompletableFuture<>();
         try {
             executor.submit(() -> {
-                Reply reply = generateInfoReply(command, chooser);
+                Reply reply = generateInfoReply(command, factory);
                 future.complete(reply);
             });
             return future;
@@ -103,20 +103,20 @@ public class ProxyInfoUtils {
                 String bid = params.get("bid");
                 String bgroup = params.get("bgroup");
                 if (bid == null || bgroup == null) {
-                    return UpstreamInfoUtils.upstreamInfo(null, null, GlobalRedisProxyEnv.getChooser(), parseJson);
+                    return UpstreamInfoUtils.upstreamInfo(null, null, GlobalRedisProxyEnv.getClientTemplateFactory(), parseJson);
                 }
                 try {
                     Long.parseLong(bid);
                 } catch (NumberFormatException e) {
                     return parseResponse(ErrorReply.SYNTAX_ERROR, parseJson);
                 }
-                return UpstreamInfoUtils.upstreamInfo(Long.parseLong(bid), bgroup, GlobalRedisProxyEnv.getChooser(), parseJson);
+                return UpstreamInfoUtils.upstreamInfo(Long.parseLong(bid), bgroup, GlobalRedisProxyEnv.getClientTemplateFactory(), parseJson);
             } else {
-                Reply reply = generateInfoReply(new Command(new byte[][]{RedisCommand.INFO.raw(), section.getBytes(StandardCharsets.UTF_8)}), GlobalRedisProxyEnv.getChooser());
+                Reply reply = generateInfoReply(new Command(new byte[][]{RedisCommand.INFO.raw(), section.getBytes(StandardCharsets.UTF_8)}), GlobalRedisProxyEnv.getClientTemplateFactory());
                 return parseResponse(reply, parseJson);
             }
         } else {
-            Reply reply = generateInfoReply(new Command(new byte[][]{RedisCommand.INFO.raw()}), GlobalRedisProxyEnv.getChooser());
+            Reply reply = generateInfoReply(new Command(new byte[][]{RedisCommand.INFO.raw()}), GlobalRedisProxyEnv.getClientTemplateFactory());
             return parseResponse(reply, parseJson);
         }
     }
@@ -188,7 +188,7 @@ public class ProxyInfoUtils {
         }
     }
 
-    public static Reply generateInfoReply(Command command, IUpstreamClientTemplateFactory chooser) {
+    public static Reply generateInfoReply(Command command, IUpstreamClientTemplateFactory factory) {
         try {
             StringBuilder builder = new StringBuilder();
             byte[][] objects = command.getObjects();
@@ -218,7 +218,7 @@ public class ProxyInfoUtils {
                     } else if (section.equalsIgnoreCase("stats")) {
                         builder.append(getStats()).append("\r\n");
                     } else if (section.equalsIgnoreCase("upstream-info")) {
-                        builder.append(UpstreamInfoUtils.upstreamInfo(null, null, chooser, false)).append("\r\n");
+                        builder.append(UpstreamInfoUtils.upstreamInfo(null, null, factory, false)).append("\r\n");
                     }
                 } else if (objects.length == 4) {
                     String section = Utils.bytesToString(objects[1]);
@@ -231,7 +231,7 @@ public class ProxyInfoUtils {
                         } catch (Exception e) {
                             return ErrorReply.SYNTAX_ERROR;
                         }
-                        builder.append(UpstreamInfoUtils.upstreamInfo(bid, bgroup, chooser, false)).append("\r\n");
+                        builder.append(UpstreamInfoUtils.upstreamInfo(bid, bgroup, factory, false)).append("\r\n");
                     } else {
                         return ErrorReply.SYNTAX_ERROR;
                     }

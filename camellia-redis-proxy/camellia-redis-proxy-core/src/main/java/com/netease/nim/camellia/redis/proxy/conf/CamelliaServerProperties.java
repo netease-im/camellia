@@ -23,7 +23,7 @@ public class CamelliaServerProperties {
     private ProxyBeanFactory proxyBeanFactory = DefaultBeanFactory.INSTANCE;
     private String monitorCallbackClassName = Constants.Server.monitorCallbackClassName;
     private String clientAuthProviderClassName = Constants.Server.clientAuthByConfigProvider;
-    private String upstreamClientTemplateChooserClassName = Constants.Server.upstreamClientTemplateChooserClassName;
+    private String upstreamClientTemplateFactoryClassName = Constants.Server.upstreamClientTemplateFactoryClassName;
 
     private List<String> plugins = new ArrayList<>();
 
@@ -123,12 +123,12 @@ public class CamelliaServerProperties {
         this.clientAuthProviderClassName = clientAuthProviderClassName;
     }
 
-    public String getUpstreamClientTemplateChooserClassName() {
-        return upstreamClientTemplateChooserClassName;
+    public String getUpstreamClientTemplateFactoryClassName() {
+        return upstreamClientTemplateFactoryClassName;
     }
 
-    public void setUpstreamClientTemplateChooserClassName(String upstreamClientTemplateChooserClassName) {
-        this.upstreamClientTemplateChooserClassName = upstreamClientTemplateChooserClassName;
+    public void setUpstreamClientTemplateFactoryClassName(String upstreamClientTemplateFactoryClassName) {
+        this.upstreamClientTemplateFactoryClassName = upstreamClientTemplateFactoryClassName;
     }
 
     public List<String> getPlugins() {

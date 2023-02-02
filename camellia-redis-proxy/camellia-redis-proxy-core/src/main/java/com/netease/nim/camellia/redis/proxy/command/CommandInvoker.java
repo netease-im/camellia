@@ -29,14 +29,14 @@ public class CommandInvoker implements ICommandInvoker {
 
     private static final Logger logger = LoggerFactory.getLogger(CommandInvoker.class);
 
-    private final IUpstreamClientTemplateFactory chooser;
+    private final IUpstreamClientTemplateFactory factory;
     private final CommandInvokeConfig commandInvokeConfig;
 
     public CommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
         ProxyDynamicConf.updateInitConf(serverProperties.getConfig());
 
-        this.chooser = ConfigInitUtil.initUpstreamClientTemplateChooser(serverProperties, transpondProperties);
-        GlobalRedisProxyEnv.setChooser(chooser);
+        this.factory = ConfigInitUtil.initUpstreamClientTemplateFactory(serverProperties, transpondProperties);
+        GlobalRedisProxyEnv.setClientTemplateFactory(factory);
 
         MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);
         ProxyMonitorCollector.init(serverProperties, monitorCallback);
@@ -62,7 +62,7 @@ public class CommandInvoker implements ICommandInvoker {
         try {
             CommandsTransponder trandponder = threadLocal.get();
             if (trandponder == null) {
-                trandponder = new CommandsTransponder(chooser, commandInvokeConfig);
+                trandponder = new CommandsTransponder(factory, commandInvokeConfig);
                 logger.info("CommandsTransponder init success");
                 threadLocal.set(trandponder);
             }

@@ -38,15 +38,15 @@ public class CommandsTransponder {
 
     private final AuthCommandProcessor authCommandProcessor;
     private final ProxyClusterModeProcessor clusterModeProcessor;
-    private final IUpstreamClientTemplateFactory chooser;
+    private final IUpstreamClientTemplateFactory factory;
     private final ProxyPluginFactory proxyPluginFactory;
 
     private boolean eventLoopSetSuccess = false;
 
     private ProxyPluginInitResp proxyPluginInitResp;
 
-    public CommandsTransponder(IUpstreamClientTemplateFactory chooser, CommandInvokeConfig commandInvokeConfig) {
-        this.chooser = chooser;
+    public CommandsTransponder(IUpstreamClientTemplateFactory factory, CommandInvokeConfig commandInvokeConfig) {
+        this.factory = factory;
         this.authCommandProcessor = commandInvokeConfig.getAuthCommandProcessor();
         this.clusterModeProcessor = commandInvokeConfig.getClusterModeProcessor();
         this.proxyPluginFactory = commandInvokeConfig.getProxyPluginFactory();
@@ -93,7 +93,7 @@ public class CommandsTransponder {
                 if (!requestPlugins.isEmpty()) {
                     boolean pluginBreak = false;
                     //执行插件
-                    ProxyRequest request = new ProxyRequest(command, chooser);
+                    ProxyRequest request = new ProxyRequest(command, factory);
                     for (ProxyPlugin plugin : proxyPluginInitResp.getRequestPlugins()) {
                         try {
                             ProxyPluginResponse response = plugin.executeRequest(request);
@@ -198,7 +198,7 @@ public class CommandsTransponder {
 
                     //info命令
                     if (redisCommand == RedisCommand.INFO) {
-                        CompletableFuture<Reply> future = ProxyInfoUtils.getInfoReply(command, chooser);
+                        CompletableFuture<Reply> future = ProxyInfoUtils.getInfoReply(command, factory);
                         future.thenAccept(task::replyCompleted);
                         hasCommandsSkip = true;
                         continue;
@@ -320,12 +320,12 @@ public class CommandsTransponder {
 
     private void flush(Long bid, String bgroup, List<CommandTask> tasks, List<Command> commands) {
         try {
-            if (!chooser.isMultiTenancySupport() || bid == null || bid <= 0 || bgroup == null) {
-                IUpstreamClientTemplate template = chooser.getOrInitialize(bid, bgroup);
+            if (!factory.isMultiTenancySupport() || bid == null || bid <= 0 || bgroup == null) {
+                IUpstreamClientTemplate template = factory.getOrInitialize(bid, bgroup);
                 flush0(template, bid, bgroup, tasks, commands);
                 return;
             }
-            CompletableFuture<IUpstreamClientTemplate> future = chooser.getOrInitializeAsync(bid, bgroup);
+            CompletableFuture<IUpstreamClientTemplate> future = factory.getOrInitializeAsync(bid, bgroup);
             if (future == null) {
                 for (CommandTask task : tasks) {
                     task.replyCompleted(ErrorReply.NOT_AVAILABLE);
