@@ -36,6 +36,6 @@ public class RedisStandaloneClient extends AbstractSimpleRedisClient {
 
     @Override
     public boolean isValid() {
-        return check(getAddr());
+        return checkValid(getAddr());
     }
 }

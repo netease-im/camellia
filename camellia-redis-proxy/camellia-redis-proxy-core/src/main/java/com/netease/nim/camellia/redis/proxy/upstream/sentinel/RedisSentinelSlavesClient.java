@@ -185,9 +185,9 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
 
     @Override
     public boolean isValid() {
-        if (check(master)) return true;
+        if (checkValid(master)) return true;
         for (RedisConnectionAddr slave : slaves) {
-            if (check(slave)) return true;
+            if (checkValid(slave)) return true;
         }
         return false;
     }
