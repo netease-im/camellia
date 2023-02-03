@@ -10,6 +10,8 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Tuple;
 
 import java.util.HashMap;
@@ -23,6 +25,7 @@ import java.util.Set;
  */
 public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
 
+    private static final Logger logger = LoggerFactory.getLogger(RedisHBaseCommandProcessor.class);
     private final RedisHBaseZSetMixClient zSetMixClient;
     private final RedisHBaseCommonMixClient commonMixClient;
     private final RedisHBaseStringMixClient stringMixClient;
@@ -34,6 +37,7 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
             redisTemplate.exists("warm");
             hBaseTemplate.get(RedisHBaseConfiguration.hbaseTableName(), new Get(Bytes.toBytes("warm")));
         } catch (Exception e) {
+            logger.error("warm fail", e);
             throw new IllegalArgumentException("warm fail, please check", e);
         }
 

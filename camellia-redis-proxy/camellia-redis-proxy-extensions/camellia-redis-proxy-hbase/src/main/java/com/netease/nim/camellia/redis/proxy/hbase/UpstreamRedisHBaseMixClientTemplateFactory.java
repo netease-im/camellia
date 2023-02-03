@@ -19,8 +19,14 @@ public class UpstreamRedisHBaseMixClientTemplateFactory implements IUpstreamClie
     private final UpstreamRedisHBaseMixClientTemplate template;
 
     public UpstreamRedisHBaseMixClientTemplateFactory(CamelliaRedisTemplate redisTemplate, CamelliaHBaseTemplate hBaseTemplate) {
-        template = new UpstreamRedisHBaseMixClientTemplate(redisTemplate, hBaseTemplate);
-        logger.info("UpstreamRedisHBaseMixClientTemplateFactory init success");
+        try {
+            logger.info("try init UpstreamRedisHBaseMixClientTemplateFactory");
+            template = new UpstreamRedisHBaseMixClientTemplate(redisTemplate, hBaseTemplate);
+            logger.info("UpstreamRedisHBaseMixClientTemplateFactory init success");
+        } catch (Throwable e) {
+            logger.error("UpstreamRedisHBaseMixClientTemplateFactory init error", e);
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
