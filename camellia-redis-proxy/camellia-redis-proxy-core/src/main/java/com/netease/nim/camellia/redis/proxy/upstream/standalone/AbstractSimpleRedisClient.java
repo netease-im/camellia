@@ -50,12 +50,6 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         }
     }
 
-    protected boolean checkValid(RedisConnectionAddr addr) {
-        if (addr == null) return false;
-        RedisConnection redisConnection = RedisConnectionHub.getInstance().get(addr);
-        return redisConnection != null && redisConnection.isValid();
-    }
-
     public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
         if (commands.size() == 1) {
             Command command = commands.get(0);

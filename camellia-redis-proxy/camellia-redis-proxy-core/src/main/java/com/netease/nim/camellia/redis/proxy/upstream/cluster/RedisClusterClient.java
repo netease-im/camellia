@@ -121,7 +121,11 @@ public class RedisClusterClient implements IUpstreamClient {
 
     @Override
     public boolean isValid() {
-        //todo
+        for (RedisClusterSlotInfo.Node master : clusterSlotInfo.getMasterSlaveMap().keySet()) {
+            if (!checkValid(master.getAddr())) {
+                return false;
+            }
+        }
         return true;
     }
 
