@@ -15,15 +15,15 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by caojiajun on 2023/2/1
  */
-public class CachedResourceChecker implements ResourceChooser.ResourceChecker {
+public class ScheduledResourceChecker implements ResourceChooser.ResourceChecker {
 
-    private static final Logger logger = LoggerFactory.getLogger(CachedResourceChecker.class);
+    private static final Logger logger = LoggerFactory.getLogger(ScheduledResourceChecker.class);
 
     private final ConcurrentHashMap<String, IUpstreamClient> clientCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Boolean> validCache = new ConcurrentHashMap<>();
 
-    private static final CachedResourceChecker instance = new CachedResourceChecker();
-    private CachedResourceChecker() {
+    private static final ScheduledResourceChecker instance = new ScheduledResourceChecker();
+    private ScheduledResourceChecker() {
         int intervalSeconds = ProxyDynamicConf.getInt("check.redis.resource.valid.interval.seconds", 5);
         ExecutorUtils.scheduleAtFixedRate(this::schedule, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
     }
@@ -39,7 +39,7 @@ public class CachedResourceChecker implements ResourceChooser.ResourceChecker {
         }
     }
 
-    public static CachedResourceChecker getInstance() {
+    public static ScheduledResourceChecker getInstance() {
         return instance;
     }
 

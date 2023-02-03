@@ -17,7 +17,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
-import com.netease.nim.camellia.redis.proxy.upstream.utils.CachedResourceChecker;
+import com.netease.nim.camellia.redis.proxy.upstream.utils.ScheduledResourceChecker;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.ScanCursorCalculator;
 import com.netease.nim.camellia.redis.proxy.util.*;
@@ -520,7 +520,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             }
         }
         if (resourceChooser.isNeedResourceChecker()) {
-            CachedResourceChecker resourceChecker = CachedResourceChecker.getInstance();
+            ScheduledResourceChecker resourceChecker = ScheduledResourceChecker.getInstance();
             for (Resource resource : resources) {
                 resourceChecker.addResource(resource, factory.get(resource.getUrl()));
             }
