@@ -520,7 +520,11 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             }
         }
         if (resourceChooser.isNeedResourceChecker()) {
-            resourceChooser.setResourceChecker(CachedResourceChecker.getInstance());
+            CachedResourceChecker resourceChecker = CachedResourceChecker.getInstance();
+            for (Resource resource : resources) {
+                resourceChecker.addResource(resource, factory.get(resource.getUrl()));
+            }
+            resourceChooser.setResourceChecker(resourceChecker);
         }
         //check need force close subscribe channel
         boolean needCloseSubscribeChannel = this.resourceChooser.getResourceTable().getType() == ResourceTable.Type.SHADING;

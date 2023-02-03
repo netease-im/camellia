@@ -2,10 +2,15 @@ package com.netease.nim.camellia.redis.proxy.upstream.utils;
 
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.util.ResourceChooser;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by caojiajun on 2023/2/1
@@ -14,21 +19,38 @@ public class CachedResourceChecker implements ResourceChooser.ResourceChecker {
 
     private static final Logger logger = LoggerFactory.getLogger(CachedResourceChecker.class);
 
+    private final ConcurrentHashMap<String, IUpstreamClient> clientCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Boolean> validCache = new ConcurrentHashMap<>();
 
     private static final CachedResourceChecker instance = new CachedResourceChecker();
     private CachedResourceChecker() {
+        int intervalSeconds = ProxyDynamicConf.getInt("check.redis.resource.valid.interval.seconds", 5);
+        ExecutorUtils.scheduleAtFixedRate(this::schedule, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
+    }
+
+    private void schedule() {
+        for (Map.Entry<String, IUpstreamClient> entry : clientCache.entrySet()) {
+            String url = entry.getKey();
+            boolean valid = entry.getValue().isValid();
+            if (!valid) {
+                logger.warn("IUpstreamClient with resource = {} not valid", url);
+            }
+            validCache.put(url, valid);
+        }
     }
 
     public static CachedResourceChecker getInstance() {
         return instance;
     }
 
-    public void updateCache(Resource resource, boolean valid) {
+    public void addResource(Resource resource, IUpstreamClient client) {
+        String url = resource.getUrl();
+        clientCache.put(url, client);
+        boolean valid = client.isValid();
         if (!valid) {
-            logger.warn("resource = {} not valid", resource.getUrl());
+            logger.warn("IUpstreamClient with resource = {} not valid", url);
         }
-        validCache.put(resource.getUrl(), valid);
+        validCache.put(url, valid);
     }
 
     @Override
