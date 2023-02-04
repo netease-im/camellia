@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream;
 
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
+import com.netease.nim.camellia.core.util.ResourceChooser;
 import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 
 /**
@@ -10,6 +11,7 @@ import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 public class RedisProxyEnv {
 
     private UpstreamRedisClientFactory clientFactory = UpstreamRedisClientFactory.DEFAULT;
+    private ResourceChooser.ResourceChecker resourceChecker;
 
     private ProxyEnv proxyEnv = ProxyEnv.defaultProxyEnv();
     private MultiWriteMode multiWriteMode = MultiWriteMode.FIRST_RESOURCE_ONLY;
@@ -17,8 +19,9 @@ public class RedisProxyEnv {
     private RedisProxyEnv() {
     }
 
-    private RedisProxyEnv(UpstreamRedisClientFactory clientFactory, ProxyEnv proxyEnv) {
+    private RedisProxyEnv(UpstreamRedisClientFactory clientFactory, ResourceChooser.ResourceChecker resourceChecker, ProxyEnv proxyEnv) {
         this.clientFactory = clientFactory;
+        this.resourceChecker = resourceChecker;
         this.proxyEnv = proxyEnv;
     }
 
@@ -28,6 +31,10 @@ public class RedisProxyEnv {
 
     public UpstreamRedisClientFactory getClientFactory() {
         return clientFactory;
+    }
+
+    public ResourceChooser.ResourceChecker getResourceChecker() {
+        return resourceChecker;
     }
 
     public ProxyEnv getProxyEnv() {
@@ -45,12 +52,19 @@ public class RedisProxyEnv {
         }
 
         public Builder(RedisProxyEnv redisEnv) {
-            this.redisEnv = new RedisProxyEnv(redisEnv.clientFactory, redisEnv.proxyEnv);
+            this.redisEnv = new RedisProxyEnv(redisEnv.clientFactory, redisEnv.resourceChecker, redisEnv.proxyEnv);
         }
 
         public Builder clientFactory(UpstreamRedisClientFactory clientFactory) {
             if (clientFactory != null) {
                 redisEnv.clientFactory = clientFactory;
+            }
+            return this;
+        }
+
+        public Builder resourceChecker(ResourceChooser.ResourceChecker resourceChecker) {
+            if (resourceChecker != null) {
+                redisEnv.resourceChecker = resourceChecker;
             }
             return this;
         }

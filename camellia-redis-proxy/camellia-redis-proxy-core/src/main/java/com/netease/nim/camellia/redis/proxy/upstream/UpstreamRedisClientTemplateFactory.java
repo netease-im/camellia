@@ -9,6 +9,7 @@ import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultBeanFactory;
+import com.netease.nim.camellia.redis.proxy.upstream.utils.ScheduledResourceChecker;
 import com.netease.nim.camellia.tools.executor.CamelliaLinearInitializationExecutor;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
@@ -297,6 +298,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         env = new RedisProxyEnv.Builder()
                 .proxyEnv(proxyEnv)
                 .clientFactory(clientFactory)
+                .resourceChecker(new ScheduledResourceChecker(clientFactory))
                 .multiWriteMode(redisConf.getMultiWriteMode())
                 .build();
     }

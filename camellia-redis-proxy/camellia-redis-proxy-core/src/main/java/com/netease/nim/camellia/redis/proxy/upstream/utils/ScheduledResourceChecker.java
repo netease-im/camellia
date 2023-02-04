@@ -4,6 +4,7 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.util.ResourceChooser;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientFactory;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +23,10 @@ public class ScheduledResourceChecker implements ResourceChooser.ResourceChecker
     private final ConcurrentHashMap<String, IUpstreamClient> clientCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Boolean> validCache = new ConcurrentHashMap<>();
 
-    private static final ScheduledResourceChecker instance = new ScheduledResourceChecker();
-    private ScheduledResourceChecker() {
+    private final UpstreamRedisClientFactory factory;
+
+    public ScheduledResourceChecker(UpstreamRedisClientFactory factory) {
+        this.factory = factory;
         int intervalSeconds = ProxyDynamicConf.getInt("check.redis.resource.valid.interval.seconds", 5);
         ExecutorUtils.scheduleAtFixedRate(this::schedule, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
     }
@@ -39,12 +42,10 @@ public class ScheduledResourceChecker implements ResourceChooser.ResourceChecker
         }
     }
 
-    public static ScheduledResourceChecker getInstance() {
-        return instance;
-    }
-
-    public void addResource(Resource resource, IUpstreamClient client) {
+    @Override
+    public void addResource(Resource resource) {
         String url = resource.getUrl();
+        IUpstreamClient client = factory.get(url);
         clientCache.put(url, client);
         boolean valid = client.isValid();
         if (!valid) {

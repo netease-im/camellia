@@ -56,12 +56,13 @@ public class ResourceChooser {
         this.needResourceChecker = calcIsNeedResourceChecker(resourceTable);
     }
 
-    public ResourceChecker getResourceChecker() {
-        return resourceChecker;
-    }
-
     public void setResourceChecker(ResourceChecker resourceChecker) {
         this.resourceChecker = resourceChecker;
+        if (needResourceChecker) {
+            for (Resource resource : allReadResources) {
+                resourceChecker.addResource(resource);
+            }
+        }
     }
 
     public ResourceTable getResourceTable() {
@@ -88,11 +89,8 @@ public class ResourceChooser {
         return allResources;
     }
 
-    public boolean isNeedResourceChecker() {
-        return needResourceChecker;
-    }
-
     public static interface ResourceChecker {
+        void addResource(Resource resource);
         boolean checkValid(Resource resource);
     }
 

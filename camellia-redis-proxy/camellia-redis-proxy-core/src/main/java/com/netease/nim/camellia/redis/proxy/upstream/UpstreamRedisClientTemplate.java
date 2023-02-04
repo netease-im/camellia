@@ -17,7 +17,6 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
-import com.netease.nim.camellia.redis.proxy.upstream.utils.ScheduledResourceChecker;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.ScanCursorCalculator;
 import com.netease.nim.camellia.redis.proxy.util.*;
@@ -63,6 +62,8 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
 
     private ScanCursorCalculator cursorCalculator;
 
+    private ResourceChooser.ResourceChecker resourceChecker;
+
     public UpstreamRedisClientTemplate(ResourceTable resourceTable) {
         this(RedisProxyEnv.defaultRedisEnv(), resourceTable);
     }
@@ -87,6 +88,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         this.bid = bid;
         this.bgroup = bgroup;
         this.factory = env.getClientFactory();
+        this.resourceChecker = env.getResourceChecker();
         this.multiWriteMode = env.getMultiWriteMode();
         CamelliaApiResponse response = service.getResourceTable(bid, bgroup, null);
         String md5 = response.getMd5();
@@ -519,13 +521,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 singletonClient = null;
             }
         }
-        if (resourceChooser.isNeedResourceChecker()) {
-            ScheduledResourceChecker resourceChecker = ScheduledResourceChecker.getInstance();
-            for (Resource resource : resources) {
-                resourceChecker.addResource(resource, factory.get(resource.getUrl()));
-            }
-            resourceChooser.setResourceChecker(resourceChecker);
-        }
+        resourceChooser.setResourceChecker(resourceChecker);
         //check need force close subscribe channel
         boolean needCloseSubscribeChannel = this.resourceChooser.getResourceTable().getType() == ResourceTable.Type.SHADING;
         if (!needCloseSubscribeChannel) {
