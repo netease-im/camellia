@@ -508,7 +508,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             factory.get(resource.getUrl());
         }
         //初始化IUpstreamClientTemplate
-        this.resourceSelector = new ResourceSelector(resourceTable, env.getProxyEnv());
+        this.resourceSelector = new ResourceSelector(resourceTable, env.getProxyEnv(), resourceChecker);
 
         this.proxyRouteType = ProxyRouteType.fromResourceTable(resourceTable);
         if (this.proxyRouteType == ProxyRouteType.REDIS_STANDALONE ||
@@ -521,7 +521,6 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 singletonClient = null;
             }
         }
-        resourceSelector.setResourceChecker(resourceChecker);
         //check need force close subscribe channel
         boolean needCloseSubscribeChannel = this.resourceSelector.getResourceTable().getType() == ResourceTable.Type.SHADING;
         if (!needCloseSubscribeChannel) {
