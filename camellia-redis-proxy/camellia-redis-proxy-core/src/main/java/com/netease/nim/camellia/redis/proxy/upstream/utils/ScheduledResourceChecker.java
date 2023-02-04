@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.utils;
 
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.core.util.ResourceChooser;
+import com.netease.nim.camellia.core.util.ResourceSelector;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientFactory;
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by caojiajun on 2023/2/1
  */
-public class ScheduledResourceChecker implements ResourceChooser.ResourceChecker {
+public class ScheduledResourceChecker implements ResourceSelector.ResourceChecker {
 
     private static final Logger logger = LoggerFactory.getLogger(ScheduledResourceChecker.class);
 

@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream;
 
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
-import com.netease.nim.camellia.core.util.ResourceChooser;
+import com.netease.nim.camellia.core.util.ResourceSelector;
 import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 
 /**
@@ -11,7 +11,7 @@ import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 public class RedisProxyEnv {
 
     private UpstreamRedisClientFactory clientFactory = UpstreamRedisClientFactory.DEFAULT;
-    private ResourceChooser.ResourceChecker resourceChecker;
+    private ResourceSelector.ResourceChecker resourceChecker;
 
     private ProxyEnv proxyEnv = ProxyEnv.defaultProxyEnv();
     private MultiWriteMode multiWriteMode = MultiWriteMode.FIRST_RESOURCE_ONLY;
@@ -19,7 +19,7 @@ public class RedisProxyEnv {
     private RedisProxyEnv() {
     }
 
-    private RedisProxyEnv(UpstreamRedisClientFactory clientFactory, ResourceChooser.ResourceChecker resourceChecker, ProxyEnv proxyEnv) {
+    private RedisProxyEnv(UpstreamRedisClientFactory clientFactory, ResourceSelector.ResourceChecker resourceChecker, ProxyEnv proxyEnv) {
         this.clientFactory = clientFactory;
         this.resourceChecker = resourceChecker;
         this.proxyEnv = proxyEnv;
@@ -33,7 +33,7 @@ public class RedisProxyEnv {
         return clientFactory;
     }
 
-    public ResourceChooser.ResourceChecker getResourceChecker() {
+    public ResourceSelector.ResourceChecker getResourceChecker() {
         return resourceChecker;
     }
 
@@ -62,7 +62,7 @@ public class RedisProxyEnv {
             return this;
         }
 
-        public Builder resourceChecker(ResourceChooser.ResourceChecker resourceChecker) {
+        public Builder resourceChecker(ResourceSelector.ResourceChecker resourceChecker) {
             if (resourceChecker != null) {
                 redisEnv.resourceChecker = resourceChecker;
             }

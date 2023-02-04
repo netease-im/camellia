@@ -76,14 +76,14 @@ camellia-redis-proxy:
   #  password: xxxx
   monitor-enable: false
   monitor-interval-seconds: 60
-  upstream-client-template-chooser-class-name: com.netease.nim.camellia.redis.proxy.hbase.UpstreamRedisHBaseMixClientTemplateChooser
+  upstream-client-template-factory-class-name: com.netease.nim.camellia.redis.proxy.hbase.UpstreamRedisHBaseMixClientTemplateChooser
   plugins: #plugin list
     - monitorPlugin
     - bigKeyPlugin
     - hotKeyPlugin
   #  config: #you can get this config from ProxyDynamicConf.java, priority less than camellia-redis-proxy.properties
   #    "k": v
-  transpond: ## transpond conf is noneffective for upstream-client-template-chooser-class-name is rewrite
+  transpond: ## transpond conf is noneffective for upstream-client-template-factory-class-name is rewrite
     type: local #local、remote、custom
     local:
       type: simple #simple、complex

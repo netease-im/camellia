@@ -15,7 +15,7 @@ import java.util.concurrent.ThreadLocalRandom;
  *
  * Created by caojiajun on 2019/12/13.
  */
-public class ResourceChooser {
+public class ResourceSelector {
 
     public static final byte[] EMPTY_ARRAY = new byte[0];
 
@@ -27,7 +27,6 @@ public class ResourceChooser {
     private List<Resource> writeResources = null;
 
     private boolean bucketSizeIs2Power = false;
-    private final boolean needResourceChecker;
 
     private final Set<Resource> allResources;
     private final List<Resource> allReadResources;
@@ -35,30 +34,33 @@ public class ResourceChooser {
 
     private final long createTime = System.currentTimeMillis();
 
-    private ResourceChecker resourceChecker;
+    private final ResourceChecker resourceChecker;
 
-    public ResourceChooser(ResourceTable resourceTable, ProxyEnv proxyEnv) {
+    public ResourceSelector(ResourceTable resourceTable, ProxyEnv proxyEnv) {
+        this(resourceTable, proxyEnv, null);
+    }
+
+    public ResourceSelector(ResourceTable resourceTable, ProxyEnv proxyEnv, ResourceSelector.ResourceChecker resourceChecker) {
         this.resourceTable = resourceTable;
         this.proxyEnv = proxyEnv;
+        this.resourceChecker = resourceChecker;
         ResourceTable.Type type = resourceTable.getType();
         if (type == ResourceTable.Type.SHADING) {
             int bucketSize = resourceTable.getShadingTable().getBucketSize();
             bucketSizeIs2Power = MathUtil.is2Power(bucketSize);
         }
+        //all
         this.allResources = ResourceUtil.getAllResources(resourceTable);
+        //read
         Set<Resource> readResources = new TreeSet<>(Comparator.comparing(Resource::getUrl));
         readResources.addAll(ResourceUtil.getAllReadResources(resourceTable));
-        Set<Resource> writeResources = new TreeSet<>(Comparator.comparing(Resource::getUrl));
-        readResources.addAll(ResourceUtil.getAllReadResources(resourceTable));
-        writeResources.addAll(ResourceUtil.getAllWriteResources(resourceTable));
         this.allReadResources = new ArrayList<>(readResources);
+        //write
+        Set<Resource> writeResources = new TreeSet<>(Comparator.comparing(Resource::getUrl));
+        writeResources.addAll(ResourceUtil.getAllWriteResources(resourceTable));
         this.allWriteResources = new ArrayList<>(writeResources);
-        this.needResourceChecker = calcIsNeedResourceChecker(resourceTable);
-    }
-
-    public void setResourceChecker(ResourceChecker resourceChecker) {
-        this.resourceChecker = resourceChecker;
-        if (needResourceChecker) {
+        //
+        if (resourceChecker != null && calcIsNeedResourceChecker(resourceTable)) {
             for (Resource resource : allReadResources) {
                 resourceChecker.addResource(resource);
             }
@@ -67,6 +69,14 @@ public class ResourceChooser {
 
     public ResourceTable getResourceTable() {
         return resourceTable;
+    }
+
+    public ResourceChecker getResourceChecker() {
+        return resourceChecker;
+    }
+
+    public ProxyEnv getProxyEnv() {
+        return proxyEnv;
     }
 
     public long getCreateTime() {
@@ -122,9 +132,9 @@ public class ResourceChooser {
      * @return resource
      */
     public Resource getReadResourceWithCheckEqual(List<byte[]> shadingKeys) {
-        ResourceChooser.ReadResourceBean resources = null;
+        ResourceSelector.ReadResourceBean resources = null;
         for (byte[] key : shadingKeys) {
-            ResourceChooser.ReadResourceBean nextResources = getReadResources(key);
+            ResourceSelector.ReadResourceBean nextResources = getReadResources(key);
             if (resources != null) {
                 boolean checkReadResourcesEqual = getReadResourceWithCheckEqual(resources, nextResources);
                 if (!checkReadResourcesEqual) {
@@ -256,7 +266,7 @@ public class ResourceChooser {
         throw new IllegalArgumentException();
     }
 
-    private boolean getReadResourceWithCheckEqual(ResourceChooser.ReadResourceBean readResourceBean1, ResourceChooser.ReadResourceBean readResourceBean2) {
+    private boolean getReadResourceWithCheckEqual(ResourceSelector.ReadResourceBean readResourceBean1, ResourceSelector.ReadResourceBean readResourceBean2) {
         if (readResourceBean1 == null || readResourceBean2 == null) {
             return false;
         }

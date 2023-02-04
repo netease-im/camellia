@@ -352,7 +352,7 @@ public class CommandsTransponder {
                 try {
                     futureList = template.sendCommand(commands);
                 } catch (Exception e) {
-                    String log = "AsyncCamelliaRedisTemplateChooser sendCommand error"
+                    String log = "IUpstreamClientTemplate sendCommand error"
                             + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e;
                     ErrorLogCollector.collect(CommandsTransponder.class, log, e);
                     for (CommandTask task : tasks) {

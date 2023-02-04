@@ -8,7 +8,7 @@ import com.netease.nim.camellia.core.client.hub.standard.StandardProxyGenerator;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
-import com.netease.nim.camellia.core.util.ResourceChooser;
+import com.netease.nim.camellia.core.util.ResourceSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ public class ReloadableProxyFactory<T> {
     private T proxy;
     private StandardProxyGenerator<T> generator;
     private final ProxyEnv env;
-    private ResourceChooser resourceChooser;
+    private ResourceSelector resourceSelector;
 
     private final AtomicBoolean reloading = new AtomicBoolean(false);
 
@@ -82,7 +82,7 @@ public class ReloadableProxyFactory<T> {
                             bid, bgroup, response.getMd5(), ReadableResourceTableUtil.readableResourceTable(response.getResourceTable()));
                 }
                 this.response = response;
-                this.resourceChooser = new ResourceChooser(response.getResourceTable(), env);
+                this.resourceSelector = new ResourceSelector(response.getResourceTable(), env);
                 this.generator = new StandardProxyGenerator<>(clazz, response.getResourceTable(), defaultResource, env);
                 T proxy = generator.generate();
                 if (logger.isInfoEnabled()) {
@@ -135,11 +135,11 @@ public class ReloadableProxyFactory<T> {
     }
 
     /**
-     * 获取ResourceChooser
-     * @return ResourceChooser
+     * 获取ResourceSelector
+     * @return ResourceSelector
      */
-    public ResourceChooser getResourceChooser() {
-        return resourceChooser;
+    public ResourceSelector getResourceSelector() {
+        return resourceSelector;
     }
 
     /**

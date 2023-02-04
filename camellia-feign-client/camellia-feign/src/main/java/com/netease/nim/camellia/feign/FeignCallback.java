@@ -49,7 +49,7 @@ public class FeignCallback<T> implements MethodInterceptor {
     private final String bgroup;
     private final Map<String, FeignResourcePool> map = new ConcurrentHashMap<>();
     private final Map<String, CamelliaCircuitBreaker> circuitBreakerMap = new ConcurrentHashMap<>();
-    private ResourceChooser resourceChooser;
+    private ResourceSelector resourceSelector;
     private final CamelliaFeignEnv feignEnv;
     private final FeignClientFactory<T> factory;
     private final Class<T> apiType;
@@ -120,7 +120,7 @@ public class FeignCallback<T> implements MethodInterceptor {
                     circuitBreakerMap.put(r.getUrl(), circuitBreaker);
                 }
             }
-            this.resourceChooser = new ResourceChooser(resourceTable, feignEnv.getProxyEnv());
+            this.resourceSelector = new ResourceSelector(resourceTable, feignEnv.getProxyEnv());
         } catch (Exception e) {
             logger.error("refresh error, class = {}", apiType.getName(), e);
             if (throwError) {
@@ -204,10 +204,10 @@ public class FeignCallback<T> implements MethodInterceptor {
             byte operationType = readWriteOperationCache.getOperationType(method);
             final Object loadBalanceKey = annotationValueGetterCache.getAnnotationValueByParameterField(LoadBalanceKey.class, method, objects);
             if (operationType == ReadWriteOperationCache.READ || operationType == ReadWriteOperationCache.UNKNOWN) {
-                Resource resource = resourceChooser.getReadResource(ResourceChooser.EMPTY_ARRAY);
+                Resource resource = resourceSelector.getReadResource(ResourceSelector.EMPTY_ARRAY);
                 return invoke(resource, loadBalanceKey, method, objects, true, operationType);
             } else if (operationType == ReadWriteOperationCache.WRITE) {
-                List<Resource> list = resourceChooser.getWriteResources(ResourceChooser.EMPTY_ARRAY);
+                List<Resource> list = resourceSelector.getWriteResources(ResourceSelector.EMPTY_ARRAY);
                 if (list.size() == 1) {
                     Resource resource = list.get(0);
                     return invoke(resource, loadBalanceKey, method, objects, true, operationType);

@@ -328,6 +328,6 @@ camellia-redis-proxy:
 ### 部署最佳实践
 * 云信线上proxy集群，使用4C8G的云主机or容器进行部署（jdk版本1.8.0_202），配置3G的堆内存，搭配G1垃圾回收器  
 ```
--server -Xms3072m -Xmx3072m -XX:MetaspaceSize=128m -XX:+UseG1GC -verbose:gc -XX:+PrintGCDateStamps -XX:+PrintGCDetails -Xloggc:/xxx/logs/camellia-redis-proxy-gc-`date +%Y-%m-%d_%I-%M-%S`.log 
+-server -Xms3072m, -Xmx3072m -XX:MetaspaceSize=128m -XX:+UseG1GC -verbose:gc -XX:+PrintGCDateStamps -XX:+PrintGCDetails -Xloggc:/xxx/logs/camellia-redis-proxy-gc-`date +%Y-%m-%d_%I-%M-%S`.log 
 ```
 * 如果有优化建议，或者在其他环境或者机器配置下的最佳实践，欢迎补充

@@ -15,7 +15,7 @@ import com.netease.nim.camellia.redis.base.utils.CloseUtil;
 import com.netease.nim.camellia.redis.base.utils.LogUtil;
 import com.netease.nim.camellia.redis.base.utils.SafeEncoder;
 import com.netease.nim.camellia.tools.utils.BytesKey;
-import com.netease.nim.camellia.core.util.ResourceChooser;
+import com.netease.nim.camellia.core.util.ResourceSelector;
 import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTransferUtil;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
@@ -1792,10 +1792,10 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         if (keys == null || keys.length == 0) {
             throw new CamelliaRedisException("keys is null or empty");
         }
-        ResourceChooser chooser = factory.getResourceChooser();
+        ResourceSelector selector = factory.getResourceSelector();
         String url = null;
         for (byte[] key : keys) {
-            List<Resource> writeResources = chooser.getWriteResources(key);
+            List<Resource> writeResources = selector.getWriteResources(key);
             if (writeResources == null || writeResources.size() > 1) {
                 throw new CamelliaRedisException("not support while in multi-write mode");
             }
@@ -1817,10 +1817,10 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         if (keys == null || keys.length == 0) {
             throw new CamelliaRedisException("keys is null or empty");
         }
-        ResourceChooser chooser = factory.getResourceChooser();
+        ResourceSelector selector = factory.getResourceSelector();
         String url = null;
         for (byte[] key : keys) {
-            Resource readResource = chooser.getReadResource(key);
+            Resource readResource = selector.getReadResource(key);
             if (url != null && !url.equalsIgnoreCase(readResource.getUrl())) {
                 throw new CamelliaRedisException("ERR keys in request not in same resources");
             }
@@ -1851,8 +1851,8 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
      */
     @Override
     public List<Jedis> getJedisList() {
-        ResourceChooser chooser = factory.getResourceChooser();
-        Set<Resource> allResources = chooser.getAllResources();
+        ResourceSelector selector = factory.getResourceSelector();
+        Set<Resource> allResources = selector.getAllResources();
         List<Jedis> jedisList = new ArrayList<>();
         for (Resource resource : allResources) {
             ICamelliaRedis redis = CamelliaRedisInitializer.init(resource, env);
@@ -1869,8 +1869,8 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
      */
     @Override
     public List<Jedis> getWriteJedisList() {
-        ResourceChooser chooser = factory.getResourceChooser();
-        List<Resource> allResources = chooser.getAllWriteResources();
+        ResourceSelector selector = factory.getResourceSelector();
+        List<Resource> allResources = selector.getAllWriteResources();
         List<Jedis> jedisList = new ArrayList<>();
         for (Resource resource : allResources) {
             ICamelliaRedis redis = CamelliaRedisInitializer.init(resource, env);
@@ -1887,8 +1887,8 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
      */
     @Override
     public List<Jedis> getReadJedisList() {
-        ResourceChooser chooser = factory.getResourceChooser();
-        List<Resource> allResources = chooser.getAllReadResources();
+        ResourceSelector selector = factory.getResourceSelector();
+        List<Resource> allResources = selector.getAllReadResources();
         List<Jedis> jedisList = new ArrayList<>();
         for (Resource resource : allResources) {
             ICamelliaRedis redis = CamelliaRedisInitializer.init(resource, env);
@@ -1925,10 +1925,10 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         if (keys == null || keys.length == 0) {
             throw new CamelliaRedisException("keys is null or empty");
         }
-        ResourceChooser chooser = factory.getResourceChooser();
+        ResourceSelector selector = factory.getResourceSelector();
         Map<String, Resource> writeResourceMap = new HashMap<>();
         for (byte[] key : keys) {
-            List<Resource> resources = chooser.getWriteResources(key);
+            List<Resource> resources = selector.getWriteResources(key);
             if (writeResourceMap.isEmpty()) {
                 for (Resource resource : resources) {
                     writeResourceMap.put(resource.getUrl(), resource);
@@ -1971,19 +1971,19 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
         if (params.length < keyCount) {
             throw new CamelliaRedisException("keyCount/params not match");
         }
-        ResourceChooser chooser = factory.getResourceChooser();
+        ResourceSelector selector = factory.getResourceSelector();
         List<Resource> writeResources;
         if (keyCount < 0) {
             throw new CamelliaRedisException("ERR Number of keys can't be negative");
         }
         if (keyCount == 0) {
-            writeResources = chooser.getWriteResources(new byte[0]);
+            writeResources = selector.getWriteResources(new byte[0]);
         } else if (keyCount == 1) {
-            writeResources = chooser.getWriteResources(params[0]);
+            writeResources = selector.getWriteResources(params[0]);
         } else {
-            writeResources = chooser.getWriteResources(params[0]);
+            writeResources = selector.getWriteResources(params[0]);
             for (int i = 1; i < keyCount; i++) {
-                List<Resource> resources = chooser.getWriteResources(params[i]);
+                List<Resource> resources = selector.getWriteResources(params[i]);
                 if (writeResources.size() != resources.size()) {
                     throw new CamelliaRedisException("ERR keys in request not in same resources");
                 }

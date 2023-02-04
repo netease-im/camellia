@@ -13,7 +13,7 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.tools.utils.ExceptionUtils;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
-import com.netease.nim.camellia.core.util.ResourceChooser;
+import com.netease.nim.camellia.core.util.ResourceSelector;
 import com.netease.nim.camellia.feign.CamelliaFeignEnv;
 import com.netease.nim.camellia.feign.CamelliaFeignFallbackFactory;
 import com.netease.nim.camellia.feign.client.DynamicOption;
@@ -74,8 +74,8 @@ public class CamelliaNakedClient<R, W> {
 
     private final Map<String, FeignResourcePool> map = new ConcurrentHashMap<>();
 
-    private ResourceChooser resourceChooser;
-    private final ConcurrentHashMap<String, ResourceChooser> resourceChooserMap = new ConcurrentHashMap<>();
+    private ResourceSelector resourceSelector;
+    private final ConcurrentHashMap<String, ResourceSelector> resourceSelectorMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, CamelliaCircuitBreaker> circuitBreakerMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, CamelliaDashboardFeignResourceTableUpdater> updaterMap = new ConcurrentHashMap<>();
 
@@ -252,14 +252,14 @@ public class CamelliaNakedClient<R, W> {
             } else {
                 retry = maxRetry;
             }
-            Pair<ResourceChooser, String> pair = getResourceChooser(routeKey);
-            ResourceChooser resourceChooser = pair.first;
+            Pair<ResourceSelector, String> pair = getResourceSelector(routeKey);
+            ResourceSelector resourceSelector = pair.first;
             String bgroup = pair.second;
             if (operationType == OperationType.READ) {
-                Resource resource = resourceChooser.getReadResource(ResourceChooser.EMPTY_ARRAY);
+                Resource resource = resourceSelector.getReadResource(ResourceSelector.EMPTY_ARRAY);
                 return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
             } else if (operationType == OperationType.WRITE) {
-                List<Resource> writeResources = resourceChooser.getWriteResources(ResourceChooser.EMPTY_ARRAY);
+                List<Resource> writeResources = resourceSelector.getWriteResources(ResourceSelector.EMPTY_ARRAY);
                 if (writeResources.size() == 1) {
                     Resource resource = writeResources.get(0);
                     return invoke(operationType, resource, request, retry, loadBalanceKey, bgroup);
@@ -561,7 +561,7 @@ public class CamelliaNakedClient<R, W> {
 
     }
 
-    private Pair<ResourceChooser, String> getResourceChooser(Object routeKey) {
+    private Pair<ResourceSelector, String> getResourceSelector(Object routeKey) {
         if (bid > 0 && routeKey != null && dynamicOptionGetter != null && camelliaApi != null) {
             DynamicRouteConfGetter dynamicRouteConfGetter = dynamicOptionGetter.getDynamicRouteConfGetter(bid);
             String bgroup = dynamicRouteConfGetter.bgroup(routeKey);
@@ -573,10 +573,10 @@ public class CamelliaNakedClient<R, W> {
         if (bid > 0 && camelliaApi != null) {
             return new Pair<>(getResourceChooserByBgroup(bgroup), bgroup);
         }
-        if (resourceChooser == null && resourceTable != null) {
-            resourceChooser = new ResourceChooser(resourceTable, feignEnv.getProxyEnv());
+        if (resourceSelector == null && resourceTable != null) {
+            resourceSelector = new ResourceSelector(resourceTable, feignEnv.getProxyEnv());
         }
-        return new Pair<>(resourceChooser, bgroup);
+        return new Pair<>(resourceSelector, bgroup);
     }
 
     private static class Pair<T, W> {
@@ -589,16 +589,16 @@ public class CamelliaNakedClient<R, W> {
         }
     }
 
-    private ResourceChooser getResourceChooserByBgroup(String bgroup) {
-        ResourceChooser resourceChooser = resourceChooserMap.get(bgroup);
-        if (resourceChooser == null) {
+    private ResourceSelector getResourceChooserByBgroup(String bgroup) {
+        ResourceSelector resourceSelector = resourceSelectorMap.get(bgroup);
+        if (resourceSelector == null) {
             FeignResourceTableUpdater updater = initUpdater(bgroup);
-            resourceChooser = resourceChooserMap.get(bgroup);
-            if (resourceChooser == null) {
-                return new ResourceChooser(updater.getResourceTable(), feignEnv.getProxyEnv());
+            resourceSelector = resourceSelectorMap.get(bgroup);
+            if (resourceSelector == null) {
+                return new ResourceSelector(updater.getResourceTable(), feignEnv.getProxyEnv());
             }
         }
-        return resourceChooser;
+        return resourceSelector;
     }
 
     private FeignResourceTableUpdater initUpdater(String bgroup) {
@@ -609,9 +609,9 @@ public class CamelliaNakedClient<R, W> {
                 if (updater == null) {
                     updater = new CamelliaDashboardFeignResourceTableUpdater(camelliaApi, bid, bgroup, resourceTable, checkIntervalMillis);
                     ResourceTable resourceTable = updater.getResourceTable();
-                    ResourceChooser resourceChooser = new ResourceChooser(resourceTable, feignEnv.getProxyEnv());
-                    updater.addCallback(table -> resourceChooserMap.put(bgroup, new ResourceChooser(table, feignEnv.getProxyEnv())));
-                    resourceChooserMap.put(bgroup, resourceChooser);
+                    ResourceSelector resourceSelector = new ResourceSelector(resourceTable, feignEnv.getProxyEnv());
+                    updater.addCallback(table -> resourceSelectorMap.put(bgroup, new ResourceSelector(table, feignEnv.getProxyEnv())));
+                    resourceSelectorMap.put(bgroup, resourceSelector);
                     updaterMap.put(bgroup, updater);
                 }
             }

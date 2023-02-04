@@ -18,7 +18,7 @@ camellia-redis-proxy:
     - hotKeyPlugin
   #  config: #you can get this config from ProxyDynamicConf.java, priority less than camellia-redis-proxy.properties
   #    "k": v
-  transpond: ## transpond conf is noneffective for upstream-client-template-chooser-class-name is rewrite
+  transpond: ## transpond conf is noneffective for upstream-client-template-factory-class-name is rewrite
     type: local #local、remote、custom
     local:
       type: simple #simple、complex

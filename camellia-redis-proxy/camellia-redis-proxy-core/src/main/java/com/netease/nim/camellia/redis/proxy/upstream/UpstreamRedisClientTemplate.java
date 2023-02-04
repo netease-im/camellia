@@ -55,14 +55,14 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
 
     private RedisProxyEnv env;
     private Monitor monitor;
-    private ResourceChooser resourceChooser;
+    private ResourceSelector resourceSelector;
 
     private ProxyRouteType proxyRouteType;
     private IUpstreamClient singletonClient;
 
     private ScanCursorCalculator cursorCalculator;
 
-    private ResourceChooser.ResourceChecker resourceChecker;
+    private ResourceSelector.ResourceChecker resourceChecker;
 
     public UpstreamRedisClientTemplate(ResourceTable resourceTable) {
         this(RedisProxyEnv.defaultRedisEnv(), resourceTable);
@@ -147,7 +147,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         List<CompletableFuture<Reply>> futureList = new ArrayList<>(commands.size());
 
         if (isPassThroughCommand(commands)) {
-            String url = resourceChooser.getReadResource(Utils.EMPTY_ARRAY).getUrl();
+            String url = resourceSelector.getReadResource(Utils.EMPTY_ARRAY).getUrl();
             for (Command command : commands) {
                 CompletableFuture<Reply> future = new CompletableFuture<>();
                 RedisCommand redisCommand = command.getRedisCommand();
@@ -173,7 +173,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             RedisCommand redisCommand = command.getRedisCommand();
 
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1) {
-                if (resourceChooser.getResourceTable().getType() == ResourceTable.Type.SHADING) {
+                if (resourceSelector.getResourceTable().getType() == ResourceTable.Type.SHADING) {
                     ChannelInfo channelInfo = command.getChannelInfo();
                     channelInfo.setInSubscribe(false);
                     if (!channelInfo.isInTransaction()) {
@@ -190,7 +190,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 }
                 if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE
                         || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
-                    List<Resource> writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
+                    List<Resource> writeResources = resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
                     if (writeResources == null || writeResources.isEmpty()) {
                         ChannelInfo channelInfo = command.getChannelInfo();
                         channelInfo.setInSubscribe(false);
@@ -227,7 +227,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     futureList.add(future);
                     continue;
                 }
-                Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
+                Resource resource = resourceSelector.getReadResource(Utils.EMPTY_ARRAY);
                 String url = resource.getUrl();
                 IUpstreamClient client = factory.get(url);
                 CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
@@ -247,7 +247,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     futureList.add(future);
                     continue;
                 }
-                Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
+                Resource resource = resourceSelector.getReadResource(Utils.EMPTY_ARRAY);
                 String url = resource.getUrl();
                 IUpstreamClient client = factory.get(url);
                 CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
@@ -266,11 +266,11 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     Resource resource;
                     List<byte[]> keys = command.getKeys();
                     if (keys.isEmpty()) {
-                        resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
+                        resource = resourceSelector.getReadResource(Utils.EMPTY_ARRAY);
                     } else if (keys.size() == 1) {
-                        resource = resourceChooser.getReadResource(keys.get(0));
+                        resource = resourceSelector.getReadResource(keys.get(0));
                     } else {
-                        resource = resourceChooser.getReadResourceWithCheckEqual(keys);
+                        resource = resourceSelector.getReadResourceWithCheckEqual(keys);
                     }
                     if (resource == null) {
                         future = new CompletableFuture<>();
@@ -282,11 +282,11 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     List<Resource> writeResources;
                     List<byte[]> keys = command.getKeys();
                     if (keys.isEmpty()) {
-                        writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
+                        writeResources = resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
                     } else if (keys.size() == 1) {
-                        writeResources = resourceChooser.getWriteResources(keys.get(0));
+                        writeResources = resourceSelector.getWriteResources(keys.get(0));
                     } else {
-                        writeResources = resourceChooser.getWriteResourcesWithCheckEqual(keys);
+                        writeResources = resourceSelector.getWriteResourcesWithCheckEqual(keys);
                     }
                     if (writeResources == null) {
                         future = new CompletableFuture<>();
@@ -313,11 +313,11 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 try {
                     if (proxyRouteType == ProxyRouteType.REDIS_STANDALONE || proxyRouteType == ProxyRouteType.REDIS_SENTINEL
                             || proxyRouteType == ProxyRouteType.REDIS_CLUSTER) {
-                        Resource resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
+                        Resource resource = resourceSelector.getReadResource(Utils.EMPTY_ARRAY);
                         CompletableFuture<Reply> future = doRead(resource, commandFlusher, command);
                         futureList.add(future);
                     } else {
-                        List<Resource> allReadResources = resourceChooser.getAllReadResources();
+                        List<Resource> allReadResources = resourceSelector.getAllReadResources();
                         if (cursorCalculator == null || cursorCalculator.getNodeBitLen() != ScanCursorCalculator.getSuitableNodeBitLen(allReadResources.size())) {
                             cursorCalculator = new ScanCursorCalculator(ScanCursorCalculator.getSuitableNodeBitLen(allReadResources.size()));
                         }
@@ -369,10 +369,10 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 String ope = Utils.bytesToString(objects[1]);
                 if (ope.equalsIgnoreCase(RedisKeyword.FLUSH.name())
                         || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())) {
-                    List<Resource> resources = resourceChooser.getAllWriteResources();
+                    List<Resource> resources = resourceSelector.getAllWriteResources();
                     future = doWrite(resources, commandFlusher, command);
                 } else if (ope.equalsIgnoreCase(RedisKeyword.EXISTS.name())) {
-                    List<Resource> resources = resourceChooser.getAllReadResources();
+                    List<Resource> resources = resourceSelector.getAllReadResources();
                     List<CompletableFuture<Reply>> futures = new ArrayList<>();
                     for (Resource resource : resources) {
                         CompletableFuture<Reply> subFuture = doRead(resource, commandFlusher, command);
@@ -388,7 +388,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 continue;
             }
 
-            if (resourceChooser.getType() == ResourceTable.Type.SHADING) {
+            if (resourceSelector.getType() == ResourceTable.Type.SHADING) {
                 //这些命令比较特殊，需要把后端的结果merge起来之后再返回给客户端
                 boolean continueOk = false;
                 switch (redisCommand) {
@@ -443,13 +443,13 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             if (type == RedisCommand.Type.READ) {
                 Resource resource;
                 if (redisCommand.getCommandKeyType() == RedisCommand.CommandKeyType.SIMPLE_SINGLE && args.length >= 2) {
-                    resource = resourceChooser.getReadResource(args[1]);
+                    resource = resourceSelector.getReadResource(args[1]);
                 } else {
                     List<byte[]> keys = command.getKeys();
                     if (keys.isEmpty()) {
-                        resource = resourceChooser.getReadResource(Utils.EMPTY_ARRAY);
+                        resource = resourceSelector.getReadResource(Utils.EMPTY_ARRAY);
                     } else {//按道理走到这里的都是只有一个key的命令，且不是blocking的
-                        resource = resourceChooser.getReadResource(keys.get(0));
+                        resource = resourceSelector.getReadResource(keys.get(0));
                     }
                 }
                 CompletableFuture<Reply> future = doRead(resource, commandFlusher, command);
@@ -457,13 +457,13 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             } else if (type == RedisCommand.Type.WRITE) {
                 List<Resource> writeResources;
                 if (redisCommand.getCommandKeyType() == RedisCommand.CommandKeyType.SIMPLE_SINGLE && args.length >= 2) {
-                    writeResources = resourceChooser.getWriteResources(args[1]);
+                    writeResources = resourceSelector.getWriteResources(args[1]);
                 } else {
                     List<byte[]> keys = command.getKeys();
                     if (keys.isEmpty()) {
-                        writeResources = resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
+                        writeResources = resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
                     } else {//按道理走到这里的都是只有一个key的命令，且不是blocking的
-                        writeResources = resourceChooser.getWriteResources(keys.get(0));
+                        writeResources = resourceSelector.getWriteResources(keys.get(0));
                     }
                 }
                 CompletableFuture<Reply> future = doWrite(writeResources, commandFlusher, command);
@@ -478,17 +478,17 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
 
     @Override
     public ResourceTable getResourceTable() {
-        return resourceChooser.getResourceTable();
+        return resourceSelector.getResourceTable();
     }
 
     @Override
     public long getResourceTableUpdateTime() {
-        return resourceChooser.getCreateTime();
+        return resourceSelector.getCreateTime();
     }
 
     @Override
     public void preheat() {
-        Set<Resource> allResources = this.resourceChooser.getAllResources();
+        Set<Resource> allResources = this.resourceSelector.getAllResources();
         for (Resource resource : allResources) {
             IUpstreamClient client = factory.get(resource.getUrl());
             client.preheat();
@@ -498,8 +498,8 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
     @Override
     public synchronized void update(ResourceTable resourceTable) {
         List<Resource> oldWriteResources = null;
-        if (this.resourceChooser != null) {
-            oldWriteResources = this.resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
+        if (this.resourceSelector != null) {
+            oldWriteResources = this.resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
         }
         RedisResourceUtil.checkResourceTable(resourceTable);
         //初始化每个Resource，会做基本的校验
@@ -507,25 +507,25 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         for (Resource resource : resources) {
             factory.get(resource.getUrl());
         }
-        //初始化ResourceChooser
-        this.resourceChooser = new ResourceChooser(resourceTable, env.getProxyEnv());
+        //初始化IUpstreamClientTemplate
+        this.resourceSelector = new ResourceSelector(resourceTable, env.getProxyEnv());
 
         this.proxyRouteType = ProxyRouteType.fromResourceTable(resourceTable);
         if (this.proxyRouteType == ProxyRouteType.REDIS_STANDALONE ||
                 this.proxyRouteType == ProxyRouteType.REDIS_SENTINEL ||
                 this.proxyRouteType == ProxyRouteType.REDIS_CLUSTER) {
             try {
-                singletonClient = factory.get(resourceChooser.getReadResource(Utils.EMPTY_ARRAY).getUrl());
+                singletonClient = factory.get(resourceSelector.getReadResource(Utils.EMPTY_ARRAY).getUrl());
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 singletonClient = null;
             }
         }
-        resourceChooser.setResourceChecker(resourceChecker);
+        resourceSelector.setResourceChecker(resourceChecker);
         //check need force close subscribe channel
-        boolean needCloseSubscribeChannel = this.resourceChooser.getResourceTable().getType() == ResourceTable.Type.SHADING;
+        boolean needCloseSubscribeChannel = this.resourceSelector.getResourceTable().getType() == ResourceTable.Type.SHADING;
         if (!needCloseSubscribeChannel) {
-            List<Resource> newWriteResources = this.resourceChooser.getWriteResources(Utils.EMPTY_ARRAY);
+            List<Resource> newWriteResources = this.resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
             needCloseSubscribeChannel = oldWriteResources != null && !oldWriteResources.isEmpty() && !newWriteResources.isEmpty()
                     && !ResourceUtil.resourceEquals(oldWriteResources.get(0), newWriteResources.get(0));
         }
@@ -602,7 +602,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         for (int i = 1; i < args.length; i++, i++) {
             byte[] key = args[i];
             byte[] value = args[i + 1];
-            List<Resource> resources = resourceChooser.getWriteResources(key);
+            List<Resource> resources = resourceSelector.getWriteResources(key);
             for (int j = 0; j < resources.size(); j++) {
                 Resource resource = resources.get(j);
                 List<byte[]> list = map.get(resource.getUrl());
@@ -670,7 +670,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             byte[] key = args[i];
             BytesKey redisKey = new BytesKey(key);
             redisKeys.add(redisKey);
-            Resource resource = resourceChooser.getReadResource(key);
+            Resource resource = resourceSelector.getReadResource(key);
             List<BytesKey> list = map.get(resource.getUrl());
             if (list == null) {
                 list = map.computeIfAbsent(resource.getUrl(), k -> new ArrayList<>(args.length - 1));
@@ -740,7 +740,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             byte[] key = args[i];
             BytesKey redisKey = new BytesKey(key);
             redisKeys.add(redisKey);
-            Resource resource = resourceChooser.getReadResource(key);
+            Resource resource = resourceSelector.getReadResource(key);
             List<BytesKey> list = map.get(resource.getUrl());
             if (list == null) {
                 list = map.computeIfAbsent(resource.getUrl(), k -> new ArrayList<>(args.length - 2));
@@ -809,7 +809,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         //拆成N个命令进行投递，不做聚合，因为如果分片逻辑下，可能某个resource同时为双写的第1个地址和第2个地址
         for (int i = 1; i < args.length; i++) {
             byte[] key = args[i];
-            List<Resource> resources = resourceChooser.getWriteResources(key);
+            List<Resource> resources = resourceSelector.getWriteResources(key);
             for (int j = 0; j < resources.size(); j++) {
                 Resource resource = resources.get(j);
                 IUpstreamClient client = factory.get(resource.getUrl());
@@ -861,7 +861,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         byte[][] args = command.getObjects();
         for (int i = 1; i < args.length; i++) {
             byte[] key = args[i];
-            Resource resource = resourceChooser.getReadResource(key);
+            Resource resource = resourceSelector.getReadResource(key);
             List<byte[]> list = map.get(resource.getUrl());
             if (list == null) {
                 list = new ArrayList<>();
