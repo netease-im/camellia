@@ -58,16 +58,8 @@ public class ProxyDynamicConf {
             if (logger.isDebugEnabled()) {
                 logger.debug("{} not exists", fileName);
             }
-            if (newConf.equals(new HashMap<>(ProxyDynamicConf.conf))) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("conf not modify");
-                }
-            } else {
-                ProxyDynamicConf.conf = newConf;
-                logger.info("conf reload success");
-                clearCache();
-                triggerCallback();
-            }
+            clearCache();
+            triggerCallback();
             return;
         }
         try {
