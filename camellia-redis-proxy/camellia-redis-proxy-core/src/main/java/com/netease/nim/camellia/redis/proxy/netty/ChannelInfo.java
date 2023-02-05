@@ -28,9 +28,9 @@ public class ChannelInfo {
     private final String consid;
     private ChannelStats channelStats = ChannelStats.NO_AUTH;
     private final ChannelHandlerContext ctx;
-    private final CommandTaskQueue asyncTaskQueue;
-    private volatile ConcurrentHashMap<String, RedisConnection> bindRedisClientCache;
-    private RedisConnection bindClient = null;
+    private final CommandTaskQueue commandTaskQueue;
+    private volatile ConcurrentHashMap<String, RedisConnection> bindRedisConnectionCache;
+    private RedisConnection bindConnection = null;
     private int bindSlot = -1;
     private boolean inTransaction = false;
     private boolean inSubscribe = false;
@@ -50,7 +50,7 @@ public class ChannelInfo {
         this.consid = null;
         this.ctx = null;
         this.clientSocketAddress = null;
-        this.asyncTaskQueue = null;
+        this.commandTaskQueue = null;
         this.mock = true;
         this.fromCport = false;
     }
@@ -59,7 +59,7 @@ public class ChannelInfo {
         this.ctx = ctx;
         this.consid = UUID.randomUUID().toString();
         this.clientSocketAddress = ctx.channel().remoteAddress();
-        this.asyncTaskQueue = new CommandTaskQueue(this);
+        this.commandTaskQueue = new CommandTaskQueue(this);
         this.mock = false;
         this.fromCport = ((InetSocketAddress) ctx.channel().localAddress()).getPort() == GlobalRedisProxyEnv.getCport();
     }
@@ -85,68 +85,69 @@ public class ChannelInfo {
         return ctx.channel().attr(ATTRIBUTE_KEY).get();
     }
 
-    public CommandTaskQueue getAsyncTaskQueue() {
-        return asyncTaskQueue;
+    public CommandTaskQueue getCommandTaskQueue() {
+        return commandTaskQueue;
     }
 
-    public void updateBindRedisClientCache(RedisConnection redisConnection) {
+    public void updateBindRedisConnectionCache(RedisConnection redisConnection) {
         if (mock) {
             return;
         }
-        if (bindRedisClientCache == null) {
+        if (bindRedisConnectionCache == null) {
             synchronized (this) {
-                if (bindRedisClientCache == null) {
-                    bindRedisClientCache = new ConcurrentHashMap<>();
+                if (bindRedisConnectionCache == null) {
+                    bindRedisConnectionCache = new ConcurrentHashMap<>();
                 }
             }
         }
-        bindRedisClientCache.put(redisConnection.getAddr().getUrl(), redisConnection);
+        bindRedisConnectionCache.put(redisConnection.getAddr().getUrl(), redisConnection);
     }
 
-    public RedisConnection tryAcquireBindRedisClient(RedisConnectionAddr addr) {
+    public RedisConnection tryAcquireBindRedisConnection(RedisConnectionAddr addr) {
         if (mock) {
             return null;
         }
-        if (bindRedisClientCache != null && !bindRedisClientCache.isEmpty()) {
-            RedisConnection client = bindRedisClientCache.get(addr.getUrl());
-            if (client != null && client.isValid()) {
-                return client;
+        if (bindRedisConnectionCache != null && !bindRedisConnectionCache.isEmpty()) {
+            RedisConnection connection = bindRedisConnectionCache.get(addr.getUrl());
+            if (connection != null && connection.isValid()) {
+                return connection;
             }
         }
         return null;
     }
 
-    public RedisConnection acquireBindRedisClient(RedisConnectionAddr addr) {
+    public RedisConnection acquireBindRedisConnection(RedisConnectionAddr addr) {
         if (mock) {
             return null;
         }
-        if (bindRedisClientCache != null && !bindRedisClientCache.isEmpty()) {
-            RedisConnection client = bindRedisClientCache.get(addr.getUrl());
-            if (client != null && client.isValid()) {
-                client.stopIdleCheck();
-                return client;
+        if (bindRedisConnectionCache != null && !bindRedisConnectionCache.isEmpty()) {
+            RedisConnection connection = bindRedisConnectionCache.get(addr.getUrl());
+            if (connection != null && connection.isValid()) {
+                connection.stopIdleCheck();
+                return connection;
             }
         }
-        RedisConnection client = RedisConnectionHub.getInstance().newConnection(addr);
-        if (client == null) return null;
-        if (bindRedisClientCache == null) {
+        RedisConnection connection = RedisConnectionHub.getInstance().newConnection(addr);
+        if (connection == null) return null;
+        if (bindRedisConnectionCache == null) {
             synchronized (this) {
-                if (bindRedisClientCache == null) {
-                    bindRedisClientCache = new ConcurrentHashMap<>();
+                if (bindRedisConnectionCache == null) {
+                    bindRedisConnectionCache = new ConcurrentHashMap<>();
                 }
             }
         }
-        bindRedisClientCache.put(addr.getUrl(), client);
-        return client;
+        bindRedisConnectionCache.put(addr.getUrl(), connection);
+        return connection;
     }
 
-    public ConcurrentHashMap<String, RedisConnection> getBindRedisClientCache() {
-        return bindRedisClientCache;
+    public ConcurrentHashMap<String, RedisConnection> getBindRedisConnectionCache() {
+        return bindRedisConnectionCache;
     }
 
     public void clear() {
-        asyncTaskQueue.clear();
+        commandTaskQueue.clear();
         inSubscribe = false;
+        inTransaction = false;
     }
 
     public ChannelHandlerContext getCtx() {
@@ -193,8 +194,8 @@ public class ChannelInfo {
         this.bgroup = bgroup;
     }
 
-    public RedisConnection getBindClient() {
-        return bindClient;
+    public RedisConnection getBindConnection() {
+        return bindConnection;
     }
 
     public boolean isInTransaction() {
@@ -205,15 +206,15 @@ public class ChannelInfo {
         this.inTransaction = inTransaction;
     }
 
-    public void setBindClient(RedisConnection bindClient) {
-        this.bindClient = bindClient;
+    public void setBindConnection(RedisConnection bindConnection) {
+        this.bindConnection = bindConnection;
     }
 
-    public void setBindClient(int bindSlot, RedisConnection bindClient) {
-        if (bindSlot >= 0 && bindClient == null) {
+    public void setBindClient(int bindSlot, RedisConnection bindConnection) {
+        if (bindSlot >= 0 && bindConnection == null) {
             return;
         }
-        this.bindClient = bindClient;
+        this.bindConnection = bindConnection;
         this.bindSlot = bindSlot;
     }
 

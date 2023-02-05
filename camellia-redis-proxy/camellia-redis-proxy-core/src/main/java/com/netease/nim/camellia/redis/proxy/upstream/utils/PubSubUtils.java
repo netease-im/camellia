@@ -24,19 +24,19 @@ import java.util.concurrent.CompletableFuture;
  */
 public class PubSubUtils {
 
-    public static void sendByBindClient(RedisConnection client, CommandTaskQueue asyncTaskQueue,
+    public static void sendByBindClient(RedisConnection connection, CommandTaskQueue taskQueue,
                                         Command command, CompletableFuture<Reply> future, boolean first) {
-        sendByBindClient(client, asyncTaskQueue, command, future, first, command.getRedisCommand());
+        sendByBindClient(connection, taskQueue, command, future, first, command.getRedisCommand());
     }
 
-    private static void sendByBindClient(RedisConnection client, CommandTaskQueue asyncTaskQueue,
+    private static void sendByBindClient(RedisConnection connection, CommandTaskQueue asyncTaskQueue,
                                          Command command, CompletableFuture<Reply> future, boolean first, RedisCommand redisCommand) {
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
         if (future != null) {
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
             futures.add(completableFuture);
             completableFuture.thenAccept(reply -> {
-                //parse reply must before send reply to client
+                //parse reply must before send reply to connection
                 Long subscribeChannelCount = tryGetSubscribeChannelCount(reply);
                 if (first) {
                     future.complete(reply);
@@ -49,14 +49,14 @@ public class PubSubUtils {
                 }
             });
         }
-        if (client.queueSize() < 8) {
+        if (connection.queueSize() < 8) {
             for (int j = 0; j < 16; j++) {
                 CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
                 completableFuture.thenAccept(reply -> {
-                    if (client.queueSize() < 8 && client.isValid()) {
-                        sendByBindClient(client, asyncTaskQueue, null, null, false, redisCommand);
+                    if (connection.queueSize() < 8 && connection.isValid()) {
+                        sendByBindClient(connection, asyncTaskQueue, null, null, false, redisCommand);
                     }
-                    //parse reply must before send reply to client
+                    //parse reply must before send reply to connection
                     Long subscribeChannelCount = tryGetSubscribeChannelCount(reply);
                     asyncTaskQueue.reply(redisCommand, reply);
                     //after send reply, update channel subscribe status
@@ -68,9 +68,9 @@ public class PubSubUtils {
             }
         }
         if (command != null) {
-            client.sendCommand(Collections.singletonList(command), futures);
+            connection.sendCommand(Collections.singletonList(command), futures);
         } else {
-            client.sendCommand(Collections.emptyList(), futures);
+            connection.sendCommand(Collections.emptyList(), futures);
         }
     }
 

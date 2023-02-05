@@ -99,12 +99,12 @@ public class RedisClusterSlotInfo {
     }
 
     /**
-     * get client by slot
+     * get connection by slot
      *
      * @param slot slot
-     * @return client
+     * @return connection
      */
-    public RedisConnection getClient(int slot) {
+    public RedisConnection getConnection(int slot) {
         Node node = getNode(slot);
         if (node == null) return null;
         return RedisConnectionHub.getInstance().get(node.getAddr());
@@ -211,7 +211,7 @@ public class RedisClusterSlotInfo {
      * @param index index
      * @return RedisClient
      */
-    public RedisConnection getClientByIndex(int index) {
+    public RedisConnection getConnectionByIndex(int index) {
         try {
             Node master = this.masterNodeList.get(index);
             if (master == null) return null;
@@ -351,20 +351,20 @@ public class RedisClusterSlotInfo {
     }
 
     private boolean tryRenew(String host, int port, String userName, String password) {
-        RedisConnection client = null;
+        RedisConnection connection = null;
         try {
-            client = RedisConnectionHub.getInstance().newConnection(host, port, userName, password);
-            if (client == null || !client.isValid()) return false;
-            CompletableFuture<Reply> future = client.sendCommand(RedisCommand.CLUSTER.raw(), Utils.stringToBytes("slots"));
-            logger.info("tryRenew, client = {}, url = {}", client.getClientName(), maskUrl);
+            connection = RedisConnectionHub.getInstance().newConnection(host, port, userName, password);
+            if (connection == null || !connection.isValid()) return false;
+            CompletableFuture<Reply> future = connection.sendCommand(RedisCommand.CLUSTER.raw(), Utils.stringToBytes("slots"));
+            logger.info("tryRenew, connection = {}, url = {}", connection.getClientName(), maskUrl);
             Reply reply = future.get(10000, TimeUnit.MILLISECONDS);
             return clusterNodes(reply);
         } catch (Exception e) {
             logger.error("tryRenew error, host = {}, port = {}, url = {}", host, port, maskUrl, e);
             return false;
         } finally {
-            if (client != null) {
-                client.stop(true);
+            if (connection != null) {
+                connection.stop(true);
             }
         }
     }

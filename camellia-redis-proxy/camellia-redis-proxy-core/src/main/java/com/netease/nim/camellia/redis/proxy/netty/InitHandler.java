@@ -60,7 +60,7 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
         if (channelInfo != null) {
             channelInfo.clear();
             ChannelMonitor.remove(channelInfo);
-            ConcurrentHashMap<String, RedisConnection> map = channelInfo.getBindRedisClientCache();
+            ConcurrentHashMap<String, RedisConnection> map = channelInfo.getBindRedisConnectionCache();
             if (map != null) {
                 for (Map.Entry<String, RedisConnection> entry : map.entrySet()) {
                     RedisConnection redisConnection = entry.getValue();
@@ -73,7 +73,7 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
                 }
                 map.clear();
             }
-            RedisConnection bindClient = channelInfo.getBindClient();
+            RedisConnection bindClient = channelInfo.getBindConnection();
             if (bindClient != null) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("bind redis client will close for disconnect, consid = {}, client.addr = {}, upstream.redis.client = {}",

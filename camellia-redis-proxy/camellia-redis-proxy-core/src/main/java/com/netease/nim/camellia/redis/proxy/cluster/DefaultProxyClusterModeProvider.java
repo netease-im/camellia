@@ -159,9 +159,9 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
 
     private void heartbeat(ProxyNode node, ClusterModeStatus.Status status) {
         try {
-            RedisConnection client = RedisConnectionHub.getInstance().get(node.getHost(), node.getCport(), null, null);
-            if (client != null) {
-                CompletableFuture<Reply> future = client.sendCommand(RedisCommand.CLUSTER.raw(),
+            RedisConnection connection = RedisConnectionHub.getInstance().get(node.getHost(), node.getCport(), null, null);
+            if (connection != null) {
+                CompletableFuture<Reply> future = connection.sendCommand(RedisCommand.CLUSTER.raw(),
                         Utils.stringToBytes(RedisKeyword.PROXY_HEARTBEAT.name()), Utils.stringToBytes(current().toString()),
                         Utils.stringToBytes(String.valueOf(status.getValue())));
                 int timeoutSeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.request.timeout.seconds", 10);

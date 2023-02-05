@@ -71,18 +71,18 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             Command command = commands.get(i);
             CompletableFuture<Reply> future = completableFutureList.get(i);
             ChannelInfo channelInfo = command.getChannelInfo();
-            RedisConnection bindClient = channelInfo.getBindClient();
+            RedisConnection bindClient = channelInfo.getBindConnection();
             RedisCommand redisCommand = command.getRedisCommand();
             if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
                 boolean first = false;
                 if (bindClient == null) {
-                    bindClient = command.getChannelInfo().acquireBindRedisClient(getAddr());
-                    channelInfo.setBindClient(bindClient);
+                    bindClient = command.getChannelInfo().acquireBindRedisConnection(getAddr());
+                    channelInfo.setBindConnection(bindClient);
                     first = true;
                 }
                 if (bindClient != null) {
-                    CommandTaskQueue asyncTaskQueue = command.getChannelInfo().getAsyncTaskQueue();
-                    PubSubUtils.sendByBindClient(bindClient, asyncTaskQueue, command, future, first);
+                    CommandTaskQueue taskQueue = command.getChannelInfo().getCommandTaskQueue();
+                    PubSubUtils.sendByBindClient(bindClient, taskQueue, command, future, first);
                     byte[][] objects = command.getObjects();
                     if (objects != null && objects.length > 1) {
                         for (int j = 1; j < objects.length; j++) {
@@ -108,20 +108,20 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                                 channelInfo.removePSubscribeChannels(channel);
                             }
                             if (!channelInfo.hasSubscribeChannels()) {
-                                channelInfo.setBindClient(null);
+                                channelInfo.setBindConnection(null);
                                 bindClient.startIdleCheck();
                             }
                         }
                     }
-                    PubSubUtils.sendByBindClient(bindClient, channelInfo.getAsyncTaskQueue(), command, future, false);
+                    PubSubUtils.sendByBindClient(bindClient, channelInfo.getCommandTaskQueue(), command, future, false);
                 } else {
                     filterCommands.add(command);
                     filterFutures.add(future);
                 }
             } else if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
                 if (bindClient == null) {
-                    bindClient = command.getChannelInfo().acquireBindRedisClient(getAddr());
-                    channelInfo.setBindClient(bindClient);
+                    bindClient = command.getChannelInfo().acquireBindRedisConnection(getAddr());
+                    channelInfo.setBindConnection(bindClient);
                 }
                 if (bindClient == null) {
                     future.complete(ErrorReply.NOT_AVAILABLE);
@@ -131,11 +131,11 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                         channelInfo.setInTransaction(true);
                     } else if (redisCommand == RedisCommand.EXEC || redisCommand == RedisCommand.DISCARD) {
                         channelInfo.setInTransaction(false);
-                        channelInfo.setBindClient(null);
+                        channelInfo.setBindConnection(null);
                         bindClient.startIdleCheck();
                     } else if (redisCommand == RedisCommand.UNWATCH) {
                         if (!channelInfo.isInTransaction()) {
-                            channelInfo.setBindClient(null);
+                            channelInfo.setBindConnection(null);
                             bindClient.startIdleCheck();
                         }
                     }
@@ -193,7 +193,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
     }
 
     private boolean isPassThroughCommand(Command command) {
-        RedisConnection bindClient = command.getChannelInfo().getBindClient();
+        RedisConnection bindClient = command.getChannelInfo().getBindConnection();
         if (bindClient != null) return false;
         RedisCommand redisCommand = command.getRedisCommand();
         if (redisCommand == null) return false;
@@ -212,10 +212,10 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             return;
         }
         Command lastBlockingCommand = commands.get(commands.size() - 1);
-        RedisConnection client = lastBlockingCommand.getChannelInfo().acquireBindRedisClient(addr);
-        if (client != null) {
-            client.sendCommand(commands, completableFutureList);
-            client.startIdleCheck();
+        RedisConnection connection = lastBlockingCommand.getChannelInfo().acquireBindRedisConnection(addr);
+        if (connection != null) {
+            connection.sendCommand(commands, completableFutureList);
+            connection.startIdleCheck();
         } else {
             String log = "RedisClient[" + PasswordMaskUtils.maskAddr(addr) + "] is null, command return NOT_AVAILABLE, RedisResource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
@@ -235,9 +235,9 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             }
             return;
         }
-        RedisConnection client = RedisConnectionHub.getInstance().get(addr);
-        if (client != null) {
-            client.sendCommand(commands, completableFutureList);
+        RedisConnection connection = RedisConnectionHub.getInstance().get(addr);
+        if (connection != null) {
+            connection.sendCommand(commands, completableFutureList);
         } else {
             String log = "RedisClient[" + PasswordMaskUtils.maskAddr(addr) + "] is null, command return NOT_AVAILABLE, RedisResource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {

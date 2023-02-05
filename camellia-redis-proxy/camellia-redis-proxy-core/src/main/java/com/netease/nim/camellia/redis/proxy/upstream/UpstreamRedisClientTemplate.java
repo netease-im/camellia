@@ -177,7 +177,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     ChannelInfo channelInfo = command.getChannelInfo();
                     channelInfo.setInSubscribe(false);
                     if (!channelInfo.isInTransaction()) {
-                        RedisConnection bindClient = channelInfo.getBindClient();
+                        RedisConnection bindClient = channelInfo.getBindConnection();
                         if (bindClient != null) {
                             channelInfo.setBindClient(-1, null);
                             bindClient.startIdleCheck();
@@ -195,7 +195,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                         ChannelInfo channelInfo = command.getChannelInfo();
                         channelInfo.setInSubscribe(false);
                         if (!channelInfo.isInTransaction()) {
-                            RedisConnection bindClient = channelInfo.getBindClient();
+                            RedisConnection bindClient = channelInfo.getBindConnection();
                             if (bindClient != null) {
                                 channelInfo.setBindClient(-1, null);
                                 bindClient.startIdleCheck();

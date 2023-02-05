@@ -61,7 +61,7 @@ public class CommandsTransponder {
         }
         try {
             boolean hasCommandsSkip = false;
-            CommandTaskQueue taskQueue = channelInfo.getAsyncTaskQueue();
+            CommandTaskQueue taskQueue = channelInfo.getCommandTaskQueue();
 
             if (logger.isDebugEnabled()) {
                 List<String> commandNameList = new ArrayList<>(commands.size());
