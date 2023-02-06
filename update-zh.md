@@ -9,6 +9,8 @@
 * camellia-tools新增CamelliaLinearInitializationExecutor，支持资源的异步线性初始化
 * camellia-redis-proxy引入CamelliaLinearInitializationExecutor，对多租户upstream初始化逻辑进行了重构
 * camellia-redis-proxy在多读场景下，支持对后端进行健康检查，自动剔除故障节点
+* camellia-redis-proxy支持异步初始化到后端redis的连接
+* camellia-redis-proxy支持监控秒级的qps
 
 ### 更新
 * camellia-redis-proxy相关核心类进行了重命名（upstream部分）
