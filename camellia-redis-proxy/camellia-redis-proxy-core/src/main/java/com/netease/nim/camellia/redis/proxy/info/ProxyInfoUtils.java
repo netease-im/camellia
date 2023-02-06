@@ -3,7 +3,6 @@ package com.netease.nim.camellia.redis.proxy.info;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
@@ -41,13 +40,12 @@ public class ProxyInfoUtils {
     private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(8), new DefaultThreadFactory("proxy-info"));
 
-    public static final String VERSION = "v1.1.14";
+    public static final String VERSION = "v1.2.0-SNAPSHOT";
     private static final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
     private static final OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
     private static final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
     private static final List<GarbageCollectorMXBean> garbageCollectorMXBeanList = ManagementFactory.getGarbageCollectorMXBeans();
 
-    private static int monitorIntervalSeconds;
     private static final AtomicLong commandsCount = new AtomicLong();
     private static final AtomicLong readCommandsCount = new AtomicLong();
     private static final AtomicLong writeCommandsCount = new AtomicLong();
@@ -60,23 +58,23 @@ public class ProxyInfoUtils {
     private static double lastReadCommandQps = 0.0;
     private static double lastWriteCommandQps = 0.0;
 
-    public static void updateStats(Stats stats) {
-        try {
-            monitorIntervalSeconds = stats.getIntervalSeconds();
-            commandsCount.addAndGet(stats.getCount());
-            readCommandsCount.addAndGet(stats.getTotalReadCount());
-            writeCommandsCount.addAndGet(stats.getTotalWriteCount());
+    /**
+     * update every 1 seconds
+     * @param readQps readQps
+     * @param writeQps writeQps
+     */
+    public static void updateLastQps(long readQps, long writeQps) {
+        commandsCount.addAndGet(readQps + writeQps);
+        readCommandsCount.addAndGet(readQps);
+        writeCommandsCount.addAndGet(writeQps);
 
-            avgCommandsQps = commandsCount.get() / (runtimeMXBean.getUptime() / 1000.0);
-            avgReadCommandsQps = readCommandsCount.get() / (runtimeMXBean.getUptime() / 1000.0);
-            avgWriteCommandsQps = writeCommandsCount.get() / (runtimeMXBean.getUptime() / 1000.0);
+        avgCommandsQps = commandsCount.get() / (runtimeMXBean.getUptime() / 1000.0);
+        avgReadCommandsQps = readCommandsCount.get() / (runtimeMXBean.getUptime() / 1000.0);
+        avgWriteCommandsQps = writeCommandsCount.get() / (runtimeMXBean.getUptime() / 1000.0);
 
-            lastCommandQps = (double) stats.getCount() / stats.getIntervalSeconds();
-            lastReadCommandQps = (double) stats.getTotalReadCount() / stats.getIntervalSeconds();
-            lastWriteCommandQps = (double) stats.getTotalWriteCount() / stats.getIntervalSeconds();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
+        lastCommandQps = readQps + writeQps;
+        lastReadCommandQps = readQps;
+        lastWriteCommandQps = writeQps;
     }
 
     public static CompletableFuture<Reply> getInfoReply(Command command, IUpstreamClientTemplateFactory factory) {
@@ -305,7 +303,6 @@ public class ProxyInfoUtils {
         builder.append("avg_commands_qps:").append(String.format("%.2f", avgCommandsQps)).append("\r\n");
         builder.append("avg_read_commands_qps:").append(String.format("%.2f", avgReadCommandsQps)).append("\r\n");
         builder.append("avg_write_commands_qps:").append(String.format("%.2f", avgWriteCommandsQps)).append("\r\n");
-        builder.append("monitor_interval_seconds:").append(monitorIntervalSeconds).append("\r\n");
         builder.append("last_commands_qps:").append(String.format("%.2f", lastCommandQps)).append("\r\n");
         builder.append("last_read_commands_qps:").append(String.format("%.2f", lastReadCommandQps)).append("\r\n");
         builder.append("last_write_commands_qps:").append(String.format("%.2f", lastWriteCommandQps)).append("\r\n");

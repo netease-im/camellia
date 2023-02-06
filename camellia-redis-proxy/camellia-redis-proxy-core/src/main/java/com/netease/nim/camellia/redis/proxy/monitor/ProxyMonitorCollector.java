@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
-import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.model.*;
@@ -100,8 +99,11 @@ public class ProxyMonitorCollector {
 
             CommandCountMonitor.CommandCounterStats commandCounterStats = CommandCountMonitor.collect();
             stats.setCount(commandCounterStats.count);
+            stats.setMaxQps(commandCounterStats.maxQps);
             stats.setTotalReadCount(commandCounterStats.totalReadCount);
+            stats.setMaxReadQps(commandCounterStats.maxReadQps);
             stats.setTotalWriteCount(commandCounterStats.totalWriteCount);
+            stats.setMaxWriteQps(commandCounterStats.maxWriteQps);
             stats.setDetailStatsList(commandCounterStats.detailStatsList);
             stats.setTotalStatsList(commandCounterStats.totalStatsList);
             stats.setBidBgroupStatsList(commandCounterStats.bidBgroupStatsList);
@@ -131,7 +133,6 @@ public class ProxyMonitorCollector {
             if (monitorCallback != null) {
                 ExecutorUtils.submitCallbackTask(CALLBACK_NAME, () -> monitorCallback.callback(stats));
             }
-            ProxyInfoUtils.updateStats(stats);
         } catch (Exception e) {
             logger.error("monitor data collect error", e);
         }

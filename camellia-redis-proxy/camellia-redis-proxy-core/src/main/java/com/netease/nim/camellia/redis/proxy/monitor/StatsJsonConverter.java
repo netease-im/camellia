@@ -49,8 +49,11 @@ public class StatsJsonConverter {
         JSONArray qpsJsonArray = new JSONArray();
         JSONObject qpsJson = new JSONObject();
         qpsJson.put("qps", stats.getCount() / (stats.getIntervalSeconds() * 1.0));
+        qpsJson.put("maxQps", stats.getMaxQps());
         qpsJson.put("readQps", stats.getTotalReadCount() / (stats.getIntervalSeconds() * 1.0));
+        qpsJson.put("maxReadQps", stats.getMaxReadQps());
         qpsJson.put("writeQps", stats.getTotalWriteCount() / (stats.getIntervalSeconds() * 1.0));
+        qpsJson.put("maxWriteQps", stats.getMaxWriteQps());
         qpsJsonArray.add(qpsJson);
         monitorJson.put("qpsStats", qpsJsonArray);
 

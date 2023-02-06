@@ -1,11 +1,13 @@
 package com.netease.nim.camellia.redis.proxy.plugin.monitor;
 
+import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.model.BidBgroupStats;
 import com.netease.nim.camellia.redis.proxy.monitor.model.DetailStats;
 import com.netease.nim.camellia.redis.proxy.monitor.model.TotalStats;
+import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +16,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -26,11 +32,42 @@ public class CommandCountMonitor {
     private static int count = 0;
     private static ConcurrentHashMap<String, LongAdder> map = new ConcurrentHashMap<>();
 
-    public static void incr(Long bid, String bgroup, String command) {
+    private static final ScheduledExecutorService scheduleService = Executors.newSingleThreadScheduledExecutor(
+            new DefaultThreadFactory("camellia-qps-monitor"));
+    private static final MaxQps maxQps = new MaxQps();
+
+    private static class MaxQps {
+        public AtomicLong qps = new AtomicLong();
+        public AtomicLong readQps = new AtomicLong();
+        public AtomicLong writeQps = new AtomicLong();
+    }
+
+    private static final LongAdder read = new LongAdder();
+    private static final LongAdder write = new LongAdder();
+
+    static {
+        scheduleService.scheduleAtFixedRate(() -> {
+            long readQps = read.sumThenReset();
+            long writeQps = write.sumThenReset();
+            ProxyInfoUtils.updateLastQps(readQps, writeQps);
+            if (readQps + writeQps > maxQps.qps.get()) {
+                maxQps.readQps.set(readQps);
+                maxQps.writeQps.set(writeQps);
+                maxQps.qps.set(readQps + writeQps);
+            }
+        }, 1, 1, TimeUnit.SECONDS);
+    }
+
+    public static void incr(Long bid, String bgroup, String command, RedisCommand.Type type) {
         try {
             String key = bid + "|" + bgroup + "|" + command;
             LongAdder count = CamelliaMapUtils.computeIfAbsent(map, key, k -> new LongAdder());
             count.increment();
+            if (type == RedisCommand.Type.READ) {
+                read.increment();
+            } else if (type == RedisCommand.Type.WRITE) {
+                write.increment();
+            }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -38,8 +75,11 @@ public class CommandCountMonitor {
 
     public static class CommandCounterStats {
         public long count;
+        public long maxQps;
         public long totalReadCount;
+        public long maxReadQps;
         public long totalWriteCount;
+        public long maxWriteQps;
         public List<TotalStats> totalStatsList = new ArrayList<>();
         public List<BidBgroupStats> bidBgroupStatsList = new ArrayList<>();
         public List<DetailStats> detailStatsList = new ArrayList<>();
@@ -103,8 +143,11 @@ public class CommandCountMonitor {
 
         CommandCounterStats counterStats = new CommandCounterStats();
         counterStats.count = totalCount;
+        counterStats.maxQps = maxQps.qps.getAndSet(0);
         counterStats.totalReadCount = totalReadCount;
+        counterStats.maxReadQps = maxQps.readQps.getAndSet(0);
         counterStats.totalWriteCount = totalWriteCount;
+        counterStats.maxWriteQps = maxQps.writeQps.getAndSet(0);
         counterStats.detailStatsList = detailStatsList;
         counterStats.totalStatsList = new ArrayList<>(totalStatsMap.values());
         counterStats.bidBgroupStatsList = new ArrayList<>(bidBgroupStatsMap.values());

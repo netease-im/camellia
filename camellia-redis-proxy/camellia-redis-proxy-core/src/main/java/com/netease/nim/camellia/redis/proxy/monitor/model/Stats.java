@@ -18,6 +18,9 @@ public class Stats {
     private long count;
     private long totalReadCount;
     private long totalWriteCount;
+    public long maxQps;
+    public long maxReadQps;
+    public long maxWriteQps;
     private List<TotalStats> totalStatsList = new ArrayList<>();
     private List<BidBgroupStats> bidBgroupStatsList = new ArrayList<>();
     private List<DetailStats> detailStatsList = new ArrayList<>();
@@ -66,6 +69,30 @@ public class Stats {
 
     public void setCount(long count) {
         this.count = count;
+    }
+
+    public long getMaxQps() {
+        return maxQps;
+    }
+
+    public void setMaxQps(long maxQps) {
+        this.maxQps = maxQps;
+    }
+
+    public long getMaxReadQps() {
+        return maxReadQps;
+    }
+
+    public void setMaxReadQps(long maxReadQps) {
+        this.maxReadQps = maxReadQps;
+    }
+
+    public long getMaxWriteQps() {
+        return maxWriteQps;
+    }
+
+    public void setMaxWriteQps(long maxWriteQps) {
+        this.maxWriteQps = maxWriteQps;
     }
 
     public long getTotalReadCount() {

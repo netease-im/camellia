@@ -26,6 +26,9 @@ public class LoggingMonitorCallback implements MonitorCallback {
             logger.info("total.count={}", stats.getCount());
             logger.info("total.read.count={}", stats.getTotalReadCount());
             logger.info("total.write.count={}", stats.getTotalWriteCount());
+            logger.info("total.maxQps={}", stats.getMaxQps());
+            logger.info("total.maxReadQps={}", stats.getMaxReadQps());
+            logger.info("total.maxWriteQps={}", stats.getMaxWriteQps());
             logger.info("====total====");
             for (TotalStats totalStats : stats.getTotalStatsList()) {
                 logger.info("total.command.{}, count={}", totalStats.getCommand(), totalStats.getCount());

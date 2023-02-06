@@ -53,7 +53,7 @@ public class MonitorProxyPlugin implements ProxyPlugin {
         if (!ProxyMonitorCollector.isMonitorEnable()) return ProxyPluginResponse.SUCCESS;
         Command command = request.getCommand();
         CommandContext commandContext = command.getCommandContext();
-        CommandCountMonitor.incr(commandContext.getBid(), commandContext.getBgroup(), command.getName());
+        CommandCountMonitor.incr(commandContext.getBid(), commandContext.getBgroup(), command.getName(), command.getRedisCommand().getType());
         if (ProxyMonitorCollector.isCommandSpendTimeMonitorEnable()) {
             command.initStartNanoTime();
         }
