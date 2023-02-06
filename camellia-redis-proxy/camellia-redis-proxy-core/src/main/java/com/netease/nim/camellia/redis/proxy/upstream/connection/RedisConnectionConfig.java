@@ -32,6 +32,8 @@ public class RedisConnectionConfig {
     private int writeBufferWaterMarkLow;
     private int writeBufferWaterMarkHigh;
 
+    private FastFailStats fastFailStats;
+
     public String getHost() {
         return host;
     }
@@ -198,5 +200,13 @@ public class RedisConnectionConfig {
 
     public void setWriteBufferWaterMarkHigh(int writeBufferWaterMarkHigh) {
         this.writeBufferWaterMarkHigh = writeBufferWaterMarkHigh;
+    }
+
+    public FastFailStats getFastFailStats() {
+        return fastFailStats;
+    }
+
+    public void setFastFailStats(FastFailStats fastFailStats) {
+        this.fastFailStats = fastFailStats;
     }
 }

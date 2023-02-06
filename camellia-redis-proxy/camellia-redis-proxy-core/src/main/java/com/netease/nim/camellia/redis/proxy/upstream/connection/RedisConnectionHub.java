@@ -4,7 +4,6 @@ import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.tools.utils.LockMap;
-import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
@@ -37,10 +36,6 @@ public class RedisConnectionHub {
 
     private final ConcurrentHashMap<String, RedisConnection> map = new ConcurrentHashMap<>();
     private EventLoopGroup eventLoopGroup = null;
-    private EventLoopGroup eventLoopGroupBackup = null;
-
-    private final ExecutorService redisConnectionAsyncInitExec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(4096), new DefaultThreadFactory("camellia-redis-connection-initialize"), new ThreadPoolExecutor.AbortPolicy());
 
     private final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, RedisConnection>> eventLoopMap = new ConcurrentHashMap<>();
 
@@ -65,7 +60,6 @@ public class RedisConnectionHub {
     private int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;
 
     private final ConcurrentHashMap<Object, LockMap> lockMapMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, AtomicBoolean>> initializerStatusMap = new ConcurrentHashMap<>();
 
     public static RedisConnectionHub instance = new RedisConnectionHub();
     private RedisConnectionHub() {
@@ -89,16 +83,12 @@ public class RedisConnectionHub {
         NettyTransportMode nettyTransportMode = GlobalRedisProxyEnv.getNettyTransportMode();
         if (nettyTransportMode == NettyTransportMode.epoll) {
             this.eventLoopGroup = new EpollEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"));
-            this.eventLoopGroupBackup = new EpollEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-backup"));
         } else if (nettyTransportMode == NettyTransportMode.kqueue) {
             this.eventLoopGroup = new KQueueEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"));
-            this.eventLoopGroupBackup = new KQueueEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-backup"));
         } else if (nettyTransportMode == NettyTransportMode.io_uring) {
             this.eventLoopGroup = new IOUringEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"));
-            this.eventLoopGroupBackup = new IOUringEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-backup"));
         } else {
             this.eventLoopGroup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"));
-            this.eventLoopGroupBackup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-backup"));
         }
 
         fastFailStats = new FastFailStats(redisConf.getFailCountThreshold(), redisConf.getFailBanMillis());
@@ -125,80 +115,22 @@ public class RedisConnectionHub {
         reloadConf();
     }
 
+    /**
+     * 设置当前线程所在的EventLoop
+     * @param eventLoop EventLoop
+     */
     public void updateEventLoop(EventLoop eventLoop) {
         eventLoopThreadLocal.set(eventLoop);
     }
 
-    public RedisConnection tryGet(String host, int port, String userName, String password) {
-        try {
-            RedisConnectionAddr addr = new RedisConnectionAddr(host, port, userName, password);
-            EventLoop eventLoop = eventLoopThreadLocal.get();
-            if (eventLoop != null) {
-                ConcurrentHashMap<String, RedisConnection> connectionMap = eventLoopMap.get(eventLoop);
-                if (connectionMap != null) {
-                    RedisConnection connection = connectionMap.get(addr.getUrl());
-                    if (connection != null && connection.isValid()) {
-                        return connection;
-                    }
-                }
-            }
-            String url = addr.getUrl();
-            RedisConnection connection = map.get(url);
-            if (connection != null && connection.isValid()) {
-                return connection;
-            }
-            return null;
-        } catch (Exception e) {
-            ErrorLogCollector.collect(RedisConnectionHub.class,
-                    "try get RedisConnection error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
-            return null;
-        }
-    }
-
-    public CompletableFuture<RedisConnection> newAsync(String host, int port, String userName, String password) {
-        CompletableFuture<RedisConnection> future = new CompletableFuture<>();
-        try {
-            redisConnectionAsyncInitExec.submit(() -> {
-                try {
-                    RedisConnection redisConnection = newConnection(host, port, userName, password);
-                    future.complete(redisConnection);
-                } catch (Exception e) {
-                    ErrorLogCollector.collect(RedisConnectionHub.class,
-                            "new RedisConnection async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
-                    future.complete(null);
-                }
-            });
-            return future;
-        } catch (Exception e) {
-            ErrorLogCollector.collect(RedisConnectionHub.class,
-                    "new RedisConnection async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
-            future.complete(null);
-            return future;
-        }
-    }
-
-    public CompletableFuture<RedisConnection> getAsync(String host, int port, String userName, String password) {
-        CompletableFuture<RedisConnection> future = new CompletableFuture<>();
-        try {
-            redisConnectionAsyncInitExec.submit(() -> {
-                try {
-                    RedisConnection redisConnection = get(host, port, userName, password);
-                    future.complete(redisConnection);
-                } catch (Exception e) {
-                    ErrorLogCollector.collect(RedisConnectionHub.class,
-                            "get RedisConnection async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
-                    future.complete(null);
-                }
-            });
-            return future;
-        } catch (Exception e) {
-            ErrorLogCollector.collect(RedisConnectionHub.class,
-                    "get RedisConnection async error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
-            future.complete(null);
-            return future;
-        }
-    }
-
+    /**
+     * 获取一个连接，优先使用相同eventLoop的连接，如果获取不到，则走公共连接池
+     * @param host host
+     * @param port port
+     * @param userName userName
+     * @param password password
+     * @return RedisConnection
+     */
     public RedisConnection get(String host, int port, String userName, String password) {
         try {
             RedisConnectionAddr addr = new RedisConnectionAddr(host, port, userName, password);
@@ -210,6 +142,65 @@ public class RedisConnectionHub {
         }
     }
 
+    /**
+     * 获取一个连接，优先使用相同eventLoop的连接，如果获取不到，则走公共连接池
+     * @param addr addr
+     * @return RedisConnection
+     */
+    public RedisConnection get(RedisConnectionAddr addr) {
+        try {
+            RedisConnection cache = addr.getCache();
+            if (cache != null && cache.isValid()) {
+                return cache;
+            }
+            String url = addr.getUrl();
+            //优先使用相同eventLoop的连接
+            EventLoop eventLoop = eventLoopThreadLocal.get();
+            if (eventLoop != null) {
+                //看看是否已经初始化好了，如果是，直接返回
+                ConcurrentHashMap<String, RedisConnection> map = CamelliaMapUtils.computeIfAbsent(eventLoopMap, eventLoop, k -> new ConcurrentHashMap<>());
+                RedisConnection connection = map.get(url);
+                if (connection != null && connection.isValid()) {
+                    addr.setCache(connection);//如果是使用当前eventLoop初始化的，则可以放入快速缓存
+                    return connection;
+                }
+                //如果没有初始化好，或者已有连接不可用了，则初始化一个
+                LockMap lockMap = CamelliaMapUtils.computeIfAbsent(this.lockMapMap, eventLoop, k -> new LockMap());
+                connection = initRedisConnection(map, lockMap, eventLoop, addr);
+                if (connection != null && connection.isValid()) {
+                    addr.setCache(connection);//如果是使用当前eventLoop初始化的，则可以放入快速缓存
+                    return connection;
+                }
+            }
+            //否则看看公共连接池，如果有，直接返回
+            RedisConnection connection = map.get(url);
+            if (connection != null && connection.isValid()) {
+                return connection;
+            }
+            //如果没有，则使用公共eventLoopGroup去初始化一个连接
+            eventLoop = eventLoopGroup.next();
+            LockMap lockMap = CamelliaMapUtils.computeIfAbsent(this.lockMapMap, addr.getUrl(), k -> new LockMap());
+            connection = initRedisConnection(map, lockMap, eventLoop, addr);
+            if (connection != null && connection.isValid()) {
+                return connection;
+            }
+            String log = "get RedisConnection fail, url = " + url;
+            ErrorLogCollector.collect(RedisConnectionHub.class, log);
+            return null;
+        } catch (Exception e) {
+            ErrorLogCollector.collect(RedisConnectionHub.class, "get RedisConnection error, addr = " + addr.getUrl(), e);
+            return null;
+        }
+    }
+
+    /**
+     * 新建一个连接，优先使用当前eventLoop新建连接，如果没有，则走公共eventLoopGroup新建连接
+     * @param host host
+     * @param port port
+     * @param userName userName
+     * @param password password
+     * @return RedisConnection
+     */
     public RedisConnection newConnection(String host, int port, String userName, String password) {
         try {
             return newConnection(new RedisConnectionAddr(host, port, userName, password));
@@ -220,46 +211,22 @@ public class RedisConnectionHub {
         }
     }
 
+    /**
+     * 新建一个连接，优先使用当前eventLoop新建连接，如果没有，则走公共eventLoopGroup新建连接
+     * @param addr addr
+     * @return RedisConnection
+     */
     public RedisConnection newConnection(RedisConnectionAddr addr) {
         try {
-            String url = addr.getUrl();
-            if (fastFailStats.fastFail(url)) {
-                return null;
+            EventLoop eventLoop = eventLoopThreadLocal.get();
+            if (eventLoop == null) {
+                eventLoop = eventLoopGroup.next();
             }
-            EventLoop loopGroup = eventLoopGroup.next();
-            if (loopGroup.inEventLoop()) {
-                loopGroup = eventLoopGroupBackup.next();
-            }
-            RedisConnectionConfig config = new RedisConnectionConfig();
-            config.setHost(addr.getHost());
-            config.setPort(addr.getPort());
-            config.setUserName(addr.getUserName());
-            config.setPassword(addr.getPassword());
-            config.setReadonly(addr.isReadonly());
-            config.setDb(addr.getDb());
-            config.setEventLoopGroup(loopGroup);
-            config.setHeartbeatTimeoutMillis(-1);
-            config.setHeartbeatIntervalSeconds(-1);
-            config.setConnectTimeoutMillis(connectTimeoutMillis);
-            config.setCloseIdleConnection(false);
-            config.setCloseIdleConnectionDelaySeconds(closeIdleConnectionDelaySeconds);
-            config.setCheckIdleConnectionThresholdSeconds(checkIdleConnectionThresholdSeconds);
-            config.setSkipCommandSpendTimeMonitor(true);
-            config.setTcpNoDelay(tcpNoDelay);
-            config.setTcpQuickAck(tcpQuickAck);
-            config.setSoKeepalive(soKeepalive);
-            config.setSoRcvbuf(soRcvbuf);
-            config.setSoSndbuf(soSndbuf);
-            config.setWriteBufferWaterMarkLow(writeBufferWaterMarkLow);
-            config.setWriteBufferWaterMarkHigh(writeBufferWaterMarkHigh);
-            RedisConnection connection = new RedisConnection(config);
-            connection.start();
+            RedisConnection connection = initRedisConnection(eventLoop, addr, false, false, true);
             if (connection.isValid()) {
-                fastFailStats.resetFail(url);//如果connection初始化成功，则重置计数器和错误时间戳
                 return connection;
             } else {
                 connection.stop();
-                fastFailStats.incrFail(url);
                 return null;
             }
         } catch (Exception e) {
@@ -268,10 +235,27 @@ public class RedisConnectionHub {
         }
     }
 
+    /**
+     * 预热一组连接（使用主EventLoopGroup）
+     * @param host host
+     * @param port port
+     * @param userName userName
+     * @param password password
+     * @return true/false
+     */
     public boolean preheat(String host, int port, String userName, String password) {
         return preheat(host, port, userName, password, 0);
     }
 
+    /**
+     * 预热一组连接（使用主EventLoopGroup）
+     * @param host host
+     * @param port port
+     * @param userName userName
+     * @param password password
+     * @param db db
+     * @return true/false
+     */
     public boolean preheat(String host, int port, String userName, String password, int db) {
         EventLoopGroup workGroup = GlobalRedisProxyEnv.getWorkGroup();
         int workThread = GlobalRedisProxyEnv.getWorkThread();
@@ -293,121 +277,22 @@ public class RedisConnectionHub {
         return false;
     }
 
-    public RedisConnection get(RedisConnectionAddr addr) {
-        try {
-            RedisConnection cache = addr.getCache();
-            if (cache != null && cache.isValid()) {
-                return cache;
-            }
-            EventLoop eventLoop = eventLoopThreadLocal.get();
-            if (eventLoop != null) {
-                RedisConnection connection = tryGetRedisConnection(eventLoop, addr);
-                if (connection != null) {
-                    addr.setCache(connection);
-                    return connection;
-                }
-            }
-            String url = addr.getUrl();
-            RedisConnection connection = map.get(url);
-            if (connection != null && connection.isValid()) {
-                return connection;
-            }
-            if (connection == null || !connection.isValid()) {
-                eventLoop = eventLoopGroup.next();
-                if (eventLoop.inEventLoop()) {
-                    eventLoop = eventLoopGroupBackup.next();
-                }
-                LockMap lockMap = CamelliaMapUtils.computeIfAbsent(this.lockMapMap, addr.getUrl(), k -> new LockMap());
-                connection = tryInitRedisConnection(map, lockMap, eventLoop, addr);
-            }
-            if (connection != null && connection.isValid()) {
-                map.put(url, connection);
-                return connection;
-            }
-            String log = "get RedisConnection fail, url = " + url;
-            ErrorLogCollector.collect(RedisConnectionHub.class, log);
-            return null;
-        } catch (Exception e) {
-            ErrorLogCollector.collect(RedisConnectionHub.class, "get RedisConnection error, addr = " + addr.getUrl(), e);
-            return null;
-        }
-    }
-
-    private RedisConnection tryGetRedisConnection(EventLoop eventLoop, RedisConnectionAddr addr) {
-        ConcurrentHashMap<String, RedisConnection> map = CamelliaMapUtils.computeIfAbsent(eventLoopMap, eventLoop, k -> new ConcurrentHashMap<>());
-        String url = addr.getUrl();
-        RedisConnection connection = map.get(url);
-        if (connection != null && connection.isValid()) {
-            return connection;
-        }
-        if (eventLoop.inEventLoop()) {
-            ConcurrentHashMap<String, AtomicBoolean> statusMap = CamelliaMapUtils.computeIfAbsent(initializerStatusMap, eventLoop, k -> new ConcurrentHashMap<>());
-            AtomicBoolean status = CamelliaMapUtils.computeIfAbsent(statusMap, addr.getUrl(), k -> new AtomicBoolean(false));
-            if (status.compareAndSet(false, true)) {
-                try {
-                    redisConnectionAsyncInitExec.submit(() -> {
-                        try {
-                            LockMap lockMap = CamelliaMapUtils.computeIfAbsent(this.lockMapMap, eventLoop, k -> new LockMap());
-                            tryInitRedisConnection(map, lockMap, eventLoop, addr);
-                        } catch (Exception e) {
-                            ErrorLogCollector.collect(RedisConnectionHub.class, "tryInitRedisConnection error", e);
-                        } finally {
-                            status.compareAndSet(true, false);
-                        }
-                    });
-                } catch (Exception e) {
-                    ErrorLogCollector.collect(RedisConnectionHub.class, "tryInitRedisConnection submit error", e);
-                    status.compareAndSet(true, false);
-                }
-            }
-            return null;
-        } else {
-            LockMap lockMap = CamelliaMapUtils.computeIfAbsent(this.lockMapMap, eventLoop, k -> new LockMap());
-            return tryInitRedisConnection(map, lockMap, eventLoop, addr);
-        }
-    }
-
-    private RedisConnection tryInitRedisConnection(ConcurrentHashMap<String, RedisConnection> map, LockMap lockMap, EventLoop eventLoop, RedisConnectionAddr addr) {
+    //初始化一个连接，初始化完成后会放入map，会做并发控制，map中只有一个实例
+    private RedisConnection initRedisConnection(ConcurrentHashMap<String, RedisConnection> map, LockMap lockMap,
+                                                EventLoop eventLoop, RedisConnectionAddr addr) {
         String url = addr.getUrl();
         RedisConnection connection = map.get(url);
         if (connection == null || !connection.isValid()) {
-            if (fastFailStats.fastFail(url)) {
-                return null;
-            }
             synchronized (lockMap.getLockObj(url)) {
                 connection = map.get(url);
                 if (connection == null || !connection.isValid()) {
-                    RedisConnectionConfig config = new RedisConnectionConfig();
-                    config.setHost(addr.getHost());
-                    config.setPort(addr.getPort());
-                    config.setUserName(addr.getUserName());
-                    config.setPassword(addr.getPassword());
-                    config.setReadonly(addr.isReadonly());
-                    config.setDb(addr.getDb());
-                    config.setEventLoopGroup(eventLoop);
-                    config.setHeartbeatTimeoutMillis(heartbeatTimeoutMillis);
-                    config.setHeartbeatIntervalSeconds(heartbeatIntervalSeconds);
-                    config.setConnectTimeoutMillis(connectTimeoutMillis);
-                    config.setCloseIdleConnection(closeIdleConnection);
-                    config.setCheckIdleConnectionThresholdSeconds(checkIdleConnectionThresholdSeconds);
-                    config.setCloseIdleConnectionDelaySeconds(closeIdleConnectionDelaySeconds);
-                    config.setTcpNoDelay(tcpNoDelay);
-                    config.setTcpQuickAck(tcpQuickAck);
-                    config.setSoKeepalive(soKeepalive);
-                    config.setSoRcvbuf(soRcvbuf);
-                    config.setSoSndbuf(soSndbuf);
-                    config.setWriteBufferWaterMarkLow(writeBufferWaterMarkLow);
-                    config.setWriteBufferWaterMarkHigh(writeBufferWaterMarkHigh);
-                    connection = new RedisConnection(config);
-                    connection.start();
+                    connection = initRedisConnection(eventLoop, addr, true, true, false);
                     if (connection.isValid()) {
                         RedisConnection oldConnection = map.put(url, connection);
                         if (oldConnection != null) {
                             oldConnection.stop();
                         }
-                        fastFailStats.resetFail(url);//如果connection初始化成功，则重置计数器和错误时间戳
                     } else {
-                        fastFailStats.incrFail(url);//connection初始化失败，递增错误计数器
                         connection.stop();
                     }
                 }
@@ -417,6 +302,39 @@ public class RedisConnectionHub {
             return connection;
         }
         return null;
+    }
+
+    //初始化一个连接
+    private RedisConnection initRedisConnection(EventLoop eventLoop, RedisConnectionAddr addr, boolean heartbeatEnable,
+                                                boolean checkIdle, boolean skipCommandSpendTimeMonitor) {
+        RedisConnectionConfig config = new RedisConnectionConfig();
+        config.setHost(addr.getHost());
+        config.setPort(addr.getPort());
+        config.setUserName(addr.getUserName());
+        config.setPassword(addr.getPassword());
+        config.setReadonly(addr.isReadonly());
+        config.setDb(addr.getDb());
+        config.setEventLoopGroup(eventLoop);
+        config.setHeartbeatTimeoutMillis(heartbeatEnable ? heartbeatTimeoutMillis : -1);
+        config.setHeartbeatIntervalSeconds(heartbeatEnable ? heartbeatIntervalSeconds : -1);
+        config.setConnectTimeoutMillis(connectTimeoutMillis);
+        config.setCloseIdleConnection(checkIdle && closeIdleConnection);
+        config.setCheckIdleConnectionThresholdSeconds(checkIdleConnectionThresholdSeconds);
+        config.setCloseIdleConnectionDelaySeconds(closeIdleConnectionDelaySeconds);
+        if (skipCommandSpendTimeMonitor) {
+            config.setSkipCommandSpendTimeMonitor(true);
+        }
+        config.setTcpNoDelay(tcpNoDelay);
+        config.setTcpQuickAck(tcpQuickAck);
+        config.setSoKeepalive(soKeepalive);
+        config.setSoRcvbuf(soRcvbuf);
+        config.setSoSndbuf(soSndbuf);
+        config.setWriteBufferWaterMarkLow(writeBufferWaterMarkLow);
+        config.setWriteBufferWaterMarkHigh(writeBufferWaterMarkHigh);
+        config.setFastFailStats(fastFailStats);
+        RedisConnection connection = new RedisConnection(config);
+        connection.start();
+        return connection;
     }
 
     private void reloadConf() {

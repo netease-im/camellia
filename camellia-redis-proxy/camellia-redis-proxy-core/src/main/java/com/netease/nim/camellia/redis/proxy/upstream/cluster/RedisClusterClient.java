@@ -570,54 +570,43 @@ public class RedisClusterClient implements IUpstreamClient {
                                     redisConnection.sendCommand(Collections.singletonList(command), Collections.singletonList(this));
                                     redisConnection.startIdleCheck();
                                 } else {
-                                    CompletableFuture<RedisConnection> future = RedisConnectionHub.getInstance().newAsync(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
-                                    future.thenAccept(connection -> {
-                                        try {
-                                            if (connection == null) {
-                                                ErrorLogCollector.collect(RedisClusterClient.class,
-                                                        "MOVED, [BlockingCommand] [RedisClient newAsync fail], command = " + command.getName() + ", attempts = " + attempts);
-                                                clusterClient.clusterSlotInfo.renew();
-                                                CompletableFutureWrapper.this.future.complete(reply);
-                                            } else {
-                                                ErrorLogCollector.collect(RedisClusterClient.class,
-                                                        "MOVED, [BlockingCommand] [RedisClient newAsync success], command = " + command.getName() + ", attempts = " + attempts);
-                                                connection.sendCommand(Collections.singletonList(command), Collections.singletonList(CompletableFutureWrapper.this));
-                                                connection.startIdleCheck();
-                                                command.getChannelInfo().updateBindRedisConnectionCache(connection);
-                                            }
-                                        } catch (Exception e) {
+                                    RedisConnection connection = RedisConnectionHub.getInstance().newConnection(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
+                                    try {
+                                        if (connection == null || !connection.isValid()) {
                                             ErrorLogCollector.collect(RedisClusterClient.class,
-                                                    "MOVED, [BlockingCommand] [RedisClient newAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
+                                                    "MOVED, [BlockingCommand] [RedisClient newAsync fail], command = " + command.getName() + ", attempts = " + attempts);
+                                            clusterClient.clusterSlotInfo.renew();
                                             CompletableFutureWrapper.this.future.complete(reply);
+                                        } else {
+                                            ErrorLogCollector.collect(RedisClusterClient.class,
+                                                    "MOVED, [BlockingCommand] [RedisClient newAsync success], command = " + command.getName() + ", attempts = " + attempts);
+                                            connection.sendCommand(Collections.singletonList(command), Collections.singletonList(CompletableFutureWrapper.this));
+                                            connection.startIdleCheck();
+                                            command.getChannelInfo().updateBindRedisConnectionCache(connection);
                                         }
-                                    });
+                                    } catch (Exception e) {
+                                        ErrorLogCollector.collect(RedisClusterClient.class,
+                                                "MOVED, [BlockingCommand] [RedisClient newAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
+                                        CompletableFutureWrapper.this.future.complete(reply);
+                                    }
                                 }
                             } else {
-                                RedisConnection redisConnection = RedisConnectionHub.getInstance().tryGet(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
-                                if (redisConnection != null) {
+                                RedisConnection connection = RedisConnectionHub.getInstance().get(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
+                                try {
+                                    if (connection == null || !connection.isValid()) {
+                                        ErrorLogCollector.collect(RedisClusterClient.class,
+                                                "MOVED, [RedisClient getAsync fail], command = " + command.getName() + ", attempts = " + attempts);
+                                        clusterClient.clusterSlotInfo.renew();
+                                        CompletableFutureWrapper.this.future.complete(reply);
+                                    } else {
+                                        ErrorLogCollector.collect(RedisClusterClient.class,
+                                                "MOVED, [RedisClient getAsync success], command = " + command.getName() + ", attempts = " + attempts);
+                                        connection.sendCommand(Collections.singletonList(command), Collections.singletonList(CompletableFutureWrapper.this));
+                                    }
+                                } catch (Exception e) {
                                     ErrorLogCollector.collect(RedisClusterClient.class,
-                                            "MOVED, [RedisClient tryGet success], command = " + command.getName() + ", attempts = " + attempts);
-                                    redisConnection.sendCommand(Collections.singletonList(command), Collections.singletonList(this));
-                                } else {
-                                    CompletableFuture<RedisConnection> future = RedisConnectionHub.getInstance().getAsync(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
-                                    future.thenAccept(connection -> {
-                                        try {
-                                            if (connection == null) {
-                                                ErrorLogCollector.collect(RedisClusterClient.class,
-                                                        "MOVED, [RedisClient getAsync fail], command = " + command.getName() + ", attempts = " + attempts);
-                                                clusterClient.clusterSlotInfo.renew();
-                                                CompletableFutureWrapper.this.future.complete(reply);
-                                            } else {
-                                                ErrorLogCollector.collect(RedisClusterClient.class,
-                                                        "MOVED, [RedisClient getAsync success], command = " + command.getName() + ", attempts = " + attempts);
-                                                connection.sendCommand(Collections.singletonList(command), Collections.singletonList(CompletableFutureWrapper.this));
-                                            }
-                                        } catch (Exception e) {
-                                            ErrorLogCollector.collect(RedisClusterClient.class,
-                                                    "MOVED, [RedisClient getAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
-                                            CompletableFutureWrapper.this.future.complete(reply);
-                                        }
-                                    });
+                                            "MOVED, [RedisClient getAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
+                                    CompletableFutureWrapper.this.future.complete(reply);
                                 }
                             }
                             return true;
@@ -635,54 +624,43 @@ public class RedisClusterClient implements IUpstreamClient {
                                     redisConnection.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), this));
                                     redisConnection.startIdleCheck();
                                 } else {
-                                    CompletableFuture<RedisConnection> future = RedisConnectionHub.getInstance().newAsync(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
-                                    future.thenAccept(connection -> {
-                                        try {
-                                            if (connection == null) {
-                                                ErrorLogCollector.collect(RedisClusterClient.class,
-                                                        "ASK, [BlockingCommand] [RedisClient newAsync fail], command = " + command.getName() + ", attempts = " + attempts);
-                                                clusterClient.clusterSlotInfo.renew();
-                                                CompletableFutureWrapper.this.future.complete(reply);
-                                            } else {
-                                                ErrorLogCollector.collect(RedisClusterClient.class,
-                                                        "ASK, [BlockingCommand] [RedisClient newAsync success], command = " + command.getName() + ", attempts = " + attempts);
-                                                connection.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), CompletableFutureWrapper.this));
-                                                connection.startIdleCheck();
-                                                command.getChannelInfo().updateBindRedisConnectionCache(connection);
-                                            }
-                                        } catch (Exception e) {
+                                    RedisConnection connection = RedisConnectionHub.getInstance().newConnection(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
+                                    try {
+                                        if (connection == null || !connection.isValid()) {
                                             ErrorLogCollector.collect(RedisClusterClient.class,
-                                                    "ASK, [BlockingCommand] [RedisClient newAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
+                                                    "ASK, [BlockingCommand] [RedisClient newAsync fail], command = " + command.getName() + ", attempts = " + attempts);
+                                            clusterClient.clusterSlotInfo.renew();
                                             CompletableFutureWrapper.this.future.complete(reply);
+                                        } else {
+                                            ErrorLogCollector.collect(RedisClusterClient.class,
+                                                    "ASK, [BlockingCommand] [RedisClient newAsync success], command = " + command.getName() + ", attempts = " + attempts);
+                                            connection.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), CompletableFutureWrapper.this));
+                                            connection.startIdleCheck();
+                                            command.getChannelInfo().updateBindRedisConnectionCache(connection);
                                         }
-                                    });
+                                    } catch (Exception e) {
+                                        ErrorLogCollector.collect(RedisClusterClient.class,
+                                                "ASK, [BlockingCommand] [RedisClient newAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
+                                        CompletableFutureWrapper.this.future.complete(reply);
+                                    }
                                 }
                             } else {
-                                RedisConnection redisConnection = RedisConnectionHub.getInstance().tryGet(strings[1], Integer.parseInt(strings[2]), clusterClient.userName, clusterClient.password);
-                                if (redisConnection != null) {
+                                RedisConnection connection = RedisConnectionHub.getInstance().get(strings[1], Integer.parseInt(strings[2]), clusterClient.userName, clusterClient.password);
+                                try {
+                                    if (connection == null) {
+                                        ErrorLogCollector.collect(RedisClusterClient.class,
+                                                "ASK, [RedisClient getAsync fail], command = " + command.getName() + ", attempts = " + attempts);
+                                        clusterClient.clusterSlotInfo.renew();
+                                        CompletableFutureWrapper.this.future.complete(reply);
+                                    } else {
+                                        ErrorLogCollector.collect(RedisClusterClient.class,
+                                                "ASK, [RedisClient getAsync success], command = " + command.getName() + ", attempts = " + attempts);
+                                        connection.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), CompletableFutureWrapper.this));
+                                    }
+                                } catch (Exception e) {
                                     ErrorLogCollector.collect(RedisClusterClient.class,
-                                            "ASK, [RedisClient tryGet success], command = " + command.getName() + ", attempts = " + attempts);
-                                    redisConnection.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), this));
-                                } else {
-                                    CompletableFuture<RedisConnection> future = RedisConnectionHub.getInstance().getAsync(strings[1], Integer.parseInt(strings[2]), clusterClient.userName, clusterClient.password);
-                                    future.thenAccept(client -> {
-                                        try {
-                                            if (client == null) {
-                                                ErrorLogCollector.collect(RedisClusterClient.class,
-                                                        "ASK, [RedisClient getAsync fail], command = " + command.getName() + ", attempts = " + attempts);
-                                                clusterClient.clusterSlotInfo.renew();
-                                                CompletableFutureWrapper.this.future.complete(reply);
-                                            } else {
-                                                ErrorLogCollector.collect(RedisClusterClient.class,
-                                                        "ASK, [RedisClient getAsync success], command = " + command.getName() + ", attempts = " + attempts);
-                                                client.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), CompletableFutureWrapper.this));
-                                            }
-                                        } catch (Exception e) {
-                                            ErrorLogCollector.collect(RedisClusterClient.class,
-                                                    "ASK, [RedisClient getAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
-                                            CompletableFutureWrapper.this.future.complete(reply);
-                                        }
-                                    });
+                                            "ASK, [RedisClient getAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
+                                    CompletableFutureWrapper.this.future.complete(reply);
                                 }
                             }
                             return true;

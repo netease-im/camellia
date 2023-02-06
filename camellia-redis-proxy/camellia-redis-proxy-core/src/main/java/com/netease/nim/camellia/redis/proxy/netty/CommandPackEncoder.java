@@ -51,7 +51,7 @@ public class CommandPackEncoder extends MessageToMessageEncoder<CommandPack> {
                     offer = queue.offer(future);
                 }
                 if (!offer) {
-                    String log = redisConnection.getClientName() + ", queue full, will stop";
+                    String log = redisConnection.getConnectionName() + ", queue full, will stop";
                     ErrorLogCollector.collect(CommandPackEncoder.class, log);
                     future.complete(ErrorReply.NOT_AVAILABLE);
                     redisConnection.stop();
@@ -68,11 +68,11 @@ public class CommandPackEncoder extends MessageToMessageEncoder<CommandPack> {
                 for (Command command : commands) {
                     commandNames.add(command.getName());
                 }
-                logger.debug("send commands to {}, commands = {}", redisConnection.getClientName(), commandNames);
+                logger.debug("send commands to {}, commands = {}", redisConnection.getConnectionName(), commandNames);
             }
             out.add(buf);
         } catch (Exception e) {
-            logger.error("{} error", redisConnection.getClientName(), e);
+            logger.error("{} error", redisConnection.getConnectionName(), e);
         }
     }
 }

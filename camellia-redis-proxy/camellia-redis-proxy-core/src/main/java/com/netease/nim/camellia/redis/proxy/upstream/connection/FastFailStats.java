@@ -39,6 +39,11 @@ public class FastFailStats {
         this.failBanMillis = failBanMillis;
     }
 
+    /**
+     * 是否要快速失败
+     * @param url url
+     * @return true/false
+     */
     public boolean fastFail(String url) {
         //如果client处于不可用状态，检查不可用时长
         long failTimestamp = getFailTimestamp(url);
@@ -63,38 +68,47 @@ public class FastFailStats {
         return false;
     }
 
-    public long getFailTimestamp(String key) {
-        AtomicLong failTimestamp = CamelliaMapUtils.computeIfAbsent(failTimestampMap, key, k -> new AtomicLong(0L));
-        return failTimestamp.get();
-    }
-
-    public void setFailTimestamp(String key) {
-        AtomicLong failTimestamp = CamelliaMapUtils.computeIfAbsent(failTimestampMap, key, k -> new AtomicLong(0L));
-        failTimestamp.set(TimeCache.currentMillis);
-    }
-
-    public void resetFailTimestamp(String key) {
-        AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failTimestampMap, key, k -> new AtomicLong(0L));
-        failCount.set(0L);
-    }
-
-    public void resetFailCount(String key) {
-        AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, key, k -> new AtomicLong());
-        failCount.set(0L);
-    }
-
-    public long getFailCount(String key) {
-        AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, key, k -> new AtomicLong());
-        return failCount.get();
-    }
-
-    public void incrFail(String key) {
-        AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, key, k -> new AtomicLong());
+    /**
+     * 增加一次失败
+     * @param url url
+     */
+    public void incrFail(String url) {
+        AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, url, k -> new AtomicLong());
         failCount.incrementAndGet();
     }
 
-    public void resetFail(String key) {
-        resetFailTimestamp(key);
-        resetFailCount(key);
+    /**
+     * 重置失败
+     * @param url url
+     */
+    public void resetFail(String url) {
+        resetFailTimestamp(url);
+        resetFailCount(url);
     }
+
+    private long getFailTimestamp(String url) {
+        AtomicLong failTimestamp = CamelliaMapUtils.computeIfAbsent(failTimestampMap, url, k -> new AtomicLong(0L));
+        return failTimestamp.get();
+    }
+
+    private void setFailTimestamp(String url) {
+        AtomicLong failTimestamp = CamelliaMapUtils.computeIfAbsent(failTimestampMap, url, k -> new AtomicLong(0L));
+        failTimestamp.set(TimeCache.currentMillis);
+    }
+
+    private void resetFailTimestamp(String url) {
+        AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failTimestampMap, url, k -> new AtomicLong(0L));
+        failCount.set(0L);
+    }
+
+    private void resetFailCount(String url) {
+        AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, url, k -> new AtomicLong());
+        failCount.set(0L);
+    }
+
+    private long getFailCount(String url) {
+        AtomicLong failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, url, k -> new AtomicLong());
+        return failCount.get();
+    }
+
 }

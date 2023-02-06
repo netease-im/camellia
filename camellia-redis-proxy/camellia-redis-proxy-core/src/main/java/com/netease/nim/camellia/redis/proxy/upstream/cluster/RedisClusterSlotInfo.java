@@ -356,7 +356,7 @@ public class RedisClusterSlotInfo {
             connection = RedisConnectionHub.getInstance().newConnection(host, port, userName, password);
             if (connection == null || !connection.isValid()) return false;
             CompletableFuture<Reply> future = connection.sendCommand(RedisCommand.CLUSTER.raw(), Utils.stringToBytes("slots"));
-            logger.info("tryRenew, connection = {}, url = {}", connection.getClientName(), maskUrl);
+            logger.info("tryRenew, connection = {}, url = {}", connection.getConnectionName(), maskUrl);
             Reply reply = future.get(10000, TimeUnit.MILLISECONDS);
             return clusterNodes(reply);
         } catch (Exception e) {
