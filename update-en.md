@@ -8,6 +8,7 @@
 * refactor camellia-redis-proxy-hbase, replace custom CommandInvoker into custom upstream, more code reuse, refactor thread module, use business thread to isolation netty worker thread and business thread 
 * camellia-tools provide CamelliaLinearInitializationExecutor to resource liner initialization
 * camellia-redis-proxy refactor multi tenant init by CamelliaLinearInitializationExecutor
+* camellia-redis-proxy support check upstream healthy in multi-read mode
 
 ### update
 * camellia-redis-proxy rename core upstream service  

@@ -8,6 +8,7 @@
 * camellia-redis-proxy-hbase冷热分离存储，从自定义CommandInvoker改成自定义upstream，从而有更多代码复用，并且修改了线程模型（新增了工作线程池和netty-worker线程池隔离）
 * camellia-tools新增CamelliaLinearInitializationExecutor，支持资源的异步线性初始化
 * camellia-redis-proxy引入CamelliaLinearInitializationExecutor，对多租户upstream初始化逻辑进行了重构
+* camellia-redis-proxy在多读场景下，支持对后端进行健康检查，自动剔除故障节点
 
 ### 更新
 * camellia-redis-proxy相关核心类进行了重命名（upstream部分）
