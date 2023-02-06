@@ -71,18 +71,18 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             Command command = commands.get(i);
             CompletableFuture<Reply> future = completableFutureList.get(i);
             ChannelInfo channelInfo = command.getChannelInfo();
-            RedisConnection bindClient = channelInfo.getBindConnection();
+            RedisConnection bindConnection = channelInfo.getBindConnection();
             RedisCommand redisCommand = command.getRedisCommand();
             if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
                 boolean first = false;
-                if (bindClient == null) {
-                    bindClient = command.getChannelInfo().acquireBindRedisConnection(getAddr());
-                    channelInfo.setBindConnection(bindClient);
+                if (bindConnection == null) {
+                    bindConnection = command.getChannelInfo().acquireBindRedisConnection(getAddr());
+                    channelInfo.setBindConnection(bindConnection);
                     first = true;
                 }
-                if (bindClient != null) {
+                if (bindConnection != null) {
                     CommandTaskQueue taskQueue = command.getChannelInfo().getCommandTaskQueue();
-                    PubSubUtils.sendByBindClient(bindClient, taskQueue, command, future, first);
+                    PubSubUtils.sendByBindClient(bindConnection, taskQueue, command, future, first);
                     byte[][] objects = command.getObjects();
                     if (objects != null && objects.length > 1) {
                         for (int j = 1; j < objects.length; j++) {
@@ -98,7 +98,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                     future.complete(ErrorReply.NOT_AVAILABLE);
                 }
             } else if (redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
-                if (bindClient != null) {
+                if (bindConnection != null) {
                     if (command.getObjects() != null && command.getObjects().length > 1) {
                         for (int j = 1; j < command.getObjects().length; j++) {
                             byte[] channel = command.getObjects()[j];
@@ -109,40 +109,40 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                             }
                             if (!channelInfo.hasSubscribeChannels()) {
                                 channelInfo.setBindConnection(null);
-                                bindClient.startIdleCheck();
+                                bindConnection.startIdleCheck();
                             }
                         }
                     }
-                    PubSubUtils.sendByBindClient(bindClient, channelInfo.getCommandTaskQueue(), command, future, false);
+                    PubSubUtils.sendByBindClient(bindConnection, channelInfo.getCommandTaskQueue(), command, future, false);
                 } else {
                     filterCommands.add(command);
                     filterFutures.add(future);
                 }
             } else if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
-                if (bindClient == null) {
-                    bindClient = command.getChannelInfo().acquireBindRedisConnection(getAddr());
-                    channelInfo.setBindConnection(bindClient);
+                if (bindConnection == null) {
+                    bindConnection = command.getChannelInfo().acquireBindRedisConnection(getAddr());
+                    channelInfo.setBindConnection(bindConnection);
                 }
-                if (bindClient == null) {
+                if (bindConnection == null) {
                     future.complete(ErrorReply.NOT_AVAILABLE);
                 } else {
-                    bindClient.sendCommand(Collections.singletonList(command), Collections.singletonList(future));
+                    bindConnection.sendCommand(Collections.singletonList(command), Collections.singletonList(future));
                     if (redisCommand == RedisCommand.MULTI) {
                         channelInfo.setInTransaction(true);
                     } else if (redisCommand == RedisCommand.EXEC || redisCommand == RedisCommand.DISCARD) {
                         channelInfo.setInTransaction(false);
                         channelInfo.setBindConnection(null);
-                        bindClient.startIdleCheck();
+                        bindConnection.startIdleCheck();
                     } else if (redisCommand == RedisCommand.UNWATCH) {
                         if (!channelInfo.isInTransaction()) {
                             channelInfo.setBindConnection(null);
-                            bindClient.startIdleCheck();
+                            bindConnection.startIdleCheck();
                         }
                     }
                 }
             } else {
-                if (bindClient != null) {
-                    bindClient.sendCommand(Collections.singletonList(command), Collections.singletonList(future));
+                if (bindConnection != null) {
+                    bindConnection.sendCommand(Collections.singletonList(command), Collections.singletonList(future));
                 } else {
                     filterCommands.add(command);
                     filterFutures.add(future);
@@ -193,8 +193,8 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
     }
 
     private boolean isPassThroughCommand(Command command) {
-        RedisConnection bindClient = command.getChannelInfo().getBindConnection();
-        if (bindClient != null) return false;
+        RedisConnection bindConnection = command.getChannelInfo().getBindConnection();
+        if (bindConnection != null) return false;
         RedisCommand redisCommand = command.getRedisCommand();
         if (redisCommand == null) return false;
         return !command.isBlocking() && redisCommand != RedisCommand.SUBSCRIBE && redisCommand != RedisCommand.PSUBSCRIBE

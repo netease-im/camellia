@@ -158,25 +158,25 @@ public class RedisClusterClient implements IUpstreamClient {
             CompletableFuture<Reply> future = futureList.get(i);
             RedisCommand redisCommand = command.getRedisCommand();
 
-            RedisConnection bindClient = channelInfo.getBindConnection();
+            RedisConnection bindConnection = channelInfo.getBindConnection();
             int bindSlot = channelInfo.getBindSlot();
 
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1) {
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.PUB_SUB) {
-                    pubsub(command, future, channelInfo, commandFlusher, redisCommand, bindClient);
+                    pubsub(command, future, channelInfo, commandFlusher, redisCommand, bindConnection);
                     continue;
                 }
             }
 
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2) {
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
-                    transaction(command, future, channelInfo, commandFlusher, redisCommand, bindSlot, bindClient);
+                    transaction(command, future, channelInfo, commandFlusher, redisCommand, bindSlot, bindConnection);
                     continue;
                 }
             }
 
             //以multi命令之后的第一个命令归属的slot作为bindSlot
-            if (channelInfo.isInTransaction() && bindClient == null) {
+            if (channelInfo.isInTransaction() && bindConnection == null) {
                 Command cachedMultiCommand = channelInfo.getCachedMultiCommand();
                 if (cachedMultiCommand != null) {
                     List<byte[]> keys = command.getKeys();
@@ -186,20 +186,20 @@ public class RedisClusterClient implements IUpstreamClient {
                         continue;
                     }
                     RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(slot);
-                    bindClient = command.getChannelInfo().acquireBindRedisConnection(node.getAddr());
-                    if (bindClient == null) {
+                    bindConnection = command.getChannelInfo().acquireBindRedisConnection(node.getAddr());
+                    if (bindConnection == null) {
                         future.complete(ErrorReply.NOT_AVAILABLE);
                         continue;
                     }
-                    channelInfo.setBindClient(slot, bindClient);
-                    commandFlusher.sendCommand(bindClient, cachedMultiCommand, new CompletableFuture<>());
-                    commandFlusher.sendCommand(bindClient, command, future);
+                    channelInfo.setBindClient(slot, bindConnection);
+                    commandFlusher.sendCommand(bindConnection, cachedMultiCommand, new CompletableFuture<>());
+                    commandFlusher.sendCommand(bindConnection, command, future);
                     channelInfo.updateCachedMultiCommand(null);
                     continue;
                 }
             }
 
-            if (bindClient != null && bindSlot > 0) {
+            if (bindConnection != null && bindSlot > 0) {
                 commandFlusher.flush();
                 commandFlusher.clear();
                 List<byte[]> keys = command.getKeys();
@@ -208,7 +208,7 @@ public class RedisClusterClient implements IUpstreamClient {
                     future.complete(new ErrorReply("CROSSSLOT Keys in request don't hash to the same slot in TRANSACTION"));
                     continue;
                 }
-                commandFlusher.sendCommand(bindClient, command, future);
+                commandFlusher.sendCommand(bindConnection, command, future);
                 continue;
             }
 
@@ -331,7 +331,7 @@ public class RedisClusterClient implements IUpstreamClient {
     }
 
     private void transaction(Command command, CompletableFuture<Reply> future, ChannelInfo channelInfo, CommandFlusher commandFlusher,
-                             RedisCommand redisCommand, int bindSlot, RedisConnection bindClient) {
+                             RedisCommand redisCommand, int bindSlot, RedisConnection bindConnection) {
         if (redisCommand == RedisCommand.WATCH) {
             List<byte[]> keys = command.getKeys();
             if (keys.isEmpty()) {
@@ -347,18 +347,18 @@ public class RedisClusterClient implements IUpstreamClient {
                 future.complete(new ErrorReply("MULTI WATCH Keys don't hash to the same slot"));
                 return;
             }
-            if (bindClient == null) {
+            if (bindConnection == null) {
                 RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(slot);
-                bindClient = command.getChannelInfo().acquireBindRedisConnection(node.getAddr());
-                channelInfo.setBindClient(slot, bindClient);
+                bindConnection = command.getChannelInfo().acquireBindRedisConnection(node.getAddr());
+                channelInfo.setBindClient(slot, bindConnection);
             }
-            commandFlusher.sendCommand(bindClient, command, future);
+            commandFlusher.sendCommand(bindConnection, command, future);
         } else if (redisCommand == RedisCommand.UNWATCH) {
-            if (bindClient != null) {
-                commandFlusher.sendCommand(bindClient, command, future);
+            if (bindConnection != null) {
+                commandFlusher.sendCommand(bindConnection, command, future);
                 if (!channelInfo.isInTransaction()) {
                     channelInfo.setBindClient(-1, null);
-                    bindClient.startIdleCheck();
+                    bindConnection.startIdleCheck();
                 }
             } else {
                 future.complete(StatusReply.OK);
@@ -369,8 +369,8 @@ public class RedisClusterClient implements IUpstreamClient {
                 return;
             }
             channelInfo.setInTransaction(true);
-            if (bindClient != null) {
-                commandFlusher.sendCommand(bindClient, command, future);
+            if (bindConnection != null) {
+                commandFlusher.sendCommand(bindConnection, command, future);
             } else {
                 channelInfo.updateCachedMultiCommand(command);
                 future.complete(StatusReply.OK);
@@ -380,9 +380,9 @@ public class RedisClusterClient implements IUpstreamClient {
                 future.complete(new ErrorReply("ERR " + redisCommand.strRaw() + " without MULTI"));
                 return;
             }
-            if (bindClient != null) {
-                commandFlusher.sendCommand(bindClient, command, future);
-                bindClient.startIdleCheck();
+            if (bindConnection != null) {
+                commandFlusher.sendCommand(bindConnection, command, future);
+                bindConnection.startIdleCheck();
             } else {
                 future.complete(new ErrorReply("ERR " + redisCommand.strRaw() + " without MULTI"));
             }
@@ -720,8 +720,8 @@ public class RedisClusterClient implements IUpstreamClient {
         if (channelInfo.isInTransaction()) {
             return false;
         }
-        RedisConnection bindClient = channelInfo.getBindConnection();
-        if (bindClient != null) return false;
+        RedisConnection bindConnection = channelInfo.getBindConnection();
+        if (bindConnection != null) return false;
         RedisCommand redisCommand = command.getRedisCommand();
         RedisCommand.CommandSupportType supportType = redisCommand.getSupportType();
         if (supportType == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2

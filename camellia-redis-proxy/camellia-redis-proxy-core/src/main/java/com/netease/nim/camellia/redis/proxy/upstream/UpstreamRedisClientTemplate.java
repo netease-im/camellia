@@ -177,10 +177,10 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     ChannelInfo channelInfo = command.getChannelInfo();
                     channelInfo.setInSubscribe(false);
                     if (!channelInfo.isInTransaction()) {
-                        RedisConnection bindClient = channelInfo.getBindConnection();
-                        if (bindClient != null) {
+                        RedisConnection bindConnection = channelInfo.getBindConnection();
+                        if (bindConnection != null) {
                             channelInfo.setBindClient(-1, null);
-                            bindClient.startIdleCheck();
+                            bindConnection.startIdleCheck();
                         }
                     }
                     CompletableFuture<Reply> future = new CompletableFuture<>();
@@ -195,10 +195,10 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                         ChannelInfo channelInfo = command.getChannelInfo();
                         channelInfo.setInSubscribe(false);
                         if (!channelInfo.isInTransaction()) {
-                            RedisConnection bindClient = channelInfo.getBindConnection();
-                            if (bindClient != null) {
+                            RedisConnection bindConnection = channelInfo.getBindConnection();
+                            if (bindConnection != null) {
                                 channelInfo.setBindClient(-1, null);
-                                bindClient.startIdleCheck();
+                                bindConnection.startIdleCheck();
                             }
                         }
                         CompletableFuture<Reply> future = new CompletableFuture<>();

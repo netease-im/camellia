@@ -66,20 +66,20 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
                     RedisConnection redisConnection = entry.getValue();
                     if (redisConnection == null || !redisConnection.isValid()) continue;
                     if (logger.isDebugEnabled()) {
-                        logger.debug("bind redis client cache will close interrupt by proxy client, consid = {}, client.addr = {}, upstream.redis.client = {}",
+                        logger.debug("bind redis connection cache will close interrupt by proxy, consid = {}, client.addr = {}, upstream.redis.connection = {}",
                                 channelInfo.getConsid(), ctx.channel().remoteAddress(), redisConnection.getClientName());
                     }
                     redisConnection.stop(true);
                 }
                 map.clear();
             }
-            RedisConnection bindClient = channelInfo.getBindConnection();
-            if (bindClient != null) {
+            RedisConnection bindConnection = channelInfo.getBindConnection();
+            if (bindConnection != null) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("bind redis client will close for disconnect, consid = {}, client.addr = {}, upstream.redis.client = {}",
-                            channelInfo.getConsid(), ctx.channel().remoteAddress(), bindClient.getClientName());
+                    logger.debug("bind redis connection will close for disconnect, consid = {}, client.addr = {}, upstream.redis.connection = {}",
+                            channelInfo.getConsid(), ctx.channel().remoteAddress(), bindConnection.getClientName());
                 }
-                bindClient.stop(true);
+                bindConnection.stop(true);
             }
         }
         if (logger.isDebugEnabled()) {
