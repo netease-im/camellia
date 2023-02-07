@@ -22,7 +22,7 @@ public class ResourceSelector {
     private final ResourceTable resourceTable;
     private final ProxyEnv proxyEnv;
 
-    private ReadResourceBean readResourceBean = null;
+    private ReadResources readResources = null;
     private Resource readResource = null;
     private List<Resource> writeResources = null;
 
@@ -41,7 +41,7 @@ public class ResourceSelector {
     }
 
     public ResourceSelector(ResourceTable resourceTable, ProxyEnv proxyEnv, ResourceSelector.ResourceChecker resourceChecker) {
-        this.resourceTable = resourceTable;
+        this.resourceTable = ResourceTableUtil.immutableResourceTable(resourceTable);
         this.proxyEnv = proxyEnv;
         this.resourceChecker = resourceChecker;
         ResourceTable.Type type = resourceTable.getType();
@@ -50,17 +50,17 @@ public class ResourceSelector {
             bucketSizeIs2Power = MathUtil.is2Power(bucketSize);
         }
         //all
-        this.allResources = ResourceUtil.getAllResources(resourceTable);
+        this.allResources = Collections.unmodifiableSet(ResourceUtil.getAllResources(resourceTable));
         //read
         Set<Resource> readResources = new TreeSet<>(Comparator.comparing(Resource::getUrl));
         readResources.addAll(ResourceUtil.getAllReadResources(resourceTable));
-        this.allReadResources = new ArrayList<>(readResources);
+        this.allReadResources = Collections.unmodifiableList(new ArrayList<>(readResources));
         //write
         Set<Resource> writeResources = new TreeSet<>(Comparator.comparing(Resource::getUrl));
         writeResources.addAll(ResourceUtil.getAllWriteResources(resourceTable));
-        this.allWriteResources = new ArrayList<>(writeResources);
+        this.allWriteResources = Collections.unmodifiableList(new ArrayList<>(writeResources));
         //
-        if (resourceChecker != null && calcIsNeedResourceChecker(resourceTable)) {
+        if (resourceChecker != null && isMultiReadMode(resourceTable)) {
             for (Resource resource : allReadResources) {
                 resourceChecker.addResource(resource);
             }
@@ -106,20 +106,20 @@ public class ResourceSelector {
 
     /**
      * 获取read resource
-     * @param shardingParam shardingParam
+     * @param shadingKey shadingKey
      * @return resource
      */
-    public Resource getReadResource(byte[]... shardingParam) {
+    public Resource getReadResource(byte[] shadingKey) {
         if (readResource != null) {
             return readResource;
         }
         ResourceTable.Type type = resourceTable.getType();
-        ReadResourceBean readResourceBean = getReadResources(shardingParam);
-        if (readResourceBean == null) {
+        ReadResources readResources = getReadResources(shadingKey);
+        if (readResources == null) {
             return null;
         }
-        Resource readResource = getReadResource(readResourceBean);
-        if (type == ResourceTable.Type.SIMPLE && readResourceBean.getResources().size() == 1) {
+        Resource readResource = getReadResource(readResources);
+        if (type == ResourceTable.Type.SIMPLE && readResources.getResources().size() == 1) {
             //下次就可以走缓存了
            this.readResource = readResource;
         }
@@ -132,9 +132,9 @@ public class ResourceSelector {
      * @return resource
      */
     public Resource getReadResourceWithCheckEqual(List<byte[]> shadingKeys) {
-        ResourceSelector.ReadResourceBean resources = null;
+        ReadResources resources = null;
         for (byte[] key : shadingKeys) {
-            ResourceSelector.ReadResourceBean nextResources = getReadResources(key);
+            ReadResources nextResources = getReadResources(key);
             if (resources != null) {
                 boolean checkReadResourcesEqual = getReadResourceWithCheckEqual(resources, nextResources);
                 if (!checkReadResourcesEqual) {
@@ -159,7 +159,7 @@ public class ResourceSelector {
             ResourceOperation resourceOperation = simpleTable.getResourceOperation();
             this.writeResources = getWriteResourcesFromOperation(resourceOperation);
             return this.writeResources;
-        } else {
+        } else if (type == ResourceTable.Type.SHADING) {
             int shardingCode = proxyEnv.getShardingFunc().shardingCode(shardingParam);
             ResourceTable.ShadingTable shardingTable = resourceTable.getShadingTable();
             int bucketSize = shardingTable.getBucketSize();
@@ -168,6 +168,7 @@ public class ResourceSelector {
             ResourceOperation resourceOperation = operationMap.get(index);
             return getWriteResourcesFromOperation(resourceOperation);
         }
+        throw new IllegalArgumentException();
     }
 
     /**
@@ -190,63 +191,61 @@ public class ResourceSelector {
         return resources;
     }
 
-    private Resource getReadResource(ReadResourceBean readResourceBean) {
-        if (readResourceBean == null) return null;
-        List<Resource> resources = readResourceBean.getValidResource();
+    private Resource getReadResource(ReadResources readResources) {
+        if (readResources == null) return null;
+        List<Resource> resources = readResources.getValidResource();
         if (resources == null || resources.isEmpty()) {
             return null;
         }
         if (resources.size() == 1) {
             return resources.get(0);
         }
-        if (readResourceBean.getType() == ResourceReadOperation.Type.SIMPLE || readResourceBean.getType() == ResourceReadOperation.Type.ORDER) {
+        if (readResources.getType() == ResourceReadOperation.Type.SIMPLE || readResources.getType() == ResourceReadOperation.Type.ORDER) {
             return resources.get(0);
-        } else if (readResourceBean.getType() == ResourceReadOperation.Type.RANDOM) {
+        } else if (readResources.getType() == ResourceReadOperation.Type.RANDOM) {
             int index = ThreadLocalRandom.current().nextInt(resources.size());
             return resources.get(index);
-        } else {
-            return null;
         }
+        return null;
     }
 
-    private ReadResourceBean getReadResources(byte[]... shardingParam) {
-        if (readResourceBean != null) {
-            return readResourceBean;
+    private ReadResources getReadResources(byte[] shardingKey) {
+        if (readResources != null) {//get from cache
+            return readResources;
         }
         ResourceTable.Type type = resourceTable.getType();
         if (type == ResourceTable.Type.SIMPLE) {
             ResourceTable.SimpleTable simpleTable = resourceTable.getSimpleTable();
             ResourceOperation resourceOperation = simpleTable.getResourceOperation();
-            ReadResourceBean readResourceBean = getReadResourcesFromOperation(resourceOperation);
+            ReadResources readResourceBean = getReadResourcesFromOperation(resourceOperation);
             if (!readResourceBean.isDynamic()) {
-                this.readResourceBean = readResourceBean;
+                this.readResources = readResourceBean;
             }
             return readResourceBean;
         } else if (type == ResourceTable.Type.SHADING) {
-            int shardingCode = proxyEnv.getShardingFunc().shardingCode(shardingParam);
+            int shardingCode = proxyEnv.getShardingFunc().shardingCode(shardingKey);
             ResourceTable.ShadingTable shardingTable = resourceTable.getShadingTable();
             int bucketSize = shardingTable.getBucketSize();
             Map<Integer, ResourceOperation> operationMap = shardingTable.getResourceOperationMap();
             int index = MathUtil.mod(bucketSizeIs2Power, Math.abs(shardingCode), bucketSize);
             ResourceOperation resourceOperation = operationMap.get(index);
             return getReadResourcesFromOperation(resourceOperation);
-        } else {
-            throw new IllegalArgumentException();
         }
+        throw new IllegalArgumentException();
     }
 
-    private ReadResourceBean getReadResourcesFromOperation(ResourceOperation resourceOperation) {
+    private ReadResources getReadResourcesFromOperation(ResourceOperation resourceOperation) {
         ResourceOperation.Type resourceOperationType = resourceOperation.getType();
         if (resourceOperationType == ResourceOperation.Type.SIMPLE) {
-            return new ReadResourceBean(resourceChecker, ResourceReadOperation.Type.SIMPLE, Collections.singletonList(resourceOperation.getResource()));
+            return new ReadResources(resourceChecker, ResourceReadOperation.Type.SIMPLE, Collections.singletonList(resourceOperation.getResource()));
         } else if (resourceOperationType == ResourceOperation.Type.RW_SEPARATE) {
             ResourceReadOperation readOperation = resourceOperation.getReadOperation();
             ResourceReadOperation.Type readOperationType = readOperation.getType();
             if (readOperationType == ResourceReadOperation.Type.SIMPLE) {
-                return new ReadResourceBean(resourceChecker, readOperationType, Collections.singletonList(readOperation.getReadResource()));
+                return new ReadResources(resourceChecker, readOperationType, Collections.singletonList(readOperation.getReadResource()));
             } else if (readOperationType == ResourceReadOperation.Type.ORDER || readOperationType == ResourceReadOperation.Type.RANDOM) {
                 List<Resource> readResources = readOperation.getReadResources();
-                return new ReadResourceBean(resourceChecker, readOperationType, readResources);
+                return new ReadResources(resourceChecker, readOperationType, readResources);
             }
         }
         throw new IllegalArgumentException();
@@ -262,29 +261,28 @@ public class ResourceSelector {
             if (writeOperationType == ResourceWriteOperation.Type.SIMPLE) {
                 return Collections.singletonList(writeOperation.getWriteResource());
             } else if (writeOperationType == ResourceWriteOperation.Type.MULTI) {
-                List<Resource> writeResources = writeOperation.getWriteResources();
-                return new ArrayList<>(writeResources);
+                return writeOperation.getWriteResources();
             }
         }
         throw new IllegalArgumentException();
     }
 
-    private boolean getReadResourceWithCheckEqual(ResourceSelector.ReadResourceBean readResourceBean1, ResourceSelector.ReadResourceBean readResourceBean2) {
-        if (readResourceBean1 == null || readResourceBean2 == null) {
+    private boolean getReadResourceWithCheckEqual(ReadResources readResources1, ReadResources readResources2) {
+        if (readResources1 == null || readResources2 == null) {
             return false;
         }
-        if (readResourceBean1.getType() != readResourceBean2.getType()) {
+        if (readResources1.getType() != readResources2.getType()) {
             return false;
         }
-        if (readResourceBean1.getResources() == null || readResourceBean2.getResources() == null) {
+        if (readResources1.getResources() == null || readResources2.getResources() == null) {
             return false;
         }
-        if (readResourceBean1.getResources().size() != readResourceBean2.getResources().size()) {
+        if (readResources1.getResources().size() != readResources2.getResources().size()) {
             return false;
         }
-        for (int i = 0; i < readResourceBean1.getResources().size(); i++) {
-            Resource resource1 = readResourceBean1.getResources().get(i);
-            Resource resource2 = readResourceBean2.getResources().get(i);
+        for (int i = 0; i < readResources1.getResources().size(); i++) {
+            Resource resource1 = readResources1.getResources().get(i);
+            Resource resource2 = readResources2.getResources().get(i);
             if (!resource1.getUrl().equals(resource2.getUrl())) {
                 return false;
             }
@@ -309,18 +307,18 @@ public class ResourceSelector {
         return true;
     }
 
-    private boolean calcIsNeedResourceChecker(ResourceTable resourceTable) {
+    private boolean isMultiReadMode(ResourceTable resourceTable) {
         ResourceTable.Type type = resourceTable.getType();
         if (type == ResourceTable.Type.SIMPLE) {
             ResourceTable.SimpleTable simpleTable = resourceTable.getSimpleTable();
             ResourceOperation resourceOperation = simpleTable.getResourceOperation();
-            ReadResourceBean bean = getReadResourcesFromOperation(resourceOperation);
-            return bean.getResources().size() > 1;
+            ReadResources readResources = getReadResourcesFromOperation(resourceOperation);
+            return readResources.getResources().size() > 1;
         } else if (type == ResourceTable.Type.SHADING) {
             ResourceTable.ShadingTable shadingTable = resourceTable.getShadingTable();
             for (ResourceOperation resourceOperation : shadingTable.getResourceOperationMap().values()) {
-                ReadResourceBean bean = getReadResourcesFromOperation(resourceOperation);
-                if (bean.getResources().size() > 1) {
+                ReadResources readResources = getReadResourcesFromOperation(resourceOperation);
+                if (readResources.getResources().size() > 1) {
                     return true;
                 }
             }
@@ -328,13 +326,13 @@ public class ResourceSelector {
         return false;
     }
 
-    public static class ReadResourceBean {
+    public static class ReadResources {
         private final ResourceReadOperation.Type type;
         private final List<Resource> resources;
         private List<Resource> validResources;
         private boolean dynamic = false;
 
-        public ReadResourceBean(ResourceChecker resourceChecker, ResourceReadOperation.Type type, List<Resource> resources) {
+        public ReadResources(ResourceChecker resourceChecker, ResourceReadOperation.Type type, List<Resource> resources) {
             this.type = type;
             this.resources = resources;
             this.validResources = resources;

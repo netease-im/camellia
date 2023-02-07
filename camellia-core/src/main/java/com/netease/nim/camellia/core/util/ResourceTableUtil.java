@@ -7,6 +7,7 @@ import com.netease.nim.camellia.core.model.operation.ResourceReadOperation;
 import com.netease.nim.camellia.core.model.operation.ResourceWriteOperation;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,6 +16,58 @@ import java.util.Map;
  * Created by caojiajun on 2019/5/16.
  */
 public class ResourceTableUtil {
+
+    public static ResourceTable immutableResourceTable(ResourceTable resourceTable) {
+        if (resourceTable == null) return null;
+        ResourceTable immutableResourceTable = new ResourceTable();
+        immutableResourceTable.setType(resourceTable.getType());
+        ResourceTable.SimpleTable simpleTable = resourceTable.getSimpleTable();
+        if (simpleTable != null) {
+            ResourceTable.SimpleTable immutableSimpleTable = new ResourceTable.SimpleTable();
+            ResourceOperation resourceOperation = simpleTable.getResourceOperation();
+            if (resourceOperation != null) {
+                ResourceOperation immutableResourceOperation = immutableResourceOperation(resourceOperation);
+                immutableSimpleTable.setResourceOperation(immutableResourceOperation);
+            }
+            immutableResourceTable.setSimpleTable(immutableSimpleTable);
+        }
+        ResourceTable.ShadingTable shadingTable = resourceTable.getShadingTable();
+        if (shadingTable != null) {
+            ResourceTable.ShadingTable immutableShadingTable = new ResourceTable.ShadingTable();
+            immutableShadingTable.setBucketSize(shadingTable.getBucketSize());
+            Map<Integer, ResourceOperation> immutableResourceOperationMap = new HashMap<>();
+            for (Map.Entry<Integer, ResourceOperation> entry : shadingTable.getResourceOperationMap().entrySet()) {
+                immutableResourceOperationMap.put(entry.getKey(), immutableResourceOperation(entry.getValue()));
+            }
+            immutableShadingTable.setResourceOperationMap(Collections.unmodifiableMap(immutableResourceOperationMap));
+            immutableResourceTable.setShadingTable(immutableShadingTable);
+        }
+        return immutableResourceTable;
+    }
+
+    public static ResourceOperation immutableResourceOperation(ResourceOperation resourceOperation) {
+        if (resourceOperation == null) return null;
+        ResourceOperation immutableResourceOperation = new ResourceOperation();
+        immutableResourceOperation.setResource(resourceOperation.getResource());
+        ResourceReadOperation readOperation = resourceOperation.getReadOperation();
+        if (readOperation != null) {
+            ResourceReadOperation immutableReadOperation = new ResourceReadOperation();
+            immutableReadOperation.setType(readOperation.getType());
+            immutableReadOperation.setReadResource(readOperation.getReadResource());
+            immutableReadOperation.setReadResources(Collections.unmodifiableList(readOperation.getReadResources()));
+            immutableResourceOperation.setReadOperation(immutableReadOperation);
+        }
+        ResourceWriteOperation writeOperation = resourceOperation.getWriteOperation();
+        if (writeOperation != null) {
+            ResourceWriteOperation immutableWriteOperation = new ResourceWriteOperation();
+            immutableWriteOperation.setType(writeOperation.getType());
+            immutableWriteOperation.setWriteResource(writeOperation.getWriteResource());
+            immutableWriteOperation.setWriteResources(Collections.unmodifiableList(immutableWriteOperation.getWriteResources()));
+            immutableResourceOperation.setWriteOperation(immutableWriteOperation);
+        }
+        return immutableResourceOperation;
+    }
+
 
     /**
      * 单写单读
