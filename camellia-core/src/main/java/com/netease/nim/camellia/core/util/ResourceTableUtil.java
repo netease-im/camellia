@@ -48,6 +48,7 @@ public class ResourceTableUtil {
     public static ResourceOperation immutableResourceOperation(ResourceOperation resourceOperation) {
         if (resourceOperation == null) return null;
         ResourceOperation immutableResourceOperation = new ResourceOperation();
+        immutableResourceOperation.setType(resourceOperation.getType());
         immutableResourceOperation.setResource(resourceOperation.getResource());
         ResourceReadOperation readOperation = resourceOperation.getReadOperation();
         if (readOperation != null) {
