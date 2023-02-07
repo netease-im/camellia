@@ -229,6 +229,14 @@ public class RedisConnection implements IUpstreamClient {
     }
 
     /**
+     * 获取status
+     * @return status
+     */
+    public RedisConnectionStatus getStatus() {
+        return status;
+    }
+
+    /**
      * 未回包的命令数量
      * @return 数量
      */

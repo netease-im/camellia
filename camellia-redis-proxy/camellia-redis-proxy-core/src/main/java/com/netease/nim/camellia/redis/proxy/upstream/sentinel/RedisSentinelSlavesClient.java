@@ -4,6 +4,7 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.base.resource.RedisSentinelResource;
 import com.netease.nim.camellia.redis.base.resource.RedisSentinelSlavesResource;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.AbstractSimpleRedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.HostAndPort;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
@@ -185,10 +186,10 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
 
     @Override
     public boolean isValid() {
-        if (checkValid(master)) return true;
+        if (getStatus(master) == RedisConnectionStatus.VALID) return true;
         List<RedisConnectionAddr> slaveNodes = new ArrayList<>(slaves);
         for (RedisConnectionAddr slave : slaveNodes) {
-            if (checkValid(slave)) return true;
+            if (getStatus(slave) == RedisConnectionStatus.VALID) return true;
         }
         return false;
     }

@@ -17,6 +17,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.CommandFlusher;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.PubSubUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.ScanCursorCalculator;
@@ -123,7 +124,7 @@ public class RedisClusterClient implements IUpstreamClient {
     public boolean isValid() {
         HashSet<RedisClusterSlotInfo.Node> masterNodes = new HashSet<>(clusterSlotInfo.getMasterSlaveMap().keySet());
         for (RedisClusterSlotInfo.Node master : masterNodes) {
-            if (!checkValid(master.getAddr())) {
+            if (getStatus(master.getAddr()) != RedisConnectionStatus.VALID) {
                 return false;
             }
         }

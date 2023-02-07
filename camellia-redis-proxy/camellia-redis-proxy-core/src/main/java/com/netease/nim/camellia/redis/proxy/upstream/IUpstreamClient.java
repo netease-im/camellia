@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -23,9 +24,12 @@ public interface IUpstreamClient {
 
     boolean isValid();
 
-    default boolean checkValid(RedisConnectionAddr addr) {
-        if (addr == null) return false;
+    default RedisConnectionStatus getStatus(RedisConnectionAddr addr) {
+        if (addr == null) return RedisConnectionStatus.INVALID;
         RedisConnection redisConnection = RedisConnectionHub.getInstance().get(addr);
-        return redisConnection != null && redisConnection.isValid();
+        if (redisConnection == null) {
+            return RedisConnectionStatus.INVALID;
+        }
+        return redisConnection.getStatus();
     }
 }

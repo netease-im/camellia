@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.sentinel;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.base.resource.RedisSentinelResource;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.AbstractSimpleRedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.HostAndPort;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
@@ -79,6 +80,6 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
 
     @Override
     public boolean isValid() {
-        return checkValid(getAddr());
+        return getStatus(getAddr()) == RedisConnectionStatus.VALID;
     }
 }

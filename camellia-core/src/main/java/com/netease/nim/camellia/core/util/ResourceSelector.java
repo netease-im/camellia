@@ -217,8 +217,11 @@ public class ResourceSelector {
         if (type == ResourceTable.Type.SIMPLE) {
             ResourceTable.SimpleTable simpleTable = resourceTable.getSimpleTable();
             ResourceOperation resourceOperation = simpleTable.getResourceOperation();
-            this.readResourceBean = getReadResourcesFromOperation(resourceOperation);
-            return this.readResourceBean;
+            ReadResourceBean readResourceBean = getReadResourcesFromOperation(resourceOperation);
+            if (!readResourceBean.isDynamic()) {
+                this.readResourceBean = readResourceBean;
+            }
+            return readResourceBean;
         } else if (type == ResourceTable.Type.SHADING) {
             int shardingCode = proxyEnv.getShardingFunc().shardingCode(shardingParam);
             ResourceTable.ShadingTable shardingTable = resourceTable.getShadingTable();
@@ -329,6 +332,7 @@ public class ResourceSelector {
         private final ResourceReadOperation.Type type;
         private final List<Resource> resources;
         private List<Resource> validResources;
+        private boolean dynamic = false;
 
         public ReadResourceBean(ResourceChecker resourceChecker, ResourceReadOperation.Type type, List<Resource> resources) {
             this.type = type;
@@ -344,6 +348,7 @@ public class ResourceSelector {
                 if (validResources.isEmpty()) {
                     validResources = resources;
                 }
+                dynamic = true;
             }
         }
 
@@ -357,6 +362,10 @@ public class ResourceSelector {
 
         public List<Resource> getValidResource() {
             return validResources;
+        }
+
+        public boolean isDynamic() {
+            return dynamic;
         }
 
     }

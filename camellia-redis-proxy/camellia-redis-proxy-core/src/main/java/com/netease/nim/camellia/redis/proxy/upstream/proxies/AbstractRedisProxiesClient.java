@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.proxies;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.AbstractSimpleRedisClient;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
@@ -37,7 +38,7 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
     public boolean isValid() {
         List<RedisConnectionAddr> list = new ArrayList<>(originalList);
         for (RedisConnectionAddr addr : list) {
-            if (checkValid(addr)) {
+            if (getStatus(addr) == RedisConnectionStatus.VALID) {
                 return true;
             }
         }
@@ -55,7 +56,7 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
         synchronized (lock) {
             List<RedisConnectionAddr> validList = new ArrayList<>();
             for (RedisConnectionAddr addr : list) {
-                if (checkValid(addr)) {
+                if (getStatus(addr) == RedisConnectionStatus.VALID) {
                     validList.add(addr);
                 }
             }
@@ -100,7 +101,7 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
                 }
                 int i = ThreadLocalRandom.current().nextInt(dynamicList.size());
                 RedisConnectionAddr addr = dynamicList.get(i);
-                if (checkValid(addr)) {
+                if (getStatus(addr) == RedisConnectionStatus.VALID) {
                     return addr;
                 } else {
                     dynamicList.remove(addr);

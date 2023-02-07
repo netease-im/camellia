@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.standalone;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.base.resource.RedisResource;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +37,7 @@ public class RedisStandaloneClient extends AbstractSimpleRedisClient {
 
     @Override
     public boolean isValid() {
-        return checkValid(getAddr());
+        RedisConnectionStatus status = getStatus(getAddr());
+        return status == RedisConnectionStatus.VALID;
     }
 }
