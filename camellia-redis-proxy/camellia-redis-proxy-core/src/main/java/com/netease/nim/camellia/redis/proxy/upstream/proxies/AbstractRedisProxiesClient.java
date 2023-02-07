@@ -26,12 +26,12 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
     private List<RedisConnectionAddr> dynamicList = new ArrayList<>();
 
     protected void init() {
-        refresh();
+        refresh(true);
         if (originalList.isEmpty()) {
             throw new CamelliaRedisException("init fail, no reachable proxy, resource = " + getResource().getUrl());
         }
         int seconds = ProxyDynamicConf.getInt("redis.proxies.reload.interval.seconds", 60);
-        ExecutorUtils.scheduleAtFixedRate(this::refresh, seconds, seconds, TimeUnit.SECONDS);
+        ExecutorUtils.scheduleAtFixedRate(() -> refresh(false), seconds, seconds, TimeUnit.SECONDS);
     }
 
     @Override
@@ -47,7 +47,7 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
 
     public abstract List<RedisConnectionAddr> getAll();
 
-    private void refresh() {
+    private void refresh(boolean first) {
         List<RedisConnectionAddr> list = getAll();
         if (list == null || list.isEmpty()) {
             logger.warn("addr list is empty, skip refresh, resource = {}", getResource());
@@ -56,7 +56,10 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
         synchronized (lock) {
             List<RedisConnectionAddr> validList = new ArrayList<>();
             for (RedisConnectionAddr addr : list) {
-                if (getStatus(addr) == RedisConnectionStatus.VALID) {
+                RedisConnectionStatus status = getStatus(addr);
+                if (status == RedisConnectionStatus.VALID) {
+                    validList.add(addr);
+                } else if (status == RedisConnectionStatus.INITIALIZE && first) {//如果是初次初始化，则INITIALIZE也算valid
                     validList.add(addr);
                 }
             }
