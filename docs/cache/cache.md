@@ -9,6 +9,7 @@
 
 ## 快速开始（spring-boot工程）
 ### 引入依赖
+* 使用jedis-2.9.3
 ```
 <dependency>
     <groupId>com.netease.nim</groupId>
@@ -19,6 +20,25 @@
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-spring-boot-starter</artifactId>
     <version>1.1.14</version>
+</dependency>
+```
+* 使用jedis-3.6.3
+```
+<dependency>
+    <groupId>com.netease.nim</groupId>
+    <artifactId>camellia-cache-spring-boot-starter</artifactId>
+    <version>1.2.0-SNAPSHOT</version>
+    <exclusions>
+        <exclusion>
+            <groupId>com.netease.nim</groupId>
+            <artifactId>camellia-redis</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+<dependency>
+    <groupId>com.netease.nim</groupId>
+    <artifactId>camellia-redis3-spring-boot-starter</artifactId>
+    <version>1.2.0-SNAPSHOT</version>
 </dependency>
 ```
 

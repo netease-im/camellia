@@ -11,8 +11,8 @@
 ```
 <dependency>
     <groupId>com.netease.nim</groupId>
-    <artifactId>camellia-redis</artifactId>
-    <version>1.1.14</version>
+    <artifactId>camellia-redis-toolkit</artifactId>
+    <version>1.2.0-SNAPSHOT</version>
 </dependency>
 ```
 

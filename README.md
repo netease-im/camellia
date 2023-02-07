@@ -36,7 +36,7 @@ camellia主要包括以下功能模块：
 [快速开始](/docs/delay-queue/delay-queue.md)
 
 ### camellia-redis(enhanced-redis-client)
-* 这是一个封装了jedis（2.9.3）的redis客户端，主要的类是CamelliaRedisTemplate
+* 这是一个封装了jedis（2.9.3/3.6.3）的redis客户端，主要的类是CamelliaRedisTemplate
 * 屏蔽了访问redis-standalone/redis-sentinel/redis-cluster的区别（jedis访问上述三种redis服务器的api是不一样的）
 * 支持pipeline、mget、mset等操作（jedis不支持使用pipeline访问redis-cluster，也不支持跨slot场景下使用mget、mset命令访问redis-cluster）
 * 支持透明的访问从节点（当前支持redis-sentinel）

@@ -1,7 +1,7 @@
 
 # camellia-redis 
 ## 简介
-基于camellia-core和jedis（2.9.3）开发的Redis客户端CamelliaRedisTemplate  
+基于camellia-core和jedis（2.9.3/3.6.3）开发的Redis客户端CamelliaRedisTemplate  
 
 ## 特性
 * 支持redis、redis-sentinel、redis-cluster，对外暴露统一的api（方法和参数同普通jedis）
@@ -25,11 +25,20 @@
 ## 教程
 
 ### maven
+* 底层依赖jedis-2.9.3
 ```
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis</artifactId>
-  <version>a.b.c</version>
+  <version>1.2.0-SNAPSHOT</version>
+</dependency>
+```
+* 底层依赖jedis-3.6.3
+```
+<dependency>
+  <groupId>com.netease.nim</groupId>
+  <artifactId>camellia-redis3</artifactId>
+  <version>1.2.0-SNAPSHOT</version>
 </dependency>
 ```
 

@@ -8,7 +8,7 @@
 ```
 <dependency>
     <groupId>com.netease.nim</groupId>
-    <artifactId>camellia-redis</artifactId>
+    <artifactId>camellia-tools</artifactId>
     <version>1.1.14</version>
 </dependency>
 ```
