@@ -2,7 +2,9 @@ package com.netease.nim.camellia.redis.proxy.upstream.proxies;
 
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.AbstractSimpleRedisClient;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
@@ -24,6 +26,17 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
     private final Object lock = new Object();
     private List<RedisConnectionAddr> originalList = new ArrayList<>();
     private List<RedisConnectionAddr> dynamicList = new ArrayList<>();
+
+    @Override
+    public void preheat() {
+        logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
+        for (RedisConnectionAddr addr : getAll()) {
+            logger.info("try preheat, url = {}, proxy = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(addr));
+            boolean result = RedisConnectionHub.getInstance().preheat(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
+            logger.info("preheat result = {}, url = {}, proxy = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(addr));
+        }
+        logger.info("preheat success, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
+    }
 
     protected void init() {
         refresh(true);
@@ -67,7 +80,7 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
                 logger.warn("no reachable addr list {}, skip refresh, resource = {}", list, getResource());
                 return;
             }
-            this.originalList = new ArrayList<>(list);
+            this.originalList = new ArrayList<>(validList);
             this.dynamicList = new ArrayList<>(originalList);
         }
     }

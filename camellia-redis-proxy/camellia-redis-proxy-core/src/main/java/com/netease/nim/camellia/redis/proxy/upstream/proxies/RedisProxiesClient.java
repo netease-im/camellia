@@ -3,8 +3,6 @@ package com.netease.nim.camellia.redis.proxy.upstream.proxies;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.resource.RedisProxiesResource;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
-import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
-import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,17 +28,6 @@ public class RedisProxiesClient extends AbstractRedisProxiesClient {
         }
         init();
         logger.info("RedisProxiesClient init success, resource = {}", resource.getUrl());
-    }
-
-    @Override
-    public void preheat() {
-        logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
-        for (RedisConnectionAddr addr : list) {
-            logger.info("try preheat, url = {}, proxy = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(addr));
-            boolean result = RedisConnectionHub.getInstance().preheat(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
-            logger.info("preheat result = {}, url = {}, proxy = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(addr));
-        }
-        logger.info("preheat success, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
     }
 
     @Override
