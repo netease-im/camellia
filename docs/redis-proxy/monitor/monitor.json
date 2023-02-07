@@ -27,7 +27,10 @@
     {
       "qps": 7036.9,
       "writeQps": 3577.2,
-      "readQps": 3459.7
+      "readQps": 3459.7,
+      "maxQps": 8036.9,
+      "maxReadQps": 4577.2,
+      "maxWriteQps": 4459.7
     }
   ],
   "total": [

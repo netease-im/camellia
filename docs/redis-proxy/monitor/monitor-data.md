@@ -31,9 +31,12 @@
   ],
   "qpsStats": [
     {
-      "qps": 7036.9,   //总qps
-      "writeQps": 3577.2,  //写qps
-      "readQps": 3459.7  //读qps
+      "qps": 7036.9,   //总qps（统计周期内的平均值，默认60s）
+      "writeQps": 3577.2,  //写qps（统计周期内的平均值，默认60s）
+      "readQps": 3459.7,  //读qps（统计周期内的平均值，默认60s）
+      "maxQps": 8036.9, //秒级峰值（如果统计周期为60s，则表示60个s中qps的最大的那个点）
+      "maxReadQps": 4577.2, //秒级峰值时的readQps（不是read的最大，而是总的最大时的read）
+      "maxWriteQps": 4459.7  //秒级峰值时的writeQps（不是write的最大，而是总的最大时的write）
     }
   ],
   "total": [ //各命令的请求量、qps
