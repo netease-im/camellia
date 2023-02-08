@@ -64,7 +64,7 @@ public class Constants {
         public static final int redisClusterMaxAttempts = 5;
         public static final int heartbeatIntervalSeconds = 60;//若小于等于0则不发心跳
         public static final long heartbeatTimeoutMillis = 10000L;
-        public static final int connectTimeoutMillis = 500;
+        public static final int connectTimeoutMillis = 1000;
         public static final int failCountThreshold = 5;
         public static final long failBanMillis = 5000L;
         public static final int defaultTranspondWorkThread = SysUtils.getCpuHalfNum();//if queueType is None, then effective
