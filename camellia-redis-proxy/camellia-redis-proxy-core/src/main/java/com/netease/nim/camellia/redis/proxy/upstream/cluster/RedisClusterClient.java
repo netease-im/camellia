@@ -567,7 +567,7 @@ public class RedisClusterClient implements IUpstreamClient {
                                 RedisConnection redisConnection = command.getChannelInfo().tryAcquireBindRedisConnection(addr);
                                 if (redisConnection != null && redisConnection.isValid()) {
                                     ErrorLogCollector.collect(RedisClusterClient.class,
-                                            "MOVED, [BlockingCommand] [RedisClient tryGet success], command = " + command.getName() + ", attempts = " + attempts);
+                                            "MOVED, [BlockingCommand] [RedisConnection tryAcquireBindRedisConnection success], command = " + command.getName() + ", attempts = " + attempts);
                                     redisConnection.sendCommand(Collections.singletonList(command), Collections.singletonList(this));
                                     redisConnection.startIdleCheck();
                                 } else {
@@ -575,19 +575,19 @@ public class RedisClusterClient implements IUpstreamClient {
                                     try {
                                         if (connection == null || !connection.isValid()) {
                                             ErrorLogCollector.collect(RedisClusterClient.class,
-                                                    "MOVED, [BlockingCommand] [RedisClient newAsync fail], command = " + command.getName() + ", attempts = " + attempts);
+                                                    "MOVED, [BlockingCommand] [RedisConnection newConnection fail], command = " + command.getName() + ", attempts = " + attempts);
                                             clusterClient.clusterSlotInfo.renew();
                                             CompletableFutureWrapper.this.future.complete(reply);
                                         } else {
                                             ErrorLogCollector.collect(RedisClusterClient.class,
-                                                    "MOVED, [BlockingCommand] [RedisClient newAsync success], command = " + command.getName() + ", attempts = " + attempts);
+                                                    "MOVED, [BlockingCommand] [RedisConnection newConnection success], command = " + command.getName() + ", attempts = " + attempts);
                                             connection.sendCommand(Collections.singletonList(command), Collections.singletonList(CompletableFutureWrapper.this));
                                             connection.startIdleCheck();
                                             command.getChannelInfo().updateBindRedisConnectionCache(connection);
                                         }
                                     } catch (Exception e) {
                                         ErrorLogCollector.collect(RedisClusterClient.class,
-                                                "MOVED, [BlockingCommand] [RedisClient newAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
+                                                "MOVED, [BlockingCommand] [RedisConnection newConnection error], command = " + command.getName() + ", attempts = " + attempts, e);
                                         CompletableFutureWrapper.this.future.complete(reply);
                                     }
                                 }
@@ -596,17 +596,17 @@ public class RedisClusterClient implements IUpstreamClient {
                                 try {
                                     if (connection == null || !connection.isValid()) {
                                         ErrorLogCollector.collect(RedisClusterClient.class,
-                                                "MOVED, [RedisClient getAsync fail], command = " + command.getName() + ", attempts = " + attempts);
+                                                "MOVED, [RedisConnection get fail], command = " + command.getName() + ", attempts = " + attempts);
                                         clusterClient.clusterSlotInfo.renew();
                                         CompletableFutureWrapper.this.future.complete(reply);
                                     } else {
                                         ErrorLogCollector.collect(RedisClusterClient.class,
-                                                "MOVED, [RedisClient getAsync success], command = " + command.getName() + ", attempts = " + attempts);
+                                                "MOVED, [RedisConnection get success], command = " + command.getName() + ", attempts = " + attempts);
                                         connection.sendCommand(Collections.singletonList(command), Collections.singletonList(CompletableFutureWrapper.this));
                                     }
                                 } catch (Exception e) {
                                     ErrorLogCollector.collect(RedisClusterClient.class,
-                                            "MOVED, [RedisClient getAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
+                                            "MOVED, [RedisConnection get error], command = " + command.getName() + ", attempts = " + attempts, e);
                                     CompletableFutureWrapper.this.future.complete(reply);
                                 }
                             }
@@ -621,7 +621,7 @@ public class RedisClusterClient implements IUpstreamClient {
                                 RedisConnection redisConnection = command.getChannelInfo().tryAcquireBindRedisConnection(addr);
                                 if (redisConnection != null && redisConnection.isValid()) {
                                     ErrorLogCollector.collect(RedisClusterClient.class,
-                                            "ASK, [BlockingCommand] [RedisClient tryGet success], command = " + command.getName() + ", attempts = " + attempts);
+                                            "ASK, [BlockingCommand] [RedisConnection tryAcquireBindRedisConnection success], command = " + command.getName() + ", attempts = " + attempts);
                                     redisConnection.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), this));
                                     redisConnection.startIdleCheck();
                                 } else {
@@ -629,38 +629,38 @@ public class RedisClusterClient implements IUpstreamClient {
                                     try {
                                         if (connection == null || !connection.isValid()) {
                                             ErrorLogCollector.collect(RedisClusterClient.class,
-                                                    "ASK, [BlockingCommand] [RedisClient newAsync fail], command = " + command.getName() + ", attempts = " + attempts);
+                                                    "ASK, [BlockingCommand] [RedisConnection newConnection fail], command = " + command.getName() + ", attempts = " + attempts);
                                             clusterClient.clusterSlotInfo.renew();
                                             CompletableFutureWrapper.this.future.complete(reply);
                                         } else {
                                             ErrorLogCollector.collect(RedisClusterClient.class,
-                                                    "ASK, [BlockingCommand] [RedisClient newAsync success], command = " + command.getName() + ", attempts = " + attempts);
+                                                    "ASK, [BlockingCommand] [RedisConnection newConnection success], command = " + command.getName() + ", attempts = " + attempts);
                                             connection.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), CompletableFutureWrapper.this));
                                             connection.startIdleCheck();
                                             command.getChannelInfo().updateBindRedisConnectionCache(connection);
                                         }
                                     } catch (Exception e) {
                                         ErrorLogCollector.collect(RedisClusterClient.class,
-                                                "ASK, [BlockingCommand] [RedisClient newAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
+                                                "ASK, [BlockingCommand] [RedisConnection newConnection error], command = " + command.getName() + ", attempts = " + attempts, e);
                                         CompletableFutureWrapper.this.future.complete(reply);
                                     }
                                 }
                             } else {
                                 RedisConnection connection = RedisConnectionHub.getInstance().get(strings[1], Integer.parseInt(strings[2]), clusterClient.userName, clusterClient.password);
                                 try {
-                                    if (connection == null) {
+                                    if (connection == null || !connection.isValid()) {
                                         ErrorLogCollector.collect(RedisClusterClient.class,
-                                                "ASK, [RedisClient getAsync fail], command = " + command.getName() + ", attempts = " + attempts);
+                                                "ASK, [RedisConnection get fail], command = " + command.getName() + ", attempts = " + attempts);
                                         clusterClient.clusterSlotInfo.renew();
                                         CompletableFutureWrapper.this.future.complete(reply);
                                     } else {
                                         ErrorLogCollector.collect(RedisClusterClient.class,
-                                                "ASK, [RedisClient getAsync success], command = " + command.getName() + ", attempts = " + attempts);
+                                                "ASK, [RedisConnection get success], command = " + command.getName() + ", attempts = " + attempts);
                                         connection.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), CompletableFutureWrapper.this));
                                     }
                                 } catch (Exception e) {
                                     ErrorLogCollector.collect(RedisClusterClient.class,
-                                            "ASK, [RedisClient getAsync error], command = " + command.getName() + ", attempts = " + attempts, e);
+                                            "ASK, [RedisConnection get error], command = " + command.getName() + ", attempts = " + attempts, e);
                                     CompletableFutureWrapper.this.future.complete(reply);
                                 }
                             }
