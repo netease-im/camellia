@@ -138,7 +138,7 @@ public class RedisConnection implements IUpstreamClient {
             ChannelFuture future = bootstrap.connect(host, port);
             this.channel = future.channel();
             this.channel.closeFuture().addListener(f -> {
-                logger.warn("{} connect close, will stop", connectionName);
+                logger.warn("{} disconnect", connectionName);
                 stop();
             });
             future.addListener((ChannelFutureListener) channelFuture -> {
@@ -417,9 +417,17 @@ public class RedisConnection implements IUpstreamClient {
     private void _stop(boolean grace) {
         RedisConnectionMonitor.removeRedisConnection(this);
         if (!stop.compareAndSet(false, true)) return;
-        if (!grace) {
-            String log = connectionName + " stopping, command maybe return NOT_AVAILABLE";
-            ErrorLogCollector.collect(RedisConnection.class, log);
+        if (status == RedisConnectionStatus.INVALID && channel == null
+                && heartbeatScheduledFuture == null && idleCheckScheduledFuture == null && queue.isEmpty() && cachedCommands.isEmpty()) {
+            ErrorLogCollector.collect(RedisConnection.class, addr.getUrl() + " stop, grace = " + grace);
+            return;
+        }
+        if (logger.isInfoEnabled()) {
+            if (grace) {
+                logger.info("{} stopping, grace = {}", connectionName, true);
+            } else {
+                logger.warn("{} stopping, grace = {}", connectionName, false);
+            }
         }
         try {
             status = RedisConnectionStatus.INVALID;
@@ -465,8 +473,9 @@ public class RedisConnection implements IUpstreamClient {
                 }
             }
             if (count > 0 && !grace) {
-                String log = connectionName + ", " + count + " commands return NOT_AVAILABLE";
-                ErrorLogCollector.collect(RedisConnection.class, log);
+                if (logger.isInfoEnabled()) {
+                    logger.info("{} stopped, {} commands return NOT_AVAILABLE", connectionName, count);
+                }
             }
         } catch (Exception e) {
             logger.error("{} stop error", connectionName, e);
