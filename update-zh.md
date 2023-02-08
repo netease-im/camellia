@@ -11,6 +11,7 @@
 * camellia-redis-proxy在多读场景下，支持对后端进行健康检查，自动剔除故障节点
 * camellia-redis-proxy支持异步初始化到后端redis的连接
 * camellia-redis-proxy支持监控秒级的qps
+* camellia-redis-proxy代理redis-cluster时除了MOVED触发renew外，新增兜底的定时renew，默认60s一次
 
 ### 更新
 * camellia-redis-proxy相关核心类进行了重命名（upstream部分）

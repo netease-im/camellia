@@ -22,15 +22,14 @@ import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtil
 import com.netease.nim.camellia.redis.proxy.upstream.utils.PubSubUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.ScanCursorCalculator;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.RedisClusterCRC16Utils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 
 /**
  * Created by caojiajun on 2019/12/18.
@@ -69,6 +68,7 @@ public class RedisClusterClient implements IUpstreamClient {
         } catch (Exception e) {
             throw new CamelliaRedisException("RedisClusterSlotInfo init fail", e);
         }
+        startSchedule();
         logger.info("RedisClusterClient init success, resource = {}", redisClusterResource.getUrl());
     }
 
@@ -90,7 +90,19 @@ public class RedisClusterClient implements IUpstreamClient {
         } catch (Exception e) {
             throw new CamelliaRedisException("RedisClusterSlotInfo init fail", e);
         }
+        startSchedule();
         logger.info("RedisClusterClient init success, resource = {}", redisClusterResource.getUrl());
+    }
+
+    private void startSchedule() {
+        int intervalSeconds = ProxyDynamicConf.getInt("redis.cluster.schedule.renew.interval.seconds", 60);
+        ExecutorUtils.scheduleAtFixedRate(() -> {
+            try {
+                clusterSlotInfo.renew();
+            } catch (Exception e) {
+                logger.error("renew error, resource = {}", getResource().getUrl());
+            }
+        }, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
     }
 
     /**

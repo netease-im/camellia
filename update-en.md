@@ -11,7 +11,7 @@
 * camellia-redis-proxy support check upstream healthy in multi-read mode
 * camellia-redis-proxy support init upstream RedisConnection in async mode
 * camellia-redis-proxy support monitor qps every seconds
-
+* camellia-redis-proxy add schedule renew when upstream is redis-cluster, default 60s
 
 ### update
 * camellia-redis-proxy rename core upstream service  
