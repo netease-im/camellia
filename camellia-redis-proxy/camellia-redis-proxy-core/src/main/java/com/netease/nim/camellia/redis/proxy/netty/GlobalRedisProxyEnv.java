@@ -48,8 +48,8 @@ public class GlobalRedisProxyEnv {
     private static EventLoopGroup bossGroup;
     private static int workThread;
     private static EventLoopGroup workGroup;
-    private static Class<? extends ServerChannel> serverChannelClass;
-    private static Class<? extends SocketChannel> socketChannelClass;
+    private static Class<? extends ServerChannel> serverChannelClass = NioServerSocketChannel.class;
+    private static Class<? extends SocketChannel> socketChannelClass = NioSocketChannel.class;
 
     private static boolean serverTcpQuickAck = false;
 
