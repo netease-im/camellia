@@ -55,7 +55,9 @@ public class ResourceTableUtil {
             ResourceReadOperation immutableReadOperation = new ResourceReadOperation();
             immutableReadOperation.setType(readOperation.getType());
             immutableReadOperation.setReadResource(readOperation.getReadResource());
-            immutableReadOperation.setReadResources(Collections.unmodifiableList(readOperation.getReadResources()));
+            if (readOperation.getReadResources() != null) {
+                immutableReadOperation.setReadResources(Collections.unmodifiableList(readOperation.getReadResources()));
+            }
             immutableResourceOperation.setReadOperation(immutableReadOperation);
         }
         ResourceWriteOperation writeOperation = resourceOperation.getWriteOperation();
@@ -63,7 +65,9 @@ public class ResourceTableUtil {
             ResourceWriteOperation immutableWriteOperation = new ResourceWriteOperation();
             immutableWriteOperation.setType(writeOperation.getType());
             immutableWriteOperation.setWriteResource(writeOperation.getWriteResource());
-            immutableWriteOperation.setWriteResources(Collections.unmodifiableList(immutableWriteOperation.getWriteResources()));
+            if (writeOperation.getWriteResources() != null) {
+                immutableWriteOperation.setWriteResources(Collections.unmodifiableList(writeOperation.getWriteResources()));
+            }
             immutableResourceOperation.setWriteOperation(immutableWriteOperation);
         }
         return immutableResourceOperation;
