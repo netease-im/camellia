@@ -51,6 +51,7 @@ public class HBaseResourceUtil {
         String zkParent;
         String userName = null;
         String password = null;
+        Boolean lindorm = null;
         if (!str.contains("?")) {
             zkParent = "/" + str;
         } else {
@@ -60,9 +61,11 @@ public class HBaseResourceUtil {
                 Map<String, String> params = getParams(strings[1]);
                 userName = params.get("userName");
                 password = params.get("password");
+                String lindormStr = params.get("lindorm");
+                lindorm = lindormStr == null ? null : lindormStr.equalsIgnoreCase(Boolean.TRUE.toString());
             }
         }
-        HBaseResource hBaseResource = new HBaseResource(zk, zkParent, userName, password);
+        HBaseResource hBaseResource = new HBaseResource(zk, zkParent, userName, password, lindorm);
         if (zk == null || zk.length() == 0) {
             throw new IllegalArgumentException("zk is empty");
         }

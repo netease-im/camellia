@@ -10,4 +10,6 @@ public class HBaseConstants {
     public static final String ZK_PARENT = "zookeeper.znode.parent";
     public static final String USER_NAME = "hbase.client.username";
     public static final String PASSWORD = "hbase.client.password";
+    public static final String HBASE_CLIENT_CONNECTION_IMPL = "hbase.client.connection.impl";
+    public static final String HBASE_CLIENT_CONNECTION_LINDORM_IMPL = "org.apache.hadoop.hbase.client.AliHBaseUEClusterConnection";
 }

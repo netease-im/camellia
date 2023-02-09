@@ -44,6 +44,7 @@ public class CamelliaHBaseInitUtil {
         String zkParent = null;
         String userName = null;
         String password = null;
+        Boolean lindorm = null;
         for (Map.Entry<String, String> entry : configuration) {
             if (entry.getKey().equalsIgnoreCase(HBaseConstants.ZK)) {
                 zk = entry.getValue();
@@ -53,7 +54,11 @@ public class CamelliaHBaseInitUtil {
                 userName = entry.getValue();
             } else if (entry.getKey().equalsIgnoreCase(HBaseConstants.PASSWORD)) {
                 password = entry.getValue();
-            } else {
+            } else if (entry.getKey().equalsIgnoreCase(HBaseConstants.HBASE_CLIENT_CONNECTION_IMPL)
+                    && entry.getValue().equalsIgnoreCase(HBaseConstants.HBASE_CLIENT_CONNECTION_LINDORM_IMPL)) {
+                lindorm = true;
+            }
+            else {
                 camelliaHBaseConf.addConf(entry.getKey(), entry.getValue());
             }
         }
@@ -63,7 +68,7 @@ public class CamelliaHBaseInitUtil {
         if (zkParent == null) {
             throw new IllegalArgumentException("missing '" + HBaseConstants.ZK_PARENT + "'");
         }
-        return new HBaseResource(zk, zkParent, userName, password);
+        return new HBaseResource(zk, zkParent, userName, password, lindorm);
     }
 
     public static CamelliaHBaseConf initHBaseConfFromFile(String hbaseXmlFile) {

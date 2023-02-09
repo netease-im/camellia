@@ -53,6 +53,11 @@ public class CamelliaHBaseConnection {
             if (hBaseResource.getPassword() != null) {
                 configuration.set(HBaseConstants.PASSWORD, hBaseResource.getPassword());
             }
+            if (hBaseResource.isLindorm()) {
+                if (hBaseConf == null || !hBaseConf.getConfMap().containsKey(HBaseConstants.HBASE_CLIENT_CONNECTION_IMPL)) {
+                    configuration.set(HBaseConstants.HBASE_CLIENT_CONNECTION_IMPL, HBaseConstants.HBASE_CLIENT_CONNECTION_LINDORM_IMPL);
+                }
+            }
             this.configuration = configuration;
             this.connection = ConnectionFactory.createConnection(configuration);
         } catch (IOException e) {

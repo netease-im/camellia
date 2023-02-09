@@ -10,20 +10,26 @@ public class HBaseResource extends Resource {
 
     public static final String prefix = "hbase://";
 
-    private final String userName;
-    private final String password;
     private final String zk;
     private final String zkParent;
+    private final String userName;
+    private final String password;
+    private final Boolean lindorm;
 
     public HBaseResource(String zk, String zkParent) {
         this(zk, zkParent, null, null);
     }
 
     public HBaseResource(String zk, String zkParent, String userName, String password) {
+        this(zk, zkParent, userName, password, null);
+    }
+
+    public HBaseResource(String zk, String zkParent, String userName, String password, Boolean lindorm) {
         this.zk = zk;
         this.zkParent = zkParent;
         this.userName = userName;
         this.password = password;
+        this.lindorm = lindorm;
         StringBuilder builder = new StringBuilder();
         builder.append(prefix);
         builder.append(zk).append(zkParent);
@@ -35,6 +41,9 @@ public class HBaseResource extends Resource {
         }
         if (password != null) {
             builder.append("password=").append(password).append("&");
+        }
+        if (lindorm != null) {
+            builder.append("lindorm=").append(lindorm).append("&");
         }
         if (builder.charAt(builder.length() - 1) == '&') {
             builder.deleteCharAt(builder.length() - 1);
@@ -56,5 +65,9 @@ public class HBaseResource extends Resource {
 
     public String getPassword() {
         return password;
+    }
+
+    public boolean isLindorm() {
+        return lindorm != null && lindorm;
     }
 }
