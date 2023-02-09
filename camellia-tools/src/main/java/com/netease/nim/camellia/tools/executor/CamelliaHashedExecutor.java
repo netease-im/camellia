@@ -97,7 +97,7 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
                     workThreads.add(workThread);
                 }
                 logger.info("CamelliaHashedExecutor thread init success, name = {}, poolSize = {}, queueSize = {}, rejectedExecutionHandler = {}",
-                        name, poolSize, queueSize, rejectedExecutionHandler.getClass().getSimpleName());
+                        name, poolSize, dynamicQueueSize != null ? dynamicQueueSize.get() : queueSize, rejectedExecutionHandler.getClass().getSimpleName());
                 initOk.set(true);
             }
         } finally {
