@@ -12,6 +12,8 @@
 * camellia-redis-proxy support init upstream RedisConnection in async mode
 * camellia-redis-proxy support monitor qps every seconds
 * camellia-redis-proxy add schedule renew when upstream is redis-cluster, default 60s
+* camellia-hbase support setting userName、password、tag of aliyun-lindorm in url
+* camellia-redis-proxy optimize the failover logic of redis-cluster-slaves and redis-sentinel-slaves
 
 ### update
 * camellia-redis-proxy rename core upstream service  
