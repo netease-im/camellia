@@ -84,7 +84,7 @@ public class CommandsTransponder {
                 boolean add = taskQueue.add(task);
                 if (!add) {
                     taskQueue.clear();
-                    logger.warn("AsyncTaskQueue full, client connect will be disconnect, remote.ip = {}", ctx.channel().remoteAddress());
+                    logger.warn("CommandTaskQueue full, client connect will be disconnect, remote.ip = {}", ctx.channel().remoteAddress());
                     ctx.writeAndFlush(ErrorReply.TOO_BUSY).addListener((ChannelFutureListener) future -> ctx.close());
                     return;
                 }

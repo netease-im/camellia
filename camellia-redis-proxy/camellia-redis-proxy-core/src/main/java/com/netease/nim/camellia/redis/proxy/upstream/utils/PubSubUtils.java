@@ -29,7 +29,7 @@ public class PubSubUtils {
         sendByBindClient(connection, taskQueue, command, future, first, command.getRedisCommand());
     }
 
-    private static void sendByBindClient(RedisConnection connection, CommandTaskQueue asyncTaskQueue,
+    private static void sendByBindClient(RedisConnection connection, CommandTaskQueue taskQueue,
                                          Command command, CompletableFuture<Reply> future, boolean first, RedisCommand redisCommand) {
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
         if (future != null) {
@@ -41,11 +41,11 @@ public class PubSubUtils {
                 if (first) {
                     future.complete(reply);
                 } else {
-                    asyncTaskQueue.reply(redisCommand, reply);
+                    taskQueue.reply(redisCommand, reply);
                 }
                 //after send reply, update channel subscribe status
                 if (subscribeChannelCount != null && subscribeChannelCount <= 0) {
-                    asyncTaskQueue.getChannelInfo().setInSubscribe(false);
+                    taskQueue.getChannelInfo().setInSubscribe(false);
                 }
             });
         }
@@ -54,14 +54,14 @@ public class PubSubUtils {
                 CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
                 completableFuture.thenAccept(reply -> {
                     if (connection.queueSize() < 8 && connection.isValid()) {
-                        sendByBindClient(connection, asyncTaskQueue, null, null, false, redisCommand);
+                        sendByBindClient(connection, taskQueue, null, null, false, redisCommand);
                     }
                     //parse reply must before send reply to connection
                     Long subscribeChannelCount = tryGetSubscribeChannelCount(reply);
-                    asyncTaskQueue.reply(redisCommand, reply);
+                    taskQueue.reply(redisCommand, reply);
                     //after send reply, update channel subscribe status
                     if (subscribeChannelCount != null && subscribeChannelCount <= 0) {
-                        asyncTaskQueue.getChannelInfo().setInSubscribe(false);
+                        taskQueue.getChannelInfo().setInSubscribe(false);
                     }
                 });
                 futures.add(completableFuture);

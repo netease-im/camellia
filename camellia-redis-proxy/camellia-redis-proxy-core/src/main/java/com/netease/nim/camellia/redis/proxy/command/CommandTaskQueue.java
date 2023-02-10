@@ -46,7 +46,7 @@ public class CommandTaskQueue {
         plugins = task.getPlugins();
         boolean offer = queue.offer(task);
         if (!offer) {
-            logger.warn("AsyncTaskQueue full, consid = {}", channelInfo.getConsid());
+            logger.warn("CommandTaskQueue full, consid = {}", channelInfo.getConsid());
         }
         return offer;
     }
@@ -66,7 +66,7 @@ public class CommandTaskQueue {
                     Reply reply = task.getReply();
                     if (reply != null) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug("AsyncTaskQueue callback, command = {}, reply = {}, consid = {}",
+                            logger.debug("CommandTaskQueue callback, command = {}, reply = {}, consid = {}",
                                     task.getCommand() == null ? null : task.getCommand().getName(),
                                     reply.getClass().getSimpleName(), channelInfo.getConsid());
                         }
@@ -87,7 +87,7 @@ public class CommandTaskQueue {
             return;
         }
         if (logger.isDebugEnabled()) {
-            logger.debug("AsyncTaskQueue reply, reply = {}, consid = {}",
+            logger.debug("CommandTaskQueue reply, reply = {}, consid = {}",
                     reply.getClass().getSimpleName(), channelInfo.getConsid());
         }
         if (plugins != null && !plugins.isEmpty()) {
