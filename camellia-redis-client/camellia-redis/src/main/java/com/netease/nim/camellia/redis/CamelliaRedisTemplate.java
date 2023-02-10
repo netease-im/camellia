@@ -9,7 +9,6 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.redis.base.resource.RedisClusterResource;
 import com.netease.nim.camellia.redis.base.resource.RedisResource;
-import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
 import com.netease.nim.camellia.redis.base.resource.RedisSentinelResource;
 import com.netease.nim.camellia.redis.base.utils.SafeEncoder;
 import com.netease.nim.camellia.tools.utils.BytesKey;
@@ -148,7 +147,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     public CamelliaRedisTemplate(String url) {
-        this(RedisResourceUtil.parseResourceByUrl(new Resource(url)));
+        this(RedisClientResourceUtil.parseResourceByUrl(new Resource(url)));
     }
 
     public CamelliaRedisTemplate(CamelliaRedisEnv env, ReloadableLocalFileCamelliaApi reloadableLocalFileCamelliaApi, long checkIntervalMillis) {

@@ -15,7 +15,6 @@ import com.netease.nim.camellia.redis.jedis.JedisPoolFactory;
 import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
 import com.netease.nim.camellia.redis.proxy.*;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.ProxyJedisPoolConfig;
-import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
 import com.netease.nim.camellia.redis.resource.RedisTemplateResourceTableUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +68,7 @@ public class CamelliaRedisConfiguration {
             CamelliaRedisProperties.Local.Type localType = local.getType();
             if (localType == CamelliaRedisProperties.Local.Type.SIMPLE) {
                 String url = local.getResource();
-                Resource resource = RedisResourceUtil.parseResourceByUrl(new Resource(url));
+                Resource resource = RedisClientResourceUtil.parseResourceByUrl(new Resource(url));
                 return new CamelliaRedisTemplate(redisEnv, ResourceTableUtil.simpleTable(resource));
             } else if (localType == CamelliaRedisProperties.Local.Type.COMPLEX) {
                 String jsonFile = local.getJsonFile();

@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.resource;
 
 import com.netease.nim.camellia.core.api.ResourceTableUpdater;
 import com.netease.nim.camellia.core.model.ResourceTable;
-import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
 
 
 /**

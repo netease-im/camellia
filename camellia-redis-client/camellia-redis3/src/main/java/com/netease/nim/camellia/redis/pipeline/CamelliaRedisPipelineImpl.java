@@ -4,10 +4,10 @@ import com.netease.nim.camellia.core.client.annotation.ReadOp;
 import com.netease.nim.camellia.core.client.annotation.ShardingParam;
 import com.netease.nim.camellia.core.client.annotation.WriteOp;
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
 import com.netease.nim.camellia.redis.base.utils.LogUtil;
 import com.netease.nim.camellia.redis.base.utils.SafeEncoder;
 import com.netease.nim.camellia.redis.resource.PipelineResource;
+import com.netease.nim.camellia.redis.resource.RedisClientResourceUtil;
 import com.netease.nim.camellia.redis.util.CamelliaBitPosParams;
 import com.netease.nim.camellia.redis.util.SetParamsUtils;
 import redis.clients.jedis.*;
@@ -31,7 +31,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     public CamelliaRedisPipelineImpl(Resource resource) {
         if (resource == null) return;
-        this.resource = RedisResourceUtil.parseResourceByUrl(resource);
+        this.resource = RedisClientResourceUtil.parseResourceByUrl(resource);
         if (resource instanceof PipelineResource) {
             this.queable = ((PipelineResource) resource).getQueable();
             this.clientPool = ((PipelineResource) resource).getClientPool();
