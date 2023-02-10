@@ -218,7 +218,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                             }
                             //next
                             index = index + 1;
-                            if (index == slaves.size()) {
+                            if (index == slaves.size() + 1) {
                                 index = 0;
                             }
                         } catch (Exception e) {
@@ -250,7 +250,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                             }
                             //next
                             index = index + 1;
-                            if (index == slaves.size() - 1) {
+                            if (index == slaves.size()) {
                                 index = 0;
                             }
                         } catch (Exception e) {
