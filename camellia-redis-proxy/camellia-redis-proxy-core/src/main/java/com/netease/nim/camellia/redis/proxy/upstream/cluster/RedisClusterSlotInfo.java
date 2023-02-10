@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.cluster;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.resource.RedisClusterResource;
 import com.netease.nim.camellia.redis.base.resource.RedisClusterSlavesResource;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
@@ -122,50 +123,18 @@ public class RedisClusterSlotInfo {
                 return masterSlotArray[slot];
             } else if (type == Type.SLAVE_ONLY) {
                 NodeWithSlaves nodeWithSlaves = nodeWithSlavesArray[slot];
-                if (nodeWithSlaves == null) return null;
-                List<Node> slaves = nodeWithSlaves.getSlaves();
-                if (slaves == null || slaves.isEmpty()) {
+                if (nodeWithSlaves == null) {
                     return null;
                 }
-                if (slaves.size() == 1) {
-                    return slaves.get(0);
-                } else {
-                    try {
-                        int i = ThreadLocalRandom.current().nextInt(slaves.size());
-                        return slaves.get(i);
-                    } catch (Exception e) {
-                        return slaves.get(0);
-                    }
-                }
+                List<Node> slaves = nodeWithSlaves.getSlaves();
+                return selectSlavesNode(slaves);
             } else if (type == Type.MASTER_SLAVE) {
                 try {
                     NodeWithSlaves nodeWithSlaves = nodeWithSlavesArray[slot];
                     if (nodeWithSlaves == null) {
                         return masterSlotArray[slot];
                     } else {
-                        Node master = nodeWithSlaves.getMaster();
-                        List<Node> slaves = nodeWithSlaves.getSlaves();
-                        Node node;
-                        if (slaves == null || slaves.isEmpty()) {
-                            node = master;
-                        } else {
-                            if (master == null) {
-                                if (slaves.size() == 1) {
-                                    node = slaves.get(0);
-                                } else {
-                                    int i = ThreadLocalRandom.current().nextInt(slaves.size());
-                                    node = slaves.get(i);
-                                }
-                            } else {
-                                int i = ThreadLocalRandom.current().nextInt(slaves.size() + 1);
-                                if (i == 0) {
-                                    node = master;
-                                } else {
-                                    node = slaves.get(i - 1);
-                                }
-                            }
-                        }
-                        return node;
+                        return selectMasterSlavesNode(nodeWithSlaves.getMaster(), nodeWithSlaves.getSlaves());
                     }
                 } catch (Exception e) {
                     return masterSlotArray[slot];
@@ -174,11 +143,12 @@ public class RedisClusterSlotInfo {
                 return null;
             }
         } catch (Exception e) {
-            ErrorLogCollector.collect(RedisClusterSlotInfo.class,
-                    "getNode error, url = " + maskUrl + ", slot = " + slot, e);
+            ErrorLogCollector.collect(RedisClusterSlotInfo.class, "getNode error, url = " + maskUrl + ", slot = " + slot, e);
             return null;
         }
     }
+
+
 
     /**
      * get all nodes
@@ -331,6 +301,54 @@ public class RedisClusterSlotInfo {
         return null;
     }
 
+    public boolean isValid() {
+        Map<Node, List<Node>> masterSlaveMap = new HashMap<>(this.masterSlaveMap);
+        if (type == Type.MASTER_ONLY) {
+            for (Node node : masterSlaveMap.keySet()) {
+                if (!checkValid(node)) {
+                    return false;
+                }
+            }
+        } else if (type == Type.SLAVE_ONLY) {
+            for (List<Node> list : masterSlaveMap.values()) {
+                if (list == null || list.isEmpty()) {
+                    return false;
+                }
+                boolean allDown = true;
+                for (Node node : list) {
+                    if (checkValid(node)) {
+                        allDown = false;
+                        break;
+                    }
+                }
+                if (allDown) {
+                    return false;
+                }
+            }
+        } else if (type == Type.MASTER_SLAVE) {
+            for (Map.Entry<Node, List<Node>> entry : masterSlaveMap.entrySet()) {
+                Node master = entry.getKey();
+                if (!checkValid(master)) {
+                    List<Node> list = entry.getValue();
+                    if (list == null || list.isEmpty()) {
+                        return false;
+                    }
+                    boolean allDown = true;
+                    for (Node slave : list) {
+                        if (checkValid(slave)) {
+                            allDown = false;
+                            break;
+                        }
+                    }
+                    if (allDown) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     private String masterSlaveInfo() {
         Map<Node, List<Node>> masterSlaveMap = new HashMap<>(this.masterSlaveMap);
         StringBuilder builder = new StringBuilder();
@@ -452,6 +470,94 @@ public class RedisClusterSlotInfo {
         } catch (Exception e) {
             throw new CamelliaRedisException(e);
         }
+    }
+
+    private Node selectMasterSlavesNode(Node masterNode, List<Node> slaves) {
+        if (slaves == null || slaves.isEmpty()) return masterNode;
+        try {
+            if (masterNode == null) {
+                return selectSlavesNode(slaves);
+            }
+            int maxLoop = slaves.size() + 1;
+            int index = ThreadLocalRandom.current().nextInt(maxLoop);
+            for (int i=0; i<maxLoop; i++) {
+                try {
+                    Node node;
+                    if (index == 0) {
+                        node = masterNode;
+                    } else {
+                        node = slaves.get(index - 1);
+                    }
+                    if (checkValid(node)) {
+                        return node;
+                    }
+                    index = index + 1;
+                    if (index == slaves.size() + 1) {
+                        index = 0;
+                    }
+                } catch (Exception e) {
+                    index = ThreadLocalRandom.current().nextInt(slaves.size() + 1);
+                }
+            }
+            index = ThreadLocalRandom.current().nextInt(slaves.size() + 1);
+            if (index == 0) {
+                return masterNode;
+            }
+            return slaves.get(index - 1);
+        } catch (Exception e) {
+            try {
+                if (masterNode != null) {
+                    return masterNode;
+                } else if (!slaves.isEmpty()) {
+                    return slaves.get(0);
+                }
+                return null;
+            } catch (Exception ex) {
+                ErrorLogCollector.collect(RedisClusterSlotInfo.class, "selectMasterSlavesNode error, url = " + getResource(), ex);
+                return null;
+            }
+        }
+    }
+
+    private Node selectSlavesNode(List<Node> slaves) {
+        if (slaves == null || slaves.isEmpty()) return null;
+        if (slaves.size() == 1) return slaves.get(0);
+        try {
+            int maxLoop = slaves.size();
+            int index = ThreadLocalRandom.current().nextInt(maxLoop);
+            for (int i=0; i<maxLoop; i++) {
+                try {
+                    Node node = slaves.get(index);
+                    if (checkValid(node)) {
+                        return node;
+                    }
+                    index = index + 1;
+                    if (index == slaves.size()) {
+                        index = 0;
+                    }
+                } catch (Exception e) {
+                    index = ThreadLocalRandom.current().nextInt(slaves.size());
+                }
+            }
+            index = ThreadLocalRandom.current().nextInt(slaves.size());
+            return slaves.get(index);
+        } catch (Exception e) {
+            try {
+                return slaves.get(0);
+            } catch (Exception ex) {
+                ErrorLogCollector.collect(RedisClusterSlotInfo.class, "selectSlavesNode error, url = " + getResource(), ex);
+                return null;
+            }
+        }
+    }
+
+    private boolean checkValid(Node node) {
+        if (node == null) return false;
+        RedisConnection redisConnection = RedisConnectionHub.getInstance().get(node.getAddr());
+        if (redisConnection == null) {
+            return false;
+        }
+        return redisConnection.getStatus() == RedisConnectionStatus.VALID;
     }
 
     public static class NodeWithSlaves {
