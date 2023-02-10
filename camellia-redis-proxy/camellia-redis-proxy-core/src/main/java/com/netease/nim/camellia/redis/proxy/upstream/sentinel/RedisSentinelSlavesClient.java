@@ -186,7 +186,9 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
 
     @Override
     public boolean isValid() {
-        if (getStatus(master) == RedisConnectionStatus.VALID) return true;
+        if (master != null) {
+            if (getStatus(master) == RedisConnectionStatus.VALID) return true;
+        }
         List<RedisConnectionAddr> slaveNodes = new ArrayList<>(slaves);
         for (RedisConnectionAddr slave : slaveNodes) {
             if (getStatus(slave) == RedisConnectionStatus.VALID) return true;
@@ -196,26 +198,73 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
 
     @Override
     public RedisConnectionAddr getAddr() {
-        int retry = 3;
-        while (retry > 0) {
-            retry --;
-            try {
-                if (master != null) {
-                    if (slaves.isEmpty()) return master;
-                    int index = ThreadLocalRandom.current().nextInt(slaves.size() + 1);
+        try {
+            if (master != null) {
+                if (slaves.isEmpty()) return master;
+                try {
+                    int maxLoop = slaves.size() + 1;
+                    int index = ThreadLocalRandom.current().nextInt(maxLoop);
+                    for (int i=0; i<maxLoop; i++) {
+                        try {
+                            //current
+                            RedisConnectionAddr addr;
+                            if (index == 0) {
+                                addr = master;
+                            } else {
+                                addr = slaves.get(index - 1);
+                            }
+                            if (getStatus(addr) == RedisConnectionStatus.VALID) {
+                                return addr;
+                            }
+                            //next
+                            index = index + 1;
+                            if (index == slaves.size()) {
+                                index = 0;
+                            }
+                        } catch (Exception e) {
+                            //slaves list maybe update
+                            index = ThreadLocalRandom.current().nextInt(slaves.size() + 1);
+                        }
+                    }
+                    index = ThreadLocalRandom.current().nextInt(slaves.size() + 1);
                     if (index == 0) {
                         return master;
+                    } else {
+                        return slaves.get(index - 1);
                     }
-                    return slaves.get(index - 1);
-                } else {
-                    if (slaves.isEmpty()) return null;
-                    if (slaves.size() == 1) return slaves.get(0);
-                    int index = ThreadLocalRandom.current().nextInt(slaves.size());
-                    return slaves.get(index);
+                } catch (Exception e) {
+                    return master;
                 }
-            } catch (Exception e) {
-                ErrorLogCollector.collect(RedisSentinelSlavesClient.class, "getAddr error, url = " + PasswordMaskUtils.maskResource(redisSentinelSlavesResource.getUrl()), e);
+            } else {
+                if (slaves.isEmpty()) return null;
+                if (slaves.size() == 1) return slaves.get(0);
+                try {
+                    int maxLoop = slaves.size();
+                    int index = ThreadLocalRandom.current().nextInt(maxLoop);
+                    for (int i=0; i<maxLoop; i++) {
+                        try {
+                            //current
+                            RedisConnectionAddr addr = slaves.get(index);
+                            if (getStatus(addr) == RedisConnectionStatus.VALID) {
+                                return addr;
+                            }
+                            //next
+                            index = index + 1;
+                            if (index == slaves.size() - 1) {
+                                index = 0;
+                            }
+                        } catch (Exception e) {
+                            //slaves list maybe update
+                            index = ThreadLocalRandom.current().nextInt(slaves.size());
+                        }
+                    }
+                    return slaves.get(ThreadLocalRandom.current().nextInt(slaves.size()));
+                } catch (Exception e) {
+                    return slaves.get(0);
+                }
             }
+        } catch (Exception e) {
+            ErrorLogCollector.collect(RedisSentinelSlavesClient.class, "getAddr error, url = " + PasswordMaskUtils.maskResource(redisSentinelSlavesResource.getUrl()), e);
         }
         return null;
     }
