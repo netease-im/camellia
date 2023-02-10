@@ -11,18 +11,20 @@
 * camellia-redis-proxy在多读场景下，支持对后端进行健康检查，自动剔除故障节点
 * camellia-redis-proxy支持异步初始化到后端redis的连接
 * camellia-redis-proxy支持监控秒级的qps
-* camellia-redis-proxy代理redis-cluster时除了MOVED触发renew外，新增兜底的定时renew，默认60s一次
+* camellia-redis-proxy代理redis-cluster时除了MOVED/disconnect触发renew外，新增兜底的定时renew，默认60s一次
 * camellia-hbase支持url中设置userName和password以及aliyun-lindorm的标记
 * camellia-redis-proxy优化了redis-cluster-slaves和redis-sentinel-slaves两种resource在有节点宕机下的failover逻辑
+* camellia-redis-proxy优化了redis-proxies和redis-proxies-discovery两种resource在有节点宕机下的failover逻辑
 
 ### 更新
 * camellia-redis-proxy相关核心类进行了重命名（upstream部分）
 * camellia-redis移除了CamelliaRedisTemplate到SpringRedisTemplate的适配器
 * camellia-redis移除了CamelliaRedisTemplate到Jedis的适配器
 * 新增camellia-redis-toolkit模块，把camellia-redis中的toolkit相关功能（如分布式锁等）独立出来，从而可以被camellia-redis3复用
+* 使用按照包启动(redis-proxy、delay-queue、id-gen-server)时，新增camellia的banner
 
 ### fix
-* 无
+* camellia-redis-proxy修复了使用ProxyDynamicConf#reload(Map)方法直接设置自定义变量时（而非基于camellia-redis-proxy.properties文件），配置被清空的问题，1.1.8引入该问题
 
 
 # 1.1.14（2023/02/01）(1.1.13相关jar包在maven中央仓库已损坏，因此换一个版本号重新deploy)
@@ -73,6 +75,7 @@
 
 ### 更新
 * 调整了项目maven结构
+* 重命名了camellia-redis-proxy的artifactId为camellia-redis-proxy-core，camellia-redis-proxy变成目录
 
 ### fix
 * 修复CamelliaRedisTemplate使用RedisResource时select db不生效的问题 

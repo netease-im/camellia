@@ -14,15 +14,17 @@
 * camellia-redis-proxy add schedule renew when upstream is redis-cluster, default 60s
 * camellia-hbase support setting userName、password、tag of aliyun-lindorm in url
 * camellia-redis-proxy optimize the failover logic of redis-cluster-slaves and redis-sentinel-slaves
+* camellia-redis-proxy optimize the failover logic of redis-proxies and redis-proxies-discovery
 
 ### update
 * camellia-redis-proxy rename core upstream service  
 * camellia-redis remove the adaptor of CamelliaRedisTemplate to SpringRedisTemplate
 * camellia-redis remove the adaptor of CamelliaRedisTemplate to Jedis
 * add camellia-redis-toolkit module, independent the toolkits (such as CamelliaRedisLock) from camellia-redis, so the code could reuse by camellia-redis3
+* add camellia banner in log file when use package to startup(redis-proxy、delay-queue、id-gen-server)
 
 ### fix
-* none
+* fix camellia-redis-proxy use ProxyDynamicConf#reload(Map) direct setting custom k-v config, and config will be cleared in schedule task(bug from v1.1.8)
 
 
 # 1.1.13（2023/01/30）（1.1.13 is broken in maven central repository, so re-deploy in 1.1.14）
@@ -73,6 +75,7 @@
 
 ### update
 * refactor project maven module
+* rename camellia-redis-proxy artifactId to camellia-redis-proxy-core, camellia-redis-proxy transform to a directory
 
 ### fix
 * fix CamelliaRedisTemplate select db when use RedisResource
