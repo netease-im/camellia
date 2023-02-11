@@ -496,23 +496,64 @@ public class RedisConnection implements IUpstreamClient {
     //发送SELECT命令
     private void selectDB() {
         if (config.getDb() == 0) return;
-        Command command = new Command(new byte[][]{RedisCommand.SELECT.raw(), Utils.stringToBytes(String.valueOf(config.getDb()))});
-        CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-        if (logger.isInfoEnabled()) {
-            logger.info("{} select db={}", connectionName, db);
+        try {
+            Command command = new Command(new byte[][]{RedisCommand.SELECT.raw(), Utils.stringToBytes(String.valueOf(config.getDb()))});
+            CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
+            sendCommandDirect(command, completableFuture);
+            Reply reply = completableFuture.get(connectTimeoutMillis, TimeUnit.MILLISECONDS);
+            if (reply instanceof StatusReply) {
+                if (((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.OK.getStatus())) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("{} select db={} success, reply = {}", connectionName, db, ((StatusReply) reply).getStatus());
+                    }
+                    return;
+                } else {
+                    logger.error("{} select db={} fail, reply={}", connectionName, db, ((StatusReply) reply).getStatus());
+                    throw new CamelliaRedisException("select db fail");
+                }
+            } else if (reply instanceof ErrorReply) {
+                logger.error("{} select db={} error, reply={}", connectionName, db, ((ErrorReply) reply).getError());
+                throw new CamelliaRedisException("select db fail");
+            }
+            logger.error("{} select db={} error, reply={}", connectionName, db, reply);
+            throw new CamelliaRedisException("select db fail");
+        } catch (Exception e) {
+            logger.error("{} select db={} timeout", connectionName, db);
+            throw new CamelliaRedisException("select db timeout", e);
         }
-        sendCommandDirect(command, completableFuture);
     }
 
     //发送READONLY命令
     private void sendReadonlyCommand() {
-        if (!addr.isReadonly()) return;
-        Command command = new Command(new byte[][]{RedisCommand.READONLY.raw()});
-        CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-        if (logger.isInfoEnabled()) {
-            logger.info("{} send READONLY command", connectionName);
+        try {
+            if (!addr.isReadonly()) return;
+            Command command = new Command(new byte[][]{RedisCommand.READONLY.raw()});
+            CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
+            if (logger.isInfoEnabled()) {
+                logger.info("{} send READONLY command", connectionName);
+            }
+            sendCommandDirect(command, completableFuture);
+            Reply reply = completableFuture.get(connectTimeoutMillis, TimeUnit.MILLISECONDS);
+            if (reply instanceof StatusReply) {
+                if (((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.OK.getStatus())) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("{} send readonly command success, reply = {}", connectionName, ((StatusReply) reply).getStatus());
+                    }
+                    return;
+                } else {
+                    logger.error("{} send readonly command fail, reply={}", connectionName, ((StatusReply) reply).getStatus());
+                    throw new CamelliaRedisException("send readonly command fail");
+                }
+            } else if (reply instanceof ErrorReply) {
+                logger.error("{} send readonly command error, reply={}", connectionName, ((ErrorReply) reply).getError());
+                throw new CamelliaRedisException("send readonly command error");
+            }
+            logger.error("{} send readonly command error, reply={}", connectionName, reply);
+            throw new CamelliaRedisException("send readonly command error");
+        } catch (Exception e) {
+            logger.error("{} send readonly command timeout", connectionName);
+            throw new CamelliaRedisException("send readonly command timeout", e);
         }
-        sendCommandDirect(command, completableFuture);
     }
 
     //直接发送命令，不检查连接状态
