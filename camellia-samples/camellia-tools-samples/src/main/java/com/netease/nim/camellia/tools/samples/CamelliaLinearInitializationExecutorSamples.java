@@ -17,6 +17,11 @@ public class CamelliaLinearInitializationExecutorSamples {
     public static void main(String[] args) {
 
         CamelliaLinearInitializationExecutor<String, String> executor = new CamelliaLinearInitializationExecutor<>("test", key -> {
+            try {
+                TimeUnit.MILLISECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             long l = c.incrementAndGet();
             if (l == 1) {
                 System.out.println("init fail");
