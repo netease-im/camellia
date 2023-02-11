@@ -200,8 +200,7 @@ public class CamelliaLinearInitializationExecutor<K, T> implements CamelliaExecu
     private DynamicCapacityLinkedBlockingQueue<MyCompletableFuture<T>> getFutureQueue(String keyStr) {
         FastThreadLocal<DynamicCapacityLinkedBlockingQueue<MyCompletableFuture<T>>> threadLocal = futureQueueMap.get(keyStr);
         if (threadLocal == null) {
-            threadLocal = new FastThreadLocal<>();
-            futureQueueMap.computeIfAbsent(keyStr, k -> new FastThreadLocal<>());
+            threadLocal = futureQueueMap.computeIfAbsent(keyStr, k -> new FastThreadLocal<>());
         }
         DynamicCapacityLinkedBlockingQueue<MyCompletableFuture<T>> queue = threadLocal.get();
         if (queue == null) {
