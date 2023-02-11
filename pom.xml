@@ -47,8 +47,8 @@
 		<openFeign11.version>11.8</openFeign11.version>
 		<okhttp.version>3.14.0</okhttp.version>
 		<slf4j.version>1.7.7</slf4j.version>
-		<netty.version>4.1.85.Final</netty.version>
-		<netty-incubator-transport-native-io_uring.version>0.0.16.Final</netty-incubator-transport-native-io_uring.version>
+		<netty.version>4.1.87.Final</netty.version>
+		<netty-incubator-transport-native-io_uring.version>0.0.17.Final</netty-incubator-transport-native-io_uring.version>
 		<jedis.version>2.9.3</jedis.version>
 		<jedis3.version>3.6.3</jedis3.version>
 		<concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
