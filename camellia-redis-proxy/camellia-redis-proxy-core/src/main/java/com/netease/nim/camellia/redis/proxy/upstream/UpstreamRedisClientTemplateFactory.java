@@ -82,7 +82,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
             if (future == null) return null;
             return future.get();
         } catch (Exception e) {
-            ErrorLogCollector.collect(UpstreamRedisClientTemplateFactory.class, "choose UpstreamRedisClientTemplate error", e);
+            ErrorLogCollector.collect(UpstreamRedisClientTemplateFactory.class, "getOrInitialize UpstreamRedisClientTemplate error", e);
             return null;
         }
     }
