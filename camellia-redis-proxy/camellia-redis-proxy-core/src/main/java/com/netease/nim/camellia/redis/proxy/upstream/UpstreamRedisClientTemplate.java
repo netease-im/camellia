@@ -132,7 +132,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(resourceTable)), updater.getClass().getName());
         }
         if (reloadIntervalMillis > 0) {
-            ProxyRouteConfUpdaterReloadTask reloadTask = new ProxyRouteConfUpdaterReloadTask(this, resourceTable, bid, bgroup, updater);
+            ProxyRouteConfUpdaterReloadTask reloadTask = new ProxyRouteConfUpdaterReloadTask(this, bid, bgroup, updater);
             this.future = scheduleExecutor.scheduleAtFixedRate(reloadTask, reloadIntervalMillis, reloadIntervalMillis, TimeUnit.MILLISECONDS);
         }
         if (bid == -1) {
@@ -898,12 +898,10 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         private final long bid;
         private final String bgroup;
         private final ProxyRouteConfUpdater updater;
-        private ResourceTable resourceTable;
 
-        ProxyRouteConfUpdaterReloadTask(UpstreamRedisClientTemplate template, ResourceTable resourceTable, long bid, String bgroup,
+        ProxyRouteConfUpdaterReloadTask(UpstreamRedisClientTemplate template, long bid, String bgroup,
                                         ProxyRouteConfUpdater updater) {
             this.template = template;
-            this.resourceTable = resourceTable;
             this.bid = bid;
             this.bgroup = bgroup;
             this.updater = updater;
@@ -922,10 +920,9 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                         return;
                     }
                     String newJson = ReadableResourceTableUtil.readableResourceTable(resourceTable);
-                    String oldJson = ReadableResourceTableUtil.readableResourceTable(this.resourceTable);
+                    String oldJson = ReadableResourceTableUtil.readableResourceTable(template.getResourceTable());
                     if (!newJson.equals(oldJson)) {
                         template.update(resourceTable);
-                        this.resourceTable = resourceTable;
                         if (logger.isInfoEnabled()) {
                             logger.info("reload success, bid = {}, bgroup = {}, resourceTable = {}", bid, bgroup,
                                     ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(resourceTable)));
