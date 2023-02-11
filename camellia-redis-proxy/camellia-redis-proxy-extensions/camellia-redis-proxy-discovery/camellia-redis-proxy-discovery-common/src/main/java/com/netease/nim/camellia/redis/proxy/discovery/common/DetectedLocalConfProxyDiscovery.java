@@ -4,6 +4,7 @@ import com.netease.nim.camellia.core.discovery.AbstractCamelliaDiscovery;
 import com.netease.nim.camellia.redis.base.proxy.IProxyDiscovery;
 import com.netease.nim.camellia.redis.base.proxy.Proxy;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -23,6 +25,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class DetectedLocalConfProxyDiscovery extends AbstractCamelliaDiscovery<Proxy> implements IProxyDiscovery {
 
     private static final Logger logger = LoggerFactory.getLogger(DetectedLocalConfProxyDiscovery.class);
+
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(SysUtils.getCpuNum(),
+            new CamelliaThreadFactory("detected-local-proxy-discovery"));
 
     private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -55,8 +60,7 @@ public class DetectedLocalConfProxyDiscovery extends AbstractCamelliaDiscovery<P
         if (aliveList.isEmpty()) {
             throw new IllegalArgumentException("all proxy node is not alive");
         }
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("detected-local-proxy-discovery"))
-                .scheduleAtFixedRate(this::checkAndUpdate, detectIntervalSeconds, detectIntervalSeconds, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(this::checkAndUpdate, detectIntervalSeconds, detectIntervalSeconds, TimeUnit.SECONDS);
     }
 
     private List<Proxy> parseConfig(String config) {
