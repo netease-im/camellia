@@ -225,7 +225,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         if (multiTenancySupport) {
             executor = new CamelliaLinearInitializationExecutor<>("upstream-redis-client-template-init", key -> {
                 String[] split = key.split("\\|");
-                return initRemoteInstance(Long.parseLong(split[0]), split[1]);
+                return initCustomInstance(Long.parseLong(split[0]), split[1]);
             }, () -> ProxyDynamicConf.getInt("upstream.redis.client.template.init.pending.size", 1000000));
 
             if (custom.getBid() > 0 && custom.getBgroup() != null && customInstance != null) {
