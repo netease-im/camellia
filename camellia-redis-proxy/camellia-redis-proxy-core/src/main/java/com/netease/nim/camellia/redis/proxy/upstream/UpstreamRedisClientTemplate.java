@@ -112,9 +112,9 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             }
         }
         if (bid == -1) {
-            RouteConfMonitor.registerRedisTemplate(null, null, this);
+            RouteConfMonitor.registerRedisClientTemplate(null, null, this);
         } else {
-            RouteConfMonitor.registerRedisTemplate(bid, bgroup, this);
+            RouteConfMonitor.registerRedisClientTemplate(bid, bgroup, this);
         }
     }
 
@@ -136,9 +136,9 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             this.future = scheduleExecutor.scheduleAtFixedRate(reloadTask, reloadIntervalMillis, reloadIntervalMillis, TimeUnit.MILLISECONDS);
         }
         if (bid == -1) {
-            RouteConfMonitor.registerRedisTemplate(null, null, this);
+            RouteConfMonitor.registerRedisClientTemplate(null, null, this);
         } else {
-            RouteConfMonitor.registerRedisTemplate(bid, bgroup, this);
+            RouteConfMonitor.registerRedisClientTemplate(bid, bgroup, this);
         }
     }
 
@@ -549,9 +549,9 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             future.cancel(false);
         }
         if (bid == -1) {
-            RouteConfMonitor.deregisterRedisTemplate(null, null);
+            RouteConfMonitor.deregisterRedisClientTemplate(null, null);
         } else {
-            RouteConfMonitor.deregisterRedisTemplate(bid, bgroup);
+            RouteConfMonitor.deregisterRedisClientTemplate(bid, bgroup);
         }
         if (logger.isInfoEnabled()) {
             logger.info("AsyncCamelliaRedisTemplate shutdown, bid = {}, bgroup = {}", bid, bgroup);

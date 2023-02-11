@@ -17,7 +17,7 @@ public class RouteConfMonitor {
 
     private static final ConcurrentHashMap<String, UpstreamRedisClientTemplate> templateMap = new ConcurrentHashMap<>();
 
-    public static void registerRedisTemplate(Long bid, String bgroup, UpstreamRedisClientTemplate template) {
+    public static void registerRedisClientTemplate(Long bid, String bgroup, UpstreamRedisClientTemplate template) {
         try {
             templateMap.put(bid + "|" + bgroup, template);
         } catch (Exception e) {
@@ -25,7 +25,7 @@ public class RouteConfMonitor {
         }
     }
 
-    public static void deregisterRedisTemplate(Long bid, String bgroup) {
+    public static void deregisterRedisClientTemplate(Long bid, String bgroup) {
         try {
             templateMap.remove(bid + "|" + bgroup);
         } catch (Exception e) {
