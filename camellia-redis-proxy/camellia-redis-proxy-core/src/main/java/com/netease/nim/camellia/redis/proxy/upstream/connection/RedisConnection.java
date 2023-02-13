@@ -342,7 +342,7 @@ public class RedisConnection implements IUpstreamClient {
             //1、auth
             auth();
             //2、ping
-            ping(connectTimeoutMillis);
+            ping(connectTimeoutMillis, true);
             //3、select db
             selectDB();
             //4、readonly
@@ -377,7 +377,7 @@ public class RedisConnection implements IUpstreamClient {
                 if (status != RedisConnectionStatus.VALID) {
                     return;
                 }
-                ping(heartbeatTimeoutMillis);
+                ping(heartbeatTimeoutMillis, false);
             } catch (Exception e) {
                 logger.error("{} heartbeat error", connectionName, e);
             }
@@ -385,12 +385,20 @@ public class RedisConnection implements IUpstreamClient {
     }
 
     //发送ping，并检测回包
-    private void ping(long timeoutMillis) {
+    private void ping(long timeoutMillis, boolean logEnable) {
+        if (logEnable && logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
+                logger.info("{} send `PING` command", connectionName);
+            }
+        }
         CompletableFuture<Reply> future = sendPing();
         try {
             Reply reply = future.get(timeoutMillis, TimeUnit.MILLISECONDS);
             if (reply instanceof StatusReply) {
                 if (((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.PONG.getStatus())) {
+                    if (logEnable && logger.isInfoEnabled()) {
+                        logger.info("{} send `PING` command success, reply = {}", connectionName, ((StatusReply) reply).getStatus());
+                    }
                     return;
                 }
             }
@@ -400,15 +408,18 @@ public class RedisConnection implements IUpstreamClient {
                     Reply reply1 = replies[0];
                     if (reply1 instanceof BulkReply) {
                         if (Utils.bytesToString(((BulkReply) reply1).getRaw()).equalsIgnoreCase(StatusReply.PONG.getStatus())) {
+                            if (logEnable && logger.isInfoEnabled()) {
+                                logger.info("{} send `PING` command success, reply = {}", connectionName, Utils.bytesToString(((BulkReply) reply1).getRaw()));
+                            }
                             return;
                         }
                     }
                 }
             }
-            logger.error("{} ping fail, response = {}", connectionName, reply);
+            logger.error("{} send `PING` command fail, reply = {}", connectionName, reply);
             throw new CamelliaRedisException("ping fail");
         } catch (Exception e) {
-            logger.error("{} ping timeout, timeoutMillis = {}", connectionName, heartbeatTimeoutMillis, e);
+            logger.error("{} send `PING` command timeout, timeoutMillis = {}", connectionName, timeoutMillis, e);
             throw new CamelliaRedisException(e);
         }
     }
@@ -473,9 +484,7 @@ public class RedisConnection implements IUpstreamClient {
                 }
             }
             if (count > 0 && !grace) {
-                if (logger.isInfoEnabled()) {
-                    logger.info("{} stopped, {} commands return NOT_AVAILABLE", connectionName, count);
-                }
+                logger.error("{} stopped, {} commands return NOT_AVAILABLE", connectionName, count);
             }
         } catch (Exception e) {
             logger.error("{} stop error", connectionName, e);
@@ -486,9 +495,6 @@ public class RedisConnection implements IUpstreamClient {
     private CompletableFuture<Reply> sendPing() {
         Command command = new Command(new byte[][]{RedisCommand.PING.raw()});
         CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
-        if (logger.isDebugEnabled()) {
-            logger.debug("{} send ping for heart-beat", connectionName);
-        }
         sendCommandDirect(command, completableFuture);
         return completableFuture;
     }
@@ -499,26 +505,29 @@ public class RedisConnection implements IUpstreamClient {
         try {
             Command command = new Command(new byte[][]{RedisCommand.SELECT.raw(), Utils.stringToBytes(String.valueOf(config.getDb()))});
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
+            if (logger.isInfoEnabled()) {
+                logger.info("{} send `SELECT {}` command", connectionName, config.getDb());
+            }
             sendCommandDirect(command, completableFuture);
             Reply reply = completableFuture.get(connectTimeoutMillis, TimeUnit.MILLISECONDS);
             if (reply instanceof StatusReply) {
                 if (((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.OK.getStatus())) {
                     if (logger.isInfoEnabled()) {
-                        logger.info("{} select db={} success, reply = {}", connectionName, db, ((StatusReply) reply).getStatus());
+                        logger.info("{} `SELECT {}` success, reply = {}", connectionName, db, ((StatusReply) reply).getStatus());
                     }
                     return;
                 } else {
-                    logger.error("{} select db={} fail, reply={}", connectionName, db, ((StatusReply) reply).getStatus());
+                    logger.error("{} send `SELECT {}` fail, reply = {}", connectionName, db, ((StatusReply) reply).getStatus());
                     throw new CamelliaRedisException("select db fail");
                 }
             } else if (reply instanceof ErrorReply) {
-                logger.error("{} select db={} error, reply={}", connectionName, db, ((ErrorReply) reply).getError());
+                logger.error("{} send `SELECT {}` error, reply = {}", connectionName, db, ((ErrorReply) reply).getError());
                 throw new CamelliaRedisException("select db fail");
             }
-            logger.error("{} select db={} error, reply={}", connectionName, db, reply);
+            logger.error("{} send `SELECT {}` error, reply = {}", connectionName, db, reply);
             throw new CamelliaRedisException("select db fail");
         } catch (Exception e) {
-            logger.error("{} select db={} timeout", connectionName, db);
+            logger.error("{} send `SELECT {}` timeout, timeoutMillis = {}", connectionName, db, connectTimeoutMillis);
             throw new CamelliaRedisException("select db timeout", e);
         }
     }
@@ -530,28 +539,28 @@ public class RedisConnection implements IUpstreamClient {
             Command command = new Command(new byte[][]{RedisCommand.READONLY.raw()});
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
             if (logger.isInfoEnabled()) {
-                logger.info("{} send READONLY command", connectionName);
+                logger.info("{} send `READONLY` command", connectionName);
             }
             sendCommandDirect(command, completableFuture);
             Reply reply = completableFuture.get(connectTimeoutMillis, TimeUnit.MILLISECONDS);
             if (reply instanceof StatusReply) {
                 if (((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.OK.getStatus())) {
                     if (logger.isInfoEnabled()) {
-                        logger.info("{} send readonly command success, reply = {}", connectionName, ((StatusReply) reply).getStatus());
+                        logger.info("{} send `READONLY` command success, reply = {}", connectionName, ((StatusReply) reply).getStatus());
                     }
                     return;
                 } else {
-                    logger.error("{} send readonly command fail, reply={}", connectionName, ((StatusReply) reply).getStatus());
+                    logger.error("{} send `READONLY` command fail, reply = {}", connectionName, ((StatusReply) reply).getStatus());
                     throw new CamelliaRedisException("send readonly command fail");
                 }
             } else if (reply instanceof ErrorReply) {
-                logger.error("{} send readonly command error, reply={}", connectionName, ((ErrorReply) reply).getError());
+                logger.error("{} send `READONLY` command error, reply = {}", connectionName, ((ErrorReply) reply).getError());
                 throw new CamelliaRedisException("send readonly command error");
             }
-            logger.error("{} send readonly command error, reply={}", connectionName, reply);
+            logger.error("{} send `READONLY` command error, reply = {}", connectionName, reply);
             throw new CamelliaRedisException("send readonly command error");
         } catch (Exception e) {
-            logger.error("{} send readonly command timeout", connectionName);
+            logger.error("{} send `READONLY` command timeout, timeoutMillis = {}", connectionName, connectTimeoutMillis);
             throw new CamelliaRedisException("send readonly command timeout", e);
         }
     }
@@ -563,28 +572,35 @@ public class RedisConnection implements IUpstreamClient {
     }
 
     //发送AUTH命令，并检查回包
-    private void auth() throws Exception {
+    private void auth() {
         if (password != null) {
-            logger.info("{} need password, try auth", connectionName);
-            boolean authSuccess = false;
+            logger.info("{} need password, send `AUTH` command", connectionName);
             CompletableFuture<Reply> future = new CompletableFuture<>();
             if (userName == null) {
                 sendCommandDirect(new Command(new byte[][]{RedisCommand.AUTH.raw(), Utils.stringToBytes(password)}), future);
             } else {
                 sendCommandDirect(new Command(new byte[][]{RedisCommand.AUTH.raw(), Utils.stringToBytes(userName), Utils.stringToBytes(password)}), future);
             }
-            Reply reply = future.get(connectTimeoutMillis, TimeUnit.MILLISECONDS);
+            Reply reply;
+            try {
+                reply = future.get(connectTimeoutMillis, TimeUnit.MILLISECONDS);
+            } catch (Exception e) {
+                logger.error("{} send `AUTH` command timeout, timeoutMillis = {}", connectionName, connectTimeoutMillis);
+                throw new CamelliaRedisException("auth fail");
+            }
             if (reply instanceof StatusReply) {
                 if (((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.OK.getStatus())) {
                     if (logger.isInfoEnabled()) {
-                        logger.info("{} auth success", connectionName);
+                        logger.info("{} send `AUTH` command success", connectionName);
                     }
-                    authSuccess = true;
+                    return;
                 }
-            }
-            if (!authSuccess) {
+            } else if (reply instanceof ErrorReply) {
+                logger.error("{} send `AUTH` command error, reply = {}", connectionName, ((ErrorReply) reply).getError());
                 throw new CamelliaRedisException("auth fail");
             }
+            logger.error("{} send `AUTH` command fail, reply = {}", connectionName, reply);
+            throw new CamelliaRedisException("auth fail");
         }
     }
 
