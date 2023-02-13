@@ -42,7 +42,8 @@ public class CamelliaLinearInitializationExecutor<K, T> implements CamelliaExecu
         this.initializer = config.getInitializer();
         this.config = config;
         this.name = CamelliaExecutorMonitor.genExecutorName(config.getName());
-        this.executor = config.getExecutor();
+        this.executor = new CamelliaHashedExecutor("liner-initialization-" + name, config.getPoolSize(),
+                config.getPendingQueueSize(), new CamelliaHashedExecutor.AbortPolicy());
         this.pendingQueueSize = config.getPendingQueueSize();
 
         CamelliaExecutorMonitor.register(this);
