@@ -22,21 +22,25 @@ public class DynamicConfProxyRouteConfUpdater extends ProxyRouteConfUpdater {
     }
 
     private void reload() {
-        for (String key : map.keySet()) {
+        ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>(map);
+        for (String key : cache.keySet()) {
             try {
                 String[] split = key.split("\\|");
                 long bid = Long.parseLong(split[0]);
                 String bgroup = split[1];
-                String oldConf = map.get(key);
+                String oldConf = cache.get(key);
                 String newConf = getConf(bid, bgroup);
                 if (newConf == null) {
                     invokeRemoveResourceTable(bid, bgroup);
+                    map.remove(bid + "|" + bgroup);
                     continue;
                 }
                 if (!oldConf.equals(newConf)) {
                     ResourceTable resourceTable = getResourceTable(bid, bgroup);
-                    //触发回调
-                    invokeUpdateResourceTable(bid, bgroup, resourceTable);
+                    if (resourceTable != null) {
+                        //触发回调
+                        invokeUpdateResourceTable(bid, bgroup, resourceTable);
+                    }
                 }
             } catch (Exception e) {
                 ErrorLogCollector.collect(DynamicConfProxyRouteConfUpdater.class, "reload error, key = " + key, e);
