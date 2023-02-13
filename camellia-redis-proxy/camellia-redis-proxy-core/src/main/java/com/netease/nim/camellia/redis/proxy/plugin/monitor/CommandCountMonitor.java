@@ -51,9 +51,13 @@ public class CommandCountMonitor {
             long writeQps = write.sumThenReset();
             ProxyInfoUtils.updateLastQps(readQps, writeQps);
             if (readQps + writeQps > maxQps.qps.get()) {
-                maxQps.readQps.set(readQps);
-                maxQps.writeQps.set(writeQps);
                 maxQps.qps.set(readQps + writeQps);
+            }
+            if (readQps > maxQps.readQps.get()) {
+                maxQps.readQps.set(readQps);
+            }
+            if (writeQps > maxQps.writeQps.get()) {
+                maxQps.writeQps.set(writeQps);
             }
         }, 1, 1, TimeUnit.SECONDS);
     }
