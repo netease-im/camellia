@@ -94,7 +94,7 @@ public class RedisClusterClient implements IUpstreamClient {
     }
 
     private void startSchedule() {
-        int intervalSeconds = ProxyDynamicConf.getInt("redis.cluster.schedule.renew.interval.seconds", 60);
+        int intervalSeconds = ProxyDynamicConf.getInt("redis.cluster.schedule.renew.interval.seconds", 600);
         ExecutorUtils.scheduleAtFixedRate(() -> {
             try {
                 clusterSlotInfo.renew();
