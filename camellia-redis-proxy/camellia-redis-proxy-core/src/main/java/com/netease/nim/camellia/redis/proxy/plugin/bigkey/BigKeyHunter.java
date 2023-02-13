@@ -165,11 +165,11 @@ public class BigKeyHunter {
                     case GETSET:
                     case GET:
                         if (reply instanceof BulkReply) {
-                            byte[] raw = ((BulkReply) reply).getRaw();
+                            int size = ((BulkReply) reply).getSize();
                             int threshold = stringSizeThreshold(bid, bgroup);
-                            if (raw != null && raw.length > threshold) {
-                                BigKeyMonitor.bigKey(command, objects[1], raw.length, threshold);
-                                ExecutorUtils.submitCallbackTask(CALLBACK_NAME, () -> bigKeyMonitorCallback.callbackReply(command, reply, objects[1], raw.length, threshold));
+                            if (size > threshold) {
+                                BigKeyMonitor.bigKey(command, objects[1], size, threshold);
+                                ExecutorUtils.submitCallbackTask(CALLBACK_NAME, () -> bigKeyMonitorCallback.callbackReply(command, reply, objects[1], size, threshold));
                             }
                         }
                         break;
@@ -181,11 +181,11 @@ public class BigKeyHunter {
                                 int threshold = stringSizeThreshold(bid, bgroup);
                                 for (Reply reply1 : replies) {
                                     if (reply1 instanceof BulkReply) {
-                                        byte[] raw = ((BulkReply) reply1).getRaw();
-                                        if (raw != null && raw.length > threshold) {
+                                        int size = ((BulkReply) reply1).getSize();
+                                        if (size > threshold) {
                                             int index = i;
-                                            BigKeyMonitor.bigKey(command, objects[index], raw.length, threshold);
-                                            ExecutorUtils.submitCallbackTask(CALLBACK_NAME, () -> bigKeyMonitorCallback.callbackReply(command, reply, objects[index], raw.length, threshold));
+                                            BigKeyMonitor.bigKey(command, objects[index], size, threshold);
+                                            ExecutorUtils.submitCallbackTask(CALLBACK_NAME, () -> bigKeyMonitorCallback.callbackReply(command, reply, objects[index], size, threshold));
                                         }
                                     }
                                     i ++;
