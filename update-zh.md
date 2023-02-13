@@ -15,6 +15,7 @@
 * camellia-hbase支持url中设置userName和password以及aliyun-lindorm的标记
 * camellia-redis-proxy优化了redis-cluster-slaves和redis-sentinel-slaves两种resource在有节点宕机下的failover逻辑
 * camellia-redis-proxy优化了redis-proxies和redis-proxies-discovery两种resource在有节点宕机下的failover逻辑
+* camellia-redis-proxy支持在application.yml中配置dynamic.conf.file.name来代替camellia-redis-proxy.properties文件
 
 ### 更新
 * camellia-redis-proxy相关核心类进行了重命名（upstream部分）

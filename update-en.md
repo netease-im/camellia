@@ -15,6 +15,7 @@
 * camellia-hbase support setting userName、password、tag of aliyun-lindorm in url
 * camellia-redis-proxy optimize the failover logic of redis-cluster-slaves and redis-sentinel-slaves
 * camellia-redis-proxy optimize the failover logic of redis-proxies and redis-proxies-discovery
+* camellia-redis-proxy support configure dynamic.conf.file.name in application.yml to replace camellia-redis-proxy.properties
 
 ### update
 * camellia-redis-proxy rename core upstream service  

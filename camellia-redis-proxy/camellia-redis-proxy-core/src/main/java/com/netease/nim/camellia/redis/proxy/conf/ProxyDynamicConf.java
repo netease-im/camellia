@@ -23,7 +23,7 @@ public class ProxyDynamicConf {
 
     private static Map<String, String> conf = new HashMap<>();
     private static final Set<DynamicConfCallback> callbackSet = new HashSet<>();
-    private static final String fileName = "camellia-redis-proxy.properties";
+    private static String fileName = "camellia-redis-proxy.properties";
 
     private static final ConcurrentHashMap<String, Integer> intCache = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Long> longCache = new ConcurrentHashMap<>();
@@ -44,6 +44,11 @@ public class ProxyDynamicConf {
     public static void updateInitConf(Map<String, String> initConf) {
         if (initConf != null && !initConf.isEmpty()) {
             ProxyDynamicConf.initConf.putAll(initConf);
+            String fileName = initConf.get("dynamic.conf.file.name");
+            if (fileName != null) {
+                ProxyDynamicConf.fileName = fileName;
+                logger.info("ProxyDynamicConf use {} instead of camellia-redis-proxy.properties", fileName);
+            }
             reload();
         }
     }
