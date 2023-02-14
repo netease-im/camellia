@@ -6,7 +6,7 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-proxy-nacos-spring-boot-starter</artifactId>
-    <version>1.1.14</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 

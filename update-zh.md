@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.2.0（2023/02/xx）
+# 1.2.0（2023/02/14）
 ### 新增
 * 新增camellia-redis3模块以及相关模块，支持jedis3.x（默认使用v3.6.3)
 * 把camellia-redis-client和camellia-redis-proxy的公共部分组成camellia-redis-base模块，从而camellia-redis-proxy不再依赖camellia-redis-client

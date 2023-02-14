@@ -52,7 +52,7 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-delay-queue-server-spring-boot-starter</artifactId>
-    <version>1.1.14</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 编写main方法
@@ -126,7 +126,7 @@ camellia-redis:
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-delay-queue-sdk-spring-boot-starter</artifactId>
-    <version>1.1.14</version>
+    <version>1.2.0</version>
 </dependency>
 <dependency>
     <groupId>org.springframework.boot</groupId>
@@ -188,7 +188,7 @@ public class ProducerController {
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-delay-queue-sdk-spring-boot-starter</artifactId>
-    <version>1.1.14</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 增加application.yml文件，主要是配置delay-queue-server的地址（可以基于nginx配置一个域名，也可以基于注册中心）
@@ -259,7 +259,7 @@ curl 'http://127.0.0.1:8081/sendDelayMsg?topic=topic1&msg=abc&delaySeconds=10'
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-delay-queue-sdk</artifactId>
-    <version>1.1.14</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 示例代码：  

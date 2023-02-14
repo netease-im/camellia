@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.0（2023/02/xx）
+# 1.2.0（2023/02/14）
 ### add
 * add camellia-redis3 module, support jedis3.x(default use v3.6.3)
 * add camellia-redis-base, the common of camellia-redis-client and camellia-redis-proxy

@@ -72,7 +72,7 @@ provide some simple and practical tools, like:
 [QUICK START](/docs/tools/tools.md)
 
 ## Version
-latest version is 1.1.14, have deploy to maven central repository on 2023/02/01  
+latest version is 1.2.0, have deploy to maven central repository on 2023/02/14  
 [CHANGE_LOG](/update-en.md)  
 
 ## User List
