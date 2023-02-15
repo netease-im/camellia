@@ -53,12 +53,7 @@ public class CamelliaRedisPipeline implements ICamelliaRedisPipeline {
         } finally {
             if (close.compareAndSet(false, true)) {
                 //放回pool，可以复用pipeline对象
-                pipelinePool.set(this, new Runnable() {
-                    @Override
-                    public void run() {
-                        close.compareAndSet(true, false);
-                    }
-                });
+                pipelinePool.set(this, () -> close.compareAndSet(true, false));
             }
         }
     }
