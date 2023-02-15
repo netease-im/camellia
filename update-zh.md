@@ -1,5 +1,16 @@
 [ENGLISH](update-en.md)
 
+# 1.2.1（2023/02/xx）
+### 新增
+* 无
+
+### 更新
+* 无
+
+### fix
+* 修复了使用jedis3+SpringRedisTemplate+zk/eureka接入proxy的相关jar包的依赖错误问题（打包时使用了jedis2打包导致类找不到）
+
+
 # 1.2.0（2023/02/14）
 ### 新增
 * 新增camellia-redis3模块以及相关模块，支持jedis3.x（默认使用v3.6.3)

@@ -1,5 +1,16 @@
 [中文版](update-zh.md)
 
+# 1.2.1（2023/02/xx）
+### add
+* none
+
+### update
+* none
+
+### fix
+* fix the dependency problem of jar when use jedis3+SpringRedisTemplate+zk/eureka to access redis-proxy by discovery mode(root case: compile by jedis2.x, occur class not found error)
+
+
 # 1.2.0（2023/02/14）
 ### add
 * add camellia-redis3 module, support jedis3.x(default use v3.6.3)
