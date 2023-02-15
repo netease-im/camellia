@@ -244,7 +244,22 @@ public class RedisResourceUtil {
 
                 String split = substring.substring(index + 1);
 
-                String[] split2 = split.split(",");
+                String nodesStr;
+                int db = 0;
+                if (split.contains("?")) {
+                    int i = split.indexOf("?");
+                    String queryString = split.substring(i + 1);
+                    Map<String, String> params = getParams(queryString);
+                    String dbStr = params.get("db");
+                    if (dbStr != null) {
+                        db = Integer.parseInt(dbStr);
+                    }
+                    nodesStr = split.substring(0, i);
+                } else {
+                    nodesStr = split;
+                }
+
+                String[] split2 = nodesStr.split(",");
                 List<RedisProxiesResource.Node> nodeList = new ArrayList<>();
                 for (String node : split2) {
                     String[] split1 = node.split(":");
@@ -252,11 +267,7 @@ public class RedisResourceUtil {
                     int port = Integer.parseInt(split1[1]);
                     nodeList.add(new RedisProxiesResource.Node(ip, port));
                 }
-                RedisProxiesResource proxyResource = new RedisProxiesResource(nodeList, userName, password);
-                if (!proxyResource.getUrl().equals(resource.getUrl())) {
-                    throw new CamelliaRedisException("resource url not equals");
-                }
-                return proxyResource;
+                return new RedisProxiesResource(nodeList, userName, password, db);
             } else if (url.startsWith(RedisType.RedisProxiesDiscovery.getPrefix())) {
                 String substring = url.substring(RedisType.RedisProxiesDiscovery.getPrefix().length());
                 if (!substring.contains("@")) {
@@ -268,12 +279,23 @@ public class RedisResourceUtil {
                 String userName = userNameAndPassword[0];
                 String password = userNameAndPassword[1];
 
-                String proxyName = substring.substring(index + 1);
-                RedisProxiesDiscoveryResource redisProxiesDiscoveryResource = new RedisProxiesDiscoveryResource(userName, password, proxyName);
-                if (!redisProxiesDiscoveryResource.getUrl().equals(resource.getUrl())) {
-                    throw new CamelliaRedisException("resource url not equals");
+                String str = substring.substring(index + 1);
+
+                String proxyName;
+                int db = 0;
+                if (str.contains("?")) {
+                    int i = str.indexOf("?");
+                    String queryString = str.substring(i + 1);
+                    Map<String, String> params = getParams(queryString);
+                    String dbStr = params.get("db");
+                    if (dbStr != null) {
+                        db = Integer.parseInt(dbStr);
+                    }
+                    proxyName = str.substring(0, i);
+                } else {
+                    proxyName = str;
                 }
-                return redisProxiesDiscoveryResource;
+                return new RedisProxiesDiscoveryResource(userName, password, proxyName, db);
             }
             throw new CamelliaRedisException("not redis resource");
         } catch (CamelliaRedisException e) {

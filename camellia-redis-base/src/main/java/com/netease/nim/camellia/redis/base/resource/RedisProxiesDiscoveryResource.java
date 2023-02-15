@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.base.resource;
 
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.redis.base.resource.RedisType;
 
 /**
  * 格式如下：
@@ -11,17 +10,21 @@ import com.netease.nim.camellia.redis.base.resource.RedisType;
  * redis-proxies-discovery://passwd@proxyName
  * 3、有密码且有账号
  * redis-proxies-discovery://username:passwd@proxyName
+ * 4、有db
+ * redis-proxies-discovery://username:passwd@proxyName?db=1
  */
 public class RedisProxiesDiscoveryResource extends Resource {
 
     private final String userName;
     private final String password;
     private final String proxyName;
+    private final int db;
 
-    public RedisProxiesDiscoveryResource(String userName, String password, String proxyName) {
+    public RedisProxiesDiscoveryResource(String userName, String password, String proxyName, int db) {
         this.userName = userName;
         this.password = password;
         this.proxyName = proxyName;
+        this.db = db;
         StringBuilder url = new StringBuilder();
         url.append(RedisType.RedisProxiesDiscovery.getPrefix());
         if (userName != null && password != null) {
@@ -31,7 +34,14 @@ public class RedisProxiesDiscoveryResource extends Resource {
         }
         url.append("@");
         url.append(proxyName);
+        if (db > 0) {
+            url.append("?db=").append(db);
+        }
         this.setUrl(url.toString());
+    }
+
+    public RedisProxiesDiscoveryResource(String userName, String password, String proxyName) {
+        this(userName, password, proxyName, 0);
     }
 
     public String getUserName() {
@@ -44,5 +54,9 @@ public class RedisProxiesDiscoveryResource extends Resource {
 
     public String getProxyName() {
         return proxyName;
+    }
+
+    public int getDb() {
+        return db;
     }
 }

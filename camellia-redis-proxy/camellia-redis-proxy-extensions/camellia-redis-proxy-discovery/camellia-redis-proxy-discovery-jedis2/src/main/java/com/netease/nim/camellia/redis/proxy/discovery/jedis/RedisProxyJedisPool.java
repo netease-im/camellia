@@ -61,6 +61,7 @@ public class RedisProxyJedisPool extends JedisPool {
     private final boolean jedisPoolLazyInit;
     private final int jedisPoolInitialSize;
     private final JedisPoolInitializer jedisPoolInitializer;
+    private final int db;
 
     public RedisProxyJedisPool(IProxyDiscovery proxyDiscovery) {
         this(-1, null, proxyDiscovery, null, defaultTimeout, null, defaultRefreshSeconds, defaultMaxRetry, defaultSideCarFirst, defaultLocalHost);
@@ -191,9 +192,18 @@ public class RedisProxyJedisPool extends JedisPool {
 
     public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
                                int timeout, String password, int refreshSeconds, int maxRetry, boolean sideCarFirst, String localhost,
-                               RegionResolver regionResolver, IProxySelector proxySelector, boolean jedisPoolLazyInit, int jedisPoolInitialSize, JedisPoolInitializer jedisPoolInitializer, ScheduledExecutorService scheduledExecutorService) {
+                               RegionResolver regionResolver, IProxySelector proxySelector, boolean jedisPoolLazyInit, int jedisPoolInitialSize,
+                               JedisPoolInitializer jedisPoolInitializer, ScheduledExecutorService scheduledExecutorService) {
+        this(bid, bgroup, proxyDiscovery, poolConfig, timeout, password, refreshSeconds, maxRetry, sideCarFirst, localhost, regionResolver,
+                proxySelector, jedisPoolLazyInit, jedisPoolInitialSize, jedisPoolInitializer, scheduledExecutorService, 0);
+    }
+
+    public RedisProxyJedisPool(long bid, String bgroup, IProxyDiscovery proxyDiscovery, GenericObjectPoolConfig poolConfig,
+                               int timeout, String password, int refreshSeconds, int maxRetry, boolean sideCarFirst, String localhost,
+                               RegionResolver regionResolver, IProxySelector proxySelector, boolean jedisPoolLazyInit, int jedisPoolInitialSize, JedisPoolInitializer jedisPoolInitializer, ScheduledExecutorService scheduledExecutorService, int db) {
         this.bid = bid;
         this.bgroup = bgroup;
+        this.db = db;
         this.jedisPoolLazyInit = jedisPoolLazyInit;
         this.jedisPoolInitialSize = jedisPoolInitialSize;
         if (proxyDiscovery == null) {
@@ -238,6 +248,7 @@ public class RedisProxyJedisPool extends JedisPool {
 
         private long bid = -1;//业务id，小于等于0表示不指定
         private String bgroup = null;//业务分组
+        private int db = 0;
         private IProxyDiscovery proxyDiscovery;//proxy discovery，用于获取proxy列表以及获取proxy的变更通知，默认提供了基于zk的实现，你也可以自己实现
         private GenericObjectPoolConfig poolConfig = new JedisPoolConfig();//jedis pool config
         private int timeout = defaultTimeout;//超时
@@ -275,6 +286,11 @@ public class RedisProxyJedisPool extends JedisPool {
 
         public Builder bgroup(String bgroup) {
             this.bgroup = bgroup;
+            return this;
+        }
+
+        public Builder db(int db) {
+            this.db = db;
             return this;
         }
 
@@ -350,7 +366,8 @@ public class RedisProxyJedisPool extends JedisPool {
 
         public RedisProxyJedisPool build() {
             return new RedisProxyJedisPool(bid, bgroup, proxyDiscovery, poolConfig, timeout, password,
-                    refreshSeconds, maxRetry, sideCarFirst, localhost, regionResolver, proxySelector, jedisPoolLazyInit, jedisPoolInitialSize, jedisPoolInitializer, scheduledExecutorService);
+                    refreshSeconds, maxRetry, sideCarFirst, localhost,
+                    regionResolver, proxySelector, jedisPoolLazyInit, jedisPoolInitialSize, jedisPoolInitializer, scheduledExecutorService, db);
         }
     }
 
@@ -477,7 +494,7 @@ public class RedisProxyJedisPool extends JedisPool {
                 proxySelector.add(proxy);
                 JedisPool jedisPool = jedisPoolMap.get(proxy);
                 if (jedisPool == null) {
-                    jedisPool = jedisPoolInitializer.initJedisPool(new JedisPoolInitialContext(proxy, poolConfig, bid, bgroup, timeout, password));
+                    jedisPool = jedisPoolInitializer.initJedisPool(new JedisPoolInitialContext(proxy, poolConfig, bid, bgroup, timeout, password, db));
                     jedisPoolMap.put(proxy, jedisPool);
                 }
             } catch (Exception e) {
@@ -493,14 +510,16 @@ public class RedisProxyJedisPool extends JedisPool {
         private final String bgroup;
         private final int timeout;
         private final String password;
+        private final int db;
 
-        public JedisPoolInitialContext(Proxy proxy, GenericObjectPoolConfig poolConfig, Long bid, String bgroup, int timeout, String password) {
+        public JedisPoolInitialContext(Proxy proxy, GenericObjectPoolConfig poolConfig, Long bid, String bgroup, int timeout, String password, int db) {
             this.proxy = proxy;
             this.poolConfig = poolConfig;
             this.bid = bid;
             this.bgroup = bgroup;
             this.timeout = timeout;
             this.password = password;
+            this.db = db;
         }
 
         public Proxy getProxy() {
@@ -526,6 +545,10 @@ public class RedisProxyJedisPool extends JedisPool {
         public String getPassword() {
             return password;
         }
+
+        public int getDb() {
+            return db;
+        }
     }
 
     public static interface JedisPoolInitializer {
@@ -541,7 +564,7 @@ public class RedisProxyJedisPool extends JedisPool {
                     clientName = ProxyUtil.buildClientName(context.getBid(), context.getBgroup());
                 }
                 return new JedisPool(context.poolConfig, context.getProxy().getHost(),
-                        context.getProxy().getPort(), context.getTimeout(), context.getPassword(), 0, clientName);
+                        context.getProxy().getPort(), context.getTimeout(), context.getPassword(), context.getDb(), clientName);
             }
         }
     }

@@ -57,7 +57,7 @@ public class RedisProxiesDiscoveryClient extends AbstractRedisProxiesClient {
     }
 
     private RedisConnectionAddr toAddr(Proxy proxy) {
-        return new RedisConnectionAddr(proxy.getHost(), proxy.getPort(), resource.getUserName(), resource.getPassword());
+        return new RedisConnectionAddr(proxy.getHost(), proxy.getPort(), resource.getUserName(), resource.getPassword(), resource.getDb());
     }
 
     @Override

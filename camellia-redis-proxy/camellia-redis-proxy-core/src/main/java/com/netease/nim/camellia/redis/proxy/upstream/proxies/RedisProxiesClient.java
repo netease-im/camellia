@@ -24,7 +24,7 @@ public class RedisProxiesClient extends AbstractRedisProxiesClient {
         this.resource = resource;
         List<RedisProxiesResource.Node> nodes = resource.getNodes();
         for (RedisProxiesResource.Node node : nodes) {
-            list.add(new RedisConnectionAddr(node.getHost(), node.getPort(), resource.getUserName(), resource.getPassword()));
+            list.add(new RedisConnectionAddr(node.getHost(), node.getPort(), resource.getUserName(), resource.getPassword(), resource.getDb()));
         }
         init();
         logger.info("RedisProxiesClient init success, resource = {}", resource.getUrl());

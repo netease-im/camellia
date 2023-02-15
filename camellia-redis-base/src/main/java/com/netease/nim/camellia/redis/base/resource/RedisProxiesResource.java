@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.base.resource;
 
 
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.redis.base.resource.RedisType;
 
 import java.util.List;
 
@@ -14,16 +13,20 @@ import java.util.List;
  * redis-proxies://passwd@host:port,host:port,host:port
  * 3、有密码且有账号
  * redis-proxies://username:passwd@host:port,host:port,host:port
+ * 4、有db
+ * redis-proxies://username:passwd@host:port,host:port,host:port?db=1
  */
 public class RedisProxiesResource extends Resource {
     private final List<Node> nodes;
     private final String password;
     private final String userName;
+    private final int db;
 
-    public RedisProxiesResource(List<Node> nodes, String userName, String password) {
+    public RedisProxiesResource(List<Node> nodes, String userName, String password, int db) {
         this.nodes = nodes;
         this.password = password;
         this.userName = userName;
+        this.db = db;
         StringBuilder url = new StringBuilder();
         url.append(RedisType.RedisProxies.getPrefix());
         if (userName != null && password != null) {
@@ -37,7 +40,14 @@ public class RedisProxiesResource extends Resource {
             url.append(",");
         }
         url.deleteCharAt(url.length() - 1);
+        if (db > 0) {
+            url.append("?db=").append(db);
+        }
         this.setUrl(url.toString());
+    }
+
+    public RedisProxiesResource(List<Node> nodes, String userName, String password) {
+        this(nodes, userName, password, 0);
     }
 
     public RedisProxiesResource(List<Node> nodes, String password) {
@@ -54,6 +64,10 @@ public class RedisProxiesResource extends Resource {
 
     public String getUserName() {
         return userName;
+    }
+
+    public int getDb() {
+        return db;
     }
 
     public static class Node {

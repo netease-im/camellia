@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.base.resource;
 
 import com.netease.nim.camellia.core.model.Resource;
-import com.netease.nim.camellia.redis.base.resource.RedisType;
 
 import java.util.List;
 
