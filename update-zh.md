@@ -2,7 +2,7 @@
 
 # 1.2.1（2023/02/xx）
 ### 新增
-* 无
+* redis-proxies和redis-proxies-discovery两种redis-resource支持设置db，包括camellia-redis-proxy和CamelliaRedisTemplate
 
 ### 更新
 * 无

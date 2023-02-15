@@ -2,7 +2,7 @@
 
 # 1.2.1（2023/02/xx）
 ### add
-* none
+* redis-resource of redis-proxies and redis-proxies-discovery support setting db, both camellia-redis-proxy and CamelliaRedisTemplate
 
 ### update
 * none
