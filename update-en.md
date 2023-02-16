@@ -5,7 +5,7 @@
 * redis-resource of redis-proxies and redis-proxies-discovery support setting db, both camellia-redis-proxy and CamelliaRedisTemplate
 
 ### update
-* none
+* camellia-redis-proxy-hbase support setting upstream.redis.hbase.command.execute.concurrent.enable(default false), it will improve the performance of pipeline commands, you can enable it only when the client is blocking, such as jedis
 
 ### fix
 * fix the dependency problem of jar when use jedis3+SpringRedisTemplate+zk/eureka to access redis-proxy by discovery mode(root case: compile by jedis2.x, occur class not found error)

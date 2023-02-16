@@ -5,7 +5,7 @@
 * redis-proxies和redis-proxies-discovery两种redis-resource支持设置db，包括camellia-redis-proxy和CamelliaRedisTemplate
 
 ### 更新
-* 无
+* camellia-redis-proxy-hbase支持配置upstream.redis.hbase.command.execute.concurrent.enable（默认false），从而提高客户端使用pipeline批量提交命令时的执行效率，但是要求客户端是阻塞性的提交方式，否则可能导致命令乱序执行
 
 ### fix
 * 修复了使用jedis3+SpringRedisTemplate+zk/eureka接入proxy的相关jar包的依赖错误问题（打包时使用了jedis2打包导致类找不到）
