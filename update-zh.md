@@ -3,6 +3,7 @@
 # 1.2.1（2023/02/xx）
 ### 新增
 * redis-proxies和redis-proxies-discovery两种redis-resource支持设置db，包括camellia-redis-proxy和CamelliaRedisTemplate
+* camellia-redis-proxy支持select命令，当前仅当后端是redis-standalone/redis-sentinel/redis-proxies或者其分片/读写分离等的组合时支持设置非0的db，如果后端有redis-cluster类型的resource，则只支持select 0（TODO）
 
 ### 更新
 * camellia-redis-proxy-hbase支持配置upstream.redis.hbase.command.execute.concurrent.enable（默认false），从而提高客户端使用pipeline批量提交命令时的执行效率，但是要求客户端是阻塞性的提交方式，否则可能导致命令乱序执行
