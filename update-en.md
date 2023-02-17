@@ -3,7 +3,7 @@
 # 1.2.1（2023/02/xx）
 ### add
 * redis-resource of redis-proxies and redis-proxies-discovery support setting db, both camellia-redis-proxy and CamelliaRedisTemplate
-* camellia-redis-proxy support select command, only when upstream is redis-standalone/redis-sentinel/redis-proxies or their compose of sharding/read-write-separate, you can select no-zero db. if upstream contains redis-cluster resource, only support select 0 (TODO)
+* camellia-redis-proxy support select command, only when upstream is redis-standalone/redis-sentinel/redis-proxies or their compose of sharding/read-write-separate, you can select no-zero db. if upstream contains redis-cluster resource, only support select 0
 
 ### update
 * camellia-redis-proxy-hbase support setting upstream.redis.hbase.command.execute.concurrent.enable(default false), it will improve the performance of pipeline commands, you can enable it only when the client is blocking, such as jedis
