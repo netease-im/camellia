@@ -13,7 +13,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.reply.*;
-import com.netease.nim.camellia.redis.proxy.upstream.CommandFlusher;
+import com.netease.nim.camellia.redis.proxy.upstream.RedisConnectionCommandFlusher;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
@@ -136,7 +136,13 @@ public class RedisClusterClient implements IUpstreamClient {
         return clusterSlotInfo.isValid();
     }
 
-    public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> futureList) {
+    public void sendCommand(int db, List<Command> commands, List<CompletableFuture<Reply>> futureList) {
+        if (db > 0) {
+            for (CompletableFuture<Reply> future : futureList) {
+                future.complete(ErrorReply.NOT_SUPPORT);
+            }
+            return;
+        }
         if (commands.isEmpty()) return;
         if (commands.size() == 1) {
             Command command = commands.get(0);
@@ -157,7 +163,7 @@ public class RedisClusterClient implements IUpstreamClient {
             }
         }
 
-        CommandFlusher commandFlusher = new CommandFlusher(commands.size());
+        RedisConnectionCommandFlusher commandFlusher = new RedisConnectionCommandFlusher(commands.size());
         for (int i = 0; i < commands.size(); i++) {
             Command command = commands.get(i);
             ChannelInfo channelInfo = command.getChannelInfo();
@@ -336,7 +342,7 @@ public class RedisClusterClient implements IUpstreamClient {
         commandFlusher.flush();
     }
 
-    private void transaction(Command command, CompletableFuture<Reply> future, ChannelInfo channelInfo, CommandFlusher commandFlusher,
+    private void transaction(Command command, CompletableFuture<Reply> future, ChannelInfo channelInfo, RedisConnectionCommandFlusher commandFlusher,
                              RedisCommand redisCommand, int bindSlot, RedisConnection bindConnection) {
         if (redisCommand == RedisCommand.WATCH) {
             List<byte[]> keys = command.getKeys();
@@ -399,7 +405,7 @@ public class RedisClusterClient implements IUpstreamClient {
         }
     }
 
-    private void pubsub(Command command, CompletableFuture<Reply> future, ChannelInfo channelInfo, CommandFlusher commandFlusher,
+    private void pubsub(Command command, CompletableFuture<Reply> future, ChannelInfo channelInfo, RedisConnectionCommandFlusher commandFlusher,
                              RedisCommand redisCommand, RedisConnection bindConnection) {
         if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
             boolean first = false;
@@ -467,7 +473,7 @@ public class RedisClusterClient implements IUpstreamClient {
         }
     }
 
-    private void script(CommandFlusher commandFlusher, Command command, CompletableFuture<Reply> future) {
+    private void script(RedisConnectionCommandFlusher commandFlusher, Command command, CompletableFuture<Reply> future) {
         byte[][] objects = command.getObjects();
         if (objects.length <= 1) {
             future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
@@ -498,7 +504,7 @@ public class RedisClusterClient implements IUpstreamClient {
         }
     }
 
-    private void scan(CommandFlusher commandFlusher, Command command, CompletableFuture<Reply> future) {
+    private void scan(RedisConnectionCommandFlusher commandFlusher, Command command, CompletableFuture<Reply> future) {
         byte[][] objects = command.getObjects();
         if (objects == null || objects.length <= 1) {
             future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
@@ -716,7 +722,7 @@ public class RedisClusterClient implements IUpstreamClient {
         return commandKeyType == RedisCommand.CommandKeyType.SIMPLE_SINGLE && !command.isBlocking();
     }
 
-    private void jsonMget(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
+    private void jsonMget(Command command, RedisConnectionCommandFlusher commandFlusher, CompletableFuture<Reply> future) {
         byte[][] args = command.getObjects();
         List<CompletableFuture<Reply>> futureList = new ArrayList<>();
 
@@ -755,7 +761,7 @@ public class RedisClusterClient implements IUpstreamClient {
         });
     }
 
-    private void mget(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
+    private void mget(Command command, RedisConnectionCommandFlusher commandFlusher, CompletableFuture<Reply> future) {
         byte[][] args = command.getObjects();
         List<CompletableFuture<Reply>> futureList = new ArrayList<>();
 
@@ -794,7 +800,7 @@ public class RedisClusterClient implements IUpstreamClient {
         });
     }
 
-    private void mset(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
+    private void mset(Command command, RedisConnectionCommandFlusher commandFlusher, CompletableFuture<Reply> future) {
         byte[][] args = command.getObjects();
         if ((args.length - 1) % 2 != 0) {
             future.complete(new ErrorReply("wrong number of arguments for 'mset' command"));
@@ -821,7 +827,7 @@ public class RedisClusterClient implements IUpstreamClient {
         CompletableFutureUtils.allOf(futureList).thenAccept(replies -> future.complete(Utils.mergeStatusReply(replies)));
     }
 
-    private void simpleIntegerReplyMerge(Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
+    private void simpleIntegerReplyMerge(Command command, RedisConnectionCommandFlusher commandFlusher, CompletableFuture<Reply> future) {
         byte[][] args = command.getObjects();
         List<CompletableFuture<Reply>> futureList = new ArrayList<>();
         for (int i = 1; i < args.length; i++) {
@@ -843,7 +849,7 @@ public class RedisClusterClient implements IUpstreamClient {
         CompletableFutureUtils.allOf(futureList).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
     }
 
-    private void blockingCommand(int slot, Command command, CommandFlusher commandFlusher, CompletableFuture<Reply> future) {
+    private void blockingCommand(int slot, Command command, RedisConnectionCommandFlusher commandFlusher, CompletableFuture<Reply> future) {
         if (slot < 0) {
             future.complete(new ErrorReply("CROSSSLOT Keys in request don't hash to the same slot"));
             return;

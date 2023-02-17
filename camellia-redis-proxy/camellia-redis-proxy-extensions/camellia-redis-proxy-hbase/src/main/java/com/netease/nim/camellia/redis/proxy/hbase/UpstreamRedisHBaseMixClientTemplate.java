@@ -52,7 +52,7 @@ public class UpstreamRedisHBaseMixClientTemplate implements IUpstreamClientTempl
     }
 
     @Override
-    public List<CompletableFuture<Reply>> sendCommand(List<Command> commands) {
+    public List<CompletableFuture<Reply>> sendCommand(int db, List<Command> commands) {
         if (commands.isEmpty()) return new ArrayList<>();
         String consid = commands.get(0).getChannelInfo().getConsid();
         boolean concurrentEnable = concurrentEnable(commands);
@@ -96,7 +96,7 @@ public class UpstreamRedisHBaseMixClientTemplate implements IUpstreamClientTempl
 
     private void reloadConf() {
         boolean concurrentEnable = ProxyDynamicConf.getBoolean(CONF_KEY, false);
-        if (!(this.concurrentEnable && concurrentEnable)) {
+        if ((this.concurrentEnable && !concurrentEnable) || (!this.concurrentEnable && concurrentEnable)) {
             logger.info("{} update, {} -> {}", CONF_KEY, this.concurrentEnable, concurrentEnable);
             this.concurrentEnable = concurrentEnable;
         }

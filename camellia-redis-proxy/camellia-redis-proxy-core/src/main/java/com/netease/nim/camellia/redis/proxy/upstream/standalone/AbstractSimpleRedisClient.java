@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.standalone;
 
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
@@ -14,6 +15,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionA
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.PubSubUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +32,31 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractSimpleRedisClient.class);
 
+    private final ConcurrentLinkedHashMap<String, RedisConnectionAddr[]> cache = new ConcurrentLinkedHashMap.Builder<String, RedisConnectionAddr[]>()
+            .initialCapacity(128).maximumWeightedCapacity(1024).build();
+
     public abstract RedisConnectionAddr getAddr();
     public abstract Resource getResource();
+
+    private RedisConnectionAddr getAddr(int db) {
+        RedisConnectionAddr addr = getAddr();
+        if (addr == null) {
+            return null;
+        }
+        if (db < 0 || db == addr.getDb()) {
+            return addr;
+        }
+        RedisConnectionAddr[] addrs = CamelliaMapUtils.computeIfAbsent(cache, addr.getUrl(), k -> new RedisConnectionAddr[16]);
+        if (db < addrs.length) {
+            RedisConnectionAddr cacheAddr = addrs[db];
+            if (cacheAddr == null) {
+                cacheAddr = new RedisConnectionAddr(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), db);
+                addrs[db] = cacheAddr;
+            }
+            return cacheAddr;
+        }
+        return new RedisConnectionAddr(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), db);
+    }
 
     @Override
     public String getUrl() {
@@ -40,26 +65,26 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
 
     @Override
     public void preheat() {
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
         }
         RedisConnectionAddr addr = getAddr();
         boolean result = RedisConnectionHub.getInstance().preheat(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), addr.getDb());
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("preheat result = {}, url = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()));
         }
     }
 
-    public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
+    public void sendCommand(int db, List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
         if (commands.size() == 1) {
             Command command = commands.get(0);
             if (isPassThroughCommand(command)) {
-                flushNoBlockingCommands(commands, completableFutureList);
+                flushNoBlockingCommands(db, commands, completableFutureList);
                 return;
             }
         } else {
             if (isPassThroughCommands(commands)) {
-                flushNoBlockingCommands(commands, completableFutureList);
+                flushNoBlockingCommands(db, commands, completableFutureList);
                 return;
             }
         }
@@ -76,7 +101,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
                 boolean first = false;
                 if (bindConnection == null) {
-                    bindConnection = command.getChannelInfo().acquireBindRedisConnection(getAddr());
+                    bindConnection = command.getChannelInfo().acquireBindRedisConnection(getAddr(db));
                     channelInfo.setBindConnection(bindConnection);
                     first = true;
                 }
@@ -120,7 +145,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                 }
             } else if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
                 if (bindConnection == null) {
-                    bindConnection = command.getChannelInfo().acquireBindRedisConnection(getAddr());
+                    bindConnection = command.getChannelInfo().acquireBindRedisConnection(getAddr(db));
                     channelInfo.setBindConnection(bindConnection);
                 }
                 if (bindConnection == null) {
@@ -157,12 +182,12 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         completableFutureList = filterFutures;
 
         if (!hasBlockingCommands) {
-            flushNoBlockingCommands(commands, completableFutureList);
+            flushNoBlockingCommands(db, commands, completableFutureList);
             return;
         }
 
         if (commands.size() == 1) {
-            flushBlockingCommands(commands, completableFutureList);
+            flushBlockingCommands(db, commands, completableFutureList);
             return;
         }
 
@@ -174,13 +199,13 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             commands1.add(command);
             completableFutureList1.add(future);
             if (command.isBlocking()) {
-                flushBlockingCommands(commands1, completableFutureList1);
+                flushBlockingCommands(db, commands1, completableFutureList1);
                 commands1 = new ArrayList<>(commands.size());
                 completableFutureList1 = new ArrayList<>(commands.size());
             }
         }
         if (!commands1.isEmpty()) {
-            flushNoBlockingCommands(commands1, completableFutureList1);
+            flushNoBlockingCommands(db, commands1, completableFutureList1);
         }
     }
 
@@ -201,8 +226,8 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                 && redisCommand.getCommandType() != RedisCommand.CommandType.TRANSACTION;
     }
 
-    private void flushBlockingCommands(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
-        RedisConnectionAddr addr = getAddr();
+    private void flushBlockingCommands(int db, List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
+        RedisConnectionAddr addr = getAddr(db);
         if (addr == null) {
             String log = "addr is null, command return NOT_AVAILABLE, RedisResource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
@@ -225,8 +250,8 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         }
     }
 
-    private void flushNoBlockingCommands(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
-        RedisConnectionAddr addr = getAddr();
+    private void flushNoBlockingCommands(int db, List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
+        RedisConnectionAddr addr = getAddr(db);
         if (addr == null) {
             String log = "addr is null, command return NOT_AVAILABLE, RedisResource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {

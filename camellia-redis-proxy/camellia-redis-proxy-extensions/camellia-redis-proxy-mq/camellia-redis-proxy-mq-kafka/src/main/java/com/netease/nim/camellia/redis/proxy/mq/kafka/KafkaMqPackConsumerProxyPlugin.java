@@ -61,6 +61,7 @@ public class KafkaMqPackConsumerProxyPlugin implements ProxyPlugin {
             String key = null;
             Long bid = null;
             String bgroup = null;
+            int db = -1;
             List<Command> buffer = new ArrayList<>();
             while (true) {
                 try {
@@ -74,12 +75,13 @@ public class KafkaMqPackConsumerProxyPlugin implements ProxyPlugin {
                                 logger.debug("receive command from kafka, bid = {}, bgroup = {}, command = {}, keys = {}",
                                         mqPack.getBid(), mqPack.getBgroup(), mqPack.getCommand().getName(), mqPack.getCommand().getKeysStr());
                             }
-                            String k = mqPack.getBid() + "|" + mqPack.getBgroup();
+                            String k = mqPack.getBid() + "|" + mqPack.getBgroup() + "|" + mqPack.getDb();
                             boolean needFlush = false;
                             if (key == null) {
                                 key = k;
                                 bid = mqPack.getBid();
                                 bgroup = mqPack.getBgroup();
+                                db = mqPack.getDb();
                                 buffer.add(mqPack.getCommand());
                             } else {
                                 if (k.equals(key)) {
@@ -93,10 +95,11 @@ public class KafkaMqPackConsumerProxyPlugin implements ProxyPlugin {
                             }
                             if (needFlush) {
                                 try {
-                                    flush(bid, bgroup, buffer);
+                                    flush(bid, bgroup, db, buffer);
                                 } finally {
                                     bid = null;
                                     bgroup = null;
+                                    db = -1;
                                     buffer.clear();
                                 }
                             }
@@ -105,10 +108,11 @@ public class KafkaMqPackConsumerProxyPlugin implements ProxyPlugin {
                         }
                     }
                     try {
-                        flush(bid, bgroup, buffer);
+                        flush(bid, bgroup, db, buffer);
                     } finally {
                         bid = null;
                         bgroup = null;
+                        db = -1;
                         buffer.clear();
                     }
                     consumer.commitAsync();
@@ -121,11 +125,11 @@ public class KafkaMqPackConsumerProxyPlugin implements ProxyPlugin {
         thread.start();
     }
 
-    private void flush(Long bid, String bgroup, List<Command> buffer) {
+    private void flush(Long bid, String bgroup, int db, List<Command> buffer) {
         if (buffer.isEmpty()) return;
         List<Command> commands = new ArrayList<>(buffer);
         IUpstreamClientTemplate template = GlobalRedisProxyEnv.getClientTemplateFactory().getOrInitialize(bid, bgroup);
-        List<CompletableFuture<Reply>> futures = template.sendCommand(commands);
+        List<CompletableFuture<Reply>> futures = template.sendCommand(db, commands);
         for (int i=0; i<futures.size(); i++) {
             Command command = commands.get(i);
             CompletableFuture<Reply> future = futures.get(i);
@@ -161,7 +165,7 @@ public class KafkaMqPackConsumerProxyPlugin implements ProxyPlugin {
                     int index = 1;
                     while (retry-- > 0) {
                         IUpstreamClientTemplate template = GlobalRedisProxyEnv.getClientTemplateFactory().getOrInitialize(mqPack.getBid(), mqPack.getBgroup());
-                        List<CompletableFuture<Reply>> futures = template.sendCommand(Collections.singletonList(mqPack.getCommand()));
+                        List<CompletableFuture<Reply>> futures = template.sendCommand(mqPack.getDb(),  Collections.singletonList(mqPack.getCommand()));
                         boolean isRetry = false;
                         long timeoutSeconds = ProxyDynamicConf.getInt("mq.multi.write.kafka.consume.redis.timeout.seconds", 10);
                         Reply reply;

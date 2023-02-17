@@ -3,7 +3,6 @@ package com.netease.nim.camellia.redis.proxy.upstream.connection;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.netty.*;
-import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -35,7 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * Created by caojiajun on 2019/12/17.
  */
-public class RedisConnection implements IUpstreamClient {
+public class RedisConnection {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisConnection.class);
     private static final AtomicLong id = new AtomicLong(0);
@@ -223,7 +222,6 @@ public class RedisConnection implements IUpstreamClient {
      * 是否有效
      * @return true/false
      */
-    @Override
     public boolean isValid() {
         return status == RedisConnectionStatus.VALID || status == RedisConnectionStatus.INITIALIZE;
     }
@@ -326,12 +324,6 @@ public class RedisConnection implements IUpstreamClient {
         }
     }
 
-    @Override
-    public void preheat() {
-        //do nothing
-    }
-
-    @Override
     public String getUrl() {
         return addr.getUrl();
     }

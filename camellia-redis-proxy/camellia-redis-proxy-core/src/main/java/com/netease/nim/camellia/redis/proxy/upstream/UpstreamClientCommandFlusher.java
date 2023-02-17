@@ -15,19 +15,21 @@ import java.util.concurrent.CompletableFuture;
  *
  * Created by caojiajun on 2019/12/19.
  */
-public class CommandFlusher {
+public class UpstreamClientCommandFlusher {
 
     private final Map<IUpstreamClient, List<Command>> commandMap = new HashMap<>();
     private final Map<IUpstreamClient, List<CompletableFuture<Reply>>> futureMap = new HashMap<>();
 
     private int initializerSize;
+    private final int db;
 
-    public CommandFlusher(int initializerSize) {
+    public UpstreamClientCommandFlusher(int db, int initializerSize) {
         this.initializerSize = initializerSize;
+        this.db = db;
     }
 
-    public CommandFlusher() {
-        this(10);
+    public UpstreamClientCommandFlusher() {
+        this(-1, 10);
     }
 
     public int getInitializerSize() {
@@ -65,10 +67,10 @@ public class CommandFlusher {
             if (client == null) {
                 for (CompletableFuture<Reply> future : futureList) {
                     future.complete(ErrorReply.NOT_AVAILABLE);
-                    ErrorLogCollector.collect(CommandFlusher.class, "AsyncClient is null, return NOT_AVAILABLE");
+                    ErrorLogCollector.collect(UpstreamClientCommandFlusher.class, "IUpstreamClient is null, return NOT_AVAILABLE");
                 }
             } else {
-                client.sendCommand(commands, futureList);
+                client.sendCommand(db, commands, futureList);
             }
         }
     }

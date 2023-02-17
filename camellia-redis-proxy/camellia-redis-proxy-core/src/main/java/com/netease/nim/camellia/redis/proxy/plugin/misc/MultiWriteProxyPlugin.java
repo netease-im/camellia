@@ -24,11 +24,14 @@ import java.util.concurrent.CompletableFuture;
 public class MultiWriteProxyPlugin implements ProxyPlugin {
 
     private MultiWriteFunc multiWriteFunc;
+    private boolean skipDb;
 
     @Override
     public void init(ProxyBeanFactory factory) {
         String multiWriteFuncClassName = ProxyDynamicConf.getString("multi.write.func.className", PrefixMatchHotKeyCacheKeyChecker.class.getName());
         this.multiWriteFunc = (MultiWriteFunc) factory.getBean(BeanInitUtils.parseClass(multiWriteFuncClassName));
+        this.skipDb = ProxyDynamicConf.getBoolean("multi.write.plugin.skip.db.enable", false);
+        ProxyDynamicConf.registerCallback(() -> skipDb = ProxyDynamicConf.getBoolean("multi.write.plugin.skip.db.enable", false));
     }
 
     @Override
@@ -49,6 +52,10 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
     @Override
     public ProxyPluginResponse executeRequest(ProxyRequest request) {
         try {
+            int db = request.getDb();
+            if (skipDb) {
+                db = -1;
+            }
             Command command = request.getCommand();
             IUpstreamClientTemplateFactory factory = request.getClientTemplateFactory();
             RedisCommand redisCommand = command.getRedisCommand();
@@ -76,13 +83,13 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
                 List<byte[]> keys = command.getKeys();
                 if (!keys.isEmpty()) {
                     byte[] key = keys.get(0);
-                    doMultiWrite(key, keyContext, command, factory);
+                    doMultiWrite(key, keyContext, db, command, factory);
                 }
             } else if (commandKeyType == RedisCommand.CommandKeyType.SIMPLE_MULTI) {
                 List<byte[]> keys = command.getKeys();
                 if (keys != null && !keys.isEmpty()) {
                     for (byte[] key : keys) {
-                        doMultiWrite(key, keyContext, new Command(new byte[][]{redisCommand.raw(), key}), factory);
+                        doMultiWrite(key, keyContext, db, new Command(new byte[][]{redisCommand.raw(), key}), factory);
                     }
                 }
             } else if (commandKeyType == RedisCommand.CommandKeyType.COMPLEX) {
@@ -92,13 +99,13 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
                         for (int i = 1; i < objects.length; i += 2) {
                             byte[] key = objects[i];
                             byte[] value = objects[i + 1];
-                            doMultiWrite(key, keyContext, new Command(new byte[][]{RedisCommand.SET.raw(), key, value}), factory);
+                            doMultiWrite(key, keyContext, db, new Command(new byte[][]{RedisCommand.SET.raw(), key, value}), factory);
                         }
                     }
                 } else if (redisCommand == RedisCommand.XGROUP) {
                     if (command.getObjects().length >= 3) {
                         byte[] key = command.getObjects()[2];
-                        doMultiWrite(key, keyContext, command, factory);
+                        doMultiWrite(key, keyContext, db, command, factory);
                     }
                 }
             }
@@ -109,7 +116,7 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
         }
     }
 
-    private void doMultiWrite(byte[] key, KeyContext keyContext, Command command, IUpstreamClientTemplateFactory factory) {
+    private void doMultiWrite(byte[] key, KeyContext keyContext, int db, Command command, IUpstreamClientTemplateFactory factory) {
         try {
             RedisProxyEnv redisProxyEnv = factory.getEnv();
             if (redisProxyEnv == null) {
@@ -123,7 +130,7 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
                     for (String url : urls) {
                         try {
                             IUpstreamClient client = redisProxyEnv.getClientFactory().get(url);
-                            client.sendCommand(Collections.singletonList(command),
+                            client.sendCommand(db, Collections.singletonList(command),
                                     Collections.singletonList(new CompletableFuture<>()));
                         } catch (Exception e) {
                             ErrorLogCollector.collect(MultiWriteProxyPlugin.class,

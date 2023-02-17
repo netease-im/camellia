@@ -21,11 +21,15 @@ public class MqMultiWriteProducerProxyPlugin implements ProxyPlugin {
     private static final ProxyPluginResponse MQ_FAIL = new ProxyPluginResponse(false, "mq send fail");
 
     private MqPackSender mqSender;
+    private boolean skipDb;
 
     @Override
     public void init(ProxyBeanFactory factory) {
         String className = ProxyDynamicConf.getString("mq.multi.write.sender.className", null);
         mqSender = (MqPackSender) factory.getBean(BeanInitUtils.parseClass(className));
+
+        this.skipDb = ProxyDynamicConf.getBoolean("mq.multi.write.plugin.skip.db.enable", false);
+        ProxyDynamicConf.registerCallback(() -> skipDb = ProxyDynamicConf.getBoolean("mq.multi.write.plugin.skip.db.enable", false));
     }
 
     @Override
@@ -58,6 +62,9 @@ public class MqMultiWriteProducerProxyPlugin implements ProxyPlugin {
             mqPack.setCommand(command);
             mqPack.setBid(bid);
             mqPack.setBgroup(bgroup);
+            if (!skipDb) {
+                mqPack.setDb(request.getDb());
+            }
             boolean send = mqSender.send(mqPack);
             if (!send && ProxyDynamicConf.getBoolean(CONF_INTERRUPT, false)) {
                 return MQ_FAIL;

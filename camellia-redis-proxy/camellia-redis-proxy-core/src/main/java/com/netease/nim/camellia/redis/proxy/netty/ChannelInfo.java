@@ -46,6 +46,8 @@ public class ChannelInfo {
     private Long bid;
     private String bgroup;
 
+    private int db = -1;
+
     public ChannelInfo() {
         this.consid = null;
         this.ctx = null;
@@ -301,6 +303,14 @@ public class ChannelInfo {
 
     public boolean isFromCport() {
         return fromCport;
+    }
+
+    public int getDb() {
+        return db;
+    }
+
+    public void setDb(int db) {
+        this.db = db;
     }
 
     public static enum ChannelStats {

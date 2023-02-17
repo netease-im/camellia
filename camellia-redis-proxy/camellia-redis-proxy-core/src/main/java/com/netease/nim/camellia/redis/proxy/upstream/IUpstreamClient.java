@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface IUpstreamClient {
 
-    void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> futureList);
+    void sendCommand(int db, List<Command> commands, List<CompletableFuture<Reply>> futureList);
 
     void preheat();
 

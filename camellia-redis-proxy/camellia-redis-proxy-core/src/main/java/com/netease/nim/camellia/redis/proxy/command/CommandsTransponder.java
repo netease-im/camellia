@@ -93,7 +93,7 @@ public class CommandsTransponder {
                 if (!requestPlugins.isEmpty()) {
                     boolean pluginBreak = false;
                     //执行插件
-                    ProxyRequest request = new ProxyRequest(command, factory);
+                    ProxyRequest request = new ProxyRequest(channelInfo.getDb(), command, factory);
                     for (ProxyPlugin plugin : proxyPluginInitResp.getRequestPlugins()) {
                         try {
                             ProxyPluginResponse response = plugin.executeRequest(request);
@@ -184,10 +184,20 @@ public class CommandsTransponder {
                     if (redisCommand == RedisCommand.SELECT) {
                         byte[][] objects = command.getObjects();
                         if (objects.length == 2) {
-                            if ("0".equals(Utils.bytesToString(command.getObjects()[1]))) {
-                                task.replyCompleted(StatusReply.OK);
-                            } else {
+                            int db = (int) Utils.bytesToNum(command.getObjects()[1]);
+                            if (db < 0) {
                                 task.replyCompleted(new ErrorReply("ERR DB index is out of range"));
+                            } else {
+                                if (!tasks.isEmpty()) {
+                                    List<Command> list = new ArrayList<>(tasks.size());
+                                    for (CommandTask asyncTask : tasks) {
+                                        list.add(asyncTask.getCommand());
+                                    }
+                                    flush(channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getDb(), tasks, list);
+                                    tasks = new ArrayList<>();
+                                }
+                                channelInfo.setDb(db);
+                                task.replyCompleted(StatusReply.OK);
                             }
                         } else {
                             task.replyCompleted(ErrorReply.argNumWrong(redisCommand));
@@ -286,7 +296,7 @@ public class CommandsTransponder {
                 }
             }
             //写入到后端
-            flush(channelInfo.getBid(), channelInfo.getBgroup(), tasks, commands);
+            flush(channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getDb(), tasks, commands);
         } catch (Exception e) {
             logger.error("commands transponder error, client connect will be force closed, bid = {}, bgroup = {}, addr = {}",
                     channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getCtx().channel().remoteAddress(), e);
@@ -318,11 +328,11 @@ public class CommandsTransponder {
         }
     }
 
-    private void flush(Long bid, String bgroup, List<CommandTask> tasks, List<Command> commands) {
+    private void flush(Long bid, String bgroup, int db, List<CommandTask> tasks, List<Command> commands) {
         try {
             if (!factory.isMultiTenancySupport() || bid == null || bid <= 0 || bgroup == null) {
                 IUpstreamClientTemplate template = factory.getOrInitialize(bid, bgroup);
-                flush0(template, bid, bgroup, tasks, commands);
+                flush0(template, bid, bgroup, db, tasks, commands);
                 return;
             }
             CompletableFuture<IUpstreamClientTemplate> future = factory.getOrInitializeAsync(bid, bgroup);
@@ -332,7 +342,7 @@ public class CommandsTransponder {
                 }
                 return;
             }
-            future.thenAccept(template -> flush0(template, bid, bgroup, tasks, commands));
+            future.thenAccept(template -> flush0(template, bid, bgroup, db, tasks, commands));
         } catch (Exception e) {
             ErrorLogCollector.collect(CommandsTransponder.class, "flush commands error", e);
             for (CommandTask task : tasks) {
@@ -341,7 +351,7 @@ public class CommandsTransponder {
         }
     }
 
-    private void flush0(IUpstreamClientTemplate template, Long bid, String bgroup, List<CommandTask> tasks, List<Command> commands) {
+    private void flush0(IUpstreamClientTemplate template, Long bid, String bgroup, int db, List<CommandTask> tasks, List<Command> commands) {
         try {
             if (template == null) {
                 for (CommandTask task : tasks) {
@@ -350,7 +360,7 @@ public class CommandsTransponder {
             } else {
                 List<CompletableFuture<Reply>> futureList;
                 try {
-                    futureList = template.sendCommand(commands);
+                    futureList = template.sendCommand(db, commands);
                 } catch (Exception e) {
                     String log = "IUpstreamClientTemplate sendCommand error"
                             + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e;

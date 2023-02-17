@@ -7,6 +7,7 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.*;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
+import com.netease.nim.camellia.redis.base.resource.RedisType;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.ProxyRouteType;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
@@ -56,6 +57,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
     private RedisProxyEnv env;
     private Monitor monitor;
     private ResourceSelector resourceSelector;
+    private boolean multiDBSupport;
 
     private ProxyRouteType proxyRouteType;
     private IUpstreamClient singletonClient;
@@ -143,8 +145,16 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
     }
 
     @Override
-    public List<CompletableFuture<Reply>> sendCommand(List<Command> commands) {
+    public List<CompletableFuture<Reply>> sendCommand(int db, List<Command> commands) {
         List<CompletableFuture<Reply>> futureList = new ArrayList<>(commands.size());
+        if (db > 0 && !multiDBSupport) {
+            for (int i=0; i<commands.size(); i++) {
+                CompletableFuture<Reply> future = new CompletableFuture<>();
+                future.complete(ErrorReply.NOT_SUPPORT);
+                futureList.add(future);
+            }
+            return futureList;
+        }
 
         if (isPassThroughCommand(commands)) {
             String url = resourceSelector.getReadResource(Utils.EMPTY_ARRAY).getUrl();
@@ -160,15 +170,15 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 futureList.add(future);
             }
             if (singletonClient != null) {
-                singletonClient.sendCommand(commands, futureList);
+                singletonClient.sendCommand(db, commands, futureList);
             } else {
                 IUpstreamClient client = factory.get(url);
-                client.sendCommand(commands, futureList);
+                client.sendCommand(db, commands, futureList);
             }
             return futureList;
         }
 
-        CommandFlusher commandFlusher = new CommandFlusher(commands.size());
+        UpstreamClientCommandFlusher commandFlusher = new UpstreamClientCommandFlusher(db, commands.size());
         for (Command command : commands) {
             RedisCommand redisCommand = command.getRedisCommand();
 
@@ -541,6 +551,21 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 }
             }
         }
+        boolean multiDBSupport = true;
+        for (Resource resource : resources) {
+            if (resource.getUrl().startsWith(RedisType.RedisCluster.getPrefix())
+                    || resource.getUrl().startsWith(RedisType.RedisClusterSlaves.getPrefix())) {
+                multiDBSupport = false;
+                break;
+            }
+        }
+        if ((multiDBSupport && !this.multiDBSupport) || (!multiDBSupport && this.multiDBSupport)) {
+            if (logger.isInfoEnabled()) {
+                logger.info("multiDBSupport update for route conf update, bid = {}, bgroup = {}, multiDBSupport = {}->{}",
+                        bid, bgroup, this.multiDBSupport, multiDBSupport);
+            }
+            this.multiDBSupport = multiDBSupport;
+        }
     }
 
     @Override
@@ -571,14 +596,14 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         return true;
     }
 
-    private CompletableFuture<Reply> doRead(Resource resource, CommandFlusher commandFlusher, Command command) {
+    private CompletableFuture<Reply> doRead(Resource resource, UpstreamClientCommandFlusher commandFlusher, Command command) {
         IUpstreamClient client = factory.get(resource.getUrl());
         CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
         incrRead(resource.getUrl(), command);
         return future;
     }
 
-    private CompletableFuture<Reply> doWrite(List<Resource> writeResources, CommandFlusher commandFlusher, Command command) {
+    private CompletableFuture<Reply> doWrite(List<Resource> writeResources, UpstreamClientCommandFlusher commandFlusher, Command command) {
         List<CompletableFuture<Reply>> list = new ArrayList<>(writeResources.size());
         for (Resource resource : writeResources) {
             IUpstreamClient client = factory.get(resource.getUrl());
@@ -589,7 +614,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         return CompletableFutureUtils.finalReply(list, multiWriteMode);
     }
 
-    private CompletableFuture<Reply> mset(Command command, CommandFlusher commandFlusher) {
+    private CompletableFuture<Reply> mset(Command command, UpstreamClientCommandFlusher commandFlusher) {
         byte[][] args = command.getObjects();
         if ((args.length - 1) % 2 != 0) {
             CompletableFuture<Reply> future = new CompletableFuture<>();
@@ -661,7 +686,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         return completableFuture;
     }
 
-    private CompletableFuture<Reply> mget(Command command, CommandFlusher commandFlusher) {
+    private CompletableFuture<Reply> mget(Command command, UpstreamClientCommandFlusher commandFlusher) {
         List<BytesKey> redisKeys = new ArrayList<>();
         Map<String, List<BytesKey>> map = new HashMap<>();
         byte[][] args = command.getObjects();
@@ -730,7 +755,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         return future;
     }
 
-    private CompletableFuture<Reply> jsonMget(Command command, CommandFlusher commandFlusher) {
+    private CompletableFuture<Reply> jsonMget(Command command, UpstreamClientCommandFlusher commandFlusher) {
         List<BytesKey> redisKeys = new ArrayList<>();
         Map<String, List<BytesKey>> map = new HashMap<>();
         byte[][] args = command.getObjects();
@@ -801,7 +826,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         return future;
     }
 
-    private CompletableFuture<Reply> delOrUnlinkOrTouch(Command command, CommandFlusher commandFlusher) {
+    private CompletableFuture<Reply> delOrUnlinkOrTouch(Command command, UpstreamClientCommandFlusher commandFlusher) {
         byte[][] args = command.getObjects();
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
         List<CompletableFuture<Reply>> allFutures = new ArrayList<>();
@@ -855,7 +880,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         }
     }
 
-    private CompletableFuture<Reply> exists(Command command, CommandFlusher commandFlusher) {
+    private CompletableFuture<Reply> exists(Command command, UpstreamClientCommandFlusher commandFlusher) {
         Map<String, List<byte[]>> map = new HashMap<>();
         byte[][] args = command.getObjects();
         for (int i = 1; i < args.length; i++) {

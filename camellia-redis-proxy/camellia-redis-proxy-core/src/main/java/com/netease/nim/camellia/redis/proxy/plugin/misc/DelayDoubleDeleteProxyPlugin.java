@@ -83,7 +83,7 @@ public class DelayDoubleDeleteProxyPlugin implements ProxyPlugin {
                 ExecutorUtils.submitDelayTask(() -> {
                     try {
                         IUpstreamClientTemplate template = request.getClientTemplateFactory().getOrInitialize(bid, bgroup);
-                        template.sendCommand(Collections.singletonList(command));
+                        template.sendCommand(request.getDb(), Collections.singletonList(command));
                     } catch (Exception e) {
                         ErrorLogCollector.collect(DelayDoubleDeleteProxyPlugin.class, "delay double del invoke error", e);
                     }
@@ -103,7 +103,7 @@ public class DelayDoubleDeleteProxyPlugin implements ProxyPlugin {
                         ExecutorUtils.submitDelayTask(() -> {
                             try {
                                 IUpstreamClientTemplate template = request.getClientTemplateFactory().getOrInitialize(bid, bgroup);
-                                template.sendCommand(Collections.singletonList(new Command(new byte[][]{RedisCommand.DEL.raw(), key})));
+                                template.sendCommand(request.getDb(), Collections.singletonList(new Command(new byte[][]{RedisCommand.DEL.raw(), key})));
                             } catch (Exception e) {
                                 ErrorLogCollector.collect(DelayDoubleDeleteProxyPlugin.class, "delay double del invoke error", e);
                             }

@@ -13,8 +13,9 @@ public interface IUpstreamClientTemplate {
 
     /**
      * 发送命令
+     * @param db db
      * @param commands commands
      * @return reply future list
      */
-    List<CompletableFuture<Reply>> sendCommand(List<Command> commands);
+    List<CompletableFuture<Reply>> sendCommand(int db, List<Command> commands);
 }
