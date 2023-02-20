@@ -410,6 +410,8 @@ public class RedisConnection {
             }
             logger.error("{} send `PING` command fail, reply = {}", connectionName, reply);
             throw new CamelliaRedisException("ping fail");
+        } catch (CamelliaRedisException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("{} send `PING` command timeout, timeoutMillis = {}", connectionName, timeoutMillis, e);
             throw new CamelliaRedisException(e);
@@ -518,6 +520,8 @@ public class RedisConnection {
             }
             logger.error("{} send `SELECT {}` error, reply = {}", connectionName, db, reply);
             throw new CamelliaRedisException("select db fail");
+        } catch (CamelliaRedisException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("{} send `SELECT {}` timeout, timeoutMillis = {}", connectionName, db, connectTimeoutMillis);
             throw new CamelliaRedisException("select db timeout", e);
@@ -551,6 +555,8 @@ public class RedisConnection {
             }
             logger.error("{} send `READONLY` command error, reply = {}", connectionName, reply);
             throw new CamelliaRedisException("send readonly command error");
+        } catch (CamelliaRedisException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("{} send `READONLY` command timeout, timeoutMillis = {}", connectionName, connectTimeoutMillis);
             throw new CamelliaRedisException("send readonly command timeout", e);
