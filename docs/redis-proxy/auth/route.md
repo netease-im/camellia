@@ -38,7 +38,7 @@ camellia-redis-proxy:
 具体见：[complex](complex.md)
 
 ### 多租户支持
-具体见：[tenancy](tenancy.md)
+具体见：[tenant](tenant.md)
 
 ### 使用camellia-dashboard管理多租户动态路由
 具体见：[dashboard](dashboard.md)

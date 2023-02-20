@@ -9,7 +9,7 @@ import com.netease.nim.camellia.core.client.annotation.RouteKey;
 public class User {
 
     @RouteKey
-    private long tenancyId;
+    private long tenantId;
 
     @LoadBalanceKey
     private long uid;
@@ -17,12 +17,12 @@ public class User {
     private String name;
     private String ext;
 
-    public long getTenancyId() {
-        return tenancyId;
+    public long getTenantId() {
+        return tenantId;
     }
 
-    public void setTenancyId(long tenancyId) {
-        this.tenancyId = tenancyId;
+    public void setTenantId(long tenantId) {
+        this.tenantId = tenantId;
     }
 
     public long getUid() {

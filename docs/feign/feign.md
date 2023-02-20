@@ -196,7 +196,7 @@ camellia支持根据请求参数中的某个字段，映射到不同的bgroup，
 public class User {
 
     @RouteKey
-    private long tenancyId;
+    private long tenantId;
 
     @LoadBalanceKey
     private long uid;
@@ -207,7 +207,7 @@ public class User {
     //.....
 }
 ```
-以快速开始sample中的接口为例，我们把接口入参User中的tenancyId字段添加了@RouteKey注解，随后可以定义如下DynamicRouteConfGetter动态接口  
+以快速开始sample中的接口为例，我们把接口入参User中的tenantId字段添加了@RouteKey注解，随后可以定义如下DynamicRouteConfGetter动态接口  
 ```java
 public class SampleDynamicRouteConfGetter implements DynamicRouteConfGetter {
 
@@ -224,8 +224,8 @@ public class SampleDynamicRouteConfGetter implements DynamicRouteConfGetter {
 }
 ```
 假设bid=1，则上述的DynamicRouteConfGetter动态接口表示：  
-1）当User的tenancyId字段是1时，使用bid=1,bgroup=bgroup1的路由，比如路由到集群1    
-2）当User的tenancyId字段是2时，使用bid=1,bgroup=bgroup2的路由，比如路由到集群2    
+1）当User的tenantId字段是1时，使用bid=1,bgroup=bgroup1的路由，比如路由到集群1    
+2）当User的tenantId字段是2时，使用bid=1,bgroup=bgroup2的路由，比如路由到集群2    
 3）其他情况，使用bid=1,bgroup=default的路由，比如路由到集群3  
 
 ## 根据不同的参数设置不同的负载均衡策略

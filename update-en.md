@@ -7,6 +7,7 @@
 
 ### update
 * camellia-redis-proxy-hbase support setting upstream.redis.hbase.command.execute.concurrent.enable(default false), it will improve the performance of pipeline commands, you can enable it only when the client is blocking, such as jedis
+* rename DefaultTenancyNamespaceKeyConverter -> DefaultMultiTenantNamespaceKeyConverter
 
 ### fix
 * fix the dependency problem of jar when use jedis3+SpringRedisTemplate+zk/eureka to access redis-proxy by discovery mode(root case: compile by jedis2.x, occur class not found error)
@@ -254,7 +255,7 @@
 * camellia-tools provide CamelliaStatistics for calculate sum/count/avg/max
 * camellia-redis provide CamelliaFreq for freq, include standalone/cluster mode
 * camellia-redis-proxy add valid check when dynamic route conf update
-* camellia-redis-proxy add route, resource init in async mode, improve multi-tenancy isolation
+* camellia-redis-proxy add route, resource init in async mode, improve multi-tenant isolation
 
 ### update
 * CamelliaRedisTemplate add available check for redis-cluster init

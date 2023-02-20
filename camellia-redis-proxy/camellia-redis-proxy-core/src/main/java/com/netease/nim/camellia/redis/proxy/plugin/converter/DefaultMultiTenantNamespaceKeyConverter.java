@@ -6,7 +6,7 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 
 /**
- * Tenancy Namespace Key Converter make sure that
+ * Tenant Namespace Key Converter make sure that
  * key single key and key contains hashtag are in the same slot
  *
  * <h3>Normal cases </h3>
@@ -38,7 +38,7 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
  * <p>
  * Created by caojiajun on 2022/12/7
  */
-public class DefaultTenancyNamespaceKeyConverter implements KeyConverter {
+public class DefaultMultiTenantNamespaceKeyConverter implements KeyConverter {
 
     private static final String SEPARATOR_STRING = "|";
     private static final byte[] OPEN_CURLY_BRACE = Utils.stringToBytes("{");

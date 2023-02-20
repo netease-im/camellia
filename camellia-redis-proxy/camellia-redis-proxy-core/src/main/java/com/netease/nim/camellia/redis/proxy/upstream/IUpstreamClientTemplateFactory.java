@@ -9,7 +9,7 @@ public interface IUpstreamClientTemplateFactory {
 
     /**
      * choose a IUpstreamClientTemplate instance
-     * in sync, this method maybe blocking, if isMultiTenancySupport=false, it should no-blocking
+     * in sync, this method maybe blocking, if isMultiTenantsSupport=false, it should no-blocking
      * @param bid bid
      * @param bgroup bgroup
      * @return instance
@@ -25,10 +25,10 @@ public interface IUpstreamClientTemplateFactory {
     CompletableFuture<IUpstreamClientTemplate> getOrInitializeAsync(Long bid, String bgroup);
 
     /**
-     * isMultiTenancySupport
+     * is multi tenants support
      * @return true/false
      */
-    boolean isMultiTenancySupport();
+    boolean isMultiTenantsSupport();
 
     /**
      * get RedisProxyEnv

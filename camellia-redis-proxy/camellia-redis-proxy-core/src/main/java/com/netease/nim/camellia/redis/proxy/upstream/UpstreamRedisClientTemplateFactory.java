@@ -40,7 +40,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
     private CamelliaApi apiService;
     private ProxyRouteConfUpdater updater;
 
-    private boolean multiTenancySupport = true;//是否支持多租户
+    private boolean multiTenantsSupport = true;//是否支持多租户
     private final ProxyBeanFactory proxyBeanFactory;
 
     private UpstreamRedisClientTemplate remoteInstance;
@@ -58,7 +58,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
     @Override
     public IUpstreamClientTemplate getOrInitialize(Long bid, String bgroup) {
         try {
-            if (!multiTenancySupport) {
+            if (!multiTenantsSupport) {
                 CamelliaTranspondProperties.Type type = properties.getType();
                 if (type == CamelliaTranspondProperties.Type.LOCAL) {
                     return localInstance;
@@ -119,8 +119,8 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
     }
 
     @Override
-    public boolean isMultiTenancySupport() {
-        return multiTenancySupport;
+    public boolean isMultiTenantsSupport() {
+        return multiTenantsSupport;
     }
 
     @Override
@@ -172,7 +172,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         if (localInstance == null) {
             throw new IllegalArgumentException("local.resourceTable/local.resourceTableFilePath is null");
         }
-        multiTenancySupport = false;
+        multiTenantsSupport = false;
     }
 
     private void initRemote() {
@@ -192,8 +192,8 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         if (remote.getBid() > 0 && remote.getBgroup() != null) {
             remoteInstance = initRemoteInstance(remote.getBid(), remote.getBgroup());
         }
-        multiTenancySupport = remote.isDynamic();
-        if (multiTenancySupport) {
+        multiTenantsSupport = remote.isDynamic();
+        if (multiTenantsSupport) {
             executor = new CamelliaLinearInitializationExecutor<>("upstream-redis-client-template-init", key -> {
                 String[] split = key.split("\\|");
                 return initRemoteInstance(Long.parseLong(split[0]), split[1]);
@@ -221,8 +221,8 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         if (custom.getBid() > 0 && custom.getBgroup() != null) {
             customInstance = initCustomInstance(custom.getBid(), custom.getBgroup());
         }
-        multiTenancySupport = custom.isDynamic();
-        if (multiTenancySupport) {
+        multiTenantsSupport = custom.isDynamic();
+        if (multiTenantsSupport) {
             executor = new CamelliaLinearInitializationExecutor<>("upstream-redis-client-template-init", key -> {
                 String[] split = key.split("\\|");
                 return initCustomInstance(Long.parseLong(split[0]), split[1]);

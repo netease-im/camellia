@@ -40,7 +40,7 @@ public class UpstreamRedisHBaseMixClientTemplateFactory implements IUpstreamClie
     }
 
     @Override
-    public boolean isMultiTenancySupport() {
+    public boolean isMultiTenantsSupport() {
         return false;
     }
 }

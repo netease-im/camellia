@@ -77,7 +77,7 @@ public class IPCheckProxyPlugin implements ProxyPlugin {
     }
 
     /**
-     * when proxy configure in multi-tenancy
+     * when proxy configure in multi-tenants
      * first commands like AUTH/HELLO will check ip of global config
      * other commands will check bid/brgoup config
      *

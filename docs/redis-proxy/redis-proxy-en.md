@@ -17,7 +17,7 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support custom sharding
 * support read from slave(in redis-sentinel master-slave mode，support read slave, and proxy will automatic process node-down/master-switch/node-expansion）
 * support route config refresh online
-* support multi-tenancy, then proxy will route business-A to redis1, business-B to redis2 
+* support multi-tenants, then proxy will route business-A to redis1, business-B to redis2 
 * support plugin, and build in some plugin, such as bigKeyPlugin, hotKeyPlugin, converterPlugin and so on
 * support monitor, such as commands request count、commands spend time, support setting MonitorCallback
 * provider http api to get monitor metric data
