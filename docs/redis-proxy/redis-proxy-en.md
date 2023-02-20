@@ -9,6 +9,7 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support double(multi) write
 * support double(multi) read
 * support set password
+* support SELECT commands, only upstream do not contain redis-cluster(in this case, only support SELECT 0), upstream can be redis-standalone/redis-sentinel/redis-proxies or their compose of sharding/read-write-seperate
 * support blocking commands, such as BLPOP/BRPOP/BRPOPLPUSH/BZPOPMIN/BZPOPMAX and so on
 * support pub-sub commands
 * support transaction command, only when proxy route to redis-standalone/redis-sentinel/redis-cluster with no-sharding/no-read-write-separate

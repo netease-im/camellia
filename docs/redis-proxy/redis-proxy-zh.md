@@ -10,6 +10,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持双（多）写，可以proxy直连双写，也可以基于mq（如kafka）双写，也可以基于插件体系自定义双写规则
 * 支持双（多）读
 * 支持设置密码
+* 支持SELECT命令，当前仅当后端redis不包含redis-cluster（此时仅支持SELECT 0），可以是redis-standalone/redis-sentinel/redis-proxies或者其组合（分片/读写分离）
 * 支持阻塞式命令，如BLPOP/BRPOP/BRPOPLPUSH/BZPOPMIN/BZPOPMAX等
 * 支持PUBSUB系列命令，代理到redis-standalone/redis-sentinel/redis-cluster均支持
 * 支持事务命令（MULTI/EXEC/DISCARD/WATCH/UNWATCH），代理到redis-standalone/redis-sentinel/redis-cluster均支持
@@ -271,7 +272,7 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 使用redis-shake进行数据迁移的说明，具体见：[redis-shake](other/redis-shake.md)
 * 关于自定义分片函数，具体见：[sharding](other/sharding.md)
 * 如何使用spring管理bean生成，具体见：[spring](other/spring.md)
-* 关于select db命令，具体见：[select-db](other/selectdb.md)
+* 关于多租户的一个完整示例，具体见：[multu-telant](other/multu-telant.md)
 
 ## 应用场景
 * 业务开始使用redis-standalone或者redis-sentinel，现在需要切换到redis-cluster，但是客户端需要改造（比如jedis访问redis-sentinel和redis-cluster是不一样的），此时你可以使用proxy，从而做到不改造（使用四层代理LB）或者很少的改造（使用注册中心）
