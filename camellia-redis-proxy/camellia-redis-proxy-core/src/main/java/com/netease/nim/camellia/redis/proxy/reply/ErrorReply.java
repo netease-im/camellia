@@ -15,6 +15,7 @@ public class ErrorReply implements Reply {
     public static final ErrorReply INVALID_PASSWORD = new ErrorReply("ERR invalid password");
     public static final ErrorReply WRONG_PASS = new ErrorReply("WRONGPASS invalid username-password pair or user is disabled.");
     public static final ErrorReply TOO_MANY_CONNECTS = new ErrorReply("ERR too many connects");
+    public static final ErrorReply DB_INDEX_OUT_OF_RANGE = new ErrorReply("ERR DB index is out of range");
 
     public static final ErrorReply SYNTAX_ERROR = new ErrorReply(Utils.syntaxError);
 

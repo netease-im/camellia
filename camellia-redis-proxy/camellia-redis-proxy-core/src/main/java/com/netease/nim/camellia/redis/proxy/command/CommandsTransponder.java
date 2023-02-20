@@ -186,18 +186,24 @@ public class CommandsTransponder {
                         if (objects.length == 2) {
                             int db = (int) Utils.bytesToNum(command.getObjects()[1]);
                             if (db < 0) {
-                                task.replyCompleted(new ErrorReply("ERR DB index is out of range"));
+                                task.replyCompleted(ErrorReply.DB_INDEX_OUT_OF_RANGE);
                             } else {
-                                if (!tasks.isEmpty()) {
-                                    List<Command> list = new ArrayList<>(tasks.size());
-                                    for (CommandTask asyncTask : tasks) {
-                                        list.add(asyncTask.getCommand());
+                                IUpstreamClientTemplate template = factory.tryGet(channelInfo.getBid(), channelInfo.getBgroup());
+                                if (template != null && !template.isMultiDBSupport()) {
+                                    task.replyCompleted(ErrorReply.DB_INDEX_OUT_OF_RANGE);
+                                } else {
+                                    //需要把之前db的命令先发出去
+                                    if (!tasks.isEmpty() && channelInfo.getDb() != db) {
+                                        List<Command> list = new ArrayList<>(tasks.size());
+                                        for (CommandTask asyncTask : tasks) {
+                                            list.add(asyncTask.getCommand());
+                                        }
+                                        flush(channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getDb(), tasks, list);
+                                        tasks = new ArrayList<>();
                                     }
-                                    flush(channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getDb(), tasks, list);
-                                    tasks = new ArrayList<>();
+                                    channelInfo.setDb(db);
+                                    task.replyCompleted(StatusReply.OK);
                                 }
-                                channelInfo.setDb(db);
-                                task.replyCompleted(StatusReply.OK);
                             }
                         } else {
                             task.replyCompleted(ErrorReply.argNumWrong(redisCommand));

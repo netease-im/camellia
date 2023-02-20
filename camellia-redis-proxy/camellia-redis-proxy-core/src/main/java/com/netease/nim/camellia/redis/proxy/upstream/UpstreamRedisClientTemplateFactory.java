@@ -119,6 +119,37 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
     }
 
     @Override
+    public IUpstreamClientTemplate tryGet(Long bid, String bgroup) {
+        CamelliaTranspondProperties.Type type = properties.getType();
+        if (type == CamelliaTranspondProperties.Type.LOCAL) {
+            return localInstance;
+        } else if (type == CamelliaTranspondProperties.Type.REMOTE) {
+            CamelliaTranspondProperties.RemoteProperties remote = properties.getRemote();
+            if (!remote.isDynamic()) {
+                return remoteInstance;
+            }
+            if (bid == null || bid <= 0 || bgroup == null) {
+                return remoteInstance;
+            }
+            if (executor != null) {
+                return executor.get(bid + "|" + bgroup);
+            }
+        } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
+            CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
+            if (!custom.isDynamic()) {
+                return customInstance;
+            }
+            if (bid == null || bid <= 0 || bgroup == null) {
+                return customInstance;
+            }
+            if (executor != null) {
+                return executor.get(bid + "|" + bgroup);
+            }
+        }
+        return null;
+    }
+
+    @Override
     public boolean isMultiTenantsSupport() {
         return multiTenantsSupport;
     }

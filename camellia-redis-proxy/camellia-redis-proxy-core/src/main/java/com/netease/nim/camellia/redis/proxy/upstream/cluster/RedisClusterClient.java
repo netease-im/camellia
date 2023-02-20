@@ -139,7 +139,7 @@ public class RedisClusterClient implements IUpstreamClient {
     public void sendCommand(int db, List<Command> commands, List<CompletableFuture<Reply>> futureList) {
         if (db > 0) {
             for (CompletableFuture<Reply> future : futureList) {
-                future.complete(ErrorReply.NOT_SUPPORT);
+                future.complete(ErrorReply.DB_INDEX_OUT_OF_RANGE);
             }
             return;
         }

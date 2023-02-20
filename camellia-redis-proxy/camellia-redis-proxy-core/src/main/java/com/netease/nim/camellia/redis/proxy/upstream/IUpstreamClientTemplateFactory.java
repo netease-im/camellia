@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture;
 public interface IUpstreamClientTemplateFactory {
 
     /**
-     * choose a IUpstreamClientTemplate instance
+     * get a IUpstreamClientTemplate instance
      * in sync, this method maybe blocking, if isMultiTenantsSupport=false, it should no-blocking
      * @param bid bid
      * @param bgroup bgroup
@@ -17,12 +17,20 @@ public interface IUpstreamClientTemplateFactory {
     IUpstreamClientTemplate getOrInitialize(Long bid, String bgroup);
 
     /**
-     * async choose a IUpstreamClientTemplate instance
+     * get or async initialize a IUpstreamClientTemplate instance
      * @param bid bid
      * @param bgroup bgroup
      * @return instance
      */
     CompletableFuture<IUpstreamClientTemplate> getOrInitializeAsync(Long bid, String bgroup);
+
+    /**
+     * try get initialized instance from cache, no-blocking
+     * @param bid bid
+     * @param bgroup bgroup
+     * @return instance
+     */
+    IUpstreamClientTemplate tryGet(Long bid, String bgroup);
 
     /**
      * is multi tenants support

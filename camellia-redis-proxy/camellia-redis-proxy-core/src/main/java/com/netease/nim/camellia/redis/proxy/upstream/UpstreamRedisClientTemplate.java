@@ -150,7 +150,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         if (db > 0 && !multiDBSupport) {
             for (int i=0; i<commands.size(); i++) {
                 CompletableFuture<Reply> future = new CompletableFuture<>();
-                future.complete(ErrorReply.NOT_SUPPORT);
+                future.complete(ErrorReply.DB_INDEX_OUT_OF_RANGE);
                 futureList.add(future);
             }
             return futureList;
@@ -484,6 +484,11 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         }
         commandFlusher.flush();
         return futureList;
+    }
+
+    @Override
+    public boolean isMultiDBSupport() {
+        return multiDBSupport;
     }
 
     @Override

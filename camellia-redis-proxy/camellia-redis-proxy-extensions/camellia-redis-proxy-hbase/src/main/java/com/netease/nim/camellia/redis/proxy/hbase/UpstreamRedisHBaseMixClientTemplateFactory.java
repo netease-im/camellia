@@ -40,6 +40,11 @@ public class UpstreamRedisHBaseMixClientTemplateFactory implements IUpstreamClie
     }
 
     @Override
+    public IUpstreamClientTemplate tryGet(Long bid, String bgroup) {
+        return template;
+    }
+
+    @Override
     public boolean isMultiTenantsSupport() {
         return false;
     }

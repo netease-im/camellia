@@ -18,4 +18,10 @@ public interface IUpstreamClientTemplate {
      * @return reply future list
      */
     List<CompletableFuture<Reply>> sendCommand(int db, List<Command> commands);
+
+    /**
+     * 是否支持多db
+     * @return true/false
+     */
+    boolean isMultiDBSupport();
 }

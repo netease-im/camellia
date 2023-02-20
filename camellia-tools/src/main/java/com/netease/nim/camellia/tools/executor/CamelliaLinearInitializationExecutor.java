@@ -119,6 +119,15 @@ public class CamelliaLinearInitializationExecutor<K, T> implements CamelliaExecu
     }
 
     /**
+     * 获取资源，如果有则返回，否则返回null
+     * @param key 资源key
+     * @return 资源
+     */
+    public T get(K key) {
+        return cache.get(key.toString());
+    }
+
+    /**
      * 删除资源
      * @param key 资源key
      */
