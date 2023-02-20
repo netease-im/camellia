@@ -15,7 +15,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionA
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.PubSubUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +31,8 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractSimpleRedisClient.class);
 
-    private final ConcurrentLinkedHashMap<String, RedisConnectionAddr[]> cache = new ConcurrentLinkedHashMap.Builder<String, RedisConnectionAddr[]>()
-            .initialCapacity(128).maximumWeightedCapacity(1024).build();
+    private final ConcurrentLinkedHashMap<String, RedisConnectionAddr> cache = new ConcurrentLinkedHashMap.Builder<String, RedisConnectionAddr>()
+            .initialCapacity(128).maximumWeightedCapacity(10240).build();
 
     public abstract RedisConnectionAddr getAddr();
     public abstract Resource getResource();
@@ -46,16 +45,12 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         if (db < 0 || db == addr.getDb()) {
             return addr;
         }
-        RedisConnectionAddr[] addrs = CamelliaMapUtils.computeIfAbsent(cache, addr.getUrl(), k -> new RedisConnectionAddr[16]);
-        if (db < addrs.length) {
-            RedisConnectionAddr cacheAddr = addrs[db];
-            if (cacheAddr == null) {
-                cacheAddr = new RedisConnectionAddr(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), db);
-                addrs[db] = cacheAddr;
-            }
-            return cacheAddr;
+        String key = addr.getUrl() + "|" + db;
+        RedisConnectionAddr target = cache.get(key);
+        if (target == null) {
+            target = cache.computeIfAbsent(key, s -> new RedisConnectionAddr(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), db));
         }
-        return new RedisConnectionAddr(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), db);
+        return target;
     }
 
     @Override
