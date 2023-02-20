@@ -9,7 +9,9 @@ import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
 import com.netease.nim.camellia.redis.jediscluster.JedisClusterWrapper;
 import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyContext;
 import com.netease.nim.camellia.redis.proxy.RedisProxyResource;
-import redis.clients.jedis.*;
+import redis.clients.jedis.Client;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisClusterException;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisMovedDataException;
@@ -130,6 +132,14 @@ public interface RedisClientPool {
                         return jedis6.getClient();
                     }
                     jedis6 = jedisPoolFactory.getRedisProxiesJedisPool((RedisProxiesResource) resource).getResource();
+                    jedisMap.put(resource.getUrl(), jedis6);
+                    return jedis6.getClient();
+                } else if (resource instanceof RedisProxiesDiscoveryResource) {
+                    Jedis jedis6 = jedisMap.get(resource.getUrl());
+                    if (jedis6 != null) {
+                        return jedis6.getClient();
+                    }
+                    jedis6 = jedisPoolFactory.getRedisProxiesDiscoveryJedisPool((RedisProxiesDiscoveryResource) resource).getResource();
                     jedisMap.put(resource.getUrl(), jedis6);
                     return jedis6.getClient();
                 }

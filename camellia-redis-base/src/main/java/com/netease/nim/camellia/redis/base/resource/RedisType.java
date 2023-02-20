@@ -40,7 +40,7 @@ public enum RedisType {
     RedisProxies("redis-proxies://"),//camellia-redis-proxy会随机挑选一个proxy节点，并当做普通redis去访问
 
     //格式：redis-proxies-discovery://password@proxyName
-    //仅camellia-redis-proxy支持
+    //CamelliaRedisTemplate和camellia-redis-proxy同时支持
     RedisProxiesDiscovery("redis-proxies-discovery://"),//camellia-redis-proxy会随机挑选一个proxy节点，并当做普通redis去访问
 
     ;

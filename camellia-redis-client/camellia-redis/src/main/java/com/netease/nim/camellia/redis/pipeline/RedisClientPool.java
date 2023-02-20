@@ -132,6 +132,14 @@ public interface RedisClientPool {
                     jedis6 = jedisPoolFactory.getRedisProxiesJedisPool((RedisProxiesResource) resource).getResource();
                     jedisMap.put(resource.getUrl(), jedis6);
                     return jedis6.getClient();
+                } else if (resource instanceof RedisProxiesDiscoveryResource) {
+                    Jedis jedis6 = jedisMap.get(resource.getUrl());
+                    if (jedis6 != null) {
+                        return jedis6.getClient();
+                    }
+                    jedis6 = jedisPoolFactory.getRedisProxiesDiscoveryJedisPool((RedisProxiesDiscoveryResource) resource).getResource();
+                    jedisMap.put(resource.getUrl(), jedis6);
+                    return jedis6.getClient();
                 }
                 throw new UnsupportedOperationException();
             } catch (Exception e) {

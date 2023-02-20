@@ -32,6 +32,8 @@ public class CamelliaRedisInitializer {
             redis = new CamelliaJedis((RedisSentinelSlavesResource) originalResource, env);
         } else if (originalResource instanceof RedisProxiesResource) {
             redis = new CamelliaJedis((RedisProxiesResource) originalResource, env);
+        } else if (originalResource instanceof RedisProxiesDiscoveryResource) {
+            redis = new CamelliaJedis((RedisProxiesDiscoveryResource) originalResource, env);
         } else {
             throw new UnsupportedOperationException();
         }

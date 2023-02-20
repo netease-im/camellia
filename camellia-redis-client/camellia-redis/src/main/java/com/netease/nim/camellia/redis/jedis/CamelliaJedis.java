@@ -45,6 +45,10 @@ public class CamelliaJedis implements ICamelliaRedis {
         this.jedisPool = env.getJedisPoolFactory().getRedisProxiesJedisPool(resource);
     }
 
+    public CamelliaJedis(RedisProxiesDiscoveryResource resource, CamelliaRedisEnv env) {
+        this.jedisPool = env.getJedisPoolFactory().getRedisProxiesDiscoveryJedisPool(resource);
+    }
+
     @Override
     public List<Jedis> getJedisList() {
         return Collections.singletonList(jedisPool.getResource());

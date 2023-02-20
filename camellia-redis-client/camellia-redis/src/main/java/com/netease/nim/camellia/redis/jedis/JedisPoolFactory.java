@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.jedis;
 import com.netease.nim.camellia.redis.base.resource.*;
 import com.netease.nim.camellia.redis.conf.CamelliaRedisConstants;
 import com.netease.nim.camellia.redis.proxy.CamelliaRedisProxyContext;
+import com.netease.nim.camellia.redis.proxy.RedisProxiesContext;
 import com.netease.nim.camellia.redis.proxy.discovery.common.DetectedLocalConfProxyDiscovery;
 import com.netease.nim.camellia.redis.base.proxy.Proxy;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.RedisProxyJedisPool;
@@ -57,6 +58,13 @@ public interface JedisPoolFactory {
      * @return RedisProxiesJedisPool对象
      */
     JedisPool getRedisProxiesJedisPool(RedisProxiesResource redisProxiesResource);
+
+    /**
+     * 获取RedisProxiesDiscoveryJedisPool对象
+     * @param redisProxiesDiscoveryResource RedisProxiesDiscoveryResource资源定义
+     * @return RedisProxiesJedisPool对象
+     */
+    JedisPool getRedisProxiesDiscoveryJedisPool(RedisProxiesDiscoveryResource redisProxiesDiscoveryResource);
 
     /**
      * 一个默认实现
@@ -194,6 +202,11 @@ public interface JedisPoolFactory {
                 }
             }
             return redisProxyJedisPool;
+        }
+
+        @Override
+        public JedisPool getRedisProxiesDiscoveryJedisPool(RedisProxiesDiscoveryResource redisProxiesDiscoveryResource) {
+            return RedisProxiesContext.getFactory().initOrGet(redisProxiesDiscoveryResource);
         }
     }
 

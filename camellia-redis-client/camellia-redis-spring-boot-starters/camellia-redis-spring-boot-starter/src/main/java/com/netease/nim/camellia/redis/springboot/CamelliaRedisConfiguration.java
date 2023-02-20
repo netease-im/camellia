@@ -48,6 +48,9 @@ public class CamelliaRedisConfiguration {
     private CamelliaRedisProxyFactory proxyFactory;
 
     @Autowired(required = false)
+    private RedisProxiesFactory redisProxiesFactory;
+
+    @Autowired(required = false)
     private ProxyJedisPoolConfig proxyJedisPoolConfig;
 
     @Bean
@@ -55,6 +58,10 @@ public class CamelliaRedisConfiguration {
         if (proxyFactory != null) {
             CamelliaRedisProxyContext.register(proxyFactory);
             logger.info("CamelliaRedisProxyFactory register success, type = {}", proxyFactory.getClass().getName());
+        }
+        if (redisProxiesFactory != null) {
+            RedisProxiesContext.register(redisProxiesFactory);
+            logger.info("RedisProxiesFactory register success, type = {}", redisProxiesFactory.getClass().getName());
         }
         if (proxyJedisPoolConfig != null) {
             proxyJedisPoolConfig.setJedisPoolConfig(jedisPoolConfig(properties.getRedisConf()));
