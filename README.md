@@ -10,7 +10,8 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 camellia主要包括以下功能模块：
 
 ### camellia-redis-proxy
-* 基于netty4开发的一款高性能redis代理，支持redis-standalone/redis-sentinel/redis-cluster    
+基于netty4开发的一款高性能redis代理  
+* 支持redis-standalone/redis-sentinel/redis-cluster    
 * 支持自定义分片、读写分离、双（多）写、双（多）读   
 * 支持多租户（可以同时代理多组路由，可以通过不同的登录密码来区分）     
 * 支持多租户动态路由，支持自定义的动态路由数据源
@@ -36,7 +37,7 @@ camellia主要包括以下功能模块：
 [快速开始](/docs/delay-queue/delay-queue.md)
 
 ### camellia-redis(enhanced-redis-client)
-* 这是一个封装了jedis（2.9.3/3.6.3）的redis客户端，主要的类是CamelliaRedisTemplate
+这是一个封装了jedis（2.9.3/3.6.3）的redis客户端，主要的类是CamelliaRedisTemplate  
 * 屏蔽了访问redis-standalone/redis-sentinel/redis-cluster的区别（jedis访问上述三种redis服务器的api是不一样的）
 * 支持pipeline、mget、mset等操作（jedis不支持使用pipeline访问redis-cluster，也不支持跨slot场景下使用mget、mset命令访问redis-cluster）
 * 支持透明的访问从节点（当前支持redis-sentinel）
@@ -46,7 +47,7 @@ camellia主要包括以下功能模块：
   [快速开始](/docs/redis-template/redis-template.md)
 
 ### camellia-hbase(enhanced-hbase-client)
-* 基于hbase-client封装的hbase客户端，主要的类是CamelliaHBaseTemplate  
+基于hbase-client封装的hbase客户端，主要的类是CamelliaHBaseTemplate    
 * 支持读写分离、双（多）写   
 * 支持动态配置变更  
 [快速开始](/docs/hbase-template/hbase-template.md)
