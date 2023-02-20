@@ -51,6 +51,7 @@ public class CamelliaRedisProxyEurekaFactory implements CamelliaRedisProxyFactor
                             .proxyDiscovery(proxyDiscovery)
                             .bid(resource.getBid())
                             .bgroup(resource.getBgroup())
+                            .db(resource.getDb())
                             .poolConfig(proxyJedisPoolConfig.getJedisPoolConfig())
                             .timeout(proxyJedisPoolConfig.getTimeout())
                             .password(password)

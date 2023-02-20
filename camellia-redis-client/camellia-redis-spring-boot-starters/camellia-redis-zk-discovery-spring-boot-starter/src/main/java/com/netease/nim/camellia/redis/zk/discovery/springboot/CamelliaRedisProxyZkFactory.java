@@ -48,9 +48,12 @@ public class CamelliaRedisProxyZkFactory implements CamelliaRedisProxyFactory {
                     }
                     jedisPool = new RedisProxyJedisPool.Builder()
                             .proxyDiscovery(proxyDiscovery)
+                            .bid(resource.getBid())
+                            .bgroup(resource.getBgroup())
                             .poolConfig(proxyJedisPoolConfig.getJedisPoolConfig())
                             .timeout(proxyJedisPoolConfig.getTimeout())
                             .password(password)
+                            .db(resource.getDb())
                             .sideCarFirst(proxyJedisPoolConfig.isSideCarFirst())
                             .regionResolver(new RegionResolver.IpSegmentRegionResolver(proxyJedisPoolConfig.getRegionResolveConf(), proxyJedisPoolConfig.getDefaultRegion()))
                             .jedisPoolLazyInit(proxyJedisPoolConfig.isJedisPoolLazyInit())

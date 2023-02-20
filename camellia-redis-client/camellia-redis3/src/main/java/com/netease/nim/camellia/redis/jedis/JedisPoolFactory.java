@@ -185,6 +185,7 @@ public interface JedisPoolFactory {
                         redisProxyJedisPool = new RedisProxyJedisPool.Builder()
                                 .timeout(timeout)
                                 .poolConfig(poolConfig)
+                                .db(redisProxiesResource.getDb())
                                 .password(redisProxiesResource.getPassword())
                                 .proxyDiscovery(discovery)
                                 .build();

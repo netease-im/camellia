@@ -11,6 +11,7 @@
 
 ### fix
 * fix the dependency problem of jar when use jedis3+SpringRedisTemplate+zk/eureka to access redis-proxy by discovery mode(root case: compile by jedis2.x, occur class not found error)
+* fix bid/bgroup params not available when use CamelliaRedisProxyZkFactory+CamelliaRedisTemplate to access camellia-redis-proxy 
 
 
 # 1.2.0（2023/02/14）
