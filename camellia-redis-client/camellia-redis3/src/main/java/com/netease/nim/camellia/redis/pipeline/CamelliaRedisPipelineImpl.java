@@ -2668,7 +2668,7 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
         });
     }
 
-    @WriteOp
+    @ReadOp
     @Override
     public Response<Long> zcard(@ShardingParam final String key) {
         LogUtil.debugLog(resource, key);

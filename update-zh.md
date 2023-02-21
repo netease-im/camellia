@@ -13,6 +13,7 @@
 ### fix
 * 修复了使用jedis3+SpringRedisTemplate+zk/eureka接入proxy的相关jar包的依赖错误问题（打包时使用了jedis2打包导致类找不到）
 * 修复了使用CamelliaRedisProxyZkFactory+CamelliaRedisTemplate接入camellia-redis-proxy时，bid/bgroup不生效的问题
+* CamelliaRedisTemplate里这个pipeline方法应该是读方法而不是写方法：Response<Long> zcard(String key)
 
 
 # 1.2.0（2023/02/14）
