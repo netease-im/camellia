@@ -66,6 +66,9 @@ public class TestSamples {
 ### 更详细的一个例子
 如何设置超时时间、连接池、ResourceTable等相关参数，参见：[sample](sample.md)
 
+### 支持的redis的类型  
+参见：[resource-samples](redis-resources.md)
+
 ### 生成其他复杂的ResourceTable的方法
 如何配置双写、分片、读写分离等，参见：[resource-table](resource-table.md)
 

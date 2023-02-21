@@ -176,7 +176,7 @@
 ### 新增
 * 访问camellia-dashboard的相关API时支持自定义header头，感谢[@tasszz2k](https://github.com/tasszz2k)提供该功能
 * camellia-redis-proxy在配置双写时也支持PUBSUB系列命令
-* 新增任务合并工具类，具体见：[toolkit](/docs/redis-template/toolkit.md)
+* 新增任务合并工具类，具体见：[toolkit](/docs/redis-client/toolkit.md)
 
 ### 更新
 * camellia-redis-proxy重构并优化了ReplyDecoder的实现和性能
@@ -385,8 +385,8 @@
 
 # 1.0.50（2022/02/17）
 ### 新增
-* camellia-redis新增CamelliaRedisLockManager，用于管理redis分布式锁的自动续约，具体见：[toolkit](/docs/redis-template/toolkit.md)
-* camellia-redis新增CamelliaRedisTemplateManager，用于管理不同bid/bgroup的多组CamelliaRedisTemplate，具体见：[dynamic-dashboard](/docs/redis-template/dynamic-dashboard.md)
+* camellia-redis新增CamelliaRedisLockManager，用于管理redis分布式锁的自动续约，具体见：[toolkit](/docs/redis-client/toolkit.md)
+* camellia-redis新增CamelliaRedisTemplateManager，用于管理不同bid/bgroup的多组CamelliaRedisTemplate，具体见：[dynamic-dashboard](/docs/redis-client/dynamic-dashboard.md)
 * camellia-tools新增CamelliaHashedExecutor，用于执行相同hashKey的runnable/callable任务时是相同线程执行
 
 ### 更新
@@ -606,8 +606,8 @@
 # 1.0.34（2021/08/05）
 ### 新增
 * camellia-redis-proxy-hbase重构了string相关命令的冷热分离存储设计，具体见：[文档](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
-* CamelliaRedisTemplate提供Jedis适配器，修改一行代码从Jedis迁移到CamelliaRedisTemplate，具体见：[文档](/docs/redis-template/redis-template.md)
-* CamelliaRedisTemplate提供SpringRedisTemplate适配器，具体见：[文档](/docs/redis-template/redis-template.md)
+* CamelliaRedisTemplate提供Jedis适配器，修改一行代码从Jedis迁移到CamelliaRedisTemplate，具体见：[文档](/docs/redis-client/redis-client.md)
+* CamelliaRedisTemplate提供SpringRedisTemplate适配器，具体见：[文档](/docs/redis-client/redis-client.md)
 * camellia-redis-proxy提供一个不使用spring-boot-starter启动proxy的简单封装工具类CamelliaRedisProxyStarter，具体见：[文档](/docs/redis-proxy/redis-proxy-zh.md)
 
 ### 更新

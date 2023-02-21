@@ -44,13 +44,13 @@ camellia主要包括以下功能模块：
 * 支持自定义分片、读写分离、双（多）写、双（多）读
 * 支持动态配置变更
 * 提供了一些常用的工具类，如分布式锁、计数器缓存、频控等  
-  [快速开始](/docs/redis-template/redis-template.md)
+  [快速开始](/docs/redis-client/redis-client.md)
 
 ### camellia-hbase(enhanced-hbase-client)
 基于hbase-client封装的hbase客户端，主要的类是CamelliaHBaseTemplate    
 * 支持读写分离、双（多）写   
 * 支持动态配置变更  
-[快速开始](/docs/hbase-template/hbase-template.md)
+[快速开始](/docs/hbase-client/hbase-client.md)
 
 ### camellia-feign(enhanced-feign-client)  
 整合了camellia-core和open-feign，从而你的feign客户端可以：

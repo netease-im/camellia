@@ -36,12 +36,12 @@ delay queue base on redis:
 * support client sharding/read-write-separate/double-write
 * support read from slave(redis-sentinel)
 * provide CamelliaRedisLock、CamelliaFreq utils  
-[QUICK START](/docs/redis-template/redis-template.md)
+[QUICK START](/docs/redis-client/redis-client.md)
 
 ### camellia-hbase(enhanced-hbase-client)  
 * base on camellia-core and hbase-client，main class is CamelliaHBaseTemplate    
 * support client read-write-separate/double-write  
-[QUICK START](/docs/hbase-template/hbase-template.md)  
+[QUICK START](/docs/hbase-client/hbase-client.md)  
 
 ### camellia-feign(enhanced-feign-client)  
 join camellia-core and open-feign, so your feign-client have this feature: 
