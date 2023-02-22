@@ -1,5 +1,5 @@
 
-### 更详细的一个例子
+### 更详细的一个说明
 包括如何设置超时时间、连接池等相关参数，如何访问redis-cluster等，参见如下示例：
 ```java
 public class TestCamelliaRedisTemplate {
@@ -52,5 +52,5 @@ CamelliaRedisTemplate初始化需要两个参数：
 描述了一些配置信息，包括连接池参数、超时、redis-cluster的重试次数等     
 CamelliaRedisEnv会管理底层的redis连接，因此不同CamelliaRedisTemplate可以共用同一个CamelliaRedisEnv实例，此时相同的redis后端会共用同一组连接（即使是不同的CamelliaRedisTemplate实例）      
 * ResourceTable  
-表示了路由表，表示CamelliaRedisTemplate的请求指向哪个redis地址(支持的后端redis类型，参见：[resource-samples](redis-resources.md))，支持单点redis、redis-sentinel、redis-cluster，此外也支持配置分片、读写分离、双写等      
+表示了路由表，表示CamelliaRedisTemplate的请求指向哪个redis地址(支持的后端redis类型，参见：[redis-resources](redis-resources.md))，支持单点redis、redis-sentinel、redis-cluster，此外也支持配置分片、读写分离、双写等      
 上面的示例中表示了使用ResourceTableUtil去生成了指向单个地址的ResourceTable
