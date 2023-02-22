@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.1（2023/02/xx）
+# 1.2.1（2023/02/22）
 ### add
 * redis-resource of redis-proxies and redis-proxies-discovery support setting db, both camellia-redis-proxy and CamelliaRedisTemplate
 * camellia-redis-proxy support select command, only when upstream is redis-standalone/redis-sentinel/redis-proxies or their compose of sharding/read-write-separate, you can select no-zero db. if upstream contains redis-cluster resource, only support select 0
