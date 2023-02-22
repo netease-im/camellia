@@ -42,7 +42,7 @@ public class CamelliaRedisProxyResource extends Resource {
         if (db > 0) {
             url.append("db=").append(db);
         }
-        if (url.charAt(url.length() - 1) == '?') {
+        if (url.charAt(url.length() - 1) == '?' || url.charAt(url.length() - 1) == '&') {
             url.deleteCharAt(url.length() - 1);
         }
         this.setUrl(url.toString());

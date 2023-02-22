@@ -58,10 +58,13 @@ public class RedisResourceUtil {
                 String split = substring.substring(index + 1);
                 String hostAndPortString;
                 if (split.contains("?")) {
-                    Map<String, String> params = getParams(split.split("\\?")[1]);
-                    String dbStr = params.get("db");
-                    if (dbStr != null) {
-                        db = Integer.parseInt(dbStr);
+                    String[] strings = split.split("\\?");
+                    if (strings.length == 2) {
+                        Map<String, String> params = getParams(strings[1]);
+                        String dbStr = params.get("db");
+                        if (dbStr != null) {
+                            db = Integer.parseInt(dbStr);
+                        }
                     }
                     hostAndPortString = split.split("\\?")[0];
                 } else {
