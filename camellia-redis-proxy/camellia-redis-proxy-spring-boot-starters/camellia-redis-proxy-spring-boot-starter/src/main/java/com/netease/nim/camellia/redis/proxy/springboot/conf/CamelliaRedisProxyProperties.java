@@ -78,6 +78,11 @@ public class CamelliaRedisProxyProperties {
     private String upstreamClientTemplateFactoryClassName = Constants.Server.upstreamClientTemplateFactoryClassName;
 
     /**
+     * 自定义配置的loader
+     */
+    private String proxyDynamicConfLoaderClassName = Constants.Server.proxyDynamicConfLoaderClassName;
+
+    /**
      * 插件
      */
     private List<String> plugins = new ArrayList<>();
@@ -197,6 +202,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setUpstreamClientTemplateFactoryClassName(String upstreamClientTemplateFactoryClassName) {
         this.upstreamClientTemplateFactoryClassName = upstreamClientTemplateFactoryClassName;
+    }
+
+    public String getProxyDynamicConfLoaderClassName() {
+        return proxyDynamicConfLoaderClassName;
+    }
+
+    public void setProxyDynamicConfLoaderClassName(String proxyDynamicConfLoaderClassName) {
+        this.proxyDynamicConfLoaderClassName = proxyDynamicConfLoaderClassName;
     }
 
     public List<String> getPlugins() {

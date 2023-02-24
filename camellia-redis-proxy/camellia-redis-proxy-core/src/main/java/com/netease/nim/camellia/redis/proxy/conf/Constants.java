@@ -28,6 +28,8 @@ public class Constants {
 
         public static final String upstreamClientTemplateFactoryClassName = UpstreamRedisClientTemplateFactory.class.getName();
 
+        public static final String proxyDynamicConfLoaderClassName = FileBasedProxyDynamicConfLoader.class.getName();
+
         public static final int workThread = SysUtils.getCpuNum();
         public static final int commandDecodeMaxBatchSize = 256;
         public static final int commandDecodeBufferInitializerSize = 32;

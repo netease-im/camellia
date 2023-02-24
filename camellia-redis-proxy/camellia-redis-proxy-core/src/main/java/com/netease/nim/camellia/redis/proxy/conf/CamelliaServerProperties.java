@@ -25,6 +25,8 @@ public class CamelliaServerProperties {
     private String clientAuthProviderClassName = Constants.Server.clientAuthByConfigProvider;
     private String upstreamClientTemplateFactoryClassName = Constants.Server.upstreamClientTemplateFactoryClassName;
 
+    private String proxyDynamicConfLoaderClassName = Constants.Server.proxyDynamicConfLoaderClassName;
+
     private List<String> plugins = new ArrayList<>();
 
     private Map<String, String> config = new HashMap<>();
@@ -129,6 +131,14 @@ public class CamelliaServerProperties {
 
     public void setUpstreamClientTemplateFactoryClassName(String upstreamClientTemplateFactoryClassName) {
         this.upstreamClientTemplateFactoryClassName = upstreamClientTemplateFactoryClassName;
+    }
+
+    public String getProxyDynamicConfLoaderClassName() {
+        return proxyDynamicConfLoaderClassName;
+    }
+
+    public void setProxyDynamicConfLoaderClassName(String proxyDynamicConfLoaderClassName) {
+        this.proxyDynamicConfLoaderClassName = proxyDynamicConfLoaderClassName;
     }
 
     public List<String> getPlugins() {

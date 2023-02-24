@@ -5,6 +5,8 @@ import com.netease.nim.camellia.redis.proxy.auth.ClientAuthByConfigProvider;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthProvider;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
+import com.netease.nim.camellia.redis.proxy.conf.FileBasedProxyDynamicConfLoader;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfLoader;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
@@ -32,6 +34,15 @@ public class ConfigInitUtil {
         }
         ProxyBeanFactory proxyBeanFactory = serverProperties.getProxyBeanFactory();
         return (ClientAuthProvider) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
+    }
+
+    public static ProxyDynamicConfLoader initProxyDynamicConfLoader(CamelliaServerProperties serverProperties) {
+        String className = serverProperties.getProxyDynamicConfLoaderClassName();
+        if (className != null) {
+            ProxyBeanFactory proxyBeanFactory = serverProperties.getProxyBeanFactory();
+            return (ProxyDynamicConfLoader) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
+        }
+        return new FileBasedProxyDynamicConfLoader();
     }
 
     public static MonitorCallback initMonitorCallback(CamelliaServerProperties serverProperties) {

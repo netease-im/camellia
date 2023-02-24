@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.springboot;
 
-import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
@@ -53,8 +52,7 @@ public class CamelliaRedisProxyConfiguration implements ApplicationContextAware 
     }
 
     @Bean
-    @ConditionalOnMissingBean(value = {ICommandInvoker.class})
-    public ICommandInvoker commandInvoker(CamelliaRedisProxyProperties properties) {
+    public CamelliaRedisProxyBoot redisProxyBoot(CamelliaRedisProxyProperties properties) throws Exception {
         CamelliaServerProperties serverProperties = camelliaServerProperties(properties);
         GlobalRedisProxyEnv.init(serverProperties);
 
@@ -68,13 +66,8 @@ public class CamelliaRedisProxyConfiguration implements ApplicationContextAware 
         transpondProperties.setRedisConf(CamelliaRedisProxyUtil.parse(transpond.getRedisConf()));
         transpondProperties.setNettyProperties(CamelliaRedisProxyUtil.parse(transpond.getNetty()));
 
-        return new CommandInvoker(serverProperties, transpondProperties);
-    }
+        CommandInvoker commandInvoker = new CommandInvoker(serverProperties, transpondProperties);
 
-    @Bean
-    public CamelliaRedisProxyBoot redisProxyBoot(CamelliaRedisProxyProperties properties) throws Exception {
-        ICommandInvoker commandInvoker = commandInvoker(properties);
-        CamelliaServerProperties serverProperties = camelliaServerProperties(properties);
         GlobalRedisProxyEnv.init(serverProperties);
         return new CamelliaRedisProxyBoot(serverProperties, commandInvoker);
     }
