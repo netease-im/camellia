@@ -372,6 +372,7 @@ public class RedisConnection {
                 ping(heartbeatTimeoutMillis, false);
             } catch (Exception e) {
                 logger.error("{} heartbeat error", connectionName, e);
+                stop();
             }
         }
     }

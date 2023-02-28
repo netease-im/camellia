@@ -1,5 +1,16 @@
 [中文版](update-zh.md)
 
+# 1.2.2（2023/02/28）
+### add
+* none
+
+### update
+* refactor ProxyDynamicConf, support custom Loader
+
+### fix
+* fix RedisConnection heartbeat error do not close connection
+
+
 # 1.2.1（2023/02/22）
 ### add
 * redis-resource of redis-proxies and redis-proxies-discovery support setting db, both camellia-redis-proxy and CamelliaRedisTemplate

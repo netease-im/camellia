@@ -1,5 +1,16 @@
 [ENGLISH](update-en.md)
 
+# 1.2.2（2023/02/28）
+### 新增
+* 无
+
+### 更新
+* 重构了ProxyDynamicConf，支持自定义loader
+
+### fix
+* 修复RedisConnection心跳异常后没有关闭连接
+
+
 # 1.2.1（2023/02/22）
 ### 新增
 * redis-proxies和redis-proxies-discovery两种redis-resource支持设置db，包括camellia-redis-proxy和CamelliaRedisTemplate
