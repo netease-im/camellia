@@ -8,7 +8,7 @@
 * refactor ProxyDynamicConf, support custom Loader
 
 ### fix
-* fix RedisConnection heartbeat error do not close connection
+* fix RedisConnection heartbeat error do not close connection(bug from v1.2.0)
 
 
 # 1.2.1（2023/02/22）

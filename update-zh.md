@@ -8,7 +8,7 @@
 * 重构了ProxyDynamicConf，支持自定义loader
 
 ### fix
-* 修复RedisConnection心跳异常后没有关闭连接
+* 修复RedisConnection心跳异常后没有关闭连接(1.2.0引入)
 
 
 # 1.2.1（2023/02/22）
