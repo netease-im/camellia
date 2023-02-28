@@ -5,14 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>camellia-redis-proxy-discovery</artifactId>
-    <version>1.2.2-SNAPSHOT</version>
+    <version>1.2.2</version>
 
     <packaging>pom</packaging>
 
     <parent>
         <groupId>com.netease.nim</groupId>
         <artifactId>camellia-redis-proxy-extensions</artifactId>
-        <version>1.2.2-SNAPSHOT</version>
+        <version>1.2.2</version>
     </parent>
 
     <modules>
