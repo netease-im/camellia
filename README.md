@@ -36,6 +36,14 @@ camellia主要包括以下功能模块：
 * 支持丰富的监控数据    
 [快速开始](/docs/delay-queue/delay-queue.md)
 
+### camellia-external-call
+多租户自动隔离的外部调用系统：  
+* 在云平台系统中（Paas/Saas），平台方需要调用客户的接口，客户的接口被认为是不可靠的，因此我们需要一个机制可以自动屏蔽或者隔离有问题的调用接口
+* 这样的外部调用可以分为两种类型，同步调用和异步调用
+* 同步调用：调用方需要获取到调用的结果，并且根据返回值做进一步的业务逻辑
+* 异步调用：调用方不需要第一时间获取到调用的结果，只是单向的将结果告知给目标接口
+[快速开始](/docs/external-call/external-call.md)
+
 ### camellia-redis(enhanced-redis-client)
 这是一个封装了jedis（2.9.3/3.6.3）的redis客户端，主要的类是CamelliaRedisTemplate  
 * 屏蔽了访问redis-standalone/redis-sentinel/redis-cluster的区别（jedis访问上述三种redis服务器的api是不一样的）
