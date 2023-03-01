@@ -24,6 +24,8 @@ public class CamelliaExternalCallMqConsumerConfig<R> {
 
     private double permitMaxRatio = 0.5;//单个租户最多占用的工作线程的比例
 
+    private long degradationTimeThreshold = 10*60*1000L;
+
     public String getNamespace() {
         return namespace;
     }
@@ -94,5 +96,13 @@ public class CamelliaExternalCallMqConsumerConfig<R> {
 
     public void setPermitMaxRatio(double permitMaxRatio) {
         this.permitMaxRatio = permitMaxRatio;
+    }
+
+    public long getDegradationTimeThreshold() {
+        return degradationTimeThreshold;
+    }
+
+    public void setDegradationTimeThreshold(long degradationTimeThreshold) {
+        this.degradationTimeThreshold = degradationTimeThreshold;
     }
 }

@@ -71,6 +71,7 @@ public class CamelliaExternalCallConsumer<R> implements ICamelliaExternalCallMqC
         list.addAll(generator.retryHighPriority());
         list.addAll(generator.heavyTraffic());
         list.addAll(generator.isolation());
+        list.addAll(generator.degradation());
         return list;
     }
 
@@ -78,7 +79,7 @@ public class CamelliaExternalCallConsumer<R> implements ICamelliaExternalCallMqC
     public BizResponse onMsg(MqInfo mqInfo, byte[] data) {
         CamelliaDynamicExecutor executor = selectExecutor(mqInfo);
         try {
-            Future<BizResponse> future = executor.submit(() -> invoke(executor, data));
+            Future<BizResponse> future = executor.submit(() -> invoke(executor, mqInfo, data));
             return future.get();
         } catch (Exception e) {
             logger.error("onMsg error", e);
@@ -86,9 +87,13 @@ public class CamelliaExternalCallConsumer<R> implements ICamelliaExternalCallMqC
         }
     }
 
-    private BizResponse invoke(CamelliaDynamicExecutor currentExecutor, byte[] data) {
+    private BizResponse invoke(CamelliaDynamicExecutor currentExecutor, MqInfo mqInfo, byte[] data) {
         ExternalCallMqPack pack = JSONObject.parseObject(new String(data, StandardCharsets.UTF_8), ExternalCallMqPack.class);
         String isolationKey = pack.getIsolationKey();
+
+        if (isDegradation(mqInfo) && System.currentTimeMillis() - pack.getCreateTime() > consumerConfig.getDegradationTimeThreshold()) {
+            return BizResponse.FAIL_NO_RETRY;
+        }
 
         // acquire permits
         // same isolationKey should not acquire too many permits
@@ -135,6 +140,14 @@ public class CamelliaExternalCallConsumer<R> implements ICamelliaExternalCallMqC
             }
             //
         }
+    }
+
+    private boolean isDegradation(MqInfo mqInfo) {
+        List<MqInfo> list = generator.degradation();
+        if (list.isEmpty()) {
+            return false;
+        }
+        return list.contains(mqInfo);
     }
 
     private MqInfo selectRetryMqInfo(boolean highPriority) {

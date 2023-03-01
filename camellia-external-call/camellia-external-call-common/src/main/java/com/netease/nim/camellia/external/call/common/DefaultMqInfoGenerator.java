@@ -73,4 +73,11 @@ public class DefaultMqInfoGenerator implements MqInfoGenerator {
         list.add(new MqInfo(server, namespace + "_isolation"));
         return list;
     }
+
+    @Override
+    public List<MqInfo> degradation() {
+        List<MqInfo> list = new ArrayList<>();
+        list.add(new MqInfo(server, namespace + "_degradation"));
+        return list;
+    }
 }
