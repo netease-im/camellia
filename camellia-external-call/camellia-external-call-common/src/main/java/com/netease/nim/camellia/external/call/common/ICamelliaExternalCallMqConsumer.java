@@ -17,8 +17,8 @@ public interface ICamelliaExternalCallMqConsumer {
      * 业务方请自行从mq中取出消息，并调用本方法
      * @param mqInfo mqInfo
      * @param data data
-     * @return 成功/失败
+     * @return 结果
      */
-    boolean onMsg(MqInfo mqInfo, byte[] data);
+    BizResponse onMsg(MqInfo mqInfo, byte[] data);
 
 }

@@ -4,18 +4,25 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
- * Created by caojiajun on 2023/2/27
+ * Created by caojiajun on 2023/2/28
  */
-public class CamelliaExternalCallMqClientConfig<R> {
+public class CamelliaExternalCallMqConsumerConfig<R> {
 
     private static final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 
     private String namespace = "default";
-    private ScheduledExecutorService scheduledExecutor;
+    private ScheduledExecutorService scheduledExecutor = scheduledExecutorService;
+
     private int reportIntervalSeconds = 5;
+
     private MqSender mqSender;
+    private BizConsumer<R> bizConsumer;
+    private int workThreadPerTopic = 200;
     private CamelliaExternalCallRequestSerializer<R> serializer;
-    private String controllerUrl;
+
+    private MqInfoGenerator generator;
+
+    private double permitMaxRatio = 0.5;//单个租户最多占用的工作线程的比例
 
     public String getNamespace() {
         return namespace;
@@ -49,6 +56,22 @@ public class CamelliaExternalCallMqClientConfig<R> {
         this.mqSender = mqSender;
     }
 
+    public BizConsumer<R> getBizConsumer() {
+        return bizConsumer;
+    }
+
+    public void setBizConsumer(BizConsumer<R> bizConsumer) {
+        this.bizConsumer = bizConsumer;
+    }
+
+    public int getWorkThreadPerTopic() {
+        return workThreadPerTopic;
+    }
+
+    public void setWorkThreadPerTopic(int workThreadPerTopic) {
+        this.workThreadPerTopic = workThreadPerTopic;
+    }
+
     public CamelliaExternalCallRequestSerializer<R> getSerializer() {
         return serializer;
     }
@@ -57,11 +80,19 @@ public class CamelliaExternalCallMqClientConfig<R> {
         this.serializer = serializer;
     }
 
-    public String getControllerUrl() {
-        return controllerUrl;
+    public MqInfoGenerator getGenerator() {
+        return generator;
     }
 
-    public void setControllerUrl(String controllerUrl) {
-        this.controllerUrl = controllerUrl;
+    public void setGenerator(MqInfoGenerator generator) {
+        this.generator = generator;
+    }
+
+    public double getPermitMaxRatio() {
+        return permitMaxRatio;
+    }
+
+    public void setPermitMaxRatio(double permitMaxRatio) {
+        this.permitMaxRatio = permitMaxRatio;
     }
 }

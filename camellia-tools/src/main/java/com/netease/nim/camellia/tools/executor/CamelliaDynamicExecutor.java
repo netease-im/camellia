@@ -100,6 +100,18 @@ public class CamelliaDynamicExecutor implements ExecutorService, CamelliaExecuto
         return stats;
     }
 
+    public int getActiveCount() {
+        return executor.getActiveCount();
+    }
+
+    public int getPoolSize() {
+        return executor.getPoolSize();
+    }
+
+    public int getMaximumPoolSize() {
+        return executor.getMaximumPoolSize();
+    }
+
     @Override
     public void shutdown() {
         executor.shutdown();

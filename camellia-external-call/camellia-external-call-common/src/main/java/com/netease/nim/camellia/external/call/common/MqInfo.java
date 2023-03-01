@@ -7,6 +7,14 @@ public class MqInfo {
     private String server;
     private String topic;
 
+    public MqInfo() {
+    }
+
+    public MqInfo(String server, String topic) {
+        this.server = server;
+        this.topic = topic;
+    }
+
     public String getServer() {
         return server;
     }

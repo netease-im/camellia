@@ -1,12 +1,10 @@
 package com.netease.nim.camellia.external.call.common;
 
 /**
- * Created by caojiajun on 2023/2/24
+ * Created by caojiajun on 2023/2/28
  */
-public class ExternalCallMqPack {
+public class BizContext {
     private String isolationKey;
-    private byte[] data;
-    private long createTime;
     private int retry;//重试次数，第一次是0，之后每一次+1
 
     public String getIsolationKey() {
@@ -15,22 +13,6 @@ public class ExternalCallMqPack {
 
     public void setIsolationKey(String isolationKey) {
         this.isolationKey = isolationKey;
-    }
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public void setData(byte[] data) {
-        this.data = data;
-    }
-
-    public long getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(long createTime) {
-        this.createTime = createTime;
     }
 
     public int getRetry() {

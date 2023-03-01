@@ -9,6 +9,7 @@ import java.util.List;
 public class ExternalCallInputStats {
 
     private String instanceId;
+    private String namespace;
     private List<Stats> statsList = new ArrayList<>();
 
     public String getInstanceId() {
@@ -17,6 +18,14 @@ public class ExternalCallInputStats {
 
     public void setInstanceId(String instanceId) {
         this.instanceId = instanceId;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
     }
 
     public List<Stats> getStatsList() {
@@ -30,7 +39,6 @@ public class ExternalCallInputStats {
     public static class Stats {
         private String isolationKey;
         private long input;
-        private long inputQps;
 
         public String getIsolationKey() {
             return isolationKey;
@@ -46,14 +54,6 @@ public class ExternalCallInputStats {
 
         public void setInput(long input) {
             this.input = input;
-        }
-
-        public long getInputQps() {
-            return inputQps;
-        }
-
-        public void setInputQps(long inputQps) {
-            this.inputQps = inputQps;
         }
     }
 }

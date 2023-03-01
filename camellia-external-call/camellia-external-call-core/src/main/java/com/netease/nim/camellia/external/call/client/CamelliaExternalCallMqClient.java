@@ -26,7 +26,7 @@ public class CamelliaExternalCallMqClient<R> implements ICamelliaExternalCallMqC
     private final String instanceId = UUID.randomUUID().toString().replaceAll("-", "");
 
     private final CamelliaLoadingCache<String, ExternalCallSelectInfo> cache = new CamelliaLoadingCache.Builder<String, ExternalCallSelectInfo>()
-            .initialCapacity(128)
+            .initialCapacity(1024)
             .maxCapacity(10240)
             .build(new CamelliaLoadingCache.CacheLoader<String, ExternalCallSelectInfo>() {
                 @Override
@@ -37,11 +37,15 @@ public class CamelliaExternalCallMqClient<R> implements ICamelliaExternalCallMqC
 
     private final CamelliaStatisticsManager manager = new CamelliaStatisticsManager();
 
-    private MqSender mqSender;
-    private CamelliaExternalCallRequestSerializer<R> serializer;
+    private final CamelliaExternalCallMqClientConfig<R> clientConfig;
+    private final MqSender mqSender;
+    private final CamelliaExternalCallRequestSerializer<R> serializer;
     private ICamelliaExternalCallController controller;
 
-    public CamelliaExternalCallMqClient(CamelliaExternalCallMqClientConfig clientConfig) {
+    public CamelliaExternalCallMqClient(CamelliaExternalCallMqClientConfig<R> clientConfig) {
+        this.clientConfig = clientConfig;
+        this.mqSender = clientConfig.getMqSender();
+        this.serializer = clientConfig.getSerializer();
         clientConfig.getScheduledExecutor().scheduleAtFixedRate(this::schedule, clientConfig.getReportIntervalSeconds(),
                 clientConfig.getReportIntervalSeconds(), TimeUnit.SECONDS);
     }
@@ -53,6 +57,7 @@ public class CamelliaExternalCallMqClient<R> implements ICamelliaExternalCallMqC
         ExternalCallMqPack pack = new ExternalCallMqPack();
         pack.setIsolationKey(isolationKey);
         pack.setData(serializer.serialize(request));
+        pack.setCreateTime(System.currentTimeMillis());
         return mqSender.send(mqInfo, JSONObject.toJSONString(pack).getBytes(StandardCharsets.UTF_8));
     }
 
@@ -72,6 +77,7 @@ public class CamelliaExternalCallMqClient<R> implements ICamelliaExternalCallMqC
     private void schedule() {
         ExternalCallInputStats inputStats = new ExternalCallInputStats();
         inputStats.setInstanceId(instanceId);
+        inputStats.setNamespace(clientConfig.getNamespace());
         List<ExternalCallInputStats.Stats> statsList = new ArrayList<>();
         Map<String, CamelliaStatsData> dataMap = manager.getStatsDataAndReset();
         for (Map.Entry<String, CamelliaStatsData> entry : dataMap.entrySet()) {

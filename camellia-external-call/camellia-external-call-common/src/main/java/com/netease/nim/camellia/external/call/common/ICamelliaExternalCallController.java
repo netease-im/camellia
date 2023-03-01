@@ -8,4 +8,6 @@ public interface ICamelliaExternalCallController {
     ExternalCallSelectInfo select(String isolationKey);
 
     void reportInputStats(ExternalCallInputStats inputStats);
+
+    void reportConsumeStats(ExternalCallConsumeStats inputStats);
 }
