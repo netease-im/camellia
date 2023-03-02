@@ -103,7 +103,7 @@ public class CamelliaExternalCallConsumer<R> implements ICamelliaExternalCallMqC
             permission = semaphore.tryAcquire();
         }
         if (!permission) {
-            mqSender.send(selectRetryMqInfo(false), data);
+            mqSender.send(selectRetryMqInfo(pack.isHighPriority()), data);
             return BizResponse.FAIL_RETRY;
         }
         //
@@ -130,7 +130,7 @@ public class CamelliaExternalCallConsumer<R> implements ICamelliaExternalCallMqC
             if (!response.isSuccess() && response.isRetry()) {
                 //retry
                 pack.setRetry(pack.getRetry() + 1);
-                mqSender.send(selectRetryMqInfo(response.isHighPriority()), JSONObject.toJSONString(pack).getBytes(StandardCharsets.UTF_8));
+                mqSender.send(selectRetryMqInfo(pack.isHighPriority()), JSONObject.toJSONString(pack).getBytes(StandardCharsets.UTF_8));
             }
             return response;
         } finally {
@@ -198,6 +198,7 @@ public class CamelliaExternalCallConsumer<R> implements ICamelliaExternalCallMqC
         ExternalCallConsumeStats inputStats = new ExternalCallConsumeStats();
         inputStats.setInstanceId(instanceId);
         inputStats.setNamespace(consumerConfig.getNamespace());
+        inputStats.setTimestamp(System.currentTimeMillis());
         List<ExternalCallConsumeStats.Stats> statsList = new ArrayList<>();
         Map<String, CamelliaStatsData> dataMap = manager.getStatsDataAndReset();
         Map<String, CamelliaStatsData> successMap = successManager.getStatsDataAndReset();

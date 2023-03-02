@@ -40,7 +40,7 @@ public class CamelliaExternalCallLocalClient<R, T> implements ICamelliaExternalC
         executor.submit(isolationKey, () -> {
             T result;
             try {
-                result = invoker.invoke(request);
+                result = invoker.invoke(isolationKey, request);
             } catch (Exception e) {
                 future.completeExceptionally(e);
                 return;

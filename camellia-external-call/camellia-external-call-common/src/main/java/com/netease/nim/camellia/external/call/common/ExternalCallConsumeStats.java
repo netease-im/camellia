@@ -10,6 +10,7 @@ public class ExternalCallConsumeStats {
 
     private String instanceId;
     private String namespace;
+    private long timestamp;
     private List<Stats> statsList = new ArrayList<>();
 
     public String getInstanceId() {
@@ -26,6 +27,14 @@ public class ExternalCallConsumeStats {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     public List<Stats> getStatsList() {

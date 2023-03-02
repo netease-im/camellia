@@ -33,6 +33,7 @@
         <module>camellia-spring-redis-samples</module>
         <module>camellia-cache-samples</module>
         <module>camellia-cache-samples2</module>
+        <module>camellia-external-call-samples</module>
     </modules>
 
 </project>

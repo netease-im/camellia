@@ -8,6 +8,7 @@ public class ExternalCallMqPack {
     private byte[] data;
     private long createTime;
     private int retry;//重试次数，第一次是0，之后每一次+1
+    private boolean highPriority;//是否属于高优
 
     public String getIsolationKey() {
         return isolationKey;
@@ -39,5 +40,13 @@ public class ExternalCallMqPack {
 
     public void setRetry(int retry) {
         this.retry = retry;
+    }
+
+    public boolean isHighPriority() {
+        return highPriority;
+    }
+
+    public void setHighPriority(boolean highPriority) {
+        this.highPriority = highPriority;
     }
 }

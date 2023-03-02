@@ -53,6 +53,9 @@ public class CamelliaExternalCallMqClient<R> implements ICamelliaExternalCallMqC
     @Override
     public boolean submit(String isolationKey, R request) {
         MqInfo mqInfo = selectMqInfo(isolationKey);
+        if (mqInfo == null) {
+            return false;
+        }
         stats(isolationKey);
         ExternalCallMqPack pack = new ExternalCallMqPack();
         pack.setIsolationKey(isolationKey);
@@ -63,6 +66,9 @@ public class CamelliaExternalCallMqClient<R> implements ICamelliaExternalCallMqC
 
     private MqInfo selectMqInfo(String isolationKey) {
         List<MqInfo> mqInfoList = cache.get(isolationKey).getMqInfoList();
+        if (mqInfoList == null || mqInfoList.isEmpty()) {
+            return null;
+        }
         if (mqInfoList.size() == 1) {
             return mqInfoList.get(0);
         }
@@ -78,6 +84,7 @@ public class CamelliaExternalCallMqClient<R> implements ICamelliaExternalCallMqC
         ExternalCallInputStats inputStats = new ExternalCallInputStats();
         inputStats.setInstanceId(instanceId);
         inputStats.setNamespace(clientConfig.getNamespace());
+        inputStats.setTimestamp(System.currentTimeMillis());
         List<ExternalCallInputStats.Stats> statsList = new ArrayList<>();
         Map<String, CamelliaStatsData> dataMap = manager.getStatsDataAndReset();
         for (Map.Entry<String, CamelliaStatsData> entry : dataMap.entrySet()) {

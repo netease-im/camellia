@@ -11,7 +11,6 @@ public class BizResponse {
 
     private boolean success;
     private boolean retry;
-    private boolean highPriority;//是否属于高优
 
     public BizResponse(boolean success, boolean retry) {
         this.success = success;
@@ -34,11 +33,4 @@ public class BizResponse {
         this.retry = retry;
     }
 
-    public boolean isHighPriority() {
-        return highPriority;
-    }
-
-    public void setHighPriority(boolean highPriority) {
-        this.highPriority = highPriority;
-    }
 }

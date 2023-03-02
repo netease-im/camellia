@@ -6,5 +6,5 @@ package com.netease.nim.camellia.external.call.common;
  */
 public interface CamelliaExternalCallInvoker<R, T> {
 
-    T invoke(R request);
+    T invoke(String isolationKey, R request) throws Exception;
 }

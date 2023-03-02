@@ -41,7 +41,7 @@ camellia主要包括以下功能模块：
 * 在云平台系统中（PaaS/SaaS），平台方需要调用客户的接口，客户的接口被认为是不可靠的，因此我们需要一个机制可以自动屏蔽或者隔离有问题的调用接口
 * 这样的外部调用可以分为两种类型，同步调用和异步调用
 * 同步调用：调用方需要获取到调用的结果，并且根据返回值做进一步的业务逻辑
-* 异步调用：调用方不需要第一时间获取到调用的结果，只是单向的将结果告知给目标接口
+* 异步调用：调用方不需要第一时间获取到调用的结果，只是单向的将结果告知给目标接口  
 [快速开始](/docs/external-call/external-call.md)
 
 ### camellia-redis(enhanced-redis-client)
@@ -52,7 +52,7 @@ camellia主要包括以下功能模块：
 * 支持自定义分片、读写分离、双（多）写、双（多）读
 * 支持动态配置变更
 * 提供了一些常用的工具类，如分布式锁、计数器缓存、频控等  
-  [快速开始](/docs/redis-client/redis-client.md)
+[快速开始](/docs/redis-client/redis-client.md)
 
 ### camellia-hbase(enhanced-hbase-client)
 基于hbase-client封装的hbase客户端，主要的类是CamelliaHBaseTemplate    
