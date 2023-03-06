@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.feign.conf;
 
-import com.netease.nim.camellia.core.conf.CamelliaConfig;
+import com.netease.nim.camellia.core.conf.AbstractCamelliaConfig;
+import com.netease.nim.camellia.core.conf.FileBasedCamelliaConfig;
 import com.netease.nim.camellia.feign.client.DynamicOption;
 import com.netease.nim.camellia.feign.client.DynamicRouteConfGetter;
 import com.netease.nim.camellia.tools.circuitbreaker.CircuitBreakerConfig;
@@ -13,9 +14,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class FileBasedCamelliaFeignDynamicOptionGetter implements CamelliaFeignDynamicOptionGetter {
 
-    private final CamelliaConfig config;
+    private final AbstractCamelliaConfig config;
 
-    public FileBasedCamelliaFeignDynamicOptionGetter(CamelliaConfig config) {
+    public FileBasedCamelliaFeignDynamicOptionGetter(AbstractCamelliaConfig config) {
         this.config = config;
     }
 

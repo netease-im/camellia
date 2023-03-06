@@ -1,71 +1,17 @@
 package com.netease.nim.camellia.core.conf;
 
-import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Created by caojiajun on 2022/11/16
+ * Created by caojiajun on 2023/3/6
  */
-public class CamelliaConfig {
+public abstract class AbstractCamelliaConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(CamelliaConfig.class);
+    private Map<String, String> conf = new HashMap<>();
 
-    private static Map<String, String> conf = new HashMap<>();
-    private static final AtomicBoolean init = new AtomicBoolean();
-
-    private final String fileName;
-
-    public CamelliaConfig() {
-        this("camellia.properties");
-    }
-
-    public CamelliaConfig(String fileName) {
-        this.fileName = fileName;
-        init();
-    }
-
-    private void init() {
-        if (init.compareAndSet(false, true)) {
-            reload();
-            Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-config"))
-                    .scheduleAtFixedRate(this::reload, 60, 60, TimeUnit.SECONDS);
-        }
-    }
-
-    private void reload() {
-        URL url = CamelliaConfig.class.getClassLoader().getResource(fileName);
-        if (url == null) return;
-        try {
-            Properties props = new Properties();
-            try {
-                props.load(new FileInputStream(url.getPath()));
-            } catch (IOException e) {
-                props.load(CamelliaConfig.class.getClassLoader().getResourceAsStream(fileName));
-            }
-            Map<String, String> map = new HashMap<>();
-            for (Map.Entry<Object, Object> entry : props.entrySet()) {
-                map.put(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
-            }
-            if (map.equals(CamelliaConfig.conf)) {
-                logger.debug("CamelliaFeignConfig skip reload for conf not modify");
-            } else {
-                CamelliaConfig.conf = map;
-                logger.info("CamelliaFeignConfig reload success.");
-            }
-        } catch (Exception e) {
-            logger.error("reload {} error", fileName);
-        }
+    protected void setConf(Map<String, String> conf) {
+        this.conf = conf;
     }
 
     public Map<String, String> getConf() {
@@ -178,5 +124,4 @@ public class CamelliaConfig {
             return defaultValue;
         }
     }
-
 }

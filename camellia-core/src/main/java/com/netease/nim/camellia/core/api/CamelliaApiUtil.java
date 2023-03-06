@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.core.api;
 
-import com.netease.nim.camellia.core.conf.CamelliaConfig;
+import com.netease.nim.camellia.core.conf.FileBasedCamelliaConfig;
 import feign.Feign;
 import feign.Request;
 import feign.jackson.JacksonDecoder;
@@ -52,7 +52,7 @@ public class CamelliaApiUtil {
                 String[] split = url.split("//");
                 if (split.length == 2) {
                     String fileName = split[1];
-                    CamelliaConfig camelliaConfig = new CamelliaConfig(fileName);
+                    FileBasedCamelliaConfig camelliaConfig = new FileBasedCamelliaConfig(fileName);
                     return (T) new FileBasedCamelliaApi(camelliaConfig);
                 }
             }
