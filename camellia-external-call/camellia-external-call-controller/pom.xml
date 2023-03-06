@@ -13,7 +13,11 @@
 	</parent>
 
 	<dependencies>
-
+		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-external-call-common</artifactId>
+			<version>1.3.0-SNAPSHOT</version>
+		</dependency>
     </dependencies>
 	<build>
 		<plugins>

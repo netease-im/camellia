@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.external.call.common;
 
+import com.netease.nim.camellia.tools.base.DynamicValueGetter;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -17,14 +19,14 @@ public class CamelliaExternalCallMqConsumerConfig<R> {
 
     private MqSender mqSender;
     private BizConsumer<R> bizConsumer;
-    private int workThreadPerTopic = 200;
+    private DynamicValueGetter<Integer> workThreadPerTopic = () -> 200;
     private CamelliaExternalCallRequestSerializer<R> serializer;
 
     private MqInfoGenerator generator;
 
-    private double permitMaxRatio = 0.5;//单个租户最多占用的工作线程的比例
+    private DynamicValueGetter<Double> permitMaxRatio = () -> 0.5;//单个租户最多占用的工作线程的比例
 
-    private long degradationTimeThreshold = 10*60*1000L;
+    private DynamicValueGetter<Long> degradationTimeThreshold = () -> 10*60*1000L;
 
     public String getNamespace() {
         return namespace;
@@ -66,11 +68,11 @@ public class CamelliaExternalCallMqConsumerConfig<R> {
         this.bizConsumer = bizConsumer;
     }
 
-    public int getWorkThreadPerTopic() {
+    public DynamicValueGetter<Integer> getWorkThreadPerTopic() {
         return workThreadPerTopic;
     }
 
-    public void setWorkThreadPerTopic(int workThreadPerTopic) {
+    public void setWorkThreadPerTopic(DynamicValueGetter<Integer> workThreadPerTopic) {
         this.workThreadPerTopic = workThreadPerTopic;
     }
 
@@ -90,19 +92,19 @@ public class CamelliaExternalCallMqConsumerConfig<R> {
         this.generator = generator;
     }
 
-    public double getPermitMaxRatio() {
+    public DynamicValueGetter<Double> getPermitMaxRatio() {
         return permitMaxRatio;
     }
 
-    public void setPermitMaxRatio(double permitMaxRatio) {
+    public void setPermitMaxRatio(DynamicValueGetter<Double> permitMaxRatio) {
         this.permitMaxRatio = permitMaxRatio;
     }
 
-    public long getDegradationTimeThreshold() {
+    public DynamicValueGetter<Long> getDegradationTimeThreshold() {
         return degradationTimeThreshold;
     }
 
-    public void setDegradationTimeThreshold(long degradationTimeThreshold) {
+    public void setDegradationTimeThreshold(DynamicValueGetter<Long> degradationTimeThreshold) {
         this.degradationTimeThreshold = degradationTimeThreshold;
     }
 }

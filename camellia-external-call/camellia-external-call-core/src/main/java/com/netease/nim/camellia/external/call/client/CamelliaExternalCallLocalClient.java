@@ -37,21 +37,26 @@ public class CamelliaExternalCallLocalClient<R, T> implements ICamelliaExternalC
     @Override
     public CompletableFuture<T> submit(String isolationKey, R request) {
         CompletableFuture<T> future = new CompletableFuture<>();
-        executor.submit(isolationKey, () -> {
-            T result;
-            try {
-                result = invoker.invoke(isolationKey, request);
-            } catch (Exception e) {
-                future.completeExceptionally(e);
-                return;
-            }
-            try {
-                future.complete(result);
-            } catch (Exception e) {
-                logger.error("complete error, isolationKey = {}, request = {}, result = {}", isolationKey, request, result, e);
-            }
-        }, (key, reason) -> future.completeExceptionally(new CamelliaExternalCallException(reason.name())));
-        return future;
+        try {
+            executor.submit(isolationKey, () -> {
+                T result;
+                try {
+                    result = invoker.invoke(isolationKey, request);
+                } catch (Exception e) {
+                    future.completeExceptionally(e);
+                    return;
+                }
+                try {
+                    future.complete(result);
+                } catch (Exception e) {
+                    logger.error("complete error, isolationKey = {}, request = {}, result = {}", isolationKey, request, result, e);
+                }
+            }, (key, reason) -> future.completeExceptionally(new CamelliaExternalCallException(reason.name())));
+            return future;
+        } catch (Exception e) {
+            future.completeExceptionally(e);
+            return future;
+        }
     }
 
     @Override

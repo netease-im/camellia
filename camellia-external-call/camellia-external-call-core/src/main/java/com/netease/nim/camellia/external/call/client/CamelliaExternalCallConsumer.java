@@ -91,7 +91,7 @@ public class CamelliaExternalCallConsumer<R> implements ICamelliaExternalCallMqC
         ExternalCallMqPack pack = JSONObject.parseObject(new String(data, StandardCharsets.UTF_8), ExternalCallMqPack.class);
         String isolationKey = pack.getIsolationKey();
 
-        if (isDegradation(mqInfo) && System.currentTimeMillis() - pack.getCreateTime() > consumerConfig.getDegradationTimeThreshold()) {
+        if (isDegradation(mqInfo) && System.currentTimeMillis() - pack.getCreateTime() > consumerConfig.getDegradationTimeThreshold().get()) {
             return BizResponse.FAIL_NO_RETRY;
         }
 
@@ -172,7 +172,7 @@ public class CamelliaExternalCallConsumer<R> implements ICamelliaExternalCallMqC
     private CamelliaDynamicExecutor selectExecutor(MqInfo mqInfo) {
         String key = mqInfo.getServer() + "|" + mqInfo.getTopic();
         return CamelliaMapUtils.computeIfAbsent(executorMap, key, k -> {
-            CamelliaDynamicExecutorConfig config = new CamelliaDynamicExecutorConfig(k, consumerConfig::getWorkThreadPerTopic, consumerConfig::getWorkThreadPerTopic);
+            CamelliaDynamicExecutorConfig config = new CamelliaDynamicExecutorConfig(k, consumerConfig.getWorkThreadPerTopic(), consumerConfig.getWorkThreadPerTopic());
             config.setQueueSize(() -> 10);
             config.setRejectedExecutionHandler(ThreadPoolExecutor.CallerRunsPolicy::new);
             return new CamelliaDynamicExecutor(config);
@@ -180,7 +180,7 @@ public class CamelliaExternalCallConsumer<R> implements ICamelliaExternalCallMqC
     }
 
     private Semaphore getIsolationSemaphore(CamelliaDynamicExecutor executor, String isolationKey) {
-        double percent = consumerConfig.getPermitMaxRatio();
+        double percent = consumerConfig.getPermitMaxRatio().get();
         return CamelliaMapUtils.computeIfAbsent(semaphoreMap,
                 executor.getName() + "|" + isolationKey, key -> new Semaphore((int)(executor.getMaximumPoolSize() * percent)));
     }
