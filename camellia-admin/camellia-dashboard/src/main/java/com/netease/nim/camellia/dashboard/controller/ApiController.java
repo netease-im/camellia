@@ -2,7 +2,9 @@ package com.netease.nim.camellia.dashboard.controller;
 
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiResponse;
+import com.netease.nim.camellia.core.api.CamelliaApiV2Response;
 import com.netease.nim.camellia.core.api.ResourceStats;
+import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.dashboard.conf.DashboardProperties;
 import com.netease.nim.camellia.dashboard.service.IIpCheckerService;
 import com.netease.nim.camellia.dashboard.service.ResourceTableService;
@@ -45,6 +47,17 @@ public class ApiController implements CamelliaApi {
         CamelliaApiResponse response = resourceTableService.get(bid, bgroup, md5);
         LogBean.get().addProps("response", response);
         return response;
+    }
+
+    @ApiOperation(value = "获取资源表", notes = "这是一个心跳接口，客户端定时来拉取（如5s），通过MD5值判断是否有更新")
+    @GetMapping(value = "/v2/resourceTable")
+    public CamelliaApiV2Response getResourceTableV2(Long bid, String bgroup, String md5) {
+        LogBean.get().addProps("bid", bid);
+        LogBean.get().addProps("bgroup", bgroup);
+        LogBean.get().addProps("md5", md5);
+        CamelliaApiResponse response = resourceTableService.get(bid, bgroup, md5);
+        LogBean.get().addProps("response", response);
+        return ResourceTableUtil.toV2Response(response);
     }
 
     @ApiOperation(value = "汇报资源读写统计数据", notes = "客户端定时汇报，服务器会将统计数据汇总存储在缓存中")

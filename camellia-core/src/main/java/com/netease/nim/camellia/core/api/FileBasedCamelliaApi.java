@@ -2,6 +2,7 @@ package com.netease.nim.camellia.core.api;
 
 import com.netease.nim.camellia.core.conf.FileBasedCamelliaConfig;
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.tools.utils.MD5Util;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 
@@ -36,6 +37,11 @@ public class FileBasedCamelliaApi implements CamelliaApi {
         response.setResourceTable(resourceTable);
         response.setMd5(newMd5);
         return response;
+    }
+
+    @Override
+    public CamelliaApiV2Response getResourceTableV2(Long bid, String bgroup, String md5) {
+        return ResourceTableUtil.toV2Response(getResourceTable(bid, bgroup, md5));
     }
 
     @Override

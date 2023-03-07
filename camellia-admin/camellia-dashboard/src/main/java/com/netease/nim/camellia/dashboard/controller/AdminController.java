@@ -11,10 +11,7 @@ import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.dashboard.conf.DashboardProperties;
 import com.netease.nim.camellia.dashboard.exception.AppException;
 import com.netease.nim.camellia.dashboard.model.*;
-import com.netease.nim.camellia.dashboard.service.ResourceInfoService;
-import com.netease.nim.camellia.dashboard.service.StatsService;
-import com.netease.nim.camellia.dashboard.service.TableRefService;
-import com.netease.nim.camellia.dashboard.service.TableService;
+import com.netease.nim.camellia.dashboard.service.*;
 import com.netease.nim.camellia.dashboard.util.LogBean;
 import io.netty.util.internal.StringUtil;
 import io.swagger.annotations.Api;
@@ -47,6 +44,9 @@ public class AdminController {
 
     @Autowired
     private StatsService statsService;
+
+    @Autowired
+    private ConfigService configService;
 
     @ApiOperation(value = "创建资源表", notes = "创建接口")
     @PostMapping("/createResourceTable")
@@ -394,7 +394,6 @@ public class AdminController {
         return WebResult.success(stats);
     }
 
-
     @ApiOperation(value = "根据资源url查询读写统计", notes = "用于查询上报的资源读写统计，根据资源url查询")
     @GetMapping("/rwStatsByResourceUrl")
     public WebResult rwStatsByResourceUrl(@RequestParam("url") String url) {
@@ -446,6 +445,64 @@ public class AdminController {
         jsonObject.put("detail", businessDetail);
         jsonObject.put("info", tableRef.getInfo());
         return WebResult.success(jsonObject);
+    }
+
+    @ApiOperation(value = "创建或者更新一条配置", notes = "创建或者更新一条配置")
+    @GetMapping("/createOrUpdateConfig")
+    public WebResult createOrUpdateConfig(@RequestParam("namespace") String namespace,
+                                          @RequestParam("key") String key,
+                                          @RequestParam("value") String value,
+                                          @RequestParam("info") String info,
+                                          @RequestParam("validFlag") Integer validFlag) {
+        LogBean.get().addProps("namespace", namespace);
+        LogBean.get().addProps("key", key);
+        LogBean.get().addProps("value", value);
+        LogBean.get().addProps("info", info);
+        LogBean.get().addProps("validFlag", validFlag);
+        Config config = configService.createOrUpdateConfig(namespace, key, value, info, validFlag);
+        LogBean.get().addProps("config", config);
+        return WebResult.success(config);
+    }
+
+    @ApiOperation(value = "查询namespace下所有配置", notes = "查询namespace下所有配置")
+    @GetMapping("/getConfigList")
+    public WebResult getConfigList(@RequestParam("namespace") String namespace,
+                                   @RequestParam(value = "onlyValid", required = false, defaultValue = "true") boolean onlyValid) {
+        LogBean.get().addProps("namespace", namespace);
+        LogBean.get().addProps("onlyValid", onlyValid);
+        List<Config> configList = configService.getConfigList(namespace, onlyValid);
+        LogBean.get().addProps("configList", configList);
+        return WebResult.success(configList);
+    }
+
+    @ApiOperation(value = "查询namespace下所有配置（字符串方式）", notes = "查询namespace下所有配置（字符串方式）")
+    @GetMapping("/getConfigString")
+    public WebResult getConfigString(@RequestParam("namespace") String namespace,
+                                     @RequestParam(value = "onlyValid", required = false, defaultValue = "true") boolean onlyValid) {
+        LogBean.get().addProps("namespace", namespace);
+        LogBean.get().addProps("onlyValid", onlyValid);
+        String configString = configService.getConfigString(namespace, onlyValid);
+        LogBean.get().addProps("configString", configString);
+        return WebResult.success(configString);
+    }
+
+    @ApiOperation(value = "查询一条配置", notes = "查询一条配置")
+    @GetMapping("/getConfigByKey")
+    public WebResult getConfigByKey(@RequestParam("namespace") String namespace,
+                                    @RequestParam("key") String key) {
+        LogBean.get().addProps("namespace", namespace);
+        LogBean.get().addProps("key", key);
+        Config config = configService.getConfigByKey(namespace, key);
+        LogBean.get().addProps("config", config);
+        return WebResult.success(config);
+    }
+
+    @ApiOperation(value = "删除一条配置", notes = "删除一条配置")
+    @GetMapping("/deleteConfig")
+    public WebResult deleteConfig(@RequestParam("id") long id) {
+        LogBean.get().addProps("id", id);
+        configService.deleteConfig(id);
+        return WebResult.success();
     }
 
     private JSONObject rwStats(ResourceInfo resourceInfo) {

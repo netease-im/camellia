@@ -16,6 +16,11 @@ public interface CamelliaApi {
                                          @Param("bgroup") String bgroup,
                                          @Param("md5") String md5);
 
+    @RequestLine("GET /camellia/api/v2/resourceTable?bid={bid}&bgroup={bgroup}&md5={md5}")
+    CamelliaApiV2Response getResourceTableV2(@Param("bid") Long bid,
+                                             @Param("bgroup") String bgroup,
+                                             @Param("md5") String md5);
+
     @RequestLine("POST /camellia/api/reportStats")
     boolean reportStats(ResourceStats resourceStats);
 

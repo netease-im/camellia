@@ -20,4 +20,6 @@ public interface CamelliaMiscApi {
     @RequestLine("GET /camellia/misc/api/permissions/rate-limit?md5={md5}")
     DataWithMd5Response<List<RateLimitDto>> getRateLimitConfigurationList(@Param("md5") String md5);
 
+    @RequestLine("GET /camellia/misc/api/config?namespace={namespace}&md5={md5}")
+    CamelliaConfigResponse getConfig(@Param("namespace") String namespace, @Param("md5") String md5);
 }

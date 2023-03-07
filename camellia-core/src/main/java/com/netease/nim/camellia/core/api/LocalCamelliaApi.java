@@ -2,6 +2,7 @@ package com.netease.nim.camellia.core.api;
 
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.CheckUtil;
+import com.netease.nim.camellia.core.util.ResourceTableUtil;
 
 import java.util.UUID;
 
@@ -34,6 +35,11 @@ public class LocalCamelliaApi implements CamelliaApi {
         response.setResourceTable(resourceTable);
         response.setMd5(this.md5);
         return response;
+    }
+
+    @Override
+    public CamelliaApiV2Response getResourceTableV2(Long bid, String bgroup, String md5) {
+        return ResourceTableUtil.toV2Response(getResourceTable(bid, bgroup, md5));
     }
 
     @Override

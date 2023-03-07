@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.core.util;
 
+import com.netease.nim.camellia.core.api.CamelliaApiResponse;
+import com.netease.nim.camellia.core.api.CamelliaApiV2Response;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.model.operation.ResourceOperation;
@@ -16,6 +18,18 @@ import java.util.Map;
  * Created by caojiajun on 2019/5/16.
  */
 public class ResourceTableUtil {
+
+    public static CamelliaApiV2Response toV2Response(CamelliaApiResponse response) {
+        CamelliaApiV2Response v2Response = new CamelliaApiV2Response();
+        v2Response.setCode(response.getCode());
+        v2Response.setMd5(response.getMd5());
+        ResourceTable resourceTable = response.getResourceTable();
+        if (resourceTable != null) {
+            String table = ReadableResourceTableUtil.readableResourceTable(resourceTable);
+            v2Response.setRouteTable(table);
+        }
+        return v2Response;
+    }
 
     public static ResourceTable immutableResourceTable(ResourceTable resourceTable) {
         if (resourceTable == null) return null;

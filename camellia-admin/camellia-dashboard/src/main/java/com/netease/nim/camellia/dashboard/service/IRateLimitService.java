@@ -26,8 +26,8 @@ public interface IRateLimitService {
     /**
      * Optional update Rate Limit configuration
      *
-     * @param id
-     * @param request
+     * @param id id
+     * @param request request
      */
     void update(long id, UpdateRateLimitRequest request);
 

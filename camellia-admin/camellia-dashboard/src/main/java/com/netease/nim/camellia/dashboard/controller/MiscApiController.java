@@ -1,10 +1,12 @@
 package com.netease.nim.camellia.dashboard.controller;
 
+import com.netease.nim.camellia.core.api.CamelliaConfigResponse;
 import com.netease.nim.camellia.core.api.CamelliaMiscApi;
 import com.netease.nim.camellia.core.api.DataWithMd5Response;
 import com.netease.nim.camellia.core.model.IpCheckerDto;
 import com.netease.nim.camellia.core.model.RateLimitDto;
 import com.netease.nim.camellia.dashboard.conf.DashboardProperties;
+import com.netease.nim.camellia.dashboard.service.ConfigService;
 import com.netease.nim.camellia.dashboard.service.IIpCheckerService;
 import com.netease.nim.camellia.dashboard.service.IRateLimitService;
 import com.netease.nim.camellia.dashboard.util.LogBean;
@@ -34,6 +36,9 @@ public class MiscApiController implements CamelliaMiscApi {
     @Autowired
     private IRateLimitService rateLimitService;
 
+    @Autowired
+    private ConfigService configService;
+
     @ApiOperation(value = "Get ip checker all", notes = "This is a heartbeat interface, the client pulls it regularly (such as 5s), and judges whether there is an update through the MD5 value")
     @GetMapping("/permissions/ip-checkers")
     public DataWithMd5Response<List<IpCheckerDto>> getIpCheckerList(@RequestParam(value = "md5", required = false) String md5) {
@@ -52,4 +57,16 @@ public class MiscApiController implements CamelliaMiscApi {
         LogBean.get().addProps("response", response);
         return response;
     }
+
+    @ApiOperation(value = "Get configurations", notes = "This is a heartbeat interface, the client pulls it regularly (such as 5s), and judges whether there is an update through the MD5 value")
+    @GetMapping("/config")
+    public CamelliaConfigResponse getConfig(@RequestParam(value = "namespace") String namespace,
+                                            @RequestParam(value = "md5", required = false) String md5) {
+        LogBean.get().addProps("md5", md5);
+        LogBean.get().addProps("namespace", namespace);
+        CamelliaConfigResponse response = configService.getConfig(namespace, md5);
+        LogBean.get().addProps("response", response);
+        return response;
+    }
+
 }

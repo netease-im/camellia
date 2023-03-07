@@ -137,6 +137,11 @@ public class CamelliaHBaseTemplate implements ICamelliaHBaseTemplate {
         }
 
         @Override
+        public CamelliaApiV2Response getResourceTableV2(Long bid, String bgroup, String md5) {
+            return ResourceTableUtil.toV2Response(getResourceTable(bid, bgroup, md5));
+        }
+
+        @Override
         public boolean reportStats(ResourceStats resourceStats) {
             return service.reportStats(resourceStats);
         }
