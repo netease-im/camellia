@@ -38,6 +38,7 @@ public class Stats {
     private List<HotKeyStats> hotKeyStatsList = new ArrayList<>();
     private List<HotKeyCacheStats> hotKeyCacheStatsList = new ArrayList<>();
     private List<SlowCommandStats> slowCommandStatsList = new ArrayList<>();
+    private List<UpstreamFailStats> upstreamFailStatsList = new ArrayList<>();
 
     public int getIntervalSeconds() {
         return intervalSeconds;
@@ -245,5 +246,13 @@ public class Stats {
 
     public void setSlowCommandStatsList(List<SlowCommandStats> slowCommandStatsList) {
         this.slowCommandStatsList = slowCommandStatsList;
+    }
+
+    public List<UpstreamFailStats> getUpstreamFailStatsList() {
+        return upstreamFailStatsList;
+    }
+
+    public void setUpstreamFailStatsList(List<UpstreamFailStats> upstreamFailStatsList) {
+        this.upstreamFailStatsList = upstreamFailStatsList;
     }
 }

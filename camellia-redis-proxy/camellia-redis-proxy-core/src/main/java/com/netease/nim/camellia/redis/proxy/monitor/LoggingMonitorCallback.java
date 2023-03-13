@@ -121,6 +121,13 @@ public class LoggingMonitorCallback implements MonitorCallback {
                         slowCommandStats.getBgroup(), slowCommandStats.getCommand(),
                         slowCommandStats.getKeys(), slowCommandStats.getSpendMillis(), slowCommandStats.getThresholdMillis());
             }
+
+            logger.info("====upstream.fail.stats====");
+            List<UpstreamFailStats> upstreamFailStatsList = stats.getUpstreamFailStatsList();
+            for (UpstreamFailStats upstreamFailStats : upstreamFailStatsList) {
+                logger.info("resource={},command={},msg={},count={}", upstreamFailStats.getResource(),
+                        upstreamFailStats.getCommand(), upstreamFailStats.getMsg(), upstreamFailStats.getCount());
+            }
             logger.info("<<<<<<<END<<<<<<<");
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
