@@ -8,7 +8,7 @@
 * camellia-redis-proxy细化了后端redis异常时返回给客户端错误描述信息
 
 ### fix
-* 无
+* 修复camellia-redis-proxy使用info upstream-info命令获取到的后端redis地址的密码没有mask的问题
 
 
 # 1.2.2（2023/02/28）

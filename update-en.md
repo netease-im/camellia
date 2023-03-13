@@ -8,7 +8,7 @@
 * camellia-redis-proxy specify ErrorReply msg of proxy upstream error
 
 ### fix
-* none
+* fix camellia-redis-proxy use info upstream-info command to get upstream route conf do not mask redis password
 
 
 # 1.2.2（2023/02/28）
