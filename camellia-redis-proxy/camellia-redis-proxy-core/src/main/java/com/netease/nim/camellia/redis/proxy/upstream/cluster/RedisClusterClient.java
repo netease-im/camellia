@@ -200,7 +200,7 @@ public class RedisClusterClient implements IUpstreamClient {
                     RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(slot);
                     bindConnection = command.getChannelInfo().acquireBindRedisConnection(node.getAddr());
                     if (bindConnection == null) {
-                        future.complete(ErrorReply.NOT_AVAILABLE);
+                        future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                         continue;
                     }
                     channelInfo.setBindClient(slot, bindConnection);
@@ -413,7 +413,7 @@ public class RedisClusterClient implements IUpstreamClient {
                 int randomSlot = ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE);
                 RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(randomSlot);
                 if (node == null) {
-                    future.complete(ErrorReply.NOT_AVAILABLE);
+                    future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                     return;
                 }
                 bindConnection = command.getChannelInfo().acquireBindRedisConnection(node.getAddr());
@@ -437,7 +437,7 @@ public class RedisClusterClient implements IUpstreamClient {
                     }
                 }
             } else {
-                future.complete(ErrorReply.NOT_AVAILABLE);
+                future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
             }
             return;
         }
@@ -468,7 +468,7 @@ public class RedisClusterClient implements IUpstreamClient {
             if (connection != null) {
                 commandFlusher.sendCommand(connection, command, new CompletableFutureWrapper(this, future, command));
             } else {
-                future.complete(ErrorReply.NOT_AVAILABLE);
+                future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
             }
         }
     }
@@ -524,7 +524,7 @@ public class RedisClusterClient implements IUpstreamClient {
 
         RedisConnection redisConnection = clusterSlotInfo.getConnectionByIndex(currentNodeIndex);
         if (redisConnection == null || !redisConnection.isValid()) {
-            future.complete(ErrorReply.NOT_AVAILABLE);
+            future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
             return;
         }
 
@@ -857,13 +857,13 @@ public class RedisClusterClient implements IUpstreamClient {
         RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(slot);
         if (node == null) {
             ErrorLogCollector.collect(RedisClusterClient.class, "blockingCommand getNode, slot=" + slot + " fail");
-            future.complete(ErrorReply.NOT_AVAILABLE);
+            future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
             return;
         }
         RedisConnection connection = command.getChannelInfo().acquireBindRedisConnection(node.getAddr());
         if (connection == null || !connection.isValid()) {
             ErrorLogCollector.collect(RedisClusterClient.class, "blockingCommand newClient, node=" + node.getAddr() + " fail");
-            future.complete(ErrorReply.NOT_AVAILABLE);
+            future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
             return;
         }
         commandFlusher.flush();

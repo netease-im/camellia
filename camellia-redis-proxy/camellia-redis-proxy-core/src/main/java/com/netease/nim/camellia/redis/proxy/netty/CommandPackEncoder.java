@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
 import com.netease.nim.camellia.redis.proxy.util.CommandsEncodeUtil;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.buffer.ByteBuf;
@@ -39,9 +40,10 @@ public class CommandPackEncoder extends MessageToMessageEncoder<CommandPack> {
         try {
             List<Command> commands = msg.getCommands();
             long startTime = msg.getStartTime();
+            RedisConnectionStatus status = redisConnection.getStatus();
             for (CompletableFuture<Reply> future : msg.getCompletableFutureList()) {
-                if (!redisConnection.isValid()) {
-                    future.complete(ErrorReply.NOT_AVAILABLE);
+                if (status == RedisConnectionStatus.INVALID) {
+                    future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                     continue;
                 }
                 boolean offer;
@@ -53,11 +55,11 @@ public class CommandPackEncoder extends MessageToMessageEncoder<CommandPack> {
                 if (!offer) {
                     String log = redisConnection.getConnectionName() + ", queue full, will stop";
                     ErrorLogCollector.collect(CommandPackEncoder.class, log);
-                    future.complete(ErrorReply.NOT_AVAILABLE);
+                    future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                     redisConnection.stop();
                 }
             }
-            if (!redisConnection.isValid()) {
+            if (status == RedisConnectionStatus.INVALID) {
                 return;
             }
             if (commands.isEmpty()) return;

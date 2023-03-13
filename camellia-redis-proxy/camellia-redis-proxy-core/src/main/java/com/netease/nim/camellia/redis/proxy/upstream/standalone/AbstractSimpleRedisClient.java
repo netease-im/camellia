@@ -115,7 +115,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                         }
                     }
                 } else {
-                    future.complete(ErrorReply.NOT_AVAILABLE);
+                    future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                 }
             } else if (redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
                 if (bindConnection != null) {
@@ -144,7 +144,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                     channelInfo.setBindConnection(bindConnection);
                 }
                 if (bindConnection == null) {
-                    future.complete(ErrorReply.NOT_AVAILABLE);
+                    future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                 } else {
                     bindConnection.sendCommand(Collections.singletonList(command), Collections.singletonList(future));
                     if (redisCommand == RedisCommand.MULTI) {
@@ -226,7 +226,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         if (addr == null) {
             String log = "addr is null, command return NOT_AVAILABLE, RedisResource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
-                completableFuture.complete(ErrorReply.NOT_AVAILABLE);
+                completableFuture.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                 ErrorLogCollector.collect(RedisStandaloneClient.class, log);
             }
             return;
@@ -239,7 +239,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         } else {
             String log = "RedisClient[" + PasswordMaskUtils.maskAddr(addr) + "] is null, command return NOT_AVAILABLE, RedisResource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
-                completableFuture.complete(ErrorReply.NOT_AVAILABLE);
+                completableFuture.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                 ErrorLogCollector.collect(RedisStandaloneClient.class, log);
             }
         }
@@ -250,7 +250,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         if (addr == null) {
             String log = "addr is null, command return NOT_AVAILABLE, RedisResource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
-                completableFuture.complete(ErrorReply.NOT_AVAILABLE);
+                completableFuture.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                 ErrorLogCollector.collect(RedisStandaloneClient.class, log);
             }
             return;
@@ -261,7 +261,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         } else {
             String log = "RedisClient[" + PasswordMaskUtils.maskAddr(addr) + "] is null, command return NOT_AVAILABLE, RedisResource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
-                completableFuture.complete(ErrorReply.NOT_AVAILABLE);
+                completableFuture.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                 ErrorLogCollector.collect(RedisStandaloneClient.class, log);
             }
         }

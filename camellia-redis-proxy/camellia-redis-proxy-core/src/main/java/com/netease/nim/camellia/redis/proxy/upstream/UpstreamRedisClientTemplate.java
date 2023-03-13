@@ -212,7 +212,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                             }
                         }
                         CompletableFuture<Reply> future = new CompletableFuture<>();
-                        future.complete(ErrorReply.NOT_AVAILABLE);
+                        future.complete(ErrorReply.UPSTREAM_RESOURCE_NOT_AVAILABLE);
                         futureList.add(future);
                         continue;
                     }
@@ -361,7 +361,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     }
                 } catch (Exception e) {
                     CompletableFuture<Reply> future = new CompletableFuture<>();
-                    future.complete(ErrorReply.NOT_AVAILABLE);
+                    future.complete(ErrorReply.UPSTREAM_RESOURCE_NOT_AVAILABLE);
                     futureList.add(future);
                 }
                 continue;
@@ -746,7 +746,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     future.complete(reply);
                     return;
                 } else {
-                    future.complete(ErrorReply.NOT_AVAILABLE);
+                    future.complete(ErrorReply.UPSTREAM_RESOURCE_NOT_AVAILABLE);
                     return;
                 }
             }
@@ -817,7 +817,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     future.complete(reply);
                     return;
                 } else {
-                    future.complete(ErrorReply.NOT_AVAILABLE);
+                    future.complete(ErrorReply.UPSTREAM_RESOURCE_NOT_AVAILABLE);
                     return;
                 }
             }

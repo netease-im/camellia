@@ -283,10 +283,10 @@ public class RedisConnection {
      * @param completableFutureList future list
      */
     public void sendCommand(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
-        if (status == RedisConnectionStatus.INVALID || status == RedisConnectionStatus.CLOSING) {
+        if (status == RedisConnectionStatus.INVALID) {
             String log = connectionName + " is " + status + ", command return NOT_AVAILABLE";
             for (CompletableFuture<Reply> future : completableFutureList) {
-                future.complete(ErrorReply.NOT_AVAILABLE);
+                future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                 ErrorLogCollector.collect(RedisConnection.class, log);
             }
             return;
@@ -295,28 +295,34 @@ public class RedisConnection {
         if (logger.isDebugEnabled()) {
             logger.debug("{} sendCommands, commands.size = {}", connectionName, commands.size());
         }
-        if (status == RedisConnectionStatus.VALID) {
+        if (status == RedisConnectionStatus.VALID || status == RedisConnectionStatus.CLOSING) {
             writeAndFlush(pack);
         } else if (status == RedisConnectionStatus.INITIALIZE) {
             synchronized (cachedCommands) {
-                if (status == RedisConnectionStatus.VALID && cachedCommands.isEmpty()) {
+                if (status == RedisConnectionStatus.VALID || status == RedisConnectionStatus.CLOSING) {
                     writeAndFlush(pack);
-                } else if (status == RedisConnectionStatus.INVALID || status == RedisConnectionStatus.CLOSING) {
-                    String log = connectionName + " is " + status + ", command return NOT_AVAILABLE";
-                    for (CompletableFuture<Reply> future : completableFutureList) {
-                        future.complete(ErrorReply.NOT_AVAILABLE);
-                        ErrorLogCollector.collect(RedisConnection.class, log);
-                    }
-                } else {
+                } else if (status == RedisConnectionStatus.INITIALIZE) {
                     boolean success = cachedCommands.offer(pack);
                     if (!success) {
                         String log = connectionName + ", cachedCommands queue is full, command return NOT_AVAILABLE";
                         for (CompletableFuture<Reply> future : completableFutureList) {
-                            future.complete(ErrorReply.NOT_AVAILABLE);
+                            future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                             ErrorLogCollector.collect(RedisConnection.class, log);
                         }
                     }
+                } else {
+                    String log = connectionName + " is " + status + ", command return NOT_AVAILABLE";
+                    for (CompletableFuture<Reply> future : completableFutureList) {
+                        future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+                        ErrorLogCollector.collect(RedisConnection.class, log);
+                    }
                 }
+            }
+        } else {
+            String log = connectionName + " is " + status + ", command return NOT_AVAILABLE";
+            for (CompletableFuture<Reply> future : completableFutureList) {
+                future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+                ErrorLogCollector.collect(RedisConnection.class, log);
             }
         }
         if (closeIdleConnection) {
@@ -465,7 +471,7 @@ public class RedisConnection {
             while (!queue.isEmpty()) {
                 CompletableFuture<Reply> future = queue.poll();
                 if (future != null) {
-                    future.complete(ErrorReply.NOT_AVAILABLE);
+                    future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                     count ++;
                 }
             }
@@ -473,7 +479,7 @@ public class RedisConnection {
                 CommandPack commandPack = cachedCommands.poll();
                 if (commandPack != null) {
                     for (CompletableFuture<Reply> future : commandPack.getCompletableFutureList()) {
-                        future.complete(ErrorReply.NOT_AVAILABLE);
+                        future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                         count ++;
                     }
                 }

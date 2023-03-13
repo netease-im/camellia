@@ -344,7 +344,7 @@ public class CommandsTransponder {
             CompletableFuture<IUpstreamClientTemplate> future = factory.getOrInitializeAsync(bid, bgroup);
             if (future == null) {
                 for (CommandTask task : tasks) {
-                    task.replyCompleted(ErrorReply.NOT_AVAILABLE);
+                    task.replyCompleted(ErrorReply.UPSTREAM_NOT_AVAILABLE);
                 }
                 return;
             }
@@ -352,7 +352,7 @@ public class CommandsTransponder {
         } catch (Exception e) {
             ErrorLogCollector.collect(CommandsTransponder.class, "flush commands error", e);
             for (CommandTask task : tasks) {
-                task.replyCompleted(ErrorReply.NOT_AVAILABLE);
+                task.replyCompleted(ErrorReply.UPSTREAM_NOT_AVAILABLE);
             }
         }
     }
@@ -361,7 +361,7 @@ public class CommandsTransponder {
         try {
             if (template == null) {
                 for (CommandTask task : tasks) {
-                    task.replyCompleted(ErrorReply.NOT_AVAILABLE);
+                    task.replyCompleted(ErrorReply.UPSTREAM_NOT_AVAILABLE);
                 }
             } else {
                 List<CompletableFuture<Reply>> futureList;
@@ -372,7 +372,7 @@ public class CommandsTransponder {
                             + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e;
                     ErrorLogCollector.collect(CommandsTransponder.class, log, e);
                     for (CommandTask task : tasks) {
-                        task.replyCompleted(ErrorReply.NOT_AVAILABLE);
+                        task.replyCompleted(ErrorReply.UPSTREAM_NOT_AVAILABLE);
                     }
                     return;
                 }
