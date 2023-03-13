@@ -52,7 +52,7 @@ public class UpstreamFailMonitor {
             String command = split[1];
             String msg = split[2];
             UpstreamFailStats stats = new UpstreamFailStats();
-            stats.setResource(resource);
+            stats.setResource(PasswordMaskUtils.maskResource(resource));
             stats.setCommand(command);
             stats.setMsg(msg);
             stats.setCount(entry.getValue().sum());
