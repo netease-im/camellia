@@ -296,11 +296,11 @@ public class RedisConnection {
             logger.debug("{} sendCommands, commands.size = {}", connectionName, commands.size());
         }
         if (status == RedisConnectionStatus.VALID || status == RedisConnectionStatus.CLOSING) {
-            writeAndFlush(pack);
+            channel.writeAndFlush(pack);
         } else if (status == RedisConnectionStatus.INITIALIZE) {
             synchronized (cachedCommands) {
                 if (status == RedisConnectionStatus.VALID || status == RedisConnectionStatus.CLOSING) {
-                    writeAndFlush(pack);
+                    channel.writeAndFlush(pack);
                 } else if (status == RedisConnectionStatus.INITIALIZE) {
                     boolean success = cachedCommands.offer(pack);
                     if (!success) {
@@ -573,7 +573,7 @@ public class RedisConnection {
     //直接发送命令，不检查连接状态
     private void sendCommandDirect(Command command, CompletableFuture<Reply> future) {
         CommandPack pack = new CommandPack(Collections.singletonList(command), Collections.singletonList(future), time());
-        writeAndFlush(pack);
+        channel.writeAndFlush(pack);
     }
 
     //发送AUTH命令，并检查回包
@@ -627,7 +627,7 @@ public class RedisConnection {
         while (!cachedCommands.isEmpty()) {
             CommandPack commandPack = cachedCommands.poll();
             if (commandPack == null) break;
-            writeAndFlush(commandPack);
+            channel.writeAndFlush(commandPack);
         }
     }
 
@@ -674,11 +674,6 @@ public class RedisConnection {
                 logger.error("{} idle check error", connectionName, e);
             }
         }
-    }
-
-    //写入命令
-    private void writeAndFlush(CommandPack commandPack) {
-        channel.writeAndFlush(commandPack);
     }
 
     //获取当前时间（ns）
