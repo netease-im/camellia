@@ -41,6 +41,9 @@ public class StatsPrometheusConverter {
             sb.append(String.format(totalFormat, "all", stats.getCount()));
             sb.append(String.format(totalFormat, "read", stats.getTotalReadCount()));
             sb.append(String.format(totalFormat, "write", stats.getTotalWriteCount()));
+            sb.append(String.format(totalFormat, "max_qps", stats.getMaxQps()));
+            sb.append(String.format(totalFormat, "max_read_qps", stats.getMaxReadQps()));
+            sb.append(String.format(totalFormat, "max_write_qps", stats.getMaxWriteQps()));
 
             // ====total====
             sb.append("# HELP redis_proxy_total_command Redis Proxy Total Command\n");
@@ -267,6 +270,18 @@ public class StatsPrometheusConverter {
                         bgroup,
                         slowCommandStatsKey.getCommand(),
                         entry.getValue()));
+            }
+
+            // ====upstream.fail.stats====
+            sb.append("# HELP redis_proxy_upstream_fail_stats Redis Proxy Upstream Fail Stats\n");
+            sb.append("# TYPE redis_proxy_upstream_fail_stats counter\n");
+            List<UpstreamFailStats> upstreamFailStatsList = stats.getUpstreamFailStatsList();
+            for (UpstreamFailStats upstreamFailStats : upstreamFailStatsList) {
+                sb.append(String.format("redis_proxy_upstream_fail_stats{resource=\"%s\",command=\"%s\",msg=\"%s\",} %d%n",
+                        upstreamFailStats.getResource(),
+                        upstreamFailStats.getCommand(),
+                        upstreamFailStats.getMsg(),
+                        upstreamFailStats.getCount()));
             }
 
             // <<<<<<<END<<<<<<<
