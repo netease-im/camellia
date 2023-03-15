@@ -231,20 +231,20 @@ redis_proxy_upstream_redis_spend_stats{redis_addr="@xx.xx.xx.xx:6379",quantile="
 redis_proxy_upstream_redis_spend_stats{redis_addr="@xx.xx.xx.xx:6379",quantile="0.999"} 17051.380000
 redis_proxy_upstream_redis_spend_stats{redis_addr="@xx.xx.xx.xx:6379",quantile="1"} 41120.110000
 # HELP redis_proxy_big_key_stats Redis Proxy Big Key Stats
-# TYPE redis_proxy_big_key_stats counter
+# TYPE redis_proxy_big_key_stats gauge
 redis_proxy_big_key_stats{bid="1",bgroup="default",command="zrange",} 100
 # HELP redis_proxy_hot_key_stats Redis Proxy Hot Key Stats
-# TYPE redis_proxy_hot_key_stats counter
+# TYPE redis_proxy_hot_key_stats gauge
 redis_proxy_hot_key_stats{bid="1",bgroup="default",} 10
 # HELP redis_proxy_hot_key_cache_stats Redis Proxy Hot Key Cache Stats
-# TYPE redis_proxy_hot_key_cache_stats counter
+# TYPE redis_proxy_hot_key_cache_stats gauge
 redis_proxy_hot_key_cache_stats{bid="1",bgroup="default",} 10
 # HELP redis_proxy_slow_command_stats Redis Proxy Slow Command Stats
-# TYPE redis_proxy_slow_command_stats counter
+# TYPE redis_proxy_slow_command_stats gauge
 redis_proxy_slow_command_stats{bid="245",bgroup="platform",command="hset",} 24
 redis_proxy_slow_command_stats{bid="3",bgroup="tass",command="incr",} 76
 # HELP redis_proxy_upstream_fail_stats Redis Proxy Upstream Fail Stats
-# TYPE redis_proxy_upstream_fail_stats counter
+# TYPE redis_proxy_upstream_fail_stats gauge
 redis_proxy_upstream_fail_stats{resource="redis://@127.0.0.1:6379",command="get",msg="ERR proxy upstream connection not available",} 2
 ```
 

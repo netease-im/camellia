@@ -6,6 +6,7 @@
 
 ### 更新
 * camellia-redis-proxy细化了后端redis异常时返回给客户端的错误描述信息
+* camellia-redis-proxy的/prometheus端点调整了部分metrics的type
 
 ### fix
 * 修复camellia-redis-proxy使用info upstream-info命令获取到的后端redis地址的密码没有mask的问题

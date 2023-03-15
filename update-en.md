@@ -6,6 +6,7 @@
 
 ### update
 * camellia-redis-proxy specify ErrorReply msg of proxy upstream error
+* camellia-redis-proxy update some metrics type of /prometheus
 
 ### fix
 * fix camellia-redis-proxy use info upstream-info command to get upstream route conf do not mask redis password
