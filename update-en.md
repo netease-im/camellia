@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.3（2023/03/xx）
+# 1.2.3（2023/03/15）
 ### add
 * camellia-redis-proxy support monitor upstream fail
 

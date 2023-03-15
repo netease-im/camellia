@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.2.3（2023/03/xx）
+# 1.2.3（2023/03/15）
 ### 新增
 * camellia-redis-proxy支持根据后端resource统计请求失败的情况，具体见：[monitor-data](/docs/redis-proxy/monitor/monitor-data.md)
 
