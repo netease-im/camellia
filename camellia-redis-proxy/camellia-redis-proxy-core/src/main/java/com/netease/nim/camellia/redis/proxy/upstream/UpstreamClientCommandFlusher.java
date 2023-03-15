@@ -66,7 +66,7 @@ public class UpstreamClientCommandFlusher {
             List<CompletableFuture<Reply>> futureList = futureMap.get(client);
             if (client == null) {
                 for (CompletableFuture<Reply> future : futureList) {
-                    future.complete(ErrorReply.NOT_AVAILABLE);
+                    future.complete(ErrorReply.UPSTREAM_RESOURCE_NOT_AVAILABLE);
                     ErrorLogCollector.collect(UpstreamClientCommandFlusher.class, "IUpstreamClient is null, return NOT_AVAILABLE");
                 }
             } else {

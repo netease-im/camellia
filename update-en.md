@@ -1,5 +1,17 @@
 [中文版](update-zh.md)
 
+# 1.2.3（2023/03/xx）
+### add
+* camellia-redis-proxy support monitor upstream fail
+
+### update
+* camellia-redis-proxy specify ErrorReply msg of proxy upstream error
+* camellia-redis-proxy update some metrics type of /prometheus
+
+### fix
+* fix camellia-redis-proxy use info upstream-info command to get upstream route conf do not mask redis password
+
+
 # 1.2.2（2023/02/28）
 ### add
 * none

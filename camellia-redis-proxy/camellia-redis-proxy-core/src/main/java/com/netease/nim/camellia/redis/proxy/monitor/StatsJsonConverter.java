@@ -291,6 +291,18 @@ public class StatsJsonConverter {
             hotKeyCacheStatsJsonArray.add(hotKeyCacheStatsJson);
         }
         monitorJson.put("hotKeyCacheStats", hotKeyCacheStatsJsonArray);
+
+        List<UpstreamFailStats> upstreamFailStatsList = stats.getUpstreamFailStatsList();
+        JSONArray upstreamFailStatsJsonArray = new JSONArray();
+        for (UpstreamFailStats upstreamFailStats : upstreamFailStatsList) {
+            JSONObject upstreamFailStatsJson = new JSONObject();
+            upstreamFailStatsJson.put("resource", upstreamFailStats.getResource());
+            upstreamFailStatsJson.put("command", upstreamFailStats.getCommand());
+            upstreamFailStatsJson.put("msg", upstreamFailStats.getMsg());
+            upstreamFailStatsJson.put("count", upstreamFailStats.getCount());
+            upstreamFailStatsJsonArray.add(upstreamFailStatsJson);
+        }
+        monitorJson.put("upstreamFailStats", upstreamFailStatsJsonArray);
         return monitorJson.toJSONString();
     }
 }

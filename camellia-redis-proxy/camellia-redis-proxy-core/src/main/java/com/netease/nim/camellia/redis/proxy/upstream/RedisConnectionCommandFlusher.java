@@ -63,7 +63,7 @@ public class RedisConnectionCommandFlusher {
             List<CompletableFuture<Reply>> futureList = futureMap.get(connection);
             if (connection == null) {
                 for (CompletableFuture<Reply> future : futureList) {
-                    future.complete(ErrorReply.NOT_AVAILABLE);
+                    future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                     ErrorLogCollector.collect(UpstreamClientCommandFlusher.class, "RedisConnection is null, return NOT_AVAILABLE");
                 }
             } else {

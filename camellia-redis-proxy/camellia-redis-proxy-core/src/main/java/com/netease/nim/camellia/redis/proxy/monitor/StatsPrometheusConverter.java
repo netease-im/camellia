@@ -41,6 +41,9 @@ public class StatsPrometheusConverter {
             sb.append(String.format(totalFormat, "all", stats.getCount()));
             sb.append(String.format(totalFormat, "read", stats.getTotalReadCount()));
             sb.append(String.format(totalFormat, "write", stats.getTotalWriteCount()));
+            sb.append(String.format(totalFormat, "max_qps", stats.getMaxQps()));
+            sb.append(String.format(totalFormat, "max_read_qps", stats.getMaxReadQps()));
+            sb.append(String.format(totalFormat, "max_write_qps", stats.getMaxWriteQps()));
 
             // ====total====
             sb.append("# HELP redis_proxy_total_command Redis Proxy Total Command\n");
@@ -180,7 +183,7 @@ public class StatsPrometheusConverter {
 
             // ====big.key.stats====
             sb.append("# HELP redis_proxy_big_key_stats Redis Proxy Big Key Stats\n");
-            sb.append("# TYPE redis_proxy_big_key_stats counter\n");
+            sb.append("# TYPE redis_proxy_big_key_stats gauge\n");
             List<BigKeyStats> bigKeyStatsList = stats.getBigKeyStatsList();
             // BigKeyStatsMap: BigKeyStats group by bid, bgroup and command and count the number of keys
             Map<BigKeyStatsKey, Long> bigKeyStatsMap = bigKeyStatsList.stream()
@@ -203,7 +206,7 @@ public class StatsPrometheusConverter {
 
             // ====hot.key.stats====
             sb.append("# HELP redis_proxy_hot_key_stats Redis Proxy Hot Key Stats\n");
-            sb.append("# TYPE redis_proxy_hot_key_stats counter\n");
+            sb.append("# TYPE redis_proxy_hot_key_stats gauge\n");
             List<HotKeyStats> hotKeyStatsList = stats.getHotKeyStatsList();
             // HotKeyStatsMap: HotKeyStats group by bid, bgroup and count the number of keys
             Map<HotKeyStatsKey, Long> hotKeyStatsMap = hotKeyStatsList.stream()
@@ -225,7 +228,7 @@ public class StatsPrometheusConverter {
 
             // ====hot.key.cache.stats====
             sb.append("# HELP redis_proxy_hot_key_cache_stats Redis Proxy Hot Key Cache Stats\n");
-            sb.append("# TYPE redis_proxy_hot_key_cache_stats counter\n");
+            sb.append("# TYPE redis_proxy_hot_key_cache_stats gauge\n");
             List<HotKeyCacheStats> hotKeyCacheStatsList = stats.getHotKeyCacheStatsList();
             // HotKeyCacheStatsMap: HotKeyCacheStats group by bid, bgroup and count the number of keys
             Map<HotKeyCacheStatsKey, Long> hotKeyCacheStatsMap = hotKeyCacheStatsList.stream()
@@ -248,7 +251,7 @@ public class StatsPrometheusConverter {
 
             // ====slow.command.stats====
             sb.append("# HELP redis_proxy_slow_command_stats Redis Proxy Slow Command Stats\n");
-            sb.append("# TYPE redis_proxy_slow_command_stats counter\n");
+            sb.append("# TYPE redis_proxy_slow_command_stats gauge\n");
             List<SlowCommandStats> slowCommandStatsList = stats.getSlowCommandStatsList();
             // SlowCommandStatsMap: SlowCommandStats group by bid, bgroup and command and count the number of keys
             Map<SlowCommandStatsKey, Long> slowCommandStatsMap = slowCommandStatsList.stream()
@@ -267,6 +270,18 @@ public class StatsPrometheusConverter {
                         bgroup,
                         slowCommandStatsKey.getCommand(),
                         entry.getValue()));
+            }
+
+            // ====upstream.fail.stats====
+            sb.append("# HELP redis_proxy_upstream_fail_stats Redis Proxy Upstream Fail Stats\n");
+            sb.append("# TYPE redis_proxy_upstream_fail_stats gauge\n");
+            List<UpstreamFailStats> upstreamFailStatsList = stats.getUpstreamFailStatsList();
+            for (UpstreamFailStats upstreamFailStats : upstreamFailStatsList) {
+                sb.append(String.format("redis_proxy_upstream_fail_stats{resource=\"%s\",command=\"%s\",msg=\"%s\",} %d%n",
+                        upstreamFailStats.getResource(),
+                        upstreamFailStats.getCommand(),
+                        upstreamFailStats.getMsg(),
+                        upstreamFailStats.getCount()));
             }
 
             // <<<<<<<END<<<<<<<

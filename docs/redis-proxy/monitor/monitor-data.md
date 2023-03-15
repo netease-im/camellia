@@ -327,6 +327,14 @@
       "spendMsP999": 2.03,
       "avgSpendMs": 0.12276473684210526
     }
+  ],
+  "upstreamFailStats": [//后端转发失败情况（根据resource区分）
+    {
+      "resource": "redis://@10.2.2.2:6379", 
+      "command": "get",
+      "msg": "ERR proxy upstream connection not available",
+      "count": 2
+    }
   ]
 }
 ```

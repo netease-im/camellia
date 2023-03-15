@@ -1,5 +1,17 @@
 [ENGLISH](update-en.md)
 
+# 1.2.3（2023/03/xx）
+### 新增
+* camellia-redis-proxy支持根据后端resource统计请求失败的情况，具体见：[monitor-data](/docs/redis-proxy/monitor/monitor-data.md)
+
+### 更新
+* camellia-redis-proxy细化了后端redis异常时返回给客户端的错误描述信息
+* camellia-redis-proxy的/prometheus端点调整了部分metrics的type
+
+### fix
+* 修复camellia-redis-proxy使用info upstream-info命令获取到的后端redis地址的密码没有mask的问题
+
+
 # 1.2.2（2023/02/28）
 ### 新增
 * 无

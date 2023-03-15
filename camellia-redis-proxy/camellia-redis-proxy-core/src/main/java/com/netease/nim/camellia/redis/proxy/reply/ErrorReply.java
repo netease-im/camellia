@@ -7,10 +7,13 @@ import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 
 public class ErrorReply implements Reply {
-    public static final ErrorReply NOT_SUPPORT = new ErrorReply("Not Support");
-    public static final ErrorReply NOT_AVAILABLE = new ErrorReply("Not Available");
-    public static final ErrorReply TOO_BUSY = new ErrorReply("Too Busy");
-    public static final ErrorReply REPEAT_OPERATION = new ErrorReply("Repeat Operation");
+    public static final ErrorReply NOT_SUPPORT = new ErrorReply("ERR proxy command not support");
+    public static final ErrorReply NOT_AVAILABLE = new ErrorReply("ERR proxy not available");
+    public static final ErrorReply UPSTREAM_NOT_AVAILABLE = new ErrorReply("ERR proxy upstream not available");
+    public static final ErrorReply UPSTREAM_CONNECTION_NOT_AVAILABLE = new ErrorReply("ERR proxy upstream connection not available");
+    public static final ErrorReply UPSTREAM_RESOURCE_NOT_AVAILABLE = new ErrorReply("ERR proxy upstream resource not available");
+    public static final ErrorReply TOO_BUSY = new ErrorReply("ERR proxy too busy");
+    public static final ErrorReply REPEAT_OPERATION = new ErrorReply("ERR repeat operation");
     public static final ErrorReply NO_AUTH = new ErrorReply("NOAUTH Authentication required");
     public static final ErrorReply INVALID_PASSWORD = new ErrorReply("ERR invalid password");
     public static final ErrorReply WRONG_PASS = new ErrorReply("WRONGPASS invalid username-password pair or user is disabled.");

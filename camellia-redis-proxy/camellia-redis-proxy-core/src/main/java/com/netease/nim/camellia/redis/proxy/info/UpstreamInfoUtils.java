@@ -218,7 +218,7 @@ public class UpstreamInfoUtils {
             for (int i=0; i<resources.size(); i++) {
                 Resource resource = resources.get(i);
                 builder.append("upstream").append(i).append("_url:").append(resource.getUrl()).append("\r\n");
-                upstreamInfo.put("upstream" + i + "_url", resource.getUrl());
+                upstreamInfo.put("upstream" + i + "_url", PasswordMaskUtils.maskResource(resource.getUrl()));
             }
             builder.append("\r\n");
             for (int i=0; i<resources.size(); i++) {
