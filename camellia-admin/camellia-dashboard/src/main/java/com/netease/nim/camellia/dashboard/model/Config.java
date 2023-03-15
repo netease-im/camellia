@@ -29,6 +29,12 @@ public class Config {
     private String info;//描述信息
 
     @Column
+    private Integer type;//类型
+
+    @Column
+    private String operator;//操作者
+
+    @Column
     private Long createTime;//创建时间
 
     @Column
@@ -80,6 +86,22 @@ public class Config {
 
     public void setInfo(String info) {
         this.info = info;
+    }
+
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public void setOperator(String operator) {
+        this.operator = operator;
     }
 
     public Long getCreateTime() {

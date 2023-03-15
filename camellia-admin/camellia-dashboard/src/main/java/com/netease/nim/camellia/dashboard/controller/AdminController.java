@@ -451,15 +451,17 @@ public class AdminController {
     @GetMapping("/createOrUpdateConfig")
     public WebResult createOrUpdateConfig(@RequestParam("namespace") String namespace,
                                           @RequestParam("key") String key,
-                                          @RequestParam("value") String value,
-                                          @RequestParam("info") String info,
-                                          @RequestParam("validFlag") Integer validFlag) {
+                                          @RequestParam(value = "value", required = false) String value,
+                                          @RequestParam(value = "type", required = false) Integer type,
+                                          @RequestParam(value = "info", required = false) String info,
+                                          @RequestParam(value = "validFlag", required = false) Integer validFlag) {
         LogBean.get().addProps("namespace", namespace);
         LogBean.get().addProps("key", key);
         LogBean.get().addProps("value", value);
+        LogBean.get().addProps("type", type);
         LogBean.get().addProps("info", info);
         LogBean.get().addProps("validFlag", validFlag);
-        Config config = configService.createOrUpdateConfig(namespace, key, value, info, validFlag);
+        Config config = configService.createOrUpdateConfig(namespace, key, value, type, info, validFlag);
         LogBean.get().addProps("config", config);
         return WebResult.success(config);
     }
