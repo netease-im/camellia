@@ -2,7 +2,9 @@ package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.core.conf.DynamicCamelliaConfig;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 走camellia-config获取配置，远程配置会覆盖本地配置
@@ -10,14 +12,20 @@ import java.util.Map;
  */
 public class ApiBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
 
-    private final FileBasedProxyDynamicConfLoader loader = new FileBasedProxyDynamicConfLoader();
+    private final AtomicBoolean initOk = new AtomicBoolean();
+    private DynamicCamelliaConfig camelliaConfig;
+    private Map<String, String> initConf = new HashMap<>();
 
-    private final DynamicCamelliaConfig camelliaConfig;
+    @Override
+    public Map<String, String> load() {
+        Map<String, String> conf = new HashMap<>(initConf);
+        conf.putAll(camelliaConfig.getConf());
+        return conf;
+    }
 
-    public ApiBasedProxyDynamicConfLoader() {
-        Map<String, String> map = loader.load();
-        String url = map.get("camellia.config.url");
-        String namespace = map.get("camellia.config.namespace");
+    private void init() {
+        String url = initConf.get("camellia.config.url");
+        String namespace = initConf.get("camellia.config.namespace");
         if (url == null) {
             throw new IllegalArgumentException("missing 'camellia.config.url'");
         }
@@ -28,15 +36,10 @@ public class ApiBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
     }
 
     @Override
-    public Map<String, String> load() {
-        Map<String, String> map = loader.load();
-        Map<String, String> conf = camelliaConfig.getConf();
-        map.putAll(conf);
-        return conf;
-    }
-
-    @Override
     public void updateInitConf(Map<String, String> initConf) {
-        loader.updateInitConf(initConf);
+        this.initConf = initConf;
+        if (initOk.compareAndSet(false, true)) {
+            init();
+        }
     }
 }
