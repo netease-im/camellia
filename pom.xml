@@ -21,7 +21,6 @@
 		<module>camellia-redis-proxy</module>
 		<module>camellia-id-gen</module>
 		<module>camellia-delay-queue</module>
-		<module>camellia-external-call</module>
 		<module>camellia-tools</module>
 		<module>camellia-samples</module>
 	</modules>

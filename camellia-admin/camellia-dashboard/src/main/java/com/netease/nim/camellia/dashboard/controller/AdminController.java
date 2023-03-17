@@ -45,9 +45,6 @@ public class AdminController {
     @Autowired
     private StatsService statsService;
 
-    @Autowired
-    private ConfigService configService;
-
     @ApiOperation(value = "创建资源表", notes = "创建接口")
     @PostMapping("/createResourceTable")
     public WebResult createResourceTable(@RequestParam("detail") String detail,
@@ -445,66 +442,6 @@ public class AdminController {
         jsonObject.put("detail", businessDetail);
         jsonObject.put("info", tableRef.getInfo());
         return WebResult.success(jsonObject);
-    }
-
-    @ApiOperation(value = "创建或者更新一条配置", notes = "创建或者更新一条配置")
-    @GetMapping("/createOrUpdateConfig")
-    public WebResult createOrUpdateConfig(@RequestParam("namespace") String namespace,
-                                          @RequestParam("key") String key,
-                                          @RequestParam(value = "value", required = false) String value,
-                                          @RequestParam(value = "type", required = false) Integer type,
-                                          @RequestParam(value = "info", required = false) String info,
-                                          @RequestParam(value = "validFlag", required = false) Integer validFlag) {
-        LogBean.get().addProps("namespace", namespace);
-        LogBean.get().addProps("key", key);
-        LogBean.get().addProps("value", value);
-        LogBean.get().addProps("type", type);
-        LogBean.get().addProps("info", info);
-        LogBean.get().addProps("validFlag", validFlag);
-        Config config = configService.createOrUpdateConfig(namespace, key, value, type, info, validFlag);
-        LogBean.get().addProps("config", config);
-        return WebResult.success(config);
-    }
-
-    @ApiOperation(value = "查询namespace下所有配置", notes = "查询namespace下所有配置")
-    @GetMapping("/getConfigList")
-    public WebResult getConfigList(@RequestParam("namespace") String namespace,
-                                   @RequestParam(value = "onlyValid", required = false, defaultValue = "true") boolean onlyValid) {
-        LogBean.get().addProps("namespace", namespace);
-        LogBean.get().addProps("onlyValid", onlyValid);
-        List<Config> configList = configService.getConfigList(namespace, onlyValid);
-        LogBean.get().addProps("configList", configList);
-        return WebResult.success(configList);
-    }
-
-    @ApiOperation(value = "查询namespace下所有配置（字符串方式）", notes = "查询namespace下所有配置（字符串方式）")
-    @GetMapping("/getConfigString")
-    public WebResult getConfigString(@RequestParam("namespace") String namespace,
-                                     @RequestParam(value = "onlyValid", required = false, defaultValue = "true") boolean onlyValid) {
-        LogBean.get().addProps("namespace", namespace);
-        LogBean.get().addProps("onlyValid", onlyValid);
-        String configString = configService.getConfigString(namespace, onlyValid);
-        LogBean.get().addProps("configString", configString);
-        return WebResult.success(configString);
-    }
-
-    @ApiOperation(value = "查询一条配置", notes = "查询一条配置")
-    @GetMapping("/getConfigByKey")
-    public WebResult getConfigByKey(@RequestParam("namespace") String namespace,
-                                    @RequestParam("key") String key) {
-        LogBean.get().addProps("namespace", namespace);
-        LogBean.get().addProps("key", key);
-        Config config = configService.getConfigByKey(namespace, key);
-        LogBean.get().addProps("config", config);
-        return WebResult.success(config);
-    }
-
-    @ApiOperation(value = "删除一条配置", notes = "删除一条配置")
-    @GetMapping("/deleteConfig")
-    public WebResult deleteConfig(@RequestParam("id") long id) {
-        LogBean.get().addProps("id", id);
-        configService.deleteConfig(id);
-        return WebResult.success();
     }
 
     private JSONObject rwStats(ResourceInfo resourceInfo) {

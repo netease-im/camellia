@@ -19,5 +19,7 @@
 		<module>camellia-dashboard-spring-boot-starter</module>
 		<module>camellia-console</module>
 		<module>camellia-console-spring-boot-starter</module>
+		<module>camellia-config</module>
+		<module>camellia-config-spring-boot-starter</module>
 	</modules>
 </project>
