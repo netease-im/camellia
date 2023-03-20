@@ -11,8 +11,8 @@ import java.util.List;
  */
 public interface ConfigDao {
 
-    @Select("select `id`, `namespace`, `ckey` as key, `cvalue` as value, `valid_flag` as validFlag, `info`, `ctype` as type," +
-            " `creator`, `operator`, `version`, `create_time` as createTime, `update_time` as updateTime from camellia_config where id = #{id}")
+    @Select("select `id`, `namespace`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
+            " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config where id = #{id}")
     Config getById(@Param("id") long id);
 
     @Delete("delete from camellia_config where id = #{id}")
@@ -28,33 +28,33 @@ public interface ConfigDao {
             " #{creator}, #{operator}, #{version}, #{createTime}, #{updateTime});")
     int create(Config config);
 
-    @Select("select `id`, `namespace`, `ckey` as key, `cvalue` as value, `valid_flag` as validFlag, `info`, `ctype` as type," +
-            " `creator`, `operator`, `version`, `create_time` as createTime, `update_time` as updateTime from camellia_config " +
+    @Select("select `id`, `namespace`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
+            " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTim`e from camellia_config " +
             " where `namespace` = #{namespace} and `valid_flag` = 1 limit #{offset}, #{limit}")
     List<Config> getValidList(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit);
 
-    @Select("select `id`, `namespace`, `ckey` as key, `cvalue` as value, `valid_flag` as validFlag, `info`, `ctype` as type," +
-            " `creator`, `operator`, `version`, `create_time` as createTime, `update_time` as updateTime from camellia_config " +
+    @Select("select `id`, `namespace`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
+            " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config " +
             " where `namespace` = #{namespace} and `valid_flag` = 1 and " +
             " (`ckey` like concat('%', #{keyword}, '%') or `cvalue` like concat('%', #{keyword}, '%') or `info` like concat('%', #{keyword}, '%') or `operator` like concat('%', #{keyword}, '%')) limit #{offset}, #{limit}")
     List<Config> getValidListAndKeyword(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit, @Param("keyword") String keyword);
 
-    @Select("select `id`, `namespace`, `ckey` as key, `cvalue` as value, `valid_flag` as validFlag, `info`, `ctype` as type," +
+    @Select("select `id`, `namespace`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
             " `creator`, `operator`, `version`, `create_time` as createTime, `update_time` as updateTime from camellia_config " +
             " where `namespace` = #{namespace} limit #{offset}, #{limit}")
     List<Config> getList(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit);
 
-    @Select("select `id`, `namespace`, `ckey` as key, `cvalue` as value, `valid_flag` as validFlag, `info`, `ctype` as type," +
-            " `creator`, `operator`, `version`, `create_time` as createTime, `update_time` as updateTime from camellia_config " +
+    @Select("select `id`, `namespace`, `ckey` as key, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
+            " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config " +
             " where `namespace` = #{namespace} and " +
             " (`ckey` like concat('%', #{keyword}, '%') or `cvalue` like concat('%', #{keyword}, '%') or `info` like concat('%', #{keyword}, '%') or `operator` like concat('%', #{keyword}, '%')) limit #{offset}, #{limit}")
     List<Config> getListAndKeyword(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit, @Param("keyword") String keyword);
 
-    @Select("select `id`, `namespace`, `ckey` as key, `cvalue` as value, `valid_flag` as validFlag, `info`, `ctype` as type," +
-            " `creator`, `operator`, `version`, `create_time` as createTime, `update_time` as updateTime from camellia_config where `namespace` = #{namespace} limit 100000")
+    @Select("select `id`, `namespace`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
+            " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config where `namespace` = #{namespace} limit 100000")
     List<Config> findAllValidByNamespace(@Param("namespace") String namespace);
 
-    @Select("select `id`, `namespace`, `ckey` as key, `cvalue` as value, `valid_flag` as validFlag, `info`, `ctype` as type," +
-            " `creator`, `operator`, `version`, `create_time` as createTime, `update_time` as updateTime from camellia_config where `namespace` = #{namespace} and `ckey` = #{key}")
+    @Select("select `id`, `namespace`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
+            " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config where `namespace` = #{namespace} and `ckey` = #{key}")
     Config findByNamespaceAndKey(@Param("namespace") String namespace, @Param("key") String key);
 }
