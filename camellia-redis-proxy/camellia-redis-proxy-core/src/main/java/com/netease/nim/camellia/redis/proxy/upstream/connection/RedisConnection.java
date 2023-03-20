@@ -360,6 +360,11 @@ public class RedisConnection {
                     logger.info("{} initialize success", connectionName);
                 }
             }
+            int size = cachedCommands.size();
+            if (logger.isWarnEnabled() && size > 0) {
+                logger.warn("{} flushCachedCommands after initialize, size = {}", connectionName, size);
+            }
+            flushCachedCommands();
         } catch (Exception e) {
             config.getFastFailStats().incrFail(addr.getUrl());
             status = RedisConnectionStatus.INVALID;
