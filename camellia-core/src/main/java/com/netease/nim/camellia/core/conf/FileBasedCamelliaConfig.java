@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by caojiajun on 2022/11/16
  */
-public class FileBasedCamelliaConfig extends AbstractCamelliaConfig {
+public class FileBasedCamelliaConfig extends CamelliaConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(FileBasedCamelliaConfig.class);
 
@@ -56,13 +56,15 @@ public class FileBasedCamelliaConfig extends AbstractCamelliaConfig {
                 map.put(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
             }
             if (map.equals(this.getConf())) {
-                logger.debug("FileBasedCamelliaConfig skip reload for conf not modify, fileName = {}", fileName);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("camellia config skip reload for conf not modify, fileName = {}", fileName);
+                }
             } else {
                 this.setConf(map);
-                logger.info("FileBasedCamelliaConfig reload success, fileName = {}", fileName);
+                logger.info("camellia config reload success, fileName = {}", fileName);
             }
         } catch (Exception e) {
-            logger.error("reload {} error", fileName);
+            logger.error("camellia config reload error, fileName = {}", fileName);
         }
     }
 

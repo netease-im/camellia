@@ -11,7 +11,8 @@ CREATE TABLE `camellia_config` (
   `creator` varchar(256) DEFAULT NULL comment '创建者',
   `operator` varchar(256) DEFAULT NULL comment '最后更新者',
   `create_time` bigint(20) DEFAULT NULL comment '创建时间',
-  `update_time` bigint(20) DEFAULT NULL comment '更新时间'
+  `update_time` bigint(20) DEFAULT NULL comment '更新时间',
+  unique key(`namespace`, `key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='配置表';
 
 CREATE TABLE `camellia_config_namespace` (
@@ -24,7 +25,9 @@ CREATE TABLE `camellia_config_namespace` (
   `creator` varchar(256) DEFAULT NULL comment '创建者',
   `operator` varchar(256) DEFAULT NULL comment '最后更新者',
   `create_time` bigint(20) DEFAULT NULL comment '创建时间',
-  `update_time` bigint(20) DEFAULT NULL comment '更新时间'
+  `update_time` bigint(20) DEFAULT NULL comment '更新时间',
+  unique key(`namespace`),
+  unique key(`alias`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='配置命名空间表';
 
 

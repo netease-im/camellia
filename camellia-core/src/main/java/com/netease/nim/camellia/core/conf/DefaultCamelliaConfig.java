@@ -5,7 +5,7 @@ import java.util.Map;
 /**
  * Created by caojiajun on 2023/3/6
  */
-public class DefaultCamelliaConfig extends AbstractCamelliaConfig {
+public class DefaultCamelliaConfig extends CamelliaConfig {
 
     public DefaultCamelliaConfig(Map<String, String> conf) {
         setConf(conf);

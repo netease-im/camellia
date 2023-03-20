@@ -4,9 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * abstract class
  * Created by caojiajun on 2023/3/6
  */
-public abstract class AbstractCamelliaConfig {
+public abstract class CamelliaConfig {
 
     private Map<String, String> conf = new HashMap<>();
 

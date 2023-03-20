@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by caojiajun on 2023/3/17
  */
-public class DynamicCamelliaConfig extends AbstractCamelliaConfig {
+public class DynamicCamelliaConfig extends CamelliaConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicCamelliaConfig.class);
 
