@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
-import com.netease.nim.camellia.core.conf.DynamicCamelliaConfig;
+import com.netease.nim.camellia.core.conf.ApiBasedCamelliaConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ApiBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
 
     private final AtomicBoolean initOk = new AtomicBoolean();
-    private DynamicCamelliaConfig camelliaConfig;
+    private ApiBasedCamelliaConfig camelliaConfig;
     private Map<String, String> initConf = new HashMap<>();
 
     @Override
@@ -32,7 +32,7 @@ public class ApiBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
         if (namespace == null) {
             throw new IllegalArgumentException("missing 'camellia.config.namespace'");
         }
-        this.camelliaConfig = new DynamicCamelliaConfig(url, namespace);
+        this.camelliaConfig = new ApiBasedCamelliaConfig(url, namespace);
     }
 
     @Override

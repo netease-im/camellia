@@ -8,21 +8,21 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by caojiajun on 2023/3/17
  */
-public class DynamicCamelliaConfigFactory {
+public class ApiBasedCamelliaConfigFactory {
 
-    private final ConcurrentHashMap<String, DynamicCamelliaConfig> map = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ApiBasedCamelliaConfig> map = new ConcurrentHashMap<>();
 
     private final String url;
     private final int intervalSeconds;
 
-    public DynamicCamelliaConfigFactory(String url, int intervalSeconds) {
+    public ApiBasedCamelliaConfigFactory(String url, int intervalSeconds) {
         this.url = url;
         this.intervalSeconds = intervalSeconds;
     }
 
-    public DynamicCamelliaConfig get(String namespace) {
+    public ApiBasedCamelliaConfig get(String namespace) {
         namespace = namespace.toLowerCase(Locale.ROOT);
-        return CamelliaMapUtils.computeIfAbsent(map, namespace, str -> new DynamicCamelliaConfig(url, str, intervalSeconds));
+        return CamelliaMapUtils.computeIfAbsent(map, namespace, str -> new ApiBasedCamelliaConfig(url, str, intervalSeconds));
     }
 
 }

@@ -18,9 +18,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by caojiajun on 2023/3/17
  */
-public class DynamicCamelliaConfig extends CamelliaConfig {
+public class ApiBasedCamelliaConfig extends CamelliaConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamicCamelliaConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(ApiBasedCamelliaConfig.class);
 
     private static final ScheduledExecutorService defaultScheduler = Executors.newScheduledThreadPool(SysUtils.getCpuNum(),
             new DefaultThreadFactory("camellia-config-scheduler"));
@@ -32,15 +32,15 @@ public class DynamicCamelliaConfig extends CamelliaConfig {
 
     private final AtomicBoolean lock = new AtomicBoolean(false);
 
-    public DynamicCamelliaConfig(String url, String namespace) {
+    public ApiBasedCamelliaConfig(String url, String namespace) {
         this(url, namespace, 5, defaultScheduler);
     }
 
-    public DynamicCamelliaConfig(String url, String namespace, int intervalSeconds) {
+    public ApiBasedCamelliaConfig(String url, String namespace, int intervalSeconds) {
         this(url, namespace, intervalSeconds, defaultScheduler);
     }
 
-    public DynamicCamelliaConfig(String url, String namespace, int intervalSeconds, ScheduledExecutorService scheduler) {
+    public ApiBasedCamelliaConfig(String url, String namespace, int intervalSeconds, ScheduledExecutorService scheduler) {
         this.url = url;
         this.namespace = namespace;
         this.api = CamelliaConfigApiUtil.init(url);
