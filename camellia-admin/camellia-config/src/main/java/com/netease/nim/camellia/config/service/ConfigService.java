@@ -81,16 +81,16 @@ public class ConfigService {
         return map;
     }
 
-    public List<Config> getConfigList(String namespace, int offset, int limit, boolean onlyValid, String keyword) {
+    public ConfigPage getConfigList(String namespace, int offset, int limit, boolean onlyValid, String keyword) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
         return daoWrapper.getList(namespace, offset, limit, onlyValid, keyword);
     }
 
     public String getConfigString(String namespace, int offset, int limit, boolean onlyValid, String keyword) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
-        List<Config> list = daoWrapper.getList(namespace, offset, limit, onlyValid, keyword);
+        ConfigPage configPage = daoWrapper.getList(namespace, offset, limit, onlyValid, keyword);
         StringBuilder builder = new StringBuilder();
-        for (Config config : list) {
+        for (Config config : configPage.getList()) {
             builder.append("## ").append(config.getInfo()).append("\r\n");
             builder.append("## id=").append(config.getId()).append("\r\n");
             if (config.getValidFlag() == 1) {
@@ -243,16 +243,16 @@ public class ConfigService {
         }
     }
 
-    public List<ConfigHistory> getConfigNamespaceHistoryList(int offset, int limit, String keyword) {
+    public ConfigHistoryPage getConfigNamespaceHistoryList(int offset, int limit, String keyword) {
         return configHistoryService.getConfigHistoryListByType(ConfigHistoryType.NAMESPACE.getValue(), offset, limit, keyword);
     }
 
-    public List<ConfigHistory> getConfigHistoryListByNamespace(String namespace, int offset, int limit, String keyword) {
+    public ConfigHistoryPage getConfigHistoryListByNamespace(String namespace, int offset, int limit, String keyword) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
         return configHistoryService.getConfigHistoryListByNamespace(namespace, offset, limit, keyword);
     }
 
-    public List<ConfigHistory> getConfigHistoryListByConfigId(String namespace, Long configId, int offset, int limit, String keyword) {
+    public ConfigHistoryPage getConfigHistoryListByConfigId(String namespace, Long configId, int offset, int limit, String keyword) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
         Config config = daoWrapper.getById(configId);
         if (config != null && !config.getNamespace().equals(namespace)) {
@@ -261,15 +261,15 @@ public class ConfigService {
                 throw new AppException(HttpStatus.BAD_REQUEST.value(), "id not belongs to this namespace");
             }
         }
-        List<ConfigHistory> list = configHistoryService.getConfigHistoryListByTypeAndConfigId(ConfigHistoryType.CONFIG.getValue(), configId, offset, limit, keyword);
-        if (!list.isEmpty()) {
-            ConfigHistory history = list.get(0);
+        ConfigHistoryPage configHistoryPage = configHistoryService.getConfigHistoryListByTypeAndConfigId(ConfigHistoryType.CONFIG.getValue(), configId, offset, limit, keyword);
+        if (!configHistoryPage.getList().isEmpty()) {
+            ConfigHistory history = configHistoryPage.getList().get(0);
             if (!history.getNamespace().equals(namespace)) {
                 LogBean.get().addProps("namespace.not.equals", true);
                 throw new AppException(HttpStatus.BAD_REQUEST.value(), "id not belongs to this namespace");
             }
         }
-        return list;
+        return configHistoryPage;
     }
 
     private void checkConfigType(String value, ConfigType type) {

@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.config.conf.ConfigProperties;
 import com.netease.nim.camellia.config.dao.ConfigDao;
 import com.netease.nim.camellia.config.model.Config;
+import com.netease.nim.camellia.config.model.ConfigPage;
 import com.netease.nim.camellia.core.util.CacheUtil;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,22 +48,32 @@ public class ConfigDaoWrapper {
         return configList;
     }
 
-    public List<Config> getList(String namespace, int offset, int limit, boolean onlyValid, String keyword) {
+    public ConfigPage getList(String namespace, int offset, int limit, boolean onlyValid, String keyword) {
         if (keyword != null) {
             keyword = keyword.trim();
         }
         if (keyword == null || keyword.length() == 0) {
+            List<Config> list;
+            long count;
             if (onlyValid) {
-                return configDao.getValidList(namespace, offset, limit);
+                list = configDao.getValidList(namespace, offset, limit);
+                count = configDao.getValidListCount(namespace, offset, limit);
             } else {
-                return configDao.getList(namespace, offset, limit);
+                list = configDao.getList(namespace, offset, limit);
+                count = configDao.getListCount(namespace, offset, limit);
             }
+            return new ConfigPage(count, list);
         } else {
+            List<Config> list;
+            long count;
             if (onlyValid) {
-                return configDao.getValidListAndKeyword(namespace, offset, limit, keyword);
+                list = configDao.getValidListAndKeyword(namespace, offset, limit, keyword);
+                count = configDao.getValidListAndKeywordCount(namespace, offset, limit, keyword);
             } else {
-                return configDao.getListAndKeyword(namespace, offset, limit, keyword);
+                list = configDao.getListAndKeyword(namespace, offset, limit, keyword);
+                count = configDao.getListAndKeywordCount(namespace, offset, limit, keyword);
             }
+            return new ConfigPage(count, list);
         }
     }
 

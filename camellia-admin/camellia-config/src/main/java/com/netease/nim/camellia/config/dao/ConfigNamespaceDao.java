@@ -32,20 +32,36 @@ public interface ConfigNamespaceDao {
             " where `valid_flag` = 1 limit #{offset}, #{limit}")
     List<ConfigNamespace> getValidList(@Param("offset") int offset, @Param("limit") int limit);
 
+    @Select("select count(*) from camellia_config_namespace " +
+            " where `valid_flag` = 1 limit #{offset}, #{limit}")
+    long getValidListCount(@Param("offset") int offset, @Param("limit") int limit);
+
     @Select("select `id`, `namespace`, `alias`, `valid_flag` as `validFlag`, `info`, " +
             " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config_namespace " +
             " where `valid_flag` = 1 and (namespace like concat('%', #{keyword}, '%') or info like concat('%', #{keyword}, '%') or creator like concat('%', #{keyword}, '%') or operator like concat('%', #{keyword}, '%')) limit #{offset}, #{limit}")
     List<ConfigNamespace> getValidListAndKeyword(@Param("offset") int offset, @Param("limit") int limit, @Param("keyword") String keyword);
+
+    @Select("select count(*) from camellia_config_namespace " +
+            " where `valid_flag` = 1 and (namespace like concat('%', #{keyword}, '%') or info like concat('%', #{keyword}, '%') or creator like concat('%', #{keyword}, '%') or operator like concat('%', #{keyword}, '%')) limit #{offset}, #{limit}")
+    long getValidListAndKeywordCount(@Param("offset") int offset, @Param("limit") int limit, @Param("keyword") String keyword);
 
     @Select("select `id`, `namespace`, `alias`, `valid_flag` as `validFlag`, `info`," +
             " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config_namespace " +
             " limit #{offset}, #{limit}")
     List<ConfigNamespace> getList(@Param("offset") int offset, @Param("limit") int limit);
 
+    @Select("select count(*) from camellia_config_namespace " +
+            " limit #{offset}, #{limit}")
+    long getListCount(@Param("offset") int offset, @Param("limit") int limit);
+
     @Select("select `id`, `namespace`, `alias`, `valid_flag` as `validFlag`, `info`," +
             "  `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config_namespace " +
             " where (namespace like concat('%', #{keyword}, '%') or info like concat('%', #{keyword}, '%') or creator like concat('%', #{keyword}, '%') or operator like concat('%', #{keyword}, '%')) limit #{offset}, #{limit}")
     List<ConfigNamespace> getListAndKeyword(@Param("offset") int offset, @Param("limit") int limit, @Param("keyword") String keyword);
+
+    @Select("select count(*) from camellia_config_namespace " +
+            " where (namespace like concat('%', #{keyword}, '%') or info like concat('%', #{keyword}, '%') or creator like concat('%', #{keyword}, '%') or operator like concat('%', #{keyword}, '%')) limit #{offset}, #{limit}")
+    long getListAndKeywordCount(@Param("offset") int offset, @Param("limit") int limit, @Param("keyword") String keyword);
 
     @Select("select `id`, `namespace`, `alias`, `valid_flag` as `validFlag`, `info`," +
             " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config_namespace " +

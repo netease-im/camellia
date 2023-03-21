@@ -124,36 +124,51 @@ public class ConfigHistoryService {
         LogBean.get().addProps("config.history.insert", create);
     }
 
-    public List<ConfigHistory> getConfigHistoryListByType(int type, int offset, int limit, String keyword) {
+    public ConfigHistoryPage getConfigHistoryListByType(int type, int offset, int limit, String keyword) {
         if (keyword != null) {
             keyword = keyword.trim();
         }
+        List<ConfigHistory> list;
+        long count;
         if (keyword == null || keyword.length() == 0) {
-            return dao.getConfigHistoryListByType(type, offset, limit);
+            list = dao.getConfigHistoryListByType(type, offset, limit);
+            count = dao.getConfigHistoryListByTypeCount(type, offset, limit);
         } else {
-            return dao.getConfigHistoryListByTypeAndKeyword(type, offset, limit, keyword);
+            list = dao.getConfigHistoryListByTypeAndKeyword(type, offset, limit, keyword);
+            count = dao.getConfigHistoryListByTypeAndKeywordCount(type, offset, limit, keyword);
         }
+        return new ConfigHistoryPage(count, list);
     }
 
-    public List<ConfigHistory> getConfigHistoryListByTypeAndConfigId(int type, long configId, int offset, int limit, String keyword) {
+    public ConfigHistoryPage getConfigHistoryListByTypeAndConfigId(int type, long configId, int offset, int limit, String keyword) {
         if (keyword != null) {
             keyword = keyword.trim();
         }
+        List<ConfigHistory> list;
+        long count;
         if (keyword == null || keyword.length() == 0) {
-            return dao.getConfigHistoryListByTypeAndConfigId(type, configId, offset, limit);
+            list = dao.getConfigHistoryListByTypeAndConfigId(type, configId, offset, limit);
+            count = dao.getConfigHistoryListByTypeAndConfigIdCount(type, configId, offset, limit);
         } else {
-            return dao.getConfigHistoryListByTypeAndConfigIdAndKeyword(type, configId, offset, limit, keyword);
+            list = dao.getConfigHistoryListByTypeAndConfigIdAndKeyword(type, configId, offset, limit, keyword);
+            count = dao.getConfigHistoryListByTypeAndConfigIdAndKeywordCount(type, configId, offset, limit, keyword);
         }
+        return new ConfigHistoryPage(count, list);
     }
 
-    public List<ConfigHistory> getConfigHistoryListByNamespace(String namespace, int offset, int limit, String keyword) {
+    public ConfigHistoryPage getConfigHistoryListByNamespace(String namespace, int offset, int limit, String keyword) {
         if (keyword != null) {
             keyword = keyword.trim();
         }
+        List<ConfigHistory> list;
+        long count;
         if (keyword == null || keyword.length() == 0) {
-            return dao.getConfigHistoryListByNamespace(namespace, offset, limit);
+            list = dao.getConfigHistoryListByNamespace(namespace, offset, limit);
+            count = dao.getConfigHistoryListByNamespaceCount(namespace, offset, limit);
         } else {
-            return dao.getConfigHistoryListByNamespaceAndKeyword(namespace, offset, limit, keyword);
+            list = dao.getConfigHistoryListByNamespaceAndKeyword(namespace, offset, limit, keyword);
+            count = dao.getConfigHistoryListByNamespaceAndKeywordCount(namespace, offset, limit, keyword);
         }
+        return new ConfigHistoryPage(count, list);
     }
 }

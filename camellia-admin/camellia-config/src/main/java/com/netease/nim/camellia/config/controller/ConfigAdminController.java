@@ -1,9 +1,7 @@
 package com.netease.nim.camellia.config.controller;
 
 import com.netease.nim.camellia.config.conf.LogBean;
-import com.netease.nim.camellia.config.model.Config;
-import com.netease.nim.camellia.config.model.ConfigHistory;
-import com.netease.nim.camellia.config.model.ConfigNamespace;
+import com.netease.nim.camellia.config.model.*;
 import com.netease.nim.camellia.config.service.ConfigNamespaceService;
 import com.netease.nim.camellia.config.service.ConfigService;
 import io.swagger.annotations.Api;
@@ -51,32 +49,36 @@ public class ConfigAdminController {
 
     @PostMapping("/getConfigList")
     public WebResult getConfigList(@RequestParam("namespace") String namespace,
-                                   @RequestParam(value = "offset", required = false, defaultValue = "0") int offset,
-                                   @RequestParam(value = "limit", required = false, defaultValue = "100") int limit,
+                                   @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+                                   @RequestParam(value = "pageSize", required = false, defaultValue = "100") int pageSize,
                                    @RequestParam(value = "onlyValid", required = false, defaultValue = "true") boolean onlyValid,
                                    @RequestParam(value = "keyword", required = false) String keyword) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
         LogBean.get().addProps("namespace", namespace);
         LogBean.get().addProps("onlyValid", onlyValid);
-        LogBean.get().addProps("offset", offset);
-        LogBean.get().addProps("limit", limit);
+        LogBean.get().addProps("pageIndex", pageIndex);
+        LogBean.get().addProps("pageSize", pageSize);
         LogBean.get().addProps("keyword", keyword);
-        List<Config> configList = configService.getConfigList(namespace, offset, limit, onlyValid, keyword);
-        LogBean.get().addProps("configList", configList);
-        return WebResult.success(configList);
+        int offset = pageIndex * pageSize;
+        ConfigPage configPage = configService.getConfigList(namespace, offset, pageSize, onlyValid, keyword);
+        LogBean.get().addProps("configPage", configPage);
+        return WebResult.success(configPage);
     }
 
     @PostMapping(value = "/getConfigString", produces = "text/plain;charset=UTF-8")
     public String getConfigString(@RequestParam("namespace") String namespace,
-                                  @RequestParam(value = "offset", required = false, defaultValue = "0") int offset,
-                                  @RequestParam(value = "limit", required = false, defaultValue = "100") int limit,
+                                  @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+                                  @RequestParam(value = "pageSize", required = false, defaultValue = "100") int pageSize,
                                   @RequestParam(value = "onlyValid", required = false, defaultValue = "true") boolean onlyValid,
                                   @RequestParam(value = "keyword", required = false) String keyword) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
         LogBean.get().addProps("namespace", namespace);
         LogBean.get().addProps("onlyValid", onlyValid);
         LogBean.get().addProps("keyword", keyword);
-        String configString = configService.getConfigString(namespace, offset, limit, onlyValid, keyword);
+        LogBean.get().addProps("pageSize", pageSize);
+        LogBean.get().addProps("keyword", keyword);
+        int offset = pageIndex * pageSize;
+        String configString = configService.getConfigString(namespace, offset, pageSize, onlyValid, keyword);
         LogBean.get().addProps("configString", configString);
         return configString;
     }
@@ -106,44 +108,47 @@ public class ConfigAdminController {
     }
 
     @PostMapping("/getConfigNamespaceHistoryList")
-    public WebResult getConfigNamespaceHistoryList(@RequestParam(value = "offset", required = false, defaultValue = "0") int offset,
-                                                   @RequestParam(value = "limit", required = false, defaultValue = "100") int limit,
+    public WebResult getConfigNamespaceHistoryList(@RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+                                                   @RequestParam(value = "pageSize", required = false, defaultValue = "100") int pageSize,
                                                    @RequestParam(value = "keyword", required = false) String keyword) {
-        LogBean.get().addProps("offset", offset);
-        LogBean.get().addProps("limit", limit);
+        LogBean.get().addProps("pageSize", pageSize);
         LogBean.get().addProps("keyword", keyword);
-        List<ConfigHistory> configHistoryList = configService.getConfigNamespaceHistoryList(offset, limit, keyword);
-        return WebResult.success(configHistoryList);
+        int offset = pageIndex * pageSize;
+        LogBean.get().addProps("keyword", keyword);
+        ConfigHistoryPage configHistoryPage = configService.getConfigNamespaceHistoryList(offset, pageSize, keyword);
+        return WebResult.success(configHistoryPage);
     }
 
     @PostMapping("/getConfigHistoryListByNamespace")
     public WebResult getConfigHistoryListByNamespace(@RequestParam("namespace") String namespace,
-                                                     @RequestParam(value = "offset", required = false, defaultValue = "0") int offset,
-                                                     @RequestParam(value = "limit", required = false, defaultValue = "100") int limit,
+                                                     @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+                                                     @RequestParam(value = "pageSize", required = false, defaultValue = "100") int pageSize,
                                                      @RequestParam(value = "keyword", required = false) String keyword) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
         LogBean.get().addProps("namespace", namespace);
-        LogBean.get().addProps("offset", offset);
-        LogBean.get().addProps("limit", limit);
+        LogBean.get().addProps("pageSize", pageSize);
         LogBean.get().addProps("keyword", keyword);
-        List<ConfigHistory> configHistoryList = configService.getConfigHistoryListByNamespace(namespace, offset, limit, keyword);
-        return WebResult.success(configHistoryList);
+        int offset = pageIndex * pageSize;
+        LogBean.get().addProps("keyword", keyword);
+        ConfigHistoryPage configHistoryPage = configService.getConfigHistoryListByNamespace(namespace, offset, pageSize, keyword);
+        return WebResult.success(configHistoryPage);
     }
 
     @PostMapping("/getConfigHistoryListByConfigId")
     public WebResult getConfigHistoryListByConfigId(@RequestParam("namespace") String namespace,
                                                     @RequestParam(value = "id") Long id,
-                                                    @RequestParam(value = "offset", required = false, defaultValue = "0") int offset,
-                                                    @RequestParam(value = "limit", required = false, defaultValue = "100") int limit,
+                                                    @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+                                                    @RequestParam(value = "pageSize", required = false, defaultValue = "100") int pageSize,
                                                     @RequestParam(value = "keyword", required = false) String keyword) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
         LogBean.get().addProps("id", id);
         LogBean.get().addProps("namespace", namespace);
-        LogBean.get().addProps("offset", offset);
-        LogBean.get().addProps("limit", limit);
+        LogBean.get().addProps("pageSize", pageSize);
         LogBean.get().addProps("keyword", keyword);
-        List<ConfigHistory> configHistoryList = configService.getConfigHistoryListByConfigId(namespace, id, offset, limit, keyword);
-        return WebResult.success(configHistoryList);
+        int offset = pageIndex * pageSize;
+        LogBean.get().addProps("keyword", keyword);
+        ConfigHistoryPage configHistoryPage = configService.getConfigHistoryListByConfigId(namespace, id, offset, offset, keyword);
+        return WebResult.success(configHistoryPage);
     }
 
     @PostMapping("/createOrUpdateConfigNamespace")
@@ -177,15 +182,16 @@ public class ConfigAdminController {
     }
 
     @PostMapping("/getConfigNamespaceList")
-    public WebResult getConfigNamespaceList(@RequestParam(value = "offset", required = false, defaultValue = "0") int offset,
-                                            @RequestParam(value = "limit", required = false, defaultValue = "100") int limit,
+    public WebResult getConfigNamespaceList(@RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+                                            @RequestParam(value = "pageSize", required = false, defaultValue = "100") int pageSize,
                                             @RequestParam(value = "onlyValid", required = false, defaultValue = "true") boolean onlyValid,
                                             @RequestParam(value = "keyword", required = false) String keyword) {
-        LogBean.get().addProps("offset", offset);
-        LogBean.get().addProps("limit", limit);
+        LogBean.get().addProps("pageSize", pageSize);
         LogBean.get().addProps("keyword", keyword);
-        List<ConfigNamespace> list = configNamespaceService.getList(offset, limit, onlyValid, keyword);
-        LogBean.get().addProps("list.size", list.size());
-        return WebResult.success(list);
+        int offset = pageIndex * pageSize;
+        LogBean.get().addProps("keyword", keyword);
+        ConfigNamespacePage configNamespacePage = configNamespaceService.getList(offset, offset, onlyValid, keyword);
+        LogBean.get().addProps("configNamespacePage", configNamespacePage);
+        return WebResult.success(configNamespacePage);
     }
 }

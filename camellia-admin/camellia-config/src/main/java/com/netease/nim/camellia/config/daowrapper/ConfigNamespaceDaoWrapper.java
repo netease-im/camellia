@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.config.conf.ConfigProperties;
 import com.netease.nim.camellia.config.dao.ConfigNamespaceDao;
 import com.netease.nim.camellia.config.model.ConfigNamespace;
+import com.netease.nim.camellia.config.model.ConfigNamespacePage;
 import com.netease.nim.camellia.core.util.CacheUtil;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,22 +57,32 @@ public class ConfigNamespaceDaoWrapper {
         return dao.getById(id);
     }
 
-    public List<ConfigNamespace> getList(int offset, int limit, boolean onlyValid, String keyword) {
+    public ConfigNamespacePage getList(int offset, int limit, boolean onlyValid, String keyword) {
         if (keyword != null) {
             keyword = keyword.trim();
         }
         if (keyword == null || keyword.length() == 0) {
+            List<ConfigNamespace> list;
+            long count;
             if (onlyValid) {
-                return dao.getValidList(offset, limit);
+                list = dao.getValidList(offset, limit);
+                count = dao.getValidListCount(offset, limit);
             } else {
-                return dao.getList(offset, limit);
+                list = dao.getList(offset, limit);
+                count = dao.getListCount(offset, limit);
             }
+            return new ConfigNamespacePage(count, list);
         } else {
+            List<ConfigNamespace> list;
+            long count;
             if (onlyValid) {
-                return dao.getValidListAndKeyword(offset, limit, keyword);
+                list = dao.getValidListAndKeyword(offset, limit, keyword);
+                count = dao.getValidListAndKeywordCount(offset, limit, keyword);
             } else {
-                return dao.getListAndKeyword(offset, limit, keyword);
+                list = dao.getListAndKeyword(offset, limit, keyword);
+                count = dao.getListAndKeywordCount(offset, limit, keyword);
             }
+            return new ConfigNamespacePage(count, list);
         }
     }
 

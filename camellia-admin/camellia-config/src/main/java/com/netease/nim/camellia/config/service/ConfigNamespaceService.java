@@ -5,6 +5,7 @@ import com.netease.nim.camellia.config.conf.LogBean;
 import com.netease.nim.camellia.config.daowrapper.ConfigNamespaceDaoWrapper;
 import com.netease.nim.camellia.config.exception.AppException;
 import com.netease.nim.camellia.config.model.ConfigNamespace;
+import com.netease.nim.camellia.config.model.ConfigNamespacePage;
 import com.netease.nim.camellia.config.util.ConfigUtils;
 import com.netease.nim.camellia.config.util.ParamCheckUtils;
 import com.netease.nim.camellia.core.util.CacheUtil;
@@ -134,7 +135,7 @@ public class ConfigNamespaceService {
         }
     }
 
-    public List<ConfigNamespace> getList(int offset, int limit, boolean onlyValid, String keyword) {
+    public ConfigNamespacePage getList(int offset, int limit, boolean onlyValid, String keyword) {
         return dao.getList(offset, limit, onlyValid, keyword);
     }
 
