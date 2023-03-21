@@ -15,6 +15,10 @@ public interface ConfigDao {
             " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config where id = #{id}")
     Config getById(@Param("id") long id);
 
+    @Select("select `id`, `namespace`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
+            " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config where namespace = #{namespace} and ckey = #{key}")
+    Config getByKey(@Param("namespace") String namespace, @Param("key") String key);
+
     @Delete("delete from camellia_config where id = #{id}")
     int deleteById(@Param("id") long id);
 

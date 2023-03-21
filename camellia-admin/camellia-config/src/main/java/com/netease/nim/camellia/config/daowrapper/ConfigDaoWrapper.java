@@ -81,6 +81,10 @@ public class ConfigDaoWrapper {
         return configDao.getById(id);
     }
 
+    public Config getByKey(String namespace, String key) {
+        return configDao.getByKey(namespace, key);
+    }
+
     public int delete(Config config) {
         try {
             return configDao.deleteById(config.getId());

@@ -8,7 +8,6 @@ import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Locale;
 
 
@@ -134,20 +133,27 @@ public class ConfigAdminController {
         return WebResult.success(configHistoryPage);
     }
 
-    @PostMapping("/getConfigHistoryListByConfigId")
-    public WebResult getConfigHistoryListByConfigId(@RequestParam("namespace") String namespace,
-                                                    @RequestParam(value = "id") Long id,
+    @PostMapping("/getConfigHistoryListByConfigKey")
+    public WebResult getConfigHistoryListByConfigKey(@RequestParam("namespace") String namespace,
+                                                    @RequestParam(value = "key", required = false) String key,
+                                                     @RequestParam(value = "id", required = false) Long id,
                                                     @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
                                                     @RequestParam(value = "pageSize", required = false, defaultValue = "100") int pageSize,
                                                     @RequestParam(value = "keyword", required = false) String keyword) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
+        LogBean.get().addProps("key", key);
         LogBean.get().addProps("id", id);
         LogBean.get().addProps("namespace", namespace);
         LogBean.get().addProps("pageSize", pageSize);
         LogBean.get().addProps("keyword", keyword);
         int offset = pageIndex * pageSize;
         LogBean.get().addProps("keyword", keyword);
-        ConfigHistoryPage configHistoryPage = configService.getConfigHistoryListByConfigId(namespace, id, offset, offset, keyword);
+        ConfigHistoryPage configHistoryPage;
+        if (id != null && id > 0) {
+            configHistoryPage = configService.getConfigHistoryListByConfigId(namespace, id, offset, pageSize, keyword);
+        } else {
+            configHistoryPage = configService.getConfigHistoryListByConfigKey(namespace, key, offset, pageSize, keyword);
+        }
         return WebResult.success(configHistoryPage);
     }
 
@@ -190,7 +196,7 @@ public class ConfigAdminController {
         LogBean.get().addProps("keyword", keyword);
         int offset = pageIndex * pageSize;
         LogBean.get().addProps("keyword", keyword);
-        ConfigNamespacePage configNamespacePage = configNamespaceService.getList(offset, offset, onlyValid, keyword);
+        ConfigNamespacePage configNamespacePage = configNamespaceService.getList(offset, pageSize, onlyValid, keyword);
         LogBean.get().addProps("configNamespacePage", configNamespacePage);
         return WebResult.success(configNamespacePage);
     }

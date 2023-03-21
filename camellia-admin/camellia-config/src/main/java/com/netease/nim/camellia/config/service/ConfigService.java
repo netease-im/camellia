@@ -252,10 +252,25 @@ public class ConfigService {
         return configHistoryService.getConfigHistoryListByNamespace(namespace, offset, limit, keyword);
     }
 
+    public ConfigHistoryPage getConfigHistoryListByConfigKey(String namespace, String key, int offset, int limit, String keyword) {
+        ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
+        ParamCheckUtils.checkParam(key, "key", maxKeyLen);
+        Config config = daoWrapper.getByKey(namespace, key);
+        if (config == null) {
+            LogBean.get().addProps("config.key.not.exists", true);
+            throw new AppException(HttpStatus.NOT_FOUND.value(), "config key not found");
+        }
+        return configHistoryService.getConfigHistoryListByTypeAndConfigId(ConfigHistoryType.CONFIG.getValue(), config.getId(), offset, limit, keyword);
+    }
+
     public ConfigHistoryPage getConfigHistoryListByConfigId(String namespace, Long configId, int offset, int limit, String keyword) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
         Config config = daoWrapper.getById(configId);
-        if (config != null && !config.getNamespace().equals(namespace)) {
+        if (config == null) {
+            LogBean.get().addProps("config.id.not.exists", true);
+            throw new AppException(HttpStatus.NOT_FOUND.value(), "config id not found");
+        }
+        if (!config.getNamespace().equals(namespace)) {
             if (!config.getNamespace().equals(namespace)) {
                 LogBean.get().addProps("namespace.not.equals", true);
                 throw new AppException(HttpStatus.BAD_REQUEST.value(), "id not belongs to this namespace");

@@ -269,13 +269,14 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 
 
 ### 分页查询某个key的配置历史
-POST /camellia/config/admin/getConfigHistoryListByConfigId HTTP/1.1  
+POST /camellia/config/admin/getConfigHistoryListByConfigKey HTTP/1.1  
 Content-Type:application/x-www-form-urlencoded;charset=utf-8
 
 |参数|类型|是否必填|说明|
 |:---:|:---:|:---:|:---:|
 |namespace|string|是|namespace，最长128字符|
-|id|number|是|config的id|
+|id|number|否|配置key，最长256字符，id和key二选一，优先id|
+|key|string|否|配置key，最长256字符，id和key二选一，优先id|
 |pageIndex|number|否|偏移量，默认0，用于分页|
 |pageSize|number|否|pageSize，默认100用于分页|
 |keyword|string|否|关键词|
@@ -370,6 +371,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 
 |参数|类型|是否必填|说明|
 |:---:|:---:|:---:|:---:|
+|namespace|string|是|namespace，最长128字符|
 |pageIndex|number|否|偏移量，默认0，用于分页|
 |pageSize|number|否|pageSize，默认100用于分页|
 |keyword|string|否|关键词|
