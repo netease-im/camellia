@@ -171,7 +171,7 @@ public class RedisConnection {
         if (idleCheckScheduledFuture != null && closeIdleConnection) {
             return;
         }
-        synchronized (this) {
+        synchronized (lock) {
             if (idleCheckScheduledFuture == null) {
                 lastCommandTime = TimeCache.currentMillis;
                 closeIdleConnection = true;
@@ -188,7 +188,7 @@ public class RedisConnection {
         if (idleCheckScheduledFuture == null && !closeIdleConnection) {
             return;
         }
-        synchronized (this) {
+        synchronized (lock) {
             lastCommandTime = TimeCache.currentMillis;
             closeIdleConnection = false;
             if (idleCheckScheduledFuture != null) {
@@ -375,7 +375,7 @@ public class RedisConnection {
 
     //发送心跳
     private void heartbeat() {
-        synchronized (this) {
+        synchronized (lock) {
             try {
                 if (status != RedisConnectionStatus.VALID) {
                     return;
@@ -648,7 +648,7 @@ public class RedisConnection {
 
     //检查是否idle
     private void checkIdle() {
-        synchronized (this) {
+        synchronized (lock) {
             try {
                 if (isIdle()) {
                     status = RedisConnectionStatus.CLOSING;
