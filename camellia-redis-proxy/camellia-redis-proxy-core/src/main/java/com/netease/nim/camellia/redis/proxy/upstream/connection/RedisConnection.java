@@ -472,25 +472,26 @@ public class RedisConnection {
             } catch (Exception e) {
                 logger.error("{}, idle-check schedule cancel error", connectionName, e);
             }
-            int count = 0;
+            int count1 = 0;
             while (!queue.isEmpty()) {
                 CompletableFuture<Reply> future = queue.poll();
                 if (future != null) {
                     future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
-                    count ++;
+                    count1 ++;
                 }
             }
+            int count2 = 0;
             while (!cachedCommands.isEmpty()) {
                 CommandPack commandPack = cachedCommands.poll();
                 if (commandPack != null) {
                     for (CompletableFuture<Reply> future : commandPack.getCompletableFutureList()) {
                         future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
-                        count ++;
+                        count2 ++;
                     }
                 }
             }
-            if (count > 0 && !grace) {
-                logger.error("{} stopped, {} commands return NOT_AVAILABLE", connectionName, count);
+            if ((count1 > 0 || count2 > 0) && !grace) {
+                logger.error("{} stopped, pendingCommands = {}, cachedCommands = {} return NOT_AVAILABLE", connectionName, count1, count2);
             }
         } catch (Exception e) {
             logger.error("{} stop error", connectionName, e);
