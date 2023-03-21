@@ -83,8 +83,8 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 
 |参数|类型|是否必填|说明|
 |:---:|:---:|:---:|:---:|
-|pageIndex|number|是|偏移量，默认0，用于分页|
-|pageSize|number|是|pageSize，默认100用于分页|
+|pageIndex|number|否|偏移量，默认0，用于分页|
+|pageSize|number|否|pageSize，默认100用于分页|
 |onlyValid|string|否|是否只返回有效的，true或者false，默认true|
 |keyword|string|否|关键词|
 
