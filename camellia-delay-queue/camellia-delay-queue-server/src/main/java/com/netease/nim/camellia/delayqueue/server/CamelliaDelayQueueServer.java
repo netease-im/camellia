@@ -20,6 +20,7 @@ import redis.clients.jedis.Response;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by caojiajun on 2022/7/14
@@ -34,11 +35,11 @@ public class CamelliaDelayQueueServer {
     private final ExecutorService checkTriggerExecutor;
     private final ExecutorService checkTimeoutExecutor;
     private final ExecutorService checkExpireExecutor;
+    private final AtomicBoolean msgScheduledLock = new AtomicBoolean(false);
     private final ScheduledExecutorService msgScheduledExecutor;
+    private final AtomicBoolean topicScheduledLock = new AtomicBoolean(false);
     private final ScheduledExecutorService topicScheduledExecutor;
     private final CamelliaRedisLockManager lockManager;
-
-
 
     public CamelliaDelayQueueServer(CamelliaDelayQueueServerConfig serverConfig, CamelliaRedisTemplate template) {
         this.serverConfig = serverConfig;
@@ -491,33 +492,41 @@ public class CamelliaDelayQueueServer {
     private void startSchedule() {
         long msgScheduleMillis = serverConfig.getMsgScheduleMillis();
         msgScheduledExecutor.scheduleAtFixedRate(() -> {
-            try {
-                //topicsKey
-                String topicsKey = topicsKey();
-                Long topicNum = template.zcard(topicsKey);
-                scheduleMsg(topicsKey, topicNum);
-                //topicsKeyTmp
-                String topicsKeyTmp = topicsKeyTmp();
-                Long topicNumTmp = template.zcard(topicsKeyTmp);
-                scheduleMsg(topicsKeyTmp, topicNumTmp);
-            } catch (Exception e) {
-                logger.error("msg schedule error", e);
+            if (msgScheduledLock.compareAndSet(false, true)) {
+                try {
+                    //topicsKey
+                    String topicsKey = topicsKey();
+                    Long topicNum = template.zcard(topicsKey);
+                    scheduleMsg(topicsKey, topicNum);
+                    //topicsKeyTmp
+                    String topicsKeyTmp = topicsKeyTmp();
+                    Long topicNumTmp = template.zcard(topicsKeyTmp);
+                    scheduleMsg(topicsKeyTmp, topicNumTmp);
+                } catch (Exception e) {
+                    logger.error("msg schedule error", e);
+                } finally {
+                    msgScheduledLock.compareAndSet(true, false);
+                }
             }
         }, ThreadLocalRandom.current().nextLong(msgScheduleMillis), msgScheduleMillis, TimeUnit.MILLISECONDS);
 
         long topicScheduleSeconds = serverConfig.getTopicScheduleSeconds();
         topicScheduledExecutor.scheduleAtFixedRate(() -> {
-            try {
-                //topicsKey
-                String topicsKey = topicsKey();
-                Long topicNum = template.zcard(topicsKey);
-                scheduleTopic(topicsKey, topicNum);
-                //topicsKeyTmp
-                String topicsKeyTmp = topicsKeyTmp();
-                Long topicNumTmp = template.zcard(topicsKeyTmp);
-                scheduleTopic(topicsKeyTmp, topicNumTmp);
-            } catch (Exception e) {
-                logger.error("topic schedule error", e);
+            if (topicScheduledLock.compareAndSet(false, true)) {
+                try {
+                    //topicsKey
+                    String topicsKey = topicsKey();
+                    Long topicNum = template.zcard(topicsKey);
+                    scheduleTopic(topicsKey, topicNum);
+                    //topicsKeyTmp
+                    String topicsKeyTmp = topicsKeyTmp();
+                    Long topicNumTmp = template.zcard(topicsKeyTmp);
+                    scheduleTopic(topicsKeyTmp, topicNumTmp);
+                } catch (Exception e) {
+                    logger.error("topic schedule error", e);
+                } finally {
+                    topicScheduledLock.compareAndSet(true, false);
+                }
             }
         }, ThreadLocalRandom.current().nextLong(topicScheduleSeconds), topicScheduleSeconds, TimeUnit.SECONDS);
     }
