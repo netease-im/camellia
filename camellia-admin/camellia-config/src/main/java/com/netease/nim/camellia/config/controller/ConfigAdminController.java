@@ -50,16 +50,16 @@ public class ConfigAdminController {
     public WebResult getConfigList(@RequestParam("namespace") String namespace,
                                    @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
                                    @RequestParam(value = "pageSize", required = false, defaultValue = "100") int pageSize,
-                                   @RequestParam(value = "onlyValid", required = false, defaultValue = "true") boolean onlyValid,
+                                   @RequestParam(value = "validFlag", required = false) Integer validFlag,
                                    @RequestParam(value = "keyword", required = false) String keyword) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
         LogBean.get().addProps("namespace", namespace);
-        LogBean.get().addProps("onlyValid", onlyValid);
+        LogBean.get().addProps("validFlag", validFlag);
         LogBean.get().addProps("pageIndex", pageIndex);
         LogBean.get().addProps("pageSize", pageSize);
         LogBean.get().addProps("keyword", keyword);
         int offset = pageIndex * pageSize;
-        ConfigPage configPage = configService.getConfigList(namespace, offset, pageSize, onlyValid, keyword);
+        ConfigPage configPage = configService.getConfigList(namespace, offset, pageSize, validFlag, keyword);
         LogBean.get().addProps("configPage", configPage);
         return WebResult.success(configPage);
     }
@@ -68,16 +68,16 @@ public class ConfigAdminController {
     public String getConfigString(@RequestParam("namespace") String namespace,
                                   @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
                                   @RequestParam(value = "pageSize", required = false, defaultValue = "100") int pageSize,
-                                  @RequestParam(value = "onlyValid", required = false, defaultValue = "true") boolean onlyValid,
+                                  @RequestParam(value = "validFlag", required = false) Integer validFlag,
                                   @RequestParam(value = "keyword", required = false) String keyword) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
         LogBean.get().addProps("namespace", namespace);
-        LogBean.get().addProps("onlyValid", onlyValid);
+        LogBean.get().addProps("validFlag", validFlag);
         LogBean.get().addProps("keyword", keyword);
         LogBean.get().addProps("pageSize", pageSize);
         LogBean.get().addProps("keyword", keyword);
         int offset = pageIndex * pageSize;
-        String configString = configService.getConfigString(namespace, offset, pageSize, onlyValid, keyword);
+        String configString = configService.getConfigString(namespace, offset, pageSize, validFlag, keyword);
         LogBean.get().addProps("configString", configString);
         return configString;
     }
@@ -190,13 +190,14 @@ public class ConfigAdminController {
     @PostMapping("/getConfigNamespaceList")
     public WebResult getConfigNamespaceList(@RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
                                             @RequestParam(value = "pageSize", required = false, defaultValue = "100") int pageSize,
-                                            @RequestParam(value = "onlyValid", required = false, defaultValue = "true") boolean onlyValid,
+                                            @RequestParam(value = "validFlag", required = false) Integer validFlag,
                                             @RequestParam(value = "keyword", required = false) String keyword) {
         LogBean.get().addProps("pageSize", pageSize);
         LogBean.get().addProps("keyword", keyword);
         int offset = pageIndex * pageSize;
         LogBean.get().addProps("keyword", keyword);
-        ConfigNamespacePage configNamespacePage = configNamespaceService.getList(offset, pageSize, onlyValid, keyword);
+        LogBean.get().addProps("validFlag", validFlag);
+        ConfigNamespacePage configNamespacePage = configNamespaceService.getList(offset, pageSize, validFlag, keyword);
         LogBean.get().addProps("configNamespacePage", configNamespacePage);
         return WebResult.success(configNamespacePage);
     }

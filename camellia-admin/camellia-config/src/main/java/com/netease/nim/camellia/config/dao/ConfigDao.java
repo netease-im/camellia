@@ -34,23 +34,23 @@ public interface ConfigDao {
 
     @Select("select `id`, `namespace`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
             " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTim` from camellia_config " +
-            " where `namespace` = #{namespace} and `valid_flag` = 1 limit #{offset}, #{limit}")
-    List<Config> getValidList(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit);
+            " where `namespace` = #{namespace} and `valid_flag` = #{validFlag} limit #{offset}, #{limit}")
+    List<Config> getValidList(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit, @Param("validFlag") int validFlag);
 
     @Select("select count(*) from camellia_config " +
-            " where `namespace` = #{namespace} and `valid_flag` = 1 limit #{offset}, #{limit}")
-    long getValidListCount(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit);
+            " where `namespace` = #{namespace} and `valid_flag` = #{validFlag} limit #{offset}, #{limit}")
+    long getValidListCount(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit, @Param("validFlag") int validFlag);
 
     @Select("select `id`, `namespace`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
             " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config " +
-            " where `namespace` = #{namespace} and `valid_flag` = 1 and " +
+            " where `namespace` = #{namespace} and `valid_flag` = #{validFlag} and " +
             " (`ckey` like concat('%', #{keyword}, '%') or `cvalue` like concat('%', #{keyword}, '%') or `info` like concat('%', #{keyword}, '%') or `operator` like concat('%', #{keyword}, '%')) limit #{offset}, #{limit}")
-    List<Config> getValidListAndKeyword(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit, @Param("keyword") String keyword);
+    List<Config> getValidListAndKeyword(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit, @Param("keyword") String keyword, @Param("validFlag") int validFlag);
 
     @Select("select count(*) from camellia_config " +
-            " where `namespace` = #{namespace} and `valid_flag` = 1 and " +
+            " where `namespace` = #{namespace} and `valid_flag` = #{validFlag} and " +
             " (`ckey` like concat('%', #{keyword}, '%') or `cvalue` like concat('%', #{keyword}, '%') or `info` like concat('%', #{keyword}, '%') or `operator` like concat('%', #{keyword}, '%')) limit #{offset}, #{limit}")
-    long getValidListAndKeywordCount(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit, @Param("keyword") String keyword);
+    long getValidListAndKeywordCount(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit, @Param("keyword") String keyword, @Param("validFlag") int validFlag);
 
     @Select("select `id`, `namespace`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
             " `creator`, `operator`, `version`, `create_time` as createTime, `update_time` as updateTime from camellia_config " +

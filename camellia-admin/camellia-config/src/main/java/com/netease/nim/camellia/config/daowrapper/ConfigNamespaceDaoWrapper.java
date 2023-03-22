@@ -57,16 +57,16 @@ public class ConfigNamespaceDaoWrapper {
         return dao.getById(id);
     }
 
-    public ConfigNamespacePage getList(int offset, int limit, boolean onlyValid, String keyword) {
+    public ConfigNamespacePage getList(int offset, int limit, Integer validFlag, String keyword) {
         if (keyword != null) {
             keyword = keyword.trim();
         }
         if (keyword == null || keyword.length() == 0) {
             List<ConfigNamespace> list;
             long count;
-            if (onlyValid) {
-                list = dao.getValidList(offset, limit);
-                count = dao.getValidListCount(offset, limit);
+            if (validFlag != null) {
+                list = dao.getValidList(offset, limit, validFlag);
+                count = dao.getValidListCount(offset, limit, validFlag);
             } else {
                 list = dao.getList(offset, limit);
                 count = dao.getListCount(offset, limit);
@@ -75,9 +75,9 @@ public class ConfigNamespaceDaoWrapper {
         } else {
             List<ConfigNamespace> list;
             long count;
-            if (onlyValid) {
-                list = dao.getValidListAndKeyword(offset, limit, keyword);
-                count = dao.getValidListAndKeywordCount(offset, limit, keyword);
+            if (validFlag != null) {
+                list = dao.getValidListAndKeyword(offset, limit, keyword, validFlag);
+                count = dao.getValidListAndKeywordCount(offset, limit, keyword, validFlag);
             } else {
                 list = dao.getListAndKeyword(offset, limit, keyword);
                 count = dao.getListAndKeywordCount(offset, limit, keyword);

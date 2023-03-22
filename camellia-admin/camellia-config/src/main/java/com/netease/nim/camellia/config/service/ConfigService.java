@@ -81,14 +81,16 @@ public class ConfigService {
         return map;
     }
 
-    public ConfigPage getConfigList(String namespace, int offset, int limit, boolean onlyValid, String keyword) {
+    public ConfigPage getConfigList(String namespace, int offset, int limit, Integer validFlag, String keyword) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
-        return daoWrapper.getList(namespace, offset, limit, onlyValid, keyword);
+        ParamCheckUtils.checkValidFlag(validFlag);
+        return daoWrapper.getList(namespace, offset, limit, validFlag, keyword);
     }
 
-    public String getConfigString(String namespace, int offset, int limit, boolean onlyValid, String keyword) {
+    public String getConfigString(String namespace, int offset, int limit, Integer validFlag, String keyword) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
-        ConfigPage configPage = daoWrapper.getList(namespace, offset, limit, onlyValid, keyword);
+        ParamCheckUtils.checkValidFlag(validFlag);
+        ConfigPage configPage = daoWrapper.getList(namespace, offset, limit, validFlag, keyword);
         StringBuilder builder = new StringBuilder();
         for (Config config : configPage.getList()) {
             builder.append("## ").append(config.getInfo()).append("\r\n");

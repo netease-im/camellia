@@ -135,8 +135,9 @@ public class ConfigNamespaceService {
         }
     }
 
-    public ConfigNamespacePage getList(int offset, int limit, boolean onlyValid, String keyword) {
-        return dao.getList(offset, limit, onlyValid, keyword);
+    public ConfigNamespacePage getList(int offset, int limit, Integer validFlag, String keyword) {
+        ParamCheckUtils.checkValidFlag(validFlag);
+        return dao.getList(offset, limit, validFlag, keyword);
     }
 
 }

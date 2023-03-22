@@ -48,16 +48,16 @@ public class ConfigDaoWrapper {
         return configList;
     }
 
-    public ConfigPage getList(String namespace, int offset, int limit, boolean onlyValid, String keyword) {
+    public ConfigPage getList(String namespace, int offset, int limit, Integer validFlag, String keyword) {
         if (keyword != null) {
             keyword = keyword.trim();
         }
         if (keyword == null || keyword.length() == 0) {
             List<Config> list;
             long count;
-            if (onlyValid) {
-                list = configDao.getValidList(namespace, offset, limit);
-                count = configDao.getValidListCount(namespace, offset, limit);
+            if (validFlag != null) {
+                list = configDao.getValidList(namespace, offset, limit, validFlag);
+                count = configDao.getValidListCount(namespace, offset, limit, validFlag);
             } else {
                 list = configDao.getList(namespace, offset, limit);
                 count = configDao.getListCount(namespace, offset, limit);
@@ -66,9 +66,9 @@ public class ConfigDaoWrapper {
         } else {
             List<Config> list;
             long count;
-            if (onlyValid) {
-                list = configDao.getValidListAndKeyword(namespace, offset, limit, keyword);
-                count = configDao.getValidListAndKeywordCount(namespace, offset, limit, keyword);
+            if (validFlag != null) {
+                list = configDao.getValidListAndKeyword(namespace, offset, limit, keyword, validFlag);
+                count = configDao.getValidListAndKeywordCount(namespace, offset, limit, keyword, validFlag);
             } else {
                 list = configDao.getListAndKeyword(namespace, offset, limit, keyword);
                 count = configDao.getListAndKeywordCount(namespace, offset, limit, keyword);

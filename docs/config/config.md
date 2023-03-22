@@ -85,7 +85,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 |:---:|:---:|:---:|:---:|
 |pageIndex|number|否|偏移量，默认0，用于分页|
 |pageSize|number|否|pageSize，默认100用于分页|
-|onlyValid|string|否|是否只返回有效的，true或者false，默认true|
+|validFlag|number|否|是否有效，0或者1，如果不填，则返回所有|
 |keyword|string|否|关键词|
 
 响应
@@ -223,7 +223,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 |namespace|string|是|namespace，最长128字符|
 |pageIndex|number|否|偏移量，默认0，用于分页|
 |pageSize|number|否|pageSize，默认100用于分页|
-|onlyValid|string|否|是否只返回有效的，true或者false，默认true|
+|validFlag|number|否|是否有效，0或者1，如果不填，则返回所有|
 |keyword|string|否|关键词|
 
 响应
