@@ -99,7 +99,7 @@ public class LogInterceptor extends HandlerInterceptorAdapter {
         JSONObject logBeanJson = logBean.toJson();
         int code = logBean.getCode();
         if (code == 200) {
-            if (uri.equals("/health/status")) {
+            if (uri.startsWith("/health")) {
                 if (staticsLogger.isDebugEnabled()) {
                     staticsLogger.debug(logBeanJson.toString());
                 }
@@ -123,8 +123,7 @@ public class LogInterceptor extends HandlerInterceptorAdapter {
                 staticsLogger.warn(logBeanJson.toString());
             }
         }
-        if (uri.equals("/health/status")) return;
-        if (!uri.startsWith("/health") && !uri.startsWith("/console")) {
+        if (!uri.startsWith("/health")) {
             HealthStatus.updateRequestTimestamp();
         }
     }
