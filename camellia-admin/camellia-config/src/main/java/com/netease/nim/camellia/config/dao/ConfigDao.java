@@ -22,7 +22,7 @@ public interface ConfigDao {
     @Delete("delete from camellia_config where id = #{id}")
     int deleteById(@Param("id") long id);
 
-    @Update("update camellia_config set `cvalue` = #{cvalue}, `valid_flag` = #{validFlag}, `info` = #{info}, `ctype` = #{type}," +
+    @Update("update camellia_config set `cvalue` = #{value}, `valid_flag` = #{validFlag}, `info` = #{info}, `ctype` = #{type}," +
             " `operator` = #{operator}, `version` = #{version}, `update_time` = #{updateTime} where id = #{id}")
     int update(Config config);
 
