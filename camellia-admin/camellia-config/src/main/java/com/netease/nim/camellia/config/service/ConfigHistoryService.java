@@ -141,10 +141,10 @@ public class ConfigHistoryService {
         long count;
         if (keyword == null || keyword.length() == 0) {
             list = dao.getConfigHistoryListByType(type, offset, limit);
-            count = dao.getConfigHistoryListByTypeCount(type, offset, limit);
+            count = dao.getConfigHistoryListByTypeCount(type);
         } else {
             list = dao.getConfigHistoryListByTypeAndKeyword(type, offset, limit, keyword);
-            count = dao.getConfigHistoryListByTypeAndKeywordCount(type, offset, limit, keyword);
+            count = dao.getConfigHistoryListByTypeAndKeywordCount(type, keyword);
         }
         return new ConfigHistoryPage(count, list);
     }
@@ -157,10 +157,10 @@ public class ConfigHistoryService {
         long count;
         if (keyword == null || keyword.length() == 0) {
             list = dao.getConfigHistoryListByTypeAndConfigId(type, configId, offset, limit);
-            count = dao.getConfigHistoryListByTypeAndConfigIdCount(type, configId, offset, limit);
+            count = dao.getConfigHistoryListByTypeAndConfigIdCount(type, configId);
         } else {
             list = dao.getConfigHistoryListByTypeAndConfigIdAndKeyword(type, configId, offset, limit, keyword);
-            count = dao.getConfigHistoryListByTypeAndConfigIdAndKeywordCount(type, configId, offset, limit, keyword);
+            count = dao.getConfigHistoryListByTypeAndConfigIdAndKeywordCount(type, configId, keyword);
         }
         return new ConfigHistoryPage(count, list);
     }
@@ -173,10 +173,10 @@ public class ConfigHistoryService {
         long count;
         if (keyword == null || keyword.length() == 0) {
             list = dao.getConfigHistoryListByNamespace(namespace, offset, limit);
-            count = dao.getConfigHistoryListByNamespaceCount(namespace, offset, limit);
+            count = dao.getConfigHistoryListByNamespaceCount(namespace);
         } else {
             list = dao.getConfigHistoryListByNamespaceAndKeyword(namespace, offset, limit, keyword);
-            count = dao.getConfigHistoryListByNamespaceAndKeywordCount(namespace, offset, limit, keyword);
+            count = dao.getConfigHistoryListByNamespaceAndKeywordCount(namespace, keyword);
         }
         return new ConfigHistoryPage(count, list);
     }
