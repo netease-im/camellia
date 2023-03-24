@@ -70,7 +70,7 @@ public class ConfigNamespaceService {
                 configNamespace.setVersion(1);
                 int create = dao.create(configNamespace);
                 LogBean.get().addProps("create", create);
-                configHistoryService.namespaceCreate(configNamespace);
+                configHistoryService.namespaceCreate(dao.getByNamespace(namespace));
             } else {
                 ConfigNamespace oldConfig = ConfigUtils.duplicate(configNamespace);
                 boolean needUpdate = false;

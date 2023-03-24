@@ -17,15 +17,15 @@ public interface ConfigHistoryDao {
     int create(ConfigHistory configHistory);
 
     @Select("select `id`, `ctype` as `type`, `namespace`, `config_id` as `configId`, `old_config` as `oldConfig`, `new_config` as `newConfig` , `operator_type` as `operatorType`, `operator`,`create_time` as `createTime` from camellia_config_history " +
-            " where `type` = #{type} limit #{offset}, #{limit}")
+            " where `ctype` = #{type} limit #{offset}, #{limit}")
     List<ConfigHistory> getConfigHistoryListByType(@Param("type") int type, @Param("offset") int offset, @Param("limit") int limit);
 
     @Select("select count(*) from camellia_config_history " +
-            " where `type` = #{type} limit #{offset}, #{limit}")
+            " where `ctype` = #{type} limit #{offset}, #{limit}")
     long getConfigHistoryListByTypeCount(@Param("type") int type, @Param("offset") int offset, @Param("limit") int limit);
 
     @Select("select `id`, `ctype` as type, `namespace`, `config_id` as `configId`, `old_config` as `oldConfig`, `new_config` as `newConfig` , `operator_type` as `operatorType`, `operator`,`create_time` as `createTime` from camellia_config_history " +
-            " where `type` = #{type} and (`namespace` like concat('%', #{keyword}, '%') or `old_config` like concat('%', #{keyword}, '%') or `newConfig` like concat('%', #{keyword}, '%')) limit #{offset}, #{limit}")
+            " where `ctype` = #{type} and (`namespace` like concat('%', #{keyword}, '%') or `old_config` like concat('%', #{keyword}, '%') or `newConfig` like concat('%', #{keyword}, '%')) limit #{offset}, #{limit}")
     List<ConfigHistory> getConfigHistoryListByTypeAndKeyword(@Param("type") int type, @Param("offset") int offset, @Param("limit") int limit, @Param("keyword") String keyword);
 
     @Select("select count(*) from camellia_config_history " +

@@ -5,6 +5,7 @@ import feign.Request;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -17,7 +18,7 @@ public class CamelliaConfigApiUtil {
     }
 
     public static CamelliaConfigApi init(String url, int connectTimeoutMillis, int readTimeoutMillis) {
-        return init(url, connectTimeoutMillis, readTimeoutMillis);
+        return init(url, connectTimeoutMillis, readTimeoutMillis, new HashMap<>());
     }
 
     public static CamelliaConfigApi init(String url, int connectTimeoutMillis, int readTimeoutMillis, Map<String, String> headerMap) {

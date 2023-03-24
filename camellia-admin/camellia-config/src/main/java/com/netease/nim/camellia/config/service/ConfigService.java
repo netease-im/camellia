@@ -201,7 +201,7 @@ public class ConfigService {
                 checkConfigType(config.getValue(), ConfigType.getByValue(config.getType()));
                 int create = daoWrapper.create(config);
                 LogBean.get().addProps("create", create);
-                configHistoryService.configCreate(config);
+                configHistoryService.configCreate(daoWrapper.findByNamespaceAndKey(namespace, key));
             } else {
                 Config oldConfig = ConfigUtils.duplicate(config);
                 boolean needUpdate = false;
