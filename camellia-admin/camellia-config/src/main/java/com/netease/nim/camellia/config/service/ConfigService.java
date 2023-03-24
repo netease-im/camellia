@@ -297,21 +297,21 @@ public class ConfigService {
         if (type == ConfigType.NUMBER) {
             try {
                 Long.parseLong(value);
-            } catch (NumberFormatException e) {
+            } catch (Exception e) {
                 LogBean.get().addProps("type.value.not.match", true);
                 throw new AppException(HttpStatus.BAD_REQUEST.value(), "type/value not match");
             }
         } else if (type == ConfigType.FLOAT_NUMBER) {
             try {
                 Double.parseDouble(value);
-            } catch (NumberFormatException e) {
+            } catch (Exception e) {
                 LogBean.get().addProps("type.value.not.match", true);
                 throw new AppException(HttpStatus.BAD_REQUEST.value(), "type/value not match");
             }
         } else if (type == ConfigType.JSON_STRING) {
             try {
                 JSON.parseObject(value);
-            } catch (NumberFormatException e) {
+            } catch (Exception e) {
                 LogBean.get().addProps("type.value.not.match", true);
                 throw new AppException(HttpStatus.BAD_REQUEST.value(), "type/value not match");
             }

@@ -2,10 +2,14 @@ package com.netease.nim.camellia.config.service;
 
 import com.netease.nim.camellia.config.auth.EnvContext;
 import com.netease.nim.camellia.config.conf.LogBean;
+import com.netease.nim.camellia.config.dao.ConfigDao;
+import com.netease.nim.camellia.config.daowrapper.ConfigDaoWrapper;
 import com.netease.nim.camellia.config.daowrapper.ConfigNamespaceDaoWrapper;
 import com.netease.nim.camellia.config.exception.AppException;
+import com.netease.nim.camellia.config.model.Config;
 import com.netease.nim.camellia.config.model.ConfigNamespace;
 import com.netease.nim.camellia.config.model.ConfigNamespacePage;
+import com.netease.nim.camellia.config.model.ConfigPage;
 import com.netease.nim.camellia.config.util.ConfigUtils;
 import com.netease.nim.camellia.config.util.ParamCheckUtils;
 import com.netease.nim.camellia.core.util.CacheUtil;
@@ -31,6 +35,9 @@ public class ConfigNamespaceService {
 
     @Autowired
     private ConfigNamespaceDaoWrapper dao;
+
+    @Autowired
+    private ConfigDaoWrapper configDaoWrapper;
 
     @Autowired
     private CamelliaRedisTemplate template;
@@ -125,6 +132,11 @@ public class ConfigNamespaceService {
             if (!Objects.equals(configNamespace.getVersion(), version)) {
                 LogBean.get().addProps("config.namespace.has.changed", true);
                 throw new AppException(HttpStatus.BAD_REQUEST.value(), "config namespace has changed");
+            }
+            ConfigPage page = configDaoWrapper.getList(namespace, 0, 100, null, null);
+            if (!page.getList().isEmpty()) {
+                LogBean.get().addProps("config.namespace.has.no.delete.config", true);
+                throw new AppException(HttpStatus.FORBIDDEN.value(), "config namespace has no delete config");
             }
             int delete = dao.delete(configNamespace);
             LogBean.get().addProps("delete", delete);
