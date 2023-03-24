@@ -29,6 +29,7 @@ public class ScheduledResourceChecker implements ResourceSelector.ResourceChecke
         this.factory = factory;
         int intervalSeconds = ProxyDynamicConf.getInt("check.redis.resource.valid.interval.seconds", 5);
         ExecutorUtils.scheduleAtFixedRate(this::schedule, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
+        logger.info("ScheduledResourceChecker start, intervalSeconds = {}", intervalSeconds);
     }
 
     private void schedule() {
@@ -48,9 +49,7 @@ public class ScheduledResourceChecker implements ResourceSelector.ResourceChecke
         IUpstreamClient client = factory.get(url);
         clientCache.put(url, client);
         boolean valid = client.isValid();
-        if (!valid) {
-            logger.warn("IUpstreamClient with resource = {} not valid", url);
-        }
+        logger.info("addResource to ScheduledResourceChecker, resource = {}, valid = {}", url, valid);
         validCache.put(url, valid);
     }
 
