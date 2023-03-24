@@ -150,6 +150,8 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
   {
     "id": 1,
     "key": "k1",
+    "namespace": "xxx",
+    "namespaceId": "xxx",
     "value": "123",
     "type": 2,
     "info": "xx",
@@ -200,6 +202,8 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
   "data":
   {
     "id": 1,
+    "namespace": "xxx",
+    "namespaceId": "xxx",
     "key": "k1",
     "value": "123",
     "type": 2,
@@ -238,6 +242,8 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
     [
       {
         "id": 1,
+        "namespace": "xxx",
+        "namespaceId": "xxx",
         "key": "k1",
         "value": "123",
         "type": 2,
@@ -251,6 +257,8 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
       },
       {
         "id": 2,
+        "namespace": "xxx",
+        "namespaceId": "xxx",
         "key": "k2",
         "value": "123",
         "type": 2,

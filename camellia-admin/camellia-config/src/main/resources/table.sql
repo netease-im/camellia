@@ -1,6 +1,7 @@
 
 CREATE TABLE `camellia_config` (
   `id` bigint(20) NOT NULL primary key auto_increment comment '自增字段',
+  `namespaceId` bigint(20) NOT NULL comment 'namespaceId',
   `namespace` varchar(128) NOT NULL comment 'namespace',
   `ckey` varchar(256) NOT NULL comment '配置key',
   `cvalue` varchar(4096) DEFAULT NULL comment '配置value',

@@ -7,6 +7,8 @@ public class Config {
 
     private Long id;//主键
 
+    private Long namespaceId;
+
     private String namespace;//命名空间
 
     private String key;//配置key
@@ -35,6 +37,14 @@ public class Config {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getNamespaceId() {
+        return namespaceId;
+    }
+
+    public void setNamespaceId(Long namespaceId) {
+        this.namespaceId = namespaceId;
     }
 
     public String getNamespace() {

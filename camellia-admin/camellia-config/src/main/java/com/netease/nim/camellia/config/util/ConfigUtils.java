@@ -26,6 +26,7 @@ public class ConfigUtils {
     public static Config duplicate(Config config) {
         Config duplicate = new Config();
         duplicate.setId(config.getId());
+        duplicate.setNamespaceId(config.getNamespaceId());
         duplicate.setNamespace(config.getNamespace());
         duplicate.setKey(config.getKey());
         duplicate.setValue(config.getValue());

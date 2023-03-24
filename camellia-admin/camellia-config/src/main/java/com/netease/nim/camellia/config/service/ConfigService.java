@@ -188,6 +188,7 @@ public class ConfigService {
                 }
                 config = new Config();
                 config.setNamespace(namespace);
+                config.setNamespaceId(configNamespace.getId());
                 config.setCreateTime(now);
                 config.setUpdateTime(now);
                 config.setKey(key);
