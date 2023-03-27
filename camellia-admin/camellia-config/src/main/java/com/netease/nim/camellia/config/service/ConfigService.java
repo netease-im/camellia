@@ -33,6 +33,7 @@ public class ConfigService {
     private static final int maxNamespaceLen = 128;
     private static final int maxInfoLen = 4096;
     private static final int maxKeyLen = 256;
+    private static final int maxOperatorInfoLen = 256;
     private static final int maxValueLen = 4096;
 
     @Autowired
@@ -110,9 +111,10 @@ public class ConfigService {
         return daoWrapper.findByNamespaceAndKey(namespace, key);
     }
 
-    public int deleteConfig(String namespace, long id, String key, Long version) {
+    public int deleteConfig(String namespace, long id, String key, Long version, String operatorInfo) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
         ParamCheckUtils.checkParam(key, "key", maxKeyLen);
+        ParamCheckUtils.checkParam(operatorInfo, "operatorInfo", maxOperatorInfoLen);
         ConfigNamespace configNamespace = configNamespaceDaoWrapper.getByNamespace(namespace);
         if (configNamespace == null || configNamespace.getValidFlag() == 0) {
             LogBean.get().addProps("config.namespace.not.valid", true);
@@ -143,16 +145,17 @@ public class ConfigService {
             }
             int delete = daoWrapper.delete(config);
             LogBean.get().addProps("delete", delete);
-            configHistoryService.configDelete(config, EnvContext.getUser());
+            configHistoryService.configDelete(config, EnvContext.getUser(), operatorInfo);
             return delete;
         } finally {
             lock.release();
         }
     }
 
-    public Config createOrUpdateConfig(String namespace, String key, String value, Integer type, String info, Long version, Integer validFlag) {
+    public Config createOrUpdateConfig(String namespace, String key, String value, Integer type, String info, Long version, Integer validFlag, String operatorInfo) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
         ParamCheckUtils.checkParam(key, "key", maxKeyLen);
+        ParamCheckUtils.checkParam(operatorInfo, "operatorInfo", maxOperatorInfoLen);
         ConfigNamespace configNamespace = configNamespaceDaoWrapper.getByNamespace(namespace);
         if (configNamespace == null || configNamespace.getValidFlag() == 0) {
             LogBean.get().addProps("config.namespace.not.valid", true);
@@ -202,7 +205,7 @@ public class ConfigService {
                 checkConfigType(config.getValue(), ConfigType.getByValue(config.getType()));
                 int create = daoWrapper.create(config);
                 LogBean.get().addProps("create", create);
-                configHistoryService.configCreate(daoWrapper.findByNamespaceAndKey(namespace, key));
+                configHistoryService.configCreate(daoWrapper.findByNamespaceAndKey(namespace, key), operatorInfo);
             } else {
                 Config oldConfig = ConfigUtils.duplicate(config);
                 boolean needUpdate = false;
@@ -237,7 +240,7 @@ public class ConfigService {
                     int update = daoWrapper.update(config);
                     LogBean.get().addProps("update", update);
                     Config newConfig = daoWrapper.findByNamespaceAndKey(namespace, key);
-                    configHistoryService.configUpdate(oldConfig, newConfig);
+                    configHistoryService.configUpdate(oldConfig, newConfig, operatorInfo);
                 }
             }
             return daoWrapper.findByNamespaceAndKey(namespace, key);

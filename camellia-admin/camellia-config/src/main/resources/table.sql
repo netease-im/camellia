@@ -41,5 +41,6 @@ CREATE TABLE `camellia_config_history` (
   `new_config` text DEFAULT NULL comment '新配置',
   `operator_type` varchar(256) DEFAULT NULL comment '配置类型',
   `operator` varchar(256) DEFAULT NULL comment '最后更新者',
+  `operatorInfo` varchar(256) DEFAULT NULL comment '操作说明',
   `create_time` bigint(20) DEFAULT NULL comment '创建时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='配置变更历史';

@@ -32,6 +32,7 @@ public class ConfigNamespaceService {
     private static final int maxNamespaceLen = 128;
     private static final int maxInfoLen = 4096;
     private static final int maxAliasLen = 32;
+    private static final int maxOperatorInfoLen = 256;
 
     @Autowired
     private ConfigNamespaceDaoWrapper dao;
@@ -45,9 +46,10 @@ public class ConfigNamespaceService {
     @Autowired
     private ConfigHistoryService configHistoryService;
 
-    public ConfigNamespace createOrUpdateConfigNamespace(String namespace, String info, String alias, Integer version, Integer validFlag) {
+    public ConfigNamespace createOrUpdateConfigNamespace(String namespace, String info, String alias, Integer version, Integer validFlag, String operatorInfo) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
         ParamCheckUtils.checkValidFlag(validFlag);
+        ParamCheckUtils.checkParam(operatorInfo, "operatorInfo", maxOperatorInfoLen);
         String lockKey = CacheUtil.buildCacheKey("camellia_config_namespace", namespace, "~lock");
         CamelliaRedisLock lock = CamelliaRedisLock.newLock(template, lockKey, namespace, 5000, 5000);
         if (!lock.tryLock()) {
@@ -77,7 +79,7 @@ public class ConfigNamespaceService {
                 configNamespace.setVersion(1);
                 int create = dao.create(configNamespace);
                 LogBean.get().addProps("create", create);
-                configHistoryService.namespaceCreate(dao.getByNamespace(namespace));
+                configHistoryService.namespaceCreate(dao.getByNamespace(namespace), operatorInfo);
             } else {
                 ConfigNamespace oldConfig = ConfigUtils.duplicate(configNamespace);
                 boolean needUpdate = false;
@@ -103,7 +105,7 @@ public class ConfigNamespaceService {
                     int update = dao.update(configNamespace);
                     LogBean.get().addProps("update", update);
                     ConfigNamespace newConfig = dao.getByNamespace(namespace);
-                    configHistoryService.namespaceUpdate(oldConfig, newConfig);
+                    configHistoryService.namespaceUpdate(oldConfig, newConfig, operatorInfo);
                 }
             }
             return dao.getByNamespace(namespace);
@@ -112,8 +114,9 @@ public class ConfigNamespaceService {
         }
     }
 
-    public int deleteConfigNamespace(long id, String namespace, Integer version) {
+    public int deleteConfigNamespace(long id, String namespace, Integer version, String operatorInfo) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
+        ParamCheckUtils.checkParam(operatorInfo, "operatorInfo", maxOperatorInfoLen);
         String lockKey = CacheUtil.buildCacheKey("camellia_config_namespace", namespace, "~lock");
         CamelliaRedisLock lock = CamelliaRedisLock.newLock(template, lockKey, namespace, 5000, 5000);
         if (!lock.tryLock()) {
@@ -140,7 +143,7 @@ public class ConfigNamespaceService {
             }
             int delete = dao.delete(configNamespace);
             LogBean.get().addProps("delete", delete);
-            configHistoryService.namespaceDelete(configNamespace, EnvContext.getUser());
+            configHistoryService.namespaceDelete(configNamespace, EnvContext.getUser(), operatorInfo);
             return delete;
         } finally {
             lock.release();

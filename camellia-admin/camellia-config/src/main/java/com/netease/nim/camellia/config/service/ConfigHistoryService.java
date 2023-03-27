@@ -23,7 +23,7 @@ public class ConfigHistoryService {
     @Autowired(required = false)
     private ConfigChangeNotify notify;
 
-    public void namespaceUpdate(ConfigNamespace oldConfig, ConfigNamespace newConfig) {
+    public void namespaceUpdate(ConfigNamespace oldConfig, ConfigNamespace newConfig, String operatorInfo) {
         ConfigHistory history = new ConfigHistory();
         history.setType(ConfigHistoryType.NAMESPACE.getValue());
         history.setOperator(newConfig.getOperator());
@@ -43,12 +43,13 @@ public class ConfigHistoryService {
             }
         }
         history.setCreateTime(System.currentTimeMillis());
+        history.setOperatorInfo(operatorInfo);
         int create = dao.create(history);
         LogBean.get().addProps("config.history.insert", create);
         notify(history);
     }
 
-    public void namespaceCreate(ConfigNamespace configNamespace) {
+    public void namespaceCreate(ConfigNamespace configNamespace, String operatorInfo) {
         ConfigHistory history = new ConfigHistory();
         history.setType(ConfigHistoryType.NAMESPACE.getValue());
         history.setOperator(configNamespace.getCreator());
@@ -58,12 +59,13 @@ public class ConfigHistoryService {
         history.setOldConfig("");
         history.setOperatorType(OperatorType.CREATE.name());
         history.setCreateTime(System.currentTimeMillis());
+        history.setOperatorInfo(operatorInfo);
         int create = dao.create(history);
         LogBean.get().addProps("config.history.insert", create);
         notify(history);
     }
 
-    public void namespaceDelete(ConfigNamespace configNamespace, String user) {
+    public void namespaceDelete(ConfigNamespace configNamespace, String user, String operatorInfo) {
         ConfigHistory history = new ConfigHistory();
         history.setType(ConfigHistoryType.NAMESPACE.getValue());
         history.setConfigId(configNamespace.getId());
@@ -73,12 +75,13 @@ public class ConfigHistoryService {
         history.setOperatorType(OperatorType.DELETE.name());
         history.setCreateTime(System.currentTimeMillis());
         history.setOperator(user);
+        history.setOperatorInfo(operatorInfo);
         int create = dao.create(history);
         LogBean.get().addProps("config.history.insert", create);
         notify(history);
     }
 
-    public void configUpdate(Config oldConfig, Config newConfig) {
+    public void configUpdate(Config oldConfig, Config newConfig, String operatorInfo) {
         ConfigHistory history = new ConfigHistory();
         history.setType(ConfigHistoryType.CONFIG.getValue());
         history.setOperator(newConfig.getOperator());
@@ -98,12 +101,13 @@ public class ConfigHistoryService {
             }
         }
         history.setCreateTime(System.currentTimeMillis());
+        history.setOperatorInfo(operatorInfo);
         int create = dao.create(history);
         LogBean.get().addProps("config.history.insert", create);
         notify(history);
     }
 
-    public void configCreate(Config config) {
+    public void configCreate(Config config, String operatorInfo) {
         ConfigHistory history = new ConfigHistory();
         history.setType(ConfigHistoryType.CONFIG.getValue());
         history.setOperator(config.getOperator());
@@ -113,12 +117,13 @@ public class ConfigHistoryService {
         history.setOldConfig("");
         history.setOperatorType(OperatorType.CREATE.name());
         history.setCreateTime(System.currentTimeMillis());
+        history.setOperatorInfo(operatorInfo);
         int create = dao.create(history);
         LogBean.get().addProps("config.history.insert", create);
         notify(history);
     }
 
-    public void configDelete(Config config, String user) {
+    public void configDelete(Config config, String user, String operatorInfo) {
         ConfigHistory history = new ConfigHistory();
         history.setType(ConfigHistoryType.CONFIG.getValue());
         history.setConfigId(config.getId());
@@ -128,6 +133,7 @@ public class ConfigHistoryService {
         history.setOperatorType(OperatorType.DELETE.name());
         history.setCreateTime(System.currentTimeMillis());
         history.setOperator(user);
+        history.setOperatorInfo(operatorInfo);
         int create = dao.create(history);
         LogBean.get().addProps("config.history.insert", create);
         notify(history);

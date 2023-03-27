@@ -21,6 +21,8 @@ public class ConfigHistory {
 
     private String operator;//操作者
 
+    private String operatorInfo;//操作说明
+
     private Long createTime;//创建时间
 
     public Long getId() {
@@ -85,6 +87,14 @@ public class ConfigHistory {
 
     public void setOperator(String operator) {
         this.operator = operator;
+    }
+
+    public String getOperatorInfo() {
+        return operatorInfo;
+    }
+
+    public void setOperatorInfo(String operatorInfo) {
+        this.operatorInfo = operatorInfo;
     }
 
     public Long getCreateTime() {

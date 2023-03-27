@@ -36,6 +36,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 |info|string|否|namespace的说明，最长4096字符<br>创建时必填|
 |version|number|否|版本号，用于并发控制<br>创建时不填，更新时必填|
 |validFlag|number|否|是否生效，0或者1，其他参数错误<br>创建时默认0|
+|operatorInfo|string|是|操作说明，最长256字符|
 
 响应  
 ```json
@@ -67,6 +68,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 |namespace|string|是|namespace，最长128字符|
 |id|number|是|namespace的id|
 |version|number|是|版本号，用于并发控制|
+|operatorInfo|string|是|操作说明，最长256字符|
 
 响应
 ```json
@@ -107,6 +109,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
         "validFlag": 1,
         "creator": "xxx@xx.com",
         "operator": "xxx@xx.com",
+        "operatorInfo": "xxx",
         "createTime": 1111,
         "updateTime": 222
       },
@@ -119,6 +122,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
         "validFlag": 1,
         "creator": "xxx@xx.com",
         "operator": "xxx@xx.com",
+        "operatorInfo": "xxx",
         "createTime": 1111,
         "updateTime": 222
       }
@@ -140,6 +144,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 |info|string|否|配置说明，最长4096字符<br>创建时必填|
 |version|number|否|版本号，用于并发控制<br>创建时不填，更新时必填|
 |validFlag|number|否|是否生效，0或者1，其他参数错误<br>创建时默认0|
+|operatorInfo|string|是|操作说明，最长256字符|
 
 响应
 ```json
@@ -175,6 +180,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 |key|string|是|配置key，最长256字符|
 |id|number|是|config的id|
 |version|number|是|版本号，用于并发控制|
+|operatorInfo|string|是|操作说明，最长256字符|
 
 响应
 ```json
@@ -308,6 +314,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
         "newConfig": "{xxx}",
         "operatorType": "UPDATE",
         "operator": "xx@xx.com",
+        "operatorInfo": "xxx",
         "createTime": 123
       },
       {
@@ -319,6 +326,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
         "newConfig": "{xxx}",
         "operatorType": "UPDATE",
         "operator": "xx@xx.com",
+        "operatorInfo": "xxx",
         "createTime": 123
       }
     ]
@@ -355,6 +363,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
         "newConfig": "{xxx}",
         "operatorType": "UPDATE",
         "operator": "xx@xx.com",
+        "operatorInfo": "xxx",
         "createTime": 123
       },
       {
@@ -366,6 +375,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
         "newConfig": "{xxx}",
         "operatorType": "UPDATE",
         "operator": "xx@xx.com",
+        "operatorInfo": "xxx",
         "createTime": 123
       }
     ]
@@ -403,6 +413,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
         "newConfig": "{xxx}",
         "operatorType": "UPDATE",
         "operator": "xx@xx.com",
+        "operatorInfo": "xxx",
         "createTime": 123
       },
       {
@@ -414,6 +425,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
         "newConfig": "{xxx}",
         "operatorType": "UPDATE",
         "operator": "xx@xx.com",
+        "operatorInfo": "xxx",
         "createTime": 123
       }
     ]
