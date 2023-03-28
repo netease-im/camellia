@@ -1,5 +1,20 @@
 [ENGLISH](update-en.md)
 
+# 1.2.4（2023/03/xx）
+### 新增
+* 新增camellia-config模块，一个简单的kv配置中心
+
+### 更新
+* camellia-redis-proxy的ProxyDynamicConfLoader接口支持callback
+* camellia-redis-proxy优化了RedisConnection的实现
+* camellia-redis-proxy支持接入camellia-config
+* camellia-feign支持接入camellia-config
+* camellia-redis-proxy中的PUBSUB系列命令的响应也需要统计到upstream-fail里面
+
+### fix
+* 无
+
+
 # 1.2.3（2023/03/15）
 ### 新增
 * camellia-redis-proxy支持根据后端resource统计请求失败的情况，具体见：[monitor-data](/docs/redis-proxy/monitor/monitor-data.md)
@@ -7,6 +22,7 @@
 ### 更新
 * camellia-redis-proxy细化了后端redis异常时返回给客户端的错误描述信息
 * camellia-redis-proxy的/prometheus端点调整了部分metrics的type
+* camellia-redis-proxy优化了RedisConnection的状态判断的实现逻辑
 
 ### fix
 * 修复camellia-redis-proxy使用info upstream-info命令获取到的后端redis地址的密码没有mask的问题
