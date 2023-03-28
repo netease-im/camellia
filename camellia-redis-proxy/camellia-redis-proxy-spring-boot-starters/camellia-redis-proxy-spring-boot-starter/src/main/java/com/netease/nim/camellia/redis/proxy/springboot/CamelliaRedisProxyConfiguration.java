@@ -20,14 +20,12 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 
 /**
  *
  * Created by caojiajun on 2019/11/6.
  */
 @Configuration
-@Import(CamelliaRedisProxyConfigurerSupport.class)
 @EnableConfigurationProperties({CamelliaRedisProxyProperties.class, NettyProperties.class, TranspondProperties.class})
 public class CamelliaRedisProxyConfiguration implements ApplicationContextAware {
 

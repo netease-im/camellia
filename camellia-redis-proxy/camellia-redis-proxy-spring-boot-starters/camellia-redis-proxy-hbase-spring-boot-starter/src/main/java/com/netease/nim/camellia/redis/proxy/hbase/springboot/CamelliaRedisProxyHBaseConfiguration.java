@@ -5,7 +5,6 @@ import com.netease.nim.camellia.hbase.springboot.CamelliaHBaseConfiguration;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.proxy.hbase.UpstreamRedisHBaseMixClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.springboot.CamelliaRedisProxyConfiguration;
-import com.netease.nim.camellia.redis.proxy.springboot.CamelliaRedisProxyConfigurerSupport;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
 import com.netease.nim.camellia.redis.springboot.CamelliaRedisConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -22,7 +21,7 @@ import org.springframework.context.annotation.Import;
 @Configuration
 @AutoConfigureBefore(CamelliaRedisProxyConfiguration.class)
 @EnableConfigurationProperties({CamelliaRedisProxyProperties.class})
-@Import(value = {CamelliaHBaseConfiguration.class, CamelliaRedisConfiguration.class, CamelliaRedisProxyConfigurerSupport.class})
+@Import(value = {CamelliaHBaseConfiguration.class, CamelliaRedisConfiguration.class})
 public class CamelliaRedisProxyHBaseConfiguration {
 
     @Bean
