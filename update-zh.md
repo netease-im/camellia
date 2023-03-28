@@ -12,7 +12,7 @@
 * camellia-redis-proxy中的PUBSUB系列命令的响应也需要统计到upstream-fail里面
 
 ### fix
-* camellia-redis-proxy使用custom自定义路由模式时，多读场景下的自定剔除异常后端功能不生效的问题
+* 修复camellia-redis-proxy使用custom自定义路由模式时，多读场景下的自定剔除异常后端功能不生效的问题
 
 
 # 1.2.3（2023/03/15）
