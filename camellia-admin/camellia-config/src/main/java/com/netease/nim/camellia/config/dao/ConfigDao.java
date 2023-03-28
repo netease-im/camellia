@@ -61,7 +61,7 @@ public interface ConfigDao {
             " where `namespace` = #{namespace} limit #{offset}, #{limit}")
     long getListCount(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit);
 
-    @Select("select `id`, `namespace`, `namespaceId`, `ckey` as key, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
+    @Select("select `id`, `namespace`, `namespaceId`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
             " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config " +
             " where `namespace` = #{namespace} and " +
             " (`ckey` like concat('%', #{keyword}, '%') or `cvalue` like concat('%', #{keyword}, '%') or `info` like concat('%', #{keyword}, '%') or `operator` like concat('%', #{keyword}, '%')) limit #{offset}, #{limit}")
