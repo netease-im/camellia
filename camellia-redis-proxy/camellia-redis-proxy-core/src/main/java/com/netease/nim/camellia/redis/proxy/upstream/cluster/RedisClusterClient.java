@@ -424,7 +424,7 @@ public class RedisClusterClient implements IUpstreamClient {
                 CommandTaskQueue taskQueue = channelInfo.getCommandTaskQueue();
                 commandFlusher.flush();
                 commandFlusher.clear();
-                PubSubUtils.sendByBindClient(bindConnection, taskQueue, command, future, first);
+                PubSubUtils.sendByBindClient(getResource(), bindConnection, taskQueue, command, future, first);
                 byte[][] objects = command.getObjects();
                 if (objects != null && objects.length > 1) {
                     for (int j = 1; j < objects.length; j++) {
@@ -462,7 +462,7 @@ public class RedisClusterClient implements IUpstreamClient {
         if (bindConnection != null) {
             commandFlusher.flush();
             commandFlusher.clear();
-            PubSubUtils.sendByBindClient(bindConnection, command.getChannelInfo().getCommandTaskQueue(), command, future, false);
+            PubSubUtils.sendByBindClient(getResource(), bindConnection, command.getChannelInfo().getCommandTaskQueue(), command, future, false);
         } else {
             RedisConnection connection = getConnection(ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE));
             if (connection != null) {

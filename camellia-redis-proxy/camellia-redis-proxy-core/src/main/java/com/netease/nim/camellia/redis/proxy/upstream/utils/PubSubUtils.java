@@ -1,8 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.upstream.utils;
 
+import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
+import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
+import com.netease.nim.camellia.redis.proxy.monitor.UpstreamFailMonitor;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.plugin.converter.KeyConverter;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -24,12 +27,12 @@ import java.util.concurrent.CompletableFuture;
  */
 public class PubSubUtils {
 
-    public static void sendByBindClient(RedisConnection connection, CommandTaskQueue taskQueue,
+    public static void sendByBindClient(Resource resource, RedisConnection connection, CommandTaskQueue taskQueue,
                                         Command command, CompletableFuture<Reply> future, boolean first) {
-        sendByBindClient(connection, taskQueue, command, future, first, command.getRedisCommand());
+        sendByBindClient(resource, connection, taskQueue, command, future, first, command.getRedisCommand());
     }
 
-    private static void sendByBindClient(RedisConnection connection, CommandTaskQueue taskQueue,
+    private static void sendByBindClient(Resource resource, RedisConnection connection, CommandTaskQueue taskQueue,
                                          Command command, CompletableFuture<Reply> future, boolean first, RedisCommand redisCommand) {
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
         if (future != null) {
@@ -42,6 +45,11 @@ public class PubSubUtils {
                     future.complete(reply);
                 } else {
                     taskQueue.reply(redisCommand, reply);
+                    //monitor
+                    if (ProxyMonitorCollector.isMonitorEnable()) {
+                        UpstreamFailMonitor.stats(resource.getUrl(),
+                                command == null ? "pubsub": command.getName(), reply);
+                    }
                 }
                 //after send reply, update channel subscribe status
                 if (subscribeChannelCount != null && subscribeChannelCount <= 0) {
@@ -54,7 +62,7 @@ public class PubSubUtils {
                 CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
                 completableFuture.thenAccept(reply -> {
                     if (connection.queueSize() < 8 && connection.isValid()) {
-                        sendByBindClient(connection, taskQueue, null, null, false, redisCommand);
+                        sendByBindClient(resource, connection, taskQueue, null, null, false, redisCommand);
                     }
                     //parse reply must before send reply to connection
                     Long subscribeChannelCount = tryGetSubscribeChannelCount(reply);
@@ -62,6 +70,11 @@ public class PubSubUtils {
                     //after send reply, update channel subscribe status
                     if (subscribeChannelCount != null && subscribeChannelCount <= 0) {
                         taskQueue.getChannelInfo().setInSubscribe(false);
+                    }
+                    //monitor
+                    if (ProxyMonitorCollector.isMonitorEnable()) {
+                        UpstreamFailMonitor.stats(resource.getUrl(),
+                                command == null ? "pubsub": command.getName(), reply);
                     }
                 });
                 futures.add(completableFuture);

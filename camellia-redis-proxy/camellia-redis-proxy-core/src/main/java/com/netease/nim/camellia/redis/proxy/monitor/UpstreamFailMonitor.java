@@ -29,17 +29,24 @@ public class UpstreamFailMonitor {
      * @param future future
      */
     public static void stats(String resource, String command, CompletableFuture<Reply> future) {
-        future.thenAccept(reply -> {
-            if (reply instanceof ErrorReply) {
-                try {
-                    String key = resource + "|" + command + "|" + ((ErrorReply) reply).getError();
-                    LongAdder failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, key, k -> new LongAdder());
-                    failCount.increment();
-                } catch (Exception e) {
-                    logger.error(e.getMessage(), e);
-                }
+        future.thenAccept(reply -> stats(resource, command, reply));
+    }
+
+    /**
+     * 增加上游转发失败的监控埋点
+     * @param resource resource
+     * @param reply reply
+     */
+    public static void stats(String resource, String command, Reply reply) {
+        if (reply instanceof ErrorReply) {
+            try {
+                String key = resource + "|" + command + "|" + ((ErrorReply) reply).getError();
+                LongAdder failCount = CamelliaMapUtils.computeIfAbsent(failCountMap, key, k -> new LongAdder());
+                failCount.increment();
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
             }
-        });
+        }
     }
 
     public static List<UpstreamFailStats> collect() {
