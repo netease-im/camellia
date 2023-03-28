@@ -125,6 +125,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         this.bid = bid;
         this.bgroup = bgroup;
         this.factory = env.getClientFactory();
+        this.resourceChecker = env.getResourceChecker();
         this.multiWriteMode = env.getMultiWriteMode();
         ResourceTable resourceTable = updater.getResourceTable(bid, bgroup);
         RedisResourceUtil.checkResourceTable(resourceTable);
