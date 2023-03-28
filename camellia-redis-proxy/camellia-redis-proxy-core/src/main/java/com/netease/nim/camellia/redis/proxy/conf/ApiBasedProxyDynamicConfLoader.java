@@ -42,4 +42,11 @@ public class ApiBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
             init();
         }
     }
+
+    @Override
+    public void addCallback(ProxyDynamicConfLoaderCallback callback) {
+        if (camelliaConfig != null) {
+            camelliaConfig.addCallback(callback::callback);
+        }
+    }
 }

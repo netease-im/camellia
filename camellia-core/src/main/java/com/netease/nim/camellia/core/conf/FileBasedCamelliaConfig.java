@@ -62,6 +62,13 @@ public class FileBasedCamelliaConfig extends CamelliaConfig {
             } else {
                 this.setConf(map);
                 logger.info("camellia config reload success, fileName = {}", fileName);
+                for (ConfigUpdateCallback callback : getCallbackList()) {
+                    try {
+                        callback.callback();
+                    } catch (Exception e) {
+                        logger.error("ConfigUpdateCallback error", e);
+                    }
+                }
             }
         } catch (Exception e) {
             logger.error("camellia config reload error, fileName = {}", fileName);

@@ -11,4 +11,7 @@ public interface ProxyDynamicConfLoader {
 
     void updateInitConf(Map<String, String> initConf);
 
+    default void addCallback(ProxyDynamicConfLoaderCallback callback) {
+
+    }
 }

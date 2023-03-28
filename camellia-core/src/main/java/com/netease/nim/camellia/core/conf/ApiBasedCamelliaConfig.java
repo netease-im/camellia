@@ -66,6 +66,13 @@ public class ApiBasedCamelliaConfig extends CamelliaConfig {
                     setConf(conf);
                     logger.info("camellia config update, url = {}, namespace = {}, md5 = {}, conf = {}", url, namespace, md5, conf);
                     this.md5 = md5;
+                    for (ConfigUpdateCallback callback : getCallbackList()) {
+                        try {
+                            callback.callback();
+                        } catch (Exception e) {
+                            logger.error("ConfigUpdateCallback error", e);
+                        }
+                    }
                     return true;
                 } else {
                     logger.error("camellia config reload wrong, url = {}, code = {}", url, response.getCode());

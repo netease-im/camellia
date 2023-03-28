@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -20,6 +21,8 @@ public class ProxyDynamicConf {
 
     private static Map<String, String> conf = new HashMap<>();
     private static final Set<DynamicConfCallback> callbackSet = new HashSet<>();
+
+    private static final AtomicBoolean reloading = new AtomicBoolean(false);
 
     private static ProxyDynamicConfLoader loader = new FileBasedProxyDynamicConfLoader();
 
@@ -39,6 +42,7 @@ public class ProxyDynamicConf {
         if (initConf != null && !initConf.isEmpty()) {
             ProxyDynamicConf.initConf = initConf;
             loader.updateInitConf(initConf);
+            loader.addCallback(ProxyDynamicConf::reload);
         }
         reload();
         int reloadIntervalSeconds = ConfigurationUtil.getInteger(conf, "dynamic.conf.reload.interval.seconds", 600);
@@ -50,22 +54,28 @@ public class ProxyDynamicConf {
      * 检查本地配置文件是否有变更，如果有，则重新加载，并且会清空缓存，并触发监听者的回调
      */
     public static void reload() {
-        try {
-            Map<String, String> newConf = loader.load();
-            if (newConf.equals(new HashMap<>(ProxyDynamicConf.conf))) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("ProxyDynamicConf not modify");
+        if (reloading.compareAndSet(false, true)) {
+            try {
+                Map<String, String> newConf = loader.load();
+                if (newConf.equals(new HashMap<>(ProxyDynamicConf.conf))) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("ProxyDynamicConf not modify");
+                    }
+                } else {
+                    ProxyDynamicConf.conf = newConf;
+                    if (logger.isInfoEnabled()) {
+                        logger.info("ProxyDynamicConf updated, conf.size = {}, conf = {}", newConf.size(), newConf);
+                    }
+                    clearCache();
+                    triggerCallback();
                 }
-            } else {
-                ProxyDynamicConf.conf = newConf;
-                if (logger.isInfoEnabled()) {
-                    logger.info("ProxyDynamicConf updated, conf.size = {}, conf = {}", newConf.size(), newConf);
-                }
-                clearCache();
-                triggerCallback();
+            } catch (Exception e) {
+                logger.error("reload error", e);
+            } finally {
+                reloading.compareAndSet(true, false);
             }
-        } catch (Exception e) {
-            logger.error("reload error", e);
+        } else {
+            logger.warn("ProxyDynamicConf is reloading, skip current reload");
         }
     }
 

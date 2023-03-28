@@ -1,6 +1,8 @@
 package com.netease.nim.camellia.core.conf;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -10,6 +12,7 @@ import java.util.Map;
 public abstract class CamelliaConfig {
 
     private Map<String, String> conf = new HashMap<>();
+    private final List<ConfigUpdateCallback> callbackList = new ArrayList<>();
 
     protected void setConf(Map<String, String> conf) {
         this.conf = conf;
@@ -17,6 +20,16 @@ public abstract class CamelliaConfig {
 
     public Map<String, String> getConf() {
         return conf;
+    }
+
+    public void addCallback(ConfigUpdateCallback callback) {
+        synchronized (callbackList) {
+            callbackList.add(callback);
+        }
+    }
+
+    protected List<ConfigUpdateCallback> getCallbackList() {
+        return new ArrayList<>(callbackList);
     }
 
     public long getLong(long bid, String bgroup, String key, long defaultValue) {
