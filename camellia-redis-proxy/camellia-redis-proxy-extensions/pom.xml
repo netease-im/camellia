@@ -17,5 +17,6 @@
 		<module>camellia-redis-proxy-discovery</module>
 		<module>camellia-redis-proxy-hbase</module>
 		<module>camellia-redis-proxy-mq</module>
+		<module>camellia-redis-proxy-nacos</module>
 	</modules>
 </project>
