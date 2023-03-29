@@ -42,7 +42,7 @@ public class RedisHBaseCommandProcessor implements IRedisHBaseCommandProcessor {
         }
 
         HBaseAsyncWriteExecutor hBaseAsyncWriteExecutor = new HBaseAsyncWriteExecutor(hBaseTemplate,
-                RedisHBaseConfiguration.hbaseAsyncWritePoolSize(), RedisHBaseConfiguration.hbaseAsyncWriteQueueSize());
+                RedisHBaseConfiguration.hbaseAsyncWritePoolSize(), RedisHBaseConfiguration::hbaseAsyncWriteQueueSize);
         //
         this.zSetMixClient = new RedisHBaseZSetMixClient(redisTemplate, hBaseTemplate, hBaseAsyncWriteExecutor);
         this.stringMixClient = new RedisHBaseStringMixClient(redisTemplate, hBaseTemplate, hBaseAsyncWriteExecutor);

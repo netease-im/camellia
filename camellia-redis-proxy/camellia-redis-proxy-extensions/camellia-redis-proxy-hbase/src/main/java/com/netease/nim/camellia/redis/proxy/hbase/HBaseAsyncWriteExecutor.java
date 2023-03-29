@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.hbase;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.redis.proxy.hbase.conf.RedisHBaseConfiguration;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
+import com.netease.nim.camellia.tools.base.DynamicValueGetter;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Put;
 import org.slf4j.Logger;
@@ -27,7 +28,7 @@ public class HBaseAsyncWriteExecutor {
 
     private final List<HBaseAsyncWriteExecutor.HBaseAsyncWriteThread> threadList = new ArrayList<>();
 
-    public HBaseAsyncWriteExecutor(CamelliaHBaseTemplate hBaseTemplate, int poolSize, int queueSize) {
+    public HBaseAsyncWriteExecutor(CamelliaHBaseTemplate hBaseTemplate, int poolSize, DynamicValueGetter<Integer> queueSize) {
         for (int i=0; i<poolSize; i++) {
             HBaseAsyncWriteExecutor.HBaseAsyncWriteThread thread = new HBaseAsyncWriteExecutor.HBaseAsyncWriteThread(hBaseTemplate, queueSize);
             thread.start();
@@ -75,15 +76,20 @@ public class HBaseAsyncWriteExecutor {
         private static final AtomicLong id = new AtomicLong();
         private final LinkedBlockingQueue<HBaseAsyncWriteTask> queue;
         private final CamelliaHBaseTemplate hBaseTemplate;
+        private final DynamicValueGetter<Integer> queueSize;
 
-        public HBaseAsyncWriteThread(CamelliaHBaseTemplate hBaseTemplate, int queueSize) {
+        public HBaseAsyncWriteThread(CamelliaHBaseTemplate hBaseTemplate, DynamicValueGetter<Integer> queueSize) {
             this.hBaseTemplate = hBaseTemplate;
-            this.queue = new LinkedBlockingQueue<>(queueSize);
+            this.queue = new LinkedBlockingQueue<>();
+            this.queueSize = queueSize;
             setName("hbase-async-write-" + id.incrementAndGet());
             RedisHBaseMonitor.register(getName(), queue);
         }
 
         public boolean submit(HBaseAsyncWriteTask task) {
+            if (queue.size() > queueSize.get()) {
+                return false;
+            }
             return queue.offer(task);
         }
 
