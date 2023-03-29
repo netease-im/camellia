@@ -3,9 +3,11 @@ package com.netease.nim.camellia.console.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.console.constant.AppCode;
 import com.netease.nim.camellia.console.constant.DashboardPathConstant;
+import com.netease.nim.camellia.console.context.AppInfoContext;
 import com.netease.nim.camellia.console.dao.wrapper.DashboardMapperWrapper;
 import com.netease.nim.camellia.console.exception.AppException;
 import com.netease.nim.camellia.console.model.CamelliaDashboard;
+import com.netease.nim.camellia.console.service.OperationNotify;
 import com.netease.nim.camellia.console.service.ResourceService;
 import com.netease.nim.camellia.console.service.bo.ResourceInfoBO;
 import com.netease.nim.camellia.console.service.vo.CamelliaResourcePage;
@@ -31,6 +33,8 @@ public class ResourceServiceImpl implements ResourceService {
     @Autowired
     DashboardMapperWrapper dashboardMapperWrapper;
 
+    @Autowired(required = false)
+    OperationNotify notify;
 
     @Override
     public CamelliaResourcePage getAllUrl(Long did, String url, int pageNum, int pageSize) {
@@ -68,6 +72,11 @@ public class ResourceServiceImpl implements ResourceService {
         paras.put("info",info);
         RespBody body = OkhttpKit.postForm(address + DashboardPathConstant.createOrUpdateResources, paras, null);
         ResponseCheckUtil.parseResponse(body);
+
+        if (notify != null) {
+            notify.notifyCreateOrUpdateResource(AppInfoContext.getUser().getUsername(), address, url, info);
+        }
+
     }
 
     @Override
@@ -78,6 +87,10 @@ public class ResourceServiceImpl implements ResourceService {
         paras.put("id",id+"");
         RespBody body = OkhttpKit.deleteRequest(address + DashboardPathConstant.deleteResource, paras, null,null);
         ResponseCheckUtil.parseResponse(body);
+
+        if (notify != null) {
+            notify.notifyDeleteResource(AppInfoContext.getUser().getUsername(), address, id);
+        }
     }
 
 

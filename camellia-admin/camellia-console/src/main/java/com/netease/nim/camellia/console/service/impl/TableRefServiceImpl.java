@@ -9,6 +9,7 @@ import com.netease.nim.camellia.console.dao.wrapper.DashboardMapperWrapper;
 import com.netease.nim.camellia.console.exception.AppException;
 import com.netease.nim.camellia.console.model.CamelliaDashboard;
 import com.netease.nim.camellia.console.model.CamelliaRefHistory;
+import com.netease.nim.camellia.console.service.OperationNotify;
 import com.netease.nim.camellia.console.service.TableRefService;
 import com.netease.nim.camellia.console.service.bo.TableBO;
 import com.netease.nim.camellia.console.service.bo.TableRefBO;
@@ -42,6 +43,9 @@ public class TableRefServiceImpl implements TableRefService {
     @Autowired
     CamelliaRefHistoryMapperWrapper refHistoryMapperWrapper;
 
+    @Autowired(required = false)
+    private OperationNotify notify;
+
     @Override
     public TableRefBO bindBigBgroupWithTid(Long dashboardId, long bid, String bgroup, long tid, String info) {
         CamelliaDashboard byId = getCamelliaDashboardById(dashboardId);
@@ -60,6 +64,9 @@ public class TableRefServiceImpl implements TableRefService {
         CamelliaRefHistory camelliaRefHistory=generateRefHistory(byId,table,tableRefBO);
         camelliaRefHistory.setOpType(BIND);
         refHistoryMapperWrapper.saveCamelliaRefHistory(camelliaRefHistory);
+        if (notify != null) {
+            notify.notifyBindBigBgroupWithTid(AppInfoContext.getUser().getUsername(), address, bid, bgroup, tid, info);
+        }
         return tableRefBO;
     }
 
@@ -81,7 +88,9 @@ public class TableRefServiceImpl implements TableRefService {
         camelliaRefHistory.setOpType(CLEAR);
         camelliaRefHistory.setCreatedTime(System.currentTimeMillis());
         refHistoryMapperWrapper.saveCamelliaRefHistory(camelliaRefHistory);
-        return ;
+        if (notify != null) {
+            notify.notifyDeleteTableRef(AppInfoContext.getUser().getUsername(), address, bid, bgroup);
+        }
     }
 
     @Override

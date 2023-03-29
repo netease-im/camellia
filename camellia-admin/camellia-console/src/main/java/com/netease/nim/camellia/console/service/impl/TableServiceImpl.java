@@ -13,6 +13,7 @@ import com.netease.nim.camellia.console.model.CamelliaDashboard;
 import com.netease.nim.camellia.console.model.CamelliaRefHistory;
 import com.netease.nim.camellia.console.model.CamelliaTableHistory;
 import com.netease.nim.camellia.console.model.TableDetail;
+import com.netease.nim.camellia.console.service.OperationNotify;
 import com.netease.nim.camellia.console.service.TableService;
 import com.netease.nim.camellia.console.service.bo.TableBO;
 import com.netease.nim.camellia.console.service.bo.TableRefBO;
@@ -26,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.print.DocFlavor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +55,8 @@ public class TableServiceImpl implements TableService {
     CamelliaRefHistoryMapperWrapper refHistoryMapperWrapper;
 
 
+    @Autowired(required = false)
+    OperationNotify notify;
 
 
     @Override
@@ -104,6 +108,9 @@ public class TableServiceImpl implements TableService {
         tableHistory.setResourceInfo(info);
         tableHistory.setTid(data.getTid());
         tableHistoryMapperWrapper.saveCamelliaTableHistory(tableHistory);
+        if (notify != null) {
+            notify.notifyCreateTable(AppInfoContext.getUser().getUsername(), byId.getAddress(), detail, info, type);
+        }
         return data;
     }
 
@@ -117,6 +124,9 @@ public class TableServiceImpl implements TableService {
         tableHistory.setTid(tid);
         tableHistory.setOpType(DELETE);
         tableHistoryMapperWrapper.saveCamelliaTableHistory(tableHistory);
+        if (notify != null) {
+            notify.notifyDeleteTable(AppInfoContext.getUser().getUsername(), address, tid);
+        }
     }
 
     @Override
@@ -179,6 +189,9 @@ public class TableServiceImpl implements TableService {
         ret.setDashboard(byId);
         ret.setTable(tableBO);
         ret.setTableRefs(tableRefBOs);
+        if (notify != null) {
+            notify.notifyChangeTable(AppInfoContext.getUser().getUsername(), address, tid, table, info, type);
+        }
         return ret;
     }
 
