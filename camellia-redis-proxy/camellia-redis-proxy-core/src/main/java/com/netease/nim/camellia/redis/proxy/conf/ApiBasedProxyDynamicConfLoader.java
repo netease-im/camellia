@@ -38,9 +38,7 @@ public class ApiBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
     @Override
     public void updateInitConf(Map<String, String> initConf) {
         this.initConf = initConf;
-        if (initOk.compareAndSet(false, true)) {
-            init();
-        }
+        init();
     }
 
     @Override

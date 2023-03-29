@@ -17,8 +17,6 @@ public class ProxyDynamicConf {
 
     private static final Logger logger = LoggerFactory.getLogger(ProxyDynamicConf.class);
 
-    private static Map<String, String> initConf = new HashMap<>();//通过yml文件配置的初始配置
-
     private static Map<String, String> conf = new HashMap<>();
     private static final Set<DynamicConfCallback> callbackSet = new HashSet<>();
 
@@ -40,10 +38,9 @@ public class ProxyDynamicConf {
     public static void init(Map<String, String> initConf, ProxyDynamicConfLoader loader) {
         ProxyDynamicConf.loader = loader;
         if (initConf != null && !initConf.isEmpty()) {
-            ProxyDynamicConf.initConf = initConf;
             loader.updateInitConf(initConf);
-            loader.addCallback(ProxyDynamicConf::reload);
         }
+        loader.addCallback(ProxyDynamicConf::reload);
         reload();
         int reloadIntervalSeconds = ConfigurationUtil.getInteger(conf, "dynamic.conf.reload.interval.seconds", 600);
         ExecutorUtils.scheduleAtFixedRate(ProxyDynamicConf::reload, reloadIntervalSeconds, reloadIntervalSeconds, TimeUnit.SECONDS);
@@ -76,21 +73,6 @@ public class ProxyDynamicConf {
             }
         } else {
             logger.warn("ProxyDynamicConf is reloading, skip current reload");
-        }
-    }
-
-    /**
-     * 直接把配置设置进来（k-v的map）
-     * @param conf conf
-     */
-    public static void reload(Map<String, String> conf) {
-        try {
-            Map<String, String> newConf = new HashMap<>(initConf);
-            newConf.putAll(conf);
-            loader.updateInitConf(newConf);
-            reload();
-        } catch (Exception e) {
-            logger.error("reload conf error", e);
         }
     }
 

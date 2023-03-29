@@ -18,11 +18,12 @@ camellia-redis-proxy:
     - monitorPlugin
     - bigKeyPlugin
     - hotKeyPlugin
+  #  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.conf.FileBasedProxyDynamicConfLoader
   ##you can get this config from ProxyDynamicConf.java, priority less than camellia-redis-proxy.properties
   ##you can configure dynamic.conf.file.name here to replace camellia-redis-proxy.properties
-#  config:
-#    "dynamic.conf.file.name": "xxx.properties"
-#    "xxx": "yyy"
+  #  config:
+  #    "dynamic.conf.file.name": "xxx.properties"
+  #    "xxx": "yyy"
   transpond:
     type: local #local、remote、custom
     local:
