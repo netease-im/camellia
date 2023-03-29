@@ -33,7 +33,7 @@ public class ConfigAdminController {
                                           @RequestParam(value = "info", required = false) String info,
                                           @RequestParam(value = "version", required = false) Long version,
                                           @RequestParam(value = "validFlag", required = false) Integer validFlag,
-                                          @RequestParam(value = "operatorInfo", defaultValue = "") String operatorInfo) {
+                                          @RequestParam(value = "operatorInfo") String operatorInfo) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
         LogBean.get().addProps("namespace", namespace);
         LogBean.get().addProps("key", key);
@@ -69,7 +69,7 @@ public class ConfigAdminController {
     @PostMapping(value = "/getConfigString", produces = "text/plain;charset=UTF-8")
     public String getConfigString(@RequestParam("namespace") String namespace,
                                   @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
-                                  @RequestParam(value = "pageSize", required = false, defaultValue = "100") int pageSize,
+                                  @RequestParam(value = "pageSize", required = false, defaultValue = "10000") int pageSize,
                                   @RequestParam(value = "validFlag", required = false) Integer validFlag,
                                   @RequestParam(value = "keyword", required = false) String keyword) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
@@ -100,7 +100,7 @@ public class ConfigAdminController {
                                   @RequestParam("id") long id,
                                   @RequestParam("key") String key,
                                   @RequestParam(value = "version", required = false) Long version,
-                                  @RequestParam(value = "operatorInfo", defaultValue = "") String operatorInfo) {
+                                  @RequestParam(value = "operatorInfo") String operatorInfo) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
         LogBean.get().addProps("id", id);
         LogBean.get().addProps("namespace", namespace);
@@ -167,7 +167,7 @@ public class ConfigAdminController {
                                                    @RequestParam(value = "alias", required = false) String alias,
                                                    @RequestParam(value = "version", required = false) Integer version,
                                                    @RequestParam(value = "validFlag", required = false) Integer validFlag,
-                                                   @RequestParam(value = "operatorInfo", defaultValue = "") String operatorInfo) {
+                                                   @RequestParam(value = "operatorInfo") String operatorInfo) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
         LogBean.get().addProps("namespace", namespace);
         LogBean.get().addProps("info", info);
@@ -184,7 +184,7 @@ public class ConfigAdminController {
     public WebResult deleteConfigNamespace(@RequestParam(value = "id", required = false) Long id,
                                            @RequestParam(value = "version") Integer version,
                                            @RequestParam("namespace") String namespace,
-                                           @RequestParam(value = "operatorInfo", defaultValue = "") String operatorInfo) {
+                                           @RequestParam(value = "operatorInfo") String operatorInfo) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
         LogBean.get().addProps("namespace", namespace);
         LogBean.get().addProps("id", id);
