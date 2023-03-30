@@ -1,5 +1,22 @@
 [中文版](update-zh.md)
 
+# 1.2.4（2023/03/xx）
+### add
+* add camellia-config module, a simple k-v config center
+* camellia-redis-proxy provide NacosProxyDynamicConfLoader, a new method to use nacos
+
+### update
+* camellia-redis-proxy optimize RedisConnection
+* camellia-redis-proxy support use camellia-config
+* camellia-feign support use camellia-config
+* camellia-redis-proxy support stats upstream fails when use PUBSUB commands
+* camellia-redis-proxy-hbase memory queue support dynamic capacity
+* camellia-delay-queue-server scheduler add concurrent control
+
+### fix
+* fix camellia-redis-proxy use custom proxy route conf, fix no-effective of automatically eliminate faulty nodes when use multi read mode
+
+
 # 1.2.3（2023/03/15）
 ### add
 * camellia-redis-proxy support monitor upstream fail
@@ -7,6 +24,7 @@
 ### update
 * camellia-redis-proxy specify ErrorReply msg of proxy upstream error
 * camellia-redis-proxy update some metrics type of /prometheus
+* camellia-redis-proxy optimize status of RedisConnection
 
 ### fix
 * fix camellia-redis-proxy use info upstream-info command to get upstream route conf do not mask redis password
