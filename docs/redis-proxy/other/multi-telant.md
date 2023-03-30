@@ -21,9 +21,6 @@ camellia-redis-proxy:
     type: custom
     custom:
       proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfUpdater
-      dynamic: true
-      bid: 1
-      bgroup: db0
 ```
 * camellia-redis-proxy.properties
 ```properties
