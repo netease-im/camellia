@@ -20,12 +20,4 @@ public interface ProxyDynamicConfLoader {
      */
     void updateInitConf(Map<String, String> initConf);
 
-    /**
-     * 设置回调，从而可以让loader中配置发生变更时第一时间被ProxyDynamicConf感知到，而不需要等ProxyDynamicConf来定期拉取更新
-     * loader不一定需要实现这个方法
-     * @param callback 回调类
-     */
-    default void addCallback(ProxyDynamicConfLoaderCallback callback) {
-
-    }
 }

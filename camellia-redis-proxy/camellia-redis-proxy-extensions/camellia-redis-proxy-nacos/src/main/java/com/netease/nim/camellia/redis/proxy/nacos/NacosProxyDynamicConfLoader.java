@@ -19,7 +19,7 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(NacosProxyDynamicConfLoader.class);
 
-    private Map<String, String> initConf = new HashMap<>();
+    private final Map<String, String> initConf = new HashMap<>();
     private Map<String, String> conf = new HashMap<>();
 
     @Override
@@ -32,12 +32,13 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
 
     @Override
     public void updateInitConf(Map<String, String> initConf) {
-        init(initConf);
+        this.initConf.putAll(initConf);
+        init();
     }
 
-    private void init(Map<String, String> initConf) {
+    private void init() {
+        Properties nacosProps = new Properties();
         try {
-            Properties nacosProps = new Properties();
             String prefix = "nacos.";
             for (Map.Entry<String, String> entry : initConf.entrySet()) {
                 String key = entry.getKey();
@@ -45,14 +46,28 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
                 if (key.startsWith(prefix)) {
                     key = key.substring(prefix.length());
                     nacosProps.put(key, value);
-                } else {
-                    this.initConf.put(key, value);
                 }
             }
             ConfigService configService = NacosFactory.createConfigService(nacosProps);
             String dataId = nacosProps.getProperty("dataId");
             String group = nacosProps.getProperty("group");
-            long timeoutMs = nacosProps.getProperty("timeoutMs") == null ? 10000L : Long.parseLong(nacosProps.getProperty("timeoutMs"));
+            if (dataId == null) {
+                throw new IllegalArgumentException("missing nacos.dataId");
+            }
+            if (group == null) {
+                throw new IllegalArgumentException("missing nacos.group");
+            }
+            String timeoutMsStr = nacosProps.getProperty("timeoutMs");
+            long timeoutMs;
+            if (timeoutMsStr == null) {
+                timeoutMs = 10000L;
+            } else {
+                try {
+                    timeoutMs = Long.parseLong(timeoutMsStr);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("illegal nacos.timeoutMs");
+                }
+            }
             String content = configService.getConfig(dataId, group, timeoutMs);
             this.conf = toMap(content);
             configService.addListener(dataId, group, new Listener() {
@@ -73,6 +88,7 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
             });
             logger.info("NacosProxyDynamicConfLoader init success, nacosProps = {}", nacosProps);
         } catch (NacosException e) {
+            logger.info("NacosProxyDynamicConfLoader init error, nacosProps = {}", nacosProps, e);
             throw new IllegalArgumentException(e);
         }
     }

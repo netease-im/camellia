@@ -4,7 +4,6 @@ import com.netease.nim.camellia.core.conf.ApiBasedCamelliaConfig;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 走camellia-config获取配置，远程配置会覆盖本地配置
@@ -12,7 +11,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class ApiBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
 
-    private final AtomicBoolean initOk = new AtomicBoolean();
     private ApiBasedCamelliaConfig camelliaConfig;
     private Map<String, String> initConf = new HashMap<>();
 
@@ -33,6 +31,7 @@ public class ApiBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
             throw new IllegalArgumentException("missing 'camellia.config.namespace'");
         }
         this.camelliaConfig = new ApiBasedCamelliaConfig(url, namespace);
+        this.camelliaConfig.addCallback(ProxyDynamicConf::reload);
     }
 
     @Override
@@ -41,10 +40,4 @@ public class ApiBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
         init();
     }
 
-    @Override
-    public void addCallback(ProxyDynamicConfLoaderCallback callback) {
-        if (camelliaConfig != null) {
-            camelliaConfig.addCallback(callback::callback);
-        }
-    }
 }

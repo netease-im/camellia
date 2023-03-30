@@ -40,7 +40,6 @@ public class ProxyDynamicConf {
         if (initConf != null && !initConf.isEmpty()) {
             loader.updateInitConf(initConf);
         }
-        loader.addCallback(ProxyDynamicConf::reload);
         reload();
         int reloadIntervalSeconds = ConfigurationUtil.getInteger(conf, "dynamic.conf.reload.interval.seconds", 600);
         ExecutorUtils.scheduleAtFixedRate(ProxyDynamicConf::reload, reloadIntervalSeconds, reloadIntervalSeconds, TimeUnit.SECONDS);
