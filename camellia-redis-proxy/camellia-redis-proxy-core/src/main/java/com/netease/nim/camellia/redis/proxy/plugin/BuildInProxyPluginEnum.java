@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.plugin;
 
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.plugin.bigkey.BigKeyProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.converter.ConverterProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkey.HotKeyProxyPlugin;
@@ -70,11 +71,11 @@ public enum BuildInProxyPluginEnum {
     }
 
     public int getRequestOrder() {
-        return requestOrder;
+        return ProxyDynamicConf.getInt(alias + ".build.in.plugin.request.order", requestOrder);
     }
 
     public int getReplyOrder() {
-        return replyOrder;
+        return ProxyDynamicConf.getInt(alias + ".build.in.plugin.reply.order", replyOrder);
     }
 
     public static BuildInProxyPluginEnum getByAlias(String alias) {
