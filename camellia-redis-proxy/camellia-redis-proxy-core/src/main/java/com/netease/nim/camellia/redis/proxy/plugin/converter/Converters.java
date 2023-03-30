@@ -61,7 +61,7 @@ public class Converters {
         RedisCommand.CommandType commandType = redisCommand.getCommandType();
         if (commandType == null) return;
         CommandContext commandContext = command.getCommandContext();
-        keyConvert(redisCommand, commandContext, command);
+        keyConvert(redisCommand, commandContext, command, true);
         if (keyConverter != null) {
             command.clearKeysCache();
         }
@@ -99,24 +99,33 @@ public class Converters {
             zsetConvertReply(redisCommand, commandContext, command, reply);
         }
         keyConvertReply(redisCommand, commandContext, command, reply);
+        keyConvert(redisCommand, commandContext, command, false);
         if (keyConverter != null) {
             command.clearKeysCache();
         }
     }
 
-    private void keyConvert(RedisCommand redisCommand, CommandContext commandContext, Command command) {
+    private byte[] convert(CommandContext commandContext, RedisCommand redisCommand, byte[] key, boolean convert) {
+        if (convert) {
+            return keyConverter.convert(commandContext, redisCommand, key);
+        } else {
+            return keyConverter.reverseConvert(commandContext, redisCommand, key);
+        }
+    }
+
+    private void keyConvert(RedisCommand redisCommand, CommandContext commandContext, Command command, boolean convert) {
         if (keyConverter == null) return;
         byte[][] objects = command.getObjects();
         RedisCommand.CommandKeyType commandKeyType = redisCommand.getCommandKeyType();
         if (commandKeyType == RedisCommand.CommandKeyType.SIMPLE_SINGLE) {
             if (objects.length >= 2) {
-                byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, objects[1]);
+                byte[] convertedKey = convert(commandContext, redisCommand, objects[1], convert);
                 objects[1] = convertedKey;
             }
         } else if (commandKeyType == RedisCommand.CommandKeyType.SIMPLE_MULTI) {
             if (objects.length >= 2) {
                 for (int i = 1; i < objects.length; i++) {
-                    byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                    byte[] convertedKey = convert(commandContext, redisCommand, objects[i], convert);
                     objects[i] = convertedKey;
                 }
             }
@@ -126,7 +135,7 @@ public class Converters {
                 case MSETNX:
                     if (objects.length >= 3 && objects.length % 2 == 1) {
                         for (int i = 1; i < objects.length; i += 2) {
-                            byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                            byte[] convertedKey = convert(commandContext, redisCommand, objects[i], convert);
                             objects[i] = convertedKey;
                         }
                     }
@@ -138,14 +147,14 @@ public class Converters {
                         if (objects.length < 4) {
                             return;
                         }
-                        byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, objects[3]);
+                        byte[] convertedKey = convert(commandContext, redisCommand, objects[3], convert);
                         objects[3] = convertedKey;
                     } else if (keyCount > 1) {
                         if (objects.length < 3 + keyCount) {
                             return;
                         }
                         for (int i = 3; i < 3 + keyCount; i++) {
-                            byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                            byte[] convertedKey = convert(commandContext, redisCommand, objects[i], convert);
                             objects[i] = convertedKey;
                         }
                     }
@@ -158,9 +167,9 @@ public class Converters {
                 case ZRANGESTORE:
                 case BLMOVE:
                     if (command.getObjects().length >= 3) {
-                        byte[] convertedKey1 = keyConverter.convert(commandContext, redisCommand, objects[1]);
+                        byte[] convertedKey1 = convert(commandContext, redisCommand, objects[1], convert);
                         objects[1] = convertedKey1;
-                        byte[] convertedKey2 = keyConverter.convert(commandContext, redisCommand, objects[2]);
+                        byte[] convertedKey2 = convert(commandContext, redisCommand, objects[2], convert);
                         objects[2] = convertedKey2;
                     }
                     break;
@@ -173,10 +182,10 @@ public class Converters {
                     if (objects.length >= 4) {
                         int keyCount1 = (int) Utils.bytesToNum(objects[2]);
                         if (keyCount1 > 0) {
-                            byte[] convertedKey1 = keyConverter.convert(commandContext, redisCommand, objects[1]);
+                            byte[] convertedKey1 = convert(commandContext, redisCommand, objects[1], convert);
                             objects[1] = convertedKey1;
                             for (int i = 3; i < 3 + keyCount1; i++) {
-                                byte[] convertedKey2 = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                                byte[] convertedKey2 = convert(commandContext, redisCommand, objects[i], convert);
                                 objects[i] = convertedKey2;
                             }
                         }
@@ -196,7 +205,7 @@ public class Converters {
                         int keyCount2 = (int) Utils.bytesToNum(objects[1]);
                         if (keyCount2 > 0) {
                             for (int i = 2; i < 2 + keyCount2; i++) {
-                                byte[] convertedKey2 = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                                byte[] convertedKey2 = convert(commandContext, redisCommand, objects[i], convert);
                                 objects[i] = convertedKey2;
                             }
                         }
@@ -208,7 +217,7 @@ public class Converters {
                         int keyCount2 = (int) Utils.bytesToNum(objects[2]);
                         if (keyCount2 > 0) {
                             for (int i = 3; i < 3 + keyCount2; i++) {
-                                byte[] convertedKey2 = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                                byte[] convertedKey2 = convert(commandContext, redisCommand, objects[i], convert);
                                 objects[i] = convertedKey2;
                             }
                         }
@@ -217,7 +226,7 @@ public class Converters {
                 case BITOP:
                     if (objects.length >= 4) {
                         for (int i = 2; i < objects.length; i++) {
-                            byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                            byte[] convertedKey = convert(commandContext, redisCommand, objects[i], convert);
                             objects[i] = convertedKey;
                         }
                     }
@@ -230,7 +239,7 @@ public class Converters {
                 case EXBZPOPMAX:
                 case EXBZPOPMIN:
                     for (int i = 1; i < objects.length - 1; i++) {
-                        byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                        byte[] convertedKey = convert(commandContext, redisCommand, objects[i], convert);
                         objects[i] = convertedKey;
                     }
                     break;
@@ -256,21 +265,21 @@ public class Converters {
                     }
                     int keyCount3 = last / 2;
                     for (int i = index + 1; i < index + keyCount3 + 1; i++) {
-                        byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                        byte[] convertedKey = convert(commandContext, redisCommand, objects[i], convert);
                         objects[i] = convertedKey;
                     }
                     break;
                 case XINFO:
                 case XGROUP:
                     if (objects.length >= 3) {
-                        byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, objects[2]);
+                        byte[] convertedKey = convert(commandContext, redisCommand, objects[2], convert);
                         objects[2] = convertedKey;
                     }
                     break;
                 case JSON_MGET:
                     if (objects.length >= 3) {
                         for (int i=1; i<objects.length - 1; i++) {
-                            byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                            byte[] convertedKey = convert(commandContext, redisCommand, objects[i], convert);
                             objects[i] = convertedKey;
                         }
                     }
@@ -280,14 +289,14 @@ public class Converters {
             }
         } else if (redisCommand == RedisCommand.KEYS) {
             if (objects.length >= 2) {
-                byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, objects[1]);
+                byte[] convertedKey = convert(commandContext, redisCommand, objects[1], convert);
                 objects[1] = convertedKey;
             }
         } else if (redisCommand == RedisCommand.SCAN) {
             int matchIndex = -1;
             for (int i = 2; i < objects.length; i ++) {
                 if (i == matchIndex + 1) {
-                    byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                    byte[] convertedKey = convert(commandContext, redisCommand, objects[i], convert);
                     objects[i] = convertedKey;
                 }
                 if ("MATCH".equalsIgnoreCase(new String(objects[i], Utils.utf8Charset))) {
@@ -295,7 +304,7 @@ public class Converters {
                 }
             }
             if (matchIndex == -1) {
-                byte[] convertedKey = keyConverter.convert(commandContext, redisCommand, Utils.stringToBytes("*"));
+                byte[] convertedKey = convert(commandContext, redisCommand, Utils.stringToBytes("*"), convert);
                 byte[][] args = new byte[objects.length + 2][];
                 System.arraycopy(objects, 0, args, 0, objects.length);
                 args[objects.length] = RedisKeyword.MATCH.getRaw();
@@ -306,13 +315,13 @@ public class Converters {
                 || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
             if (objects.length > 1) {
                 for (int i = 1; i < objects.length; i ++) {
-                    byte[] convertedChannels = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                    byte[] convertedChannels = convert(commandContext, redisCommand, objects[i], convert);
                     objects[i] = convertedChannels;
                 }
             }
         } else if (redisCommand == RedisCommand.PUBLISH) {
             if (objects.length > 1) {
-                byte[] convertedChannels = keyConverter.convert(commandContext, redisCommand, objects[1]);
+                byte[] convertedChannels = convert(commandContext, redisCommand, objects[1], convert);
                 objects[1] = convertedChannels;
             }
         } else if (redisCommand == RedisCommand.PUBSUB) {
@@ -321,13 +330,13 @@ public class Converters {
                 if (subCommand.equalsIgnoreCase("NUMSUB")) {
                     if (objects.length >= 3) {
                         for (int i=2; i<objects.length; i++) {
-                            byte[] convertedChannels = keyConverter.convert(commandContext, redisCommand, objects[i]);
+                            byte[] convertedChannels = convert(commandContext, redisCommand, objects[i], convert);
                             objects[i] = convertedChannels;
                         }
                     }
                 } else if (subCommand.equalsIgnoreCase("CHANNELS")) {
                     if (objects.length == 3) {
-                        byte[] convertedChannels = keyConverter.convert(commandContext, redisCommand, objects[2]);
+                        byte[] convertedChannels = convert(commandContext, redisCommand, objects[2], convert);
                         objects[2] = convertedChannels;
                     }
                 }

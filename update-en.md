@@ -4,6 +4,7 @@
 ### add
 * add camellia-config module, a simple k-v config center
 * camellia-redis-proxy provide NacosProxyDynamicConfLoader, a new method to use nacos
+* camellia-redis-proxy BuildInProxyPlugins support setting custom order
 
 ### update
 * camellia-redis-proxy optimize RedisConnection
@@ -15,6 +16,7 @@
 
 ### fix
 * fix camellia-redis-proxy use custom proxy route conf, fix no-effective of automatically eliminate faulty nodes when use multi read mode
+* fix camellia-redis-proxy both use converterPlugin's key converter and hotKeyCachePlugin, the hot key cache not-effective
 
 
 # 1.2.3（2023/03/15）

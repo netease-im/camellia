@@ -4,6 +4,7 @@
 ### 新增
 * 新增camellia-config模块，一个简单的kv配置中心，具体见：[camellia-config](/docs/config/config.md)
 * camellia-redis-proxy新增NacosProxyDynamicConfLoader，一种新的集成nacos的方法，具体见：[dynamic-conf](/docs/redis-proxy/other/dynamic-conf.md)
+* camellia-redis-proxy中内建的ProxyPlugin支持自定义执行顺序（order），具体见：[plugin](/docs/redis-proxy/plugin/plugin.md)
 
 ### 更新
 * camellia-redis-proxy优化了RedisConnection的实现
@@ -15,6 +16,7 @@
 
 ### fix
 * 修复camellia-redis-proxy使用custom自定义路由模式时，多读场景下的自动剔除异常后端功能不生效的问题
+* 修复camellia-redis-proxy同时使用converterPlugin的key转换功能和hotKeyCachePlugin时，热key缓存功能不生效的问题
 
 
 # 1.2.3（2023/03/15）
