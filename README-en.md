@@ -11,6 +11,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 ### camellia-redis-proxy  
 high performance redis-proxy:  
 * base on netty4, support redis-standalone/redis-sentinel/redis-cluster  
+* support GET/SET/EVAL, support MGET/MSET, support blocking BLPOP, support PUBSUB/TRANSACTION, support STREAMS/JSON/SEARCH, support TAIR_HASH/TAIR_ZSET/TAIR_STRING
 * support sharding/read-write-separate/double-write on proxy  
 * support multi-route-conf            
 * support tps/rt/big-key/hot-key/slow-command monitor  

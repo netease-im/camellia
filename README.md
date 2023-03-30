@@ -12,6 +12,7 @@ camellia主要包括以下功能模块：
 ### camellia-redis-proxy
 基于netty4开发的一款高性能redis代理  
 * 支持redis-standalone/redis-sentinel/redis-cluster    
+* 支持普通的GET/SET/EVAL，也支持MGET/MSET，也支持阻塞型的BLPOP，也支持PUBSUB和TRANSACTION，也支持STREAMS/JSON/SEARCH，也支持TAIR_HASH/TAIR_ZSET/TAIR_STRING
 * 支持自定义分片、读写分离、双（多）写、双（多）读   
 * 支持多租户（可以同时代理多组路由，可以通过不同的登录密码来区分）     
 * 支持多租户动态路由，支持自定义的动态路由数据源
