@@ -1,6 +1,9 @@
 
 ## 使用nacos托管proxy的配置
 
+* 这是一种基于本地文件的nacos接入方法，可以托管任意的本地配置文件给nacos
+* 如果你只是想托管ProxyDynamicConf（camellia-redis-proxy.properties），还有另外一种方法，参考：[dynamic-conf](dynamic-conf.md)
+
 ### maven
 ```
 <dependency>

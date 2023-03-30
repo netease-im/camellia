@@ -274,6 +274,7 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 如何使用spring管理bean生成，具体见：[spring](other/spring.md)
 * 关于多租户的一个完整示例，具体见：[multi-telant](other/multi-telant.md)
 * 多读场景下自动摘除故障读节点读，具体见：[multi-read](other/multi-read.md)
+* 关于ProxyDynamicConf(camellia-redis-proxy.properties)，具体见：[dynamic-conf](other/dynamic-conf.md)
 
 ## 应用场景
 * 业务开始使用redis-standalone或者redis-sentinel，现在需要切换到redis-cluster，但是客户端需要改造（比如jedis访问redis-sentinel和redis-cluster是不一样的），此时你可以使用proxy，从而做到不改造（使用四层代理LB）或者很少的改造（使用注册中心）

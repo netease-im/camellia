@@ -1,6 +1,9 @@
 ## camellia-config
 一个简单的k-v配置平台，支持按namespace进行归类
 
+## 关键词
+namespace：camellia-config以namespace作为隔离和管理k-v配置的界限，基于namespace增删改查
+
 ## 接口文档（服务）
 ### 获取配置
 GET /camellia/config/api/getConfig HTTP/1.1
