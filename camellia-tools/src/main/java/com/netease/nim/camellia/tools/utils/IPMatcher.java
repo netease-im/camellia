@@ -14,8 +14,8 @@ public class IPMatcher {
     private final int imask;
 
     public IPMatcher(String ip, String mask) {
-        iip = ip2int(ip);
         imask = mask2int(mask);
+        iip = ip2int(ip) & imask;
     }
 
     public int mask2int(String mask) {
