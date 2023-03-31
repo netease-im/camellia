@@ -13,6 +13,7 @@
 * camellia-redis-proxy support stats upstream fails when use PUBSUB commands
 * camellia-redis-proxy-hbase memory queue support dynamic capacity
 * camellia-delay-queue-server scheduler add concurrent control
+* optimize IPMatcher, so it can calculate `10.22.23.1/24` correct
 
 ### fix
 * fix camellia-redis-proxy use custom proxy route conf, fix no-effective of automatically eliminate faulty nodes when use multi read mode

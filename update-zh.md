@@ -13,6 +13,7 @@
 * camellia-redis-proxy中的PUBSUB系列命令的响应也需要统计到upstream-fail里面
 * camellia-redis-proxy-hbase的内存队列支持动态调整容量
 * camellia-delay-queue-server定时任务增加一个单机并发控制，优化资源使用
+* 优化了IPMatcher的实现，从而可以处理`10.22.23.1/24`的判断
 
 ### fix
 * 修复camellia-redis-proxy使用custom自定义路由模式时，多读场景下的自动剔除异常后端功能不生效的问题
