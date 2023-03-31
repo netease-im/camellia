@@ -117,6 +117,9 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
             if (line.length() == 0) {
                 continue;
             }
+            if (line.startsWith("#")) {
+                continue;
+            }
             int index = line.indexOf("=");
             String key = line.substring(0, index);
             String value = line.substring(index + 1);
