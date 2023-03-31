@@ -3,7 +3,6 @@ package com.netease.nim.camellia.redis.proxy.nacos;
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
-import com.alibaba.nacos.api.exception.NacosException;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfLoader;
 import org.slf4j.Logger;
@@ -22,10 +21,17 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
     private final Map<String, String> initConf = new HashMap<>();
     private Map<String, String> conf = new HashMap<>();
 
+    private String dataId;
+    private String group;
+    private long timeoutMs;
+    private ConfigService configService;
+
     @Override
     public Map<String, String> load() {
-        Map<String, String> map = new HashMap<>();
-        map.putAll(initConf);
+        //reload
+        reload(false);
+        //conf
+        Map<String, String> map = new HashMap<>(initConf);
         map.putAll(conf);
         return map;
     }
@@ -48,28 +54,26 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
                     nacosProps.put(key, value);
                 }
             }
-            ConfigService configService = NacosFactory.createConfigService(nacosProps);
-            String dataId = nacosProps.getProperty("dataId");
-            String group = nacosProps.getProperty("group");
+            this.configService = NacosFactory.createConfigService(nacosProps);
+            this.dataId = nacosProps.getProperty("dataId");
+            this.group = nacosProps.getProperty("group");
             if (dataId == null) {
-                throw new IllegalArgumentException("missing nacos.dataId");
+                throw new IllegalArgumentException("missing 'nacos.dataId'");
             }
             if (group == null) {
-                throw new IllegalArgumentException("missing nacos.group");
+                throw new IllegalArgumentException("missing 'nacos.group'");
             }
             String timeoutMsStr = nacosProps.getProperty("timeoutMs");
-            long timeoutMs;
             if (timeoutMsStr == null) {
-                timeoutMs = 10000L;
+                this.timeoutMs = 10000L;
             } else {
                 try {
-                    timeoutMs = Long.parseLong(timeoutMsStr);
+                    this.timeoutMs = Long.parseLong(timeoutMsStr);
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("illegal nacos.timeoutMs");
+                    throw new IllegalArgumentException("illegal 'nacos.timeoutMs'");
                 }
             }
-            String content = configService.getConfig(dataId, group, timeoutMs);
-            this.conf = toMap(content);
+            reload(true);
             configService.addListener(dataId, group, new Listener() {
                 @Override
                 public Executor getExecutor() {
@@ -87,9 +91,21 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
                 }
             });
             logger.info("NacosProxyDynamicConfLoader init success, nacosProps = {}", nacosProps);
-        } catch (NacosException e) {
+        } catch (Exception e) {
             logger.info("NacosProxyDynamicConfLoader init error, nacosProps = {}", nacosProps, e);
             throw new IllegalArgumentException(e);
+        }
+    }
+
+    private void reload(boolean throwError) {
+        try {
+            String content = configService.getConfig(dataId, group, timeoutMs);
+            this.conf = toMap(content);
+        } catch (Exception e) {
+            logger.error("reload from nacos error", e);
+            if (throwError) {
+                throw new IllegalArgumentException(e);
+            }
         }
     }
 

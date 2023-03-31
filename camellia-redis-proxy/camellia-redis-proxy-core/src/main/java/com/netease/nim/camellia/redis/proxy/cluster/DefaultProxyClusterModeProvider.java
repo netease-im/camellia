@@ -63,7 +63,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
     private void initConf() {
         String string = ProxyDynamicConf.getString("proxy.cluster.mode.nodes", null);
         if (string == null) {
-            throw new IllegalArgumentException("missing 'proxy.cluster.mode.nodes' in camellia-redis-proxy.properties");
+            throw new IllegalArgumentException("missing 'proxy.cluster.mode.nodes' in ProxyDynamicConf");
         }
         String[] split = string.split(",");
         List<ProxyNode> initNodes = new ArrayList<>();
