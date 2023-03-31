@@ -135,6 +135,7 @@ public class GlobalRedisProxyEnv {
                 runnable.run();
             } catch (Exception e) {
                 logger.error("callback error", e);
+                throw new IllegalStateException(e);
             }
         }
     }
