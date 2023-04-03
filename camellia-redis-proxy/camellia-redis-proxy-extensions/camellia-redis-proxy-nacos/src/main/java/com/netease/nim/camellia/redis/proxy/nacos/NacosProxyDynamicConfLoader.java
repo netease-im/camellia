@@ -29,7 +29,7 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
     @Override
     public Map<String, String> load() {
         //reload
-        reload(false);
+        reload();
         //conf
         Map<String, String> map = new HashMap<>(initConf);
         map.putAll(conf);
@@ -73,7 +73,10 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
                     throw new IllegalArgumentException("illegal 'nacos.timeoutMs'");
                 }
             }
-            reload(true);
+            boolean success = reload();
+            if (!success) {
+                throw new IllegalStateException("reload from nacos error");
+            }
             configService.addListener(dataId, group, new Listener() {
                 @Override
                 public Executor getExecutor() {
@@ -97,15 +100,14 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
         }
     }
 
-    private void reload(boolean throwError) {
+    private boolean reload() {
         try {
             String content = configService.getConfig(dataId, group, timeoutMs);
             this.conf = toMap(content);
+            return true;
         } catch (Exception e) {
-            logger.error("reload from nacos error", e);
-            if (throwError) {
-                throw new IllegalArgumentException(e);
-            }
+            logger.error("reload from nacos error, dataId = {}, group = {}, timeouMs = {}", dataId, group, timeoutMs, e);
+            return false;
         }
     }
 
