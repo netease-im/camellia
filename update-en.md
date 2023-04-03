@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.4（2023/03/xx）
+# 1.2.4（2023/04/03）
 ### add
 * add camellia-config module, a simple k-v config center
 * camellia-redis-proxy provide NacosProxyDynamicConfLoader, a new method to use nacos

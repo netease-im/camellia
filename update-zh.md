@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.2.4（2023/03/xx）
+# 1.2.4（2023/04/03）
 ### 新增
 * 新增camellia-config模块，一个简单的kv配置中心，具体见：[camellia-config](/docs/config/config.md)
 * camellia-redis-proxy新增NacosProxyDynamicConfLoader，一种新的集成nacos的方法，具体见：[dynamic-conf](/docs/redis-proxy/other/dynamic-conf.md)
