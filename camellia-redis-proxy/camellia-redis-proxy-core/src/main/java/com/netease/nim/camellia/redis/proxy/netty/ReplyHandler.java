@@ -11,14 +11,14 @@ import org.slf4j.LoggerFactory;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 
-public class ClientHandler extends SimpleChannelInboundHandler<Reply> {
+public class ReplyHandler extends SimpleChannelInboundHandler<Reply> {
 
-    private static final Logger logger = LoggerFactory.getLogger(ClientHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(ReplyHandler.class);
     private final Queue<CompletableFuture<Reply>> queue;
     private final String clientName;
     private final boolean tcpQuickAck;
 
-    public ClientHandler(Queue<CompletableFuture<Reply>> queue, String clientName, boolean tcpQuickAck) {
+    public ReplyHandler(Queue<CompletableFuture<Reply>> queue, String clientName, boolean tcpQuickAck) {
         this.queue = queue;
         this.clientName = clientName;
         this.tcpQuickAck = tcpQuickAck;
@@ -35,7 +35,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<Reply> {
                 completableFuture.complete(msg);
             } else {
                 String log = clientName + " redis receive reply with null future";
-                ErrorLogCollector.collect(ClientHandler.class, log);
+                ErrorLogCollector.collect(ReplyHandler.class, log);
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -45,7 +45,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<Reply> {
                     ctx.channel().config().setOption(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
                 }
             } catch (Exception e) {
-                ErrorLogCollector.collect(ClientHandler.class, "set TCP_QUICKACK error", e);
+                ErrorLogCollector.collect(ReplyHandler.class, "set TCP_QUICKACK error", e);
             }
         }
     }

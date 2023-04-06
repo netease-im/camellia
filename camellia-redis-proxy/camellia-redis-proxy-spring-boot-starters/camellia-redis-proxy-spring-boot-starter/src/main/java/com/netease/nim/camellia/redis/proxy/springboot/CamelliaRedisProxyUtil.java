@@ -46,6 +46,7 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setProxyBeanFactory(proxyBeanFactory);
         serverProperties.setPlugins(properties.getPlugins());
         serverProperties.setConfig(properties.getConfig());
+        serverProperties.setQueueFactoryClassName(properties.getQueueFactoryClassName());
         serverProperties.setNettyTransportMode(properties.getNettyTransportMode());
         NettyProperties netty = properties.getNetty();
         serverProperties.setBossThread(netty.getBossThread());

@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
+import com.netease.nim.camellia.redis.proxy.command.DefaultQueueFactory;
 import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateFactory;
 import com.netease.nim.camellia.tools.utils.SysUtils;
@@ -25,6 +26,7 @@ public class Constants {
         public static final String clientAuthByConfigProvider = ClientAuthByConfigProvider.class.getName();
         public static final boolean clusterModeEnable = false;
         public static final String clusterModeProviderClassName = DefaultProxyClusterModeProvider.class.getName();
+        public static final String queueFactoryClassName = DefaultQueueFactory.class.getName();
 
         public static final String upstreamClientTemplateFactoryClassName = UpstreamRedisClientTemplateFactory.class.getName();
 

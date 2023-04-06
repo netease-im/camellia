@@ -33,6 +33,7 @@ public class CamelliaServerProperties {
 
     private boolean clusterModeEnable = Constants.Server.clusterModeEnable;
     private String clusterModeProviderClassName = Constants.Server.clusterModeProviderClassName;
+    private String queueFactoryClassName = Constants.Server.queueFactoryClassName;
 
     private NettyTransportMode nettyTransportMode = Constants.Server.nettyTransportMode;
     private int bossThread = 1;
@@ -171,6 +172,14 @@ public class CamelliaServerProperties {
 
     public void setClusterModeProviderClassName(String clusterModeProviderClassName) {
         this.clusterModeProviderClassName = clusterModeProviderClassName;
+    }
+
+    public String getQueueFactoryClassName() {
+        return queueFactoryClassName;
+    }
+
+    public void setQueueFactoryClassName(String queueFactoryClassName) {
+        this.queueFactoryClassName = queueFactoryClassName;
     }
 
     public NettyTransportMode getNettyTransportMode() {

@@ -1,5 +1,16 @@
 [ENGLISH](update-en.md)
 
+# 1.2.5（2023/04/xx）
+### 新增
+* 无
+
+### 更新
+* camellia-redis-proxy内置内存队列支持使用jctools的高性能队列，从而优化性能
+
+### fix
+* 无
+
+
 # 1.2.4（2023/04/03）
 ### 新增
 * 新增camellia-config模块，一个简单的kv配置中心，具体见：[camellia-config](/docs/config/config.md)

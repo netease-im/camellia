@@ -1,8 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
+import com.netease.nim.camellia.redis.proxy.command.DefaultQueueFactory;
+import com.netease.nim.camellia.redis.proxy.command.QueueFactory;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
+import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
 import io.netty.channel.epoll.Epoll;
@@ -60,6 +63,8 @@ public class GlobalRedisProxyEnv {
     private static IUpstreamClientTemplateFactory clientTemplateFactory;
     private static ProxyDiscoveryFactory discoveryFactory;
 
+    private static QueueFactory queueFactory = new DefaultQueueFactory();
+
     private static final Set<Runnable> callbackSet = new HashSet<>();
 
     public static void init(CamelliaServerProperties serverProperties) {
@@ -101,6 +106,8 @@ public class GlobalRedisProxyEnv {
                 socketChannelClass = NioSocketChannel.class;
                 nettyTransportMode = NettyTransportMode.nio;
             }
+            queueFactory = (QueueFactory) serverProperties.getProxyBeanFactory()
+                    .getBean(BeanInitUtils.parseClass(serverProperties.getQueueFactoryClassName()));
             initOk.set(true);
         }
     }
@@ -223,5 +230,9 @@ public class GlobalRedisProxyEnv {
             logger.warn("kqueue is unavailable, e = {}", e.toString());
             return false;
         }
+    }
+
+    public static QueueFactory getQueueFactory() {
+        return queueFactory;
     }
 }

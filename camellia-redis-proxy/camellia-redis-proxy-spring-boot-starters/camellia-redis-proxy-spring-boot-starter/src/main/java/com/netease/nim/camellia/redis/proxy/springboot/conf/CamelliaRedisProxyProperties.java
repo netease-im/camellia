@@ -83,6 +83,11 @@ public class CamelliaRedisProxyProperties {
     private String proxyDynamicConfLoaderClassName = Constants.Server.proxyDynamicConfLoaderClassName;
 
     /**
+     * 内存队列工厂
+     */
+    private String queueFactoryClassName = Constants.Server.queueFactoryClassName;
+
+    /**
      * 插件
      */
     private List<String> plugins = new ArrayList<>();
@@ -226,6 +231,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setNettyTransportMode(NettyTransportMode nettyTransportMode) {
         this.nettyTransportMode = nettyTransportMode;
+    }
+
+    public String getQueueFactoryClassName() {
+        return queueFactoryClassName;
+    }
+
+    public void setQueueFactoryClassName(String queueFactoryClassName) {
+        this.queueFactoryClassName = queueFactoryClassName;
     }
 
     public NettyProperties getNetty() {

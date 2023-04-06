@@ -74,8 +74,8 @@ public class RedisConnection {
     private volatile RedisConnectionStatus status;
     private long lastCommandTime = TimeCache.currentMillis;
 
-    private final Queue<CompletableFuture<Reply>> queue = new LinkedBlockingQueue<>(1024*32);
-    private final Queue<CommandPack> cachedCommands = new LinkedBlockingQueue<>(1024*10);
+    private final Queue<CompletableFuture<Reply>> queue = GlobalRedisProxyEnv.getQueueFactory().generateCommandReplyQueue();
+    private final Queue<CommandPack> cachedCommands = new ConcurrentLinkedQueue<>();
 
     public RedisConnection(RedisConnectionConfig config) {
         this.config = config;
@@ -124,7 +124,7 @@ public class RedisConnection {
                             ChannelPipeline pipeline = channel.pipeline();
                             pipeline.addLast(new ReplyDecoder());
                             pipeline.addLast(new ReplyAggregateDecoder());
-                            pipeline.addLast(new ClientHandler(queue, connectionName, config.isTcpQuickAck()));
+                            pipeline.addLast(new ReplyHandler(queue, connectionName, config.isTcpQuickAck()));
                             pipeline.addLast(new CommandPackEncoder(RedisConnection.this, queue));
                         }
                     });

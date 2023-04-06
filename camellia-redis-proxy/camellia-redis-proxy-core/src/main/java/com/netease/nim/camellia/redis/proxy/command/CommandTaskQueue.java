@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.command;
 
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPluginResponse;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyReply;
@@ -12,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -25,7 +25,7 @@ public class CommandTaskQueue {
     private static final Logger logger = LoggerFactory.getLogger(CommandTaskQueue.class);
 
     private final ChannelInfo channelInfo;
-    private final Queue<CommandTask> queue = new LinkedBlockingQueue<>(1024*32);
+    private final Queue<CommandTask> queue = GlobalRedisProxyEnv.getQueueFactory().generateCommandTaskQueue();
     private final AtomicBoolean callbacking = new AtomicBoolean(false);
     private final AtomicLong id = new AtomicLong(0);
 
