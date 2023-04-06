@@ -25,7 +25,6 @@
 		<module>camellia-samples</module>
 	</modules>
 
-
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
@@ -39,6 +38,9 @@
 		<maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
 		<maven-source-plugin.version>3.1.0</maven-source-plugin.version>
 		<maven-deploy-plugin.version>3.0.0-M1</maven-deploy-plugin.version>
+		<maven-release-plugin.version>2.5.3</maven-release-plugin.version>
+		<maven-javadoc-plugin.version>2.9.1</maven-javadoc-plugin.version>
+		<maven-gpg-plugin.version>1.5</maven-gpg-plugin.version>
 		<fastjson.version>1.2.83</fastjson.version>
 		<cglib.version>3.3.0</cglib.version>
 		<openFeign9.version>9.4.0</openFeign9.version>
