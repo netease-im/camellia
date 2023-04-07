@@ -130,7 +130,7 @@ public class ProxyClusterModeProcessor {
         if (refreshing.get()) return null;//正在更新slot信息，则别move了
         ChannelInfo channelInfo = command.getChannelInfo();
         long lastCommandMoveTime = channelInfo.getLastCommandMoveTime();
-        if (TimeCache.currentMillis - lastCommandMoveTime <= clusterModeCommandMoveIntervalSeconds *1000L) {
+        if (TimeCache.currentMillis - lastCommandMoveTime <= clusterModeCommandMoveIntervalSeconds * 1000L) {
             //30s内只move一次
             return null;
         }

@@ -253,25 +253,24 @@ public class CommandsTransponder {
                         }
                     }
 
-                    //cluster mode
-                    if (clusterModeProcessor != null) {
-                        if (redisCommand == RedisCommand.CLUSTER) {
+                    if (redisCommand == RedisCommand.CLUSTER) {
+                        //cluster mode
+                        if (clusterModeProcessor != null) {
                             CompletableFuture<Reply> future = clusterModeProcessor.clusterCommands(command);
                             future.thenAccept(task::replyCompleted);
-                            hasCommandsSkip = true;
-                            continue;
-                        }
-                        if (commands.size() == 1) {//pipeline过来的命令就不move了
-                            Reply moveReply = clusterModeProcessor.isCommandMove(command);
-                            if (moveReply != null) {
-                                task.replyCompleted(moveReply);
-                                hasCommandsSkip = true;
-                                continue;
-                            }
-                        }
-                    } else {
-                        if (redisCommand == RedisCommand.CLUSTER) {
+                        } else {
                             task.replyCompleted(ErrorReply.NOT_SUPPORT);
+                        }
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+                }
+
+                if (clusterModeProcessor != null) {
+                    if (commands.size() == 1) {//pipeline过来的命令就不move了
+                        Reply moveReply = clusterModeProcessor.isCommandMove(command);
+                        if (moveReply != null) {
+                            task.replyCompleted(moveReply);
                             hasCommandsSkip = true;
                             continue;
                         }
