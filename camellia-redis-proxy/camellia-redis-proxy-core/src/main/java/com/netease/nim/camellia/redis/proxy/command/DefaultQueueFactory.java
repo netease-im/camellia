@@ -68,7 +68,8 @@ public class DefaultQueueFactory implements QueueFactory {
         } else if (type == CommandReplyQueueType.SpscAtomicArrayQueue) {
             return new SpscAtomicArrayQueue<>(capacity);
         } else if (type == CommandReplyQueueType.ArrayDeque) {
-            return new ArrayDeque<>(capacity);
+            int initCapacity = ProxyDynamicConf.getInt("command.reply.queue.init.capacity", 1024);
+            return new ArrayDeque<>(initCapacity);
         } else if (type == CommandReplyQueueType.LinkedList) {
             return new LinkedList<>();
         } else {
