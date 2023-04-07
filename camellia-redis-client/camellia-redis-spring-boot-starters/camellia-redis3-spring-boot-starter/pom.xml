@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis3-spring-boot-starter</artifactId>
-	<version>1.2.5-SNAPSHOT</version>
+	<version>1.2.5</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-redis-spring-boot-starters</artifactId>
-		<version>1.2.5-SNAPSHOT</version>
+		<version>1.2.5</version>
 	</parent>
 
 	<dependencyManagement>
@@ -28,7 +28,7 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-spring-boot-starter</artifactId>
-			<version>1.2.5-SNAPSHOT</version>
+			<version>1.2.5</version>
 			<exclusions>
 				<exclusion>
 					<groupId>com.netease.nim</groupId>
@@ -43,7 +43,7 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis3</artifactId>
-			<version>1.2.5-SNAPSHOT</version>
+			<version>1.2.5</version>
 		</dependency>
 		<dependency>
 			<groupId>redis.clients</groupId>
@@ -53,7 +53,7 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis3-toolkit</artifactId>
-			<version>1.2.5-SNAPSHOT</version>
+			<version>1.2.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

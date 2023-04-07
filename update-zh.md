@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.2.5（2023/04/xx）
+# 1.2.5（2023/04/07）
 ### 新增
 * 无
 
@@ -9,7 +9,7 @@
 * camellia-redis-proxy伪redis-cluster模式下，proxy集群扩缩容时，优化MOVED指令逻辑
 
 ### fix
-* camellia-redis-proxy代理redis-cluster时，优化了renew的逻辑（1.2.0引入，导致redis节点宕机后刷新路由表不及时）
+* camellia-redis-proxy代理redis-cluster时，优化了renew的逻辑（1.2.0引入，导致redis节点宕机后刷新路由表不及时），感谢[@saitama-24](https://github.com/saitama-24) 发现这个问题
 
 
 # 1.2.4（2023/04/03）

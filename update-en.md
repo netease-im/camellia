@@ -1,5 +1,17 @@
 [中文版](update-zh.md)
 
+# 1.2.5（2023/04/07）
+### add
+* none
+
+### update
+* camellia-redis-proxy memory queue support use jctools high performance queue
+* camellia-redis-proxy run in redis-cluster mode, optimize the MOVED logic
+
+### fix
+* camellia-redis-proxy optimize the renew logic when proxy to redis-cluster, may renew timely(bug from 1.2.0), thanks [@saitama-24](https://github.com/saitama-24) find this problem
+
+
 # 1.2.4（2023/04/03）
 ### add
 * add camellia-config module, a simple k-v config center
