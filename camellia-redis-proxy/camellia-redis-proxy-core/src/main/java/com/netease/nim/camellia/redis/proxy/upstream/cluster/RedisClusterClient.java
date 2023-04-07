@@ -566,12 +566,12 @@ public class RedisClusterClient implements IUpstreamClient {
             try {
                 if (attempts < clusterClient.maxAttempts) {
                     if (reply instanceof ErrorReply) {
+                        clusterClient.clusterSlotInfo.renew();
                         String error = ((ErrorReply) reply).getError();
                         if (error.startsWith("MOVED")) {
                             attempts++;
                             String log = "MOVED, command = " + command.getName() + ", attempts = " + attempts;
                             ErrorLogCollector.collect(RedisClusterClient.class, log);
-                            clusterClient.clusterSlotInfo.renew();
                             String[] strings = parseTargetHostAndSlot(error);
                             RedisConnectionAddr addr = new RedisConnectionAddr(strings[1], Integer.parseInt(strings[2]), clusterClient.userName, clusterClient.password);
                             if (command.isBlocking()) {

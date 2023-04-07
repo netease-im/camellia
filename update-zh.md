@@ -8,7 +8,7 @@
 * camellia-redis-proxy内置内存队列支持使用jctools的高性能队列，从而优化性能
 
 ### fix
-* 无
+* camellia-redis-proxy代理redis-cluster时，优化了renew的逻辑（1.2.0引入，导致redis节点宕机后刷新路由表不及时）
 
 
 # 1.2.4（2023/04/03）
