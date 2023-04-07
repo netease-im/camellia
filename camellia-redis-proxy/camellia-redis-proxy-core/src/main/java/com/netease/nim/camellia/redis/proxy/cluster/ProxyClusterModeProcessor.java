@@ -124,28 +124,34 @@ public class ProxyClusterModeProcessor {
      * @return reply
      */
     public Reply isCommandMove(Command command) {
-        if (!init) return null;
-        if (!clusterModeCommandMoveEnable) return null;//不开启move，则直接返回null
-        if (onlineNodes.isEmpty()) return null;
-        if (refreshing.get()) return null;//正在更新slot信息，则别move了
-        ChannelInfo channelInfo = command.getChannelInfo();
-        long lastCommandMoveTime = channelInfo.getLastCommandMoveTime();
-        if (TimeCache.currentMillis - lastCommandMoveTime <= clusterModeCommandMoveIntervalSeconds * 1000L) {
-            //30s内只move一次
+        try {
+            if (!init) return null;
+            if (!clusterModeCommandMoveEnable) return null;//不开启move，则直接返回null
+            if (onlineNodes.isEmpty()) return null;
+            if (refreshing.get()) return null;//正在更新slot信息，则别move了
+            ChannelInfo channelInfo = command.getChannelInfo();
+            long lastCommandMoveTime = channelInfo.getLastCommandMoveTime();
+            if (TimeCache.currentMillis - lastCommandMoveTime <= clusterModeCommandMoveIntervalSeconds * 1000L) {
+                //30s内只move一次
+                return null;
+            }
+            if (command.isBlocking()) return null;//blocking的command也别move了吧
+            List<byte[]> keys = command.getKeys();
+            if (keys.isEmpty()) return null;
+            byte[] key = keys.get(0);
+            int slot = RedisClusterCRC16Utils.getSlot(key);
+            if (!currentNodeOnline || slot < slotStart || slot > slotEnd) {
+                ProxyNode node = slotMap.get(slot);
+                if (node == null || currentNode == null) return null;
+                if (node.equals(currentNode)) return null;
+                channelInfo.setLastCommandMoveTime(TimeCache.currentMillis);//记录一下上一次move的时间
+                return new ErrorReply("MOVED " + slot + " " + node.getHost() + ":" + node.getPort());
+            }
+            return null;
+        } catch (Exception e) {
+            ErrorLogCollector.collect(ProxyClusterModeProcessor.class, "is command move error", e);
             return null;
         }
-        if (command.isBlocking()) return null;//blocking的command也别move了吧
-        List<byte[]> keys = command.getKeys();
-        if (keys.isEmpty()) return null;
-        byte[] key = keys.get(0);
-        int slot = RedisClusterCRC16Utils.getSlot(key);
-        if (!currentNodeOnline || slot < slotStart || slot > slotEnd) {
-            ProxyNode node = slotMap.get(slot);
-            if (node.equals(currentNode)) return null;
-            channelInfo.setLastCommandMoveTime(TimeCache.currentMillis);//记录一下上一次move的时间
-            return new ErrorReply("MOVED " + slot + " " + node.getHost() + ":" + node.getPort());
-        }
-        return null;
     }
 
     /**
