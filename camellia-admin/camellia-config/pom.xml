@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-config</artifactId>
-	<version>1.2.5</version>
+	<version>1.2.6-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-admin</artifactId>
-		<version>1.2.5</version>
+		<version>1.2.6-SNAPSHOT</version>
 	</parent>
 
 	<dependencyManagement>
@@ -69,17 +69,17 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-core</artifactId>
-			<version>1.2.5</version>
+			<version>1.2.6-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-tools</artifactId>
-			<version>1.2.5</version>
+			<version>1.2.6-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-spring-boot-starter</artifactId>
-			<version>1.2.5</version>
+			<version>1.2.6-SNAPSHOT</version>
 		</dependency>
     </dependencies>
 	<build>

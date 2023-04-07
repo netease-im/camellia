@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis-proxy-core</artifactId>
-	<version>1.2.5</version>
+	<version>1.2.6-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-redis-proxy</artifactId>
-		<version>1.2.5</version>
+		<version>1.2.6-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -36,7 +36,7 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-base</artifactId>
-			<version>1.2.5</version>
+			<version>1.2.6-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.concurrentlinkedhashmap</groupId>
