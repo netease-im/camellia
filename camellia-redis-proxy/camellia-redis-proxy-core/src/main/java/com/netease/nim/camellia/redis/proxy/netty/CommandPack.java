@@ -11,9 +11,9 @@ import java.util.concurrent.CompletableFuture;
  * Created by caojiajun on 2020/8/19
  */
 public class CommandPack {
-    private final List<Command> commands;
-    private final List<CompletableFuture<Reply>> completableFutureList;
-    private final long startTime;
+    private List<Command> commands;
+    private List<CompletableFuture<Reply>> completableFutureList;
+    private long startTime;
 
     public CommandPack(List<Command> commands, List<CompletableFuture<Reply>> completableFutureList, long startTime) {
         this.commands = commands;
@@ -31,5 +31,17 @@ public class CommandPack {
 
     public long getStartTime() {
         return startTime;
+    }
+
+    public void setCommands(List<Command> commands) {
+        this.commands = commands;
+    }
+
+    public void setCompletableFutureList(List<CompletableFuture<Reply>> completableFutureList) {
+        this.completableFutureList = completableFutureList;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
     }
 }

@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.connection;
 
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.EventLoop;
 
 /**
  * Created by caojiajun on 2021/5/14
@@ -13,7 +13,7 @@ public class RedisConnectionConfig {
     private String password;
     private boolean readonly;
     private int db;
-    private EventLoopGroup eventLoopGroup;
+    private EventLoop eventLoop;
     private int heartbeatIntervalSeconds;
     private long heartbeatTimeoutMillis;
     private int connectTimeoutMillis;
@@ -82,12 +82,12 @@ public class RedisConnectionConfig {
         this.db = db;
     }
 
-    public EventLoopGroup getEventLoopGroup() {
-        return eventLoopGroup;
+    public EventLoop getEventLoop() {
+        return eventLoop;
     }
 
-    public void setEventLoopGroup(EventLoopGroup eventLoopGroup) {
-        this.eventLoopGroup = eventLoopGroup;
+    public void setEventLoop(EventLoop eventLoop) {
+        this.eventLoop = eventLoop;
     }
 
     public int getHeartbeatIntervalSeconds() {

@@ -314,7 +314,7 @@ public class RedisConnectionHub {
         config.setPassword(addr.getPassword());
         config.setReadonly(addr.isReadonly());
         config.setDb(addr.getDb());
-        config.setEventLoopGroup(eventLoop);
+        config.setEventLoop(eventLoop);
         config.setHeartbeatTimeoutMillis(heartbeatEnable ? heartbeatTimeoutMillis : -1);
         config.setHeartbeatIntervalSeconds(heartbeatEnable ? heartbeatIntervalSeconds : -1);
         config.setConnectTimeoutMillis(connectTimeoutMillis);

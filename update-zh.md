@@ -1,5 +1,16 @@
 [ENGLISH](update-en.md)
 
+# 1.2.6（2023/04/xx）
+### 新增
+* 无
+
+### 更新
+* camellia-redis-proxy支持复用CommandPack，优化gc
+
+### fix
+* 无
+
+
 # 1.2.5（2023/04/07）
 ### 新增
 * 无

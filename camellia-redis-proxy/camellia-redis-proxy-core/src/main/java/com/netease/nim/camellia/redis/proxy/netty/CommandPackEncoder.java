@@ -28,10 +28,12 @@ public class CommandPackEncoder extends MessageToMessageEncoder<CommandPack> {
     private static final Logger logger = LoggerFactory.getLogger(CommandPackEncoder.class);
     private final Queue<CompletableFuture<Reply>> queue;
     private final RedisConnection redisConnection;
+    private final CommandPackRecycler commandPackRecycler;
 
-    public CommandPackEncoder(RedisConnection redisConnection, Queue<CompletableFuture<Reply>> queue) {
+    public CommandPackEncoder(RedisConnection redisConnection, CommandPackRecycler commandPackRecycler, Queue<CompletableFuture<Reply>> queue) {
         super();
         this.redisConnection = redisConnection;
+        this.commandPackRecycler = commandPackRecycler;
         this.queue = queue;
     }
 
@@ -75,6 +77,8 @@ public class CommandPackEncoder extends MessageToMessageEncoder<CommandPack> {
             out.add(buf);
         } catch (Exception e) {
             logger.error("{} error", redisConnection.getConnectionName(), e);
+        } finally {
+            commandPackRecycler.recycle(msg);
         }
     }
 }

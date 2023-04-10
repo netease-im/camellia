@@ -53,7 +53,7 @@ public class RedisConnection {
     private final String password;
     private final int db;
 
-    private final EventLoopGroup eventLoopGroup;
+    private final EventLoop eventLoop;
     private final String connectionName;
     private final Object lock = new Object();
     private final AtomicBoolean stop = new AtomicBoolean(false);
@@ -77,6 +77,8 @@ public class RedisConnection {
     private final Queue<CompletableFuture<Reply>> queue = GlobalRedisProxyEnv.getQueueFactory().generateCommandReplyQueue();
     private final Queue<CommandPack> cachedCommands = new ConcurrentLinkedQueue<>();
 
+    private final CommandPackRecycler commandPackRecycler;
+
     public RedisConnection(RedisConnectionConfig config) {
         this.config = config;
         this.host = config.getHost();
@@ -85,7 +87,8 @@ public class RedisConnection {
         this.password = config.getPassword();
         this.db = config.getDb();
         this.addr = new RedisConnectionAddr(host, port, userName, password, config.isReadonly(), config.getDb());
-        this.eventLoopGroup = config.getEventLoopGroup();
+        this.eventLoop = config.getEventLoop();
+        this.commandPackRecycler = new CommandPackRecycler(eventLoop);
         this.heartbeatIntervalSeconds = config.getHeartbeatIntervalSeconds();
         this.heartbeatTimeoutMillis = config.getHeartbeatTimeoutMillis();
         this.connectTimeoutMillis = config.getConnectTimeoutMillis();
@@ -109,7 +112,7 @@ public class RedisConnection {
             }
             RedisConnectionMonitor.addRedisConnection(this);
             Bootstrap bootstrap = new Bootstrap();
-            bootstrap.group(eventLoopGroup)
+            bootstrap.group(eventLoop)
                     .channel(GlobalRedisProxyEnv.getSocketChannelClass())
                     .option(ChannelOption.SO_KEEPALIVE, config.isSoKeepalive())
                     .option(ChannelOption.TCP_NODELAY, config.isTcpNoDelay())
@@ -125,7 +128,7 @@ public class RedisConnection {
                             pipeline.addLast(new ReplyDecoder());
                             pipeline.addLast(new ReplyAggregateDecoder());
                             pipeline.addLast(new ReplyHandler(queue, connectionName, config.isTcpQuickAck()));
-                            pipeline.addLast(new CommandPackEncoder(RedisConnection.this, queue));
+                            pipeline.addLast(new CommandPackEncoder(RedisConnection.this, commandPackRecycler, queue));
                         }
                     });
             if (config.isTcpQuickAck()) {
@@ -291,7 +294,7 @@ public class RedisConnection {
             }
             return;
         }
-        CommandPack pack = new CommandPack(commands, completableFutureList, time());
+        CommandPack pack = commandPackRecycler.newInstance(commands, completableFutureList, time());
         if (logger.isDebugEnabled()) {
             logger.debug("{} sendCommands, commands.size = {}", connectionName, commands.size());
         }
@@ -578,7 +581,7 @@ public class RedisConnection {
 
     //直接发送命令，不检查连接状态
     private void sendCommandDirect(Command command, CompletableFuture<Reply> future) {
-        CommandPack pack = new CommandPack(Collections.singletonList(command), Collections.singletonList(future), time());
+        CommandPack pack = commandPackRecycler.newInstance(Collections.singletonList(command), Collections.singletonList(future), time());
         channel.writeAndFlush(pack);
     }
 
