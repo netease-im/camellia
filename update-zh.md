@@ -6,9 +6,10 @@
 
 ### 更新
 * camellia-redis-proxy支持复用CommandPack，优化gc
+* camellia-config配置key服务器增加trim逻辑
 
 ### fix
-* 无
+* 修复camellia-config分页查询接口sql错误的问题
 
 
 # 1.2.5（2023/04/07）
