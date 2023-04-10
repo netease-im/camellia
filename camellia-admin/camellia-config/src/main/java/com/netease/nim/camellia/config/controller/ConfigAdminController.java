@@ -35,6 +35,7 @@ public class ConfigAdminController {
                                           @RequestParam(value = "validFlag", required = false) Integer validFlag,
                                           @RequestParam(value = "operatorInfo") String operatorInfo) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
+        key = key.trim();
         LogBean.get().addProps("namespace", namespace);
         LogBean.get().addProps("key", key);
         LogBean.get().addProps("value", value);
@@ -88,6 +89,7 @@ public class ConfigAdminController {
     public WebResult getConfigByKey(@RequestParam("namespace") String namespace,
                                     @RequestParam("key") String key) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
+        key = key.trim();
         LogBean.get().addProps("namespace", namespace);
         LogBean.get().addProps("key", key);
         Config config = configService.getConfigByKey(namespace, key);
@@ -102,6 +104,7 @@ public class ConfigAdminController {
                                   @RequestParam(value = "version", required = false) Long version,
                                   @RequestParam(value = "operatorInfo") String operatorInfo) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
+        key = key.trim();
         LogBean.get().addProps("id", id);
         LogBean.get().addProps("namespace", namespace);
         LogBean.get().addProps("key", key);
@@ -145,6 +148,7 @@ public class ConfigAdminController {
                                                     @RequestParam(value = "pageSize", required = false, defaultValue = "100") int pageSize,
                                                     @RequestParam(value = "keyword", required = false) String keyword) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
+        key = key.trim();
         LogBean.get().addProps("key", key);
         LogBean.get().addProps("id", id);
         LogBean.get().addProps("namespace", namespace);
