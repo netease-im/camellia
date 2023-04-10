@@ -108,7 +108,8 @@ EXZDIFFSTORE,EXZDIFF,EXBZPOPMIN,EXBZPOPMAX,
 ```
 
 * 部分支持1
-  当且仅当路由不是自定义分片
+当且仅当路由不是自定义分片  
+1.1.4开始，PUBSUB命令支持双写（会订阅双写中的第一个地址，发布给双写中的所有地址）  
 ```
 ##PUBSUB(will sub first write redis resource, pub all write redis resource)
 SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
@@ -116,6 +117,7 @@ SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
 
 * 部分支持2
 当且仅当路由后端是单个redis-standalone或者单个redis-sentinel或者单个redis-cluster  
+1.2.6版本开始，TRANSACTION支持双鞋，但是要求读地址只能配置一个，且必须和写地址的第一个是一样的   
 ```
 ##TRANSACTION(keys must in same slot)
 MULTI,DISCARD,EXEC,WATCH,UNWATCH,
