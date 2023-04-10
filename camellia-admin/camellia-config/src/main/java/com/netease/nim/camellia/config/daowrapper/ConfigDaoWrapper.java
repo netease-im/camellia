@@ -57,10 +57,10 @@ public class ConfigDaoWrapper {
             long count;
             if (validFlag != null) {
                 list = configDao.getValidList(namespace, offset, limit, validFlag);
-                count = configDao.getValidListCount(namespace, offset, limit, validFlag);
+                count = configDao.getValidListCount(namespace, validFlag);
             } else {
                 list = configDao.getList(namespace, offset, limit);
-                count = configDao.getListCount(namespace, offset, limit);
+                count = configDao.getListCount(namespace);
             }
             return new ConfigPage(count, list);
         } else {
@@ -68,10 +68,10 @@ public class ConfigDaoWrapper {
             long count;
             if (validFlag != null) {
                 list = configDao.getValidListAndKeyword(namespace, offset, limit, keyword, validFlag);
-                count = configDao.getValidListAndKeywordCount(namespace, offset, limit, keyword, validFlag);
+                count = configDao.getValidListAndKeywordCount(namespace, keyword, validFlag);
             } else {
                 list = configDao.getListAndKeyword(namespace, offset, limit, keyword);
-                count = configDao.getListAndKeywordCount(namespace, offset, limit, keyword);
+                count = configDao.getListAndKeywordCount(namespace, keyword);
             }
             return new ConfigPage(count, list);
         }

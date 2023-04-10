@@ -38,8 +38,8 @@ public interface ConfigDao {
     List<Config> getValidList(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit, @Param("validFlag") int validFlag);
 
     @Select("select count(*) from camellia_config " +
-            " where `namespace` = #{namespace} and `valid_flag` = #{validFlag} limit #{offset}, #{limit}")
-    long getValidListCount(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit, @Param("validFlag") int validFlag);
+            " where `namespace` = #{namespace} and `valid_flag` = #{validFlag}")
+    long getValidListCount(@Param("namespace") String namespace, @Param("validFlag") int validFlag);
 
     @Select("select `id`, `namespace`, `namespaceId`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
             " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config " +
@@ -49,8 +49,8 @@ public interface ConfigDao {
 
     @Select("select count(*) from camellia_config " +
             " where `namespace` = #{namespace} and `valid_flag` = #{validFlag} and " +
-            " (`ckey` like concat('%', #{keyword}, '%') or `cvalue` like concat('%', #{keyword}, '%') or `info` like concat('%', #{keyword}, '%') or `operator` like concat('%', #{keyword}, '%')) limit #{offset}, #{limit}")
-    long getValidListAndKeywordCount(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit, @Param("keyword") String keyword, @Param("validFlag") int validFlag);
+            " (`ckey` like concat('%', #{keyword}, '%') or `cvalue` like concat('%', #{keyword}, '%') or `info` like concat('%', #{keyword}, '%') or `operator` like concat('%', #{keyword}, '%'))")
+    long getValidListAndKeywordCount(@Param("namespace") String namespace, @Param("keyword") String keyword, @Param("validFlag") int validFlag);
 
     @Select("select `id`, `namespace`, `namespaceId`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
             " `creator`, `operator`, `version`, `create_time` as createTime, `update_time` as updateTime from camellia_config " +
@@ -58,8 +58,8 @@ public interface ConfigDao {
     List<Config> getList(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit);
 
     @Select("select count(*) from camellia_config " +
-            " where `namespace` = #{namespace} limit #{offset}, #{limit}")
-    long getListCount(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit);
+            " where `namespace` = #{namespace}")
+    long getListCount(@Param("namespace") String namespace);
 
     @Select("select `id`, `namespace`, `namespaceId`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
             " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config " +
@@ -69,8 +69,8 @@ public interface ConfigDao {
 
     @Select("select count(*) from camellia_config " +
             " where `namespace` = #{namespace} and " +
-            " (`ckey` like concat('%', #{keyword}, '%') or `cvalue` like concat('%', #{keyword}, '%') or `info` like concat('%', #{keyword}, '%') or `operator` like concat('%', #{keyword}, '%')) limit #{offset}, #{limit}")
-    long getListAndKeywordCount(@Param("namespace") String namespace, @Param("offset") int offset, @Param("limit") int limit, @Param("keyword") String keyword);
+            " (`ckey` like concat('%', #{keyword}, '%') or `cvalue` like concat('%', #{keyword}, '%') or `info` like concat('%', #{keyword}, '%') or `operator` like concat('%', #{keyword}, '%'))")
+    long getListAndKeywordCount(@Param("namespace") String namespace, @Param("keyword") String keyword);
 
     @Select("select `id`, `namespace`, `namespaceId`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
             " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config where `namespace` = #{namespace} limit 100000")

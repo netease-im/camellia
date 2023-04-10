@@ -66,7 +66,7 @@ public class ConfigNamespaceDaoWrapper {
             long count;
             if (validFlag != null) {
                 list = dao.getValidList(offset, limit, validFlag);
-                count = dao.getValidListCount(offset, limit, validFlag);
+                count = dao.getValidListCount(validFlag);
             } else {
                 list = dao.getList(offset, limit);
                 count = dao.getListCount(offset, limit);
@@ -77,10 +77,10 @@ public class ConfigNamespaceDaoWrapper {
             long count;
             if (validFlag != null) {
                 list = dao.getValidListAndKeyword(offset, limit, keyword, validFlag);
-                count = dao.getValidListAndKeywordCount(offset, limit, keyword, validFlag);
+                count = dao.getValidListAndKeywordCount(keyword, validFlag);
             } else {
                 list = dao.getListAndKeyword(offset, limit, keyword);
-                count = dao.getListAndKeywordCount(offset, limit, keyword);
+                count = dao.getListAndKeywordCount(keyword);
             }
             return new ConfigNamespacePage(count, list);
         }
