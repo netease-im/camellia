@@ -233,6 +233,97 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 //other commands
             }
 
+            if (command.getChannelInfo().isInTransaction()) {
+                if (redisCommand.getType() == RedisCommand.Type.WRITE
+                        && redisCommand.getCommandType() != RedisCommand.CommandType.TRANSACTION) {
+                    command.getChannelInfo().addInTransactionCommands(command);
+                }
+                if (redisCommand == RedisCommand.DISCARD) {
+                    command.getChannelInfo().clearInTransactionCommands();
+                }
+            }
+
+            //事务命令支持双写，但是不能分片，且读地址和写地址的第一个必须是一样的
+            if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
+                if (resourceSelector.getType() == ResourceTable.Type.SHADING) {
+                    CompletableFuture<Reply> future = new CompletableFuture<>();
+                    future.complete(ErrorReply.NOT_SUPPORT);
+                    futureList.add(future);
+                    command.getChannelInfo().clearInTransactionCommands();
+                    command.getChannelInfo().setTransactionTag(false);
+                    continue;
+                }
+                List<Resource> allReadResources = resourceSelector.getAllReadResources();
+                List<Resource> allWriteResources = resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
+                if (allReadResources.size() > 1) {
+                    CompletableFuture<Reply> future = new CompletableFuture<>();
+                    future.complete(ErrorReply.NOT_SUPPORT);
+                    futureList.add(future);
+                    command.getChannelInfo().clearInTransactionCommands();
+                    command.getChannelInfo().setTransactionTag(false);
+                    continue;
+                }
+                if (!allReadResources.get(0).getUrl().equals(allWriteResources.get(0).getUrl())) {
+                    CompletableFuture<Reply> future = new CompletableFuture<>();
+                    future.complete(ErrorReply.NOT_SUPPORT);
+                    futureList.add(future);
+                    command.getChannelInfo().clearInTransactionCommands();
+                    command.getChannelInfo().setTransactionTag(false);
+                    continue;
+                }
+                command.getChannelInfo().setTransactionTag(true);
+                if (redisCommand == RedisCommand.DISCARD || redisCommand == RedisCommand.EXEC) {
+                    command.getChannelInfo().setTransactionTag(false);
+                }
+                if (!command.getChannelInfo().isInTransaction() && redisCommand == RedisCommand.UNWATCH) {
+                    RedisConnection bindConnection = command.getChannelInfo().getBindConnection();
+                    if (bindConnection != null) {
+                        command.getChannelInfo().setTransactionTag(false);
+                    }
+                }
+                String url = allReadResources.get(0).getUrl();
+                IUpstreamClient client = factory.get(url);
+                CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
+                if (redisCommand == RedisCommand.EXEC) {
+                    if (allWriteResources.size() > 1) {
+                        future.thenAccept(reply -> {
+                            try {
+                                if (reply instanceof ErrorReply) {
+                                    return;
+                                }
+                                if (reply instanceof MultiBulkReply) {
+                                    Reply[] replies = ((MultiBulkReply) reply).getReplies();
+                                    if (replies == null) {
+                                        return;
+                                    }
+                                }
+                                List<Resource> resources = resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
+                                if (resources.size() > 1) {
+                                    for (int i = 1; i < resources.size(); i++) {
+                                        IUpstreamClient upstreamClient = factory.get(resources.get(i).getUrl());
+                                        command.getChannelInfo().flushInTransactionCommands(db, upstreamClient);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                ErrorLogCollector.collect(UpstreamRedisClientTemplate.class, "transaction commands flush error", e);
+                            } finally {
+                                command.getChannelInfo().clearInTransactionCommands();
+                            }
+                        });
+                    }
+                }
+                if (redisCommand.getType() == RedisCommand.Type.READ) {
+                    incrRead(url, command);
+                } else if (redisCommand.getType() == RedisCommand.Type.WRITE) {
+                    incrWrite(url, command);
+                }
+                futureList.add(future);
+                if (ProxyMonitorCollector.isMonitorEnable()) {
+                    UpstreamFailMonitor.stats(url, command.getName(), future);
+                }
+                continue;
+            }
+
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2) {
                 if (proxyRouteType != ProxyRouteType.REDIS_STANDALONE && proxyRouteType != ProxyRouteType.REDIS_SENTINEL
                         && proxyRouteType != ProxyRouteType.REDIS_CLUSTER) {
@@ -625,6 +716,29 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
     }
 
     private CompletableFuture<Reply> doWrite(List<Resource> writeResources, UpstreamClientCommandFlusher commandFlusher, Command command) {
+        if (writeResources.size() > 1) {
+            if (command.getChannelInfo().isInTransaction()) {
+                writeResources = new ArrayList<>(Collections.singletonList(writeResources.get(0)));
+            } else if (command.getChannelInfo().isTransactionTag()) {
+                for (int i=1; i<writeResources.size(); i++) {
+                    Resource resource = writeResources.get(i);
+                    IUpstreamClient client = factory.get(resource.getUrl());
+                    CompletableFuture<Reply> future = new CompletableFuture<>();
+                    if (client != null) {
+                        RedisConnection bindConnection = command.getChannelInfo().getBindConnection();
+                        command.getChannelInfo().setBindConnection(null);
+                        client.sendCommand(commandFlusher.getDb(), Collections.singletonList(command), Collections.singletonList(future));
+                        command.getChannelInfo().setBindConnection(bindConnection);
+                    } else {
+                        future.complete(ErrorReply.UPSTREAM_RESOURCE_NOT_AVAILABLE);
+                    }
+                    if (ProxyMonitorCollector.isMonitorEnable()) {
+                        UpstreamFailMonitor.stats(resource.getUrl(), command.getName(), future);
+                    }
+                }
+                writeResources = new ArrayList<>(Collections.singletonList(writeResources.get(0)));
+            }
+        }
         List<CompletableFuture<Reply>> list = new ArrayList<>(writeResources.size());
         for (Resource resource : writeResources) {
             IUpstreamClient client = factory.get(resource.getUrl());

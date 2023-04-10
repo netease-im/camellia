@@ -261,5 +261,11 @@ public class Utils {
     public static boolean hasChange(String md5, String newMd5) {
         return md5 == null || (newMd5 != null && !md5.equals(newMd5));
     }
-    
+
+    public static boolean isNil(BulkReply bulkReply) {
+        if (bulkReply == BulkReply.NIL_REPLY) {
+            return true;
+        }
+        return bulkReply.getSize() < 0 || bulkReply.getRaw() == null;
+    }
 }

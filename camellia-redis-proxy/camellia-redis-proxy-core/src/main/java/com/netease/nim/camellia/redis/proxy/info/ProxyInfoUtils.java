@@ -35,12 +35,10 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class ProxyInfoUtils {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProxyInfoUtils.class);
-
     private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(8), new DefaultThreadFactory("proxy-info"));
 
-    public static final String VERSION = "v1.2.5";
+    public static final String VERSION = "v1.2.6-SNAPSHOT";
     private static final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
     private static final OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
     private static final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();

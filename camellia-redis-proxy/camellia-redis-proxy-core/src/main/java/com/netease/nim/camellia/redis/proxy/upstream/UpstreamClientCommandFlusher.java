@@ -32,6 +32,10 @@ public class UpstreamClientCommandFlusher {
         this(-1, 10);
     }
 
+    public int getDb() {
+        return db;
+    }
+
     public int getInitializerSize() {
         return initializerSize;
     }

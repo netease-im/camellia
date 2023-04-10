@@ -58,3 +58,14 @@ camellia-redis-proxy:
 
 ### 双写一致性
 * 你可以通过一些工具，来判断多个redis集群的数据一致性，如redis-full-check，见：https://developer.aliyun.com/article/690463    
+
+### 事务命令的双写（TRANSACTION）
+* 要求读地址只能配置一个，且必须和写地址的第一个是一样的
+* proxy会把MULTI和EXEC之间的命令缓存在proxy内存中，并且监听EXEC的返回，如果返回为成功，则把缓存的命令刷新给双写的后端redis中（也就是写地址串列表中除第一个地址之外的其他地址），否则会丢弃缓存的的命令，从而尽可能保证双写数据的一致性
+
+### 发布订阅命令的双写（PUBSUB）
+* proxy会订阅双写地址中的第一个地址
+* proxy会发布消息给双写地址中的所有地址
+
+### 阻塞性命令不支持双写
+* 如BLPOP等

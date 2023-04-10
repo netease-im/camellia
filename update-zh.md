@@ -2,7 +2,7 @@
 
 # 1.2.6（2023/04/xx）
 ### 新增
-* 无
+* camellia-redis-proxy支持对TRANSACTION命令的双写
 
 ### 更新
 * camellia-redis-proxy支持复用CommandPack，优化gc

@@ -3,16 +3,24 @@ package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
+import com.netease.nim.camellia.redis.proxy.monitor.UpstreamFailMonitor;
+import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -38,7 +46,12 @@ public class ChannelInfo {
     private final boolean fromCport;
     private volatile ConcurrentHashMap<BytesKey, Boolean> subscribeChannels;
     private volatile ConcurrentHashMap<BytesKey, Boolean> psubscribeChannels;
+
+    private boolean transactionTag = false;
+
     private Command cachedMultiCommand;
+
+    private volatile List<Command> cachedCommands;//for transaction commands multi-write
 
     private long lastCommandMoveTime;
 
@@ -206,6 +219,9 @@ public class ChannelInfo {
 
     public void setInTransaction(boolean inTransaction) {
         this.inTransaction = inTransaction;
+        if (!inTransaction) {
+            this.transactionTag = false;
+        }
     }
 
     public void setBindConnection(RedisConnection bindConnection) {
@@ -230,6 +246,41 @@ public class ChannelInfo {
 
     public Command getCachedMultiCommand() {
         return this.cachedMultiCommand;
+    }
+
+    public void addInTransactionCommands(Command command) {
+        if (cachedCommands == null) {
+            synchronized (this) {
+                if (cachedCommands == null) {
+                    cachedCommands = new ArrayList<>();
+                }
+            }
+        }
+        if (command.isBlocking()) {
+            ErrorLogCollector.collect(ChannelInfo.class, "blocking command do not support transaction multi-write");
+            return;
+        }
+        cachedCommands.add(command);
+    }
+
+    public void flushInTransactionCommands(int db, IUpstreamClient upstreamClient) {
+        if (upstreamClient != null && !cachedCommands.isEmpty()) {
+            List<CompletableFuture<Reply>> futureList = new ArrayList<>();
+            for (Command command : cachedCommands) {
+                CompletableFuture<Reply> future = new CompletableFuture<>();
+                if (ProxyMonitorCollector.isMonitorEnable()) {
+                    UpstreamFailMonitor.stats(upstreamClient.getUrl(), command.getName(), future);
+                }
+                futureList.add(future);
+            }
+            upstreamClient.sendCommand(db, cachedCommands, futureList);
+        }
+    }
+
+    public void clearInTransactionCommands() {
+        if (cachedCommands != null) {
+            cachedCommands.clear();
+        }
     }
 
     public void addSubscribeChannels(byte[]...channels) {
@@ -311,6 +362,14 @@ public class ChannelInfo {
 
     public void setDb(int db) {
         this.db = db;
+    }
+
+    public boolean isTransactionTag() {
+        return transactionTag;
+    }
+
+    public void setTransactionTag(boolean transactionTag) {
+        this.transactionTag = transactionTag;
     }
 
     public static enum ChannelStats {
