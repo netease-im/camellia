@@ -284,6 +284,8 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 String url = allReadResources.get(0).getUrl();
                 IUpstreamClient client = factory.get(url);
                 CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
+                commandFlusher.flush();
+                commandFlusher.clear();
                 if (redisCommand == RedisCommand.EXEC) {
                     if (allWriteResources.size() > 1) {
                         future.thenAccept(reply -> {
@@ -310,6 +312,8 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                                 command.getChannelInfo().clearInTransactionCommands();
                             }
                         });
+                    } else {
+                        command.getChannelInfo().clearInTransactionCommands();
                     }
                 }
                 if (redisCommand.getType() == RedisCommand.Type.READ) {
@@ -727,6 +731,8 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     if (client != null) {
                         RedisConnection bindConnection = command.getChannelInfo().getBindConnection();
                         command.getChannelInfo().setBindConnection(null);
+                        commandFlusher.flush();
+                        commandFlusher.clear();
                         client.sendCommand(commandFlusher.getDb(), Collections.singletonList(command), Collections.singletonList(future));
                         command.getChannelInfo().setBindConnection(bindConnection);
                     } else {
