@@ -105,14 +105,16 @@ EXZDIFFSTORE,EXZDIFF,EXBZPOPMIN,EXBZPOPMAX,
 ```
 
 * Partially Supported 1   
-  only support while no custom sharding
+only support while no custom sharding  
+since 1.1.4, PUBSUB support multi-write, will sub first write redis resource, pub all write redis resource   
 ```
 ##PUBSUB(will sub first write redis resource, pub all write redis resource)
 SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
 ```
 
 * Partially Supported 2   
-only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel or redis-cluster)
+only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel or redis-cluster)   
+since 1.2.6, TRANSACTION commands support multi-write only when read-resources without multi and read-resource equals to the first write resource  
 ```
 ##TRANSACTION(keys must in same slot)
 MULTI,DISCARD,EXEC,WATCH,UNWATCH,
@@ -134,7 +136,7 @@ KEYS,RANDOMKEY,
 only support in special case or special parameter
 ```
 ##DataBase
-#only support 'select 0'
+#if upstream contains redis-cluster, only support 'select 0', other-wise, support select xx
 SELECT,
 #only support 'CONFIG GET XXX'
 CONFIG,
