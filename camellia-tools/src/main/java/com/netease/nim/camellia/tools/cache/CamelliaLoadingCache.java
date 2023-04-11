@@ -1,12 +1,14 @@
 package com.netease.nim.camellia.tools.cache;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -53,14 +55,22 @@ public class CamelliaLoadingCache<K, V> {
     private final boolean cacheNull;
     private final int concurrentMaxRetry;
     private final long concurrentSleepMs;
+    private final ExecutorService concurrentLoadExecutor;
+    private final long maxLoadTimeMs;
 
     private CamelliaLoadingCache(CacheLoader<K, V> cacheLoader, int initialCapacity, int maxCapacity,
-                                 long expireMillis, boolean cacheNull, int concurrentMaxRetry, long concurrentSleepMs) {
+                                 long expireMillis, boolean cacheNull, int concurrentMaxRetry,
+                                 long concurrentSleepMs, long maxLoadTimeMs, int concurrentLoadExecutorPoolSize, int concurrentLoadExecutorQueueSize) {
         this.cacheLoader = cacheLoader;
         this.expireMillis = expireMillis;
         this.cacheNull = cacheNull;
         this.concurrentMaxRetry = concurrentMaxRetry;
         this.concurrentSleepMs = concurrentSleepMs;
+        this.maxLoadTimeMs = maxLoadTimeMs;
+        long id = idGenerator.incrementAndGet();
+        this.concurrentLoadExecutor = new ThreadPoolExecutor(concurrentLoadExecutorPoolSize, concurrentLoadExecutorPoolSize,
+                0, TimeUnit.SECONDS, new LinkedBlockingDeque<>(concurrentLoadExecutorQueueSize),
+                new CamelliaThreadFactory("camellia-loading-cache-concurrent-load-" + id), new ThreadPoolExecutor.AbortPolicy());
         cacheMap = new ConcurrentLinkedHashMap.Builder<K, ValueInfo>()
                 .initialCapacity(initialCapacity).maximumWeightedCapacity(maxCapacity).build();
         lockMap = new ConcurrentLinkedHashMap.Builder<K, AtomicBoolean>()
@@ -75,7 +85,7 @@ public class CamelliaLoadingCache<K, V> {
                     logger.error("reload error", e);
                 }
             }
-        }, "camellia-loading-cache-" + idGenerator.incrementAndGet());
+        }, "camellia-loading-cache-" + id);
         thread.setDaemon(true);
         thread.start();
     }
@@ -87,6 +97,9 @@ public class CamelliaLoadingCache<K, V> {
         private boolean cacheNull = true;
         private int concurrentMaxRetry = 5;
         private long concurrentSleepMs = 1;
+        private long maxLoadTimeMs = 500;
+        private int concurrentLoadExecutorPoolSize = SysUtils.getCpuNum() * 2;
+        private int concurrentLoadExecutorQueueSize = 1024;
 
         public Builder() {
         }
@@ -132,13 +145,31 @@ public class CamelliaLoadingCache<K, V> {
             return this;
         }
 
+        //并发重试时的间隔，单位ms
+        public Builder<K, V> maxLoadTimeMs(long maxLoadTimeMs) {
+            this.maxLoadTimeMs = maxLoadTimeMs;
+            return this;
+        }
+
+        //并发穿透时的执行线程池大小
+        public Builder<K, V> concurrentLoadExecutorPoolSize(int concurrentLoadExecutorPoolSize) {
+            this.concurrentLoadExecutorPoolSize = concurrentLoadExecutorPoolSize;
+            return this;
+        }
+
+        //并发穿透时的执行线程池等待队列大小
+        public Builder<K, V> concurrentLoadExecutorQueueSize(int concurrentLoadExecutorQueueSize) {
+            this.concurrentLoadExecutorQueueSize = concurrentLoadExecutorQueueSize;
+            return this;
+        }
+
         //缓存加载的接口
         public CamelliaLoadingCache<K, V> build(CacheLoader<K, V> cacheLoader) {
             if (cacheLoader == null) {
                 throw new IllegalArgumentException("cacheLoader is null");
             }
             return new CamelliaLoadingCache<>(cacheLoader, initialCapacity, maxCapacity, expireMillis,
-                    cacheNull, concurrentMaxRetry, concurrentSleepMs);
+                    cacheNull, concurrentMaxRetry, concurrentSleepMs, maxLoadTimeMs, concurrentLoadExecutorPoolSize, concurrentLoadExecutorQueueSize);
         }
     }
 
@@ -159,30 +190,12 @@ public class CamelliaLoadingCache<K, V> {
             }
         }
         try {
-            int retry = concurrentMaxRetry;
-            while (retry -- > 0) {
-                //避免并发缓存穿透
-                boolean lock = tryLock(key);
-                if (lock) {
-                    try {
-                        return _load(key, valueInfo);
-                    } finally {
-                        releaseLock(key);
-                    }
-                } else {
-                    TimeUnit.MILLISECONDS.sleep(concurrentSleepMs);
-                    if (valueInfo != null && valueInfo.isCacheNotExpire()) {
-                        valueInfo.updateCacheHitTime();
-                        return valueInfo.get();
-                    }
-                    valueInfo = cacheMap.get(key);
-                    if (valueInfo != null && valueInfo.isCacheNotExpire()) {
-                        valueInfo.updateCacheHitTime();
-                        return valueInfo.get();
-                    }
-                }
+            if (valueInfo == null) {
+                return load(key, null);
+            } else {
+                Future<V> future = concurrentLoadExecutor.submit(() -> load(key, valueInfo));
+                return future.get(maxLoadTimeMs, TimeUnit.MILLISECONDS);
             }
-            return _load(key, valueInfo);
         } catch (Exception e) {
             //出现异常时返回旧值
             if (valueInfo != null) {
@@ -190,6 +203,33 @@ public class CamelliaLoadingCache<K, V> {
             }
             throw new CamelliaLoadingCacheException(e);
         }
+    }
+
+    private V load(K key, ValueInfo valueInfo) throws Exception {
+        int retry = concurrentMaxRetry;
+        while (retry -- > 0) {
+            //避免并发缓存穿透
+            boolean lock = tryLock(key);
+            if (lock) {
+                try {
+                    return _load(key, valueInfo);
+                } finally {
+                    releaseLock(key);
+                }
+            } else {
+                TimeUnit.MILLISECONDS.sleep(concurrentSleepMs);
+                if (valueInfo != null && valueInfo.isCacheNotExpire()) {
+                    valueInfo.updateCacheHitTime();
+                    return valueInfo.get();
+                }
+                valueInfo = cacheMap.get(key);
+                if (valueInfo != null && valueInfo.isCacheNotExpire()) {
+                    valueInfo.updateCacheHitTime();
+                    return valueInfo.get();
+                }
+            }
+        }
+        return _load(key, valueInfo);
     }
 
     private V _load(K key, ValueInfo valueInfo) throws Exception {

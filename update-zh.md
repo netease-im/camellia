@@ -7,6 +7,7 @@
 ### 更新
 * camellia-redis-proxy支持复用CommandPack，优化gc
 * camellia-config配置key服务器增加trim逻辑
+* CamelliaLoadingCache在缓存穿透时增加最大执行时间控制
 
 ### fix
 * 修复camellia-config分页查询接口sql错误的问题
