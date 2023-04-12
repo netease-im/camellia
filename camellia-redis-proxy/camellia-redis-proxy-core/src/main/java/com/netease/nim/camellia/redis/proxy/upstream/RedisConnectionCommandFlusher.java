@@ -25,16 +25,16 @@ public class RedisConnectionCommandFlusher {
         this.initializerSize = initializerSize;
     }
 
-    public RedisConnectionCommandFlusher() {
-        this(10);
-    }
-
     public int getInitializerSize() {
         return initializerSize;
     }
 
     public void updateInitializerSize(int initializerSize) {
         this.initializerSize = initializerSize;
+    }
+
+    public boolean isEmpty() {
+        return commandMap.isEmpty();
     }
 
     public void sendCommand(RedisConnection connection, Command command, CompletableFuture<Reply> future) {
@@ -48,12 +48,6 @@ public class RedisConnectionCommandFlusher {
             futures = futureMap.computeIfAbsent(connection, k -> new ArrayList<>(initializerSize));
         }
         futures.add(future);
-    }
-
-    public CompletableFuture<Reply> sendCommand(RedisConnection connection, Command command) {
-        CompletableFuture<Reply> future = new CompletableFuture<>();
-        sendCommand(connection, command, future);
-        return future;
     }
 
     public void flush() {
@@ -70,9 +64,6 @@ public class RedisConnectionCommandFlusher {
                 connection.sendCommand(commands, futureList);
             }
         }
-    }
-
-    public void clear() {
         commandMap.clear();
         futureMap.clear();
     }

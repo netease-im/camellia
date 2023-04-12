@@ -22,6 +22,7 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
@@ -296,7 +297,11 @@ public class RedisConnection {
         }
         CommandPack pack = commandPackRecycler.newInstance(commands, completableFutureList, time());
         if (logger.isDebugEnabled()) {
-            logger.debug("{} sendCommands, commands.size = {}", connectionName, commands.size());
+            List<String> commandNames = new ArrayList<>();
+            for (Command command : commands) {
+                commandNames.add(command.getName());
+            }
+            logger.debug("{} receive commands, commands.size = {}, commands = {}", connectionName, commands.size(), commandNames);
         }
         if (status == RedisConnectionStatus.VALID || status == RedisConnectionStatus.CLOSING) {
             channel.writeAndFlush(pack);

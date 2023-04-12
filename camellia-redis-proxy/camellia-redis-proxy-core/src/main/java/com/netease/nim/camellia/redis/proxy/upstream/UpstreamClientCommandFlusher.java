@@ -20,7 +20,7 @@ public class UpstreamClientCommandFlusher {
     private final Map<IUpstreamClient, List<Command>> commandMap = new HashMap<>();
     private final Map<IUpstreamClient, List<CompletableFuture<Reply>>> futureMap = new HashMap<>();
 
-    private int initializerSize;
+    private final int initializerSize;
     private final int db;
 
     public UpstreamClientCommandFlusher(int db, int initializerSize) {
@@ -28,20 +28,8 @@ public class UpstreamClientCommandFlusher {
         this.db = db;
     }
 
-    public UpstreamClientCommandFlusher() {
-        this(-1, 10);
-    }
-
     public int getDb() {
         return db;
-    }
-
-    public int getInitializerSize() {
-        return initializerSize;
-    }
-
-    public void updateInitializerSize(int initializerSize) {
-        this.initializerSize = initializerSize;
     }
 
     public void sendCommand(IUpstreamClient client, Command command, CompletableFuture<Reply> future) {
@@ -77,10 +65,8 @@ public class UpstreamClientCommandFlusher {
                 client.sendCommand(db, commands, futureList);
             }
         }
-    }
-
-    public void clear() {
         commandMap.clear();
         futureMap.clear();
     }
+
 }

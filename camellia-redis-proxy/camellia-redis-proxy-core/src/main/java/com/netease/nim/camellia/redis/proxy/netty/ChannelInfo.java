@@ -228,7 +228,7 @@ public class ChannelInfo {
         this.bindConnection = bindConnection;
     }
 
-    public void setBindClient(int bindSlot, RedisConnection bindConnection) {
+    public void setBindConnection(int bindSlot, RedisConnection bindConnection) {
         if (bindSlot >= 0 && bindConnection == null) {
             return;
         }

@@ -70,26 +70,33 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         }
     }
 
-    public void sendCommand(int db, List<Command> commands, List<CompletableFuture<Reply>> completableFutureList) {
+    public void sendCommand(int db, List<Command> commands, List<CompletableFuture<Reply>> futureList) {
+        if (logger.isDebugEnabled()) {
+            List<String> commandNames = new ArrayList<>();
+            for (Command command : commands) {
+                commandNames.add(command.getName());
+            }
+            logger.debug("receive commands, url = {}, db = {}, commands = {}", getUrl(), db, commandNames);
+        }
         if (commands.size() == 1) {
             Command command = commands.get(0);
             if (isPassThroughCommand(command)) {
-                flushNoBlockingCommands(db, commands, completableFutureList);
+                flushNoBlockingCommands(db, commands, futureList);
                 return;
             }
         } else {
             if (isPassThroughCommands(commands)) {
-                flushNoBlockingCommands(db, commands, completableFutureList);
+                flushNoBlockingCommands(db, commands, futureList);
                 return;
             }
         }
         List<Command> filterCommands = new ArrayList<>(commands.size());
-        List<CompletableFuture<Reply>> filterFutures = new ArrayList<>(completableFutureList.size());
+        List<CompletableFuture<Reply>> filterFutures = new ArrayList<>(futureList.size());
         boolean hasBlockingCommands = false;
 
         for (int i=0; i<commands.size(); i++) {
             Command command = commands.get(i);
-            CompletableFuture<Reply> future = completableFutureList.get(i);
+            CompletableFuture<Reply> future = futureList.get(i);
             ChannelInfo channelInfo = command.getChannelInfo();
             RedisConnection bindConnection = channelInfo.getBindConnection();
             RedisCommand redisCommand = command.getRedisCommand();
@@ -101,6 +108,12 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                     first = true;
                 }
                 if (bindConnection != null) {
+                    if (!filterCommands.isEmpty()) {
+                        flush(db, filterCommands, filterFutures, hasBlockingCommands);
+                        filterCommands = new ArrayList<>();
+                        filterFutures = new ArrayList<>();
+                        hasBlockingCommands = false;
+                    }
                     CommandTaskQueue taskQueue = command.getChannelInfo().getCommandTaskQueue();
                     PubSubUtils.sendByBindClient(getResource(), bindConnection, taskQueue, command, future, first);
                     byte[][] objects = command.getObjects();
@@ -133,6 +146,12 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                             }
                         }
                     }
+                    if (!filterCommands.isEmpty()) {
+                        flush(db, filterCommands, filterFutures, hasBlockingCommands);
+                        filterCommands = new ArrayList<>();
+                        filterFutures = new ArrayList<>();
+                        hasBlockingCommands = false;
+                    }
                     PubSubUtils.sendByBindClient(getResource(), bindConnection, channelInfo.getCommandTaskQueue(), command, future, false);
                 } else {
                     filterCommands.add(command);
@@ -146,6 +165,12 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                 if (bindConnection == null) {
                     future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
                 } else {
+                    if (!filterCommands.isEmpty()) {
+                        flush(db, filterCommands, filterFutures, hasBlockingCommands);
+                        filterCommands = new ArrayList<>();
+                        filterFutures = new ArrayList<>();
+                        hasBlockingCommands = false;
+                    }
                     bindConnection.sendCommand(Collections.singletonList(command), Collections.singletonList(future));
                     if (redisCommand == RedisCommand.MULTI) {
                         channelInfo.setInTransaction(true);
@@ -162,6 +187,12 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                 }
             } else {
                 if (bindConnection != null) {
+                    if (!filterCommands.isEmpty()) {
+                        flush(db, filterCommands, filterFutures, hasBlockingCommands);
+                        filterCommands = new ArrayList<>();
+                        filterFutures = new ArrayList<>();
+                        hasBlockingCommands = false;
+                    }
                     bindConnection.sendCommand(Collections.singletonList(command), Collections.singletonList(future));
                 } else {
                     filterCommands.add(command);
@@ -173,16 +204,17 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             }
         }
         if (filterCommands.isEmpty()) return;
-        commands = filterCommands;
-        completableFutureList = filterFutures;
+        flush(db, filterCommands, filterFutures, hasBlockingCommands);
+    }
 
+    private void flush(int db, List<Command> commands, List<CompletableFuture<Reply>> futureList, boolean hasBlockingCommands) {
         if (!hasBlockingCommands) {
-            flushNoBlockingCommands(db, commands, completableFutureList);
+            flushNoBlockingCommands(db, commands, futureList);
             return;
         }
 
         if (commands.size() == 1) {
-            flushBlockingCommands(db, commands, completableFutureList);
+            flushBlockingCommands(db, commands, futureList);
             return;
         }
 
@@ -190,7 +222,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         List<CompletableFuture<Reply>> completableFutureList1 = new ArrayList<>(commands.size());
         for (int i=0; i<commands.size(); i++) {
             Command command = commands.get(i);
-            CompletableFuture<Reply> future = completableFutureList.get(i);
+            CompletableFuture<Reply> future = futureList.get(i);
             commands1.add(command);
             completableFutureList1.add(future);
             if (command.isBlocking()) {

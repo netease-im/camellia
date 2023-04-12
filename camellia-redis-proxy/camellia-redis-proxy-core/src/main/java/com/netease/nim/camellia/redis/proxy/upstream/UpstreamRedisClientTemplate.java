@@ -64,7 +64,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
 
     private ScanCursorCalculator cursorCalculator;
 
-    private ResourceSelector.ResourceChecker resourceChecker;
+    private final ResourceSelector.ResourceChecker resourceChecker;
 
     public UpstreamRedisClientTemplate(ResourceTable resourceTable) {
         this(RedisProxyEnv.defaultRedisEnv(), resourceTable);
@@ -147,6 +147,13 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
 
     @Override
     public List<CompletableFuture<Reply>> sendCommand(int db, List<Command> commands) {
+        if (logger.isDebugEnabled()) {
+            List<String> commandNames = new ArrayList<>();
+            for (Command command : commands) {
+                commandNames.add(command.getName());
+            }
+            logger.debug("receive commands, bid = {}, bgroup = {}, db = {}, commands = {}", bid, bgroup, db, commandNames);
+        }
         List<CompletableFuture<Reply>> futureList = new ArrayList<>(commands.size());
         if (db > 0 && !multiDBSupport) {
             for (int i=0; i<commands.size(); i++) {
@@ -193,7 +200,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     if (!channelInfo.isInTransaction()) {
                         RedisConnection bindConnection = channelInfo.getBindConnection();
                         if (bindConnection != null) {
-                            channelInfo.setBindClient(-1, null);
+                            channelInfo.setBindConnection(-1, null);
                             bindConnection.startIdleCheck();
                         }
                     }
@@ -211,7 +218,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                         if (!channelInfo.isInTransaction()) {
                             RedisConnection bindConnection = channelInfo.getBindConnection();
                             if (bindConnection != null) {
-                                channelInfo.setBindClient(-1, null);
+                                channelInfo.setBindConnection(-1, null);
                                 bindConnection.startIdleCheck();
                             }
                         }
@@ -285,7 +292,6 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 IUpstreamClient client = factory.get(url);
                 CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
                 commandFlusher.flush();
-                commandFlusher.clear();
                 if (redisCommand == RedisCommand.EXEC) {
                     if (allWriteResources.size() > 1) {
                         future.thenAccept(reply -> {
@@ -732,7 +738,6 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                         RedisConnection bindConnection = command.getChannelInfo().getBindConnection();
                         command.getChannelInfo().setBindConnection(null);
                         commandFlusher.flush();
-                        commandFlusher.clear();
                         client.sendCommand(commandFlusher.getDb(), Collections.singletonList(command), Collections.singletonList(future));
                         command.getChannelInfo().setBindConnection(bindConnection);
                     } else {
