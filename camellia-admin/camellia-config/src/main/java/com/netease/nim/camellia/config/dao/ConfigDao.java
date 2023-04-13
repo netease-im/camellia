@@ -73,7 +73,7 @@ public interface ConfigDao {
     long getListAndKeywordCount(@Param("namespace") String namespace, @Param("keyword") String keyword);
 
     @Select("select `id`, `namespace`, `namespaceId`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
-            " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config where `namespace` = #{namespace} and `validFlag` = 1 limit 100000")
+            " `creator`, `operator`, `version`, `create_time` as `createTime`, `update_time` as `updateTime` from camellia_config where `namespace` = #{namespace} and `valid_flag` = 1 limit 100000")
     List<Config> findAllValidByNamespace(@Param("namespace") String namespace);
 
     @Select("select `id`, `namespace`, `namespaceId`, `ckey` as `key`, `cvalue` as `value`, `valid_flag` as `validFlag`, `info`, `ctype` as `type`," +
