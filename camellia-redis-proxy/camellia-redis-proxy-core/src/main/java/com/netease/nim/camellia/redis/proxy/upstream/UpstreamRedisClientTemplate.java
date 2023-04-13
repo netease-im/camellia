@@ -290,6 +290,9 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 }
                 String url = allReadResources.get(0).getUrl();
                 IUpstreamClient client = factory.get(url);
+                if (!commandFlusher.isEmpty()) {
+                    commandFlusher.flush();
+                }
                 CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
                 commandFlusher.flush();
                 if (redisCommand == RedisCommand.EXEC) {

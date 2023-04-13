@@ -51,6 +51,10 @@ public class UpstreamClientCommandFlusher {
         return future;
     }
 
+    public boolean isEmpty() {
+        return commandMap.isEmpty();
+    }
+
     public void flush() {
         for (Map.Entry<IUpstreamClient, List<Command>> entry : commandMap.entrySet()) {
             IUpstreamClient client = entry.getKey();
