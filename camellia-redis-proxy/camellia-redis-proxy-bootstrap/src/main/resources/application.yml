@@ -1,4 +1,3 @@
-
 server:
   port: 6380
 spring:
@@ -47,4 +46,3 @@ camellia-redis-proxy:
 #      close-idle-connection: true #if close upstream idle redis-connection, default true
 #      check-idle-connection-threshold-seconds: 600  #upstream redis-connection idle check threshold, default 600s
 #      preheat: true #preheat upstream redis-connection, default true
-
