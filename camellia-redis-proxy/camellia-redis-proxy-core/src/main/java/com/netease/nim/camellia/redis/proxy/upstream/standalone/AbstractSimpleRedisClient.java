@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.standalone;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.core.model.Resource;
+import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
@@ -81,6 +82,10 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         if (commands.size() == 1) {
             Command command = commands.get(0);
             if (isPassThroughCommand(command)) {
+                if (command.getRedisCommand() == RedisCommand.PING) {
+                    futureList.get(0).complete(StatusReply.PONG);
+                    return;
+                }
                 flushNoBlockingCommands(db, commands, futureList);
                 return;
             }
@@ -100,6 +105,12 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             ChannelInfo channelInfo = command.getChannelInfo();
             RedisConnection bindConnection = channelInfo.getBindConnection();
             RedisCommand redisCommand = command.getRedisCommand();
+            if (redisCommand == RedisCommand.PING) {
+                if (bindConnection == null) {
+                    future.complete(StatusReply.PONG);
+                    continue;
+                }
+            }
             if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
                 boolean first = false;
                 if (bindConnection == null) {

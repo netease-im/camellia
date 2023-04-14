@@ -124,13 +124,6 @@ public class CommandsTransponder {
 
                 //DB类型的命令，before auth
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.DB) {
-                    //ping命令直接返回
-                    if (redisCommand == RedisCommand.PING) {
-                        task.replyCompleted(StatusReply.PONG);
-                        hasCommandsSkip = true;
-                        continue;
-                    }
-
                     //quit命令直接断开连接
                     if (redisCommand == RedisCommand.QUIT) {
                         channelInfo.getCtx().close();
@@ -284,7 +277,7 @@ public class CommandsTransponder {
 
                 if (channelInfo.isInSubscribe()) {
                     if (redisCommand != RedisCommand.SUBSCRIBE && redisCommand != RedisCommand.PSUBSCRIBE
-                            && redisCommand != RedisCommand.UNSUBSCRIBE && redisCommand != RedisCommand.PUNSUBSCRIBE) {
+                            && redisCommand != RedisCommand.UNSUBSCRIBE && redisCommand != RedisCommand.PUNSUBSCRIBE && redisCommand != RedisCommand.PING) {
                         taskQueue.reply(redisCommand, new ErrorReply("Command " + redisCommand.strRaw() + " not allowed while subscribed. Allowed commands are: [PSUBSCRIBE, QUIT, PUNSUBSCRIBE, SUBSCRIBE, UNSUBSCRIBE]"));
                         hasCommandsSkip = true;
                         continue;

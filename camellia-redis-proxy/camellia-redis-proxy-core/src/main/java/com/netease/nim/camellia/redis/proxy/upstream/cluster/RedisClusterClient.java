@@ -180,6 +180,13 @@ public class RedisClusterClient implements IUpstreamClient {
             RedisConnection bindConnection = channelInfo.getBindConnection();
             int bindSlot = channelInfo.getBindSlot();
 
+            if (redisCommand == RedisCommand.PING) {
+                if (bindConnection == null) {
+                    future.complete(StatusReply.PONG);
+                    continue;
+                }
+            }
+
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_1) {
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.PUB_SUB) {
                     pubsub(command, future, channelInfo, commandFlusher, redisCommand, bindConnection);
