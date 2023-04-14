@@ -214,7 +214,7 @@ public class RedisClusterClient implements IUpstreamClient {
                     RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(slot);
                     bindConnection = command.getChannelInfo().acquireBindRedisConnection(node.getAddr());
                     if (bindConnection == null) {
-                        future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+                        future.complete(ErrorReply.UPSTREAM_BIND_CONNECTION_NULL);
                         continue;
                     }
                     channelInfo.setBindConnection(slot, bindConnection);
@@ -232,7 +232,7 @@ public class RedisClusterClient implements IUpstreamClient {
                 List<byte[]> keys = command.getKeys();
                 int slot = RedisClusterCRC16Utils.checkSlot(keys);
                 if (slot < 0 || slot != bindSlot) {
-                    future.complete(new ErrorReply("CROSSSLOT Keys in request don't hash to the same slot in bind connection"));
+                    future.complete(ErrorReply.UPSTREAM_BIND_CONNECTION_CROSSSLOT);
                     continue;
                 }
                 commandFlusher.sendCommand(bindConnection, command, future);
@@ -433,7 +433,7 @@ public class RedisClusterClient implements IUpstreamClient {
                 int randomSlot = ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE);
                 RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(randomSlot);
                 if (node == null) {
-                    future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+                    future.complete(ErrorReply.UPSTREAM_CONNECTION_REDIS_CLUSTER_NODE_NULL);
                     return;
                 }
                 bindConnection = command.getChannelInfo().acquireBindRedisConnection(node.getAddr());
@@ -456,7 +456,7 @@ public class RedisClusterClient implements IUpstreamClient {
                     }
                 }
             } else {
-                future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+                future.complete(ErrorReply.UPSTREAM_BIND_CONNECTION_NULL);
             }
             return;
         }
@@ -486,7 +486,7 @@ public class RedisClusterClient implements IUpstreamClient {
             if (connection != null) {
                 commandFlusher.sendCommand(connection, command, new CompletableFutureWrapper(this, future, command));
             } else {
-                future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+                future.complete(ErrorReply.UPSTREAM_CONNECTION_NULL);
             }
         }
     }
@@ -541,8 +541,8 @@ public class RedisClusterClient implements IUpstreamClient {
         }
 
         RedisConnection redisConnection = clusterSlotInfo.getConnectionByIndex(currentNodeIndex);
-        if (redisConnection == null || !redisConnection.isValid()) {
-            future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+        if (redisConnection == null) {
+            future.complete(ErrorReply.UPSTREAM_CONNECTION_NULL);
             return;
         }
 
@@ -875,13 +875,13 @@ public class RedisClusterClient implements IUpstreamClient {
         RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(slot);
         if (node == null) {
             ErrorLogCollector.collect(RedisClusterClient.class, "blockingCommand getNode, slot=" + slot + " fail");
-            future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+            future.complete(ErrorReply.UPSTREAM_CONNECTION_REDIS_CLUSTER_NODE_NULL);
             return;
         }
         RedisConnection connection = command.getChannelInfo().acquireBindRedisConnection(node.getAddr());
-        if (connection == null || !connection.isValid()) {
-            ErrorLogCollector.collect(RedisClusterClient.class, "blockingCommand newClient, node=" + node.getAddr() + " fail");
-            future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+        if (connection == null) {
+            ErrorLogCollector.collect(RedisClusterClient.class, "blockingCommand bind connection null, node=" + node.getAddr() + " fail");
+            future.complete(ErrorReply.UPSTREAM_BIND_CONNECTION_NULL);
             return;
         }
         commandFlusher.flush();

@@ -290,7 +290,7 @@ public class RedisConnection {
         if (status == RedisConnectionStatus.INVALID) {
             String log = connectionName + " is " + status + ", command return NOT_AVAILABLE";
             for (CompletableFuture<Reply> future : completableFutureList) {
-                future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+                future.complete(ErrorReply.UPSTREAM_CONNECTION_STATUS_INVALID);
                 ErrorLogCollector.collect(RedisConnection.class, log);
             }
             return;
@@ -314,14 +314,14 @@ public class RedisConnection {
                     if (!success) {
                         String log = connectionName + ", cachedCommands queue is full, command return NOT_AVAILABLE";
                         for (CompletableFuture<Reply> future : completableFutureList) {
-                            future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+                            future.complete(ErrorReply.UPSTREAM_CONNECTION_CACHED_QUEUE_FULL);
                             ErrorLogCollector.collect(RedisConnection.class, log);
                         }
                     }
                 } else {
                     String log = connectionName + " is " + status + ", command return NOT_AVAILABLE";
                     for (CompletableFuture<Reply> future : completableFutureList) {
-                        future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+                        future.complete(ErrorReply.UPSTREAM_CONNECTION_STATUS_INVALID);
                         ErrorLogCollector.collect(RedisConnection.class, log);
                     }
                 }
@@ -329,7 +329,7 @@ public class RedisConnection {
         } else {
             String log = connectionName + " is " + status + ", command return NOT_AVAILABLE";
             for (CompletableFuture<Reply> future : completableFutureList) {
-                future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+                future.complete(ErrorReply.UPSTREAM_CONNECTION_STATUS_INVALID);
                 ErrorLogCollector.collect(RedisConnection.class, log);
             }
         }

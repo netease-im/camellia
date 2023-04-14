@@ -143,7 +143,7 @@ public class ChannelInfo {
             }
         }
         RedisConnection connection = RedisConnectionHub.getInstance().newConnection(addr);
-        if (connection == null) return null;
+        if (connection == null || !connection.isValid()) return null;
         if (bindRedisConnectionCache == null) {
             synchronized (this) {
                 if (bindRedisConnectionCache == null) {

@@ -45,7 +45,7 @@ public class CommandPackEncoder extends MessageToMessageEncoder<CommandPack> {
             RedisConnectionStatus status = redisConnection.getStatus();
             for (CompletableFuture<Reply> future : msg.getCompletableFutureList()) {
                 if (status == RedisConnectionStatus.INVALID) {
-                    future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+                    future.complete(ErrorReply.UPSTREAM_CONNECTION_STATUS_INVALID);
                     continue;
                 }
                 boolean offer;
@@ -57,7 +57,7 @@ public class CommandPackEncoder extends MessageToMessageEncoder<CommandPack> {
                 if (!offer) {
                     String log = redisConnection.getConnectionName() + ", queue full, will stop";
                     ErrorLogCollector.collect(CommandPackEncoder.class, log);
-                    future.complete(ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE);
+                    future.complete(ErrorReply.UPSTREAM_CONNECTION_QUEUE_FULL);
                     redisConnection.stop();
                 }
             }

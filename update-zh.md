@@ -8,9 +8,11 @@
 * camellia-redis-proxy支持复用CommandPack，优化gc
 * camellia-config配置key服务器增加trim逻辑
 * CamelliaLoadingCache在缓存穿透时增加最大执行时间控制
+* camellia-redis-proxy细化了后端redis异常时返回给客户端的错误描述信息
 
 ### fix
 * 修复camellia-config分页查询接口sql错误的问题
+* camellia-redis-proxy在连接处于TRANSACTION或者SUBSCRIBE状态时，ping命令应该透给后端而不是直接返回
 
 
 # 1.2.5（2023/04/07）

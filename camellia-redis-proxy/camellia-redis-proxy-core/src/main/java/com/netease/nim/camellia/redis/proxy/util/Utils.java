@@ -240,11 +240,7 @@ public class Utils {
     }
 
     private static Reply checkErrorReply(Reply reply) {
-        if (reply == ErrorReply.UPSTREAM_CONNECTION_NOT_AVAILABLE || reply == ErrorReply.UPSTREAM_RESOURCE_NOT_AVAILABLE
-                || reply == ErrorReply.UPSTREAM_NOT_AVAILABLE || reply == ErrorReply.NOT_AVAILABLE) {
-            //非预期的返回一般是ErrorReply中预定义的，先判断一下
-            return reply;
-        } else if (reply instanceof ErrorReply) {
+        if (reply instanceof ErrorReply) {
             return reply;
         } else {
             return ErrorReply.NOT_AVAILABLE;

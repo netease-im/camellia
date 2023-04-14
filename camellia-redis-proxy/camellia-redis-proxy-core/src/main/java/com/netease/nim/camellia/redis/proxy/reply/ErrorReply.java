@@ -8,10 +8,24 @@ import java.io.IOException;
 
 public class ErrorReply implements Reply {
     public static final ErrorReply NOT_SUPPORT = new ErrorReply("ERR proxy command not support");
+
     public static final ErrorReply NOT_AVAILABLE = new ErrorReply("ERR proxy not available");
+
     public static final ErrorReply UPSTREAM_NOT_AVAILABLE = new ErrorReply("ERR proxy upstream not available");
-    public static final ErrorReply UPSTREAM_CONNECTION_NOT_AVAILABLE = new ErrorReply("ERR proxy upstream connection not available");
+
     public static final ErrorReply UPSTREAM_RESOURCE_NOT_AVAILABLE = new ErrorReply("ERR proxy upstream resource not available");
+    public static final ErrorReply UPSTREAM_RESOURCE_NULL = new ErrorReply("ERR proxy upstream resource null");
+
+    public static final ErrorReply UPSTREAM_CONNECTION_NOT_AVAILABLE = new ErrorReply("ERR proxy upstream connection not available");
+    public static final ErrorReply UPSTREAM_CONNECTION_QUEUE_FULL = new ErrorReply("ERR proxy upstream connection queue full");
+    public static final ErrorReply UPSTREAM_CONNECTION_CACHED_QUEUE_FULL = new ErrorReply("ERR proxy upstream connection cached queue full");
+    public static final ErrorReply UPSTREAM_CONNECTION_STATUS_INVALID = new ErrorReply("ERR proxy upstream connection status invalid");
+    public static final ErrorReply UPSTREAM_CONNECTION_NULL = new ErrorReply("ERR proxy upstream connection null");
+    public static final ErrorReply UPSTREAM_BIND_CONNECTION_NULL = new ErrorReply("ERR proxy upstream bind connection null");
+    public static final ErrorReply UPSTREAM_CONNECTION_REDIS_CLUSTER_NODE_NULL = new ErrorReply("ERR proxy upstream redis cluster node null");
+    public static final ErrorReply UPSTREAM_CONNECTION_REDIS_NODE_NULL = new ErrorReply("ERR proxy upstream redis node null");
+    public static final ErrorReply UPSTREAM_BIND_CONNECTION_CROSSSLOT = new ErrorReply("CROSSSLOT Keys in request don't hash to the same slot in bind connection");
+
     public static final ErrorReply TOO_BUSY = new ErrorReply("ERR proxy too busy");
     public static final ErrorReply REPEAT_OPERATION = new ErrorReply("ERR repeat operation");
     public static final ErrorReply NO_AUTH = new ErrorReply("NOAUTH Authentication required");
