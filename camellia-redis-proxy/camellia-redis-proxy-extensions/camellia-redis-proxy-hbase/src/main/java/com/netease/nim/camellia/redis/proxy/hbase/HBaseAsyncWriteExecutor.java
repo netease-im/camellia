@@ -87,7 +87,7 @@ public class HBaseAsyncWriteExecutor {
         }
 
         public boolean submit(HBaseAsyncWriteTask task) {
-            if (queue.size() > queueSize.get()) {
+            if (queue.size() >= queueSize.get()) {
                 return false;
             }
             return queue.offer(task);

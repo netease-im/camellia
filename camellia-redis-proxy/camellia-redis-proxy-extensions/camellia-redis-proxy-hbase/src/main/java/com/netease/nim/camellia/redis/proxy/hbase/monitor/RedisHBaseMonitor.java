@@ -74,6 +74,9 @@ public class RedisHBaseMonitor {
     public static void incrDegraded(String desc) {
         if (!RedisHBaseConfiguration.monitorEnable()) return;
         CamelliaMapUtils.computeIfAbsent(degradedMap, desc, k -> new LongAdder()).increment();
+        if (logger.isDebugEnabled()) {
+            logger.debug("degraded = {}", desc);
+        }
     }
 
     public static void register(String name, Queue queue) {
