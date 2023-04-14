@@ -142,13 +142,15 @@ public class ConfigAdminController {
 
     @PostMapping("/getConfigHistoryListByConfigKey")
     public WebResult getConfigHistoryListByConfigKey(@RequestParam("namespace") String namespace,
-                                                    @RequestParam(value = "key", required = false) String key,
+                                                     @RequestParam(value = "key", required = false) String key,
                                                      @RequestParam(value = "id", required = false) Long id,
-                                                    @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
-                                                    @RequestParam(value = "pageSize", required = false, defaultValue = "100") int pageSize,
-                                                    @RequestParam(value = "keyword", required = false) String keyword) {
+                                                     @RequestParam(value = "pageIndex", required = false, defaultValue = "0") int pageIndex,
+                                                     @RequestParam(value = "pageSize", required = false, defaultValue = "100") int pageSize,
+                                                     @RequestParam(value = "keyword", required = false) String keyword) {
         namespace  = namespace.toLowerCase(Locale.ROOT);
-        key = key.trim();
+        if (key != null) {
+            key = key.trim();
+        }
         LogBean.get().addProps("key", key);
         LogBean.get().addProps("id", id);
         LogBean.get().addProps("namespace", namespace);
