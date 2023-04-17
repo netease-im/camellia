@@ -124,6 +124,13 @@ public class CommandsTransponder {
 
                 //DB类型的命令，before auth
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.DB) {
+                    if (redisCommand == RedisCommand.PING) {
+                        if (channelInfo.isFromCport()) {
+                            task.replyCompleted(StatusReply.PONG);
+                            hasCommandsSkip = true;
+                            continue;
+                        }
+                    }
                     //quit命令直接断开连接
                     if (redisCommand == RedisCommand.QUIT) {
                         channelInfo.getCtx().close();
