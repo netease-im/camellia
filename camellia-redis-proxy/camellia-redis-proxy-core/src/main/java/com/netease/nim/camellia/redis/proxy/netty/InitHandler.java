@@ -60,23 +60,36 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
         if (channelInfo != null) {
             channelInfo.clear();
             ChannelMonitor.remove(channelInfo);
-            ConcurrentHashMap<String, RedisConnection> map = channelInfo.getBindRedisConnectionCache();
-            if (map != null) {
-                for (Map.Entry<String, RedisConnection> entry : map.entrySet()) {
+            ConcurrentHashMap<String, RedisConnection> map1 = channelInfo.getBindRedisConnectionCache();
+            if (map1 != null) {
+                for (Map.Entry<String, RedisConnection> entry : map1.entrySet()) {
                     RedisConnection redisConnection = entry.getValue();
                     if (redisConnection == null || !redisConnection.isValid()) continue;
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("bind redis connection cache will close interrupt by proxy, consid = {}, client.addr = {}, upstream.redis.connection = {}",
+                    if (logger.isInfoEnabled()) {
+                        logger.info("bind redis connection cache will close interrupt by proxy, consid = {}, client.addr = {}, upstream.redis.connection = {}",
                                 channelInfo.getConsid(), ctx.channel().remoteAddress(), redisConnection.getConnectionName());
                     }
                     redisConnection.stop(true);
                 }
-                map.clear();
+                map1.clear();
+            }
+            ConcurrentHashMap<String, RedisConnection> map2 = channelInfo.getBindSubscribeRedisConnectionCache();
+            if (map2 != null) {
+                for (Map.Entry<String, RedisConnection> entry : map2.entrySet()) {
+                    RedisConnection redisConnection = entry.getValue();
+                    if (redisConnection == null || !redisConnection.isValid()) continue;
+                    if (logger.isInfoEnabled()) {
+                        logger.info("bind subscribe redis connection cache will close interrupt by proxy, consid = {}, client.addr = {}, upstream.redis.connection = {}",
+                                channelInfo.getConsid(), ctx.channel().remoteAddress(), redisConnection.getConnectionName());
+                    }
+                    redisConnection.stop(true);
+                }
+                map2.clear();
             }
             RedisConnection bindConnection = channelInfo.getBindConnection();
             if (bindConnection != null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("bind redis connection will close for disconnect, consid = {}, client.addr = {}, upstream.redis.connection = {}",
+                if (logger.isInfoEnabled()) {
+                    logger.info("bind redis connection will close for disconnect, consid = {}, client.addr = {}, upstream.redis.connection = {}",
                             channelInfo.getConsid(), ctx.channel().remoteAddress(), bindConnection.getConnectionName());
                 }
                 bindConnection.stop(true);

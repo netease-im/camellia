@@ -436,7 +436,7 @@ public class RedisClusterClient implements IUpstreamClient {
                     future.complete(ErrorReply.UPSTREAM_CONNECTION_REDIS_CLUSTER_NODE_NULL);
                     return;
                 }
-                bindConnection = command.getChannelInfo().acquireBindRedisConnection(node.getAddr());
+                bindConnection = command.getChannelInfo().acquireBindSubscribeRedisConnection(node.getAddr());
                 channelInfo.setBindConnection(bindConnection);
                 first = true;
             }

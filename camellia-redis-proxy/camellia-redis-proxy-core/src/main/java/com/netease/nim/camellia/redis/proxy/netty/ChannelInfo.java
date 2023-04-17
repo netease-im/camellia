@@ -38,6 +38,7 @@ public class ChannelInfo {
     private final ChannelHandlerContext ctx;
     private final CommandTaskQueue commandTaskQueue;
     private volatile ConcurrentHashMap<String, RedisConnection> bindRedisConnectionCache;
+    private volatile ConcurrentHashMap<String, RedisConnection> bindSubscribeRedisConnectionCache;
     private RedisConnection bindConnection = null;
     private int bindSlot = -1;
     private boolean inTransaction = false;
@@ -153,6 +154,34 @@ public class ChannelInfo {
         }
         bindRedisConnectionCache.put(addr.getUrl(), connection);
         return connection;
+    }
+
+    public RedisConnection acquireBindSubscribeRedisConnection(RedisConnectionAddr addr) {
+        if (mock) {
+            return null;
+        }
+        if (bindSubscribeRedisConnectionCache != null && !bindSubscribeRedisConnectionCache.isEmpty()) {
+            RedisConnection connection = bindSubscribeRedisConnectionCache.get(addr.getUrl());
+            if (connection != null && connection.isValid()) {
+                connection.stopIdleCheck();
+                return connection;
+            }
+        }
+        RedisConnection connection = RedisConnectionHub.getInstance().newConnection(addr);
+        if (connection == null || !connection.isValid()) return null;
+        if (bindSubscribeRedisConnectionCache == null) {
+            synchronized (this) {
+                if (bindSubscribeRedisConnectionCache == null) {
+                    bindSubscribeRedisConnectionCache = new ConcurrentHashMap<>();
+                }
+            }
+        }
+        bindSubscribeRedisConnectionCache.put(addr.getUrl(), connection);
+        return connection;
+    }
+
+    public ConcurrentHashMap<String, RedisConnection> getBindSubscribeRedisConnectionCache() {
+        return bindSubscribeRedisConnectionCache;
     }
 
     public ConcurrentHashMap<String, RedisConnection> getBindRedisConnectionCache() {

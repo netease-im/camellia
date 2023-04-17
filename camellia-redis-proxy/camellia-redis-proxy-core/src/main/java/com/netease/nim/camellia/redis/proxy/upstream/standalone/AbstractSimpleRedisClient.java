@@ -114,7 +114,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
                 boolean first = false;
                 if (bindConnection == null) {
-                    bindConnection = command.getChannelInfo().acquireBindRedisConnection(getAddr(db));
+                    bindConnection = command.getChannelInfo().acquireBindSubscribeRedisConnection(getAddr(db));
                     channelInfo.setBindConnection(bindConnection);
                     first = true;
                 }
