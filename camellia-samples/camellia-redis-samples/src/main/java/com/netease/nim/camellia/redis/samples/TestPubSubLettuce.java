@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.samples;
 
+import io.lettuce.core.KeyValue;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.pubsub.RedisPubSubListener;
@@ -23,6 +24,7 @@ public class TestPubSubLettuce {
     public static void pub() {
         new Thread(() -> {
             RedisCommands<String, String> sync = redisClient1.connect().sync();
+            sync.lpush("bk1", "abc");
             for (int i=0; i<100000; i++) {
                 sync.publish("ch01", String.valueOf(i));
                 sync.publish("ch02", String.valueOf(i));
@@ -83,7 +85,7 @@ public class TestPubSubLettuce {
                 String k1 = connection.sync().get("k1");
                 System.out.println("get k1=" + k1);
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println(e);
             }
 
             System.out.println("try subscribe ch02");
@@ -109,6 +111,8 @@ public class TestPubSubLettuce {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            KeyValue<String, String> keyValue = connection.sync().blpop(10, "bk1");
+            System.out.println(keyValue);
             connection.close();
             System.out.println("=========end==========");
         } catch (Exception e) {
