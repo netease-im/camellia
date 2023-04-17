@@ -86,9 +86,6 @@ public class CommandTaskQueue {
         if (!channelInfo.isInSubscribe()) {
             return;
         }
-        if (!queue.isEmpty()) {
-            queue.clear();
-        }
         if (logger.isDebugEnabled()) {
             logger.debug("CommandTaskQueue reply, reply = {}, consid = {}",
                     reply.getClass().getSimpleName(), channelInfo.getConsid());

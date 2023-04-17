@@ -247,6 +247,13 @@ public class RedisConnection {
     }
 
     /**
+     * 清空queue
+     */
+    public void clearQueue() {
+        queue.clear();
+    }
+
+    /**
      * 获取连接地址
      * @return 地址
      */

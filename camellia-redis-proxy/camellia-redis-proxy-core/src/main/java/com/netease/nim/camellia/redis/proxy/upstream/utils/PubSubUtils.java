@@ -54,6 +54,8 @@ public class PubSubUtils {
                 //after send reply, update channel subscribe status
                 if (subscribeChannelCount != null && subscribeChannelCount <= 0) {
                     taskQueue.getChannelInfo().setInSubscribe(false);
+                    taskQueue.clear();
+                    connection.clearQueue();
                 }
             });
         }
@@ -70,6 +72,8 @@ public class PubSubUtils {
                     //after send reply, update channel subscribe status
                     if (subscribeChannelCount != null && subscribeChannelCount <= 0) {
                         taskQueue.getChannelInfo().setInSubscribe(false);
+                        taskQueue.clear();
+                        connection.clearQueue();
                     }
                     //monitor
                     if (ProxyMonitorCollector.isMonitorEnable()) {
