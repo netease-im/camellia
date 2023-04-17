@@ -2,7 +2,7 @@
 
 # 1.2.6（2023/04/xx）
 ### 新增
-* camellia-redis-proxy支持对TRANSACTION命令的双写
+* camellia-redis-proxy支持对TRANSACTION命令的双写，具体见：[multi-write](/docs/redis-proxy/other/multi-write.md)
 
 ### 更新
 * camellia-redis-proxy支持复用CommandPack，优化gc
@@ -13,6 +13,8 @@
 ### fix
 * 修复camellia-config分页查询接口sql错误的问题
 * camellia-redis-proxy在连接处于TRANSACTION或者SUBSCRIBE状态时，ping命令应该透给后端而不是直接返回
+* camellia-redis-proxy修复了连接在SUBSCRIBE和normal状态间频繁切换后，普通命令没有响应的问题
+* camellia-redis-proxy修复了连接在从SUBSCRIBE转变为normal后，又使用阻塞型命令后命令没有响应的问题
 
 
 # 1.2.5（2023/04/07）
