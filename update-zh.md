@@ -9,6 +9,7 @@
 * camellia-config配置key服务器增加trim逻辑
 * CamelliaLoadingCache在缓存穿透时增加最大执行时间控制
 * camellia-redis-proxy细化了后端redis异常时返回给客户端的错误描述信息
+* camellia-redis-proxy在伪redis-cluster模式下，`cluster nodes`命令返回的换行符应该是`\n`，而不是`\r\n`
 
 ### fix
 * 修复camellia-config分页查询接口sql错误的问题

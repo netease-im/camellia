@@ -278,7 +278,7 @@ public class ProxyClusterModeProcessor {
             }
             slotCurrent += slotsPerNode;
             slotCurrent ++;
-            builder.append("\r\n");
+            builder.append("\n");
         }
         String str = builder.toString();
         logger.info("cluster nodes refresh, cluster_nodes: \r\n{}", str);
