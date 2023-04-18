@@ -12,6 +12,7 @@ import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Transaction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +44,9 @@ public class TestTransactionPipeline {
             String key = UUID.randomUUID().toString();
             Jedis jedis = template.getReadJedis(key);
             try {
-                testDiscard(jedis, key);
+//                testExec(jedis, key);
+//                testDiscard(jedis, key);
+                test2(jedis, key);
             } finally {
                 jedis.close();
             }
@@ -97,9 +100,24 @@ public class TestTransactionPipeline {
 
     }
 
+    public static void test2(Jedis jedis, String key) {
+        List<Object> expMulti = new ArrayList<>();
+
+        assertEquals(Long.valueOf(4L), jedis.incrBy(key, 4L));
+        Transaction transaction = jedis.multi();
+        transaction.incrBy(key, 4L);   expMulti.add(8L);
+        transaction.set(key, "20");      expMulti.add("OK");
+        transaction.incrBy(key, 4L);    expMulti.add(24L);
+
+        List<Object> resp = transaction.exec();
+        assertEquals(expMulti, resp);
+
+        assertEquals(Long.valueOf(28L), jedis.incrBy(key, 4L));
+    }
+
     private static void assertEquals(Object o1, Object o2) {
         System.out.println(o1 + " <--> " + o2);
-        if (String.valueOf(o2).equals("22")) {
+        if (!String.valueOf(o2).equals(String.valueOf(o1))) {
             System.exit(-1);
         }
     }
