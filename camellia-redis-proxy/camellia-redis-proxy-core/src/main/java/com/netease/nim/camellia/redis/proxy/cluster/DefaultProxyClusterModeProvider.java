@@ -1,6 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.cluster;
 
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
@@ -13,12 +15,12 @@ import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.util.ConcurrentHashSet;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
-import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -28,11 +30,16 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultProxyClusterModeProvider.class);
 
-    private static final ScheduledExecutorService schedule = Executors.newScheduledThreadPool(SysUtils.getCpuNum(),
-            new DefaultThreadFactory("proxy-cluster-mode-schedule"));
+    private static final int executorSize;
+    static {
+        executorSize = Math.max(4, Math.min(SysUtils.getCpuNum(), 8));
+    }
 
-    private static final ThreadPoolExecutor heartbeatExecutor = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(),
-            0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new DefaultThreadFactory("proxy-heartbeat-sender"), new ThreadPoolExecutor.AbortPolicy());
+    private static final ScheduledExecutorService schedule = Executors.newScheduledThreadPool(executorSize,
+            new CamelliaThreadFactory("proxy-cluster-mode-schedule"));
+
+    private static final ThreadPoolExecutor heartbeatExecutor = new ThreadPoolExecutor(executorSize, executorSize,
+            0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000), new CamelliaThreadFactory("proxy-heartbeat-sender"), new ThreadPoolExecutor.AbortPolicy());
 
     private boolean init = false;
 
@@ -46,6 +53,9 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
     private final ConcurrentHashSet<ProxyNode> pendingNodes = new ConcurrentHashSet<>();
     private final ConcurrentHashMap<ProxyNode, AtomicLong> heartbeatTargetNodes = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<ProxyNode, Long> heartbeatMap = new ConcurrentHashMap<>();
+
+    private final ConcurrentHashMap<ProxyNode, RedisConnectionAddr> addrCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<ProxyNode, AtomicBoolean> heartbeatLock = new ConcurrentHashMap<>();
 
     @Override
     public synchronized void init() {
@@ -158,35 +168,40 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
     }
 
     private void heartbeat(ProxyNode node, ClusterModeStatus.Status status) {
-        try {
-            RedisConnection connection = RedisConnectionHub.getInstance().get(node.getHost(), node.getCport(), null, null);
-            if (connection != null) {
-                CompletableFuture<Reply> future = connection.sendCommand(RedisCommand.CLUSTER.raw(),
-                        Utils.stringToBytes(RedisKeyword.PROXY_HEARTBEAT.name()), Utils.stringToBytes(current().toString()),
-                        Utils.stringToBytes(String.valueOf(status.getValue())));
-                int timeoutSeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.request.timeout.seconds", 10);
-                Reply reply = future.get(timeoutSeconds, TimeUnit.SECONDS);
-                if (reply instanceof BulkReply) {
-                    String heartbeatResp = Utils.bytesToString(((BulkReply) reply).getRaw());
-                    ProxyClusterModeHeartbeatResp resp = parseHeartbeatResp(heartbeatResp);
-                    for (ProxyNode proxyNode : resp.getOnlineNodes()) {
-                        addHeartbeatTarget(proxyNode);
+        AtomicBoolean lock = CamelliaMapUtils.computeIfAbsent(heartbeatLock, node, n -> new AtomicBoolean(false));
+        if (lock.compareAndSet(false, true)) {
+            try {
+                RedisConnection connection = RedisConnectionHub.getInstance().get(toAddr(node));
+                if (connection != null) {
+                    CompletableFuture<Reply> future = connection.sendCommand(RedisCommand.CLUSTER.raw(),
+                            Utils.stringToBytes(RedisKeyword.PROXY_HEARTBEAT.name()), Utils.stringToBytes(current().toString()),
+                            Utils.stringToBytes(String.valueOf(status.getValue())));
+                    int timeoutSeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.heartbeat.request.timeout.seconds", 10);
+                    Reply reply = future.get(timeoutSeconds, TimeUnit.SECONDS);
+                    if (reply instanceof BulkReply) {
+                        String heartbeatResp = Utils.bytesToString(((BulkReply) reply).getRaw());
+                        ProxyClusterModeHeartbeatResp resp = parseHeartbeatResp(heartbeatResp);
+                        for (ProxyNode proxyNode : resp.getOnlineNodes()) {
+                            addHeartbeatTarget(proxyNode);
+                        }
+                        for (ProxyNode proxyNode : resp.getPendingNodes()) {
+                            addHeartbeatTarget(proxyNode);
+                        }
+                        addHeartbeatTarget(node);//心跳成功
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("proxy cluster mode heartbeat success, node = {}, resp = {}", node, heartbeatResp);
+                        }
+                        return;
                     }
-                    for (ProxyNode proxyNode : resp.getPendingNodes()) {
-                        addHeartbeatTarget(proxyNode);
-                    }
-                    addHeartbeatTarget(node);//心跳成功
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("proxy cluster mode heartbeat success, node = {}, resp = {}", node, heartbeatResp);
-                    }
-                    return;
                 }
+                logger.warn("proxy cluster mode heartbeat fail, node = {}", node);
+                heartbeatTargetFail(node);//心跳失败
+            } catch (Exception e) {
+                logger.warn("proxy cluster mode heartbeat error, node = {}, ex = {}", node, e.toString());
+                heartbeatTargetFail(node);//心跳失败
+            } finally {
+                lock.compareAndSet(true, false);
             }
-            logger.warn("proxy cluster mode heartbeat fail, node = {}", node);
-            heartbeatTargetFail(node);//心跳失败
-        } catch (Exception e) {
-            logger.warn("proxy cluster mode heartbeat error, node = {}, ex = {}", node, e.toString());
-            heartbeatTargetFail(node);//心跳失败
         }
     }
 
@@ -292,5 +307,10 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
                 }
             }
         }
+    }
+
+    private RedisConnectionAddr toAddr(ProxyNode proxyNode) {
+        return CamelliaMapUtils.computeIfAbsent(addrCache, proxyNode,
+                node -> new RedisConnectionAddr(node.getHost(), node.getCport(), null, null));
     }
 }
