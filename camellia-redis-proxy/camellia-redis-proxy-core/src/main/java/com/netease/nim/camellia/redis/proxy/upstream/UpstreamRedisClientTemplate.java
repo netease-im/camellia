@@ -1203,9 +1203,6 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         } else {
             ResourceStatsMonitor.incr(bid, bgroup, url, command.getName());
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug("read command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, url);
-        }
     }
 
     private void incrWrite(String url, Command command) {
@@ -1216,9 +1213,6 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             ResourceStatsMonitor.incr(null, null, url, command.getName());
         } else {
             ResourceStatsMonitor.incr(bid, bgroup, url, command.getName());
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("write command = {}, bid = {}, bgroup = {}, resource = {}", command.getName(), bid, bgroup, url);
         }
     }
 

@@ -228,7 +228,7 @@ public class RedisClusterClient implements IUpstreamClient {
                 }
             }
 
-            if (bindConnection != null && bindSlot > 0) {
+            if (bindConnection != null && bindSlot >= 0) {
                 List<byte[]> keys = command.getKeys();
                 int slot = RedisClusterCRC16Utils.checkSlot(keys);
                 if (slot < 0 || slot != bindSlot) {

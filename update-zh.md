@@ -16,6 +16,7 @@
 * camellia-redis-proxy在连接处于TRANSACTION或者SUBSCRIBE状态时，ping命令应该透给后端而不是直接返回
 * camellia-redis-proxy修复了连接在SUBSCRIBE和normal状态间频繁切换后，普通命令没有响应的问题
 * camellia-redis-proxy修复了连接在从SUBSCRIBE转变为normal后，又使用阻塞型命令后命令没有响应的问题
+* camellia-redis-proxy修复了代理到redis-cluster时，TRANSACTION命令包裹的普通命令的key的slot计算为0时导致事务逻辑错误的问题
 
 
 # 1.2.5（2023/04/07）
