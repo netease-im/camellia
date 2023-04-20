@@ -116,7 +116,7 @@ public class TestTransactionPipeline {
     }
 
     private static void assertEquals(Object o1, Object o2) {
-        System.out.println(o1 + " <--> " + o2);
+        System.out.println(Thread.currentThread().getName() + ":" + o1 + " <--> " + o2);
         if (!String.valueOf(o2).equals(String.valueOf(o1))) {
             System.exit(-1);
         }
