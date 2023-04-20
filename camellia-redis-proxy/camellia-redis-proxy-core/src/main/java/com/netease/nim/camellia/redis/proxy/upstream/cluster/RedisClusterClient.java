@@ -370,7 +370,7 @@ public class RedisClusterClient implements IUpstreamClient {
                 future.complete(new ErrorReply("CROSSSLOT Keys in request don't hash to the same slot"));
                 return;
             }
-            if (bindSlot > 0 && slot != bindSlot) {
+            if (bindSlot >= 0 && slot != bindSlot) {
                 future.complete(new ErrorReply("MULTI WATCH Keys don't hash to the same slot"));
                 return;
             }
