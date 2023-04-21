@@ -41,7 +41,13 @@ public class ConsoleServiceAdaptor implements ConsoleService {
         if (logger.isDebugEnabled()) {
             logger.debug("status = {}", status.name());
         }
+        boolean online = false;
         if (status == ServerStatus.Status.ONLINE) {
+            online = true;
+        } else if (status == ServerStatus.Status.OFFLINE) {
+            online = !ServerStatus.isIdle();
+        }
+        if (online) {
             return ConsoleResult.success(status.name());
         } else {
             return ConsoleResult.error(status.name());
