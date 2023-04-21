@@ -13,9 +13,8 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Transaction;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by caojiajun on 2023/4/12
@@ -37,21 +36,39 @@ public class TestTransactionPipeline {
 
         CamelliaRedisTemplate template = new CamelliaRedisTemplate(redisEnv, resourceTable);
 
+        String url1 = "redis-cluster://@10.189.31.13:6601,10.189.31.14:6603,10.189.31.15:6605";
+        String url2 = "redis-cluster://@nim-redis-perftest-jd-1.v1.yunxin.jd1.vpc:7000,nim-redis-perftest-jd-2.v1.yunxin.jd1.vpc:7006,nim-redis-perftest-jd-3.v1.yunxin.jd1.vpc:7010";
+        CamelliaRedisTemplate template1 = new CamelliaRedisTemplate(redisEnv,
+                ResourceTableUtil.simpleTable(RedisResourceUtil.parseResourceByUrl(new Resource(url1))));
+        CamelliaRedisTemplate template2 = new CamelliaRedisTemplate(redisEnv,
+                ResourceTableUtil.simpleTable(RedisResourceUtil.parseResourceByUrl(new Resource(url2))));
 
+        for (int i=0; i<5; i++) {
+            new Thread(() -> {
+                try {
+                    while (true) {
+                        String key = UUID.randomUUID().toString();
+                        try (Jedis jedis = template.getReadJedis(key)) {
+                //                testExec(jedis, key);
+                //                testDiscard(jedis, key);
+                //                test2(jedis, key);
+                            test3(jedis, key);
+                        }
+                        System.out.println(Thread.currentThread().getName() + ":key=" + key);
+                        assertEquals(template1.zrange(key, 0, -1), template2.zrange(key, 0, -1));
 
-        while (true) {
-            String key = UUID.randomUUID().toString();
-            Jedis jedis = template.getReadJedis(key);
-            try {
-//                testExec(jedis, key);
-//                testDiscard(jedis, key);
-                test2(jedis, key);
-            } finally {
-                jedis.close();
-            }
-            Thread.sleep(1000);
+                        template.del(key);
+                        try {
+                            Thread.sleep(1);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
         }
-
     }
 
     public static void testExec(Jedis jedis, String key) {
@@ -112,6 +129,17 @@ public class TestTransactionPipeline {
         assertEquals(expMulti, resp);
 
         assertEquals(Long.valueOf(28L), jedis.incrBy(key, 4L));
+    }
+
+    public static void test3(Jedis jedis, String key) {
+        String field = UUID.randomUUID().toString();
+        Map<String, Double> map = new HashMap<>();
+        for (int i=0; i<10; i++) {
+            map.put(UUID.randomUUID().toString(), ThreadLocalRandom.current().nextDouble(10.0));
+        }
+        jedis.zadd(key, map);
+        jedis.zadd(key, ThreadLocalRandom.current().nextDouble(10.0), field);
+        jedis.zrem(key, field);
     }
 
     private static void assertEquals(Object o1, Object o2) {
