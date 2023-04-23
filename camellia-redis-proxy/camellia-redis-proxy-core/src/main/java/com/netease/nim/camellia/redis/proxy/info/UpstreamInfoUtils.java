@@ -77,7 +77,8 @@ public class UpstreamInfoUtils {
                         String[] split1 = split[0].split(":");
                         String host = split1[0];
                         int port = Integer.parseInt(split1[1]);
-                        RedisConnectionAddr addr = new RedisConnectionAddr(host, port, ((RedisClusterResource) resource).getUserName(), ((RedisClusterResource) resource).getPassword());
+                        RedisConnectionAddr addr = new RedisConnectionAddr(host, port, ((RedisClusterResource) resource).getUserName(),
+                                ((RedisClusterResource) resource).getPassword(), false, 0, false);
                         RedisInfo redisInfo = getRedisInfo(addr);
                         if (redisInfo != null) {
                             totalMaxMemory += redisInfo.maxMemory;
@@ -109,7 +110,7 @@ public class UpstreamInfoUtils {
         } else if (resource instanceof RedisResource) {
             infoJson.put("type", "standalone");
             RedisConnectionAddr addr = new RedisConnectionAddr(((RedisResource) resource).getHost(),
-                    ((RedisResource) resource).getPort(), ((RedisResource) resource).getUserName(), ((RedisResource) resource).getPassword());
+                    ((RedisResource) resource).getPort(), ((RedisResource) resource).getUserName(), ((RedisResource) resource).getPassword(), false, 0, false);
             RedisInfo redisInfo = getRedisInfo(addr);
             if (redisInfo != null) {
                 infoJson.put("status", "ok");
@@ -237,7 +238,7 @@ public class UpstreamInfoUtils {
                     upstream.put("redis-node-info", redisNodeInfoJson);
 
                     RedisConnectionAddr addr = new RedisConnectionAddr(((RedisResource) redisResource).getHost(),
-                            ((RedisResource) redisResource).getPort(), ((RedisResource) redisResource).getUserName(), ((RedisResource) redisResource).getPassword());
+                            ((RedisResource) redisResource).getPort(), ((RedisResource) redisResource).getUserName(), ((RedisResource) redisResource).getPassword(), false, 0, false);
                     builder.append("### redis-node-info").append("\r\n");
                     RedisInfo redisInfo = getRedisInfo(addr);
                     if (redisInfo != null) {
@@ -319,7 +320,8 @@ public class UpstreamInfoUtils {
                             String[] split1 = split[0].split(":");
                             String host = split1[0];
                             int port = Integer.parseInt(split1[1]);
-                            RedisInfo redisInfo = getRedisInfo(new RedisConnectionAddr(host, port, ((RedisClusterResource) redisResource).getUserName(), ((RedisClusterResource) redisResource).getPassword()));
+                            RedisInfo redisInfo = getRedisInfo(new RedisConnectionAddr(host, port, ((RedisClusterResource) redisResource).getUserName(),
+                                    ((RedisClusterResource) redisResource).getPassword(), false, 0, false));
                             redisNodeInfoBuilder.append("#### node").append(k).append("\r\n");
 
                             JSONObject node = new JSONObject();
@@ -570,7 +572,7 @@ public class UpstreamInfoUtils {
         for (RedisSentinelResource.Node node : sentinels) {
             HostAndPort master = getRedisSentinelMaster(node.getHost(), node.getPort(), masterName);
             if (master != null) {
-                RedisConnectionAddr addr = new RedisConnectionAddr(master.getHost(), master.getPort(), userName, password);
+                RedisConnectionAddr addr = new RedisConnectionAddr(master.getHost(), master.getPort(), userName, password, false, 0, false);
                 redisSentinelInfo.master = addr;
                 RedisInfo redisInfo = getRedisInfo(addr);
                 if (redisInfo != null) {

@@ -31,7 +31,7 @@ public class RedisConnectionMonitor {
             ExecutorUtils.submitToSingleThreadExecutor(() -> {
                 try {
                     RedisConnectionConfig config = redisConnection.getConfig();
-                    RedisConnectionAddr addr = new RedisConnectionAddr(config.getHost(), config.getPort(), config.getUserName(), config.getPassword());
+                    RedisConnectionAddr addr = new RedisConnectionAddr(config.getHost(), config.getPort(), config.getUserName(), config.getPassword(), false, 0, false);
                     ConcurrentHashMap<String, RedisConnection> subMap = redisClientMap.get(addr);
                     if (subMap == null) {
                         subMap = new ConcurrentHashMap<>();
@@ -56,7 +56,7 @@ public class RedisConnectionMonitor {
             ExecutorUtils.submitToSingleThreadExecutor(() -> {
                 try {
                     RedisConnectionConfig config = redisConnection.getConfig();
-                    RedisConnectionAddr addr = new RedisConnectionAddr(config.getHost(), config.getPort(), config.getUserName(), config.getPassword());
+                    RedisConnectionAddr addr = new RedisConnectionAddr(config.getHost(), config.getPort(), config.getUserName(), config.getPassword(), false, 0, false);
                     ConcurrentHashMap<String, RedisConnection> subMap = redisClientMap.get(addr);
                     if (subMap != null) {
                         subMap.remove(redisConnection.getConnectionName());

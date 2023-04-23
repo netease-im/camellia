@@ -591,7 +591,7 @@ public class RedisClusterClient implements IUpstreamClient {
                             String log = "MOVED, command = " + command.getName() + ", attempts = " + attempts;
                             ErrorLogCollector.collect(RedisClusterClient.class, log);
                             String[] strings = parseTargetHostAndSlot(error);
-                            RedisConnectionAddr addr = new RedisConnectionAddr(strings[1], Integer.parseInt(strings[2]), clusterClient.userName, clusterClient.password);
+                            RedisConnectionAddr addr = new RedisConnectionAddr(strings[1], Integer.parseInt(strings[2]), clusterClient.userName, clusterClient.password, false, 0, false);
                             if (command.isBlocking()) {
                                 RedisConnection redisConnection = command.getChannelInfo().tryAcquireBindRedisConnection(addr);
                                 if (redisConnection != null && redisConnection.isValid()) {
@@ -645,7 +645,7 @@ public class RedisClusterClient implements IUpstreamClient {
                             String log = "ASK, command = " + command.getName() + ", attempts = " + attempts;
                             ErrorLogCollector.collect(RedisClusterClient.class, log);
                             String[] strings = parseTargetHostAndSlot(error);
-                            RedisConnectionAddr addr = new RedisConnectionAddr(strings[1], Integer.parseInt(strings[2]), clusterClient.userName, clusterClient.password);
+                            RedisConnectionAddr addr = new RedisConnectionAddr(strings[1], Integer.parseInt(strings[2]), clusterClient.userName, clusterClient.password, false, 0, false);
                             if (command.isBlocking()) {
                                 RedisConnection redisConnection = command.getChannelInfo().tryAcquireBindRedisConnection(addr);
                                 if (redisConnection != null && redisConnection.isValid()) {

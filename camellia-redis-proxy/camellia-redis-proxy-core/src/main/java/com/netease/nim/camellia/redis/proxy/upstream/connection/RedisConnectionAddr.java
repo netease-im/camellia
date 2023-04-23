@@ -18,7 +18,7 @@ public class RedisConnectionAddr {
 
     private final String url;
 
-    private final FastThreadLocal<RedisConnection> cache = new FastThreadLocal<>();
+    private final FastThreadLocal<RedisConnection> cache;
 
     public RedisConnectionAddr(String host, int port, String userName, String password) {
         this(host, port, userName, password, false);
@@ -33,6 +33,10 @@ public class RedisConnectionAddr {
     }
 
     public RedisConnectionAddr(String host, int port, String userName, String password, boolean readonly, int db) {
+        this(host, port, userName, password, readonly, db, true);
+    }
+
+    public RedisConnectionAddr(String host, int port, String userName, String password, boolean readonly, int db, boolean cacheEnable) {
         this.host = host;
         this.port = port;
         this.password = password;
@@ -60,6 +64,11 @@ public class RedisConnectionAddr {
             }
         }
         this.url = builder.toString();
+        if (cacheEnable) {
+            this.cache = new FastThreadLocal<>();
+        } else {
+            this.cache = null;
+        }
     }
 
     public String getHost() {
@@ -87,10 +96,12 @@ public class RedisConnectionAddr {
     }
 
     public RedisConnection getCache() {
+        if (cache == null) return null;
         return cache.get();
     }
 
     public void setCache(RedisConnection cache) {
+        if (cache == null) return;
         this.cache.set(cache);
     }
 

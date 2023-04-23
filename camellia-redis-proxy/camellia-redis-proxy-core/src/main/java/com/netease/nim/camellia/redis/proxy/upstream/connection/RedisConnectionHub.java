@@ -133,7 +133,7 @@ public class RedisConnectionHub {
      */
     public RedisConnection get(String host, int port, String userName, String password) {
         try {
-            RedisConnectionAddr addr = new RedisConnectionAddr(host, port, userName, password);
+            RedisConnectionAddr addr = new RedisConnectionAddr(host, port, userName, password, false, 0, false);
             return get(addr);
         } catch (Exception e) {
             ErrorLogCollector.collect(RedisConnectionHub.class,
@@ -203,7 +203,7 @@ public class RedisConnectionHub {
      */
     public RedisConnection newConnection(String host, int port, String userName, String password) {
         try {
-            return newConnection(new RedisConnectionAddr(host, port, userName, password));
+            return newConnection(new RedisConnectionAddr(host, port, userName, password, false, 0, false));
         } catch (Exception e) {
             ErrorLogCollector.collect(RedisConnectionHub.class,
                     "new RedisConnection error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
