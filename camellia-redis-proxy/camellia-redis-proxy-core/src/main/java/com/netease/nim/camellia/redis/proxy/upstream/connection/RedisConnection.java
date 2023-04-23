@@ -87,7 +87,7 @@ public class RedisConnection {
         this.userName = config.getUserName();
         this.password = config.getPassword();
         this.db = config.getDb();
-        this.addr = new RedisConnectionAddr(host, port, userName, password, config.isReadonly(), config.getDb());
+        this.addr = new RedisConnectionAddr(host, port, userName, password, config.isReadonly(), config.getDb(), false);
         this.eventLoop = config.getEventLoop();
         this.commandPackRecycler = new CommandPackRecycler(eventLoop);
         this.heartbeatIntervalSeconds = config.getHeartbeatIntervalSeconds();
