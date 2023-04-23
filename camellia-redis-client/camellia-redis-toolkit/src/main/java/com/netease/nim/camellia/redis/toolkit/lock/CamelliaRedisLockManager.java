@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.toolkit.lock;
 
 
-import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.executor.CamelliaScheduleExecutor;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 
 import java.nio.charset.StandardCharsets;
@@ -20,14 +20,14 @@ public class CamelliaRedisLockManager {
     private static final long defaultAcquireTimeoutMillis = 5000;
     private static final long defaultExpireTimeoutMillis = 5000;
 
-    private final ScheduledExecutorService scheduledExec;
+    private final CamelliaScheduleExecutor scheduleExecutor;
 
     private final CamelliaRedisTemplate template;
 
     private final long acquireTimeoutMillis;
     private final long expireTimeoutMillis;
 
-    private final ConcurrentHashMap<LockKey, ScheduledFuture<?>> futureMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<LockKey, CamelliaScheduleExecutor.Task> taskMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<LockKey, CamelliaRedisLock> lockMap = new ConcurrentHashMap<>();
 
     private static final CamelliaRedisLockManager INSTANCE = new CamelliaRedisLockManager();
@@ -50,7 +50,7 @@ public class CamelliaRedisLockManager {
 
     public CamelliaRedisLockManager(CamelliaRedisTemplate template, int poolSize, long acquireTimeoutMillis, long expireTimeoutMillis) {
         this.template = template;
-        this.scheduledExec = new ScheduledThreadPoolExecutor(poolSize, new CamelliaThreadFactory("camellia-redis-lock-manager"));
+        this.scheduleExecutor = new CamelliaScheduleExecutor("camellia-redis-lock-manager", poolSize);
         this.acquireTimeoutMillis = acquireTimeoutMillis;
         this.expireTimeoutMillis = expireTimeoutMillis;
     }
@@ -279,11 +279,11 @@ public class CamelliaRedisLockManager {
         for (Map.Entry<LockKey, CamelliaRedisLock> entry : lockMap.entrySet()) {
             entry.getValue().release();
         }
-        for (Map.Entry<LockKey, ScheduledFuture<?>> entry : futureMap.entrySet()) {
-            entry.getValue().cancel(false);
+        for (Map.Entry<LockKey, CamelliaScheduleExecutor.Task> entry : taskMap.entrySet()) {
+            entry.getValue().cancel();
         }
         lockMap.clear();
-        futureMap.clear();
+        taskMap.clear();
     }
 
     private boolean lock(CamelliaRedisTemplate template, LockKey lockKey,
@@ -296,8 +296,8 @@ public class CamelliaRedisLockManager {
         boolean lockOk = lock.lock();
         if (lockOk) {
             lockMap.put(lockKey, lock);
-            ScheduledFuture<?> future = scheduledExec.scheduleAtFixedRate(lock::renew, expireTimeoutMillis / 5, expireTimeoutMillis / 5, TimeUnit.MILLISECONDS);
-            futureMap.put(lockKey, future);
+            CamelliaScheduleExecutor.Task task = scheduleExecutor.scheduleAtFixedRate(lock::renew, expireTimeoutMillis / 5, expireTimeoutMillis / 5, TimeUnit.MILLISECONDS);
+            taskMap.put(lockKey, task);
         }
         return lockOk;
     }
@@ -312,8 +312,8 @@ public class CamelliaRedisLockManager {
         boolean lockOk = lock.tryLock();
         if (lockOk) {
             lockMap.put(lockKey, lock);
-            ScheduledFuture<?> future = scheduledExec.scheduleAtFixedRate(lock::renew, expireTimeoutMillis / 5, expireTimeoutMillis / 5, TimeUnit.MILLISECONDS);
-            futureMap.put(lockKey, future);
+            CamelliaScheduleExecutor.Task task = scheduleExecutor.scheduleAtFixedRate(lock::renew, expireTimeoutMillis / 5, expireTimeoutMillis / 5, TimeUnit.MILLISECONDS);
+            taskMap.put(lockKey, task);
         }
         return lockOk;
     }
@@ -328,9 +328,9 @@ public class CamelliaRedisLockManager {
         if (lock != null) {
             result = lock.release();
         }
-        ScheduledFuture<?> future = futureMap.remove(lockKey);
-        if (future != null) {
-            future.cancel(false);
+        CamelliaScheduleExecutor.Task task = taskMap.remove(lockKey);
+        if (task != null) {
+            task.cancel();
         }
         return result;
     }
@@ -341,9 +341,9 @@ public class CamelliaRedisLockManager {
         if (lock != null) {
             result = lock.clear();
         }
-        ScheduledFuture<?> future = futureMap.remove(lockKey);
-        if (future != null) {
-            future.cancel(false);
+        CamelliaScheduleExecutor.Task task = taskMap.remove(lockKey);
+        if (task != null) {
+            task.cancel();
         }
         return result;
     }
