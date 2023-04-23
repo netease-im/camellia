@@ -4,6 +4,7 @@
 ### 新增
 * camellia-redis-proxy支持对TRANSACTION命令的双写，具体见：[multi-write](/docs/redis-proxy/other/multi-write.md)
 * camellia-tools新增CamelliaScheduleExecutor工具类
+* RateLimitProxyPlugin支持对租户级别设置默认频控，具体见：[rate-limit](/docs/redis-proxy/plugin/rate-limit.md)
 
 ### 更新
 * camellia-redis-proxy支持复用CommandPack，优化gc

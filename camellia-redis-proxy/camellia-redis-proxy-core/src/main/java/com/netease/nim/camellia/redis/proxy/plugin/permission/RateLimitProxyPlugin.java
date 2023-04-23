@@ -106,6 +106,10 @@ public class RateLimitProxyPlugin implements ProxyPlugin {
         return CamelliaMapUtils.computeIfAbsent(rateLimitConfMap, key, str -> {
             long checkMillis = ProxyDynamicConf.getLong(bid + "." + bgroup + ".rate.limit.check.millis", 1000L);
             long maxCount = ProxyDynamicConf.getLong(bid + "." + bgroup + ".rate.limit.max.count", -1L);
+            if (maxCount < 0) {
+                checkMillis = ProxyDynamicConf.getLong("default.default.rate.limit.check.millis", 1000L);
+                maxCount = ProxyDynamicConf.getLong("default.default.rate.limit.max.count", -1L);
+            }
             return new RateLimitConf(checkMillis, maxCount);
         });
     }

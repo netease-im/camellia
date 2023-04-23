@@ -38,4 +38,10 @@ rate.limit.max.count=100000
 1.default.rate.limit.check.millis=1000
 ##最大请求次数，如果小于0，则不限制，如果等于0，则会拦截所有请求
 1.default.rate.limit.max.count=100000
+
+#bid/bgroup级别的默认速率控制
+##检查周期
+default.default.rate.limit.check.millis=1000
+##最大请求次数，如果小于0，则不限制，如果等于0，则会拦截所有请求
+default.default.rate.limit.max.count=100000
 ```
