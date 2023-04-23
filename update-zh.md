@@ -3,6 +3,7 @@
 # 1.2.6（2023/04/xx）
 ### 新增
 * camellia-redis-proxy支持对TRANSACTION命令的双写，具体见：[multi-write](/docs/redis-proxy/other/multi-write.md)
+* camellia-tools新增CamelliaScheduleExecutor工具类
 
 ### 更新
 * camellia-redis-proxy支持复用CommandPack，优化gc
@@ -10,6 +11,7 @@
 * CamelliaLoadingCache在缓存穿透时增加最大执行时间控制
 * camellia-redis-proxy细化了后端redis异常时返回给客户端的错误描述信息
 * camellia-redis-proxy在伪redis-cluster模式下，`cluster nodes`命令返回的换行符应该是`\n`，而不是`\r\n`
+* CamelliaRedisLockManager底层使用CamelliaScheduleExecutor代替ScheduledExecutorService  
 
 ### fix
 * 修复camellia-config分页查询接口sql错误的问题
