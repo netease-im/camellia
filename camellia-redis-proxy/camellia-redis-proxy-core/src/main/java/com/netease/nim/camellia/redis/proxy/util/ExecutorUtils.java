@@ -30,7 +30,13 @@ public class ExecutorUtils {
     }
 
     public static void submitDelayTask(Runnable runnable, long delay, TimeUnit unit) {
-        delayTimer.newTimeout(timeout -> runnable.run(), delay, unit);
+        delayTimer.newTimeout(timeout -> {
+            try {
+                runnable.run();
+            } catch (Exception e) {
+                logger.error("delay task error", e);
+            }
+        }, delay, unit);
     }
 
     public static void submitToSingleThreadExecutor(Runnable runnable) {
