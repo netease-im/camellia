@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.6（2023/04/xx）
+# 1.2.6（2023/04/28）
 ### add
 * camellia-redis-proxy support custom-write for TRANSACTION commands
 * camellia-tools provide CamelliaScheduleExecutor

@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.2.6（2023/04/xx）
+# 1.2.6（2023/04/28）
 ### 新增
 * camellia-redis-proxy支持对TRANSACTION命令的双写，具体见：[multi-write](/docs/redis-proxy/other/multi-write.md)
 * camellia-tools新增CamelliaScheduleExecutor工具类
