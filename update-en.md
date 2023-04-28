@@ -15,6 +15,7 @@
 * camellia-redis-proxy run in redis-cluster mode, the line break in reply of `cluster nodes` commands should use `\n` rather than `\r\n`
 * CamelliaRedisLockManager use CamelliaScheduleExecutor instead of ScheduledExecutorService
 * camellia-redis-proxy RedisConnection use CamelliaScheduleExecutor instead of ScheduledExecutorService to invoke idle-check and heartbeat
+* camellia-redis-proxy optimize the heartbeat logic in redis-cluster mode
 
 ### fix
 * camellia-config fix sql error

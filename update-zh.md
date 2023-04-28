@@ -15,6 +15,7 @@
 * camellia-redis-proxy在伪redis-cluster模式下，`cluster nodes`命令返回的换行符应该是`\n`，而不是`\r\n`
 * CamelliaRedisLockManager底层使用CamelliaScheduleExecutor代替ScheduledExecutorService
 * camellia-redis-proxy的RedisConnection底层使用CamelliaScheduleExecutor代替ScheduledExecutorService执行idle检测和心跳检测
+* camellia-redis-proxy优化了伪redis-cluster模式下心跳逻辑
 
 ### fix
 * 修复camellia-config相关接口sql错误的问题
