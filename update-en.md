@@ -1,5 +1,29 @@
 [中文版](update-zh.md)
 
+# 1.2.6（2023/04/xx）
+### add
+* camellia-redis-proxy support custom-write for TRANSACTION commands
+* camellia-tools provide CamelliaScheduleExecutor
+* RateLimitProxyPlugin support setting default config in tenant level
+
+### update
+* camellia-redis-proxy support recycler CommandPack instance, optimize gc
+* camellia-config add trim logic for key
+* camellia-config optimize the response of `/getConfigString`
+* CamelliaLoadingCache add max load time control on cache penetration case
+* camellia-redis-proxy specify ErrorReply msg of proxy upstream error
+* camellia-redis-proxy run in redis-cluster mode, the line break in reply of `cluster nodes` commands should use `\n` rather than `\r\n`
+* CamelliaRedisLockManager use CamelliaScheduleExecutor instead of ScheduledExecutorService
+* camellia-redis-proxy RedisConnection use CamelliaScheduleExecutor instead of ScheduledExecutorService to invoke idle-check and heartbeat
+
+### fix
+* camellia-config fix sql error
+* camellia-redis-proxy when client connection in TRANSACTION or SUBSCRIBE status, `ping` command should pass through
+* camellia-redis-proxy fix command no reply when client connection change status between SUBSCRIBE and normal
+* camellia-redis-proxy fix command no reply when client connection change status between SUBSCRIBE to normal, and send blocking command
+* camellia-redis-proxy fix the TRANSACTION command logic error when route to redis-cluster, only occurs bug when in key's slot is 0
+
+
 # 1.2.5（2023/04/07）
 ### add
 * none
