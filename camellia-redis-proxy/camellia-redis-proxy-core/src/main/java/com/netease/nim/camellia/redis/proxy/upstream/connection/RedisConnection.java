@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.connection;
 
-import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.executor.CamelliaScheduleExecutor;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.netty.*;
 import com.netease.nim.camellia.redis.proxy.command.Command;
@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -40,8 +39,8 @@ public class RedisConnection {
     private static final Logger logger = LoggerFactory.getLogger(RedisConnection.class);
     private static final AtomicLong id = new AtomicLong(0);
 
-    private static final ScheduledExecutorService heartBeatScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-redis-connection-heart-beat"));
-    private static final ScheduledExecutorService idleCheckScheduled = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-redis-connection-idle-check"));
+    private static final CamelliaScheduleExecutor heartBeatScheduled = new CamelliaScheduleExecutor("camellia-redis-connection-heart-beat", 1, 1024*32);
+    private static final CamelliaScheduleExecutor idleCheckScheduled = new CamelliaScheduleExecutor("camellia-redis-connection-idle-check", 1, 1024*32);
     private static final ExecutorService initializeExecutor = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(10240), new DefaultThreadFactory("camellia-redis-connection-initialize"), new ThreadPoolExecutor.AbortPolicy());
 
@@ -68,8 +67,8 @@ public class RedisConnection {
     private final int closeIdleConnectionDelaySeconds;
 
     private Channel channel;
-    private ScheduledFuture<?> heartbeatScheduledFuture;
-    private ScheduledFuture<?> idleCheckScheduledFuture;
+    private volatile CamelliaScheduleExecutor.Task heartbeatTask;
+    private volatile CamelliaScheduleExecutor.Task idleCheckTask;
 
     //status
     private volatile RedisConnectionStatus status;
@@ -172,14 +171,14 @@ public class RedisConnection {
      * 开启空闲检测
      */
     public void startIdleCheck() {
-        if (idleCheckScheduledFuture != null && closeIdleConnection) {
+        if (idleCheckTask != null && closeIdleConnection) {
             return;
         }
         synchronized (lock) {
-            if (idleCheckScheduledFuture == null) {
+            if (idleCheckTask == null) {
                 lastCommandTime = TimeCache.currentMillis;
                 closeIdleConnection = true;
-                idleCheckScheduledFuture = idleCheckScheduled.scheduleAtFixedRate(this::checkIdle,
+                idleCheckTask = idleCheckScheduled.scheduleAtFixedRate(this::checkIdle,
                         checkIdleThresholdSeconds, checkIdleThresholdSeconds, TimeUnit.SECONDS);
             }
         }
@@ -189,15 +188,15 @@ public class RedisConnection {
      * 关闭空闲检测
      */
     public void stopIdleCheck() {
-        if (idleCheckScheduledFuture == null && !closeIdleConnection) {
+        if (idleCheckTask == null && !closeIdleConnection) {
             return;
         }
         synchronized (lock) {
             lastCommandTime = TimeCache.currentMillis;
             closeIdleConnection = false;
-            if (idleCheckScheduledFuture != null) {
-                idleCheckScheduledFuture.cancel(false);
-                idleCheckScheduledFuture = null;
+            if (idleCheckTask != null) {
+                idleCheckTask.cancel();
+                idleCheckTask = null;
             }
         }
     }
@@ -450,7 +449,7 @@ public class RedisConnection {
         RedisConnectionMonitor.removeRedisConnection(this);
         if (!stop.compareAndSet(false, true)) return;
         if (status == RedisConnectionStatus.INVALID && channel == null
-                && heartbeatScheduledFuture == null && idleCheckScheduledFuture == null && queue.isEmpty() && cachedCommands.isEmpty()) {
+                && heartbeatTask == null && idleCheckTask == null && queue.isEmpty() && cachedCommands.isEmpty()) {
             ErrorLogCollector.collect(RedisConnection.class, addr.getUrl() + " stop, grace = " + grace);
             return;
         }
@@ -472,17 +471,17 @@ public class RedisConnection {
                 logger.error("{}, channel close error", connectionName, e);
             }
             try {
-                if (heartbeatScheduledFuture != null) {
-                    heartbeatScheduledFuture.cancel(false);
-                    heartbeatScheduledFuture = null;
+                if (heartbeatTask != null) {
+                    heartbeatTask.cancel();
+                    heartbeatTask = null;
                 }
             } catch (Exception e) {
                 logger.error("{}, heart-beat schedule cancel error", connectionName, e);
             }
             try {
-                if (idleCheckScheduledFuture != null) {
-                    idleCheckScheduledFuture.cancel(false);
-                    idleCheckScheduledFuture = null;
+                if (idleCheckTask != null) {
+                    idleCheckTask.cancel();
+                    idleCheckTask = null;
                 }
             } catch (Exception e) {
                 logger.error("{}, idle-check schedule cancel error", connectionName, e);
@@ -634,11 +633,11 @@ public class RedisConnection {
     private void startSchedule() {
         if (heartbeatIntervalSeconds > 0 && heartbeatTimeoutMillis > 0) {
             //默认60s发送一个心跳，心跳超时时间10s，如果超时了，则关闭当前连接
-            this.heartbeatScheduledFuture = heartBeatScheduled.scheduleAtFixedRate(this::heartbeat,
+            this.heartbeatTask = heartBeatScheduled.scheduleAtFixedRate(this::heartbeat,
                     heartbeatIntervalSeconds, heartbeatIntervalSeconds, TimeUnit.SECONDS);
         }
         if (closeIdleConnection && checkIdleThresholdSeconds > 0 && closeIdleConnectionDelaySeconds > 0) {
-            this.idleCheckScheduledFuture = idleCheckScheduled.scheduleAtFixedRate(this::checkIdle,
+            this.idleCheckTask = idleCheckScheduled.scheduleAtFixedRate(this::checkIdle,
                     checkIdleThresholdSeconds, checkIdleThresholdSeconds, TimeUnit.SECONDS);
         }
     }
