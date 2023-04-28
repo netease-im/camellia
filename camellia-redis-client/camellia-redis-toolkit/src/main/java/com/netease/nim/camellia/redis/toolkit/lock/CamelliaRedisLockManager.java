@@ -50,7 +50,7 @@ public class CamelliaRedisLockManager {
 
     public CamelliaRedisLockManager(CamelliaRedisTemplate template, int poolSize, long acquireTimeoutMillis, long expireTimeoutMillis) {
         this.template = template;
-        this.scheduleExecutor = new CamelliaScheduleExecutor("camellia-redis-lock-manager", poolSize);
+        this.scheduleExecutor = new CamelliaScheduleExecutor("camellia-redis-lock-manager", poolSize, 1024*32);
         this.acquireTimeoutMillis = acquireTimeoutMillis;
         this.expireTimeoutMillis = expireTimeoutMillis;
     }

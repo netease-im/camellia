@@ -18,7 +18,7 @@ public class TestCamelliaScheduleExecutor {
     private static final AtomicInteger id2 = new AtomicInteger();
 
     public static void main(String[] args) throws InterruptedException {
-        CamelliaScheduleExecutor executor = new CamelliaScheduleExecutor("test", 8);
+        CamelliaScheduleExecutor executor = new CamelliaScheduleExecutor("test", 8, 1024*32);
         CamelliaScheduleExecutor.Task task = executor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {

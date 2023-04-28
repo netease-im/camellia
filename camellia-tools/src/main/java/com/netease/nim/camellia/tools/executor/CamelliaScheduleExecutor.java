@@ -24,11 +24,11 @@ public class CamelliaScheduleExecutor {
     private final HashedWheelTimer timer;
     private final ThreadPoolExecutor executor;
 
-    public CamelliaScheduleExecutor(String name, int poolSize) {
+    public CamelliaScheduleExecutor(String name, int poolSize, int queueSize) {
         this.name = name;
         this.timer = new HashedWheelTimer();
         this.executor = new ThreadPoolExecutor(poolSize, poolSize, 0, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(1024*128), new CamelliaThreadFactory(name), new ThreadPoolExecutor.AbortPolicy());
+                new LinkedBlockingQueue<>(queueSize), new CamelliaThreadFactory(name), new ThreadPoolExecutor.AbortPolicy());
     }
 
     public Task scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
@@ -64,10 +64,15 @@ public class CamelliaScheduleExecutor {
         }
 
         private void tryInvoke(long delay, TimeUnit unit) {
-            if (cancel.get()) return;
+            if (cancel.get()) {
+                return;
+            }
             try {
                 executor.submit(() -> {
                     try {
+                        if (cancel.get()) {
+                            return;
+                        }
                         command.run();
                     } catch (Throwable e) {
                         logger.error("{} invoke error", Task.this.name, e);
