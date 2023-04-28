@@ -94,7 +94,11 @@ public class ConfigService {
         ConfigPage configPage = daoWrapper.getList(namespace, offset, limit, validFlag, keyword);
         StringBuilder builder = new StringBuilder();
         for (Config config : configPage.getList()) {
-            builder.append("## ").append(config.getInfo()).append("\r\n");
+            String info = config.getInfo();
+            String[] split = info.split("\\n");
+            for (String subInfo : split) {
+                builder.append("## ").append(subInfo).append("\r\n");
+            }
             builder.append("## id=").append(config.getId()).append("\r\n");
             if (config.getValidFlag() == 1) {
                 builder.append(config.getKey()).append("=").append(config.getValue()).append("\r\n");
