@@ -229,6 +229,7 @@ public class RedisConnection {
      * @return true/false
      */
     public boolean isValid() {
+        if (stop.get()) return false;
         return status == RedisConnectionStatus.VALID || status == RedisConnectionStatus.INITIALIZE;
     }
 
@@ -395,9 +396,7 @@ public class RedisConnection {
         synchronized (lock) {
             try {
                 if (stop.get()) {
-                    if (heartbeatTask != null) {
-                        heartbeatTask.cancel();
-                    }
+                    stopHeartbeatTask();
                     return;
                 }
                 if (status != RedisConnectionStatus.VALID) {
@@ -456,7 +455,12 @@ public class RedisConnection {
     //关闭（是否优雅的）
     private void _stop(boolean grace) {
         RedisConnectionMonitor.removeRedisConnection(this);
-        if (!stop.compareAndSet(false, true)) return;
+        if (!stop.compareAndSet(false, true)) {
+            status = RedisConnectionStatus.INVALID;
+            stopHeartbeatTask();
+            stopIdleCheckTask();
+            return;
+        }
         if (status == RedisConnectionStatus.INVALID && channel == null
                 && heartbeatTask == null && idleCheckTask == null && queue.isEmpty() && cachedCommands.isEmpty()) {
             ErrorLogCollector.collect(RedisConnection.class, addr.getUrl() + " stop, grace = " + grace);
@@ -471,30 +475,9 @@ public class RedisConnection {
         }
         try {
             status = RedisConnectionStatus.INVALID;
-            try {
-                if (channel != null) {
-                    channel.close();
-                    channel = null;
-                }
-            } catch (Exception e) {
-                logger.error("{}, channel close error", connectionName, e);
-            }
-            try {
-                if (heartbeatTask != null) {
-                    heartbeatTask.cancel();
-                    heartbeatTask = null;
-                }
-            } catch (Exception e) {
-                logger.error("{}, heart-beat schedule cancel error", connectionName, e);
-            }
-            try {
-                if (idleCheckTask != null) {
-                    idleCheckTask.cancel();
-                    idleCheckTask = null;
-                }
-            } catch (Exception e) {
-                logger.error("{}, idle-check schedule cancel error", connectionName, e);
-            }
+            closeChannel();
+            stopHeartbeatTask();
+            stopIdleCheckTask();
             int count1 = 0;
             while (!queue.isEmpty()) {
                 CompletableFuture<Reply> future = queue.poll();
@@ -518,6 +501,39 @@ public class RedisConnection {
             }
         } catch (Exception e) {
             logger.error("{} stop error", connectionName, e);
+        }
+    }
+
+    private void closeChannel() {
+        try {
+            if (channel != null) {
+                channel.close();
+                channel = null;
+            }
+        } catch (Exception e) {
+            logger.error("{}, channel close error", connectionName, e);
+        }
+    }
+
+    private void stopHeartbeatTask() {
+        try {
+            if (heartbeatTask != null) {
+                heartbeatTask.cancel();
+                heartbeatTask = null;
+            }
+        } catch (Exception e) {
+            logger.error("{}, heart-beat schedule cancel error", connectionName, e);
+        }
+    }
+
+    private void stopIdleCheckTask() {
+        try {
+            if (idleCheckTask != null) {
+                idleCheckTask.cancel();
+                idleCheckTask = null;
+            }
+        } catch (Exception e) {
+            logger.error("{}, idle-check schedule cancel error", connectionName, e);
         }
     }
 
@@ -675,9 +691,7 @@ public class RedisConnection {
         synchronized (lock) {
             try {
                 if (stop.get()) {
-                    if (idleCheckTask != null) {
-                        idleCheckTask.cancel();
-                    }
+                    stopIdleCheckTask();
                     return;
                 }
                 if (isIdle()) {
