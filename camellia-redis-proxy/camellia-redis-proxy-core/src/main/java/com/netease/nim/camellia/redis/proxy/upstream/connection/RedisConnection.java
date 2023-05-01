@@ -171,6 +171,9 @@ public class RedisConnection {
      * 开启空闲检测
      */
     public void startIdleCheck() {
+        if (stop.get()) {
+            return;
+        }
         if (idleCheckTask != null && closeIdleConnection) {
             return;
         }
@@ -391,6 +394,12 @@ public class RedisConnection {
     private void heartbeat() {
         synchronized (lock) {
             try {
+                if (stop.get()) {
+                    if (heartbeatTask != null) {
+                        heartbeatTask.cancel();
+                    }
+                    return;
+                }
                 if (status != RedisConnectionStatus.VALID) {
                     return;
                 }
@@ -665,6 +674,12 @@ public class RedisConnection {
     private void checkIdle() {
         synchronized (lock) {
             try {
+                if (stop.get()) {
+                    if (idleCheckTask != null) {
+                        idleCheckTask.cancel();
+                    }
+                    return;
+                }
                 if (isIdle()) {
                     status = RedisConnectionStatus.CLOSING;
                     if (logger.isInfoEnabled()) {
