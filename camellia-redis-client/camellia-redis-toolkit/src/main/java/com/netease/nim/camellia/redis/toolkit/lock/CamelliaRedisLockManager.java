@@ -27,8 +27,7 @@ public class CamelliaRedisLockManager {
     private final long acquireTimeoutMillis;
     private final long expireTimeoutMillis;
 
-    private final ConcurrentHashMap<LockKey, CamelliaScheduleExecutor.Task> taskMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<LockKey, CamelliaRedisLock> lockMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<LockKey, LockInfo> lockInfoMap = new ConcurrentHashMap<>();
 
     private static final CamelliaRedisLockManager INSTANCE = new CamelliaRedisLockManager();
 
@@ -57,6 +56,16 @@ public class CamelliaRedisLockManager {
 
     public static CamelliaRedisLockManager getInstance() {
         return INSTANCE;
+    }
+
+    private static class LockInfo {
+        CamelliaRedisLock lock;
+        CamelliaScheduleExecutor.Task task;
+
+        public LockInfo(CamelliaRedisLock lock, CamelliaScheduleExecutor.Task task) {
+            this.lock = lock;
+            this.task = task;
+        }
     }
 
     public boolean lock(CamelliaRedisTemplate template, String lockKey) {
@@ -276,14 +285,16 @@ public class CamelliaRedisLockManager {
     }
 
     public void clearAll() {
-        for (Map.Entry<LockKey, CamelliaRedisLock> entry : lockMap.entrySet()) {
-            entry.getValue().release();
+        for (Map.Entry<LockKey, LockInfo> entry : lockInfoMap.entrySet()) {
+            LockInfo lockInfo = entry.getValue();
+            if (lockInfo.lock != null) {
+                lockInfo.lock.release();
+            }
+            if (lockInfo.task != null) {
+                lockInfo.task.cancel();
+            }
         }
-        for (Map.Entry<LockKey, CamelliaScheduleExecutor.Task> entry : taskMap.entrySet()) {
-            entry.getValue().cancel();
-        }
-        lockMap.clear();
-        taskMap.clear();
+        lockInfoMap.clear();
     }
 
     private boolean lock(CamelliaRedisTemplate template, LockKey lockKey,
@@ -295,9 +306,16 @@ public class CamelliaRedisLockManager {
         final CamelliaRedisLock lock = CamelliaRedisLock.newLock(template, lockKey.getKey(), acquireTimeoutMillis, expireTimeoutMillis);
         boolean lockOk = lock.lock();
         if (lockOk) {
-            lockMap.put(lockKey, lock);
             CamelliaScheduleExecutor.Task task = scheduleExecutor.scheduleAtFixedRate(lock::renew, expireTimeoutMillis / 5, expireTimeoutMillis / 5, TimeUnit.MILLISECONDS);
-            taskMap.put(lockKey, task);
+            LockInfo oldLockInfo = lockInfoMap.put(lockKey, new LockInfo(lock, task));
+            if (oldLockInfo != null) {
+                if (oldLockInfo.lock != null) {
+                    oldLockInfo.lock.release();
+                }
+                if (oldLockInfo.task != null) {
+                    oldLockInfo.task.cancel();
+                }
+            }
         }
         return lockOk;
     }
@@ -311,39 +329,52 @@ public class CamelliaRedisLockManager {
         final CamelliaRedisLock lock = CamelliaRedisLock.newLock(template, lockKey.getKey(), acquireTimeoutMillis, expireTimeoutMillis);
         boolean lockOk = lock.tryLock();
         if (lockOk) {
-            lockMap.put(lockKey, lock);
             CamelliaScheduleExecutor.Task task = scheduleExecutor.scheduleAtFixedRate(lock::renew, expireTimeoutMillis / 5, expireTimeoutMillis / 5, TimeUnit.MILLISECONDS);
-            taskMap.put(lockKey, task);
+            LockInfo oldLockInfo = lockInfoMap.put(lockKey, new LockInfo(lock, task));
+            if (oldLockInfo != null) {
+                if (oldLockInfo.lock != null) {
+                    oldLockInfo.lock.release();
+                }
+                if (oldLockInfo.task != null) {
+                    oldLockInfo.task.cancel();
+                }
+            }
         }
         return lockOk;
     }
 
     private CamelliaRedisLock getLock(LockKey lockKey) {
-        return lockMap.get(lockKey);
+        LockInfo lockInfo = lockInfoMap.get(lockKey);
+        if (lockInfo != null) {
+            return lockInfo.lock;
+        }
+        return null;
     }
 
     private boolean release(LockKey lockKey) {
-        CamelliaRedisLock lock = lockMap.remove(lockKey);
+        LockInfo lockInfo = lockInfoMap.remove(lockKey);
         boolean result = false;
-        if (lock != null) {
-            result = lock.release();
-        }
-        CamelliaScheduleExecutor.Task task = taskMap.remove(lockKey);
-        if (task != null) {
-            task.cancel();
+        if (lockInfo != null) {
+            if (lockInfo.lock != null) {
+                result = lockInfo.lock.release();
+            }
+            if (lockInfo.task != null) {
+                lockInfo.task.cancel();
+            }
         }
         return result;
     }
 
     private boolean clear(LockKey lockKey) {
-        CamelliaRedisLock lock = lockMap.remove(lockKey);
+        LockInfo lockInfo = lockInfoMap.remove(lockKey);
         boolean result = false;
-        if (lock != null) {
-            result = lock.clear();
-        }
-        CamelliaScheduleExecutor.Task task = taskMap.remove(lockKey);
-        if (task != null) {
-            task.cancel();
+        if (lockInfo != null) {
+            if (lockInfo.lock != null) {
+                result = lockInfo.lock.clear();
+            }
+            if (lockInfo.task != null) {
+                lockInfo.task.cancel();
+            }
         }
         return result;
     }
