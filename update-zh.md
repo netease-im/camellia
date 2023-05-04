@@ -1,5 +1,17 @@
 [ENGLISH](update-en.md)
 
+# 1.2.6（2023/05/xx）
+### 新增
+* 无
+
+### 更新
+* 无
+
+### fix
+* 修复了CamelliaRedisLockManager在并发场景下，可能导致自动renew任务泄露的问题（逻辑正确，但是引起cpu多余开销），影响camellia-delay-queue-server
+* 修复了camellia-redis-proxy中RedisConnection下心跳和idle检测定时任务，在使用了事务命令/发布订阅命令时，某些情况下，在连接已经关闭的情况下可能空跑的问题
+
+
 # 1.2.6（2023/04/28）
 ### 新增
 * camellia-redis-proxy支持对TRANSACTION命令的双写，具体见：[multi-write](/docs/redis-proxy/other/multi-write.md)

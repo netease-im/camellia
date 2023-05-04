@@ -1,5 +1,17 @@
 [中文版](update-zh.md)
 
+# 1.2.6（2023/05/xx）
+### add
+* none
+
+### update
+* none
+
+### fix
+* fix lock instance leak in concurrent case of CamelliaRedisLockManager
+* fix schedule task leak in some case of RedisConnection when camellia-redis-proxy proxy pass TRANSACTION/PUB-SUB/BLOCKING commands
+
+
 # 1.2.6（2023/04/28）
 ### add
 * camellia-redis-proxy support custom-write for TRANSACTION commands
