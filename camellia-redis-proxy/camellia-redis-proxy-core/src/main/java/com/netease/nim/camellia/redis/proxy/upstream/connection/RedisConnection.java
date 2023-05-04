@@ -197,10 +197,7 @@ public class RedisConnection {
         synchronized (lock) {
             lastCommandTime = TimeCache.currentMillis;
             closeIdleConnection = false;
-            if (idleCheckTask != null) {
-                idleCheckTask.cancel();
-                idleCheckTask = null;
-            }
+            stopIdleCheckTask();
         }
     }
 
@@ -229,7 +226,6 @@ public class RedisConnection {
      * @return true/false
      */
     public boolean isValid() {
-        if (stop.get()) return false;
         return status == RedisConnectionStatus.VALID || status == RedisConnectionStatus.INITIALIZE;
     }
 
@@ -517,9 +513,11 @@ public class RedisConnection {
 
     private void stopHeartbeatTask() {
         try {
-            if (heartbeatTask != null) {
-                heartbeatTask.cancel();
-                heartbeatTask = null;
+            synchronized (lock) {
+                if (heartbeatTask != null) {
+                    heartbeatTask.cancel();
+                    heartbeatTask = null;
+                }
             }
         } catch (Exception e) {
             logger.error("{}, heart-beat schedule cancel error", connectionName, e);
@@ -528,9 +526,11 @@ public class RedisConnection {
 
     private void stopIdleCheckTask() {
         try {
-            if (idleCheckTask != null) {
-                idleCheckTask.cancel();
-                idleCheckTask = null;
+            synchronized (lock) {
+                if (idleCheckTask != null) {
+                    idleCheckTask.cancel();
+                    idleCheckTask = null;
+                }
             }
         } catch (Exception e) {
             logger.error("{}, idle-check schedule cancel error", connectionName, e);
@@ -657,13 +657,21 @@ public class RedisConnection {
     //开启定时检测和定时心跳
     private void startSchedule() {
         if (heartbeatIntervalSeconds > 0 && heartbeatTimeoutMillis > 0) {
-            //默认60s发送一个心跳，心跳超时时间10s，如果超时了，则关闭当前连接
-            this.heartbeatTask = heartBeatScheduled.scheduleAtFixedRate(this::heartbeat,
-                    heartbeatIntervalSeconds, heartbeatIntervalSeconds, TimeUnit.SECONDS);
+            synchronized (lock) {
+                if (heartbeatTask == null) {
+                    //默认60s发送一个心跳，心跳超时时间10s，如果超时了，则关闭当前连接
+                    heartbeatTask = heartBeatScheduled.scheduleAtFixedRate(this::heartbeat,
+                            heartbeatIntervalSeconds, heartbeatIntervalSeconds, TimeUnit.SECONDS);
+                }
+            }
         }
         if (closeIdleConnection && checkIdleThresholdSeconds > 0 && closeIdleConnectionDelaySeconds > 0) {
-            this.idleCheckTask = idleCheckScheduled.scheduleAtFixedRate(this::checkIdle,
-                    checkIdleThresholdSeconds, checkIdleThresholdSeconds, TimeUnit.SECONDS);
+            synchronized (lock) {
+                if (idleCheckTask == null) {
+                    idleCheckTask = idleCheckScheduled.scheduleAtFixedRate(this::checkIdle,
+                            checkIdleThresholdSeconds, checkIdleThresholdSeconds, TimeUnit.SECONDS);
+                }
+            }
         }
     }
 
