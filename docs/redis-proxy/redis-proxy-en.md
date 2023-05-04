@@ -114,7 +114,7 @@ SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
 
 * Partially Supported 2   
 only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel or redis-cluster)   
-since 1.2.6, TRANSACTION commands support multi-write only when read-resources without multi and read-resource equals to the first write resource  
+since 1.2.7, TRANSACTION commands support multi-write only when read-resources without multi and read-resource equals to the first write resource  
 ```
 ##TRANSACTION(keys must in same slot)
 MULTI,DISCARD,EXEC,WATCH,UNWATCH,

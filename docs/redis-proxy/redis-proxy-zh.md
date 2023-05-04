@@ -117,7 +117,7 @@ SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
 
 * 部分支持2  
 当且仅当路由后端是单个redis-standalone或者单个redis-sentinel或者单个redis-cluster  
-备注：1.2.6版本开始，TRANSACTION支持双写，但是要求读地址只能配置一个，且必须和写地址的第一个是一样的     
+备注：1.2.7版本开始，TRANSACTION支持双写，但是要求读地址只能配置一个，且必须和写地址的第一个是一样的     
 ```
 ##TRANSACTION(keys must in same slot)
 MULTI,DISCARD,EXEC,WATCH,UNWATCH,
@@ -155,12 +155,12 @@ INFO,
 ``` 
 
 ## 快速开始一
-1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.2.6），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
+1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.2.7），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
 ```
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
-  <version>1.2.6</version>
+  <version>1.2.7</version>
 </dependency>
 ```
 2) 编写主类Application.java, 如下: 

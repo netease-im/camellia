@@ -25,7 +25,7 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-core</artifactId>
-    <version>1.2.6</version>
+    <version>1.2.7</version>
 </dependency>
 ```
 示例如下：
@@ -76,17 +76,17 @@ public class CamelliaStrictIdGenTest {
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-strict-spring-boot-starter</artifactId>
-    <version>1.2.6</version>
+    <version>1.2.7</version>
 </dependency>
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-id-loader</artifactId>
-    <version>1.2.6</version>
+    <version>1.2.7</version>
 </dependency>
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-spring-boot-starter</artifactId>
-    <version>1.2.6</version>
+    <version>1.2.7</version>
 </dependency>
 ```
 编写启动类：
@@ -210,7 +210,7 @@ http://127.0.0.1:8082/camellia/id/gen/strict/decodeRegionId?id=11111
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-id-gen-sdk</artifactId>
-    <version>1.2.6</version>
+    <version>1.2.7</version>
 </dependency>
 ```
 示例代码如下：  
