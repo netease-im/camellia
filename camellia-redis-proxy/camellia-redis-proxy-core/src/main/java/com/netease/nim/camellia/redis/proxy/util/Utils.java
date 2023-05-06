@@ -1,9 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
 import com.netease.nim.camellia.redis.proxy.reply.*;
-import io.netty.buffer.ByteBuf;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -36,32 +34,6 @@ public class Utils {
             numMapWithCRLF[i] = convert(i, true);
             numMap[i] = convert(i, false);
         }
-    }
-
-    public static long readLong(ByteBuf is) throws IOException {
-        long size = 0;
-        int sign = 1;
-        int read = is.readByte();
-        if (read == '-') {
-            read = is.readByte();
-            sign = -1;
-        }
-        do {
-            if (read == CR) {
-                if (is.readByte() == LF) {
-                    break;
-                }
-            }
-            int value = read - ZERO;
-            if (value >= 0 && value < 10) {
-                size *= 10;
-                size += value;
-            } else {
-                throw new IOException("Invalid character in integer");
-            }
-            read = is.readByte();
-        } while (true);
-        return size * sign;
     }
 
     public static byte[] numToBytes(long value, boolean withCRLF) {
@@ -247,21 +219,7 @@ public class Utils {
         }
     }
 
-    /**
-     * Check if config has been changed
-     *
-     * @param md5    old md5
-     * @param newMd5 new md5
-     * @return true if config has been changed
-     */
     public static boolean hasChange(String md5, String newMd5) {
         return md5 == null || (newMd5 != null && !md5.equals(newMd5));
-    }
-
-    public static boolean isNil(BulkReply bulkReply) {
-        if (bulkReply == BulkReply.NIL_REPLY) {
-            return true;
-        }
-        return bulkReply.getSize() < 0 || bulkReply.getRaw() == null;
     }
 }
