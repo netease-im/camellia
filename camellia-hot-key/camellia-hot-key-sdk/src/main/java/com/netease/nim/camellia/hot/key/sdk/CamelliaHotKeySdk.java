@@ -14,12 +14,12 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
     }
 
     @Override
-    public void push(String key, KeyAction keyAction) {
+    public void push(String namespace, String key, KeyAction keyAction) {
 
     }
 
     @Override
-    public void addListener(CamelliaHotKeyListener listener) {
+    public void addListener(String namespace, CamelliaHotKeyListener listener) {
 
     }
 }

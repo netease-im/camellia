@@ -38,15 +38,11 @@ public class LocalValueLoaderLock implements IValueLoaderLock {
     public boolean tryLock(String key) {
         String lockKey = buildLockKey(key);
         LockInfo lockInfo = lockMap.get(lockKey);
-        if (lockInfo == null) {
-            this.lockInfo = new LockInfo(expireMillis);
-            LockInfo old = lockMap.putIfAbsent(lockKey, new LockInfo(expireMillis));
-            return old == null;
-        }
-        if (lockInfo.isExpire()) {
+        if (lockInfo != null) {
+            if (!lockInfo.isExpire()) {
+                return false;
+            }
             lockMap.remove(lockKey, lockInfo);
-        } else {
-            return false;
         }
         this.lockInfo = new LockInfo(expireMillis);
         LockInfo old = lockMap.putIfAbsent(lockKey, new LockInfo(expireMillis));

@@ -14,17 +14,17 @@ public class CamelliaHotKeyCacheSdk implements ICamelliaHotKeyCacheSdk {
     }
 
     @Override
-    public <T> T getValue(String key, ValueLoader<T> loader, IValueLoaderLock loaderLock) {
+    public <T> T getValue(String namespace, String key, ValueLoader<T> loader, IValueLoaderLock loaderLock) {
         return null;
     }
 
     @Override
-    public void keyUpdate(String key) {
+    public void keyUpdate(String namespace, String key) {
 
     }
 
     @Override
-    public void keyDelete(String key) {
+    public void keyDelete(String namespace, String key) {
 
     }
 }

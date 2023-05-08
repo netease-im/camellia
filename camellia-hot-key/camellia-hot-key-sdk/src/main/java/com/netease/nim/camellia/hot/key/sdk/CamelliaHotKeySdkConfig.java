@@ -5,6 +5,5 @@ package com.netease.nim.camellia.hot.key.sdk;
  */
 public class CamelliaHotKeySdkConfig {
 
-    private String namespace;
 
 }

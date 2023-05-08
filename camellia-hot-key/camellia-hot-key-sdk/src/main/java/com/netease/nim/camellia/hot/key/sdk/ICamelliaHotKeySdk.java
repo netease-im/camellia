@@ -9,15 +9,17 @@ public interface ICamelliaHotKeySdk {
 
     /**
      * 推送一个key的动作给server
+     * @param namespace namespace
      * @param key key
      * @param keyAction 动作
      */
-    void push(String key, KeyAction keyAction);
+    void push(String namespace, String key, KeyAction keyAction);
 
     /**
      * 增加一个key的事件监听
+     * @param namespace namespace
      * @param listener 监听器
      */
-    void addListener(CamelliaHotKeyListener listener);
+    void addListener(String namespace, CamelliaHotKeyListener listener);
 
 }
