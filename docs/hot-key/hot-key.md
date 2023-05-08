@@ -5,6 +5,7 @@
 
 * 一个热key探测和缓存的工具
 * 包括SDK、Server两个模块
+* 参考了：京东hotkey、搜狐hotCaffeine、云音乐music_hot_caffeine的架构和实现
 
 ## 基本架构
 
@@ -103,6 +104,19 @@ public interface IValueLoaderLock {
 * rule主要用于设置key的匹配模式、热key的定义（多少时间内多少次请求），热key缓存过期时间（只有cache模式下需要）
 
 ### 配置示例（monitor）
+
+#### 字段说明
+|字段名|类型|说明|
+|:---:|:---:|:---:|
+|namespace|string|命名空间｜
+|namespace.type|string|命名空间，包括：monitor和cache两种类型｜
+|rule.name|string|规则名字｜
+|rule.type|string|规则类型，包括：exact_match（精确匹配）、prefix_match（前缀匹配）、match_all（匹配所有）｜
+|rule.keyConfig|string|exact_match时表示key本身，prefix_match时表示前缀，match_all没有这个配置项｜
+|rule.checkMillis|long|检查周期，单位ms｜
+|rule.checkThreshold|long|检查阈值｜
+|rule.expireMills|long|过期时间，只有cache这种命名空间下的rule需要配置这个，如果缺失或者小于等于0则表示cache不启用｜
+
 ```json
 {
     "namespace": "test",
@@ -112,14 +126,14 @@ public interface IValueLoaderLock {
         {
             "name": "rule1",
             "type": "exact_match",
-            "config": "abcdef",
+            "keyConfig": "abcdef",
             "checkMillis": 1000,
             "checkThreshold": 100
         },
         {
             "name": "rule1",
             "type": "prefix_match",
-            "config": "xyz",
+            "keyConfig": "xyz",
             "checkMillis": 1000,
             "checkThreshold": 100
         },
