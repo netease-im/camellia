@@ -13,98 +13,46 @@
 ## SDK部分
 
 包括两个SDK：  
-* CamelliaHotKeySdk
-* CamelliaHotKeyCacheSdk（基于CamelliaHotKeySdk封装）
+* CamelliaHotKeyMonitorSdk（仅用于监控热key）
+* CamelliaHotKeyCacheSdk（用于监控热key，并且提供本地缓存功能）
 
-### CamelliaHotKeySdk
+### CamelliaHotKeyMonitorSdk
 
-* CamelliaHotKeySdk用于推送key相关的事件给到hot-key-server做统计
-* 此外sdk侧可以添加listener用于感知事件（可选），hot-key-server也可以配置是否进行事件通知，如果仅仅用于热key探测，建议关闭通知
+* 该sdk仅用于监控热key
 
 ```java
-public interface ICamelliaHotKeySdk {
+public interface ICamelliaHotKeyMonitorSdk {
 
     /**
-     * 推送一个key的动作给server
+     * 推送一个key用于统计和检测热key
      * @param key key
-     * @param keyAction 动作
      */
-    void push(String key, KeyAction keyAction);
+    void push(String key);
 
-    /**
-     * 增加一个key的事件监听
-     * @param listener 监听器
-     */
-    void addListener(CamelliaHotKeyListener listener);
-
-}
-
-public enum KeyAction {
-
-    QUERY,
-    UPDATE,
-    DELETE,
-    ;
-}
-
-public interface CamelliaHotKeyListener {
-
-    /**
-     * 热key事件监听回调方法
-     * @param event 事件
-     */
-    void onHotKeyEvent(HotKeyEvent event);
-}
-
-public class HotKeyEvent {
-
-    private final HotKeyEventType eventType;//事件类型
-    private final String key;
-
-    public HotKeyEvent(HotKeyEventType eventType, String key) {
-        this.eventType = eventType;
-        this.key = key;
-    }
-
-    public HotKeyEventType getEventType() {
-        return eventType;
-    }
-
-    public String getKey() {
-        return key;
-    }
-}
-
-public enum HotKeyEventType {
-
-    HOT_KEY_DISCOVERY,
-    KEY_UPDATE,
-    KEY_DELETE,
-    ;
 }
 ```
 
-
 ### CamelliaHotKeyCacheSdk
 
-* 基于CamelliaHotKeySdk，可以进一步封装一个CamelliaHotKeyCacheSdk，该sdk支持热key缓存，且热key会在被更新或者删除后广播给其他sdk
-* 使用CamelliaHotKeyCacheSdk时，hot-key-server需要开启事件通知，从而能及时感知到热key的变化
+* 该sdk支持热key的监控，并且支持设置本地缓存
+* IValueLoaderLock内置了单机并发控制lock和集群并发控制lock（基于redis），也可以自定义实现
 
 ```java
 public interface ICamelliaHotKeyCacheSdk {
 
     /**
      * 获取一个key的value
-     * 如果是热key，则会优先获取本地缓存中的内容，如果获取不到则会走loader穿透（穿透时会加并发控制）
+     * 如果是热key，则会优先获取本地缓存中的内容，如果获取不到则会走loader穿透（穿透时支持设置并发控制）
      * 如果不是热key，则通过loader获取到value后返回
      *
      * 如果key有更新了，hot-key-server会广播给所有sdk去更新本地缓存，从而保证缓存值的时效性
      *
      * @param key key
      * @param loader value loader
+     * @param loaderLock loader lock，用于并发控制，如果不传，则不进行并发控制，可以是单机的锁，也可以是集群的锁（如redis）
      * @return value
      */
-    <T> T getValue(String key, ValueLoader<T> loader);
+    <T> T getValue(String key, ValueLoader<T> loader, IValueLoaderLock loaderLock);
 
     /**
      * key的value被更新了，需要调用本方法给hot-key-server，进而广播给所有人
@@ -128,8 +76,95 @@ public interface ValueLoader<T> {
      */
     T load(String key);
 }
+
+public interface IValueLoaderLock {
+
+    /**
+     * 尝试获取一把锁
+     * @param key key
+     * @return 成功/失败
+     */
+    boolean tryLock(String key);
+
+    /**
+     * 释放一把锁
+     * @param key key
+     * @return 成功/失败
+     */
+    boolean release(String key);
+}
+
 ```
 
 ## Server部分
 
-xxx
+* 服务器基于namespace来管理热key相关配置，namespace有monitor和cache两种类型，对应于两种sdk，其中cache的功能覆盖了monitor
+* 每个namespace下可以配置多个rule
+* rule主要用于设置key的匹配模式、热key的定义（多少时间内多少次请求），热key缓存过期时间（只有cache模式下需要）
+
+### 配置示例（monitor）
+```json
+{
+    "namespace": "test",
+    "type": "monitor",
+    "rules":
+    [
+        {
+            "name": "rule1",
+            "type": "exact_match",
+            "config": "abcdef",
+            "checkMillis": 1000,
+            "checkThreshold": 100
+        },
+        {
+            "name": "rule1",
+            "type": "prefix_match",
+            "config": "xyz",
+            "checkMillis": 1000,
+            "checkThreshold": 100
+        },
+        {
+            "name": "rule1",
+            "type": "match_all",
+            "checkMillis": 1000,
+            "checkThreshold": 100
+        }
+    ]
+}
+```
+
+### 配置示例（cache）
+```json
+
+{
+    "namespace": "test",
+    "type": "cache",
+    "rules":
+    [
+        {
+            "name": "rule1",
+            "type": "exact_match",
+            "config": "abcdef",
+            "checkMillis": 1000,
+            "checkThreshold": 100,
+            "expireMills": 10000
+        },
+        {
+            "name": "rule1",
+            "type": "prefix_match",
+            "config": "xyz",
+            "checkMillis": 1000,
+            "checkThreshold": 100,
+            "expireMills": 10000
+        },
+        {
+            "name": "rule1",
+            "type": "match_all",
+            "checkMillis": 1000,
+            "checkThreshold": 100,
+            "expireMills": 10000
+        }
+    ]
+}
+```
+

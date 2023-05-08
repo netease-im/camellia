@@ -6,7 +6,7 @@ package com.netease.nim.camellia.hot.key.sdk;
 public interface ICamelliaHotKeyMonitorSdk {
 
     /**
-     * 推送一个key用于统计和健康热key
+     * 推送一个key用于统计和检测热key
      * @param key key
      */
     void push(String key);

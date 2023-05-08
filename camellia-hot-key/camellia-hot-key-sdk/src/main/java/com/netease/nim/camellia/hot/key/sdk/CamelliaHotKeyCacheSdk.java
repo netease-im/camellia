@@ -14,7 +14,7 @@ public class CamelliaHotKeyCacheSdk implements ICamelliaHotKeyCacheSdk {
     }
 
     @Override
-    public <T> T getValue(String key, ValueLoader<T> loader) {
+    public <T> T getValue(String key, ValueLoader<T> loader, IValueLoaderLock loaderLock) {
         return null;
     }
 
