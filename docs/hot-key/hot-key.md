@@ -5,7 +5,7 @@
 
 * 一个热key探测和缓存的工具
 * 包括SDK、Server两个模块
-* 参考了：京东hotkey、搜狐hotCaffeine、云音乐music_hot_caffeine的架构和实现
+* 参考了：京东hotkey(https://gitee.com/jd-platform-opensource/hotkey)、搜狐hotCaffeine(https://github.com/sohutv/hotcaffeine)、云音乐music_hot_caffeine的架构和实现
 
 ## 基本架构
 
@@ -103,7 +103,7 @@ public interface IValueLoaderLock {
 * 每个namespace下可以配置多个rule
 * rule主要用于设置key的匹配模式、热key的定义（多少时间内多少次请求），热key缓存过期时间（只有cache模式下需要）
 
-### 配置示例（monitor）
+### 配置
 
 #### 字段说明
 |字段名|类型|说明|
@@ -116,6 +116,8 @@ public interface IValueLoaderLock {
 |rule.checkMillis|long|检查周期，单位ms|
 |rule.checkThreshold|long|检查阈值|
 |rule.expireMills|long|过期时间，只有cache这种命名空间下的rule需要配置这个，如果缺失或者小于等于0则表示cache不启用|
+
+#### 配置示例（monitor）
 
 ```json
 {
@@ -147,7 +149,7 @@ public interface IValueLoaderLock {
 }
 ```
 
-### 配置示例（cache）
+#### 配置示例（cache）
 ```json
 
 {
