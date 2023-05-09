@@ -42,8 +42,8 @@ public class HotKeyServerAddr implements Comparable<HotKeyServerAddr> {
     }
 
     @Override
-    public int compareTo(HotKeyServerAddr hotKeyServer) {
-        if (hotKeyServer == null) return -1;
-        return this.toString().compareTo(hotKeyServer.toString());
+    public int compareTo(HotKeyServerAddr addr) {
+        if (addr == null) return -1;
+        return this.toString().compareTo(addr.toString());
     }
 }

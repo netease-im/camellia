@@ -7,7 +7,10 @@ import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
  */
 public abstract class HotKeyServerDiscovery implements CamelliaDiscovery<HotKeyServerAddr> {
 
-
+    /**
+     * 每个HotKeyServerDiscovery应该有一个唯一的名字
+     * @return 名字
+     */
     public abstract String getName();
 
 }

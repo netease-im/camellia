@@ -22,6 +22,7 @@ public abstract class CamelliaHotKeyAbstractSdk {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaHotKeyAbstractSdk.class);
 
+    private final AtomicBoolean scheduleLock = new AtomicBoolean(false);
     private final ConcurrentHashMap<String, HotKeyConfig> hotKeyConfigCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, AtomicBoolean> hotKeyConfigListenerCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, AtomicBoolean> hotKeyConfigLockMap = new ConcurrentHashMap<>();
@@ -110,8 +111,16 @@ public abstract class CamelliaHotKeyAbstractSdk {
     }
 
     private void reloadHotKeyConfig() {
-        for (Map.Entry<String, HotKeyConfig> entry : hotKeyConfigCache.entrySet()) {
-            reloadHotKeyConfig(entry.getKey());
+        if (scheduleLock.compareAndSet(false, true)) {
+            try {
+                for (Map.Entry<String, HotKeyConfig> entry : hotKeyConfigCache.entrySet()) {
+                    reloadHotKeyConfig(entry.getKey());
+                }
+            } catch (Exception e) {
+                logger.error("reloadHotKeyConfig error", e);
+            } finally {
+                scheduleLock.compareAndSet(true, false);
+            }
         }
     }
 }

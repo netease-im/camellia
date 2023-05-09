@@ -41,28 +41,6 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         addHotKeyListener(namespace);
     }
 
-    private void addHotKeyListener(String namespace) {
-        AtomicBoolean lock = CamelliaMapUtils.computeIfAbsent(hotKeyListenerCache, namespace, k -> new AtomicBoolean(false));
-        if (lock.get()) return;
-        if (lock.compareAndSet(false, true)) {
-            //listener 只加一次
-            sdk.addListener(namespace, (CamelliaHotKeyListener) event -> {
-                try {
-                    logger.info("receive HotKeyEvent = {}", JSONObject.toJSONString(event));
-                    KeyAction keyAction = event.getKeyAction();
-                    if (keyAction == KeyAction.QUERY) {
-                        hotKeyCache.put(event.getNamespace(), event.getKey(), true, event.getExpireMillis());
-                    } else if (keyAction == KeyAction.DELETE || keyAction == KeyAction.UPDATE) {
-                        hotKeyCache.evict(event.getNamespace(), event.getKey());
-                        hotKeyValueCache.evict(event.getNamespace(), event.getKey());
-                    }
-                } catch (Exception e) {
-                    logger.error("onHotKeyEvent error, event = {}", JSONObject.toJSONString(event), e);
-                }
-            });
-        }
-    }
-
     @Override
     public <T> T getValue(String namespace, String key, ValueLoader<T> loader, IValueLoaderLock loaderLock) {
         addHotKeyListener(namespace);
@@ -161,5 +139,25 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         sdk.push(config.getNamespace(), key, KeyAction.DELETE);
     }
 
-
+    private void addHotKeyListener(String namespace) {
+        AtomicBoolean lock = CamelliaMapUtils.computeIfAbsent(hotKeyListenerCache, namespace, k -> new AtomicBoolean(false));
+        if (lock.get()) return;
+        if (lock.compareAndSet(false, true)) {
+            //listener 只加一次
+            sdk.addListener(namespace, (CamelliaHotKeyListener) event -> {
+                try {
+                    logger.info("receive HotKeyEvent = {}", JSONObject.toJSONString(event));
+                    KeyAction keyAction = event.getKeyAction();
+                    if (keyAction == KeyAction.QUERY) {
+                        hotKeyCache.put(event.getNamespace(), event.getKey(), true, event.getExpireMillis());
+                    } else if (keyAction == KeyAction.DELETE || keyAction == KeyAction.UPDATE) {
+                        hotKeyCache.evict(event.getNamespace(), event.getKey());
+                        hotKeyValueCache.evict(event.getNamespace(), event.getKey());
+                    }
+                } catch (Exception e) {
+                    logger.error("onHotKeyEvent error, event = {}", JSONObject.toJSONString(event), e);
+                }
+            });
+        }
+    }
 }

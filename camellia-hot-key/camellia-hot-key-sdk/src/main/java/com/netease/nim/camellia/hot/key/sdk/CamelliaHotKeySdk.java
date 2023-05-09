@@ -105,6 +105,10 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
                             logger.debug("send push pack to server success, size = {}", list.size());
                         }
                     });
+                    future.exceptionally(throwable -> {
+                        logger.error("send push pack to server error, size = {}", list.size(), throwable);
+                        return null;
+                    });
                 }
             }
         } catch (Exception e) {

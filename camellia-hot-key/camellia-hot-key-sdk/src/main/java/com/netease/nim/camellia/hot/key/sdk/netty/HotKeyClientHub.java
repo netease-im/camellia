@@ -2,15 +2,19 @@ package com.netease.nim.camellia.hot.key.sdk.netty;
 
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
+import com.netease.nim.camellia.hot.key.common.netty.HotKeyPack;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackConsumer;
+import com.netease.nim.camellia.hot.key.common.netty.pack.HeartbeatPack;
+import com.netease.nim.camellia.hot.key.common.netty.pack.HeartbeatRepPack;
+import com.netease.nim.camellia.hot.key.common.netty.pack.HotKeyCommand;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by caojiajun on 2023/5/8
@@ -19,8 +23,12 @@ public class HotKeyClientHub {
 
     private static final Logger logger = LoggerFactory.getLogger(HotKeyClientHub.class);
 
+    private final AtomicBoolean scheduleLock = new AtomicBoolean(false);
+    //name -> addr -> client
     private final ConcurrentHashMap<String, ConcurrentHashMap<HotKeyServerAddr, HotKeyClient>> clientMap = new ConcurrentHashMap<>();
+    //name -> discovery
     private final ConcurrentHashMap<String, HotKeyServerDiscovery> discoveryMap = new ConcurrentHashMap<>();
+    //name -> addr-list
     private final ConcurrentHashMap<String, List<HotKeyServerAddr>> addrMap = new ConcurrentHashMap<>();
 
     private final HotKeyPackBizClientHandler handler = new HotKeyPackBizClientHandler();
@@ -29,6 +37,10 @@ public class HotKeyClientHub {
     private static volatile HotKeyClientHub instance;
     private HotKeyClientHub() {
         this.consumer = new HotKeyPackConsumer(HotKeyConstants.Client.bizWorkThread, handler);
+        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("hot-key-client-heartbeat"))
+                .scheduleAtFixedRate(this::scheduleHeartbeat, HotKeyConstants.Client.heartbeatIntervalSeconds, HotKeyConstants.Client.heartbeatIntervalSeconds, TimeUnit.SECONDS);
+        logger.info("HotKeyClientHub init success, workThread = {}, heartbeatIntervalSeconds = {}",
+                HotKeyConstants.Client.bizWorkThread, HotKeyConstants.Client.heartbeatIntervalSeconds);
     }
     public static HotKeyClientHub getInstance() {
         if (instance == null) {
@@ -39,6 +51,38 @@ public class HotKeyClientHub {
             }
         }
         return instance;
+    }
+
+    private void scheduleHeartbeat() {
+        if (scheduleLock.compareAndSet(false, true)) {
+            try {
+                ConcurrentHashMap<String, List<HotKeyServerAddr>> map = new ConcurrentHashMap<>(addrMap);
+                for (Map.Entry<String, List<HotKeyServerAddr>> entry : map.entrySet()) {
+                    String name = entry.getKey();
+                    ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> clientSubMap = clientMap.get(name);
+                    if (clientSubMap == null) continue;
+                    List<HotKeyServerAddr> list = new ArrayList<>(entry.getValue());
+                    for (HotKeyServerAddr addr : list) {
+                        HotKeyClient client = clientSubMap.get(addr);
+                        CompletableFuture<HotKeyPack> future = client.sendPack(HotKeyPack.newPack(HotKeyCommand.HEARTBEAT, new HeartbeatPack()));
+                        try {
+                            HotKeyPack hotKeyPack = future.get(HotKeyConstants.Client.heartbeatTimeoutMillis, TimeUnit.MILLISECONDS);
+                            if (!(hotKeyPack != null && hotKeyPack.getBody() instanceof HeartbeatRepPack)) {
+                                logger.warn("{} {} heartbeat error, will remove", name, addr);
+                                remove(name, addr);
+                            }
+                        } catch (Exception e) {
+                            logger.warn("{} {} heartbeat error, will remove", name, addr);
+                            remove(name, addr);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("scheduleHeartbeat error", e);
+            } finally {
+                scheduleLock.compareAndSet(true, false);
+            }
+        }
     }
 
     /**
@@ -60,16 +104,9 @@ public class HotKeyClientHub {
             logger.error("HotKeyServerDiscovery = {} duplicate register, will skip", name);
             return;
         }
-        ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> map = clientMap.get(name);
-        List<HotKeyServerAddr> addrList = addrMap.get(name);
-        if (map == null) {
-            map = new ConcurrentHashMap<>();
-            clientMap.put(name, map);
-        }
-        if (addrList == null) {
-            addrList = new ArrayList<>();
-            addrMap.put(name, addrList);
-        }
+        ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> map = CamelliaMapUtils.computeIfAbsent(clientMap, name, k -> new ConcurrentHashMap<>());
+        List<HotKeyServerAddr> addrList = CamelliaMapUtils.computeIfAbsent(addrMap, name, k -> new ArrayList<>());
+
         List<HotKeyServerAddr> all = discovery.findAll();
         List<HotKeyServerAddr> valid = new ArrayList<>();
         for (HotKeyServerAddr addr : all) {
@@ -84,11 +121,11 @@ public class HotKeyClientHub {
         discovery.setCallback(new CamelliaDiscovery.Callback<HotKeyServerAddr>() {
             @Override
             public void add(HotKeyServerAddr server) {
-                HotKeyClientHub.this.add(discovery, server);
+                HotKeyClientHub.this.add(discovery.getName(), server);
             }
             @Override
             public void remove(HotKeyServerAddr server) {
-                HotKeyClientHub.this.remove(discovery, server);
+                HotKeyClientHub.this.remove(discovery.getName(), server);
             }
         });
         logger.info("HotKeyServerDiscovery = {} init {}, size = {}, all.list = {}, valid.list = {}", name, !valid.isEmpty(), map.size(), all, valid);
@@ -112,28 +149,51 @@ public class HotKeyClientHub {
         return null;
     }
 
-    private synchronized void add(HotKeyServerDiscovery discovery, HotKeyServerAddr addr) {
-        List<HotKeyServerAddr> addrs = addrMap.get(discovery.getName());
-        HashSet<HotKeyServerAddr> set = new HashSet<>(addrs);
-        set.add(addr);
-        List<HotKeyServerAddr> newAddrs = new ArrayList<>(set);
-        Collections.sort(newAddrs);
-        addrMap.put(discovery.getName(), newAddrs);
-        logger.info("HotKeyServerDiscovery = {}, add addr = {}, newAddrs = {}", discovery.getName(), addr, newAddrs);
+    private synchronized void add(String name, HotKeyServerAddr addr) {
+        try {
+            boolean valid = false;
+            ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> map = CamelliaMapUtils.computeIfAbsent(clientMap, name, k -> new ConcurrentHashMap<>());
+
+            HotKeyClient client = map.get(addr);
+            if (client == null || !client.isValid()) {
+                client = new HotKeyClient(addr, consumer);
+            }
+            if (client.isValid()) {
+                map.put(addr, client);
+                valid = true;
+            }
+            if (valid) {
+                List<HotKeyServerAddr> addrs = CamelliaMapUtils.computeIfAbsent(addrMap, name, k -> new ArrayList<>());
+                HashSet<HotKeyServerAddr> set = new HashSet<>(addrs);
+                set.add(addr);
+                List<HotKeyServerAddr> newAddrs = new ArrayList<>(set);
+                Collections.sort(newAddrs);
+                addrMap.put(name, newAddrs);
+                logger.info("HotKeyServerDiscovery = {}, add addr = {}, newAddrs = {}", name, addr, newAddrs);
+            } else {
+                logger.warn("HotKeyServerDiscovery = {}, try add addr = {}, but failed", name, addr);
+            }
+        } catch (Exception e) {
+            logger.error("HotKeyServerDiscovery = {} add addr = {} error", name, addr, e);
+        }
     }
 
-    private synchronized void remove(HotKeyServerDiscovery discovery, HotKeyServerAddr addr) {
-        List<HotKeyServerAddr> addrs = addrMap.get(discovery.getName());
-        HashSet<HotKeyServerAddr> set = new HashSet<>(addrs);
-        set.remove(addr);
-        if (set.isEmpty()) {
-            logger.error("HotKeyServerDiscovery = {}, last HotKeyServerAddr, skip remove = {}", discovery.getName(), addr);
-            return;
+    private synchronized void remove(String name, HotKeyServerAddr addr) {
+        try {
+            List<HotKeyServerAddr> addrs = addrMap.get(name);
+            HashSet<HotKeyServerAddr> set = new HashSet<>(addrs);
+            set.remove(addr);
+            if (set.isEmpty()) {
+                logger.error("HotKeyServerDiscovery = {}, last HotKeyServerAddr, skip remove = {}", name, addr);
+                return;
+            }
+            List<HotKeyServerAddr> newAddrs = new ArrayList<>(set);
+            Collections.sort(newAddrs);
+            addrMap.put(name, newAddrs);
+            logger.info("HotKeyServerDiscovery = {}, remove addr = {}, newAddrs = {}", name, addr, newAddrs);
+        } catch (Exception e) {
+            logger.error("HotKeyServerDiscovery = {} remove addr = {} error", name, addr, e);
         }
-        List<HotKeyServerAddr> newAddrs = new ArrayList<>(set);
-        Collections.sort(newAddrs);
-        addrMap.put(discovery.getName(), newAddrs);
-        logger.info("HotKeyServerDiscovery = {}, remove addr = {}, newAddrs = {}", discovery.getName(), addr, newAddrs);
     }
 
     private HotKeyClient select0(String name, String key) {
@@ -151,6 +211,8 @@ public class HotKeyClientHub {
             HotKeyClient client = map.get(addr);
             if (client.isValid()) {
                 return client;
+            } else {
+                remove(name, addr);
             }
             return null;
         } catch (Exception e) {

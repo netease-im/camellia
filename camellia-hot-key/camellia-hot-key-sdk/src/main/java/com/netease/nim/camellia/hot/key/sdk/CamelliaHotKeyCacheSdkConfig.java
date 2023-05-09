@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.hot.key.sdk;
 
+import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 
@@ -18,7 +19,7 @@ public class CamelliaHotKeyCacheSdkConfig {
 
     private ThreadPoolExecutor executor = defaultExecutor;
     private ScheduledExecutorService scheduler = defaultScheduler;
-    private int hotKeyConfigReloadIntervalSeconds = 60;
+    private int hotKeyConfigReloadIntervalSeconds = HotKeyConstants.Client.hotKeyConfigReloadIntervalSeconds;
 
     private String namespace;
     private int capacity = 10000;
