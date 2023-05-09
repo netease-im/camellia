@@ -22,8 +22,8 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
     private final CamelliaHotKeySdk sdk;
     private final CamelliaHotKeyCacheSdkConfig config;
 
-    private final CamelliaLocalCache hotKeyValueCache;
-    private final CamelliaLocalCache hotKeyCache;
+    private final ConcurrentHashMap<String, CamelliaLocalCache> hotKeyValueCacheMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CamelliaLocalCache> hotKeyCacheMap = new ConcurrentHashMap<>();
 
     private final ConcurrentHashMap<String, AtomicBoolean> hotKeyListenerCache = new ConcurrentHashMap<>();
 
@@ -31,8 +31,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         super(sdk, config.getExecutor(), config.getScheduler(), config.getHotKeyConfigReloadIntervalSeconds());
         this.sdk = sdk;
         this.config = config;
-        this.hotKeyValueCache = new CamelliaLocalCache(config.getCapacity());
-        this.hotKeyCache = new CamelliaLocalCache(config.getCapacity());
+        logger.info("CamelliaHotKeyCacheSdk init success");
     }
 
     @Override
@@ -52,13 +51,13 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         //提交探测请求
         sdk.push(namespace, key, KeyAction.QUERY);
         //看看是否是热key
-        Boolean isHotKey = hotKeyCache.get(namespace, key, Boolean.class);
+        Boolean isHotKey = getHotKeyCache(namespace).get(namespace, key, Boolean.class);
         if (isHotKey == null || !isHotKey) {
             //如果不是热key，直接请求底层
             return loader.load(key);
         }
         //如果是热key，看看有没有本地缓存
-        CamelliaLocalCache.ValueWrapper valueWrapper = hotKeyValueCache.get(namespace, key);
+        CamelliaLocalCache.ValueWrapper valueWrapper = getHotKeyValueCache(namespace).get(namespace, key);
         if (valueWrapper != null) {
             return (T) valueWrapper.get();
         }
@@ -71,7 +70,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
                 return null;
             }
             //回填到缓存中
-            hotKeyValueCache.put(namespace, key, value, rule.getExpireMillis());
+            getHotKeyValueCache(namespace).put(namespace, key, value, rule.getExpireMillis());
             return value;
         }
         //如果设置了并发锁
@@ -87,7 +86,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
                         return null;
                     }
                     //回填缓存
-                    hotKeyValueCache.put(namespace, key, value, rule.getExpireMillis());
+                    getHotKeyValueCache(namespace).put(namespace, key, value, rule.getExpireMillis());
                     return value;
                 } finally {
                     //释放锁
@@ -101,7 +100,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
                     logger.error(e.getMessage(), e);
                 }
                 //等待之后，再看看是否已经有缓存了
-                valueWrapper = hotKeyValueCache.get(namespace, key);
+                valueWrapper = getHotKeyValueCache(namespace).get(namespace, key);
                 if (valueWrapper != null) {
                     return (T) valueWrapper.get();
                 }
@@ -115,7 +114,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
             return null;
         }
         //回填缓存
-        hotKeyValueCache.put(namespace, key, value, rule.getExpireMillis());
+        getHotKeyValueCache(namespace).put(namespace, key, value, rule.getExpireMillis());
         return value;
     }
 
@@ -149,15 +148,23 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
                     logger.info("receive HotKeyEvent = {}", JSONObject.toJSONString(event));
                     KeyAction keyAction = event.getKeyAction();
                     if (keyAction == KeyAction.QUERY) {
-                        hotKeyCache.put(event.getNamespace(), event.getKey(), true, event.getExpireMillis());
+                        getHotKeyCache(event.getNamespace()).put(event.getNamespace(), event.getKey(), true, event.getExpireMillis());
                     } else if (keyAction == KeyAction.DELETE || keyAction == KeyAction.UPDATE) {
-                        hotKeyCache.evict(event.getNamespace(), event.getKey());
-                        hotKeyValueCache.evict(event.getNamespace(), event.getKey());
+                        getHotKeyCache(event.getNamespace()).evict(event.getNamespace(), event.getKey());
+                        getHotKeyValueCache(event.getNamespace()).evict(event.getNamespace(), event.getKey());
                     }
                 } catch (Exception e) {
                     logger.error("onHotKeyEvent error, event = {}", JSONObject.toJSONString(event), e);
                 }
             });
         }
+    }
+
+    private CamelliaLocalCache getHotKeyValueCache(String namespace) {
+        return CamelliaMapUtils.computeIfAbsent(hotKeyValueCacheMap, namespace, n -> new CamelliaLocalCache(config.getCapacity()));
+    }
+
+    private CamelliaLocalCache getHotKeyCache(String namespace) {
+        return CamelliaMapUtils.computeIfAbsent(hotKeyCacheMap, namespace, n -> new CamelliaLocalCache(config.getCapacity()));
     }
 }

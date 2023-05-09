@@ -141,12 +141,12 @@ public class Test {
     private static void testCache(CamelliaHotKeySdk sdk) {
         //设置相关参数，按需设置，一般来说默认即可
         CamelliaHotKeyCacheSdkConfig config = new CamelliaHotKeyCacheSdkConfig();
-        config.setCapacity(10000);//最多保留多少个热key的缓存
+        config.setCapacity(1000);//最多保留多少个热key的缓存，各个namespace之间是隔离的，独立计算容量
         config.setCacheNull(true);//是否缓存null
         config.setLoadTryLockRetry(10);//对于热key，当缓存穿透时，如果有并发锁，锁等待的次数
         config.setLoadTryLockSleepMs(1);//对于热key，当缓存穿透时，如果有并发锁，锁每次等待的ms
 
-        //初始化CamelliaHotKeyCacheSdk，一般来说如果对于锁
+        //初始化CamelliaHotKeyCacheSdk，一般来说如果对于上述配置策略没有特殊要求的话，或者缓存不想互相挤占的话，全局一个即可
         CamelliaHotKeyCacheSdk cacheSdk = new CamelliaHotKeyCacheSdk(sdk, config);
 
         String namespace1 = "db_cache";
@@ -163,7 +163,7 @@ public class Test {
         String value3 = cacheSdk.getValue(namespace1, "key1", Test::getValueFromDbOrRedis, RedisValueLoaderLock.newLock(template, namespace1, "key1", 100));
         System.out.println(value3);
     }
-    
+
     private static String getValueFromDbOrRedis(String key) {
         return key + "-value";
     }

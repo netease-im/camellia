@@ -22,7 +22,7 @@ public class CamelliaHotKeyCacheSdkConfig {
     private int hotKeyConfigReloadIntervalSeconds = HotKeyConstants.Client.hotKeyConfigReloadIntervalSeconds;
 
     private String namespace;
-    private int capacity = 10000;
+    private int capacity = 1000;
     private boolean cacheNull = true;
     private int loadTryLockRetry = 3;
     private long loadTryLockSleepMs = 1;
