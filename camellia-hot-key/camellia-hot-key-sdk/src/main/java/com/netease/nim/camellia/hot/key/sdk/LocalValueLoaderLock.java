@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.hot.key.sdk;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.netease.nim.camellia.core.util.CacheUtil;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -15,13 +16,13 @@ public class LocalValueLoaderLock implements IValueLoaderLock {
             .maximumWeightedCapacity(10000)
             .build();
 
-    private final String prefix;
+    private final String lockKey;
     private final long expireMillis;
     private LockInfo lockInfo;
 
-    private LocalValueLoaderLock(String prefix, long expireMillis) {
-        this.prefix = prefix;
+    private LocalValueLoaderLock(String prefix, String key, long expireMillis) {
         this.expireMillis = expireMillis;
+        this.lockKey = CacheUtil.buildCacheKey(prefix, key, "~lock");
     }
 
     /**
@@ -30,13 +31,12 @@ public class LocalValueLoaderLock implements IValueLoaderLock {
      * @param expireMillis 过期时间
      * @return 锁对象
      */
-    public static LocalValueLoaderLock newLock(String prefix, long expireMillis) {
-        return new LocalValueLoaderLock(prefix, expireMillis);
+    public static LocalValueLoaderLock newLock(String prefix, String key, long expireMillis) {
+        return new LocalValueLoaderLock(prefix, key, expireMillis);
     }
 
     @Override
-    public boolean tryLock(String key) {
-        String lockKey = buildLockKey(key);
+    public boolean tryLock() {
         LockInfo lockInfo = lockMap.get(lockKey);
         if (lockInfo != null) {
             if (!lockInfo.isExpire()) {
@@ -50,16 +50,11 @@ public class LocalValueLoaderLock implements IValueLoaderLock {
     }
 
     @Override
-    public boolean release(String key) {
-        String lockKey = buildLockKey(key);
+    public boolean release() {
         if (lockInfo == null) {
             return false;
         }
         return lockMap.remove(lockKey, this.lockInfo);
-    }
-
-    private String buildLockKey(String key) {
-        return prefix + "|" + key + "~lock";
     }
 
     private static class LockInfo {

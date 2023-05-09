@@ -7,17 +7,15 @@ public interface IValueLoaderLock {
 
     /**
      * 尝试获取一把锁
-     * @param key key
      * @return 成功/失败
      */
-    boolean tryLock(String key);
+    boolean tryLock();
 
     /**
      * 释放一把锁
-     * @param key key
      * @return 成功/失败
      */
-    boolean release(String key);
+    boolean release();
 
 
 }

@@ -78,7 +78,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         int retry = config.getLoadTryLockRetry();
         while (retry --> 0) {
             //尝试获取锁
-            if (loaderLock.tryLock(key)) {
+            if (loaderLock.tryLock()) {
                 try {
                     //如果获得了锁，则请求底层
                     T value = loader.load(key);
@@ -91,7 +91,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
                     return value;
                 } finally {
                     //释放锁
-                    loaderLock.release(key);
+                    loaderLock.release();
                 }
             } else {
                 //如果没有获取锁，则等待一下
