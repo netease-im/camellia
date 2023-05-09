@@ -45,7 +45,7 @@ public class HotKeyNotifyService {
 
     /**
      * 发送热key通知
-     * @param hotKeys
+     * @param hotKeys hotKeys
      */
     public void notifyHotKey(List<HotKey> hotKeys) {
         //todo

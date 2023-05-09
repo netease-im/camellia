@@ -34,15 +34,15 @@ public class HotKeyPackConsumer {
             try {
                 HotKeyCommand command = header.getCommand();
                 if (command == HotKeyCommand.PUSH) {
-                    repPack = handler.onPushPack((PushPack) pack.getBody());
+                    repPack = handler.onPushPack(channel, (PushPack) pack.getBody());
                 } else if (command == HotKeyCommand.GET_CONFIG) {
-                    repPack = handler.onGetConfigPack((GetConfigPack) pack.getBody());
+                    repPack = handler.onGetConfigPack(channel, (GetConfigPack) pack.getBody());
                 } else if (command == HotKeyCommand.HEARTBEAT) {
-                    repPack = handler.onHeartbeatPack((HeartbeatPack) pack.getBody());
+                    repPack = handler.onHeartbeatPack(channel, (HeartbeatPack) pack.getBody());
                 } else if (command == HotKeyCommand.NOTIFY_CONFIG) {
-                    repPack = handler.onNotifyHotKeyConfigPack((NotifyHotKeyConfigPack) pack.getBody());
+                    repPack = handler.onNotifyHotKeyConfigPack(channel, (NotifyHotKeyConfigPack) pack.getBody());
                 } else if (command == HotKeyCommand.NOTIFY_HOTKEY) {
-                    repPack = handler.onNotifyHotKeyPack((NotifyHotKeyPack) pack.getBody());
+                    repPack = handler.onNotifyHotKeyPack(channel, (NotifyHotKeyPack) pack.getBody());
                 }
             } catch (Exception e) {
                 logger.error("on pack error, command = {}", pack.getHeader().getCommand(), e);
