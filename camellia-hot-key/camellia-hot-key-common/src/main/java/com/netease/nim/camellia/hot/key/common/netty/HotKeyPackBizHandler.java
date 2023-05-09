@@ -2,29 +2,38 @@ package com.netease.nim.camellia.hot.key.common.netty;
 
 
 import com.netease.nim.camellia.hot.key.common.netty.pack.*;
+import io.netty.channel.Channel;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Created by caojiajun on 2023/5/9
  */
 public interface HotKeyPackBizHandler {
 
-    default NotifyHotKeyRepPack onNotifyHotKeyPack(NotifyHotKeyPack pack) {
-        return NotifyHotKeyRepPack.INSTANCE;
+    default CompletableFuture<NotifyHotKeyRepPack> onNotifyHotKeyPack(Channel channel, NotifyHotKeyPack pack) {
+        return wrapper(NotifyHotKeyRepPack.INSTANCE);
     }
 
-    default NotifyHotKeyConfigRepPack onNotifyHotKeyConfigPack(NotifyHotKeyConfigPack pack) {
-        return NotifyHotKeyConfigRepPack.INSTANCE;
+    default CompletableFuture<NotifyHotKeyConfigRepPack> onNotifyHotKeyConfigPack(Channel channel, NotifyHotKeyConfigPack pack) {
+        return wrapper(NotifyHotKeyConfigRepPack.INSTANCE);
     }
 
-    default PushRepPack onPushPack(PushPack pack) {
-        return PushRepPack.INSTANCE;
+    default CompletableFuture<PushRepPack> onPushPack(Channel channel, PushPack pack) {
+        return wrapper(PushRepPack.INSTANCE);
     }
 
-    default HeartbeatRepPack onHeartbeatPack(HeartbeatPack pack) {
-        return HeartbeatRepPack.INSTANCE;
+    default CompletableFuture<HeartbeatRepPack> onHeartbeatPack(Channel channel, HeartbeatPack pack) {
+        return wrapper(HeartbeatRepPack.INSTANCE);
     }
 
-    default GetConfigRepPack onGetConfigPack(GetConfigPack pack) {
-        return null;
+    default CompletableFuture<GetConfigRepPack> onGetConfigPack(Channel channel, GetConfigPack pack) {
+        return wrapper(null);
+    }
+
+    default <T> CompletableFuture<T> wrapper(T t) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        future.complete(t);
+        return future;
     }
 }

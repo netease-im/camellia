@@ -1,5 +1,8 @@
-package com.netease.nim.camellia.hot.key.common.netty;
+package com.netease.nim.camellia.hot.key.sdk.netty;
 
+import com.netease.nim.camellia.hot.key.common.netty.HotKeyPack;
+import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackConsumer;
+import com.netease.nim.camellia.hot.key.common.netty.RequestManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.slf4j.Logger;
@@ -8,9 +11,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by caojiajun on 2023/5/8
  */
-public class HotKeyPackHandler extends ChannelInboundHandlerAdapter {
+public class HotKeyPackClientHandler extends ChannelInboundHandlerAdapter {
 
-    private static final Logger logger = LoggerFactory.getLogger(HotKeyPackHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(HotKeyPackClientHandler.class);
 
     public static String getName() {
         return "HotKeyPackHandler";
@@ -19,7 +22,7 @@ public class HotKeyPackHandler extends ChannelInboundHandlerAdapter {
     private final RequestManager manager;
     private final HotKeyPackConsumer handler;
 
-    public HotKeyPackHandler(RequestManager manager, HotKeyPackConsumer handler) {
+    public HotKeyPackClientHandler(RequestManager manager, HotKeyPackConsumer handler) {
         this.manager = manager;
         this.handler = handler;
     }

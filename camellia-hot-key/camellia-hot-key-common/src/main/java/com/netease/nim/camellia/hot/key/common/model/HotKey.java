@@ -10,6 +10,16 @@ public class HotKey {
     private KeyAction action;
     private Long expireMillis;
 
+    public HotKey() {
+    }
+
+    public HotKey(String namespace, String key, KeyAction action, Long expireMillis) {
+        this.namespace = namespace;
+        this.key = key;
+        this.action = action;
+        this.expireMillis = expireMillis;
+    }
+
     public String getNamespace() {
         return namespace;
     }

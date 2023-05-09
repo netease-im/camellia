@@ -20,7 +20,7 @@ public class HotKeyClient {
 
     private static final Logger logger = LoggerFactory.getLogger(HotKeyClient.class);
 
-    private static final NioEventLoopGroup nioEventLoopGroup = new NioEventLoopGroup(HotKeyConstants.Client.workThread);
+    private static final NioEventLoopGroup nioEventLoopGroup = new NioEventLoopGroup(HotKeyConstants.Client.nettyWorkThread);
 
     private Channel channel = null;
     private RequestManager requestManager;
@@ -42,7 +42,7 @@ public class HotKeyClient {
                             ChannelPipeline pipeLine = channel.pipeline();
                             pipeLine.addLast(HotKeyPackEncoder.getName(), new HotKeyPackEncoder()); // OUT
                             pipeLine.addLast(HotKeyPackDecoder.getName(), new HotKeyPackDecoder()); // IN
-                            pipeLine.addLast(HotKeyPackHandler.getName(), new HotKeyPackHandler(requestManager, consumer)); // IN
+                            pipeLine.addLast(HotKeyPackClientHandler.getName(), new HotKeyPackClientHandler(requestManager, consumer)); // IN
                         }
                     });
             ChannelFuture f = bootstrap.connect(addr.getHost(), addr.getPort()).sync();

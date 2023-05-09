@@ -31,12 +31,13 @@ public class HotKeyClientHub {
     //name -> addr-list
     private final ConcurrentHashMap<String, List<HotKeyServerAddr>> addrMap = new ConcurrentHashMap<>();
 
-    private final HotKeyPackBizClientHandler handler = new HotKeyPackBizClientHandler();
+    private final HotKeyPackBizClientHandler handler;
     private final HotKeyPackConsumer consumer;
 
     private static volatile HotKeyClientHub instance;
     private HotKeyClientHub() {
-        this.consumer = new HotKeyPackConsumer(HotKeyConstants.Client.bizWorkThread, handler);
+        this.handler = new HotKeyPackBizClientHandler(HotKeyConstants.Client.bizWorkThread, HotKeyConstants.Client.bizWorkQueueCapacity);
+        this.consumer = new HotKeyPackConsumer(handler);
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("hot-key-client-heartbeat"))
                 .scheduleAtFixedRate(this::scheduleHeartbeat, HotKeyConstants.Client.heartbeatIntervalSeconds, HotKeyConstants.Client.heartbeatIntervalSeconds, TimeUnit.SECONDS);
         logger.info("HotKeyClientHub init success, workThread = {}, heartbeatIntervalSeconds = {}",
