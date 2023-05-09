@@ -16,9 +16,10 @@ import java.util.List;
 public class PushPack extends HotKeyPackBody {
 
     private static enum Tag {
-        key(1),
-        action(1),
-        count(1),
+        namespace(1),
+        key(2),
+        action(3),
+        count(4),
         ;
 
         private final int value;
@@ -46,6 +47,7 @@ public class PushPack extends HotKeyPackBody {
         ArrayMable<Property> arrayMable = new ArrayMable<>(Property.class);
         for (HotKeyCounter counter : list) {
             Property property = new Property();
+            property.put(Tag.namespace.value, counter.getNamespace());
             property.put(Tag.key.value, counter.getKey());
             property.putInteger(Tag.action.value, counter.getAction().getValue());
             property.putLong(Tag.key.value, counter.getCount());
@@ -61,6 +63,7 @@ public class PushPack extends HotKeyPackBody {
         list = new ArrayList<>();
         for (Property property : arrayMable.list) {
             HotKeyCounter counter = new HotKeyCounter();
+            counter.setNamespace(property.get(Tag.namespace.value));
             counter.setKey(property.get(Tag.key.value));
             counter.setAction(KeyAction.getByValue(property.getInteger(Tag.action.value)));
             counter.setCount(property.getLong(Tag.count.value));

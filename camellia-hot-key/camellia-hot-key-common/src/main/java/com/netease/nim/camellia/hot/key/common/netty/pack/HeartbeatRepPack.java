@@ -8,13 +8,13 @@ import com.netease.nim.camellia.hot.key.common.netty.codec.Unpack;
  */
 public class HeartbeatRepPack extends HotKeyPackBody {
 
+    public static final HeartbeatRepPack INSTANCE = new HeartbeatRepPack();
+
     @Override
     public void marshal(Pack pack) {
-
     }
 
     @Override
     public void unmarshal(Unpack unpack) {
-
     }
 }

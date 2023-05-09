@@ -53,7 +53,7 @@ public class HotKeyConfigPackUtils {
         for (Rule rule : rules) {
             Property property = new Property();
             property.put(HotKeyConfigPackUtils.RuleTag.name.value, rule.getName());
-            property.putInteger(HotKeyConfigPackUtils.RuleTag.type.value, rule.getRuleType().getValue());
+            property.putInteger(HotKeyConfigPackUtils.RuleTag.type.value, rule.getType().getValue());
             if (rule.getCheckMillis() != null) {
                 property.putLong(HotKeyConfigPackUtils.RuleTag.checkMillis.value, rule.getCheckMillis());
             }
@@ -81,7 +81,7 @@ public class HotKeyConfigPackUtils {
         for (Property property : rulesArray.list) {
             Rule rule = new Rule();
             rule.setName(property.get(HotKeyConfigPackUtils.RuleTag.name.value));
-            rule.setRuleType(RuleType.getByValue(property.getInteger(HotKeyConfigPackUtils.RuleTag.type.value)));
+            rule.setType(RuleType.getByValue(property.getInteger(HotKeyConfigPackUtils.RuleTag.type.value)));
             if (property.containsKey(HotKeyConfigPackUtils.RuleTag.checkMillis.value)) {
                 rule.setCheckMillis(property.getLong(HotKeyConfigPackUtils.RuleTag.checkMillis.value));
             }

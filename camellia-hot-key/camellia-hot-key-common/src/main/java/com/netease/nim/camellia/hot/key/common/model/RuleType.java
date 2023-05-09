@@ -5,9 +5,9 @@ package com.netease.nim.camellia.hot.key.common.model;
  */
 public enum RuleType {
 
-    EXACT_MATCH(1),//精准匹配
-    PREFIX_MATCH(2),//前缀匹配
-    MATCH_ALL(3),//匹配所有
+    exact_match(1),//精准匹配
+    prefix_match(2),//前缀匹配
+    match_all(3),//匹配所有
 
     ;
 

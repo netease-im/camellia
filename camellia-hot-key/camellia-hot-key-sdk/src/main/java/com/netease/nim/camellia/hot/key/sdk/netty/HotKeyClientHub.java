@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.hot.key.sdk.netty;
 
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
+import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,27 +23,42 @@ public class HotKeyClientHub {
     private final ConcurrentHashMap<String, HotKeyServerDiscovery> discoveryMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, List<HotKeyServerAddr>> addrMap = new ConcurrentHashMap<>();
 
-    private HotKeyPackConsumer consumer;
+    private final HotKeyPackBizClientHandler handler = new HotKeyPackBizClientHandler();
+    private final HotKeyPackConsumer consumer;
 
-    private static final HotKeyClientHub instance = new HotKeyClientHub();
+    private static volatile HotKeyClientHub instance;
     private HotKeyClientHub() {
+        this.consumer = new HotKeyPackConsumer(HotKeyConstants.Client.bizWorkThread, handler);
     }
     public static HotKeyClientHub getInstance() {
+        if (instance == null) {
+            synchronized (HotKeyClientHub.class) {
+                if (instance == null) {
+                    instance = new HotKeyClientHub();
+                }
+            }
+        }
         return instance;
     }
 
+    /**
+     * 注册一个业务回调
+     * @param listener listener
+     */
+    public void registerListener(HotKeyClientListener listener) {
+        handler.registerListener(listener);
+    }
 
     /**
      * 注册一个服务器发现discovery
      * @param discovery discovery
-     * @return 成功/失败
      */
-    public boolean register(HotKeyServerDiscovery discovery) {
+    public void registerDiscovery(HotKeyServerDiscovery discovery) {
         String name = discovery.getName();
         HotKeyServerDiscovery old = discoveryMap.putIfAbsent(name, discovery);
         if (old != null) {
             logger.error("HotKeyServerDiscovery = {} duplicate register, will skip", name);
-            return false;
+            return;
         }
         ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> map = clientMap.get(name);
         List<HotKeyServerAddr> addrList = addrMap.get(name);
@@ -76,7 +92,6 @@ public class HotKeyClientHub {
             }
         });
         logger.info("HotKeyServerDiscovery = {} init {}, size = {}, all.list = {}, valid.list = {}", name, !valid.isEmpty(), map.size(), all, valid);
-        return !valid.isEmpty();
     }
 
     /**
@@ -85,7 +100,7 @@ public class HotKeyClientHub {
      * @param key key
      * @return HotKeyClient
      */
-    public HotKeyClient select(HotKeyServerDiscovery discovery, String key) {
+    public HotKeyClient selectClient(HotKeyServerDiscovery discovery, String key) {
         String name = discovery.getName();
         int retry = 3;
         while (retry -- > 0) {

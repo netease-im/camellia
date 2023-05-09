@@ -26,9 +26,10 @@ public interface ICamelliaHotKeyMonitorSdk {
 
     /**
      * 推送一个key用于统计和检测热key
+     * @param namespace namespace
      * @param key key
      */
-    void push(String key);
+    void push(String namespace, String key);
 
 }
 ```
@@ -48,24 +49,27 @@ public interface ICamelliaHotKeyCacheSdk {
      *
      * 如果key有更新了，hot-key-server会广播给所有sdk去更新本地缓存，从而保证缓存值的时效性
      *
+     * @param namespace namespace
      * @param key key
      * @param loader value loader
      * @param loaderLock loader lock，用于并发控制，如果不传，则不进行并发控制，可以是单机的锁，也可以是集群的锁（如redis）
      * @return value
      */
-    <T> T getValue(String key, ValueLoader<T> loader, IValueLoaderLock loaderLock);
+    <T> T getValue(String namespace, String key, ValueLoader<T> loader, IValueLoaderLock loaderLock);
 
     /**
      * key的value被更新了，需要调用本方法给hot-key-server，进而广播给所有人
+     * @param namespace namespace
      * @param key key
      */
-    void keyUpdate(String key);
+    void keyUpdate(String namespace, String key);
 
     /**
      * key的value被删除了，需要调用本方法给hot-key-server，进而广播给所有人
+     * @param namespace namespace
      * @param key key
      */
-    void keyDelete(String key);
+    void keyDelete(String namespace, String key);
 }
 
 public interface ValueLoader<T> {
@@ -160,7 +164,7 @@ public interface IValueLoaderLock {
         {
             "name": "rule1",
             "type": "exact_match",
-            "config": "abcdef",
+            "keyConfig": "abcdef",
             "checkMillis": 1000,
             "checkThreshold": 100,
             "expireMills": 10000
@@ -168,7 +172,7 @@ public interface IValueLoaderLock {
         {
             "name": "rule1",
             "type": "prefix_match",
-            "config": "xyz",
+            "keyConfig": "xyz",
             "checkMillis": 1000,
             "checkThreshold": 100,
             "expireMills": 10000

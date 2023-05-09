@@ -50,12 +50,20 @@ public class HotKeyClient {
             channel.closeFuture().addListener((ChannelFutureListener) channelFuture -> {
                 valid = false;
                 logger.error("hot key client closed, addr = {}", addr, channelFuture.cause());
+                stop();
             });
-            requestManager = new RequestManager(channel);
+            requestManager = new RequestManager(channel.remoteAddress());
             valid = true;
         } catch (Exception e) {
             valid = false;
+            stop();
             logger.error("hot key client start error, addr = {}", addr, e);
+        }
+    }
+
+    private void stop() {
+        if (requestManager != null) {
+            requestManager.clear();
         }
     }
 

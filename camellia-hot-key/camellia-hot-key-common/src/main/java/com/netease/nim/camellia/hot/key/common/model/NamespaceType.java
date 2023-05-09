@@ -4,8 +4,8 @@ package com.netease.nim.camellia.hot.key.common.model;
  * Created by caojiajun on 2023/5/6
  */
 public enum NamespaceType {
-    MONITOR(1),
-    CACHE(2),
+    monitor(1),
+    cache(2),
     ;
     private final int value;
 

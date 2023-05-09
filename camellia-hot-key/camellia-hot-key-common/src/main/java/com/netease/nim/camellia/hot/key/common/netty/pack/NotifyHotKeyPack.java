@@ -16,9 +16,10 @@ import java.util.List;
 public class NotifyHotKeyPack extends HotKeyPackBody {
 
     private static enum Tag {
-        key(1),
-        action(2),
-        expireMillis(3),
+        namespace(1),
+        key(2),
+        action(3),
+        expireMillis(4),
         ;
 
         private final int value;
@@ -46,6 +47,7 @@ public class NotifyHotKeyPack extends HotKeyPackBody {
         ArrayMable<Property> arrayMable = new ArrayMable<>(Property.class);
         for (HotKey hotKey : list) {
             Property property = new Property();
+            property.put(Tag.namespace.value, hotKey.getNamespace());
             property.put(Tag.key.value, hotKey.getKey());
             property.putInteger(Tag.action.value, hotKey.getAction().getValue());
             property.putLong(Tag.expireMillis.value, hotKey.getExpireMillis());
@@ -61,6 +63,7 @@ public class NotifyHotKeyPack extends HotKeyPackBody {
         list = new ArrayList<>();
         for (Property property : arrayMable.list) {
             HotKey hotKey = new HotKey();
+            hotKey.setNamespace(property.get(Tag.namespace.value));
             hotKey.setKey(property.get(Tag.key.value));
             hotKey.setAction(KeyAction.getByValue(property.getInteger(Tag.action.value)));
             hotKey.setExpireMillis(property.getLong(Tag.expireMillis.value));

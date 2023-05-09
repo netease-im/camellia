@@ -30,7 +30,8 @@ public class HotKeyPackHeader implements Marshallable {
     public static enum Tag {
 
         DEFAULT((byte) 0),
-        ACK((byte) 1),//是否是响应包
+        EMPTY_BODY((byte) 1),//是否空包
+        ACK((byte) 2),//是否是响应包
 
         ;
 
@@ -92,5 +93,13 @@ public class HotKeyPackHeader implements Marshallable {
 
     public boolean isAck() {
         return 0 != (tag & Tag.ACK.getValue());
+    }
+
+    public void setEmptyBody() {
+        tag |= Tag.EMPTY_BODY.getValue();
+    }
+
+    public boolean isEmptyBody() {
+        return 0 != (tag & Tag.EMPTY_BODY.getValue());
     }
 }

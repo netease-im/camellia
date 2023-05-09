@@ -5,19 +5,31 @@ package com.netease.nim.camellia.hot.key.common.model;
  */
 public class HotKeyEvent {
 
-    private final HotKeyEventType eventType;//事件类型
+    private final String namespace;
+    private final KeyAction keyAction;//事件类型
     private final String key;
+    private final Long expireMillis;
 
-    public HotKeyEvent(HotKeyEventType eventType, String key) {
-        this.eventType = eventType;
+    public HotKeyEvent(String namespace, KeyAction keyAction, String key, Long expireMillis) {
+        this.namespace = namespace;
+        this.keyAction = keyAction;
         this.key = key;
+        this.expireMillis = expireMillis;
     }
 
-    public HotKeyEventType getEventType() {
-        return eventType;
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public KeyAction getKeyAction() {
+        return keyAction;
     }
 
     public String getKey() {
         return key;
+    }
+
+    public Long getExpireMillis() {
+        return expireMillis;
     }
 }

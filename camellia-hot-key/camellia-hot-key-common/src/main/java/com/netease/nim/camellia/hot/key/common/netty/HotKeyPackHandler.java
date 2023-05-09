@@ -2,11 +2,15 @@ package com.netease.nim.camellia.hot.key.common.netty;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by caojiajun on 2023/5/8
  */
 public class HotKeyPackHandler extends ChannelInboundHandlerAdapter {
+
+    private static final Logger logger = LoggerFactory.getLogger(HotKeyPackHandler.class);
 
     public static String getName() {
         return "HotKeyPackHandler";
@@ -27,8 +31,10 @@ public class HotKeyPackHandler extends ChannelInboundHandlerAdapter {
             if (pack.getHeader().isAck()) {
                 manager.complete(pack);
             } else {
-                handler.onPack(pack);
+                handler.onPack(ctx.channel(), pack);
             }
+        } else {
+            logger.error("unknown pack, type = {}, value = {}", msg.getClass().getName(), msg);
         }
     }
 }

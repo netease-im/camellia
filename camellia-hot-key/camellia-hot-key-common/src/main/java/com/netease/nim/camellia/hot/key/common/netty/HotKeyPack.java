@@ -19,6 +19,12 @@ public class HotKeyPack {
         this.body = body;
     }
 
+    public static HotKeyPack newPack(HotKeyCommand command, HotKeyPackBody body) {
+        HotKeyPackHeader header = new HotKeyPackHeader();
+        header.setCommand(command);
+        return new HotKeyPack(header, body);
+    }
+
     public HotKeyPack() {
     }
 
@@ -34,8 +40,14 @@ public class HotKeyPack {
         Pack pack = new Pack();
         pack.putInt(0);
 
+        if (body == null) {
+            header.setEmptyBody();
+        }
+
         pack.putMarshallable(header);
-        pack.putMarshallable(body);
+        if (body != null) {
+            pack.putMarshallable(body);
+        }
 
         pack.getBuffer().capacity(pack.getBuffer().readableBytes());
 
@@ -48,6 +60,9 @@ public class HotKeyPack {
         unpack.popInt();
         header = new HotKeyPackHeader();
         unpack.popMarshallable(header);
+        if (header.isEmptyBody()) {
+            return;
+        }
         HotKeyCommand command = header.getCommand();
         if (header.isAck()) {
             switch (command) {

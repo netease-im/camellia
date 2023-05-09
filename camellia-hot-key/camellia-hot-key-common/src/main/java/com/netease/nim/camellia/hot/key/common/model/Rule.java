@@ -5,7 +5,8 @@ package com.netease.nim.camellia.hot.key.common.model;
  */
 public class Rule {
     private String name;
-    private RuleType ruleType;
+    private RuleType type;
+    private String keyConfig;
     private Long checkMillis;
     private Long checkThreshold;
     private Long expireMillis;
@@ -18,12 +19,20 @@ public class Rule {
         this.name = name;
     }
 
-    public RuleType getRuleType() {
-        return ruleType;
+    public RuleType getType() {
+        return type;
     }
 
-    public void setRuleType(RuleType ruleType) {
-        this.ruleType = ruleType;
+    public void setType(RuleType type) {
+        this.type = type;
+    }
+
+    public String getKeyConfig() {
+        return keyConfig;
+    }
+
+    public void setKeyConfig(String keyConfig) {
+        this.keyConfig = keyConfig;
     }
 
     public Long getCheckMillis() {

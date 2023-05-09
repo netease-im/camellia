@@ -5,9 +5,18 @@ package com.netease.nim.camellia.hot.key.common.model;
  */
 public class HotKeyCounter {
 
+    private String namespace;
     private String key;
     private KeyAction action;
     private long count;
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
 
     public String getKey() {
         return key;

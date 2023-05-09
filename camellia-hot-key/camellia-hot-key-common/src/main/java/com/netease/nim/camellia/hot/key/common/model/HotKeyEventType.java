@@ -9,4 +9,5 @@ public enum HotKeyEventType {
     KEY_UPDATE,//key更新了
     KEY_DELETE,//key删除了
     ;
+
 }

@@ -51,7 +51,7 @@ public class CamelliaHotKeyServer {
                             ChannelPipeline pipeLine = ch.pipeline();
                             pipeLine.addLast(HotKeyPackEncoder.getName(), new HotKeyPackEncoder()); // OUT
                             pipeLine.addLast(HotKeyPackDecoder.getName(), new HotKeyPackDecoder()); // IN
-                            RequestManager requestManager = new RequestManager(ch);
+                            RequestManager requestManager = new RequestManager(ch.remoteAddress());
                             pipeLine.addLast(HotKeyPackHandler.getName(), new HotKeyPackHandler(requestManager, consumer)); // IN
                         }
                     });
