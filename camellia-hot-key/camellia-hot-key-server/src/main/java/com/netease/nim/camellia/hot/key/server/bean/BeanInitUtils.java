@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.hot.key.server;
+package com.netease.nim.camellia.hot.key.server.bean;
 
 /**
  * Created by caojiajun on 2022/9/16

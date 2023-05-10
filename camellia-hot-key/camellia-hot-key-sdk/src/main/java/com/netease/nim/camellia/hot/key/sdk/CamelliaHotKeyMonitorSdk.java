@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.hot.key.sdk;
 
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
+import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeyMonitorSdkConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

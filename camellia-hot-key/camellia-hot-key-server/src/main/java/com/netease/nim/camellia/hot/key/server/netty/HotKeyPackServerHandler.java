@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.hot.key.server;
+package com.netease.nim.camellia.hot.key.server.netty;
 
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPack;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackConsumer;

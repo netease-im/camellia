@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.hot.key.sdk;
+package com.netease.nim.camellia.hot.key.sdk.conf;
 
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;

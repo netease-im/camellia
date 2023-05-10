@@ -1,6 +1,9 @@
-package com.netease.nim.camellia.hot.key.server;
+package com.netease.nim.camellia.hot.key.server.conf;
 
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
+import com.netease.nim.camellia.hot.key.server.bean.BeanFactory;
+import com.netease.nim.camellia.hot.key.server.bean.DefaultBeanFactory;
+import com.netease.nim.camellia.hot.key.server.callback.DummyHotKeyCallback;
 
 /**
  * Created by caojiajun on 2023/5/9
@@ -27,6 +30,10 @@ public class HotKeyServerProperties {
 
     private String hotKeyConfigServiceClassName;
     private BeanFactory beanFactory = DefaultBeanFactory.INSTANCE;
+
+    private int callbackExecutorSize = HotKeyConstants.Server.callbackExecutorSize;
+    private int hotKeyCallbackIntervalSeconds = HotKeyConstants.Server.hotKeyCallbackIntervalSeconds;
+    private String hotKeyCallbackClassName = DummyHotKeyCallback.class.getName();
 
     public int getPort() {
         return port;
@@ -162,5 +169,29 @@ public class HotKeyServerProperties {
 
     public void setBeanFactory(BeanFactory beanFactory) {
         this.beanFactory = beanFactory;
+    }
+
+    public int getCallbackExecutorSize() {
+        return callbackExecutorSize;
+    }
+
+    public void setCallbackExecutorSize(int callbackExecutorSize) {
+        this.callbackExecutorSize = callbackExecutorSize;
+    }
+
+    public int getHotKeyCallbackIntervalSeconds() {
+        return hotKeyCallbackIntervalSeconds;
+    }
+
+    public void setHotKeyCallbackIntervalSeconds(int hotKeyCallbackIntervalSeconds) {
+        this.hotKeyCallbackIntervalSeconds = hotKeyCallbackIntervalSeconds;
+    }
+
+    public String getHotKeyCallbackClassName() {
+        return hotKeyCallbackClassName;
+    }
+
+    public void setHotKeyCallbackClassName(String hotKeyCallbackClassName) {
+        this.hotKeyCallbackClassName = hotKeyCallbackClassName;
     }
 }

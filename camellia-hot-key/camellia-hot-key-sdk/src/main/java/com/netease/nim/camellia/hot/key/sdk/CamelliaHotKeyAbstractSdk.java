@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 import com.netease.nim.camellia.hot.key.common.model.Rule;
 import com.netease.nim.camellia.hot.key.common.utils.RuleUtils;
+import com.netease.nim.camellia.hot.key.sdk.listener.CamelliaHotKeyConfigListener;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,5 +1,6 @@
-package com.netease.nim.camellia.hot.key.sdk;
+package com.netease.nim.camellia.hot.key.sdk.collect;
 
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
@@ -8,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -18,12 +18,23 @@ import java.util.concurrent.atomic.LongAdder;
 public class HotKeyCounterCollector {
 
     private final AtomicBoolean backUp = new AtomicBoolean(false);
-    private final ConcurrentHashMap<UniqueKey, LongAdder> map1 = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<UniqueKey, LongAdder> map2 = new ConcurrentHashMap<>();
+    private final ConcurrentLinkedHashMap<UniqueKey, LongAdder> map1;
+    private final ConcurrentLinkedHashMap<UniqueKey, LongAdder> map2;
+
+    public HotKeyCounterCollector(int capacity) {
+        map1 = new ConcurrentLinkedHashMap.Builder<UniqueKey, LongAdder>()
+                .initialCapacity(capacity)
+                .maximumWeightedCapacity(capacity)
+                .build();
+        map2 = new ConcurrentLinkedHashMap.Builder<UniqueKey, LongAdder>()
+                .initialCapacity(capacity)
+                .maximumWeightedCapacity(capacity)
+                .build();
+    }
 
     public void push(String namespace, String key, KeyAction keyAction) {
         UniqueKey uniqueKey = new UniqueKey(namespace, key, keyAction);
-        ConcurrentHashMap<UniqueKey, LongAdder> map = !backUp.get() ? map1 : map2;
+        Map<UniqueKey, LongAdder> map = !backUp.get() ? map1 : map2;
         LongAdder adder = CamelliaMapUtils.computeIfAbsent(map, uniqueKey, k -> new LongAdder());
         adder.increment();
     }
@@ -44,7 +55,7 @@ public class HotKeyCounterCollector {
         return result;
     }
 
-    private List<KeyCounter> toResult(ConcurrentHashMap<UniqueKey, LongAdder> map) {
+    private List<KeyCounter> toResult(Map<UniqueKey, LongAdder> map) {
         List<KeyCounter> result = new ArrayList<>();
         for (Map.Entry<UniqueKey, LongAdder> entry : map.entrySet()) {
             UniqueKey uniqueKey = entry.getKey();

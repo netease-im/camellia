@@ -1,7 +1,12 @@
-package com.netease.nim.camellia.hot.key.server;
+package com.netease.nim.camellia.hot.key.server.calculate;
 
 import com.netease.nim.camellia.hot.key.common.model.*;
 import com.netease.nim.camellia.hot.key.common.utils.RuleUtils;
+import com.netease.nim.camellia.hot.key.server.callback.HotKeyCallbackManager;
+import com.netease.nim.camellia.hot.key.server.event.HotKeyEventHandler;
+import com.netease.nim.camellia.hot.key.server.notify.HotKeyNotifyService;
+import com.netease.nim.camellia.hot.key.server.conf.CacheableHotKeyConfigService;
+import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 
 import java.util.List;
 
@@ -16,11 +21,12 @@ public class HotKeyCalculator {
     private final CacheableHotKeyConfigService hotKeyConfigService;
     private final HotKeyEventHandler hotKeyEventHandler;
 
-    public HotKeyCalculator(HotKeyServerProperties properties, CacheableHotKeyConfigService hotKeyConfigService, HotKeyNotifyService hotKeyNotifyService) {
+    public HotKeyCalculator(HotKeyServerProperties properties, CacheableHotKeyConfigService hotKeyConfigService,
+                            HotKeyNotifyService hotKeyNotifyService, HotKeyCallbackManager callbackManager) {
         this.hotKeyConfigService = hotKeyConfigService;
         this.hotKeyCounterManager = new HotKeyCounterManager(properties);
         this.topNCounterManager = new TopNCounterManager(properties);
-        this.hotKeyEventHandler = new HotKeyEventHandler(properties, hotKeyConfigService, hotKeyNotifyService);
+        this.hotKeyEventHandler = new HotKeyEventHandler(properties, hotKeyConfigService, hotKeyNotifyService, callbackManager);
         //热key规则发生变化，所有计数器清零
         hotKeyConfigService.registerCallback(hotKeyCounterManager::remove);
     }

@@ -1,5 +1,6 @@
-package com.netease.nim.camellia.hot.key.server;
+package com.netease.nim.camellia.hot.key.server.conf;
 
+import com.netease.nim.camellia.hot.key.server.netty.ChannelInfo;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 
 import java.util.concurrent.ConcurrentHashMap;

@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.hot.key.server;
+package com.netease.nim.camellia.hot.key.server.conf;
 
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 import org.slf4j.Logger;

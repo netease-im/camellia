@@ -1,6 +1,9 @@
 package com.netease.nim.camellia.hot.key.sdk.samples;
 
 import com.netease.nim.camellia.hot.key.sdk.*;
+import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeyCacheSdkConfig;
+import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeyMonitorSdkConfig;
+import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeySdkConfig;
 
 /**
  * Created by caojiajun on 2023/5/9

@@ -23,6 +23,8 @@ public class HotKeyConstants {
         public static long pushIntervalMillis = 100;
         public static int pushBatch = 1000;
 
+        public static int capacity = 100000;
+
         public static int hotKeyConfigReloadIntervalSeconds = 60;
     }
 
@@ -46,6 +48,9 @@ public class HotKeyConstants {
         public static final int maxNamespace = 1000;
         public static final int cacheCapacityPerNamespace = 100000;
         public static final int hotKeyCacheCapacity = 10000;
+
+        public static final int callbackExecutorSize = SysUtils.getCpuHalfNum();
+        public static final int hotKeyCallbackIntervalSeconds = 10;
     }
 
 }

@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.hot.key.sdk;
+package com.netease.nim.camellia.hot.key.sdk.listener;
 
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 

@@ -2,6 +2,8 @@ package com.netease.nim.camellia.hot.key.sdk;
 
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
+import com.netease.nim.camellia.hot.key.sdk.listener.CamelliaHotKeyConfigListener;
+import com.netease.nim.camellia.hot.key.sdk.listener.CamelliaHotKeyListener;
 
 /**
  * Created by caojiajun on 2023/5/6

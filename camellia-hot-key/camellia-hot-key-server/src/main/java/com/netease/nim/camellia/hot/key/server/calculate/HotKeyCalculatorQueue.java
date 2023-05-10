@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.hot.key.server;
+package com.netease.nim.camellia.hot.key.server.calculate;
 
 import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 import org.slf4j.Logger;
@@ -51,7 +51,7 @@ public class HotKeyCalculatorQueue {
                     logger.error("hot key calculate error", e);
                 }
             }
-        }, "hot-key-calculator-" + id).start();
+        }, "hot-key-calculator-queue-" + id).start();
         logger.info("hot key calculator {} start success", id);
     }
 }

@@ -1,7 +1,13 @@
-package com.netease.nim.camellia.hot.key.server;
+package com.netease.nim.camellia.hot.key.server.event;
 
 import com.netease.nim.camellia.hot.key.common.model.*;
+import com.netease.nim.camellia.hot.key.server.notify.HotKeyNotifyService;
+import com.netease.nim.camellia.hot.key.server.callback.HotKeyCallbackManager;
+import com.netease.nim.camellia.hot.key.server.conf.CacheableHotKeyConfigService;
+import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 import com.netease.nim.camellia.tools.cache.NamespaceCamelliaLocalCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -9,14 +15,20 @@ import com.netease.nim.camellia.tools.cache.NamespaceCamelliaLocalCache;
  */
 public class HotKeyEventHandler {
 
+    private static final Logger logger = LoggerFactory.getLogger(HotKeyEventHandler.class);
+
     private final CacheableHotKeyConfigService hotKeyConfigService;
     private final HotKeyNotifyService hotKeyNotifyService;
     private final NamespaceCamelliaLocalCache hotKeyCache;
+    private final HotKeyCallbackManager callbackManager;
 
-    public HotKeyEventHandler(HotKeyServerProperties properties, CacheableHotKeyConfigService hotKeyConfigService, HotKeyNotifyService hotKeyNotifyService) {
+    public HotKeyEventHandler(HotKeyServerProperties properties, CacheableHotKeyConfigService hotKeyConfigService,
+                              HotKeyNotifyService hotKeyNotifyService, HotKeyCallbackManager callbackManager) {
         this.hotKeyConfigService = hotKeyConfigService;
         this.hotKeyNotifyService = hotKeyNotifyService;
         this.hotKeyCache = new NamespaceCamelliaLocalCache(properties.getMaxNamespace(), properties.getHotKeyCacheCapacity());
+        this.callbackManager = callbackManager;
+        logger.info("HotKeyEventHandler init success");
     }
 
     /**
@@ -43,10 +55,12 @@ public class HotKeyEventHandler {
                 hotKeyNotifyService.notifyHotKey(hotKey);
             }
         }
+        callbackManager.newHotkey(hotKey);
     }
 
     /**
      * 如果是热key，需要下发热key更新的通知（如key已经更新了，或者key已经删除了）
+     * @param counter counter
      */
     public void hotKeyUpdate(KeyCounter counter) {
         Long expireMillis = hotKeyCache.get(counter.getNamespace(), counter.getKey(), Long.class);

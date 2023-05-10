@@ -1,5 +1,6 @@
-package com.netease.nim.camellia.hot.key.server;
+package com.netease.nim.camellia.hot.key.server.netty;
 
+import com.netease.nim.camellia.hot.key.server.conf.ClientConnectHub;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;

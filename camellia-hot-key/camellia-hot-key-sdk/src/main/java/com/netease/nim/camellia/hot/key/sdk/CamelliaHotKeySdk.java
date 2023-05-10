@@ -7,6 +7,10 @@ import com.netease.nim.camellia.hot.key.common.model.*;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPack;
 import com.netease.nim.camellia.hot.key.common.netty.pack.*;
+import com.netease.nim.camellia.hot.key.sdk.collect.HotKeyCounterCollector;
+import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeySdkConfig;
+import com.netease.nim.camellia.hot.key.sdk.listener.CamelliaHotKeyConfigListener;
+import com.netease.nim.camellia.hot.key.sdk.listener.CamelliaHotKeyListener;
 import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyClient;
 import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyClientHub;
 import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyClientListener;
@@ -29,13 +33,14 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
     private final ConcurrentHashMap<String, List<CamelliaHotKeyListener>> hotKeyListenerMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, List<CamelliaHotKeyConfigListener>> hotKeyConfigListenerMap = new ConcurrentHashMap<>();
 
-    private final HotKeyCounterCollector collector = new HotKeyCounterCollector();
+    private final HotKeyCounterCollector collector;
 
     public CamelliaHotKeySdk(CamelliaHotKeySdkConfig config) {
         this.config = config;
         if (config.getDiscovery() == null) {
             throw new CamelliaHotKeyException("discovery is missing");
         }
+        this.collector = new HotKeyCounterCollector(config.getCapacity());
         HotKeyClientHub.getInstance().registerDiscovery(config.getDiscovery());
         HotKeyClientHub.getInstance().registerListener(new DefaultHotKeyClientListener(this));
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-hot-key-sdk-schedule")).scheduleAtFixedRate(this::schedulePush,

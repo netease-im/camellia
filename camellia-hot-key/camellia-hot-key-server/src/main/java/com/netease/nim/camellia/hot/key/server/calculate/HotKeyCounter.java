@@ -1,7 +1,8 @@
-package com.netease.nim.camellia.hot.key.server;
+package com.netease.nim.camellia.hot.key.server.calculate;
 
 
 import com.netease.nim.camellia.hot.key.common.model.Rule;
+import com.netease.nim.camellia.hot.key.server.utils.TimeCache;
 
 /**
  * 基于滑动窗口的热key检测计数器
