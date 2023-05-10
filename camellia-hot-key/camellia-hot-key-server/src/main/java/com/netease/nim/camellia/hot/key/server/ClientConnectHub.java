@@ -2,9 +2,6 @@ package com.netease.nim.camellia.hot.key.server;
 
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 
-import java.nio.channels.Channel;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
