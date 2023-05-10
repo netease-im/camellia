@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.hot.key.common.netty.pack;
 
-import com.netease.nim.camellia.hot.key.common.model.HotKeyCounter;
+import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
 import com.netease.nim.camellia.hot.key.common.netty.codec.ArrayMable;
 import com.netease.nim.camellia.hot.key.common.netty.codec.Pack;
@@ -29,23 +29,23 @@ public class PushPack extends HotKeyPackBody {
         }
     }
 
-    private List<HotKeyCounter> list;
+    private List<KeyCounter> list;
 
-    public PushPack(List<HotKeyCounter> list) {
+    public PushPack(List<KeyCounter> list) {
         this.list = list;
     }
 
     public PushPack() {
     }
 
-    public List<HotKeyCounter> getList() {
+    public List<KeyCounter> getList() {
         return list;
     }
 
     @Override
     public void marshal(Pack pack) {
         ArrayMable<Property> arrayMable = new ArrayMable<>(Property.class);
-        for (HotKeyCounter counter : list) {
+        for (KeyCounter counter : list) {
             Property property = new Property();
             property.put(Tag.namespace.value, counter.getNamespace());
             property.put(Tag.key.value, counter.getKey());
@@ -62,7 +62,7 @@ public class PushPack extends HotKeyPackBody {
         unpack.popMarshallable(arrayMable);
         list = new ArrayList<>();
         for (Property property : arrayMable.list) {
-            HotKeyCounter counter = new HotKeyCounter();
+            KeyCounter counter = new KeyCounter();
             counter.setNamespace(property.get(Tag.namespace.value));
             counter.setKey(property.get(Tag.key.value));
             counter.setAction(KeyAction.getByValue(property.getInteger(Tag.action.value)));

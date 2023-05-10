@@ -6,6 +6,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -54,10 +56,15 @@ public class ChannelInfo {
 
     public void addNamespace(String namespace) {
         namespaceMap.put(namespace, true);
+        ClientConnectHub.getInstance().updateNamespace(namespace, this);
     }
 
     public boolean hasNamespace(String namespace) {
         return namespaceMap.containsKey(namespace);
+    }
+
+    public Set<String> namespaceSet() {
+        return new HashSet<>(namespaceMap.keySet());
     }
 
     public long genRequestId() {

@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.hot.key.sdk.samples;
 
 import com.netease.nim.camellia.hot.key.sdk.*;
-import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 
 /**
  * Created by caojiajun on 2023/5/9
@@ -49,22 +48,20 @@ public class Test {
         //初始化CamelliaHotKeyCacheSdk，一般来说如果对于上述配置策略没有特殊要求的话，或者缓存不想互相挤占的话，全局一个即可
         CamelliaHotKeyCacheSdk cacheSdk = new CamelliaHotKeyCacheSdk(sdk, config);
 
-        String namespace1 = "db_cache";
-        //没有并发锁
-        String value1 = cacheSdk.getValue(namespace1, "key1", Test::getValueFromDbOrRedis, null);
+        String namespace1 = "db";
+        String value1 = cacheSdk.getValue(namespace1, "key1", Test::getValueFromDb);
         System.out.println(value1);
 
-        //单机并发锁
-        String value2 = cacheSdk.getValue(namespace1, "key1", Test::getValueFromDbOrRedis, LocalValueLoaderLock.newLock(namespace1, "key1", 100));
+        String namespace2 = "redis";
+        String value2 = cacheSdk.getValue(namespace2, "key1", Test::getValueRedis);
         System.out.println(value2);
-
-        //集群并发锁
-        CamelliaRedisTemplate template = new CamelliaRedisTemplate("redis://@127.0.0.1:6379");
-        String value3 = cacheSdk.getValue(namespace1, "key1", Test::getValueFromDbOrRedis, RedisValueLoaderLock.newLock(template, namespace1, "key1", 100));
-        System.out.println(value3);
     }
 
-    private static String getValueFromDbOrRedis(String key) {
+    private static String getValueFromDb(String key) {
+        return key + "-value";
+    }
+
+    private static String getValueRedis(String key) {
         return key + "-value";
     }
 }

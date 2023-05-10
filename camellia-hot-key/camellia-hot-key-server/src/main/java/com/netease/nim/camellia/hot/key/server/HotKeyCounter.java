@@ -4,9 +4,10 @@ package com.netease.nim.camellia.hot.key.server;
 import com.netease.nim.camellia.hot.key.common.model.Rule;
 
 /**
+ * 基于滑动窗口的热key检测计数器
  * Created by caojiajun on 2023/5/9
  */
-public class SlidingWindowHotKeyCounter {
+public class HotKeyCounter {
 
     private final String namespace;
     private final String key;
@@ -18,10 +19,10 @@ public class SlidingWindowHotKeyCounter {
     private final long threshold;
 
     private int index;
-    private long lastUpdateTime = System.currentTimeMillis();
+    private long lastUpdateTime = TimeCache.currentMillis;
     private boolean hot;
 
-    public SlidingWindowHotKeyCounter(String namespace, String key, Rule rule) {
+    public HotKeyCounter(String namespace, String key, Rule rule) {
         this.namespace = namespace;
         this.key = key;
         this.rule = rule;

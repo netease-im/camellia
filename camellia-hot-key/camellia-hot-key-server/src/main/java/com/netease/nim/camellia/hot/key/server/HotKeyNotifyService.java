@@ -6,11 +6,11 @@ import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPack;
 import com.netease.nim.camellia.hot.key.common.netty.pack.HotKeyCommand;
 import com.netease.nim.camellia.hot.key.common.netty.pack.NotifyHotKeyConfigPack;
+import com.netease.nim.camellia.hot.key.common.netty.pack.NotifyHotKeyPack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,23 +32,59 @@ public class HotKeyNotifyService {
      */
     public void notifyHotKeyNotifyChange(String namespace) {
         HotKeyConfig hotKeyConfig = hotKeyConfigService.get(namespace);
-        ConcurrentHashMap<String, ChannelInfo> map = ClientConnectHub.getInstance().getMap();
         HotKeyPack pack = HotKeyPack.newPack(HotKeyCommand.NOTIFY_CONFIG, new NotifyHotKeyConfigPack(hotKeyConfig));
-        for (Map.Entry<String, ChannelInfo> entry : map.entrySet()) {
-            ChannelInfo channelInfo = entry.getValue();
-            if (channelInfo.hasNamespace(namespace)) {
+
+        ConcurrentHashMap<String, Boolean> map = ClientConnectHub.getInstance().getMap(namespace);
+        for (String consid : map.keySet()) {
+            ChannelInfo channelInfo = ClientConnectHub.getInstance().get(consid);
+            if (channelInfo != null) {
                 CompletableFuture<HotKeyPack> future = sendPack(channelInfo, pack);
-                future.thenAccept(p -> logger.info("notify hotKeyConfig change success, config = {}", JSONObject.toJSONString(hotKeyConfig)));
+                future.thenAccept(p -> {
+                    if (p.getHeader().isEmptyBody()) {
+                        logger.error("notify HotKeyConfig change fail, channel = {}, config = {}",
+                                channelInfo.getCtx().channel(), JSONObject.toJSONString(hotKeyConfig));
+                    } else {
+                        logger.info("notify HotKeyConfig change success, channel = {}, config = {}",
+                                channelInfo.getCtx().channel(), JSONObject.toJSONString(hotKeyConfig));
+                    }
+                });
+                future.exceptionally(throwable -> {
+                    logger.error("notify HotKeyConfig change error, channel = {}, config = {}",
+                            channelInfo.getCtx().channel(), JSONObject.toJSONString(hotKeyConfig), throwable);
+                    return null;
+                });
             }
         }
     }
 
     /**
      * 发送热key通知
-     * @param hotKeys hotKeys
+     * @param hotKey hotKey
      */
-    public void notifyHotKey(List<HotKey> hotKeys) {
-        //todo
+    public void notifyHotKey(HotKey hotKey) {
+        HotKeyPack pack = HotKeyPack.newPack(HotKeyCommand.NOTIFY_HOTKEY, new NotifyHotKeyPack(Collections.singletonList(hotKey)));
+        ConcurrentHashMap<String, Boolean> map = ClientConnectHub.getInstance().getMap(hotKey.getNamespace());
+        for (String consid : map.keySet()) {
+            ChannelInfo channelInfo = ClientConnectHub.getInstance().get(consid);
+            if (channelInfo != null) {
+                CompletableFuture<HotKeyPack> future = sendPack(channelInfo, pack);
+
+                future.thenAccept(p -> {
+                    if (p.getHeader().isEmptyBody()) {
+                        logger.error("notify HotKey change fail, channel = {}, hotKey = {}",
+                                channelInfo.getCtx().channel(), JSONObject.toJSONString(hotKey));
+                    } else {
+                        logger.info("notify HotKey change success, channel = {}, hotKey = {}",
+                                channelInfo.getCtx().channel(), JSONObject.toJSONString(hotKey));
+                    }
+                });
+                future.exceptionally(throwable -> {
+                    logger.error("notify HotKey change error, channel = {}, hotKey = {}",
+                            channelInfo.getCtx().channel(), JSONObject.toJSONString(hotKey), throwable);
+                    return null;
+                });
+            }
+        }
     }
 
     private CompletableFuture<HotKeyPack> sendPack(ChannelInfo channelInfo, HotKeyPack hotKeyPack) {

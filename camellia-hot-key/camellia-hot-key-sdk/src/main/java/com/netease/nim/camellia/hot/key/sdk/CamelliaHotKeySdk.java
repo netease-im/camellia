@@ -87,18 +87,18 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
 
     private void schedulePush() {
         try {
-            List<HotKeyCounter> collect = collector.collect();
-            Map<HotKeyClient, List<HotKeyCounter>> map = new HashMap<>();
-            for (HotKeyCounter counter : collect) {
+            List<KeyCounter> collect = collector.collect();
+            Map<HotKeyClient, List<KeyCounter>> map = new HashMap<>();
+            for (KeyCounter counter : collect) {
                 HotKeyClient client = HotKeyClientHub.getInstance().selectClient(config.getDiscovery(), counter.getKey());
-                List<HotKeyCounter> counters = CamelliaMapUtils.computeIfAbsent(map, client, k -> new ArrayList<>());
+                List<KeyCounter> counters = CamelliaMapUtils.computeIfAbsent(map, client, k -> new ArrayList<>());
                 counters.add(counter);
             }
-            for (Map.Entry<HotKeyClient, List<HotKeyCounter>> entry : map.entrySet()) {
+            for (Map.Entry<HotKeyClient, List<KeyCounter>> entry : map.entrySet()) {
                 HotKeyClient client = entry.getKey();
-                List<HotKeyCounter> counters = entry.getValue();
-                List<List<HotKeyCounter>> split = CollectionSplitUtil.split(counters, config.getPushBatch());
-                for (List<HotKeyCounter> list : split) {
+                List<KeyCounter> counters = entry.getValue();
+                List<List<KeyCounter>> split = CollectionSplitUtil.split(counters, config.getPushBatch());
+                for (List<KeyCounter> list : split) {
                     CompletableFuture<HotKeyPack> future = client.sendPack(HotKeyPack.newPack(HotKeyCommand.PUSH, new PushPack(list)));
                     future.thenAccept(pack -> {
                         if (logger.isDebugEnabled()) {

@@ -15,6 +15,7 @@ public class HotKeyServerProperties {
 
     private int maxNamespace = HotKeyConstants.Server.maxNamespace;
     private int cacheCapacityPerNamespace = HotKeyConstants.Server.cacheCapacityPerNamespace;
+    private int hotKeyCacheCapacity = HotKeyConstants.Server.hotKeyCacheCapacity;
 
     private boolean tcpNoDelay = HotKeyConstants.Server.tcpNoDelay;
     private int soBacklog = HotKeyConstants.Server.soBacklog;
@@ -83,6 +84,14 @@ public class HotKeyServerProperties {
         this.cacheCapacityPerNamespace = cacheCapacityPerNamespace;
     }
 
+    public int getHotKeyCacheCapacity() {
+        return hotKeyCacheCapacity;
+    }
+
+    public void setHotKeyCacheCapacity(int hotKeyCacheCapacity) {
+        this.hotKeyCacheCapacity = hotKeyCacheCapacity;
+    }
+
     public boolean isTcpNoDelay() {
         return tcpNoDelay;
     }
@@ -139,19 +148,19 @@ public class HotKeyServerProperties {
         this.writeBufferWaterMarkHigh = writeBufferWaterMarkHigh;
     }
 
-    public BeanFactory getBeanFactory() {
-        return beanFactory;
-    }
-
-    public void setBeanFactory(BeanFactory beanFactory) {
-        this.beanFactory = beanFactory;
-    }
-
     public String getHotKeyConfigServiceClassName() {
         return hotKeyConfigServiceClassName;
     }
 
     public void setHotKeyConfigServiceClassName(String hotKeyConfigServiceClassName) {
         this.hotKeyConfigServiceClassName = hotKeyConfigServiceClassName;
+    }
+
+    public BeanFactory getBeanFactory() {
+        return beanFactory;
+    }
+
+    public void setBeanFactory(BeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
     }
 }

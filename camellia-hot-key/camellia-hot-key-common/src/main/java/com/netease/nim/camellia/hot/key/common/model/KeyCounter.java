@@ -3,7 +3,7 @@ package com.netease.nim.camellia.hot.key.common.model;
 /**
  * Created by caojiajun on 2023/5/8
  */
-public class HotKeyCounter {
+public class KeyCounter {
 
     private String namespace;
     private String key;

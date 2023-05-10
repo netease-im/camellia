@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.hot.key.server;
 
-import com.netease.nim.camellia.hot.key.common.model.HotKeyCounter;
+import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +18,7 @@ public class HotKeyCalculatorQueue {
     private static final Logger logger = LoggerFactory.getLogger(HotKeyCalculatorQueue.class);
 
     private static final AtomicLong idGen = new AtomicLong(0);
-    private final Queue<List<HotKeyCounter>> queue;
+    private final Queue<List<KeyCounter>> queue;
     private final long id;
 
     public HotKeyCalculatorQueue(int bizWorkQueueCapacity) {
@@ -26,7 +26,7 @@ public class HotKeyCalculatorQueue {
         this.id = idGen.getAndIncrement();
     }
 
-    public void push(List<HotKeyCounter> counters) {
+    public void push(List<KeyCounter> counters) {
         boolean success = queue.offer(counters);
         if (!success) {
             logger.error("HotKeyCalculatorQueue full");
@@ -37,7 +37,7 @@ public class HotKeyCalculatorQueue {
         new Thread(() -> {
             while (true) {
                 try {
-                    List<HotKeyCounter> counters = queue.poll();
+                    List<KeyCounter> counters = queue.poll();
                     if (counters == null) {
                         try {
                             TimeUnit.MILLISECONDS.sleep(10);

@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.hot.key.server;
 
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
-import com.netease.nim.camellia.hot.key.common.model.HotKeyCounter;
+import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackBizHandler;
 import com.netease.nim.camellia.hot.key.common.netty.pack.*;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
@@ -46,7 +46,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
 
         for (int i=0; i<bizWorkThread; i++) {
             HotKeyCalculatorQueue queue = new HotKeyCalculatorQueue(properties.getBizQueueCapacity());
-            queue.start(new HotKeyCalculator(properties, hotKeyConfigService));
+            queue.start(new HotKeyCalculator(properties, hotKeyConfigService, hotKeyConfigNotifyService));
             this.queues[i] = queue;
         }
 
@@ -59,13 +59,13 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
     @Override
     public CompletableFuture<PushRepPack> onPushPack(Channel channel, PushPack pack) {
         try {
-            Map<HotKeyCalculatorQueue, List<HotKeyCounter>> buffer = new HashMap<>();
-            for (HotKeyCounter counter : pack.getList()) {
+            Map<HotKeyCalculatorQueue, List<KeyCounter>> buffer = new HashMap<>();
+            for (KeyCounter counter : pack.getList()) {
                 HotKeyCalculatorQueue queue = selectQueue(counter);
-                List<HotKeyCounter> list = CamelliaMapUtils.computeIfAbsent(buffer, queue, k -> new ArrayList<>());
+                List<KeyCounter> list = CamelliaMapUtils.computeIfAbsent(buffer, queue, k -> new ArrayList<>());
                 list.add(counter);
             }
-            for (Map.Entry<HotKeyCalculatorQueue, List<HotKeyCounter>> entry : buffer.entrySet()) {
+            for (Map.Entry<HotKeyCalculatorQueue, List<KeyCounter>> entry : buffer.entrySet()) {
                 entry.getKey().push(entry.getValue());
             }
         } catch (Exception e) {
@@ -96,7 +96,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         return future;
     }
 
-    private HotKeyCalculatorQueue selectQueue(HotKeyCounter counter) {
+    private HotKeyCalculatorQueue selectQueue(KeyCounter counter) {
         int code = Math.abs((counter.getNamespace() + "|" + counter.getKey()).hashCode());
         int index = MathUtil.mod(is2Power, code, bizWorkThread);
         return queues[index];

@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.tools.cache;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.sun.org.apache.bcel.internal.generic.PUSH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -153,6 +154,25 @@ public class CamelliaLocalCache {
     }
 
     /**
+     * 获取ttl
+     */
+    public long ttl(String tag, Object key) {
+        String uniqueKey = buildCacheKey(tag, key);
+        CacheBean cacheBean = cache.get(uniqueKey);
+        if (cacheBean == null || cacheBean.isExpire()) {
+            return -2;
+        }
+        if (cacheBean.notTtl()) {
+            return -1;
+        }
+        long ttl = cacheBean.expireTime - System.currentTimeMillis();
+        if (ttl > 0) {
+            return ttl;
+        }
+        return -2;
+    }
+
+    /**
      * 清空缓存
      */
     public void clear() {
@@ -199,6 +219,10 @@ public class CamelliaLocalCache {
 
         boolean isExpire() {
             return System.currentTimeMillis() > expireTime;
+        }
+
+        boolean notTtl() {
+            return expireTime == Long.MAX_VALUE;
         }
     }
 

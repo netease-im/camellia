@@ -45,6 +45,7 @@ public class HotKeyConstants {
 
         public static final int maxNamespace = 1000;
         public static final int cacheCapacityPerNamespace = 100000;
+        public static final int hotKeyCacheCapacity = 10000;
     }
 
 }

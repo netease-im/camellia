@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.hot.key.server;
 
-import com.netease.nim.camellia.hot.key.common.model.HotKeyCounter;
+import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 
 /**
  * 统计namespace下的topN的key
@@ -14,7 +14,7 @@ public class TopNCounter {
         this.namespace = namespace;
     }
 
-    public void update(HotKeyCounter counter) {
+    public void update(KeyCounter counter) {
 
     }
 }
