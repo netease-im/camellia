@@ -1,0 +1,30 @@
+{
+  "namespace": "test",
+  "type": "cache",
+  "rules":
+  [
+    {
+      "name": "rule1",
+      "type": "exact_match",
+      "keyConfig": "abcdef",
+      "checkMillis": 1000,
+      "checkThreshold": 100,
+      "expireMills": 10000
+    },
+    {
+      "name": "rule1",
+      "type": "prefix_match",
+      "keyConfig": "xyz",
+      "checkMillis": 1000,
+      "checkThreshold": 100,
+      "expireMills": 10000
+    },
+    {
+      "name": "rule1",
+      "type": "match_all",
+      "checkMillis": 1000,
+      "checkThreshold": 100,
+      "expireMills": 10000
+    }
+  ]
+}

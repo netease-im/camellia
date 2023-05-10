@@ -3,6 +3,7 @@ package com.netease.nim.camellia.hot.key.server.springboot.conf;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCallback;
 import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyTopNCallback;
+import com.netease.nim.camellia.hot.key.server.conf.FileBasedHotKeyConfigService;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -21,7 +22,7 @@ public class CamelliaHotKeyServerProperties {
 
     private int maxNamespace = HotKeyConstants.Server.maxNamespace;
 
-    private String hotKeyConfigServiceClassName;
+    private String hotKeyConfigServiceClassName = FileBasedHotKeyConfigService.class.getName();
     private int hotKeyCacheCounterCapacity = HotKeyConstants.Server.hotKeyCacheCounterCapacity;
     private int hotKeyCacheCapacity = HotKeyConstants.Server.hotKeyCacheCapacity;
     private int hotKeyCallbackIntervalSeconds = HotKeyConstants.Server.hotKeyCallbackIntervalSeconds;

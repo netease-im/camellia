@@ -36,7 +36,7 @@ public class HotKeyServerProperties {
     private BeanFactory beanFactory = DefaultBeanFactory.INSTANCE;
     private int callbackExecutorSize = HotKeyConstants.Server.callbackExecutorSize;
 
-    private String hotKeyConfigServiceClassName;
+    private String hotKeyConfigServiceClassName = FileBasedHotKeyConfigService.class.getName();
     private int hotKeyCacheCounterCapacity = HotKeyConstants.Server.hotKeyCacheCounterCapacity;
     private int hotKeyCacheCapacity = HotKeyConstants.Server.hotKeyCacheCapacity;
     private int hotKeyCallbackIntervalSeconds = HotKeyConstants.Server.hotKeyCallbackIntervalSeconds;

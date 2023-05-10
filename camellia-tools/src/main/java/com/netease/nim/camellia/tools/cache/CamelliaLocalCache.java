@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.tools.cache;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
-import com.sun.org.apache.bcel.internal.generic.PUSH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

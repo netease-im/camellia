@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.hot.key.common.model;
 
+import java.util.Objects;
+
 /**
  * Created by caojiajun on 2023/5/8
  */
@@ -57,5 +59,18 @@ public class Rule {
 
     public void setExpireMillis(Long expireMillis) {
         this.expireMillis = expireMillis;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Rule rule = (Rule) o;
+        return Objects.equals(name, rule.name) && type == rule.type && Objects.equals(keyConfig, rule.keyConfig) && Objects.equals(checkMillis, rule.checkMillis) && Objects.equals(checkThreshold, rule.checkThreshold) && Objects.equals(expireMillis, rule.expireMillis);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, type, keyConfig, checkMillis, checkThreshold, expireMillis);
     }
 }
