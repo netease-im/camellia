@@ -25,8 +25,8 @@ public class TopNCounter {
         this.topN = properties.getTopnCount();
         this.checkMillis = properties.getTopnCheckMillis();
         this.map = new ConcurrentLinkedHashMap.Builder<String, Counter>()
-                .initialCapacity(properties.getTopnCacheCapacity())
-                .maximumWeightedCapacity(properties.getTopnCacheCapacity())
+                .initialCapacity(properties.getTopnCacheCounterCapacity())
+                .maximumWeightedCapacity(properties.getTopnCacheCounterCapacity())
                 .build();
     }
 

@@ -1,40 +1,25 @@
-package com.netease.nim.camellia.hot.key.server.conf;
+package com.netease.nim.camellia.hot.key.server.springboot.conf;
 
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
-import com.netease.nim.camellia.hot.key.server.bean.BeanFactory;
-import com.netease.nim.camellia.hot.key.server.bean.DefaultBeanFactory;
 import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCallback;
 import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyTopNCallback;
-import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
-
-import java.util.UUID;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Created by caojiajun on 2023/5/9
+ *
+ * Created by caojiajun on 2023/5/10
  */
-public class HotKeyServerProperties {
+@ConfigurationProperties(prefix = "camellia-hot-key-server")
+public class CamelliaHotKeyServerProperties {
 
-    private final String id = UUID.randomUUID().toString().replaceAll("-", "");
-    private String applicationName;
-    private int port = HotKeyConstants.Server.severPort;
-    private int nettyBossThread = HotKeyConstants.Server.nettyBossThread;
-    private int nettyWorkThread = HotKeyConstants.Server.nettyWorkThread;
+    private int consolePort = HotKeyConstants.Server.consolePort;
 
-    private int bizWorkThread = HotKeyConstants.Server.bizWorkThread;
+    private NettyProperties netty = new NettyProperties();
+
+    private int bizWorkThread = -1;
     private int bizQueueCapacity = HotKeyConstants.Server.bizWorkQueueCapacity;
 
-    private boolean tcpNoDelay = HotKeyConstants.Server.tcpNoDelay;
-    private int soBacklog = HotKeyConstants.Server.soBacklog;
-    private int soSndbuf = HotKeyConstants.Server.soSndbuf;
-    private int soRcvbuf = HotKeyConstants.Server.soRcvbuf;
-    private boolean soKeepalive = HotKeyConstants.Server.soKeepalive;
-    private int writeBufferWaterMarkLow = HotKeyConstants.Server.writeBufferWaterMarkLow;
-    private int writeBufferWaterMarkHigh = HotKeyConstants.Server.writeBufferWaterMarkHigh;
-
     private int maxNamespace = HotKeyConstants.Server.maxNamespace;
-
-    private BeanFactory beanFactory = DefaultBeanFactory.INSTANCE;
-    private int callbackExecutorSize = HotKeyConstants.Server.callbackExecutorSize;
 
     private String hotKeyConfigServiceClassName;
     private int hotKeyCacheCounterCapacity = HotKeyConstants.Server.hotKeyCacheCounterCapacity;
@@ -46,46 +31,26 @@ public class HotKeyServerProperties {
     private int topnCheckMillis = HotKeyConstants.Server.topnCheckMillis;
     private int topnCacheCounterCapacity = HotKeyConstants.Server.topnCacheCounterCapacity;
     private int topnScheduleSeconds = HotKeyConstants.Server.topnScheduleSeconds;
-    private String topNCallbackClassName = LoggingHotKeyTopNCallback.class.getName();
     private String topnRedisKeyPrefix = HotKeyConstants.Server.topnRedisKeyPrefix;
     private int topnRedisExpireSeconds = HotKeyConstants.Server.topnRedisExpireSeconds;
+    private String topnCallbackClassName = LoggingHotKeyTopNCallback.class.getName();
 
-    private CamelliaRedisTemplate redisTemplate;
+    private int callbackExecutorSize = HotKeyConstants.Server.callbackExecutorSize;
 
-    public String getId() {
-        return id;
+    public int getConsolePort() {
+        return consolePort;
     }
 
-    public String getApplicationName() {
-        return applicationName;
+    public void setConsolePort(int consolePort) {
+        this.consolePort = consolePort;
     }
 
-    public void setApplicationName(String applicationName) {
-        this.applicationName = applicationName;
+    public NettyProperties getNetty() {
+        return netty;
     }
 
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public int getNettyBossThread() {
-        return nettyBossThread;
-    }
-
-    public void setNettyBossThread(int nettyBossThread) {
-        this.nettyBossThread = nettyBossThread;
-    }
-
-    public int getNettyWorkThread() {
-        return nettyWorkThread;
-    }
-
-    public void setNettyWorkThread(int nettyWorkThread) {
-        this.nettyWorkThread = nettyWorkThread;
+    public void setNetty(NettyProperties netty) {
+        this.netty = netty;
     }
 
     public int getBizWorkThread() {
@@ -128,76 +93,12 @@ public class HotKeyServerProperties {
         this.hotKeyCacheCapacity = hotKeyCacheCapacity;
     }
 
-    public boolean isTcpNoDelay() {
-        return tcpNoDelay;
-    }
-
-    public void setTcpNoDelay(boolean tcpNoDelay) {
-        this.tcpNoDelay = tcpNoDelay;
-    }
-
-    public int getSoBacklog() {
-        return soBacklog;
-    }
-
-    public void setSoBacklog(int soBacklog) {
-        this.soBacklog = soBacklog;
-    }
-
-    public int getSoSndbuf() {
-        return soSndbuf;
-    }
-
-    public void setSoSndbuf(int soSndbuf) {
-        this.soSndbuf = soSndbuf;
-    }
-
-    public int getSoRcvbuf() {
-        return soRcvbuf;
-    }
-
-    public void setSoRcvbuf(int soRcvbuf) {
-        this.soRcvbuf = soRcvbuf;
-    }
-
-    public boolean isSoKeepalive() {
-        return soKeepalive;
-    }
-
-    public void setSoKeepalive(boolean soKeepalive) {
-        this.soKeepalive = soKeepalive;
-    }
-
-    public int getWriteBufferWaterMarkLow() {
-        return writeBufferWaterMarkLow;
-    }
-
-    public void setWriteBufferWaterMarkLow(int writeBufferWaterMarkLow) {
-        this.writeBufferWaterMarkLow = writeBufferWaterMarkLow;
-    }
-
-    public int getWriteBufferWaterMarkHigh() {
-        return writeBufferWaterMarkHigh;
-    }
-
-    public void setWriteBufferWaterMarkHigh(int writeBufferWaterMarkHigh) {
-        this.writeBufferWaterMarkHigh = writeBufferWaterMarkHigh;
-    }
-
     public String getHotKeyConfigServiceClassName() {
         return hotKeyConfigServiceClassName;
     }
 
     public void setHotKeyConfigServiceClassName(String hotKeyConfigServiceClassName) {
         this.hotKeyConfigServiceClassName = hotKeyConfigServiceClassName;
-    }
-
-    public BeanFactory getBeanFactory() {
-        return beanFactory;
-    }
-
-    public void setBeanFactory(BeanFactory beanFactory) {
-        this.beanFactory = beanFactory;
     }
 
     public int getCallbackExecutorSize() {
@@ -222,6 +123,14 @@ public class HotKeyServerProperties {
 
     public void setHotKeyCallbackClassName(String hotKeyCallbackClassName) {
         this.hotKeyCallbackClassName = hotKeyCallbackClassName;
+    }
+
+    public String getTopnCallbackClassName() {
+        return topnCallbackClassName;
+    }
+
+    public void setTopnCallbackClassName(String topnCallbackClassName) {
+        this.topnCallbackClassName = topnCallbackClassName;
     }
 
     public int getTopnCount() {
@@ -270,21 +179,5 @@ public class HotKeyServerProperties {
 
     public void setTopnRedisExpireSeconds(int topnRedisExpireSeconds) {
         this.topnRedisExpireSeconds = topnRedisExpireSeconds;
-    }
-
-    public CamelliaRedisTemplate getRedisTemplate() {
-        return redisTemplate;
-    }
-
-    public void setRedisTemplate(CamelliaRedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
-    }
-
-    public String getTopNCallbackClassName() {
-        return topNCallbackClassName;
-    }
-
-    public void setTopNCallbackClassName(String topNCallbackClassName) {
-        this.topNCallbackClassName = topNCallbackClassName;
     }
 }

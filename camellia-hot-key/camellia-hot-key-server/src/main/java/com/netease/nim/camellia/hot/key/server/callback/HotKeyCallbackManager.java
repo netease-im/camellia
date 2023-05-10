@@ -30,8 +30,8 @@ public class HotKeyCallbackManager {
     public HotKeyCallbackManager(HotKeyServerProperties properties) {
         this.properties = properties;
         this.hotKeyCallback = (HotKeyCallback) properties.getBeanFactory().getBean(BeanInitUtils.parseClass(properties.getHotKeyCallbackClassName()));
-        this.topNCallback = (HotKeyTopNCallback) properties.getBeanFactory().getBean(BeanInitUtils.parseClass(properties.getHotKeyTopNCallbackClassName()));
-        this.callbackTimeCache = new NamespaceCamelliaLocalCache(properties.getMaxNamespace(), properties.getCacheCapacityPerNamespace());
+        this.topNCallback = (HotKeyTopNCallback) properties.getBeanFactory().getBean(BeanInitUtils.parseClass(properties.getTopNCallbackClassName()));
+        this.callbackTimeCache = new NamespaceCamelliaLocalCache(properties.getMaxNamespace(), properties.getHotKeyCacheCounterCapacity());
         this.executor = new ThreadPoolExecutor(properties.getCallbackExecutorSize(), properties.getCallbackExecutorSize(), 0, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(10000), new CamelliaThreadFactory("hot-key-callback"), new ThreadPoolExecutor.DiscardPolicy());
         logger.info("HotKeyCallbackManager init success, HotKeyCallback = {}, HotKeyTopNCallback = {}",

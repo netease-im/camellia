@@ -1,0 +1,50 @@
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-hot-key-server
+
+camellia-hot-key-server:
+  #工作线程和工作队列
+  biz-work-thread: -1 #默认使用cpu核数的一半，不建议修改
+  biz-queue-capacity: 1000000 #队列容量，默认100w
+  #netty部分
+  netty:
+    boss-thread: 1 #默认1，不建议修改
+    work-thread: -1 #默认cpu核数的一半，不建议修改
+  #公共部分
+  max-namespace: 1000 #预期的最大的namespace数量，默认1000
+  #热key探测部分
+  hot-key-config-service-class-name: xxx #热key配置数据源，需要业务自定义实现
+  hot-key-cache-counter-capacity: 100000 #LRU-key计数器的容量，默认10w(每个namespace下)
+  hot-key-cache-capacity: 10000 #每个namespace最多的热key数量，默认1w
+  hot-key-callback-interval-seconds: 10 #同一个热key回调给业务自行处理的最小间隔，默认10s
+  hot-key-callback-class-name: com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCallback #探测到热key后的自定义回调，默认是打日志
+  ##topn探测部分
+  topn-count: 1000 #每个namespace下，topn的key的数量，默认1000
+  topn-check-millis: 1000 #topn统计中的统计窗口
+  topn-cache-counter-capacity: 100000 #topn统计中的LRU-key计数器(每个namespace下)
+  topn-redis-key-prefix: camellia #topn统计结果会通过redis进行聚合从而获取全局视图
+  topn-redis-expire-seconds: 3600 #topn统计结果在redis中的保留时间
+  topn-schedule-seconds: 60 #topn统计结果回调间隔，默认60s
+  topn-callback-class-name: com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyTopNCallback #topN统计结果的自定义回调，默认打印日志
+
+#topn统计依赖redis
+camellia-redis:
+  type: local
+  local:
+    resource: redis://@127.0.0.1:6379
+  redis-conf:
+    jedis:
+      timeout: 2000
+      min-idle: 0
+      max-idle: 32
+      max-active: 32
+      max-wait-millis: 2000
+    jedis-cluster:
+      max-wait-millis: 2000
+      min-idle: 0
+      max-idle: 16
+      max-active: 16
+      max-attempts: 5
+      timeout: 2000

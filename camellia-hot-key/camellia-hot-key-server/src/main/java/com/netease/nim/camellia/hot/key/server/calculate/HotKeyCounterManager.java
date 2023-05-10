@@ -14,7 +14,7 @@ public class HotKeyCounterManager {
     private final int capacity;
 
     public HotKeyCounterManager(HotKeyServerProperties properties) {
-        this.capacity = properties.getCacheCapacityPerNamespace();
+        this.capacity = properties.getHotKeyCacheCounterCapacity();
         this.counterMap = new ConcurrentLinkedHashMap.Builder<String, ConcurrentLinkedHashMap<String, HotKeyCounter>>()
                 .initialCapacity(properties.getMaxNamespace())
                 .maximumWeightedCapacity(properties.getMaxNamespace())

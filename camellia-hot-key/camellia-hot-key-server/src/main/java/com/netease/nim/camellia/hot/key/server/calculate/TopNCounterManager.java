@@ -80,12 +80,12 @@ public class TopNCounterManager {
                     results.add(counter.collect());
                 }
             }
-            String namespaceKeys = CacheUtil.buildCacheKey(properties.getRedisKeyPrefix(), TAG, dataFormatStr, "namespace");
+            String namespaceKeys = CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, dataFormatStr, "namespace");
             for (TopNStatsResult result : results) {
                 try {
                     template.zadd(namespaceKeys, System.currentTimeMillis(), result.getNamespace());
-                    template.expire(namespaceKeys, properties.getRedisExpireSeconds());
-                    String key = CacheUtil.buildCacheKey(properties.getRedisKeyPrefix(), TAG, properties.getId(), result.getNamespace(), dataFormatStr);
+                    template.expire(namespaceKeys, properties.getTopnRedisExpireSeconds());
+                    String key = CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, properties.getId(), result.getNamespace(), dataFormatStr);
                     List<TopNStats> topN = result.getTopN();
                     Map<String, Double> scoreMembers = new HashMap<>();
                     for (TopNStats stats : topN) {
@@ -99,7 +99,7 @@ public class TopNCounterManager {
                         template.zadd(key, scoreMembers);
                     }
                     template.zremrangeByRank(key, 0, - properties.getTopnCount() - 1);
-                    template.expire(key, properties.getRedisExpireSeconds());
+                    template.expire(key, properties.getTopnRedisExpireSeconds());
                 } catch (Exception e) {
                     logger.error("write topn stats to redis error, namespace = {}", result.getNamespace(), e);
                 }
@@ -115,18 +115,18 @@ public class TopNCounterManager {
     private void callback(String dataFormatStr) {
         try {
             logger.info("try callback hot key topn stats");
-            String namespaceKeys = CacheUtil.buildCacheKey(properties.getRedisKeyPrefix(), TAG, dataFormatStr, "namespace");
+            String namespaceKeys = CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, dataFormatStr, "namespace");
             Long namespaceNum = template.zcard(namespaceKeys);
             if (namespaceNum != null && namespaceNum > 0) {
                 for (int i = 0; i < namespaceNum; i += 100) {
                     Set<String> namespaceSet = template.zrange(namespaceKeys, i, i + 99);
                     for (String namespace : namespaceSet) {
-                        String lockKey = CacheUtil.buildCacheKey(properties.getRedisKeyPrefix(), TAG, dataFormatStr, namespace, "notify~lock");
+                        String lockKey = CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, dataFormatStr, namespace, "notify~lock");
                         long lockExpireMillis = properties.getTopnScheduleSeconds() * 2 * 1000L;
                         CamelliaRedisLock lock = CamelliaRedisLock.newLock(template, lockKey, lockExpireMillis, lockExpireMillis);
                         if (lock.tryLock()) {
                             try {
-                                String key = CacheUtil.buildCacheKey(properties.getRedisKeyPrefix(), TAG, properties.getId(), namespace, dataFormatStr);
+                                String key = CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, properties.getId(), namespace, dataFormatStr);
                                 Set<String> set = template.zrevrange(key, 0, -1);
                                 TopNStatsResult result = new TopNStatsResult();
                                 result.setNamespace(namespace);

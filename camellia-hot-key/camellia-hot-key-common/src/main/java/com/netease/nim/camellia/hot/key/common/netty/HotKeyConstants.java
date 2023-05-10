@@ -46,7 +46,7 @@ public class HotKeyConstants {
         public static final int writeBufferWaterMarkHigh = 512 * 1024;
 
         public static final int maxNamespace = 1000;
-        public static final int cacheCapacityPerNamespace = 100000;
+        public static final int hotKeyCacheCounterCapacity = 100000;
         public static final int hotKeyCacheCapacity = 10000;
 
         public static final int callbackExecutorSize = SysUtils.getCpuHalfNum();
@@ -54,10 +54,10 @@ public class HotKeyConstants {
 
         public static final int topnCount = 1000;
         public static final int topnCheckMillis = 1000;
-        public static final int topnCacheCapacity = 100000;
+        public static final int topnCacheCounterCapacity = 100000;
         public static final int topnScheduleSeconds = 60;
-        public static final String redisKeyPrefix = "camellia";
-        public static final int redisExpireSeconds = 60*60;
+        public static final String topnRedisKeyPrefix = "camellia";
+        public static final int topnRedisExpireSeconds = 60*60;
     }
 
 }

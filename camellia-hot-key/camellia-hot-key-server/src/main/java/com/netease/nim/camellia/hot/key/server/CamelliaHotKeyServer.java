@@ -67,4 +67,8 @@ public class CamelliaHotKeyServer {
             throw new CamelliaHotKeyException(e);
         }
     }
+
+    public int getPort() {
+        return properties.getPort();
+    }
 }
