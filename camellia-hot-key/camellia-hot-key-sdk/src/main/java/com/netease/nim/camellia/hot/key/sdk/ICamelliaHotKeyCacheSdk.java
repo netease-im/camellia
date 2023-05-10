@@ -12,6 +12,8 @@ public interface ICamelliaHotKeyCacheSdk {
      *
      * 如果key有更新了，hot-key-server会广播给所有sdk去更新本地缓存，从而保证缓存值的时效性
      *
+     * 如果key没有更新，sdk也会在配置的expireMillis之前尝试刷新一下（单机只会穿透一次）
+     *
      * @param namespace namespace
      * @param key key
      * @param loader value loader

@@ -18,8 +18,8 @@ public class HotKeyCalculator {
 
     public HotKeyCalculator(HotKeyServerProperties properties, CacheableHotKeyConfigService hotKeyConfigService, HotKeyNotifyService hotKeyNotifyService) {
         this.hotKeyConfigService = hotKeyConfigService;
-        this.hotKeyCounterManager = new HotKeyCounterManager(properties.getMaxNamespace(), properties.getCacheCapacityPerNamespace());
-        this.topNCounterManager = new TopNCounterManager(properties.getMaxNamespace(), properties.getCacheCapacityPerNamespace());
+        this.hotKeyCounterManager = new HotKeyCounterManager(properties);
+        this.topNCounterManager = new TopNCounterManager(properties);
         this.hotKeyEventHandler = new HotKeyEventHandler(properties, hotKeyConfigService, hotKeyNotifyService);
         //热key规则发生变化，所有计数器清零
         hotKeyConfigService.registerCallback(hotKeyCounterManager::remove);

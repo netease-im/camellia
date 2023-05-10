@@ -12,11 +12,11 @@ public class HotKeyCounterManager {
     private final ConcurrentLinkedHashMap<String, ConcurrentLinkedHashMap<String, HotKeyCounter>> counterMap;
     private final int capacity;
 
-    public HotKeyCounterManager(int maxNamespace, int capacity) {
-        this.capacity = capacity;
+    public HotKeyCounterManager(HotKeyServerProperties properties) {
+        this.capacity = properties.getCacheCapacityPerNamespace();
         this.counterMap = new ConcurrentLinkedHashMap.Builder<String, ConcurrentLinkedHashMap<String, HotKeyCounter>>()
-                .initialCapacity(maxNamespace)
-                .maximumWeightedCapacity(maxNamespace)
+                .initialCapacity(properties.getMaxNamespace())
+                .maximumWeightedCapacity(properties.getMaxNamespace())
                 .build();
     }
 

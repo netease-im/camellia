@@ -10,13 +10,11 @@ import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 public class TopNCounterManager {
 
     private final ConcurrentLinkedHashMap<String, TopNCounter> topNCounterMap;
-    private final int capacity;
 
-    public TopNCounterManager(int maxNamespace, int capacity) {
-        this.capacity = capacity;
+    public TopNCounterManager(HotKeyServerProperties properties) {
         this.topNCounterMap = new ConcurrentLinkedHashMap.Builder<String, TopNCounter>()
-                .initialCapacity(maxNamespace)
-                .maximumWeightedCapacity(maxNamespace)
+                .initialCapacity(properties.getMaxNamespace())
+                .maximumWeightedCapacity(properties.getMaxNamespace())
                 .build();
     }
 

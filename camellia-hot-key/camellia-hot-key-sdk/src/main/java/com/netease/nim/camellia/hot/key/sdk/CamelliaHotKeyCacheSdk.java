@@ -24,6 +24,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
 
     private final NamespaceCamelliaLocalCache hotKeyCacheKeyMap;
     private final NamespaceCamelliaLocalCache hotKeyCacheValueMap;
+    private final NamespaceCamelliaLocalCache hotKeyCacheHitLockMap;
 
     private final ConcurrentHashMap<String, AtomicBoolean> hotKeyListenerCache = new ConcurrentHashMap<>();
 
@@ -33,6 +34,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         this.config = config;
         this.hotKeyCacheKeyMap = new NamespaceCamelliaLocalCache(-1, config.getCapacity());
         this.hotKeyCacheValueMap = new NamespaceCamelliaLocalCache(-1, config.getCapacity());
+        this.hotKeyCacheHitLockMap = new NamespaceCamelliaLocalCache(-1, config.getCapacity());
         logger.info("CamelliaHotKeyCacheSdk init success");
     }
 
@@ -58,11 +60,28 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
             //如果不是热key，直接请求底层
             return loader.load(key);
         }
+        //热key缓存ttl已过半，则提前穿透一次更新吧
+        long ttl = hotKeyCacheKeyMap.ttl(namespace, key);
+        if (ttl < hotKeyExpireMillis / 2) {
+            //加个本地lock，从而只穿透一次
+            boolean lock = hotKeyCacheHitLockMap.putIfAbsent(namespace, key, true, -1);
+            if (lock) {
+                try {
+                    return refresh(namespace, key, rule, loader);
+                } finally {
+                    hotKeyCacheHitLockMap.evict(namespace, key);
+                }
+            }
+        }
         //如果是热key，看看有没有本地缓存
         CamelliaLocalCache.ValueWrapper valueWrapper = hotKeyCacheValueMap.get(namespace, key);
         if (valueWrapper != null) {
             return (T) valueWrapper.get();
         }
+        return refresh(namespace, key, rule, loader);
+    }
+
+    private <T> T refresh(String namespace, String key, Rule rule, ValueLoader<T> loader) {
         //没有缓存，直接请求底层
         T value = loader.load(key);
         //判断是否缓存null
@@ -106,7 +125,6 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
                     if (keyAction == KeyAction.QUERY) {
                         hotKeyCacheKeyMap.put(event.getNamespace(), event.getKey(), event.getExpireMillis(), event.getExpireMillis());
                     } else if (keyAction == KeyAction.DELETE || keyAction == KeyAction.UPDATE) {
-                        hotKeyCacheKeyMap.evict(event.getNamespace(), event.getKey());
                         hotKeyCacheValueMap.evict(event.getNamespace(), event.getKey());
                     }
                 } catch (Exception e) {
