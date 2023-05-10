@@ -175,6 +175,153 @@ public class Test {
 * 每个namespace下可以配置多个rule
 * rule主要用于设置key的匹配模式、热key的定义（多少时间内多少次请求），热key缓存过期时间（只有cache模式下需要）
 
+### 快速开始
+1) 首先创建一个spring-boot的工程，然后添加以下依赖:
+```
+<dependency>
+  <groupId>com.netease.nim</groupId>
+  <artifactId>camellia-hot-key-server-spring-boot-starter</artifactId>
+  <version>1.2.8-SNAPSHOT</version>
+</dependency>
+```
+2) 编写主类Application.java, 如下:
+```java
+@SpringBootApplication
+@EnableCamelliaHotKeyServer
+public class Application {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+
+```
+3) 配置application.yml, 如下:
+```yaml
+server:
+  port: 7070
+spring:
+  application:
+    name: camellia-hot-key-server
+
+camellia-hot-key-server:
+  #工作线程和工作队列
+  biz-work-thread: -1 #默认使用cpu核数的一半，不建议修改
+  biz-queue-capacity: 1000000 #队列容量，默认100w
+  #netty部分
+  netty:
+    boss-thread: 1 #默认1，不建议修改
+    work-thread: -1 #默认cpu核数的一半，不建议修改
+  #公共部分
+  max-namespace: 1000 #预期的最大的namespace数量，默认1000
+  hot-key-config-service-class-name: com.netease.nim.camellia.hot.key.server.conf.FileBasedHotKeyConfigService #热key配置数据源，默认使用本地配置文件，业务可以自定义实现
+  #热key探测部分
+  hot-key-cache-counter-capacity: 100000 #LRU-key计数器的容量，默认10w(每个namespace下)
+  hot-key-cache-capacity: 10000 #每个namespace最多的热key数量，默认1w
+  hot-key-callback-interval-seconds: 10 #同一个热key回调给业务自行处理的最小间隔，默认10s
+  hot-key-callback-class-name: com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCallback #探测到热key后的自定义回调，默认是打日志
+  ##topn探测部分，topn只会统计符合热key探测规则的key，topn统计的窗口固定为1s
+  topn-count: 100 #每个namespace下，topn的key的数量，默认100
+  topn-cache-counter-capacity: 100000 #topn统计中的LRU-key计数器(每个namespace下)
+  topn-collect-seconds: 60 #topn统计结果收集间隔，也是回调的间隔，默认60s
+  topn-tiny-collect-seconds: 5 #topn初步统计结果收集间隔，topn-collect-seconds需要大于topn-tiny-collect-seconds
+  topn-redis-key-prefix: camellia #topn统计结果会通过redis进行聚合从而获取全局视图
+  topn-redis-expire-seconds: 3600 #topn统计结果在redis中的保留时间
+  topn-callback-class-name: com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyTopNCallback #topN统计结果的自定义回调，默认打印日志
+
+#topn统计依赖redis
+camellia-redis:
+  type: local
+  local:
+    resource: redis://@127.0.0.1:6379
+  redis-conf:
+    jedis:
+      timeout: 2000
+      min-idle: 0
+      max-idle: 32
+      max-active: 32
+      max-wait-millis: 2000
+    jedis-cluster:
+      max-wait-millis: 2000
+      min-idle: 0
+      max-idle: 16
+      max-active: 16
+      max-attempts: 5
+      timeout: 2000
+```
+4）启动即可
+
+### 扩展口
+
+#### HotKeyConfigService
+* 热key配置的数据源，默认是FileBasedHotKeyConfigService，会读取本地文件
+* 你也可以自定义实现，只要实现`public abstract HotKeyConfig get(String namespace)`方法，并且在配置变更时回调`public void invokeUpdate(namespace)`即可
+
+```java
+public abstract class HotKeyConfigService {
+
+    private static final Logger logger = LoggerFactory.getLogger(HotKeyConfigService.class);
+
+    private final List<Callback> callbackList = new ArrayList<>();
+
+    /**
+     * 获取HotKeyConfig
+     * @param namespace namespace
+     * @return HotKeyConfig
+     */
+    public abstract HotKeyConfig get(String namespace);
+
+    protected final void invokeUpdate(String namespace) {
+        for (Callback callback : callbackList) {
+            try {
+                callback.update(namespace);
+            } catch (Exception e) {
+                logger.error("callback error, namespace = {}", namespace, e);
+            }
+        }
+    }
+
+    public final synchronized void registerCallback(Callback callback) {
+        callbackList.add(callback);
+    }
+
+    public static interface Callback {
+        void update(String namespace);
+    }
+}
+```
+
+#### HotKeyCallback
+* 发现热key后的回调，默认是LoggingHotKeyCallback，仅打印日志
+* 你也可以自己实现本接口，从而对接到你们的监控报警系统
+
+```java
+public interface HotKeyCallback {
+
+    /**
+     * 热key回调接口
+     * @param hotKey 热key
+     */
+    void newHotKey(HotKey hotKey);
+}
+```
+
+#### HotKeyTopNCallback
+* 定期回调每个namespace下topN的key，默认是LoggingHotKeyTopNCallback
+* 你也可以自己实现，从而对接到你们的监控系统，做数据的留存
+
+```java
+public interface HotKeyTopNCallback {
+
+    /***
+     * 回调topN的key数据，注意回调结果是全局的topN，而非单机的topN
+     * 一个周期内，一个namespace只会回调一次（集群内会任选一台机器，通过redis锁来实现）
+     * @param result 结果
+     */
+    void topN(TopNStatsResult result);
+}
+```
+
 ### 配置
 
 #### 字段说明
