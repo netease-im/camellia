@@ -2,7 +2,6 @@ package com.netease.nim.camellia.hot.key.server.callback;
 
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.hot.key.common.model.HotKey;
-import com.netease.nim.camellia.hot.key.server.callback.HotKeyCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

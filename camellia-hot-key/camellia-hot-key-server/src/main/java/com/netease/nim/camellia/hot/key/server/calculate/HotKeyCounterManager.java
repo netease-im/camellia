@@ -2,7 +2,6 @@ package com.netease.nim.camellia.hot.key.server.calculate;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.hot.key.common.model.Rule;
-import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCounter;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 
