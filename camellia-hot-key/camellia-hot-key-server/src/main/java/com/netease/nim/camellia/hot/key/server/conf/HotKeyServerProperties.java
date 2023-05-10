@@ -4,12 +4,18 @@ import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.server.bean.BeanFactory;
 import com.netease.nim.camellia.hot.key.server.bean.DefaultBeanFactory;
 import com.netease.nim.camellia.hot.key.server.callback.DummyHotKeyCallback;
+import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCallback;
+import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyTopNCallback;
+import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
+
+import java.util.UUID;
 
 /**
  * Created by caojiajun on 2023/5/9
  */
 public class HotKeyServerProperties {
 
+    private final String id = UUID.randomUUID().toString().replaceAll("-", "");
     private int port = HotKeyConstants.Server.severPort;
     private int nettyBossThread = HotKeyConstants.Server.nettyBossThread;
     private int nettyWorkThread = HotKeyConstants.Server.nettyWorkThread;
@@ -33,7 +39,21 @@ public class HotKeyServerProperties {
 
     private int callbackExecutorSize = HotKeyConstants.Server.callbackExecutorSize;
     private int hotKeyCallbackIntervalSeconds = HotKeyConstants.Server.hotKeyCallbackIntervalSeconds;
-    private String hotKeyCallbackClassName = DummyHotKeyCallback.class.getName();
+    private String hotKeyCallbackClassName = LoggingHotKeyCallback.class.getName();
+    private String hotKeyTopNCallbackClassName = LoggingHotKeyTopNCallback.class.getName();
+
+    private int topnCount = HotKeyConstants.Server.topnCount;
+    private int topnCheckMillis = HotKeyConstants.Server.topnCheckMillis;
+    private int topnCacheCapacity = HotKeyConstants.Server.topnCacheCapacity;
+    private int topnScheduleSeconds = HotKeyConstants.Server.topnScheduleSeconds;
+    private String redisKeyPrefix = HotKeyConstants.Server.redisKeyPrefix;
+    private int redisExpireSeconds = HotKeyConstants.Server.redisExpireSeconds;
+
+    private CamelliaRedisTemplate redisTemplate;
+
+    public String getId() {
+        return id;
+    }
 
     public int getPort() {
         return port;
@@ -193,5 +213,69 @@ public class HotKeyServerProperties {
 
     public void setHotKeyCallbackClassName(String hotKeyCallbackClassName) {
         this.hotKeyCallbackClassName = hotKeyCallbackClassName;
+    }
+
+    public int getTopnCount() {
+        return topnCount;
+    }
+
+    public void setTopnCount(int topnCount) {
+        this.topnCount = topnCount;
+    }
+
+    public int getTopnCheckMillis() {
+        return topnCheckMillis;
+    }
+
+    public void setTopnCheckMillis(int topnCheckMillis) {
+        this.topnCheckMillis = topnCheckMillis;
+    }
+
+    public int getTopnCacheCapacity() {
+        return topnCacheCapacity;
+    }
+
+    public void setTopnCacheCapacity(int topnCacheCapacity) {
+        this.topnCacheCapacity = topnCacheCapacity;
+    }
+
+    public int getTopnScheduleSeconds() {
+        return topnScheduleSeconds;
+    }
+
+    public void setTopnScheduleSeconds(int topnScheduleSeconds) {
+        this.topnScheduleSeconds = topnScheduleSeconds;
+    }
+
+    public String getRedisKeyPrefix() {
+        return redisKeyPrefix;
+    }
+
+    public void setRedisKeyPrefix(String redisKeyPrefix) {
+        this.redisKeyPrefix = redisKeyPrefix;
+    }
+
+    public int getRedisExpireSeconds() {
+        return redisExpireSeconds;
+    }
+
+    public void setRedisExpireSeconds(int redisExpireSeconds) {
+        this.redisExpireSeconds = redisExpireSeconds;
+    }
+
+    public CamelliaRedisTemplate getRedisTemplate() {
+        return redisTemplate;
+    }
+
+    public void setRedisTemplate(CamelliaRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
+    public String getHotKeyTopNCallbackClassName() {
+        return hotKeyTopNCallbackClassName;
+    }
+
+    public void setHotKeyTopNCallbackClassName(String hotKeyTopNCallbackClassName) {
+        this.hotKeyTopNCallbackClassName = hotKeyTopNCallbackClassName;
     }
 }

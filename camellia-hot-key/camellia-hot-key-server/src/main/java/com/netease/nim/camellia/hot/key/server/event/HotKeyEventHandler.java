@@ -20,6 +20,7 @@ public class HotKeyEventHandler {
     private final CacheableHotKeyConfigService hotKeyConfigService;
     private final HotKeyNotifyService hotKeyNotifyService;
     private final NamespaceCamelliaLocalCache hotKeyCache;
+    private final NamespaceCamelliaLocalCache keyUpdateCache;
     private final HotKeyCallbackManager callbackManager;
 
     public HotKeyEventHandler(HotKeyServerProperties properties, CacheableHotKeyConfigService hotKeyConfigService,
@@ -27,6 +28,7 @@ public class HotKeyEventHandler {
         this.hotKeyConfigService = hotKeyConfigService;
         this.hotKeyNotifyService = hotKeyNotifyService;
         this.hotKeyCache = new NamespaceCamelliaLocalCache(properties.getMaxNamespace(), properties.getHotKeyCacheCapacity());
+        this.keyUpdateCache = new NamespaceCamelliaLocalCache(properties.getMaxNamespace(), properties.getHotKeyCacheCapacity());
         this.callbackManager = callbackManager;
         logger.info("HotKeyEventHandler init success");
     }
@@ -64,10 +66,14 @@ public class HotKeyEventHandler {
      */
     public void hotKeyUpdate(KeyCounter counter) {
         Long expireMillis = hotKeyCache.get(counter.getNamespace(), counter.getKey(), Long.class);
+        //只有在热key缓存中，才需要下发变更通知
         if (expireMillis != null) {
-            //只有在热key缓存中，才需要下发变更通知
-            HotKey hotKey = new HotKey(counter.getNamespace(), counter.getKey(), counter.getAction(), null);
-            hotKeyNotifyService.notifyHotKey(hotKey);
+            //100ms内只下发一次
+            boolean success = keyUpdateCache.putIfAbsent(counter.getNamespace(), counter.getKey() + "|" + counter.getAction(), true, 100L);
+            if (success) {
+                HotKey hotKey = new HotKey(counter.getNamespace(), counter.getKey(), counter.getAction(), null);
+                hotKeyNotifyService.notifyHotKey(hotKey);
+            }
         }
     }
 

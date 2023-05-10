@@ -18,6 +18,16 @@
 			<artifactId>camellia-hot-key-common</artifactId>
 			<version>1.2.8-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-redis</artifactId>
+			<version>1.2.8-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-redis-toolkit</artifactId>
+			<version>1.2.8-SNAPSHOT</version>
+		</dependency>
     </dependencies>
 	<build>
 		<plugins>

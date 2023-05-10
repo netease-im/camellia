@@ -51,6 +51,13 @@ public class HotKeyConstants {
 
         public static final int callbackExecutorSize = SysUtils.getCpuHalfNum();
         public static final int hotKeyCallbackIntervalSeconds = 10;
+
+        public static final int topnCount = 1000;
+        public static final int topnCheckMillis = 1000;
+        public static final int topnCacheCapacity = 100000;
+        public static final int topnScheduleSeconds = 60;
+        public static final String redisKeyPrefix = "camellia";
+        public static final int redisExpireSeconds = 60*60;
     }
 
 }

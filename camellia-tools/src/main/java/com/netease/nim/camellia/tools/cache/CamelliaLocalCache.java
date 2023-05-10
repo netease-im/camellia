@@ -75,6 +75,31 @@ public class CamelliaLocalCache {
     /**
      * 添加缓存（检查是否第一次）
      */
+    public boolean putIfAbsent(String tag, Object key, Object value, long expireMillis) {
+        String uniqueKey = buildCacheKey(tag, key);
+        CacheBean bean;
+        if (value == null) {
+            value = nullCache;
+        }
+        if (expireMillis <= 0) {
+            bean = new CacheBean(value, Long.MAX_VALUE);
+        } else {
+            bean = new CacheBean(value, System.currentTimeMillis() + expireMillis);
+        }
+        CacheBean oldBean = cache.get(uniqueKey);
+        if (oldBean != null && oldBean.isExpire()) {
+            cache.remove(uniqueKey);
+        }
+        CacheBean cacheBean = cache.putIfAbsent(uniqueKey, bean);
+        if (logger.isTraceEnabled()) {
+            logger.trace("local cache put, tag = {}, key = {}, expireMillis = {}", tag, key, expireMillis);
+        }
+        return cacheBean == null;
+    }
+
+    /**
+     * 添加缓存（检查是否第一次）
+     */
     public boolean putIfAbsent(String tag, Object key, Object value, int expireSeconds) {
         String uniqueKey = buildCacheKey(tag, key);
         CacheBean bean;

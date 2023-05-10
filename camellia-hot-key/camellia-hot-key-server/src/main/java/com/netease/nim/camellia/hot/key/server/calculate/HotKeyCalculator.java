@@ -25,7 +25,7 @@ public class HotKeyCalculator {
                             HotKeyNotifyService hotKeyNotifyService, HotKeyCallbackManager callbackManager) {
         this.hotKeyConfigService = hotKeyConfigService;
         this.hotKeyCounterManager = new HotKeyCounterManager(properties);
-        this.topNCounterManager = new TopNCounterManager(properties);
+        this.topNCounterManager = new TopNCounterManager(properties, callbackManager);
         this.hotKeyEventHandler = new HotKeyEventHandler(properties, hotKeyConfigService, hotKeyNotifyService, callbackManager);
         //热key规则发生变化，所有计数器清零
         hotKeyConfigService.registerCallback(hotKeyCounterManager::remove);

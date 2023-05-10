@@ -52,6 +52,13 @@ public class NamespaceCamelliaLocalCache {
     /**
      * 添加缓存（检查是否第一次）
      */
+    public boolean putIfAbsent(String namespace, Object key, Object value, long expireMillis) {
+        return get(namespace).putIfAbsent("", key, value, expireMillis);
+    }
+
+    /**
+     * 添加缓存（检查是否第一次）
+     */
     public boolean putIfAbsent(String namespace, Object key, Object value, int expireSeconds) {
         return get(namespace).putIfAbsent("", key, value, expireSeconds);
     }
