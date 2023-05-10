@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.hot.key.server;
 
+import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackBizHandler;
@@ -7,10 +8,13 @@ import com.netease.nim.camellia.hot.key.common.netty.pack.*;
 import com.netease.nim.camellia.hot.key.server.bean.BeanInitUtils;
 import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCalculator;
 import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCalculatorQueue;
+import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCounterManager;
+import com.netease.nim.camellia.hot.key.server.calculate.TopNCounterManager;
 import com.netease.nim.camellia.hot.key.server.callback.HotKeyCallbackManager;
 import com.netease.nim.camellia.hot.key.server.conf.CacheableHotKeyConfigService;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyConfigService;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
+import com.netease.nim.camellia.hot.key.server.event.HotKeyEventHandler;
 import com.netease.nim.camellia.hot.key.server.netty.ChannelInfo;
 import com.netease.nim.camellia.hot.key.server.notify.HotKeyNotifyService;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
@@ -53,15 +57,25 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         this.hotKeyConfigService = new CacheableHotKeyConfigService(service);
 
         //notify
-        HotKeyNotifyService hotKeyConfigNotifyService = new HotKeyNotifyService(hotKeyConfigService);
-        hotKeyConfigService.registerCallback(hotKeyConfigNotifyService::notifyHotKeyNotifyChange);
+        HotKeyNotifyService notifyService = new HotKeyNotifyService(hotKeyConfigService);
+        hotKeyConfigService.registerCallback(notifyService::notifyHotKeyNotifyChange);
+
+        //hot key counter
+        HotKeyCounterManager hotKeyCounterManager = new HotKeyCounterManager(properties);
+        hotKeyConfigService.registerCallback(hotKeyCounterManager::remove);
 
         //callback
         HotKeyCallbackManager callbackManager = new HotKeyCallbackManager(properties);
 
+        //topN counter
+        TopNCounterManager topNCounterManager = new TopNCounterManager(properties, callbackManager);
+
+        //event handler
+        HotKeyEventHandler hotKeyEventHandler = new HotKeyEventHandler(properties, hotKeyConfigService, notifyService, callbackManager);
+
         for (int i=0; i<bizWorkThread; i++) {
             HotKeyCalculatorQueue queue = new HotKeyCalculatorQueue(properties.getBizQueueCapacity());
-            queue.start(new HotKeyCalculator(properties, hotKeyConfigService, hotKeyConfigNotifyService, callbackManager));
+            queue.start(new HotKeyCalculator(i, hotKeyConfigService, hotKeyCounterManager, topNCounterManager, hotKeyEventHandler));
             this.queues[i] = queue;
         }
 
@@ -74,6 +88,9 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
     @Override
     public CompletableFuture<PushRepPack> onPushPack(Channel channel, PushPack pack) {
         try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("receive PushPack, size = {}", pack.getList().size());
+            }
             Map<HotKeyCalculatorQueue, List<KeyCounter>> buffer = new HashMap<>();
             for (KeyCounter counter : pack.getList()) {
                 HotKeyCalculatorQueue queue = selectQueue(counter);
@@ -91,6 +108,9 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
 
     @Override
     public CompletableFuture<GetConfigRepPack> onGetConfigPack(Channel channel, GetConfigPack pack) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("receive GetConfigPack, namespace = {}", pack.getNamespace());
+        }
         CompletableFuture<GetConfigRepPack> future = new CompletableFuture<>();
         ChannelInfo channelInfo = ChannelInfo.get(channel);
         channelInfo.addNamespace(pack.getNamespace());
@@ -98,6 +118,9 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
             executor.submit(() -> {
                 try {
                     HotKeyConfig hotKeyConfig = hotKeyConfigService.get(pack.getNamespace());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("reply GetConfigRepPack, config = {}", JSONObject.toJSONString(hotKeyConfig));
+                    }
                     future.complete(new GetConfigRepPack(hotKeyConfig));
                 } catch (Exception e) {
                     logger.error("onGetConfigPack error, namespace = {}", pack.getNamespace(), e);

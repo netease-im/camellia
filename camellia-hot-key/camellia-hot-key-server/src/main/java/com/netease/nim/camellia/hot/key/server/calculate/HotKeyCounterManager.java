@@ -4,11 +4,15 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.hot.key.common.model.Rule;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by caojiajun on 2023/5/10
  */
 public class HotKeyCounterManager {
+
+    private static final Logger logger = LoggerFactory.getLogger(HotKeyCounterManager.class);
 
     private final ConcurrentLinkedHashMap<String, ConcurrentLinkedHashMap<String, HotKeyCounter>> counterMap;
     private final int capacity;
@@ -21,8 +25,12 @@ public class HotKeyCounterManager {
                 .build();
     }
 
-    public boolean addAndCheckHot(String namespace, String key, Rule rule, long count) {
-        return getHotKeyCounter(namespace, key, rule).addAndCheckHot(count);
+    public boolean check(String namespace, String key, Rule rule, long count) {
+        boolean hot = getHotKeyCounter(namespace, key, rule).check(count);
+        if (logger.isDebugEnabled()) {
+            logger.debug("check key, namespace = {}, key = {}, count = {}, rule.name = {}, hot = {}", namespace, key, count, rule.getName(), hot);
+        }
+        return hot;
     }
 
     public void remove(String namespace) {

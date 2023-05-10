@@ -91,6 +91,6 @@ public class FileBasedHotKeyConfigService extends HotKeyConfigService {
 
     @Override
     public HotKeyConfig get(String namespace) {
-        return null;
+        return configMap.get(namespace);
     }
 }

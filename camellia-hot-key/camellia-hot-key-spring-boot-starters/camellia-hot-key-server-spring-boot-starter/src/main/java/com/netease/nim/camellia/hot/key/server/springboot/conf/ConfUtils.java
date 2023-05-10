@@ -24,8 +24,8 @@ public class ConfUtils {
         properties.setHotKeyCacheCounterCapacity(serverProperties.getHotKeyCacheCounterCapacity());
 
         properties.setTopnCacheCounterCapacity(serverProperties.getTopnCacheCounterCapacity());
-        properties.setTopnCheckMillis(serverProperties.getTopnCheckMillis());
-        properties.setTopnScheduleSeconds(serverProperties.getTopnScheduleSeconds());
+        properties.setTopnCollectSeconds(serverProperties.getTopnCollectSeconds());
+        properties.setTopnTinyCollectSeconds(serverProperties.getTopnTinyCollectSeconds());
         properties.setTopnCount(serverProperties.getTopnCount());
         properties.setTopnRedisKeyPrefix(serverProperties.getTopnRedisKeyPrefix());
         properties.setTopnRedisExpireSeconds(serverProperties.getTopnRedisExpireSeconds());

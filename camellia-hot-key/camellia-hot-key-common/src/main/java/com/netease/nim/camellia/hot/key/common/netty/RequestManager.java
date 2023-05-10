@@ -6,7 +6,6 @@ import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -22,10 +21,17 @@ public class RequestManager {
             .maximumWeightedCapacity(HotKeyConstants.Client.sessionCapacity)
             .build();
 
-    private final SocketAddress address;
+    private Channel channel;
 
-    public RequestManager(SocketAddress address) {
-        this.address = address;
+    public RequestManager() {
+    }
+
+    public RequestManager(Channel channel) {
+        this.channel = channel;
+    }
+
+    public void setChannel(Channel channel) {
+        this.channel = channel;
     }
 
     public CompletableFuture<HotKeyPack> putSession(HotKeyPack pack) {
@@ -40,13 +46,17 @@ public class RequestManager {
         if (future != null) {
             future.complete(pack);
         } else {
-            logger.warn("unknown requestId = {}, remote = {}", requestId, address);
+            logger.warn("unknown requestId = {}, channel = {}", requestId, channel);
         }
     }
 
     public void clear() {
         for (Map.Entry<Long, CompletableFuture<HotKeyPack>> entry : requests.entrySet()) {
-            entry.getValue().completeExceptionally(new CamelliaHotKeyException(address + " disconnect"));
+            if (channel == null) {
+                entry.getValue().completeExceptionally(new CamelliaHotKeyException("channel disconnect"));
+            } else {
+                entry.getValue().completeExceptionally(new CamelliaHotKeyException(channel + " disconnect"));
+            }
         }
     }
 }

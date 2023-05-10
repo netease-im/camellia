@@ -17,7 +17,7 @@ public class LoggingHotKeyTopNCallback implements HotKeyTopNCallback {
         logger.info("===hot-key-topn====");
         logger.info("namespace={}", result.getNamespace());
         for (TopNStats topNStats : result.getTopN()) {
-            logger.info("key={},action={},max={},total={}", topNStats.getKey(), topNStats.getAction(), topNStats.getMax(), topNStats.getTotal());
+            logger.info("key={},action={},maxQps={},total={}", topNStats.getKey(), topNStats.getAction(), topNStats.getMaxQps(), topNStats.getTotal());
         }
         logger.info("====end====");
     }

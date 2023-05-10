@@ -29,9 +29,9 @@ public class CamelliaHotKeyServerProperties {
     private String hotKeyCallbackClassName = LoggingHotKeyCallback.class.getName();
 
     private int topnCount = HotKeyConstants.Server.topnCount;
-    private int topnCheckMillis = HotKeyConstants.Server.topnCheckMillis;
     private int topnCacheCounterCapacity = HotKeyConstants.Server.topnCacheCounterCapacity;
-    private int topnScheduleSeconds = HotKeyConstants.Server.topnScheduleSeconds;
+    private int topnCollectSeconds = HotKeyConstants.Server.topnCollectSeconds;
+    private int topnTinyCollectSeconds = HotKeyConstants.Server.topnTinyCollectSeconds;
     private String topnRedisKeyPrefix = HotKeyConstants.Server.topnRedisKeyPrefix;
     private int topnRedisExpireSeconds = HotKeyConstants.Server.topnRedisExpireSeconds;
     private String topnCallbackClassName = LoggingHotKeyTopNCallback.class.getName();
@@ -78,6 +78,14 @@ public class CamelliaHotKeyServerProperties {
         this.maxNamespace = maxNamespace;
     }
 
+    public String getHotKeyConfigServiceClassName() {
+        return hotKeyConfigServiceClassName;
+    }
+
+    public void setHotKeyConfigServiceClassName(String hotKeyConfigServiceClassName) {
+        this.hotKeyConfigServiceClassName = hotKeyConfigServiceClassName;
+    }
+
     public int getHotKeyCacheCounterCapacity() {
         return hotKeyCacheCounterCapacity;
     }
@@ -92,22 +100,6 @@ public class CamelliaHotKeyServerProperties {
 
     public void setHotKeyCacheCapacity(int hotKeyCacheCapacity) {
         this.hotKeyCacheCapacity = hotKeyCacheCapacity;
-    }
-
-    public String getHotKeyConfigServiceClassName() {
-        return hotKeyConfigServiceClassName;
-    }
-
-    public void setHotKeyConfigServiceClassName(String hotKeyConfigServiceClassName) {
-        this.hotKeyConfigServiceClassName = hotKeyConfigServiceClassName;
-    }
-
-    public int getCallbackExecutorSize() {
-        return callbackExecutorSize;
-    }
-
-    public void setCallbackExecutorSize(int callbackExecutorSize) {
-        this.callbackExecutorSize = callbackExecutorSize;
     }
 
     public int getHotKeyCallbackIntervalSeconds() {
@@ -126,28 +118,12 @@ public class CamelliaHotKeyServerProperties {
         this.hotKeyCallbackClassName = hotKeyCallbackClassName;
     }
 
-    public String getTopnCallbackClassName() {
-        return topnCallbackClassName;
-    }
-
-    public void setTopnCallbackClassName(String topnCallbackClassName) {
-        this.topnCallbackClassName = topnCallbackClassName;
-    }
-
     public int getTopnCount() {
         return topnCount;
     }
 
     public void setTopnCount(int topnCount) {
         this.topnCount = topnCount;
-    }
-
-    public int getTopnCheckMillis() {
-        return topnCheckMillis;
-    }
-
-    public void setTopnCheckMillis(int topnCheckMillis) {
-        this.topnCheckMillis = topnCheckMillis;
     }
 
     public int getTopnCacheCounterCapacity() {
@@ -158,12 +134,20 @@ public class CamelliaHotKeyServerProperties {
         this.topnCacheCounterCapacity = topnCacheCounterCapacity;
     }
 
-    public int getTopnScheduleSeconds() {
-        return topnScheduleSeconds;
+    public int getTopnCollectSeconds() {
+        return topnCollectSeconds;
     }
 
-    public void setTopnScheduleSeconds(int topnScheduleSeconds) {
-        this.topnScheduleSeconds = topnScheduleSeconds;
+    public void setTopnCollectSeconds(int topnCollectSeconds) {
+        this.topnCollectSeconds = topnCollectSeconds;
+    }
+
+    public int getTopnTinyCollectSeconds() {
+        return topnTinyCollectSeconds;
+    }
+
+    public void setTopnTinyCollectSeconds(int topnTinyCollectSeconds) {
+        this.topnTinyCollectSeconds = topnTinyCollectSeconds;
     }
 
     public String getTopnRedisKeyPrefix() {
@@ -180,5 +164,21 @@ public class CamelliaHotKeyServerProperties {
 
     public void setTopnRedisExpireSeconds(int topnRedisExpireSeconds) {
         this.topnRedisExpireSeconds = topnRedisExpireSeconds;
+    }
+
+    public String getTopnCallbackClassName() {
+        return topnCallbackClassName;
+    }
+
+    public void setTopnCallbackClassName(String topnCallbackClassName) {
+        this.topnCallbackClassName = topnCallbackClassName;
+    }
+
+    public int getCallbackExecutorSize() {
+        return callbackExecutorSize;
+    }
+
+    public void setCallbackExecutorSize(int callbackExecutorSize) {
+        this.callbackExecutorSize = callbackExecutorSize;
     }
 }

@@ -41,7 +41,7 @@ public class HotKeyCounter {
      * @param count count
      * @return 是否hot
      */
-    public boolean addAndCheckHot(long count) {
+    public boolean check(long count) {
         int slideStep = (int) ((TimeCache.currentMillis - lastUpdateTime) / millisPerBucket);
         if (slideStep > 0) {
             slideToNextBucket(slideStep);

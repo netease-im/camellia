@@ -7,6 +7,7 @@ import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackConsumer;
 import com.netease.nim.camellia.hot.key.common.netty.pack.HeartbeatPack;
 import com.netease.nim.camellia.hot.key.common.netty.pack.HeartbeatRepPack;
 import com.netease.nim.camellia.hot.key.common.netty.pack.HotKeyCommand;
+import com.netease.nim.camellia.hot.key.sdk.discovery.HotKeyServerDiscovery;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;

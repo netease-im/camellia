@@ -10,13 +10,13 @@ public class TopNStats implements Comparable<TopNStats> {
     private final String key;
     private final KeyAction action;
     private final long total;
-    private final long max;
+    private final long maxQps;
 
-    public TopNStats(String key, KeyAction action, long total, long max) {
+    public TopNStats(String key, KeyAction action, long total, long maxQps) {
         this.key = key;
         this.action = action;
         this.total = total;
-        this.max = max;
+        this.maxQps = maxQps;
     }
 
     public String getKey() {
@@ -31,12 +31,12 @@ public class TopNStats implements Comparable<TopNStats> {
         return total;
     }
 
-    public long getMax() {
-        return max;
+    public long getMaxQps() {
+        return maxQps;
     }
 
     @Override
     public int compareTo(TopNStats topNStats) {
-        return Long.compare(topNStats.max, max);
+        return Long.compare(topNStats.maxQps, maxQps);
     }
 }

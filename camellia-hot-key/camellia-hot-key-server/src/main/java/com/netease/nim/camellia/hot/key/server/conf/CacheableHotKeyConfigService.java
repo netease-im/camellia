@@ -38,7 +38,9 @@ public class CacheableHotKeyConfigService {
         HotKeyConfig config = cache.get(namespace);
         if (config == null) {
             config = hotKeyConfigService.get(namespace);
-            cache.put(namespace, config);
+            if (config != null) {
+                cache.put(namespace, config);
+            }
         }
         return config;
     }

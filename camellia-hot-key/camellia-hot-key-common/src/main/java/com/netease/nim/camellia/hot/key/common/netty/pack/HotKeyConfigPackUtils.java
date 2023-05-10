@@ -32,9 +32,10 @@ public class HotKeyConfigPackUtils {
     private enum RuleTag {
         name(1),
         type(2),
-        checkMillis(3),
-        checkThreshold(4),
-        expireMillis(5),
+        keyConfig(3),
+        checkMillis(4),
+        checkThreshold(5),
+        expireMillis(6),
         ;
 
         private final int value;
@@ -46,22 +47,25 @@ public class HotKeyConfigPackUtils {
 
     public static void marshal(HotKeyConfig config, Pack pack) {
         Property namespaceProps = new Property();
-        namespaceProps.put(HotKeyConfigPackUtils.NamespaceTag.namespace.value, config.getNamespace());
-        namespaceProps.putInteger(HotKeyConfigPackUtils.NamespaceTag.type.value, config.getType().getValue());
+        namespaceProps.put(NamespaceTag.namespace.value, config.getNamespace());
+        namespaceProps.putInteger(NamespaceTag.type.value, config.getType().getValue());
         ArrayMable<Property> rulesArray = new ArrayMable<>(Property.class);
         List<Rule> rules = config.getRules();
         for (Rule rule : rules) {
             Property property = new Property();
-            property.put(HotKeyConfigPackUtils.RuleTag.name.value, rule.getName());
-            property.putInteger(HotKeyConfigPackUtils.RuleTag.type.value, rule.getType().getValue());
+            property.put(RuleTag.name.value, rule.getName());
+            property.putInteger(RuleTag.type.value, rule.getType().getValue());
+            if (rule.getKeyConfig() != null) {
+                property.put(RuleTag.keyConfig.value, rule.getKeyConfig());
+            }
             if (rule.getCheckMillis() != null) {
-                property.putLong(HotKeyConfigPackUtils.RuleTag.checkMillis.value, rule.getCheckMillis());
+                property.putLong(RuleTag.checkMillis.value, rule.getCheckMillis());
             }
             if (rule.getCheckThreshold() != null) {
-                property.putLong(HotKeyConfigPackUtils.RuleTag.checkThreshold.value, rule.getCheckMillis());
+                property.putLong(RuleTag.checkThreshold.value, rule.getCheckMillis());
             }
             if (rule.getExpireMillis() != null) {
-                property.putLong(HotKeyConfigPackUtils.RuleTag.expireMillis.value, rule.getExpireMillis());
+                property.putLong(RuleTag.expireMillis.value, rule.getExpireMillis());
             }
             rulesArray.add(property);
         }
@@ -75,21 +79,24 @@ public class HotKeyConfigPackUtils {
         unpack.popMarshallable(namespaceProps);
         unpack.popMarshallable(rulesArray);
         HotKeyConfig config = new HotKeyConfig();
-        config.setNamespace(namespaceProps.get(HotKeyConfigPackUtils.NamespaceTag.namespace.value));
-        config.setType(NamespaceType.getByValue(namespaceProps.getInteger(HotKeyConfigPackUtils.NamespaceTag.type.value)));
+        config.setNamespace(namespaceProps.get(NamespaceTag.namespace.value));
+        config.setType(NamespaceType.getByValue(namespaceProps.getInteger(NamespaceTag.type.value)));
         List<Rule> rules = new ArrayList<>();
         for (Property property : rulesArray.list) {
             Rule rule = new Rule();
-            rule.setName(property.get(HotKeyConfigPackUtils.RuleTag.name.value));
-            rule.setType(RuleType.getByValue(property.getInteger(HotKeyConfigPackUtils.RuleTag.type.value)));
-            if (property.containsKey(HotKeyConfigPackUtils.RuleTag.checkMillis.value)) {
-                rule.setCheckMillis(property.getLong(HotKeyConfigPackUtils.RuleTag.checkMillis.value));
+            rule.setName(property.get(RuleTag.name.value));
+            rule.setType(RuleType.getByValue(property.getInteger(RuleTag.type.value)));
+            if (property.containsKey(RuleTag.keyConfig.value)) {
+                rule.setKeyConfig(property.get(RuleTag.keyConfig.value));
             }
-            if (property.containsKey(HotKeyConfigPackUtils.RuleTag.checkThreshold.value)) {
-                rule.setCheckThreshold(property.getLong(HotKeyConfigPackUtils.RuleTag.checkThreshold.value));
+            if (property.containsKey(RuleTag.checkMillis.value)) {
+                rule.setCheckMillis(property.getLong(RuleTag.checkMillis.value));
             }
-            if (property.containsKey(HotKeyConfigPackUtils.RuleTag.expireMillis.value)) {
-                rule.setExpireMillis(property.getLong(HotKeyConfigPackUtils.RuleTag.expireMillis.value));
+            if (property.containsKey(RuleTag.checkThreshold.value)) {
+                rule.setCheckThreshold(property.getLong(RuleTag.checkThreshold.value));
+            }
+            if (property.containsKey(RuleTag.expireMillis.value)) {
+                rule.setExpireMillis(property.getLong(RuleTag.expireMillis.value));
             }
             rules.add(rule);
         }

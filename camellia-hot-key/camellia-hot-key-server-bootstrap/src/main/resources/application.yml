@@ -1,5 +1,5 @@
 server:
-  port: 6380
+  port: 7070
 spring:
   application:
     name: camellia-hot-key-server
@@ -20,13 +20,13 @@ camellia-hot-key-server:
   hot-key-cache-capacity: 10000 #每个namespace最多的热key数量，默认1w
   hot-key-callback-interval-seconds: 10 #同一个热key回调给业务自行处理的最小间隔，默认10s
   hot-key-callback-class-name: com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCallback #探测到热key后的自定义回调，默认是打日志
-  ##topn探测部分，topn只会统计符合热key探测规则的key
-  topn-count: 1000 #每个namespace下，topn的key的数量，默认1000
-  topn-check-millis: 1000 #topn统计中的统计窗口
+  ##topn探测部分，topn只会统计符合热key探测规则的key，topn统计的窗口固定为1s
+  topn-count: 100 #每个namespace下，topn的key的数量，默认100
   topn-cache-counter-capacity: 100000 #topn统计中的LRU-key计数器(每个namespace下)
+  topn-collect-seconds: 60 #topn统计结果收集间隔，也是回调的间隔，默认60s
+  topn-tiny-collect-seconds: 5 #topn初步统计结果收集间隔，topn-collect-seconds需要大于topn-tiny-collect-seconds
   topn-redis-key-prefix: camellia #topn统计结果会通过redis进行聚合从而获取全局视图
   topn-redis-expire-seconds: 3600 #topn统计结果在redis中的保留时间
-  topn-schedule-seconds: 60 #topn统计结果回调间隔，默认60s
   topn-callback-class-name: com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyTopNCallback #topN统计结果的自定义回调，默认打印日志
 
 #topn统计依赖redis

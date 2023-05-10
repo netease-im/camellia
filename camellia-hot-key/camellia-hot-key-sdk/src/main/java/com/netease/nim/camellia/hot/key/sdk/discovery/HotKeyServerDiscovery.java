@@ -1,6 +1,7 @@
-package com.netease.nim.camellia.hot.key.sdk.netty;
+package com.netease.nim.camellia.hot.key.sdk.discovery;
 
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
+import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyServerAddr;
 
 /**
  * Created by caojiajun on 2023/5/8

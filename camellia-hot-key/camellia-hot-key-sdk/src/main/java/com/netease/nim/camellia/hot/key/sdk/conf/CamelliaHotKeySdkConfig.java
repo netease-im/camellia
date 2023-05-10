@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.hot.key.sdk.conf;
 
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
-import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyServerDiscovery;
+import com.netease.nim.camellia.hot.key.sdk.discovery.HotKeyServerDiscovery;
 
 /**
  * Created by caojiajun on 2023/5/6

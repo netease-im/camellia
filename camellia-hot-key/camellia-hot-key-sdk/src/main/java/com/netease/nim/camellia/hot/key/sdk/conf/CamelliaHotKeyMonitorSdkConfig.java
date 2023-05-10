@@ -14,7 +14,7 @@ public class CamelliaHotKeyMonitorSdkConfig {
     private static final ScheduledExecutorService defaultScheduler = Executors.newScheduledThreadPool(SysUtils.getCpuNum(),
             new CamelliaThreadFactory("camellia-hot-key-monitor-scheduler"));
 
-    private static final ThreadPoolExecutor defaultExecutor = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuHalfNum(), 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000),
+    private static final ThreadPoolExecutor defaultExecutor = new ThreadPoolExecutor(SysUtils.getCpuHalfNum(), SysUtils.getCpuHalfNum(), 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000),
             new CamelliaThreadFactory("camellia-hot-key-monitor-executor"), new ThreadPoolExecutor.CallerRunsPolicy());
 
     private ThreadPoolExecutor executor = defaultExecutor;

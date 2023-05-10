@@ -29,6 +29,7 @@ public class HotKeyClient {
 
     public HotKeyClient(HotKeyServerAddr addr, HotKeyPackConsumer consumer) {
         try {
+            requestManager = new RequestManager();
             Bootstrap bootstrap = new Bootstrap()
                     .group(nioEventLoopGroup)
                     .channel(NioSocketChannel.class)
@@ -52,7 +53,7 @@ public class HotKeyClient {
                 logger.error("hot key client closed, addr = {}", addr, channelFuture.cause());
                 stop();
             });
-            requestManager = new RequestManager(channel.remoteAddress());
+            requestManager.setChannel(channel);
             valid = true;
         } catch (Exception e) {
             valid = false;

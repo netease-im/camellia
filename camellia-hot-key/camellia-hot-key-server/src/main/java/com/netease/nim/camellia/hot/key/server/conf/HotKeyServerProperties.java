@@ -43,9 +43,9 @@ public class HotKeyServerProperties {
     private String hotKeyCallbackClassName = LoggingHotKeyCallback.class.getName();
 
     private int topnCount = HotKeyConstants.Server.topnCount;
-    private int topnCheckMillis = HotKeyConstants.Server.topnCheckMillis;
     private int topnCacheCounterCapacity = HotKeyConstants.Server.topnCacheCounterCapacity;
-    private int topnScheduleSeconds = HotKeyConstants.Server.topnScheduleSeconds;
+    private int topnCollectSeconds = HotKeyConstants.Server.topnCollectSeconds;
+    private int topnTinyCollectSeconds = HotKeyConstants.Server.topnTinyCollectSeconds;
     private String topNCallbackClassName = LoggingHotKeyTopNCallback.class.getName();
     private String topnRedisKeyPrefix = HotKeyConstants.Server.topnRedisKeyPrefix;
     private int topnRedisExpireSeconds = HotKeyConstants.Server.topnRedisExpireSeconds;
@@ -104,30 +104,6 @@ public class HotKeyServerProperties {
         this.bizQueueCapacity = bizQueueCapacity;
     }
 
-    public int getMaxNamespace() {
-        return maxNamespace;
-    }
-
-    public void setMaxNamespace(int maxNamespace) {
-        this.maxNamespace = maxNamespace;
-    }
-
-    public int getHotKeyCacheCounterCapacity() {
-        return hotKeyCacheCounterCapacity;
-    }
-
-    public void setHotKeyCacheCounterCapacity(int hotKeyCacheCounterCapacity) {
-        this.hotKeyCacheCounterCapacity = hotKeyCacheCounterCapacity;
-    }
-
-    public int getHotKeyCacheCapacity() {
-        return hotKeyCacheCapacity;
-    }
-
-    public void setHotKeyCacheCapacity(int hotKeyCacheCapacity) {
-        this.hotKeyCacheCapacity = hotKeyCacheCapacity;
-    }
-
     public boolean isTcpNoDelay() {
         return tcpNoDelay;
     }
@@ -184,12 +160,12 @@ public class HotKeyServerProperties {
         this.writeBufferWaterMarkHigh = writeBufferWaterMarkHigh;
     }
 
-    public String getHotKeyConfigServiceClassName() {
-        return hotKeyConfigServiceClassName;
+    public int getMaxNamespace() {
+        return maxNamespace;
     }
 
-    public void setHotKeyConfigServiceClassName(String hotKeyConfigServiceClassName) {
-        this.hotKeyConfigServiceClassName = hotKeyConfigServiceClassName;
+    public void setMaxNamespace(int maxNamespace) {
+        this.maxNamespace = maxNamespace;
     }
 
     public BeanFactory getBeanFactory() {
@@ -206,6 +182,30 @@ public class HotKeyServerProperties {
 
     public void setCallbackExecutorSize(int callbackExecutorSize) {
         this.callbackExecutorSize = callbackExecutorSize;
+    }
+
+    public String getHotKeyConfigServiceClassName() {
+        return hotKeyConfigServiceClassName;
+    }
+
+    public void setHotKeyConfigServiceClassName(String hotKeyConfigServiceClassName) {
+        this.hotKeyConfigServiceClassName = hotKeyConfigServiceClassName;
+    }
+
+    public int getHotKeyCacheCounterCapacity() {
+        return hotKeyCacheCounterCapacity;
+    }
+
+    public void setHotKeyCacheCounterCapacity(int hotKeyCacheCounterCapacity) {
+        this.hotKeyCacheCounterCapacity = hotKeyCacheCounterCapacity;
+    }
+
+    public int getHotKeyCacheCapacity() {
+        return hotKeyCacheCapacity;
+    }
+
+    public void setHotKeyCacheCapacity(int hotKeyCacheCapacity) {
+        this.hotKeyCacheCapacity = hotKeyCacheCapacity;
     }
 
     public int getHotKeyCallbackIntervalSeconds() {
@@ -232,14 +232,6 @@ public class HotKeyServerProperties {
         this.topnCount = topnCount;
     }
 
-    public int getTopnCheckMillis() {
-        return topnCheckMillis;
-    }
-
-    public void setTopnCheckMillis(int topnCheckMillis) {
-        this.topnCheckMillis = topnCheckMillis;
-    }
-
     public int getTopnCacheCounterCapacity() {
         return topnCacheCounterCapacity;
     }
@@ -248,12 +240,28 @@ public class HotKeyServerProperties {
         this.topnCacheCounterCapacity = topnCacheCounterCapacity;
     }
 
-    public int getTopnScheduleSeconds() {
-        return topnScheduleSeconds;
+    public int getTopnCollectSeconds() {
+        return topnCollectSeconds;
     }
 
-    public void setTopnScheduleSeconds(int topnScheduleSeconds) {
-        this.topnScheduleSeconds = topnScheduleSeconds;
+    public void setTopnCollectSeconds(int topnCollectSeconds) {
+        this.topnCollectSeconds = topnCollectSeconds;
+    }
+
+    public int getTopnTinyCollectSeconds() {
+        return topnTinyCollectSeconds;
+    }
+
+    public void setTopnTinyCollectSeconds(int topnTinyCollectSeconds) {
+        this.topnTinyCollectSeconds = topnTinyCollectSeconds;
+    }
+
+    public String getTopNCallbackClassName() {
+        return topNCallbackClassName;
+    }
+
+    public void setTopNCallbackClassName(String topNCallbackClassName) {
+        this.topNCallbackClassName = topNCallbackClassName;
     }
 
     public String getTopnRedisKeyPrefix() {
@@ -278,13 +286,5 @@ public class HotKeyServerProperties {
 
     public void setRedisTemplate(CamelliaRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
-    }
-
-    public String getTopNCallbackClassName() {
-        return topNCallbackClassName;
-    }
-
-    public void setTopNCallbackClassName(String topNCallbackClassName) {
-        this.topNCallbackClassName = topNCallbackClassName;
     }
 }

@@ -50,7 +50,7 @@ public class PushPack extends HotKeyPackBody {
             property.put(Tag.namespace.value, counter.getNamespace());
             property.put(Tag.key.value, counter.getKey());
             property.putInteger(Tag.action.value, counter.getAction().getValue());
-            property.putLong(Tag.key.value, counter.getCount());
+            property.putLong(Tag.count.value, counter.getCount());
             arrayMable.add(property);
         }
         pack.putMarshallable(arrayMable);

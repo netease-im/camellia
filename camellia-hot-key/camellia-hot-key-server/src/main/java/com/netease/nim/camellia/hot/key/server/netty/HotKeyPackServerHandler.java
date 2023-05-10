@@ -2,6 +2,7 @@ package com.netease.nim.camellia.hot.key.server.netty;
 
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPack;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackConsumer;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by caojiajun on 2023/5/8
  */
+@ChannelHandler.Sharable
 public class HotKeyPackServerHandler extends ChannelInboundHandlerAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(HotKeyPackServerHandler.class);

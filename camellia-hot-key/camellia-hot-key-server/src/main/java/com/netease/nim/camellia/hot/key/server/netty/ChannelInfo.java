@@ -25,7 +25,7 @@ public class ChannelInfo {
     private ChannelInfo(ChannelHandlerContext ctx) {
         this.ctx = ctx;
         this.consid = UUID.randomUUID().toString();
-        this.requestManager = new RequestManager(ctx.channel().remoteAddress());
+        this.requestManager = new RequestManager(ctx.channel());
     }
 
     /**

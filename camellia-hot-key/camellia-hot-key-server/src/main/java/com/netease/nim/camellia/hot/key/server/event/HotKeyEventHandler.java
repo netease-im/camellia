@@ -38,6 +38,9 @@ public class HotKeyEventHandler {
      * @param hotKey 热key
      */
     public void newHotKey(HotKey hotKey) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("newHotKey, namespace = {}, key = {}, action = {}", hotKey.getNamespace(), hotKey.getKey(), hotKey.getAction());
+        }
         HotKeyConfig hotKeyConfig = hotKeyConfigService.get(hotKey.getNamespace());
         if (hotKeyConfig.getType() == NamespaceType.cache && hotKey.getAction() == KeyAction.QUERY && hotKey.getExpireMillis() != null) {
             Long expireMillis = hotKeyCache.get(hotKey.getNamespace(), hotKey.getKey(), Long.class);
