@@ -4,6 +4,7 @@ import com.netease.nim.camellia.hot.key.common.model.*;
 import com.netease.nim.camellia.hot.key.common.utils.RuleUtils;
 import com.netease.nim.camellia.hot.key.server.event.HotKeyEventHandler;
 import com.netease.nim.camellia.hot.key.server.conf.CacheableHotKeyConfigService;
+import com.netease.nim.camellia.hot.key.server.event.ValueGetter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,9 @@ public class HotKeyCalculator {
                     counter.getKey() + "|" + counter.getAction().getValue(), rule, counter.getCount());
             if (hot) {
                 //如果是热点，推给hotKeyEventHandler处理
-                hotKeyEventHandler.newHotKey(new HotKey(counter.getNamespace(), counter.getKey(), counter.getAction(), rule.getExpireMillis()));
+                HotKey hotKey = new HotKey(counter.getNamespace(), counter.getKey(), counter.getAction(), rule.getExpireMillis());
+                ValueGetter getter = () -> hotKeyCounterManager.getCount(counter.getNamespace(), counter.getKey() + "|" + counter.getAction(), rule);
+                hotKeyEventHandler.newHotKey(hotKey, rule, getter);
             }
             //如果是key的更新/删除操作，则需要看看是否需要广播
             if (counter.getAction() == KeyAction.DELETE || counter.getAction() == KeyAction.UPDATE) {

@@ -33,6 +33,10 @@ public class HotKeyCounterManager {
         return hot;
     }
 
+    public long getCount(String namespace, String key, Rule rule) {
+        return getHotKeyCounter(namespace, key, rule).getCount();
+    }
+
     public void remove(String namespace) {
         counterMap.remove(namespace);
     }

@@ -60,6 +60,18 @@ public class HotKeyCounter {
         return hot;
     }
 
+    /**
+     * 获取当前值
+     * @return value
+     */
+    public long getCount() {
+        long total = 0;
+        for (long bucket : buckets) {
+            total += bucket;
+        }
+        return total;
+    }
+
     public String getNamespace() {
         return namespace;
     }

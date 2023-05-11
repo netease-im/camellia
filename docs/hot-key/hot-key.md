@@ -5,7 +5,16 @@
 
 * 一个热key探测和缓存的工具
 * 包括SDK、Server两个模块
-* 参考了：京东hotkey(https://gitee.com/jd-platform-opensource/hotkey)、搜狐hotCaffeine(https://github.com/sohutv/hotcaffeine)、云音乐music_hot_caffeine的架构和实现
+* 设计时参考了以下内外部开源的项目：[京东hotkey](https://gitee.com/jd-platform-opensource/hotkey) 、[搜狐hotCaffeine](https://github.com/sohutv/hotcaffeine) 、云音乐music_hot_caffeine
+
+## 特性
+
+* 支持热key探测
+* 支持热key的本地缓存
+* 支持自定义热key配置数据源（默认为本地配置），可以对接到你们的配置中心或者管理后台
+* 支持topN统计（全局维度）
+* 支持服务器自定义事件回调（热key回调+topN回调），从而对接到你们的监控报警系统或者频控流控系统
+* 支持自定义的注册发现器（内置了zk和eureka两种实现）
 
 ## 基本架构
 
@@ -38,8 +47,9 @@ public interface ICamelliaHotKeyMonitorSdk {
 
 #### 接口说明
 
-* 该sdk支持热key的监控，并且支持设置本地缓存
-* IValueLoaderLock内置了单机并发控制lock和集群并发控制lock（基于redis），也可以自定义实现
+* 该sdk支持热key的监控，并且在检测热key后，会自动走本地缓存逻辑，从而保护底层
+* 数据有更新时，内部会自动同步更新给所有sdk，从而保证数据的一致性（弱一致性，最多有百毫秒级的延迟）
+
 
 ```java
 public interface ICamelliaHotKeyCacheSdk {
@@ -255,15 +265,10 @@ camellia-redis:
 
 #### HotKeyConfigService
 * 热key配置的数据源，默认是FileBasedHotKeyConfigService，会读取本地文件
-* 你也可以自定义实现，只要实现`public abstract HotKeyConfig get(String namespace)`方法，并且在配置变更时回调`public void invokeUpdate(namespace)`即可
+* 你也可以自定义实现，只要实现`HotKeyConfig get(String namespace)`方法，并且在配置变更时回调`void invokeUpdate(namespace)`即可
 
 ```java
 public abstract class HotKeyConfigService {
-
-    private static final Logger logger = LoggerFactory.getLogger(HotKeyConfigService.class);
-
-    private final List<Callback> callbackList = new ArrayList<>();
-
     /**
      * 获取HotKeyConfig
      * @param namespace namespace
@@ -271,43 +276,45 @@ public abstract class HotKeyConfigService {
      */
     public abstract HotKeyConfig get(String namespace);
 
+    //回调方法
     protected final void invokeUpdate(String namespace) {
-        for (Callback callback : callbackList) {
-            try {
-                callback.update(namespace);
-            } catch (Exception e) {
-                logger.error("callback error, namespace = {}", namespace, e);
-            }
-        }
-    }
-
-    public final synchronized void registerCallback(Callback callback) {
-        callbackList.add(callback);
-    }
-
-    public static interface Callback {
-        void update(String namespace);
+        //xxxx
     }
 }
 ```
 
 #### HotKeyCallback
 * 发现热key后的回调，默认是LoggingHotKeyCallback，仅打印日志
-* 你也可以自己实现本接口，从而对接到你们的监控报警系统
+* 你也可以自己实现本接口，从而对接到你们的监控报警系统，或者频控/限流系统等
 
 ```java
 public interface HotKeyCallback {
 
     /**
      * 热key回调接口
-     * @param hotKey 热key
+     * @param hotKeyInfo 热key信息
      */
-    void newHotKey(HotKey hotKey);
+    void newHotKey(HotKeyInfo hotKeyInfo);
+}
+```
+```java
+public class HotKeyInfo {
+    private final String namespace;
+    private final String key;
+    private final KeyAction action;
+    private final Rule rule;
+    private final long count;
+}
+public enum KeyAction {
+    QUERY(1),
+    UPDATE(2),
+    DELETE(3),
+    ;
 }
 ```
 
 #### HotKeyTopNCallback
-* 定期回调每个namespace下topN的key，默认是LoggingHotKeyTopNCallback
+* 定期回调每个namespace下topN的key，默认是LoggingHotKeyTopNCallback，仅打印日志
 * 你也可以自己实现，从而对接到你们的监控系统，做数据的留存
 
 ```java
@@ -321,6 +328,18 @@ public interface HotKeyTopNCallback {
     void topN(TopNStatsResult result);
 }
 ```
+```java
+public class TopNStatsResult {
+    private String namespace;
+    private List<TopNStats> topN;
+}
+public class TopNStats implements Comparable<TopNStats> {
+    private final String key;
+    private final KeyAction action;
+    private final long total;
+    private final long maxQps;
+}
+```
 
 ### 配置
 
@@ -332,7 +351,7 @@ public interface HotKeyTopNCallback {
 |rule.name|string|规则名字|
 |rule.type|string|规则类型，包括：exact_match（精确匹配）、prefix_match（前缀匹配）、match_all（匹配所有）|
 |rule.keyConfig|string|exact_match时表示key本身，prefix_match时表示前缀，match_all没有这个配置项|
-|rule.checkMillis|long|检查周期，单位ms|
+|rule.checkMillis|long|检查周期，单位ms，需要是100ms的整数倍，否则会被四舍五入|
 |rule.checkThreshold|long|检查阈值|
 |rule.expireMills|long|过期时间，只有cache这种命名空间下的rule需要配置这个，如果缺失或者小于等于0则表示cache不启用|
 

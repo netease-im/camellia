@@ -1,7 +1,9 @@
 package com.netease.nim.camellia.hot.key.server.callback;
 
 import com.netease.nim.camellia.hot.key.common.model.HotKey;
+import com.netease.nim.camellia.hot.key.common.model.Rule;
 import com.netease.nim.camellia.hot.key.server.calculate.TopNStatsResult;
+import com.netease.nim.camellia.hot.key.server.event.ValueGetter;
 import com.netease.nim.camellia.hot.key.server.utils.TimeCache;
 import com.netease.nim.camellia.hot.key.server.bean.BeanInitUtils;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
@@ -41,7 +43,7 @@ public class HotKeyCallbackManager {
     /**
      * 发现一个新的热key的回调
      */
-    public void newHotkey(HotKey hotKey) {
+    public void newHotkey(HotKey hotKey, Rule rule, ValueGetter getter) {
         try {
             if (hotKeyCallback != null) {
                 Long lastCallbackTime = callbackTimeCache.get(hotKey.getNamespace(), hotKey.getKey(), Long.class);
@@ -49,18 +51,19 @@ public class HotKeyCallbackManager {
                     boolean success = callbackTimeCache.putIfAbsent(hotKey.getNamespace(), hotKey.getKey(),
                             TimeCache.currentMillis, properties.getHotKeyCallbackIntervalSeconds());
                     if (success) {
+                        HotKeyInfo hotKeyInfo = new HotKeyInfo(hotKey.getNamespace(), hotKey.getKey(), hotKey.getAction(), rule, getter.get());
                         executor.submit(() -> {
                             try {
-                                hotKeyCallback.newHotKey(hotKey);
+                                hotKeyCallback.newHotKey(hotKeyInfo);
                             } catch (Exception e) {
-                                logger.error("hotKey callback error", e);
+                                logger.error("hotKeyInfo callback error", e);
                             }
                         });
                     }
                 }
             }
         } catch (Exception e) {
-            logger.error("submit hotKey callback error", e);
+            logger.error("submit hotKeyInfo callback error", e);
         }
     }
 

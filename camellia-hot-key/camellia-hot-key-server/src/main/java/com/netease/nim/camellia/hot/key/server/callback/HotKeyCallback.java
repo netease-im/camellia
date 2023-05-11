@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.hot.key.server.callback;
 
-import com.netease.nim.camellia.hot.key.common.model.HotKey;
 
 /**
  * 自定义接口
@@ -10,7 +9,7 @@ public interface HotKeyCallback {
 
     /**
      * 热key回调接口
-     * @param hotKey 热key
+     * @param hotKeyInfo 热key信息
      */
-    void newHotKey(HotKey hotKey);
+    void newHotKey(HotKeyInfo hotKeyInfo);
 }

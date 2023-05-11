@@ -37,7 +37,7 @@ public class HotKeyEventHandler {
      * 检测到热key
      * @param hotKey 热key
      */
-    public void newHotKey(HotKey hotKey) {
+    public void newHotKey(HotKey hotKey, Rule rule, ValueGetter getter) {
         if (logger.isDebugEnabled()) {
             logger.debug("newHotKey, namespace = {}, key = {}, action = {}", hotKey.getNamespace(), hotKey.getKey(), hotKey.getAction());
         }
@@ -60,7 +60,7 @@ public class HotKeyEventHandler {
                 hotKeyNotifyService.notifyHotKey(hotKey);
             }
         }
-        callbackManager.newHotkey(hotKey);
+        callbackManager.newHotkey(hotKey, rule, getter);
     }
 
     /**
