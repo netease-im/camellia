@@ -8,6 +8,7 @@ import java.util.List;
 public class TopNStatsResult {
 
     private String namespace;
+    private String time;
     private List<TopNStats> topN;
 
     public String getNamespace() {
@@ -16,6 +17,14 @@ public class TopNStatsResult {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
     }
 
     public List<TopNStats> getTopN() {

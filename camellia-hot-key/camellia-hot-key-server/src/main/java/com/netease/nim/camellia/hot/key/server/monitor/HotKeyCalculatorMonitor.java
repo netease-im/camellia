@@ -53,7 +53,7 @@ public class HotKeyCalculatorMonitor {
             List<TrafficStats.Stats> statsList = new ArrayList<>();
             for (Map.Entry<String, Counter> entry : map.entrySet()) {
                 String key = entry.getKey();
-                int index = key.lastIndexOf("\\|");
+                int index = key.lastIndexOf("|");
                 String namespace = key.substring(0, index);
                 TrafficStats.Type type = TrafficStats.Type.getByValue(Integer.parseInt(key.substring(index + 1)));
 

@@ -15,6 +15,8 @@ public interface ConsoleService {
 
     ConsoleResult monitor();
 
+    ConsoleResult topN(String namespace);
+
     ConsoleResult prometheus();
 
     ConsoleResult reload();

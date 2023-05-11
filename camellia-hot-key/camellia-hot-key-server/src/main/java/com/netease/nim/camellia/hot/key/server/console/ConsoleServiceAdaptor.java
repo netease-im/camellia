@@ -1,10 +1,8 @@
 package com.netease.nim.camellia.hot.key.server.console;
 
+import com.netease.nim.camellia.hot.key.server.calculate.TopNStatsResult;
 import com.netease.nim.camellia.hot.key.server.conf.ConfReloadHolder;
-import com.netease.nim.camellia.hot.key.server.monitor.HotKeyServerMonitorCollector;
-import com.netease.nim.camellia.hot.key.server.monitor.HotKeyServerStats;
-import com.netease.nim.camellia.hot.key.server.monitor.StatsJsonConverter;
-import com.netease.nim.camellia.hot.key.server.monitor.StatsPrometheusConverter;
+import com.netease.nim.camellia.hot.key.server.monitor.*;
 import com.netease.nim.camellia.hot.key.server.netty.ServerStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +65,15 @@ public class ConsoleServiceAdaptor implements ConsoleService {
     public ConsoleResult monitor() {
         HotKeyServerStats serverStats = HotKeyServerMonitorCollector.getHotKeyServerStats();
         return ConsoleResult.success(StatsJsonConverter.converter(serverStats));
+    }
+
+    @Override
+    public ConsoleResult topN(String namespace) {
+        TopNStatsResult result = TopNMonitor.getTopNStatsResult(namespace);
+        if (result == null) {
+            return ConsoleResult.error();
+        }
+        return ConsoleResult.success(TopNStatsResultJsonConverter.converter(result));
     }
 
     @Override

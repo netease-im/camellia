@@ -6,6 +6,7 @@ import com.netease.nim.camellia.core.util.CacheUtil;
 import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 import com.netease.nim.camellia.hot.key.server.callback.HotKeyCallbackManager;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
+import com.netease.nim.camellia.hot.key.server.monitor.TopNMonitor;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.toolkit.lock.CamelliaRedisLock;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
@@ -57,6 +58,8 @@ public class TopNCounterManager {
                         properties.getTopnCollectSeconds() * 1000L, TimeUnit.MILLISECONDS);
         callbackScheduler = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-hot-key-topn-callback-scheduler"));
         scheduler = new ScheduledThreadPoolExecutor(SysUtils.getCpuHalfNum(), new CamelliaThreadFactory("camella-hot-key-topn-scheduler"));
+
+        TopNMonitor.register(this);
     }
 
     /**
@@ -67,13 +70,37 @@ public class TopNCounterManager {
         getTopNCounter(keyCounter.getNamespace()).update(keyCounter);
     }
 
+    /**
+     * 最近一次的获取topN配置
+     * @param namespace namespace
+     * @return TopNStatsResult
+     */
+    public TopNStatsResult getTopNStats(String namespace) {
+        SimpleDateFormat dataFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        long time = (System.currentTimeMillis() / properties.getTopnCollectSeconds()) * properties.getTopnCollectSeconds();
+        time = time - properties.getTopnCollectSeconds() * 1000L;
+        String dataFormatStr = dataFormat.format(new Date(time));
+        String key = CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, properties.getId(), namespace, dataFormatStr);
+        Set<String> set = template.zrevrange(key, 0, -1);
+        TopNStatsResult result = new TopNStatsResult();
+        result.setTime(dataFormatStr);
+        result.setNamespace(namespace);
+        List<TopNStats> topN = new ArrayList<>();
+        for (String str : set) {
+            TopNStats topNStats = JSONObject.parseObject(str, TopNStats.class);
+            topN.add(topNStats);
+        }
+        result.setTopN(topN);
+        return result;
+    }
+
     private TopNCounter getTopNCounter(String namespace) {
         return CamelliaMapUtils.computeIfAbsent(topNCounterMap, namespace, n -> new TopNCounter(namespace, scheduler, properties));
     }
 
-    private static final SimpleDateFormat dataFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private void scheduleCollect() {
         try {
+            SimpleDateFormat dataFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             long time = (System.currentTimeMillis() / properties.getTopnCollectSeconds()) * properties.getTopnCollectSeconds();
             String dataFormatStr = dataFormat.format(new Date(time));
             Set<String> namespaceSet = new HashSet<>(topNCounterMap.keySet());
@@ -134,6 +161,7 @@ public class TopNCounterManager {
                                 Set<String> set = template.zrevrange(key, 0, -1);
                                 TopNStatsResult result = new TopNStatsResult();
                                 result.setNamespace(namespace);
+                                result.setTime(dataFormatStr);
                                 List<TopNStats> topN = new ArrayList<>();
                                 for (String str : set) {
                                     TopNStats topNStats = JSONObject.parseObject(str, TopNStats.class);

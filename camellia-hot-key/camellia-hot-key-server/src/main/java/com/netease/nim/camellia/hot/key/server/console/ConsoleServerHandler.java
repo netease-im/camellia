@@ -54,6 +54,17 @@ public class ConsoleServerHandler extends SimpleChannelInboundHandler<Object> {
                 return consoleService.custom(requestObject.getParams());
             } else if (uri.equalsIgnoreCase("/prometheus")) {
                 return consoleService.prometheus();
+            } else if (uri.equalsIgnoreCase("/topN")) {
+                Map<String, List<String>> paramsMap = requestObject.getParams();
+                if (paramsMap == null) {
+                    return ConsoleResult.error("missing namespace");
+                }
+                List<String> params = paramsMap.get("namespace");
+                if (params == null || params.isEmpty()) {
+                    return ConsoleResult.error("missing namespace");
+                }
+                String namespace = params.get(0);
+                return consoleService.topN(namespace);
             }
             return ConsoleResult.error();
         } catch (Exception e) {
