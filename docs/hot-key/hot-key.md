@@ -9,12 +9,18 @@
 
 ## 特性
 
-* 支持热key探测
-* 支持热key的本地缓存
-* 支持自定义热key配置数据源（默认为本地配置），可以对接到你们的配置中心或者管理后台
-* 支持topN统计（全局维度）
-* 支持服务器自定义事件回调（热key回调+topN回调），从而对接到你们的监控报警系统或者频控流控系统
+* 支持`热key探测`
+* 支持`热key本地缓存`，本地缓存如果有更新，hot-key-server会自动广播给所有sdk，从而保证数据的`弱`一致性（可能有百ms级的延迟）
+* `namespace`维度划分服务，一个hot-key-server支持同时服务多个`namespace`
+* `namespace`包括`monitor`和`cache`两种类型（对应于`CamelliaHotKeyMonitorSdk`和`CamelliaHotKeyCacheSdk`两个SDK）
+* 一个namespace下可以配置多条`rule`
+* rule里配置key的匹配规则（字符串完全匹配、字符串前缀匹配、匹配所有），以及热key的定义（时间窗口+阈值）
+* 特别的，对于cache类型的namespace，还需要配置检测到热key转为本地cache后的过期时间（如果一直是热key，cache会一直delay，并且定期load）
+* 支持自定义热key配置数据源（默认为本地文件配置），从而可以对接到你们的`配置中心`或者`管理后台`
+* 支持topN统计（全局维度），依赖redis进行数据汇总，对redis仅有少量的调用
+* 支持服务器自定义事件回调（热key回调+topN回调），从而可以对接到你们的`监控报警系统`或者`频控流控系统`
 * 支持自定义的注册发现器（内置了zk和eureka两种实现）
+* 支持丰富的监控，用于监控服务运行状态
 
 ## 基本架构
 
