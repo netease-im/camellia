@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.hot.key.server.netty;
 
-import com.netease.nim.camellia.hot.key.common.netty.RequestManager;
+import com.netease.nim.camellia.hot.key.common.netty.SeqManager;
 import com.netease.nim.camellia.hot.key.server.conf.ClientConnectHub;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class ChannelInfo {
 
@@ -18,14 +17,13 @@ public class ChannelInfo {
 
     private final String consid;
     private final ChannelHandlerContext ctx;
-    private final RequestManager requestManager;
+    private final SeqManager seqManager;
     private final ConcurrentHashMap<String, Boolean> namespaceMap = new ConcurrentHashMap<>();
-    private final AtomicLong requestIdGen = new AtomicLong(0);
 
     private ChannelInfo(ChannelHandlerContext ctx) {
         this.ctx = ctx;
         this.consid = UUID.randomUUID().toString();
-        this.requestManager = new RequestManager(ctx.channel());
+        this.seqManager = new SeqManager(ctx.channel());
     }
 
     /**
@@ -67,8 +65,8 @@ public class ChannelInfo {
         return new HashSet<>(namespaceMap.keySet());
     }
 
-    public long genRequestId() {
-        return requestIdGen.incrementAndGet();
+    public long genSeqId() {
+        return seqManager.genSeqId();
     }
 
     public String getConsid() {
@@ -79,7 +77,7 @@ public class ChannelInfo {
         return ctx;
     }
 
-    public RequestManager getRequestManager() {
-        return requestManager;
+    public SeqManager getSeqManager() {
+        return seqManager;
     }
 }

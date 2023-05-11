@@ -10,20 +10,20 @@ import com.netease.nim.camellia.hot.key.common.netty.codec.Unpack;
 public class HotKeyPackHeader implements Marshallable {
 
     private HotKeyCommand command;
-    private long requestId;
+    private long seqId;
     private byte tag = Tag.DEFAULT.getValue();
 
     @Override
     public void marshal(Pack pack) {
         pack.putByte(command.getCmd());
-        pack.putLong(requestId);
+        pack.putLong(seqId);
         pack.putByte(tag);
     }
 
     @Override
     public void unmarshal(Unpack unpack) {
         command = HotKeyCommand.getByValue(unpack.popByte());
-        requestId = unpack.popLong();
+        seqId = unpack.popLong();
         tag = unpack.popByte();
     }
 
@@ -58,15 +58,15 @@ public class HotKeyPackHeader implements Marshallable {
     public HotKeyPackHeader() {
     }
 
-    public HotKeyPackHeader(HotKeyCommand command, long requestId) {
+    public HotKeyPackHeader(HotKeyCommand command, long seqId) {
         this.command = command;
-        this.requestId = requestId;
+        this.seqId = seqId;
     }
 
     public HotKeyPackHeader duplicate() {
         HotKeyPackHeader header = new HotKeyPackHeader();
         header.command = this.command;
-        header.requestId = this.requestId;
+        header.seqId = this.seqId;
         header.tag = this.tag;
         return header;
     }
@@ -79,12 +79,12 @@ public class HotKeyPackHeader implements Marshallable {
         this.command = command;
     }
 
-    public long getRequestId() {
-        return requestId;
+    public long getSeqId() {
+        return seqId;
     }
 
-    public void setRequestId(long requestId) {
-        this.requestId = requestId;
+    public void setSeqId(long seqId) {
+        this.seqId = seqId;
     }
 
     public void setAck() {

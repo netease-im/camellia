@@ -2,7 +2,7 @@ package com.netease.nim.camellia.hot.key.sdk.netty;
 
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPack;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackConsumer;
-import com.netease.nim.camellia.hot.key.common.netty.RequestManager;
+import com.netease.nim.camellia.hot.key.common.netty.SeqManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.slf4j.Logger;
@@ -19,10 +19,10 @@ public class HotKeyPackClientHandler extends ChannelInboundHandlerAdapter {
         return "HotKeyPackHandler";
     }
 
-    private final RequestManager manager;
+    private final SeqManager manager;
     private final HotKeyPackConsumer handler;
 
-    public HotKeyPackClientHandler(RequestManager manager, HotKeyPackConsumer handler) {
+    public HotKeyPackClientHandler(SeqManager manager, HotKeyPackConsumer handler) {
         this.manager = manager;
         this.handler = handler;
     }

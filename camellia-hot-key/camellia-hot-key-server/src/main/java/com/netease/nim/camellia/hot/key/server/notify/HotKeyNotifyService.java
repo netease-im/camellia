@@ -38,6 +38,7 @@ public class HotKeyNotifyService {
         HotKeyPack pack = HotKeyPack.newPack(HotKeyCommand.NOTIFY_CONFIG, new NotifyHotKeyConfigPack(hotKeyConfig));
 
         ConcurrentHashMap<String, Boolean> map = ClientConnectHub.getInstance().getMap(namespace);
+        if (map == null) return;
         for (String consid : map.keySet()) {
             ChannelInfo channelInfo = ClientConnectHub.getInstance().get(consid);
             if (channelInfo != null) {
@@ -91,8 +92,8 @@ public class HotKeyNotifyService {
     }
 
     private CompletableFuture<HotKeyPack> sendPack(ChannelInfo channelInfo, HotKeyPack hotKeyPack) {
-        hotKeyPack.getHeader().setRequestId(channelInfo.genRequestId());
-        CompletableFuture<HotKeyPack> future = channelInfo.getRequestManager().putSession(hotKeyPack);
+        hotKeyPack.getHeader().setSeqId(channelInfo.genSeqId());
+        CompletableFuture<HotKeyPack> future = channelInfo.getSeqManager().putSession(hotKeyPack);
         channelInfo.getCtx().channel().writeAndFlush(hotKeyPack);
         return future;
     }

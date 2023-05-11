@@ -1,5 +1,8 @@
 package com.netease.nim.camellia.hot.key.server.monitor;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.netease.nim.camellia.hot.key.server.callback.HotKeyInfo;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
@@ -42,6 +45,8 @@ public class HotKeyServerMonitorCollector {
         serverStats.setTrafficStats(trafficStats);
         serverStats.setHotKeyInfoList(hotKeyInfoList);
 
-        logger.info("HotKeyServerMonitorCollector collect success");
+        HotKeyServerMonitorCollector.serverStats = serverStats;
+        logger.info("HotKeyServerMonitorCollector collect success, serverStats = \n{}\n",
+                JSON.toJSONString(serverStats, SerializerFeature.PrettyFormat));
     }
 }

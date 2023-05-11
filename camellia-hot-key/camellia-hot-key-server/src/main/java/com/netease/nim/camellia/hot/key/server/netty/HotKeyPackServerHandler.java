@@ -33,7 +33,7 @@ public class HotKeyPackServerHandler extends ChannelInboundHandlerAdapter {
             if (pack.getHeader().isAck()) {
                 ChannelInfo channelInfo = ChannelInfo.get(ctx);
                 if (channelInfo != null) {
-                    channelInfo.getRequestManager().complete(pack);
+                    channelInfo.getSeqManager().complete(pack);
                 } else {
                     logger.warn("not found ChannelInfo in {}", ctx.channel().remoteAddress());
                 }

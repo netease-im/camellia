@@ -129,6 +129,9 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
                     if (logger.isDebugEnabled()) {
                         logger.debug("reply GetConfigRepPack, config = {}", JSONObject.toJSONString(hotKeyConfig));
                     }
+                    if (hotKeyConfig == null) {
+                        logger.warn("GetConfigPack fail because config not exists, namespace = {}, channel = {}", pack.getNamespace(), channel);
+                    }
                     future.complete(new GetConfigRepPack(hotKeyConfig));
                 } catch (Exception e) {
                     logger.error("onGetConfigPack error, namespace = {}", pack.getNamespace(), e);

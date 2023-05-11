@@ -24,7 +24,6 @@ public class HotKeyPackDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> list) {
-        buf = buf.order(ByteOrder.LITTLE_ENDIAN);
         if (buf.readableBytes() > 4) {
             int len = buf.getInt(buf.readerIndex());
             if (len > 40 * 1024 * 1024 || len < 0) {

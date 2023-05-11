@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteOrder;
 
 public class Unpack {
 
@@ -12,7 +11,7 @@ public class Unpack {
     public static final int VAR_STR_LEN_MAX = 20*1024*1024;
 
     public Unpack(byte[] bytes, int offset, int length) {
-        buffer = Unpooled.wrappedBuffer(bytes, offset, length).order(ByteOrder.LITTLE_ENDIAN);
+        buffer = Unpooled.wrappedBuffer(bytes, offset, length).order();
     }
 
     public Unpack(byte[] bytes) {
@@ -22,7 +21,7 @@ public class Unpack {
     public Unpack(ByteBuf bb) {
         byte[] bytes = new byte[bb.readableBytes()];
         bb.readBytes(bytes);
-        buffer = Unpooled.wrappedBuffer(bytes, 0, bytes.length).order(ByteOrder.LITTLE_ENDIAN);
+        buffer = Unpooled.wrappedBuffer(bytes, 0, bytes.length);
     }
 
     public int GetSize() {

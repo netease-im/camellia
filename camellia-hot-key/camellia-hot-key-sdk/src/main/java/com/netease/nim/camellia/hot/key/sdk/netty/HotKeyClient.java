@@ -21,15 +21,18 @@ public class HotKeyClient {
     private static final Logger logger = LoggerFactory.getLogger(HotKeyClient.class);
 
     private static final NioEventLoopGroup nioEventLoopGroup = new NioEventLoopGroup(HotKeyConstants.Client.nettyWorkThread);
+    private static final AtomicLong idGen = new AtomicLong(0);
 
+    private final long id;
+    private final HotKeyServerAddr addr;
     private Channel channel = null;
-    private RequestManager requestManager;
-    private final AtomicLong requestIdGen = new AtomicLong(0);
+    private final SeqManager seqManager = new SeqManager();
     private volatile boolean valid;
 
     public HotKeyClient(HotKeyServerAddr addr, HotKeyPackConsumer consumer) {
+        this.id = idGen.incrementAndGet();
+        this.addr = addr;
         try {
-            requestManager = new RequestManager();
             Bootstrap bootstrap = new Bootstrap()
                     .group(nioEventLoopGroup)
                     .channel(NioSocketChannel.class)
@@ -43,29 +46,39 @@ public class HotKeyClient {
                             ChannelPipeline pipeLine = channel.pipeline();
                             pipeLine.addLast(HotKeyPackEncoder.getName(), new HotKeyPackEncoder()); // OUT
                             pipeLine.addLast(HotKeyPackDecoder.getName(), new HotKeyPackDecoder()); // IN
-                            pipeLine.addLast(HotKeyPackClientHandler.getName(), new HotKeyPackClientHandler(requestManager, consumer)); // IN
+                            pipeLine.addLast(HotKeyPackClientHandler.getName(), new HotKeyPackClientHandler(seqManager, consumer)); // IN
                         }
                     });
             ChannelFuture f = bootstrap.connect(addr.getHost(), addr.getPort()).sync();
             channel = f.channel();
             channel.closeFuture().addListener((ChannelFutureListener) channelFuture -> {
-                valid = false;
-                logger.error("hot key client closed, addr = {}", addr, channelFuture.cause());
+                logger.warn("hot key client closed, addr = {}, id = {}", addr, id, channelFuture.cause());
                 stop();
             });
-            requestManager.setChannel(channel);
+            seqManager.setChannel(channel);
             valid = true;
+            logger.info("hot key client init success, addr = {}, id = {}", addr, id);
         } catch (Exception e) {
-            valid = false;
             stop();
-            logger.error("hot key client start error, addr = {}", addr, e);
+            logger.error("hot key client start error, addr = {}, id = {}", addr, id, e);
         }
     }
 
-    private void stop() {
-        if (requestManager != null) {
-            requestManager.clear();
+    public synchronized void stop() {
+        valid = false;
+        try {
+            seqManager.clear();
+        } catch (Exception e) {
+            logger.error("seqManager clear error, addr = {}, id = {}", addr, id, e);
         }
+        try {
+            if (channel != null) {
+                channel.close();
+            }
+        } catch (Exception e) {
+            logger.error("channel close error, addr = {}, id = {}", addr, id, e);
+        }
+        logger.info("HotKeyClient stopped, addr = {}, id = {}", addr, id);
     }
 
     public boolean isValid() {
@@ -73,8 +86,8 @@ public class HotKeyClient {
     }
 
     public CompletableFuture<HotKeyPack> sendPack(HotKeyPack hotKeyPack) {
-        hotKeyPack.getHeader().setRequestId(requestIdGen.incrementAndGet());
-        CompletableFuture<HotKeyPack> future = requestManager.putSession(hotKeyPack);
+        hotKeyPack.getHeader().setSeqId(seqManager.genSeqId());
+        CompletableFuture<HotKeyPack> future = seqManager.putSession(hotKeyPack);
         channel.writeAndFlush(hotKeyPack);
         return future;
     }

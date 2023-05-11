@@ -3,8 +3,10 @@ package com.netease.nim.camellia.hot.key.sdk;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 import com.netease.nim.camellia.hot.key.common.model.Rule;
+import com.netease.nim.camellia.hot.key.common.utils.HotKeyConfigUtils;
 import com.netease.nim.camellia.hot.key.common.utils.RuleUtils;
 import com.netease.nim.camellia.hot.key.sdk.listener.CamelliaHotKeyConfigListener;
+import com.netease.nim.camellia.tools.cache.CamelliaLocalCache;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +29,7 @@ public abstract class CamelliaHotKeyAbstractSdk {
     private final ConcurrentHashMap<String, HotKeyConfig> hotKeyConfigCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, AtomicBoolean> hotKeyConfigListenerCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, AtomicBoolean> hotKeyConfigLockMap = new ConcurrentHashMap<>();
+    private final CamelliaLocalCache lastReloadConfigTime = new CamelliaLocalCache();
 
     private final CamelliaHotKeySdk sdk;
     private final ThreadPoolExecutor executor;
@@ -88,12 +91,26 @@ public abstract class CamelliaHotKeyAbstractSdk {
 
     private void reloadHotKeyConfig(String namespace) {
         try {
+            Long lastReloadTime = lastReloadConfigTime.get("time", namespace, Long.class);
+            if (lastReloadTime != null && System.currentTimeMillis() - lastReloadTime < 1000) {
+                return;
+            }
+            lastReloadConfigTime.put("time", namespace, System.currentTimeMillis(), -1);
             HotKeyConfig hotKeyConfig = sdk.getHotKeyConfig(namespace);
+            if (hotKeyConfig == null) {
+                logger.warn("reloadHotKeyConfig fail, HotKeyConfig of namespace = {} not exists", namespace);
+                return;
+            }
+            boolean valid = HotKeyConfigUtils.checkAndConvert(hotKeyConfig);
+            if (!valid) {
+                logger.warn("reloadHotKeyConfig fail for check invalid, namespace = {}, config = {}", namespace, JSONObject.toJSONString(hotKeyConfig));
+                return;
+            }
             HotKeyConfig old = hotKeyConfigCache.put(namespace, hotKeyConfig);
             if (old == null) {
                 logger.info("reloadHotKeyConfig success, namespace = {}, hotKeyConfig = {}", namespace, JSONObject.toJSONString(hotKeyConfig));
             } else {
-                if (!JSONObject.toJSONString(old).equals(JSONObject.toJSONString(hotKeyConfig))) {
+                if (HotKeyConfigUtils.isChange(old, hotKeyConfig)) {
                     logger.info("reloadHotKeyConfig success, namespace = {}, hotKeyConfig = {}", namespace, JSONObject.toJSONString(hotKeyConfig));
                 }
             }

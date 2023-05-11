@@ -25,11 +25,19 @@ public class GetConfigRepPack extends HotKeyPackBody {
 
     @Override
     public void marshal(Pack pack) {
-        HotKeyConfigPackUtils.marshal(config, pack);
+        if (config != null) {
+            pack.putBoolean(true);
+            HotKeyConfigPackUtils.marshal(config, pack);
+        } else {
+            pack.putBoolean(false);
+        }
     }
 
     @Override
     public void unmarshal(Unpack unpack) {
-        this.config = HotKeyConfigPackUtils.unmarshal(unpack);
+        boolean exits = unpack.popBoolean();
+        if (exits) {
+            this.config = HotKeyConfigPackUtils.unmarshal(unpack);
+        }
     }
 }

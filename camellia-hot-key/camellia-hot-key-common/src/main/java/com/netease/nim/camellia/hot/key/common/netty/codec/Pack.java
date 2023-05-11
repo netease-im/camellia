@@ -3,7 +3,6 @@ package com.netease.nim.camellia.hot.key.common.netty.codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 
 public class Pack {
@@ -16,7 +15,7 @@ public class Pack {
     }
 
     public Pack(int initialSize) {
-        buf = Unpooled.buffer(initialSize).order(ByteOrder.LITTLE_ENDIAN);
+        buf = Unpooled.buffer(initialSize);
     }
 
     public int size() {

@@ -63,16 +63,14 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
             HotKeyClient client = HotKeyClientHub.getInstance().selectClient(config.getDiscovery(), UUID.randomUUID().toString());
             if (client == null) {
                 logger.warn("not found valid HotKeyClient, return null HotKeyConfig");
-                return null;
+                throw new CamelliaHotKeyException("can not found valid hot key server");
             }
             CompletableFuture<HotKeyPack> future = client.sendPack(HotKeyPack.newPack(HotKeyCommand.GET_CONFIG, new GetConfigPack(namespace)));
             HotKeyPack hotKeyPack = future.get(HotKeyConstants.Client.getConfigTimeoutMillis, TimeUnit.MILLISECONDS);
-            if (hotKeyPack.getHeader().isEmptyBody()) {
-                logger.warn("getHotKeyConfig return null for empty resp pack");
-                return null;
-            }
             GetConfigRepPack repPack = (GetConfigRepPack) hotKeyPack.getBody();
             return repPack.getConfig();
+        } catch (CamelliaHotKeyException e) {
+            throw e;
         } catch (Exception e) {
             throw new CamelliaHotKeyException(e);
         }
@@ -101,6 +99,10 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
             }
             for (Map.Entry<HotKeyClient, List<KeyCounter>> entry : map.entrySet()) {
                 HotKeyClient client = entry.getKey();
+                if (client == null) {
+                    logger.error("selectClient return null, skip push");
+                    continue;
+                }
                 List<KeyCounter> counters = entry.getValue();
                 List<List<KeyCounter>> split = CollectionSplitUtil.split(counters, config.getPushBatch());
                 for (List<KeyCounter> list : split) {

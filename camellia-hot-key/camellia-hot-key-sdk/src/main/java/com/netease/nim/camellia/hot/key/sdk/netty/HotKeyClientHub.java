@@ -31,6 +31,8 @@ public class HotKeyClientHub {
     private final ConcurrentHashMap<String, HotKeyServerDiscovery> discoveryMap = new ConcurrentHashMap<>();
     //name -> addr-list
     private final ConcurrentHashMap<String, List<HotKeyServerAddr>> addrMap = new ConcurrentHashMap<>();
+    //lock-map
+    private final ConcurrentHashMap<String, AtomicBoolean> lockMap = new ConcurrentHashMap<>();
 
     private final HotKeyPackBizClientHandler handler;
     private final HotKeyPackConsumer consumer;
@@ -41,8 +43,10 @@ public class HotKeyClientHub {
         this.consumer = new HotKeyPackConsumer(handler);
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("hot-key-client-heartbeat"))
                 .scheduleAtFixedRate(this::scheduleHeartbeat, HotKeyConstants.Client.heartbeatIntervalSeconds, HotKeyConstants.Client.heartbeatIntervalSeconds, TimeUnit.SECONDS);
-        logger.info("HotKeyClientHub init success, workThread = {}, heartbeatIntervalSeconds = {}",
-                HotKeyConstants.Client.bizWorkThread, HotKeyConstants.Client.heartbeatIntervalSeconds);
+        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("hot-key-client-reload"))
+                .scheduleAtFixedRate(this::reload, HotKeyConstants.Client.reloadIntervalSeconds, HotKeyConstants.Client.reloadIntervalSeconds, TimeUnit.SECONDS);
+        logger.info("HotKeyClientHub init success, workThread = {}, heartbeatIntervalSeconds = {}, reloadIntervalSeconds = {}",
+                HotKeyConstants.Client.bizWorkThread, HotKeyConstants.Client.heartbeatIntervalSeconds, HotKeyConstants.Client.reloadIntervalSeconds);
     }
     public static HotKeyClientHub getInstance() {
         if (instance == null) {
@@ -103,7 +107,7 @@ public class HotKeyClientHub {
         String name = discovery.getName();
         HotKeyServerDiscovery old = discoveryMap.putIfAbsent(name, discovery);
         if (old != null) {
-            logger.error("HotKeyServerDiscovery = {} duplicate register, will skip", name);
+            logger.error("HotKeyServerDiscovery duplicate register, will skip, name = {}", name);
             return;
         }
         ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> map = CamelliaMapUtils.computeIfAbsent(clientMap, name, k -> new ConcurrentHashMap<>());
@@ -130,7 +134,7 @@ public class HotKeyClientHub {
                 HotKeyClientHub.this.remove(discovery.getName(), server);
             }
         });
-        logger.info("HotKeyServerDiscovery = {} init {}, size = {}, all.list = {}, valid.list = {}", name, !valid.isEmpty(), map.size(), all, valid);
+        logger.info("HotKeyServerDiscovery init {}, name = {} size = {}, all.list = {}, valid.list = {}", !valid.isEmpty(), name, map.size(), all, valid);
     }
 
     /**
@@ -141,14 +145,93 @@ public class HotKeyClientHub {
      */
     public HotKeyClient selectClient(HotKeyServerDiscovery discovery, String key) {
         String name = discovery.getName();
-        int retry = 3;
-        while (retry -- > 0) {
-            HotKeyClient client = select0(name, key);
-            if (client != null) {
-                return client;
+        HotKeyClient client = select0(name, key);
+        if (client != null) {
+            return client;
+        }
+        int retry1 = 3;
+        while (retry1 -- > 0) {
+            int retry2 = 3;
+            while (retry2-- > 0) {
+                client = select0(name, key);
+                if (client != null) {
+                    return client;
+                }
             }
+            reload(discovery);
         }
         return null;
+    }
+
+    private void reload() {
+        try {
+            Set<HotKeyServerDiscovery> discoverySet = new HashSet<>(discoveryMap.values());
+            for (HotKeyServerDiscovery discovery : discoverySet) {
+                reload(discovery);
+            }
+        } catch (Exception e) {
+            logger.error("reload error", e);
+        }
+    }
+
+    private void reload(HotKeyServerDiscovery discovery) {
+        String name = discovery.getName();
+        AtomicBoolean lock = CamelliaMapUtils.computeIfAbsent(lockMap, name, k -> new AtomicBoolean(false));
+        if (lock.compareAndSet(false, true)) {
+            try {
+                Set<HotKeyServerAddr> addrSet = new HashSet<>(discovery.findAll());
+                if (addrSet.isEmpty()) {
+                    return;
+                }
+
+                ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> newClientMap = new ConcurrentHashMap<>();
+                ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> oldClientMap = CamelliaMapUtils.computeIfAbsent(clientMap, name, k -> new ConcurrentHashMap<>());
+
+                List<HotKeyClient> toRemoveClient = new ArrayList<>();
+                List<HotKeyServerAddr> toRemoveAddr = new ArrayList<>();
+                for (Map.Entry<HotKeyServerAddr, HotKeyClient> entry : oldClientMap.entrySet()) {
+                    HotKeyServerAddr addr = entry.getKey();
+                    HotKeyClient oldClient = entry.getValue();
+                    if (addrSet.contains(addr)) {
+                        if (oldClient.isValid()) {
+                            newClientMap.put(addr, oldClient);
+                        }
+                    } else {
+                        toRemoveClient.add(oldClient);
+                    }
+                }
+                for (HotKeyServerAddr addr : addrSet) {
+                    HotKeyClient client = newClientMap.get(addr);
+                    if (client == null || !client.isValid()) {
+                        HotKeyClient newClient = new HotKeyClient(addr, consumer);
+                        if (newClient.isValid()) {
+                            newClientMap.put(addr, newClient);
+                            continue;
+                        }
+                    }
+                    toRemoveAddr.add(addr);
+                }
+                if (newClientMap.isEmpty()) {
+                    return;
+                }
+                toRemoveAddr.forEach(addrSet::remove);
+                if (addrSet.isEmpty()) {
+                    return;
+                }
+                List<HotKeyServerAddr> newAddrs = new ArrayList<>(addrSet);
+                Collections.sort(newAddrs);
+                addrMap.put(name, newAddrs);
+                clientMap.put(name, newClientMap);
+
+                for (HotKeyClient client : toRemoveClient) {
+                    client.stop();
+                }
+            } catch (Exception e) {
+                logger.error("reload error, discovery.name = {}", name, e);
+            } finally {
+                lock.compareAndSet(true, false);
+            }
+        }
     }
 
     private synchronized void add(String name, HotKeyServerAddr addr) {
@@ -192,6 +275,13 @@ public class HotKeyClientHub {
             List<HotKeyServerAddr> newAddrs = new ArrayList<>(set);
             Collections.sort(newAddrs);
             addrMap.put(name, newAddrs);
+            ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> map = clientMap.get(name);
+            if (map != null) {
+                HotKeyClient client = map.remove(addr);
+                if (client != null) {
+                    client.stop();
+                }
+            }
             logger.info("HotKeyServerDiscovery = {}, remove addr = {}, newAddrs = {}", name, addr, newAddrs);
         } catch (Exception e) {
             logger.error("HotKeyServerDiscovery = {} remove addr = {} error", name, addr, e);
@@ -211,6 +301,9 @@ public class HotKeyClientHub {
                 return null;
             }
             HotKeyClient client = map.get(addr);
+            if (client == null) {
+                return null;
+            }
             if (client.isValid()) {
                 return client;
             } else {
