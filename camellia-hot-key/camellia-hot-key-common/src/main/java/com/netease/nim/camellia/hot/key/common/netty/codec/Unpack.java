@@ -11,7 +11,7 @@ public class Unpack {
     public static final int VAR_STR_LEN_MAX = 20*1024*1024;
 
     public Unpack(byte[] bytes, int offset, int length) {
-        buffer = Unpooled.wrappedBuffer(bytes, offset, length).order();
+        buffer = Unpooled.wrappedBuffer(bytes, offset, length);
     }
 
     public Unpack(byte[] bytes) {
