@@ -4,6 +4,10 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * 本地缓存工具类，支持设置缓存有效期，缓存空值
  * Created by caojiajun on 2018/2/27.
@@ -206,6 +210,18 @@ public class CamelliaLocalCache {
         if (logger.isDebugEnabled()) {
             logger.debug("local cache clear");
         }
+    }
+
+    public List<Object> values() {
+        List<CacheBean> values = new ArrayList<>(cache.values());
+        List<Object> list = new ArrayList<>();
+        for (CacheBean bean : values) {
+            if (bean.getValue() == null) {
+                continue;
+            }
+            list.add(bean.getValue());
+        }
+        return list;
     }
 
     //是否缓存了NULL值

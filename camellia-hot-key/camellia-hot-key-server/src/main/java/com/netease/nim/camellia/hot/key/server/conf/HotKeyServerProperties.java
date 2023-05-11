@@ -50,6 +50,9 @@ public class HotKeyServerProperties {
     private String topnRedisKeyPrefix = HotKeyConstants.Server.topnRedisKeyPrefix;
     private int topnRedisExpireSeconds = HotKeyConstants.Server.topnRedisExpireSeconds;
 
+    private int monitorIntervalSeconds = HotKeyConstants.Server.monitorIntervalSeconds;
+    private int monitorHotKeyMaxCount = HotKeyConstants.Server.monitorHotKeyMaxCount;
+
     private CamelliaRedisTemplate redisTemplate;
 
     public String getId() {
@@ -286,5 +289,21 @@ public class HotKeyServerProperties {
 
     public void setRedisTemplate(CamelliaRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
+    }
+
+    public int getMonitorIntervalSeconds() {
+        return monitorIntervalSeconds;
+    }
+
+    public void setMonitorIntervalSeconds(int monitorIntervalSeconds) {
+        this.monitorIntervalSeconds = monitorIntervalSeconds;
+    }
+
+    public int getMonitorHotKeyMaxCount() {
+        return monitorHotKeyMaxCount;
+    }
+
+    public void setMonitorHotKeyMaxCount(int monitorHotKeyMaxCount) {
+        this.monitorHotKeyMaxCount = monitorHotKeyMaxCount;
     }
 }

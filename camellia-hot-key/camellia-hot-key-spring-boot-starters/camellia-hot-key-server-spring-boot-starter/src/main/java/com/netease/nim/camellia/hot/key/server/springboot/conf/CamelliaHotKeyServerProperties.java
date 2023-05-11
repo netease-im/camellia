@@ -38,6 +38,9 @@ public class CamelliaHotKeyServerProperties {
 
     private int callbackExecutorSize = HotKeyConstants.Server.callbackExecutorSize;
 
+    private int monitorIntervalSeconds = HotKeyConstants.Server.monitorIntervalSeconds;
+    private int monitorHotKeyMaxCount = HotKeyConstants.Server.monitorHotKeyMaxCount;
+
     public int getConsolePort() {
         return consolePort;
     }
@@ -180,5 +183,21 @@ public class CamelliaHotKeyServerProperties {
 
     public void setCallbackExecutorSize(int callbackExecutorSize) {
         this.callbackExecutorSize = callbackExecutorSize;
+    }
+
+    public int getMonitorIntervalSeconds() {
+        return monitorIntervalSeconds;
+    }
+
+    public void setMonitorIntervalSeconds(int monitorIntervalSeconds) {
+        this.monitorIntervalSeconds = monitorIntervalSeconds;
+    }
+
+    public int getMonitorHotKeyMaxCount() {
+        return monitorHotKeyMaxCount;
+    }
+
+    public void setMonitorHotKeyMaxCount(int monitorHotKeyMaxCount) {
+        this.monitorHotKeyMaxCount = monitorHotKeyMaxCount;
     }
 }

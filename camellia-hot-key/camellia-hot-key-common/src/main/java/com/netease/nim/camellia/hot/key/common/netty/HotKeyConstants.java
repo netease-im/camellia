@@ -58,6 +58,9 @@ public class HotKeyConstants {
         public static final int topnTinyCollectSeconds = 5;
         public static final String topnRedisKeyPrefix = "camellia";
         public static final int topnRedisExpireSeconds = 60*60;
+
+        public static final int monitorIntervalSeconds = 60;
+        public static final int monitorHotKeyMaxCount = 20;
     }
 
 }

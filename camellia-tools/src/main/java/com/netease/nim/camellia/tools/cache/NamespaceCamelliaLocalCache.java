@@ -3,7 +3,7 @@ package com.netease.nim.camellia.tools.cache;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -91,4 +91,17 @@ public class NamespaceCamelliaLocalCache {
         return get(namespace).ttl("", key);
     }
 
+    /**
+     * 获取namespace列表
+     */
+    public Set<String> namespaceSet() {
+        return new HashSet<>(map.keySet());
+    }
+
+    /**
+     * 获取values
+     */
+    public List<Object> values(String namespace) {
+        return get(namespace).values();
+    }
 }

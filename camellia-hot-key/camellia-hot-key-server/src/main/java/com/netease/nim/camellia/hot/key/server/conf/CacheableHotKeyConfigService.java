@@ -2,6 +2,7 @@ package com.netease.nim.camellia.hot.key.server.conf;
 
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
+import com.netease.nim.camellia.hot.key.common.utils.HotKeyConfigUtils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +25,10 @@ public class CacheableHotKeyConfigService {
 
     public CacheableHotKeyConfigService(HotKeyConfigService hotKeyConfigService) {
         this.hotKeyConfigService = hotKeyConfigService;
-        hotKeyConfigService.registerCallback(this::reload);
+        hotKeyConfigService.registerCallback(namespace -> reload(namespace, false));
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("hot-key-config-reload"))
                 .scheduleAtFixedRate(this::reload, 60, 60, TimeUnit.SECONDS);
+
     }
 
     /**
@@ -38,9 +40,10 @@ public class CacheableHotKeyConfigService {
         HotKeyConfig config = cache.get(namespace);
         if (config == null) {
             config = hotKeyConfigService.get(namespace);
-            if (config != null) {
-                cache.put(namespace, config);
+            if (!HotKeyConfigUtils.checkAndConvert(config)) {
+                return null;
             }
+            cache.put(namespace, config);
         }
         return config;
     }
@@ -51,25 +54,35 @@ public class CacheableHotKeyConfigService {
      */
     public void registerCallback(HotKeyConfigService.Callback callback) {
         hotKeyConfigService.registerCallback(namespace -> {
-            reload(namespace);
+            reload(namespace, false);
             callback.update(namespace);
         });
     }
 
-    private void reload(String namespace) {
+    private void reload(String namespace, boolean callback) {
         try {
             HotKeyConfig hotKeyConfig = hotKeyConfigService.get(namespace);
+            if (!HotKeyConfigUtils.checkAndConvert(hotKeyConfig)) {
+                logger.warn("hot-key-config invalid, skip reload, config = {}", JSONObject.toJSONString(hotKeyConfig));
+                return;
+            }
+            HotKeyConfig oldConfig = cache.get(namespace);
             cache.put(namespace, hotKeyConfig);
+            if (callback) {
+                if (HotKeyConfigUtils.isChange(oldConfig, hotKeyConfig)) {
+                    hotKeyConfigService.invokeUpdate(namespace);
+                }
+            }
             logger.info("reload HotKeyConfig success, config = {}", JSONObject.toJSONString(namespace));
         } catch (Exception e) {
             logger.error("reload error, namespace = {}", namespace);
         }
     }
 
-    private void reload() {
+    public void reload() {
         Set<String> set = new HashSet<>(cache.keySet());
         for (String namespace : set) {
-            reload(namespace);
+            reload(namespace, true);
         }
     }
 

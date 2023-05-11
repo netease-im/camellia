@@ -44,6 +44,8 @@ public class ConfUtils {
         properties.setWriteBufferWaterMarkLow(serverProperties.getNetty().getWriteBufferWaterMarkLow());
         properties.setWriteBufferWaterMarkHigh(serverProperties.getNetty().getWriteBufferWaterMarkHigh());
 
+        properties.setMonitorIntervalSeconds(serverProperties.getMonitorIntervalSeconds());
+        properties.setMonitorHotKeyMaxCount(serverProperties.getMonitorHotKeyMaxCount());
         return properties;
     }
 }

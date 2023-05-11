@@ -12,9 +12,12 @@ import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCounterManager;
 import com.netease.nim.camellia.hot.key.server.calculate.TopNCounterManager;
 import com.netease.nim.camellia.hot.key.server.callback.HotKeyCallbackManager;
 import com.netease.nim.camellia.hot.key.server.conf.CacheableHotKeyConfigService;
+import com.netease.nim.camellia.hot.key.server.conf.ConfReloadHolder;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyConfigService;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 import com.netease.nim.camellia.hot.key.server.event.HotKeyEventHandler;
+import com.netease.nim.camellia.hot.key.server.monitor.HotKeyCalculatorQueueMonitor;
+import com.netease.nim.camellia.hot.key.server.monitor.HotKeyServerMonitorCollector;
 import com.netease.nim.camellia.hot.key.server.netty.ChannelInfo;
 import com.netease.nim.camellia.hot.key.server.notify.HotKeyNotifyService;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
@@ -52,9 +55,13 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         this.is2Power = MathUtil.is2Power(bizWorkThread);
         this.queues = new HotKeyCalculatorQueue[bizWorkThread];
 
+        //监控
+        HotKeyServerMonitorCollector.init(properties);
+
         //config
         HotKeyConfigService service = (HotKeyConfigService) properties.getBeanFactory().getBean(BeanInitUtils.parseClass(properties.getHotKeyConfigServiceClassName()));
         this.hotKeyConfigService = new CacheableHotKeyConfigService(service);
+        ConfReloadHolder.register(hotKeyConfigService);
 
         //notify
         HotKeyNotifyService notifyService = new HotKeyNotifyService(hotKeyConfigService);
@@ -75,6 +82,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
 
         for (int i=0; i<bizWorkThread; i++) {
             HotKeyCalculatorQueue queue = new HotKeyCalculatorQueue(properties.getBizQueueCapacity());
+            HotKeyCalculatorQueueMonitor.register(queue);
             queue.start(new HotKeyCalculator(i, hotKeyConfigService, hotKeyCounterManager, topNCounterManager, hotKeyEventHandler));
             this.queues[i] = queue;
         }

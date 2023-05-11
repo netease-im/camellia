@@ -26,11 +26,19 @@ public class HotKeyCalculatorQueue {
         this.id = idGen.getAndIncrement();
     }
 
+    public long getId() {
+        return id;
+    }
+
     public void push(List<KeyCounter> counters) {
         boolean success = queue.offer(counters);
         if (!success) {
             logger.error("HotKeyCalculatorQueue full");
         }
+    }
+
+    public int pendingSize() {
+        return queue.size();
     }
 
     public void start(HotKeyCalculator calculator) {

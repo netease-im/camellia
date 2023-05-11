@@ -4,6 +4,7 @@ import com.netease.nim.camellia.hot.key.common.model.HotKey;
 import com.netease.nim.camellia.hot.key.common.model.Rule;
 import com.netease.nim.camellia.hot.key.server.calculate.TopNStatsResult;
 import com.netease.nim.camellia.hot.key.server.event.ValueGetter;
+import com.netease.nim.camellia.hot.key.server.monitor.HotKeyCollector;
 import com.netease.nim.camellia.hot.key.server.utils.TimeCache;
 import com.netease.nim.camellia.hot.key.server.bean.BeanInitUtils;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
@@ -54,6 +55,7 @@ public class HotKeyCallbackManager {
                         HotKeyInfo hotKeyInfo = new HotKeyInfo(hotKey.getNamespace(), hotKey.getKey(), hotKey.getAction(), rule, getter.get());
                         executor.submit(() -> {
                             try {
+                                HotKeyCollector.update(hotKeyInfo);
                                 hotKeyCallback.newHotKey(hotKeyInfo);
                             } catch (Exception e) {
                                 logger.error("hotKeyInfo callback error", e);
