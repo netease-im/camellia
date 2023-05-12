@@ -35,7 +35,7 @@
 
 ## Server部分
 
-* 服务器基于namespace来管理热key相关配置，namespace有monitor和cache两种类型，对应于两种sdk，其中cache的功能覆盖了monitor
+* 服务器基于namespace来管理热key相关配置
 * 每个namespace下可以配置多个rule
 * rule主要用于设置key的匹配模式、热key的定义（多少时间内多少次请求），热key缓存过期时间（只有cache模式下需要）
 
