@@ -7,6 +7,8 @@ import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCallback;
 import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyTopNCallback;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -52,6 +54,8 @@ public class HotKeyServerProperties {
 
     private int monitorIntervalSeconds = HotKeyConstants.Server.monitorIntervalSeconds;
     private int monitorHotKeyMaxCount = HotKeyConstants.Server.monitorHotKeyMaxCount;
+
+    private Map<String, String> config = new HashMap<>();
 
     private CamelliaRedisTemplate redisTemplate;
 
@@ -305,5 +309,13 @@ public class HotKeyServerProperties {
 
     public void setMonitorHotKeyMaxCount(int monitorHotKeyMaxCount) {
         this.monitorHotKeyMaxCount = monitorHotKeyMaxCount;
+    }
+
+    public Map<String, String> getConfig() {
+        return config;
+    }
+
+    public void setConfig(Map<String, String> config) {
+        this.config = config;
     }
 }

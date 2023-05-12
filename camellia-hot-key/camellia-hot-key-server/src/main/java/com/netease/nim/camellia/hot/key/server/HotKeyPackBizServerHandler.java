@@ -11,10 +11,7 @@ import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCalculatorQueue;
 import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCounterManager;
 import com.netease.nim.camellia.hot.key.server.calculate.TopNCounterManager;
 import com.netease.nim.camellia.hot.key.server.callback.HotKeyCallbackManager;
-import com.netease.nim.camellia.hot.key.server.conf.CacheableHotKeyConfigService;
-import com.netease.nim.camellia.hot.key.server.conf.ConfReloadHolder;
-import com.netease.nim.camellia.hot.key.server.conf.HotKeyConfigService;
-import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
+import com.netease.nim.camellia.hot.key.server.conf.*;
 import com.netease.nim.camellia.hot.key.server.event.HotKeyEventHandler;
 import com.netease.nim.camellia.hot.key.server.monitor.HotKeyCalculatorQueueMonitor;
 import com.netease.nim.camellia.hot.key.server.monitor.HotKeyServerMonitorCollector;
@@ -59,7 +56,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         HotKeyServerMonitorCollector.init(properties);
 
         //config
-        HotKeyConfigService service = (HotKeyConfigService) properties.getBeanFactory().getBean(BeanInitUtils.parseClass(properties.getHotKeyConfigServiceClassName()));
+        HotKeyConfigService service = ConfigInitUtil.initHotKeyConfigService(properties);
         this.hotKeyConfigService = new CacheableHotKeyConfigService(service);
         ConfReloadHolder.register(hotKeyConfigService);
 

@@ -19,6 +19,8 @@ public class StatsJsonConverter {
         JSONArray infoJsonArray = new JSONArray();
         JSONObject info = new JSONObject();
         info.put("workThread", queueStats.getQueueNum());
+        info.put("applicationName", serverStats.getApplicationName());
+        info.put("monitorIntervalSeconds", serverStats.getMonitorIntervalSeconds());
         infoJsonArray.add(info);
 
         monitorJson.put("info", infoJsonArray);
@@ -34,6 +36,13 @@ public class StatsJsonConverter {
 
         TrafficStats trafficStats = serverStats.getTrafficStats();
         info.put("count", trafficStats.getTotal());
+
+        JSONArray trafficTotalStatsJsonArray = new JSONArray();
+        JSONObject total = new JSONObject();
+        total.put("count", trafficStats.getTotal());
+        total.put("qps", trafficStats.getTotal() * 1.0 / serverStats.getMonitorIntervalSeconds());
+        trafficTotalStatsJsonArray.add(total);
+        monitorJson.put("trafficTotalStats", trafficTotalStatsJsonArray);
 
         JSONArray trafficStatsJsonArray = new JSONArray();
         for (TrafficStats.Stats stats : trafficStats.getStatsList()) {

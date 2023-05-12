@@ -10,9 +10,27 @@ import java.util.List;
  */
 public class HotKeyServerStats {
 
+    private String applicationName;
+    private int monitorIntervalSeconds;
     private QueueStats queueStats;
     private TrafficStats trafficStats;
     private List<HotKeyInfo> hotKeyInfoList = new ArrayList<>();
+
+    public String getApplicationName() {
+        return applicationName;
+    }
+
+    public void setApplicationName(String applicationName) {
+        this.applicationName = applicationName;
+    }
+
+    public int getMonitorIntervalSeconds() {
+        return monitorIntervalSeconds;
+    }
+
+    public void setMonitorIntervalSeconds(int monitorIntervalSeconds) {
+        this.monitorIntervalSeconds = monitorIntervalSeconds;
+    }
 
     public QueueStats getQueueStats() {
         return queueStats;

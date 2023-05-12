@@ -2,6 +2,8 @@ package com.netease.nim.camellia.hot.key.server.springboot.conf;
 
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 
+import javax.naming.ldap.PagedResultsControl;
+
 
 /**
  * Created by caojiajun on 2023/5/10
@@ -46,6 +48,8 @@ public class ConfUtils {
 
         properties.setMonitorIntervalSeconds(serverProperties.getMonitorIntervalSeconds());
         properties.setMonitorHotKeyMaxCount(serverProperties.getMonitorHotKeyMaxCount());
+
+        properties.setConfig(serverProperties.getConfig());
         return properties;
     }
 }

@@ -6,6 +6,9 @@ import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyTopNCallbac
 import com.netease.nim.camellia.hot.key.server.conf.FileBasedHotKeyConfigService;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  *
  * Created by caojiajun on 2023/5/10
@@ -40,6 +43,8 @@ public class CamelliaHotKeyServerProperties {
 
     private int monitorIntervalSeconds = HotKeyConstants.Server.monitorIntervalSeconds;
     private int monitorHotKeyMaxCount = HotKeyConstants.Server.monitorHotKeyMaxCount;
+
+    private Map<String, String> config = new HashMap<>();
 
     public int getConsolePort() {
         return consolePort;
@@ -199,5 +204,13 @@ public class CamelliaHotKeyServerProperties {
 
     public void setMonitorHotKeyMaxCount(int monitorHotKeyMaxCount) {
         this.monitorHotKeyMaxCount = monitorHotKeyMaxCount;
+    }
+
+    public Map<String, String> getConfig() {
+        return config;
+    }
+
+    public void setConfig(Map<String, String> config) {
+        this.config = config;
     }
 }

@@ -20,14 +20,14 @@ public class PerformanceTest {
     public static void main(String[] args) {
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
         LocalConfHotKeyServerDiscovery discovery = new LocalConfHotKeyServerDiscovery("local",
-                Collections.singletonList(new HotKeyServerAddr("127.0.0.1", 7070)));
+                Collections.singletonList(new HotKeyServerAddr("10.189.44.231", 7070)));
         config.setDiscovery(discovery);
 
         CamelliaHotKeySdk sdk = new CamelliaHotKeySdk(config);
 
         CamelliaHotKeyMonitorSdk monitorSdk = new CamelliaHotKeyMonitorSdk(sdk, new CamelliaHotKeyMonitorSdkConfig());
 
-        String namespace1 = "namespace1";
+        String namespace1 = "sql_hot_key";
 
         monitorSdk.preheat(namespace1);
 
