@@ -3,11 +3,12 @@ package com.netease.nim.camellia.hot.key.common.utils;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
-import com.netease.nim.camellia.hot.key.common.model.NamespaceType;
 import com.netease.nim.camellia.hot.key.common.model.Rule;
 import com.netease.nim.camellia.hot.key.common.model.RuleType;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by caojiajun on 2023/5/11
@@ -32,25 +33,29 @@ public class HotKeyConfigUtils {
         if (config.getNamespace() == null) {
             return false;
         }
-        if (config.getType() == null) {
-            return false;
-        }
-        NamespaceType type = config.getType();
+        Set<String> nameSet = new HashSet<>();
         List<Rule> rules = config.getRules();
         if (rules != null) {
             for (Rule rule : rules) {
-                if (!checkAndConvert(type, rule)) {
+                if (!checkAndConvert(rule)) {
                     return false;
                 }
+                if (nameSet.contains(rule.getName())) {
+                    return false;
+                }
+                nameSet.add(rule.getName());
             }
         }
         return true;
     }
 
-    public static boolean checkAndConvert(NamespaceType namespaceType, Rule rule) {
+    public static boolean checkAndConvert(Rule rule) {
         if (rule.getName() == null) return false;
         RuleType type = rule.getType();
         if (type == null) {
+            return false;
+        }
+        if (rule.getName() == null) {
             return false;
         }
         if (type == RuleType.match_all) {
@@ -60,9 +65,6 @@ public class HotKeyConfigUtils {
             if (rule.getKeyConfig() == null) {
                 return false;
             }
-        }
-        if (namespaceType == NamespaceType.monitor) {
-            rule.setExpireMillis(null);
         }
         Long checkMillis = rule.getCheckMillis();
         Long checkThreshold = rule.getCheckThreshold();

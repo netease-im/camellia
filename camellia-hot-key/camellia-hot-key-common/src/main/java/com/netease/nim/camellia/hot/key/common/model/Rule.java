@@ -66,7 +66,9 @@ public class Rule {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Rule rule = (Rule) o;
-        return Objects.equals(name, rule.name) && type == rule.type && Objects.equals(keyConfig, rule.keyConfig) && Objects.equals(checkMillis, rule.checkMillis) && Objects.equals(checkThreshold, rule.checkThreshold) && Objects.equals(expireMillis, rule.expireMillis);
+        return Objects.equals(name, rule.name) && type == rule.type && Objects.equals(keyConfig, rule.keyConfig)
+                && Objects.equals(checkMillis, rule.checkMillis) && Objects.equals(checkThreshold, rule.checkThreshold)
+                && Objects.equals(expireMillis, rule.expireMillis);
     }
 
     @Override

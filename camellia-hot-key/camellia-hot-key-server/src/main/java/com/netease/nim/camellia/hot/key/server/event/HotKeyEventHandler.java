@@ -3,7 +3,6 @@ package com.netease.nim.camellia.hot.key.server.event;
 import com.netease.nim.camellia.hot.key.common.model.*;
 import com.netease.nim.camellia.hot.key.server.notify.HotKeyNotifyService;
 import com.netease.nim.camellia.hot.key.server.callback.HotKeyCallbackManager;
-import com.netease.nim.camellia.hot.key.server.conf.CacheableHotKeyConfigService;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 import com.netease.nim.camellia.tools.cache.NamespaceCamelliaLocalCache;
 import org.slf4j.Logger;
@@ -17,15 +16,12 @@ public class HotKeyEventHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(HotKeyEventHandler.class);
 
-    private final CacheableHotKeyConfigService hotKeyConfigService;
     private final HotKeyNotifyService hotKeyNotifyService;
     private final NamespaceCamelliaLocalCache hotKeyCache;
     private final NamespaceCamelliaLocalCache keyUpdateCache;
     private final HotKeyCallbackManager callbackManager;
 
-    public HotKeyEventHandler(HotKeyServerProperties properties, CacheableHotKeyConfigService hotKeyConfigService,
-                              HotKeyNotifyService hotKeyNotifyService, HotKeyCallbackManager callbackManager) {
-        this.hotKeyConfigService = hotKeyConfigService;
+    public HotKeyEventHandler(HotKeyServerProperties properties, HotKeyNotifyService hotKeyNotifyService, HotKeyCallbackManager callbackManager) {
         this.hotKeyNotifyService = hotKeyNotifyService;
         this.hotKeyCache = new NamespaceCamelliaLocalCache(properties.getMaxNamespace(), properties.getHotKeyCacheCapacity());
         this.keyUpdateCache = new NamespaceCamelliaLocalCache(properties.getMaxNamespace(), properties.getHotKeyCacheCapacity());
@@ -41,8 +37,7 @@ public class HotKeyEventHandler {
         if (logger.isDebugEnabled()) {
             logger.debug("newHotKey, namespace = {}, key = {}, action = {}", hotKey.getNamespace(), hotKey.getKey(), hotKey.getAction());
         }
-        HotKeyConfig hotKeyConfig = hotKeyConfigService.get(hotKey.getNamespace());
-        if (hotKeyConfig.getType() == NamespaceType.cache && hotKey.getAction() == KeyAction.QUERY && hotKey.getExpireMillis() != null) {
+        if (hotKey.getAction() == KeyAction.QUERY && hotKey.getExpireMillis() != null) {
             Long expireMillis = hotKeyCache.get(hotKey.getNamespace(), hotKey.getKey(), Long.class);
             boolean needNotify = false;
             if (expireMillis == null) {

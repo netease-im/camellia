@@ -78,7 +78,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         TopNCounterManager topNCounterManager = new TopNCounterManager(properties, callbackManager);
 
         //event handler
-        HotKeyEventHandler hotKeyEventHandler = new HotKeyEventHandler(properties, hotKeyConfigService, notifyService, callbackManager);
+        HotKeyEventHandler hotKeyEventHandler = new HotKeyEventHandler(properties, notifyService, callbackManager);
 
         for (int i=0; i<bizWorkThread; i++) {
             HotKeyCalculatorQueue queue = new HotKeyCalculatorQueue(properties.getBizQueueCapacity());

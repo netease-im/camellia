@@ -67,7 +67,7 @@ public class HotKeyPackBizClientHandler implements HotKeyPackBizHandler {
             logger.error("submit onNotifyHotKeyPack error", e);
             future.complete(NotifyHotKeyRepPack.INSTANCE);
         }
-        return null;
+        return future;
     }
 
     @Override

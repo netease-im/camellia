@@ -1,6 +1,5 @@
 {
-  "namespace": "test",
-  "type": "cache",
+  "namespace": "namespace2",
   "rules":
   [
     {
@@ -9,22 +8,22 @@
       "keyConfig": "abcdef",
       "checkMillis": 1000,
       "checkThreshold": 100,
-      "expireMills": 10000
+      "expireMillis": 10000
     },
     {
-      "name": "rule1",
+      "name": "rule2",
       "type": "prefix_match",
       "keyConfig": "xyz",
       "checkMillis": 1000,
       "checkThreshold": 100,
-      "expireMills": 10000
+      "expireMillis": 10000
     },
     {
-      "name": "rule1",
+      "name": "rule3",
       "type": "match_all",
       "checkMillis": 1000,
       "checkThreshold": 100,
-      "expireMills": 10000
+      "expireMillis": 10000
     }
   ]
 }

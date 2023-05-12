@@ -20,6 +20,8 @@ public class CamelliaHotKeyMonitorSdkConfig {
     private ThreadPoolExecutor executor = defaultExecutor;
     private ScheduledExecutorService scheduler = defaultScheduler;
     private int hotKeyConfigReloadIntervalSeconds = HotKeyConstants.Client.hotKeyConfigReloadIntervalSeconds;
+    private int capacity = 1000;
+    private int maxNamespace = 1000;
 
     public ScheduledExecutorService getScheduler() {
         return scheduler;
@@ -43,5 +45,21 @@ public class CamelliaHotKeyMonitorSdkConfig {
 
     public void setHotKeyConfigReloadIntervalSeconds(int hotKeyConfigReloadIntervalSeconds) {
         this.hotKeyConfigReloadIntervalSeconds = hotKeyConfigReloadIntervalSeconds;
+    }
+
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
+    }
+
+    public int getMaxNamespace() {
+        return maxNamespace;
+    }
+
+    public void setMaxNamespace(int maxNamespace) {
+        this.maxNamespace = maxNamespace;
     }
 }

@@ -1,5 +1,8 @@
 package com.netease.nim.camellia.hot.key.sdk;
 
+import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeyCacheSdkConfig;
+import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeyMonitorSdkConfig;
+
 /**
  * Created by caojiajun on 2023/5/6
  */
@@ -34,4 +37,10 @@ public interface ICamelliaHotKeyCacheSdk {
      * @param key key
      */
     void keyDelete(String namespace, String key);
+
+    /**
+     * 获取当配置
+     * @return 配置
+     */
+    CamelliaHotKeyCacheSdkConfig getConfig();
 }

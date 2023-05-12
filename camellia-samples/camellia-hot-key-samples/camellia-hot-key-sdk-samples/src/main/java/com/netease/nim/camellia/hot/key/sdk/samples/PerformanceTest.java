@@ -2,6 +2,7 @@ package com.netease.nim.camellia.hot.key.sdk.samples;
 
 import com.netease.nim.camellia.hot.key.sdk.CamelliaHotKeyMonitorSdk;
 import com.netease.nim.camellia.hot.key.sdk.CamelliaHotKeySdk;
+import com.netease.nim.camellia.hot.key.sdk.Result;
 import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeyMonitorSdkConfig;
 import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeySdkConfig;
 import com.netease.nim.camellia.hot.key.sdk.discovery.LocalConfHotKeyServerDiscovery;
@@ -30,11 +31,15 @@ public class PerformanceTest {
 
         monitorSdk.preheat(namespace1);
 
-        monitorSdk.push(namespace1, "hahahaha");
+        String key0 = "hahahaha";
+        Result result0 = monitorSdk.push(namespace1, key0);
+        System.out.println("key=" + key0 + ",hot=" + result0.isHot());
 
         new Thread(() -> {
             while (true) {
-                monitorSdk.push(namespace1, UUID.randomUUID().toString());
+                String key = UUID.randomUUID().toString();
+                Result result = monitorSdk.push(namespace1, key);
+//                System.out.println("key=" + key + ",hot=" + result.isHot());
                 try {
                     TimeUnit.MILLISECONDS.sleep(1);
                 } catch (InterruptedException e) {
@@ -44,7 +49,9 @@ public class PerformanceTest {
         }).start();
         new Thread(() -> {
             while (true) {
-                monitorSdk.push(namespace1, "abc");
+                String key = "abc";
+                Result result = monitorSdk.push(namespace1, key);
+//                System.out.println("key=" + key + ",hot=" + result.isHot());
                 try {
                     TimeUnit.MILLISECONDS.sleep(1);
                 } catch (InterruptedException e) {

@@ -22,6 +22,7 @@ public class CamelliaHotKeyCacheSdkConfig {
     private int hotKeyConfigReloadIntervalSeconds = HotKeyConstants.Client.hotKeyConfigReloadIntervalSeconds;
 
     private String namespace;
+    private int maxNamespace = 1000;
     private int capacity = 1000;
     private boolean cacheNull = true;
     private int loadTryLockRetry = 3;
@@ -57,6 +58,14 @@ public class CamelliaHotKeyCacheSdkConfig {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    public int getMaxNamespace() {
+        return maxNamespace;
+    }
+
+    public void setMaxNamespace(int maxNamespace) {
+        this.maxNamespace = maxNamespace;
     }
 
     public int getCapacity() {

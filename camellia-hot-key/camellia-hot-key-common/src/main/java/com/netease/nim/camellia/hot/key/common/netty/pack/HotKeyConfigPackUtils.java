@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.hot.key.common.netty.pack;
 
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
-import com.netease.nim.camellia.hot.key.common.model.NamespaceType;
 import com.netease.nim.camellia.hot.key.common.model.Rule;
 import com.netease.nim.camellia.hot.key.common.model.RuleType;
 import com.netease.nim.camellia.hot.key.common.netty.codec.ArrayMable;
@@ -19,7 +18,6 @@ public class HotKeyConfigPackUtils {
 
     private enum NamespaceTag {
         namespace(1),
-        type(2),
         ;
 
         private final int value;
@@ -48,7 +46,6 @@ public class HotKeyConfigPackUtils {
     public static void marshal(HotKeyConfig config, Pack pack) {
         Property namespaceProps = new Property();
         namespaceProps.put(NamespaceTag.namespace.value, config.getNamespace());
-        namespaceProps.putInteger(NamespaceTag.type.value, config.getType().getValue());
         ArrayMable<Property> rulesArray = new ArrayMable<>(Property.class);
         List<Rule> rules = config.getRules();
         for (Rule rule : rules) {
@@ -80,7 +77,6 @@ public class HotKeyConfigPackUtils {
         unpack.popMarshallable(rulesArray);
         HotKeyConfig config = new HotKeyConfig();
         config.setNamespace(namespaceProps.get(NamespaceTag.namespace.value));
-        config.setType(NamespaceType.getByValue(namespaceProps.getInteger(NamespaceTag.type.value)));
         List<Rule> rules = new ArrayList<>();
         for (Property property : rulesArray.list) {
             Rule rule = new Rule();

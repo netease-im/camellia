@@ -1,6 +1,5 @@
 {
-  "namespace": "test",
-  "type": "monitor",
+  "namespace": "namespace1",
   "rules":
   [
     {
@@ -11,17 +10,18 @@
       "checkThreshold": 100
     },
     {
-      "name": "rule1",
+      "name": "rule2",
       "type": "prefix_match",
       "keyConfig": "xyz",
       "checkMillis": 1000,
       "checkThreshold": 100
     },
     {
-      "name": "rule1",
+      "name": "rule3",
       "type": "match_all",
       "checkMillis": 1000,
-      "checkThreshold": 100
+      "checkThreshold": 10,
+      "expireMillis": 10000
     }
   ]
 }

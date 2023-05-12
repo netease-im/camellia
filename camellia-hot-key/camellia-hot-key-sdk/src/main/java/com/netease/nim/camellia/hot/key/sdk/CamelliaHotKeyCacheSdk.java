@@ -34,9 +34,9 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         super(sdk, config.getExecutor(), config.getScheduler(), config.getHotKeyConfigReloadIntervalSeconds());
         this.sdk = sdk;
         this.config = config;
-        this.hotKeyCacheKeyMap = new NamespaceCamelliaLocalCache(-1, config.getCapacity());
-        this.hotKeyCacheValueMap = new NamespaceCamelliaLocalCache(-1, config.getCapacity());
-        this.hotKeyCacheHitLockMap = new NamespaceCamelliaLocalCache(-1, config.getCapacity());
+        this.hotKeyCacheKeyMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity());
+        this.hotKeyCacheValueMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity());
+        this.hotKeyCacheHitLockMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity());
         logger.info("CamelliaHotKeyCacheSdk init success");
     }
 
@@ -48,7 +48,6 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
 
     @Override
     public <T> T getValue(String namespace, String key, ValueLoader<T> loader) {
-        addHotKeyListener(namespace);
         //先看看是否匹配规则
         Rule rule = rulePass(namespace, key);
         if (rule == null) {
@@ -56,6 +55,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         }
         //提交探测请求
         sdk.push(namespace, key, KeyAction.QUERY);
+        addHotKeyListener(namespace);
         //看看是否是热key
         Long hotKeyExpireMillis = hotKeyCacheKeyMap.get(namespace, key, Long.class);
         if (hotKeyExpireMillis == null) {
@@ -83,6 +83,31 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         return refresh(namespace, key, rule, loader);
     }
 
+    @Override
+    public void keyUpdate(String namespace, String key) {
+        Rule rule = rulePass(config.getNamespace(), key);
+        if (rule == null) {
+            return;
+        }
+        sdk.push(config.getNamespace(), key, KeyAction.UPDATE);
+        addHotKeyListener(namespace);
+    }
+
+    @Override
+    public void keyDelete(String namespace, String key) {
+        Rule rule = rulePass(config.getNamespace(), key);
+        if (rule == null) {
+            return;
+        }
+        sdk.push(config.getNamespace(), key, KeyAction.DELETE);
+        addHotKeyListener(namespace);
+    }
+
+    @Override
+    public CamelliaHotKeyCacheSdkConfig getConfig() {
+        return config;
+    }
+
     private <T> T refresh(String namespace, String key, Rule rule, ValueLoader<T> loader) {
         //没有缓存，直接请求底层
         T value = loader.load(key);
@@ -95,25 +120,6 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         return value;
     }
 
-    @Override
-    public void keyUpdate(String namespace, String key) {
-        addHotKeyListener(namespace);
-        Rule rule = rulePass(config.getNamespace(), key);
-        if (rule == null) {
-            return;
-        }
-        sdk.push(config.getNamespace(), key, KeyAction.UPDATE);
-    }
-
-    @Override
-    public void keyDelete(String namespace, String key) {
-        addHotKeyListener(namespace);
-        Rule rule = rulePass(config.getNamespace(), key);
-        if (rule == null) {
-            return;
-        }
-        sdk.push(config.getNamespace(), key, KeyAction.DELETE);
-    }
 
     private void addHotKeyListener(String namespace) {
         AtomicBoolean lock = CamelliaMapUtils.computeIfAbsent(hotKeyListenerCache, namespace, k -> new AtomicBoolean(false));

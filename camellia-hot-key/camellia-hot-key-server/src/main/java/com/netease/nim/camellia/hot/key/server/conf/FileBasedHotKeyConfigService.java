@@ -3,6 +3,7 @@ package com.netease.nim.camellia.hot.key.server.conf;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.hot.key.common.exception.CamelliaHotKeyException;
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
+import com.netease.nim.camellia.hot.key.common.utils.HotKeyConfigUtils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +70,15 @@ public class FileBasedHotKeyConfigService extends HotKeyConfigService {
                     continue;
                 }
                 HotKeyConfig hotKeyConfig = JSONObject.parseObject(jsonString, HotKeyConfig.class);
-                configMap.put(namespace, hotKeyConfig);
+                if (!namespace.equals(hotKeyConfig.getNamespace())) {
+                    logger.warn("namespace not match, config will skip reload, {} <-> {}", namespace, hotKeyConfig.getNamespace());
+                    continue;
+                }
+                if (!HotKeyConfigUtils.checkAndConvert(hotKeyConfig)) {
+                    logger.warn("hotKeyConfig check fail, config will skip reload, namespace = {}, config = {}", namespace, JSONObject.toJSONString(hotKeyConfig));
+                    continue;
+                }
+                configMap.put(hotKeyConfig.getNamespace(), hotKeyConfig);
             }
             if (!this.configMap.equals(configMap)) {
                 this.configMap = configMap;

@@ -68,6 +68,9 @@ public class HotKeyNotifyService {
     public void notifyHotKey(HotKey hotKey) {
         HotKeyPack pack = HotKeyPack.newPack(HotKeyCommand.NOTIFY_HOTKEY, new NotifyHotKeyPack(Collections.singletonList(hotKey)));
         ConcurrentHashMap<String, Boolean> map = ClientConnectHub.getInstance().getMap(hotKey.getNamespace());
+        if (map == null || map.isEmpty()) {
+            return;
+        }
         for (String consid : map.keySet()) {
             ChannelInfo channelInfo = ClientConnectHub.getInstance().get(consid);
             if (channelInfo != null) {
