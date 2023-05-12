@@ -14,7 +14,7 @@
 * `namespace`维度划分服务，一个hot-key-server支持同时服务多个`namespace`
 * 一个namespace下可以配置多条`rule`
 * rule里配置key的匹配规则（字符串完全匹配、字符串前缀匹配、匹配所有），以及热key的定义（时间窗口+阈值）
-* 特别的，对于cache类型的namespace，还需要配置检测到热key转为本地cache后的过期时间（如果一直是热key，cache会一直delay，并且定期load）
+* 提供`CamelliaHotKeyMonitorSdk`（探测）和`CamelliaHotKeyCacheSdk`（探测+本地缓存）两种SDK，适配不同使用场景
 * 支持自定义热key配置数据源（默认为本地文件配置），从而可以对接到你们的`配置中心`或者`管理后台`
 * 支持topN统计（全局维度），依赖redis进行数据汇总，对redis仅有少量的调用
 * 支持服务器自定义事件回调（热key回调+topN回调），从而可以对接到你们的`监控报警系统`或者`频控流控系统`
