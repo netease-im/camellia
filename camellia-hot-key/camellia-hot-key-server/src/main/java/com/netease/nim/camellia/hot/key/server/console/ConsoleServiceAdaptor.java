@@ -68,8 +68,8 @@ public class ConsoleServiceAdaptor implements ConsoleService {
     }
 
     @Override
-    public ConsoleResult topN(String namespace) {
-        TopNStatsResult result = TopNMonitor.getTopNStatsResult(namespace);
+    public ConsoleResult topN(String namespace, Integer backtrack) {
+        TopNStatsResult result = TopNMonitor.getTopNStatsResult(namespace, backtrack);
         if (result == null) {
             return ConsoleResult.error();
         }

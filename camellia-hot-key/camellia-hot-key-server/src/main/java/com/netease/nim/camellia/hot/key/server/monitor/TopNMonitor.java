@@ -14,10 +14,13 @@ public class TopNMonitor {
         TopNMonitor.manager = topNCounterManager;
     }
 
-    public static TopNStatsResult getTopNStatsResult(String namespace) {
+    public static TopNStatsResult getTopNStatsResult(String namespace, Integer backtrack) {
         if (manager == null) {
             return null;
         }
-        return manager.getTopNStats(namespace);
+        if (backtrack == null) {
+            backtrack = 1;
+        }
+        return manager.getTopNStats(namespace, backtrack);
     }
 }

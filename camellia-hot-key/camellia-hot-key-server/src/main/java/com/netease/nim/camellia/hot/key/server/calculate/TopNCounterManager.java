@@ -73,17 +73,19 @@ public class TopNCounterManager {
     /**
      * 最近一次的获取topN配置
      * @param namespace namespace
+     * @param backtrack 回溯几个周期
      * @return TopNStatsResult
      */
-    public TopNStatsResult getTopNStats(String namespace) {
-        SimpleDateFormat dataFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        long time = (System.currentTimeMillis() / properties.getTopnCollectSeconds()) * properties.getTopnCollectSeconds();
-        time = time - properties.getTopnCollectSeconds() * 1000L;
-        String dataFormatStr = dataFormat.format(new Date(time));
-        String key = CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, properties.getId(), namespace, dataFormatStr);
+    public TopNStatsResult getTopNStats(String namespace, int backtrack) {
+        SimpleDateFormat dataFormat = new SimpleDateFormat("yyyy-MM-dd#HH:mm:ss");
+        long time = (System.currentTimeMillis() / (properties.getTopnCollectSeconds() * 1000L)) * properties.getTopnCollectSeconds() * 1000L;
+        time = time - properties.getTopnCollectSeconds() * backtrack * 1000L;
+        String timeKey = dataFormat.format(new Date(time));
+        logger.info("getTopNStats, namespace = {}, timeKey = {}", namespace, timeKey);
+        String key = mergeKey(namespace, timeKey);
         Set<String> set = template.zrevrange(key, 0, -1);
         TopNStatsResult result = new TopNStatsResult();
-        result.setTime(dataFormatStr);
+        result.setTime(timeKey);
         result.setNamespace(namespace);
         List<TopNStats> topN = new ArrayList<>();
         for (String str : set) {
@@ -100,9 +102,9 @@ public class TopNCounterManager {
 
     private void scheduleCollect() {
         try {
-            SimpleDateFormat dataFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            long time = (System.currentTimeMillis() / properties.getTopnCollectSeconds()) * properties.getTopnCollectSeconds();
-            String dataFormatStr = dataFormat.format(new Date(time));
+            SimpleDateFormat dataFormat = new SimpleDateFormat("yyyy-MM-dd#HH:mm:ss");
+            long time = (System.currentTimeMillis() / (properties.getTopnCollectSeconds() * 1000L)) * properties.getTopnCollectSeconds() * 1000L;
+            String timeKey = dataFormat.format(new Date(time));
             Set<String> namespaceSet = new HashSet<>(topNCounterMap.keySet());
             List<TopNStatsResult> results = new ArrayList<>();
             for (String namespace : namespaceSet) {
@@ -111,12 +113,12 @@ public class TopNCounterManager {
                     results.add(counter.collect());
                 }
             }
-            String namespaceKeys = CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, dataFormatStr, "namespace");
+            String namespaceKeys = namespaceKeys(timeKey);
             for (TopNStatsResult result : results) {
                 try {
                     template.zadd(namespaceKeys, System.currentTimeMillis(), result.getNamespace());
                     template.expire(namespaceKeys, properties.getTopnRedisExpireSeconds());
-                    String key = CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, properties.getId(), result.getNamespace(), dataFormatStr);
+                    String key = mergeKey(result.getNamespace(), timeKey);
                     List<TopNStats> topN = result.getTopN();
                     Map<String, Double> scoreMembers = new HashMap<>();
                     for (TopNStats stats : topN) {
@@ -132,36 +134,36 @@ public class TopNCounterManager {
                     template.zremrangeByRank(key, 0, - properties.getTopnCount() - 1);
                     template.expire(key, properties.getTopnRedisExpireSeconds());
                 } catch (Exception e) {
-                    logger.error("write topn stats to redis error, namespace = {}", result.getNamespace(), e);
+                    logger.error("write topn stats to redis error, namespace = {}, timeKey = {}", result.getNamespace(), timeKey, e);
                 }
             }
-            logger.info("write topn stats to redis success, namespace.size = {}, time = {}", results.size(), dataFormatStr);
+            logger.info("write topn stats to redis success, namespace.size = {}, timeKey = {}", results.size(), timeKey);
             //延迟一下再发callback，让大家都写完redis
-            callbackScheduler.schedule(() -> callback(dataFormatStr), properties.getTopnCollectSeconds() / 2, TimeUnit.SECONDS);
+            callbackScheduler.schedule(() -> callback(timeKey), properties.getTopnCollectSeconds() / 2, TimeUnit.SECONDS);
         } catch (Exception e) {
             logger.error("hot key topn schedule error", e);
         }
     }
 
-    private void callback(String dataFormatStr) {
+    private void callback(String timeKey) {
         try {
-            logger.info("try callback hot key topn stats");
-            String namespaceKeys = CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, dataFormatStr, "namespace");
+            logger.info("try callback hot key topn stats, timeKey = {}", timeKey);
+            String namespaceKeys = namespaceKeys(timeKey);
             Long namespaceNum = template.zcard(namespaceKeys);
             if (namespaceNum != null && namespaceNum > 0) {
                 for (int i = 0; i < namespaceNum; i += 100) {
                     Set<String> namespaceSet = template.zrange(namespaceKeys, i, i + 99);
                     for (String namespace : namespaceSet) {
-                        String lockKey = CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, dataFormatStr, namespace, "notify~lock");
+                        String lockKey = lockKey(namespace, timeKey);
                         long lockExpireMillis = properties.getTopnCollectSeconds() * 2 * 1000L;
                         CamelliaRedisLock lock = CamelliaRedisLock.newLock(template, lockKey, lockExpireMillis, lockExpireMillis);
                         if (lock.tryLock()) {
                             try {
-                                String key = CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, properties.getId(), namespace, dataFormatStr);
+                                String key = mergeKey(namespace, timeKey);
                                 Set<String> set = template.zrevrange(key, 0, -1);
                                 TopNStatsResult result = new TopNStatsResult();
                                 result.setNamespace(namespace);
-                                result.setTime(dataFormatStr);
+                                result.setTime(timeKey);
                                 List<TopNStats> topN = new ArrayList<>();
                                 for (String str : set) {
                                     TopNStats topNStats = JSONObject.parseObject(str, TopNStats.class);
@@ -177,9 +179,21 @@ public class TopNCounterManager {
                     }
                 }
             }
-            logger.info("callback hot key topn stats done");
+            logger.info("callback hot key topn stats done, timeKey = {}", timeKey);
         } catch (Exception e) {
             logger.error("hot key topn callback error", e);
         }
+    }
+
+    private String lockKey(String namespace, String timeKey) {
+        return CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, timeKey, namespace, "notify~lock");
+    }
+
+    private String namespaceKeys(String timeKey) {
+        return CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, timeKey, "namespace");
+    }
+
+    private String mergeKey(String namespace, String timeKey) {
+        return CacheUtil.buildCacheKey(properties.getTopnRedisKeyPrefix(), TAG, namespace, timeKey);
     }
 }

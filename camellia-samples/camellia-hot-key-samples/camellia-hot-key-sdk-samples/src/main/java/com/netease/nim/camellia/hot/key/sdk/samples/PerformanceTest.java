@@ -8,7 +8,9 @@ import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeySdkConfig;
 import com.netease.nim.camellia.hot.key.sdk.discovery.LocalConfHotKeyServerDiscovery;
 import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyServerAddr;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -19,8 +21,11 @@ public class PerformanceTest {
 
     public static void main(String[] args) {
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
-        LocalConfHotKeyServerDiscovery discovery = new LocalConfHotKeyServerDiscovery("local",
-                Collections.singletonList(new HotKeyServerAddr("10.189.249.35", 7070)));
+        List<HotKeyServerAddr> addrList = new ArrayList<>();
+//        addrList.add(new HotKeyServerAddr("127.0.0.1", 7070));
+        addrList.add(new HotKeyServerAddr("10.156.151.251", 7070));
+        addrList.add(new HotKeyServerAddr("10.189.248.179", 7070));
+        LocalConfHotKeyServerDiscovery discovery = new LocalConfHotKeyServerDiscovery("local", addrList);
         config.setDiscovery(discovery);
 
         CamelliaHotKeySdk sdk = new CamelliaHotKeySdk(config);
@@ -28,6 +33,7 @@ public class PerformanceTest {
         CamelliaHotKeyMonitorSdk monitorSdk = new CamelliaHotKeyMonitorSdk(sdk, new CamelliaHotKeyMonitorSdkConfig());
 
         String namespace1 = "sql_hot_key";
+//        namespace1 = "namespace1";
 
         monitorSdk.preheat(namespace1);
 
@@ -54,6 +60,18 @@ public class PerformanceTest {
 //                System.out.println("key=" + key + ",hot=" + result.isHot());
                 try {
                     TimeUnit.MILLISECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+        new Thread(() -> {
+            while (true) {
+                String key = "def";
+                Result result = monitorSdk.push(namespace1, key);
+//                System.out.println("key=" + key + ",hot=" + result.isHot());
+                try {
+                    TimeUnit.MILLISECONDS.sleep(2);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

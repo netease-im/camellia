@@ -64,7 +64,12 @@ public class ConsoleServerHandler extends SimpleChannelInboundHandler<Object> {
                     return ConsoleResult.error("missing namespace");
                 }
                 String namespace = params.get(0);
-                return consoleService.topN(namespace);
+                Integer backtrack = null;
+                List<String> list = paramsMap.get("backtrack");
+                if (list != null && !list.isEmpty()) {
+                    backtrack = Integer.parseInt(list.get(0));
+                }
+                return consoleService.topN(namespace, backtrack);
             }
             return ConsoleResult.error();
         } catch (Exception e) {

@@ -15,7 +15,7 @@ public interface ConsoleService {
 
     ConsoleResult monitor();
 
-    ConsoleResult topN(String namespace);
+    ConsoleResult topN(String namespace, Integer backtrack);
 
     ConsoleResult prometheus();
 

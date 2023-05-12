@@ -55,13 +55,14 @@ public class HotKeyCalculator {
                 monitor.updateRuleNotMatch(counter.getNamespace(), 1);
                 continue;
             }
+            String uniqueKey = counter.getKey() + "|" + counter.getAction().getValue();
             //计算是否是热点
             boolean hot = hotKeyCounterManager.check(counter.getNamespace(),
-                    counter.getKey() + "|" + counter.getAction().getValue(), rule, counter.getCount());
+                    uniqueKey, rule, counter.getCount());
             if (hot) {
                 //如果是热点，推给hotKeyEventHandler处理
                 HotKey hotKey = new HotKey(counter.getNamespace(), counter.getKey(), counter.getAction(), rule.getExpireMillis());
-                ValueGetter getter = () -> hotKeyCounterManager.getCount(counter.getNamespace(), counter.getKey() + "|" + counter.getAction(), rule);
+                ValueGetter getter = () -> hotKeyCounterManager.getCount(counter.getNamespace(), uniqueKey, rule);
                 hotKeyEventHandler.newHotKey(hotKey, rule, getter);
             }
             //如果是key的更新/删除操作，则需要看看是否需要广播
