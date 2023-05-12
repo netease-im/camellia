@@ -2,24 +2,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
-	<artifactId>camellia-hot-key</artifactId>
+	<artifactId>camellia-hot-key-extensions</artifactId>
 	<version>1.2.8-SNAPSHOT</version>
 
 	<packaging>pom</packaging>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia</artifactId>
+		<artifactId>camellia-hot-key</artifactId>
 		<version>1.2.8-SNAPSHOT</version>
 	</parent>
 
 	<modules>
-		<module>camellia-hot-key-common</module>
-		<module>camellia-hot-key-sdk</module>
-		<module>camellia-hot-key-server</module>
-		<module>camellia-hot-key-extensions</module>
-		<module>camellia-hot-key-server-bootstrap</module>
-		<module>camellia-hot-key-spring-boot-starters</module>
+		<module>camellia-hot-key-config</module>
+		<module>camellia-hot-key-discovery</module>
 	</modules>
 </project>
