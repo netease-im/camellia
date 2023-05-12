@@ -23,6 +23,16 @@ public class LocalConfHotKeyServerDiscovery extends HotKeyServerDiscovery {
     }
 
     @Override
+    public void setCallback(Callback<HotKeyServerAddr> callback) {
+
+    }
+
+    @Override
+    public void clearCallback(Callback<HotKeyServerAddr> callback) {
+
+    }
+
+    @Override
     public String getName() {
         return name;
     }

@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.spring.redis.zk.discovery;
 
-import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkConstants;
+import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkProxyConstants;
+import com.netease.nim.camellia.zk.ZkConstants;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -76,7 +77,7 @@ public class SpringRedisZkDiscoveryProperties {
 
     public static class ZkConf {
 
-        private String basePath = ZkConstants.basePath;
+        private String basePath = ZkProxyConstants.basePath;
 
         /**
          * zk的地址，例子：127.0.0.1:2181,127.0.0.2.2181
@@ -91,7 +92,7 @@ public class SpringRedisZkDiscoveryProperties {
         private int baseSleepTimeMs = ZkConstants.baseSleepTimeMs;
         private int maxRetries = ZkConstants.maxRetries;
         private int reloadIntervalSeconds = ZkConstants.reloadIntervalSeconds;
-        private boolean sideCarFirst = ZkConstants.sideCarFirst;
+        private boolean sideCarFirst = ZkProxyConstants.sideCarFirst;
         private String regionResolveConf = "";//例子 10.189.0.0/20:region1,10.189.208.0/21:region2
         private String defaultRegion = "default";
         private boolean jedisPoolLazyInit = true;

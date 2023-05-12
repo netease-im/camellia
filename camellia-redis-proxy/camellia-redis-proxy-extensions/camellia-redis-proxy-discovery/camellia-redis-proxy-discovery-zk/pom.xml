@@ -25,14 +25,9 @@
             <version>1.2.8-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.curator</groupId>
-            <artifactId>curator-framework</artifactId>
-            <version>${curator.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.curator</groupId>
-            <artifactId>curator-recipes</artifactId>
-            <version>${curator.version}</version>
+            <groupId>com.netease.nim</groupId>
+            <artifactId>camellia-zk</artifactId>
+            <version>1.2.8-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

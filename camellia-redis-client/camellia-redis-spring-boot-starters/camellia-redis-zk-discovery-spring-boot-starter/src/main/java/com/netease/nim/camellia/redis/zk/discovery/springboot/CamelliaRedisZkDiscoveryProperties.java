@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.zk.discovery.springboot;
 
-import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkConstants;
+import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkProxyConstants;
+import com.netease.nim.camellia.zk.ZkConstants;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -23,7 +24,7 @@ public class CamelliaRedisZkDiscoveryProperties {
     private int baseSleepTimeMs = ZkConstants.baseSleepTimeMs;
     private int maxRetries = ZkConstants.maxRetries;
     private int reloadIntervalSeconds = ZkConstants.reloadIntervalSeconds;
-    private boolean sideCarFirst = ZkConstants.sideCarFirst;
+    private boolean sideCarFirst = ZkProxyConstants.sideCarFirst;
     private String regionResolveConf = "";//例子 10.189.0.0/20:region1,10.189.208.0/21:region2
     private String defaultRegion = "default";
     private boolean jedisPoolLazyInit = true;
@@ -32,7 +33,7 @@ public class CamelliaRedisZkDiscoveryProperties {
     /**
      * 注册到zk时的根路径
      */
-    private String basePath = ZkConstants.basePath;
+    private String basePath = ZkProxyConstants.basePath;
 
     public String getZkUrl() {
         return zkUrl;

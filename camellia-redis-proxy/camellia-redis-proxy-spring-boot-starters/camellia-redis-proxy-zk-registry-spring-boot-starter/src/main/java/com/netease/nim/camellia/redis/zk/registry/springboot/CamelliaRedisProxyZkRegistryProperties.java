@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.zk.registry.springboot;
 
-import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkConstants;
+import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkProxyConstants;
+import com.netease.nim.camellia.zk.ZkConstants;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -31,7 +32,7 @@ public class CamelliaRedisProxyZkRegistryProperties {
     /**
      * 注册到zk时的根路径
      */
-    private String basePath = ZkConstants.basePath;
+    private String basePath = ZkProxyConstants.basePath;
 
     /**
      * 手动指定注册的host
@@ -41,7 +42,7 @@ public class CamelliaRedisProxyZkRegistryProperties {
     /**
      * 自动获取的情况下是否偏好使用hostname注册，若true，则ignoredInterfaces和preferredNetworks参数无效
      */
-    private boolean preferredHostName = ZkConstants.preferredHostName;
+    private boolean preferredHostName = ZkProxyConstants.preferredHostName;
 
     /**
      * host字段为空的情况下，自动获取host，此时，忽略哪些网卡，逗号分隔
