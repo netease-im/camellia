@@ -20,7 +20,7 @@ public class PerformanceTest {
     public static void main(String[] args) {
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
         LocalConfHotKeyServerDiscovery discovery = new LocalConfHotKeyServerDiscovery("local",
-                Collections.singletonList(new HotKeyServerAddr("10.189.44.231", 7070)));
+                Collections.singletonList(new HotKeyServerAddr("10.189.249.35", 7070)));
         config.setDiscovery(discovery);
 
         CamelliaHotKeySdk sdk = new CamelliaHotKeySdk(config);

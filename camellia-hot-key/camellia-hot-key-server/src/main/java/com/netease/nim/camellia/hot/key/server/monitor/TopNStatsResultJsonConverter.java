@@ -19,9 +19,9 @@ public class TopNStatsResultJsonConverter {
         JSONArray infoJsonArray = new JSONArray();
         JSONObject infoJson = new JSONObject();
         infoJson.put("namespace", result.getNamespace());
-        infoJson.put("time", result.getTime());
+        infoJson.put("statsTime", result.getTime());
         infoJsonArray.add(infoJson);
-        monitorJson.put("timeStats", infoJsonArray);
+        monitorJson.put("info", infoJsonArray);
 
         JSONArray statsJsonArray = new JSONArray();
         List<TopNStats> topN = result.getTopN();
