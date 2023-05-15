@@ -6,13 +6,16 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
- *
+ * 高并发频繁调用{@link System#currentTimeMillis()}会有性能损耗，所以对于时间要求不太严格的场景可以使用
  * Created by caojiajun on 2020/11/5
  */
 public class TimeCache implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(TimeCache.class);
 
+    /**
+     * 时间，单位是milliseconds，volatile保证可见性
+     */
     public static volatile long currentMillis = System.currentTimeMillis();
 
     static {

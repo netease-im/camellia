@@ -119,7 +119,7 @@ public class DelayDoubleDeleteProxyPlugin implements ProxyPlugin {
     }
 
     private Set<String> getKeyPrefix(Long bid, String bgroup) {
-        String cacheKey = bid + "|" + bgroup;
+        String cacheKey = Utils.getCacheKey(bid, bgroup);
         Set<String> set = keyPrefixCacheMap.get(cacheKey);
         if (set != null) return set;
         try {

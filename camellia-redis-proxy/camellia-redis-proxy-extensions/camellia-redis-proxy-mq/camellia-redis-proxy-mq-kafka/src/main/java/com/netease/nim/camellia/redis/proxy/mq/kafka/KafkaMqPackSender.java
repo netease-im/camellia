@@ -92,7 +92,7 @@ public class KafkaMqPackSender implements MqPackSender {
     }
 
     private List<KafkaUrl> kafkaUrls(Long bid, String bgroup) {
-        String key = bid + "|" + bgroup;
+        String key = Utils.getCacheKey(bid, bgroup);
         List<KafkaUrl> urls = cache.get(key);
         if (urls != null) {
             return urls;

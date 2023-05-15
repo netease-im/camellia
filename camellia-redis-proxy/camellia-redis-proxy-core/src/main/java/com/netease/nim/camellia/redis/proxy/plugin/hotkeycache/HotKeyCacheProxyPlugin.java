@@ -49,6 +49,7 @@ public class HotKeyCacheProxyPlugin implements ProxyPlugin {
     public ProxyPluginResponse executeRequest(ProxyRequest proxyRequest) {
         Command command = proxyRequest.getCommand();
         RedisCommand redisCommand = command.getRedisCommand();
+        // 只对get命令做缓存
         if (redisCommand == RedisCommand.GET) {
             byte[][] objects = command.getObjects();
             if (objects.length > 1) {

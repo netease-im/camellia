@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.plugin.hotkey;
 
 import com.netease.nim.camellia.redis.proxy.auth.IdentityInfo;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.LockMap;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +27,7 @@ public class HotKeyHunterManager {
         if (bid == null || bgroup == null) {
             return hotKeyHunter;
         } else {
-            String key = bid + "|" + bgroup;
+            String key = Utils.getCacheKey(bid, bgroup);
             HotKeyHunter hotKeyHunter = map.get(key);
             if (hotKeyHunter == null) {
                 synchronized (lockMap.getLockObj(key)) {

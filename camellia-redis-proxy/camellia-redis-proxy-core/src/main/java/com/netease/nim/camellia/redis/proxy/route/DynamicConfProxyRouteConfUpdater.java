@@ -5,6 +5,7 @@ import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,7 +33,7 @@ public class DynamicConfProxyRouteConfUpdater extends ProxyRouteConfUpdater {
                 String newConf = getConf(bid, bgroup);
                 if (newConf == null) {
                     invokeRemoveResourceTable(bid, bgroup);
-                    map.remove(bid + "|" + bgroup);
+                    map.remove(Utils.getCacheKey(bid, bgroup));
                     continue;
                 }
                 if (!oldConf.equals(newConf)) {
@@ -54,7 +55,7 @@ public class DynamicConfProxyRouteConfUpdater extends ProxyRouteConfUpdater {
         if (string == null) return null;
         ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(string);
         RedisResourceUtil.checkResourceTable(resourceTable);
-        map.put(bid + "|" + bgroup, string);
+        map.put(Utils.getCacheKey(bid, bgroup), string);
         return resourceTable;
     }
 

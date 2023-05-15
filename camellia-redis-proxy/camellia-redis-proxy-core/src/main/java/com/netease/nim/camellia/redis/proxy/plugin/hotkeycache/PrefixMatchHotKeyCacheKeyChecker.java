@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- *
+ * 对key进行前缀匹配
  * Created by caojiajun on 2021/1/5
  */
 public class PrefixMatchHotKeyCacheKeyChecker implements HotKeyCacheKeyChecker {
@@ -27,7 +27,8 @@ public class PrefixMatchHotKeyCacheKeyChecker implements HotKeyCacheKeyChecker {
         try {
             Long bid = identityInfo.getBid();
             String bgroup = identityInfo.getBgroup();
-            String cacheKey = bid + "|" + bgroup;
+            String cacheKey = Utils.getCacheKey(bid, bgroup);
+            // 这里不用DCL是因为不用保证每次获取是同一个对象，也就是说不用做成单例
             Set<String> set = cache.get(cacheKey);
             if (set == null) {
                 set = hotKeyCacheKeyPrefix(bid, bgroup);
