@@ -21,6 +21,7 @@ public class StatsJsonConverter {
         info.put("workThread", queueStats.getQueueNum());
         info.put("applicationName", serverStats.getApplicationName());
         info.put("monitorIntervalSeconds", serverStats.getMonitorIntervalSeconds());
+        info.put("connectCount", serverStats.getConnectCount());
         infoJsonArray.add(info);
 
         monitorJson.put("info", infoJsonArray);

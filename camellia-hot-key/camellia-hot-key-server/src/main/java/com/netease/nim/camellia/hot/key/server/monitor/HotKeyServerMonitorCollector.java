@@ -3,6 +3,7 @@ package com.netease.nim.camellia.hot.key.server.monitor;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.netease.nim.camellia.hot.key.server.callback.HotKeyInfo;
+import com.netease.nim.camellia.hot.key.server.conf.ClientConnectHub;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
@@ -48,6 +49,7 @@ public class HotKeyServerMonitorCollector {
         HotKeyServerStats serverStats = new HotKeyServerStats();
         serverStats.setApplicationName(applicationName);
         serverStats.setMonitorIntervalSeconds(monitorIntervalSeconds);
+        serverStats.setConnectCount(ClientConnectHub.getInstance().getMap().size());
         QueueStats queueStats = HotKeyCalculatorQueueMonitor.collect();
         TrafficStats trafficStats = HotKeyCalculatorMonitorCollector.collect();
         List<HotKeyInfo> hotKeyInfoList = HotKeyCollector.collect();
