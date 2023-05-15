@@ -34,6 +34,8 @@ public class RuleUtils {
             return key.startsWith(rule.getKeyConfig());
         } else if (ruleType == RuleType.match_all) {
             return true;
+        } else if (ruleType == RuleType.contains) {
+            return key.contains(rule.getKeyConfig());
         }
         return false;
     }
