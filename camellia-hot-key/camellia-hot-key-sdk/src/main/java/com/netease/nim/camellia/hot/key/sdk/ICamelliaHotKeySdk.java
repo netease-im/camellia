@@ -15,8 +15,9 @@ public interface ICamelliaHotKeySdk {
      * @param namespace namespace
      * @param key key
      * @param keyAction 动作
+     * @param count count
      */
-    void push(String namespace, String key, KeyAction keyAction);
+    void push(String namespace, String key, KeyAction keyAction, long count);
 
     /**
      * 获取热key配置

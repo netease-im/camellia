@@ -16,9 +16,10 @@ public interface ICamelliaHotKeyMonitorSdk {
      * 推送一个key用于统计和检测热key
      * @param namespace namespace
      * @param key key
+     * @param count count
      * @return Result 结果
      */
-    Result push(String namespace, String key);
+    Result push(String namespace, String key, long count);
 
     /**
      * 获取当配置
@@ -106,6 +107,7 @@ public class Test {
 
     public static void main(String[] args) {
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
+
         config.setDiscovery(null);//设置一个发现器，默认提供zk/eureka，也可以自己实现基于etcd/consul/nacos等其他注册中心
         //如果需要同时访问多个集群，则需要初始化多个sdk，否则初始化一个实例即可
         CamelliaHotKeySdk sdk = new CamelliaHotKeySdk(config);
@@ -125,13 +127,13 @@ public class Test {
 
         //把key的访问push给server即可
         String namespace1 = "db_cache";
-        monitorSdk.push(namespace1, "key1");
-        monitorSdk.push(namespace1, "key2");
-        monitorSdk.push(namespace1, "key2");
+        monitorSdk.push(namespace1, "key1", 1);
+        monitorSdk.push(namespace1, "key2", 1);
+        monitorSdk.push(namespace1, "key2", 1);
 
         String namespace2 = "api_request";
-        monitorSdk.push(namespace2, "/xx/xx");
-        monitorSdk.push(namespace2, "/xx/xx2");
+        monitorSdk.push(namespace2, "/xx/xx", 1);
+        monitorSdk.push(namespace2, "/xx/xx2", 1);
     }
 
     private static void testCache(CamelliaHotKeySdk sdk) {

@@ -110,13 +110,13 @@ public class TestZk {
 
         //把key的访问push给server即可
         String namespace1 = "db_cache";
-        monitorSdk.push(namespace1, "key1");
-        monitorSdk.push(namespace1, "key2");
-        monitorSdk.push(namespace1, "key2");
+        monitorSdk.push(namespace1, "key1", 1);
+        monitorSdk.push(namespace1, "key2", 1);
+        monitorSdk.push(namespace1, "key2", 1);
 
         String namespace2 = "api_request";
-        monitorSdk.push(namespace2, "/xx/xx");
-        monitorSdk.push(namespace2, "/xx/xx2");
+        monitorSdk.push(namespace2, "/xx/xx", 1);
+        monitorSdk.push(namespace2, "/xx/xx2", 1);
     }
 }
 
@@ -227,13 +227,13 @@ public class TestEureka {
 
         //把key的访问push给server即可
         String namespace1 = "db_cache";
-        monitorSdk.push(namespace1, "key1");
-        monitorSdk.push(namespace1, "key2");
-        monitorSdk.push(namespace1, "key2");
+        monitorSdk.push(namespace1, "key1", 1);
+        monitorSdk.push(namespace1, "key2", 1);
+        monitorSdk.push(namespace1, "key2", 1);
 
         String namespace2 = "api_request";
-        monitorSdk.push(namespace2, "/xx/xx");
-        monitorSdk.push(namespace2, "/xx/xx2");
+        monitorSdk.push(namespace2, "/xx/xx", 1);
+        monitorSdk.push(namespace2, "/xx/xx2", 1);
     }
 }
 
@@ -267,14 +267,13 @@ public class TestNoRegister {
 
         //把key的访问push给server即可
         String namespace1 = "db_cache";
-        monitorSdk.push(namespace1, "key1");
-        monitorSdk.push(namespace1, "key2");
-        monitorSdk.push(namespace1, "key2");
+        monitorSdk.push(namespace1, "key1", 1);
+        monitorSdk.push(namespace1, "key2", 1);
+        monitorSdk.push(namespace1, "key2", 1);
 
         String namespace2 = "api_request";
-        monitorSdk.push(namespace2, "/xx/xx");
-        monitorSdk.push(namespace2, "/xx/xx2");
+        monitorSdk.push(namespace2, "/xx/xx", 1);
+        monitorSdk.push(namespace2, "/xx/xx2", 1);
     }
 }
-
 ```

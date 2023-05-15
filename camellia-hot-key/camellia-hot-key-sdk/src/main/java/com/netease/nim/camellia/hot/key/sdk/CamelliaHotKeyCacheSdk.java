@@ -55,7 +55,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
                 return loader.load(key);
             }
             //提交探测请求
-            sdk.push(namespace, key, KeyAction.QUERY);
+            sdk.push(namespace, key, KeyAction.QUERY, 1);
             addHotKeyListener(namespace);
             //看看是否是热key
             Long hotKeyExpireMillis = hotKeyCacheKeyMap.get(namespace, key, Long.class);
@@ -95,7 +95,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
             if (rule == null) {
                 return;
             }
-            sdk.push(config.getNamespace(), key, KeyAction.UPDATE);
+            sdk.push(config.getNamespace(), key, KeyAction.UPDATE, 1);
             addHotKeyListener(namespace);
         } catch (Exception e) {
             logger.error("keyUpdate error, namespace = {}, key = {}", namespace, key);
@@ -109,7 +109,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
             if (rule == null) {
                 return;
             }
-            sdk.push(config.getNamespace(), key, KeyAction.DELETE);
+            sdk.push(config.getNamespace(), key, KeyAction.DELETE, 1);
             addHotKeyListener(namespace);
         } catch (Exception e) {
             logger.error("keyDelete error, namespace = {}, key = {}", namespace, key);

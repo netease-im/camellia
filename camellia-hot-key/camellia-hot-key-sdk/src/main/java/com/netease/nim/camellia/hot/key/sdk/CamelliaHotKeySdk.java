@@ -53,8 +53,8 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
     }
 
     @Override
-    public void push(String namespace, String key, KeyAction keyAction) {
-        collector.push(namespace, key, keyAction);
+    public void push(String namespace, String key, KeyAction keyAction, long count) {
+        collector.push(namespace, key, keyAction, count);
     }
 
     @Override

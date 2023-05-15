@@ -11,9 +11,10 @@ public interface ICamelliaHotKeyMonitorSdk {
      * 推送一个key用于统计和检测热key
      * @param namespace namespace
      * @param key key
+     * @param count count
      * @return Result 结果
      */
-    Result push(String namespace, String key);
+    Result push(String namespace, String key, long count);
 
     /**
      * 获取当配置

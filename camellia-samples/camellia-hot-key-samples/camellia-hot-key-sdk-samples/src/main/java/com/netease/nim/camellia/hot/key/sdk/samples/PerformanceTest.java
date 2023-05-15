@@ -38,13 +38,13 @@ public class PerformanceTest {
         monitorSdk.preheat(namespace1);
 
         String key0 = "hahahaha";
-        Result result0 = monitorSdk.push(namespace1, key0);
+        Result result0 = monitorSdk.push(namespace1, key0, 1);
         System.out.println("key=" + key0 + ",hot=" + result0.isHot());
 
         new Thread(() -> {
             while (true) {
                 String key = UUID.randomUUID().toString();
-                Result result = monitorSdk.push(namespace1, key);
+                Result result = monitorSdk.push(namespace1, key, 1);
 //                System.out.println("key=" + key + ",hot=" + result.isHot());
                 try {
                     TimeUnit.MILLISECONDS.sleep(1);
@@ -56,7 +56,7 @@ public class PerformanceTest {
         new Thread(() -> {
             while (true) {
                 String key = "abc";
-                Result result = monitorSdk.push(namespace1, key);
+                Result result = monitorSdk.push(namespace1, key, 1);
 //                System.out.println("key=" + key + ",hot=" + result.isHot());
                 try {
                     TimeUnit.MILLISECONDS.sleep(1);
@@ -68,7 +68,7 @@ public class PerformanceTest {
         new Thread(() -> {
             while (true) {
                 String key = "def";
-                Result result = monitorSdk.push(namespace1, key);
+                Result result = monitorSdk.push(namespace1, key, 1);
 //                System.out.println("key=" + key + ",hot=" + result.isHot());
                 try {
                     TimeUnit.MILLISECONDS.sleep(2);
