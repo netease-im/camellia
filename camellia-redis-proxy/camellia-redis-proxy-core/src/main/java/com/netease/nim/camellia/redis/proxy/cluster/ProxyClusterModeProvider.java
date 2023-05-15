@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.cluster;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
-import com.netease.nim.camellia.redis.proxy.util.InetUtils;
+import com.netease.nim.camellia.tools.utils.InetUtils;
 
 import java.net.InetAddress;
 import java.util.ArrayList;

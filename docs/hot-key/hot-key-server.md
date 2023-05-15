@@ -103,12 +103,21 @@ public abstract class HotKeyConfigService {
      */
     public abstract HotKeyConfig get(String namespace);
 
+    /**
+     * 初始化后会调用本方法，你可以重写本方法去获取到HotKeyServerProperties中的相关配置
+     * @param properties properties
+     */
+    public void init(HotKeyServerProperties properties) {
+    }
+
     //回调方法
     protected final void invokeUpdate(String namespace) {
         //xxxx
     }
 }
 ```
+
+更多配置方式参考：[hot-key-config](hot-key-config.md)  
 
 #### HotKeyCallback
 * 发现热key后的回调，默认是LoggingHotKeyCallback，仅打印日志
@@ -175,11 +184,13 @@ public class TopNStats implements Comparable<TopNStats> {
 |:---:|:---:|:---:|:---:|
 |namespace|string|是|命名空间|
 |rule.name|string|是|规则名字，每个namespace下的rule.name需要唯一|
-|rule.type|string|是|规则类型，包括：exact_match（精确匹配）、prefix_match（前缀匹配）、match_all（匹配所有）|
+|rule.type|string|是|规则类型，包括：`exact_match`（精确匹配）、`prefix_match`（前缀匹配）、`match_all`（匹配所有）、`contains`（包含子串）|
 |rule.keyConfig|string|否|exact_match时表示key本身，prefix_match时表示前缀，match_all没有这个配置项|
 |rule.checkMillis|long|是|检查周期，单位ms，需要是100ms的整数倍，否则会被四舍五入|
 |rule.checkThreshold|long|是|检查阈值|
-|rule.expireMills|long|否|过期时间，只有配置了本字段，hot-key的信息才会广播给SDK，否则仅做服务器统计|
+|rule.expireMills|long|否|检测到热key后的过期时间，只有配置了本字段，hot-key的信息才会广播给SDK，从而CamelliaHotKeyMonitorSdk才能获取的Result，CamelliaHotKeyCacheSdk本地缓存功能才生效，否则仅做服务器统计|
+
+备注：服务器会根据rules数组的顺序依次进行规则匹配，匹配到一个之后就返回
 
 #### 配置示例
 
@@ -206,7 +217,7 @@ public class TopNStats implements Comparable<TopNStats> {
     },
     {
       "name": "rule3",
-      "type": "prefix_match",
+      "type": "contains",
       "keyConfig": "opq",
       "checkMillis": 1000,
       "checkThreshold": 100

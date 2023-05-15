@@ -13,21 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ApiBasedHotKeyConfigService extends HotKeyConfigService {
 
-    private final ApiBasedCamelliaConfig camelliaConfig;
+    private ApiBasedCamelliaConfig camelliaConfig;
     private final ConcurrentHashMap<String, Boolean> namespaceMap = new ConcurrentHashMap<>();
-
-    public ApiBasedHotKeyConfigService(Map<String, String> config) {
-        String url = config.get("camellia.config.url");
-        String namespace = config.get("camellia.config.namespace");
-        if (url == null) {
-            throw new IllegalArgumentException("missing 'camellia.config.url'");
-        }
-        if (namespace == null) {
-            throw new IllegalArgumentException("missing 'camellia.config.namespace'");
-        }
-        this.camelliaConfig = new ApiBasedCamelliaConfig(url, namespace);
-        this.camelliaConfig.addCallback(this::reload);
-    }
 
     private void reload() {
         for (Map.Entry<String, Boolean> entry : namespaceMap.entrySet()) {
@@ -43,5 +30,20 @@ public class ApiBasedHotKeyConfigService extends HotKeyConfigService {
         }
         namespaceMap.put(namespace, true);
         return JSONObject.parseObject(string, HotKeyConfig.class);
+    }
+
+    @Override
+    public void init(HotKeyServerProperties properties) {
+        Map<String, String> config = properties.getConfig();
+        String url = config.get("camellia.config.url");
+        String namespace = config.get("camellia.config.namespace");
+        if (url == null) {
+            throw new IllegalArgumentException("missing 'camellia.config.url'");
+        }
+        if (namespace == null) {
+            throw new IllegalArgumentException("missing 'camellia.config.namespace'");
+        }
+        this.camelliaConfig = new ApiBasedCamelliaConfig(url, namespace);
+        this.camelliaConfig.addCallback(this::reload);
     }
 }

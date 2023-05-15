@@ -15,7 +15,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-hot-key-server</artifactId>
+			<artifactId>camellia-hot-key-server-spring-boot-starter</artifactId>
 			<version>1.2.8-SNAPSHOT</version>
 		</dependency>
 	</dependencies>

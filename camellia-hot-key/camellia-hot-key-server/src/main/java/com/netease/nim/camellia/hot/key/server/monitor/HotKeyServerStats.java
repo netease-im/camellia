@@ -12,6 +12,7 @@ public class HotKeyServerStats {
 
     private String applicationName;
     private int monitorIntervalSeconds;
+    private long connectCount;
     private QueueStats queueStats;
     private TrafficStats trafficStats;
     private List<HotKeyInfo> hotKeyInfoList = new ArrayList<>();
@@ -30,6 +31,14 @@ public class HotKeyServerStats {
 
     public void setMonitorIntervalSeconds(int monitorIntervalSeconds) {
         this.monitorIntervalSeconds = monitorIntervalSeconds;
+    }
+
+    public long getConnectCount() {
+        return connectCount;
+    }
+
+    public void setConnectCount(long connectCount) {
+        this.connectCount = connectCount;
     }
 
     public QueueStats getQueueStats() {

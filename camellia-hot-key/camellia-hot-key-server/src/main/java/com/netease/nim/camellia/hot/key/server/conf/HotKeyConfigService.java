@@ -23,6 +23,14 @@ public abstract class HotKeyConfigService {
      */
     public abstract HotKeyConfig get(String namespace);
 
+    /**
+     * 初始化后会调用本方法，你可以重写本方法去获取到HotKeyServerProperties中的相关配置
+     * @param properties properties
+     */
+    public void init(HotKeyServerProperties properties) {
+
+    }
+
     protected final void invokeUpdate(String namespace) {
         for (Callback callback : callbackList) {
             try {

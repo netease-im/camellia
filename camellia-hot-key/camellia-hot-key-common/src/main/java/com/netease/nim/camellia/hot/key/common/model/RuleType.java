@@ -8,6 +8,7 @@ public enum RuleType {
     exact_match(1),//精准匹配
     prefix_match(2),//前缀匹配
     match_all(3),//匹配所有
+    contains(4),//包含子串
 
     ;
 

@@ -48,59 +48,72 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
 
     @Override
     public <T> T getValue(String namespace, String key, ValueLoader<T> loader) {
-        //先看看是否匹配规则
-        Rule rule = rulePass(namespace, key);
-        if (rule == null) {
-            return loader.load(key);
-        }
-        //提交探测请求
-        sdk.push(namespace, key, KeyAction.QUERY);
-        addHotKeyListener(namespace);
-        //看看是否是热key
-        Long hotKeyExpireMillis = hotKeyCacheKeyMap.get(namespace, key, Long.class);
-        if (hotKeyExpireMillis == null) {
-            //如果不是热key，直接请求底层
-            return loader.load(key);
-        }
-        //热key缓存ttl已过半，则提前穿透一次更新吧
-        long ttl = hotKeyCacheKeyMap.ttl(namespace, key);
-        if (ttl < hotKeyExpireMillis / 2) {
-            //加个本地lock，从而只穿透一次
-            boolean lock = hotKeyCacheHitLockMap.putIfAbsent(namespace, key, true, -1);
-            if (lock) {
-                try {
-                    return refresh(namespace, key, rule, loader);
-                } finally {
-                    hotKeyCacheHitLockMap.evict(namespace, key);
+        try {
+            //先看看是否匹配规则
+            Rule rule = rulePass(namespace, key);
+            if (rule == null) {
+                return loader.load(key);
+            }
+            //提交探测请求
+            sdk.push(namespace, key, KeyAction.QUERY);
+            addHotKeyListener(namespace);
+            //看看是否是热key
+            Long hotKeyExpireMillis = hotKeyCacheKeyMap.get(namespace, key, Long.class);
+            if (hotKeyExpireMillis == null) {
+                //如果不是热key，直接请求底层
+                return loader.load(key);
+            }
+            //热key缓存ttl已过半，则提前穿透一次更新吧
+            long ttl = hotKeyCacheKeyMap.ttl(namespace, key);
+            if (ttl < hotKeyExpireMillis / 2) {
+                //加个本地lock，从而只穿透一次
+                boolean lock = hotKeyCacheHitLockMap.putIfAbsent(namespace, key, true, -1);
+                if (lock) {
+                    try {
+                        return refresh(namespace, key, rule, loader);
+                    } finally {
+                        hotKeyCacheHitLockMap.evict(namespace, key);
+                    }
                 }
             }
+            //如果是热key，看看有没有本地缓存
+            CamelliaLocalCache.ValueWrapper valueWrapper = hotKeyCacheValueMap.get(namespace, key);
+            if (valueWrapper != null) {
+                return (T) valueWrapper.get();
+            }
+            return refresh(namespace, key, rule, loader);
+        } catch (Exception e) {
+            logger.error("getValue error, namespace = {}, key = {}", namespace, key, e);
+            return loader.load(key);
         }
-        //如果是热key，看看有没有本地缓存
-        CamelliaLocalCache.ValueWrapper valueWrapper = hotKeyCacheValueMap.get(namespace, key);
-        if (valueWrapper != null) {
-            return (T) valueWrapper.get();
-        }
-        return refresh(namespace, key, rule, loader);
     }
 
     @Override
     public void keyUpdate(String namespace, String key) {
-        Rule rule = rulePass(config.getNamespace(), key);
-        if (rule == null) {
-            return;
+        try {
+            Rule rule = rulePass(config.getNamespace(), key);
+            if (rule == null) {
+                return;
+            }
+            sdk.push(config.getNamespace(), key, KeyAction.UPDATE);
+            addHotKeyListener(namespace);
+        } catch (Exception e) {
+            logger.error("keyUpdate error, namespace = {}, key = {}", namespace, key);
         }
-        sdk.push(config.getNamespace(), key, KeyAction.UPDATE);
-        addHotKeyListener(namespace);
     }
 
     @Override
     public void keyDelete(String namespace, String key) {
-        Rule rule = rulePass(config.getNamespace(), key);
-        if (rule == null) {
-            return;
+        try {
+            Rule rule = rulePass(config.getNamespace(), key);
+            if (rule == null) {
+                return;
+            }
+            sdk.push(config.getNamespace(), key, KeyAction.DELETE);
+            addHotKeyListener(namespace);
+        } catch (Exception e) {
+            logger.error("keyDelete error, namespace = {}, key = {}", namespace, key);
         }
-        sdk.push(config.getNamespace(), key, KeyAction.DELETE);
-        addHotKeyListener(namespace);
     }
 
     @Override
