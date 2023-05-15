@@ -117,6 +117,8 @@ public abstract class HotKeyConfigService {
 }
 ```
 
+更多配置方式参考：[hot-key-config](hot-key-config.md)  
+
 #### HotKeyCallback
 * 发现热key后的回调，默认是LoggingHotKeyCallback，仅打印日志
 * 你也可以自己实现本接口，从而对接到你们的监控报警系统，或者频控/限流系统等

@@ -12,6 +12,7 @@ public class Test {
 
     public static void main(String[] args) {
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
+
         config.setDiscovery(null);//设置一个发现器，默认提供zk/eureka，也可以自己实现基于etcd/consul/nacos等其他注册中心
         //如果需要同时访问多个集群，则需要初始化多个sdk，否则初始化一个实例即可
         CamelliaHotKeySdk sdk = new CamelliaHotKeySdk(config);
