@@ -52,6 +52,32 @@ camellia-hot-key-zk-registry:
   basePath: /camellia-hot-key
 ```
 
+* 重写consoleService，如下：
+```java
+@Component
+public class MyConsoleService extends ConsoleServiceAdaptor {
+
+    @Autowired(required = false)
+    private CamelliaHotKeyServerZkRegisterBoot zkRegisterBoot;
+
+    @Override
+    public ConsoleResult online() {
+        if (zkRegisterBoot != null) {
+            zkRegisterBoot.register();
+        }
+        return super.online();
+    }
+
+    @Override
+    public ConsoleResult offline() {
+        if (zkRegisterBoot != null) {
+            zkRegisterBoot.deregister();
+        }
+        return super.offline();
+    }
+}
+```
+
 #### sdk侧
 * 额外引入依赖
 
@@ -146,6 +172,25 @@ eureka:
     leaseExpirationDurationInSeconds: 15
     leaseRenewalIntervalInSeconds: 5
     prefer-ip-address: true
+```
+
+* 重写consoleService，如下：
+```java
+@Component
+public class MyConsoleService extends ConsoleServiceAdaptor {
+
+    @Override
+    public ConsoleResult online() {
+        ApplicationInfoManager.getInstance().setInstanceStatus(InstanceInfo.InstanceStatus.UP);
+        return super.online();
+    }
+
+    @Override
+    public ConsoleResult offline() {
+        ApplicationInfoManager.getInstance().setInstanceStatus(InstanceInfo.InstanceStatus.DOWN);
+        return super.offline();
+    }
+}
 ```
 
 #### sdk侧
