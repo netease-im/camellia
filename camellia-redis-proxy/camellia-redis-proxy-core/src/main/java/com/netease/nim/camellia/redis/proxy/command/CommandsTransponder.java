@@ -93,7 +93,7 @@ public class CommandsTransponder {
                 List<ProxyPlugin> requestPlugins = proxyPluginInitResp.getRequestPlugins();
                 if (!requestPlugins.isEmpty()) {
                     boolean pluginBreak = false;
-                    //执行插件，这里很妙，跟spring boot的拦截器一样的思维，算是一种责任链，上一个没通过下一个plugin也不会执行了
+                    //执行插件，跟spring boot的拦截器一样的思维，算是一种责任链，上一个没通过下一个plugin也不会执行了
                     ProxyRequest request = new ProxyRequest(channelInfo.getDb(), command, factory);
                     for (ProxyPlugin plugin : proxyPluginInitResp.getRequestPlugins()) {
                         try {
