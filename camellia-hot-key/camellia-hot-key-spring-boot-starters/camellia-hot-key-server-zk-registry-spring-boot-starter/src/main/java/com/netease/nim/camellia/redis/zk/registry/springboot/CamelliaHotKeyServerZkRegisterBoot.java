@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.zk.registry.springboot;
 
-import com.netease.nim.camellia.redis.base.proxy.Proxy;
-import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkProxyRegistry;
+import com.netease.nim.camellia.hot.key.extensions.discovery.zk.ZkHotKeyServerRegistry;
+import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyServerAddr;
 import com.netease.nim.camellia.tools.utils.InetUtils;
 import com.netease.nim.camellia.zk.ZkRegistryException;
 import org.slf4j.Logger;
@@ -12,35 +12,32 @@ import java.net.UnknownHostException;
 import java.util.Collections;
 
 /**
- *
- * Created by caojiajun on 2020/8/12
+ * Created by caojiajun on 2023/5/15
  */
-public class CamelliaRedisProxyZkRegisterBoot {
+public class CamelliaHotKeyServerZkRegisterBoot {
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaHotKeyServerZkRegisterBoot.class);
 
-    private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyZkRegisterBoot.class);
+    private ZkHotKeyServerRegistry registry;
 
-    private ZkProxyRegistry registry;
-
-    public CamelliaRedisProxyZkRegisterBoot(CamelliaRedisProxyZkRegistryProperties properties, String applicationName, int port) {
+    public CamelliaHotKeyServerZkRegisterBoot(CamelliaHotKeyServerZkRegistryProperties properties, String applicationName, int port) {
         if (!properties.isEnable()) {
-            logger.info("camellia redis proxy zk registry not enable");
+            logger.info("camellia hot key server zk registry not enable");
             return;
         }
         if (properties.getZkUrl() == null) {
-            logger.warn("zkUrl is null, skip camellia redis proxy zk registry");
+            logger.warn("zkUrl is null, skip camellia hot key server zk registry");
             return;
         }
-        Proxy proxy;
+        HotKeyServerAddr addr;
         try {
-            proxy = new Proxy();
-            proxy.setPort(port);
             String host = properties.getHost();
             if (host != null && host.length() > 0) {
-                proxy.setHost(host);
+                addr = new HotKeyServerAddr(host, port);
             } else {
                 boolean preferredHostName = properties.isPreferredHostName();
                 if (preferredHostName) {
-                    proxy.setHost(InetAddress.getLocalHost().getHostName());
+                    host = InetAddress.getLocalHost().getHostName();
+                    addr = new HotKeyServerAddr(host, port);
                 } else {
                     String ignoredInterfaces = properties.getIgnoredInterfaces();
                     if (ignoredInterfaces != null) {
@@ -54,18 +51,19 @@ public class CamelliaRedisProxyZkRegisterBoot {
                     }
                     InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress();
                     if (inetAddress != null) {
-                        proxy.setHost(inetAddress.getHostAddress());
+                        host = inetAddress.getHostAddress();
                     } else {
-                        proxy.setHost(InetAddress.getLocalHost().getHostAddress());
+                        host = InetAddress.getLocalHost().getHostAddress();
                     }
+                    addr = new HotKeyServerAddr(host, port);
                 }
             }
         } catch (UnknownHostException e) {
             throw new ZkRegistryException(e);
         }
-        registry = new ZkProxyRegistry(properties.getZkUrl(), properties.getSessionTimeoutMs(),
+        registry = new ZkHotKeyServerRegistry(properties.getZkUrl(), properties.getSessionTimeoutMs(),
                 properties.getConnectionTimeoutMs(), properties.getBaseSleepTimeMs(), properties.getMaxRetries(),
-                properties.getBasePath(), applicationName, proxy);
+                properties.getBasePath(), applicationName, addr);
 
         registry.register();
     }
@@ -82,7 +80,7 @@ public class CamelliaRedisProxyZkRegisterBoot {
         }
     }
 
-    public ZkProxyRegistry getRegistry() {
+    public ZkHotKeyServerRegistry getRegistry() {
         return registry;
     }
 }
