@@ -14,7 +14,13 @@ import java.util.concurrent.atomic.LongAdder;
  */
 public class LRUCounter {
 
+    /**
+     * 每一个key都有一个计数器
+     */
     private final ConcurrentLinkedHashMap<BytesKey, Counter> cache;
+    /**
+     * 过期时间
+     */
     private final long expireMillis;
 
     public LRUCounter(int initialCapacity, long capacity, long expireMillis) {

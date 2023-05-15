@@ -222,4 +222,15 @@ public class Utils {
     public static boolean hasChange(String md5, String newMd5) {
         return md5 == null || (newMd5 != null && !md5.equals(newMd5));
     }
+
+    /**
+     * 缓存key拼接
+     *
+     * @param bid    bid
+     * @param bgroup bgroup
+     * @return bid + "|" + bgroup
+     */
+    public static String getCacheKey(Long bid, String bgroup) {
+        return bid + "|" + bgroup;
+    }
 }

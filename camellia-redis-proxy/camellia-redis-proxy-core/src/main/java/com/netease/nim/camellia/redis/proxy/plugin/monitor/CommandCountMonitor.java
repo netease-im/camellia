@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.plugin.monitor;
 
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -123,7 +124,7 @@ public class CommandCountMonitor {
             }
             totalStats.setCount(totalStats.getCount() + count);
 
-            String key = bid + "|" + bgroup;
+            String key = Utils.getCacheKey(bid, bgroup);
             BidBgroupStats bidBgroupStats = bidBgroupStatsMap.get(key);
             if (bidBgroupStats == null) {
                 bidBgroupStats = bidBgroupStatsMap.computeIfAbsent(key, k -> new BidBgroupStats());

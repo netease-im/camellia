@@ -3,14 +3,15 @@ package com.netease.nim.camellia.redis.proxy.monitor;
 import com.netease.nim.camellia.redis.proxy.monitor.model.BidBgroupConnectStats;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.rmi.CORBA.Util;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- *
  * Created by caojiajun on 2019/11/7.
  */
 public class ChannelMonitor {
@@ -37,7 +38,7 @@ public class ChannelMonitor {
                 Long bid = channelInfo.getBid();
                 String bgroup = channelInfo.getBgroup();
                 if (bid != null && bgroup != null) {
-                    String key = bid + "|" + bgroup;
+                    String key = Utils.getCacheKey(bid, bgroup);
                     ConcurrentHashMap<String, ChannelInfo> subMap = bidbgroupMap.get(key);
                     if (subMap != null) {
                         subMap.remove(channelInfo.getConsid());
@@ -83,7 +84,7 @@ public class ChannelMonitor {
     }
 
     public static int bidBgroupConnect(long bid, String bgroup) {
-        String key = bid + "|" + bgroup;
+        String key = Utils.getCacheKey(bid, bgroup);
         ConcurrentHashMap<String, ChannelInfo> subMap = bidbgroupMap.get(key);
         if (subMap == null) return 0;
         return subMap.size();
@@ -92,7 +93,7 @@ public class ChannelMonitor {
     public static void initBidBgroup(long bid, String bgroup, ChannelInfo channelInfo) {
         ExecutorUtils.submitToSingleThreadExecutor(() -> {
             try {
-                String key = bid + "|" + bgroup;
+                String key = Utils.getCacheKey(bid, bgroup);
                 ConcurrentHashMap<String, ChannelInfo> subMap = bidbgroupMap.get(key);
                 if (subMap == null) {
                     subMap = new ConcurrentHashMap<>();

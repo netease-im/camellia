@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.plugin.permission.model.IpCheckInfo;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +129,7 @@ public class IPCheckProxyPlugin implements ProxyPlugin {
     }
 
     public boolean checkIp(Long bid, String bgroup, String ip) {
-        String key = bid + "|" + bgroup;
+        String key = Utils.getCacheKey(bid, bgroup);
         IpCheckInfo ipCheckInfo = cache.get(key);
         if (ipCheckInfo == null) {
             int mode = ProxyDynamicConf.getInt("ip.check.mode", bid, bgroup, 0);

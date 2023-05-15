@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.auth;
 
 /**
+ * 租户身份标识，id+group
  * Created by caojiajun on 2022/9/15
  */
 public class IdentityInfo {

@@ -18,12 +18,24 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
     private static final Logger logger = LoggerFactory.getLogger(DefaultProxyPluginFactory.class);
 
     private static final String CONF_KEY = "proxy.plugin.list";
+    /**
+     * 插件名称 list
+     */
     private final List<String> defaultPlugins;
 
     private final ProxyBeanFactory beanFactory;
+    /**
+     * 插件配置的字符串
+     */
     private String pluginConf;
+    /**
+     * 回调接口，这里主要是通过注册进来，配合线程池每隔多久进行一次reload刷新插件用的
+     */
     private final List<Runnable> callbackSet = new ArrayList<>();
 
+    /**
+     * 插件map
+     */
     private final ConcurrentHashMap<String, ProxyPlugin> pluginMap = new ConcurrentHashMap<>();
 
     public DefaultProxyPluginFactory(List<String> defaultPlugins, ProxyBeanFactory beanFactory) {
@@ -31,9 +43,13 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
         this.beanFactory = beanFactory;
         reload();
         int seconds = ProxyDynamicConf.getInt("proxy.plugin.update.interval.seconds", 60);
+        // 按照配置的频率去调用reload方法
         ExecutorUtils.scheduleAtFixedRate(this::reload, seconds, seconds, TimeUnit.SECONDS);
     }
 
+    /**
+     * 依次调用callbackSet里面的方法，{@link DefaultProxyPluginFactory#CONF_KEY} 配置字符串发生改变的时候才会进行调用
+     */
     private void reload() {
         String pluginConf = ProxyDynamicConf.getString(CONF_KEY, "");
         if (!Objects.equals(pluginConf, this.pluginConf)) {
@@ -50,6 +66,7 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
 
     @Override
     public ProxyPluginInitResp initPlugins() {
+        // 根据配置中的名称构建插件
         Set<String> pluginSet = new HashSet<>(defaultPlugins);
         if (pluginConf != null && pluginConf.trim().length() != 0) {
             String[] split = pluginConf.trim().split(",");
@@ -63,11 +80,12 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
             ProxyPlugin proxyPlugin = getOrInitProxyPlugin(classOrAlias);
             plugins.add(proxyPlugin);
         }
+        // 插件排序，先按request排再按reply排，越大约优先
         plugins.sort((p1, p2) -> Integer.compare(p1.order().request(), p2.order().request()) * -1);
         List<ProxyPlugin> requestPlugins = new ArrayList<>(plugins);
         if (logger.isInfoEnabled()) {
             logger.info("###request-plugins-start");
-            for (int i=0; i<requestPlugins.size(); i++) {
+            for (int i = 0; i < requestPlugins.size(); i++) {
                 ProxyPlugin plugin = requestPlugins.get(i);
                 logger.info("index = {}, order = {}, plugin = {}", i, plugin.order().request(), plugin.getClass().getName());
             }
@@ -77,7 +95,7 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
         List<ProxyPlugin> replyPlugins = new ArrayList<>(plugins);
         if (logger.isInfoEnabled()) {
             logger.info("###reply-plugins-start");
-            for (int i=0; i<replyPlugins.size(); i++) {
+            for (int i = 0; i < replyPlugins.size(); i++) {
                 ProxyPlugin plugin = replyPlugins.get(i);
                 logger.info("index = {}, order = {}, plugin = {}", i, plugin.order().reply(), plugin.getClass().getName());
             }
@@ -86,7 +104,12 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
         return new ProxyPluginInitResp(requestPlugins, replyPlugins);
     }
 
-    //只初始化一次
+    /**
+     * 用的DCL，保证插件的单例
+     *
+     * @param classOrAlias 类的全限定名
+     * @return 插件 {@link ProxyPlugin}对象
+     */
     private ProxyPlugin getOrInitProxyPlugin(String classOrAlias) {
         ProxyPlugin plugin = pluginMap.get(classOrAlias);
         if (plugin == null) {
@@ -102,6 +125,12 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
         return plugin;
     }
 
+    /**
+     * 根据类的全限定名或者别名获取插件。
+     *
+     * @param classOrAlias 类的全限定名或者内建的插件的别名,内建插件别名必须是{@link BuildInProxyPluginEnum#alias} 不然会报错
+     * @return 插件 {@link ProxyPlugin}对象
+     */
     @Override
     public ProxyPlugin initProxyPlugin(String classOrAlias) {
         try {
@@ -118,6 +147,11 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
         }
     }
 
+    /**
+     * 将callback方法注册进去
+     *
+     * @param callback
+     */
     @Override
     public synchronized void registerPluginUpdate(Runnable callback) {
         callbackSet.add(callback);

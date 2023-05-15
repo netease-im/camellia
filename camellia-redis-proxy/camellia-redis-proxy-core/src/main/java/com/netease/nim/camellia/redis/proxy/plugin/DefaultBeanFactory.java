@@ -13,10 +13,22 @@ public class DefaultBeanFactory implements ProxyBeanFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultBeanFactory.class);
 
+    /**
+     * 饿汉单例
+     */
     public static final DefaultBeanFactory INSTANCE = new DefaultBeanFactory();
 
+    /**
+     * 反射的类实例缓存，和DCL配合使用
+     */
     private final ConcurrentHashMap<Class<?>, Object> map = new ConcurrentHashMap<>();
 
+    /**
+     * DCL保证返回的单例，也就是说多次调用返回的是同一个对象，内部通过反射做的
+     * @param requiredType class对象
+     * @param <T> 目标类
+     * @return 目标类对象
+     */
     @Override
     public <T> T getBean(Class<T> requiredType) {
         try {

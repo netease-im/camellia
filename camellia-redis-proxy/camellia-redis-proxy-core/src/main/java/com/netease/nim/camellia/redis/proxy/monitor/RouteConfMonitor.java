@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.monitor;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.monitor.model.RouteConf;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +20,7 @@ public class RouteConfMonitor {
 
     public static void registerRedisClientTemplate(Long bid, String bgroup, UpstreamRedisClientTemplate template) {
         try {
-            templateMap.put(bid + "|" + bgroup, template);
+            templateMap.put(Utils.getCacheKey(bid, bgroup), template);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -27,7 +28,7 @@ public class RouteConfMonitor {
 
     public static void deregisterRedisClientTemplate(Long bid, String bgroup) {
         try {
-            templateMap.remove(bid + "|" + bgroup);
+            templateMap.remove(Utils.getCacheKey(bid, bgroup));
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

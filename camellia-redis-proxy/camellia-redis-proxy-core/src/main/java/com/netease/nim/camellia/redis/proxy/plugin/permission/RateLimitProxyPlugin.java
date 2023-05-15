@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.plugin.permission;
 
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
@@ -97,12 +98,12 @@ public class RateLimitProxyPlugin implements ProxyPlugin {
     }
 
     private Counter getCounter(long bid, String bgroup) {
-        String key = bid + "|" + bgroup;
+        String key = Utils.getCacheKey(bid, bgroup);
         return CamelliaMapUtils.computeIfAbsent(counterMap, key, s -> new Counter());
     }
 
     private RateLimitConf getRateLimitConf(long bid, String bgroup) {
-        String key = bid + "|" + bgroup;
+        String key = Utils.getCacheKey(bid, bgroup);
         return CamelliaMapUtils.computeIfAbsent(rateLimitConfMap, key, str -> {
             long checkMillis = ProxyDynamicConf.getLong(bid + "." + bgroup + ".rate.limit.check.millis", 1000L);
             long maxCount = ProxyDynamicConf.getLong(bid + "." + bgroup + ".rate.limit.max.count", -1L);

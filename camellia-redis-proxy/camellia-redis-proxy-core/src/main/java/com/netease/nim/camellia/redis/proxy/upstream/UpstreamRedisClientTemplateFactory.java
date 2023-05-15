@@ -10,6 +10,7 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultBeanFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.ScheduledResourceChecker;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaLinearInitializationExecutor;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
@@ -101,7 +102,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
                 return IUpstreamClientTemplateFactory.wrapper(remoteInstance);
             }
             if (executor != null) {
-                return executor.getOrInitialize(bid + "|" + bgroup);
+                return executor.getOrInitialize(Utils.getCacheKey(bid, bgroup));
             }
         } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
             CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
@@ -112,7 +113,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
                 return IUpstreamClientTemplateFactory.wrapper(customInstance);
             }
             if (executor != null) {
-                return executor.getOrInitialize(bid + "|" + bgroup);
+                return executor.getOrInitialize(Utils.getCacheKey(bid, bgroup));
             }
         }
         return null;
@@ -132,7 +133,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
                 return remoteInstance;
             }
             if (executor != null) {
-                return executor.get(bid + "|" + bgroup);
+                return executor.get(Utils.getCacheKey(bid, bgroup));
             }
         } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
             CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
@@ -143,7 +144,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
                 return customInstance;
             }
             if (executor != null) {
-                return executor.get(bid + "|" + bgroup);
+                return executor.get(Utils.getCacheKey(bid, bgroup));
             }
         }
         return null;
@@ -275,7 +276,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         //删除的callback
         ResourceTableRemoveCallback removeCallback = () -> {
             if (executor != null) {
-                executor.remove(bid + "|" + bgroup);
+                executor.remove(Utils.getCacheKey(bid, bgroup));
             }
             template.shutdown();
             Set<ChannelInfo> channelMap = ChannelMonitor.getChannelMap(bid, bgroup);
