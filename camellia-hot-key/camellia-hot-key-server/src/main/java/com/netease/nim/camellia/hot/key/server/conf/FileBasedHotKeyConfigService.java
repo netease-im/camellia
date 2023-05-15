@@ -24,18 +24,9 @@ public class FileBasedHotKeyConfigService extends HotKeyConfigService {
 
     private static final Logger logger = LoggerFactory.getLogger(FileBasedHotKeyConfigService.class);
 
-    private static final String fileName = "camellia-hot-key-config.properties";
+    private String fileName = "camellia-hot-key-config.properties";
 
     private Map<String, HotKeyConfig> configMap = new HashMap<>();
-
-    public FileBasedHotKeyConfigService() {
-        boolean success = reload();
-        if (!success) {
-            throw new CamelliaHotKeyException("init fail");
-        }
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-hot-key-config-reload"))
-                .scheduleAtFixedRate(this::reload, 60, 60, TimeUnit.SECONDS);
-    }
 
     private boolean reload() {
         try {
@@ -101,5 +92,19 @@ public class FileBasedHotKeyConfigService extends HotKeyConfigService {
     @Override
     public HotKeyConfig get(String namespace) {
         return configMap.get(namespace);
+    }
+
+    @Override
+    public void init(HotKeyServerProperties properties) {
+        String fileName = properties.getConfig().get("hot.key.config.name");
+        if (fileName != null) {
+            this.fileName = fileName;
+        }
+        boolean success = reload();
+        if (!success) {
+            throw new CamelliaHotKeyException("init fail");
+        }
+        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-hot-key-config-reload"))
+                .scheduleAtFixedRate(this::reload, 60, 60, TimeUnit.SECONDS);
     }
 }

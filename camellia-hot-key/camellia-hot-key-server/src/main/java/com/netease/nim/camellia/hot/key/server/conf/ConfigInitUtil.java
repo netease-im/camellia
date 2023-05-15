@@ -8,12 +8,16 @@ import com.netease.nim.camellia.hot.key.server.bean.BeanInitUtils;
 public class ConfigInitUtil {
 
     public static HotKeyConfigService initHotKeyConfigService(HotKeyServerProperties properties) {
+        HotKeyConfigService service;
         String className = properties.getHotKeyConfigServiceClassName();
         if (className.equals(FileBasedHotKeyConfigService.class.getName())) {
-            return new FileBasedHotKeyConfigService();
+            service = new FileBasedHotKeyConfigService();
         } else if (className.equals(ApiBasedHotKeyConfigService.class.getName())) {
-            return new ApiBasedHotKeyConfigService(properties.getConfig());
+            service = new ApiBasedHotKeyConfigService();
+        } else {
+            service = (HotKeyConfigService) properties.getBeanFactory().getBean(BeanInitUtils.parseClass(properties.getHotKeyConfigServiceClassName()));
         }
-        return (HotKeyConfigService) properties.getBeanFactory().getBean(BeanInitUtils.parseClass(properties.getHotKeyConfigServiceClassName()));
+        service.init(properties);
+        return service;
     }
 }

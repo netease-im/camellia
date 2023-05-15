@@ -103,6 +103,13 @@ public abstract class HotKeyConfigService {
      */
     public abstract HotKeyConfig get(String namespace);
 
+    /**
+     * 初始化后会调用本方法，你可以重写本方法去获取到HotKeyServerProperties中的相关配置
+     * @param properties properties
+     */
+    public void init(HotKeyServerProperties properties) {
+    }
+
     //回调方法
     protected final void invokeUpdate(String namespace) {
         //xxxx
@@ -180,6 +187,8 @@ public class TopNStats implements Comparable<TopNStats> {
 |rule.checkMillis|long|是|检查周期，单位ms，需要是100ms的整数倍，否则会被四舍五入|
 |rule.checkThreshold|long|是|检查阈值|
 |rule.expireMills|long|否|检测到热key后的过期时间，只有配置了本字段，hot-key的信息才会广播给SDK，从而CamelliaHotKeyMonitorSdk才能获取的Result，CamelliaHotKeyCacheSdk本地缓存功能才生效，否则仅做服务器统计|
+
+备注：服务器会根据rules数组的顺序依次进行规则匹配，匹配到一个之后就返回
 
 #### 配置示例
 
