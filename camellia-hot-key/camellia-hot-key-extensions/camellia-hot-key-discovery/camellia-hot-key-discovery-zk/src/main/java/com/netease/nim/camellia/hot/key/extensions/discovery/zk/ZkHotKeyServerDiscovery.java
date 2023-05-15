@@ -13,7 +13,7 @@ import java.util.List;
  *
  * Created by caojiajun on 2020/8/10
  */
-public class ZkHotKeyServerDiscovery extends HotKeyServerDiscovery {
+public class ZkHotKeyServerDiscovery implements HotKeyServerDiscovery {
 
     private static final Logger logger = LoggerFactory.getLogger(ZkHotKeyServerDiscovery.class);
 

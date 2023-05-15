@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Created by caojiajun on 2023/5/10
  */
-public class LocalConfHotKeyServerDiscovery extends HotKeyServerDiscovery {
+public class LocalConfHotKeyServerDiscovery implements HotKeyServerDiscovery {
 
     private final String name;
     private final List<HotKeyServerAddr> addrs;
