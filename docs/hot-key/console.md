@@ -95,7 +95,7 @@
   "info":
   [
     {
-      "namespace": "sql_hot_key",
+      "namespace": "test",
       "statsTime": "2023-05-15#15:09:00"
     }
   ],
