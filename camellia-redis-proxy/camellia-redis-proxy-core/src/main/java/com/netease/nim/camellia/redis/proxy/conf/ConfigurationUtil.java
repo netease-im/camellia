@@ -64,24 +64,4 @@ public class ConfigurationUtil {
             return defaultValue;
         }
     }
-
-    public static <T> T get(Map<String, String> conf, String key, T defaultValue, Class<T> tClass) {
-        try {
-            String v = conf.get(key);
-            if (v == null) return defaultValue;
-            if (tClass == Integer.class) {
-                return (T) Integer.valueOf(v);
-            } else if (tClass == Boolean.class) {
-                return (T) Boolean.valueOf(v);
-            } else if (tClass == Long.class) {
-                return (T) Long.valueOf(v);
-            } else if (tClass == Double.class) {
-                return (T) Double.valueOf(v);
-            } else {
-                return (T) v;
-            }
-        } catch (Exception e) {
-            return defaultValue;
-        }
-    }
 }
