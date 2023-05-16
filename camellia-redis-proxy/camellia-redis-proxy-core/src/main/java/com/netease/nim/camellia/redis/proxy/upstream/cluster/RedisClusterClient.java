@@ -716,7 +716,7 @@ public class RedisClusterClient implements IUpstreamClient {
         }
 
         private static String[] extractParts(String from) {
-            int idx = from.lastIndexOf(":");
+            int idx = from.lastIndexOf(Utils.COLON);
             String host = idx != -1 ? from.substring(0, idx) : from;
             String port = idx != -1 ? from.substring(idx + 1) : "";
             return new String[]{host, port};

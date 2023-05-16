@@ -145,7 +145,7 @@ public class ProxyClusterModeProcessor {
                 if (node == null || currentNode == null) return null;
                 if (node.equals(currentNode)) return null;
                 channelInfo.setLastCommandMoveTime(TimeCache.currentMillis);//记录一下上一次move的时间
-                return new ErrorReply("MOVED " + slot + " " + node.getHost() + ":" + node.getPort());
+                return new ErrorReply("MOVED " + slot + " " + node.getHost() + Utils.COLON + node.getPort());
             }
             return null;
         } catch (Exception e) {
@@ -260,7 +260,7 @@ public class ProxyClusterModeProcessor {
         for (ProxyNode proxyNode : onlineNodes) {
             i++;
             builder.append(MD5Util.md5(proxyNode.toString())).append(" ");
-            builder.append(proxyNode.getHost()).append(":").append(proxyNode.getPort()).append("@").append(proxyNode.getPort() + 1000).append(" ");
+            builder.append(proxyNode.getHost()).append(Utils.COLON).append(proxyNode.getPort()).append("@").append(proxyNode.getPort() + 1000).append(" ");
             if (proxyNode.equals(currentNode)) {
                 builder.append("myself,master").append(" ");
             } else {

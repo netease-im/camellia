@@ -1,6 +1,5 @@
-
 server:
-  port: 6380
+  port: 6385
 spring:
   application:
     name: camellia-redis-proxy-server
@@ -29,8 +28,11 @@ camellia-redis-proxy:
     type: local #local、remote、custom
     local:
       type: simple #simple、complex
-      resource: redis://@127.0.0.1:6379 #target transpond redis address
-#      resource: redis-cluster://@127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382,127.0.0.1:6383,127.0.0.1:6384
+      #      resource: redis://@127.0.0.1:6379 #target transpond redis address
+      resource: redis-cluster://@192.168.88.130:6380,192.168.88.130:6381,192.168.88.130:6382
+#  config:
+#    "dynamic.conf.file.name": "abc.properties"
+#    "dynamic.conf.file.path": "G:\\devleop\\java_project\\camellia\\camellia-samples\\camellia-redis-proxy-samples\\src\\main\\resources\\abc2.proerties"
 #      resource: redis-sentinel://@127.0.0.1:26379/master1
 #      resource: redis-sentinel-slaves://@127.0.0.1:26379/master1
 #      type: complex

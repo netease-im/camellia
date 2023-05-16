@@ -103,7 +103,7 @@ public class TroubleTrickKeysProxyPlugin implements ProxyPlugin {
             String[] split = string.split(";");
             for (String str : split) {
                 try {
-                    String[] split1 = str.split(":");
+                    String[] split1 = str.split(Utils.COLON);
                     if (split1.length == 2) {
                         RedisCommand redisCommand = RedisCommand.getRedisCommandByName(split1[0].toLowerCase());
                         if (redisCommand == null) continue;
