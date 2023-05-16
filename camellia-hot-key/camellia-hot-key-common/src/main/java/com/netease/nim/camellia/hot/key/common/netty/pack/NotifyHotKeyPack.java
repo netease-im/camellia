@@ -4,7 +4,7 @@ import com.netease.nim.camellia.hot.key.common.model.HotKey;
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
 import com.netease.nim.camellia.hot.key.common.netty.codec.ArrayMable;
 import com.netease.nim.camellia.hot.key.common.netty.codec.Pack;
-import com.netease.nim.camellia.hot.key.common.netty.codec.Property;
+import com.netease.nim.camellia.hot.key.common.netty.codec.Props;
 import com.netease.nim.camellia.hot.key.common.netty.codec.Unpack;
 
 import java.util.ArrayList;
@@ -44,24 +44,24 @@ public class NotifyHotKeyPack extends HotKeyPackBody {
 
     @Override
     public void marshal(Pack pack) {
-        ArrayMable<Property> arrayMable = new ArrayMable<>(Property.class);
+        ArrayMable<Props> arrayMable = new ArrayMable<>(Props.class);
         for (HotKey hotKey : list) {
-            Property property = new Property();
-            property.put(Tag.namespace.value, hotKey.getNamespace());
-            property.put(Tag.key.value, hotKey.getKey());
-            property.putInteger(Tag.action.value, hotKey.getAction().getValue());
-            property.putLong(Tag.expireMillis.value, hotKey.getExpireMillis());
-            arrayMable.add(property);
+            Props props = new Props();
+            props.put(Tag.namespace.value, hotKey.getNamespace());
+            props.put(Tag.key.value, hotKey.getKey());
+            props.putInteger(Tag.action.value, hotKey.getAction().getValue());
+            props.putLong(Tag.expireMillis.value, hotKey.getExpireMillis());
+            arrayMable.add(props);
         }
         pack.putMarshallable(arrayMable);
     }
 
     @Override
     public void unmarshal(Unpack unpack) {
-        ArrayMable<Property> arrayMable = new ArrayMable<>(Property.class);
+        ArrayMable<Props> arrayMable = new ArrayMable<>(Props.class);
         unpack.popMarshallable(arrayMable);
         list = new ArrayList<>();
-        for (Property property : arrayMable.list) {
+        for (Props property : arrayMable.list) {
             HotKey hotKey = new HotKey();
             hotKey.setNamespace(property.get(Tag.namespace.value));
             hotKey.setKey(property.get(Tag.key.value));

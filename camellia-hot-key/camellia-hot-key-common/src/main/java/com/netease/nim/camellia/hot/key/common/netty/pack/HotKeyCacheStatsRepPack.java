@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.hot.key.common.netty.pack;
 
 import com.netease.nim.camellia.hot.key.common.netty.codec.Pack;
-import com.netease.nim.camellia.hot.key.common.netty.codec.Property;
+import com.netease.nim.camellia.hot.key.common.netty.codec.Props;
 import com.netease.nim.camellia.hot.key.common.netty.codec.Unpack;
 
 /**
@@ -11,7 +11,7 @@ public class HotKeyCacheStatsRepPack extends HotKeyPackBody {
 
     public static final HotKeyCacheStatsRepPack INSTANCE = new HotKeyCacheStatsRepPack();
 
-    private static final Property property = new Property();//预留一个参数
+    private static final Props property = new Props();//预留一个参数
 
     @Override
     public void marshal(Pack pack) {
@@ -20,6 +20,6 @@ public class HotKeyCacheStatsRepPack extends HotKeyPackBody {
 
     @Override
     public void unmarshal(Unpack unpack) {
-        unpack.popMarshallable(new Property());
+        unpack.popMarshallable(new Props());
     }
 }

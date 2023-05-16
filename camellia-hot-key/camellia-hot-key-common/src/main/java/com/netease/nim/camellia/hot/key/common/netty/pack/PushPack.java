@@ -4,7 +4,7 @@ import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
 import com.netease.nim.camellia.hot.key.common.netty.codec.ArrayMable;
 import com.netease.nim.camellia.hot.key.common.netty.codec.Pack;
-import com.netease.nim.camellia.hot.key.common.netty.codec.Property;
+import com.netease.nim.camellia.hot.key.common.netty.codec.Props;
 import com.netease.nim.camellia.hot.key.common.netty.codec.Unpack;
 
 import java.util.ArrayList;
@@ -44,29 +44,29 @@ public class PushPack extends HotKeyPackBody {
 
     @Override
     public void marshal(Pack pack) {
-        ArrayMable<Property> arrayMable = new ArrayMable<>(Property.class);
+        ArrayMable<Props> arrayMable = new ArrayMable<>(Props.class);
         for (KeyCounter counter : list) {
-            Property property = new Property();
-            property.put(Tag.namespace.value, counter.getNamespace());
-            property.put(Tag.key.value, counter.getKey());
-            property.putInteger(Tag.action.value, counter.getAction().getValue());
-            property.putLong(Tag.count.value, counter.getCount());
-            arrayMable.add(property);
+            Props props = new Props();
+            props.put(Tag.namespace.value, counter.getNamespace());
+            props.put(Tag.key.value, counter.getKey());
+            props.putInteger(Tag.action.value, counter.getAction().getValue());
+            props.putLong(Tag.count.value, counter.getCount());
+            arrayMable.add(props);
         }
         pack.putMarshallable(arrayMable);
     }
 
     @Override
     public void unmarshal(Unpack unpack) {
-        ArrayMable<Property> arrayMable = new ArrayMable<>(Property.class);
+        ArrayMable<Props> arrayMable = new ArrayMable<>(Props.class);
         unpack.popMarshallable(arrayMable);
         list = new ArrayList<>();
-        for (Property property : arrayMable.list) {
+        for (Props props : arrayMable.list) {
             KeyCounter counter = new KeyCounter();
-            counter.setNamespace(property.get(Tag.namespace.value));
-            counter.setKey(property.get(Tag.key.value));
-            counter.setAction(KeyAction.getByValue(property.getInteger(Tag.action.value)));
-            counter.setCount(property.getLong(Tag.count.value));
+            counter.setNamespace(props.get(Tag.namespace.value));
+            counter.setKey(props.get(Tag.key.value));
+            counter.setAction(KeyAction.getByValue(props.getInteger(Tag.action.value)));
+            counter.setCount(props.getLong(Tag.count.value));
             list.add(counter);
         }
     }

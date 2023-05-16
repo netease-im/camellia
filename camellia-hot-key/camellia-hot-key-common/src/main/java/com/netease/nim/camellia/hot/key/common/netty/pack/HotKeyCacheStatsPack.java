@@ -2,7 +2,7 @@ package com.netease.nim.camellia.hot.key.common.netty.pack;
 
 import com.netease.nim.camellia.hot.key.common.netty.codec.ArrayMable;
 import com.netease.nim.camellia.hot.key.common.netty.codec.Pack;
-import com.netease.nim.camellia.hot.key.common.netty.codec.Property;
+import com.netease.nim.camellia.hot.key.common.netty.codec.Props;
 import com.netease.nim.camellia.hot.key.common.netty.codec.Unpack;
 
 import java.util.ArrayList;
@@ -41,27 +41,27 @@ public class HotKeyCacheStatsPack extends HotKeyPackBody {
 
     @Override
     public void marshal(Pack pack) {
-        ArrayMable<Property> arrayMable = new ArrayMable<>(Property.class);
+        ArrayMable<Props> arrayMable = new ArrayMable<>(Props.class);
         for (HotKeyCacheStats stats : statsList) {
-            Property property = new Property();
-            property.put(Tag.namespace.value, stats.getNamespace());
-            property.put(Tag.key.value, stats.getKey());
-            property.putLong(Tag.hitCount.value, stats.getHitCount());
-            arrayMable.add(property);
+            Props props = new Props();
+            props.put(Tag.namespace.value, stats.getNamespace());
+            props.put(Tag.key.value, stats.getKey());
+            props.putLong(Tag.hitCount.value, stats.getHitCount());
+            arrayMable.add(props);
         }
         pack.putMarshallable(arrayMable);
     }
 
     @Override
     public void unmarshal(Unpack unpack) {
-        ArrayMable<Property> arrayMable = new ArrayMable<>(Property.class);
+        ArrayMable<Props> arrayMable = new ArrayMable<>(Props.class);
         unpack.popMarshallable(arrayMable);
         statsList = new ArrayList<>();
-        for (Property property : arrayMable.list) {
+        for (Props props : arrayMable.list) {
             HotKeyCacheStats stats = new HotKeyCacheStats();
-            stats.setNamespace(property.get(Tag.namespace.value));
-            stats.setKey(property.get(Tag.key.value));
-            stats.setHitCount(property.getLong(Tag.hitCount.value));
+            stats.setNamespace(props.get(Tag.namespace.value));
+            stats.setKey(props.get(Tag.key.value));
+            stats.setHitCount(props.getLong(Tag.hitCount.value));
             statsList.add(stats);
         }
     }
