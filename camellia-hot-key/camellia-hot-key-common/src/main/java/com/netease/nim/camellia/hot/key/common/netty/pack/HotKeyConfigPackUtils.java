@@ -5,7 +5,7 @@ import com.netease.nim.camellia.hot.key.common.model.Rule;
 import com.netease.nim.camellia.hot.key.common.model.RuleType;
 import com.netease.nim.camellia.hot.key.common.netty.codec.ArrayMable;
 import com.netease.nim.camellia.hot.key.common.netty.codec.Pack;
-import com.netease.nim.camellia.hot.key.common.netty.codec.Property;
+import com.netease.nim.camellia.hot.key.common.netty.codec.Props;
 import com.netease.nim.camellia.hot.key.common.netty.codec.Unpack;
 
 import java.util.ArrayList;
@@ -44,55 +44,55 @@ public class HotKeyConfigPackUtils {
     }
 
     public static void marshal(HotKeyConfig config, Pack pack) {
-        Property namespaceProps = new Property();
+        Props namespaceProps = new Props();
         namespaceProps.put(NamespaceTag.namespace.value, config.getNamespace());
-        ArrayMable<Property> rulesArray = new ArrayMable<>(Property.class);
+        ArrayMable<Props> rulesArray = new ArrayMable<>(Props.class);
         List<Rule> rules = config.getRules();
         for (Rule rule : rules) {
-            Property property = new Property();
-            property.put(RuleTag.name.value, rule.getName());
-            property.putInteger(RuleTag.type.value, rule.getType().getValue());
+            Props props = new Props();
+            props.put(RuleTag.name.value, rule.getName());
+            props.putInteger(RuleTag.type.value, rule.getType().getValue());
             if (rule.getKeyConfig() != null) {
-                property.put(RuleTag.keyConfig.value, rule.getKeyConfig());
+                props.put(RuleTag.keyConfig.value, rule.getKeyConfig());
             }
             if (rule.getCheckMillis() != null) {
-                property.putLong(RuleTag.checkMillis.value, rule.getCheckMillis());
+                props.putLong(RuleTag.checkMillis.value, rule.getCheckMillis());
             }
             if (rule.getCheckThreshold() != null) {
-                property.putLong(RuleTag.checkThreshold.value, rule.getCheckMillis());
+                props.putLong(RuleTag.checkThreshold.value, rule.getCheckMillis());
             }
             if (rule.getExpireMillis() != null) {
-                property.putLong(RuleTag.expireMillis.value, rule.getExpireMillis());
+                props.putLong(RuleTag.expireMillis.value, rule.getExpireMillis());
             }
-            rulesArray.add(property);
+            rulesArray.add(props);
         }
         pack.putMarshallable(namespaceProps);
         pack.putMarshallable(rulesArray);
     }
 
     public static HotKeyConfig unmarshal(Unpack unpack) {
-        Property namespaceProps = new Property();
-        ArrayMable<Property> rulesArray = new ArrayMable<>(Property.class);
+        Props namespaceProps = new Props();
+        ArrayMable<Props> rulesArray = new ArrayMable<>(Props.class);
         unpack.popMarshallable(namespaceProps);
         unpack.popMarshallable(rulesArray);
         HotKeyConfig config = new HotKeyConfig();
         config.setNamespace(namespaceProps.get(NamespaceTag.namespace.value));
         List<Rule> rules = new ArrayList<>();
-        for (Property property : rulesArray.list) {
+        for (Props props : rulesArray.list) {
             Rule rule = new Rule();
-            rule.setName(property.get(RuleTag.name.value));
-            rule.setType(RuleType.getByValue(property.getInteger(RuleTag.type.value)));
-            if (property.containsKey(RuleTag.keyConfig.value)) {
-                rule.setKeyConfig(property.get(RuleTag.keyConfig.value));
+            rule.setName(props.get(RuleTag.name.value));
+            rule.setType(RuleType.getByValue(props.getInteger(RuleTag.type.value)));
+            if (props.containsKey(RuleTag.keyConfig.value)) {
+                rule.setKeyConfig(props.get(RuleTag.keyConfig.value));
             }
-            if (property.containsKey(RuleTag.checkMillis.value)) {
-                rule.setCheckMillis(property.getLong(RuleTag.checkMillis.value));
+            if (props.containsKey(RuleTag.checkMillis.value)) {
+                rule.setCheckMillis(props.getLong(RuleTag.checkMillis.value));
             }
-            if (property.containsKey(RuleTag.checkThreshold.value)) {
-                rule.setCheckThreshold(property.getLong(RuleTag.checkThreshold.value));
+            if (props.containsKey(RuleTag.checkThreshold.value)) {
+                rule.setCheckThreshold(props.getLong(RuleTag.checkThreshold.value));
             }
-            if (property.containsKey(RuleTag.expireMillis.value)) {
-                rule.setExpireMillis(property.getLong(RuleTag.expireMillis.value));
+            if (props.containsKey(RuleTag.expireMillis.value)) {
+                rule.setExpireMillis(props.getLong(RuleTag.expireMillis.value));
             }
             rules.add(rule);
         }

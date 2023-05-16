@@ -54,6 +54,7 @@ camellia-hot-key-server:
   hot-key-cache-capacity: 10000 #每个namespace最多的热key数量，默认1w
   hot-key-callback-interval-seconds: 10 #同一个热key回调给业务自行处理的最小间隔，默认10s
   hot-key-callback-class-name: com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCallback #探测到热key后的自定义回调，默认是打日志
+  hot-key-cache-stats-callback-class-name: com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCacheStatsCallback #热key缓存功能的统计数据（命中情况），默认是打印日志
   ##topn探测部分，topn只会统计符合热key探测规则的key，topn统计的窗口固定为1s
   topn-count: 100 #每个namespace下，topn的key的数量，默认100
   topn-cache-counter-capacity: 100000 #topn统计中的LRU-key计数器(每个namespace下)
@@ -174,6 +175,24 @@ public class TopNStats implements Comparable<TopNStats> {
     private final KeyAction action;
     private final long total;
     private final long maxQps;
+}
+```
+
+#### HotKeyCacheStatsCallback
+* 使用CamelliaHotKeyCacheSdk时缓存命中的统计数据，默认是LoggingHotKeyCacheStatsCallback，仅打印日志
+* 你也可以自己实现，从而对接到你们的监控系统，做数据的留存
+
+```java
+public interface HotKeyCacheStatsCallback {
+
+    /**
+     * callback the hot key cache stats
+     * @param identityInfo IdentityInfo
+     * @param hotKeyCacheStats HotKeyCacheInfo
+     * @param checkMillis checkMillis
+     * @param checkThreshold checkThreshold
+     */
+    void callback(IdentityInfo identityInfo, HotKeyCacheInfo hotKeyCacheStats, long checkMillis, long checkThreshold);
 }
 ```
 

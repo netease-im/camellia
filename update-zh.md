@@ -1,5 +1,17 @@
 [ENGLISH](update-en.md)
 
+
+# 1.2.8（2023/05/xx）
+### 新增
+* 新增camellia-hot-key模块，具体见：[hot-key](/docs/hot-key/hot-key.md)
+
+### 更新
+* 无
+
+### fix
+* camellia-redis-proxy的`/prometheus`接口的换行符，从`%n`改成`\n`，从而适配windows环境
+
+
 # 1.2.7（2023/05/04）
 ### 新增
 * 无

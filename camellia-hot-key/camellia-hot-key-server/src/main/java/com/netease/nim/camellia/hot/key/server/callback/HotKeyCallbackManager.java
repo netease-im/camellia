@@ -2,6 +2,7 @@ package com.netease.nim.camellia.hot.key.server.callback;
 
 import com.netease.nim.camellia.hot.key.common.model.HotKey;
 import com.netease.nim.camellia.hot.key.common.model.Rule;
+import com.netease.nim.camellia.hot.key.common.netty.pack.HotKeyCacheStats;
 import com.netease.nim.camellia.hot.key.server.calculate.TopNStatsResult;
 import com.netease.nim.camellia.hot.key.server.event.ValueGetter;
 import com.netease.nim.camellia.hot.key.server.monitor.HotKeyCollector;
@@ -13,6 +14,7 @@ import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -28,12 +30,14 @@ public class HotKeyCallbackManager {
     private final ThreadPoolExecutor executor;
     private final HotKeyCallback hotKeyCallback;
     private final HotKeyTopNCallback topNCallback;
+    private final HotKeyCacheStatsCallback hotKeyCacheStatsCallback;
     private final NamespaceCamelliaLocalCache callbackTimeCache;
 
     public HotKeyCallbackManager(HotKeyServerProperties properties) {
         this.properties = properties;
         this.hotKeyCallback = (HotKeyCallback) properties.getBeanFactory().getBean(BeanInitUtils.parseClass(properties.getHotKeyCallbackClassName()));
         this.topNCallback = (HotKeyTopNCallback) properties.getBeanFactory().getBean(BeanInitUtils.parseClass(properties.getTopNCallbackClassName()));
+        this.hotKeyCacheStatsCallback = (HotKeyCacheStatsCallback) properties.getBeanFactory().getBean(BeanInitUtils.parseClass(properties.getHotKeyCacheStatsCallbackClassName()));
         this.callbackTimeCache = new NamespaceCamelliaLocalCache(properties.getMaxNamespace(), properties.getHotKeyCacheCounterCapacity());
         this.executor = new ThreadPoolExecutor(properties.getCallbackExecutorSize(), properties.getCallbackExecutorSize(), 0, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(10000), new CamelliaThreadFactory("hot-key-callback"), new ThreadPoolExecutor.DiscardPolicy());
@@ -86,6 +90,26 @@ public class HotKeyCallbackManager {
             }
         } catch (Exception e) {
             logger.error("submit topN callback error", e);
+        }
+    }
+
+    /**
+     * 缓存命中情况的统计数据回调
+     * @param statsList 统计数据
+     */
+    public void cacheHitStats(List<HotKeyCacheStats> statsList) {
+        try {
+            if (hotKeyCacheStatsCallback != null) {
+                executor.submit(() -> {
+                    try {
+                        hotKeyCacheStatsCallback.newStats(statsList);
+                    } catch (Exception e) {
+                        logger.error("cacheHitStats callback error", e);
+                    }
+                });
+            }
+        } catch (Exception e) {
+            logger.error("submit cacheHitStats callback error");
         }
     }
 }

@@ -17,14 +17,14 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by caojiajun on 2023/5/10
  */
-public class PerformanceTest {
+public class MonitorPerformanceTest {
 
     public static void main(String[] args) {
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
         List<HotKeyServerAddr> addrList = new ArrayList<>();
-//        addrList.add(new HotKeyServerAddr("127.0.0.1", 7070));
-        addrList.add(new HotKeyServerAddr("10.156.151.251", 7070));
-        addrList.add(new HotKeyServerAddr("10.189.248.179", 7070));
+        addrList.add(new HotKeyServerAddr("127.0.0.1", 7070));
+//        addrList.add(new HotKeyServerAddr("10.156.148.248", 7070));
+//        addrList.add(new HotKeyServerAddr("10.189.46.125", 7070));
         LocalConfHotKeyServerDiscovery discovery = new LocalConfHotKeyServerDiscovery("local", addrList);
         config.setDiscovery(discovery);
 
@@ -32,19 +32,18 @@ public class PerformanceTest {
 
         CamelliaHotKeyMonitorSdk monitorSdk = new CamelliaHotKeyMonitorSdk(sdk, new CamelliaHotKeyMonitorSdkConfig());
 
-        String namespace1 = "sql_hot_key";
-//        namespace1 = "namespace1";
+        String namespace1 = "namespace1";
 
         monitorSdk.preheat(namespace1);
 
         String key0 = "hahahaha";
-        Result result0 = monitorSdk.push(namespace1, key0);
+        Result result0 = monitorSdk.push(namespace1, key0, 1);
         System.out.println("key=" + key0 + ",hot=" + result0.isHot());
 
         new Thread(() -> {
             while (true) {
                 String key = UUID.randomUUID().toString();
-                Result result = monitorSdk.push(namespace1, key);
+                Result result = monitorSdk.push(namespace1, key, 1);
 //                System.out.println("key=" + key + ",hot=" + result.isHot());
                 try {
                     TimeUnit.MILLISECONDS.sleep(1);
@@ -56,7 +55,7 @@ public class PerformanceTest {
         new Thread(() -> {
             while (true) {
                 String key = "abc";
-                Result result = monitorSdk.push(namespace1, key);
+                Result result = monitorSdk.push(namespace1, key, 1);
 //                System.out.println("key=" + key + ",hot=" + result.isHot());
                 try {
                     TimeUnit.MILLISECONDS.sleep(1);
@@ -68,7 +67,7 @@ public class PerformanceTest {
         new Thread(() -> {
             while (true) {
                 String key = "def";
-                Result result = monitorSdk.push(namespace1, key);
+                Result result = monitorSdk.push(namespace1, key, 1);
 //                System.out.println("key=" + key + ",hot=" + result.isHot());
                 try {
                     TimeUnit.MILLISECONDS.sleep(2);

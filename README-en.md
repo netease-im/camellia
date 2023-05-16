@@ -32,6 +32,14 @@ delay queue base on redis:
 * provide monitor data    
 [QUICK START](/docs/delay-queue/delay-queue.md)
 
+### camellia-hot-key
+hot key detect and cache:  
+* support hot key detect, hot key cache, hot key topN stats
+* support custom hot-key-config、hot-key-callbck、hot-key-topN-callback
+* support custom registry, such as eureka、zk and so on
+* provide monitor data     
+[QUICK START](/docs/hot-key/hot-key.md)
+
 ### camellia-redis(enhanced-redis-client)
 * base on camellia-core and jedis(2.9.3)，main class is CamelliaRedisTemplate, can invoke redis-standalone/redis-sentinel/redis-cluster in identical way，support pipeline
 * support client sharding/read-write-separate/double-write

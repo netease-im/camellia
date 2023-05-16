@@ -5,17 +5,17 @@ import com.netease.nim.camellia.hot.key.common.netty.codec.Props;
 import com.netease.nim.camellia.hot.key.common.netty.codec.Unpack;
 
 /**
- * Created by caojiajun on 2023/5/8
+ * Created by caojiajun on 2023/5/16
  */
-public class NotifyHotKeyRepPack extends HotKeyPackBody {
+public class HotKeyCacheStatsRepPack extends HotKeyPackBody {
 
-    public static final NotifyHotKeyRepPack INSTANCE = new NotifyHotKeyRepPack();
+    public static final HotKeyCacheStatsRepPack INSTANCE = new HotKeyCacheStatsRepPack();
 
-    private static final Props props = new Props();//预留一个参数
+    private static final Props property = new Props();//预留一个参数
 
     @Override
     public void marshal(Pack pack) {
-        pack.putMarshallable(props);
+        pack.putMarshallable(property);
     }
 
     @Override

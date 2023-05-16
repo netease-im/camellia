@@ -40,13 +40,13 @@ public class CamelliaHotKeyMonitorSdk extends CamelliaHotKeyAbstractSdk implemen
     }
 
     @Override
-    public Result push(String namespace, String key) {
+    public Result push(String namespace, String key, long count) {
         try {
             if (rulePass(namespace, key) != null) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("push {} {}", namespace, key);
                 }
-                sdk.push(namespace, key, KeyAction.QUERY);
+                sdk.push(namespace, key, KeyAction.QUERY, count);
                 addHotKeyListener(namespace);
                 Long expireMillis = hotKeyCacheKeyMap.get(namespace, key, Long.class);
                 if (expireMillis == null) {

@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.hot.key.common.netty;
 
-
 import com.netease.nim.camellia.hot.key.common.netty.pack.*;
 import io.netty.channel.Channel;
 
@@ -29,6 +28,10 @@ public interface HotKeyPackBizHandler {
 
     default CompletableFuture<GetConfigRepPack> onGetConfigPack(Channel channel, GetConfigPack pack) {
         return wrapper(null);
+    }
+
+    default CompletableFuture<HotKeyCacheStatsRepPack> onHotKeyCacheStatsPack(Channel channel, HotKeyCacheStatsPack pack) {
+        return wrapper(HotKeyCacheStatsRepPack.INSTANCE);
     }
 
     default <T> CompletableFuture<T> wrapper(T t) {

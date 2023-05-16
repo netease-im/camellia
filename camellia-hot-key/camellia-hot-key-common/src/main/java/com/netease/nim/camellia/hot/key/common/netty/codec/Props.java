@@ -8,7 +8,7 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class Property implements Marshallable {
+public class Props implements Marshallable {
 
     public Map<Integer, Value> props = new HashMap<>();
 
@@ -30,7 +30,7 @@ public class Property implements Marshallable {
         }
     }
 
-    public boolean equals(Property prop) {
+    public boolean equals(Props prop) {
         return this.props.equals(prop.props);
     }
 
@@ -141,8 +141,8 @@ public class Property implements Marshallable {
         props.clear();
     }
 
-    public Property duplicate() {
-        Property ret = new Property();
+    public Props duplicate() {
+        Props ret = new Props();
 
         for (Map.Entry<Integer, Value> entry: props.entrySet()) {
             ret.putValue(entry.getKey(), entry.getValue());

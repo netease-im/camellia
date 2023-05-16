@@ -3,6 +3,7 @@ package com.netease.nim.camellia.hot.key.server.conf;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.server.bean.BeanFactory;
 import com.netease.nim.camellia.hot.key.server.bean.DefaultBeanFactory;
+import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCacheStatsCallback;
 import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCallback;
 import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyTopNCallback;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
@@ -24,6 +25,7 @@ public class HotKeyServerProperties {
 
     private int bizWorkThread = HotKeyConstants.Server.bizWorkThread;
     private int bizQueueCapacity = HotKeyConstants.Server.bizWorkQueueCapacity;
+    private WorkQueueType workQueueType = WorkQueueType.LinkedBlockingQueue;
 
     private boolean tcpNoDelay = HotKeyConstants.Server.tcpNoDelay;
     private int soBacklog = HotKeyConstants.Server.soBacklog;
@@ -42,15 +44,18 @@ public class HotKeyServerProperties {
     private int hotKeyCacheCounterCapacity = HotKeyConstants.Server.hotKeyCacheCounterCapacity;
     private int hotKeyCacheCapacity = HotKeyConstants.Server.hotKeyCacheCapacity;
     private int hotKeyCallbackIntervalSeconds = HotKeyConstants.Server.hotKeyCallbackIntervalSeconds;
-    private String hotKeyCallbackClassName = LoggingHotKeyCallback.class.getName();
 
     private int topnCount = HotKeyConstants.Server.topnCount;
     private int topnCacheCounterCapacity = HotKeyConstants.Server.topnCacheCounterCapacity;
     private int topnCollectSeconds = HotKeyConstants.Server.topnCollectSeconds;
     private int topnTinyCollectSeconds = HotKeyConstants.Server.topnTinyCollectSeconds;
-    private String topNCallbackClassName = LoggingHotKeyTopNCallback.class.getName();
+
     private String topnRedisKeyPrefix = HotKeyConstants.Server.topnRedisKeyPrefix;
     private int topnRedisExpireSeconds = HotKeyConstants.Server.topnRedisExpireSeconds;
+
+    private String hotKeyCallbackClassName = LoggingHotKeyCallback.class.getName();
+    private String topNCallbackClassName = LoggingHotKeyTopNCallback.class.getName();
+    private String hotKeyCacheStatsCallbackClassName = LoggingHotKeyCacheStatsCallback.class.getName();
 
     private int monitorIntervalSeconds = HotKeyConstants.Server.monitorIntervalSeconds;
     private int monitorHotKeyMaxCount = HotKeyConstants.Server.monitorHotKeyMaxCount;
@@ -109,6 +114,14 @@ public class HotKeyServerProperties {
 
     public void setBizQueueCapacity(int bizQueueCapacity) {
         this.bizQueueCapacity = bizQueueCapacity;
+    }
+
+    public WorkQueueType getWorkQueueType() {
+        return workQueueType;
+    }
+
+    public void setWorkQueueType(WorkQueueType workQueueType) {
+        this.workQueueType = workQueueType;
     }
 
     public boolean isTcpNoDelay() {
@@ -317,5 +330,13 @@ public class HotKeyServerProperties {
 
     public void setConfig(Map<String, String> config) {
         this.config = config;
+    }
+
+    public String getHotKeyCacheStatsCallbackClassName() {
+        return hotKeyCacheStatsCallbackClassName;
+    }
+
+    public void setHotKeyCacheStatsCallbackClassName(String hotKeyCacheStatsCallbackClassName) {
+        this.hotKeyCacheStatsCallbackClassName = hotKeyCacheStatsCallbackClassName;
     }
 }

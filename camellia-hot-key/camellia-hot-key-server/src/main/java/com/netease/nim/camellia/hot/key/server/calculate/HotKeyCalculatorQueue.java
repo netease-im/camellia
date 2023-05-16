@@ -1,11 +1,18 @@
 package com.netease.nim.camellia.hot.key.server.calculate;
 
 import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
+import com.netease.nim.camellia.hot.key.server.conf.WorkQueueType;
+import org.jctools.queues.MpscArrayQueue;
+import org.jctools.queues.MpscLinkedQueue;
+import org.jctools.queues.atomic.MpscAtomicArrayQueue;
+import org.jctools.queues.atomic.MpscLinkedAtomicQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -21,9 +28,29 @@ public class HotKeyCalculatorQueue {
     private final Queue<List<KeyCounter>> queue;
     private final long id;
 
-    public HotKeyCalculatorQueue(int bizWorkQueueCapacity) {
-        this.queue = new LinkedBlockingQueue<>(bizWorkQueueCapacity);
+    public HotKeyCalculatorQueue(WorkQueueType workQueueType, int bizWorkQueueCapacity) {
+        this.queue = initQueue(workQueueType, bizWorkQueueCapacity);
         this.id = idGen.getAndIncrement();
+    }
+
+    private Queue<List<KeyCounter>> initQueue(WorkQueueType workQueueType, int bizWorkQueueCapacity) {
+        if (workQueueType == WorkQueueType.LinkedBlockingQueue) {
+            return new LinkedBlockingQueue<>(bizWorkQueueCapacity);
+        } else if (workQueueType == WorkQueueType.ArrayBlockingQueue) {
+            return new ArrayBlockingQueue<>(bizWorkQueueCapacity);
+        } else if (workQueueType == WorkQueueType.ConcurrentLinkedQueue) {
+            return new ConcurrentLinkedQueue<>();
+        } else if (workQueueType == WorkQueueType.MpscArrayQueue) {
+            return new MpscArrayQueue<>(bizWorkQueueCapacity);
+        } else if (workQueueType == WorkQueueType.MpscLinkedQueue) {
+            return new MpscLinkedQueue<>();
+        } else if (workQueueType == WorkQueueType.MpscAtomicArrayQueue) {
+            return new MpscAtomicArrayQueue<>(bizWorkQueueCapacity);
+        } else if (workQueueType == WorkQueueType.MpscLinkedAtomicQueue) {
+            return new MpscLinkedAtomicQueue<>();
+        } else {
+            return new LinkedBlockingQueue<>(bizWorkQueueCapacity);
+        }
     }
 
     public long getId() {

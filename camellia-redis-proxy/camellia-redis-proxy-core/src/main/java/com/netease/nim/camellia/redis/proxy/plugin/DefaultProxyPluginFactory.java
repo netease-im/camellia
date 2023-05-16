@@ -128,7 +128,7 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
     /**
      * 根据类的全限定名或者别名获取插件。
      *
-     * @param classOrAlias 类的全限定名或者内建的插件的别名,内建插件别名必须是{@link BuildInProxyPluginEnum#alias} 不然会报错
+     * @param classOrAlias 类的全限定名或者内建的插件的别名,内建插件别名必须是{@link BuildInProxyPluginEnum} 不然会报错
      * @return 插件 {@link ProxyPlugin}对象
      */
     @Override
@@ -150,7 +150,7 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
     /**
      * 将callback方法注册进去
      *
-     * @param callback
+     * @param callback callback
      */
     @Override
     public synchronized void registerPluginUpdate(Runnable callback) {

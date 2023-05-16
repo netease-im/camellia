@@ -2,8 +2,6 @@ package com.netease.nim.camellia.hot.key.server.springboot.conf;
 
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 
-import javax.naming.ldap.PagedResultsControl;
-
 
 /**
  * Created by caojiajun on 2023/5/10
@@ -21,6 +19,7 @@ public class ConfUtils {
             properties.setBizWorkThread(serverProperties.getBizWorkThread());
         }
         properties.setBizQueueCapacity(serverProperties.getBizQueueCapacity());
+        properties.setWorkQueueType(serverProperties.getWorkQueueType());
 
         properties.setMaxNamespace(serverProperties.getMaxNamespace());
         properties.setHotKeyCacheCounterCapacity(serverProperties.getHotKeyCacheCounterCapacity());
@@ -37,6 +36,8 @@ public class ConfUtils {
         properties.setTopNCallbackClassName(serverProperties.getTopnCallbackClassName());
         properties.setHotKeyCallbackClassName(serverProperties.getHotKeyCallbackClassName());
         properties.setHotKeyConfigServiceClassName(serverProperties.getHotKeyConfigServiceClassName());
+
+        properties.setHotKeyCacheStatsCallbackClassName(serverProperties.getHotKeyCacheStatsCallbackClassName());
 
         properties.setTcpNoDelay(serverProperties.getNetty().isTcpNoDelay());
         properties.setSoKeepalive(serverProperties.getNetty().isSoKeepalive());

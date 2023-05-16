@@ -37,7 +37,7 @@ public class StatsPrometheusConverter {
 
             sb.append("# HELP redis_proxy_total Redis Proxy Total\n");
             sb.append("# TYPE redis_proxy_total counter\n");
-            String totalFormat = "redis_proxy_total{type=\"%s\",} %d%n";
+            String totalFormat = "redis_proxy_total{type=\"%s\",} %d\n";
             sb.append(String.format(totalFormat, "all", stats.getCount()));
             sb.append(String.format(totalFormat, "read", stats.getTotalReadCount()));
             sb.append(String.format(totalFormat, "write", stats.getTotalWriteCount()));
@@ -49,7 +49,7 @@ public class StatsPrometheusConverter {
             sb.append("# HELP redis_proxy_total_command Redis Proxy Total Command\n");
             sb.append("# TYPE redis_proxy_total_command counter\n");
             for (TotalStats totalStats : stats.getTotalStatsList()) {
-                sb.append(String.format("redis_proxy_total_command{command=\"%s\",} %d%n", totalStats.getCommand(), totalStats.getCount()));
+                sb.append(String.format("redis_proxy_total_command{command=\"%s\",} %d\n", totalStats.getCommand(), totalStats.getCount()));
             }
 
             // ====bid-bgroup====
@@ -58,7 +58,7 @@ public class StatsPrometheusConverter {
             for (BidBgroupStats bgroupStats : stats.getBidBgroupStatsList()) {
                 String bid = bgroupStats.getBid() == null ? DEFAULT : String.valueOf(bgroupStats.getBid());
                 String bgroup = bgroupStats.getBgroup() == null ? DEFAULT : bgroupStats.getBgroup();
-                sb.append(String.format("redis_proxy_bid_bgroup{bid=\"%s\",bgroup=\"%s\",} %d%n",
+                sb.append(String.format("redis_proxy_bid_bgroup{bid=\"%s\",bgroup=\"%s\",} %d\n",
                         bid,
                         bgroup,
                         bgroupStats.getCount()));
@@ -70,7 +70,7 @@ public class StatsPrometheusConverter {
             for (DetailStats detailStats : stats.getDetailStatsList()) {
                 String bid = detailStats.getBid() == null ? DEFAULT : String.valueOf(detailStats.getBid());
                 String bgroup = detailStats.getBgroup() == null ? DEFAULT : detailStats.getBgroup();
-                sb.append(String.format("redis_proxy_detail{bid=\"%s\",bgroup=\"%s\",command=\"%s\",} %d%n",
+                sb.append(String.format("redis_proxy_detail{bid=\"%s\",bgroup=\"%s\",command=\"%s\",} %d\n",
                         bid,
                         bgroup,
                         detailStats.getCommand(),
@@ -81,22 +81,22 @@ public class StatsPrometheusConverter {
             sb.append("# HELP redis_proxy_fail Redis Proxy Fail\n");
             sb.append("# TYPE redis_proxy_fail counter\n");
             for (Map.Entry<String, Long> entry : stats.getFailMap().entrySet()) {
-                sb.append(String.format("redis_proxy_fail{reason=\"%s\",} %d%n", entry.getKey(), entry.getValue()));
+                sb.append(String.format("redis_proxy_fail{reason=\"%s\",} %d\n", entry.getKey(), entry.getValue()));
             }
 
             // ====spend.stats====
             sb.append("# HELP redis_proxy_spend_stats Redis Proxy Spend Stats\n");
             sb.append("# TYPE redis_proxy_spend_stats summary\n");
             for (SpendStats spendStats : stats.getSpendStatsList()) {
-                sb.append(String.format("redis_proxy_spend_stats_sum{command=\"%s\",} %f%n", spendStats.getCommand(), spendStats.getAvgSpendMs() * spendStats.getCount()));
-                sb.append(String.format("redis_proxy_spend_stats_count{command=\"%s\",} %d%n", spendStats.getCommand(), spendStats.getCount()));
-                sb.append(String.format("redis_proxy_spend_stats{command=\"%s\",quantile=\"0.5\"} %f%n", spendStats.getCommand(), spendStats.getSpendMsP50()));
-                sb.append(String.format("redis_proxy_spend_stats{command=\"%s\",quantile=\"0.75\"} %f%n", spendStats.getCommand(), spendStats.getSpendMsP75()));
-                sb.append(String.format("redis_proxy_spend_stats{command=\"%s\",quantile=\"0.90\"} %f%n", spendStats.getCommand(), spendStats.getSpendMsP90()));
-                sb.append(String.format("redis_proxy_spend_stats{command=\"%s\",quantile=\"0.95\"} %f%n", spendStats.getCommand(), spendStats.getSpendMsP95()));
-                sb.append(String.format("redis_proxy_spend_stats{command=\"%s\",quantile=\"0.99\"} %f%n", spendStats.getCommand(), spendStats.getSpendMsP99()));
-                sb.append(String.format("redis_proxy_spend_stats{command=\"%s\",quantile=\"0.999\"} %f%n", spendStats.getCommand(), spendStats.getSpendMsP999()));
-                sb.append(String.format("redis_proxy_spend_stats{command=\"%s\",quantile=\"1\"} %f%n", spendStats.getCommand(), spendStats.getMaxSpendMs()));
+                sb.append(String.format("redis_proxy_spend_stats_sum{command=\"%s\",} %f\n", spendStats.getCommand(), spendStats.getAvgSpendMs() * spendStats.getCount()));
+                sb.append(String.format("redis_proxy_spend_stats_count{command=\"%s\",} %d\n", spendStats.getCommand(), spendStats.getCount()));
+                sb.append(String.format("redis_proxy_spend_stats{command=\"%s\",quantile=\"0.5\"} %f\n", spendStats.getCommand(), spendStats.getSpendMsP50()));
+                sb.append(String.format("redis_proxy_spend_stats{command=\"%s\",quantile=\"0.75\"} %f\n", spendStats.getCommand(), spendStats.getSpendMsP75()));
+                sb.append(String.format("redis_proxy_spend_stats{command=\"%s\",quantile=\"0.90\"} %f\n", spendStats.getCommand(), spendStats.getSpendMsP90()));
+                sb.append(String.format("redis_proxy_spend_stats{command=\"%s\",quantile=\"0.95\"} %f\n", spendStats.getCommand(), spendStats.getSpendMsP95()));
+                sb.append(String.format("redis_proxy_spend_stats{command=\"%s\",quantile=\"0.99\"} %f\n", spendStats.getCommand(), spendStats.getSpendMsP99()));
+                sb.append(String.format("redis_proxy_spend_stats{command=\"%s\",quantile=\"0.999\"} %f\n", spendStats.getCommand(), spendStats.getSpendMsP999()));
+                sb.append(String.format("redis_proxy_spend_stats{command=\"%s\",quantile=\"1\"} %f\n", spendStats.getCommand(), spendStats.getMaxSpendMs()));
             }
 
             // ====bid-bgroup.spend.stats====
@@ -105,29 +105,29 @@ public class StatsPrometheusConverter {
             for (BidBgroupSpendStats spendStats : stats.getBidBgroupSpendStatsList()) {
                 String bid = spendStats.getBid() == null ? DEFAULT : String.valueOf(spendStats.getBid());
                 String bgroup = spendStats.getBgroup() == null ? DEFAULT : spendStats.getBgroup();
-                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats_sum{bid=\"%s\",bgroup=\"%s\",command=\"%s\",} %f%n", bid, bgroup, spendStats.getCommand(), spendStats.getAvgSpendMs() * spendStats.getCount()));
-                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats_count{bid=\"%s\",bgroup=\"%s\",command=\"%s\",} %d%n", bid, bgroup, spendStats.getCommand(), spendStats.getCount()));
-                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",quantile=\"0.5\"} %f%n", bid, bgroup, spendStats.getCommand(), spendStats.getSpendMsP50()));
-                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",quantile=\"0.75\"} %f%n", bid, bgroup, spendStats.getCommand(), spendStats.getSpendMsP75()));
-                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",quantile=\"0.90\"} %f%n", bid, bgroup, spendStats.getCommand(), spendStats.getSpendMsP90()));
-                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",quantile=\"0.95\"} %f%n", bid, bgroup, spendStats.getCommand(), spendStats.getSpendMsP95()));
-                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",quantile=\"0.99\"} %f%n", bid, bgroup, spendStats.getCommand(), spendStats.getSpendMsP99()));
-                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",quantile=\"0.999\"} %f%n", bid, bgroup, spendStats.getCommand(), spendStats.getSpendMsP999()));
-                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",quantile=\"1\"} %f%n", bid, bgroup, spendStats.getCommand(), spendStats.getMaxSpendMs()));
+                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats_sum{bid=\"%s\",bgroup=\"%s\",command=\"%s\",} %f\n", bid, bgroup, spendStats.getCommand(), spendStats.getAvgSpendMs() * spendStats.getCount()));
+                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats_count{bid=\"%s\",bgroup=\"%s\",command=\"%s\",} %d\n", bid, bgroup, spendStats.getCommand(), spendStats.getCount()));
+                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",quantile=\"0.5\"} %f\n", bid, bgroup, spendStats.getCommand(), spendStats.getSpendMsP50()));
+                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",quantile=\"0.75\"} %f\n", bid, bgroup, spendStats.getCommand(), spendStats.getSpendMsP75()));
+                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",quantile=\"0.90\"} %f\n", bid, bgroup, spendStats.getCommand(), spendStats.getSpendMsP90()));
+                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",quantile=\"0.95\"} %f\n", bid, bgroup, spendStats.getCommand(), spendStats.getSpendMsP95()));
+                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",quantile=\"0.99\"} %f\n", bid, bgroup, spendStats.getCommand(), spendStats.getSpendMsP99()));
+                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",quantile=\"0.999\"} %f\n", bid, bgroup, spendStats.getCommand(), spendStats.getSpendMsP999()));
+                sb.append(String.format("redis_proxy_bid_bgroup_spend_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",quantile=\"1\"} %f\n", bid, bgroup, spendStats.getCommand(), spendStats.getMaxSpendMs()));
             }
 
             // ====resource.stats====
             sb.append("# HELP redis_proxy_resource_stats Redis Proxy Resource Stats\n");
             sb.append("# TYPE redis_proxy_resource_stats counter\n");
             for (ResourceStats resourceStats : stats.getResourceStatsList()) {
-                sb.append(String.format("redis_proxy_resource_stats{resource=\"%s\",} %d%n", resourceStats.getResource(), resourceStats.getCount()));
+                sb.append(String.format("redis_proxy_resource_stats{resource=\"%s\",} %d\n", resourceStats.getResource(), resourceStats.getCount()));
             }
 
             // ====resource.command.stats====
             sb.append("# HELP redis_proxy_resource_command_stats Redis Proxy Resource Command Stats\n");
             sb.append("# TYPE redis_proxy_resource_command_stats counter\n");
             for (ResourceCommandStats resourceCommandStats : stats.getResourceCommandStatsList()) {
-                sb.append(String.format("redis_proxy_resource_command_stats{resource=\"%s\",command=\"%s\",} %d%n",
+                sb.append(String.format("redis_proxy_resource_command_stats{resource=\"%s\",command=\"%s\",} %d\n",
                         resourceCommandStats.getResource(), resourceCommandStats.getCommand(), resourceCommandStats.getCount()));
             }
 
@@ -137,7 +137,7 @@ public class StatsPrometheusConverter {
             for (ResourceBidBgroupCommandStats commandStats : stats.getResourceBidBgroupCommandStatsList()) {
                 String bid = commandStats.getBid() == null ? DEFAULT : String.valueOf(commandStats.getBid());
                 String bgroup = commandStats.getBgroup() == null ? DEFAULT : commandStats.getBgroup();
-                sb.append(String.format("redis_proxy_bid_bgroup_resource_command_stats{bid=\"%s\",bgroup=\"%s\",resource=\"%s\",command=\"%s\",} %d%n",
+                sb.append(String.format("redis_proxy_bid_bgroup_resource_command_stats{bid=\"%s\",bgroup=\"%s\",resource=\"%s\",command=\"%s\",} %d\n",
                         bid,
                         bgroup,
                         commandStats.getResource(), commandStats.getCommand(), commandStats.getCount()));
@@ -151,7 +151,7 @@ public class StatsPrometheusConverter {
                 String bgroup = routeConf.getBgroup() == null ? DEFAULT : routeConf.getBgroup();
                 String resourceTable = routeConf.getResourceTable();
                 String normalizeResourceTable = resourceTable.replace("\"", "");
-                sb.append(String.format("redis_proxy_route_conf{bid=\"%s\",bgroup=\"%s\",routeConf=\"%s\",updateTime=\"%d\",} 1%n",
+                sb.append(String.format("redis_proxy_route_conf{bid=\"%s\",bgroup=\"%s\",routeConf=\"%s\",updateTime=\"%d\",} 1\n",
                         bid,
                         bgroup,
                         normalizeResourceTable,
@@ -162,7 +162,7 @@ public class StatsPrometheusConverter {
             sb.append("# TYPE redis_proxy_redis_connect_stats gauge\n");
             RedisConnectStats redisConnectStats = stats.getRedisConnectStats();
             for (RedisConnectStats.Detail detail : redisConnectStats.getDetailList()) {
-                sb.append(String.format("redis_proxy_redis_connect_stats{redis_addr=\"%s\",} %d%n", detail.getAddr(), detail.getConnectCount()));
+                sb.append(String.format("redis_proxy_redis_connect_stats{redis_addr=\"%s\",} %d\n", detail.getAddr(), detail.getConnectCount()));
             }
 
             // ====upstream.redis.spend.stats====
@@ -170,15 +170,15 @@ public class StatsPrometheusConverter {
             sb.append("# TYPE redis_proxy_upstream_redis_spend_stats summary\n");
             List<UpstreamRedisSpendStats> upstreamRedisSpendStatsList = stats.getUpstreamRedisSpendStatsList();
             for (UpstreamRedisSpendStats upstreamRedisSpendStats : upstreamRedisSpendStatsList) {
-                sb.append(String.format("redis_proxy_upstream_redis_spend_stats_sum{redis_addr=\"%s\",} %f%n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getAvgSpendMs() * upstreamRedisSpendStats.getCount()));
-                sb.append(String.format("redis_proxy_upstream_redis_spend_stats_count{redis_addr=\"%s\",} %d%n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getCount()));
-                sb.append(String.format("redis_proxy_upstream_redis_spend_stats{redis_addr=\"%s\",quantile=\"0.5\"} %f%n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getSpendMsP50()));
-                sb.append(String.format("redis_proxy_upstream_redis_spend_stats{redis_addr=\"%s\",quantile=\"0.75\"} %f%n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getSpendMsP75()));
-                sb.append(String.format("redis_proxy_upstream_redis_spend_stats{redis_addr=\"%s\",quantile=\"0.9\"} %f%n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getSpendMsP90()));
-                sb.append(String.format("redis_proxy_upstream_redis_spend_stats{redis_addr=\"%s\",quantile=\"0.95\"} %f%n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getSpendMsP95()));
-                sb.append(String.format("redis_proxy_upstream_redis_spend_stats{redis_addr=\"%s\",quantile=\"0.99\"} %f%n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getSpendMsP99()));
-                sb.append(String.format("redis_proxy_upstream_redis_spend_stats{redis_addr=\"%s\",quantile=\"0.999\"} %f%n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getSpendMsP999()));
-                sb.append(String.format("redis_proxy_upstream_redis_spend_stats{redis_addr=\"%s\",quantile=\"1\"} %f%n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getMaxSpendMs()));
+                sb.append(String.format("redis_proxy_upstream_redis_spend_stats_sum{redis_addr=\"%s\",} %f\n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getAvgSpendMs() * upstreamRedisSpendStats.getCount()));
+                sb.append(String.format("redis_proxy_upstream_redis_spend_stats_count{redis_addr=\"%s\",} %d\n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getCount()));
+                sb.append(String.format("redis_proxy_upstream_redis_spend_stats{redis_addr=\"%s\",quantile=\"0.5\"} %f\n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getSpendMsP50()));
+                sb.append(String.format("redis_proxy_upstream_redis_spend_stats{redis_addr=\"%s\",quantile=\"0.75\"} %f\n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getSpendMsP75()));
+                sb.append(String.format("redis_proxy_upstream_redis_spend_stats{redis_addr=\"%s\",quantile=\"0.9\"} %f\n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getSpendMsP90()));
+                sb.append(String.format("redis_proxy_upstream_redis_spend_stats{redis_addr=\"%s\",quantile=\"0.95\"} %f\n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getSpendMsP95()));
+                sb.append(String.format("redis_proxy_upstream_redis_spend_stats{redis_addr=\"%s\",quantile=\"0.99\"} %f\n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getSpendMsP99()));
+                sb.append(String.format("redis_proxy_upstream_redis_spend_stats{redis_addr=\"%s\",quantile=\"0.999\"} %f\n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getSpendMsP999()));
+                sb.append(String.format("redis_proxy_upstream_redis_spend_stats{redis_addr=\"%s\",quantile=\"1\"} %f\n", upstreamRedisSpendStats.getAddr(), upstreamRedisSpendStats.getMaxSpendMs()));
             }
 
             // ====big.key.stats====
@@ -197,7 +197,7 @@ public class StatsPrometheusConverter {
                 BigKeyStatsKey bigKeyStatsKey = entry.getKey();
                 String bid = bigKeyStatsKey.getBid() == null ? DEFAULT : bigKeyStatsKey.getBid();
                 String bgroup = bigKeyStatsKey.getBgroup() == null ? DEFAULT : bigKeyStatsKey.getBgroup();
-                sb.append(String.format("redis_proxy_big_key_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",} %d%n",
+                sb.append(String.format("redis_proxy_big_key_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",} %d\n",
                         bid,
                         bgroup,
                         bigKeyStatsKey.getCommand(),
@@ -220,7 +220,7 @@ public class StatsPrometheusConverter {
                 HotKeyStatsKey hotKeyStatsKey = entry.getKey();
                 String bid = hotKeyStatsKey.getBid() == null ? DEFAULT : hotKeyStatsKey.getBid();
                 String bgroup = hotKeyStatsKey.getBgroup() == null ? DEFAULT : hotKeyStatsKey.getBgroup();
-                sb.append(String.format("redis_proxy_hot_key_stats{bid=\"%s\",bgroup=\"%s\",} %d%n",
+                sb.append(String.format("redis_proxy_hot_key_stats{bid=\"%s\",bgroup=\"%s\",} %d\n",
                         bid,
                         bgroup,
                         entry.getValue()));
@@ -243,7 +243,7 @@ public class StatsPrometheusConverter {
                 HotKeyCacheStatsKey hotKeyCacheStatsKey = entry.getKey();
                 String bid = hotKeyCacheStatsKey.getBid() == null ? DEFAULT : hotKeyCacheStatsKey.getBid();
                 String bgroup = hotKeyCacheStatsKey.getBgroup() == null ? DEFAULT : hotKeyCacheStatsKey.getBgroup();
-                sb.append(String.format("redis_proxy_hot_key_cache_stats{bid=\"%s\",bgroup=\"%s\",} %d%n",
+                sb.append(String.format("redis_proxy_hot_key_cache_stats{bid=\"%s\",bgroup=\"%s\",} %d\n",
                         bid,
                         bgroup,
                         entry.getValue()));
@@ -265,7 +265,7 @@ public class StatsPrometheusConverter {
                 SlowCommandStatsKey slowCommandStatsKey = entry.getKey();
                 String bid = slowCommandStatsKey.getBid() == null ? DEFAULT : slowCommandStatsKey.getBid();
                 String bgroup = slowCommandStatsKey.getBgroup() == null ? DEFAULT : slowCommandStatsKey.getBgroup();
-                sb.append(String.format("redis_proxy_slow_command_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",} %d%n",
+                sb.append(String.format("redis_proxy_slow_command_stats{bid=\"%s\",bgroup=\"%s\",command=\"%s\",} %d\n",
                         bid,
                         bgroup,
                         slowCommandStatsKey.getCommand(),
@@ -277,7 +277,7 @@ public class StatsPrometheusConverter {
             sb.append("# TYPE redis_proxy_upstream_fail_stats gauge\n");
             List<UpstreamFailStats> upstreamFailStatsList = stats.getUpstreamFailStatsList();
             for (UpstreamFailStats upstreamFailStats : upstreamFailStatsList) {
-                sb.append(String.format("redis_proxy_upstream_fail_stats{resource=\"%s\",command=\"%s\",msg=\"%s\",} %d%n",
+                sb.append(String.format("redis_proxy_upstream_fail_stats{resource=\"%s\",command=\"%s\",msg=\"%s\",} %d\n",
                         upstreamFailStats.getResource(),
                         upstreamFailStats.getCommand(),
                         upstreamFailStats.getMsg(),
