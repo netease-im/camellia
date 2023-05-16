@@ -354,12 +354,12 @@ public class RedisClusterSlotInfo {
         StringBuilder builder = new StringBuilder();
         for (Map.Entry<Node, List<Node>> entry : masterSlaveMap.entrySet()) {
             Node master = entry.getKey();
-            builder.append("master=").append(master.getHost()).append(Utils.COLON).append(master.getPort());
+            builder.append("master=").append(master.getHost()).append(":").append(master.getPort());
             List<Node> slaves = entry.getValue();
             if (slaves != null && slaves.size() > 0) {
                 int i = 0;
                 for (Node slave : slaves) {
-                    builder.append(",slave").append(i).append("=").append(slave.getHost()).append(Utils.COLON).append(slave.getPort());
+                    builder.append(",slave").append(i).append("=").append(slave.getHost()).append(":").append(slave.getPort());
                     i ++;
                 }
             }

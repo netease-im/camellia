@@ -12,7 +12,7 @@ public class HostAndPort {
     public HostAndPort(String host, int port) {
         this.host = host;
         this.port = port;
-        this.url = host + "Utils.COLON" + port;
+        this.url = host + ":" + port;
     }
 
     public String getHost() {

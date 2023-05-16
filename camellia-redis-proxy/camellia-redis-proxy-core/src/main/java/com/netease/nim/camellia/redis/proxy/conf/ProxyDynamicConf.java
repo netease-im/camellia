@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Refresh the configuration dynamically.
+ *
  * Created by caojiajun on 2021/1/5
  */
 public class ProxyDynamicConf {
@@ -29,14 +29,11 @@ public class ProxyDynamicConf {
     private static final ConcurrentHashMap<String, Boolean> booleanCache = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Double> doubleCache = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, String> stringCache = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, Object> cache = new ConcurrentHashMap<>();
-
 
     /**
      * 初始化ProxyDynamicConf
-     *
      * @param initConf 初始配置，来自yml文件
-     * @param loader   loader
+     * @param loader loader
      */
     public static void init(Map<String, String> initConf, ProxyDynamicConfLoader loader) {
         ProxyDynamicConf.loader = loader;
@@ -50,10 +47,7 @@ public class ProxyDynamicConf {
     }
 
     /**
-     * 检查本地配置文件是否有变更。如果有，则重新加载，清空缓存，触发监听者的回调。因为不止一个地方调用，所以需要用CAS来防止并发。
-     * Check the local configuration file for changes.
-     * If so, reload, clear the cache, and trigger the callback of the listener.
-     * Because more than one method calls this function, CAS is needed to prevent concurrency.
+     * 检查本地配置文件是否有变更，如果有，则重新加载，并且会清空缓存，并触发监听者的回调
      */
     public static void reload() {
         if (reloading.compareAndSet(false, true)) {
@@ -99,12 +93,10 @@ public class ProxyDynamicConf {
         booleanCache.clear();
         doubleCache.clear();
         stringCache.clear();
-        cache.clear();
     }
 
     /**
      * 注册回调，对于ProxyDynamicConf的调用者，可以注册该回调，从而当ProxyDynamicConf发生配置变更时可以第一时间重新加载
-     *
      * @param callback 回调
      */
     public static void registerCallback(DynamicConfCallback callback) {
@@ -113,9 +105,6 @@ public class ProxyDynamicConf {
         }
     }
 
-    /**
-     * Get value from {@link ProxyDynamicConf#conf}. If value is null , this method will return defaultValue.
-     */
     private static Integer _getInt(String key, Integer defaultValue) {
         return ConfigurationUtil.getInteger(conf, key, defaultValue);
     }
@@ -124,9 +113,6 @@ public class ProxyDynamicConf {
         return _getInt(key, defaultValue);
     }
 
-    /**
-     *
-     */
     public static int getInt(String key, Long bid, String bgroup, int defaultValue) {
         try {
             if (conf.isEmpty()) return defaultValue;
@@ -265,56 +251,9 @@ public class ProxyDynamicConf {
         }
     }
 
-
-    private static <T> T get(String key, T defaultValue, Class<T> tClass) {
-        return ConfigurationUtil.get(conf, key, defaultValue, tClass);
-    }
-
-    /**
-     * Get value from {@link ProxyDynamicConf#conf}. Use caching to avoid duplicate creation.
-     *
-     * @param key          key
-     * @param bid          id
-     * @param bgroup       group
-     * @param defaultValue defaultValue
-     * @param tClass       the type of the return value
-     * @param <T>          T
-     * @return value
-     */
-    public static <T> T get(String key, Long bid, String bgroup, T defaultValue, Class<T> tClass) {
-        try {
-            if (conf.isEmpty()) return defaultValue;
-            String confKey = buildConfKey(key, bid, bgroup);
-            T value;
-            T cacheValue = (T) cache.get(confKey);
-            if (cacheValue != null) return cacheValue;
-            value = get(confKey, null, tClass);
-            if (value == null) {
-                value = get(key, null, tClass);
-            }
-            if (value == null) {
-                cache.put(confKey, defaultValue);
-                return defaultValue;
-            }
-            cache.put(confKey, value);
-            return value;
-        } catch (Exception e) {
-            return defaultValue;
-        }
-    }
-
-
-    /**
-     * Build config key from key，bid，bgroup. If bid == null and bgroup == null, use default.default+key
-     *
-     * @param key    key
-     * @param bid    id
-     * @param bgroup group
-     * @return conf string
-     */
     private static String buildConfKey(String key, Long bid, String bgroup) {
         if (bid == null || bgroup == null) {
-            return "default.default." + key;
+            return  "default.default." + key;
         } else {
             return bid + "." + bgroup + "." + key;
         }

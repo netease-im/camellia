@@ -74,7 +74,7 @@ public class UpstreamInfoUtils {
                     for (ClusterNodeInfo clusterNodeInfo : redisClusterNodeInfo) {
                         String master = clusterNodeInfo.master;
                         String[] split = master.split("@");
-                        String[] split1 = split[0].split(Utils.COLON);
+                        String[] split1 = split[0].split(":");
                         String host = split1[0];
                         int port = Integer.parseInt(split1[1]);
                         RedisConnectionAddr addr = new RedisConnectionAddr(host, port, ((RedisClusterResource) resource).getUserName(),
@@ -317,7 +317,7 @@ public class UpstreamInfoUtils {
                         for (ClusterNodeInfo clusterNodeInfo : redisClusterNodeInfo) {
                             String master = clusterNodeInfo.master;
                             String[] split = master.split("@");
-                            String[] split1 = split[0].split(Utils.COLON);
+                            String[] split1 = split[0].split(":");
                             String host = split1[0];
                             int port = Integer.parseInt(split1[1]);
                             RedisInfo redisInfo = getRedisInfo(new RedisConnectionAddr(host, port, ((RedisClusterResource) redisResource).getUserName(),
@@ -367,7 +367,7 @@ public class UpstreamInfoUtils {
                                 }
                                 stringBuilder.append(",memory_used_rate=").append(String.format("%.2f", rate * 100.0)).append("%");
                             }
-                            redisClusterNodeInfoBuilder.append("node").append(j).append(Utils.COLON).append(stringBuilder);
+                            redisClusterNodeInfoBuilder.append("node").append(j).append(":").append(stringBuilder);
                             redisClusterNodeInfoBuilder.append("\r\n");
 
                             redisClusterNodeInfoJson.put("node" + j, stringBuilder);
@@ -460,7 +460,7 @@ public class UpstreamInfoUtils {
                     continue;
                 }
                 if (value != null) {
-                    builder.append(key).append(Utils.COLON).append(value).append("\r\n");
+                    builder.append(key).append(":").append(value).append("\r\n");
                 }
                 if (key.equals("connected_slaves")) {
                     String connectedSlaves = map.get("connected_slaves");
@@ -470,7 +470,7 @@ public class UpstreamInfoUtils {
                             String slaveKey = "slave" + j;
                             String slave = map.get(slaveKey);
                             if (slave != null) {
-                                builder.append(slaveKey).append(Utils.COLON).append(slave).append("\r\n");
+                                builder.append(slaveKey).append(":").append(slave).append("\r\n");
                             }
                         }
                     }
@@ -523,7 +523,7 @@ public class UpstreamInfoUtils {
             for (String key : redisClusterInfoKeys) {
                 String value = map.get(key);
                 if (value != null) {
-                    builder.append(key).append(Utils.COLON).append(value).append("\r\n");
+                    builder.append(key).append(":").append(value).append("\r\n");
                 }
             }
             return builder.toString();
@@ -544,7 +544,7 @@ public class UpstreamInfoUtils {
                     String[] split = string.split("\r\n");
                     for (String line : split) {
                         if (line.startsWith("#")) continue;
-                        String[] split1 = line.split(Utils.COLON);
+                        String[] split1 = line.split(":");
                         if (split1.length >= 2) {
                             map.put(split1[0], split1[1]);
                         }
@@ -615,7 +615,7 @@ public class UpstreamInfoUtils {
                 if (clusterNodeInfo.slaves == null || clusterNodeInfo.slaves.isEmpty()) {
                     return false;
                 }
-                String[] split = clusterNodeInfo.master.split(Utils.COLON);
+                String[] split = clusterNodeInfo.master.split(":");
                 String masterIp = split[0];
                 AtomicLong count = map.get(masterIp);
                 if (count == null) {
@@ -708,7 +708,7 @@ public class UpstreamInfoUtils {
         String[] split = str.split("\r\n");
         Map<String, String> map = new HashMap<>();
         for (String s : split) {
-            String[] split1 = s.split(Utils.COLON);
+            String[] split1 = s.split(":");
             if (split1.length == 2) {
                 map.put(split1[0].trim(), split1[1].trim());
             }

@@ -11,35 +11,21 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Load configuration from the file.
  * Created by caojiajun on 2023/2/24
  */
 public class FileBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(FileBasedProxyDynamicConfLoader.class);
-    private static final String DEFAULT_FILE_NAME = "camellia-redis-proxy.properties";
-    public static final String DYNAMIC_CONF_FILE_NAME = "dynamic.conf.file.name";
-    /**
-     * Absolute path to the configuration file
-     */
-    public static final String DYNAMIC_CONF_FILE_PATH = "dynamic.conf.file.path";
+    private static final String defaultFileName = "camellia-redis-proxy.properties";
 
     private Map<String, String> initConf = new HashMap<>();
 
-    /**
-     * 如果没有配置{@link FileBasedProxyDynamicConfLoader#DYNAMIC_CONF_FILE_NAME}，就从 {@link FileBasedProxyDynamicConfLoader#DEFAULT_FILE_NAME} 中读取
-     * 如果指定了{@link FileBasedProxyDynamicConfLoader#DYNAMIC_CONF_FILE_PATH} 也会进行读取。
-     * 注意！配置文件的优先级是: {@link FileBasedProxyDynamicConfLoader#DYNAMIC_CONF_FILE_PATH},{@link FileBasedProxyDynamicConfLoader#DYNAMIC_CONF_FILE_NAME} or {@link FileBasedProxyDynamicConfLoader#DEFAULT_FILE_NAME}, {@link ProxyDynamicConf#conf}
-     * <p>If DYNAMIC_CONF_FILE_NAME is not configured, it will read from DEFAULT_FILE_NAME.
-     * If DYNAMIC_CONF_FILE_PATH is specified, it will also be read.
-     * Notice! The priority of file: {@link FileBasedProxyDynamicConfLoader#DYNAMIC_CONF_FILE_PATH},{@link FileBasedProxyDynamicConfLoader#DYNAMIC_CONF_FILE_NAME} or {@link FileBasedProxyDynamicConfLoader#DEFAULT_FILE_NAME}, {@link ProxyDynamicConf#conf}
-     */
     @Override
     public Map<String, String> load() {
         Map<String, String> conf = new HashMap<>(initConf);
-        String fileName = conf.get(DYNAMIC_CONF_FILE_NAME);
+        String fileName = conf.get("dynamic.conf.file.name");
         if (fileName == null) {
-            fileName = DEFAULT_FILE_NAME;
+            fileName = defaultFileName;
         }
         try {
             URL url = ProxyDynamicConf.class.getClassLoader().getResource(fileName);
@@ -52,7 +38,7 @@ public class FileBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
                 }
                 conf.putAll(ConfigurationUtil.propertiesToMap(props));
             }
-            String filePath = conf.get(DYNAMIC_CONF_FILE_PATH);
+            String filePath = conf.get("dynamic.conf.file.path");
             if (filePath != null) {
                 try {
                     Properties props = new Properties();
