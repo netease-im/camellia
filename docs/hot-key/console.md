@@ -125,3 +125,31 @@
   ]
 }
 ```
+
+#### /prometheus的回包 
+
+* 具体字段参考HotKeyServerStats类
+
+```
+# HELP hot_key_server_connect_count Client Connect Count
+# TYPE hot_key_server_connect_count gauge
+hot_key_server_connect_count 1
+# HELP hot_key_server_work_thread Work Thread
+# TYPE hot_key_server_work_thread gauge
+hot_key_server_work_thread 6
+# HELP hot_key_server_work_queue_pending Work Queue Pending
+# TYPE hot_key_server_work_queue_pending gauge
+hot_key_server_work_queue_pending{queue="queue-0",} 0
+hot_key_server_work_queue_pending{queue="queue-1",} 0
+hot_key_server_work_queue_pending{queue="queue-2",} 0
+hot_key_server_work_queue_pending{queue="queue-3",} 0
+hot_key_server_work_queue_pending{queue="queue-4",} 0
+hot_key_server_work_queue_pending{queue="queue-5",} 0
+# HELP hot_key_server_traffic_total Traffic Total
+# TYPE hot_key_server_traffic_total gauge
+hot_key_server_traffic_total 49285
+# HELP hot_key_server_traffic_detail Traffic Detail
+# TYPE hot_key_server_traffic_detail gauge
+hot_key_server_traffic_detail{namespace="namespace1",type="NORMAL",} 47946
+hot_key_server_traffic_detail{namespace="namespace1",type="HOT",} 1339
+```

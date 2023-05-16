@@ -13,8 +13,8 @@ public class HotKeyServerStats {
     private String applicationName;
     private int monitorIntervalSeconds;
     private long connectCount;
-    private QueueStats queueStats;
-    private TrafficStats trafficStats;
+    private QueueStats queueStats = new QueueStats();
+    private TrafficStats trafficStats = new TrafficStats();
     private List<HotKeyInfo> hotKeyInfoList = new ArrayList<>();
 
     public String getApplicationName() {
