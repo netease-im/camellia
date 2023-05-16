@@ -18,6 +18,7 @@ public class HotKeyConstants {
         public static int CLIENT_CONNECT_TIMEOUT_MILLIS = 2000;
         public static int sessionCapacity = 10000;
         public static long getConfigTimeoutMillis = 10*1000L;
+        public static long pushCacheHitStatsTimeoutMillis = 10*1000L;
         public static long heartbeatIntervalSeconds = 60;
         public static long reloadIntervalSeconds = 120;
         public static long heartbeatTimeoutMillis = 10*1000L;

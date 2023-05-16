@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.hot.key.server.springboot.conf;
 
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
+import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCacheStatsCallback;
 import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCallback;
 import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyTopNCallback;
 import com.netease.nim.camellia.hot.key.server.conf.FileBasedHotKeyConfigService;
@@ -40,6 +41,8 @@ public class CamelliaHotKeyServerProperties {
     private String topnCallbackClassName = LoggingHotKeyTopNCallback.class.getName();
 
     private int callbackExecutorSize = HotKeyConstants.Server.callbackExecutorSize;
+
+    private String hotKeyCacheStatsCallbackClassName = LoggingHotKeyCacheStatsCallback.class.getName();
 
     private int monitorIntervalSeconds = HotKeyConstants.Server.monitorIntervalSeconds;
     private int monitorHotKeyMaxCount = HotKeyConstants.Server.monitorHotKeyMaxCount;
@@ -212,5 +215,13 @@ public class CamelliaHotKeyServerProperties {
 
     public void setConfig(Map<String, String> config) {
         this.config = config;
+    }
+
+    public String getHotKeyCacheStatsCallbackClassName() {
+        return hotKeyCacheStatsCallbackClassName;
+    }
+
+    public void setHotKeyCacheStatsCallbackClassName(String hotKeyCacheStatsCallbackClassName) {
+        this.hotKeyCacheStatsCallbackClassName = hotKeyCacheStatsCallbackClassName;
     }
 }

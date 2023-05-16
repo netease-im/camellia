@@ -17,14 +17,14 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by caojiajun on 2023/5/10
  */
-public class PerformanceTest {
+public class MonitorPerformanceTest {
 
     public static void main(String[] args) {
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
         List<HotKeyServerAddr> addrList = new ArrayList<>();
-//        addrList.add(new HotKeyServerAddr("127.0.0.1", 7070));
-        addrList.add(new HotKeyServerAddr("10.156.148.248", 7070));
-        addrList.add(new HotKeyServerAddr("10.189.46.125", 7070));
+        addrList.add(new HotKeyServerAddr("127.0.0.1", 7070));
+//        addrList.add(new HotKeyServerAddr("10.156.148.248", 7070));
+//        addrList.add(new HotKeyServerAddr("10.189.46.125", 7070));
         LocalConfHotKeyServerDiscovery discovery = new LocalConfHotKeyServerDiscovery("local", addrList);
         config.setDiscovery(discovery);
 
@@ -32,8 +32,7 @@ public class PerformanceTest {
 
         CamelliaHotKeyMonitorSdk monitorSdk = new CamelliaHotKeyMonitorSdk(sdk, new CamelliaHotKeyMonitorSdkConfig());
 
-        String namespace1 = "sql_hot_key";
-//        namespace1 = "namespace1";
+        String namespace1 = "namespace1";
 
         monitorSdk.preheat(namespace1);
 

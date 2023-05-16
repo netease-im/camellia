@@ -86,6 +86,10 @@ public class HotKeyPack {
                     body = new NotifyHotKeyConfigRepPack();
                     unpack.popMarshallable(body);
                     break;
+                case HOT_KEY_CACHE_STATS:
+                    body = new HotKeyCacheStatsRepPack();
+                    unpack.popMarshallable(body);
+                    break;
                 default:
                     throw new IllegalArgumentException("unknown HotKeyCommand");
             }
@@ -109,6 +113,10 @@ public class HotKeyPack {
                     break;
                 case NOTIFY_CONFIG:
                     body = new NotifyHotKeyConfigPack();
+                    unpack.popMarshallable(body);
+                    break;
+                case HOT_KEY_CACHE_STATS:
+                    body = new HotKeyCacheStatsPack();
                     unpack.popMarshallable(body);
                     break;
                 default:

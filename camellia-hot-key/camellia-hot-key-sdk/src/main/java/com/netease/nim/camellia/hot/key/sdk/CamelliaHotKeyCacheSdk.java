@@ -3,16 +3,23 @@ package com.netease.nim.camellia.hot.key.sdk;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
 import com.netease.nim.camellia.hot.key.common.model.Rule;
+import com.netease.nim.camellia.hot.key.common.netty.pack.HotKeyCacheStats;
 import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeyCacheSdkConfig;
 import com.netease.nim.camellia.hot.key.sdk.listener.CamelliaHotKeyListener;
 import com.netease.nim.camellia.tools.cache.CamelliaLocalCache;
 import com.netease.nim.camellia.tools.cache.NamespaceCamelliaLocalCache;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Created by caojiajun on 2023/5/6
@@ -28,6 +35,8 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
     private final NamespaceCamelliaLocalCache hotKeyCacheValueMap;
     private final NamespaceCamelliaLocalCache hotKeyCacheHitLockMap;
 
+    private final NamespaceCamelliaLocalCache hotKeyCacheHitStatsMap;
+
     private final ConcurrentHashMap<String, AtomicBoolean> hotKeyListenerCache = new ConcurrentHashMap<>();
 
     public CamelliaHotKeyCacheSdk(CamelliaHotKeySdk sdk, CamelliaHotKeyCacheSdkConfig config) {
@@ -37,7 +46,10 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         this.hotKeyCacheKeyMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity());
         this.hotKeyCacheValueMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity());
         this.hotKeyCacheHitLockMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity());
+        this.hotKeyCacheHitStatsMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity() * 2);
         logger.info("CamelliaHotKeyCacheSdk init success");
+        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("hot-key-cache-hit-stats-scheduler"))
+                .scheduleAtFixedRate(this::reportCacheHitStats, config.getCacheHitStatsReportIntervalSeconds(), config.getCacheHitStatsReportIntervalSeconds(), TimeUnit.SECONDS);
     }
 
     @Override
@@ -79,12 +91,63 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
             //如果是热key，看看有没有本地缓存
             CamelliaLocalCache.ValueWrapper valueWrapper = hotKeyCacheValueMap.get(namespace, key);
             if (valueWrapper != null) {
+                cacheHit(namespace, key);
                 return (T) valueWrapper.get();
             }
             return refresh(namespace, key, rule, loader);
         } catch (Exception e) {
             logger.error("getValue error, namespace = {}, key = {}", namespace, key, e);
             return loader.load(key);
+        }
+    }
+
+    private static class Stats {
+        String namespace;
+        String key;
+        LongAdder count;
+
+        public Stats(String namespace, String key, LongAdder count) {
+            this.namespace = namespace;
+            this.key = key;
+            this.count = count;
+        }
+    }
+
+    private void cacheHit(String namespace, String key) {
+        Stats count = hotKeyCacheHitStatsMap.get(namespace, key, Stats.class);
+        if (count == null) {
+            hotKeyCacheHitStatsMap.putIfAbsent(namespace, key, new Stats(namespace, key, new LongAdder()), -1);
+            count = hotKeyCacheHitStatsMap.get(namespace, key, Stats.class);
+        }
+        if (count != null) {
+            count.count.increment();
+        }
+    }
+
+    private void reportCacheHitStats() {
+        try {
+            List<HotKeyCacheStats> statsList = new ArrayList<>();
+            for (String namespace : hotKeyCacheHitStatsMap.namespaceSet()) {
+                List<Object> values = hotKeyCacheHitStatsMap.values(namespace);
+                for (Object value : values) {
+                    if (value instanceof Stats) {
+                        Object evict = hotKeyCacheHitStatsMap.evict(namespace, ((Stats)value).key);
+                        if (evict instanceof Stats) {
+                            Stats stats = (Stats) value;
+                            HotKeyCacheStats hotKeyCacheStats = new HotKeyCacheStats();
+                            hotKeyCacheStats.setNamespace(stats.namespace);
+                            hotKeyCacheStats.setKey(stats.key);
+                            hotKeyCacheStats.setHitCount(stats.count.sumThenReset());
+                            statsList.add(hotKeyCacheStats);
+                        }
+                    }
+                }
+            }
+            if (!statsList.isEmpty()) {
+                sdk.sendHotkeyCacheStats(statsList);
+            }
+        } catch (Exception e) {
+            logger.error("reportCacheHitStats error", e);
         }
     }
 
@@ -95,6 +158,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
             if (rule == null) {
                 return;
             }
+            hotKeyCacheValueMap.evict(config.getNamespace(), key);
             sdk.push(config.getNamespace(), key, KeyAction.UPDATE, 1);
             addHotKeyListener(namespace);
         } catch (Exception e) {
@@ -109,6 +173,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
             if (rule == null) {
                 return;
             }
+            hotKeyCacheValueMap.evict(config.getNamespace(), key);
             sdk.push(config.getNamespace(), key, KeyAction.DELETE, 1);
             addHotKeyListener(namespace);
         } catch (Exception e) {

@@ -38,6 +38,8 @@ public class ConfUtils {
         properties.setHotKeyCallbackClassName(serverProperties.getHotKeyCallbackClassName());
         properties.setHotKeyConfigServiceClassName(serverProperties.getHotKeyConfigServiceClassName());
 
+        properties.setHotKeyCacheStatsCallbackClassName(serverProperties.getHotKeyCacheStatsCallbackClassName());
+
         properties.setTcpNoDelay(serverProperties.getNetty().isTcpNoDelay());
         properties.setSoKeepalive(serverProperties.getNetty().isSoKeepalive());
         properties.setSoBacklog(serverProperties.getNetty().getSoBacklog());

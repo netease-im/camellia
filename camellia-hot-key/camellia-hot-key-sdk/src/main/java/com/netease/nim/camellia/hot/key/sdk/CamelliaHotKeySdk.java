@@ -77,6 +77,23 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
     }
 
     @Override
+    public void sendHotkeyCacheStats(List<HotKeyCacheStats> statsList) {
+        try {
+            HotKeyClient client = HotKeyClientHub.getInstance().selectClient(config.getDiscovery(), UUID.randomUUID().toString());
+            if (client == null) {
+                logger.warn("not found valid HotKeyClient, sendHotkeyCacheStats fail");
+                throw new CamelliaHotKeyException("can not found valid hot key server");
+            }
+            CompletableFuture<HotKeyPack> future = client.sendPack(HotKeyPack.newPack(HotKeyCommand.HOT_KEY_CACHE_STATS, new HotKeyCacheStatsPack(statsList)));
+            future.get(HotKeyConstants.Client.pushCacheHitStatsTimeoutMillis, TimeUnit.MILLISECONDS);
+        } catch (CamelliaHotKeyException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CamelliaHotKeyException(e);
+        }
+    }
+
+    @Override
     public synchronized void addListener(String namespace, CamelliaHotKeyConfigListener listener) {
         List<CamelliaHotKeyConfigListener> listeners = CamelliaMapUtils.computeIfAbsent(hotKeyConfigListenerMap, namespace, k -> new ArrayList<>());
         listeners.add(listener);

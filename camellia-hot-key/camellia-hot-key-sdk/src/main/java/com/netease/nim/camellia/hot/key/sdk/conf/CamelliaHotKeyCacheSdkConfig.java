@@ -14,7 +14,7 @@ public class CamelliaHotKeyCacheSdkConfig {
     private static final ScheduledExecutorService defaultScheduler = Executors.newScheduledThreadPool(SysUtils.getCpuNum(),
             new CamelliaThreadFactory("camellia-hot-key-cache-scheduler"));
 
-    private static final ThreadPoolExecutor defaultExecutor = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuHalfNum(), 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000),
+    private static final ThreadPoolExecutor defaultExecutor = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000),
             new CamelliaThreadFactory("camellia-hot-key-cache-executor"), new ThreadPoolExecutor.CallerRunsPolicy());
 
     private ThreadPoolExecutor executor = defaultExecutor;
@@ -25,8 +25,7 @@ public class CamelliaHotKeyCacheSdkConfig {
     private int maxNamespace = 1000;
     private int capacity = 1000;
     private boolean cacheNull = true;
-    private int loadTryLockRetry = 3;
-    private long loadTryLockSleepMs = 1;
+    private long cacheHitStatsReportIntervalSeconds = 30;
 
     public ThreadPoolExecutor getExecutor() {
         return executor;
@@ -84,19 +83,11 @@ public class CamelliaHotKeyCacheSdkConfig {
         this.cacheNull = cacheNull;
     }
 
-    public int getLoadTryLockRetry() {
-        return loadTryLockRetry;
+    public long getCacheHitStatsReportIntervalSeconds() {
+        return cacheHitStatsReportIntervalSeconds;
     }
 
-    public void setLoadTryLockRetry(int loadTryLockRetry) {
-        this.loadTryLockRetry = loadTryLockRetry;
-    }
-
-    public long getLoadTryLockSleepMs() {
-        return loadTryLockSleepMs;
-    }
-
-    public void setLoadTryLockSleepMs(long loadTryLockSleepMs) {
-        this.loadTryLockSleepMs = loadTryLockSleepMs;
+    public void setCacheHitStatsReportIntervalSeconds(long cacheHitStatsReportIntervalSeconds) {
+        this.cacheHitStatsReportIntervalSeconds = cacheHitStatsReportIntervalSeconds;
     }
 }

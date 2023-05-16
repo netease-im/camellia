@@ -5,7 +5,6 @@ import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackBizHandler;
 import com.netease.nim.camellia.hot.key.common.netty.pack.*;
-import com.netease.nim.camellia.hot.key.server.bean.BeanInitUtils;
 import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCalculator;
 import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCalculatorQueue;
 import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCounterManager;
@@ -46,6 +45,8 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
     private final boolean is2Power;
     private final ThreadPoolExecutor executor;
     private final CacheableHotKeyConfigService hotKeyConfigService;
+    private final HotKeyCounterManager hotKeyCounterManager;
+    private final HotKeyCallbackManager callbackManager;
 
     public HotKeyPackBizServerHandler(HotKeyServerProperties properties) {
         this.bizWorkThread = properties.getBizWorkThread();
@@ -65,11 +66,11 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         hotKeyConfigService.registerCallback(notifyService::notifyHotKeyNotifyChange);
 
         //hot key counter
-        HotKeyCounterManager hotKeyCounterManager = new HotKeyCounterManager(properties);
+        hotKeyCounterManager = new HotKeyCounterManager(properties);
         hotKeyConfigService.registerCallback(hotKeyCounterManager::remove);
 
         //callback
-        HotKeyCallbackManager callbackManager = new HotKeyCallbackManager(properties);
+        callbackManager = new HotKeyCallbackManager(properties);
 
         //topN counter
         TopNCounterManager topNCounterManager = new TopNCounterManager(properties, callbackManager);
@@ -137,6 +138,25 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
             });
         } catch (Exception e) {
             logger.error("submit onGetConfigPack error, namespace = {}", pack.getNamespace(), e);
+            future.complete(null);
+        }
+        return future;
+    }
+
+    @Override
+    public CompletableFuture<HotKeyCacheStatsRepPack> onHotKeyCacheStatsPack(Channel channel, HotKeyCacheStatsPack pack) {
+        CompletableFuture<HotKeyCacheStatsRepPack> future = new CompletableFuture<>();
+        try {
+            executor.submit(() -> {
+                try {
+                    callbackManager.cacheHitStats(pack.getStatsList());
+                    future.complete(HotKeyCacheStatsRepPack.INSTANCE);
+                } catch (Exception e) {
+                    future.complete(null);
+                }
+            });
+        } catch (Exception e) {
+            logger.error("submit onHotKeyCacheStatsPack error", e);
             future.complete(null);
         }
         return future;

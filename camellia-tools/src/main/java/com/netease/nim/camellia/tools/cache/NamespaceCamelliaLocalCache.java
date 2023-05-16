@@ -80,8 +80,8 @@ public class NamespaceCamelliaLocalCache {
     /**
      * 删除缓存
      */
-    public void evict(String namespace, Object key) {
-        get(namespace).evict("", key);
+    public Object evict(String namespace, Object key) {
+        return get(namespace).evict("", key);
     }
 
     /**

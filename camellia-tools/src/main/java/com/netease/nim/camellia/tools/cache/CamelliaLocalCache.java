@@ -173,12 +173,16 @@ public class CamelliaLocalCache {
     /**
      * 删除缓存
      */
-    public void evict(String tag, Object key) {
+    public Object evict(String tag, Object key) {
         String uniqueKey = buildCacheKey(tag, key);
-        cache.remove(uniqueKey);
         if (logger.isTraceEnabled()) {
             logger.trace("local cache evict, tag = {}, key = {}", tag, key);
         }
+        CacheBean bean = cache.remove(uniqueKey);
+        if (bean.isExpire()) {
+            return null;
+        }
+        return bean.getValue();
     }
 
     /**
