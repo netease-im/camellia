@@ -5,7 +5,6 @@ import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackBizHandler;
 import com.netease.nim.camellia.hot.key.common.netty.pack.*;
-import com.netease.nim.camellia.hot.key.server.bean.BeanInitUtils;
 import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCalculator;
 import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCalculatorQueue;
 import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCounterManager;
@@ -46,6 +45,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
     private final boolean is2Power;
     private final ThreadPoolExecutor executor;
     private final CacheableHotKeyConfigService hotKeyConfigService;
+    private final HotKeyCallbackManager callbackManager;
 
     public HotKeyPackBizServerHandler(HotKeyServerProperties properties) {
         this.bizWorkThread = properties.getBizWorkThread();
@@ -69,7 +69,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         hotKeyConfigService.registerCallback(hotKeyCounterManager::remove);
 
         //callback
-        HotKeyCallbackManager callbackManager = new HotKeyCallbackManager(properties);
+        callbackManager = new HotKeyCallbackManager(properties);
 
         //topN counter
         TopNCounterManager topNCounterManager = new TopNCounterManager(properties, callbackManager);
@@ -78,7 +78,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         HotKeyEventHandler hotKeyEventHandler = new HotKeyEventHandler(properties, notifyService, callbackManager);
 
         for (int i=0; i<bizWorkThread; i++) {
-            HotKeyCalculatorQueue queue = new HotKeyCalculatorQueue(properties.getBizQueueCapacity());
+            HotKeyCalculatorQueue queue = new HotKeyCalculatorQueue(properties.getWorkQueueType(), properties.getBizQueueCapacity());
             HotKeyCalculatorQueueMonitor.register(queue);
             queue.start(new HotKeyCalculator(i, hotKeyConfigService, hotKeyCounterManager, topNCounterManager, hotKeyEventHandler));
             this.queues[i] = queue;
@@ -86,8 +86,8 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
 
         this.executor = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000),
                 new CamelliaThreadFactory("hot-key-pack-biz-server-handler"), new ThreadPoolExecutor.AbortPolicy());
-        logger.info("HotKeyPackBizServerHandler start success, bizWorkThread = {}, bizQueueCapacity = {}",
-                bizWorkThread, properties.getBizQueueCapacity());
+        logger.info("HotKeyPackBizServerHandler start success, bizWorkThread = {}, bizQueueCapacity = {}, workQueueType = {}",
+                bizWorkThread, properties.getBizQueueCapacity(), properties.getWorkQueueType());
     }
 
     @Override
@@ -96,10 +96,12 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
             if (logger.isDebugEnabled()) {
                 logger.debug("receive PushPack, size = {}", pack.getList().size());
             }
+            List<KeyCounter> keyCounterList = pack.getList();
+            int size = keyCounterList.size();
             Map<HotKeyCalculatorQueue, List<KeyCounter>> buffer = new HashMap<>();
-            for (KeyCounter counter : pack.getList()) {
+            for (KeyCounter counter : keyCounterList) {
                 HotKeyCalculatorQueue queue = selectQueue(counter);
-                List<KeyCounter> list = CamelliaMapUtils.computeIfAbsent(buffer, queue, k -> new ArrayList<>());
+                List<KeyCounter> list = CamelliaMapUtils.computeIfAbsent(buffer, queue, k -> new ArrayList<>(size));
                 list.add(counter);
             }
             for (Map.Entry<HotKeyCalculatorQueue, List<KeyCounter>> entry : buffer.entrySet()) {
@@ -137,6 +139,25 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
             });
         } catch (Exception e) {
             logger.error("submit onGetConfigPack error, namespace = {}", pack.getNamespace(), e);
+            future.complete(null);
+        }
+        return future;
+    }
+
+    @Override
+    public CompletableFuture<HotKeyCacheStatsRepPack> onHotKeyCacheStatsPack(Channel channel, HotKeyCacheStatsPack pack) {
+        CompletableFuture<HotKeyCacheStatsRepPack> future = new CompletableFuture<>();
+        try {
+            executor.submit(() -> {
+                try {
+                    callbackManager.cacheHitStats(pack.getStatsList());
+                    future.complete(HotKeyCacheStatsRepPack.INSTANCE);
+                } catch (Exception e) {
+                    future.complete(null);
+                }
+            });
+        } catch (Exception e) {
+            logger.error("submit onHotKeyCacheStatsPack error", e);
             future.complete(null);
         }
         return future;

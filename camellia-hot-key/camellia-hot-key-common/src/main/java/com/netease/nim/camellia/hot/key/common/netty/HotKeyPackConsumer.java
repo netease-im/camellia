@@ -43,6 +43,8 @@ public class HotKeyPackConsumer {
                     repPack = handler.onNotifyHotKeyConfigPack(channel, (NotifyHotKeyConfigPack) pack.getBody());
                 } else if (command == HotKeyCommand.NOTIFY_HOTKEY) {
                     repPack = handler.onNotifyHotKeyPack(channel, (NotifyHotKeyPack) pack.getBody());
+                } else if (command == HotKeyCommand.HOT_KEY_CACHE_STATS) {
+                    repPack = handler.onHotKeyCacheStatsPack(channel, (HotKeyCacheStatsPack) pack.getBody());
                 }
             } catch (Exception e) {
                 logger.error("on pack error, command = {}", pack.getHeader().getCommand(), e);

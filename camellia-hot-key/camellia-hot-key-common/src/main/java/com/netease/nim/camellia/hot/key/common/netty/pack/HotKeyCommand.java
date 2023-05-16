@@ -10,6 +10,7 @@ public enum HotKeyCommand {
     PUSH((byte) 3), //client -> server: push key collect counter
     NOTIFY_HOTKEY((byte) 4), //server -> client: notify hot-key(discovery/delete/update) to client
     NOTIFY_CONFIG((byte) 5),//server -> client: notify new config to client
+    HOT_KEY_CACHE_STATS((byte) 6) //client -> server: push cache hit stats
     ;
 
     private final byte cmd;

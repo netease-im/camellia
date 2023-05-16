@@ -32,11 +32,11 @@ public class HotKeyCounterCollector {
                 .build();
     }
 
-    public void push(String namespace, String key, KeyAction keyAction) {
+    public void push(String namespace, String key, KeyAction keyAction, long count) {
         UniqueKey uniqueKey = new UniqueKey(namespace, key, keyAction);
         Map<UniqueKey, LongAdder> map = !backUp.get() ? map1 : map2;
         LongAdder adder = CamelliaMapUtils.computeIfAbsent(map, uniqueKey, k -> new LongAdder());
-        adder.increment();
+        adder.add(count);
     }
 
     public synchronized List<KeyCounter> collect() {

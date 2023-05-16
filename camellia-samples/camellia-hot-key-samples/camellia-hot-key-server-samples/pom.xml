@@ -18,6 +18,11 @@
 			<artifactId>camellia-hot-key-server-spring-boot-starter</artifactId>
 			<version>1.2.8-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-hot-key-server-zk-registry-spring-boot-starter</artifactId>
+			<version>1.2.8-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

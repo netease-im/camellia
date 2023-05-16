@@ -52,6 +52,32 @@ camellia-hot-key-zk-registry:
   basePath: /camellia-hot-key
 ```
 
+* 重写consoleService，如下：
+```java
+@Component
+public class MyConsoleService extends ConsoleServiceAdaptor {
+
+    @Autowired(required = false)
+    private CamelliaHotKeyServerZkRegisterBoot zkRegisterBoot;
+
+    @Override
+    public ConsoleResult online() {
+        if (zkRegisterBoot != null) {
+            zkRegisterBoot.register();
+        }
+        return super.online();
+    }
+
+    @Override
+    public ConsoleResult offline() {
+        if (zkRegisterBoot != null) {
+            zkRegisterBoot.deregister();
+        }
+        return super.offline();
+    }
+}
+```
+
 #### sdk侧
 * 额外引入依赖
 
@@ -84,13 +110,13 @@ public class TestZk {
 
         //把key的访问push给server即可
         String namespace1 = "db_cache";
-        monitorSdk.push(namespace1, "key1");
-        monitorSdk.push(namespace1, "key2");
-        monitorSdk.push(namespace1, "key2");
+        monitorSdk.push(namespace1, "key1", 1);
+        monitorSdk.push(namespace1, "key2", 1);
+        monitorSdk.push(namespace1, "key2", 1);
 
         String namespace2 = "api_request";
-        monitorSdk.push(namespace2, "/xx/xx");
-        monitorSdk.push(namespace2, "/xx/xx2");
+        monitorSdk.push(namespace2, "/xx/xx", 1);
+        monitorSdk.push(namespace2, "/xx/xx2", 1);
     }
 }
 
@@ -148,6 +174,25 @@ eureka:
     prefer-ip-address: true
 ```
 
+* 重写consoleService，如下：
+```java
+@Component
+public class MyConsoleService extends ConsoleServiceAdaptor {
+
+    @Override
+    public ConsoleResult online() {
+        ApplicationInfoManager.getInstance().setInstanceStatus(InstanceInfo.InstanceStatus.UP);
+        return super.online();
+    }
+
+    @Override
+    public ConsoleResult offline() {
+        ApplicationInfoManager.getInstance().setInstanceStatus(InstanceInfo.InstanceStatus.DOWN);
+        return super.offline();
+    }
+}
+```
+
 #### sdk侧
 * 额外引入依赖
 
@@ -182,13 +227,13 @@ public class TestEureka {
 
         //把key的访问push给server即可
         String namespace1 = "db_cache";
-        monitorSdk.push(namespace1, "key1");
-        monitorSdk.push(namespace1, "key2");
-        monitorSdk.push(namespace1, "key2");
+        monitorSdk.push(namespace1, "key1", 1);
+        monitorSdk.push(namespace1, "key2", 1);
+        monitorSdk.push(namespace1, "key2", 1);
 
         String namespace2 = "api_request";
-        monitorSdk.push(namespace2, "/xx/xx");
-        monitorSdk.push(namespace2, "/xx/xx2");
+        monitorSdk.push(namespace2, "/xx/xx", 1);
+        monitorSdk.push(namespace2, "/xx/xx2", 1);
     }
 }
 
@@ -222,14 +267,13 @@ public class TestNoRegister {
 
         //把key的访问push给server即可
         String namespace1 = "db_cache";
-        monitorSdk.push(namespace1, "key1");
-        monitorSdk.push(namespace1, "key2");
-        monitorSdk.push(namespace1, "key2");
+        monitorSdk.push(namespace1, "key1", 1);
+        monitorSdk.push(namespace1, "key2", 1);
+        monitorSdk.push(namespace1, "key2", 1);
 
         String namespace2 = "api_request";
-        monitorSdk.push(namespace2, "/xx/xx");
-        monitorSdk.push(namespace2, "/xx/xx2");
+        monitorSdk.push(namespace2, "/xx/xx", 1);
+        monitorSdk.push(namespace2, "/xx/xx2", 1);
     }
 }
-
 ```

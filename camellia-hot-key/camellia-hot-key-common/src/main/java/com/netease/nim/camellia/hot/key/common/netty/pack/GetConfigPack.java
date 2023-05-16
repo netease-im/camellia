@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.hot.key.common.netty.pack;
 
 import com.netease.nim.camellia.hot.key.common.netty.codec.Pack;
-import com.netease.nim.camellia.hot.key.common.netty.codec.Property;
+import com.netease.nim.camellia.hot.key.common.netty.codec.Props;
 import com.netease.nim.camellia.hot.key.common.netty.codec.Unpack;
 
 /**
@@ -36,14 +36,14 @@ public class GetConfigPack extends HotKeyPackBody {
 
     @Override
     public void marshal(Pack pack) {
-        Property property = new Property();
-        property.put(Tag.namespace.value, namespace);
-        pack.putMarshallable(property);
+        Props props = new Props();
+        props.put(Tag.namespace.value, namespace);
+        pack.putMarshallable(props);
     }
 
     @Override
     public void unmarshal(Unpack unpack) {
-        Property property = new Property();
+        Props property = new Props();
         unpack.popMarshallable(property);
         namespace = property.get(Tag.namespace.value);
     }

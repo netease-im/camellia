@@ -12,6 +12,6 @@ public interface HotKeyServerDiscovery extends CamelliaDiscovery<HotKeyServerAdd
      * 每个HotKeyServerDiscovery应该有一个唯一的名字
      * @return 名字
      */
-    public abstract String getName();
+    String getName();
 
 }
