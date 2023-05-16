@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.connection;
 
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.util.concurrent.FastThreadLocal;
 
 import java.util.Objects;
@@ -45,16 +46,16 @@ public class RedisConnectionAddr {
         this.db = db;
         StringBuilder builder = new StringBuilder();
         if (userName != null && password != null) {
-            builder.append(userName).append(":").append(password);
+            builder.append(userName).append(Utils.COLON).append(password);
         } else if (userName == null && password != null) {
             builder.append(password);
         }
         boolean withParam = false;
         if (readonly) {
-            builder.append("@").append(host).append(":").append(port).append("?readonly=").append(true);
+            builder.append("@").append(host).append(Utils.COLON).append(port).append("?readonly=").append(true);
             withParam = true;
         } else {
-            builder.append("@").append(host).append(":").append(port);
+            builder.append("@").append(host).append("Utils.COLON").append(port);
         }
         if (db > 0) {
             if (withParam) {

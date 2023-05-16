@@ -44,7 +44,7 @@ public class RedisSentinelUtils {
             }
             return new RedisSentinelMasterResponse(master, sentinelAvailable);
         } catch (Exception e) {
-            logger.error("Can not get master addr, master name = {}, sentinel = {}", master, host + ":" + port, e);
+            logger.error("Can not get master addr, master name = {}, sentinel = {}", master, host + Utils.COLON + port, e);
             return new RedisSentinelMasterResponse(master, sentinelAvailable);
         } finally {
             if (redisConnection != null) {
@@ -67,7 +67,7 @@ public class RedisSentinelUtils {
             }
             return new RedisSentinelSlavesResponse(slaves, sentinelAvailable);
         } catch (Exception e) {
-            logger.error("can not get slaves addr, master name = {}, sentinel = {}", masterName, host + ":" + port, e);
+            logger.error("can not get slaves addr, master name = {}, sentinel = {}", masterName, host + "Utils.COLON" + port, e);
             return new RedisSentinelSlavesResponse(null, sentinelAvailable);
         } finally {
             if (redisConnection != null) {

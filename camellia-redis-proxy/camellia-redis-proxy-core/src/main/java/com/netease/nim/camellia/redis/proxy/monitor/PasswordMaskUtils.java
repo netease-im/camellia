@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,9 +36,9 @@ public class PasswordMaskUtils {
             int j = url.lastIndexOf("@");
             String userNameAndPassword = url.substring(i + 3, j);
             if (userNameAndPassword.length() != 0) {
-                int k = userNameAndPassword.indexOf(":");
+                int k = userNameAndPassword.indexOf(Utils.COLON);
                 if (k != -1) {
-                    userNameAndPassword = userNameAndPassword.substring(0, k) + ":" + maskStr(userNameAndPassword.length() - k - 1);
+                    userNameAndPassword = userNameAndPassword.substring(0, k) + Utils.COLON + maskStr(userNameAndPassword.length() - k - 1);
                 } else {
                     userNameAndPassword = maskStr(userNameAndPassword.length());
                 }
@@ -69,9 +70,9 @@ public class PasswordMaskUtils {
             int i = addr.lastIndexOf("@");
             if (i == 0) return addr;
             String substring = addr.substring(0, i);
-            int k = substring.indexOf(":");
+            int k = substring.indexOf(Utils.COLON);
             if (k != -1) {
-                substring = substring.substring(0, k) + ":" + maskStr(substring.length() - k - 1);
+                substring = substring.substring(0, k) + Utils.COLON + maskStr(substring.length() - k - 1);
             } else {
                 substring = maskStr(substring.length());
             }

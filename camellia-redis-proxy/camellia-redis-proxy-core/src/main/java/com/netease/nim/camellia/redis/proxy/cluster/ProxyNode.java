@@ -1,6 +1,8 @@
 package com.netease.nim.camellia.redis.proxy.cluster;
 
 
+import com.netease.nim.camellia.redis.proxy.util.Utils;
+
 import java.util.Objects;
 
 /**
@@ -50,13 +52,13 @@ public class ProxyNode implements Comparable<ProxyNode> {
 
     @Override
     public String toString() {
-        return host + ":" + port + "@" + cport;
+        return host + Utils.COLON + port + "@" + cport;
     }
 
     public static ProxyNode parseString(String str) {
         try {
             ProxyNode node = new ProxyNode();
-            String[] split1 = str.split(":");
+            String[] split1 = str.split(Utils.COLON);
             node.setHost(split1[0]);
             String[] split2 = split1[1].split("@");
             node.setPort(Integer.parseInt(split2[0]));

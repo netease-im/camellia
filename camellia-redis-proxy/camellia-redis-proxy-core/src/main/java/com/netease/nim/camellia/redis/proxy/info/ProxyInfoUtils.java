@@ -142,9 +142,9 @@ public class ProxyInfoUtils {
             } else {
                 int index;
                 if (line.startsWith("upstream_redis_nums")) {
-                    index = line.lastIndexOf(":");
+                    index = line.lastIndexOf(Utils.COLON);
                 } else {
-                    index = line.indexOf(":");
+                    index = line.indexOf(Utils.COLON);
                 }
                 if (index > 0) {
                     String itemKey = line.substring(0, index);
@@ -285,7 +285,7 @@ public class ProxyInfoUtils {
             count.incrementAndGet();
         }
         for (Map.Entry<String, AtomicLong> entry : map.entrySet()) {
-            builder.append(entry.getKey()).append(":").append(entry.getValue().get()).append("\r\n");
+            builder.append(entry.getKey()).append(Utils.COLON).append(entry.getValue().get()).append("\r\n");
         }
         return builder.toString();
     }
@@ -323,7 +323,7 @@ public class ProxyInfoUtils {
             }
             UpstreamRedisClientTemplate template = entry.getValue();
             String routeConf = ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(template.getResourceTable()));
-            builder.append("route_conf_").append(bid == null ? "default" : bid).append("_").append(bgroup == null ? "default" : bgroup).append(":").append(routeConf).append("\r\n");
+            builder.append("route_conf_").append(bid == null ? "default" : bid).append("_").append(bgroup == null ? "default" : bgroup).append(Utils.COLON).append(routeConf).append("\r\n");
         }
         return builder.toString();
     }
@@ -338,7 +338,7 @@ public class ProxyInfoUtils {
         }
         builder.append("upstream_redis_nums:").append(upstreamRedisNums).append("\r\n");
         for (Map.Entry<RedisConnectionAddr, ConcurrentHashMap<String, RedisConnection>> entry : redisClientMap.entrySet()) {
-            builder.append("upstream_redis_nums").append("[").append(PasswordMaskUtils.maskAddr(entry.getKey().getUrl())).append("]").append(":").append(entry.getValue().size()).append("\r\n");
+            builder.append("upstream_redis_nums").append("[").append(PasswordMaskUtils.maskAddr(entry.getKey().getUrl())).append("]").append(Utils.COLON).append(entry.getValue().size()).append("\r\n");
         }
         return builder.toString();
     }
