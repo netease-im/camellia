@@ -1,5 +1,17 @@
 [中文版](update-zh.md)
 
+
+# 1.2.8（2023/05/xx）
+### add
+* add camellia-hot-key module
+
+### update
+* none
+
+### fix
+* camellia-redis-proxy update the console api `/prometheus`, replace `%n` to `\n`, adapate windows os
+
+
 # 1.2.7（2023/05/04）
 ### add
 * none
