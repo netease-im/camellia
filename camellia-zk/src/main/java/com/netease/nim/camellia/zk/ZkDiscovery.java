@@ -28,16 +28,18 @@ public class ZkDiscovery<T> extends AbstractCamelliaDiscovery<T> implements Came
 
     private static final Logger logger = LoggerFactory.getLogger(ZkDiscovery.class);
 
+    private final Class<T> clazz;
     private final String applicationName;
     private final CuratorFramework client;
     private final String path;
     private ConcurrentHashMap<String, InstanceInfo<T>> map = new ConcurrentHashMap<>();
 
-    public ZkDiscovery(String zkUrl, String basePath, String applicationName) {
-        this(ZkClientFactory.DEFAULT.getClient(zkUrl), basePath, applicationName, ZkConstants.reloadIntervalSeconds);
+    public ZkDiscovery(Class<T> clazz, String zkUrl, String basePath, String applicationName) {
+        this(clazz, ZkClientFactory.DEFAULT.getClient(zkUrl), basePath, applicationName, ZkConstants.reloadIntervalSeconds);
     }
 
-    public ZkDiscovery(CuratorFramework client, String basePath, String applicationName, long reloadIntervalSeconds) {
+    public ZkDiscovery(Class<T> clazz, CuratorFramework client, String basePath, String applicationName, long reloadIntervalSeconds) {
+        this.clazz = clazz;
         this.applicationName = applicationName;
         this.client = client;
         this.path = basePath + "/" + applicationName;
@@ -55,7 +57,7 @@ public class ZkDiscovery<T> extends AbstractCamelliaDiscovery<T> implements Came
                     if (data == null) {
                         logger.warn("child_added, but data is null, path = {}", path);
                     } else {
-                        InstanceInfo<T> instanceInfo = InstanceInfoSerializeUtil.deserialize(data);
+                        InstanceInfo<T> instanceInfo = InstanceInfoSerializeUtil.deserialize(data, clazz);
                         int index = path.lastIndexOf("/") + 1;
                         String id = path.substring(index);
                         map.put(id, instanceInfo);
@@ -102,7 +104,7 @@ public class ZkDiscovery<T> extends AbstractCamelliaDiscovery<T> implements Came
                 ConcurrentHashMap<String, InstanceInfo<T>> map = new ConcurrentHashMap<>();
                 for (String id : strings) {
                     byte[] data = client.getData().forPath(path + "/" + id);
-                    InstanceInfo<T> instanceInfo = InstanceInfoSerializeUtil.deserialize(data);
+                    InstanceInfo<T> instanceInfo = InstanceInfoSerializeUtil.deserialize(data, clazz);
                     if (instanceInfo != null) {
                         map.put(id, instanceInfo);
                     }

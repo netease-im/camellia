@@ -16,8 +16,13 @@ public class InstanceInfoSerializeUtil {
         return string.getBytes(StandardCharsets.UTF_8);
     }
 
-    public static <T> InstanceInfo deserialize(byte[] data) {
+    public static <T> InstanceInfo<T> deserialize(byte[] data, Class<T> clazz) {
         if (data == null || data.length == 0) return null;
-        return JSONObject.parseObject(new String(data, StandardCharsets.UTF_8), InstanceInfo.class);
+        JSONObject json = JSONObject.parseObject(new String(data, StandardCharsets.UTF_8));
+        InstanceInfo<T> instanceInfo = new InstanceInfo<>();
+        instanceInfo.setRegisterTime(json.getLong("registerTime"));
+        T instance = json.getObject("instance", clazz);
+        instanceInfo.setInstance(instance);
+        return instanceInfo;
     }
 }

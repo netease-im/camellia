@@ -4,8 +4,6 @@ import com.netease.nim.camellia.hot.key.sdk.discovery.HotKeyServerDiscovery;
 import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyServerAddr;
 import com.netease.nim.camellia.zk.ZkDiscovery;
 import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -15,16 +13,14 @@ import java.util.List;
  */
 public class ZkHotKeyServerDiscovery implements HotKeyServerDiscovery {
 
-    private static final Logger logger = LoggerFactory.getLogger(ZkHotKeyServerDiscovery.class);
-
     private final ZkDiscovery<HotKeyServerAddr> zkDiscovery;
 
     public ZkHotKeyServerDiscovery(String zkUrl, String basePath, String applicationName) {
-        zkDiscovery = new ZkDiscovery<>(zkUrl, basePath, applicationName);
+        zkDiscovery = new ZkDiscovery<>(HotKeyServerAddr.class, zkUrl, basePath, applicationName);
     }
 
     public ZkHotKeyServerDiscovery(CuratorFramework client, String basePath, String applicationName, long reloadIntervalSeconds) {
-        zkDiscovery = new ZkDiscovery<>(client, basePath, applicationName, reloadIntervalSeconds);
+        zkDiscovery = new ZkDiscovery<>(HotKeyServerAddr.class, client, basePath, applicationName, reloadIntervalSeconds);
     }
 
     @Override

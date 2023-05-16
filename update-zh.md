@@ -4,6 +4,7 @@
 # 1.2.8（2023/05/xx）
 ### 新增
 * 新增camellia-hot-key模块，具体见：[hot-key](/docs/hot-key/hot-key.md)
+* 新增camellia-zk模块，camellia-redis-proxy-zk和camellia-hot-key-zk均引用camellia-zk，从而复用代码
 
 ### 更新
 * 无

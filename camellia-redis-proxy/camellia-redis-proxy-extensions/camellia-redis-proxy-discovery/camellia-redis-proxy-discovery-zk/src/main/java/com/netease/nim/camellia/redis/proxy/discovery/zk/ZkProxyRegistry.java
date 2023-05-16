@@ -10,11 +10,11 @@ import com.netease.nim.camellia.zk.ZkRegistry;
 public class ZkProxyRegistry extends ZkRegistry<Proxy> {
 
     public ZkProxyRegistry(String zkUrl, String basePath, String applicationName, Proxy proxy) {
-        super(zkUrl, basePath, applicationName, proxy);
+        super(Proxy.class, zkUrl, basePath, applicationName, proxy);
     }
 
     public ZkProxyRegistry(String zkUrl, int sessionTimeoutMs, int connectionTimeoutMs,
                            int baseSleepTimeMs, int maxRetries, String basePath, String applicationName, Proxy proxy) {
-        super(zkUrl, sessionTimeoutMs, connectionTimeoutMs, baseSleepTimeMs, maxRetries, basePath, applicationName, proxy);
+        super(Proxy.class, zkUrl, sessionTimeoutMs, connectionTimeoutMs, baseSleepTimeMs, maxRetries, basePath, applicationName, proxy);
     }
 }

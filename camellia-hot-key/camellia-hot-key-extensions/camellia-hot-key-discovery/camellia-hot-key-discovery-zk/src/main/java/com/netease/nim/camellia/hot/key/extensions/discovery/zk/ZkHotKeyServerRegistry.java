@@ -11,12 +11,12 @@ import com.netease.nim.camellia.zk.ZkRegistry;
 public class ZkHotKeyServerRegistry extends ZkRegistry<HotKeyServerAddr> {
 
     public ZkHotKeyServerRegistry(String zkUrl, String basePath, String applicationName, HotKeyServerAddr addr) {
-        super(zkUrl, basePath, applicationName, addr);
+        super(HotKeyServerAddr.class, zkUrl, basePath, applicationName, addr);
     }
 
     public ZkHotKeyServerRegistry(String zkUrl, int sessionTimeoutMs, int connectionTimeoutMs,
                                   int baseSleepTimeMs, int maxRetries, String basePath, String applicationName, HotKeyServerAddr addr) {
-        super(zkUrl, sessionTimeoutMs, connectionTimeoutMs, baseSleepTimeMs, maxRetries, basePath, applicationName, addr);
+        super(HotKeyServerAddr.class, zkUrl, sessionTimeoutMs, connectionTimeoutMs, baseSleepTimeMs, maxRetries, basePath, applicationName, addr);
     }
 
 }

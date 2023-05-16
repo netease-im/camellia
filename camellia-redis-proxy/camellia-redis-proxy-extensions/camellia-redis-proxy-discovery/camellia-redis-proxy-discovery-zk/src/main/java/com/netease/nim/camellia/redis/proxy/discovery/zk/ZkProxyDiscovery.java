@@ -18,19 +18,19 @@ public class ZkProxyDiscovery implements IProxyDiscovery {
     private final ZkDiscovery<Proxy> zkDiscovery;
 
     public ZkProxyDiscovery(String zkUrl, String applicationName) {
-        zkDiscovery = new ZkDiscovery<>(zkUrl, ZkProxyConstants.basePath, applicationName);
+        zkDiscovery = new ZkDiscovery<>(Proxy.class, zkUrl, ZkProxyConstants.basePath, applicationName);
     }
 
     public ZkProxyDiscovery(String zkUrl, String basePath, String applicationName) {
-        zkDiscovery = new ZkDiscovery<>(ZkClientFactory.DEFAULT.getClient(zkUrl), basePath, applicationName, ZkConstants.reloadIntervalSeconds);
+        zkDiscovery = new ZkDiscovery<>(Proxy.class, ZkClientFactory.DEFAULT.getClient(zkUrl), basePath, applicationName, ZkConstants.reloadIntervalSeconds);
     }
 
     public ZkProxyDiscovery(ZkClientFactory factory, String zkUrl, String basePath, String applicationName, long reloadIntervalSeconds) {
-        zkDiscovery = new ZkDiscovery<>(factory.getClient(zkUrl), basePath, applicationName, reloadIntervalSeconds);
+        zkDiscovery = new ZkDiscovery<>(Proxy.class, factory.getClient(zkUrl), basePath, applicationName, reloadIntervalSeconds);
     }
 
     public ZkProxyDiscovery(CuratorFramework client, String basePath, String applicationName, long reloadIntervalSeconds) {
-        zkDiscovery = new ZkDiscovery<>(client, basePath, applicationName, reloadIntervalSeconds);
+        zkDiscovery = new ZkDiscovery<>(Proxy.class, client, basePath, applicationName, reloadIntervalSeconds);
     }
 
     @Override

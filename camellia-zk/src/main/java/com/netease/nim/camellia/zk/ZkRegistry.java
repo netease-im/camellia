@@ -22,6 +22,7 @@ public class ZkRegistry<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(ZkRegistry.class);
 
+    private final Class<T> clazz;
     private final String zkUrl;
     private int sessionTimeoutMs = ZkConstants.sessionTimeoutMs;
     private int connectionTimeoutMs = ZkConstants.connectionTimeoutMs;
@@ -40,7 +41,8 @@ public class ZkRegistry<T> {
     private boolean deregister = false;
     private InstanceInfo<T> instanceInfo;
 
-    public ZkRegistry(String zkUrl, String basePath, String applicationName, T instance) {
+    public ZkRegistry(Class<T> clazz, String zkUrl, String basePath, String applicationName, T instance) {
+        this.clazz = clazz;
         this.zkUrl = zkUrl;
         this.basePath = basePath;
         this.applicationName = applicationName;
@@ -48,8 +50,9 @@ public class ZkRegistry<T> {
         init();
     }
 
-    public ZkRegistry(String zkUrl, int sessionTimeoutMs, int connectionTimeoutMs,
+    public ZkRegistry(Class<T> clazz, String zkUrl, int sessionTimeoutMs, int connectionTimeoutMs,
                       int baseSleepTimeMs, int maxRetries, String basePath, String applicationName, T instance) {
+        this.clazz = clazz;
         this.zkUrl = zkUrl;
         this.sessionTimeoutMs = sessionTimeoutMs;
         this.connectionTimeoutMs = connectionTimeoutMs;
@@ -121,7 +124,7 @@ public class ZkRegistry<T> {
                     } catch (KeeperException.NodeExistsException e) {
                         try {
                             byte[] data = client.getData().forPath(registerPath());
-                            InstanceInfo<?> instanceInfo = InstanceInfoSerializeUtil.deserialize(data);
+                            InstanceInfo<?> instanceInfo = InstanceInfoSerializeUtil.deserialize(data, clazz);
                             if (instanceInfo != null) {
                                 if (Objects.equals(instanceInfo.getInstance(), this.instanceInfo.getInstance())) {
                                     this.instanceInfo.setRegisterTime(instanceInfo.getRegisterTime());
