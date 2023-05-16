@@ -23,11 +23,6 @@ public class Utils {
     public static final char CR = '\r';
     public static final char LF = '\n';
     public static final char ZERO = '0';
-
-    /**
-     * colon string
-     */
-    public static final String COLON = ":";
     public static Charset utf8Charset = StandardCharsets.UTF_8;
 
     private static final int NUM_MAP_LENGTH = 256;
