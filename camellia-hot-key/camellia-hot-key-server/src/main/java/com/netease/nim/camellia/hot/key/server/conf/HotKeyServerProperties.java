@@ -25,6 +25,7 @@ public class HotKeyServerProperties {
 
     private int bizWorkThread = HotKeyConstants.Server.bizWorkThread;
     private int bizQueueCapacity = HotKeyConstants.Server.bizWorkQueueCapacity;
+    private WorkQueueType workQueueType = WorkQueueType.LinkedBlockingQueue;
 
     private boolean tcpNoDelay = HotKeyConstants.Server.tcpNoDelay;
     private int soBacklog = HotKeyConstants.Server.soBacklog;
@@ -113,6 +114,14 @@ public class HotKeyServerProperties {
 
     public void setBizQueueCapacity(int bizQueueCapacity) {
         this.bizQueueCapacity = bizQueueCapacity;
+    }
+
+    public WorkQueueType getWorkQueueType() {
+        return workQueueType;
+    }
+
+    public void setWorkQueueType(WorkQueueType workQueueType) {
+        this.workQueueType = workQueueType;
     }
 
     public boolean isTcpNoDelay() {

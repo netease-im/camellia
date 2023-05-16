@@ -45,7 +45,6 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
     private final boolean is2Power;
     private final ThreadPoolExecutor executor;
     private final CacheableHotKeyConfigService hotKeyConfigService;
-    private final HotKeyCounterManager hotKeyCounterManager;
     private final HotKeyCallbackManager callbackManager;
 
     public HotKeyPackBizServerHandler(HotKeyServerProperties properties) {
@@ -66,7 +65,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         hotKeyConfigService.registerCallback(notifyService::notifyHotKeyNotifyChange);
 
         //hot key counter
-        hotKeyCounterManager = new HotKeyCounterManager(properties);
+        HotKeyCounterManager hotKeyCounterManager = new HotKeyCounterManager(properties);
         hotKeyConfigService.registerCallback(hotKeyCounterManager::remove);
 
         //callback
@@ -79,7 +78,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         HotKeyEventHandler hotKeyEventHandler = new HotKeyEventHandler(properties, notifyService, callbackManager);
 
         for (int i=0; i<bizWorkThread; i++) {
-            HotKeyCalculatorQueue queue = new HotKeyCalculatorQueue(properties.getBizQueueCapacity());
+            HotKeyCalculatorQueue queue = new HotKeyCalculatorQueue(properties.getWorkQueueType(), properties.getBizQueueCapacity());
             HotKeyCalculatorQueueMonitor.register(queue);
             queue.start(new HotKeyCalculator(i, hotKeyConfigService, hotKeyCounterManager, topNCounterManager, hotKeyEventHandler));
             this.queues[i] = queue;
@@ -87,8 +86,8 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
 
         this.executor = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10000),
                 new CamelliaThreadFactory("hot-key-pack-biz-server-handler"), new ThreadPoolExecutor.AbortPolicy());
-        logger.info("HotKeyPackBizServerHandler start success, bizWorkThread = {}, bizQueueCapacity = {}",
-                bizWorkThread, properties.getBizQueueCapacity());
+        logger.info("HotKeyPackBizServerHandler start success, bizWorkThread = {}, bizQueueCapacity = {}, workQueueType = {}",
+                bizWorkThread, properties.getBizQueueCapacity(), properties.getWorkQueueType());
     }
 
     @Override

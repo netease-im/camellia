@@ -5,6 +5,7 @@ import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCacheStatsC
 import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCallback;
 import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyTopNCallback;
 import com.netease.nim.camellia.hot.key.server.conf.FileBasedHotKeyConfigService;
+import com.netease.nim.camellia.hot.key.server.conf.WorkQueueType;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.HashMap;
@@ -23,6 +24,7 @@ public class CamelliaHotKeyServerProperties {
 
     private int bizWorkThread = -1;
     private int bizQueueCapacity = HotKeyConstants.Server.bizWorkQueueCapacity;
+    private WorkQueueType workQueueType = WorkQueueType.LinkedBlockingQueue;
 
     private int maxNamespace = HotKeyConstants.Server.maxNamespace;
 
@@ -79,6 +81,14 @@ public class CamelliaHotKeyServerProperties {
 
     public void setBizQueueCapacity(int bizQueueCapacity) {
         this.bizQueueCapacity = bizQueueCapacity;
+    }
+
+    public WorkQueueType getWorkQueueType() {
+        return workQueueType;
+    }
+
+    public void setWorkQueueType(WorkQueueType workQueueType) {
+        this.workQueueType = workQueueType;
     }
 
     public int getMaxNamespace() {
