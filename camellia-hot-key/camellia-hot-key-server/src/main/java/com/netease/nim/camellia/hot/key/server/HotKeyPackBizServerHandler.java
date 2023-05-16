@@ -96,10 +96,12 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
             if (logger.isDebugEnabled()) {
                 logger.debug("receive PushPack, size = {}", pack.getList().size());
             }
+            List<KeyCounter> keyCounterList = pack.getList();
+            int size = keyCounterList.size();
             Map<HotKeyCalculatorQueue, List<KeyCounter>> buffer = new HashMap<>();
-            for (KeyCounter counter : pack.getList()) {
+            for (KeyCounter counter : keyCounterList) {
                 HotKeyCalculatorQueue queue = selectQueue(counter);
-                List<KeyCounter> list = CamelliaMapUtils.computeIfAbsent(buffer, queue, k -> new ArrayList<>());
+                List<KeyCounter> list = CamelliaMapUtils.computeIfAbsent(buffer, queue, k -> new ArrayList<>(size));
                 list.add(counter);
             }
             for (Map.Entry<HotKeyCalculatorQueue, List<KeyCounter>> entry : buffer.entrySet()) {
