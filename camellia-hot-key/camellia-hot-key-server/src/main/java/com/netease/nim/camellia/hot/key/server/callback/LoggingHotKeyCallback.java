@@ -13,6 +13,6 @@ public class LoggingHotKeyCallback implements HotKeyCallback {
 
     @Override
     public void newHotKey(HotKeyInfo hotKeyInfo) {
-        logger.info("hotKeyInfo = {}", JSONObject.toJSONString(hotKeyInfo));
+        logger.info("newHotKey = {}", JSONObject.toJSONString(hotKeyInfo));
     }
 }

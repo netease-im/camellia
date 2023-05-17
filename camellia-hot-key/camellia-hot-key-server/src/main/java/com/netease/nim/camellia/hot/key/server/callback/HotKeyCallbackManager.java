@@ -50,22 +50,20 @@ public class HotKeyCallbackManager {
      */
     public void newHotkey(HotKey hotKey, Rule rule, ValueGetter getter) {
         try {
-            if (hotKeyCallback != null) {
-                Long lastCallbackTime = callbackTimeCache.get(hotKey.getNamespace(), hotKey.getKey(), Long.class);
-                if (lastCallbackTime == null) {
-                    boolean success = callbackTimeCache.putIfAbsent(hotKey.getNamespace(), hotKey.getKey(),
-                            TimeCache.currentMillis, properties.getHotKeyCallbackIntervalSeconds());
-                    if (success) {
-                        HotKeyInfo hotKeyInfo = new HotKeyInfo(hotKey.getNamespace(), hotKey.getKey(), hotKey.getAction(), rule, getter.get());
-                        executor.submit(() -> {
-                            try {
-                                HotKeyCollector.update(hotKeyInfo);
-                                hotKeyCallback.newHotKey(hotKeyInfo);
-                            } catch (Exception e) {
-                                logger.error("hotKeyInfo callback error", e);
-                            }
-                        });
-                    }
+            Long lastCallbackTime = callbackTimeCache.get(hotKey.getNamespace(), hotKey.getKey(), Long.class);
+            if (lastCallbackTime == null) {
+                boolean success = callbackTimeCache.putIfAbsent(hotKey.getNamespace(), hotKey.getKey(),
+                        TimeCache.currentMillis, properties.getHotKeyCallbackIntervalSeconds());
+                if (success) {
+                    HotKeyInfo hotKeyInfo = new HotKeyInfo(hotKey.getNamespace(), hotKey.getKey(), hotKey.getAction(), rule, getter.get());
+                    executor.submit(() -> {
+                        try {
+                            HotKeyCollector.update(hotKeyInfo);
+                            hotKeyCallback.newHotKey(hotKeyInfo);
+                        } catch (Exception e) {
+                            logger.error("hotKeyInfo callback error", e);
+                        }
+                    });
                 }
             }
         } catch (Exception e) {
@@ -79,15 +77,13 @@ public class HotKeyCallbackManager {
      */
     public void topN(TopNStatsResult result) {
         try {
-            if (topNCallback != null) {
-                executor.submit(() -> {
-                    try {
-                        topNCallback.topN(result);
-                    } catch (Exception e) {
-                        logger.error("topN callback error", e);
-                    }
-                });
-            }
+            executor.submit(() -> {
+                try {
+                    topNCallback.topN(result);
+                } catch (Exception e) {
+                    logger.error("topN callback error", e);
+                }
+            });
         } catch (Exception e) {
             logger.error("submit topN callback error", e);
         }
@@ -99,15 +95,13 @@ public class HotKeyCallbackManager {
      */
     public void cacheHitStats(List<HotKeyCacheStats> statsList) {
         try {
-            if (hotKeyCacheStatsCallback != null) {
-                executor.submit(() -> {
-                    try {
-                        hotKeyCacheStatsCallback.newStats(statsList);
-                    } catch (Exception e) {
-                        logger.error("cacheHitStats callback error", e);
-                    }
-                });
-            }
+            executor.submit(() -> {
+                try {
+                    hotKeyCacheStatsCallback.newStats(statsList);
+                } catch (Exception e) {
+                    logger.error("cacheHitStats callback error", e);
+                }
+            });
         } catch (Exception e) {
             logger.error("submit cacheHitStats callback error");
         }

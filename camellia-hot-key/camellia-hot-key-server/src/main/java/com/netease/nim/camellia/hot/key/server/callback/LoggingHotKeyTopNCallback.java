@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
  */
 public class LoggingHotKeyTopNCallback implements HotKeyTopNCallback {
 
-    private static final Logger logger = LoggerFactory.getLogger("camellia-hot-key-logging");
+    private static final Logger logger = LoggerFactory.getLogger("camellia-hot-key-topn");
 
     @Override
     public void topN(TopNStatsResult result) {

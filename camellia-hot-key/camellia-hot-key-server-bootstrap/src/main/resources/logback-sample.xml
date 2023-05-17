@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="60 seconds" debug="false">
 
-       <property name="LOG_HOME" value="/xxx/xxx/camellia-redis-proxy"/>
+       <property name="LOG_HOME" value="/xxx/xxx/camellia-hot-key-server"/>
 
        <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
               <encoder>
@@ -23,38 +23,10 @@
               </encoder>
        </appender>
 
-       <appender name="STATS" class="ch.qos.logback.core.rolling.RollingFileAppender">
-              <file>${LOG_HOME}/stats.log</file>
+       <appender name="MONITOR-COLLECT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+              <file>${LOG_HOME}/monitor.log</file>
               <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-                     <fileNamePattern>${LOG_HOME}/stats.log.%i</fileNamePattern>
-                     <maxIndex>5</maxIndex>
-              </rollingPolicy>
-              <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-                     <maxFileSize>300MB</maxFileSize>
-              </triggeringPolicy>
-              <encoder>
-                     <pattern>%d %-5p %t %X %c{1}:%L - %m%n</pattern>
-              </encoder>
-       </appender>
-
-       <appender name="SLOW-COMMAND-STATS" class="ch.qos.logback.core.rolling.RollingFileAppender">
-              <file>${LOG_HOME}/slow-command-stats.log</file>
-              <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-                     <fileNamePattern>${LOG_HOME}/slow-command-stats.log.%i</fileNamePattern>
-                     <maxIndex>5</maxIndex>
-              </rollingPolicy>
-              <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-                     <maxFileSize>300MB</maxFileSize>
-              </triggeringPolicy>
-              <encoder>
-                     <pattern>%d %-5p %t %X %c{1}:%L - %m%n</pattern>
-              </encoder>
-       </appender>
-
-       <appender name="HOT-KEY-STATS" class="ch.qos.logback.core.rolling.RollingFileAppender">
-              <file>${LOG_HOME}/hot-key-stats.log</file>
-              <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-                     <fileNamePattern>${LOG_HOME}/hot-key-stats.log.%i</fileNamePattern>
+                     <fileNamePattern>${LOG_HOME}/monitor.log.%i</fileNamePattern>
                      <maxIndex>5</maxIndex>
               </rollingPolicy>
               <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
@@ -68,7 +40,7 @@
        <appender name="HOT-KEY-CACHE-STATS" class="ch.qos.logback.core.rolling.RollingFileAppender">
               <file>${LOG_HOME}/hot-key-cache-stats.log</file>
               <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-                     <fileNamePattern>${LOG_HOME}/hot-key-cache-stats.%i</fileNamePattern>
+                     <fileNamePattern>${LOG_HOME}/hot-key-cache-stats.log.%i</fileNamePattern>
                      <maxIndex>5</maxIndex>
               </rollingPolicy>
               <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
@@ -79,10 +51,10 @@
               </encoder>
        </appender>
 
-       <appender name="BIG-KEY-STATS" class="ch.qos.logback.core.rolling.RollingFileAppender">
-              <file>${LOG_HOME}/big-key-stats.log</file>
+       <appender name="HOT-KEY" class="ch.qos.logback.core.rolling.RollingFileAppender">
+              <file>${LOG_HOME}/hot-key.log</file>
               <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-                     <fileNamePattern>${LOG_HOME}/big-key-stats.%i</fileNamePattern>
+                     <fileNamePattern>${LOG_HOME}/hot-key.log.%i</fileNamePattern>
                      <maxIndex>5</maxIndex>
               </rollingPolicy>
               <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
@@ -93,23 +65,36 @@
               </encoder>
        </appender>
 
+       <appender name="HOT-KEY-TOPN" class="ch.qos.logback.core.rolling.RollingFileAppender">
+              <file>${LOG_HOME}/hot-key-topn.log</file>
+              <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+                     <fileNamePattern>${LOG_HOME}/hot-key-topn.log.%i</fileNamePattern>
+                     <maxIndex>5</maxIndex>
+              </rollingPolicy>
+              <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                     <maxFileSize>300MB</maxFileSize>
+              </triggeringPolicy>
+              <encoder>
+                     <pattern>%d %-5p %t %X %c{1}:%L - %m%n</pattern>
+              </encoder>
+       </appender>
 
        <logger name="com.netease.nim.camellia" level="INFO"/>
 
-       <logger name="camellia.redis.proxy.stats" level="INFO" additivity="false" >
-              <appender-ref ref="STATS" />
+       <logger name="camellia-hot-key" level="INFO" additivity="false" >
+              <appender-ref ref="HOT-KEY" />
        </logger>
 
-       <logger name="camellia.redis.proxy.bigKeyStats" level="INFO" additivity="false" >
-              <appender-ref ref="BIG-KEY-STATS" />
+       <logger name="camellia-hot-key-cache-stats" level="INFO" additivity="false" >
+              <appender-ref ref="HOT-KEY-CACHE-STATS" />
        </logger>
 
-       <logger name="camellia.redis.proxy.hotKeyStats" level="INFO" additivity="false" >
-              <appender-ref ref="HOT-KEY-STATS" />
+       <logger name="camellia-hot-key-topn" level="INFO" additivity="false" >
+              <appender-ref ref="HOT-KEY-TOPN" />
        </logger>
 
-       <logger name="camellia.redis.proxy.slowCommandStats" level="INFO" additivity="false" >
-              <appender-ref ref="SLOW-COMMAND-STATS" />
+       <logger name="camellia-monitor-collect" level="INFO" additivity="false" >
+              <appender-ref ref="MONITOR-COLLECT" />
        </logger>
 
        <root level="INFO">

@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class HotKeyServerMonitorCollector {
 
     private static final Logger logger = LoggerFactory.getLogger(HotKeyServerMonitorCollector.class);
+    private static final Logger statsLogger = LoggerFactory.getLogger("camellia-monitor-collect");
 
     private static final AtomicBoolean initOk = new AtomicBoolean(false);
     private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("hot-key-server-monitor"));
@@ -59,7 +60,7 @@ public class HotKeyServerMonitorCollector {
         serverStats.setHotKeyInfoList(hotKeyInfoList);
 
         HotKeyServerMonitorCollector.serverStats = serverStats;
-        logger.info("HotKeyServerMonitorCollector collect success, serverStats = \n{}\n",
+        statsLogger.info("HotKeyServerMonitorCollector collect success, serverStats = \n{}\n",
                 JSON.toJSONString(serverStats, SerializerFeature.PrettyFormat));
     }
 }
