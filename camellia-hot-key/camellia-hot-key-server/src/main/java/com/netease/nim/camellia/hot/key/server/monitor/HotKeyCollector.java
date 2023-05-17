@@ -35,7 +35,9 @@ public class HotKeyCollector {
             List<Object> values = cache.values(namespace);
             for (Object value : values) {
                 if (value instanceof HotKeyInfo) {
-                    list.add((HotKeyInfo) value);
+                    HotKeyInfo hotKeyInfo = (HotKeyInfo) value;
+                    list.add(hotKeyInfo);
+                    cache.evict(hotKeyInfo.getNamespace(), hotKeyInfo.getKey() + "|" + hotKeyInfo.getAction().getValue());
                 }
             }
         }
