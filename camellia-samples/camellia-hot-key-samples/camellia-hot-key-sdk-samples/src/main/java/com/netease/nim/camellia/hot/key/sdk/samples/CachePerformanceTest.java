@@ -1,11 +1,8 @@
 package com.netease.nim.camellia.hot.key.sdk.samples;
 
 import com.netease.nim.camellia.hot.key.sdk.CamelliaHotKeyCacheSdk;
-import com.netease.nim.camellia.hot.key.sdk.CamelliaHotKeyMonitorSdk;
 import com.netease.nim.camellia.hot.key.sdk.CamelliaHotKeySdk;
-import com.netease.nim.camellia.hot.key.sdk.ValueLoader;
 import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeyCacheSdkConfig;
-import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeyMonitorSdkConfig;
 import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeySdkConfig;
 import com.netease.nim.camellia.hot.key.sdk.discovery.LocalConfHotKeyServerDiscovery;
 import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyServerAddr;

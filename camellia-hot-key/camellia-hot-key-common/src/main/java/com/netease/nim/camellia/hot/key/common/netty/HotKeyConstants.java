@@ -23,9 +23,10 @@ public class HotKeyConstants {
         public static long reloadIntervalSeconds = 120;
         public static long heartbeatTimeoutMillis = 10*1000L;
         public static long pushIntervalMillis = 100;
-        public static int pushBatch = 1000;
+        public static int pushBatch = 5000;
 
         public static int capacity = 100000;
+        public static int connectNum = 3;
 
         public static int hotKeyConfigReloadIntervalSeconds = 60;
     }

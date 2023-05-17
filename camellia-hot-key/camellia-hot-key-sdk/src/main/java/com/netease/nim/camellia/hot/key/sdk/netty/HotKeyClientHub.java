@@ -26,7 +26,7 @@ public class HotKeyClientHub {
 
     private final AtomicBoolean scheduleLock = new AtomicBoolean(false);
     //name -> addr -> client
-    private final ConcurrentHashMap<String, ConcurrentHashMap<HotKeyServerAddr, HotKeyClient>> clientMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup>> clientGroupMap = new ConcurrentHashMap<>();
     //name -> discovery
     private final ConcurrentHashMap<String, HotKeyServerDiscovery> discoveryMap = new ConcurrentHashMap<>();
     //name -> addr-list
@@ -36,17 +36,19 @@ public class HotKeyClientHub {
 
     private final HotKeyPackBizClientHandler handler;
     private final HotKeyPackConsumer consumer;
+    private final int connectNum;
 
     private static volatile HotKeyClientHub instance;
     private HotKeyClientHub() {
+        this.connectNum = HotKeyConstants.Client.connectNum;
         this.handler = new HotKeyPackBizClientHandler(HotKeyConstants.Client.bizWorkThread, HotKeyConstants.Client.bizWorkQueueCapacity);
         this.consumer = new HotKeyPackConsumer(handler);
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("hot-key-client-heartbeat"))
                 .scheduleAtFixedRate(this::scheduleHeartbeat, HotKeyConstants.Client.heartbeatIntervalSeconds, HotKeyConstants.Client.heartbeatIntervalSeconds, TimeUnit.SECONDS);
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("hot-key-client-reload"))
                 .scheduleAtFixedRate(this::reload, HotKeyConstants.Client.reloadIntervalSeconds, HotKeyConstants.Client.reloadIntervalSeconds, TimeUnit.SECONDS);
-        logger.info("HotKeyClientHub init success, workThread = {}, heartbeatIntervalSeconds = {}, reloadIntervalSeconds = {}",
-                HotKeyConstants.Client.bizWorkThread, HotKeyConstants.Client.heartbeatIntervalSeconds, HotKeyConstants.Client.reloadIntervalSeconds);
+        logger.info("HotKeyClientHub init success, workThread = {}, connectNum = {}, heartbeatIntervalSeconds = {}, reloadIntervalSeconds = {}",
+                HotKeyConstants.Client.bizWorkThread, connectNum, HotKeyConstants.Client.heartbeatIntervalSeconds, HotKeyConstants.Client.reloadIntervalSeconds);
     }
     public static HotKeyClientHub getInstance() {
         if (instance == null) {
@@ -65,20 +67,26 @@ public class HotKeyClientHub {
                 ConcurrentHashMap<String, List<HotKeyServerAddr>> map = new ConcurrentHashMap<>(addrMap);
                 for (Map.Entry<String, List<HotKeyServerAddr>> entry : map.entrySet()) {
                     String name = entry.getKey();
-                    ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> clientSubMap = clientMap.get(name);
+                    ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> clientSubMap = clientGroupMap.get(name);
                     if (clientSubMap == null) continue;
                     List<HotKeyServerAddr> list = new ArrayList<>(entry.getValue());
                     for (HotKeyServerAddr addr : list) {
-                        HotKeyClient client = clientSubMap.get(addr);
-                        CompletableFuture<HotKeyPack> future = client.sendPack(HotKeyPack.newPack(HotKeyCommand.HEARTBEAT, new HeartbeatPack()));
-                        try {
-                            HotKeyPack hotKeyPack = future.get(HotKeyConstants.Client.heartbeatTimeoutMillis, TimeUnit.MILLISECONDS);
-                            if (!(hotKeyPack != null && hotKeyPack.getBody() instanceof HeartbeatRepPack)) {
-                                logger.warn("{} {} heartbeat error, will remove", name, addr);
-                                remove(name, addr);
+                        HotKeyClientGroup clientGroup = clientSubMap.get(addr);
+                        clientGroup.addIfNotFull();
+                        for (HotKeyClient client : clientGroup.getClientList()) {
+                            CompletableFuture<HotKeyPack> future = client.sendPack(HotKeyPack.newPack(HotKeyCommand.HEARTBEAT, new HeartbeatPack()));
+                            try {
+                                HotKeyPack hotKeyPack = future.get(HotKeyConstants.Client.heartbeatTimeoutMillis, TimeUnit.MILLISECONDS);
+                                if (!(hotKeyPack != null && hotKeyPack.getBody() instanceof HeartbeatRepPack)) {
+                                    logger.warn("{} {} {} heartbeat error, will remove", name, addr, client.getId());
+                                    clientGroup.remove(client);
+                                }
+                            } catch (Exception e) {
+                                logger.warn("{} {} {} heartbeat error, will remove", name, addr, client.getId());
+                                clientGroup.remove(client);
                             }
-                        } catch (Exception e) {
-                            logger.warn("{} {} heartbeat error, will remove", name, addr);
+                        }
+                        if (!clientGroup.isValid()) {
                             remove(name, addr);
                         }
                     }
@@ -110,15 +118,15 @@ public class HotKeyClientHub {
             logger.error("HotKeyServerDiscovery duplicate register, will skip, name = {}", name);
             return;
         }
-        ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> map = CamelliaMapUtils.computeIfAbsent(clientMap, name, k -> new ConcurrentHashMap<>());
+        ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> map = CamelliaMapUtils.computeIfAbsent(clientGroupMap, name, k -> new ConcurrentHashMap<>());
         List<HotKeyServerAddr> addrList = CamelliaMapUtils.computeIfAbsent(addrMap, name, k -> new ArrayList<>());
 
         List<HotKeyServerAddr> all = discovery.findAll();
         List<HotKeyServerAddr> valid = new ArrayList<>();
         for (HotKeyServerAddr addr : all) {
-            HotKeyClient client = new HotKeyClient(addr, consumer);
-            if (client.isValid()) {
-                map.put(addr, client);
+            HotKeyClientGroup clientGroup = new HotKeyClientGroup(addr, consumer, connectNum);
+            if (clientGroup.isValid()) {
+                map.put(addr, clientGroup);
                 valid.add(addr);
                 addrList.add(addr);
             }
@@ -184,15 +192,16 @@ public class HotKeyClientHub {
                     return;
                 }
 
-                ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> newClientMap = new ConcurrentHashMap<>();
-                ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> oldClientMap = CamelliaMapUtils.computeIfAbsent(clientMap, name, k -> new ConcurrentHashMap<>());
+                ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> newClientMap = new ConcurrentHashMap<>();
+                ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> oldClientMap = CamelliaMapUtils.computeIfAbsent(clientGroupMap, name, k -> new ConcurrentHashMap<>());
 
-                List<HotKeyClient> toRemoveClient = new ArrayList<>();
+                List<HotKeyClientGroup> toRemoveClient = new ArrayList<>();
                 List<HotKeyServerAddr> toRemoveAddr = new ArrayList<>();
-                for (Map.Entry<HotKeyServerAddr, HotKeyClient> entry : oldClientMap.entrySet()) {
+                for (Map.Entry<HotKeyServerAddr, HotKeyClientGroup> entry : oldClientMap.entrySet()) {
                     HotKeyServerAddr addr = entry.getKey();
-                    HotKeyClient oldClient = entry.getValue();
+                    HotKeyClientGroup oldClient = entry.getValue();
                     if (addrSet.contains(addr)) {
+                        oldClient.addIfNotFull();
                         if (oldClient.isValid()) {
                             newClientMap.put(addr, oldClient);
                         }
@@ -201,9 +210,9 @@ public class HotKeyClientHub {
                     }
                 }
                 for (HotKeyServerAddr addr : addrSet) {
-                    HotKeyClient client = newClientMap.get(addr);
+                    HotKeyClientGroup client = newClientMap.get(addr);
                     if (client == null || !client.isValid()) {
-                        HotKeyClient newClient = new HotKeyClient(addr, consumer);
+                        HotKeyClientGroup newClient = new HotKeyClientGroup(addr, consumer, connectNum);
                         if (newClient.isValid()) {
                             newClientMap.put(addr, newClient);
                             continue;
@@ -221,9 +230,9 @@ public class HotKeyClientHub {
                 List<HotKeyServerAddr> newAddrs = new ArrayList<>(addrSet);
                 Collections.sort(newAddrs);
                 addrMap.put(name, newAddrs);
-                clientMap.put(name, newClientMap);
+                clientGroupMap.put(name, newClientMap);
 
-                for (HotKeyClient client : toRemoveClient) {
+                for (HotKeyClientGroup client : toRemoveClient) {
                     client.stop();
                 }
             } catch (Exception e) {
@@ -237,14 +246,14 @@ public class HotKeyClientHub {
     private synchronized void add(String name, HotKeyServerAddr addr) {
         try {
             boolean valid = false;
-            ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> map = CamelliaMapUtils.computeIfAbsent(clientMap, name, k -> new ConcurrentHashMap<>());
+            ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> map = CamelliaMapUtils.computeIfAbsent(clientGroupMap, name, k -> new ConcurrentHashMap<>());
 
-            HotKeyClient client = map.get(addr);
-            if (client == null || !client.isValid()) {
-                client = new HotKeyClient(addr, consumer);
+            HotKeyClientGroup clientGroup = map.get(addr);
+            if (clientGroup == null || !clientGroup.isValid()) {
+                clientGroup = new HotKeyClientGroup(addr, consumer, connectNum);
             }
-            if (client.isValid()) {
-                map.put(addr, client);
+            if (clientGroup.isValid()) {
+                map.put(addr, clientGroup);
                 valid = true;
             }
             if (valid) {
@@ -275,11 +284,11 @@ public class HotKeyClientHub {
             List<HotKeyServerAddr> newAddrs = new ArrayList<>(set);
             Collections.sort(newAddrs);
             addrMap.put(name, newAddrs);
-            ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> map = clientMap.get(name);
+            ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> map = clientGroupMap.get(name);
             if (map != null) {
-                HotKeyClient client = map.remove(addr);
-                if (client != null) {
-                    client.stop();
+                HotKeyClientGroup clientGroup = map.remove(addr);
+                if (clientGroup != null) {
+                    clientGroup.stop();
                 }
             }
             logger.info("HotKeyServerDiscovery = {}, remove addr = {}, newAddrs = {}", name, addr, newAddrs);
@@ -296,16 +305,19 @@ public class HotKeyClientHub {
             }
             int index = Math.abs(key.hashCode()) % addrs.size();
             HotKeyServerAddr addr = addrs.get(index);
-            ConcurrentHashMap<HotKeyServerAddr, HotKeyClient> map = clientMap.get(name);
+            ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> map = clientGroupMap.get(name);
             if (map == null || map.isEmpty()) {
                 return null;
             }
-            HotKeyClient client = map.get(addr);
-            if (client == null) {
+            HotKeyClientGroup clientGroup = map.get(addr);
+            if (clientGroup == null) {
                 return null;
             }
-            if (client.isValid()) {
-                return client;
+            if (clientGroup.isValid()) {
+                HotKeyClient client = clientGroup.select();
+                if (client != null && client.isValid()) {
+                    return client;
+                }
             } else {
                 remove(name, addr);
             }

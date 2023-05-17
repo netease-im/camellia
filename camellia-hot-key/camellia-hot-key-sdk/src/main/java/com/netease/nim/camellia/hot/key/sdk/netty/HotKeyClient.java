@@ -64,6 +64,10 @@ public class HotKeyClient {
         }
     }
 
+    public long getId() {
+        return id;
+    }
+
     public synchronized void stop() {
         valid = false;
         try {

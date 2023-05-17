@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.hot.key.server.monitor;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.netease.nim.camellia.hot.key.server.callback.HotKeyCallbackManager;
 import com.netease.nim.camellia.hot.key.server.callback.HotKeyInfo;
 import com.netease.nim.camellia.hot.key.server.conf.ClientConnectHub;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
@@ -21,20 +20,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class HotKeyServerMonitorCollector {
 
     private static final Logger logger = LoggerFactory.getLogger(HotKeyServerMonitorCollector.class);
-    private static final Logger statsLogger = LoggerFactory.getLogger("camellia-monitor-collect");
 
     private static final AtomicBoolean initOk = new AtomicBoolean(false);
     private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("hot-key-server-monitor"));
     private static int monitorIntervalSeconds = 60;
     private static String applicationName;
+    private static HotKeyCallbackManager callbackManager;
 
-    public static void init(HotKeyServerProperties properties) {
+    public static void init(HotKeyServerProperties properties, HotKeyCallbackManager callbackManager) {
         if (initOk.compareAndSet(false, true)) {
             HotKeyCollector.init(properties);
             monitorIntervalSeconds = properties.getMonitorIntervalSeconds();
             applicationName = properties.getApplicationName();
             scheduler.scheduleAtFixedRate(HotKeyServerMonitorCollector::collect, properties.getMonitorIntervalSeconds(), properties.getMonitorIntervalSeconds(), TimeUnit.SECONDS);
             logger.info("HotKeyServerMonitorCollector init success, monitor-interval-seconds = {}", properties.getMonitorIntervalSeconds());
+            HotKeyServerMonitorCollector.callbackManager = callbackManager;
         } else {
             logger.warn("duplicate HotKeyServerMonitorCollector init");
         }
@@ -60,7 +60,6 @@ public class HotKeyServerMonitorCollector {
         serverStats.setHotKeyInfoList(hotKeyInfoList);
 
         HotKeyServerMonitorCollector.serverStats = serverStats;
-        statsLogger.info("HotKeyServerMonitorCollector collect success, serverStats = \n{}\n",
-                JSON.toJSONString(serverStats, SerializerFeature.PrettyFormat));
+        callbackManager.serverStats(serverStats);
     }
 }
