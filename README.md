@@ -40,7 +40,7 @@ camellia主要包括以下功能模块：
 ### camellia-hot-key  
 热key探测和缓存服务：  
 * 支持热key探测，也支持热key缓存，也支持topN统计  
-* 支持丰富的自定义扩展口（热key通知、topN通知、热key规则数据源）  
+* 支持丰富的自定义扩展口（热key通知、topN通知、热key规则数据源、热key缓存命中统计）  
 * 支持自定义注册中心（内置zk、eureka）  
 * 支持丰富的监控数据     
 [快速开始](/docs/hot-key/hot-key.md)  

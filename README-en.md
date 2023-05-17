@@ -35,7 +35,7 @@ delay queue base on redis:
 ### camellia-hot-key
 hot key detect and cache:  
 * support hot key detect, hot key cache, hot key topN stats
-* support custom hot-key-config、hot-key-callbck、hot-key-topN-callback
+* support custom hot-key-config、hot-key-callback、hot-key-topN-callback、hot-key-cache-stats-callback  
 * support custom registry, such as eureka、zk and so on
 * provide monitor data     
 [QUICK START](/docs/hot-key/hot-key.md)
