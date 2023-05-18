@@ -22,6 +22,13 @@ public class StatsPrometheusConverter {
             builder.append(String.format(workQueuePendingFormat, "queue-" + stats.getId(), stats.getPendingSize()));
         }
 
+        builder.append("# HELP hot_key_server_work_queue_discard Work Queue Discard\n");
+        builder.append("# TYPE hot_key_server_work_queue_discard gauge\n");
+        String workQueueDiscardFormat = "hot_key_server_work_queue_discard{queue=\"%s\",} %d\n";
+        for (QueueStats.Stats stats : serverStats.getQueueStats().getStatsList()) {
+            builder.append(String.format(workQueueDiscardFormat, "queue-" + stats.getId(), stats.getDiscardCount()));
+        }
+
         builder.append("# HELP hot_key_server_traffic_total Traffic Total\n");
         builder.append("# TYPE hot_key_server_traffic_total gauge\n");
         TrafficStats trafficStats = serverStats.getTrafficStats();

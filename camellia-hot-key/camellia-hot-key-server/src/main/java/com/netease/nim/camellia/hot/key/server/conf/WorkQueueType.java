@@ -7,11 +7,7 @@ public enum WorkQueueType {
 
     LinkedBlockingQueue,
     ArrayBlockingQueue,
-    ConcurrentLinkedQueue,
-    MpscArrayQueue,
-    MpscLinkedQueue,
-    MpscAtomicArrayQueue,
-    MpscLinkedAtomicQueue,
+    MpscBlockingConsumerArrayQueue,
     ;
 
 }

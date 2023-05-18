@@ -10,10 +10,6 @@ import com.netease.nim.camellia.hot.key.server.utils.TimeCache;
  */
 public class HotKeyCounter {
 
-    private final String namespace;
-    private final String key;
-    private final Rule rule;
-
     private final long[] buckets;
     private final int bucketSize;
     private final long millisPerBucket;
@@ -23,10 +19,7 @@ public class HotKeyCounter {
     private long lastUpdateTime = TimeCache.currentMillis;
     private boolean hot;
 
-    public HotKeyCounter(String namespace, String key, Rule rule) {
-        this.namespace = namespace;
-        this.key = key;
-        this.rule = rule;
+    public HotKeyCounter(Rule rule) {
         //init
         Long checkMillis = rule.getCheckMillis();
         millisPerBucket = 100;
@@ -70,18 +63,6 @@ public class HotKeyCounter {
             total += bucket;
         }
         return total;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public Rule getRule() {
-        return rule;
     }
 
     private void slideToNextBucket(int step) {

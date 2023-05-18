@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.hot.key.sdk.collect;
 
-import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
@@ -19,8 +20,8 @@ public class HotKeyCounterCollector {
 
     private final AtomicBoolean backUp = new AtomicBoolean(false);
     private final int capacity;
-    private final ConcurrentHashMap<String, ConcurrentLinkedHashMap<String, LongAdder>> map1;
-    private final ConcurrentHashMap<String, ConcurrentLinkedHashMap<String, LongAdder>> map2;
+    private final ConcurrentHashMap<String, Cache<String, LongAdder>> map1;
+    private final ConcurrentHashMap<String, Cache<String, LongAdder>> map2;
 
     public HotKeyCounterCollector(int capacity) {
         this.capacity = capacity;
@@ -29,17 +30,18 @@ public class HotKeyCounterCollector {
     }
 
     public void push(String namespace, String key, KeyAction keyAction, long count) {
-        Map<String, LongAdder> map = getMap(namespace);
+        Cache<String, LongAdder> map = getMap(namespace);
         String uniqueKey = key + "|" + keyAction.getValue();
-        LongAdder adder = CamelliaMapUtils.computeIfAbsent(map, uniqueKey, k -> new LongAdder());
-        adder.add(count);
+        LongAdder adder = map.get(uniqueKey, s -> new LongAdder());
+        if (adder != null) {
+            adder.add(count);
+        }
     }
 
-    private ConcurrentLinkedHashMap<String, LongAdder> getMap(String namespace) {
-        ConcurrentHashMap<String, ConcurrentLinkedHashMap<String, LongAdder>> map = !backUp.get() ? map1 : map2;
-        return CamelliaMapUtils.computeIfAbsent(map, namespace, n -> new ConcurrentLinkedHashMap.Builder<String, LongAdder>()
-                .initialCapacity(capacity)
-                .maximumWeightedCapacity(capacity)
+    private Cache<String, LongAdder> getMap(String namespace) {
+        ConcurrentHashMap<String, Cache<String, LongAdder>> map = !backUp.get() ? map1 : map2;
+        return CamelliaMapUtils.computeIfAbsent(map, namespace, n -> Caffeine.newBuilder()
+                .initialCapacity(capacity).maximumSize(capacity)
                 .build());
     }
 
@@ -48,23 +50,29 @@ public class HotKeyCounterCollector {
         if (backUp.get()) {
             if (backUp.compareAndSet(true, false)) {
                 result = toResult(map2);
-                map2.clear();
+                clear(map2);
             }
         } else {
             if (backUp.compareAndSet(false, true)) {
                 result = toResult(map1);
-                map1.clear();
+                clear(map1);
             }
         }
         return result;
     }
 
-    private List<KeyCounter> toResult(ConcurrentHashMap<String, ConcurrentLinkedHashMap<String, LongAdder>> map) {
+    private void clear(ConcurrentHashMap<String, Cache<String, LongAdder>> map) {
+        for (Map.Entry<String, Cache<String, LongAdder>> entry : map.entrySet()) {
+            entry.getValue().invalidateAll();
+        }
+    }
+
+    private List<KeyCounter> toResult(ConcurrentHashMap<String, Cache<String, LongAdder>> map) {
         List<KeyCounter> result = new ArrayList<>();
-        for (Map.Entry<String, ConcurrentLinkedHashMap<String, LongAdder>> entry : map.entrySet()) {
+        for (Map.Entry<String, Cache<String, LongAdder>> entry : map.entrySet()) {
             String namespace = entry.getKey();
-            ConcurrentLinkedHashMap<String, LongAdder> subMap = entry.getValue();
-            for (Map.Entry<String, LongAdder> subEntry : subMap.entrySet()) {
+            Cache<String, LongAdder> subMap = entry.getValue();
+            for (Map.Entry<String, LongAdder> subEntry : subMap.asMap().entrySet()) {
                 KeyCounter counter = new KeyCounter();
                 counter.setNamespace(namespace);
                 String uniqueKey = subEntry.getKey();

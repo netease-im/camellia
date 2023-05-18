@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.hot.key.server.calculate;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
 import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
@@ -12,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -25,15 +28,14 @@ public class TopNCounter {
     private final String namespace;
     private final int topN;
     private final long checkMillis = 1000;//固定为1s
-    private final ConcurrentLinkedHashMap<String, Counter> map;
+    private final Cache<String, Counter> cache;
     private final List<Stats> buffer;
 
     public TopNCounter(String namespace, ScheduledThreadPoolExecutor scheduler, HotKeyServerProperties properties) {
         this.namespace = namespace;
         this.topN = properties.getTopnCount();
-        this.map = new ConcurrentLinkedHashMap.Builder<String, Counter>()
-                .initialCapacity(properties.getTopnCacheCounterCapacity())
-                .maximumWeightedCapacity(properties.getTopnCacheCounterCapacity())
+        this.cache = Caffeine.newBuilder()
+                .initialCapacity(properties.getTopnCacheCounterCapacity()).maximumSize(properties.getCallbackExecutorSize())
                 .build();
         this.buffer = new ArrayList<>(properties.getTopnCollectSeconds() * properties.getTopnCount());
         scheduler.scheduleAtFixedRate(this::schedule, checkMillis * properties.getTopnTinyCollectSeconds(),
@@ -45,7 +47,8 @@ public class TopNCounter {
      * @param counter counter
      */
     public void update(KeyCounter counter) {
-        Counter c = CamelliaMapUtils.computeIfAbsent(map, counter.getKey() + "|" + counter.getAction().getValue(), k -> new Counter(checkMillis));
+        Counter c = cache.get(counter.getKey() + "|" + counter.getAction().getValue(), k -> new Counter(checkMillis));
+        if (c == null) return;
         c.update(counter.getCount());
     }
 
@@ -85,8 +88,8 @@ public class TopNCounter {
     }
 
     public List<Stats> collect0() {
-        Map<String, Counter> collectMap = new HashMap<>(map);
-        map.clear();
+        Map<String, Counter> collectMap = new HashMap<>(cache.asMap());
+        cache.invalidateAll();
         List<Stats> list = new ArrayList<>();
         for (Map.Entry<String, Counter> entry : collectMap.entrySet()) {
             String uniqueKey = entry.getKey();

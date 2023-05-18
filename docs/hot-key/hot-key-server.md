@@ -39,7 +39,7 @@ spring:
 camellia-hot-key-server:
   #工作线程和工作队列
   biz-work-thread: -1 #默认使用cpu核数的一半，不建议修改
-  biz-queue-capacity: 1000000 #队列容量，默认100w
+  biz-queue-capacity: 200000 #队列容量，默认20w
   #netty部分
   netty:
     boss-thread: 1 #默认1，不建议修改
