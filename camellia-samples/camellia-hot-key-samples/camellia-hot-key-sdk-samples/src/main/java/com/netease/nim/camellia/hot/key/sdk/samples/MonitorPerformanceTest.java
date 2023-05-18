@@ -31,7 +31,7 @@ public class MonitorPerformanceTest {
 
         CamelliaHotKeyMonitorSdk monitorSdk = new CamelliaHotKeyMonitorSdk(sdk, new CamelliaHotKeyMonitorSdkConfig());
 
-        String namespace1 = "sql";
+        String namespace1 = "namespace1";
 
         monitorSdk.preheat(namespace1);
 

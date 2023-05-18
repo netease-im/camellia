@@ -61,44 +61,6 @@ public class HotKeyClientHub {
         return instance;
     }
 
-    private void scheduleHeartbeat() {
-        if (scheduleLock.compareAndSet(false, true)) {
-            try {
-                ConcurrentHashMap<String, List<HotKeyServerAddr>> map = new ConcurrentHashMap<>(addrMap);
-                for (Map.Entry<String, List<HotKeyServerAddr>> entry : map.entrySet()) {
-                    String name = entry.getKey();
-                    ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> clientSubMap = clientGroupMap.get(name);
-                    if (clientSubMap == null) continue;
-                    List<HotKeyServerAddr> list = new ArrayList<>(entry.getValue());
-                    for (HotKeyServerAddr addr : list) {
-                        HotKeyClientGroup clientGroup = clientSubMap.get(addr);
-                        clientGroup.addIfNotFull();
-                        for (HotKeyClient client : clientGroup.getClientList()) {
-                            CompletableFuture<HotKeyPack> future = client.sendPack(HotKeyPack.newPack(HotKeyCommand.HEARTBEAT, new HeartbeatPack()));
-                            try {
-                                HotKeyPack hotKeyPack = future.get(HotKeyConstants.Client.heartbeatTimeoutMillis, TimeUnit.MILLISECONDS);
-                                if (!(hotKeyPack != null && hotKeyPack.getBody() instanceof HeartbeatRepPack)) {
-                                    logger.warn("{} {} {} heartbeat error, will remove", name, addr, client.getId());
-                                    clientGroup.remove(client);
-                                }
-                            } catch (Exception e) {
-                                logger.warn("{} {} {} heartbeat error, will remove", name, addr, client.getId());
-                                clientGroup.remove(client);
-                            }
-                        }
-                        if (!clientGroup.isValid()) {
-                            remove(name, addr);
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("scheduleHeartbeat error", e);
-            } finally {
-                scheduleLock.compareAndSet(true, false);
-            }
-        }
-    }
-
     /**
      * 注册一个业务回调
      * @param listener listener
@@ -171,6 +133,76 @@ public class HotKeyClientHub {
         return null;
     }
 
+    private HotKeyClient select0(String name, String key) {
+        try {
+            List<HotKeyServerAddr> addrs = addrMap.get(name);
+            if (addrs == null || addrs.isEmpty()) {
+                return null;
+            }
+            int index = Math.abs(key.hashCode()) % addrs.size();
+            HotKeyServerAddr addr = addrs.get(index);
+            ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> map = clientGroupMap.get(name);
+            if (map == null || map.isEmpty()) {
+                return null;
+            }
+            HotKeyClientGroup clientGroup = map.get(addr);
+            if (clientGroup == null) {
+                return null;
+            }
+            if (clientGroup.isValid()) {
+                HotKeyClient client = clientGroup.select();
+                if (client != null && client.isValid()) {
+                    return client;
+                }
+            } else {
+                remove(name, addr);
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    //定时心跳
+    private void scheduleHeartbeat() {
+        if (scheduleLock.compareAndSet(false, true)) {
+            try {
+                ConcurrentHashMap<String, List<HotKeyServerAddr>> map = new ConcurrentHashMap<>(addrMap);
+                for (Map.Entry<String, List<HotKeyServerAddr>> entry : map.entrySet()) {
+                    String name = entry.getKey();
+                    ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> clientSubMap = clientGroupMap.get(name);
+                    if (clientSubMap == null) continue;
+                    List<HotKeyServerAddr> list = new ArrayList<>(entry.getValue());
+                    for (HotKeyServerAddr addr : list) {
+                        HotKeyClientGroup clientGroup = clientSubMap.get(addr);
+                        clientGroup.addIfNotFull();
+                        for (HotKeyClient client : clientGroup.getClientList()) {
+                            CompletableFuture<HotKeyPack> future = client.sendPack(HotKeyPack.newPack(HotKeyCommand.HEARTBEAT, new HeartbeatPack()));
+                            try {
+                                HotKeyPack hotKeyPack = future.get(HotKeyConstants.Client.heartbeatTimeoutMillis, TimeUnit.MILLISECONDS);
+                                if (!(hotKeyPack != null && hotKeyPack.getBody() instanceof HeartbeatRepPack)) {
+                                    logger.warn("{} {} {} heartbeat error, will remove", name, addr, client.getId());
+                                    clientGroup.remove(client);
+                                }
+                            } catch (Exception e) {
+                                logger.warn("{} {} {} heartbeat error, will remove", name, addr, client.getId());
+                                clientGroup.remove(client);
+                            }
+                        }
+                        if (!clientGroup.isValid()) {
+                            remove(name, addr);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("scheduleHeartbeat error", e);
+            } finally {
+                scheduleLock.compareAndSet(true, false);
+            }
+        }
+    }
+
+    //定时reload
     private void reload() {
         try {
             Set<HotKeyServerDiscovery> discoverySet = new HashSet<>(discoveryMap.values());
@@ -182,6 +214,7 @@ public class HotKeyClientHub {
         }
     }
 
+    //reload
     private void reload(HotKeyServerDiscovery discovery) {
         String name = discovery.getName();
         AtomicBoolean lock = CamelliaMapUtils.computeIfAbsent(lockMap, name, k -> new AtomicBoolean(false));
@@ -192,35 +225,35 @@ public class HotKeyClientHub {
                     return;
                 }
 
-                ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> newClientMap = new ConcurrentHashMap<>();
-                ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> oldClientMap = CamelliaMapUtils.computeIfAbsent(clientGroupMap, name, k -> new ConcurrentHashMap<>());
+                ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> newClientGroupMap = new ConcurrentHashMap<>();
+                ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> oldClientGroupMap = CamelliaMapUtils.computeIfAbsent(clientGroupMap, name, k -> new ConcurrentHashMap<>());
 
-                List<HotKeyClientGroup> toRemoveClient = new ArrayList<>();
+                List<HotKeyClientGroup> toRemoveClientGroup = new ArrayList<>();
                 List<HotKeyServerAddr> toRemoveAddr = new ArrayList<>();
-                for (Map.Entry<HotKeyServerAddr, HotKeyClientGroup> entry : oldClientMap.entrySet()) {
+                for (Map.Entry<HotKeyServerAddr, HotKeyClientGroup> entry : oldClientGroupMap.entrySet()) {
                     HotKeyServerAddr addr = entry.getKey();
-                    HotKeyClientGroup oldClient = entry.getValue();
+                    HotKeyClientGroup oldClientGroup = entry.getValue();
                     if (addrSet.contains(addr)) {
-                        oldClient.addIfNotFull();
-                        if (oldClient.isValid()) {
-                            newClientMap.put(addr, oldClient);
+                        oldClientGroup.addIfNotFull();
+                        if (oldClientGroup.isValid()) {
+                            newClientGroupMap.put(addr, oldClientGroup);
                         }
                     } else {
-                        toRemoveClient.add(oldClient);
+                        toRemoveClientGroup.add(oldClientGroup);
                     }
                 }
                 for (HotKeyServerAddr addr : addrSet) {
-                    HotKeyClientGroup client = newClientMap.get(addr);
-                    if (client == null || !client.isValid()) {
-                        HotKeyClientGroup newClient = new HotKeyClientGroup(addr, consumer, connectNum);
-                        if (newClient.isValid()) {
-                            newClientMap.put(addr, newClient);
+                    HotKeyClientGroup clientGroup = newClientGroupMap.get(addr);
+                    if (clientGroup == null || !clientGroup.isValid()) {
+                        HotKeyClientGroup newClientGroup = new HotKeyClientGroup(addr, consumer, connectNum);
+                        if (newClientGroup.isValid()) {
+                            newClientGroupMap.put(addr, newClientGroup);
                             continue;
                         }
                     }
                     toRemoveAddr.add(addr);
                 }
-                if (newClientMap.isEmpty()) {
+                if (newClientGroupMap.isEmpty()) {
                     return;
                 }
                 toRemoveAddr.forEach(addrSet::remove);
@@ -230,9 +263,9 @@ public class HotKeyClientHub {
                 List<HotKeyServerAddr> newAddrs = new ArrayList<>(addrSet);
                 Collections.sort(newAddrs);
                 addrMap.put(name, newAddrs);
-                clientGroupMap.put(name, newClientMap);
+                clientGroupMap.put(name, newClientGroupMap);
 
-                for (HotKeyClientGroup client : toRemoveClient) {
+                for (HotKeyClientGroup client : toRemoveClientGroup) {
                     client.stop();
                 }
             } catch (Exception e) {
@@ -243,6 +276,7 @@ public class HotKeyClientHub {
         }
     }
 
+    //增加一个节点
     private synchronized void add(String name, HotKeyServerAddr addr) {
         try {
             boolean valid = false;
@@ -272,11 +306,13 @@ public class HotKeyClientHub {
         }
     }
 
+    //移除一个节点
     private synchronized void remove(String name, HotKeyServerAddr addr) {
         try {
             List<HotKeyServerAddr> addrs = addrMap.get(name);
             HashSet<HotKeyServerAddr> set = new HashSet<>(addrs);
             set.remove(addr);
+            //如果已经是最后一个了，则不允许移除
             if (set.isEmpty()) {
                 logger.error("HotKeyServerDiscovery = {}, last HotKeyServerAddr, skip remove = {}", name, addr);
                 return;
@@ -294,36 +330,6 @@ public class HotKeyClientHub {
             logger.info("HotKeyServerDiscovery = {}, remove addr = {}, newAddrs = {}", name, addr, newAddrs);
         } catch (Exception e) {
             logger.error("HotKeyServerDiscovery = {} remove addr = {} error", name, addr, e);
-        }
-    }
-
-    private HotKeyClient select0(String name, String key) {
-        try {
-            List<HotKeyServerAddr> addrs = addrMap.get(name);
-            if (addrs == null || addrs.isEmpty()) {
-                return null;
-            }
-            int index = Math.abs(key.hashCode()) % addrs.size();
-            HotKeyServerAddr addr = addrs.get(index);
-            ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> map = clientGroupMap.get(name);
-            if (map == null || map.isEmpty()) {
-                return null;
-            }
-            HotKeyClientGroup clientGroup = map.get(addr);
-            if (clientGroup == null) {
-                return null;
-            }
-            if (clientGroup.isValid()) {
-                HotKeyClient client = clientGroup.select();
-                if (client != null && client.isValid()) {
-                    return client;
-                }
-            } else {
-                remove(name, addr);
-            }
-            return null;
-        } catch (Exception e) {
-            return null;
         }
     }
 }

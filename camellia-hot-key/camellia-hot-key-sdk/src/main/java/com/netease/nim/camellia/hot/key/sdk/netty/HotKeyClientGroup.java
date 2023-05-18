@@ -4,6 +4,7 @@ import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackConsumer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -11,7 +12,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class HotKeyClientGroup {
 
-    private final List<HotKeyClient> clientList = new ArrayList<>();
+    private final List<HotKeyClient> clientList = new CopyOnWriteArrayList<>();
     private final int connectNum;
     private final HotKeyServerAddr addr;
     private final HotKeyPackConsumer consumer;
@@ -23,12 +24,19 @@ public class HotKeyClientGroup {
         addIfNotFull();
     }
 
+    /**
+     * 关闭所有连接
+     */
     public synchronized void stop() {
         for (HotKeyClient client : clientList) {
             client.stop();
         }
     }
 
+    /**
+     * 只要有一个有效连接，就认为可用
+     * @return 是否有效
+     */
     public boolean isValid() {
         if (clientList.isEmpty()) {
             return false;
@@ -41,14 +49,25 @@ public class HotKeyClientGroup {
         return false;
     }
 
+    /**
+     * 获取客户端列表
+     * @return 列表
+     */
     public List<HotKeyClient> getClientList() {
         return new ArrayList<>(clientList);
     }
 
+    /**
+     * 移除一个客户端
+     * @param client 客户端
+     */
     public synchronized void remove(HotKeyClient client) {
         clientList.remove(client);
     }
 
+    /**
+     * 如果连接数不足，则补足
+     */
     public synchronized void addIfNotFull() {
         clientList.removeIf(client -> !client.isValid());
         if (clientList.size() < connectNum) {
@@ -62,6 +81,10 @@ public class HotKeyClientGroup {
         }
     }
 
+    /**
+     * 选择一个可用的连接
+     * @return 客户端
+     */
     public HotKeyClient select() {
         if (clientList.isEmpty()) {
             return null;
@@ -70,12 +93,14 @@ public class HotKeyClientGroup {
             int retry = 3;
             while (retry-- > 0) {
                 try {
+                    //随机选择
                     int index = ThreadLocalRandom.current().nextInt(clientList.size());
                     HotKeyClient client = clientList.get(index);
                     if (client != null && client.isValid()) {
                         return client;
                     }
                     if (client != null && !client.isValid()) {
+                        //如果连接不可用，则移除掉
                         client.stop();
                         remove(client);
                     }

@@ -8,7 +8,7 @@ import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -18,25 +18,29 @@ import java.util.concurrent.atomic.LongAdder;
 public class HotKeyCounterCollector {
 
     private final AtomicBoolean backUp = new AtomicBoolean(false);
-    private final ConcurrentLinkedHashMap<UniqueKey, LongAdder> map1;
-    private final ConcurrentLinkedHashMap<UniqueKey, LongAdder> map2;
+    private final int capacity;
+    private final ConcurrentHashMap<String, ConcurrentLinkedHashMap<String, LongAdder>> map1;
+    private final ConcurrentHashMap<String, ConcurrentLinkedHashMap<String, LongAdder>> map2;
 
     public HotKeyCounterCollector(int capacity) {
-        map1 = new ConcurrentLinkedHashMap.Builder<UniqueKey, LongAdder>()
-                .initialCapacity(capacity)
-                .maximumWeightedCapacity(capacity)
-                .build();
-        map2 = new ConcurrentLinkedHashMap.Builder<UniqueKey, LongAdder>()
-                .initialCapacity(capacity)
-                .maximumWeightedCapacity(capacity)
-                .build();
+        this.capacity = capacity;
+        map1 = new ConcurrentHashMap<>();
+        map2 = new ConcurrentHashMap<>();
     }
 
     public void push(String namespace, String key, KeyAction keyAction, long count) {
-        UniqueKey uniqueKey = new UniqueKey(namespace, key, keyAction);
-        Map<UniqueKey, LongAdder> map = !backUp.get() ? map1 : map2;
+        Map<String, LongAdder> map = getMap(namespace);
+        String uniqueKey = key + "|" + keyAction.getValue();
         LongAdder adder = CamelliaMapUtils.computeIfAbsent(map, uniqueKey, k -> new LongAdder());
         adder.add(count);
+    }
+
+    private ConcurrentLinkedHashMap<String, LongAdder> getMap(String namespace) {
+        ConcurrentHashMap<String, ConcurrentLinkedHashMap<String, LongAdder>> map = !backUp.get() ? map1 : map2;
+        return CamelliaMapUtils.computeIfAbsent(map, namespace, n -> new ConcurrentLinkedHashMap.Builder<String, LongAdder>()
+                .initialCapacity(capacity)
+                .maximumWeightedCapacity(capacity)
+                .build());
     }
 
     public synchronized List<KeyCounter> collect() {
@@ -55,54 +59,24 @@ public class HotKeyCounterCollector {
         return result;
     }
 
-    private List<KeyCounter> toResult(Map<UniqueKey, LongAdder> map) {
+    private List<KeyCounter> toResult(ConcurrentHashMap<String, ConcurrentLinkedHashMap<String, LongAdder>> map) {
         List<KeyCounter> result = new ArrayList<>();
-        for (Map.Entry<UniqueKey, LongAdder> entry : map.entrySet()) {
-            UniqueKey uniqueKey = entry.getKey();
-            KeyCounter counter = new KeyCounter();
-            counter.setNamespace(uniqueKey.getNamespace());
-            counter.setKey(uniqueKey.getKey());
-            counter.setAction(uniqueKey.getAction());
-            counter.setCount(entry.getValue().sum());
-            result.add(counter);
+        for (Map.Entry<String, ConcurrentLinkedHashMap<String, LongAdder>> entry : map.entrySet()) {
+            String namespace = entry.getKey();
+            ConcurrentLinkedHashMap<String, LongAdder> subMap = entry.getValue();
+            for (Map.Entry<String, LongAdder> subEntry : subMap.entrySet()) {
+                KeyCounter counter = new KeyCounter();
+                counter.setNamespace(namespace);
+                String uniqueKey = subEntry.getKey();
+                int index = uniqueKey.lastIndexOf("|");
+                String key = uniqueKey.substring(0, index);
+                KeyAction action = KeyAction.getByValue(Integer.parseInt(uniqueKey.substring(index + 1)));
+                counter.setKey(key);
+                counter.setAction(action);
+                counter.setCount(subEntry.getValue().sum());
+                result.add(counter);
+            }
         }
         return result;
-    }
-
-    private static class UniqueKey {
-        private final String namespace;
-        private final String key;
-        private final KeyAction action;
-
-        public UniqueKey(String namespace, String key, KeyAction action) {
-            this.namespace = namespace;
-            this.key = key;
-            this.action = action;
-        }
-
-        public String getNamespace() {
-            return namespace;
-        }
-
-        public KeyAction getAction() {
-            return action;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            UniqueKey uniqueKey = (UniqueKey) o;
-            return Objects.equals(namespace, uniqueKey.namespace) && action == uniqueKey.action && Objects.equals(key, uniqueKey.key);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(namespace, action, key);
-        }
     }
 }
