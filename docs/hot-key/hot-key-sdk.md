@@ -102,6 +102,14 @@ public interface ValueLoader<T> {
 
 #### 示例代码
 
+```
+<dependency>
+  <groupId>com.netease.nim</groupId>
+  <artifactId>camellia-hot-key-sdk</artifactId>
+  <version>1.2.8-SNAPSHOT</version>
+</dependency>
+```
+
 ```java
 public class Test {
 
