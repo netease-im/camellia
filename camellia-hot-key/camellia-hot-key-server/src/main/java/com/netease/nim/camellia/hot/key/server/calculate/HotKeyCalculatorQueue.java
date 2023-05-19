@@ -40,10 +40,12 @@ public class HotKeyCalculatorQueue {
     private final long id;
     private final LongAdder pendingSize = new LongAdder();
     private final LongAdder discardCount = new LongAdder();
+    private final int bizWorkQueueCapacity;
 
     public HotKeyCalculatorQueue(WorkQueueType workQueueType, int bizWorkQueueCapacity) {
         this.queue = initQueue(workQueueType, bizWorkQueueCapacity);
         this.id = idGen.getAndIncrement();
+        this.bizWorkQueueCapacity = bizWorkQueueCapacity;
     }
 
     private Queue<List<KeyCounter>> initQueue(WorkQueueType workQueueType, int bizWorkQueueCapacity) {
@@ -74,11 +76,18 @@ public class HotKeyCalculatorQueue {
 
     public void push(List<KeyCounter> counters) {
         int size = counters.size();
-        pendingSize.add(size);
-        boolean success = queue.offer(counters);
+        boolean success;
+        if (pendingSize.sum() > bizWorkQueueCapacity) {
+            success = false;
+        } else {
+            pendingSize.add(size);
+            success = queue.offer(counters);
+            if (!success) {
+                pendingSize.add(size * -1);
+            }
+        }
         if (!success) {
             fail.add(size);
-            pendingSize.add(size * -1);
             discardCount.add(size);
         }
     }

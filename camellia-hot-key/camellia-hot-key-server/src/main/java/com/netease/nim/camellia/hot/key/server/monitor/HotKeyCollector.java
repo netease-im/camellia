@@ -17,7 +17,7 @@ public class HotKeyCollector {
     private static NamespaceCamelliaLocalCache cache;
 
     public static void init(HotKeyServerProperties properties) {
-        cache = new NamespaceCamelliaLocalCache(properties.getMaxNamespace(), properties.getMonitorHotKeyMaxCount());
+        cache = new NamespaceCamelliaLocalCache(properties.getMaxNamespace(), properties.getMonitorHotKeyMaxCount(), true);
     }
 
     public static void update(HotKeyInfo hotKeyInfo) {

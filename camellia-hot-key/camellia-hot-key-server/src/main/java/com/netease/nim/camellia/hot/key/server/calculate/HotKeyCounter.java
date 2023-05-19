@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.hot.key.server.calculate;
 
 
-import com.netease.nim.camellia.hot.key.common.model.Rule;
 import com.netease.nim.camellia.hot.key.server.utils.TimeCache;
 
 /**
@@ -13,54 +12,40 @@ public class HotKeyCounter {
     private final long[] buckets;
     private final int bucketSize;
     private final long millisPerBucket;
-    private final long threshold;
 
     private int index;
     private long lastUpdateTime = TimeCache.currentMillis;
-    private boolean hot;
+    private long total = -1;
 
-    public HotKeyCounter(Rule rule) {
+    public HotKeyCounter(long checkMillis) {
         //init
-        Long checkMillis = rule.getCheckMillis();
         millisPerBucket = 100;
         bucketSize = (int) (checkMillis / millisPerBucket);
         buckets = new long[bucketSize];
         index = 0;
-        threshold = rule.getCheckThreshold();
     }
 
     /**
      * 线程不安全的，上层务必只有单线程调用
      * @param count count
-     * @return 是否hot
+     * @return 当前值
      */
-    public boolean check(long count) {
+    public long update(long count) {
         int slideStep = (int) ((TimeCache.currentMillis - lastUpdateTime) / millisPerBucket);
         if (slideStep > 0) {
             slideToNextBucket(slideStep);
-            hot = false;
+            total = -1;
         }
         lastUpdateTime = TimeCache.currentMillis;
         buckets[index] += count;
-        if (hot) {
-            return true;
-        }
-        long total = 0;
-        for (long bucket : buckets) {
-            total += bucket;
-        }
-        hot = total > threshold;
-        return hot;
-    }
-
-    /**
-     * 获取当前值
-     * @return value
-     */
-    public long getCount() {
-        long total = 0;
-        for (long bucket : buckets) {
-            total += bucket;
+        if (total == -1) {
+            long c = 0;
+            for (long bucket : buckets) {
+                c += bucket;
+            }
+            total = c;
+        } else {
+            total += count;
         }
         return total;
     }

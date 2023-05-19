@@ -2,6 +2,7 @@ package com.netease.nim.camellia.tools.cache;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
+import com.netease.nim.camellia.tools.utils.LockMap;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,13 +14,16 @@ public class NamespaceCamelliaLocalCache {
 
     private final Map<String, CamelliaLocalCache> map;
     private final int capacity;
+    private final boolean putLock;
+    private final LockMap lockMap = new LockMap();
 
     /**
      * 如果namespaceCapacity小于等于0，则namespace没有上限
      * @param namespaceCapacity namespaceCapacity
      * @param capacity CamelliaLocalCache的capacity
+     * @param putLock putLock
      */
-    public NamespaceCamelliaLocalCache(int namespaceCapacity, int capacity) {
+    public NamespaceCamelliaLocalCache(int namespaceCapacity, int capacity, boolean putLock) {
         if (namespaceCapacity > 0) {
             this.map = new ConcurrentLinkedHashMap.Builder<String, CamelliaLocalCache>()
                     .initialCapacity(namespaceCapacity)
@@ -29,6 +33,7 @@ public class NamespaceCamelliaLocalCache {
             this.map = new ConcurrentHashMap<>();
         }
         this.capacity = capacity;
+        this.putLock = putLock;
     }
 
     private CamelliaLocalCache get(String namespace) {
@@ -39,28 +44,56 @@ public class NamespaceCamelliaLocalCache {
      * 添加缓存
      */
     public void put(String namespace, Object key, Object value, long expireMillis) {
-        get(namespace).put("", key, value, expireMillis);
+        CamelliaLocalCache cache = get(namespace);
+        if (putLock) {
+            synchronized (lockMap.getLockObj(namespace)) {
+                cache.put("", key, value, expireMillis);
+            }
+        } else {
+            cache.put("", key, value, expireMillis);
+        }
     }
 
     /**
      * 添加缓存
      */
     public void put(String namespace, Object key, Object value, int expireSeconds) {
-        get(namespace).put("", key, value, expireSeconds);
+        CamelliaLocalCache cache = get(namespace);
+        if (putLock) {
+            synchronized (lockMap.getLockObj(namespace)) {
+                cache.put("", key, value, expireSeconds);
+            }
+        } else {
+            cache.put("", key, value, expireSeconds);
+        }
     }
 
     /**
      * 添加缓存（检查是否第一次）
      */
     public boolean putIfAbsent(String namespace, Object key, Object value, long expireMillis) {
-        return get(namespace).putIfAbsent("", key, value, expireMillis);
+        CamelliaLocalCache cache = get(namespace);
+        if (putLock) {
+            synchronized (lockMap.getLockObj(namespace)) {
+                return cache.putIfAbsent("", key, value, expireMillis);
+            }
+        } else {
+            return cache.putIfAbsent("", key, value, expireMillis);
+        }
     }
 
     /**
      * 添加缓存（检查是否第一次）
      */
     public boolean putIfAbsent(String namespace, Object key, Object value, int expireSeconds) {
-        return get(namespace).putIfAbsent("", key, value, expireSeconds);
+        CamelliaLocalCache cache = get(namespace);
+        if (putLock) {
+            synchronized (lockMap.getLockObj(namespace)) {
+                return cache.putIfAbsent("", key, value, expireSeconds);
+            }
+        } else {
+            return cache.putIfAbsent("", key, value, expireSeconds);
+        }
     }
 
     /**

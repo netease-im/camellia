@@ -29,16 +29,12 @@ public class HotKeyCounterManager {
         logger.info("HotKeyCounterManager init success, maxNamespace = {}, capacity = {}", properties.getMaxNamespace(), capacity);
     }
 
-    public boolean check(String namespace, String key, Rule rule, long count) {
-        boolean hot = getHotKeyCounter(namespace, key, rule).check(count);
+    public long update(String namespace, String key, Rule rule, long count) {
+        long current = getHotKeyCounter(namespace, key, rule).update(count);
         if (logger.isDebugEnabled()) {
-            logger.debug("check key, namespace = {}, key = {}, count = {}, rule.name = {}, hot = {}", namespace, key, count, rule.getName(), hot);
+            logger.debug("check key, namespace = {}, key = {}, count = {}, rule.name = {}, current = {}", namespace, key, count, rule.getName(), current);
         }
-        return hot;
-    }
-
-    public long getCount(String namespace, String key, Rule rule) {
-        return getHotKeyCounter(namespace, key, rule).getCount();
+        return current;
     }
 
     public void remove(String namespace) {
@@ -53,6 +49,6 @@ public class HotKeyCounterManager {
 
     private HotKeyCounter getHotKeyCounter(String namespace, String key, Rule rule) {
         Cache<String, HotKeyCounter> cache = getMap(namespace);
-        return cache.get(key, k -> new HotKeyCounter(rule));
+        return cache.get(key, k -> new HotKeyCounter(rule.getCheckMillis()));
     }
 }

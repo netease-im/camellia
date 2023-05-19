@@ -36,8 +36,8 @@ public class HotKeyConstants {
         public static final int consolePort = 17070;
 
         public static final int nettyBossThread = 1;
-        public static final int nettyWorkThread = SysUtils.getCpuHalfNum();
-        public static final int bizWorkThread = SysUtils.getCpuHalfNum();
+        public static final int nettyWorkThread = SysUtils.getCpuNum();
+        public static final int bizWorkThread = SysUtils.getCpuNum();
         public static int bizWorkQueueCapacity = 100000;
 
         public static final boolean tcpNoDelay = true;
