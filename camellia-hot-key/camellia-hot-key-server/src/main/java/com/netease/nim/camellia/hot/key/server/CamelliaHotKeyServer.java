@@ -61,6 +61,7 @@ public class CamelliaHotKeyServer {
                         }
                     });
             serverBootstrap.bind(properties.getPort()).sync();
+            logger.info("CamelliaHotKeyServer start, boss-thread = {}, work-thread = {}", properties.getNettyBossThread(), properties.getNettyWorkThread());
             logger.info("CamelliaHotKeyServer start at port: {}", properties.getPort());
         } catch (Exception e) {
             logger.error("CamelliaHotKeyServer start error", e);
