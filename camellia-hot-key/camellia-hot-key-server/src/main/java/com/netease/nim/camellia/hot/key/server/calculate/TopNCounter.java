@@ -2,7 +2,6 @@ package com.netease.nim.camellia.hot.key.server.calculate;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
 import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
@@ -14,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -35,7 +33,8 @@ public class TopNCounter {
         this.namespace = namespace;
         this.topN = properties.getTopnCount();
         this.cache = Caffeine.newBuilder()
-                .initialCapacity(properties.getTopnCacheCounterCapacity()).maximumSize(properties.getCallbackExecutorSize())
+                .initialCapacity(properties.getTopnCacheCounterCapacity())
+                .maximumSize(properties.getCallbackExecutorSize())
                 .build();
         this.buffer = new ArrayList<>(properties.getTopnCollectSeconds() * properties.getTopnCount());
         scheduler.scheduleAtFixedRate(this::schedule, checkMillis * properties.getTopnTinyCollectSeconds(),

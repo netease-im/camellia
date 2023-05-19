@@ -6,12 +6,12 @@ spring:
 
 camellia-hot-key-server:
   #工作线程和工作队列
-  biz-work-thread: -1 #默认使用cpu核数的一半，不建议修改
+  biz-work-thread: -1 #默认使用cpu核数
   biz-queue-capacity: 100000 #队列容量，默认10w
   #netty部分
   netty:
     boss-thread: 1 #默认1，不建议修改
-    work-thread: -1 #默认cpu核数的一半，不建议修改
+    work-thread: -1 #默认cpu核数
   #console，一个简单的http服务器，可以做优雅上下线和监控数据暴露，也可以自定义接口
   console-port: 17070
   #公共部分
