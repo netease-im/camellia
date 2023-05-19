@@ -41,3 +41,6 @@
 
 具体见：[hot-key-server](hot-key-server.md)
 
+## 性能测试
+
+具体见：[performance](performance.md)
