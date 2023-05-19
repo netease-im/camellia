@@ -7,7 +7,7 @@
 * add camellia-zk module, camellia-redis-proxy-zk and camellia-hot-key-zk base on camellia-zk
 
 ### update
-* none
+* camellia-redis-proxy set `tcp_keepalive` default true for client connect
 
 ### fix
 * camellia-redis-proxy update the console api `/prometheus`, replace `%n` to `\n`, adapate windows os

@@ -25,7 +25,7 @@ camellia-redis-proxy:
     reader-idle-time-seconds: -1 #default -1, skip idle check; 
     writer-idle-time-seconds: -1 #default -1, skip idle check; 
     all-idle-time-seconds: -1 #default -1, skip idle check; 
-    so-keepalive: false #default false
+    so-keepalive: true #default true
     tcp-no-delay: true #default true
     tcp-quick-ack: false #default false, only support when in epoll mode
   transpond:
