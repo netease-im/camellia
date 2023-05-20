@@ -9,7 +9,6 @@ import com.netease.nim.camellia.hot.key.sdk.discovery.LocalConfHotKeyServerDisco
 import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyServerAddr;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -41,14 +40,19 @@ public class MonitorPerformanceTest {
         System.out.println("key=" + key0 + ",hot=" + result0.isHot());
 
         new Thread(() -> {
+            int count = 0;
             while (true) {
                 String key = UUID.randomUUID().toString();
                 Result result = monitorSdk.push(namespace1, key, 1);
-//                System.out.println("key=" + key + ",hot=" + result.isHot());
-                try {
-                    TimeUnit.MILLISECONDS.sleep(1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                count ++;
+                if (count == 10000) {
+//                    System.out.println("key=" + key + ",hot=" + result.isHot());
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    count = 0;
                 }
             }
         }).start();

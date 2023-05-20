@@ -75,7 +75,6 @@ public class HotKeyNotifyService {
             ChannelInfo channelInfo = ClientConnectHub.getInstance().get(consid);
             if (channelInfo != null) {
                 CompletableFuture<HotKeyPack> future = sendPack(channelInfo, pack);
-
                 future.thenAccept(p -> {
                     if (p.getHeader().isEmptyBody()) {
                         logger.error("notify HotKey change fail, channel = {}, hotKey = {}",

@@ -12,6 +12,7 @@ public enum WorkQueueType {
     MpscLinkedQueue,
     MpscAtomicArrayQueue,
     MpscLinkedAtomicQueue,
+    MpscBlockingConsumerArrayQueue,
     ;
 
 }

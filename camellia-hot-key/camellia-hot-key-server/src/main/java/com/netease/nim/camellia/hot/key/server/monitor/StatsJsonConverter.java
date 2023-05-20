@@ -31,6 +31,7 @@ public class StatsJsonConverter {
             JSONObject json = new JSONObject();
             json.put("id", String.valueOf(stats.getId()));
             json.put("pendingSize", stats.getPendingSize());
+            json.put("discardCount", stats.getDiscardCount());
             queueStatsJsonArray.add(json);
         }
         monitorJson.put("queueStats", queueStatsJsonArray);

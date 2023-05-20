@@ -45,7 +45,8 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
         HotKeyClientHub.getInstance().registerListener(new DefaultHotKeyClientListener(this));
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-hot-key-sdk-schedule")).scheduleAtFixedRate(this::schedulePush,
                 config.getPushIntervalMillis(), config.getPushIntervalMillis(), TimeUnit.MILLISECONDS);
-        logger.info("CamelliaHotKeySdk init success, pushIntervalMillis = {}, pushBatch = {}", config.getPushIntervalMillis(), config.getPushBatch());
+        logger.info("CamelliaHotKeySdk init success, pushIntervalMillis = {}, pushBatch = {}, capacity = {}",
+                config.getPushIntervalMillis(), config.getPushBatch(), config.getCapacity());
     }
 
     public CamelliaHotKeySdkConfig getConfig() {
@@ -85,7 +86,15 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
                 throw new CamelliaHotKeyException("can not found valid hot key server");
             }
             CompletableFuture<HotKeyPack> future = client.sendPack(HotKeyPack.newPack(HotKeyCommand.HOT_KEY_CACHE_STATS, new HotKeyCacheStatsPack(statsList)));
-            future.get(HotKeyConstants.Client.pushCacheHitStatsTimeoutMillis, TimeUnit.MILLISECONDS);
+            HotKeyPack hotKeyPack = future.get(HotKeyConstants.Client.pushCacheHitStatsTimeoutMillis, TimeUnit.MILLISECONDS);
+            if (hotKeyPack != null) {
+                HotKeyCacheStatsRepPack repPack = (HotKeyCacheStatsRepPack) hotKeyPack.getBody();
+                if (repPack != null) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("sendHotkeyCacheStats success, size = {}", statsList.size());
+                    }
+                }
+            }
         } catch (CamelliaHotKeyException e) {
             throw e;
         } catch (Exception e) {

@@ -60,6 +60,7 @@ public class TopNCounterManager {
         scheduler = new ScheduledThreadPoolExecutor(SysUtils.getCpuHalfNum(), new CamelliaThreadFactory("camella-hot-key-topn-scheduler"));
 
         TopNMonitor.register(this);
+        logger.info("TopNCounterManager init success, maxNamespace = {}, capacity = {}", properties.getMaxNamespace(), properties.getTopnCacheCounterCapacity());
     }
 
     /**

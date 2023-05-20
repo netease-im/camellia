@@ -43,10 +43,10 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         super(sdk, config.getExecutor(), config.getScheduler(), config.getHotKeyConfigReloadIntervalSeconds());
         this.sdk = sdk;
         this.config = config;
-        this.hotKeyCacheKeyMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity());
-        this.hotKeyCacheValueMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity());
-        this.hotKeyCacheHitLockMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity());
-        this.hotKeyCacheHitStatsMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity() * 2);
+        this.hotKeyCacheKeyMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity(), true);
+        this.hotKeyCacheValueMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity(), false);
+        this.hotKeyCacheHitLockMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity(), false);
+        this.hotKeyCacheHitStatsMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity() * 2, false);
         logger.info("CamelliaHotKeyCacheSdk init success");
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("hot-key-cache-hit-stats-scheduler"))
                 .scheduleAtFixedRate(this::reportCacheHitStats, config.getCacheHitStatsReportIntervalSeconds(), config.getCacheHitStatsReportIntervalSeconds(), TimeUnit.SECONDS);

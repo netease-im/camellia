@@ -23,9 +23,10 @@ public class HotKeyConstants {
         public static long reloadIntervalSeconds = 120;
         public static long heartbeatTimeoutMillis = 10*1000L;
         public static long pushIntervalMillis = 100;
-        public static int pushBatch = 1000;
+        public static int pushBatch = 5000;
 
         public static int capacity = 100000;
+        public static int connectNum = 3;
 
         public static int hotKeyConfigReloadIntervalSeconds = 60;
     }
@@ -35,9 +36,9 @@ public class HotKeyConstants {
         public static final int consolePort = 17070;
 
         public static final int nettyBossThread = 1;
-        public static final int nettyWorkThread = SysUtils.getCpuHalfNum();
-        public static final int bizWorkThread = SysUtils.getCpuHalfNum();
-        public static int bizWorkQueueCapacity = 100*10000;
+        public static final int nettyWorkThread = SysUtils.getCpuNum();
+        public static final int bizWorkThread = SysUtils.getCpuNum();
+        public static int bizWorkQueueCapacity = 100000;
 
         public static final boolean tcpNoDelay = true;
         public static final int soBacklog = 1024;

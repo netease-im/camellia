@@ -7,7 +7,7 @@
 * 新增camellia-zk模块，camellia-redis-proxy-zk和camellia-hot-key-zk均引用camellia-zk，从而复用代码
 
 ### 更新
-* 无
+* camellia-redis-proxy面向client的连接，tcp_keepalive参数默认改成true
 
 ### fix
 * camellia-redis-proxy的`/prometheus`接口的换行符，从`%n`改成`\n`，从而适配windows环境

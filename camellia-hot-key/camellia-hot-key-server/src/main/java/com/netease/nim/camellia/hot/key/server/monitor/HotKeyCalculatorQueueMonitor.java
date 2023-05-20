@@ -26,6 +26,7 @@ public class HotKeyCalculatorQueueMonitor {
             QueueStats.Stats stats = new QueueStats.Stats();
             stats.setId(entry.getKey());
             stats.setPendingSize(entry.getValue().pendingSize());
+            stats.setDiscardCount(entry.getValue().discardCount());
             statsList.add(stats);
         }
         queueStats.setStatsList(statsList);

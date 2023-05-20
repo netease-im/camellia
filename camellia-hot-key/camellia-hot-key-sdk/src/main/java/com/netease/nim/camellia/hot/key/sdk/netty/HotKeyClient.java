@@ -25,8 +25,9 @@ public class HotKeyClient {
 
     private final long id;
     private final HotKeyServerAddr addr;
-    private Channel channel = null;
     private final SeqManager seqManager = new SeqManager();
+
+    private Channel channel = null;
     private volatile boolean valid;
 
     public HotKeyClient(HotKeyServerAddr addr, HotKeyPackConsumer consumer) {
@@ -64,6 +65,17 @@ public class HotKeyClient {
         }
     }
 
+    /**
+     * 获取唯一id
+     * @return id
+     */
+    public long getId() {
+        return id;
+    }
+
+    /**
+     * 关闭连接
+     */
     public synchronized void stop() {
         valid = false;
         try {
@@ -81,10 +93,19 @@ public class HotKeyClient {
         logger.info("HotKeyClient stopped, addr = {}, id = {}", addr, id);
     }
 
+    /**
+     * 连接是否可用
+     * @return true/false
+     */
     public boolean isValid() {
         return valid;
     }
 
+    /**
+     * 发送一个包到服务器
+     * @param hotKeyPack pack
+     * @return 响应
+     */
     public CompletableFuture<HotKeyPack> sendPack(HotKeyPack hotKeyPack) {
         hotKeyPack.getHeader().setSeqId(seqManager.genSeqId());
         CompletableFuture<HotKeyPack> future = seqManager.putSession(hotKeyPack);

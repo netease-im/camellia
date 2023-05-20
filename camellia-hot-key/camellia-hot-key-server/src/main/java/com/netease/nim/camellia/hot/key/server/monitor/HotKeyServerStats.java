@@ -15,7 +15,7 @@ public class HotKeyServerStats {
     private long connectCount;
     private QueueStats queueStats = new QueueStats();
     private TrafficStats trafficStats = new TrafficStats();
-    private List<HotKeyInfo> hotKeyInfoList = new ArrayList<>();
+    private List<HotKeyInfo> hotKeyInfoList = new ArrayList<>();//只采样部分热key
 
     public String getApplicationName() {
         return applicationName;

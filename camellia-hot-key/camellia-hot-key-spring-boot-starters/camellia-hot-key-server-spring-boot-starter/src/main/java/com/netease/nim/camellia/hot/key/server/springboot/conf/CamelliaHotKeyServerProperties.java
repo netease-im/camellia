@@ -4,6 +4,7 @@ import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCacheStatsCallback;
 import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyCallback;
 import com.netease.nim.camellia.hot.key.server.callback.LoggingHotKeyTopNCallback;
+import com.netease.nim.camellia.hot.key.server.callback.LoggingMonitorCallback;
 import com.netease.nim.camellia.hot.key.server.conf.FileBasedHotKeyConfigService;
 import com.netease.nim.camellia.hot.key.server.conf.WorkQueueType;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -45,6 +46,8 @@ public class CamelliaHotKeyServerProperties {
     private int callbackExecutorSize = HotKeyConstants.Server.callbackExecutorSize;
 
     private String hotKeyCacheStatsCallbackClassName = LoggingHotKeyCacheStatsCallback.class.getName();
+
+    private String monitorCallbackClassName = LoggingMonitorCallback.class.getName();
 
     private int monitorIntervalSeconds = HotKeyConstants.Server.monitorIntervalSeconds;
     private int monitorHotKeyMaxCount = HotKeyConstants.Server.monitorHotKeyMaxCount;
@@ -233,5 +236,13 @@ public class CamelliaHotKeyServerProperties {
 
     public void setHotKeyCacheStatsCallbackClassName(String hotKeyCacheStatsCallbackClassName) {
         this.hotKeyCacheStatsCallbackClassName = hotKeyCacheStatsCallbackClassName;
+    }
+
+    public String getMonitorCallbackClassName() {
+        return monitorCallbackClassName;
+    }
+
+    public void setMonitorCallbackClassName(String monitorCallbackClassName) {
+        this.monitorCallbackClassName = monitorCallbackClassName;
     }
 }

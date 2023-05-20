@@ -4,8 +4,8 @@ import com.netease.nim.camellia.hot.key.common.model.HotKey;
 import com.netease.nim.camellia.hot.key.common.model.Rule;
 import com.netease.nim.camellia.hot.key.common.netty.pack.HotKeyCacheStats;
 import com.netease.nim.camellia.hot.key.server.calculate.TopNStatsResult;
-import com.netease.nim.camellia.hot.key.server.event.ValueGetter;
 import com.netease.nim.camellia.hot.key.server.monitor.HotKeyCollector;
+import com.netease.nim.camellia.hot.key.server.monitor.HotKeyServerStats;
 import com.netease.nim.camellia.hot.key.server.utils.TimeCache;
 import com.netease.nim.camellia.hot.key.server.bean.BeanInitUtils;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
@@ -31,6 +31,7 @@ public class HotKeyCallbackManager {
     private final HotKeyCallback hotKeyCallback;
     private final HotKeyTopNCallback topNCallback;
     private final HotKeyCacheStatsCallback hotKeyCacheStatsCallback;
+    private final MonitorCallback monitorCallback;
     private final NamespaceCamelliaLocalCache callbackTimeCache;
 
     public HotKeyCallbackManager(HotKeyServerProperties properties) {
@@ -38,7 +39,8 @@ public class HotKeyCallbackManager {
         this.hotKeyCallback = (HotKeyCallback) properties.getBeanFactory().getBean(BeanInitUtils.parseClass(properties.getHotKeyCallbackClassName()));
         this.topNCallback = (HotKeyTopNCallback) properties.getBeanFactory().getBean(BeanInitUtils.parseClass(properties.getTopNCallbackClassName()));
         this.hotKeyCacheStatsCallback = (HotKeyCacheStatsCallback) properties.getBeanFactory().getBean(BeanInitUtils.parseClass(properties.getHotKeyCacheStatsCallbackClassName()));
-        this.callbackTimeCache = new NamespaceCamelliaLocalCache(properties.getMaxNamespace(), properties.getHotKeyCacheCounterCapacity());
+        this.monitorCallback = (MonitorCallback) properties.getBeanFactory().getBean(BeanInitUtils.parseClass(properties.getMonitorCallbackClassName()));
+        this.callbackTimeCache = new NamespaceCamelliaLocalCache(properties.getMaxNamespace(), properties.getHotKeyCacheCounterCapacity(), false);
         this.executor = new ThreadPoolExecutor(properties.getCallbackExecutorSize(), properties.getCallbackExecutorSize(), 0, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(10000), new CamelliaThreadFactory("hot-key-callback"), new ThreadPoolExecutor.DiscardPolicy());
         logger.info("HotKeyCallbackManager init success, HotKeyCallback = {}, HotKeyTopNCallback = {}",
@@ -48,14 +50,14 @@ public class HotKeyCallbackManager {
     /**
      * 发现一个新的热key的回调
      */
-    public void newHotkey(HotKey hotKey, Rule rule, ValueGetter getter) {
+    public void newHotkey(HotKey hotKey, Rule rule, long current) {
         try {
             Long lastCallbackTime = callbackTimeCache.get(hotKey.getNamespace(), hotKey.getKey(), Long.class);
             if (lastCallbackTime == null) {
                 boolean success = callbackTimeCache.putIfAbsent(hotKey.getNamespace(), hotKey.getKey(),
                         TimeCache.currentMillis, properties.getHotKeyCallbackIntervalSeconds());
                 if (success) {
-                    HotKeyInfo hotKeyInfo = new HotKeyInfo(hotKey.getNamespace(), hotKey.getKey(), hotKey.getAction(), rule, getter.get());
+                    HotKeyInfo hotKeyInfo = new HotKeyInfo(hotKey.getNamespace(), hotKey.getKey(), hotKey.getAction(), rule, current);
                     executor.submit(() -> {
                         try {
                             HotKeyCollector.update(hotKeyInfo);
@@ -93,17 +95,35 @@ public class HotKeyCallbackManager {
      * 缓存命中情况的统计数据回调
      * @param statsList 统计数据
      */
-    public void cacheHitStats(List<HotKeyCacheStats> statsList) {
+    public void newStats(List<HotKeyCacheStats> statsList) {
         try {
             executor.submit(() -> {
                 try {
                     hotKeyCacheStatsCallback.newStats(statsList);
                 } catch (Exception e) {
-                    logger.error("cacheHitStats callback error", e);
+                    logger.error("newStats callback error", e);
                 }
             });
         } catch (Exception e) {
-            logger.error("submit cacheHitStats callback error");
+            logger.error("submit newStats callback error");
+        }
+    }
+
+    /**
+     * 统计信息
+     * @param serverStats serverStats
+     */
+    public void serverStats(HotKeyServerStats serverStats) {
+        try {
+            executor.submit(() -> {
+                try {
+                    monitorCallback.serverStats(serverStats);
+                } catch (Exception e) {
+                    logger.error("serverStats callback error", e);
+                }
+            });
+        } catch (Exception e) {
+            logger.error("submit serverStats callback error");
         }
     }
 }

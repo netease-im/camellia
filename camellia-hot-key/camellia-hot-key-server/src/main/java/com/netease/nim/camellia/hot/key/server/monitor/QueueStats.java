@@ -28,7 +28,8 @@ public class QueueStats {
 
     public static class Stats {
         private long id;
-        private int pendingSize;
+        private long pendingSize;
+        private long discardCount;
 
         public long getId() {
             return id;
@@ -38,12 +39,20 @@ public class QueueStats {
             this.id = id;
         }
 
-        public int getPendingSize() {
+        public long getPendingSize() {
             return pendingSize;
         }
 
-        public void setPendingSize(int pendingSize) {
+        public void setPendingSize(long pendingSize) {
             this.pendingSize = pendingSize;
+        }
+
+        public long getDiscardCount() {
+            return discardCount;
+        }
+
+        public void setDiscardCount(long discardCount) {
+            this.discardCount = discardCount;
         }
     }
 }

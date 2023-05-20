@@ -30,7 +30,7 @@ public class CamelliaHotKeyMonitorSdk extends CamelliaHotKeyAbstractSdk implemen
         super(sdk, config.getExecutor(), config.getScheduler(), config.getHotKeyConfigReloadIntervalSeconds());
         this.sdk = sdk;
         this.config = config;
-        this.hotKeyCacheKeyMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity());
+        this.hotKeyCacheKeyMap = new NamespaceCamelliaLocalCache(config.getMaxNamespace(), config.getCapacity(), true);
     }
 
     @Override

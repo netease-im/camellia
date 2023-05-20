@@ -52,8 +52,11 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         this.is2Power = MathUtil.is2Power(bizWorkThread);
         this.queues = new HotKeyCalculatorQueue[bizWorkThread];
 
+        //callback
+        callbackManager = new HotKeyCallbackManager(properties);
+
         //监控
-        HotKeyServerMonitorCollector.init(properties);
+        HotKeyServerMonitorCollector.init(properties, callbackManager);
 
         //config
         HotKeyConfigService service = ConfigInitUtil.initHotKeyConfigService(properties);
@@ -67,9 +70,6 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         //hot key counter
         HotKeyCounterManager hotKeyCounterManager = new HotKeyCounterManager(properties);
         hotKeyConfigService.registerCallback(hotKeyCounterManager::remove);
-
-        //callback
-        callbackManager = new HotKeyCallbackManager(properties);
 
         //topN counter
         TopNCounterManager topNCounterManager = new TopNCounterManager(properties, callbackManager);
@@ -150,7 +150,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         try {
             executor.submit(() -> {
                 try {
-                    callbackManager.cacheHitStats(pack.getStatsList());
+                    callbackManager.newStats(pack.getStatsList());
                     future.complete(HotKeyCacheStatsRepPack.INSTANCE);
                 } catch (Exception e) {
                     future.complete(null);
