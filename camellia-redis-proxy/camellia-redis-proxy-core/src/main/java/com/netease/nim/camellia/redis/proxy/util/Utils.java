@@ -224,7 +224,7 @@ public class Utils {
     }
 
     /**
-     * 缓存key拼接
+     * 缓存key拼接，代表不同租户
      *
      * @param bid    bid
      * @param bgroup bgroup

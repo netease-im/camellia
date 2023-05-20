@@ -25,7 +25,7 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
 
     private final ProxyBeanFactory beanFactory;
     /**
-     * 插件配置的字符串
+     * 插件配置的字符串,也就是配置中{@link DefaultProxyPluginFactory#CONF_KEY}的值
      */
     private String pluginConf;
     /**

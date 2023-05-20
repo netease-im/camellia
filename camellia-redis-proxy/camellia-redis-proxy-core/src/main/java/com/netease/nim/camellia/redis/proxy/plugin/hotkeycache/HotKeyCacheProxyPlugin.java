@@ -20,6 +20,7 @@ public class HotKeyCacheProxyPlugin implements ProxyPlugin {
     public void init(ProxyBeanFactory factory) {
         HotKeyCacheConfig hotKeyCacheConfig = new HotKeyCacheConfig();
 
+        // Set hotKeyChecker and the default is PrefixMatchHotKeyCacheKeyChecker. Also, you can implement HotKeyCacheKeyChecker to customize a checker.
         String hotKeyCacheKeyCheckerClassName = ProxyDynamicConf.getString("hot.key.cache.key.checker.className", PrefixMatchHotKeyCacheKeyChecker.class.getName());
         HotKeyCacheKeyChecker hotKeyCacheKeyChecker = (HotKeyCacheKeyChecker) factory.getBean(BeanInitUtils.parseClass(hotKeyCacheKeyCheckerClassName));
         hotKeyCacheConfig.setHotKeyCacheKeyChecker(hotKeyCacheKeyChecker);

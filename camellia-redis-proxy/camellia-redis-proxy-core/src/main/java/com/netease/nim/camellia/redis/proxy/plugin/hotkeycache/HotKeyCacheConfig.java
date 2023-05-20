@@ -8,6 +8,9 @@ package com.netease.nim.camellia.redis.proxy.plugin.hotkeycache;
  */
 public class HotKeyCacheConfig {
 
+    /**
+     * Check if the key needs to be cached
+     */
     private HotKeyCacheKeyChecker hotKeyCacheKeyChecker;
     private HotKeyCacheStatsCallback hotKeyCacheStatsCallback;
 

@@ -26,22 +26,34 @@ public class HotKeyHunter {
     private final HotKeyMonitorCallback callback;
     private final LRUCounter counter;
     private final IdentityInfo identityInfo;
+    /**
+     * 热key监控统计的时间窗口，默认1000ms
+     */
     private final long checkMillis;
 
+    /**
+     * 热key监控统计在时间窗口内超过多少阈值，判定为热key，默认500
+     */
     private long checkThreshold;
+    /**
+     * 单个周期内最多上报多少个热key，默认32（取top）
+     */
     private int maxHotKeyCount;
 
     public HotKeyHunter(IdentityInfo identityInfo, HotKeyMonitorCallback callback) {
         this.identityInfo = identityInfo;
         this.enable = true;
         reloadHotKeyConfig();
+        // register dynamic config callback
         ProxyDynamicConf.registerCallback(this::reloadHotKeyConfig);
         this.callback = callback;
         this.CALLBACK_NAME = callback.getClass().getName();
+        // LRUCounter capacity
         int checkCacheMaxCapacity = ProxyDynamicConf.getInt("hot.key.monitor.cache.max.capacity",
                 identityInfo.getBid(), identityInfo.getBgroup(), Constants.Server.hotKeyMonitorCheckCacheMaxCapacity);
         this.checkMillis = ProxyDynamicConf.getLong("hot.key.monitor.counter.check.millis",
                 identityInfo.getBid(), identityInfo.getBgroup(), Constants.Server.hotKeyCacheCounterCheckMillis);
+        // LRUCounter
         this.counter = new LRUCounter(checkCacheMaxCapacity,
                 checkCacheMaxCapacity, checkMillis);
         ExecutorUtils.scheduleAtFixedRate(this::callback, checkMillis,

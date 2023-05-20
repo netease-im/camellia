@@ -48,7 +48,7 @@ public class CommandInvoker implements ICommandInvoker {
                     .getBean(BeanInitUtils.parseClass(serverProperties.getClusterModeProviderClassName()));
             clusterModeProcessor = new ProxyClusterModeProcessor(provider);
         }
-
+        // initialize plugins
         DefaultProxyPluginFactory proxyPluginFactory = new DefaultProxyPluginFactory(serverProperties.getPlugins(), serverProperties.getProxyBeanFactory());
         this.commandInvokeConfig = new CommandInvokeConfig(authCommandProcessor, clusterModeProcessor, proxyPluginFactory);
     }
