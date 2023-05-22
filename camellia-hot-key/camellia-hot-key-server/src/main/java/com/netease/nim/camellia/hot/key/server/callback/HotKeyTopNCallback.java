@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.hot.key.server.callback;
 
 import com.netease.nim.camellia.hot.key.server.calculate.TopNStatsResult;
+import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 
 /**
  * Created by caojiajun on 2023/5/10
@@ -13,4 +14,12 @@ public interface HotKeyTopNCallback {
      * @param result 结果
      */
     void topN(TopNStatsResult result);
+
+    /**
+     * 初始化方法
+     * @param properties properties
+     */
+    default void init(HotKeyServerProperties properties) {
+
+    }
 }

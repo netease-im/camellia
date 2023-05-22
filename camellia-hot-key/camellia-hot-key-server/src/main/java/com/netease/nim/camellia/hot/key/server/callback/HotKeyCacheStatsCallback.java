@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.hot.key.server.callback;
 
 import com.netease.nim.camellia.hot.key.common.netty.pack.HotKeyCacheStats;
+import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 
 import java.util.List;
 
@@ -14,4 +15,12 @@ public interface HotKeyCacheStatsCallback {
      * @param statsList statsList
      */
     void newStats(List<HotKeyCacheStats> statsList);
+
+    /**
+     * 初始化方法
+     * @param properties properties
+     */
+    default void init(HotKeyServerProperties properties) {
+
+    }
 }

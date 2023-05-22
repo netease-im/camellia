@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.hot.key.server.callback;
 
+import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 import com.netease.nim.camellia.hot.key.server.monitor.HotKeyServerStats;
 
 /**
@@ -14,4 +15,11 @@ public interface MonitorCallback {
      */
     void serverStats(HotKeyServerStats serverStats);
 
+    /**
+     * 初始化方法
+     * @param properties properties
+     */
+    default void init(HotKeyServerProperties properties) {
+
+    }
 }
