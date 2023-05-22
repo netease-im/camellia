@@ -113,7 +113,7 @@ public class CommandTaskQueue {
                 channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet())).addListener((ChannelFutureListener) channelFuture -> {
                     channelInfo.getCtx().close();
                     logger.warn("client connect in subscribe mode forced disconnect because bind connection is invalid, bindConnection = {}, consid = {}",
-                            channelInfo.getBindConnection().getConnectionName(), channelInfo.getConsid());
+                            bindConnection.getConnectionName(), channelInfo.getConsid());
                 });
                 channelInfo.setBindConnection(null);
                 return;
