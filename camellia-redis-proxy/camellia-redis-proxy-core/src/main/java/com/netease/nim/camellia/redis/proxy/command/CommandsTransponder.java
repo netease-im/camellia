@@ -108,7 +108,7 @@ public class CommandsTransponder {
                             ErrorLogCollector.collect(CommandsTransponder.class, "executeRequest error", e);
                         }
                     }
-                    // 如果在插件处中断了，说明命令已经刷到redis了，直接执行下一个命令
+                    // 如果在插件处中断了，说明命令不需要继续执行
                     if (pluginBreak) {
                         continue;
                     }
