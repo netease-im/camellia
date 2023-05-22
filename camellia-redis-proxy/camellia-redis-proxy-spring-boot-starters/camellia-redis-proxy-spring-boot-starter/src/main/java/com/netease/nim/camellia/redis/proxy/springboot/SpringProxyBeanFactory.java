@@ -8,7 +8,7 @@ import org.springframework.context.ApplicationContext;
 
 
 /**
- * Created by caojiajun on 2022/9/19
+ * Get bean from spring.
  */
 public class SpringProxyBeanFactory implements ProxyBeanFactory {
 
@@ -21,6 +21,13 @@ public class SpringProxyBeanFactory implements ProxyBeanFactory {
         this.applicationContext = applicationContext;
     }
 
+    /**
+     * Get bean from the spring container. If {@link ApplicationContext} is not set, {@link DefaultBeanFactory} will be used.
+     *
+     * @param requiredType target class
+     * @param <T>          type
+     * @return bean
+     */
     @Override
     public <T> T getBean(Class<T> requiredType) {
         try {

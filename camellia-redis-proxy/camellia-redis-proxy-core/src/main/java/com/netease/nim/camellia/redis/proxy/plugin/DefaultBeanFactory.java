@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * Get the instance by reflection.
  * Created by caojiajun on 2022/9/16
  */
 public class DefaultBeanFactory implements ProxyBeanFactory {

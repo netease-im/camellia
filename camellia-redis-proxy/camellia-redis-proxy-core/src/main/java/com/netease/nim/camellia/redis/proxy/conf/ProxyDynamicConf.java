@@ -50,7 +50,7 @@ public class ProxyDynamicConf {
     }
 
     /**
-     * 检查本地配置文件是否有变更。如果有，则重新加载，清空缓存，触发监听者的回调。因为不止一个地方调用，所以需要用CAS来防止并发。
+     * 检查配置文件是否有变更。如果有，则重新加载，清空缓存，触发监听者的回调。因为不止一个地方调用，所以需要用CAS来防止并发。
      * Check the local configuration file for changes.
      * If so, reload, clear the cache, and trigger the callback of the listener.
      * Because more than one method calls this function, CAS is needed to prevent concurrency.

@@ -5,5 +5,8 @@ package com.netease.nim.camellia.redis.proxy.plugin;
  */
 public interface ProxyBeanFactory {
 
+    /**
+     * Get bean from the Spring container or create bean by reflection. It depends on the implementation.
+     */
     <T> T getBean(Class<T> requiredType);
 }

@@ -12,7 +12,7 @@ public class LockMap {
     private final ConcurrentHashMap<String, Object> lockMap = new ConcurrentHashMap<>();
 
     /**
-     * 通过 {@link java.util.Map#computeIfAbsent(Object, Function)}方法实现，如果存在就直接返回锁对象，如果不存在就调用 {@link java.util.function.Function} 接口
+     * 通过 {@link java.util.Map#computeIfAbsent(Object, Function)}方法实现，如果存在就直接返回锁对象，如果不存在就调用 {@link java.util.function.Function} 接口 增加一个锁对象
      * @param key key
      * @return 锁对象
      */

@@ -42,9 +42,13 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
         init();
     }
 
+    /**
+     * Init config from nacos property file
+     */
     private void init() {
         Properties nacosProps = new Properties();
         try {
+            // Get nacos config by prefix.
             String prefix = "nacos.";
             for (Map.Entry<String, String> entry : initConf.entrySet()) {
                 String key = entry.getKey();
@@ -77,6 +81,7 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
             if (!success) {
                 throw new IllegalStateException("reload from nacos error");
             }
+            // Listen config changes
             configService.addListener(dataId, group, new Listener() {
                 @Override
                 public Executor getExecutor() {
@@ -100,6 +105,9 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
         }
     }
 
+    /**
+     * Reload config from nacos
+     */
     private boolean reload() {
         try {
             String content = configService.getConfig(dataId, group, timeoutMs);
@@ -111,6 +119,12 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
         }
     }
 
+    /**
+     * Parse the content into config map. The content must be a key-value pair, such as key=value.
+     * The type of property file is best;
+     * @param content Contents of the configuration file
+     * @return Config map
+     */
     private Map<String, String> toMap(String content) {
         String[] split = content.split("\n");
         Map<String, String> conf = new HashMap<>();

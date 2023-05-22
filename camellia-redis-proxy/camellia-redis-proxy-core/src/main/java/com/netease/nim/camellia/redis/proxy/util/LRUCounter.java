@@ -9,7 +9,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
- *
+ * A counter using the LRU algorithm.
+ * 使用LRU算法的计数器。
  * Created by caojiajun on 2020/11/19
  */
 public class LRUCounter {
@@ -29,6 +30,11 @@ public class LRUCounter {
         this.expireMillis = expireMillis;
     }
 
+    /**
+     * Increment the key
+     *
+     * @param bytesKey bytesKey
+     */
     public void increment(BytesKey bytesKey) {
         Counter counter = cache.get(bytesKey);
         if (counter != null) {
@@ -44,6 +50,12 @@ public class LRUCounter {
         counter.count.increment();
     }
 
+    /**
+     * Get the counter num
+     *
+     * @param bytesKey bytesKey
+     * @return null if expired, number if not expired
+     */
     public Long get(BytesKey bytesKey) {
         Counter counter = cache.get(bytesKey);
         if (counter != null) {
@@ -56,6 +68,13 @@ public class LRUCounter {
         return null;
     }
 
+    /**
+     * 如果key的计数超过了threshold，并且key没有过期，就会按照计数的大小值进行排序，
+     * <p>If the count of the key exceeds the threshold and the key has not expired, it will be sorted according to the count.
+     *
+     * @param threshold threshold 阈值
+     * @return TreeSet
+     */
     public TreeSet<SortedBytesKey> getSortedCacheValue(long threshold) {
         if (cache.isEmpty()) return null;
         TreeSet<SortedBytesKey> treeSet = new TreeSet<>();
@@ -101,6 +120,11 @@ public class LRUCounter {
         private final LongAdder count = new LongAdder();
         private final AtomicBoolean lock = new AtomicBoolean();
 
+        /**
+         * Check whether the counter has expired, if it is expired, refresh it.
+         *
+         * @param expireMillis expireMillis
+         */
         void checkExpireAndReset(long expireMillis) {
             if (TimeCache.currentMillis - timestamp > expireMillis) {
                 if (lock.compareAndSet(false, true)) {

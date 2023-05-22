@@ -23,3 +23,13 @@ CAS是因为调用reload的地方不止一个，所以同一时间只执行一�
 ![image-20230516161327790](./dynamic-conf-imgs/dynamic-conf-4.png)
 
 主要注意文件配置的优先级。
+
+### Nacos文件加载 NacosProxyDynamicConfLoader
+
+![image-20230516160804686](./dynamic-conf-imgs/dynamic-conf-5.png)
+
+通过初始配置，也就是来自于yml文件的conf配置项，获取所有的key-value对并且通过`nacos.`前缀来进行筛选从而获得Nacos相关的配置。之后通过NacosFactory并且添加Nacos文件更新的监听器，达到只要文件更新就进行reload操作的效果。
+
+![image-20230516160804686](./dynamic-conf-imgs/dynamic-conf-6.png)
+
+配置解析方法，是通过key=value的形式，所以nacos里面用properties最好。
