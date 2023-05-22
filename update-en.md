@@ -11,6 +11,7 @@
 
 ### fix
 * camellia-redis-proxy update the console api `/prometheus`, replace `%n` to `\n`, adapate windows os
+* camellia-redis-proxy when client connection in subscribe mode, if upstream redis down or proxy-redis connection disconnect for other reason, proxy should close client-proxy connection in same time 
 
 
 # 1.2.7（2023/05/04）

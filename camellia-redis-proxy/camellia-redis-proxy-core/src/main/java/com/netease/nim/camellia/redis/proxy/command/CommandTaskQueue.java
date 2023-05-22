@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.plugin.ProxyPluginResponse;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyReply;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import io.netty.channel.ChannelFutureListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,6 +104,17 @@ public class CommandTaskQueue {
                 } catch (Exception e) {
                     ErrorLogCollector.collect(CommandTaskQueue.class, "executeReply error", e);
                 }
+            }
+        }
+        if (reply instanceof ErrorReply) {
+            if (channelInfo.getBindConnection() != null && !channelInfo.getBindConnection().isValid()) {
+                channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet())).addListener((ChannelFutureListener) channelFuture -> {
+                    channelInfo.getCtx().close();
+                    logger.warn("client connect in subscribe mode forced disconnect because bind connection is invalid, consid = {}",
+                            channelInfo.getConsid());
+                });
+                channelInfo.setBindConnection(null);
+                return;
             }
         }
         channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet()));
