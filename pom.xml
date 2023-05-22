@@ -47,7 +47,7 @@
 		<cglib.version>3.3.0</cglib.version>
 		<openFeign9.version>9.4.0</openFeign9.version>
 		<openFeign11.version>11.8</openFeign11.version>
-		<okhttp.version>3.14.0</okhttp.version>
+		<okhttp.version>3.14.9</okhttp.version>
 		<slf4j.version>1.7.7</slf4j.version>
 		<netty.version>4.1.91.Final</netty.version>
 		<jctools.version>4.0.1</jctools.version>
