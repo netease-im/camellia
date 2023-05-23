@@ -34,7 +34,7 @@ public class TopNCounter {
         this.topN = properties.getTopnCount();
         this.cache = Caffeine.newBuilder()
                 .initialCapacity(properties.getTopnCacheCounterCapacity())
-                .maximumSize(properties.getCallbackExecutorSize())
+                .maximumSize(properties.getTopnCacheCounterCapacity())
                 .build();
         this.buffer = new ArrayList<>(properties.getTopnCollectSeconds() * properties.getTopnCount());
         scheduler.scheduleAtFixedRate(this::schedule, checkMillis * properties.getTopnTinyCollectSeconds(),
