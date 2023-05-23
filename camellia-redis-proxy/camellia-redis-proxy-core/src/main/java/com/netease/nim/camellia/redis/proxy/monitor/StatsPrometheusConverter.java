@@ -36,7 +36,7 @@ public class StatsPrometheusConverter {
             sb.append("redis_proxy_connect_count ").append(stats.getClientConnectCount()).append("\n");
 
             sb.append("# HELP redis_proxy_total Redis Proxy Total\n");
-            sb.append("# TYPE redis_proxy_total counter\n");
+            sb.append("# TYPE redis_proxy_total gauge\n");
             String totalFormat = "redis_proxy_total{type=\"%s\",} %d\n";
             sb.append(String.format(totalFormat, "all", stats.getCount()));
             sb.append(String.format(totalFormat, "read", stats.getTotalReadCount()));
@@ -47,14 +47,14 @@ public class StatsPrometheusConverter {
 
             // ====total====
             sb.append("# HELP redis_proxy_total_command Redis Proxy Total Command\n");
-            sb.append("# TYPE redis_proxy_total_command counter\n");
+            sb.append("# TYPE redis_proxy_total_command gauge\n");
             for (TotalStats totalStats : stats.getTotalStatsList()) {
                 sb.append(String.format("redis_proxy_total_command{command=\"%s\",} %d\n", totalStats.getCommand(), totalStats.getCount()));
             }
 
             // ====bid-bgroup====
             sb.append("# HELP redis_proxy_bid_bgroup Redis Proxy Bid Bgroup\n");
-            sb.append("# TYPE redis_proxy_bid_bgroup counter\n");
+            sb.append("# TYPE redis_proxy_bid_bgroup gauge\n");
             for (BidBgroupStats bgroupStats : stats.getBidBgroupStatsList()) {
                 String bid = bgroupStats.getBid() == null ? DEFAULT : String.valueOf(bgroupStats.getBid());
                 String bgroup = bgroupStats.getBgroup() == null ? DEFAULT : bgroupStats.getBgroup();
@@ -66,7 +66,7 @@ public class StatsPrometheusConverter {
 
             // ====detail====
             sb.append("# HELP redis_proxy_detail Redis Proxy Detail\n");
-            sb.append("# TYPE redis_proxy_detail counter\n");
+            sb.append("# TYPE redis_proxy_detail gauge\n");
             for (DetailStats detailStats : stats.getDetailStatsList()) {
                 String bid = detailStats.getBid() == null ? DEFAULT : String.valueOf(detailStats.getBid());
                 String bgroup = detailStats.getBgroup() == null ? DEFAULT : detailStats.getBgroup();
@@ -79,7 +79,7 @@ public class StatsPrometheusConverter {
 
             // ====fail====
             sb.append("# HELP redis_proxy_fail Redis Proxy Fail\n");
-            sb.append("# TYPE redis_proxy_fail counter\n");
+            sb.append("# TYPE redis_proxy_fail gauge\n");
             for (Map.Entry<String, Long> entry : stats.getFailMap().entrySet()) {
                 sb.append(String.format("redis_proxy_fail{reason=\"%s\",} %d\n", entry.getKey(), entry.getValue()));
             }
@@ -118,14 +118,14 @@ public class StatsPrometheusConverter {
 
             // ====resource.stats====
             sb.append("# HELP redis_proxy_resource_stats Redis Proxy Resource Stats\n");
-            sb.append("# TYPE redis_proxy_resource_stats counter\n");
+            sb.append("# TYPE redis_proxy_resource_stats gauge\n");
             for (ResourceStats resourceStats : stats.getResourceStatsList()) {
                 sb.append(String.format("redis_proxy_resource_stats{resource=\"%s\",} %d\n", resourceStats.getResource(), resourceStats.getCount()));
             }
 
             // ====resource.command.stats====
             sb.append("# HELP redis_proxy_resource_command_stats Redis Proxy Resource Command Stats\n");
-            sb.append("# TYPE redis_proxy_resource_command_stats counter\n");
+            sb.append("# TYPE redis_proxy_resource_command_stats gauge\n");
             for (ResourceCommandStats resourceCommandStats : stats.getResourceCommandStatsList()) {
                 sb.append(String.format("redis_proxy_resource_command_stats{resource=\"%s\",command=\"%s\",} %d\n",
                         resourceCommandStats.getResource(), resourceCommandStats.getCommand(), resourceCommandStats.getCount()));
@@ -133,7 +133,7 @@ public class StatsPrometheusConverter {
 
             // ====bid-bgroup.resource.command.stats====
             sb.append("# HELP redis_proxy_bid_bgroup_resource_command_stats Redis Proxy Bid Bgroup Resource Command Stats\n");
-            sb.append("# TYPE redis_proxy_bid_bgroup_resource_command_stats counter\n");
+            sb.append("# TYPE redis_proxy_bid_bgroup_resource_command_stats gauge\n");
             for (ResourceBidBgroupCommandStats commandStats : stats.getResourceBidBgroupCommandStatsList()) {
                 String bid = commandStats.getBid() == null ? DEFAULT : String.valueOf(commandStats.getBid());
                 String bgroup = commandStats.getBgroup() == null ? DEFAULT : commandStats.getBgroup();
