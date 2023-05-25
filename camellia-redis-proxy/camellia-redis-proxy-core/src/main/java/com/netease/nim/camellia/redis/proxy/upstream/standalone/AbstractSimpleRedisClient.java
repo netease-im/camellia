@@ -111,6 +111,19 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                     continue;
                 }
             }
+
+            if (channelInfo.isInSubscribe() && bindConnection != null && redisCommand.getCommandType() != RedisCommand.CommandType.PUB_SUB) {
+                if (!filterCommands.isEmpty()) {
+                    flush(db, filterCommands, filterFutures, hasBlockingCommands);
+                    filterCommands = new ArrayList<>();
+                    filterFutures = new ArrayList<>();
+                    hasBlockingCommands = false;
+                }
+                CommandTaskQueue taskQueue = command.getChannelInfo().getCommandTaskQueue();
+                PubSubUtils.sendByBindClient(getResource(), bindConnection, taskQueue, command, future, false);
+                continue;
+            }
+
             if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
                 boolean first = false;
                 if (bindConnection == null) {

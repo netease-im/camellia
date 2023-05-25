@@ -194,6 +194,13 @@ public class RedisClusterClient implements IUpstreamClient {
                 }
             }
 
+            if (channelInfo.isInSubscribe() && bindConnection != null && redisCommand.getCommandType() != RedisCommand.CommandType.PUB_SUB) {
+                commandFlusher.flush();
+                CommandTaskQueue taskQueue = channelInfo.getCommandTaskQueue();
+                PubSubUtils.sendByBindClient(getResource(), bindConnection, taskQueue, command, future, false);
+                continue;
+            }
+
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.PARTIALLY_SUPPORT_2) {
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
                     transaction(command, future, channelInfo, commandFlusher, redisCommand, bindSlot, bindConnection);

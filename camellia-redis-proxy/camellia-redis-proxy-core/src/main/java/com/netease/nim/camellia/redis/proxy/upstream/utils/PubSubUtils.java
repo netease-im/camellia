@@ -35,22 +35,13 @@ public class PubSubUtils {
     private static void sendByBindClient(Resource resource, RedisConnection connection, CommandTaskQueue taskQueue,
                                          Command command, CompletableFuture<Reply> future, boolean first, RedisCommand redisCommand) {
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
-        if (future != null) {
+        if (future != null && first) {
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
             futures.add(completableFuture);
             completableFuture.thenAccept(reply -> {
                 //parse reply must before send reply to connection
                 Long subscribeChannelCount = tryGetSubscribeChannelCount(reply);
-                if (first) {
-                    future.complete(reply);
-                } else {
-                    taskQueue.reply(redisCommand, reply);
-                    //monitor
-                    if (ProxyMonitorCollector.isMonitorEnable()) {
-                        UpstreamFailMonitor.stats(resource.getUrl(),
-                                command == null ? "pubsub": command.getName(), reply);
-                    }
-                }
+                future.complete(reply);
                 //after send reply, update channel subscribe status
                 if (subscribeChannelCount != null && subscribeChannelCount <= 0) {
                     taskQueue.getChannelInfo().setInSubscribe(false);

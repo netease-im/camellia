@@ -4,29 +4,57 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.pubsub.RedisPubSubListener;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPubSub;
 
 /**
  * Created by caojiajun on 2023/1/7
  */
-public class TestPubSubTest2 {
+public class TestPubSubLettuce2 {
 
-//        private static final String uri = "redis://@127.0.0.1:6379/0";
+//    private static final String uri = "redis://@127.0.0.1:6379/0";
     private static final String uri = "redis://pass123@127.0.0.1:6380/0";
     private static final RedisClient redisClient1 = RedisClient.create(uri);
     private static final RedisClient redisClient2 = RedisClient.create(uri);
 
     public static void main(String[] args) throws InterruptedException {
-        pub();
-        sub();
+//        pub();
+//        sub();
+
+        Jedis jedis = new Jedis("127.0.0.1", 6380);
+        jedis.auth("pass123");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("sub");
+                jedis.subscribe(new JedisPubSub() {
+                    @Override
+                    public void onMessage(String channel, String message) {
+                        System.out.println("receive " + channel + " " + message);
+                    }
+                }, "ch01");
+            }
+        }).start();
+
+        Thread.sleep(5000);
+        for (int i=0; i<100; i++) {
+            try {
+                System.out.println(jedis.ping());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void pub() {
         new Thread(() -> {
             RedisCommands<String, String> sync = redisClient1.connect().sync();
+            sync.lpush("bk1", "abc");
             for (int i=0; i<100000; i++) {
                 sync.publish("ch01", String.valueOf(i));
+                sync.publish("ch02", String.valueOf(i));
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -76,52 +104,13 @@ public class TestPubSubTest2 {
             connection.async().subscribe("ch01");
             System.out.println("subscribe ch01 done");
 
-            Thread.sleep(1000);
-            System.out.println("try unsubscribe ch01");
-            connection.async().unsubscribe("ch01");
-            System.out.println("unsubscribe ch01 done");
-
-            Thread.sleep(1000);
-
-            System.out.println("try subscribe2 ch01");
-            connection.async().subscribe("ch01");
-            System.out.println("subscribe2 ch01 done");
-
-            Thread.sleep(1000);
-            System.out.println("try unsubscribe2 ch01");
-            connection.async().unsubscribe("ch01");
-            System.out.println("unsubscribe2 ch01 done");
-
-            Thread.sleep(1000);
-            String ping = connection.sync().ping();
-            System.out.println("ping=" + ping);
-
-            Thread.sleep(1000);
-
-            System.out.println("try subscribe2 ch01");
-            connection.async().subscribe("ch01");
-            System.out.println("subscribe2 ch01 done");
             Thread.sleep(5000);
-            System.out.println("try unsubscribe3 ch01");
-            connection.async().unsubscribe("ch01");
-            System.out.println("unsubscribe3 ch01 done");
 
-            Thread.sleep(1000);
-            String ping2 = connection.sync().ping();
-            System.out.println("ping2=" + ping2);
+            for (int i=0; i<40; i++) {
+                connection.async().ping();
+            }
 
-            System.out.println("try subscribe2 ch01");
-            connection.async().subscribe("ch01");
-            System.out.println("subscribe2 ch01 done");
-            Thread.sleep(20000);
-            System.out.println("try unsubscribe3 ch01");
-            connection.async().unsubscribe("ch01");
-            System.out.println("unsubscribe3 ch01 done");
-
-            Thread.sleep(1000);
-            String ping3 = connection.sync().ping();
-            System.out.println("ping3=" + ping3);
-
+            connection.close();
             System.out.println("=========end==========");
         } catch (Exception e) {
             e.printStackTrace();
