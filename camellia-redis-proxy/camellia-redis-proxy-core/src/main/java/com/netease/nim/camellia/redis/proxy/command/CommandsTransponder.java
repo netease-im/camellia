@@ -296,8 +296,6 @@ public class CommandsTransponder {
                     channelInfo.setInSubscribe(true);
                 }
 
-
-
                 tasks.add(task);
             }
             if (tasks.isEmpty()) return;

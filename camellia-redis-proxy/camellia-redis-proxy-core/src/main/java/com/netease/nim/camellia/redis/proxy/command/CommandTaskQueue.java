@@ -78,6 +78,13 @@ public class CommandTaskQueue {
                         break;
                     }
                 } while (!queue.isEmpty());
+                if (channelInfo.isInSubscribe()) {
+                    RedisConnection bindConnection = channelInfo.getBindConnection();
+                    if (bindConnection == null || !bindConnection.isValid()) {
+                        logger.warn("client connection in subscribe mode forced disconnect because bind connection is invalid, consid = {}", channelInfo.getConsid());
+                        channelInfo.getCtx().close();
+                    }
+                }
             } finally {
                 callbacking.compareAndSet(true, false);
             }
@@ -109,11 +116,11 @@ public class CommandTaskQueue {
         }
         if (reply instanceof ErrorReply) {
             RedisConnection bindConnection = channelInfo.getBindConnection();
-            if (bindConnection != null && !bindConnection.isValid()) {
+            if (bindConnection == null || !bindConnection.isValid()) {
                 channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet())).addListener((ChannelFutureListener) channelFuture -> {
                     channelInfo.getCtx().close();
-                    logger.warn("client connect in subscribe mode forced disconnect because bind connection is invalid, bindConnection = {}, consid = {}",
-                            bindConnection.getConnectionName(), channelInfo.getConsid());
+                    logger.warn("client connection in subscribe mode forced disconnect because bind connection is null or invalid, bindConnection = {}, consid = {}",
+                            bindConnection == null ? null : bindConnection.getConnectionName(), channelInfo.getConsid());
                 });
                 channelInfo.setBindConnection(null);
                 return;
