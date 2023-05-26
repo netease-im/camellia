@@ -141,6 +141,7 @@ public class HotKeyInfo {
     private final KeyAction action;
     private final Rule rule;
     private final long count;
+    private final List<String> sources;
 }
 public enum KeyAction {
     QUERY(1),

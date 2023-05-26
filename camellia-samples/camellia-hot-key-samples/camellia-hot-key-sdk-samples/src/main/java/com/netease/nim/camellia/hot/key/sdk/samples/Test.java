@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.hot.key.sdk.samples;
 
+import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.sdk.*;
 import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeyCacheSdkConfig;
 import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeyMonitorSdkConfig;
@@ -11,6 +12,10 @@ import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeySdkConfig;
 public class Test {
 
     public static void main(String[] args) {
+
+        //非必填，可以标识来源，进程内唯一，从而hot-key-server回调热key的时候，会带上source列表，从而帮助定位热key的来源
+        HotKeyConstants.Client.source = "xxx";
+
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
 
         config.setDiscovery(null);//设置一个发现器，默认提供zk/eureka，也可以自己实现基于etcd/consul/nacos等其他注册中心

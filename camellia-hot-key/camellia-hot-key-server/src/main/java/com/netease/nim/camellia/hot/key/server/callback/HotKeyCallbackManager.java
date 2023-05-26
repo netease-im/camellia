@@ -14,6 +14,7 @@ import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -61,7 +62,7 @@ public class HotKeyCallbackManager {
                 boolean success = callbackTimeCache.putIfAbsent(hotKey.getNamespace(), hotKey.getKey(),
                         TimeCache.currentMillis, properties.getHotKeyCallbackIntervalSeconds());
                 if (success) {
-                    HotKeyInfo hotKeyInfo = new HotKeyInfo(hotKey.getNamespace(), hotKey.getKey(), hotKey.getAction(), rule, current);
+                    HotKeyInfo hotKeyInfo = new HotKeyInfo(hotKey.getNamespace(), hotKey.getKey(), hotKey.getAction(), rule, current, new ArrayList<>());
                     executor.submit(() -> {
                         try {
                             HotKeyCollector.update(hotKeyInfo);

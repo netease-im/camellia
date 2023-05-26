@@ -77,7 +77,7 @@ public class HotKeyClientHub {
         String name = discovery.getName();
         HotKeyServerDiscovery old = discoveryMap.putIfAbsent(name, discovery);
         if (old != null) {
-            logger.error("HotKeyServerDiscovery duplicate register, will skip, name = {}", name);
+            logger.info("HotKeyServerDiscovery duplicate register, will skip, name = {}", name);
             return;
         }
         ConcurrentHashMap<HotKeyServerAddr, HotKeyClientGroup> map = CamelliaMapUtils.computeIfAbsent(clientGroupMap, name, k -> new ConcurrentHashMap<>());

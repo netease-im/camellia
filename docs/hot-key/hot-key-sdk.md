@@ -114,6 +114,10 @@ public interface ValueLoader<T> {
 public class Test {
 
     public static void main(String[] args) {
+
+        //非必填，可以标识来源，进程内唯一，从而hot-key-server回调热key的时候，会带上source列表，从而帮助定位热key的来源
+        HotKeyConstants.Client.source = "xxx";
+        
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
 
         config.setDiscovery(null);//设置一个发现器，默认提供zk/eureka，也可以自己实现基于etcd/consul/nacos等其他注册中心
