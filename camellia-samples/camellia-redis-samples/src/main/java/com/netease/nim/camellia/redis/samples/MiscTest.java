@@ -6,9 +6,9 @@ package com.netease.nim.camellia.redis.samples;
 public class MiscTest {
 
     public static void main(String[] args) throws InterruptedException {
-        pubsub();
         blocking();
         transaction();
+        pubsub();
     }
 
     private static void blocking() {
@@ -22,9 +22,9 @@ public class MiscTest {
 
     private static void pubsub() {
         new Thread(() -> {
-            TestPubSubLettuce.pub();
+            TestPubSubTest.pub();
             while (true) {
-                TestPubSubLettuce.sub();
+                TestPubSubTest.sub();
                 sleep(1000);
             }
         }).start();

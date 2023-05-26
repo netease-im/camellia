@@ -99,7 +99,7 @@ public class CommandsTransponder {
                         try {
                             ProxyPluginResponse response = plugin.executeRequest(request);
                             if (!response.isPass()) {
-                                task.replyCompleted(response.getReply(), true);
+                                reply(channelInfo, task, command.getRedisCommand(), response.getReply(), true);
                                 hasCommandsSkip = true;
                                 pluginBreak = true;
                                 break;
@@ -118,10 +118,22 @@ public class CommandsTransponder {
 
                 //不支持的命令直接返回NOT_SUPPORT
                 if (redisCommand == null || redisCommand.getSupportType() == RedisCommand.CommandSupportType.NOT_SUPPORT) {
-                    task.replyCompleted(ErrorReply.NOT_SUPPORT);
+                    reply(channelInfo, task, redisCommand, ErrorReply.NOT_SUPPORT, false);
                     ErrorLogCollector.collect(CommandsTransponder.class, "not support command = " + command.getName());
                     hasCommandsSkip = true;
                     continue;
+                }
+
+                //subscribe状态下，只能使用指定的命令
+                if (channelInfo.isInSubscribe()) {
+                    if (redisCommand != RedisCommand.SUBSCRIBE && redisCommand != RedisCommand.PSUBSCRIBE
+                            && redisCommand != RedisCommand.UNSUBSCRIBE && redisCommand != RedisCommand.PUNSUBSCRIBE
+                            && redisCommand != RedisCommand.PING && redisCommand != RedisCommand.QUIT) {
+                        ErrorReply errorReply = new ErrorReply("Command " + redisCommand.strRaw() + " not allowed while subscribed. Allowed commands are: [PSUBSCRIBE, PUNSUBSCRIBE, SUBSCRIBE, UNSUBSCRIBE, QUIT, PING]");
+                        reply(channelInfo, task, redisCommand, errorReply, false);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
                 }
 
                 //DB类型的命令，before auth
@@ -182,7 +194,7 @@ public class CommandsTransponder {
 
                 //DB类型的命令，after auth
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.DB) {
-                    //select命令只支持select 0
+                    //select命令
                     if (redisCommand == RedisCommand.SELECT) {
                         byte[][] objects = command.getObjects();
                         if (objects.length == 2) {
@@ -284,14 +296,7 @@ public class CommandsTransponder {
                     channelInfo.setInSubscribe(true);
                 }
 
-                if (channelInfo.isInSubscribe()) {
-                    if (redisCommand != RedisCommand.SUBSCRIBE && redisCommand != RedisCommand.PSUBSCRIBE
-                            && redisCommand != RedisCommand.UNSUBSCRIBE && redisCommand != RedisCommand.PUNSUBSCRIBE && redisCommand != RedisCommand.PING) {
-                        taskQueue.reply(redisCommand, new ErrorReply("Command " + redisCommand.strRaw() + " not allowed while subscribed. Allowed commands are: [PSUBSCRIBE, QUIT, PUNSUBSCRIBE, SUBSCRIBE, UNSUBSCRIBE]"));
-                        hasCommandsSkip = true;
-                        continue;
-                    }
-                }
+
 
                 tasks.add(task);
             }
@@ -308,6 +313,15 @@ public class CommandsTransponder {
             logger.error("commands transponder error, client connect will be force closed, bid = {}, bgroup = {}, addr = {}",
                     channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getCtx().channel().remoteAddress(), e);
             channelInfo.getCtx().close();
+        }
+    }
+
+    private void reply(ChannelInfo channelInfo, CommandTask task, RedisCommand redisCommand, Reply reply, boolean fromPlugin) {
+        if (channelInfo.isInSubscribe()) {
+            CommandTaskQueue taskQueue = channelInfo.getCommandTaskQueue();
+            taskQueue.reply(redisCommand, reply, fromPlugin);
+        } else {
+            task.replyCompleted(reply, fromPlugin);
         }
     }
 

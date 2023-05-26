@@ -84,7 +84,7 @@ public class CommandTaskQueue {
         }
     }
 
-    public void reply(RedisCommand redisCommand, Reply reply) {
+    public void reply(RedisCommand redisCommand, Reply reply, boolean fromPlugin) {
         if (!channelInfo.isInSubscribe()) {
             return;
         }
@@ -94,7 +94,7 @@ public class CommandTaskQueue {
         }
         if (plugins != null && !plugins.isEmpty()) {
             CommandContext commandContext = new CommandContext(channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getClientSocketAddress());
-            ProxyReply proxyReply = new ProxyReply(commandContext, redisCommand, reply);
+            ProxyReply proxyReply = new ProxyReply(commandContext, redisCommand, reply, fromPlugin);
             for (ProxyPlugin plugin : plugins) {
                 try {
                     ProxyPluginResponse response = plugin.executeReply(proxyReply);

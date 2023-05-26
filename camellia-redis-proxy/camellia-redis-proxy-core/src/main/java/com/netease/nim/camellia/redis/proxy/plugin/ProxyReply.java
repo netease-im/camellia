@@ -23,12 +23,12 @@ public class ProxyReply {
         this.fromPlugin = fromPlugin;
     }
 
-    public ProxyReply(CommandContext commandContext, RedisCommand redisCommand, Reply reply) {
+    public ProxyReply(CommandContext commandContext, RedisCommand redisCommand, Reply reply, boolean fromPlugin) {
         this.command = null;
         this.commandContext = commandContext;
         this.redisCommand = redisCommand;
         this.reply = reply;
-        this.fromPlugin = false;
+        this.fromPlugin = fromPlugin;
     }
 
     public boolean isFromPlugin() {

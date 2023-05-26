@@ -59,7 +59,7 @@ public class PubSubUtils {
                     }
                     //parse reply must before send reply to connection
                     Long subscribeChannelCount = tryGetSubscribeChannelCount(reply);
-                    taskQueue.reply(redisCommand, reply);
+                    taskQueue.reply(redisCommand, reply, false);
                     //after send reply, update channel subscribe status
                     if (subscribeChannelCount != null && subscribeChannelCount <= 0) {
                         taskQueue.getChannelInfo().setInSubscribe(false);
