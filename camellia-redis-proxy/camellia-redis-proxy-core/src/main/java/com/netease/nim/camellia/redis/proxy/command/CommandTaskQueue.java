@@ -116,11 +116,11 @@ public class CommandTaskQueue {
         }
         if (reply instanceof ErrorReply) {
             RedisConnection bindConnection = channelInfo.getBindConnection();
-            if (bindConnection == null || !bindConnection.isValid()) {
+            if (bindConnection != null && !bindConnection.isValid()) {
                 channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet())).addListener((ChannelFutureListener) channelFuture -> {
                     channelInfo.getCtx().close();
                     logger.warn("client connection in subscribe mode forced disconnect because bind connection is null or invalid, bindConnection = {}, consid = {}",
-                            bindConnection == null ? null : bindConnection.getConnectionName(), channelInfo.getConsid());
+                            bindConnection.getConnectionName(), channelInfo.getConsid());
                 });
                 channelInfo.setBindConnection(null);
                 return;
