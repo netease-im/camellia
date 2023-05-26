@@ -66,7 +66,8 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
                 logger.warn("not found valid HotKeyClient, return null HotKeyConfig");
                 throw new CamelliaHotKeyException("can not found valid hot key server");
             }
-            CompletableFuture<HotKeyPack> future = client.sendPack(HotKeyPack.newPack(HotKeyCommand.GET_CONFIG, new GetConfigPack(namespace)));
+            CompletableFuture<HotKeyPack> future = client.sendPack(HotKeyPack.newPack(HotKeyCommand.GET_CONFIG,
+                    new GetConfigPack(namespace, HotKeyConstants.Client.source)));
             HotKeyPack hotKeyPack = future.get(HotKeyConstants.Client.getConfigTimeoutMillis, TimeUnit.MILLISECONDS);
             GetConfigRepPack repPack = (GetConfigRepPack) hotKeyPack.getBody();
             return repPack.getConfig();

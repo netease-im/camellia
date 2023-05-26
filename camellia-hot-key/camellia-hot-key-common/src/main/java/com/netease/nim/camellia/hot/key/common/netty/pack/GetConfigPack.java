@@ -12,6 +12,7 @@ public class GetConfigPack extends HotKeyPackBody {
 
     private static enum Tag {
         namespace(1),
+        source(2),
         ;
 
         private final int value;
@@ -22,22 +23,31 @@ public class GetConfigPack extends HotKeyPackBody {
     }
 
     private String namespace;
+    private String source;
 
     public GetConfigPack() {
     }
 
-    public GetConfigPack(String namespace) {
+    public GetConfigPack(String namespace, String source) {
         this.namespace = namespace;
+        this.source = source;
     }
 
     public String getNamespace() {
         return namespace;
     }
 
+    public String getSource() {
+        return source;
+    }
+
     @Override
     public void marshal(Pack pack) {
         Props props = new Props();
         props.put(Tag.namespace.value, namespace);
+        if (source != null) {
+            props.put(Tag.source.value, source);
+        }
         pack.putMarshallable(props);
     }
 
@@ -46,5 +56,6 @@ public class GetConfigPack extends HotKeyPackBody {
         Props property = new Props();
         unpack.popMarshallable(property);
         namespace = property.get(Tag.namespace.value);
+        source = property.get(Tag.source.value);
     }
 }

@@ -38,8 +38,9 @@ public class HotKeyCalculator {
     /**
      * 热点计算器，单线程执行
      * @param counter 计数
+     * @param source source
      */
-    public void calculate(KeyCounter counter) {
+    public void calculate(KeyCounter counter, String source) {
         if (logger.isDebugEnabled()) {
             logger.debug("calculate, id = {}, counter = {}", id, JSONObject.toJSONString(counter));
         }
@@ -52,20 +53,20 @@ public class HotKeyCalculator {
         }
         String uniqueKey = counter.getKey() + "|" + counter.getAction().getValue();
         //计算是否是热点
-        long current = hotKeyCounterManager.update(counter.getNamespace(),
-                uniqueKey, rule, counter.getCount());
+        HotKeyCounter hotKeyCounter = hotKeyCounterManager.getHotKeyCounter(counter.getNamespace(), uniqueKey, rule);
+        long current = hotKeyCounter.update(counter.getCount(), source);
         boolean hot = current >= rule.getCheckThreshold();
         if (hot) {
             //如果是热点，推给hotKeyEventHandler处理
             HotKey hotKey = new HotKey(counter.getNamespace(), counter.getKey(), counter.getAction(), rule.getExpireMillis());
-            hotKeyEventHandler.newHotKey(hotKey, rule, current);
+            hotKeyEventHandler.newHotKey(hotKey, rule, current, hotKeyCounter.getSourceSet());
         }
         //如果是key的更新/删除操作，则需要看看是否需要广播
         if (counter.getAction() == KeyAction.DELETE || counter.getAction() == KeyAction.UPDATE) {
             hotKeyEventHandler.hotKeyUpdate(counter);
         }
         //计算topN
-        topNCounterManager.update(counter);
+        topNCounterManager.update(counter, source);
 
         //监控埋点
         if (hot) {

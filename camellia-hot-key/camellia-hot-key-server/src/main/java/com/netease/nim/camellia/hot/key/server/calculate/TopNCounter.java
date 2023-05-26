@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
 import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
+import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 import com.netease.nim.camellia.hot.key.server.utils.TimeCache;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
@@ -44,11 +45,12 @@ public class TopNCounter {
     /**
      * 线程不安全
      * @param counter counter
+     * @param source source
      */
-    public void update(KeyCounter counter) {
+    public void update(KeyCounter counter, String source) {
         Counter c = cache.get(counter.getKey() + "|" + counter.getAction().getValue(), k -> new Counter(checkMillis));
         if (c == null) return;
-        c.update(counter.getCount());
+        c.update(counter.getCount(), source);
     }
 
     public synchronized TopNStatsResult collect() {
@@ -57,11 +59,15 @@ public class TopNCounter {
         Map<String, Stats> map = new HashMap<>();
         for (Stats stats : buffer) {
             Stats oldStats = CamelliaMapUtils.computeIfAbsent(map, stats.getKey() + "|" + stats.getAction(),
-                    k -> new Stats(stats.getKey(), stats.getAction(), 0, 0));
+                    k -> new Stats(stats.getKey(), stats.getAction(), 0, 0, new HashSet<>()));
             oldStats.setTotal(oldStats.getTotal() + stats.getTotal());
             if (stats.getMaxQps() > oldStats.getMaxQps()) {
                 oldStats.setMaxQps(stats.maxQps);
             }
+            if (stats.getSourceSet() != null) {
+                oldStats.getSourceSet().addAll(stats.getSourceSet());
+            }
+
         }
         List<Stats> list = new ArrayList<>(map.values());
         Collections.sort(list);
@@ -96,7 +102,7 @@ public class TopNCounter {
             String key = uniqueKey.substring(0, index);
             KeyAction action = KeyAction.getByValue(Integer.parseInt(uniqueKey.substring(index + 1)));
             Counter counter = entry.getValue();
-            list.add(new Stats(key, action, counter.getTotal(), counter.getMax()));
+            list.add(new Stats(key, action, counter.getTotal(), counter.getMax(), counter.getSourceSet()));
         }
         Collections.sort(list);
         if (list.size() <= topN) {
@@ -110,16 +116,18 @@ public class TopNCounter {
         private KeyAction action;
         private long total;
         private long maxQps;
+        private Set<String> sourceSet;
 
-        public Stats(String key, KeyAction action, long total, long maxQps) {
+        public Stats(String key, KeyAction action, long total, long maxQps, Set<String> sourceSet) {
             this.key = key;
             this.action = action;
             this.total = total;
             this.maxQps = maxQps;
+            this.sourceSet = sourceSet;
         }
 
         public TopNStats toTopNStats() {
-            return new TopNStats(key, action, total, maxQps);
+            return new TopNStats(key, action, total, maxQps, sourceSet);
         }
 
         public String getKey() {
@@ -154,6 +162,14 @@ public class TopNCounter {
             this.maxQps = maxQps;
         }
 
+        public Set<String> getSourceSet() {
+            return sourceSet;
+        }
+
+        public void setSourceSet(Set<String> sourceSet) {
+            this.sourceSet = sourceSet;
+        }
+
         @Override
         public int compareTo(Stats stats) {
             return Long.compare(stats.maxQps, maxQps);
@@ -166,12 +182,13 @@ public class TopNCounter {
         private long max;
         private long time = TimeCache.currentMillis;
         private long current;
+        private Set<String> sourceSet;
 
         public Counter(long checkMillis) {
             this.checkMillis = checkMillis;
         }
 
-        public void update(long c) {
+        public void update(long c, String source) {
             this.total += c;
             long step = (TimeCache.currentMillis - time) / checkMillis;
             if (step == 1) {
@@ -185,6 +202,16 @@ public class TopNCounter {
                 time = TimeCache.currentMillis;
             }
             this.current += c;
+
+            if (source != null) {
+                if (sourceSet == null) {
+                    sourceSet = new HashSet<>();
+                }
+                if (sourceSet.size() >= HotKeyConstants.Server.maxHotKeySourceSetSize) {
+                    sourceSet.clear();
+                }
+                sourceSet.add(source);
+            }
         }
 
         public long getTotal() {
@@ -193,6 +220,10 @@ public class TopNCounter {
 
         public long getMax() {
             return max;
+        }
+
+        public Set<String> getSourceSet() {
+            return sourceSet;
         }
     }
 }

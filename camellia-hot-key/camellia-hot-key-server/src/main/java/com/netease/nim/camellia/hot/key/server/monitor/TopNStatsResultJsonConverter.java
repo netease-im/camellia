@@ -33,6 +33,7 @@ public class TopNStatsResultJsonConverter {
             json.put("action", topNStats.getAction());
             json.put("total", topNStats.getTotal());
             json.put("maxQps", topNStats.getMaxQps());
+            json.put("sourceSet", JSONObject.toJSONString(topNStats.getSourceSet()));
             statsJsonArray.add(json);
         }
         monitorJson.put("stats", statsJsonArray);

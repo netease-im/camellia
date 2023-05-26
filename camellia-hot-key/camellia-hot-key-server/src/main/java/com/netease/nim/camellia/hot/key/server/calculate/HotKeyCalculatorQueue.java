@@ -36,7 +36,7 @@ public class HotKeyCalculatorQueue {
     }
 
     private static final AtomicLong idGen = new AtomicLong(0);
-    private final Queue<List<KeyCounter>> queue;
+    private final Queue<Object[]> queue;
     private final long id;
     private final LongAdder pendingSize = new LongAdder();
     private final LongAdder discardCount = new LongAdder();
@@ -48,7 +48,7 @@ public class HotKeyCalculatorQueue {
         this.bizWorkQueueCapacity = bizWorkQueueCapacity;
     }
 
-    private Queue<List<KeyCounter>> initQueue(WorkQueueType workQueueType, int bizWorkQueueCapacity) {
+    private Queue<Object[]> initQueue(WorkQueueType workQueueType, int bizWorkQueueCapacity) {
         if (workQueueType == WorkQueueType.LinkedBlockingQueue) {
             return new LinkedBlockingQueue<>(bizWorkQueueCapacity);
         } else if (workQueueType == WorkQueueType.ArrayBlockingQueue) {
@@ -74,14 +74,14 @@ public class HotKeyCalculatorQueue {
         return id;
     }
 
-    public void push(List<KeyCounter> counters) {
+    public void push(List<KeyCounter> counters, String source) {
         int size = counters.size();
         boolean success;
         if (pendingSize.sum() > bizWorkQueueCapacity) {
             success = false;
         } else {
             pendingSize.add(size);
-            success = queue.offer(counters);
+            success = queue.offer(new Object[] {counters, source});
             if (!success) {
                 pendingSize.add(size * -1);
             }
@@ -104,14 +104,16 @@ public class HotKeyCalculatorQueue {
         new Thread(() -> {
             while (true) {
                 try {
-                    List<KeyCounter> counters = queue.poll();
-                    if (counters == null) {
+                    Object[] objects = queue.poll();
+                    if (objects == null) {
                         TimeUnit.MILLISECONDS.sleep(1);
                         continue;
                     }
+                    List<KeyCounter> counters = (List<KeyCounter>) objects[0];
+                    String source = (String) objects[1];
                     pendingSize.add(counters.size() * -1);
                     for (KeyCounter counter : counters) {
-                        calculator.calculate(counter);
+                        calculator.calculate(counter, source);
                     }
                 } catch (Exception e) {
                     logger.error("hot key calculate error", e);

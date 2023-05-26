@@ -10,6 +10,8 @@ import com.netease.nim.camellia.tools.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Set;
+
 
 /**
  * Created by caojiajun on 2023/5/9
@@ -38,8 +40,9 @@ public class HotKeyEventHandler {
      * @param hotKey 热key
      * @param rule rule
      * @param current current
+     * @param sourceSet source set
      */
-    public void newHotKey(HotKey hotKey, Rule rule, long current) {
+    public void newHotKey(HotKey hotKey, Rule rule, long current, Set<String> sourceSet) {
         try {
             executor.submit(hotKey.getNamespace(), () -> {
                 try {
@@ -64,7 +67,7 @@ public class HotKeyEventHandler {
                             hotKeyNotifyService.notifyHotKey(hotKey);
                         }
                     }
-                    callbackManager.newHotkey(hotKey, rule, current);
+                    callbackManager.newHotkey(hotKey, rule, current, sourceSet);
                 } catch (Exception e) {
                     logger.error("newHotKey error");
                 }

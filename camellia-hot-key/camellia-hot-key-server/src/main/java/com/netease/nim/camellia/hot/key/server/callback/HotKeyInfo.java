@@ -3,7 +3,7 @@ package com.netease.nim.camellia.hot.key.server.callback;
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
 import com.netease.nim.camellia.hot.key.common.model.Rule;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * Created by caojiajun on 2023/5/11
@@ -15,15 +15,15 @@ public class HotKeyInfo {
     private final KeyAction action;
     private final Rule rule;
     private final long count;
-    private final List<String> sources;
+    private final Set<String> sourceSet;
 
-    public HotKeyInfo(String namespace, String key, KeyAction action, Rule rule, long count, List<String> sources) {
+    public HotKeyInfo(String namespace, String key, KeyAction action, Rule rule, long count, Set<String> sourceSet) {
         this.namespace = namespace;
         this.key = key;
         this.action = action;
         this.rule = rule;
         this.count = count;
-        this.sources = sources;
+        this.sourceSet = sourceSet;
     }
 
     public String getNamespace() {
@@ -46,7 +46,7 @@ public class HotKeyInfo {
         return count;
     }
 
-    public List<String> getSources() {
-        return sources;
+    public Set<String> getSourceSet() {
+        return sourceSet;
     }
 }

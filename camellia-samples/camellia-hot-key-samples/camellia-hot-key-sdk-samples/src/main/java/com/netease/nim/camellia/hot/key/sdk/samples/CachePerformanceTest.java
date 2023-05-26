@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.hot.key.sdk.samples;
 
+import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.sdk.CamelliaHotKeyCacheSdk;
 import com.netease.nim.camellia.hot.key.sdk.CamelliaHotKeySdk;
 import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeyCacheSdkConfig;
@@ -20,6 +21,9 @@ public class CachePerformanceTest {
     private static final AtomicLong id = new AtomicLong();
 
     public static void main(String[] args) {
+
+        HotKeyConstants.Client.source = "test1";
+
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
         List<HotKeyServerAddr> addrList = new ArrayList<>();
         addrList.add(new HotKeyServerAddr("127.0.0.1", 7070));

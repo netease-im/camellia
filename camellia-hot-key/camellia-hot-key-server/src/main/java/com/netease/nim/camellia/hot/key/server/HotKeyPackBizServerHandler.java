@@ -96,6 +96,8 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
             if (logger.isDebugEnabled()) {
                 logger.debug("receive PushPack, size = {}", pack.getList().size());
             }
+            ChannelInfo channelInfo = ChannelInfo.get(channel);
+            String source = channelInfo.getSource();
             List<KeyCounter> keyCounterList = pack.getList();
             int size = keyCounterList.size();
             Map<HotKeyCalculatorQueue, List<KeyCounter>> buffer = new HashMap<>();
@@ -105,7 +107,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
                 list.add(counter);
             }
             for (Map.Entry<HotKeyCalculatorQueue, List<KeyCounter>> entry : buffer.entrySet()) {
-                entry.getKey().push(entry.getValue());
+                entry.getKey().push(entry.getValue(), source);
             }
         } catch (Exception e) {
             logger.error("onPushPack error", e);
@@ -121,6 +123,9 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         CompletableFuture<GetConfigRepPack> future = new CompletableFuture<>();
         ChannelInfo channelInfo = ChannelInfo.get(channel);
         channelInfo.addNamespace(pack.getNamespace());
+        if (pack.getSource() != null) {
+            channelInfo.setSource(pack.getSource());
+        }
         try {
             executor.submit(() -> {
                 try {

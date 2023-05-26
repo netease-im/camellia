@@ -65,6 +65,7 @@ public class StatsJsonConverter {
             json.put("action", hotKeyInfo.getAction());
             json.put("rule", JSONObject.toJSONString(hotKeyInfo.getRule()));
             json.put("count", hotKeyInfo.getCount());
+            json.put("sourceSet", JSONObject.toJSONString(hotKeyInfo.getSourceSet()));
             hotKeyInfoStatsJsonArray.add(json);
         }
         monitorJson.put("hotKeyInfoStats", hotKeyInfoStatsJsonArray);

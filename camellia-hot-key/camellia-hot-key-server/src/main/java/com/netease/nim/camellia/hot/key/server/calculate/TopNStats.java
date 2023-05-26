@@ -2,6 +2,8 @@ package com.netease.nim.camellia.hot.key.server.calculate;
 
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
 
+import java.util.Set;
+
 /**
  * Created by caojiajun on 2023/5/10
  */
@@ -11,12 +13,14 @@ public class TopNStats implements Comparable<TopNStats> {
     private final KeyAction action;
     private final long total;
     private final long maxQps;
+    private final Set<String> sourceSet;
 
-    public TopNStats(String key, KeyAction action, long total, long maxQps) {
+    public TopNStats(String key, KeyAction action, long total, long maxQps, Set<String> sourceSet) {
         this.key = key;
         this.action = action;
         this.total = total;
         this.maxQps = maxQps;
+        this.sourceSet = sourceSet;
     }
 
     public String getKey() {
@@ -33,6 +37,10 @@ public class TopNStats implements Comparable<TopNStats> {
 
     public long getMaxQps() {
         return maxQps;
+    }
+
+    public Set<String> getSourceSet() {
+        return sourceSet;
     }
 
     @Override

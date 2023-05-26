@@ -141,7 +141,7 @@ public class HotKeyInfo {
     private final KeyAction action;
     private final Rule rule;
     private final long count;
-    private final List<String> sources;
+    private final Set<String> sourceSet;
 }
 public enum KeyAction {
     QUERY(1),
@@ -176,6 +176,7 @@ public class TopNStats implements Comparable<TopNStats> {
     private final KeyAction action;
     private final long total;
     private final long maxQps;
+    private final Set<String> sourceSet;
 }
 ```
 

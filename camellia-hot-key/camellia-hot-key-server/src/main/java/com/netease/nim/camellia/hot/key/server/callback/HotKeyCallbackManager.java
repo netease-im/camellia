@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -55,14 +56,14 @@ public class HotKeyCallbackManager {
     /**
      * 发现一个新的热key的回调
      */
-    public void newHotkey(HotKey hotKey, Rule rule, long current) {
+    public void newHotkey(HotKey hotKey, Rule rule, long current, Set<String> sourceSet) {
         try {
             Long lastCallbackTime = callbackTimeCache.get(hotKey.getNamespace(), hotKey.getKey(), Long.class);
             if (lastCallbackTime == null) {
                 boolean success = callbackTimeCache.putIfAbsent(hotKey.getNamespace(), hotKey.getKey(),
                         TimeCache.currentMillis, properties.getHotKeyCallbackIntervalSeconds());
                 if (success) {
-                    HotKeyInfo hotKeyInfo = new HotKeyInfo(hotKey.getNamespace(), hotKey.getKey(), hotKey.getAction(), rule, current, new ArrayList<>());
+                    HotKeyInfo hotKeyInfo = new HotKeyInfo(hotKey.getNamespace(), hotKey.getKey(), hotKey.getAction(), rule, current, sourceSet);
                     executor.submit(() -> {
                         try {
                             HotKeyCollector.update(hotKeyInfo);

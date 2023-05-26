@@ -18,6 +18,7 @@ public class ChannelInfo {
     private final String consid;
     private final ChannelHandlerContext ctx;
     private final SeqManager seqManager;
+    private String source;
     private final ConcurrentHashMap<String, Boolean> namespaceMap = new ConcurrentHashMap<>();
 
     private ChannelInfo(ChannelHandlerContext ctx) {
@@ -79,5 +80,13 @@ public class ChannelInfo {
 
     public SeqManager getSeqManager() {
         return seqManager;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 }

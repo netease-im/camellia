@@ -66,9 +66,10 @@ public class TopNCounterManager {
     /**
      * 线程不安全
      * @param keyCounter keyCounter
+     * @param source source
      */
-    public void update(KeyCounter keyCounter) {
-        getTopNCounter(keyCounter.getNamespace()).update(keyCounter);
+    public void update(KeyCounter keyCounter, String source) {
+        getTopNCounter(keyCounter.getNamespace()).update(keyCounter, source);
     }
 
     /**

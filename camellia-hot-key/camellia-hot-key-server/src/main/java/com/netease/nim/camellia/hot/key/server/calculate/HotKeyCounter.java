@@ -1,7 +1,11 @@
 package com.netease.nim.camellia.hot.key.server.calculate;
 
 
+import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.server.utils.TimeCache;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 基于滑动窗口的热key检测计数器
@@ -16,6 +20,7 @@ public class HotKeyCounter {
     private int index;
     private long lastUpdateTime = TimeCache.currentMillis;
     private long total = -1;
+    private Set<String> sourceSet;
 
     public HotKeyCounter(long checkMillis) {
         //init
@@ -28,9 +33,10 @@ public class HotKeyCounter {
     /**
      * 线程不安全的，上层务必只有单线程调用
      * @param count count
+     * @param source source
      * @return 当前值
      */
-    public long update(long count) {
+    public long update(long count, String source) {
         int slideStep = (int) ((TimeCache.currentMillis - lastUpdateTime) / millisPerBucket);
         if (slideStep > 0) {
             slideToNextBucket(slideStep);
@@ -47,7 +53,24 @@ public class HotKeyCounter {
         } else {
             total += count;
         }
+        if (source != null) {
+            if (sourceSet == null) {
+                sourceSet = new HashSet<>();
+            }
+            if (sourceSet.size() >= HotKeyConstants.Server.maxHotKeySourceSetSize) {
+                sourceSet.clear();
+            }
+            sourceSet.add(source);
+        }
         return total;
+    }
+
+    /**
+     * 获取来源
+     * @return source set
+     */
+    public Set<String> getSourceSet() {
+        return sourceSet;
     }
 
     private void slideToNextBucket(int step) {
