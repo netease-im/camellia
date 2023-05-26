@@ -21,7 +21,7 @@ public class MonitorPerformanceTest {
 
     public static void main(String[] args) {
 
-//        HotKeyConstants.Client.source = "test1";
+        HotKeyConstants.Client.source = "test2";
 
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
         List<HotKeyServerAddr> addrList = new ArrayList<>();

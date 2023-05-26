@@ -39,4 +39,15 @@ public class RuleUtils {
         }
         return false;
     }
+
+    public static long maxCheckMillis(HotKeyConfig config) {
+        List<Rule> rules = config.getRules();
+        long maxCheckMillis = -1;
+        for (Rule rule : rules) {
+            if (rule.getCheckMillis() > maxCheckMillis) {
+                maxCheckMillis = rule.getCheckMillis();
+            }
+        }
+        return maxCheckMillis;
+    }
 }
