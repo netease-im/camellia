@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.plugin.ProxyReply;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +64,7 @@ public class CommandTaskQueue {
                 if (queue.isEmpty()) {
                     return;
                 }
+                ChannelFuture future = null;
                 do {
                     CommandTask task = queue.peek();
                     Reply reply = task.getReply();
@@ -72,17 +74,29 @@ public class CommandTaskQueue {
                                     task.getCommand() == null ? null : task.getCommand().getName(),
                                     reply.getClass().getSimpleName(), channelInfo.getConsid());
                         }
-                        channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet()));
+                        future = channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet()));
                         queue.poll();
                     } else {
                         break;
                     }
                 } while (!queue.isEmpty());
+                //check subscribe
                 if (channelInfo.isInSubscribe()) {
                     RedisConnection bindConnection = channelInfo.getBindConnection();
                     if (bindConnection == null || !bindConnection.isValid()) {
-                        logger.warn("client connection in subscribe mode forced disconnect because bind connection is invalid, consid = {}", channelInfo.getConsid());
-                        channelInfo.getCtx().close();
+                        if (future == null) {
+                            logger.warn("client connection in subscribe status forced disconnect" +
+                                            " because bind redis connection is null or invalid, bindConnection = {}, consid = {} in task queue without future",
+                                    bindConnection == null ? null : bindConnection.getConnectionName(), channelInfo.getConsid());
+                            channelInfo.getCtx().close();
+                        } else {
+                            future.addListener((ChannelFutureListener) channelFuture -> {
+                                logger.warn("client connection in subscribe status forced disconnect" +
+                                                " because bind redis connection is null or invalid, bindConnection = {}, consid = {} in task queue with future",
+                                        bindConnection == null ? null : bindConnection.getConnectionName(), channelInfo.getConsid());
+                                channelInfo.getCtx().close();
+                            });
+                        }
                     }
                 }
             } finally {
@@ -114,19 +128,20 @@ public class CommandTaskQueue {
                 }
             }
         }
+
+        ChannelFuture future = channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet()));
+
         if (reply instanceof ErrorReply) {
             RedisConnection bindConnection = channelInfo.getBindConnection();
             if (bindConnection != null && !bindConnection.isValid()) {
-                channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet())).addListener((ChannelFutureListener) channelFuture -> {
+                future.addListener((ChannelFutureListener) channelFuture -> {
                     channelInfo.getCtx().close();
-                    logger.warn("client connection in subscribe mode forced disconnect because bind connection is null or invalid, bindConnection = {}, consid = {}",
+                    logger.warn("client connection in subscribe status forced disconnect" +
+                                    " because bind redis connection is null or invalid, bindConnection = {}, consid = {} in direct reply case",
                             bindConnection.getConnectionName(), channelInfo.getConsid());
                 });
-                channelInfo.setBindConnection(null);
-                return;
             }
         }
-        channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet()));
     }
 
 }

@@ -13,6 +13,7 @@
 * camellia-redis-proxy的`/prometheus`接口的换行符，从`%n`改成`\n`，从而适配windows环境
 * camellia-redis-proxy在客户端连接处于发布订阅状态时，如果后端redis宕机或者因为某些原因关闭了redis到proxy的连接，proxy需要同步关闭到client的连接
 * camellia-redis-proxy修复连接处于订阅状态时，频繁发送ping命令或者频繁sub/unsub后，导致订阅无效的问题
+* camellia-redis-proxy在客户端订阅失败的情况下，强制关闭客户端连接
 
 
 # 1.2.7（2023/05/04）
