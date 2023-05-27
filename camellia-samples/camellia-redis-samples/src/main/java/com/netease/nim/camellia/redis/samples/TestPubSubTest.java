@@ -22,8 +22,8 @@ public class TestPubSubTest {
     public static void main(String[] args) throws InterruptedException {
 //        test1(1000);
 //        test2(1000);
-//        test3();
-        test4();
+        test3();
+//        test4();
     }
 
     public static void test4() {
@@ -47,14 +47,16 @@ public class TestPubSubTest {
                 public void onMessage(String channel, String message) {
                     System.out.println("onMessage " + channel + " " + message);
                 }
-            });
+            }, "ch1");
         } catch (Exception e) {
-            System.out.println("error:" + e);
-            try {
-                String k1 = jedis.get("k1");
-                System.out.println(k1);
-            } catch (Exception ex) {
-                System.out.println("error:" + ex);
+            System.out.println("error1:" + e);
+            for (int i=0; i<10; i++) {
+                try {
+                    String k1 = jedis.get("k1");
+                    System.out.println(k1);
+                } catch (Exception ex) {
+                    System.out.println("error2:" + ex);
+                }
             }
         }
     }
