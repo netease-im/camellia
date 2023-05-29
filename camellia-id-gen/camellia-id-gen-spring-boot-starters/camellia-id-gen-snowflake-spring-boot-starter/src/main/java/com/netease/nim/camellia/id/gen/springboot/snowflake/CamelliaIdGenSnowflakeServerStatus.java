@@ -1,11 +1,20 @@
 package com.netease.nim.camellia.id.gen.springboot.snowflake;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Created by caojiajun on 2023/1/9
  */
 public class CamelliaIdGenSnowflakeServerStatus {
+
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaIdGenSnowflakeServerStatus.class);
+    private static final Set<Runnable> onlineCallbackSet = new HashSet<>();
+    private static final Set<Runnable> offlineCallbackSet = new HashSet<>();
 
     private static class TimeCachedThread extends Thread {
         private static volatile long currentTimeMillis = System.currentTimeMillis();
@@ -44,6 +53,11 @@ public class CamelliaIdGenSnowflakeServerStatus {
 
     public static void setStatus(Status status) {
         CamelliaIdGenSnowflakeServerStatus.status = status;
+        if (status == Status.ONLINE) {
+            invokeOnlineCallback();
+        } else if (status == Status.OFFLINE) {
+            invokeOfflineCallback();
+        }
     }
 
     public static void updateLastUseTime() {
@@ -56,5 +70,33 @@ public class CamelliaIdGenSnowflakeServerStatus {
 
     public static boolean isIdle(int idleSeconds) {
         return TimeCachedThread.currentTimeMillis - lastUseTime > idleSeconds*1000L;
+    }
+
+    public static void invokeOnlineCallback() {
+        for (Runnable runnable : onlineCallbackSet) {
+            try {
+                runnable.run();
+            } catch (Exception e) {
+                logger.error("online callback error", e);
+            }
+        }
+    }
+
+    public static void invokeOfflineCallback() {
+        for (Runnable runnable : offlineCallbackSet) {
+            try {
+                runnable.run();
+            } catch (Exception e) {
+                logger.error("offline callback error", e);
+            }
+        }
+    }
+
+    public static synchronized void registerOnlineCallback(Runnable task) {
+        onlineCallbackSet.add(task);
+    }
+
+    public static synchronized void registerOfflineCallback(Runnable task) {
+        offlineCallbackSet.add(task);
     }
 }

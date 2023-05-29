@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.zk.registry.springboot;
 
 import com.netease.nim.camellia.hot.key.extensions.discovery.zk.ZkHotKeyServerRegistry;
 import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyServerAddr;
+import com.netease.nim.camellia.hot.key.server.netty.ServerStatus;
 import com.netease.nim.camellia.tools.utils.InetUtils;
 import com.netease.nim.camellia.zk.ZkRegistryException;
 import org.slf4j.Logger;
@@ -66,6 +67,9 @@ public class CamelliaHotKeyServerZkRegisterBoot {
                 properties.getBasePath(), applicationName, addr);
 
         registry.register();
+
+        ServerStatus.registerOnlineCallback(this::register);
+        ServerStatus.registerOfflineCallback(this::deregister);
     }
 
     public void register() {

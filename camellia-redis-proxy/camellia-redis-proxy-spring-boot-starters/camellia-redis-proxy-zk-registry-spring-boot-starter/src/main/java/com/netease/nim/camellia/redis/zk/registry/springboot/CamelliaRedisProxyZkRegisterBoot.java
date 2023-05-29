@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.zk.registry.springboot;
 
 import com.netease.nim.camellia.redis.base.proxy.Proxy;
 import com.netease.nim.camellia.redis.proxy.discovery.zk.ZkProxyRegistry;
+import com.netease.nim.camellia.redis.proxy.netty.ServerStatus;
 import com.netease.nim.camellia.tools.utils.InetUtils;
 import com.netease.nim.camellia.zk.ZkRegistryException;
 import org.slf4j.Logger;
@@ -68,6 +69,9 @@ public class CamelliaRedisProxyZkRegisterBoot {
                 properties.getBasePath(), applicationName, proxy);
 
         registry.register();
+
+        ServerStatus.registerOnlineCallback(this::register);
+        ServerStatus.registerOfflineCallback(this::deregister);
     }
 
     public void register() {
