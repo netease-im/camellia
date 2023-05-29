@@ -1,7 +1,7 @@
 [中文版](update-zh.md)
 
 
-# 1.2.8（2023/05/xx）
+# 1.2.8（2023/05/29）
 ### add
 * add camellia-hot-key module
 * add camellia-zk module, camellia-redis-proxy-zk and camellia-hot-key-zk base on camellia-zk
