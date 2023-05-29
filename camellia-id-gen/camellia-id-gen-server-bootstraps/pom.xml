@@ -5,14 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>camellia-id-gen-server-bootstraps</artifactId>
-    <version>1.2.8</version>
+    <version>1.2.9-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
     <parent>
         <groupId>com.netease.nim</groupId>
         <artifactId>camellia-id-gen</artifactId>
-        <version>1.2.8</version>
+        <version>1.2.9-SNAPSHOT</version>
     </parent>
 
     <modules>
