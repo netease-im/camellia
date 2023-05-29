@@ -179,6 +179,9 @@ public class CamelliaLocalCache {
             logger.trace("local cache evict, tag = {}, key = {}", tag, key);
         }
         CacheBean bean = cache.remove(uniqueKey);
+        if (bean == null) {
+            return null;
+        }
         if (bean.isExpire()) {
             return null;
         }
