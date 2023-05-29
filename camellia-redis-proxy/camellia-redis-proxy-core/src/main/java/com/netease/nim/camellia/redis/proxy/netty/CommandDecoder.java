@@ -35,6 +35,15 @@ public class CommandDecoder extends ByteToMessageDecoder {
         this.commands = new ArrayList<>(this.commandDecodeBufferInitializerSize);
     }
 
+    /**
+     * 根据RESP协议去解析 {@link ByteBuf}
+     * <p>Parse the ByteBuf object according RESP protocol.
+     * <p>
+     *  RESP-> <a href = "https://redis.io/docs/reference/protocol-spec/">https://redis.io/docs/reference/protocol-spec/
+     * @param ctx the {@link ChannelHandlerContext} which this {@link ByteToMessageDecoder} belongs to
+     * @param in  the {@link ByteBuf} from which to read data
+     * @param out the {@link List} to which decoded messages should be added
+     */
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
         try {
@@ -109,6 +118,11 @@ public class CommandDecoder extends ByteToMessageDecoder {
 
     private final NumberProcessor numberProcessor = new NumberProcessor();
 
+    /**
+     * Get the number from byteBuf
+     * @param byteBuf byteBuf
+     * @return number
+     */
     private long parseRedisNumber(ByteBuf byteBuf) {
         final int readableBytes = byteBuf.readableBytes();
         final boolean negative = readableBytes > 0 && byteBuf.getByte(byteBuf.readerIndex()) == '-';
@@ -131,6 +145,9 @@ public class CommandDecoder extends ByteToMessageDecoder {
         return numberProcessor.content();
     }
 
+    /**
+     * 把字节类型累加为数字
+     */
     private static final class NumberProcessor implements ByteProcessor {
         private long result;
         @Override

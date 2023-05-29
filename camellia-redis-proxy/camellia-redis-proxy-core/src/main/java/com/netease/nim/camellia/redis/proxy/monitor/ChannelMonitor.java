@@ -11,15 +11,30 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * 监控channel的情况
+ * <p>Monitor the status of the channel
+ * <p>
  * Created by caojiajun on 2019/11/7.
  */
 public class ChannelMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(ChannelMonitor.class);
 
+    /**
+     * The channel map aims to record all {@link ChannelInfo} objects.
+     */
     private static final ConcurrentHashMap<String, ChannelInfo> map = new ConcurrentHashMap<>();
+    /**
+     * 多租户{@link ChannelInfo} map
+     * <p>
+     * multi-tenant {@link ChannelInfo} map
+     */
     private static final ConcurrentHashMap<String, ConcurrentHashMap<String, ChannelInfo>> bidbgroupMap = new ConcurrentHashMap<>();
 
+    /**
+     * Put channelInfo into {@link ChannelMonitor#map}
+     * @param channelInfo channelInfo
+     */
     public static void init(ChannelInfo channelInfo) {
         ExecutorUtils.submitToSingleThreadExecutor(() -> {
             try {
@@ -30,6 +45,10 @@ public class ChannelMonitor {
         });
     }
 
+    /**
+     * Remove channelInfo from {@link ChannelMonitor#map}. If multi-tenant is used, the channelInfo will be removed from {@link ChannelMonitor#bidbgroupMap} as well.
+     * @param channelInfo the channelInfo object
+     */
     public static void remove(ChannelInfo channelInfo) {
         ExecutorUtils.submitToSingleThreadExecutor(() -> {
             try {
@@ -65,6 +84,9 @@ public class ChannelMonitor {
         return new HashSet<>(map.values());
     }
 
+    /**
+     * @return the channelInfo number in {@link ChannelMonitor#map}
+     */
     public static int connect() {
         return map.size();
     }
@@ -89,6 +111,12 @@ public class ChannelMonitor {
         return subMap.size();
     }
 
+    /**
+     * Put the channelInfo object into {@link ChannelMonitor#bidbgroupMap}. This mthod is thread-safe,
+     * @param bid
+     * @param bgroup
+     * @param channelInfo
+     */
     public static void initBidBgroup(long bid, String bgroup, ChannelInfo channelInfo) {
         ExecutorUtils.submitToSingleThreadExecutor(() -> {
             try {

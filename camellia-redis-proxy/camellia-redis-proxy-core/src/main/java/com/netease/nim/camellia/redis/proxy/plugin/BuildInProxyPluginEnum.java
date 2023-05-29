@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.plugin.bigkey.BigKeyProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.converter.ConverterProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkey.HotKeyProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.HotKeyCacheProxyPlugin;
+import com.netease.nim.camellia.redis.proxy.plugin.hotkeycacheserver.HotKeyCacheBasedServerPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.misc.DelayDoubleDeleteProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.misc.MultiWriteProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.misc.TroubleTrickKeysProxyPlugin;
@@ -37,6 +38,9 @@ public enum BuildInProxyPluginEnum {
     HOT_KEY_PLUGIN("hotKeyPlugin", HotKeyProxyPlugin.class, 20000, 0),
     //用于热key缓存（仅支持GET命令）
     HOT_KEY_CACHE_PLUGIN("hotKeyCachePlugin", HotKeyCacheProxyPlugin.class, 10000, Integer.MIN_VALUE + 10000),
+
+    // 基于hot-key-server的热key缓存（仅支持GET命令）
+    HOT_KEY_CACHE_BASED_SERVER_PLUGIN("hotKeyCacheBasedServerPlugin", HotKeyCacheBasedServerPlugin.class, 10000, Integer.MIN_VALUE + 10000),
 
     //用于监控大key
     BIG_KEY_PLUGIN("bigKeyPlugin", BigKeyProxyPlugin.class, 0, 0),

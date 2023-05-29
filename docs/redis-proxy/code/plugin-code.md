@@ -10,8 +10,6 @@ DefaultProxyPluginFactory proxyPluginFactory = new DefaultProxyPluginFactory(ser
 
 目的是从配置中获得所有的插件string以及工厂`ProxyBeanFactory`。
 
-![plugin-img1](./plugin-imgs/plugin-img2.png)
-
 `ProxyBeanFactory` 有两个实现。
 
 - `SpringProxyBeanFactory`：从spring容器中获取对应的bean。

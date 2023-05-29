@@ -233,4 +233,19 @@ public class Utils {
     public static String getCacheKey(Long bid, String bgroup) {
         return bid + "|" + bgroup;
     }
+
+    /**
+     * Get namespace by splicing bid and bgroup.
+     * <p> eg. bid + "|" + bgroup
+     * @param bid bid
+     * @param bgroup bgroup
+     * @return namespace string
+     */
+    public static String getNamespaceOrSetDefault(Long bid, String bgroup) {
+        if (bid == null || bgroup == null) {
+            return "default|default";
+        } else {
+            return bid + "|" + bgroup;
+        }
+    }
 }

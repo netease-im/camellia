@@ -36,6 +36,10 @@ public class ChannelInfo {
     private final String consid;
     private ChannelStats channelStats = ChannelStats.NO_AUTH;
     private final ChannelHandlerContext ctx;
+    /**
+     * 接受命令的队列
+     * The queue for accepting commands
+     */
     private final CommandTaskQueue commandTaskQueue;
     private volatile ConcurrentHashMap<String, RedisConnection> bindRedisConnectionCache;
     private volatile ConcurrentHashMap<String, RedisConnection> bindSubscribeRedisConnectionCache;
@@ -43,6 +47,10 @@ public class ChannelInfo {
     private int bindSlot = -1;
     private boolean inTransaction = false;
     private boolean inSubscribe = false;
+    /**
+     * 连接代理的客户端地址
+     * The client address of the proxy server.
+     */
     private final SocketAddress clientSocketAddress;
     private final boolean fromCport;
     private volatile ConcurrentHashMap<BytesKey, Boolean> subscribeChannels;

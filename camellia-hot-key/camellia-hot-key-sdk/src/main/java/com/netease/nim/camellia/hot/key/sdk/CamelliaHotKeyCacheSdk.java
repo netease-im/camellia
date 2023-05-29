@@ -101,6 +101,56 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         }
     }
 
+    public <T> void tryBuildCache(String namespace, String key, ValueLoader<T> loader) {
+        // 检查规则
+        Rule rule = rulePass(namespace, key);
+        // 判断是不是热key
+        if (!checkKey(namespace, key)) {
+            return;
+        }
+        // 建立缓存
+        refresh(namespace, key, rule, loader);
+        // 释放穿透标记
+        hotKeyCacheHitLockMap.evict(namespace, key);
+    }
+
+    public <T> T getValue(String namespace, String key) {
+        try {
+            //先看看是否匹配规则
+            Rule rule = rulePass(namespace, key);
+            if (rule == null) {
+                return null;
+            }
+            //提交探测请求
+            sdk.push(namespace, key, KeyAction.QUERY, 1);
+            addHotKeyListener(namespace);
+            //看看是否是热key
+            Long hotKeyExpireMillis = hotKeyCacheKeyMap.get(namespace, key, Long.class);
+            if (hotKeyExpireMillis == null) {
+                return null;
+            }
+            //如果是热key，看看有没有本地缓存
+            CamelliaLocalCache.ValueWrapper valueWrapper = hotKeyCacheValueMap.get(namespace, key);
+            if (valueWrapper == null) {
+                return null;
+            }
+            //热key缓存ttl已过半，则提前穿透一次更新吧
+            long ttl = hotKeyCacheKeyMap.ttl(namespace, key);
+            if (ttl < hotKeyExpireMillis / 2) {
+                //加个本地lock，从而只穿透一次
+                boolean lock = hotKeyCacheHitLockMap.putIfAbsent(namespace, key, true, -1);
+                if (lock) {
+                    return null;
+                }
+            }
+            cacheHit(namespace, key);
+            return (T) valueWrapper.get();
+        } catch (Exception e) {
+            logger.error("getValue error, namespace = {}, key = {}", namespace, key, e);
+            return null;
+        }
+    }
+
     private static class Stats {
         String namespace;
         String key;
@@ -131,7 +181,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
                 List<Object> values = hotKeyCacheHitStatsMap.values(namespace);
                 for (Object value : values) {
                     if (value instanceof Stats) {
-                        Object evict = hotKeyCacheHitStatsMap.evict(namespace, ((Stats)value).key);
+                        Object evict = hotKeyCacheHitStatsMap.evict(namespace, ((Stats) value).key);
                         if (evict instanceof Stats) {
                             Stats stats = (Stats) value;
                             HotKeyCacheStats hotKeyCacheStats = new HotKeyCacheStats();
@@ -218,5 +268,17 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
                 }
             });
         }
+    }
+
+    /**
+     * Check if the key is hot-key.
+     * @param namespace namespace
+     * @param key key
+     * @return true/false
+     */
+    public boolean checkKey(String namespace, String key) {
+        //看看是否是热key
+        Long hotKeyExpireMillis = hotKeyCacheKeyMap.get(namespace, key, Long.class);
+        return hotKeyExpireMillis != null;
     }
 }
