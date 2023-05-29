@@ -8,6 +8,7 @@
 
 ### update
 * camellia-redis-proxy set `tcp_keepalive` default true for client connect
+* camellia-config, update config namespace info field from varchar to text
 
 ### fix
 * camellia-redis-proxy update the console api `/prometheus`, replace `%n` to `\n`, adapate windows os

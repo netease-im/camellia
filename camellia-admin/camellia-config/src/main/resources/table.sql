@@ -20,7 +20,7 @@ CREATE TABLE `camellia_config_namespace` (
   `id` bigint(20) NOT NULL primary key auto_increment comment '自增字段',
   `namespace` varchar(128) NOT NULL comment 'namespace',
   `alias` varchar(128) NOT NULL comment 'alias',
-  `info` varchar(4096) DEFAULT NULL comment '配置描述',
+  `info` text DEFAULT NULL comment '配置描述',
   `version` bigint(20) NOT NULL comment '版本',
   `valid_flag` tinyint(4) DEFAULT NULL comment '是否valid',
   `creator` varchar(256) DEFAULT NULL comment '创建者',

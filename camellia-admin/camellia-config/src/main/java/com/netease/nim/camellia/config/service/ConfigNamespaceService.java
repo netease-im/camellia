@@ -2,11 +2,9 @@ package com.netease.nim.camellia.config.service;
 
 import com.netease.nim.camellia.config.auth.EnvContext;
 import com.netease.nim.camellia.config.conf.LogBean;
-import com.netease.nim.camellia.config.dao.ConfigDao;
 import com.netease.nim.camellia.config.daowrapper.ConfigDaoWrapper;
 import com.netease.nim.camellia.config.daowrapper.ConfigNamespaceDaoWrapper;
 import com.netease.nim.camellia.config.exception.AppException;
-import com.netease.nim.camellia.config.model.Config;
 import com.netease.nim.camellia.config.model.ConfigNamespace;
 import com.netease.nim.camellia.config.model.ConfigNamespacePage;
 import com.netease.nim.camellia.config.model.ConfigPage;
@@ -20,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -30,7 +27,7 @@ import java.util.Objects;
 public class ConfigNamespaceService {
 
     private static final int maxNamespaceLen = 128;
-    private static final int maxInfoLen = 4096;
+    private static final int maxInfoLen = 16384;
     private static final int maxAliasLen = 32;
     private static final int maxOperatorInfoLen = 256;
 

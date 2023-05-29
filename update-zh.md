@@ -8,6 +8,7 @@
 
 ### 更新
 * camellia-redis-proxy面向client的连接，tcp_keepalive参数默认改成true
+* camellia-config的namespace的info字段，mysql存储字段从varchar改成text
 
 ### fix
 * camellia-redis-proxy的`/prometheus`接口的换行符，从`%n`改成`\n`，从而适配windows环境
