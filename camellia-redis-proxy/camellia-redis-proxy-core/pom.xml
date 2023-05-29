@@ -39,6 +39,11 @@
 			<version>1.2.8-SNAPSHOT</version>
 		</dependency>
 		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-hot-key-discovery-zk</artifactId>
+			<version>1.2.8-SNAPSHOT</version>
+		</dependency>
+		<dependency>
 			<groupId>com.googlecode.concurrentlinkedhashmap</groupId>
 			<artifactId>concurrentlinkedhashmap-lru</artifactId>
 			<version>${concurrentlinkedhashmap.version}</version>
