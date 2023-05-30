@@ -21,7 +21,6 @@ public class CamelliaHotKeyCacheSdkConfig {
     private ScheduledExecutorService scheduler = defaultScheduler;
     private int hotKeyConfigReloadIntervalSeconds = HotKeyConstants.Client.hotKeyConfigReloadIntervalSeconds;
 
-    private String namespace;
     private int maxNamespace = 1000;
     private int capacity = 1000;
     private boolean cacheNull = true;
@@ -49,14 +48,6 @@ public class CamelliaHotKeyCacheSdkConfig {
 
     public void setHotKeyConfigReloadIntervalSeconds(int hotKeyConfigReloadIntervalSeconds) {
         this.hotKeyConfigReloadIntervalSeconds = hotKeyConfigReloadIntervalSeconds;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
     }
 
     public int getMaxNamespace() {

@@ -1,6 +1,19 @@
 [ENGLISH](update-en.md)
 
 
+# 1.2.9（2023/06/xx）
+### 新增
+* 无
+
+### 更新
+* camellia-redis-proxy、camellia-delay-queue-server、camellia-id-gen-server新增online/offline的callback
+* ZkProxyRegistry/ZkHotKeyServerRegistry注册online/offline的callback
+
+### fix
+* CamelliaHotKeyCacheSdkConfig移除namespace字段，CamelliaHotKeyCacheSdk的namespace字段应该来自方法传参
+* camellia-hot-key-server优雅上下线时没有判断是否有流量
+
+
 # 1.2.8（2023/05/29）
 ### 新增
 * 新增camellia-hot-key模块，具体见：[hot-key](/docs/hot-key/hot-key.md)
