@@ -154,12 +154,12 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
     @Override
     public void keyUpdate(String namespace, String key) {
         try {
-            Rule rule = rulePass(config.getNamespace(), key);
+            Rule rule = rulePass(namespace, key);
             if (rule == null) {
                 return;
             }
-            hotKeyCacheValueMap.evict(config.getNamespace(), key);
-            sdk.push(config.getNamespace(), key, KeyAction.UPDATE, 1);
+            hotKeyCacheValueMap.evict(namespace, key);
+            sdk.push(namespace, key, KeyAction.UPDATE, 1);
             addHotKeyListener(namespace);
         } catch (Exception e) {
             logger.error("keyUpdate error, namespace = {}, key = {}", namespace, key);
@@ -169,12 +169,12 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
     @Override
     public void keyDelete(String namespace, String key) {
         try {
-            Rule rule = rulePass(config.getNamespace(), key);
+            Rule rule = rulePass(namespace, key);
             if (rule == null) {
                 return;
             }
-            hotKeyCacheValueMap.evict(config.getNamespace(), key);
-            sdk.push(config.getNamespace(), key, KeyAction.DELETE, 1);
+            hotKeyCacheValueMap.evict(namespace, key);
+            sdk.push(namespace, key, KeyAction.DELETE, 1);
             addHotKeyListener(namespace);
         } catch (Exception e) {
             logger.error("keyDelete error, namespace = {}, key = {}", namespace, key);
