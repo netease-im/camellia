@@ -298,7 +298,7 @@ public class ChannelInfo {
             for (Command command : cachedCommands) {
                 CompletableFuture<Reply> future = new CompletableFuture<>();
                 if (ProxyMonitorCollector.isMonitorEnable()) {
-                    UpstreamFailMonitor.stats(upstreamClient.getUrl(), command.getName(), future);
+                    UpstreamFailMonitor.stats(upstreamClient.getUrl(), command, future);
                 }
                 futureList.add(future);
             }

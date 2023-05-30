@@ -169,7 +169,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             for (Command command : commands) {
                 CompletableFuture<Reply> future = new CompletableFuture<>();
                 if (ProxyMonitorCollector.isMonitorEnable()) {
-                    UpstreamFailMonitor.stats(url, command.getName(), future);
+                    UpstreamFailMonitor.stats(url, command, future);
                 }
                 RedisCommand redisCommand = command.getRedisCommand();
                 RedisCommand.Type type = redisCommand.getType();
@@ -332,7 +332,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 }
                 futureList.add(future);
                 if (ProxyMonitorCollector.isMonitorEnable()) {
-                    UpstreamFailMonitor.stats(url, command.getName(), future);
+                    UpstreamFailMonitor.stats(url, command, future);
                 }
                 continue;
             }
@@ -356,7 +356,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 }
                 futureList.add(future);
                 if (ProxyMonitorCollector.isMonitorEnable()) {
-                    UpstreamFailMonitor.stats(resource.getUrl(), command.getName(), future);
+                    UpstreamFailMonitor.stats(resource.getUrl(), command, future);
                 }
                 continue;
             }
@@ -379,7 +379,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 }
                 futureList.add(future);
                 if (ProxyMonitorCollector.isMonitorEnable()) {
-                    UpstreamFailMonitor.stats(resource.getUrl(), command.getName(), future);
+                    UpstreamFailMonitor.stats(resource.getUrl(), command, future);
                 }
                 continue;
             }
@@ -473,7 +473,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                         futureList.add(future);
                         incrRead(resource.getUrl(), command);
                         if (ProxyMonitorCollector.isMonitorEnable()) {
-                            UpstreamFailMonitor.stats(resource.getUrl(), command.getName(), future);
+                            UpstreamFailMonitor.stats(resource.getUrl(), command, future);
                         }
                     }
                 } catch (Exception e) {
@@ -723,7 +723,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         CompletableFuture<Reply> future = commandFlusher.sendCommand(client, command);
         incrRead(resource.getUrl(), command);
         if (ProxyMonitorCollector.isMonitorEnable()) {
-            UpstreamFailMonitor.stats(resource.getUrl(), command.getName(), future);
+            UpstreamFailMonitor.stats(resource.getUrl(), command, future);
         }
         return future;
     }
@@ -747,7 +747,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                         future.complete(ErrorReply.UPSTREAM_RESOURCE_NOT_AVAILABLE);
                     }
                     if (ProxyMonitorCollector.isMonitorEnable()) {
-                        UpstreamFailMonitor.stats(resource.getUrl(), command.getName(), future);
+                        UpstreamFailMonitor.stats(resource.getUrl(), command, future);
                     }
                 }
                 writeResources = new ArrayList<>(Collections.singletonList(writeResources.get(0)));
@@ -760,7 +760,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             incrWrite(resource.getUrl(), command);
             list.add(future);
             if (ProxyMonitorCollector.isMonitorEnable()) {
-                UpstreamFailMonitor.stats(resource.getUrl(), command.getName(), future);
+                UpstreamFailMonitor.stats(resource.getUrl(), command, future);
             }
         }
         return CompletableFutureUtils.finalReply(list, multiWriteMode);
@@ -809,7 +809,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             }
             allFutures.add(future);
             if (ProxyMonitorCollector.isMonitorEnable()) {
-                UpstreamFailMonitor.stats(url, command.getName(), future);
+                UpstreamFailMonitor.stats(url, command, future);
             }
         }
         if (multiWriteMode == MultiWriteMode.FIRST_RESOURCE_ONLY) {
@@ -874,7 +874,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             incrRead(url, command);
             futures.add(future);
             if (ProxyMonitorCollector.isMonitorEnable()) {
-                UpstreamFailMonitor.stats(url, command.getName(), future);
+                UpstreamFailMonitor.stats(url, command, future);
             }
         }
         if (futures.size() == 1) {
@@ -948,7 +948,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             incrRead(url, command);
             futures.add(future);
             if (ProxyMonitorCollector.isMonitorEnable()) {
-                UpstreamFailMonitor.stats(url, command.getName(), future);
+                UpstreamFailMonitor.stats(url, command, future);
             }
         }
         if (futures.size() == 1) {
@@ -1008,7 +1008,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 }
                 allFutures.add(future);
                 if (ProxyMonitorCollector.isMonitorEnable()) {
-                    UpstreamFailMonitor.stats(resource.getUrl(), command.getName(), future);
+                    UpstreamFailMonitor.stats(resource.getUrl(), command, future);
                 }
             }
         }
@@ -1070,7 +1070,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             incrRead(url, command);
             futures.add(future);
             if (ProxyMonitorCollector.isMonitorEnable()) {
-                UpstreamFailMonitor.stats(url, command.getName(), future);
+                UpstreamFailMonitor.stats(url, command, future);
             }
         }
         if (futures.size() == 1) {

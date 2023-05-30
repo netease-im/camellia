@@ -68,8 +68,7 @@ public class PubSubUtils {
                     }
                     //monitor
                     if (ProxyMonitorCollector.isMonitorEnable()) {
-                        UpstreamFailMonitor.stats(resource.getUrl(),
-                                command == null ? "pubsub": command.getName(), reply);
+                        UpstreamFailMonitor.stats(resource.getUrl(), command == null ? "pubsub" : command.getName(), reply);
                     }
                 });
                 futures.add(completableFuture);
