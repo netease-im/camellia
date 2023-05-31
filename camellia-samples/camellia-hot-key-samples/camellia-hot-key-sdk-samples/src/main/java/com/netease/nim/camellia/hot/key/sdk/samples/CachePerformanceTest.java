@@ -35,10 +35,22 @@ public class CachePerformanceTest {
         CamelliaHotKeyCacheSdk cacheSdk = new CamelliaHotKeyCacheSdk(sdk, new CamelliaHotKeyCacheSdkConfig());
 
         String namespace1 = "namespace1";
+
+        new Thread(() -> {
+            while (true) {
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                cacheSdk.keyDelete(namespace1, "abc");
+            }
+        }).start();
+
         while (true) {
             try {
                 String value = cacheSdk.getValue(namespace1, "abc", key -> key + id.incrementAndGet());
-                System.out.println(value);
+//                System.out.println(value);
                 TimeUnit.MILLISECONDS.sleep(1);
             } catch (Exception e) {
                 e.printStackTrace();
