@@ -3,7 +3,7 @@
 
 # 1.2.9（2023/06/xx）
 ### 新增
-* 无
+* camellia-redis-proxy在后端redis失败的情况下，支持把redis地址、command命令和关联keys打印到日志文件中
 
 ### 更新
 * camellia-redis-proxy、camellia-delay-queue-server、camellia-id-gen-server新增online/offline的callback

@@ -2,7 +2,7 @@
 
 # 1.2.9（2023/06/xx）
 ### add
-* none
+* camellia-redis-proxy support print resource/command/keys in log when upstream redis failed
 
 ### update
 * camellia-redis-proxy、camellia-delay-queue-server、camellia-id-gen-server add online/offline callback
