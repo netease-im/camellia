@@ -4,6 +4,8 @@ import com.netease.nim.camellia.hot.key.common.netty.HotKeyPack;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -12,13 +14,19 @@ import java.util.List;
  */
 public class HotKeyPackEncoder extends MessageToMessageEncoder<HotKeyPack> {
 
+    private static final Logger logger = LoggerFactory.getLogger(HotKeyPackEncoder.class);
+
     public static String getName() {
         return "HotKeyPackEncoder";
     }
 
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, HotKeyPack hotKeyPack, List<Object> list) {
-        ByteBuf buf = hotKeyPack.encode();
-        list.add(buf);
+        try {
+            ByteBuf buf = hotKeyPack.encode();
+            list.add(buf);
+        } catch (Exception e) {
+            logger.error("encode error", e);
+        }
     }
 }

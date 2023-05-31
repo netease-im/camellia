@@ -50,7 +50,9 @@ public class NotifyHotKeyPack extends HotKeyPackBody {
             props.put(Tag.namespace.value, hotKey.getNamespace());
             props.put(Tag.key.value, hotKey.getKey());
             props.putInteger(Tag.action.value, hotKey.getAction().getValue());
-            props.putLong(Tag.expireMillis.value, hotKey.getExpireMillis());
+            if (hotKey.getExpireMillis() != null) {
+                props.putLong(Tag.expireMillis.value, hotKey.getExpireMillis());
+            }
             arrayMable.add(props);
         }
         pack.putMarshallable(arrayMable);
@@ -66,7 +68,9 @@ public class NotifyHotKeyPack extends HotKeyPackBody {
             hotKey.setNamespace(property.get(Tag.namespace.value));
             hotKey.setKey(property.get(Tag.key.value));
             hotKey.setAction(KeyAction.getByValue(property.getInteger(Tag.action.value)));
-            hotKey.setExpireMillis(property.getLong(Tag.expireMillis.value));
+            if (property.containsKey(Tag.expireMillis.value)) {
+                hotKey.setExpireMillis(property.getLong(Tag.expireMillis.value));
+            }
             list.add(hotKey);
         }
     }
