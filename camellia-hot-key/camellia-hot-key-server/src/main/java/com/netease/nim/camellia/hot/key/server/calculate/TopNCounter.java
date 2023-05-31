@@ -202,6 +202,9 @@ public class TopNCounter {
                 time = TimeCache.currentMillis;
             }
             this.current += c;
+            if (step == 0 && current > max) {
+                max = current;
+            }
 
             if (source != null) {
                 if (sourceSet == null) {

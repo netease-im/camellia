@@ -14,6 +14,7 @@
 * camellia-hot-key-server优雅上下线时没有判断是否有流量
 * CamelliaHotKeyCacheSdk修复keyDelete/keyUpdate方法产生的通知没有发送到其他客户端的问题
 * TopNCounter每个大周期计算完成后没有清空buffer的问题
+* TopNCounter修复计算maxQps不对的问题
 
 
 # 1.2.8（2023/05/29）
