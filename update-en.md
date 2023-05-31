@@ -1,7 +1,19 @@
 [中文版](update-zh.md)
 
+# 1.2.9（2023/06/xx）
+### add
+* camellia-redis-proxy support print resource/command/keys in log when upstream redis failed
 
-# 1.2.8（2023/05/xx）
+### update
+* camellia-redis-proxy、camellia-delay-queue-server、camellia-id-gen-server add online/offline callback
+* ZkProxyRegistry/ZkHotKeyServerRegistry register online/offline callback
+
+### fix
+* CamelliaHotKeyCacheSdkConfig remove namespace field, CamelliaHotKeyCacheSdk should use namespace from method
+* camellia-hot-key-server grace online/offline should check traffic
+
+
+# 1.2.8（2023/05/29）
 ### add
 * add camellia-hot-key module
 * add camellia-zk module, camellia-redis-proxy-zk and camellia-hot-key-zk base on camellia-zk

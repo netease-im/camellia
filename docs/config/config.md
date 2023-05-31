@@ -36,7 +36,7 @@ Content-Type:application/x-www-form-urlencoded;charset=utf-8
 |:---:|:---:|:---:|:---:|
 |namespace|string|是|namespace，最长128字符|
 |alias|string|否|namespace的别名，用于ui展示，最长32字符<br>创建时必填，更新时非必填|
-|info|string|否|namespace的说明，最长4096字符<br>创建时必填|
+|info|string|否|namespace的说明，最长16384字符<br>创建时必填|
 |version|number|否|版本号，用于并发控制<br>创建时不填，更新时必填|
 |validFlag|number|否|是否生效，0或者1，其他参数错误<br>创建时默认0|
 |operatorInfo|string|是|操作说明，最长256字符|

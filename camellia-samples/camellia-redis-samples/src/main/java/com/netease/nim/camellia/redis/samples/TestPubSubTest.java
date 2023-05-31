@@ -21,8 +21,8 @@ public class TestPubSubTest {
 
     public static void main(String[] args) throws InterruptedException {
 //        test1(1000);
-//        test2(1000);
-        test3();
+        test2(1000);
+//        test3();
 //        test4();
     }
 
@@ -140,7 +140,7 @@ public class TestPubSubTest {
     }
 
 
-    public static void test1(int c) {
+    public static void test1(int c) throws InterruptedException {
         AtomicLong count = new AtomicLong();
 
         RedisClient redisClient1 = RedisClient.create(uri);
@@ -180,6 +180,15 @@ public class TestPubSubTest {
         System.out.println("try subscribe ch01");
         connection.async().subscribe("ch01");
         System.out.println("subscribe ch01 done");
+        RedisClient redisClient3 = RedisClient.create(uri);
+        for (int i=0; i<100; i++) {
+            redisClient3.connect().sync().publish("ch01", "abc");
+        }
+        Thread.sleep(1000);
+        count.set(0);
+        System.out.println("try subscribe ch01");
+        connection.async().subscribe("ch02");
+        System.out.println("subscribe ch02 done");
 
         RedisClient redisClient2 = RedisClient.create(uri);
         new Thread(() -> {
@@ -187,6 +196,7 @@ public class TestPubSubTest {
             for (int i=0; i<c; i++) {
                 try {
                     sync.publish("ch01", String.valueOf(i));
+                    sync.publish("ch02", String.valueOf(i));
                     try {
                         Thread.sleep(10);
                     } catch (InterruptedException e) {
@@ -201,7 +211,7 @@ public class TestPubSubTest {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (count.get() == c) {
+            if (count.get() == c*2L) {
                 System.out.println("TEST SUCCESS");
             } else {
                 System.out.println("TEST FAIL!!!!!!!!!!!!!");

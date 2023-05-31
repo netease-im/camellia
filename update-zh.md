@@ -1,7 +1,20 @@
 [ENGLISH](update-en.md)
 
 
-# 1.2.8（2023/05/xx）
+# 1.2.9（2023/06/xx）
+### 新增
+* camellia-redis-proxy在后端redis失败的情况下，支持把redis地址、command命令和关联keys打印到日志文件中
+
+### 更新
+* camellia-redis-proxy、camellia-delay-queue-server、camellia-id-gen-server新增online/offline的callback
+* ZkProxyRegistry/ZkHotKeyServerRegistry注册online/offline的callback
+
+### fix
+* CamelliaHotKeyCacheSdkConfig移除namespace字段，CamelliaHotKeyCacheSdk的namespace字段应该来自方法传参
+* camellia-hot-key-server优雅上下线时没有判断是否有流量
+
+
+# 1.2.8（2023/05/29）
 ### 新增
 * 新增camellia-hot-key模块，具体见：[hot-key](/docs/hot-key/hot-key.md)
 * 新增camellia-zk模块，camellia-redis-proxy-zk和camellia-hot-key-zk均引用camellia-zk，从而复用代码

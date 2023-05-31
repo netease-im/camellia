@@ -30,7 +30,7 @@
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis</artifactId>
-  <version>1.2.7</version>
+  <version>1.2.8</version>
 </dependency>
 ```
 * 底层依赖jedis-3.6.3
@@ -38,7 +38,7 @@
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis3</artifactId>
-  <version>1.2.7</version>
+  <version>1.2.8</version>
 </dependency>
 ```
 

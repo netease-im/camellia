@@ -15,6 +15,7 @@ import com.netease.nim.camellia.hot.key.server.event.HotKeyEventHandler;
 import com.netease.nim.camellia.hot.key.server.monitor.HotKeyCalculatorQueueMonitor;
 import com.netease.nim.camellia.hot.key.server.monitor.HotKeyServerMonitorCollector;
 import com.netease.nim.camellia.hot.key.server.netty.ChannelInfo;
+import com.netease.nim.camellia.hot.key.server.netty.ServerStatus;
 import com.netease.nim.camellia.hot.key.server.notify.HotKeyNotifyService;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
@@ -93,6 +94,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
     @Override
     public CompletableFuture<PushRepPack> onPushPack(Channel channel, PushPack pack) {
         try {
+            ServerStatus.updateLastUseTime();
             if (logger.isDebugEnabled()) {
                 logger.debug("receive PushPack, size = {}", pack.getList().size());
             }
@@ -117,16 +119,17 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
 
     @Override
     public CompletableFuture<GetConfigRepPack> onGetConfigPack(Channel channel, GetConfigPack pack) {
+        ServerStatus.updateLastUseTime();
+        CompletableFuture<GetConfigRepPack> future = new CompletableFuture<>();
         if (logger.isDebugEnabled()) {
             logger.debug("receive GetConfigPack, namespace = {}", pack.getNamespace());
         }
-        CompletableFuture<GetConfigRepPack> future = new CompletableFuture<>();
-        ChannelInfo channelInfo = ChannelInfo.get(channel);
-        channelInfo.addNamespace(pack.getNamespace());
-        if (pack.getSource() != null) {
-            channelInfo.setSource(pack.getSource());
-        }
         try {
+            ChannelInfo channelInfo = ChannelInfo.get(channel);
+            channelInfo.addNamespace(pack.getNamespace());
+            if (pack.getSource() != null) {
+                channelInfo.setSource(pack.getSource());
+            }
             executor.submit(() -> {
                 try {
                     HotKeyConfig hotKeyConfig = hotKeyConfigService.get(pack.getNamespace());
