@@ -11,6 +11,8 @@
 ### fix
 * CamelliaHotKeyCacheSdkConfig remove namespace field, CamelliaHotKeyCacheSdk should use namespace from method
 * camellia-hot-key-server grace online/offline should check traffic
+* CamelliaHotKeyCacheSdk fix keyDelete/keyUpdate do not notify other sdk
+* TopNCounter should clear buffer after collect
 
 
 # 1.2.8（2023/05/29）
