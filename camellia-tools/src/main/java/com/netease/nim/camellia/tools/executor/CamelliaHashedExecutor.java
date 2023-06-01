@@ -106,6 +106,28 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
     }
 
     /**
+     * 根据hashKey计算index
+     * @param hashKey hashKey
+     * @return index
+     */
+    public int hashIndex(String hashKey) {
+        return hashIndex(hashKey.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * 根据hashKey计算index
+     * @param hashKey hashKey
+     * @return index
+     */
+    public int hashIndex(byte[] hashKey) {
+        if (shutdown.get()) {
+            throw new IllegalStateException("executor has shutdown");
+        }
+        initWorkThreads();
+        return Math.abs(Arrays.hashCode(hashKey)) % workThreads.size();
+    }
+
+    /**
      * 根据hashKey选取一个固定的工作线程执行一个任务
      * @param hashKey hashKey
      * @param runnable 无返回结果的任务
@@ -125,6 +147,12 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
         return task;
     }
 
+    /**
+     * 根据hashKey选取一个固定的工作线程执行一个任务
+     * @param hashKey hashKey
+     * @param runnable 无返回结果的任务
+     * @return 任务结果
+     */
     public Future<Void> submit(String hashKey, Runnable runnable) {
         return submit(hashKey.getBytes(StandardCharsets.UTF_8), runnable);
     }
@@ -149,6 +177,12 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
         return task;
     }
 
+    /**
+     * 根据hashKey选取一个固定的工作线程执行一个任务
+     * @param hashKey hashKey
+     * @param callable 有返回结果的任务
+     * @return 任务结果
+     */
     public <T> Future<T> submit(String hashKey, Callable<T> callable) {
         return submit(hashKey.getBytes(StandardCharsets.UTF_8), callable);
     }

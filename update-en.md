@@ -7,6 +7,7 @@
 ### update
 * camellia-redis-proxy、camellia-delay-queue-server、camellia-id-gen-server add online/offline callback
 * ZkProxyRegistry/ZkHotKeyServerRegistry register online/offline callback
+* CamelliaHashedExecutor add hashIndex method to get thread index by hashKey
 
 ### fix
 * CamelliaHotKeyCacheSdkConfig remove namespace field, CamelliaHotKeyCacheSdk should use namespace from method

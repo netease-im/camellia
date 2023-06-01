@@ -8,6 +8,7 @@
 ### 更新
 * camellia-redis-proxy、camellia-delay-queue-server、camellia-id-gen-server新增online/offline的callback
 * ZkProxyRegistry/ZkHotKeyServerRegistry注册online/offline的callback
+* CamelliaHashedExecutor新增hashIndex方法，用于获取hashKey计算得到的线程index
 
 ### fix
 * CamelliaHotKeyCacheSdkConfig移除namespace字段，CamelliaHotKeyCacheSdk的namespace字段应该来自方法传参
