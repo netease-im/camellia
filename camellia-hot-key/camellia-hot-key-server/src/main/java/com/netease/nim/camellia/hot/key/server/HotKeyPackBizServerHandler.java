@@ -7,7 +7,6 @@ import com.netease.nim.camellia.hot.key.common.netty.HotKeyPackBizHandler;
 import com.netease.nim.camellia.hot.key.common.netty.pack.*;
 import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCalculator;
 import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCalculatorQueue;
-import com.netease.nim.camellia.hot.key.server.calculate.HotKeyCounterManager;
 import com.netease.nim.camellia.hot.key.server.calculate.TopNCounterManager;
 import com.netease.nim.camellia.hot.key.server.callback.HotKeyCallbackManager;
 import com.netease.nim.camellia.hot.key.server.conf.*;
@@ -68,10 +67,6 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         HotKeyNotifyService notifyService = new HotKeyNotifyService(hotKeyConfigService);
         hotKeyConfigService.registerCallback(notifyService::notifyHotKeyNotifyChange);
 
-        //hot key counter
-        HotKeyCounterManager hotKeyCounterManager = new HotKeyCounterManager(properties);
-        hotKeyConfigService.registerCallback(hotKeyCounterManager::remove);
-
         //topN counter
         TopNCounterManager topNCounterManager = new TopNCounterManager(properties, callbackManager);
 
@@ -81,7 +76,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         for (int i=0; i<bizWorkThread; i++) {
             HotKeyCalculatorQueue queue = new HotKeyCalculatorQueue(properties.getWorkQueueType(), properties.getBizQueueCapacity());
             HotKeyCalculatorQueueMonitor.register(queue);
-            queue.start(new HotKeyCalculator(i, hotKeyConfigService, hotKeyCounterManager, topNCounterManager, hotKeyEventHandler));
+            queue.start(new HotKeyCalculator(i, properties, hotKeyConfigService, topNCounterManager, hotKeyEventHandler));
             this.queues[i] = queue;
         }
 
