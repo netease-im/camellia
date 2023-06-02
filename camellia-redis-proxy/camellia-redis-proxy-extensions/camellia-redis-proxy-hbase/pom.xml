@@ -4,29 +4,29 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis-proxy-hbase</artifactId>
-	<version>1.2.9-SNAPSHOT</version>
+	<version>1.2.9</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-redis-proxy-extensions</artifactId>
-		<version>1.2.9-SNAPSHOT</version>
+		<version>1.2.9</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-proxy-core</artifactId>
-			<version>1.2.9-SNAPSHOT</version>
+			<version>1.2.9</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis</artifactId>
-			<version>1.2.9-SNAPSHOT</version>
+			<version>1.2.9</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-hbase</artifactId>
-			<version>1.2.9-SNAPSHOT</version>
+			<version>1.2.9</version>
 		</dependency>
 		<dependency>
 			<groupId>redis.clients</groupId>

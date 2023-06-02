@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.9（2023/06/xx）
+# 1.2.9（2023/06/02）
 ### add
 * camellia-redis-proxy support print resource/command/keys in log when upstream redis failed
 

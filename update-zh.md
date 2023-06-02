@@ -1,7 +1,7 @@
 [ENGLISH](update-en.md)
 
 
-# 1.2.9（2023/06/xx）
+# 1.2.9（2023/06/02）
 ### 新增
 * camellia-redis-proxy在后端redis失败的情况下，支持把redis地址、command命令和关联keys打印到日志文件中
 
