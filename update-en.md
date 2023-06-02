@@ -1,5 +1,17 @@
 [中文版](update-zh.md)
 
+# 1.2.10（2023/06/xx）
+### add
+* none
+
+### update
+* camellia-hot-key set ConcurrentLinkedQueue as default work queue, improve performance
+* camellia-hot-key remove the expire policy of HotKeyCounterManager Caffeine, avoid performance degradation
+
+### fix
+* none
+
+
 # 1.2.9（2023/06/02）
 ### add
 * camellia-redis-proxy support print resource/command/keys in log when upstream redis failed

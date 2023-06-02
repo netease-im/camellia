@@ -69,7 +69,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         hotKeyConfigService.registerCallback(notifyService::notifyHotKeyNotifyChange);
 
         //hot key counter
-        HotKeyCounterManager hotKeyCounterManager = new HotKeyCounterManager(properties, hotKeyConfigService);
+        HotKeyCounterManager hotKeyCounterManager = new HotKeyCounterManager(properties);
         hotKeyConfigService.registerCallback(hotKeyCounterManager::remove);
 
         //topN counter

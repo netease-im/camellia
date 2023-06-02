@@ -73,7 +73,7 @@ public class HotKeyCalculatorQueue {
     public long getId() {
         return id;
     }
-
+ 
     public void push(List<KeyCounter> counters, String source) {
         int size = counters.size();
         boolean success;

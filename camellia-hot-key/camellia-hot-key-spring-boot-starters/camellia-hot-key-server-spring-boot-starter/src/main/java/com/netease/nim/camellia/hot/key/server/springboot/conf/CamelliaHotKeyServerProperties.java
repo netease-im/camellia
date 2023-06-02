@@ -25,7 +25,7 @@ public class CamelliaHotKeyServerProperties {
 
     private int bizWorkThread = -1;
     private int bizQueueCapacity = HotKeyConstants.Server.bizWorkQueueCapacity;
-    private WorkQueueType workQueueType = WorkQueueType.LinkedBlockingQueue;
+    private WorkQueueType workQueueType = WorkQueueType.ConcurrentLinkedQueue;
 
     private int maxNamespace = HotKeyConstants.Server.maxNamespace;
 

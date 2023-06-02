@@ -1,6 +1,18 @@
 [ENGLISH](update-en.md)
 
 
+# 1.2.10（2023/06/xx）
+### 新增
+* 无
+
+### 更新
+* camellia-hot-key设置ConcurrentLinkedQueue作为默认内存队列，提高一些性能
+* camellia-hot-key移除了HotKeyCounterManager中Caffeine的expire策略，避免引起性能劣化
+
+### fix
+* 无
+
+
 # 1.2.9（2023/06/02）
 ### 新增
 * camellia-redis-proxy在后端redis失败的情况下，支持把redis地址、command命令和关联keys打印到日志文件中
