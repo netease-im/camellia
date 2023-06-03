@@ -8,6 +8,7 @@ import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 import com.netease.nim.camellia.hot.key.server.utils.TimeCache;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
+import com.netease.nim.camellia.tools.utils.MathUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,16 +28,24 @@ public class TopNCounter {
     private final String namespace;
     private final int topN;
     private final long checkMillis = 1000;//固定为1s
-    private final Cache<String, Counter> cache;
+    private final List<Cache<String, Counter>> cacheList;
+    private final int bizWorkThread;
+    private final boolean is2Power;
     private final List<Stats> buffer;
 
     public TopNCounter(String namespace, ScheduledThreadPoolExecutor scheduler, HotKeyServerProperties properties) {
         this.namespace = namespace;
         this.topN = properties.getTopnCount();
-        this.cache = Caffeine.newBuilder()
-                .initialCapacity(properties.getTopnCacheCounterCapacity())
-                .maximumSize(properties.getTopnCacheCounterCapacity())
-                .build();
+        this.bizWorkThread = properties.getBizWorkThread();
+        this.is2Power = MathUtil.is2Power(bizWorkThread);
+        this.cacheList = new ArrayList<>(bizWorkThread);
+        for (int i=0; i<bizWorkThread; i++) {
+            Cache<String, Counter> cache = Caffeine.newBuilder()
+                    .initialCapacity(properties.getTopnCacheCounterCapacity())
+                    .maximumSize(properties.getTopnCacheCounterCapacity())
+                    .build();
+            cacheList.add(cache);
+        }
         this.buffer = new ArrayList<>(properties.getTopnCollectSeconds() * properties.getTopnCount());
         scheduler.scheduleAtFixedRate(this::schedule, checkMillis * properties.getTopnTinyCollectSeconds(),
                 checkMillis * properties.getTopnTinyCollectSeconds(), TimeUnit.MILLISECONDS);
@@ -48,7 +57,9 @@ public class TopNCounter {
      * @param source source
      */
     public void update(KeyCounter counter, String source) {
-        Counter c = cache.get(counter.getKey() + "|" + counter.getAction().getValue(), k -> new Counter(checkMillis));
+        int code = Math.abs((counter.getNamespace() + "|" + counter.getKey()).hashCode());
+        int index = MathUtil.mod(is2Power, code, bizWorkThread);
+        Counter c = cacheList.get(index).get(counter.getKey() + "|" + counter.getAction().getValue(), k -> new Counter(checkMillis));
         if (c == null) return;
         c.update(counter.getCount(), source);
     }
@@ -93,8 +104,11 @@ public class TopNCounter {
     }
 
     public List<Stats> collect0() {
-        Map<String, Counter> collectMap = new HashMap<>(cache.asMap());
-        cache.invalidateAll();
+        Map<String, Counter> collectMap = new HashMap<>();
+        for (Cache<String, Counter> cache : cacheList) {
+            collectMap.putAll(cache.asMap());
+            cache.invalidateAll();
+        }
         List<Stats> list = new ArrayList<>();
         for (Map.Entry<String, Counter> entry : collectMap.entrySet()) {
             String uniqueKey = entry.getKey();
