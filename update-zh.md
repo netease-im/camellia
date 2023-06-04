@@ -1,17 +1,33 @@
 [ENGLISH](update-en.md)
 
 
-# 1.2.9（2023/06/xx）
+# 1.2.10（2023/06/xx）
+### 新增
+* 无
+
+### 更新
+* camellia-hot-key设置ConcurrentLinkedQueue作为默认内存队列，提高一些性能
+* camellia-hot-key移除了HotKeyCounterManager中Caffeine的expire策略，避免引起性能劣化
+
+### fix
+* 无
+
+
+# 1.2.9（2023/06/02）
 ### 新增
 * camellia-redis-proxy在后端redis失败的情况下，支持把redis地址、command命令和关联keys打印到日志文件中
 
 ### 更新
 * camellia-redis-proxy、camellia-delay-queue-server、camellia-id-gen-server新增online/offline的callback
 * ZkProxyRegistry/ZkHotKeyServerRegistry注册online/offline的callback
+* CamelliaHashedExecutor新增hashIndex方法，用于获取hashKey计算得到的线程index
 
 ### fix
 * CamelliaHotKeyCacheSdkConfig移除namespace字段，CamelliaHotKeyCacheSdk的namespace字段应该来自方法传参
 * camellia-hot-key-server优雅上下线时没有判断是否有流量
+* CamelliaHotKeyCacheSdk修复keyDelete/keyUpdate方法产生的通知没有发送到其他客户端的问题
+* TopNCounter每个大周期计算完成后没有清空buffer的问题
+* TopNCounter修复计算maxQps不对的问题
 
 
 # 1.2.8（2023/05/29）

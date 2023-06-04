@@ -26,7 +26,7 @@ public class HotKeyServerProperties {
 
     private int bizWorkThread = HotKeyConstants.Server.bizWorkThread;
     private int bizQueueCapacity = HotKeyConstants.Server.bizWorkQueueCapacity;
-    private WorkQueueType workQueueType = WorkQueueType.LinkedBlockingQueue;
+    private WorkQueueType workQueueType = WorkQueueType.ConcurrentLinkedQueue;
 
     private boolean tcpNoDelay = HotKeyConstants.Server.tcpNoDelay;
     private int soBacklog = HotKeyConstants.Server.soBacklog;

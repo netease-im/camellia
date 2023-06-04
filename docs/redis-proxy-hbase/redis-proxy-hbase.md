@@ -2,9 +2,7 @@
 # camellia-redis-proxy-hbase
 ## 简介  
 基于camellia-redis、camellia-hbase、camellia-redis-proxy开发   
-目前实现了string/hash/zset相关的命令，可以实现自动的冷热数据分离（冷数据存hbase，热数据存redis）  
-1.0.20版本开始，camellia-redis-proxy-hbase进行了重构，且和老版本不兼容，以下内容均为重构后版本的描述   
-1.0.34版本和1.0.33版本的string实现原理有重构，且不兼容  
+目前实现了string/hash/zset相关的命令，可以实现自动的冷热数据分离（冷数据存hbase，热数据存redis）
 
 ## 基本原理
 对于redis中部分key的value部分（如zset的value，hash的value），可能占用较大字节  

@@ -134,7 +134,7 @@ public enum BuildInProxyPluginEnum {
 * DynamicIpCheckProxyPlugin，用于控制客户端接入，支持ip黑白名单，通过camellia-dashboard托管配置，具体见：[dynamic-ip-checker](dynamic-ip-checker.md)
 * CommandDisableProxyPlugin，用于屏蔽某些命令，具体见：[command-disable](command-disable.md)
 
-### 内置插件修改默认执行顺序的方法(1.2.8开始支持)
+### 内置插件修改默认执行顺序的方法(1.2.4开始支持)
 在camellia-redis-proxy.properties或者application.yml的config中，配置如下key-value-config：
 ```
 ## 修改request的order

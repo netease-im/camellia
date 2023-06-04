@@ -1,16 +1,32 @@
 [中文版](update-zh.md)
 
-# 1.2.9（2023/06/xx）
+# 1.2.10（2023/06/xx）
+### add
+* none
+
+### update
+* camellia-hot-key set ConcurrentLinkedQueue as default work queue, improve performance
+* camellia-hot-key remove the expire policy of HotKeyCounterManager Caffeine, avoid performance degradation
+
+### fix
+* none
+
+
+# 1.2.9（2023/06/02）
 ### add
 * camellia-redis-proxy support print resource/command/keys in log when upstream redis failed
 
 ### update
 * camellia-redis-proxy、camellia-delay-queue-server、camellia-id-gen-server add online/offline callback
 * ZkProxyRegistry/ZkHotKeyServerRegistry register online/offline callback
+* CamelliaHashedExecutor add hashIndex method to get thread index by hashKey
 
 ### fix
 * CamelliaHotKeyCacheSdkConfig remove namespace field, CamelliaHotKeyCacheSdk should use namespace from method
 * camellia-hot-key-server grace online/offline should check traffic
+* CamelliaHotKeyCacheSdk fix keyDelete/keyUpdate do not notify other sdk
+* TopNCounter should clear buffer after collect
+* TopNCounter fix calculate maxQps not exact issue
 
 
 # 1.2.8（2023/05/29）

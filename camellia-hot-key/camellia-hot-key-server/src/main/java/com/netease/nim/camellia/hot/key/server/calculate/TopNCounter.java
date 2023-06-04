@@ -67,8 +67,8 @@ public class TopNCounter {
             if (stats.getSourceSet() != null) {
                 oldStats.getSourceSet().addAll(stats.getSourceSet());
             }
-
         }
+        buffer.clear();
         List<Stats> list = new ArrayList<>(map.values());
         Collections.sort(list);
         List<Stats> subList;
@@ -83,7 +83,7 @@ public class TopNCounter {
         return result;
     }
 
-    private void schedule() {
+    private synchronized void schedule() {
         try {
             List<Stats> list = collect0();
             buffer.addAll(list);
@@ -202,6 +202,9 @@ public class TopNCounter {
                 time = TimeCache.currentMillis;
             }
             this.current += c;
+            if (step == 0 && current > max) {
+                max = current;
+            }
 
             if (source != null) {
                 if (sourceSet == null) {
