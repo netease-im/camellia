@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -27,13 +28,19 @@ public class TopNCounter {
     private final String namespace;
     private final int topN;
     private final long checkMillis = 1000;//固定为1s
-    private final Cache<String, Counter> cache;
+    private final AtomicBoolean backup = new AtomicBoolean(false);
+    private final Cache<String, Counter> cache1;
+    private final Cache<String, Counter> cache2;
     private final List<Stats> buffer;
 
     public TopNCounter(String namespace, ScheduledThreadPoolExecutor scheduler, HotKeyServerProperties properties) {
         this.namespace = namespace;
         this.topN = properties.getTopnCount();
-        this.cache = Caffeine.newBuilder()
+        this.cache1 = Caffeine.newBuilder()
+                .initialCapacity(properties.getTopnCacheCounterCapacity())
+                .maximumSize(properties.getTopnCacheCounterCapacity())
+                .build();
+        this.cache2 = Caffeine.newBuilder()
                 .initialCapacity(properties.getTopnCacheCounterCapacity())
                 .maximumSize(properties.getTopnCacheCounterCapacity())
                 .build();
@@ -48,6 +55,12 @@ public class TopNCounter {
      * @param source source
      */
     public void update(KeyCounter counter, String source) {
+        Cache<String, Counter> cache;
+        if (backup.get()) {
+            cache = cache2;
+        } else {
+            cache = cache1;
+        }
         Counter c = cache.get(counter.getKey() + "|" + counter.getAction().getValue(), k -> new Counter(checkMillis));
         if (c == null) return;
         c.update(counter.getCount(), source);
@@ -93,8 +106,16 @@ public class TopNCounter {
     }
 
     public List<Stats> collect0() {
-        Map<String, Counter> collectMap = new HashMap<>(cache.asMap());
-        cache.invalidateAll();
+        Map<String, Counter> collectMap = new HashMap<>();
+        if (backup.get()) {
+            backup.set(false);
+            collectMap.putAll(cache2.asMap());
+            cache2.invalidateAll();
+        } else {
+            backup.set(true);
+            collectMap.putAll(cache1.asMap());
+            cache1.invalidateAll();
+        }
         List<Stats> list = new ArrayList<>();
         for (Map.Entry<String, Counter> entry : collectMap.entrySet()) {
             String uniqueKey = entry.getKey();
