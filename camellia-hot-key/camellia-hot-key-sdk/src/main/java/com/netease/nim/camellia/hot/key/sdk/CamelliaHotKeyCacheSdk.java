@@ -272,8 +272,9 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
 
     /**
      * Check if the key is hot-key.
+     *
      * @param namespace namespace
-     * @param key key
+     * @param key       key
      * @return true/false
      */
     public boolean checkKey(String namespace, String key) {

@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
+import com.netease.nim.camellia.redis.proxy.auth.IdentityInfo;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 
 import java.nio.charset.Charset;
@@ -237,11 +238,29 @@ public class Utils {
     /**
      * Get namespace by splicing bid and bgroup.
      * <p> eg. bid + "|" + bgroup
-     * @param bid bid
+     *
+     * @param bid    bid
      * @param bgroup bgroup
      * @return namespace string
      */
     public static String getNamespaceOrSetDefault(Long bid, String bgroup) {
+        if (bid == null || bgroup == null) {
+            return "default|default";
+        } else {
+            return bid + "|" + bgroup;
+        }
+    }
+
+    /**
+     * Get namespace by splicing bid and bgroup.
+     * <p> eg. bid + "|" + bgroup
+     *
+     * @param identityInfo identityInfo
+     * @return namespace string
+     */
+    public static String getNamespaceOrSetDefault(IdentityInfo identityInfo) {
+        Long bid = identityInfo.getBid();
+        String bgroup = identityInfo.getBgroup();
         if (bid == null || bgroup == null) {
             return "default|default";
         } else {
