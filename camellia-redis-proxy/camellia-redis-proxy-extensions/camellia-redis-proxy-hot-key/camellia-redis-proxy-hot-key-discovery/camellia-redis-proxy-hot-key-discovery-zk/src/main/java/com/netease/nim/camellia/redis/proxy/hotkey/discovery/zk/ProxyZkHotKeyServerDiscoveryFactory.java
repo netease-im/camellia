@@ -10,9 +10,9 @@ import com.netease.nim.camellia.redis.proxy.hotkey.common.ProxyHotKeyServerDisco
  */
 public class ProxyZkHotKeyServerDiscoveryFactory implements ProxyHotKeyServerDiscoveryFactory {
 
-    public static final String CAMELLIA_HOT_KEY_SERVER_APPLICATION_NAME = "camellia-hot-key-server";
-    public static final String CAMELLIA_HOT_KEY_BASE_PATH = "/camellia-hot-key";
-    public static final String ZK_URL = "127.0.0.1:2181";
+    private static final String CAMELLIA_HOT_KEY_SERVER_APPLICATION_NAME = "camellia-hot-key-server";
+    private static final String CAMELLIA_HOT_KEY_BASE_PATH = "/camellia-hot-key";
+    private static final String ZK_URL = "127.0.0.1:2181";
 
     @Override
     public HotKeyServerDiscovery getDiscovery() {

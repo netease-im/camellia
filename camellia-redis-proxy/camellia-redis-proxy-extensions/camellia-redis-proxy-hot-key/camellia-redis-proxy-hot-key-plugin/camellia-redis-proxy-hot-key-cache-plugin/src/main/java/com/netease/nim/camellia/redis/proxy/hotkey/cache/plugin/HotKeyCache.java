@@ -2,7 +2,9 @@ package com.netease.nim.camellia.redis.proxy.hotkey.cache.plugin;
 
 import com.netease.nim.camellia.hot.key.sdk.ICamelliaHotKeyCacheSdk;
 import com.netease.nim.camellia.redis.proxy.auth.IdentityInfo;
+import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.HotKeyCacheKeyChecker;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.HotValue;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
@@ -25,12 +27,16 @@ public class HotKeyCache {
     private final ICamelliaHotKeyCacheSdk hotKeyCacheSdk;
 
     private boolean enable;
+    private boolean cacheNull;
+
+    private final HotKeyCacheKeyChecker keyChecker;
 
     /**
      * @param identityInfo tenant identity information，bid + bgroup can represent one tenant.
      */
     public HotKeyCache(IdentityInfo identityInfo, HotKeyCacheConfig config) {
         this.identityInfo = identityInfo;
+        this.keyChecker = config.getHotKeyCacheKeyChecker();
         ProxyDynamicConf.registerCallback(this::reloadHotKeyCacheConfig);
         reloadHotKeyCacheConfig();
 
@@ -47,6 +53,9 @@ public class HotKeyCache {
      */
     public HotValue getCache(byte[] key) {
         if (!enable) {
+            return null;
+        }
+        if (keyChecker != null && !keyChecker.needCache(identityInfo, key)) {
             return null;
         }
         String namespace = Utils.getNamespaceOrSetDefault(identityInfo);
@@ -70,6 +79,9 @@ public class HotKeyCache {
         if (!enable) {
             return;
         }
+        if (keyChecker != null && !keyChecker.needCache(identityInfo, key)) {
+            return;
+        }
         String namespace = Utils.getNamespaceOrSetDefault(identityInfo);
         String keyStr = Utils.bytesToString(key);
         hotKeyCacheSdk.keyDelete(namespace, keyStr);
@@ -81,8 +93,11 @@ public class HotKeyCache {
      * @param key key
      * @return true/false
      */
-    public boolean check(byte[] key) {
+    public boolean checkHotKey(byte[] key) {
         if (!enable) {
+            return false;
+        }
+        if (keyChecker != null && !keyChecker.needCache(identityInfo, key)) {
             return false;
         }
         String namespace = Utils.getNamespaceOrSetDefault(identityInfo);
@@ -100,6 +115,12 @@ public class HotKeyCache {
         if (!enable) {
             return;
         }
+        if (value == null && !cacheNull) {
+            return;
+        }
+        if (keyChecker != null && !keyChecker.needCache(identityInfo, key)) {
+            return;
+        }
         String namespace = Utils.getNamespaceOrSetDefault(identityInfo);
         String keyStr = Utils.bytesToString(key);
         hotKeyCacheSdk.setValue(namespace, keyStr, new HotValue(value));
@@ -113,6 +134,7 @@ public class HotKeyCache {
         Long bid = identityInfo.getBid();
         String bgroup = identityInfo.getBgroup();
         this.enable = ProxyDynamicConf.getBoolean("hot.key.cache.enable", bid, bgroup, true);
+        this.cacheNull = ProxyDynamicConf.getBoolean("hot.key.cache.null", bid, bgroup, Constants.Server.hotKeyCacheNeedCacheNull);
     }
 
 }

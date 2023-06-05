@@ -11,8 +11,8 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
  * 基于Eureka的HotKeyServer发现
  */
 public class ProxyEurekaHotKeyServerDiscoveryFactory implements ProxyHotKeyServerDiscoveryFactory {
-    public static final String CAMELLIA_HOT_KEY_SERVER_APPLICATION_NAME = "camellia-hot-key-server";
-    public static final int REFRESH_INTERVAL_SECONDS = 5;
+    private static final String CAMELLIA_HOT_KEY_SERVER_APPLICATION_NAME = "camellia-hot-key-server";
+    private static final int REFRESH_INTERVAL_SECONDS = 5;
 
     @Autowired
     private DiscoveryClient discoveryClient;

@@ -8,7 +8,9 @@ import com.netease.nim.camellia.redis.proxy.hotkey.common.ProxyHotKeyServerDisco
 import com.netease.nim.camellia.redis.proxy.hotkey.common.ProxyLocalHotKeyServerDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.hotkey.common.ProxyHotKeyUtils;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
+import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.HotKeyCacheKeyChecker;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.HotValue;
+import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.PrefixMatchHotKeyCacheKeyChecker;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
@@ -23,9 +25,14 @@ public class HotKeyCachePlugin implements ProxyPlugin {
     public void init(ProxyBeanFactory factory) {
         // 默认使用本地sever
         String hotKeyCacheDiscoveryClassName = ProxyDynamicConf.getString("hot.key.server.discovery.className", ProxyLocalHotKeyServerDiscoveryFactory.class.getName());
-        ProxyHotKeyServerDiscoveryFactory discovery = (ProxyHotKeyServerDiscoveryFactory) factory.getBean(BeanInitUtils.parseClass(hotKeyCacheDiscoveryClassName));
+        ProxyHotKeyServerDiscoveryFactory discoveryFactory = (ProxyHotKeyServerDiscoveryFactory) factory.getBean(BeanInitUtils.parseClass(hotKeyCacheDiscoveryClassName));
         HotKeyCacheConfig hotKeyCacheConfig = new HotKeyCacheConfig();
-        hotKeyCacheConfig.setDiscovery(discovery.getDiscovery());
+        hotKeyCacheConfig.setDiscovery(discoveryFactory.getDiscovery());
+
+        String hotKeyCacheKeyCheckerClassName = ProxyDynamicConf.getString("hot.key.cache.key.checker.className", PrefixMatchHotKeyCacheKeyChecker.class.getName());
+        HotKeyCacheKeyChecker hotKeyCacheKeyChecker = (HotKeyCacheKeyChecker) factory.getBean(BeanInitUtils.parseClass(hotKeyCacheKeyCheckerClassName));
+        hotKeyCacheConfig.setHotKeyCacheKeyChecker(hotKeyCacheKeyChecker);
+
         hotKeyCacheManager = new HotKeyCacheManager(hotKeyCacheConfig);
     }
 
@@ -64,7 +71,7 @@ public class HotKeyCachePlugin implements ProxyPlugin {
             // 如果是del 和 set 命令，需要对cache进行去除
         } else if (redisCommand == RedisCommand.DEL) {
             tryDeleteCache(command);
-        } else if (redisCommand == RedisCommand.SET) {
+        } else if (redisCommand == RedisCommand.SET || redisCommand == RedisCommand.SETEX || redisCommand == RedisCommand.SETNX) {
             tryUpdateCache(command);
         }
         return ProxyPluginResponse.SUCCESS;
@@ -77,7 +84,7 @@ public class HotKeyCachePlugin implements ProxyPlugin {
             HotKeyCache hotKeyCache = hotKeyCacheManager.getHotKeyCache(commandContext.getBid(), commandContext.getBgroup());
             for (int i=1; i<objects.length; i++) {
                 byte[] key = objects[i];
-                if (hotKeyCache.check(key)) {
+                if (hotKeyCache.checkHotKey(key)) {
                     // 删除key
                     hotKeyCache.delCache(key);
                 }
@@ -91,7 +98,7 @@ public class HotKeyCachePlugin implements ProxyPlugin {
             CommandContext commandContext = command.getCommandContext();
             HotKeyCache hotKeyCache = hotKeyCacheManager.getHotKeyCache(commandContext.getBid(), commandContext.getBgroup());
             byte[] key = objects[1];
-            if (hotKeyCache.check(key)) {
+            if (hotKeyCache.checkHotKey(key)) {
                 // 删除key
                 hotKeyCache.delCache(key);
             }

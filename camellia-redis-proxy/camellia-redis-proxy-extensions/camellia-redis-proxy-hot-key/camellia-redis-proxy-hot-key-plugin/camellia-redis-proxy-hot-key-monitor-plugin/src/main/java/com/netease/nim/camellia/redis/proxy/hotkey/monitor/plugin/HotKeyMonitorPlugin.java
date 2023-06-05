@@ -20,9 +20,9 @@ public class HotKeyMonitorPlugin implements ProxyPlugin {
     public void init(ProxyBeanFactory factory) {
         // 默认使用本地sever
         String hotKeyDiscoveryClassName = ProxyDynamicConf.getString("hot.key.server.discovery.className", ProxyLocalHotKeyServerDiscoveryFactory.class.getName());
-        ProxyHotKeyServerDiscoveryFactory discovery = (ProxyHotKeyServerDiscoveryFactory) factory.getBean(BeanInitUtils.parseClass(hotKeyDiscoveryClassName));
+        ProxyHotKeyServerDiscoveryFactory discoveryFactory = (ProxyHotKeyServerDiscoveryFactory) factory.getBean(BeanInitUtils.parseClass(hotKeyDiscoveryClassName));
         HotKeyMonitorConfig hotKeyMonitorConfig = new HotKeyMonitorConfig();
-        hotKeyMonitorConfig.setDiscovery(discovery.getDiscovery());
+        hotKeyMonitorConfig.setDiscovery(discoveryFactory.getDiscovery());
         hotKeyManager = new HotKeyMonitorManager(hotKeyMonitorConfig);
     }
 
