@@ -62,6 +62,7 @@ public class CommandsTransponder {
         }
         try {
             boolean hasCommandsSkip = false;
+            //  任务队列
             CommandTaskQueue taskQueue = channelInfo.getCommandTaskQueue();
 
             if (logger.isDebugEnabled()) {
@@ -80,7 +81,7 @@ public class CommandsTransponder {
                 //设置channelInfo
                 command.setChannelInfo(channelInfo);
 
-                //任务队列
+                //任务
                 CommandTask task = new CommandTask(taskQueue, command, proxyPluginInitResp.getReplyPlugins());
                 boolean add = taskQueue.add(task);
                 if (!add) {

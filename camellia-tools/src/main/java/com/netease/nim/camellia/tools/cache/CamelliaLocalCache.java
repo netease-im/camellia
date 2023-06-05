@@ -236,11 +236,11 @@ public class CamelliaLocalCache {
         return value != null && value.equals(nullCache);
     }
 
-    private String buildCacheKey(String tag, Object...obj) {
+    private String buildCacheKey(String tag, Object... obj) {
         StringBuilder key = new StringBuilder(tag);
         if (obj != null) {
             key.append("|");
-            for (int i=0; i<obj.length; i++) {
+            for (int i = 0; i < obj.length; i++) {
                 if (i == obj.length - 1) {
                     key.append(obj[i]);
                 } else {
