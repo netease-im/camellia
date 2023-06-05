@@ -18,6 +18,6 @@
 		<module>camellia-redis-proxy-hbase</module>
 		<module>camellia-redis-proxy-mq</module>
 		<module>camellia-redis-proxy-nacos</module>
-        <module>camellia-redis-proxy-hotkey</module>
+        <module>camellia-redis-proxy-hot-key</module>
     </modules>
 </project>
