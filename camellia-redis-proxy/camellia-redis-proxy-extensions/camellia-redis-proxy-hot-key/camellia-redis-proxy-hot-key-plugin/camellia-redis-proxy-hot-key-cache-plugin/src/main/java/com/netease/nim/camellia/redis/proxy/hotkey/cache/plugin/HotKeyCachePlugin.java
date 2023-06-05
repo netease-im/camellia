@@ -14,7 +14,9 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 
 public class HotKeyCachePlugin implements ProxyPlugin {
-    public static final String HOT_KEY_CACHE_PLUGIN_ALIAS = "hotKeyCachePlugin";
+
+    private static final String HOT_KEY_CACHE_PLUGIN_ALIAS = "hotKeyCachePlugin";
+
     private HotKeyCacheManager hotKeyCacheManager;
 
     @Override
@@ -60,13 +62,30 @@ public class HotKeyCachePlugin implements ProxyPlugin {
                 }
             }
             // 如果是del 和 set 命令，需要对cache进行去除
-        } else if (redisCommand == RedisCommand.DEL || redisCommand == RedisCommand.SET) {
+        } else if (redisCommand == RedisCommand.DEL) {
             tryDeleteCache(command);
+        } else if (redisCommand == RedisCommand.SET) {
+            tryUpdateCache(command);
         }
         return ProxyPluginResponse.SUCCESS;
     }
 
     private void tryDeleteCache(Command command) {
+        byte[][] objects = command.getObjects();
+        if (objects.length > 1) {
+            CommandContext commandContext = command.getCommandContext();
+            HotKeyCache hotKeyCache = hotKeyCacheManager.getHotKeyCache(commandContext.getBid(), commandContext.getBgroup());
+            for (int i=1; i<objects.length; i++) {
+                byte[] key = objects[i];
+                if (hotKeyCache.check(key)) {
+                    // 删除key
+                    hotKeyCache.delCache(key);
+                }
+            }
+        }
+    }
+
+    private void tryUpdateCache(Command command) {
         byte[][] objects = command.getObjects();
         if (objects.length > 1) {
             CommandContext commandContext = command.getCommandContext();

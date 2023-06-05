@@ -12,8 +12,8 @@ import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 
 public class HotKeyMonitorPlugin implements ProxyPlugin {
 
+    private static final String HOT_KEY_PLUGIN_ALIAS = "hotKeyPlugin";
 
-    public static final String HOT_KEY_PLUGIN_ALIAS = "hotKeyPlugin";
     private HotKeyMonitorManager hotKeyManager;
 
     @Override
