@@ -28,6 +28,7 @@ public class HotKeyCache {
 
     private boolean enable;
     private boolean cacheNull;
+    private String namespace;
 
     private final HotKeyCacheKeyChecker keyChecker;
 
@@ -58,7 +59,6 @@ public class HotKeyCache {
         if (keyChecker != null && !keyChecker.needCache(identityInfo, key)) {
             return null;
         }
-        String namespace = Utils.getNamespaceOrSetDefault(identityInfo);
         String keyStr = Utils.bytesToString(key);
         HotValue hotValue = hotKeyCacheSdk.getValue(namespace, keyStr);
         if (hotValue == null) {
@@ -82,7 +82,6 @@ public class HotKeyCache {
         if (keyChecker != null && !keyChecker.needCache(identityInfo, key)) {
             return;
         }
-        String namespace = Utils.getNamespaceOrSetDefault(identityInfo);
         String keyStr = Utils.bytesToString(key);
         hotKeyCacheSdk.keyDelete(namespace, keyStr);
     }
@@ -100,7 +99,6 @@ public class HotKeyCache {
         if (keyChecker != null && !keyChecker.needCache(identityInfo, key)) {
             return false;
         }
-        String namespace = Utils.getNamespaceOrSetDefault(identityInfo);
         String keyStr = Utils.bytesToString(key);
         return hotKeyCacheSdk.checkHotKey(namespace, keyStr);
     }
@@ -121,7 +119,6 @@ public class HotKeyCache {
         if (keyChecker != null && !keyChecker.needCache(identityInfo, key)) {
             return;
         }
-        String namespace = Utils.getNamespaceOrSetDefault(identityInfo);
         String keyStr = Utils.bytesToString(key);
         hotKeyCacheSdk.setValue(namespace, keyStr, new HotValue(value));
         if (logger.isDebugEnabled()) {
@@ -135,6 +132,8 @@ public class HotKeyCache {
         String bgroup = identityInfo.getBgroup();
         this.enable = ProxyDynamicConf.getBoolean("hot.key.cache.enable", bid, bgroup, true);
         this.cacheNull = ProxyDynamicConf.getBoolean("hot.key.cache.null", bid, bgroup, Constants.Server.hotKeyCacheNeedCacheNull);
+        this.namespace = ProxyDynamicConf.getString("hot.key.server.cache.namespace",
+                identityInfo.getBid(), identityInfo.getBgroup(), Utils.getNamespaceOrSetDefault(identityInfo.getBid(), identityInfo.getBgroup()));
     }
 
 }

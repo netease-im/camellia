@@ -26,6 +26,7 @@ public class HotKeyMonitor {
     private final ICamelliaHotKeyMonitorSdk hotKeyMonitorSdk;
 
     private boolean enable;
+    private String namespace;
 
     /**
      * @param identityInfo tenant identity information，bid + bgroup can represent one tenant.
@@ -43,7 +44,6 @@ public class HotKeyMonitor {
         if (!enable) {
             return;
         }
-        String namespace = Utils.getNamespaceOrSetDefault(identityInfo);
         String keyStr = Utils.bytesToString(key);
         hotKeyMonitorSdk.push(namespace, keyStr, 1);
     }
@@ -59,6 +59,8 @@ public class HotKeyMonitor {
         Long bid = identityInfo.getBid();
         String bgroup = identityInfo.getBgroup();
         this.enable = ProxyDynamicConf.getBoolean("hot.key.monitor.enable", bid, bgroup, true);
+        this.namespace = ProxyDynamicConf.getString("hot.key.server.monitor.namespace",
+                identityInfo.getBid(), identityInfo.getBgroup(), Utils.getNamespaceOrSetDefault(identityInfo.getBid(), identityInfo.getBgroup()));
     }
 
 }
