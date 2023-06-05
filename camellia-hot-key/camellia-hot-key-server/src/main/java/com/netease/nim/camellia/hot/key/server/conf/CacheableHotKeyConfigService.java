@@ -73,7 +73,7 @@ public class CacheableHotKeyConfigService {
                     hotKeyConfigService.invokeUpdate(namespace);
                 }
             }
-            logger.info("reload HotKeyConfig success, config = {}", JSONObject.toJSONString(namespace));
+            logger.info("reload HotKeyConfig success, config = {}", JSONObject.toJSONString(hotKeyConfig));
         } catch (Exception e) {
             logger.error("reload error, namespace = {}", namespace);
         }
