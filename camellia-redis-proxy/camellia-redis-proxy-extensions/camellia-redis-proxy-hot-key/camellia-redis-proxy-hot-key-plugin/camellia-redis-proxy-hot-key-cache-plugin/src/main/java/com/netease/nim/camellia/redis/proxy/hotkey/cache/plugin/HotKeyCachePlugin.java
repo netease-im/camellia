@@ -68,36 +68,18 @@ public class HotKeyCachePlugin implements ProxyPlugin {
                     return new ProxyPluginResponse(false, bulkReply);
                 }
             }
-            // 如果是del 和 set 命令，需要对cache进行去除
-        } else if (redisCommand == RedisCommand.DEL) {
+        } else if (redisCommand == RedisCommand.DEL || redisCommand == RedisCommand.SET ||
+                redisCommand == RedisCommand.SETEX || redisCommand == RedisCommand.SETNX ||
+                redisCommand == RedisCommand.MSET || redisCommand == RedisCommand.MSETNX) {
             tryDeleteCache(command);
-        } else if (redisCommand == RedisCommand.SET || redisCommand == RedisCommand.SETEX || redisCommand == RedisCommand.SETNX) {
-            tryUpdateCache(command);
         }
         return ProxyPluginResponse.SUCCESS;
     }
 
     private void tryDeleteCache(Command command) {
-        byte[][] objects = command.getObjects();
-        if (objects.length > 1) {
-            CommandContext commandContext = command.getCommandContext();
-            HotKeyCache hotKeyCache = hotKeyCacheManager.getHotKeyCache(commandContext.getBid(), commandContext.getBgroup());
-            for (int i=1; i<objects.length; i++) {
-                byte[] key = objects[i];
-                if (hotKeyCache.checkHotKey(key)) {
-                    // 删除key
-                    hotKeyCache.delCache(key);
-                }
-            }
-        }
-    }
-
-    private void tryUpdateCache(Command command) {
-        byte[][] objects = command.getObjects();
-        if (objects.length > 1) {
-            CommandContext commandContext = command.getCommandContext();
-            HotKeyCache hotKeyCache = hotKeyCacheManager.getHotKeyCache(commandContext.getBid(), commandContext.getBgroup());
-            byte[] key = objects[1];
+        CommandContext commandContext = command.getCommandContext();
+        HotKeyCache hotKeyCache = hotKeyCacheManager.getHotKeyCache(commandContext.getBid(), commandContext.getBgroup());
+        for (byte[] key : command.getKeys()) {
             if (hotKeyCache.checkHotKey(key)) {
                 // 删除key
                 hotKeyCache.delCache(key);
