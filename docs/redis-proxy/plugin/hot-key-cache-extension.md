@@ -334,7 +334,7 @@ camellia-redis-proxy.properties:
 
 ```properties
 monitor.enable=true
-proxy.plugin.list=HotKeyMonitorPlugin
+proxy.plugin.list=com.netease.nim.camellia.redis.proxy.hotkey.cache.plugin.HotKeyCachePlugin
 
 # local hot-key-server(default)
 hot.key.monitor.enable=true
