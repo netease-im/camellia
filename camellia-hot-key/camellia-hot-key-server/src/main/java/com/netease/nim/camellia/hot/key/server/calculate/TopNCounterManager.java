@@ -11,7 +11,6 @@ import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.toolkit.lock.CamelliaRedisLock;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
-import com.netease.nim.camellia.tools.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +18,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -39,7 +37,6 @@ public class TopNCounterManager {
     private final CamelliaRedisTemplate template;
 
     private final HotKeyCallbackManager callbackManager;
-    private final ScheduledThreadPoolExecutor scheduler;
 
     public TopNCounterManager(HotKeyServerProperties properties, HotKeyCallbackManager callbackManager) {
         this.properties = properties;
@@ -53,14 +50,20 @@ public class TopNCounterManager {
         //这样不同节点的执行时间就接近了
         long nearestTime = (System.currentTimeMillis() / properties.getTopnCollectSeconds()) * properties.getTopnCollectSeconds()
                 + (properties.getTopnCollectSeconds() / 2) * 1000L;
+        //collect
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-hot-key-topn-collect"))
                 .scheduleAtFixedRate(this::scheduleCollect, nearestTime - System.currentTimeMillis(),
                         properties.getTopnCollectSeconds() * 1000L, TimeUnit.MILLISECONDS);
+        //tiny collect
+        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camella-hot-key-topn-tiny-collect"))
+                .scheduleAtFixedRate(this::tinyCollect, properties.getTopnTinyCollectSeconds(),
+                properties.getTopnTinyCollectSeconds(), TimeUnit.SECONDS);
+        //callback
         callbackScheduler = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-hot-key-topn-callback-scheduler"));
-        scheduler = new ScheduledThreadPoolExecutor(SysUtils.getCpuHalfNum(), new CamelliaThreadFactory("camella-hot-key-topn-scheduler"));
 
         TopNMonitor.register(this);
-        logger.info("TopNCounterManager init success, maxNamespace = {}, capacity = {}", properties.getMaxNamespace(), properties.getTopnCacheCounterCapacity());
+        logger.info("TopNCounterManager init success, maxNamespace = {}, capacity = {}, cacheCount = {}",
+                properties.getMaxNamespace(), properties.getTopnCacheCounterCapacity(), properties.getCacheCount());
     }
 
     /**
@@ -98,8 +101,15 @@ public class TopNCounterManager {
         return result;
     }
 
+    //tiny collect
+    private void tinyCollect() {
+        for (Map.Entry<String, TopNCounter> entry : topNCounterMap.entrySet()) {
+            entry.getValue().tinyCollect();
+        }
+    }
+
     private TopNCounter getTopNCounter(String namespace) {
-        return CamelliaMapUtils.computeIfAbsent(topNCounterMap, namespace, n -> new TopNCounter(namespace, scheduler, properties));
+        return CamelliaMapUtils.computeIfAbsent(topNCounterMap, namespace, n -> new TopNCounter(namespace, properties));
     }
 
     private void scheduleCollect() {

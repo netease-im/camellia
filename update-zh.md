@@ -10,7 +10,7 @@
 * camellia-hot-key移除了HotKeyCounterManager中Caffeine的expire策略，避免引起性能劣化
 
 ### fix
-* 无
+* camellia-hot-key-server修复`unknown seqId`报错的问题
 
 
 # 1.2.9（2023/06/02）

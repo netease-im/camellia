@@ -34,6 +34,8 @@ camellia-hot-key-server:
   ##监控（通过console-http接口暴露）
   monitor-interval-seconds: 60 #监控数据刷新间隔，默认60s
   monitor-hot-key-max-count: 20 #每个namespace最多展示几个hot-key
+  ##cache-count（每个namespace使用几个caffeine实例）
+  cache-count: 1 #默认1
 
 #topn统计依赖redis
 camellia-redis:

@@ -49,6 +49,8 @@ public class CamelliaHotKeyServerProperties {
 
     private String monitorCallbackClassName = LoggingMonitorCallback.class.getName();
 
+    private int cacheCount = HotKeyConstants.Server.cacheCount;
+
     private int monitorIntervalSeconds = HotKeyConstants.Server.monitorIntervalSeconds;
     private int monitorHotKeyMaxCount = HotKeyConstants.Server.monitorHotKeyMaxCount;
 
@@ -244,5 +246,13 @@ public class CamelliaHotKeyServerProperties {
 
     public void setMonitorCallbackClassName(String monitorCallbackClassName) {
         this.monitorCallbackClassName = monitorCallbackClassName;
+    }
+
+    public int getCacheCount() {
+        return cacheCount;
+    }
+
+    public void setCacheCount(int cacheCount) {
+        this.cacheCount = cacheCount;
     }
 }

@@ -8,12 +8,11 @@ import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 import com.netease.nim.camellia.hot.key.server.utils.TimeCache;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
+import com.netease.nim.camellia.tools.utils.MathUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -29,24 +28,32 @@ public class TopNCounter {
     private final int topN;
     private final long checkMillis = 1000;//固定为1s
     private final AtomicBoolean backup = new AtomicBoolean(false);
-    private final Cache<String, Counter> cache1;
-    private final Cache<String, Counter> cache2;
+    private final int cacheCount;
+    private final boolean is2Power;
+    private final List<Cache<String, Counter>> cache1List;
+    private final List<Cache<String, Counter>> cache2List;
     private final List<Stats> buffer;
 
-    public TopNCounter(String namespace, ScheduledThreadPoolExecutor scheduler, HotKeyServerProperties properties) {
+    public TopNCounter(String namespace, HotKeyServerProperties properties) {
         this.namespace = namespace;
         this.topN = properties.getTopnCount();
-        this.cache1 = Caffeine.newBuilder()
-                .initialCapacity(properties.getTopnCacheCounterCapacity())
-                .maximumSize(properties.getTopnCacheCounterCapacity())
-                .build();
-        this.cache2 = Caffeine.newBuilder()
-                .initialCapacity(properties.getTopnCacheCounterCapacity())
-                .maximumSize(properties.getTopnCacheCounterCapacity())
-                .build();
+        this.cache1List = new ArrayList<>();
+        this.cache2List = new ArrayList<>();
+        this.cacheCount = properties.getCacheCount();
+        this.is2Power = MathUtil.is2Power(cacheCount);
+        for (int i=0; i<cacheCount; i++) {
+            Cache<String, Counter> cache1 = Caffeine.newBuilder()
+                    .initialCapacity(properties.getTopnCacheCounterCapacity())
+                    .maximumSize(properties.getTopnCacheCounterCapacity())
+                    .build();
+            Cache<String, Counter> cache2 = Caffeine.newBuilder()
+                    .initialCapacity(properties.getTopnCacheCounterCapacity())
+                    .maximumSize(properties.getTopnCacheCounterCapacity())
+                    .build();
+            cache1List.add(cache1);
+            cache2List.add(cache2);
+        }
         this.buffer = new ArrayList<>(properties.getTopnCollectSeconds() * properties.getTopnCount());
-        scheduler.scheduleAtFixedRate(this::schedule, checkMillis * properties.getTopnTinyCollectSeconds(),
-                checkMillis * properties.getTopnTinyCollectSeconds(), TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -56,10 +63,20 @@ public class TopNCounter {
      */
     public void update(KeyCounter counter, String source) {
         Cache<String, Counter> cache;
-        if (backup.get()) {
-            cache = cache2;
+        if (cacheCount == 1) {
+            if (backup.get()) {
+                cache = cache2List.get(0);
+            } else {
+                cache = cache1List.get(0);
+            }
         } else {
-            cache = cache1;
+            int code = Math.abs(counter.getKey().hashCode());
+            int index = MathUtil.mod(is2Power, code, cacheCount);
+            if (backup.get()) {
+                cache = cache2List.get(index);
+            } else {
+                cache = cache1List.get(index);
+            }
         }
         Counter c = cache.get(counter.getKey() + "|" + counter.getAction().getValue(), k -> new Counter(checkMillis));
         if (c == null) return;
@@ -96,7 +113,7 @@ public class TopNCounter {
         return result;
     }
 
-    private synchronized void schedule() {
+    public synchronized void tinyCollect() {
         try {
             List<Stats> list = collect0();
             buffer.addAll(list);
@@ -109,12 +126,16 @@ public class TopNCounter {
         Map<String, Counter> collectMap = new HashMap<>();
         if (backup.get()) {
             backup.set(false);
-            collectMap.putAll(cache2.asMap());
-            cache2.invalidateAll();
+            for (Cache<String, Counter> cache : cache2List) {
+                collectMap.putAll(cache.asMap());
+                cache.invalidateAll();
+            }
         } else {
             backup.set(true);
-            collectMap.putAll(cache1.asMap());
-            cache1.invalidateAll();
+            for (Cache<String, Counter> cache : cache1List) {
+                collectMap.putAll(cache.asMap());
+                cache.invalidateAll();
+            }
         }
         List<Stats> list = new ArrayList<>();
         for (Map.Entry<String, Counter> entry : collectMap.entrySet()) {

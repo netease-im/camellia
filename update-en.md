@@ -9,7 +9,7 @@
 * camellia-hot-key remove the expire policy of HotKeyCounterManager Caffeine, avoid performance degradation
 
 ### fix
-* none
+* camellia-hot-key-server fix `unknown seqId` problem
 
 
 # 1.2.9（2023/06/02）

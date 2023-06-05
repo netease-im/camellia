@@ -63,6 +63,8 @@ public class HotKeyServerProperties {
     private int monitorIntervalSeconds = HotKeyConstants.Server.monitorIntervalSeconds;
     private int monitorHotKeyMaxCount = HotKeyConstants.Server.monitorHotKeyMaxCount;
 
+    private int cacheCount = HotKeyConstants.Server.cacheCount;
+
     private Map<String, String> config = new HashMap<>();
 
     private CamelliaRedisTemplate redisTemplate;
@@ -349,5 +351,13 @@ public class HotKeyServerProperties {
 
     public void setMonitorCallbackClassName(String monitorCallbackClassName) {
         this.monitorCallbackClassName = monitorCallbackClassName;
+    }
+
+    public int getCacheCount() {
+        return cacheCount;
+    }
+
+    public void setCacheCount(int cacheCount) {
+        this.cacheCount = cacheCount;
     }
 }

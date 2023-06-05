@@ -67,6 +67,8 @@ public class HotKeyConstants {
         public static final int monitorIntervalSeconds = 60;
         public static final int monitorHotKeyMaxCount = 20;
 
+        public static final int cacheCount = 1;
+
         public static int maxHotKeySourceSetSize = 1000;
     }
 

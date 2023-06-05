@@ -5,6 +5,7 @@ import com.netease.nim.camellia.hot.key.common.model.HotKey;
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPack;
 import com.netease.nim.camellia.hot.key.common.netty.pack.HotKeyCommand;
+import com.netease.nim.camellia.hot.key.common.netty.pack.HotKeyPackHeader;
 import com.netease.nim.camellia.hot.key.common.netty.pack.NotifyHotKeyConfigPack;
 import com.netease.nim.camellia.hot.key.common.netty.pack.NotifyHotKeyPack;
 import com.netease.nim.camellia.hot.key.server.conf.CacheableHotKeyConfigService;
@@ -35,13 +36,12 @@ public class HotKeyNotifyService {
      */
     public void notifyHotKeyNotifyChange(String namespace) {
         HotKeyConfig hotKeyConfig = hotKeyConfigService.get(namespace);
-        HotKeyPack pack = HotKeyPack.newPack(HotKeyCommand.NOTIFY_CONFIG, new NotifyHotKeyConfigPack(hotKeyConfig));
-
         ConcurrentHashMap<String, Boolean> map = ClientConnectHub.getInstance().getMap(namespace);
         if (map == null) return;
         for (String consid : map.keySet()) {
             ChannelInfo channelInfo = ClientConnectHub.getInstance().get(consid);
             if (channelInfo != null) {
+                HotKeyPack pack = HotKeyPack.newPack(HotKeyCommand.NOTIFY_CONFIG, new NotifyHotKeyConfigPack(hotKeyConfig));
                 CompletableFuture<HotKeyPack> future = sendPack(channelInfo, pack);
                 future.thenAccept(p -> {
                     if (p.getHeader().isEmptyBody()) {
@@ -66,7 +66,6 @@ public class HotKeyNotifyService {
      * @param hotKey hotKey
      */
     public void notifyHotKey(HotKey hotKey) {
-        HotKeyPack pack = HotKeyPack.newPack(HotKeyCommand.NOTIFY_HOTKEY, new NotifyHotKeyPack(Collections.singletonList(hotKey)));
         ConcurrentHashMap<String, Boolean> map = ClientConnectHub.getInstance().getMap(hotKey.getNamespace());
         if (map == null || map.isEmpty()) {
             return;
@@ -74,6 +73,7 @@ public class HotKeyNotifyService {
         for (String consid : map.keySet()) {
             ChannelInfo channelInfo = ClientConnectHub.getInstance().get(consid);
             if (channelInfo != null) {
+                HotKeyPack pack = HotKeyPack.newPack(HotKeyCommand.NOTIFY_HOTKEY, new NotifyHotKeyPack(Collections.singletonList(hotKey)));
                 CompletableFuture<HotKeyPack> future = sendPack(channelInfo, pack);
                 future.thenAccept(p -> {
                     if (p.getHeader().isEmptyBody()) {

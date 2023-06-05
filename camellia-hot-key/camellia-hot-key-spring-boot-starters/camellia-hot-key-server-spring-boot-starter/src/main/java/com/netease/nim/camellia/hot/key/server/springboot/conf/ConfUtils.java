@@ -51,6 +51,8 @@ public class ConfUtils {
         properties.setMonitorIntervalSeconds(serverProperties.getMonitorIntervalSeconds());
         properties.setMonitorHotKeyMaxCount(serverProperties.getMonitorHotKeyMaxCount());
 
+        properties.setCacheCount(serverProperties.getCacheCount());
+
         properties.setConfig(serverProperties.getConfig());
         return properties;
     }
