@@ -27,7 +27,7 @@ Proxy：camellia-redis-proxy.properties
 # 监控类总开关
 monitor.enable=true
 # 插件全限定名
-proxy.plugin.list=com.netease.nim.camellia.redis.proxy.hotkey.mointor.plugin.HotKeyPlugin
+proxy.plugin.list=HotKeyMonitorPlugin
 # 监控开关
 hot.key.monitor.enable=true
 
@@ -131,10 +131,10 @@ proxy配置文件-camellia-redis-proxy.properties
 hot.key.server.zk.zkUrl=192.168.88.130:2181
 hot.key.server.zk.basePath=/camellia-hot-key
 hot.key.server.zk.applicationName=camellia-hot-key-server
-hot.key.server.discovery.className=com.netease.nim.camellia.redis.proxy.hotkey.discovery.zk.ProxyZkHotKeyServerDiscovery
+hot.key.server.discovery.className=com.netease.nim.camellia.redis.proxy.hotkey.discovery.zk.ProxyZkHotKeyServerDiscoveryFactory
 ```
 
-在server和proxy，appliaction.yaml中加入zk配置
+在server和proxy，application.yaml中加入zk配置
 
 ```yaml
 camellia-hot-key-zk-registry:
@@ -167,7 +167,7 @@ proxy配置文件-camellia-redis-proxy.properties
 ```properties
 hot.key.server.eureka.applicationName=camellia-hot-key-server
 hot.key.server.eureka.refreshIntervalSeconds=5
-hot.key.server.discovery.className=com.netease.nim.camellia.redis.proxy.hotkey.discovery.eureka.ProxyEurekaHotKeyServerDiscovery
+hot.key.server.discovery.className=com.netease.nim.camellia.redis.proxy.hotkey.discovery.eureka.ProxyEurekaHotKeyServerDiscoveryFactory
 ```
 
 hot-key-server处添加依赖：
@@ -334,7 +334,7 @@ camellia-redis-proxy.properties:
 
 ```properties
 monitor.enable=true
-proxy.plugin.list=com.netease.nim.camellia.redis.proxy.hotkey.mointor.plugin.HotKeyPlugin
+proxy.plugin.list=HotKeyMonitorPlugin
 
 # local hot-key-server(default)
 hot.key.monitor.enable=true

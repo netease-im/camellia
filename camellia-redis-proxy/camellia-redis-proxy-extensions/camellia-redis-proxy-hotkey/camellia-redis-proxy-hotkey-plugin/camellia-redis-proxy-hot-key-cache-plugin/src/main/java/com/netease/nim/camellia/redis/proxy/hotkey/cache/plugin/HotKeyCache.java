@@ -51,14 +51,14 @@ public class HotKeyCache {
         }
         String namespace = Utils.getNamespaceOrSetDefault(identityInfo);
         String keyStr = Utils.bytesToString(key);
-        HotValueWrapper value = hotKeyCacheSdk.getValue(namespace, keyStr);
-        if (value == null) {
+        HotValue hotValue = hotKeyCacheSdk.getValue(namespace, keyStr);
+        if (hotValue == null) {
             return null;
         }
         if (logger.isDebugEnabled()) {
             logger.debug("getCache of hotKey = {}", key);
         }
-        return value.hotValue;
+        return hotValue;
     }
 
     /**
@@ -87,7 +87,7 @@ public class HotKeyCache {
         }
         String namespace = Utils.getNamespaceOrSetDefault(identityInfo);
         String keyStr = Utils.bytesToString(key);
-        return hotKeyCacheSdk.checkKey(namespace, keyStr);
+        return hotKeyCacheSdk.checkHotKey(namespace, keyStr);
     }
 
     /**
@@ -102,25 +102,17 @@ public class HotKeyCache {
         }
         String namespace = Utils.getNamespaceOrSetDefault(identityInfo);
         String keyStr = Utils.bytesToString(key);
-        hotKeyCacheSdk.tryBuildCache(namespace, keyStr, key1 -> new HotValueWrapper(new HotValue(value)));
+        hotKeyCacheSdk.setValue(namespace, keyStr, new HotValue(value));
         if (logger.isDebugEnabled()) {
             logger.debug("build hotKey's value success, key = {}", keyStr);
         }
     }
 
+    //更新配置
     private void reloadHotKeyCacheConfig() {
         Long bid = identityInfo.getBid();
         String bgroup = identityInfo.getBgroup();
         this.enable = ProxyDynamicConf.getBoolean("hot.key.cache.enable", bid, bgroup, true);
-    }
-
-
-    private static class HotValueWrapper {
-        private final HotValue hotValue;
-
-        public HotValueWrapper(HotValue hotValue) {
-            this.hotValue = hotValue;
-        }
     }
 
 }

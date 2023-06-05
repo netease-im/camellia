@@ -4,9 +4,9 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.hotkey.common.ProxyHotKeyServerDiscovery;
-import com.netease.nim.camellia.redis.proxy.hotkey.common.ProxyLocalHotKeyServerDiscovery;
-import com.netease.nim.camellia.redis.proxy.hotkey.common.Utils;
+import com.netease.nim.camellia.redis.proxy.hotkey.common.ProxyHotKeyServerDiscoveryFactory;
+import com.netease.nim.camellia.redis.proxy.hotkey.common.ProxyLocalHotKeyServerDiscoveryFactory;
+import com.netease.nim.camellia.redis.proxy.hotkey.common.ProxyHotKeyUtils;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.HotValue;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
@@ -20,8 +20,8 @@ public class HotKeyCachePlugin implements ProxyPlugin {
     @Override
     public void init(ProxyBeanFactory factory) {
         // 默认使用本地sever
-        String hotKeyCacheDiscoveryClassName = ProxyDynamicConf.getString("hot.key.server.discovery.className", ProxyLocalHotKeyServerDiscovery.class.getName());
-        ProxyHotKeyServerDiscovery discovery = (ProxyHotKeyServerDiscovery) factory.getBean(BeanInitUtils.parseClass(hotKeyCacheDiscoveryClassName));
+        String hotKeyCacheDiscoveryClassName = ProxyDynamicConf.getString("hot.key.server.discovery.className", ProxyLocalHotKeyServerDiscoveryFactory.class.getName());
+        ProxyHotKeyServerDiscoveryFactory discovery = (ProxyHotKeyServerDiscoveryFactory) factory.getBean(BeanInitUtils.parseClass(hotKeyCacheDiscoveryClassName));
         HotKeyCacheConfig hotKeyCacheConfig = new HotKeyCacheConfig();
         hotKeyCacheConfig.setDiscovery(discovery.getDiscovery());
         hotKeyCacheManager = new HotKeyCacheManager(hotKeyCacheConfig);
@@ -32,12 +32,12 @@ public class HotKeyCachePlugin implements ProxyPlugin {
         return new ProxyPluginOrder() {
             @Override
             public int request() {
-                return Utils.getRequestOrder(HOT_KEY_CACHE_PLUGIN_ALIAS, 10000);
+                return ProxyHotKeyUtils.getRequestOrder(HOT_KEY_CACHE_PLUGIN_ALIAS, 10000);
             }
 
             @Override
             public int reply() {
-                return Utils.getReplyOrder(HOT_KEY_CACHE_PLUGIN_ALIAS, Integer.MIN_VALUE + 10000);
+                return ProxyHotKeyUtils.getReplyOrder(HOT_KEY_CACHE_PLUGIN_ALIAS, Integer.MIN_VALUE + 10000);
             }
         };
     }
@@ -55,7 +55,6 @@ public class HotKeyCachePlugin implements ProxyPlugin {
                 byte[] key = objects[1];
                 HotValue value = hotKeyCache.getCache(key);
                 if (value != null) {
-
                     BulkReply bulkReply = new BulkReply(value.getValue());
                     return new ProxyPluginResponse(false, bulkReply);
                 }

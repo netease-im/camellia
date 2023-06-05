@@ -2,7 +2,7 @@
 
 # 1.2.10（2023/06/xx）
 ### add
-* none
+* camellia-redis-proxy support use camellia-hot-key，thanks[@21want28k](https://github.com/21want28k) provide this function
 
 ### update
 * camellia-hot-key set ConcurrentLinkedQueue as default work queue, improve performance

@@ -49,11 +49,7 @@ public interface ICamelliaHotKeyCacheSdk {
     /**
      * 获取一个key的value
      * 如果是热key，则会优先获取本地缓存中的内容，如果获取不到则返回null
-     * <p>
-     * 如果key有更新了，hot-key-server会广播给所有sdk去更新本地缓存，从而保证缓存值的时效性
-     * <p>
-     * 如果key没有更新，sdk也会在配置的expireMillis之前打一个tag，之后通过{@link #tryBuildCache(String, String, ValueLoader)}
-     * 尝试创建cache，并且消除这个tag
+     * 即使是热key，也会在expireMillis到一半时返回一个null，从而让上层进行cache更新
      *
      * @param namespace namespace
      * @param key       key
@@ -62,13 +58,14 @@ public interface ICamelliaHotKeyCacheSdk {
     <T> T getValue(String namespace, String key);
 
     /**
-     * 尝试创建本地cache
+     * 尝试设置cache
+     * 只有是hot-key才会设置成功，否则会被忽略
      *
      * @param namespace namespace
      * @param key       key
-     * @param loader    loader
+     * @param value    value
      */
-    <T> void tryBuildCache(String namespace, String key, ValueLoader<T> loader);
+    <T> void setValue(String namespace, String key, T value);
 
     /**
      * Check if the key is hot-key.
@@ -77,5 +74,5 @@ public interface ICamelliaHotKeyCacheSdk {
      * @param key       key
      * @return true/false
      */
-    boolean checkKey(String namespace, String key);
+    boolean checkHotKey(String namespace, String key);
 }

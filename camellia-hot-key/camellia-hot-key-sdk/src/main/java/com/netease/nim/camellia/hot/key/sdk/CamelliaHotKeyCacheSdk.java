@@ -101,15 +101,15 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         }
     }
 
-    public <T> void tryBuildCache(String namespace, String key, ValueLoader<T> loader) {
+    public <T> void setValue(String namespace, String key, T value) {
         // 检查规则
         Rule rule = rulePass(namespace, key);
         // 判断是不是热key
-        if (!checkKey(namespace, key)) {
+        if (!checkHotKey(namespace, key)) {
             return;
         }
         // 建立缓存
-        refresh(namespace, key, rule, loader);
+        refresh(namespace, key, rule, k -> value);
         // 释放穿透标记
         hotKeyCacheHitLockMap.evict(namespace, key);
     }
@@ -277,7 +277,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
      * @param key       key
      * @return true/false
      */
-    public boolean checkKey(String namespace, String key) {
+    public boolean checkHotKey(String namespace, String key) {
         //看看是否是热key
         Long hotKeyExpireMillis = hotKeyCacheKeyMap.get(namespace, key, Long.class);
         return hotKeyExpireMillis != null;

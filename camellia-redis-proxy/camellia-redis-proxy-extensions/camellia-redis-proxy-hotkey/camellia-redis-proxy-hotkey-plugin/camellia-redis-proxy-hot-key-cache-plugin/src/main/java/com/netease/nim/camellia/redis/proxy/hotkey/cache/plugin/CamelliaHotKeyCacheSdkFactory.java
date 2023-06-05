@@ -15,11 +15,10 @@ public class CamelliaHotKeyCacheSdkFactory {
 
     private static volatile ICamelliaHotKeyCacheSdk cacheSdk;
 
-    public static void init(HotKeyCacheConfig hotKeyCacheConfig) {
+    private static void init(HotKeyCacheConfig hotKeyCacheConfig) {
 
-        int cacheMaxCapacity = ProxyDynamicConf.getInt("hot.key.cache.max.capacity",
-                null, null, Constants.Server.hotKeyCacheMaxCapacity);
-        boolean cacheNull = ProxyDynamicConf.getBoolean("hot.key.cache.null", null, null, Constants.Server.hotKeyCacheNeedCacheNull);
+        int cacheMaxCapacity = ProxyDynamicConf.getInt("hot.key.cache.max.capacity", Constants.Server.hotKeyCacheMaxCapacity);
+        boolean cacheNull = ProxyDynamicConf.getBoolean("hot.key.cache.null", Constants.Server.hotKeyCacheNeedCacheNull);
 
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
         config.setDiscovery(hotKeyCacheConfig.getDiscovery());

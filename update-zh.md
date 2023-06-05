@@ -3,7 +3,7 @@
 
 # 1.2.10（2023/06/xx）
 ### 新增
-* 无
+* camellia-redis-proxy支持集成camellia-hot-key，感谢[@21want28k](https://github.com/21want28k) 提供该功能
 
 ### 更新
 * camellia-hot-key设置ConcurrentLinkedQueue作为默认内存队列，提高一些性能
