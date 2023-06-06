@@ -27,7 +27,7 @@ Proxy：camellia-redis-proxy.properties
 # 监控类总开关
 monitor.enable=true
 # 插件全限定名
-proxy.plugin.list=HotKeyMonitorPlugin
+proxy.plugin.list=com.netease.nim.camellia.redis.proxy.hotkey.monitor.plugin.HotKeyMonitorPlugin
 # 监控开关
 hot.key.monitor.enable=true
 
@@ -334,7 +334,7 @@ camellia-redis-proxy.properties:
 
 ```properties
 monitor.enable=true
-proxy.plugin.list=HotKeyMonitorPlugin
+proxy.plugin.list=com.netease.nim.camellia.redis.proxy.hotkey.monitor.plugin.HotKeyMonitorPlugin
 
 # local hot-key-server(default)
 hot.key.monitor.enable=true
