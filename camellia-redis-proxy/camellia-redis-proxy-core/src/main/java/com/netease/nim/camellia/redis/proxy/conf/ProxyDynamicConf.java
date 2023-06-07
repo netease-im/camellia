@@ -113,9 +113,7 @@ public class ProxyDynamicConf {
         }
     }
 
-    /**
-     * Get value from {@link ProxyDynamicConf#conf}. If value is null , this method will return defaultValue.
-     */
+    // Get value from {@link ProxyDynamicConf#conf}. If value is null , this method will return defaultValue.
     private static Integer _getInt(String key, Integer defaultValue) {
         return ConfigurationUtil.getInteger(conf, key, defaultValue);
     }
@@ -124,9 +122,6 @@ public class ProxyDynamicConf {
         return _getInt(key, defaultValue);
     }
 
-    /**
-     *
-     */
     public static int getInt(String key, Long bid, String bgroup, int defaultValue) {
         try {
             if (conf.isEmpty()) return defaultValue;

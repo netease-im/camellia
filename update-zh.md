@@ -14,6 +14,7 @@
 ### fix
 * camellia-hot-key-server修复`unknown seqId`报错的问题
 * CamelliaHotKeyCacheSdk修复namespace错误的问题，感谢[@21want28k](https://github.com/21want28k) 发现这个bug
+* camellia-redis-proxy-discovery-zk的1.2.8/1.2.9与1.2.7以及之前的低版本有不兼容的问题，1.2.10增加了兼容性的逻辑
 
 
 # 1.2.9（2023/06/02）

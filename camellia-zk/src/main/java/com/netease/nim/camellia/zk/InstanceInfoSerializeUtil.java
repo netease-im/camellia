@@ -13,7 +13,10 @@ public class InstanceInfoSerializeUtil {
     public static <T> byte[] serialize(InstanceInfo<T> instanceInfo) {
         if (instanceInfo == null) return null;
         String string = JSONObject.toJSONString(instanceInfo);
-        return string.getBytes(StandardCharsets.UTF_8);
+        JSONObject jsonObject = JSONObject.parseObject(string);
+        JSONObject instance = jsonObject.getJSONObject("instance");
+        jsonObject.put("proxy", JSONObject.parseObject(instance.toJSONString()));//为了兼容低版本的camellia-redis-proxy-discovery-zk
+        return jsonObject.toJSONString().getBytes(StandardCharsets.UTF_8);
     }
 
     public static <T> InstanceInfo<T> deserialize(byte[] data, Class<T> clazz) {
@@ -22,6 +25,9 @@ public class InstanceInfoSerializeUtil {
         InstanceInfo<T> instanceInfo = new InstanceInfo<>();
         instanceInfo.setRegisterTime(json.getLong("registerTime"));
         T instance = json.getObject("instance", clazz);
+        if (instance == null) {
+            instance = json.getObject("proxy", clazz);//为了兼容低版本的camellia-redis-proxy-discovery-zk
+        }
         instanceInfo.setInstance(instance);
         return instanceInfo;
     }
