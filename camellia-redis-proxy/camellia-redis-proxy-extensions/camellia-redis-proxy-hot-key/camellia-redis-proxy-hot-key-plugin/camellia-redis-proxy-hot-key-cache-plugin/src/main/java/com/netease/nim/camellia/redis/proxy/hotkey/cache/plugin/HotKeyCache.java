@@ -92,7 +92,7 @@ public class HotKeyCache {
      * @param key key
      * @return true/false
      */
-    public boolean checkHotKey(byte[] key) {
+    public boolean isHotKey(byte[] key) {
         if (!enable) {
             return false;
         }
@@ -100,7 +100,7 @@ public class HotKeyCache {
             return false;
         }
         String keyStr = Utils.bytesToString(key);
-        return hotKeyCacheSdk.checkHotKey(namespace, keyStr);
+        return hotKeyCacheSdk.isHotKey(namespace, keyStr);
     }
 
     /**

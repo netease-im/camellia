@@ -1,15 +1,18 @@
 [中文版](update-zh.md)
 
-# 1.2.10（2023/06/xx）
+# 1.2.10（2023/06/07）
 ### add
 * camellia-redis-proxy support use camellia-hot-key，thanks[@21want28k](https://github.com/21want28k) provide this function
+* CamelliaHotKeyCacheSdk add some new api, thanks[@21want28k](https://github.com/21want28k) provide this function
 
 ### update
 * camellia-hot-key set ConcurrentLinkedQueue as default work queue, improve performance
 * camellia-hot-key remove the expire policy of HotKeyCounterManager Caffeine, avoid performance degradation
+* camellia-hot-key-server support setting Caffeine instance count of every namespace, it will improve performance in some case
 
 ### fix
 * camellia-hot-key-server fix `unknown seqId` problem
+* CamelliaHotKeyCacheSdk fix namespace wrong，thanks[@21want28k](https://github.com/21want28k) find this bug
 
 
 # 1.2.9（2023/06/02）

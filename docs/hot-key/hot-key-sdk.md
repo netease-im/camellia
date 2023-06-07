@@ -86,6 +86,36 @@ public interface ICamelliaHotKeyCacheSdk {
      * @param key key
      */
     void keyDelete(String namespace, String key);
+
+    /**
+     * 获取一个key的value
+     * 如果是热key，则会优先获取本地缓存中的内容，如果获取不到则返回null
+     * 即使是热key，也会在expireMillis到一半时返回一个null，从而让上层进行cache更新
+     *
+     * @param namespace namespace
+     * @param key       key
+     * @return value
+     */
+    <T> T getValue(String namespace, String key);
+
+    /**
+     * 尝试设置cache
+     * 只有是hot-key才会设置成功，否则会被忽略
+     *
+     * @param namespace namespace
+     * @param key       key
+     * @param value    value
+     */
+    <T> void setValue(String namespace, String key, T value);
+
+    /**
+     * 判断一个key是否是热key，本方法的调用不会计入访问次数，只是一个单纯的查询接口
+     *
+     * @param namespace namespace
+     * @param key       key
+     * @return true/false
+     */
+    boolean isHotKey(String namespace, String key);
 }
 
 public interface ValueLoader<T> {
@@ -106,7 +136,7 @@ public interface ValueLoader<T> {
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-hot-key-sdk</artifactId>
-  <version>1.2.9</version>
+  <version>1.2.10</version>
 </dependency>
 ```
 

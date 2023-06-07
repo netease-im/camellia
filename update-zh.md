@@ -1,16 +1,19 @@
 [ENGLISH](update-en.md)
 
 
-# 1.2.10（2023/06/xx）
+# 1.2.10（2023/06/07）
 ### 新增
 * camellia-redis-proxy支持集成camellia-hot-key，感谢[@21want28k](https://github.com/21want28k) 提供该功能
+* CamelliaHotKeyCacheSdk新增几个api，感谢[@21want28k](https://github.com/21want28k) 提供该功能
 
 ### 更新
 * camellia-hot-key设置ConcurrentLinkedQueue作为默认内存队列，提高一些性能
 * camellia-hot-key移除了HotKeyCounterManager中Caffeine的expire策略，避免引起性能劣化
+* camellia-hot-key-server支持设置每个namespace下的Caffeine实例个数，从而在某些场景下突破Caffeine单实例的性能上限
 
 ### fix
 * camellia-hot-key-server修复`unknown seqId`报错的问题
+* CamelliaHotKeyCacheSdk修复namespace错误的问题，感谢[@21want28k](https://github.com/21want28k) 发现这个bug
 
 
 # 1.2.9（2023/06/02）

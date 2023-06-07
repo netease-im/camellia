@@ -4,14 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-feign-client</artifactId>
-	<version>1.2.10-SNAPSHOT</version>
+	<version>1.2.10</version>
 
 	<packaging>pom</packaging>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia</artifactId>
-		<version>1.2.10-SNAPSHOT</version>
+		<version>1.2.10</version>
 	</parent>
 
 	<modules>

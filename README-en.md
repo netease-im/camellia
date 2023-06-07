@@ -81,7 +81,7 @@ provide some simple and practical tools, like:
 [QUICK START](/docs/tools/tools.md)
 
 ## Version
-latest version is 1.2.9, have deploy to maven central repository on 2023/06/02    
+latest version is 1.2.10, have deploy to maven central repository on 2023/06/07    
 [CHANGE_LOG](/update-en.md)  
 
 ## User List

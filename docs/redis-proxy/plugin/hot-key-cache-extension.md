@@ -15,7 +15,7 @@
 <dependency>
 	<groupId>com.netease.nim</groupId>
 	<artifactId>camellia-redis-proxy-hot-key-monitor-plugin</artifactId>
-	<version>1.2.10-SNAPSHOT</version>
+	<version>1.2.10</version>
 </dependency>
 ```
 
@@ -76,7 +76,7 @@ Hot-key-server配置
 <dependency>
    <groupId>com.netease.nim</groupId>
    <artifactId>camellia-redis-proxy-hot-key-cache-plugin</artifactId>
-   <version>1.2.10-SNAPSHOT</version>
+   <version>1.2.10</version>
 </dependency>
 ```
 
@@ -123,7 +123,7 @@ camellia-redis-proxy.properties
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-proxy-zk-registry-spring-boot-starter</artifactId>
-    <version>1.2.10-SNAPSHOT</version>
+    <version>1.2.10</version>
 </dependency>
 ```
 
@@ -133,7 +133,7 @@ camellia-redis-proxy.properties
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-hot-key-server-zk-registry-spring-boot-starter</artifactId>
-    <version>1.2.10-SNAPSHOT</version>
+    <version>1.2.10</version>
 </dependency>
 ```
 
@@ -170,7 +170,7 @@ Proxy处添加依赖，代表插件的发现机制。
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-proxy-hot-key-discovery-eureka</artifactId>
-    <version>1.2.10-SNAPSHOT</version>
+    <version>1.2.10</version>
 </dependency>
 ```
 
@@ -244,7 +244,7 @@ GET: 695894.19 requests per second, p50=1.047 msec
 MSET (10 keys): 163185.39 requests per second, p50=4.135 msec
 ```
 
-#### camellia-proxy-1.2.9
+#### camellia-proxy-1.2.10
 
 proxy-config：
 
@@ -292,7 +292,7 @@ GET: 512820.50 requests per second, p50=0.855 msec
 MSET (10 keys): 184535.89 requests per second, p50=3.247 msec
 ```
 
-#### camellia-proxy-1.2.9-hot-key-built-in
+#### camellia-proxy-1.2.10-hot-key-built-in
 
 内建插件（不基于hot-key-sdk/hot-key-server）
 
@@ -338,7 +338,7 @@ GET: 424808.81 requests per second, p50=0.983 msec
 MSET (10 keys): 193498.44 requests per second, p50=3.087 msec
 ```
 
-#### camellia-proxy-1.2.9-hot-key
+#### camellia-proxy-1.2.10-hot-key
 
 基于hot-key-sdk/hot-key-server
 
@@ -458,7 +458,7 @@ GET: 361141.19 requests per second, p50=1.023 msec
 MSET (10 keys): 171939.48 requests per second, p50=3.783 msec
 ```
 
-#### camellia-proxy-1.2.9-hot-key-cache-built-in
+#### camellia-proxy-1.2.10-hot-key-cache-built-in
 
 内建插件（不基于hot-key-sdk/hot-key-server）
 
@@ -509,7 +509,7 @@ GET: 464252.53 requests per second, p50=0.935 msec
 MSET (10 keys): 206910.81 requests per second, p50=3.303 msec
 ```
 
-#### camellia-proxy-1.2.9-hot-key-cache
+#### camellia-proxy-1.2.10-hot-key-cache
 
 基于hot-key-sdk/hot-key-server
 

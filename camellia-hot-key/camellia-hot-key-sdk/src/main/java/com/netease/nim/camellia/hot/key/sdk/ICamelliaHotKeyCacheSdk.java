@@ -68,11 +68,11 @@ public interface ICamelliaHotKeyCacheSdk {
     <T> void setValue(String namespace, String key, T value);
 
     /**
-     * Check if the key is hot-key.
+     * 判断一个key是否是热key，本方法的调用不会计入访问次数，只是一个单纯的查询接口
      *
      * @param namespace namespace
      * @param key       key
      * @return true/false
      */
-    boolean checkHotKey(String namespace, String key);
+    boolean isHotKey(String namespace, String key);
 }

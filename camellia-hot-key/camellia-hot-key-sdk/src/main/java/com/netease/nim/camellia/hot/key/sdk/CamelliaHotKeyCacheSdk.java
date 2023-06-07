@@ -101,11 +101,12 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         }
     }
 
+    @Override
     public <T> void setValue(String namespace, String key, T value) {
         // 检查规则
         Rule rule = rulePass(namespace, key);
         // 判断是不是热key
-        if (!checkHotKey(namespace, key)) {
+        if (!isHotKey(namespace, key)) {
             return;
         }
         // 建立缓存
@@ -114,6 +115,7 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         hotKeyCacheHitLockMap.evict(namespace, key);
     }
 
+    @Override
     public <T> T getValue(String namespace, String key) {
         try {
             //先看看是否匹配规则
@@ -150,6 +152,83 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
             return null;
         }
     }
+
+    @Override
+    public void keyUpdate(String namespace, String key) {
+        try {
+            Rule rule = rulePass(namespace, key);
+            if (rule == null) {
+                return;
+            }
+            hotKeyCacheValueMap.evict(namespace, key);
+            sdk.push(namespace, key, KeyAction.UPDATE, 1);
+            addHotKeyListener(namespace);
+        } catch (Exception e) {
+            logger.error("keyUpdate error, namespace = {}, key = {}", namespace, key);
+        }
+    }
+
+    @Override
+    public void keyDelete(String namespace, String key) {
+        try {
+            Rule rule = rulePass(namespace, key);
+            if (rule == null) {
+                return;
+            }
+            hotKeyCacheValueMap.evict(namespace, key);
+            sdk.push(namespace, key, KeyAction.DELETE, 1);
+            addHotKeyListener(namespace);
+        } catch (Exception e) {
+            logger.error("keyDelete error, namespace = {}, key = {}", namespace, key);
+        }
+    }
+
+    @Override
+    public CamelliaHotKeyCacheSdkConfig getConfig() {
+        return config;
+    }
+
+    @Override
+    public boolean isHotKey(String namespace, String key) {
+        //看看是否是热key
+        Long hotKeyExpireMillis = hotKeyCacheKeyMap.get(namespace, key, Long.class);
+        return hotKeyExpireMillis != null;
+    }
+
+    private <T> T refresh(String namespace, String key, Rule rule, ValueLoader<T> loader) {
+        //没有缓存，直接请求底层
+        T value = loader.load(key);
+        //判断是否缓存null
+        if (!config.isCacheNull() && value == null) {
+            return null;
+        }
+        //回填到缓存中
+        hotKeyCacheValueMap.put(namespace, key, value, rule.getExpireMillis());
+        return value;
+    }
+
+
+    private void addHotKeyListener(String namespace) {
+        AtomicBoolean lock = CamelliaMapUtils.computeIfAbsent(hotKeyListenerCache, namespace, k -> new AtomicBoolean(false));
+        if (lock.get()) return;
+        if (lock.compareAndSet(false, true)) {
+            //listener 只加一次
+            sdk.addListener(namespace, (CamelliaHotKeyListener) event -> {
+                try {
+                    logger.info("receive HotKeyEvent = {}", JSONObject.toJSONString(event));
+                    KeyAction keyAction = event.getKeyAction();
+                    if (keyAction == KeyAction.QUERY) {
+                        hotKeyCacheKeyMap.put(event.getNamespace(), event.getKey(), event.getExpireMillis(), event.getExpireMillis());
+                    } else if (keyAction == KeyAction.DELETE || keyAction == KeyAction.UPDATE) {
+                        hotKeyCacheValueMap.evict(event.getNamespace(), event.getKey());
+                    }
+                } catch (Exception e) {
+                    logger.error("onHotKeyEvent error, event = {}", JSONObject.toJSONString(event), e);
+                }
+            });
+        }
+    }
+
 
     private static class Stats {
         String namespace;
@@ -201,85 +280,4 @@ public class CamelliaHotKeyCacheSdk extends CamelliaHotKeyAbstractSdk implements
         }
     }
 
-    @Override
-    public void keyUpdate(String namespace, String key) {
-        try {
-            Rule rule = rulePass(namespace, key);
-            if (rule == null) {
-                return;
-            }
-            hotKeyCacheValueMap.evict(namespace, key);
-            sdk.push(namespace, key, KeyAction.UPDATE, 1);
-            addHotKeyListener(namespace);
-        } catch (Exception e) {
-            logger.error("keyUpdate error, namespace = {}, key = {}", namespace, key);
-        }
-    }
-
-    @Override
-    public void keyDelete(String namespace, String key) {
-        try {
-            Rule rule = rulePass(namespace, key);
-            if (rule == null) {
-                return;
-            }
-            hotKeyCacheValueMap.evict(namespace, key);
-            sdk.push(namespace, key, KeyAction.DELETE, 1);
-            addHotKeyListener(namespace);
-        } catch (Exception e) {
-            logger.error("keyDelete error, namespace = {}, key = {}", namespace, key);
-        }
-    }
-
-    @Override
-    public CamelliaHotKeyCacheSdkConfig getConfig() {
-        return config;
-    }
-
-    private <T> T refresh(String namespace, String key, Rule rule, ValueLoader<T> loader) {
-        //没有缓存，直接请求底层
-        T value = loader.load(key);
-        //判断是否缓存null
-        if (!config.isCacheNull() && value == null) {
-            return null;
-        }
-        //回填到缓存中
-        hotKeyCacheValueMap.put(namespace, key, value, rule.getExpireMillis());
-        return value;
-    }
-
-
-    private void addHotKeyListener(String namespace) {
-        AtomicBoolean lock = CamelliaMapUtils.computeIfAbsent(hotKeyListenerCache, namespace, k -> new AtomicBoolean(false));
-        if (lock.get()) return;
-        if (lock.compareAndSet(false, true)) {
-            //listener 只加一次
-            sdk.addListener(namespace, (CamelliaHotKeyListener) event -> {
-                try {
-                    logger.info("receive HotKeyEvent = {}", JSONObject.toJSONString(event));
-                    KeyAction keyAction = event.getKeyAction();
-                    if (keyAction == KeyAction.QUERY) {
-                        hotKeyCacheKeyMap.put(event.getNamespace(), event.getKey(), event.getExpireMillis(), event.getExpireMillis());
-                    } else if (keyAction == KeyAction.DELETE || keyAction == KeyAction.UPDATE) {
-                        hotKeyCacheValueMap.evict(event.getNamespace(), event.getKey());
-                    }
-                } catch (Exception e) {
-                    logger.error("onHotKeyEvent error, event = {}", JSONObject.toJSONString(event), e);
-                }
-            });
-        }
-    }
-
-    /**
-     * Check if the key is hot-key.
-     *
-     * @param namespace namespace
-     * @param key       key
-     * @return true/false
-     */
-    public boolean checkHotKey(String namespace, String key) {
-        //看看是否是热key
-        Long hotKeyExpireMillis = hotKeyCacheKeyMap.get(namespace, key, Long.class);
-        return hotKeyExpireMillis != null;
-    }
 }

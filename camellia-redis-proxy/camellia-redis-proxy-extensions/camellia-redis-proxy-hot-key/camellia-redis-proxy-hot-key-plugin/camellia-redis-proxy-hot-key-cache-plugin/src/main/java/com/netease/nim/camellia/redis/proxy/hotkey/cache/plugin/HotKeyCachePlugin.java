@@ -80,7 +80,7 @@ public class HotKeyCachePlugin implements ProxyPlugin {
         CommandContext commandContext = command.getCommandContext();
         HotKeyCache hotKeyCache = hotKeyCacheManager.getHotKeyCache(commandContext.getBid(), commandContext.getBgroup());
         for (byte[] key : command.getKeys()) {
-            if (hotKeyCache.checkHotKey(key)) {
+            if (hotKeyCache.isHotKey(key)) {
                 // 删除key
                 hotKeyCache.delCache(key);
             }
