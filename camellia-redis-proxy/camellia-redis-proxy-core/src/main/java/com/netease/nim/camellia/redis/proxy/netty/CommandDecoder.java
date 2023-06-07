@@ -37,9 +37,8 @@ public class CommandDecoder extends ByteToMessageDecoder {
 
     /**
      * 根据RESP协议去解析 {@link ByteBuf}
-     * <p>Parse the ByteBuf object according RESP protocol.
-     * <p>
-     *  RESP-> <a href = "https://redis.io/docs/reference/protocol-spec/">https://redis.io/docs/reference/protocol-spec/
+     * <p> Parse the ByteBuf object according RESP protocol.
+     * <p> https://redis.io/docs/reference/protocol-spec/
      * @param ctx the {@link ChannelHandlerContext} which this {@link ByteToMessageDecoder} belongs to
      * @param in  the {@link ByteBuf} from which to read data
      * @param out the {@link List} to which decoded messages should be added

@@ -113,9 +113,9 @@ public class ChannelMonitor {
 
     /**
      * Put the channelInfo object into {@link ChannelMonitor#bidbgroupMap}. This mthod is thread-safe,
-     * @param bid
-     * @param bgroup
-     * @param channelInfo
+     * @param bid bid
+     * @param bgroup bgroup
+     * @param channelInfo channelInfo
      */
     public static void initBidBgroup(long bid, String bgroup, ChannelInfo channelInfo) {
         ExecutorUtils.submitToSingleThreadExecutor(() -> {
