@@ -13,6 +13,7 @@
 ### fix
 * camellia-hot-key-server fix `unknown seqId` problem
 * CamelliaHotKeyCacheSdk fix namespace wrong，thanks[@21want28k](https://github.com/21want28k) find this bug
+* camellia-redis-proxy-discovery-zk 1.2.8/1.2.9 has compatibility issue with 1.2.7 or earlier, 1.2.10 fix this compatibility issue
 
 
 # 1.2.9（2023/06/02）
