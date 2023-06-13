@@ -47,3 +47,8 @@ java -XX:+UseG1GC -Xms4096m -Xmx4096m -server -jar camellia-redis-proxy.jar --sp
 ```
 java -XX:+UseG1GC -XX:+UseContainerSupport -Xms4096m -Xmx4096m -server -jar camellia-redis-proxy.jar --spring.config.location=file:/xxx/xxx/application.yml
 ```
+
+如果需要使用jdk17运行proxy，则增加启动参数`--add-opens java.base/java.lang=ALL-UNNAMED`，如下：
+```
+java -XX:+UseG1GC --add-opens java.base/java.lang=ALL-UNNAMED -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher
+```
