@@ -1,6 +1,17 @@
 [ENGLISH](update-en.md)
 
 
+# 1.2.11（2023/06/xx）
+### 新增
+* 无
+
+### 更新
+* 无
+
+### fix
+* camellia-redis-proxy打印失败的command的error日志时，日志里的resource没有隐藏password
+
+
 # 1.2.10（2023/06/07）
 ### 新增
 * camellia-redis-proxy支持集成camellia-hot-key，感谢[@21want28k](https://github.com/21want28k) 提供该功能

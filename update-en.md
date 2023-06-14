@@ -1,5 +1,16 @@
 [中文版](update-zh.md)
 
+# 1.2.11（2023/06/xx）
+### add
+* none
+
+### update
+* none
+
+### fix
+* camellia-redis-proxy logging upstream failed command, the resource do not mask password
+
+
 # 1.2.10（2023/06/07）
 ### add
 * camellia-redis-proxy support use camellia-hot-key，thanks[@21want28k](https://github.com/21want28k) provide this function

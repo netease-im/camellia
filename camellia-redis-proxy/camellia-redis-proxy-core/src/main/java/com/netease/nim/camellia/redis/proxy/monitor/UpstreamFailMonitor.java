@@ -59,7 +59,7 @@ public class UpstreamFailMonitor {
                     break;
                 }
                 statsLogger.error("command failed, resource = {}, command = {}, keys = {}, error = {}",
-                        failedCommand.resource, failedCommand.command.getName(), failedCommand.command.getKeysStr(), failedCommand.error);
+                        PasswordMaskUtils.maskResource(failedCommand.resource), failedCommand.command.getName(), failedCommand.command.getKeysStr(), failedCommand.error);
             }
         } catch (Exception e) {
             logger.error("failed command schedule error", e);
