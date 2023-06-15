@@ -7,6 +7,7 @@ import org.jctools.queues.SpscArrayQueue;
 import org.jctools.queues.SpscLinkedQueue;
 import org.jctools.queues.atomic.MpmcAtomicArrayQueue;
 import org.jctools.queues.atomic.SpscAtomicArrayQueue;
+import org.jctools.queues.atomic.SpscLinkedAtomicQueue;
 
 import java.util.ArrayDeque;
 import java.util.LinkedList;
@@ -45,7 +46,6 @@ public class DefaultQueueFactory implements QueueFactory {
         }
     }
 
-
     /**
      * single-producer, single-consumer
      * @return Queue
@@ -72,6 +72,8 @@ public class DefaultQueueFactory implements QueueFactory {
             return new ArrayDeque<>(initCapacity);
         } else if (type == CommandReplyQueueType.LinkedList) {
             return new LinkedList<>();
+        } else if (type == CommandReplyQueueType.SpscLinkedAtomicQueue) {
+            return new SpscLinkedAtomicQueue<>();
         } else {
             return new LinkedBlockingQueue<>(capacity);
         }
