@@ -3,7 +3,7 @@
 
 # 1.2.11（2023/06/xx）
 ### 新增
-* 无
+* camellia-tools新增CamelliaSegmentStatistics工具类
 
 ### 更新
 * camellia-redis-proxy使用ConcurrentLinkedQueue代替LinkedBlockingQueue作为command-task-queue的默认队列实现

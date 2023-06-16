@@ -2,7 +2,7 @@
 
 # 1.2.11（2023/06/xx）
 ### add
-* none
+* camellia-tools add CamelliaSegmentStatistics tools
 
 ### update
 * camellia-redis-proxy use ConcurrentLinkedQueue instead of LinkedBlockingQueue as the default queue impl of command-task-queue
