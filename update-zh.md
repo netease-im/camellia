@@ -6,8 +6,7 @@
 * camellia-tools新增CamelliaSegmentStatistics工具类
 
 ### 更新
-* camellia-redis-proxy使用ConcurrentLinkedQueue代替LinkedBlockingQueue作为command-task-queue的默认队列实现
-* camellia-redis-proxy使用SpscLinkedQueue代替LinkedBlockingQueue作为reply-queue的默认队列实现
+* 无
 
 ### fix
 * camellia-redis-proxy打印失败的command的error日志时，日志里的resource没有隐藏password

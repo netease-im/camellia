@@ -28,7 +28,7 @@ public class DefaultQueueFactory implements QueueFactory {
      */
     @Override
     public Queue<CommandTask> generateCommandTaskQueue() {
-        String queue = ProxyDynamicConf.getString("command.task.queue.type", CommandTaskQueueType.ConcurrentLinkedQueue.name());
+        String queue = ProxyDynamicConf.getString("command.task.queue.type", CommandTaskQueueType.LinkedBlockingQueue.name());
         CommandTaskQueueType type = CommandTaskQueueType.getByName(queue);
         int capacity = ProxyDynamicConf.getInt("command.task.queue.capacity", 1024*32);
         if (type == CommandTaskQueueType.ConcurrentLinkedQueue) {
@@ -52,7 +52,7 @@ public class DefaultQueueFactory implements QueueFactory {
      */
     @Override
     public Queue<CompletableFuture<Reply>> generateCommandReplyQueue() {
-        String queue = ProxyDynamicConf.getString("command.reply.queue.type", CommandReplyQueueType.SpscLinkedQueue.name());
+        String queue = ProxyDynamicConf.getString("command.reply.queue.type", CommandReplyQueueType.LinkedBlockingQueue.name());
         int capacity = ProxyDynamicConf.getInt("command.reply.queue.capacity", 1024*32);
         CommandReplyQueueType type = CommandReplyQueueType.getByName(queue);
         if (type == CommandReplyQueueType.SpscLinkedQueue) {

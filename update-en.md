@@ -5,8 +5,7 @@
 * camellia-tools add CamelliaSegmentStatistics tools
 
 ### update
-* camellia-redis-proxy use ConcurrentLinkedQueue instead of LinkedBlockingQueue as the default queue impl of command-task-queue
-* camellia-redis-proxy use SpscLinkedQueue instead of LinkedBlockingQueue as the default queue impl of reply-queue
+* none
 
 ### fix
 * camellia-redis-proxy logging upstream failed command, the resource do not mask password
