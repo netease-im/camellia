@@ -19,14 +19,14 @@
 |        proxy         |   版本   |                                                                               结果                                                                               |
 |:--------------------:|:------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------:|
 |       直连redis        |  7.0   | GET: 101347.93 requests per second, p50=0.967 msec<br>GET: 112183.09 requests per second, p50=0.863 msec<br>GET: 113160.58 requests per second, p50=0.863 msec |
-| camellia-redis-proxy | 1.2.10 |  GET: 85440.88 requests per second, p50=0.967 msec<br>GET: 90481.36 requests per second, p50=1.127 msec<br>GET: 106258.63 requests per second, p50=0.959 msec  |
+| camellia-redis-proxy | 1.2.10 |  GET: 85041.25 requests per second, p50=1.023 msec<br>GET: 104931.80 requests per second, p50=0.967 msec<br>GET: 96702.45 requests per second, p50=0.991 msec  |
 |      twemproxy       | 0.5.0  |  GET: 99453.01 requests per second, p50=1.575 msec<br>GET: 92055.60 requests per second, p50=1.431 msec<br>GET: 107169.65 requests per second, p50=1.575 msec  |
 |       predixy        | 1.0.5  | GET: 102427.54 requests per second, p50=0.943 msec<br>GET: 105174.59 requests per second, p50=0.911 msec<br>GET: 102490.52 requests per second, p50=0.935 msec |
 |       overlord       | 1.9.4  |  GET: 85157.12 requests per second, p50=1.119 msec<br>GET: 71352.12 requests per second, p50=1.199 msec<br>GET: 85142.62 requests per second, p50=1.023 msec   |
 
 * camellia-redis-proxy配置：
 ```
-./jdk-17.0.2/bin/java -XX:+UseG1GC --add-opens java.base/java.lang=ALL-UNNAMED -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher
+./jdk-17.0.2/bin/java -XX:+UseG1GC --add-opens java.base/java.lang=ALL-UNNAMED -Xms2048m -Xmx2048m -server org.springframework.boot.loader.JarLauncher
 ```
 ```yml
 server:
