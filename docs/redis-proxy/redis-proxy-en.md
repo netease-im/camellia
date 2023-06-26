@@ -510,6 +510,4 @@ public class Test {
 ```
 
 ### performance report
-[v1.0.37](performance/performance-report.md)   
-[performance-redis-standalone](performance/performance-redis-standalone.md)  
-[performance-redis-cluster](performance/performance-redis-cluster.md)  
+[v1.2.10](performance/performance.md)   
