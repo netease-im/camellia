@@ -21,7 +21,7 @@
 |       直连redis        |  7.0   | GET: 101347.93 requests per second, p50=0.967 msec<br>GET: 112183.09 requests per second, p50=0.863 msec<br>GET: 113160.58 requests per second, p50=0.863 msec |
 | camellia-redis-proxy | 1.2.10 |  GET: 85440.88 requests per second, p50=0.967 msec<br>GET: 90481.36 requests per second, p50=1.127 msec<br>GET: 106258.63 requests per second, p50=0.959 msec  |
 |      twemproxy       | 0.5.0  |  GET: 99453.01 requests per second, p50=1.575 msec<br>GET: 92055.60 requests per second, p50=1.431 msec<br>GET: 107169.65 requests per second, p50=1.575 msec  |
-|       predixy        | 1.0.5  | GET: 109865.96 requests per second, p50=0.895 msec<br>GET: 102124.19 requests per second, p50=1.055 msec<br>GET: 105207.78 requests per second, p50=0.935 msec |
+|       predixy        | 1.0.5  | GET: 102427.54 requests per second, p50=0.943 msec<br>GET: 105174.59 requests per second, p50=0.911 msec<br>GET: 102490.52 requests per second, p50=0.935 msec |
 |       overlord       | 1.9.4  |  GET: 85157.12 requests per second, p50=1.119 msec<br>GET: 71352.12 requests per second, p50=1.199 msec<br>GET: 85142.62 requests per second, p50=1.023 msec   |
 
 * camellia-redis-proxy配置：
@@ -70,7 +70,7 @@ Name PredixyExample
 Bind 0.0.0.0:6382
 
 ## Worker threads
-WorkerThreads 1
+WorkerThreads 4
 
 ClientTimeout 300
 
