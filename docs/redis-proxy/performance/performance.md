@@ -66,7 +66,7 @@
 * proxy压测脚本：`redis-benchmark -n 1000000 -r 10000 -c 200 -t get -q -p 639x`
 * redis-cluster压测脚本：`redis-benchmark -n 1000000 -r 10000 -c 200 -t get -q -p 6601 -h 10.189.31.13 --cluster`
 * 连续跑3次
-* 各proxy配置见：[config1](config2.md)
+* 各proxy配置见：[config2](config2.md)
 
 |        proxy         |    版本     |                     结果                      |
 |:--------------------:|:---------:|:-------------------------------------------:|
