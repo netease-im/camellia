@@ -51,7 +51,7 @@
 
 |        proxy         |   版本   |                     结果                     |
 |:--------------------:|:------:|:------------------------------------------:|
-|       直连redis        |  7.0   | <img src="1.jpg" width="60%" height="60%"> |
+|       直连redis        | 7.0.11 | <img src="1.jpg" width="60%" height="60%"> |
 | camellia-redis-proxy | 1.2.10 | <img src="2.jpg" width="60%" height="60%"> |
 |      twemproxy       | 0.5.0  | <img src="3.jpg" width="60%" height="60%"> |
 |       predixy        | 1.0.5  | <img src="4.jpg" width="60%" height="60%"> |
@@ -70,7 +70,7 @@
 
 |        proxy         |    版本     |                     结果                      |
 |:--------------------:|:---------:|:-------------------------------------------:|
-|   直连redis-cluster    |    7.0    | <img src="11.jpg" width="60%" height="60%"> |
+|   直连redis-cluster    |   4.0.9   | <img src="11.jpg" width="60%" height="60%"> |
 | camellia-redis-proxy |  1.2.10   | <img src="22.jpg" width="60%" height="60%"> |
 | redis-cluster-proxy  | 1.0-beta2 | <img src="33.jpg" width="60%" height="60%"> |
 |       predixy        |   1.0.5   | <img src="44.jpg" width="60%" height="60%"> |
