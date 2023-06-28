@@ -4,6 +4,7 @@
 # 1.2.11（2023/06/xx）
 ### 新增
 * camellia-tools新增CamelliaSegmentStatistics工具类
+* camellia-cache新增一个全局总开关
 
 ### 更新
 * 无

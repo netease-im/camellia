@@ -33,6 +33,7 @@ public class CamelliaCache implements Cache {
 
     @Override
     public ValueWrapper get(Object key) {
+        if (!CamelliaCacheEnv.enable) return null;
         String cachePrefix = getCachePrefix();
         return _get(cachePrefix, key);
     }
@@ -56,6 +57,7 @@ public class CamelliaCache implements Cache {
 
     @Override
     public <T> T get(Object key, Class<T> type) {
+        if (!CamelliaCacheEnv.enable) return null;
         String cachePrefix = getCachePrefix();
         if (isMultiGetActive(key)) {
             return multiGet(cachePrefix, key);
@@ -77,6 +79,7 @@ public class CamelliaCache implements Cache {
 
     @Override
     public void evict(Object key) {
+        if (!CamelliaCacheEnv.enable) return;
         String cachePrefix = getCachePrefix();
         if (isMultiEvictActive(key)) {
             multiEvict(cachePrefix, key);
@@ -91,6 +94,7 @@ public class CamelliaCache implements Cache {
 
     @Override
     public void put(Object key, Object value) {
+        if (!CamelliaCacheEnv.enable) return;
         String cachePrefix = getCachePrefix();
         _put(cachePrefix, key, value);
     }
@@ -141,6 +145,14 @@ public class CamelliaCache implements Cache {
 
     @Override
     public <T> T get(Object key, Callable<T> valueLoader) {
+        if (!CamelliaCacheEnv.enable) {
+            try {
+                return valueLoader.call();
+            } catch (Exception e1) {
+                logger.error("valueLoader call error", e1);
+                throw new CamelliaCacheException(e1);
+            }
+        }
         String cachePrefix = getCachePrefix();
         try {
             ValueWrapper value = _get(cachePrefix, key);
@@ -487,6 +499,7 @@ public class CamelliaCache implements Cache {
 
     @Override
     public ValueWrapper putIfAbsent(Object key, Object value) {
+        if (!CamelliaCacheEnv.enable) return null;
         String cachePrefix = getCachePrefix();
         ValueWrapper wrapper = _get(cachePrefix, key);
         if (wrapper == null) {

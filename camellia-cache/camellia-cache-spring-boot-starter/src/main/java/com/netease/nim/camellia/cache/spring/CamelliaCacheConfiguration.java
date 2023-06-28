@@ -64,12 +64,14 @@ public class CamelliaCacheConfiguration extends CachingConfigurerSupport {
     @ConditionalOnMissingBean(value = CacheManager.class)
     public CacheManager camelliaCacheManager(CamelliaCacheProperties camelliaCacheProperties) {
         CamelliaCacheManager camelliaCacheManager = new CamelliaCacheManager();
+        CamelliaCacheEnv.enable = camelliaCacheProperties.isEnable();
         CamelliaCacheEnv.multiOpBatchSize = camelliaCacheProperties.getMultiOpBatchSize();
         CamelliaCacheEnv.syncLoadExpireMillis = camelliaCacheProperties.getSyncLoadExpireMillis();
         CamelliaCacheEnv.syncLoadMaxRetry = camelliaCacheProperties.getSyncLoadMaxRetry();
         CamelliaCacheEnv.syncLoadSleepMillis = camelliaCacheProperties.getSyncLoadSleepMillis();
         CamelliaCacheEnv.maxCacheValue = camelliaCacheProperties.getMaxCacheValue();
         CamelliaCacheEnv.serializerErrorLogEnable = camelliaCacheProperties.isSerializerErrorLogEnable();
+        logger.info("camellia-cache, enable = {}", CamelliaCacheEnv.enable);
         logger.info("camellia-cache, multiOpBatchSize = {}", CamelliaCacheEnv.multiOpBatchSize);
         logger.info("camellia-cache, syncLoadExpireMillis = {}", CamelliaCacheEnv.syncLoadExpireMillis);
         logger.info("camellia-cache, syncLoadMaxRetry = {}", CamelliaCacheEnv.syncLoadMaxRetry);

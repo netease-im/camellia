@@ -4,6 +4,8 @@ package com.netease.nim.camellia.cache.core;
 
 public class CamelliaCacheEnv {
 
+    //总开关，如果设置为false，则所有缓存操作都会skip
+    public static boolean enable = true;
     //批量操作时，每批次的上限
     public static int multiOpBatchSize = 500;
     //避免缓存穿透时并发操作的锁的过期时间

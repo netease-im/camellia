@@ -3,6 +3,7 @@
 # 1.2.11（2023/06/xx）
 ### add
 * camellia-tools add CamelliaSegmentStatistics tools
+* camellia-cache add a global on-off config
 
 ### update
 * none

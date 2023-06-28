@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "camellia-cache")
 public class CamelliaCacheProperties {
 
+    private boolean enable = true;
     private int multiOpBatchSize = CamelliaCacheEnv.multiOpBatchSize;
     private long syncLoadExpireMillis = CamelliaCacheEnv.syncLoadExpireMillis;
     private int syncLoadMaxRetry = CamelliaCacheEnv.syncLoadMaxRetry;
@@ -37,6 +38,14 @@ public class CamelliaCacheProperties {
         public void setMaxCapacity(int maxCapacity) {
             this.maxCapacity = maxCapacity;
         }
+    }
+
+    public boolean isEnable() {
+        return enable;
+    }
+
+    public void setEnable(boolean enable) {
+        this.enable = enable;
     }
 
     public Local getLocal() {
