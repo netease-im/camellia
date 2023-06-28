@@ -5,7 +5,6 @@ import com.netease.nim.camellia.hot.key.common.model.HotKey;
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPack;
 import com.netease.nim.camellia.hot.key.common.netty.pack.HotKeyCommand;
-import com.netease.nim.camellia.hot.key.common.netty.pack.HotKeyPackHeader;
 import com.netease.nim.camellia.hot.key.common.netty.pack.NotifyHotKeyConfigPack;
 import com.netease.nim.camellia.hot.key.common.netty.pack.NotifyHotKeyPack;
 import com.netease.nim.camellia.hot.key.server.conf.CacheableHotKeyConfigService;
