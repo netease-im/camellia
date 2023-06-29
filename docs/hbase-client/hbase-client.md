@@ -12,10 +12,19 @@
 * 需要进行hbase双写迁移  
 
 ## maven依赖
+* spring-boot-starter（spring自动注入CamelliaHBaseTemplate对象）
 ```
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-hbase-spring-boot-starter</artifactId>
+  <version>a.b.c</version>
+</dependency>
+```
+* 直接使用（需要你自己new一个CamelliaHBaseTemplate对象）
+```
+<dependency>
+  <groupId>com.netease.nim</groupId>
+  <artifactId>camellia-hbase</artifactId>
   <version>a.b.c</version>
 </dependency>
 ```
