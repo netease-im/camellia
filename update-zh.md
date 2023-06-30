@@ -8,6 +8,7 @@
 * 新增camellia-http-console模块，一个简单的http-server
 * camellia-redis-proxy使用camellia-http-console代替原来的console实现
 * camellia-hot-key-server使用camellia-http-console代替原来的console实现
+* CamelliaRedisTemplate支持设置自定义RedisInterceptor，从而可以方便的接入CamelliaHotKeyMonitorSdk
 
 ### 更新
 * 无

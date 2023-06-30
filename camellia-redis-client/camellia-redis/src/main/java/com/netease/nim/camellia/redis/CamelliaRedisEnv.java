@@ -2,11 +2,14 @@ package com.netease.nim.camellia.redis;
 
 
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
+import com.netease.nim.camellia.redis.intercept.RedisInterceptor;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.redis.conf.CamelliaRedisConstants;
 import com.netease.nim.camellia.redis.jedis.JedisPoolFactory;
 import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -35,13 +38,15 @@ public class CamelliaRedisEnv {
 
     private ProxyEnv proxyEnv = ProxyEnv.defaultProxyEnv();
 
+    private List<RedisInterceptor> interceptorList = new ArrayList<>();
+
     private CamelliaRedisEnv() {
         initExec();
     }
 
     private CamelliaRedisEnv(JedisPoolFactory jedisPoolFactory, JedisClusterFactory jedisClusterFactory,
                              int concurrentExecPoolSize, int pipelinePoolSize, boolean pipelineConcurrentEnable,
-                             int pipelineMaxAttempts, ProxyEnv proxyEnv) {
+                             int pipelineMaxAttempts, ProxyEnv proxyEnv, List<RedisInterceptor> interceptorList) {
         this.jedisPoolFactory = jedisPoolFactory;
         this.jedisClusterFactory = jedisClusterFactory;
         this.concurrentExecPoolSize = concurrentExecPoolSize;
@@ -51,6 +56,7 @@ public class CamelliaRedisEnv {
         if (proxyEnv != null) {
             this.proxyEnv = proxyEnv;
         }
+        this.interceptorList = interceptorList;
         initExec();
     }
 
@@ -91,6 +97,10 @@ public class CamelliaRedisEnv {
         return proxyEnv;
     }
 
+    public List<RedisInterceptor> getInterceptorList() {
+        return interceptorList;
+    }
+
     public static class Builder {
         private final CamelliaRedisEnv redisEnv;
         public Builder() {
@@ -99,7 +109,8 @@ public class CamelliaRedisEnv {
 
         public Builder(CamelliaRedisEnv redisEnv) {
             this.redisEnv = new CamelliaRedisEnv(redisEnv.jedisPoolFactory, redisEnv.jedisClusterFactory,
-                    redisEnv.concurrentExecPoolSize, redisEnv.pipelinePoolSize, redisEnv.pipelineConcurrentEnable, redisEnv.pipelineMaxAttempts, redisEnv.proxyEnv);
+                    redisEnv.concurrentExecPoolSize, redisEnv.pipelinePoolSize, redisEnv.pipelineConcurrentEnable,
+                    redisEnv.pipelineMaxAttempts, redisEnv.proxyEnv, redisEnv.interceptorList);
             this.redisEnv.concurrentExec = redisEnv.concurrentExec;
         }
 
@@ -141,6 +152,11 @@ public class CamelliaRedisEnv {
             if (proxyEnv != null) {
                 redisEnv.proxyEnv = proxyEnv;
             }
+            return this;
+        }
+
+        public Builder addInterceptor(RedisInterceptor interceptor) {
+            redisEnv.interceptorList.add(interceptor);
             return this;
         }
 

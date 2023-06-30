@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.resource;
 
 
 import com.netease.nim.camellia.core.model.Resource;
+import com.netease.nim.camellia.redis.CamelliaRedisEnv;
 import com.netease.nim.camellia.redis.pipeline.RedisClientPool;
 import com.netease.nim.camellia.redis.pipeline.ResponseQueable;
 
@@ -14,6 +15,8 @@ public class PipelineResource extends Resource {
     private RedisClientPool clientPool;
     private ResponseQueable queable;
     private final Resource resource;
+
+    private CamelliaRedisEnv redisEnv;
 
     public PipelineResource(Resource resource) {
         this.resource = resource;
@@ -41,5 +44,13 @@ public class PipelineResource extends Resource {
 
     public void setQueable(ResponseQueable queable) {
         this.queable = queable;
+    }
+
+    public CamelliaRedisEnv getRedisEnv() {
+        return redisEnv;
+    }
+
+    public void setRedisEnv(CamelliaRedisEnv redisEnv) {
+        this.redisEnv = redisEnv;
     }
 }

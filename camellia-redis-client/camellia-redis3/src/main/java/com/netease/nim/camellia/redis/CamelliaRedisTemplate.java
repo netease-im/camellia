@@ -189,6 +189,7 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
             PipelineResource pipelineResource = new PipelineResource(resource);
             pipelineResource.setQueable(queable);
             pipelineResource.setClientPool(redisClientPool);
+            pipelineResource.setRedisEnv(env);
             return pipelineResource;
         });
         ProxyEnv env = factory.getEnv();
