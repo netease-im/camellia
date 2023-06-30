@@ -41,10 +41,7 @@ public class CamelliaHttpConsoleServerHandler extends SimpleChannelInboundHandle
             executor.submit(string, () -> {
                 try {
                     QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.uri());
-                    String uri = queryStringDecoder.uri();
-                    if (uri.contains("?")) {
-                        uri = uri.split("\\?")[0];
-                    }
+                    String uri = queryStringDecoder.path();
                     ConsoleApiInvoker invoker = invokerMap.get(uri);
                     FullHttpResponse response;
                     if (invoker == null) {
