@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.console;
 
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.http.console.ConsoleResult;
 import com.netease.nim.camellia.redis.proxy.cluster.ClusterModeStatus;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.info.UpstreamInfoUtils;

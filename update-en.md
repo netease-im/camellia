@@ -4,6 +4,9 @@
 ### add
 * camellia-tools add CamelliaSegmentStatistics tools
 * camellia-cache add a global on-off config
+* provide camellia-http-console module, a simple http-server based on netty
+* camellia-redis-proxy use camellia-http-console
+* camellia-hot-key-server use camellia-http-console
 
 ### update
 * none

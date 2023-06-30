@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.console;
+package com.netease.nim.camellia.http.console;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 

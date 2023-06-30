@@ -33,6 +33,11 @@
 			<artifactId>camellia-redis-toolkit</artifactId>
 			<version>1.2.11-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-http-console</artifactId>
+			<version>1.2.11-SNAPSHOT</version>
+		</dependency>
     </dependencies>
 	<build>
 		<plugins>

@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.samples;
 
-import com.netease.nim.camellia.redis.proxy.console.ConsoleResult;
+import com.netease.nim.camellia.http.console.ConsoleResult;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleServiceAdaptor;
 import com.netease.nim.camellia.redis.proxy.hbase.monitor.RedisHBaseMonitor;
 import org.springframework.stereotype.Component;

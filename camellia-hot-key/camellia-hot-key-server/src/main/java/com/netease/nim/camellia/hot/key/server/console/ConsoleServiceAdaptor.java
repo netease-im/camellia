@@ -4,6 +4,8 @@ import com.netease.nim.camellia.hot.key.server.calculate.TopNStatsResult;
 import com.netease.nim.camellia.hot.key.server.conf.ConfReloadHolder;
 import com.netease.nim.camellia.hot.key.server.monitor.*;
 import com.netease.nim.camellia.hot.key.server.netty.ServerStatus;
+import com.netease.nim.camellia.http.console.ConsoleResult;
+import com.netease.nim.camellia.http.console.ConsoleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +70,16 @@ public class ConsoleServiceAdaptor implements ConsoleService {
     }
 
     @Override
-    public ConsoleResult topN(String namespace, Integer backtrack) {
+    public ConsoleResult topN(Map<String, List<String>> params) {
+        String namespace = ConsoleUtils.getParam(params, "namespace");
+        if (namespace == null) {
+            return ConsoleResult.error("missing namespace");
+        }
+        Integer backtrack = null;
+        String backtrackStr = ConsoleUtils.getParam(params, "backtrack");
+        if (backtrackStr != null) {
+            backtrack = Integer.parseInt(backtrackStr);
+        }
         TopNStatsResult result = TopNMonitor.getTopNStatsResult(namespace, backtrack);
         if (result == null) {
             return ConsoleResult.error();

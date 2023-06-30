@@ -3,30 +3,20 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-redis-proxy-core</artifactId>
+	<artifactId>camellia-http-console</artifactId>
 	<version>1.2.11-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia-redis-proxy</artifactId>
+		<artifactId>camellia</artifactId>
 		<version>1.2.11-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
-			<groupId>org.jctools</groupId>
-			<artifactId>jctools-core</artifactId>
-			<version>${jctools.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
 			<version>${netty.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.netty.incubator</groupId>
-			<artifactId>netty-incubator-transport-native-io_uring</artifactId>
-			<version>${netty-incubator-transport-native-io_uring.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -35,20 +25,10 @@
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-base</artifactId>
+			<artifactId>camellia-tools</artifactId>
 			<version>1.2.11-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>com.googlecode.concurrentlinkedhashmap</groupId>
-			<artifactId>concurrentlinkedhashmap-lru</artifactId>
-			<version>${concurrentlinkedhashmap.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-http-console</artifactId>
-			<version>1.2.11-SNAPSHOT</version>
-		</dependency>
-    </dependencies>
+	</dependencies>
 	<build>
 		<plugins>
 			<plugin>

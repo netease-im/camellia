@@ -2,11 +2,12 @@ package com.netease.nim.camellia.redis.proxy.util;
 
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
+import com.netease.nim.camellia.http.console.CamelliaHttpConsoleConfig;
+import com.netease.nim.camellia.http.console.CamelliaHttpConsoleServer;
 import com.netease.nim.camellia.redis.proxy.command.CommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
-import com.netease.nim.camellia.redis.proxy.console.ConsoleServer;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleService;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleServiceAdaptor;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
@@ -62,8 +63,12 @@ public class CamelliaRedisProxyStarter {
                 server.start();
                 logger.info("CamelliaRedisProxyServer start success");
                 if (consolePort != 0 && consoleService != null) {
-                    ConsoleServer consoleServer = new ConsoleServer(consolePort, consoleService);
+                    CamelliaHttpConsoleConfig config = new CamelliaHttpConsoleConfig();
+                    config.setPort(consolePort);
+                    config.setConsoleService(consoleService);
+                    CamelliaHttpConsoleServer consoleServer = new CamelliaHttpConsoleServer(config);
                     consoleServer.start();
+                    GlobalRedisProxyEnv.setConsolePort(config.getPort());
                 }
                 startOk.set(true);
             } catch (Throwable e) {

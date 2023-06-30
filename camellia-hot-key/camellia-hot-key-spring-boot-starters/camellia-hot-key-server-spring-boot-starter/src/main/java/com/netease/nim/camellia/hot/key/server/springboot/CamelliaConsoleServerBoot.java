@@ -1,8 +1,9 @@
 package com.netease.nim.camellia.hot.key.server.springboot;
 
-import com.netease.nim.camellia.hot.key.server.console.ConsoleServer;
 import com.netease.nim.camellia.hot.key.server.console.ConsoleService;
 import com.netease.nim.camellia.hot.key.server.springboot.conf.CamelliaHotKeyServerProperties;
+import com.netease.nim.camellia.http.console.CamelliaHttpConsoleConfig;
+import com.netease.nim.camellia.http.console.CamelliaHttpConsoleServer;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
@@ -21,7 +22,10 @@ public class CamelliaConsoleServerBoot {
 
     @PostConstruct
     public void init() throws Exception {
-        ConsoleServer consoleServer = new ConsoleServer(properties.getConsolePort(), consoleService);
+        CamelliaHttpConsoleConfig config = new CamelliaHttpConsoleConfig();
+        config.setPort(properties.getConsolePort());
+        config.setConsoleService(consoleService);
+        CamelliaHttpConsoleServer consoleServer = new CamelliaHttpConsoleServer(config);
         consoleServer.start();
     }
 }

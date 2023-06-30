@@ -1,7 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.springboot;
 
-import com.netease.nim.camellia.redis.proxy.console.ConsoleServer;
+import com.netease.nim.camellia.http.console.CamelliaHttpConsoleConfig;
+import com.netease.nim.camellia.http.console.CamelliaHttpConsoleServer;
 import com.netease.nim.camellia.redis.proxy.console.ConsoleService;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -21,7 +23,11 @@ public class CamelliaConsoleServerBoot {
 
     @PostConstruct
     public void init() throws Exception {
-        ConsoleServer consoleServer = new ConsoleServer(properties.getConsolePort(), consoleService);
+        CamelliaHttpConsoleConfig config = new CamelliaHttpConsoleConfig();
+        config.setPort(properties.getConsolePort());
+        config.setConsoleService(consoleService);
+        CamelliaHttpConsoleServer consoleServer = new CamelliaHttpConsoleServer(config);
         consoleServer.start();
+        GlobalRedisProxyEnv.setConsolePort(config.getPort());
     }
 }

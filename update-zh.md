@@ -5,6 +5,9 @@
 ### 新增
 * camellia-tools新增CamelliaSegmentStatistics工具类
 * camellia-cache新增一个全局总开关
+* 新增camellia-http-console模块，一个简单的http-server
+* camellia-redis-proxy使用camellia-http-console代替原来的console实现
+* camellia-hot-key-server使用camellia-http-console代替原来的console实现
 
 ### 更新
 * 无
