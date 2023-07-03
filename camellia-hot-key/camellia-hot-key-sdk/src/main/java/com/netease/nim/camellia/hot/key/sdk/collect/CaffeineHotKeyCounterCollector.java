@@ -16,19 +16,20 @@ import java.util.concurrent.atomic.LongAdder;
 /**
  * Created by caojiajun on 2023/5/9
  */
-public class HotKeyCounterCollector {
+public class CaffeineHotKeyCounterCollector implements IHotKeyCounterCollector {
 
     private final AtomicBoolean backUp = new AtomicBoolean(false);
     private final int capacity;
     private final ConcurrentHashMap<String, Cache<String, LongAdder>> map1;
     private final ConcurrentHashMap<String, Cache<String, LongAdder>> map2;
 
-    public HotKeyCounterCollector(int capacity) {
+    public CaffeineHotKeyCounterCollector(int capacity) {
         this.capacity = capacity;
         map1 = new ConcurrentHashMap<>();
         map2 = new ConcurrentHashMap<>();
     }
 
+    @Override
     public void push(String namespace, String key, KeyAction keyAction, long count) {
         Cache<String, LongAdder> map = getMap(namespace);
         String uniqueKey = key + "|" + keyAction.getValue();
@@ -45,6 +46,7 @@ public class HotKeyCounterCollector {
                 .build());
     }
 
+    @Override
     public synchronized List<KeyCounter> collect() {
         List<KeyCounter> result = new ArrayList<>();
         if (backUp.get()) {

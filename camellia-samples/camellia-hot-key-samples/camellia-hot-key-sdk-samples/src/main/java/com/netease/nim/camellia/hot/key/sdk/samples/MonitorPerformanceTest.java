@@ -4,6 +4,7 @@ import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.sdk.CamelliaHotKeyMonitorSdk;
 import com.netease.nim.camellia.hot.key.sdk.CamelliaHotKeySdk;
 import com.netease.nim.camellia.hot.key.sdk.Result;
+import com.netease.nim.camellia.hot.key.sdk.collect.CollectorType;
 import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeyMonitorSdkConfig;
 import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeySdkConfig;
 import com.netease.nim.camellia.hot.key.sdk.discovery.LocalConfHotKeyServerDiscovery;
@@ -30,6 +31,7 @@ public class MonitorPerformanceTest {
 //        addrList.add(new HotKeyServerAddr("10.189.46.125", 7070));
         LocalConfHotKeyServerDiscovery discovery = new LocalConfHotKeyServerDiscovery("local", addrList);
         config.setDiscovery(discovery);
+        config.setCollectorType(CollectorType.ConcurrentLinkedHashMap);
 
         CamelliaHotKeySdk sdk = new CamelliaHotKeySdk(config);
 

@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.hot.key.sdk.conf;
 
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
+import com.netease.nim.camellia.hot.key.sdk.collect.CollectorType;
 import com.netease.nim.camellia.hot.key.sdk.discovery.HotKeyServerDiscovery;
 
 /**
@@ -12,6 +13,7 @@ public class CamelliaHotKeySdkConfig {
     private long pushIntervalMillis = HotKeyConstants.Client.pushIntervalMillis;
     private int pushBatch = HotKeyConstants.Client.pushBatch;
     private int capacity = HotKeyConstants.Client.capacity;
+    private CollectorType collectorType = CollectorType.Caffeine;
 
     public HotKeyServerDiscovery getDiscovery() {
         return discovery;
@@ -43,5 +45,13 @@ public class CamelliaHotKeySdkConfig {
 
     public void setCapacity(int capacity) {
         this.capacity = capacity;
+    }
+
+    public CollectorType getCollectorType() {
+        return collectorType;
+    }
+
+    public void setCollectorType(CollectorType collectorType) {
+        this.collectorType = collectorType;
     }
 }

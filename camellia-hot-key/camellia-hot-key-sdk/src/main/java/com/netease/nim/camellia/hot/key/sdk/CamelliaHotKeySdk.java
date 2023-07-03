@@ -7,7 +7,10 @@ import com.netease.nim.camellia.hot.key.common.model.*;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPack;
 import com.netease.nim.camellia.hot.key.common.netty.pack.*;
-import com.netease.nim.camellia.hot.key.sdk.collect.HotKeyCounterCollector;
+import com.netease.nim.camellia.hot.key.sdk.collect.CaffeineHotKeyCounterCollector;
+import com.netease.nim.camellia.hot.key.sdk.collect.CollectorType;
+import com.netease.nim.camellia.hot.key.sdk.collect.ConcurrentLinkedHashMapHotKeyCounterCollector;
+import com.netease.nim.camellia.hot.key.sdk.collect.IHotKeyCounterCollector;
 import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeySdkConfig;
 import com.netease.nim.camellia.hot.key.sdk.listener.CamelliaHotKeyConfigListener;
 import com.netease.nim.camellia.hot.key.sdk.listener.CamelliaHotKeyListener;
@@ -33,14 +36,21 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
     private final ConcurrentHashMap<String, List<CamelliaHotKeyListener>> hotKeyListenerMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, List<CamelliaHotKeyConfigListener>> hotKeyConfigListenerMap = new ConcurrentHashMap<>();
 
-    private final HotKeyCounterCollector collector;
+    private final IHotKeyCounterCollector collector;
 
     public CamelliaHotKeySdk(CamelliaHotKeySdkConfig config) {
         this.config = config;
         if (config.getDiscovery() == null) {
             throw new CamelliaHotKeyException("discovery is missing");
         }
-        this.collector = new HotKeyCounterCollector(config.getCapacity());
+        CollectorType collectorType = config.getCollectorType();
+        if (collectorType == CollectorType.Caffeine) {
+            this.collector = new CaffeineHotKeyCounterCollector(config.getCapacity());
+        } else if (collectorType == CollectorType.ConcurrentLinkedHashMap) {
+            this.collector = new ConcurrentLinkedHashMapHotKeyCounterCollector(config.getCapacity());
+        } else {
+            throw new IllegalArgumentException("unknown collectorType");
+        }
         HotKeyClientHub.getInstance().registerDiscovery(config.getDiscovery());
         HotKeyClientHub.getInstance().registerListener(new DefaultHotKeyClientListener(this));
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-hot-key-sdk-schedule")).scheduleAtFixedRate(this::schedulePush,
