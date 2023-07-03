@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.hot.key.common.netty;
 
-import com.netease.nim.camellia.hot.key.common.netty.codec.Pack;
-import com.netease.nim.camellia.hot.key.common.netty.codec.Unpack;
+import com.netease.nim.camellia.codec.Pack;
+import com.netease.nim.camellia.codec.Unpack;
 import com.netease.nim.camellia.hot.key.common.netty.pack.*;
 import io.netty.buffer.ByteBuf;
 

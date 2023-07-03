@@ -6,12 +6,13 @@
 * camellia-tools新增CamelliaSegmentStatistics工具类
 * camellia-cache新增一个全局总开关
 * 新增camellia-http-console模块，一个简单的http-server
-* camellia-redis-proxy使用camellia-http-console代替原来的console实现
-* camellia-hot-key-server使用camellia-http-console代替原来的console实现
 * CamelliaRedisTemplate支持设置自定义RedisInterceptor，从而可以方便的接入CamelliaHotKeyMonitorSdk
+* 新增camellia-codec模块
 
 ### 更新
-* 无
+* camellia-redis-proxy使用camellia-http-console代替原来的console实现
+* camellia-hot-key-server使用camellia-http-console代替原来的console实现
+* camellia-hot-key使用camellia-codec模块
 
 ### fix
 * camellia-redis-proxy打印失败的command的error日志时，日志里的resource没有隐藏password

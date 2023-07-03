@@ -5,12 +5,13 @@
 * camellia-tools add CamelliaSegmentStatistics tools
 * camellia-cache add a global on-off config
 * provide camellia-http-console module, a simple http-server based on netty
-* camellia-redis-proxy use camellia-http-console
-* camellia-hot-key-server use camellia-http-console
 * CamelliaRedisTemplate support setting custom RedisInterceptor, so you can import CamelliaHotKeyMonitorSdk
+* provide camellia-codec module
 
 ### update
-* none
+* camellia-redis-proxy use camellia-http-console
+* camellia-hot-key-server use camellia-http-console
+* camellia-hot-key use camellia-codec
 
 ### fix
 * camellia-redis-proxy logging upstream failed command, the resource do not mask password

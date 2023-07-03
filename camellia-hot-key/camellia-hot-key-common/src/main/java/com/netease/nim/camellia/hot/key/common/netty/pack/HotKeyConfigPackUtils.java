@@ -1,12 +1,12 @@
 package com.netease.nim.camellia.hot.key.common.netty.pack;
 
+import com.netease.nim.camellia.codec.ArrayMable;
+import com.netease.nim.camellia.codec.Pack;
+import com.netease.nim.camellia.codec.Props;
+import com.netease.nim.camellia.codec.Unpack;
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 import com.netease.nim.camellia.hot.key.common.model.Rule;
 import com.netease.nim.camellia.hot.key.common.model.RuleType;
-import com.netease.nim.camellia.hot.key.common.netty.codec.ArrayMable;
-import com.netease.nim.camellia.hot.key.common.netty.codec.Pack;
-import com.netease.nim.camellia.hot.key.common.netty.codec.Props;
-import com.netease.nim.camellia.hot.key.common.netty.codec.Unpack;
 
 import java.util.ArrayList;
 import java.util.List;

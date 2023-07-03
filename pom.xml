@@ -13,6 +13,7 @@
 	<modules>
 		<module>camellia-admin</module>
 		<module>camellia-core</module>
+		<module>camellia-codec</module>
 		<module>camellia-cache</module>
 		<module>camellia-feign-client</module>
 		<module>camellia-hbase-client</module>
