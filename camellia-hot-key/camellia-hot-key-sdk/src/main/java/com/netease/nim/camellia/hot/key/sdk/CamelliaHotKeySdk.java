@@ -43,7 +43,7 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
                 .scheduleAtFixedRate(() -> {
                     long c = dropCount.sumThenReset();
                     if (c > 0) {
-                        logger.error("drop {} key collect for queue full", c);
+                        logger.warn("drop {} key collect for queue full", c);
                     }
                 }, 5, 5, TimeUnit.SECONDS);
     }
