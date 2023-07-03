@@ -24,6 +24,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Created by caojiajun on 2023/5/6
@@ -32,11 +34,29 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaHotKeySdk.class);
 
+    private static final AtomicLong idGen = new AtomicLong(0);
+
+    private static final LongAdder dropCount = new LongAdder();
+
+    static {
+        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-hot-key-sdk-error"))
+                .scheduleAtFixedRate(() -> {
+                    long c = dropCount.sumThenReset();
+                    if (c > 0) {
+                        logger.error("drop {} key collect for queue full", c);
+                    }
+                }, 5, 5, TimeUnit.SECONDS);
+    }
+
+    private final long id;
     private final CamelliaHotKeySdkConfig config;
     private final ConcurrentHashMap<String, List<CamelliaHotKeyListener>> hotKeyListenerMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, List<CamelliaHotKeyConfigListener>> hotKeyConfigListenerMap = new ConcurrentHashMap<>();
 
     private final IHotKeyCounterCollector collector;
+
+    private final boolean async;
+    private LinkedBlockingQueue<QueueItem> queue;
 
     public CamelliaHotKeySdk(CamelliaHotKeySdkConfig config) {
         this.config = config;
@@ -51,12 +71,23 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
         } else {
             throw new IllegalArgumentException("unknown collectorType");
         }
+
         HotKeyClientHub.getInstance().registerDiscovery(config.getDiscovery());
         HotKeyClientHub.getInstance().registerListener(new DefaultHotKeyClientListener(this));
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-hot-key-sdk-schedule")).scheduleAtFixedRate(this::schedulePush,
                 config.getPushIntervalMillis(), config.getPushIntervalMillis(), TimeUnit.MILLISECONDS);
-        logger.info("CamelliaHotKeySdk init success, pushIntervalMillis = {}, pushBatch = {}, capacity = {}",
-                config.getPushIntervalMillis(), config.getPushBatch(), config.getCapacity());
+
+        this.id = idGen.incrementAndGet();
+        this.async = config.isAsync();
+        if (this.async) {
+            this.queue = new LinkedBlockingQueue<>(config.getAsyncQueueCapacity());
+            startPolling();
+        }
+
+        logger.info("CamelliaHotKeySdk init success, pushIntervalMillis = {}, pushBatch = {}, capacity = {}, " +
+                        "collector = {}, async = {}, asyncQueueCapacity = {}",
+                config.getPushIntervalMillis(), config.getPushBatch(), config.getCapacity(),
+                config.getCollectorType(), async, config.getAsyncQueueCapacity());
     }
 
     public CamelliaHotKeySdkConfig getConfig() {
@@ -65,7 +96,39 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
 
     @Override
     public void push(String namespace, String key, KeyAction keyAction, long count) {
-        collector.push(namespace, key, keyAction, count);
+        if (async) {
+            if (!queue.offer(new QueueItem(namespace, key, keyAction, count))) {
+                dropCount.increment();
+            }
+        } else {
+            collector.push(namespace, key, keyAction, count);
+        }
+    }
+
+    private static class QueueItem {
+        String namespace;
+        String key;
+        KeyAction keyAction;
+        long count;
+        public QueueItem(String namespace, String key, KeyAction keyAction, long count) {
+            this.namespace = namespace;
+            this.key = key;
+            this.keyAction = keyAction;
+            this.count = count;
+        }
+    }
+
+    private void startPolling() {
+        new Thread(() -> {
+            while (true) {
+                try {
+                    QueueItem item = queue.take();
+                    collector.push(item.namespace, item.key, item.keyAction, item.count);
+                } catch (Exception e) {
+                    logger.error("collector push error", e);
+                }
+            }
+        }, "camellia-hot-key-sdk-polling-" + id).start();
     }
 
     @Override

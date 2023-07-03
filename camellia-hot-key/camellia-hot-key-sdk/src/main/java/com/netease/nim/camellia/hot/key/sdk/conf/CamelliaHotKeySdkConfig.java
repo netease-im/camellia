@@ -14,6 +14,8 @@ public class CamelliaHotKeySdkConfig {
     private int pushBatch = HotKeyConstants.Client.pushBatch;
     private int capacity = HotKeyConstants.Client.capacity;
     private CollectorType collectorType = CollectorType.Caffeine;
+    private boolean async = false;//是否是异步的
+    private int asyncQueueCapacity = HotKeyConstants.Client.asyncQueueCapacity;
 
     public HotKeyServerDiscovery getDiscovery() {
         return discovery;
@@ -53,5 +55,21 @@ public class CamelliaHotKeySdkConfig {
 
     public void setCollectorType(CollectorType collectorType) {
         this.collectorType = collectorType;
+    }
+
+    public boolean isAsync() {
+        return async;
+    }
+
+    public void setAsync(boolean async) {
+        this.async = async;
+    }
+
+    public int getAsyncQueueCapacity() {
+        return asyncQueueCapacity;
+    }
+
+    public void setAsyncQueueCapacity(int asyncQueueCapacity) {
+        this.asyncQueueCapacity = asyncQueueCapacity;
     }
 }

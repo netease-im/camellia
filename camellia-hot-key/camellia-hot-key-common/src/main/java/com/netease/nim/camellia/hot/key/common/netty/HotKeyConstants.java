@@ -28,6 +28,8 @@ public class HotKeyConstants {
         public static int capacity = 100000;
         public static int connectNum = 3;
 
+        public static int asyncQueueCapacity = 100000;
+
         public static int hotKeyConfigReloadIntervalSeconds = 60;
 
         public static String source;//标识

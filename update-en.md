@@ -12,6 +12,8 @@
 * camellia-redis-proxy use camellia-http-console
 * camellia-hot-key-server use camellia-http-console
 * camellia-hot-key use camellia-codec
+* camellia-hot-key-sdk support setting collector type, include Caffeine（default）and ConcurrentLinkedHashMap
+* camellia-hot-key-sdk support setting async collect, default in sync mode
 
 ### fix
 * camellia-redis-proxy logging upstream failed command, the resource do not mask password
