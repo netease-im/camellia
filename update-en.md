@@ -17,6 +17,7 @@
 
 ### fix
 * camellia-redis-proxy logging upstream failed command, the resource do not mask password
+* camellia-hot-key-sdk get incorrect checkThreshold field of hot-key-config的checkThreshold（do not affect function）
 
 
 # 1.2.10（2023/06/07）

@@ -18,6 +18,7 @@
 
 ### fix
 * camellia-redis-proxy打印失败的command的error日志时，日志里的resource没有隐藏password
+* camellia-hot-key-sdk获取的hot-key-config的checkThreshold有误（不影响功能）
 
 
 # 1.2.10（2023/06/07）

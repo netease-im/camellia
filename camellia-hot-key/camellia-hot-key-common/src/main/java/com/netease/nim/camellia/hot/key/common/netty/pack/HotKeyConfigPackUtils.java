@@ -59,7 +59,7 @@ public class HotKeyConfigPackUtils {
                 props.putLong(RuleTag.checkMillis.value, rule.getCheckMillis());
             }
             if (rule.getCheckThreshold() != null) {
-                props.putLong(RuleTag.checkThreshold.value, rule.getCheckMillis());
+                props.putLong(RuleTag.checkThreshold.value, rule.getCheckThreshold());
             }
             if (rule.getExpireMillis() != null) {
                 props.putLong(RuleTag.expireMillis.value, rule.getExpireMillis());
