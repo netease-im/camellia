@@ -78,6 +78,8 @@ public class CamelliaHttpConsoleServerHandler extends SimpleChannelInboundHandle
         boolean keepAlive = HttpUtil.isKeepAlive(request);
         if (keepAlive) {
             if (!request.protocolVersion().isKeepAliveDefault()) {
+                response.headers().set(CONNECTION, CLOSE);
+            } else {
                 response.headers().set(CONNECTION, KEEP_ALIVE);
             }
         } else {
