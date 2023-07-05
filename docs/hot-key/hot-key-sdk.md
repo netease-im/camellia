@@ -151,8 +151,8 @@ public class Test {
         CamelliaHotKeySdkConfig config = new CamelliaHotKeySdkConfig();
 
         config.setDiscovery(null);//设置一个发现器，默认提供zk/eureka，也可以自己实现基于etcd/consul/nacos等其他注册中心
-        config.setCollectorType(CollectorType.ConcurrentLinkedHashMap);//默认是Caffeine，如果对性能敏感，建议使用ConcurrentLinkedHashMap
-        config.setAsync(false);//是否异步，默认false，如果Collector的延迟不满足，则可以使用异步采集
+        config.setCollectorType(CollectorType.Caffeine);//默认是Caffeine，还可以使用ConcurrentLinkedHashMap
+        config.setAsync(false);//是否异步，默认false，如果Collector的延迟不满足业务要求，则可以使用异步采集
         config.setAsyncQueueCapacity(100000);//异步队列的大小，默认10w
         //如果需要同时访问多个集群，则需要初始化多个sdk，否则初始化一个实例即可
         CamelliaHotKeySdk sdk = new CamelliaHotKeySdk(config);
