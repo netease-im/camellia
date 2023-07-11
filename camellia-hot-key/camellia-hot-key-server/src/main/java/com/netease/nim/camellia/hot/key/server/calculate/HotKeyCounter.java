@@ -41,8 +41,8 @@ public class HotKeyCounter {
         if (slideStep > 0) {
             slideToNextBucket(slideStep);
             total = -1;
+            lastUpdateTime = TimeCache.currentMillis;
         }
-        lastUpdateTime = TimeCache.currentMillis;
         buckets[index] += count;
         if (total == -1) {
             long c = 0;
