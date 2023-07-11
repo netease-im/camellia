@@ -1,0 +1,31 @@
+{
+  "servers":
+  [
+    {
+      "server": "default",
+      "type": "tcp",
+      "connect": 3,
+      "addrs":
+      [
+        "127.0.0.1:11600"
+      ]
+    }
+  ],
+  "routes":
+  [
+    {
+      "type": "match_host",
+      "host": "api.netease.im",
+      "server": "default"
+    },
+    {
+      "type": "match_host",
+      "host": "www.baidu.com",
+      "server": "default"
+    },
+    {
+      "type": "match_all",
+      "server": "default"
+    }
+  ]
+}

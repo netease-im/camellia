@@ -1,0 +1,42 @@
+{
+  "upstreams":
+  [
+    {
+      "upstream": "yunxin",
+      "type": "http",
+      "heartbeatUri": "/",
+      "heartbeatTimeout": 1000,
+      "addrs":
+      [
+        "http://59.111.183.225:80"
+      ]
+    },
+    {
+      "upstream": "baidu",
+      "type": "http",
+      "heartbeatUri": "/index.html",
+      "heartbeatTimeout": 1000,
+      "addrs":
+      [
+        "https://www.baidu.com"
+      ]
+    }
+  ],
+  "routes":
+  [
+    {
+      "type": "match_host",
+      "host": "api.netease.im",
+      "upstream": "yunxin"
+    },
+    {
+      "type": "match_host",
+      "host": "www.baidu.com",
+      "upstream": "baidu"
+    },
+    {
+      "type": "match_all",
+      "upstream": "baidu"
+    }
+  ]
+}

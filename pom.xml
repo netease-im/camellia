@@ -21,6 +21,7 @@
 		<module>camellia-redis-client</module>
 		<module>camellia-redis-proxy</module>
 		<module>camellia-id-gen</module>
+		<module>camellia-http-accelerate-proxy</module>
 		<module>camellia-delay-queue</module>
 		<module>camellia-tools</module>
 		<module>camellia-hot-key</module>

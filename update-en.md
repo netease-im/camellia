@@ -7,6 +7,7 @@
 * provide camellia-http-console module, a simple http-server based on netty
 * CamelliaRedisTemplate support setting custom RedisInterceptor, so you can import CamelliaHotKeyMonitorSdk
 * provide camellia-codec module
+* provide camellia-http-accelerate-proxy module
 
 ### update
 * camellia-redis-proxy use camellia-http-console
