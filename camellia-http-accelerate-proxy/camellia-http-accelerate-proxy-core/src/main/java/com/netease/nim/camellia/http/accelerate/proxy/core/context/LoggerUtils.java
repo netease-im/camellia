@@ -25,22 +25,22 @@ public class LoggerUtils {
             if (logBean.getEndTime() != null && logBean.getStartTime() != null) {
                 long spendTime = logBean.getEndTime() - logBean.getStartTime();
                 logJson.put("spendTime", spendTime);
-                ProxyMonitor.updateSpendTime(logBean.getHost(), spendTime);
+                ProxyMonitor.updateSpendTime(logBean.getHost(), logBean.getCode(), spendTime);
             }
             if (logBean.getTransportServerSendTime() != null && logBean.getTransportServerReceiveTime() != null) {
                 long transportSpendTime1 = logBean.getTransportServerReceiveTime() - logBean.getTransportServerSendTime();
                 logJson.put("transportSpendTime1", transportSpendTime1);
-                ProxyMonitor.updateTransportSpendTime1(logBean.getHost(), transportSpendTime1);
+                ProxyMonitor.updateTransportSpendTime1(logBean.getHost(), logBean.getCode(), transportSpendTime1);
             }
             if (logBean.getUpstreamSendTime() != null && logBean.getUpstreamReplyTime() != null) {
                 long upstreamSpendTime = logBean.getUpstreamReplyTime() - logBean.getUpstreamSendTime();
                 logJson.put("upstreamSpendTime", upstreamSpendTime);
-                ProxyMonitor.updateUpstreamSpendTime("upstreamSpendTime", upstreamSpendTime);
+                ProxyMonitor.updateUpstreamSpendTime(logBean.getHost(), logBean.getCode(), upstreamSpendTime);
             }
             if (logBean.getEndTime() != null && logBean.getUpstreamReplyTime() != null) {
                 long transportSpendTime2 = logBean.getEndTime() - logBean.getUpstreamReplyTime();
                 logJson.put("transportSpendTime2", transportSpendTime2);
-                ProxyMonitor.updateTransportSpendTime2(logBean.getHost(), transportSpendTime2);
+                ProxyMonitor.updateTransportSpendTime2(logBean.getHost(), logBean.getCode(), transportSpendTime2);
             }
             logJson.put("transportAddr", logBean.getTransportAddr());
             logJson.put("upstreamAddr", logBean.getUpstreamAddr());

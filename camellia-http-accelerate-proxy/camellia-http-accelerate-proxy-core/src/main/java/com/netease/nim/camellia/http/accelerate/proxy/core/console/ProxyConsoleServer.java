@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.http.accelerate.proxy.core.console;
 
+import com.netease.nim.camellia.http.accelerate.proxy.core.proxy.IHttpAccelerateProxy;
+import com.netease.nim.camellia.http.accelerate.proxy.core.transport.ITransportServer;
 import com.netease.nim.camellia.http.console.CamelliaHttpConsoleConfig;
 import com.netease.nim.camellia.http.console.CamelliaHttpConsoleServer;
 import com.netease.nim.camellia.http.accelerate.proxy.core.conf.DynamicConf;
@@ -11,10 +13,10 @@ import com.netease.nim.camellia.http.accelerate.proxy.core.route.upstream.IUpstr
  */
 public class ProxyConsoleServer {
 
-    public void start(ITransportRouter transportRouter, IUpstreamRouter upstreamRouter) {
+    public void start(ITransportRouter transportRouter, IUpstreamRouter upstreamRouter, ITransportServer transportServer, IHttpAccelerateProxy proxy) {
         CamelliaHttpConsoleConfig config = new CamelliaHttpConsoleConfig();
         config.setPort(DynamicConf.getInt("console.port", 11700));
-        config.setConsoleService(new ConsoleServiceAdaptor(transportRouter, upstreamRouter));
+        config.setConsoleService(new ConsoleServiceAdaptor(transportRouter, upstreamRouter, transportServer, proxy));
         CamelliaHttpConsoleServer consoleServer = new CamelliaHttpConsoleServer(config);
         consoleServer.start();
     }

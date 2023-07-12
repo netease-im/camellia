@@ -29,6 +29,7 @@ public class TransportTcpServer implements ITransportServer {
     private static final Logger logger = LoggerFactory.getLogger(TransportTcpServer.class);
 
     private final IUpstreamRouter router;
+    private boolean started = false;
 
     public TransportTcpServer(IUpstreamRouter router) {
         this.router = router;
@@ -37,6 +38,10 @@ public class TransportTcpServer implements ITransportServer {
     @Override
     public void start() {
         int port = DynamicConf.getInt("transport.server.port", 11600);
+        if (port <= 0) {
+            logger.warn("transport tcp server skip start");
+            return;
+        }
         try {
             int bossThread = DynamicConf.getInt("transport.server.boss.thread", 1);
             int workThread = DynamicConf.getInt("transport.server.work.thread", 1);
@@ -83,10 +88,16 @@ public class TransportTcpServer implements ITransportServer {
                     });
             bootstrap.bind(port).sync();
             logger.info("transport tcp server start success, port = {}", port);
+            started = true;
         } catch (Exception e) {
             logger.error("transport tcp server start error, port = {}", port, e);
             throw new IllegalStateException(e);
         }
+    }
+
+    @Override
+    public boolean isStarted() {
+        return started;
     }
 
     private void onTcpPack(ChannelHandlerContext ctx, TcpPack pack) {

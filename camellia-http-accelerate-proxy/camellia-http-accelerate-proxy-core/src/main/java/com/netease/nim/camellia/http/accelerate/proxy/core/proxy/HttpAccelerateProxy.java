@@ -30,6 +30,7 @@ public class HttpAccelerateProxy implements IHttpAccelerateProxy {
     private static final Logger logger = LoggerFactory.getLogger(HttpAccelerateProxy.class);
 
     private final ITransportRouter router;
+    private boolean started;
 
     public HttpAccelerateProxy(ITransportRouter router) {
         this.router = router;
@@ -38,6 +39,10 @@ public class HttpAccelerateProxy implements IHttpAccelerateProxy {
     @Override
     public void start() {
         int port = DynamicConf.getInt("http.accelerate.proxy.port", 11800);
+        if (port <= 0) {
+            logger.warn("http accelerate proxy skip start");
+            return;
+        }
         try {
             int bossThread = DynamicConf.getInt("http.accelerate.proxy.boss.thread", 1);
             int workThread = DynamicConf.getInt("http.accelerate.proxy.work.thread", Runtime.getRuntime().availableProcessors());
@@ -126,9 +131,15 @@ public class HttpAccelerateProxy implements IHttpAccelerateProxy {
                     });
             bootstrap.bind(port).sync();
             logger.info("http accelerate proxy start success, port = {}", port);
+            started = true;
         } catch (Exception e) {
             logger.error("http accelerate proxy start error, port = {}", port, e);
             throw new IllegalStateException(e);
         }
+    }
+
+    @Override
+    public boolean isStarted() {
+        return started;
     }
 }

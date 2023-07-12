@@ -7,4 +7,6 @@ package com.netease.nim.camellia.http.accelerate.proxy.core.proxy;
 public interface IHttpAccelerateProxy {
 
     void start();
+
+    boolean isStarted();
 }

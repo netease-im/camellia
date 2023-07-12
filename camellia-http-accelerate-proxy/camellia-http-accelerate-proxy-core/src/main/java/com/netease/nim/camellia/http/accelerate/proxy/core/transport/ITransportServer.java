@@ -7,4 +7,6 @@ package com.netease.nim.camellia.http.accelerate.proxy.core.transport;
 public interface ITransportServer {
 
     void start();
+
+    boolean isStarted();
 }

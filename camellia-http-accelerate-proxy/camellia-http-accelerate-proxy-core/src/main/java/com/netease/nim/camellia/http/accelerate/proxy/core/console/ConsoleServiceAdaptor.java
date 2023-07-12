@@ -1,12 +1,18 @@
 package com.netease.nim.camellia.http.accelerate.proxy.core.console;
 
 import com.netease.nim.camellia.http.accelerate.proxy.core.monitor.ProxyMonitor;
+import com.netease.nim.camellia.http.accelerate.proxy.core.proxy.IHttpAccelerateProxy;
 import com.netease.nim.camellia.http.accelerate.proxy.core.status.ServerStatus;
+import com.netease.nim.camellia.http.accelerate.proxy.core.transport.ITransportServer;
 import com.netease.nim.camellia.http.console.ConsoleResult;
 import com.netease.nim.camellia.http.accelerate.proxy.core.route.transport.ITransportRouter;
 import com.netease.nim.camellia.http.accelerate.proxy.core.route.upstream.IUpstreamRouter;
+import com.netease.nim.camellia.http.console.ConsoleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Map;
 
 public class ConsoleServiceAdaptor implements ConsoleService {
 
@@ -14,28 +20,43 @@ public class ConsoleServiceAdaptor implements ConsoleService {
 
     private final ITransportRouter transportRouter;
     private final IUpstreamRouter upstreamRouter;
+    private final ITransportServer transportServer;
+    private final IHttpAccelerateProxy proxy;
 
-    public ConsoleServiceAdaptor(ITransportRouter transportRouter, IUpstreamRouter upstreamRouter) {
+    public ConsoleServiceAdaptor(ITransportRouter transportRouter, IUpstreamRouter upstreamRouter, ITransportServer transportServer, IHttpAccelerateProxy proxy) {
         this.transportRouter = transportRouter;
         this.upstreamRouter = upstreamRouter;
+        this.transportServer = transportServer;
+        this.proxy = proxy;
     }
 
     @Override
-    public ConsoleResult status() {
-        ServerStatus.Status status = ServerStatus.getStatus();
-        if (logger.isDebugEnabled()) {
-            logger.debug("status = {}", status.name());
+    public ConsoleResult status(Map<String, List<String>> params) {
+        String type = ConsoleUtils.getParam(params, "type");
+        if (type == null) {
+            type = "all";
         }
-        boolean online = false;
-        if (status == ServerStatus.Status.ONLINE) {
-            online = true;
-        } else if (status == ServerStatus.Status.OFFLINE) {
-            online = !ServerStatus.isIdle();
+        boolean online;
+        switch (type) {
+            case "all":
+                online = ServerStatus.getStatus() == ServerStatus.Status.ONLINE && transportServer.isStarted() && proxy.isStarted();
+                break;
+            case "transport":
+                online = ServerStatus.getStatus() == ServerStatus.Status.ONLINE && transportServer.isStarted();
+                break;
+            case "proxy":
+                online = ServerStatus.getStatus() == ServerStatus.Status.ONLINE && proxy.isStarted();
+                break;
+            default:
+                return ConsoleResult.error("illegal type");
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("online = {}", online);
         }
         if (online) {
-            return ConsoleResult.success(status.name());
+            return ConsoleResult.success(ServerStatus.Status.ONLINE.name());
         } else {
-            return ConsoleResult.error(status.name());
+            return ConsoleResult.error(ServerStatus.Status.OFFLINE.name());
         }
     }
 

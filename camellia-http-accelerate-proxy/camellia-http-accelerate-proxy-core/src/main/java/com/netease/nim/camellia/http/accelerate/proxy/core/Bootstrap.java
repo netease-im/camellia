@@ -71,7 +71,7 @@ public class Bootstrap {
 
             //6、console
             ProxyConsoleServer consoleServer = new ProxyConsoleServer();
-            consoleServer.start(transportRouter, upstreamRouter);
+            consoleServer.start(transportRouter, upstreamRouter, transportServer, proxy);
 
             logger.info("camellia http accelerate proxy start success!");
         } catch (Exception e) {

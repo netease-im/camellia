@@ -4,6 +4,9 @@ import com.netease.nim.camellia.http.console.ConsoleApi;
 import com.netease.nim.camellia.http.console.ConsoleResult;
 import com.netease.nim.camellia.http.console.IConsoleService;
 
+import java.util.List;
+import java.util.Map;
+
 
 /**
  *
@@ -12,7 +15,7 @@ import com.netease.nim.camellia.http.console.IConsoleService;
 public interface ConsoleService extends IConsoleService {
 
     @ConsoleApi(uri = "/status")
-    ConsoleResult status();
+    ConsoleResult status(Map<String, List<String>> params);
 
     @ConsoleApi(uri = "/online")
     ConsoleResult online();

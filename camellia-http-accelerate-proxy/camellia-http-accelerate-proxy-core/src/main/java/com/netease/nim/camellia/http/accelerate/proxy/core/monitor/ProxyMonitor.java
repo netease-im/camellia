@@ -33,20 +33,20 @@ public class ProxyMonitor {
                 .scheduleAtFixedRate(ProxyMonitor::calc, 60, 60, TimeUnit.SECONDS);
     }
 
-    public static void updateSpendTime(String host, long spendTime) {
-        manager1.update(host, spendTime);
+    public static void updateSpendTime(String host, int code, long spendTime) {
+        manager1.update(host + "|" + code, spendTime);
     }
 
-    public static void updateTransportSpendTime1(String host, long transportSpendTime1) {
-        manager2.update(host, transportSpendTime1);
+    public static void updateTransportSpendTime1(String host, int code, long transportSpendTime1) {
+        manager2.update(host + "|" + code, transportSpendTime1);
     }
 
-    public static void updateUpstreamSpendTime(String host, long upstreamSpendTime) {
-        manager3.update(host, upstreamSpendTime);
+    public static void updateUpstreamSpendTime(String host, int code, long upstreamSpendTime) {
+        manager3.update(host + "|" + code, upstreamSpendTime);
     }
 
-    public static void updateTransportSpendTime2(String host, long transportSpendTime2) {
-        manager4.update(host, transportSpendTime2);
+    public static void updateTransportSpendTime2(String host, int code, long transportSpendTime2) {
+        manager4.update(host + "|" + code, transportSpendTime2);
     }
 
     public static void updateError(String host, ErrorReason reason) {
@@ -71,7 +71,10 @@ public class ProxyMonitor {
             for (Map.Entry<String, CamelliaStatsData> entry : dataMap1.entrySet()) {
                 JSONObject json = new JSONObject();
                 CamelliaStatsData data = entry.getValue();
-                json.put("host", entry.getKey());
+                String[] split = entry.getKey().split("\\|");
+                json.put("host", split[0]);
+                json.put("code", split[1]);
+                json.put("count", data.getCount());
                 json.put("avg", data.getAvg());
                 json.put("max", data.getMax());
                 json.put("p50", data.getP50());
@@ -88,7 +91,10 @@ public class ProxyMonitor {
             for (Map.Entry<String, CamelliaStatsData> entry : dataMap2.entrySet()) {
                 JSONObject json = new JSONObject();
                 CamelliaStatsData data = entry.getValue();
-                json.put("host", entry.getKey());
+                String[] split = entry.getKey().split("\\|");
+                json.put("host", split[0]);
+                json.put("code", split[1]);
+                json.put("count", data.getCount());
                 json.put("avg", data.getAvg());
                 json.put("max", data.getMax());
                 json.put("p50", data.getP50());
@@ -106,7 +112,10 @@ public class ProxyMonitor {
             for (Map.Entry<String, CamelliaStatsData> entry : dataMap3.entrySet()) {
                 JSONObject json = new JSONObject();
                 CamelliaStatsData data = entry.getValue();
-                json.put("host", entry.getKey());
+                String[] split = entry.getKey().split("\\|");
+                json.put("host", split[0]);
+                json.put("code", split[1]);
+                json.put("count", data.getCount());
                 json.put("avg", data.getAvg());
                 json.put("max", data.getMax());
                 json.put("p50", data.getP50());
@@ -123,7 +132,10 @@ public class ProxyMonitor {
             for (Map.Entry<String, CamelliaStatsData> entry : dataMap4.entrySet()) {
                 JSONObject json = new JSONObject();
                 CamelliaStatsData data = entry.getValue();
-                json.put("host", entry.getKey());
+                String[] split = entry.getKey().split("\\|");
+                json.put("host", split[0]);
+                json.put("code", split[1]);
+                json.put("count", data.getCount());
                 json.put("avg", data.getAvg());
                 json.put("max", data.getMax());
                 json.put("p50", data.getP50());
@@ -140,7 +152,9 @@ public class ProxyMonitor {
             for (Map.Entry<String, CamelliaStatsData> entry : dataMap5.entrySet()) {
                 JSONObject json = new JSONObject();
                 CamelliaStatsData data = entry.getValue();
-                json.put("host", entry.getKey());
+                String[] split = entry.getKey().split("\\|");
+                json.put("host", split[0]);
+                json.put("reason", ErrorReason.getByValue(Integer.parseInt(split[1])));
                 json.put("count", data.getCount());
                 errorReason.add(json);
             }

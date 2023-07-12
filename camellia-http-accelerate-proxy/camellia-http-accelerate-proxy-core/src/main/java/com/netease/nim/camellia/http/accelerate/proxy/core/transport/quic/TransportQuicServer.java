@@ -10,4 +10,9 @@ public class TransportQuicServer implements ITransportServer {
     public void start() {
         //TODO
     }
+
+    @Override
+    public boolean isStarted() {
+        return false;
+    }
 }
