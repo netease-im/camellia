@@ -130,6 +130,7 @@ public class TransportTcpServer implements ITransportServer {
                 future.thenAccept(response -> {
                     try {
                         header.setAck();
+                        response.getLogBean().setCode(response.getResponse().status().code());
                         ctx.channel().writeAndFlush(TcpPack.newPack(header, new RequestAckPack(response)).encode());
                     } finally {
                         LoggerUtils.logging(response.getLogBean());

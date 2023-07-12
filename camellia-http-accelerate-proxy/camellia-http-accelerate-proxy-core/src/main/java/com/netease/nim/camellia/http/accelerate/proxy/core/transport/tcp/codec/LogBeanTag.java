@@ -79,7 +79,10 @@ public enum LogBeanTag {
             props.put(LogBeanTag.upstreamAddr.getValue(), logBean.getUpstreamAddr());
         }
         if (logBean.getErrorReason() != null) {
-            props.putInteger(LogBeanTag.upstreamAddr.getValue(), logBean.getErrorReason().getValue());
+            props.putInteger(LogBeanTag.errorReason.getValue(), logBean.getErrorReason().getValue());
+        }
+        if (logBean.getCode() != null) {
+            props.putInteger(LogBeanTag.code.getValue(), logBean.getCode());
         }
         return props;
     }
