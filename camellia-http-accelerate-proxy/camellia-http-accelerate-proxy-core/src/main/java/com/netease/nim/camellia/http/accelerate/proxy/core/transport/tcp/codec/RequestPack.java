@@ -9,7 +9,6 @@ import com.netease.nim.camellia.http.accelerate.proxy.core.context.ProxyRequest;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
-
 import java.util.Map;
 
 /**
@@ -90,9 +89,9 @@ public class RequestPack extends TcpPackBody {
             trailingHeaders.set(entry.getKey(), entry.getValue());
         }
         FullHttpRequest request;
-        int i = unpack.popInt();
-        if (i > 0) {
-            ByteBuf buffer = unpack.getBuffer();
+        int size = unpack.popInt();
+        if (size > 0) {
+            ByteBuf buffer = Unpooled.wrappedBuffer(unpack.popFetch(size));
             request = new DefaultFullHttpRequest(httpVersion, httpMethod, uri, buffer, headers, trailingHeaders);
         } else {
             request = new DefaultFullHttpRequest(httpVersion, httpMethod, uri, Unpooled.buffer(0), headers, trailingHeaders);
