@@ -65,6 +65,8 @@ public class GlobalRedisProxyEnv {
 
     private static QueueFactory queueFactory = new DefaultQueueFactory();
 
+    private static ProxyShutdown proxyShutdown = new ProxyShutdown();
+
     private static final Set<Runnable> callbackSet = new HashSet<>();
 
     public static void init(CamelliaServerProperties serverProperties) {
@@ -234,5 +236,9 @@ public class GlobalRedisProxyEnv {
 
     public static QueueFactory getQueueFactory() {
         return queueFactory;
+    }
+
+    public static ProxyShutdown getProxyShutdown() {
+        return proxyShutdown;
     }
 }

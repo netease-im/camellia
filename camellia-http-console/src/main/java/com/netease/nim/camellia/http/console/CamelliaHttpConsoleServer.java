@@ -34,7 +34,7 @@ public class CamelliaHttpConsoleServer {
         logger.info("console service init, uri.set = {}", invokerMap.keySet());
     }
 
-    public void start() {
+    public ChannelFuture start() {
         try {
             EventLoopGroup bossGroup = new NioEventLoopGroup(config.getBossThread(), new DefaultThreadFactory("console-boss-group"));
             EventLoopGroup workerGroup = new NioEventLoopGroup(config.getWorkThread(), new DefaultThreadFactory("console-work-group"));
@@ -51,8 +51,9 @@ public class CamelliaHttpConsoleServer {
                             pipeline.addLast(new CamelliaHttpConsoleServerHandler(invokerMap, config.getExecutor()));
                         }
                     });
-            bootstrap.bind(config.getPort()).sync();
+            ChannelFuture future = bootstrap.bind(config.getPort()).sync();
             logger.info("Console Server start listen at port {}", config.getPort());
+            return future;
         } catch (Exception e) {
             logger.error("camellia-http-console start error", e);
             throw new IllegalStateException("camellia-http-console start error", e);

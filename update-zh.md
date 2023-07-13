@@ -9,6 +9,7 @@
 * CamelliaRedisTemplate支持设置自定义RedisInterceptor，从而可以方便的接入CamelliaHotKeyMonitorSdk
 * 新增camellia-codec模块
 * 新增camellia-http-accelerate-proxy模块
+* camellia-redis-proxy的GlobalRedisProxyEnv新增ProxyShutdown入口，用于释放端口和连接
 
 ### 更新
 * camellia-redis-proxy使用camellia-http-console代替原来的console实现

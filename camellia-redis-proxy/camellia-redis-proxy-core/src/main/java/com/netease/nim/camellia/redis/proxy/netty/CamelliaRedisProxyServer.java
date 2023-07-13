@@ -70,21 +70,23 @@ public class CamelliaRedisProxyServer {
         if (port == Constants.Server.serverPortRandSig) {
             port = SocketUtils.findRandomAvailablePort();
         }
-        serverBootstrap.bind(port).sync();
+        ChannelFuture future = serverBootstrap.bind(port).sync();
         logger.info("CamelliaRedisProxyServer, so_backlog = {}, so_sendbuf = {}, so_rcvbuf = {}, so_keepalive = {}",
                 serverProperties.getSoBacklog(), serverProperties.getSoSndbuf(), serverProperties.getSoRcvbuf(), serverProperties.isSoKeepalive());
         logger.info("CamelliaRedisProxyServer, tcp_no_delay = {}, tcp_quick_ack = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
                 serverProperties.isTcpNoDelay(), GlobalRedisProxyEnv.isServerTcpQuickAckEnable(), serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh());
         logger.info("CamelliaRedisProxyServer start at port: {}", port);
         GlobalRedisProxyEnv.setPort(port);
+        GlobalRedisProxyEnv.getProxyShutdown().setServerChannelFuture(future);
         this.port = port;
         if (serverProperties.isClusterModeEnable()) {
             int cport = serverProperties.getCport();
             if (cport <= 0) {
                 cport = port + 10000;
             }
-            serverBootstrap.bind(cport).sync();
+            ChannelFuture channelFuture = serverBootstrap.bind(cport).sync();
             GlobalRedisProxyEnv.setCport(cport);
+            GlobalRedisProxyEnv.getProxyShutdown().setCportChannelFuture(channelFuture);
             logger.info("CamelliaRedisProxyServer start in cluster mode at cport: {}", cport);
         }
         logger.info("CamelliaRedisProxyServer start success, version = {}", ProxyInfoUtils.VERSION);

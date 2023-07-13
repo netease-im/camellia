@@ -21,6 +21,9 @@ import io.netty.util.concurrent.FastThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -275,6 +278,14 @@ public class RedisConnectionHub {
             return true;
         }
         return false;
+    }
+
+    public Set<RedisConnection> getAllConnections() {
+        Set<RedisConnection> set = new HashSet<>(map.values());
+        for (Map.Entry<EventLoop, ConcurrentHashMap<String, RedisConnection>> entry : eventLoopMap.entrySet()) {
+            set.addAll(entry.getValue().values());
+        }
+        return set;
     }
 
     //初始化一个连接，初始化完成后会放入map，会做并发控制，map中只有一个实例

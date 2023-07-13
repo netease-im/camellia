@@ -15,6 +15,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
 import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
+import io.netty.channel.ChannelFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,8 +68,9 @@ public class CamelliaRedisProxyStarter {
                     config.setPort(consolePort);
                     config.setConsoleService(consoleService);
                     CamelliaHttpConsoleServer consoleServer = new CamelliaHttpConsoleServer(config);
-                    consoleServer.start();
+                    ChannelFuture future = consoleServer.start();
                     GlobalRedisProxyEnv.setConsolePort(config.getPort());
+                    GlobalRedisProxyEnv.getProxyShutdown().setConsoleChannelFuture(future);
                 }
                 startOk.set(true);
             } catch (Throwable e) {

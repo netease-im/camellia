@@ -8,6 +8,7 @@
 * CamelliaRedisTemplate support setting custom RedisInterceptor, so you can import CamelliaHotKeyMonitorSdk
 * provide camellia-codec module
 * provide camellia-http-accelerate-proxy module
+* camellia-redis-proxy's GlobalRedisProxyEnv provide ProxyShutdown to unbind port and release upstream redis connection
 
 ### update
 * camellia-redis-proxy use camellia-http-console
