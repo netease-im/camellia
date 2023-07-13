@@ -65,7 +65,7 @@ public class GlobalRedisProxyEnv {
 
     private static QueueFactory queueFactory = new DefaultQueueFactory();
 
-    private static ProxyShutdown proxyShutdown = new ProxyShutdown();
+    private static final ProxyShutdown proxyShutdown = new ProxyShutdown();
 
     private static final Set<Runnable> callbackSet = new HashSet<>();
 
