@@ -71,6 +71,12 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         }
     }
 
+    @Override
+    public void shutdown() {
+        //do nothing
+        logger.warn("upstream client shutdown, url = {}", getUrl());
+    }
+
     public void sendCommand(int db, List<Command> commands, List<CompletableFuture<Reply>> futureList) {
         if (logger.isDebugEnabled()) {
             List<String> commandNames = new ArrayList<>();

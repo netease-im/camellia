@@ -7,6 +7,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFact
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -47,5 +49,10 @@ public class UpstreamRedisHBaseMixClientTemplateFactory implements IUpstreamClie
     @Override
     public boolean isMultiTenantsSupport() {
         return false;
+    }
+
+    @Override
+    public List<IUpstreamClientTemplate> getAll() {
+        return Collections.singletonList(template);
     }
 }

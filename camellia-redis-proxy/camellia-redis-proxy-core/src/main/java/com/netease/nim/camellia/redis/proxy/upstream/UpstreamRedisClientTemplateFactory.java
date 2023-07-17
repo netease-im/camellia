@@ -25,6 +25,8 @@ import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 
@@ -158,6 +160,25 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
     @Override
     public RedisProxyEnv getEnv() {
         return env;
+    }
+
+    @Override
+    public List<IUpstreamClientTemplate> getAll() {
+        List<IUpstreamClientTemplate> list = new ArrayList<>();
+        if (localInstance != null) {
+            list.add(localInstance);
+        }
+        if (remoteInstance != null) {
+            list.add(remoteInstance);
+        }
+        if (customInstance != null) {
+            list.add(customInstance);
+        }
+        if (executor != null) {
+            List<IUpstreamClientTemplate> templates = executor.getAll();
+            list.addAll(templates);
+        }
+        return list;
     }
 
     private void init() {

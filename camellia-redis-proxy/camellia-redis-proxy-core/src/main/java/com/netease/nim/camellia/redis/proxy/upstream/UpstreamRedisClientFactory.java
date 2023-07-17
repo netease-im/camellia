@@ -11,6 +11,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelClien
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelSlavesClient;
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.RedisStandaloneClient;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -20,6 +22,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public interface UpstreamRedisClientFactory {
 
     IUpstreamClient get(String url);
+
+    IUpstreamClient remove(String url);
+
+    List<IUpstreamClient> getAll();
 
     UpstreamRedisClientFactory DEFAULT = new Default();
 
@@ -128,6 +134,16 @@ public interface UpstreamRedisClientFactory {
                 }
             }
             return client;
+        }
+
+        @Override
+        public IUpstreamClient remove(String url) {
+            return map.remove(url);
+        }
+
+        @Override
+        public List<IUpstreamClient> getAll() {
+            return new ArrayList<>(map.values());
         }
     }
 }

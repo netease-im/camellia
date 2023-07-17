@@ -28,6 +28,8 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
     private static final Logger logger = LoggerFactory.getLogger(RedisSentinelSlavesClient.class);
 
     private final Object lock = new Object();
+    private final List<RedisSentinelMasterListener> masterListenerList = new ArrayList<>();
+    private final List<RedisSentinelSlavesListener> slavesListenerList = new ArrayList<>();
 
     private final RedisSentinelSlavesResource redisSentinelSlavesResource;
     private RedisConnectionAddr master;
@@ -114,6 +116,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                         redisSentinelSlavesResource.getMaster(), masterUpdateCallback);
                 masterListener.setDaemon(true);
                 masterListener.start();
+                masterListenerList.add(masterListener);
             }
 
             RedisSentinelSlavesListener.SlavesUpdateCallback slavesUpdateCallback = slaves -> {
@@ -162,6 +165,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                     redisSentinelSlavesResource.getMaster(), slavesUpdateCallback);
             listener.setDaemon(true);
             listener.start();
+            slavesListenerList.add(listener);
         }
         logger.info("RedisSentinelSlavesClient init success, resource = {}", redisSentinelSlavesResource.getUrl());
     }
@@ -272,5 +276,16 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
     @Override
     public Resource getResource() {
         return redisSentinelSlavesResource;
+    }
+
+    @Override
+    public synchronized void shutdown() {
+        for (RedisSentinelMasterListener listener : masterListenerList) {
+            listener.shutdown();
+        }
+        for (RedisSentinelSlavesListener listener : slavesListenerList) {
+            listener.shutdown();
+        }
+        logger.warn("upstream client shutdown, url = {}", getUrl());
     }
 }

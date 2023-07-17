@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +27,7 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
     private final Object lock = new Object();
     private List<RedisConnectionAddr> originalList = new ArrayList<>();
     private List<RedisConnectionAddr> dynamicList = new ArrayList<>();
+    private ScheduledFuture<?> scheduledFuture;
 
     @Override
     public void preheat() {
@@ -44,7 +46,15 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
             throw new CamelliaRedisException("init fail, no reachable proxy, resource = " + getResource().getUrl());
         }
         int seconds = ProxyDynamicConf.getInt("redis.proxies.reload.interval.seconds", 60);
-        ExecutorUtils.scheduleAtFixedRate(() -> refresh(false), seconds, seconds, TimeUnit.SECONDS);
+        this.scheduledFuture = ExecutorUtils.scheduleAtFixedRate(() -> refresh(false), seconds, seconds, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public synchronized void shutdown() {
+        if (scheduledFuture != null) {
+            scheduledFuture.cancel(false);
+        }
+        logger.warn("upstream client shutdown, url = {}", getUrl());
     }
 
     @Override

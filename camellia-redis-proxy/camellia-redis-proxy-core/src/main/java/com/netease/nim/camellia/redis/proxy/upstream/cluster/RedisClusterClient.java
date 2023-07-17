@@ -46,6 +46,8 @@ public class RedisClusterClient implements IUpstreamClient {
     private final String userName;
     private final String password;
 
+    private ScheduledFuture<?> scheduledFuture;
+
     private RedisClusterResource redisClusterResource;
     private RedisClusterSlavesResource redisClusterSlavesResource;
 
@@ -95,7 +97,7 @@ public class RedisClusterClient implements IUpstreamClient {
 
     private void startSchedule() {
         int intervalSeconds = ProxyDynamicConf.getInt("redis.cluster.schedule.renew.interval.seconds", 600);
-        ExecutorUtils.scheduleAtFixedRate(() -> {
+        this.scheduledFuture = ExecutorUtils.scheduleAtFixedRate(() -> {
             try {
                 clusterSlotInfo.renew();
             } catch (Exception e) {
@@ -134,6 +136,14 @@ public class RedisClusterClient implements IUpstreamClient {
     @Override
     public boolean isValid() {
         return clusterSlotInfo.isValid();
+    }
+
+    @Override
+    public synchronized void shutdown() {
+        if (scheduledFuture != null) {
+            scheduledFuture.cancel(false);
+        }
+        logger.warn("upstream client shutdown, url = {}", getUrl());
     }
 
     public void sendCommand(int db, List<Command> commands, List<CompletableFuture<Reply>> futureList) {

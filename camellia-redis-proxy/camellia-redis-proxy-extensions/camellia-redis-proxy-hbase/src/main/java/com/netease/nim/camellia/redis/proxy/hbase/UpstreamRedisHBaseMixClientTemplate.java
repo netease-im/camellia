@@ -83,6 +83,11 @@ public class UpstreamRedisHBaseMixClientTemplate implements IUpstreamClientTempl
         return false;
     }
 
+    @Override
+    public void shutdown() {
+        //do nothing
+    }
+
     //是否并发执行命令，可以提升客户端pipeline提交命令时的执行效率，默认false
     //默认false的情况下，来自相同连接的命令顺序执行；如果设置为true，则来自相同连接的请求，会根据command关联的key进行哈希从而并发执行
     //备注：请确认好客户端的请求模型，如果是jedis这种阻塞模式可以开启，如果是lettuce且使用了异步模式则不能开启（会导致命令乱序执行）
@@ -147,4 +152,6 @@ public class UpstreamRedisHBaseMixClientTemplate implements IUpstreamClientTempl
         ErrorLogCollector.collect(UpstreamRedisHBaseMixClientTemplate.class, log);
         return new ErrorReply(message);
     }
+
+
 }

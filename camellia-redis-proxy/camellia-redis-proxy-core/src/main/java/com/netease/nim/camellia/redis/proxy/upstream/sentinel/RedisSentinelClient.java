@@ -11,6 +11,8 @@ import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -23,6 +25,7 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
 
     private final RedisSentinelResource redisSentinelResource;
     private volatile RedisConnectionAddr redisConnectionAddr;
+    private final List<RedisSentinelMasterListener> masterListenerList = new ArrayList<>();
     private final Object lock = new Object();
 
     public RedisSentinelClient(RedisSentinelResource redisSentinelResource) {
@@ -64,6 +67,7 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
             RedisSentinelMasterListener masterListener = new RedisSentinelMasterListener(redisSentinelResource, new HostAndPort(node.getHost(), node.getPort()), master, callback);
             masterListener.setDaemon(true);
             masterListener.start();
+            masterListenerList.add(masterListener);
         }
         logger.info("RedisSentinelClient init success, resource = {}", redisSentinelResource.getUrl());
     }
@@ -81,5 +85,13 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
     @Override
     public boolean isValid() {
         return getStatus(getAddr()) == RedisConnectionStatus.VALID;
+    }
+
+    @Override
+    public synchronized void shutdown() {
+        for (RedisSentinelMasterListener listener : masterListenerList) {
+            listener.shutdown();
+        }
+        logger.warn("upstream client shutdown, url = {}", getUrl());
     }
 }

@@ -65,7 +65,7 @@ public class GlobalRedisProxyEnv {
 
     private static QueueFactory queueFactory = new DefaultQueueFactory();
 
-    private static final ProxyShutdown proxyShutdown = new ProxyShutdown();
+    private static final DefaultProxyShutdown proxyShutdown = new DefaultProxyShutdown();
 
     private static final Set<Runnable> callbackSet = new HashSet<>();
 
@@ -128,6 +128,7 @@ public class GlobalRedisProxyEnv {
 
     public static void setClientTemplateFactory(IUpstreamClientTemplateFactory clientTemplateFactory) {
         GlobalRedisProxyEnv.clientTemplateFactory = clientTemplateFactory;
+        GlobalRedisProxyEnv.getProxyShutdown().updateUpstreamClientTemplateFactory(clientTemplateFactory);
     }
 
     public static void setDiscoveryFactory(ProxyDiscoveryFactory discoveryFactory) {
@@ -238,7 +239,7 @@ public class GlobalRedisProxyEnv {
         return queueFactory;
     }
 
-    public static ProxyShutdown getProxyShutdown() {
+    public static DefaultProxyShutdown getProxyShutdown() {
         return proxyShutdown;
     }
 }

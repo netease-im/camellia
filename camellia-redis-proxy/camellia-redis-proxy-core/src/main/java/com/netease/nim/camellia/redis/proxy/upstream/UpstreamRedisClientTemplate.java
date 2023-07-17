@@ -701,7 +701,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             RouteConfMonitor.deregisterRedisClientTemplate(bid, bgroup);
         }
         if (logger.isInfoEnabled()) {
-            logger.info("AsyncCamelliaRedisTemplate shutdown, bid = {}, bgroup = {}", bid, bgroup);
+            logger.info("UpstreamRedisClientTemplate shutdown, bid = {}, bgroup = {}", bid, bgroup);
         }
     }
 

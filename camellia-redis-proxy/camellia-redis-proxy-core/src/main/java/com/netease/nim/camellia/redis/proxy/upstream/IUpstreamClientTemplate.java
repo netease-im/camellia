@@ -24,4 +24,9 @@ public interface IUpstreamClientTemplate {
      * @return true/false
      */
     boolean isMultiDBSupport();
+
+    /**
+     * 关闭
+     */
+    void shutdown();
 }

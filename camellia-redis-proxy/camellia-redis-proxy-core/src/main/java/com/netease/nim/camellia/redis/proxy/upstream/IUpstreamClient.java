@@ -24,6 +24,8 @@ public interface IUpstreamClient {
 
     boolean isValid();
 
+    void shutdown();
+
     default RedisConnectionStatus getStatus(RedisConnectionAddr addr) {
         if (addr == null) return RedisConnectionStatus.INVALID;
         RedisConnection redisConnection = RedisConnectionHub.getInstance().get(addr);

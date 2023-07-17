@@ -5,6 +5,8 @@ import com.netease.nim.camellia.tools.utils.LockMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.*;
 
 /**
@@ -143,6 +145,14 @@ public class CamelliaLinearInitializationExecutor<K, T> implements CamelliaExecu
     public void put(K key, T value) {
         cache.put(key.toString(), value);
         clearFutureQueue(key.toString(), value);
+    }
+
+    /**
+     * 获取所有资源
+     * @return 资源列表
+     */
+    public List<T> getAll() {
+        return new ArrayList<>(cache.values());
     }
 
     private boolean offerFutureQueue(String keyStr, CompletableFuture<T> future) {
