@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 
@@ -162,23 +163,38 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         return env;
     }
 
+
     @Override
-    public List<IUpstreamClientTemplate> getAll() {
-        List<IUpstreamClientTemplate> list = new ArrayList<>();
+    public synchronized int shutdown() {
+        int size = 0;
         if (localInstance != null) {
-            list.add(localInstance);
+            localInstance.shutdown();
+            localInstance = null;
+            size ++;
         }
         if (remoteInstance != null) {
-            list.add(remoteInstance);
+            remoteInstance.shutdown();
+            remoteInstance = null;
+            size ++;
         }
         if (customInstance != null) {
-            list.add(customInstance);
+            customInstance.shutdown();;
+            customInstance = null;
+            size ++;
         }
         if (executor != null) {
-            List<IUpstreamClientTemplate> templates = executor.getAll();
-            list.addAll(templates);
+            Map<String, IUpstreamClientTemplate> map = executor.getAll();
+            if (map != null) {
+                for (Map.Entry<String, IUpstreamClientTemplate> entry : map.entrySet()) {
+                    String key = entry.getKey();
+                    IUpstreamClientTemplate template = entry.getValue();
+                    template.shutdown();
+                    executor.remove(key);
+                    size ++;
+                }
+            }
         }
-        return list;
+        return size;
     }
 
     private void init() {

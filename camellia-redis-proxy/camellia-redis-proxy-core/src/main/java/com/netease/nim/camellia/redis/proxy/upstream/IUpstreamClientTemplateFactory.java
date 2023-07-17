@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.upstream;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -48,10 +47,10 @@ public interface IUpstreamClientTemplateFactory {
     }
 
     /**
-     * get all IUpstreamClientTemplate instances
-     * @return instances
+     * shutdown
+     * @return size
      */
-    List<IUpstreamClientTemplate> getAll();
+    int shutdown();
 
     static CompletableFuture<IUpstreamClientTemplate> wrapper(IUpstreamClientTemplate template) {
         CompletableFuture<IUpstreamClientTemplate> future = new CompletableFuture<>();

@@ -6,7 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -151,8 +153,8 @@ public class CamelliaLinearInitializationExecutor<K, T> implements CamelliaExecu
      * 获取所有资源
      * @return 资源列表
      */
-    public List<T> getAll() {
-        return new ArrayList<>(cache.values());
+    public Map<String, T> getAll() {
+        return new HashMap<>(cache);
     }
 
     private boolean offerFutureQueue(String keyStr, CompletableFuture<T> future) {

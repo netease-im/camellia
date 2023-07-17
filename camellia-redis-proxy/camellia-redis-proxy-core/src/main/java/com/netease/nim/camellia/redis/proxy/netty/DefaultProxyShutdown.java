@@ -125,14 +125,6 @@ public class DefaultProxyShutdown implements ProxyShutdown {
     @Override
     public int closeUpstreamClientTemplates() {
         if (factory == null) return 0;
-        int size = 0;
-        List<IUpstreamClientTemplate> templates = factory.getAll();
-        if (templates != null) {
-            for (IUpstreamClientTemplate template : templates) {
-                template.shutdown();
-                size ++;
-            }
-        }
-        return size;
+        return factory.shutdown();
     }
 }

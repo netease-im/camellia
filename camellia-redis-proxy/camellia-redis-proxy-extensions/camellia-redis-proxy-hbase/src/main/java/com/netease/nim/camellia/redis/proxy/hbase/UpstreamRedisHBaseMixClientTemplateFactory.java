@@ -52,7 +52,7 @@ public class UpstreamRedisHBaseMixClientTemplateFactory implements IUpstreamClie
     }
 
     @Override
-    public List<IUpstreamClientTemplate> getAll() {
-        return Collections.singletonList(template);
+    public int shutdown() {
+        return 0;
     }
 }
