@@ -6,6 +6,7 @@ package com.netease.nim.camellia.hot.key.sdk.collect;
 public enum CollectorType {
     Caffeine,
     ConcurrentLinkedHashMap,
+    ConcurrentHashMap,
     ;
 
 }

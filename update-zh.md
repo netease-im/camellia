@@ -15,7 +15,7 @@
 * camellia-redis-proxy使用camellia-http-console代替原来的console实现
 * camellia-hot-key-server使用camellia-http-console代替原来的console实现
 * camellia-hot-key使用camellia-codec模块
-* camellia-hot-key-sdk支持设置collector类型，包括Caffeine（默认）和ConcurrentLinkedHashMap
+* camellia-hot-key-sdk支持设置collector类型，包括Caffeine（默认）、ConcurrentLinkedHashMap、ConcurrentHashMap
 * camellia-hot-key-sdk支持设置为异步采集，默认为同步模式
 
 ### fix

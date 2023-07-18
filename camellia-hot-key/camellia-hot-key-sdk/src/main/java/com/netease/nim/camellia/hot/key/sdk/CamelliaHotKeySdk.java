@@ -7,10 +7,7 @@ import com.netease.nim.camellia.hot.key.common.model.*;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyConstants;
 import com.netease.nim.camellia.hot.key.common.netty.HotKeyPack;
 import com.netease.nim.camellia.hot.key.common.netty.pack.*;
-import com.netease.nim.camellia.hot.key.sdk.collect.CaffeineHotKeyCounterCollector;
-import com.netease.nim.camellia.hot.key.sdk.collect.CollectorType;
-import com.netease.nim.camellia.hot.key.sdk.collect.ConcurrentLinkedHashMapHotKeyCounterCollector;
-import com.netease.nim.camellia.hot.key.sdk.collect.IHotKeyCounterCollector;
+import com.netease.nim.camellia.hot.key.sdk.collect.*;
 import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeySdkConfig;
 import com.netease.nim.camellia.hot.key.sdk.listener.CamelliaHotKeyConfigListener;
 import com.netease.nim.camellia.hot.key.sdk.listener.CamelliaHotKeyListener;
@@ -68,9 +65,11 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
         }
         CollectorType collectorType = config.getCollectorType();
         if (collectorType == CollectorType.Caffeine) {
-            this.collector = new CaffeineHotKeyCounterCollector(config.getCapacity());
+            this.collector = new CaffeineCollector(config.getCapacity());
         } else if (collectorType == CollectorType.ConcurrentLinkedHashMap) {
-            this.collector = new ConcurrentLinkedHashMapHotKeyCounterCollector(config.getCapacity());
+            this.collector = new ConcurrentLinkedHashMapCollector(config.getCapacity());
+        } else if (collectorType == CollectorType.ConcurrentHashMap) {
+            this.collector = new ConcurrentHashMapCollector(config.getCapacity());
         } else {
             throw new IllegalArgumentException("unknown collectorType");
         }

@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.LongAdder;
 /**
  * Created by caojiajun on 2023/5/9
  */
-public class CaffeineHotKeyCounterCollector implements IHotKeyCounterCollector {
+public class CaffeineCollector implements IHotKeyCounterCollector {
 
     private final AtomicBoolean backUp = new AtomicBoolean(false);
     private final int capacity;
@@ -26,7 +26,7 @@ public class CaffeineHotKeyCounterCollector implements IHotKeyCounterCollector {
     private final ConcurrentHashMap<String, Cache<String, LongAdder>> map2;
     private int listInitSize = HotKeySdkUtils.update(0);
 
-    public CaffeineHotKeyCounterCollector(int capacity) {
+    public CaffeineCollector(int capacity) {
         this.capacity = capacity;
         map1 = new ConcurrentHashMap<>();
         map2 = new ConcurrentHashMap<>();
