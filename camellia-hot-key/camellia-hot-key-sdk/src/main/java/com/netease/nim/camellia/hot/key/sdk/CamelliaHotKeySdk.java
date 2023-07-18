@@ -17,6 +17,7 @@ import com.netease.nim.camellia.hot.key.sdk.listener.CamelliaHotKeyListener;
 import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyClient;
 import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyClientHub;
 import com.netease.nim.camellia.hot.key.sdk.netty.HotKeyClientListener;
+import com.netease.nim.camellia.hot.key.sdk.util.HotKeySdkUtils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
@@ -57,6 +58,8 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
 
     private final boolean async;
     private LinkedBlockingQueue<QueueItem> queue;
+
+    private int collectListInitSize = HotKeySdkUtils.update(0);
 
     public CamelliaHotKeySdk(CamelliaHotKeySdkConfig config) {
         this.config = config;
@@ -194,9 +197,10 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
             Map<HotKeyClient, List<KeyCounter>> map = new HashMap<>();
             for (KeyCounter counter : collect) {
                 HotKeyClient client = HotKeyClientHub.getInstance().selectClient(config.getDiscovery(), counter.getKey());
-                List<KeyCounter> counters = CamelliaMapUtils.computeIfAbsent(map, client, k -> new ArrayList<>());
+                List<KeyCounter> counters = CamelliaMapUtils.computeIfAbsent(map, client, k -> new ArrayList<>(collectListInitSize));
                 counters.add(counter);
             }
+            int maxSize = 0;
             for (Map.Entry<HotKeyClient, List<KeyCounter>> entry : map.entrySet()) {
                 HotKeyClient client = entry.getKey();
                 if (client == null) {
@@ -204,6 +208,9 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
                     continue;
                 }
                 List<KeyCounter> counters = entry.getValue();
+                if (counters.size() > maxSize) {
+                    maxSize = counters.size();
+                }
                 List<List<KeyCounter>> split = CollectionSplitUtil.split(counters, config.getPushBatch());
                 for (List<KeyCounter> list : split) {
                     CompletableFuture<HotKeyPack> future = client.sendPack(HotKeyPack.newPack(HotKeyCommand.PUSH, new PushPack(list)));
@@ -218,6 +225,7 @@ public class CamelliaHotKeySdk implements ICamelliaHotKeySdk {
                     });
                 }
             }
+            this.collectListInitSize = HotKeySdkUtils.update(maxSize);
         } catch (Exception e) {
             logger.error("schedulePush error", e);
         }

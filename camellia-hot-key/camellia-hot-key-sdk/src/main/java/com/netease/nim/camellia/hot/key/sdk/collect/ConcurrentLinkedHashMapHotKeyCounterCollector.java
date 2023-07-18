@@ -3,6 +3,7 @@ package com.netease.nim.camellia.hot.key.sdk.collect;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
 import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
+import com.netease.nim.camellia.hot.key.sdk.util.HotKeySdkUtils;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ public class ConcurrentLinkedHashMapHotKeyCounterCollector implements IHotKeyCou
     private final int capacity;
     private final ConcurrentHashMap<String, ConcurrentLinkedHashMap<String, LongAdder>> map1;
     private final ConcurrentHashMap<String, ConcurrentLinkedHashMap<String, LongAdder>> map2;
+    private int listInitSize = HotKeySdkUtils.update(0);
 
     public ConcurrentLinkedHashMapHotKeyCounterCollector(int capacity) {
         this.capacity = capacity;
@@ -56,6 +58,7 @@ public class ConcurrentLinkedHashMapHotKeyCounterCollector implements IHotKeyCou
                 clear(map1);
             }
         }
+        this.listInitSize = HotKeySdkUtils.update(result.size());
         return result;
     }
 
@@ -66,7 +69,7 @@ public class ConcurrentLinkedHashMapHotKeyCounterCollector implements IHotKeyCou
     }
 
     private List<KeyCounter> toResult(ConcurrentHashMap<String, ConcurrentLinkedHashMap<String, LongAdder>> map) {
-        List<KeyCounter> result = new ArrayList<>();
+        List<KeyCounter> result = new ArrayList<>(listInitSize);
         for (Map.Entry<String, ConcurrentLinkedHashMap<String, LongAdder>> entry : map.entrySet()) {
             String namespace = entry.getKey();
             ConcurrentLinkedHashMap<String, LongAdder> subMap = entry.getValue();

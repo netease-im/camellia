@@ -32,7 +32,7 @@ public class MonitorPerformanceTest {
         LocalConfHotKeyServerDiscovery discovery = new LocalConfHotKeyServerDiscovery("local", addrList);
         config.setDiscovery(discovery);
         config.setCollectorType(CollectorType.ConcurrentLinkedHashMap);//默认是Caffeine，如果对性能敏感，建议使用ConcurrentLinkedHashMap
-        config.setAsync(false);//是否异步，默认false，如果Collector的延迟不满足，则可以使用异步采集
+        config.setAsync(false);//是否异步，默认false，如果Collector的延迟不满足，则可以使用异步采集(异步采集会产生大量的线程上下文切换，可能得不偿失)
         config.setAsyncQueueCapacity(100000);//异步队列的大小，默认10w
 
         CamelliaHotKeySdk sdk = new CamelliaHotKeySdk(config);

@@ -4,12 +4,14 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
+import com.netease.nim.camellia.hot.key.sdk.util.HotKeySdkUtils;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -22,6 +24,7 @@ public class CaffeineHotKeyCounterCollector implements IHotKeyCounterCollector {
     private final int capacity;
     private final ConcurrentHashMap<String, Cache<String, LongAdder>> map1;
     private final ConcurrentHashMap<String, Cache<String, LongAdder>> map2;
+    private int listInitSize = HotKeySdkUtils.update(0);
 
     public CaffeineHotKeyCounterCollector(int capacity) {
         this.capacity = capacity;
@@ -60,6 +63,7 @@ public class CaffeineHotKeyCounterCollector implements IHotKeyCounterCollector {
                 clear(map1);
             }
         }
+        this.listInitSize = HotKeySdkUtils.update(result.size());
         return result;
     }
 
@@ -70,11 +74,11 @@ public class CaffeineHotKeyCounterCollector implements IHotKeyCounterCollector {
     }
 
     private List<KeyCounter> toResult(ConcurrentHashMap<String, Cache<String, LongAdder>> map) {
-        List<KeyCounter> result = new ArrayList<>();
+        List<KeyCounter> result = new ArrayList<>(listInitSize);
         for (Map.Entry<String, Cache<String, LongAdder>> entry : map.entrySet()) {
             String namespace = entry.getKey();
-            Cache<String, LongAdder> subMap = entry.getValue();
-            for (Map.Entry<String, LongAdder> subEntry : subMap.asMap().entrySet()) {
+            ConcurrentMap<String, LongAdder> subMap = entry.getValue().asMap();
+            for (Map.Entry<String, LongAdder> subEntry : subMap.entrySet()) {
                 KeyCounter counter = new KeyCounter();
                 counter.setNamespace(namespace);
                 String uniqueKey = subEntry.getKey();
@@ -89,4 +93,5 @@ public class CaffeineHotKeyCounterCollector implements IHotKeyCounterCollector {
         }
         return result;
     }
+
 }

@@ -44,7 +44,7 @@ public class PushPack extends HotKeyPackBody {
 
     @Override
     public void marshal(Pack pack) {
-        ArrayMable<Props> arrayMable = new ArrayMable<>(Props.class);
+        ArrayMable<Props> arrayMable = new ArrayMable<>(new ArrayList<>(list.size()), Props.class);
         for (KeyCounter counter : list) {
             Props props = new Props();
             props.put(Tag.namespace.value, counter.getNamespace());
@@ -60,7 +60,7 @@ public class PushPack extends HotKeyPackBody {
     public void unmarshal(Unpack unpack) {
         ArrayMable<Props> arrayMable = new ArrayMable<>(Props.class);
         unpack.popMarshallable(arrayMable);
-        list = new ArrayList<>();
+        list = new ArrayList<>(arrayMable.list.size());
         for (Props props : arrayMable.list) {
             KeyCounter counter = new KeyCounter();
             counter.setNamespace(props.get(Tag.namespace.value));
