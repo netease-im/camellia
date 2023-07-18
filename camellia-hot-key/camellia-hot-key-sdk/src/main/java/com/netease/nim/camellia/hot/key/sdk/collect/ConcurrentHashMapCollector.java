@@ -3,12 +3,17 @@ package com.netease.nim.camellia.hot.key.sdk.collect;
 import com.netease.nim.camellia.hot.key.common.model.KeyAction;
 import com.netease.nim.camellia.hot.key.common.model.KeyCounter;
 import com.netease.nim.camellia.hot.key.sdk.util.HotKeySdkUtils;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -17,6 +22,18 @@ import java.util.concurrent.atomic.LongAdder;
  * Created by caojiajun on 2023/7/3
  */
 public class ConcurrentHashMapCollector implements IHotKeyCounterCollector {
+
+    private static final Logger logger = LoggerFactory.getLogger(ConcurrentHashMapCollector.class);
+    private static final LongAdder failedCount = new LongAdder();
+    static {
+        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(ConcurrentHashMapCollector.class))
+                .scheduleAtFixedRate(() -> {
+                    long count = failedCount.sumThenReset();
+                    if (count > 0) {
+                        logger.error("ConcurrentHashMapCollector full, drop count = {}", count);
+                    }
+                }, 30, 30, TimeUnit.SECONDS);
+    }
 
     private final AtomicBoolean backUp = new AtomicBoolean(false);
     private final int capacity;
@@ -34,6 +51,7 @@ public class ConcurrentHashMapCollector implements IHotKeyCounterCollector {
     public void push(String namespace, String key, KeyAction keyAction, long count) {
         ConcurrentHashMapWrapper<String, LongAdderWrapper> map = getMap(namespace);
         if (map.isFull()) {
+            failedCount.add(count);
             return;
         }
         String uniqueKey = key + "|" + keyAction.getValue();
