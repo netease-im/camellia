@@ -134,7 +134,7 @@ camellia-config下每个key代表一个hot-key的namespace，value代表config�
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-hot-key-config-nacos</artifactId>
-    <version>1.2.10</version>
+    <version>1.2.11</version>
 </dependency>
 ```
 

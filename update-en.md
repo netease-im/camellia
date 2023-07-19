@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.11（2023/06/xx）
+# 1.2.11（2023/07/19）
 ### add
 * camellia-tools add CamelliaSegmentStatistics tools
 * camellia-cache add a global on-off config

@@ -4,14 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-hot-key-spring-boot-starters</artifactId>
-	<version>1.2.11-SNAPSHOT</version>
+	<version>1.2.11</version>
 
 	<packaging>pom</packaging>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-hot-key</artifactId>
-		<version>1.2.11-SNAPSHOT</version>
+		<version>1.2.11</version>
 	</parent>
 
 	<modules>

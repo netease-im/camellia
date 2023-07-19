@@ -90,7 +90,7 @@ camellia主要包括以下功能模块：
 [快速开始](/docs/tools/tools.md)  
 
 ## 版本
-最新版本是1.2.10，已经发布到maven中央仓库（2023/06/07）  
+最新版本是1.2.11，已经发布到maven中央仓库（2023/07/19）  
 [更新日志](/update-zh.md)  
 
 ## 谁在使用Camellia
@@ -98,5 +98,5 @@ camellia主要包括以下功能模块：
 欢迎所有 Camellia 用户及贡献者在 [这里](https://github.com/netease-im/camellia/issues/10) 分享您在当前工作中开发/使用 Camellia 的故事  
 
 ## 联系方式
-微信: hdnxttl  
+微信: hdnxttl（加此微信拉进技术交流群）    
 email: zj_caojiajun@163.com  

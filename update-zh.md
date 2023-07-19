@@ -1,7 +1,7 @@
 [ENGLISH](update-en.md)
 
 
-# 1.2.11（2023/06/xx）
+# 1.2.11（2023/07/19）
 ### 新增
 * camellia-tools新增CamelliaSegmentStatistics工具类
 * camellia-cache新增一个全局总开关
