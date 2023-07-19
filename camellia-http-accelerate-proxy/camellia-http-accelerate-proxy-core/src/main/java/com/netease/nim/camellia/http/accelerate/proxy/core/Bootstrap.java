@@ -19,15 +19,15 @@ import java.util.concurrent.TimeUnit;
  *
  *
  * 1、user
- * ==https==>
+ * ==https==
  * 2、nginx
- * ==http==>
- * 3、IHttpAccelerateProxy --> ITransportRouter --> ITransportClient
- * ==tcp/quic==>
- * 4、ITransportServer --> IUpstreamRouter --> IUpstreamClient
- * ==http==>
+ * ==http==
+ * 3、IHttpAccelerateProxy -- ITransportRouter -- ITransportClient
+ * ==tcp/quic==
+ * 4、ITransportServer -- IUpstreamRouter -- IUpstreamClient
+ * ==http==
  * 5、nginx
- * ==http==>
+ * ==http==
  * 6、后端
  *
  * <p>
