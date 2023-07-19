@@ -30,7 +30,7 @@ public class ConcurrentHashMapCollector implements IHotKeyCounterCollector {
                 .scheduleAtFixedRate(() -> {
                     long count = failedCount.sumThenReset();
                     if (count > 0) {
-                        logger.error("ConcurrentHashMapCollector full, drop count = {}", count);
+                        logger.info("ConcurrentHashMapCollector full, drop count = {}", count);
                     }
                 }, 30, 30, TimeUnit.SECONDS);
     }
