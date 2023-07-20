@@ -37,6 +37,7 @@ public class TransportTcpServer implements ITransportServer {
 
     @Override
     public void start() {
+        String host = DynamicConf.getString("transport.server.host", "0.0.0.0");
         int port = DynamicConf.getInt("transport.server.port", 11600);
         if (port <= 0) {
             logger.warn("transport tcp server skip start");
@@ -87,10 +88,10 @@ public class TransportTcpServer implements ITransportServer {
                         }
                     });
             bootstrap.bind(port).sync();
-            logger.info("transport tcp server start success, port = {}", port);
+            logger.info("transport tcp server start success, host = {}, port = {}", host, port);
             started = true;
         } catch (Exception e) {
-            logger.error("transport tcp server start error, port = {}", port, e);
+            logger.error("transport tcp server start error, host = {}, port = {}", host, port, e);
             throw new IllegalStateException(e);
         }
     }

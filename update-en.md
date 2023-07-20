@@ -1,5 +1,16 @@
 [中文版](update-zh.md)
 
+# 1.2.12（2023/07/xx）
+### add
+* camellia-http-accelerate-proxy，proxy and transport-server support setting bind host, default 0.0.0.0
+
+### update
+* camellia-hot-key-sdk use ConcurrentHashMapCollector, update collector full log from error to info
+
+### fix
+* none
+
+
 # 1.2.11（2023/07/19）
 ### add
 * camellia-tools add CamelliaSegmentStatistics tools

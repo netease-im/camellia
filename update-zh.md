@@ -1,6 +1,17 @@
 [ENGLISH](update-en.md)
 
 
+# 1.2.12（2023/07/xx）
+### 新增
+* camellia-http-accelerate-proxy，proxy和transport-server支持设置绑定的host（默认是0.0.0.0）
+
+### 更新
+* camellia-hot-key-sdk使用ConcurrentHashMapCollector时如果key满了，打印的日志从error改成info
+
+### fix
+* 无
+
+
 # 1.2.11（2023/07/19）
 ### 新增
 * camellia-tools新增CamelliaSegmentStatistics工具类

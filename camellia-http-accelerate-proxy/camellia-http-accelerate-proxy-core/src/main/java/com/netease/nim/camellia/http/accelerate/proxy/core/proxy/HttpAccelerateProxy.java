@@ -38,6 +38,7 @@ public class HttpAccelerateProxy implements IHttpAccelerateProxy {
 
     @Override
     public void start() {
+        String host = DynamicConf.getString("http.accelerate.proxy.host", "0.0.0.0");
         int port = DynamicConf.getInt("http.accelerate.proxy.port", 11800);
         if (port <= 0) {
             logger.warn("http accelerate proxy skip start");
@@ -129,11 +130,11 @@ public class HttpAccelerateProxy implements IHttpAccelerateProxy {
                             });
                         }
                     });
-            bootstrap.bind(port).sync();
-            logger.info("http accelerate proxy start success, port = {}", port);
+            bootstrap.bind(host, port).sync();
+            logger.info("http accelerate proxy start success, host = {}, port = {}", host, port);
             started = true;
         } catch (Exception e) {
-            logger.error("http accelerate proxy start error, port = {}", port, e);
+            logger.error("http accelerate proxy start error, host = {}, port = {}", host, port, e);
             throw new IllegalStateException(e);
         }
     }
