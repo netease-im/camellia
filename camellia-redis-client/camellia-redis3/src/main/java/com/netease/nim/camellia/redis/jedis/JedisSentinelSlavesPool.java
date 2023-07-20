@@ -32,33 +32,37 @@ public class JedisSentinelSlavesPool extends JedisPool {
 
     private final GenericObjectPoolConfig poolConfig;
     private final int timeout;
+    private final String userName;
     private final String password;
     private final int db;
     private HostAndPort master;
     private List<HostAndPort> slaves;
 
-    public JedisSentinelSlavesPool(RedisSentinelSlavesResource redisSentinelSlavesResource,
+    public JedisSentinelSlavesPool(RedisSentinelSlavesResource resource,
                                    GenericObjectPoolConfig poolConfig, int timeout) {
-        this(redisSentinelSlavesResource, poolConfig, timeout, CamelliaRedisConstants.Jedis.redisSentinelSlavesCheckIntervalMillis);
+        this(resource, poolConfig, timeout, CamelliaRedisConstants.Jedis.redisSentinelSlavesCheckIntervalMillis);
     }
 
-    public JedisSentinelSlavesPool(RedisSentinelSlavesResource redisSentinelSlavesResource,
+    public JedisSentinelSlavesPool(RedisSentinelSlavesResource resource,
                                    GenericObjectPoolConfig poolConfig, int timeout, long slavesCheckIntervalMillis) {
         this.poolConfig = poolConfig;
         this.timeout = timeout;
-        this.password = redisSentinelSlavesResource.getPassword();
-        this.redisSentinelSlavesResource = redisSentinelSlavesResource;
-        this.db = redisSentinelSlavesResource.getDb();
-        for (RedisSentinelResource.Node node : redisSentinelSlavesResource.getNodes()) {
-            if (redisSentinelSlavesResource.isWithMaster()) {
-                MasterListener masterListener = new MasterListener(this, redisSentinelSlavesResource.getMaster(), node.getHost(), node.getPort());
+        this.password = resource.getPassword();
+        this.userName = resource.getUserName();
+        this.redisSentinelSlavesResource = resource;
+        this.db = resource.getDb();
+        for (RedisSentinelResource.Node node : resource.getNodes()) {
+            if (resource.isWithMaster()) {
+                MasterListener masterListener = new MasterListener(this, resource.getMaster(),
+                        node.getHost(), node.getPort(), resource.getSentinelUserName(), resource.getSentinelPassword());
                 if (master == null) {
                     masterListener.init();
                 }
                 masterListener.setDaemon(true);
                 masterListener.start();
             }
-            SlavesListener slavesListener = new SlavesListener(this, redisSentinelSlavesResource.getMaster(), node.getHost(), node.getPort(), slavesCheckIntervalMillis);
+            SlavesListener slavesListener = new SlavesListener(this, resource.getMaster(),
+                    node.getHost(), node.getPort(), slavesCheckIntervalMillis, resource.getSentinelUserName(), resource.getSentinelPassword());
             if (slaves == null || slaves.isEmpty()) {
                 slavesListener.init();
             }
@@ -66,7 +70,7 @@ public class JedisSentinelSlavesPool extends JedisPool {
             slavesListener.start();
         }
         if (master == null && (slaves == null || slaves.isEmpty())) {
-            throw new CamelliaRedisException("Could not get an available node of master/slave, url = " + redisSentinelSlavesResource.getUrl());
+            throw new CamelliaRedisException("Could not get an available node of master/slave, url = " + resource.getUrl());
         }
     }
 
@@ -203,7 +207,7 @@ public class JedisSentinelSlavesPool extends JedisPool {
     private void initPool(HostAndPort hostAndPort) {
         JedisPool jedisPool = poolMap.get(hostAndPort.getUrl());
         if (jedisPool == null) {
-            jedisPool = new JedisPool(poolConfig, hostAndPort.getHost(), hostAndPort.getPort(), timeout, password, db);
+            jedisPool = new JedisPool(poolConfig, hostAndPort.getHost(), hostAndPort.getPort(), timeout, userName, password, db);
             poolMap.put(hostAndPort.getUrl(), jedisPool);
         }
     }
@@ -215,19 +219,28 @@ public class JedisSentinelSlavesPool extends JedisPool {
         private final int port;
         private final AtomicBoolean running = new AtomicBoolean(false);
         private final long checkIntervalMillis;
+        private final String userName;
+        private final String password;
 
-        public SlavesListener(JedisSentinelSlavesPool jedisSentinelSlavesPool, String masterName, String host, int port, long checkIntervalMillis) {
+        public SlavesListener(JedisSentinelSlavesPool jedisSentinelSlavesPool, String masterName, String host, int port, long checkIntervalMillis, String userName, String password) {
             super(String.format("SlavesListener-%s-[%s:%d]", masterName, host, port));
             this.jedisSentinelSlavesPool = jedisSentinelSlavesPool;
             this.masterName = masterName;
             this.host = host;
             this.port = port;
             this.checkIntervalMillis = checkIntervalMillis;
+            this.userName = userName;
+            this.password = password;
         }
 
         public void init() {
             try {
                 try (Jedis jedis = new Jedis(host, port)) {
+                    if (password != null && userName != null) {
+                        jedis.auth(userName, password);
+                    } else if (password != null) {
+                        jedis.auth(password);
+                    }
                     refresh(jedis);
                 }
             } catch (Exception e) {
@@ -281,18 +294,27 @@ public class JedisSentinelSlavesPool extends JedisPool {
         private final String masterName;
         private final String host;
         private final int port;
+        private final String userName;
+        private final String password;
         private final AtomicBoolean running = new AtomicBoolean(false);
 
-        public MasterListener(JedisSentinelSlavesPool jedisSentinelSlavesPool, String masterName, String host, int port) {
+        public MasterListener(JedisSentinelSlavesPool jedisSentinelSlavesPool, String masterName, String host, int port, String userName, String password) {
             super(String.format("MasterListener-%s-[%s:%d]", masterName, host, port));
             this.jedisSentinelSlavesPool = jedisSentinelSlavesPool;
             this.masterName = masterName;
             this.host = host;
             this.port = port;
+            this.userName = userName;
+            this.password = password;
         }
 
         public void init() {
             try (Jedis jedis = new Jedis(host, port)) {
+                if (password != null && userName != null) {
+                    jedis.auth(userName, password);
+                } else if (password != null) {
+                    jedis.auth(password);
+                }
                 List<String> masterAddr = jedis.sentinelGetMasterAddrByName(masterName);
                 if (masterAddr == null || masterAddr.size() != 2) {
                     logger.warn("Can not get master addr, master name: " + masterName + ". Sentinel: " + host + "：" + port + ".");

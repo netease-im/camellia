@@ -4,6 +4,10 @@
 # 1.2.12（2023/07/xx）
 ### 新增
 * camellia-http-accelerate-proxy，proxy和transport-server支持设置绑定的host（默认是0.0.0.0）
+* camellia-redis3支持账号（redis-standalone、redis-sentinel、redis-sentinel-slaves、redis-cluster）
+* camellia-redis的redis-sentinel、redis-sentinel-slaves支持设置sentinelPassword
+* camellia-redis3的redis-sentinel、redis-sentinel-slaves支持设置sentinelUserName和sentinelPassword
+* camellia-redis-proxy的redis-sentinel、redis-sentinel-slaves支持设置sentinelUserName和sentinelPassword
 
 ### 更新
 * camellia-hot-key-sdk使用ConcurrentHashMapCollector时如果key满了，打印的日志从error改成info

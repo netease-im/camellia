@@ -73,10 +73,9 @@ public interface JedisClusterFactory {
                             nodes.add(hostAndPort);
                         }
                         if (password == null || password.length() == 0) {
-                            jedisCluster = new JedisClusterWrapper(nodes, connectionTimeout, soTimeout, maxAttempts, poolConfig);
-                        } else {
-                            jedisCluster = new JedisClusterWrapper(nodes, connectionTimeout, soTimeout, maxAttempts, password, poolConfig);
+                            password = null;
                         }
+                        jedisCluster = new JedisClusterWrapper(nodes, connectionTimeout, soTimeout, maxAttempts, password, poolConfig);
                         map.put(resource.getUrl(), jedisCluster);
                     }
                 }

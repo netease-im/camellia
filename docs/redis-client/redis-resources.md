@@ -3,6 +3,7 @@
 * 支持普通单点redis-standalone、redis-sentinel、redis-cluster三种类型，也支持配置多个无状态的proxy节点（如camellia-redis-proxy、codis、twemproxy等）
 * 此外可以支持配置读请求指向redis-sentinel的从节点
 * 具体的url格式如下：
+* 仅camellia-redis3支持username，camellia-redis仅支持password
 
 ### redis-standalone
 ```
@@ -12,6 +13,8 @@ redis://passwd@127.0.0.1:6379
 redis://@127.0.0.1:6379
 ##有密码，且设置了db
 redis://passwd@127.0.0.1:6379?db=1
+##有账号也有密码且设置了db
+redis://username:passwd@127.0.0.1:6379?db=1
 ```
 
 ### redis-sentinel
@@ -22,6 +25,10 @@ redis-sentinel://passwd@127.0.0.1:16379,127.0.0.1:16379/masterName
 redis-sentinel://@127.0.0.1:16379,127.0.0.1:16379/masterName
 ##有密码，且设置了db
 redis-sentinel://passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?db=1
+##有账号也有密码，且设置了db
+redis-sentinel://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?db=1
+##有密码，且设置了db，且设置了sentinel的账号和密码
+redis-sentinel://passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?db=1&sentinelUserName=xxx&sentinelPassword=xxx
 ```
 
 ### redis-cluster
@@ -30,6 +37,8 @@ redis-sentinel://passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?db=1
 redis-cluster://passwd@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
 ##没有密码
 redis-cluster://@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
+##有账号也有密码
+redis-cluster://username:passwd@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
 ```
 
 ### redis-sentinel-slaves
@@ -41,12 +50,20 @@ redis-cluster://@127.0.0.1:6379,127.0.0.2:6379,127.0.0.3:6379
 redis-sentinel-slaves://passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=false
 ##没有密码
 redis-sentinel-slaves://@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=false
+##有账号也有密码
+redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=false
+##没有密码，且设置了sentinel的账号和密码
+redis-sentinel-slaves://@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=false&sentinelUserName=xxx&sentinelPassword=xxx
 
 ##读master，此时camellia会从master+slave集合中随机挑选一个节点进行命令的转发（可能是master也可能是slave，所有节点概率相同）
 ##有密码
 redis-sentinel-slaves://passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true
 ##没有密码
 redis-sentinel-slaves://@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true
+##有账号也有密码
+redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true
+##没有密码，且设置了sentinel的账号和密码
+redis-sentinel-slaves://@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true&sentinelUserName=xxx&sentinelPassword=xxx
 
 ##redis-sentinel-slaves会自动感知：节点宕机、主从切换和节点扩容
 ```

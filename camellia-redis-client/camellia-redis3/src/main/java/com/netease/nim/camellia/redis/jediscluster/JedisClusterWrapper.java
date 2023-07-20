@@ -141,6 +141,11 @@ public class JedisClusterWrapper extends JedisCluster {
         init();
     }
 
+    public JedisClusterWrapper(Set<HostAndPort> jedisClusterNode, int connectionTimeout, int soTimeout, int maxAttempts, String user, String password, GenericObjectPoolConfig poolConfig) {
+        super(jedisClusterNode, connectionTimeout, soTimeout, maxAttempts, user, password, null, poolConfig);
+        init();
+    }
+
     public JedisClusterConnectionHandler getConnectionHandler() {
         return connectionHandler;
     }

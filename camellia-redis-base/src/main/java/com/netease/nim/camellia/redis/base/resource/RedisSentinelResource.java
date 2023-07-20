@@ -21,17 +21,26 @@ public class RedisSentinelResource extends Resource {
     private final String password;
     private final String userName;
     private final int db;
+    private final String sentinelUserName;
+    private final String sentinelPassword;
 
     public RedisSentinelResource(String master, List<Node> nodes, String userName, String password) {
         this(master, nodes, userName, password, 0);
     }
 
     public RedisSentinelResource(String master, List<Node> nodes, String userName, String password, int db) {
+        this(master, nodes, userName, password, db, null, null);
+    }
+
+    public RedisSentinelResource(String master, List<Node> nodes, String userName, String password, int db,
+                                 String sentinelUserName, String sentinelPassword) {
         this.master = master;
         this.nodes = nodes;
         this.password = password;
         this.userName = userName;
         this.db = db;
+        this.sentinelUserName = sentinelUserName;
+        this.sentinelPassword = sentinelPassword;
         StringBuilder url = new StringBuilder();
         url.append(RedisType.RedisSentinel.getPrefix());
         if (userName != null && password != null) {
@@ -47,8 +56,23 @@ public class RedisSentinelResource extends Resource {
         url.deleteCharAt(url.length() - 1);
         url.append("/");
         url.append(master);
+
+        boolean withParam = false;
+        if (db > 0 || sentinelUserName != null || sentinelPassword != null) {
+            url.append("?");
+            withParam = true;
+        }
         if (db > 0) {
-            url.append("?db=").append(db);
+            url.append("db=").append(db).append("&");
+        }
+        if (sentinelUserName != null) {
+            url.append("sentinelUserName=").append(sentinelUserName).append("&");
+        }
+        if (sentinelPassword != null) {
+            url.append("sentinelPassword=").append(sentinelPassword).append("&");
+        }
+        if (withParam) {
+            url.deleteCharAt(url.length() - 1);
         }
         this.setUrl(url.toString());
     }
@@ -75,6 +99,14 @@ public class RedisSentinelResource extends Resource {
 
     public int getDb() {
         return db;
+    }
+
+    public String getSentinelUserName() {
+        return sentinelUserName;
+    }
+
+    public String getSentinelPassword() {
+        return sentinelPassword;
     }
 
     public static class Node {

@@ -106,6 +106,8 @@ public class RedisResourceUtil {
 
                 String master;
                 int db = 0;
+                String sentinelUserName = null;
+                String sentinelPassword = null;
                 if (masterWithParams.contains("?")) {
                     int i = masterWithParams.indexOf("?");
                     master = masterWithParams.substring(0, i);
@@ -115,10 +117,12 @@ public class RedisResourceUtil {
                     if (dbStr != null) {
                         db = Integer.parseInt(dbStr);
                     }
+                    sentinelUserName = params.get("sentinelUserName");
+                    sentinelPassword = params.get("sentinelPassword");
                 } else {
                     master = masterWithParams;
                 }
-                return new RedisSentinelResource(master, nodeList, userName, password, db);
+                return new RedisSentinelResource(master, nodeList, userName, password, db, sentinelUserName, sentinelPassword);
             } else if (url.startsWith(RedisType.RedisCluster.getPrefix())) {
                 String substring = url.substring(RedisType.RedisCluster.getPrefix().length());
                 if (!substring.contains("@")) {
@@ -175,6 +179,8 @@ public class RedisResourceUtil {
                 String master;
                 boolean withMaster = false;
                 int db = 0;
+                String sentinelUserName = null;
+                String sentinelPassword = null;
                 if (masterWithParams.contains("?")) {
                     int i = masterWithParams.indexOf("?");
                     master = masterWithParams.substring(0, i);
@@ -191,10 +197,12 @@ public class RedisResourceUtil {
                     if (dbStr != null) {
                         db = Integer.parseInt(dbStr);
                     }
+                    sentinelUserName = params.get("sentinelUserName");
+                    sentinelPassword = params.get("sentinelPassword");
                 } else {
                     master = masterWithParams;
                 }
-                return new RedisSentinelSlavesResource(master, nodeList, userName, password, withMaster, db);
+                return new RedisSentinelSlavesResource(master, nodeList, userName, password, withMaster, db, sentinelUserName, sentinelPassword);
             } else if (url.startsWith(RedisType.RedisClusterSlaves.getPrefix())) {
                 String substring = url.substring(RedisType.RedisClusterSlaves.getPrefix().length());
                 if (!substring.contains("@")) {

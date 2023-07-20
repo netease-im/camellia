@@ -30,12 +30,12 @@ public class RedisSentinelUtils {
     public static final byte[] MASTER_SWITCH = Utils.stringToBytes("+switch-master");
     public static final byte[] SLAVES = Utils.stringToBytes("slaves");
 
-    public static RedisSentinelMasterResponse getMasterAddr(String host, int port, String masterName) {
+    public static RedisSentinelMasterResponse getMasterAddr(String host, int port, String masterName, String userName, String password) {
         RedisConnection redisConnection = null;
         boolean sentinelAvailable = false;
         HostAndPort master = null;
         try {
-            redisConnection = RedisConnectionHub.getInstance().newConnection(host, port, null, null);
+            redisConnection = RedisConnectionHub.getInstance().newConnection(host, port, userName, password);
             if (redisConnection != null && redisConnection.isValid()) {
                 sentinelAvailable = true;
                 CompletableFuture<Reply> future = redisConnection.sendCommand(RedisCommand.SENTINEL.raw(), SENTINEL_GET_MASTER_ADDR_BY_NAME, Utils.stringToBytes(masterName));
@@ -53,12 +53,12 @@ public class RedisSentinelUtils {
         }
     }
 
-    public static RedisSentinelSlavesResponse getSlaveAddrs(String host, int port, String masterName) {
+    public static RedisSentinelSlavesResponse getSlaveAddrs(String host, int port, String masterName, String userName, String password) {
         RedisConnection redisConnection = null;
         boolean sentinelAvailable = false;
         List<HostAndPort> slaves = null;
         try {
-            redisConnection = RedisConnectionHub.getInstance().newConnection(host, port, null, null);
+            redisConnection = RedisConnectionHub.getInstance().newConnection(host, port, userName, password);
             if (redisConnection != null && redisConnection.isValid()) {
                 sentinelAvailable = true;
                 CompletableFuture<Reply> future = redisConnection.sendCommand(RedisCommand.SENTINEL.raw(), SLAVES, Utils.stringToBytes(masterName));

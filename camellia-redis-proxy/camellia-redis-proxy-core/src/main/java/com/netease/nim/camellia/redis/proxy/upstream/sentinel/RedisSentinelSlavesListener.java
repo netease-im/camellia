@@ -30,12 +30,16 @@ public class RedisSentinelSlavesListener extends Thread {
     private final SlavesUpdateCallback callback;
     private final String master;
     private boolean running = true;
+    private final String userName;
+    private final String password;
 
-    public RedisSentinelSlavesListener(Resource resource, HostAndPort sentinel, String master, SlavesUpdateCallback callback) {
+    public RedisSentinelSlavesListener(Resource resource, HostAndPort sentinel, String master, String userName, String password, SlavesUpdateCallback callback) {
         this.resource = resource;
         this.sentinel = sentinel;
         this.callback = callback;
         this.master = master;
+        this.userName = userName;
+        this.password = password;
         setName("redis-sentinel-slaves-listener-" + sentinel.toString() + "-" + id.incrementAndGet());
     }
 
@@ -52,7 +56,7 @@ public class RedisSentinelSlavesListener extends Thread {
                     if (redisConnection != null && !redisConnection.isValid()) {
                         redisConnection.stop();
                     }
-                    redisConnection = RedisConnectionHub.getInstance().newConnection(sentinel.getHost(), sentinel.getPort(), null, null);
+                    redisConnection = RedisConnectionHub.getInstance().newConnection(sentinel.getHost(), sentinel.getPort(), userName, password);
                     while (redisConnection == null || !redisConnection.isValid()) {
                         logger.error("connect to sentinel fail, sentinel = {}. sleeping 5000ms and retrying.", sentinel.getUrl());
                         try {
@@ -60,7 +64,7 @@ public class RedisSentinelSlavesListener extends Thread {
                         } catch (InterruptedException e) {
                             logger.error(e.getMessage(), e);
                         }
-                        redisConnection = RedisConnectionHub.getInstance().newConnection(sentinel.getHost(), sentinel.getPort(), null, null);
+                        redisConnection = RedisConnectionHub.getInstance().newConnection(sentinel.getHost(), sentinel.getPort(), userName, password);
                     }
                 }
                 List<HostAndPort> slaves = null;

@@ -18,10 +18,10 @@ public interface JedisClusterFactory {
 
     /**
      * 获取JedisClusterWrapper对象
-     * @param redisClusterResource RedisCluster资源定义
+     * @param resource RedisCluster资源定义
      * @return JedisClusterWrapper对象
      */
-    JedisClusterWrapper getJedisCluster(RedisClusterResource redisClusterResource);
+    JedisClusterWrapper getJedisCluster(RedisClusterResource resource);
 
     /**
      * 一个默认实现
@@ -73,10 +73,10 @@ public interface JedisClusterFactory {
                             nodes.add(hostAndPort);
                         }
                         if (password == null || password.length() == 0) {
-                            jedisCluster = new JedisClusterWrapper(nodes, connectionTimeout, soTimeout, maxAttempts, poolConfig);
-                        } else {
-                            jedisCluster = new JedisClusterWrapper(nodes, connectionTimeout, soTimeout, maxAttempts, password, poolConfig);
+                            password = null;
                         }
+                        String userName = resource.getUserName();
+                        jedisCluster = new JedisClusterWrapper(nodes, connectionTimeout, soTimeout, maxAttempts, userName, password, poolConfig);
                         map.put(resource.getUrl(), jedisCluster);
                     }
                 }

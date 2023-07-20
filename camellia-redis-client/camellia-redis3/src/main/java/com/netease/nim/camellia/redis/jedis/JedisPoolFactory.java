@@ -26,45 +26,45 @@ public interface JedisPoolFactory {
 
     /**
      * 获取JedisPool对象
-     * @param redisResource Redis资源定义
+     * @param resource Redis资源定义
      * @return JedisPool对象
      */
-    JedisPool getJedisPool(RedisResource redisResource);
+    JedisPool getJedisPool(RedisResource resource);
 
     /**
      * 获取JedisSentinelPool对象
-     * @param redisSentinelResource RedisSentinel 资源定义
+     * @param resource RedisSentinel 资源定义
      * @return JedisPool对象
      */
-    JedisSentinelPool getJedisSentinelPool(RedisSentinelResource redisSentinelResource);
+    JedisSentinelPool getJedisSentinelPool(RedisSentinelResource resource);
 
     /**
      * 获取CamelliaJedisPool对象
-     * @param camelliaRedisProxyResource CamelliaRedisProxy资源定义
+     * @param resource CamelliaRedisProxy资源定义
      * @return JedisPool对象
      */
-    JedisPool getCamelliaJedisPool(CamelliaRedisProxyResource camelliaRedisProxyResource);
+    JedisPool getCamelliaJedisPool(CamelliaRedisProxyResource resource);
 
     /**
      * 获取JedisSentinelSlavesPool对象
-     * @param redisSentinelSlavesResource RedisSentinelSlaves资源定义
+     * @param resource RedisSentinelSlaves资源定义
      * @return JedisSentinelSlavesPool对象
      */
-    JedisPool getJedisSentinelSlavesPool(RedisSentinelSlavesResource redisSentinelSlavesResource);
+    JedisPool getJedisSentinelSlavesPool(RedisSentinelSlavesResource resource);
 
     /**
      * 获取RedisProxiesJedisPool对象
-     * @param redisProxiesResource RedisProxiesResource资源定义
+     * @param resource RedisProxiesResource资源定义
      * @return RedisProxiesJedisPool对象
      */
-    JedisPool getRedisProxiesJedisPool(RedisProxiesResource redisProxiesResource);
+    JedisPool getRedisProxiesJedisPool(RedisProxiesResource resource);
 
     /**
      * 获取RedisProxiesDiscoveryJedisPool对象
-     * @param redisProxiesDiscoveryResource RedisProxiesDiscoveryResource资源定义
+     * @param resource RedisProxiesDiscoveryResource资源定义
      * @return RedisProxiesJedisPool对象
      */
-    JedisPool getRedisProxiesDiscoveryJedisPool(RedisProxiesDiscoveryResource redisProxiesDiscoveryResource);
+    JedisPool getRedisProxiesDiscoveryJedisPool(RedisProxiesDiscoveryResource resource);
 
     /**
      * 一个默认实现
@@ -108,21 +108,19 @@ public interface JedisPoolFactory {
         }
 
         @Override
-        public JedisPool getJedisPool(RedisResource redisResource) {
-            JedisPool jedisPool = map1.get(redisResource.getUrl());
+        public JedisPool getJedisPool(RedisResource resource) {
+            JedisPool jedisPool = map1.get(resource.getUrl());
             if (jedisPool == null) {
                 synchronized (lock) {
-                    jedisPool = map1.get(redisResource.getUrl());
+                    jedisPool = map1.get(resource.getUrl());
                     if (jedisPool == null) {
-                        String password = redisResource.getPassword();
+                        String password = resource.getPassword();
                         if (password == null || password.length() == 0) {
-                            jedisPool = new JedisPool(poolConfig, redisResource.getHost(),
-                                    redisResource.getPort(), timeout, null, redisResource.getDb(), null);
-                        } else {
-                            jedisPool = new JedisPool(poolConfig, redisResource.getHost(),
-                                    redisResource.getPort(), timeout, redisResource.getPassword(), redisResource.getDb(), null);
+                            password = null;
                         }
-                        map1.put(redisResource.getUrl(), jedisPool);
+                        jedisPool = new JedisPool(poolConfig, resource.getHost(),
+                                resource.getPort(), timeout, resource.getUserName(), password, resource.getDb(), null);
+                        map1.put(resource.getUrl(), jedisPool);
                     }
                 }
             }
@@ -130,27 +128,27 @@ public interface JedisPoolFactory {
         }
 
         @Override
-        public JedisSentinelPool getJedisSentinelPool(RedisSentinelResource redisSentinelResource) {
-            JedisSentinelPool jedisSentinelPool = map2.get(redisSentinelResource.getUrl());
+        public JedisSentinelPool getJedisSentinelPool(RedisSentinelResource resource) {
+            JedisSentinelPool jedisSentinelPool = map2.get(resource.getUrl());
             if (jedisSentinelPool == null) {
                 synchronized (lock) {
-                    jedisSentinelPool = map2.get(redisSentinelResource.getUrl());
+                    jedisSentinelPool = map2.get(resource.getUrl());
                     if (jedisSentinelPool == null) {
-                        List<RedisSentinelResource.Node> nodes = redisSentinelResource.getNodes();
+                        List<RedisSentinelResource.Node> nodes = resource.getNodes();
                         Set<String> sentinels = new HashSet<>();
                         for (RedisSentinelResource.Node node : nodes) {
                             sentinels.add(node.getHost() + ":" + node.getPort());
                         }
-                        String password = redisSentinelResource.getPassword();
-                        int db = redisSentinelResource.getDb();
+                        String password = resource.getPassword();
+                        int db = resource.getDb();
                         if (password == null || password.length() == 0) {
-                            jedisSentinelPool = new JedisSentinelPool(redisSentinelResource.getMaster(), sentinels,
-                                    poolConfig, timeout, null, db);
-                        } else {
-                            jedisSentinelPool = new JedisSentinelPool(redisSentinelResource.getMaster(), sentinels,
-                                    poolConfig, timeout, password, db);
+                            password = null;
                         }
-                        map2.put(redisSentinelResource.getUrl(), jedisSentinelPool);
+                        jedisSentinelPool = new JedisSentinelPool(resource.getMaster(), sentinels,
+                                poolConfig, timeout, timeout, timeout, resource.getUserName(), password, db,
+                                null, timeout, timeout, resource.getSentinelUserName(),
+                                resource.getSentinelPassword(), null);
+                        map2.put(resource.getUrl(), jedisSentinelPool);
                     }
                 }
             }
@@ -158,19 +156,19 @@ public interface JedisPoolFactory {
         }
 
         @Override
-        public JedisPool getCamelliaJedisPool(CamelliaRedisProxyResource camelliaRedisProxyResource) {
-            return CamelliaRedisProxyContext.getFactory().initOrGet(camelliaRedisProxyResource);
+        public JedisPool getCamelliaJedisPool(CamelliaRedisProxyResource resource) {
+            return CamelliaRedisProxyContext.getFactory().initOrGet(resource);
         }
 
         @Override
-        public JedisPool getJedisSentinelSlavesPool(RedisSentinelSlavesResource redisSentinelSlavesResource) {
-            JedisSentinelSlavesPool jedisSentinelSlavesPool = map3.get(redisSentinelSlavesResource.getUrl());
+        public JedisPool getJedisSentinelSlavesPool(RedisSentinelSlavesResource resource) {
+            JedisSentinelSlavesPool jedisSentinelSlavesPool = map3.get(resource.getUrl());
             if (jedisSentinelSlavesPool == null) {
                 synchronized (lock) {
-                    jedisSentinelSlavesPool = map3.get(redisSentinelSlavesResource.getUrl());
+                    jedisSentinelSlavesPool = map3.get(resource.getUrl());
                     if (jedisSentinelSlavesPool == null) {
-                        jedisSentinelSlavesPool = new JedisSentinelSlavesPool(redisSentinelSlavesResource, poolConfig, timeout, redisSentinelSlavesCheckIntervalMillis);
-                        map3.put(redisSentinelSlavesResource.getUrl(), jedisSentinelSlavesPool);
+                        jedisSentinelSlavesPool = new JedisSentinelSlavesPool(resource, poolConfig, timeout, redisSentinelSlavesCheckIntervalMillis);
+                        map3.put(resource.getUrl(), jedisSentinelSlavesPool);
                     }
                 }
             }
@@ -178,13 +176,13 @@ public interface JedisPoolFactory {
         }
 
         @Override
-        public JedisPool getRedisProxiesJedisPool(RedisProxiesResource redisProxiesResource) {
-            RedisProxyJedisPool redisProxyJedisPool = map4.get(redisProxiesResource.getUrl());
+        public JedisPool getRedisProxiesJedisPool(RedisProxiesResource resource) {
+            RedisProxyJedisPool redisProxyJedisPool = map4.get(resource.getUrl());
             if (redisProxyJedisPool == null) {
                 synchronized (lock) {
-                    redisProxyJedisPool = map4.get(redisProxiesResource.getUrl());
+                    redisProxyJedisPool = map4.get(resource.getUrl());
                     if (redisProxyJedisPool == null) {
-                        List<RedisProxiesResource.Node> nodes = redisProxiesResource.getNodes();
+                        List<RedisProxiesResource.Node> nodes = resource.getNodes();
                         List<Proxy> list = new ArrayList<>();
                         for (RedisProxiesResource.Node node : nodes) {
                             list.add(new Proxy(node.getHost(), node.getPort()));
@@ -193,11 +191,11 @@ public interface JedisPoolFactory {
                         redisProxyJedisPool = new RedisProxyJedisPool.Builder()
                                 .timeout(timeout)
                                 .poolConfig(poolConfig)
-                                .db(redisProxiesResource.getDb())
-                                .password(redisProxiesResource.getPassword())
+                                .db(resource.getDb())
+                                .password(resource.getPassword())
                                 .proxyDiscovery(discovery)
                                 .build();
-                        map4.put(redisProxiesResource.getUrl(), redisProxyJedisPool);
+                        map4.put(resource.getUrl(), redisProxyJedisPool);
                     }
                 }
             }
@@ -205,8 +203,8 @@ public interface JedisPoolFactory {
         }
 
         @Override
-        public JedisPool getRedisProxiesDiscoveryJedisPool(RedisProxiesDiscoveryResource redisProxiesDiscoveryResource) {
-            return RedisProxiesContext.getFactory().initOrGet(redisProxiesDiscoveryResource);
+        public JedisPool getRedisProxiesDiscoveryJedisPool(RedisProxiesDiscoveryResource resource) {
+            return RedisProxiesContext.getFactory().initOrGet(resource);
         }
     }
 

@@ -28,6 +28,8 @@ redis-sentinel://@127.0.0.1:16379,127.0.0.1:16379/masterName
 redis-sentinel://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName
 ##有账号也有密码，且设置了db
 redis-sentinel://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?db=1
+##有账号也有密码，且设置了db，且设置了sentinel的账号和密码
+redis-sentinel://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?db=1&sentinelUserName=xxx&sentinelPassword=xxx
 ```
 
 ### redis-cluster
@@ -53,6 +55,8 @@ redis-sentinel-slaves://@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=f
 redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=false
 ##有账号也有密码，且设置了db
 redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=false&db=1
+##有账号也有密码，且设置了db，且设置了sentinel的账号和密码
+redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=false&db=1&sentinelUserName=xxx&sentinelPassword=xxx
 
 ##读master，此时proxy会从master+slave集合中随机挑选一个节点进行命令的转发（可能是master也可能是slave，所有节点概率相同）
 ##有密码
@@ -63,6 +67,8 @@ redis-sentinel-slaves://@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=t
 redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true
 ##有账号也有密码，且设置了db
 redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true&db=1
+##有账号也有密码，且设置了db，且设置了sentinel的账号和密码
+redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true&db=1&sentinelUserName=xxx&sentinelPassword=xxx
 
 ##redis-sentinel-slaves会自动感知：节点宕机、主从切换和节点扩容
 ```
