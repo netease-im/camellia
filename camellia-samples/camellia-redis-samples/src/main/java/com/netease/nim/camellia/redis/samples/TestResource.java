@@ -39,6 +39,8 @@ public class TestResource {
         test("redis-sentinel://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?", "redis-sentinel://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster");
         test("redis-sentinel://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?db", "redis-sentinel://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster");
         test("redis-sentinel://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?db=1", "redis-sentinel://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?db=1");
+        test("redis-sentinel://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?db=1&sentinelUserName=xxx&sentinelPassword=xxx", "redis-sentinel://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?db=1&sentinelUserName=xxx&sentinelPassword=xxx");
+        test("redis-sentinel://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?db=1&sentinelPassword=xxx", "redis-sentinel://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?db=1&sentinelPassword=xxx");
 
         test("redis-sentinel-slaves://@127.0.0.1:6379,127.0.0.2:6379/mymaster", "redis-sentinel-slaves://@127.0.0.1:6379,127.0.0.2:6379/mymaster?withMaster=false");
         test("redis-sentinel-slaves://passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster", "redis-sentinel-slaves://passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?withMaster=false");
@@ -50,6 +52,8 @@ public class TestResource {
         test("redis-sentinel-slaves://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?db=1&withMaster", "redis-sentinel-slaves://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?withMaster=false&db=1");
         test("redis-sentinel-slaves://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?db=1&withMaster=", "redis-sentinel-slaves://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?withMaster=false&db=1");
         test("redis-sentinel-slaves://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?withMaster=false&db=1", "redis-sentinel-slaves://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?withMaster=false&db=1");
+        test("redis-sentinel-slaves://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?withMaster=false&db=1&sentinelUserName=xxx&sentinelPassword=xxx", "redis-sentinel-slaves://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?withMaster=false&db=1&sentinelUserName=xxx&sentinelPassword=xxx");
+        test("redis-sentinel-slaves://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?withMaster=false&db=1&sentinelPassword=xxx", "redis-sentinel-slaves://user:passwd@127.0.0.1:6379,127.0.0.2:6379/mymaster?withMaster=false&db=1&sentinelPassword=xxx");
 
         test("redis-proxies://@127.0.0.1:6379,127.0.0.2:6379", "redis-proxies://@127.0.0.1:6379,127.0.0.2:6379");
         test("redis-proxies://passwd@127.0.0.1:6379,127.0.0.2:6379", "redis-proxies://passwd@127.0.0.1:6379,127.0.0.2:6379");
