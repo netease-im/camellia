@@ -99,18 +99,21 @@ public class HttpAccelerateProxy implements IHttpAccelerateProxy {
                                             FullHttpResponse response = proxyResponse.getResponse();
                                             proxyResponse.getLogBean().setCode(response.status().code());
                                             boolean keepAlive = HttpUtil.isKeepAlive(httpRequest);
+                                            boolean close = false;
                                             if (keepAlive) {
                                                 if (!httpRequest.protocolVersion().isKeepAliveDefault()) {
                                                     response.headers().set(CONNECTION, CLOSE);
+                                                    close = true;
                                                 } else {
                                                     response.headers().set(CONNECTION, KEEP_ALIVE);
                                                 }
                                             } else {
                                                 response.headers().set(CONNECTION, CLOSE);
+                                                close = true;
                                             }
                                             response.headers().set(TRANSFER_ENCODING, CHUNKED);
                                             ChannelFuture f = ctx.writeAndFlush(response);
-                                            if (!keepAlive) {
+                                            if (close) {
                                                 f.addListener(ChannelFutureListener.CLOSE);
                                             }
                                             try {

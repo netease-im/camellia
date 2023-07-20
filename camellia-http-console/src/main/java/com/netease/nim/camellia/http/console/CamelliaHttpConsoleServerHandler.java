@@ -75,18 +75,26 @@ public class CamelliaHttpConsoleServerHandler extends SimpleChannelInboundHandle
     private void resp(ChannelHandlerContext ctx, FullHttpRequest request, FullHttpResponse response, boolean forceDisconnect) {
         response.headers().set(CONTENT_TYPE, TEXT_PLAIN);
         response.headers().set(TRANSFER_ENCODING, CHUNKED);
-        boolean keepAlive = HttpUtil.isKeepAlive(request);
-        if (keepAlive) {
-            if (!request.protocolVersion().isKeepAliveDefault()) {
-                response.headers().set(CONNECTION, CLOSE);
-            } else {
-                response.headers().set(CONNECTION, KEEP_ALIVE);
-            }
-        } else {
+        boolean close = false;
+        if (forceDisconnect) {
             response.headers().set(CONNECTION, CLOSE);
+            close = true;
+        } else {
+            boolean keepAlive = HttpUtil.isKeepAlive(request);
+            if (keepAlive) {
+                if (!request.protocolVersion().isKeepAliveDefault()) {
+                    response.headers().set(CONNECTION, CLOSE);
+                    close = true;
+                } else {
+                    response.headers().set(CONNECTION, KEEP_ALIVE);
+                }
+            } else {
+                response.headers().set(CONNECTION, CLOSE);
+                close = true;
+            }
         }
         ChannelFuture f = ctx.writeAndFlush(response);
-        if (!keepAlive || forceDisconnect) {
+        if (close) {
             f.addListener(ChannelFutureListener.CLOSE);
         }
     }
