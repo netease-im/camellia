@@ -15,7 +15,7 @@ import java.util.Map;
 public interface ConsoleService extends IConsoleService {
 
     @ConsoleApi(uri = "/status")
-    ConsoleResult status(Map<String, List<String>> params);
+    ConsoleResult status();
 
     @ConsoleApi(uri = "/online")
     ConsoleResult online();

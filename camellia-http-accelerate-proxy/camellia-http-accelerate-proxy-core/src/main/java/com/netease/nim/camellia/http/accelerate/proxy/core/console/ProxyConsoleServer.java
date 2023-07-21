@@ -15,6 +15,7 @@ public class ProxyConsoleServer {
 
     public void start(ITransportRouter transportRouter, IUpstreamRouter upstreamRouter, ITransportServer transportServer, IHttpAccelerateProxy proxy) {
         CamelliaHttpConsoleConfig config = new CamelliaHttpConsoleConfig();
+        config.setHost(DynamicConf.getString("console.host", "0.0.0.0"));
         config.setPort(DynamicConf.getInt("console.port", 11700));
         config.setConsoleService(new ConsoleServiceAdaptor(transportRouter, upstreamRouter, transportServer, proxy));
         CamelliaHttpConsoleServer consoleServer = new CamelliaHttpConsoleServer(config);

@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.http.accelerate.proxy.core.transport.quic;
 
+import com.netease.nim.camellia.http.accelerate.proxy.core.status.ServerStartupStatus;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.ITransportServer;
 
 /**
@@ -12,7 +13,7 @@ public class TransportQuicServer implements ITransportServer {
     }
 
     @Override
-    public boolean isStarted() {
-        return false;
+    public ServerStartupStatus getStatus() {
+        return ServerStartupStatus.FAIL;
     }
 }

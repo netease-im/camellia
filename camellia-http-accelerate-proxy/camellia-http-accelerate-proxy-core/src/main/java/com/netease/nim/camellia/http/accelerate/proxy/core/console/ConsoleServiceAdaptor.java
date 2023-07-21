@@ -2,6 +2,7 @@ package com.netease.nim.camellia.http.accelerate.proxy.core.console;
 
 import com.netease.nim.camellia.http.accelerate.proxy.core.monitor.ProxyMonitor;
 import com.netease.nim.camellia.http.accelerate.proxy.core.proxy.IHttpAccelerateProxy;
+import com.netease.nim.camellia.http.accelerate.proxy.core.status.ServerStartupStatus;
 import com.netease.nim.camellia.http.accelerate.proxy.core.status.ServerStatus;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.ITransportServer;
 import com.netease.nim.camellia.http.console.ConsoleResult;
@@ -31,24 +32,13 @@ public class ConsoleServiceAdaptor implements ConsoleService {
     }
 
     @Override
-    public ConsoleResult status(Map<String, List<String>> params) {
-        String type = ConsoleUtils.getParam(params, "type");
-        if (type == null) {
-            type = "all";
+    public ConsoleResult status() {
+        boolean online = ServerStatus.getStatus() == ServerStatus.Status.ONLINE;
+        if (transportServer.getStatus() == ServerStartupStatus.FAIL) {
+            online = false;
         }
-        boolean online;
-        switch (type) {
-            case "all":
-                online = ServerStatus.getStatus() == ServerStatus.Status.ONLINE && transportServer.isStarted() && proxy.isStarted();
-                break;
-            case "transport":
-                online = ServerStatus.getStatus() == ServerStatus.Status.ONLINE && transportServer.isStarted();
-                break;
-            case "proxy":
-                online = ServerStatus.getStatus() == ServerStatus.Status.ONLINE && proxy.isStarted();
-                break;
-            default:
-                return ConsoleResult.error("illegal type");
+        if (proxy.getStatus() == ServerStartupStatus.FAIL) {
+            online = false;
         }
         if (logger.isDebugEnabled()) {
             logger.debug("online = {}", online);

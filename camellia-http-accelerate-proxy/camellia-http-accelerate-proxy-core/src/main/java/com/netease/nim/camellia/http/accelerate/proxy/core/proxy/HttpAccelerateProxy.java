@@ -4,6 +4,7 @@ import com.netease.nim.camellia.http.accelerate.proxy.core.conf.DynamicConf;
 import com.netease.nim.camellia.http.accelerate.proxy.core.constants.Constants;
 import com.netease.nim.camellia.http.accelerate.proxy.core.context.*;
 import com.netease.nim.camellia.http.accelerate.proxy.core.route.transport.ITransportRouter;
+import com.netease.nim.camellia.http.accelerate.proxy.core.status.ServerStartupStatus;
 import com.netease.nim.camellia.http.accelerate.proxy.core.status.ServerStatus;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.ITransportClient;
 import io.netty.bootstrap.ServerBootstrap;
@@ -30,7 +31,7 @@ public class HttpAccelerateProxy implements IHttpAccelerateProxy {
     private static final Logger logger = LoggerFactory.getLogger(HttpAccelerateProxy.class);
 
     private final ITransportRouter router;
-    private boolean started;
+    private ServerStartupStatus status = ServerStartupStatus.FAIL;
 
     public HttpAccelerateProxy(ITransportRouter router) {
         this.router = router;
@@ -42,6 +43,7 @@ public class HttpAccelerateProxy implements IHttpAccelerateProxy {
         int port = DynamicConf.getInt("http.accelerate.proxy.port", 11800);
         if (port <= 0) {
             logger.warn("http accelerate proxy skip start");
+            status = ServerStartupStatus.SKIP;
             return;
         }
         try {
@@ -135,15 +137,16 @@ public class HttpAccelerateProxy implements IHttpAccelerateProxy {
                     });
             bootstrap.bind(host, port).sync();
             logger.info("http accelerate proxy start success, host = {}, port = {}", host, port);
-            started = true;
+            status = ServerStartupStatus.SUCCESS;
         } catch (Exception e) {
+            status = ServerStartupStatus.FAIL;
             logger.error("http accelerate proxy start error, host = {}, port = {}", host, port, e);
             throw new IllegalStateException(e);
         }
     }
 
     @Override
-    public boolean isStarted() {
-        return started;
+    public ServerStartupStatus getStatus() {
+        return status;
     }
 }

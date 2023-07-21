@@ -51,7 +51,7 @@ public class CamelliaHttpConsoleServer {
                             pipeline.addLast(new CamelliaHttpConsoleServerHandler(invokerMap, config.getExecutor()));
                         }
                     });
-            ChannelFuture future = bootstrap.bind(config.getPort()).sync();
+            ChannelFuture future = bootstrap.bind(config.getHost(), config.getPort()).sync();
             logger.info("Console Server start listen at port {}", config.getPort());
             return future;
         } catch (Exception e) {

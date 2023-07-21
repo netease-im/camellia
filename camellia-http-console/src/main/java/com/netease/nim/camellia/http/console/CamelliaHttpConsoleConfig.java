@@ -9,12 +9,21 @@ public class CamelliaHttpConsoleConfig {
 
     private static final CamelliaHashedExecutor defaultExecutor = new CamelliaHashedExecutor("console-executor", Runtime.getRuntime().availableProcessors(), 10240);
 
+    private String host = "0.0.0.0";
     private int port;
     private int bossThread = 1;
     private int workThread = Runtime.getRuntime().availableProcessors();
     private IConsoleService consoleService;
 
     private CamelliaHashedExecutor executor = defaultExecutor;
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
 
     public int getPort() {
         return port;
