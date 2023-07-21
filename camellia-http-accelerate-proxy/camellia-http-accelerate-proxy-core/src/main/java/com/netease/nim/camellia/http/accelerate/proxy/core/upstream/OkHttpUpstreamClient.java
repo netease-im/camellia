@@ -36,17 +36,17 @@ public class OkHttpUpstreamClient implements IUpstreamClient {
 
     private final OkHttpClient okHttpClient;
     private final DynamicUpstreamAddrs dynamicUpstreamAddrs;
-    private final DynamicValueGetter<String> healthUri;
-    private final DynamicValueGetter<Long> healthTimeout;
+    private final DynamicValueGetter<String> heartbeatUri;
+    private final DynamicValueGetter<Long> heartbeatTimeout;
 
     private List<String> validAddrs = new ArrayList<>();
 
     public OkHttpUpstreamClient(DynamicUpstreamAddrs dynamicUpstreamAddrs,
-                                DynamicValueGetter<String> healthUri,
-                                DynamicValueGetter<Long> healthTimeout) {
+                                DynamicValueGetter<String> heartbeatUri,
+                                DynamicValueGetter<Long> heartbeatTimeout) {
         this.dynamicUpstreamAddrs = dynamicUpstreamAddrs;
-        this.healthUri = healthUri;
-        this.healthTimeout = healthTimeout;
+        this.heartbeatUri = heartbeatUri;
+        this.heartbeatTimeout = heartbeatTimeout;
         int maxRequests = DynamicConf.getInt("okhttp.max.requests", 4096);
         int maxRequestsPerHost = DynamicConf.getInt("okhttp.max.requests.per.host", 2048);
         Dispatcher dispatcher = new Dispatcher();
@@ -73,10 +73,10 @@ public class OkHttpUpstreamClient implements IUpstreamClient {
 
     private synchronized void check() {
         try {
-            String uri = healthUri.get();
+            String uri = heartbeatUri.get();
             List<String> validAddrs = new ArrayList<>();
             List<String> addrs = dynamicUpstreamAddrs.getAddrs();
-            Long timeout = healthTimeout.get();
+            Long timeout = heartbeatTimeout.get();
             OkHttpClient client = okHttpClient.newBuilder()
                     .connectTimeout(timeout, TimeUnit.MILLISECONDS)
                     .readTimeout(timeout, TimeUnit.MILLISECONDS)
@@ -118,85 +118,76 @@ public class OkHttpUpstreamClient implements IUpstreamClient {
     @Override
     public CompletableFuture<ProxyResponse> send(ProxyRequest proxyRequest) {
         CompletableFuture<ProxyResponse> future = new CompletableFuture<>();
-        if (validAddrs.isEmpty()) {
-            proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_SERVER_SELECT_FAIL);
+        try {
+            if (validAddrs.isEmpty()) {
+                proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_SERVER_SELECT_FAIL);
+                future.complete(new ProxyResponse(Constants.BAD_GATEWAY, proxyRequest.getLogBean()));
+                return future;
+            }
+            FullHttpRequest request = proxyRequest.getRequest();
+            int index = ThreadLocalRandom.current().nextInt(validAddrs.size());
+            String upstreamAddr = validAddrs.get(index);
+            proxyRequest.getLogBean().setUpstreamAddr(upstreamAddr);
+            String target = upstreamAddr +  request.uri();
+            Request.Builder builder = new Request.Builder().url(target);
+            for (Map.Entry<String, String> header : request.headers()) {
+                if (header.getKey().equalsIgnoreCase("content-length")) continue;
+                builder.addHeader(header.getKey(), header.getValue());
+            }
+            HttpMethod method = request.method();
+            RequestBody body;
+            if (method == HttpMethod.GET || method == HttpMethod.HEAD) {
+                body = null;
+            } else {
+                byte[] requestBody = request.content().array();
+                body = RequestBody.create(requestBody);
+            }
+            builder.method(method.name(), body);
+            proxyRequest.getLogBean().setUpstreamSendTime(System.currentTimeMillis());
+            okHttpClient.newCall(builder.build()).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                    proxyRequest.getLogBean().setUpstreamReplyTime(System.currentTimeMillis());
+                    DefaultFullHttpResponse response;
+                    if (e instanceof ConnectException) {
+                        proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_CONNECT_FAIL);
+                        response = new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.BAD_GATEWAY);
+                    } else {
+                        proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_ERROR);
+                        response = new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                    }
+                    future.complete(new ProxyResponse(response, proxyRequest.getLogBean()));
+                    LogBean logBean = proxyRequest.getLogBean();
+                    logger.error("upstream error, host = {}, path = {}, traceId = {}",
+                            logBean.getHost(), logBean.getPath(), logBean.getTraceId(), e);
+                }
+
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    proxyRequest.getLogBean().setUpstreamReplyTime(System.currentTimeMillis());
+                    Headers headers = response.headers();
+                    HttpHeaders httpHeaders = new DefaultHttpHeaders();
+                    for (String name : headers.names()) {
+                        String value = headers.get(name);
+                        httpHeaders.set(name, value);
+                    }
+                    ByteBuf byteBuf = Unpooled.wrappedBuffer(response.body().bytes());
+                    int code = response.code();
+                    if (!(code >= 200 && code <= 299)) {
+                        proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_NOT_2XX_CODE);
+                    }
+                    DefaultFullHttpResponse rep = new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.valueOf(code), byteBuf, httpHeaders, new DefaultHttpHeaders());
+                    future.complete(new ProxyResponse(rep, proxyRequest.getLogBean()));
+                }
+            });
+            return future;
+        } catch (Exception e) {
+            proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_ERROR);
             future.complete(new ProxyResponse(Constants.BAD_GATEWAY, proxyRequest.getLogBean()));
+            LogBean logBean = proxyRequest.getLogBean();
+            logger.error("upstream send error, host = {}, path = {}, traceId = {}",
+                    logBean.getHost(), logBean.getPath(), logBean.getTraceId(), e);
             return future;
         }
-        FullHttpRequest request = proxyRequest.getRequest();
-        int index = ThreadLocalRandom.current().nextInt(validAddrs.size());
-        String upstreamAddr = validAddrs.get(index);
-        proxyRequest.getLogBean().setUpstreamAddr(upstreamAddr);
-        String target = upstreamAddr +  request.uri();
-        Request.Builder builder = new Request.Builder().url(target);
-        String contentType = "application/json; charset=utf-8";
-        for (Map.Entry<String, String> header : request.headers()) {
-            if (header.getKey().equalsIgnoreCase("content-length")) continue;
-            builder.addHeader(header.getKey(), header.getValue());
-            if (header.getKey().equals("Content-Type")) {
-                contentType = header.getValue();
-            }
-        }
-        HttpMethod method = request.method();
-        if (method == HttpMethod.GET) {
-            builder.get();
-        } else if (method == HttpMethod.POST) {
-            byte[] requestBody = request.content().array();
-            RequestBody body = RequestBody.create(requestBody, MediaType.get(contentType));
-            builder.post(body);
-        } else if (method == HttpMethod.PUT) {
-            byte[] requestBody = request.content().array();
-            RequestBody body = RequestBody.create(requestBody, MediaType.get(contentType));
-            builder.put(body);
-        } else if (method == HttpMethod.HEAD) {
-            builder.head();
-        } else if (method == HttpMethod.DELETE) {
-            byte[] requestBody = request.content().array();
-            RequestBody body = RequestBody.create(requestBody, MediaType.get(contentType));
-            builder.delete(body);
-        } else if (method == HttpMethod.PATCH) {
-            byte[] requestBody = request.content().array();
-            RequestBody body = RequestBody.create(requestBody, MediaType.get(contentType));
-            builder.patch(body);
-        } else {
-            byte[] requestBody = request.content().array();
-            RequestBody body = RequestBody.create(requestBody, MediaType.get(contentType));
-            builder.method(method.name(), body);
-        }
-        proxyRequest.getLogBean().setUpstreamSendTime(System.currentTimeMillis());
-        okHttpClient.newCall(builder.build()).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                proxyRequest.getLogBean().setUpstreamReplyTime(System.currentTimeMillis());
-                DefaultFullHttpResponse response;
-                if (e instanceof ConnectException) {
-                    proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_CONNECT_FAIL);
-                    response = new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.BAD_GATEWAY);
-                } else {
-                    proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_ERROR);
-                    response = new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.INTERNAL_SERVER_ERROR);
-                }
-                future.complete(new ProxyResponse(response, proxyRequest.getLogBean()));
-            }
-
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                proxyRequest.getLogBean().setUpstreamReplyTime(System.currentTimeMillis());
-                Headers headers = response.headers();
-                HttpHeaders httpHeaders = new DefaultHttpHeaders();
-                for (String name : headers.names()) {
-                    String value = headers.get(name);
-                    httpHeaders.set(name, value);
-                }
-                ByteBuf byteBuf = Unpooled.wrappedBuffer(response.body().bytes());
-                int code = response.code();
-                if (!(code >= 200 && code <= 299)) {
-                    proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_NOT_2XX_CODE);
-                }
-                DefaultFullHttpResponse rep = new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.valueOf(code), byteBuf, httpHeaders, new DefaultHttpHeaders());
-                future.complete(new ProxyResponse(rep, proxyRequest.getLogBean()));
-            }
-        });
-        return future;
     }
 }

@@ -22,7 +22,7 @@ public class DefaultUpstreamRouter implements IUpstreamRouter {
     private static final Logger logger = LoggerFactory.getLogger(DefaultUpstreamRouter.class);
     private final ConcurrentHashMap<String, DefaultDynamicUpstreamAddrs> addrsMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, DefaultDynamicHeartbeatTimeoutGetter> heartbeatTimeoutMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, DefaultDynamicUpstreamHealthUriGetter> healthUriMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, DefaultDynamicUpstreamHealthUriGetter> heartbeatUriMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, IUpstreamClient> upstreamMap = new ConcurrentHashMap<>();
 
     private UpstreamRouterConfig routerConfig;
@@ -64,23 +64,23 @@ public class DefaultUpstreamRouter implements IUpstreamRouter {
                 } else {
                     addrs.updateAddrs(upstream.getAddrs());
                 }
-                DefaultDynamicHeartbeatTimeoutGetter timeoutGetter = heartbeatTimeoutMap.get(name);
-                if (timeoutGetter == null) {
-                    timeoutGetter = new DefaultDynamicHeartbeatTimeoutGetter(upstream.getHeartbeatTimeout());
-                    heartbeatTimeoutMap.put(name, timeoutGetter);
+                DefaultDynamicHeartbeatTimeoutGetter heartbeatTimeout = heartbeatTimeoutMap.get(name);
+                if (heartbeatTimeout == null) {
+                    heartbeatTimeout = new DefaultDynamicHeartbeatTimeoutGetter(upstream.getHeartbeatTimeout());
+                    heartbeatTimeoutMap.put(name, heartbeatTimeout);
                 } else {
-                    timeoutGetter.updateTimeout(upstream.getHeartbeatTimeout());
+                    heartbeatTimeout.updateTimeout(upstream.getHeartbeatTimeout());
                 }
-                DefaultDynamicUpstreamHealthUriGetter healthUriGetter = healthUriMap.get(name);
-                if (healthUriGetter == null) {
-                    healthUriGetter = new DefaultDynamicUpstreamHealthUriGetter(upstream.getHeartbeatUri());
-                    healthUriMap.put(name, healthUriGetter);
+                DefaultDynamicUpstreamHealthUriGetter heartbeatUri = heartbeatUriMap.get(name);
+                if (heartbeatUri == null) {
+                    heartbeatUri = new DefaultDynamicUpstreamHealthUriGetter(upstream.getHeartbeatUri());
+                    heartbeatUriMap.put(name, heartbeatUri);
                 } else {
-                    healthUriGetter.updateHealthUri(upstream.getHeartbeatUri());
+                    heartbeatUri.updateHealthUri(upstream.getHeartbeatUri());
                 }
                 IUpstreamClient upstreamClient = upstreamMap.get(name);
                 if (upstreamClient == null) {
-                    upstreamClient = new OkHttpUpstreamClient(addrs, healthUriGetter, timeoutGetter);
+                    upstreamClient = new OkHttpUpstreamClient(addrs, heartbeatUri, heartbeatTimeout);
                     upstreamMap.put(name, upstreamClient);
                 }
             } else {
