@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.codec;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
 
 import java.nio.charset.StandardCharsets;
@@ -16,6 +17,14 @@ public class Pack {
 
     public Pack(int initialSize) {
         buf = Unpooled.buffer(initialSize);
+    }
+
+    public Pack(ByteBufAllocator allocator) {
+        this.buf = allocator.ioBuffer(1024);
+    }
+
+    public Pack(ByteBufAllocator allocator, int initialSize) {
+        this.buf = allocator.ioBuffer(initialSize);
     }
 
     public int size() {
@@ -132,15 +141,15 @@ public class Pack {
         }
     }
 
-    public void ensureCapacity(int increament) {
-        if (buf.writableBytes() >= increament) {
+    public void ensureCapacity(int increment) {
+        if (buf.writableBytes() >= increment) {
             return;
         }
 
-        int requiredCapacity = buf.writerIndex() + increament;
+        int requiredCapacity = buf.writerIndex() + increment;
 
         if (requiredCapacity > m_maxCapacity) {
-            throw new IndexOutOfBoundsException("writableBytes("+ buf.writableBytes()+") + increment("+increament+") > maxCapacity("+m_maxCapacity+")");
+            throw new IndexOutOfBoundsException("writableBytes("+ buf.writableBytes()+") + increment("+increment+") > maxCapacity("+m_maxCapacity+")");
         }
 
         int tmp = Math.max(requiredCapacity, buf.capacity() * 2);

@@ -3,6 +3,7 @@ package com.netease.nim.camellia.http.accelerate.proxy.core.transport.tcp.codec;
 import com.netease.nim.camellia.codec.Pack;
 import com.netease.nim.camellia.codec.Unpack;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 
 /**
  * Created by caojiajun on 2023/7/7
@@ -32,8 +33,8 @@ public class TcpPack {
         return body;
     }
 
-    public ByteBuf encode() {
-        Pack pack = new Pack();
+    public ByteBuf encode(ByteBufAllocator allocator) {
+        Pack pack = new Pack(allocator, 1024);
         pack.putInt(0);
 
         pack.putMarshallable(header);

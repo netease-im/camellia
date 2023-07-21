@@ -112,7 +112,7 @@ public class TransportTcpServer implements ITransportServer {
             } else {
                 header.setAck();
                 HeartbeatAckPack ackPack = new HeartbeatAckPack(ServerStatus.getStatus() == ServerStatus.Status.ONLINE);
-                ctx.channel().writeAndFlush(TcpPack.newPack(header, ackPack).encode());
+                ctx.channel().writeAndFlush(TcpPack.newPack(header, ackPack).encode(ctx.alloc()));
             }
         } else if (header.getCmd() == TcpPackCmd.REQUEST) {
             ServerStatus.updateLastUseTime();
@@ -135,7 +135,7 @@ public class TransportTcpServer implements ITransportServer {
                     try {
                         header.setAck();
                         response.getLogBean().setCode(response.getResponse().status().code());
-                        ctx.channel().writeAndFlush(TcpPack.newPack(header, new RequestAckPack(response)).encode());
+                        ctx.channel().writeAndFlush(TcpPack.newPack(header, new RequestAckPack(response)).encode(ctx.alloc()));
                     } finally {
                         LoggerUtils.logging(response.getLogBean());
                     }

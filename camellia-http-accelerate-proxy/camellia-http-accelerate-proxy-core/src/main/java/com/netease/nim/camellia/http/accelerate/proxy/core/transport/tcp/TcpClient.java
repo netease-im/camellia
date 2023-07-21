@@ -102,7 +102,7 @@ public class TcpClient {
         request.getLogBean().setTransportServerSendTime(System.currentTimeMillis());
         TcpPack pack = TcpPack.newPack(header, new RequestPack(request));
         requestMap.put(header.getSeqId(), future);
-        channel.writeAndFlush(pack.encode());
+        channel.writeAndFlush(pack.encode(channel.alloc()));
     }
 
     public synchronized void stop() {
@@ -183,7 +183,7 @@ public class TcpClient {
             TcpPack pack = TcpPack.newPack(header, new HeartbeatPack());
             CompletableFuture<Boolean> future = new CompletableFuture<>();
             heartbeatMap.put(header.getSeqId(), future);
-            channel.writeAndFlush(pack.encode());
+            channel.writeAndFlush(pack.encode(channel.alloc()));
             int timeout = DynamicConf.getInt("tcp.client.heartbeat.timeout.seconds", 10);
             Boolean online = future.get(timeout, TimeUnit.SECONDS);
             if (status != Status.INVALID && status != Status.CLOSING) {

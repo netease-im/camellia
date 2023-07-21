@@ -4,6 +4,7 @@ import com.netease.nim.camellia.codec.Pack;
 import com.netease.nim.camellia.codec.Unpack;
 import com.netease.nim.camellia.hot.key.common.netty.pack.*;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 
 
 /**
@@ -36,8 +37,8 @@ public class HotKeyPack {
         return body;
     }
 
-    public ByteBuf encode() {
-        Pack pack = new Pack();
+    public ByteBuf encode(ByteBufAllocator allocator) {
+        Pack pack = new Pack(allocator, 1024);
         pack.putInt(0);
 
         if (body == null) {

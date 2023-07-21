@@ -21,9 +21,9 @@ public class HotKeyPackEncoder extends MessageToMessageEncoder<HotKeyPack> {
     }
 
     @Override
-    protected void encode(ChannelHandlerContext channelHandlerContext, HotKeyPack hotKeyPack, List<Object> list) {
+    protected void encode(ChannelHandlerContext ctx, HotKeyPack hotKeyPack, List<Object> list) {
         try {
-            ByteBuf buf = hotKeyPack.encode();
+            ByteBuf buf = hotKeyPack.encode(ctx.alloc());
             list.add(buf);
         } catch (Exception e) {
             logger.error("encode error", e);
