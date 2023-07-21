@@ -4,6 +4,7 @@
 # 1.2.12（2023/07/xx）
 ### 新增
 * camellia-http-accelerate-proxy，proxy和transport-server支持设置绑定的host（默认是0.0.0.0）
+* camellia-http-accelerate-proxy，transport-route和upstream-route支持关闭
 * camellia-redis3支持账号（redis-standalone、redis-sentinel、redis-sentinel-slaves、redis-cluster）
 * camellia-redis的redis-sentinel、redis-sentinel-slaves支持设置sentinelPassword
 * camellia-redis3的redis-sentinel、redis-sentinel-slaves支持设置sentinelUserName和sentinelPassword

@@ -45,7 +45,7 @@ public class TransportTcpServer implements ITransportServer {
         }
         try {
             int bossThread = DynamicConf.getInt("transport.server.boss.thread", 1);
-            int workThread = DynamicConf.getInt("transport.server.work.thread", 1);
+            int workThread = DynamicConf.getInt("transport.server.work.thread", Runtime.getRuntime().availableProcessors());
             EventLoopGroup bossGroup = new NioEventLoopGroup(bossThread, new DefaultThreadFactory("sidecar-proxy-boss-group"));
             EventLoopGroup workerGroup = new NioEventLoopGroup(workThread, new DefaultThreadFactory("sidecar-proxy-work-group"));
             ServerBootstrap bootstrap = new ServerBootstrap();

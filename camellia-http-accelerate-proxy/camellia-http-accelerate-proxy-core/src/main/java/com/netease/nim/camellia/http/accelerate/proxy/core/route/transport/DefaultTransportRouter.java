@@ -45,6 +45,11 @@ public class DefaultTransportRouter implements ITransportRouter {
 
     @Override
     public synchronized void reload() {
+        boolean disabled = DynamicConf.getBoolean("transport.route.config.disabled", false);
+        if (disabled) {
+            logger.warn("default transport router disabled");
+            return;
+        }
         String file = DynamicConf.getString("transport.route.config", "transport_route.json");
         URL resource = Thread.currentThread().getContextClassLoader().getResource(file);
         if (resource == null) {

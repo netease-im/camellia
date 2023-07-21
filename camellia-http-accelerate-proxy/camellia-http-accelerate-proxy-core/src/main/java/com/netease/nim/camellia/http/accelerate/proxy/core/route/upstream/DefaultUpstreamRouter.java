@@ -35,6 +35,11 @@ public class DefaultUpstreamRouter implements IUpstreamRouter {
 
     @Override
     public synchronized void reload() {
+        boolean disabled = DynamicConf.getBoolean("upstream.route.config.disabled", false);
+        if (disabled) {
+            logger.warn("default upstream router disabled");
+            return;
+        }
         String file = DynamicConf.getString("upstream.route.config", "upstream_route.json");
         URL resource = Thread.currentThread().getContextClassLoader().getResource(file);
         if (resource == null) {

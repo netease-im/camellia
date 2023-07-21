@@ -3,6 +3,7 @@
 # 1.2.12（2023/07/xx）
 ### add
 * camellia-http-accelerate-proxy，proxy and transport-server support setting bind host, default 0.0.0.0
+* camellia-http-accelerate-proxy，transport-route and upstream-route support disabled
 * camellia-redis3, support auth username（redis-standalone、redis-sentinel、redis-sentinel-slaves、redis-cluster）
 * camellia-redis, redis-sentinel、redis-sentinel-slaves support setting sentinelPassword
 * camellia-redis3, redis-sentinel、redis-sentinel-slaves support setting sentinelUserName and sentinelPassword
