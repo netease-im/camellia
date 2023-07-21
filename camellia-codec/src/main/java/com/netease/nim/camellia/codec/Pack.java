@@ -140,7 +140,7 @@ public class Pack {
         int requiredCapacity = buf.writerIndex() + increament;
 
         if (requiredCapacity > m_maxCapacity) {
-            throw new IndexOutOfBoundsException("writableBytes("+ buf.writableBytes()+") + increament("+increament+") > maxCapacity("+m_maxCapacity+")");
+            throw new IndexOutOfBoundsException("writableBytes("+ buf.writableBytes()+") + increment("+increament+") > maxCapacity("+m_maxCapacity+")");
         }
 
         int tmp = Math.max(requiredCapacity, buf.capacity() * 2);
