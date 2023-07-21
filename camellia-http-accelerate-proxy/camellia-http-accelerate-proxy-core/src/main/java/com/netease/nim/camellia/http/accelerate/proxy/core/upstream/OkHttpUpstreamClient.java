@@ -159,13 +159,9 @@ public class OkHttpUpstreamClient implements IUpstreamClient {
             RequestBody body = RequestBody.create(requestBody, MediaType.get(contentType));
             builder.patch(body);
         } else {
-            proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_NOT_SUPPORT_METHOD);
-            future.complete(new ProxyResponse(Constants.BAD_GATEWAY, proxyRequest.getLogBean()));
-            if (logger.isWarnEnabled()) {
-                LogBean logBean = proxyRequest.getLogBean();
-                logger.warn("not support method, host = {}, path = {}, method = {}", logBean.getHost(), logBean.getPath(), method.name());
-            }
-            return future;
+            byte[] requestBody = request.content().array();
+            RequestBody body = RequestBody.create(requestBody, MediaType.get(contentType));
+            builder.method(method.name(), body);
         }
         proxyRequest.getLogBean().setUpstreamSendTime(System.currentTimeMillis());
         okHttpClient.newCall(builder.build()).enqueue(new Callback() {

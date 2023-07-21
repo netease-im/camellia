@@ -31,7 +31,7 @@ public class HttpAccelerateProxy implements IHttpAccelerateProxy {
     private static final Logger logger = LoggerFactory.getLogger(HttpAccelerateProxy.class);
 
     private final ITransportRouter router;
-    private ServerStartupStatus status = ServerStartupStatus.FAIL;
+    private ServerStartupStatus status = ServerStartupStatus.INIT;
 
     public HttpAccelerateProxy(ITransportRouter router) {
         this.router = router;
@@ -77,24 +77,37 @@ public class HttpAccelerateProxy implements IHttpAccelerateProxy {
                             pipeline.addLast(new HttpServerCodec());
                             pipeline.addLast(new HttpObjectAggregator(maxContentLength));
                             pipeline.addLast(new SimpleChannelInboundHandler<FullHttpRequest>() {
+
+                                @Override
+                                public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                                    logger.error(cause.getMessage(), cause);
+                                    ctx.close();
+                                }
+
                                 @Override
                                 protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
+                                    CompletableFuture<ProxyResponse> future;
                                     ServerStatus.updateLastUseTime();
                                     LogBean logBean = new LogBean();
-                                    logBean.setHost(httpRequest.headers().get("Host"));
-                                    logBean.setTraceId(UUID.randomUUID().toString().replace("-", ""));
-                                    QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.uri());
-                                    logBean.setPath(queryStringDecoder.path());
-                                    logBean.setStartTime(System.currentTimeMillis());
-                                    ProxyRequest proxyRequest = new ProxyRequest(httpRequest, logBean);
-                                    ITransportClient client = router.select(proxyRequest);
-                                    CompletableFuture<ProxyResponse> future;
-                                    if (client == null) {
+                                    try {
+                                        logBean.setHost(httpRequest.headers().get("Host"));
+                                        logBean.setTraceId(UUID.randomUUID().toString().replace("-", ""));
+                                        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.uri());
+                                        logBean.setPath(queryStringDecoder.path());
+                                        logBean.setStartTime(System.currentTimeMillis());
+                                        ProxyRequest proxyRequest = new ProxyRequest(httpRequest, logBean);
+                                        ITransportClient client = router.select(proxyRequest);
+                                        if (client == null) {
+                                            future = new CompletableFuture<>();
+                                            logBean.setErrorReason(ErrorReason.TRANSPORT_SERVER_ROUTE_FAIL);
+                                            future.complete(new ProxyResponse(Constants.BAD_GATEWAY, logBean));
+                                        } else {
+                                            future = client.send(proxyRequest);
+                                        }
+                                    } catch (Exception e) {
                                         future = new CompletableFuture<>();
                                         logBean.setErrorReason(ErrorReason.TRANSPORT_SERVER_ROUTE_FAIL);
-                                        future.complete(new ProxyResponse(Constants.BAD_GATEWAY, logBean));
-                                    } else {
-                                        future = client.send(proxyRequest);
+                                        logger.error(e.getMessage(), e);
                                     }
                                     future.thenAccept(proxyResponse -> {
                                         try {

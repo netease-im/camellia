@@ -5,6 +5,7 @@ package com.netease.nim.camellia.http.accelerate.proxy.core.status;
  */
 public enum ServerStartupStatus {
 
+    INIT,
     SUCCESS,
     FAIL,
     SKIP,

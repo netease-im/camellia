@@ -30,7 +30,7 @@ public class TransportTcpServer implements ITransportServer {
     private static final Logger logger = LoggerFactory.getLogger(TransportTcpServer.class);
 
     private final IUpstreamRouter router;
-    private ServerStartupStatus status = ServerStartupStatus.FAIL;
+    private ServerStartupStatus status = ServerStartupStatus.INIT;
 
     public TransportTcpServer(IUpstreamRouter router) {
         this.router = router;
