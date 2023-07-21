@@ -11,6 +11,8 @@ public enum ErrorReason {
     UPSTREAM_SERVER_SELECT_FAIL(4),
     UPSTREAM_CONNECT_FAIL(5),
     UPSTREAM_ERROR(6),
+    UPSTREAM_NOT_2XX_CODE(7),
+    UPSTREAM_NOT_SUPPORT_METHOD(8),
     ;
 
     private final int value;

@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.http.accelerate.proxy.core.upstream;
 
 import com.netease.nim.camellia.http.accelerate.proxy.core.context.ErrorReason;
+import com.netease.nim.camellia.http.accelerate.proxy.core.context.LogBean;
 import com.netease.nim.camellia.http.accelerate.proxy.core.context.ProxyRequest;
 import com.netease.nim.camellia.http.accelerate.proxy.core.context.ProxyResponse;
 import com.netease.nim.camellia.http.accelerate.proxy.core.conf.DynamicConf;
@@ -158,7 +159,12 @@ public class OkHttpUpstreamClient implements IUpstreamClient {
             RequestBody body = RequestBody.create(requestBody, MediaType.get(contentType));
             builder.patch(body);
         } else {
+            proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_NOT_SUPPORT_METHOD);
             future.complete(new ProxyResponse(Constants.BAD_GATEWAY, proxyRequest.getLogBean()));
+            if (logger.isWarnEnabled()) {
+                LogBean logBean = proxyRequest.getLogBean();
+                logger.warn("not support method, host = {}, path = {}, method = {}", logBean.getHost(), logBean.getPath(), method.name());
+            }
             return future;
         }
         proxyRequest.getLogBean().setUpstreamSendTime(System.currentTimeMillis());
@@ -187,7 +193,11 @@ public class OkHttpUpstreamClient implements IUpstreamClient {
                     httpHeaders.set(name, value);
                 }
                 ByteBuf byteBuf = Unpooled.wrappedBuffer(response.body().bytes());
-                DefaultFullHttpResponse rep = new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.valueOf(response.code()), byteBuf, httpHeaders, new DefaultHttpHeaders());
+                int code = response.code();
+                if (!(code >= 200 && code <= 299)) {
+                    proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_NOT_2XX_CODE);
+                }
+                DefaultFullHttpResponse rep = new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.valueOf(code), byteBuf, httpHeaders, new DefaultHttpHeaders());
                 future.complete(new ProxyResponse(rep, proxyRequest.getLogBean()));
             }
         });
