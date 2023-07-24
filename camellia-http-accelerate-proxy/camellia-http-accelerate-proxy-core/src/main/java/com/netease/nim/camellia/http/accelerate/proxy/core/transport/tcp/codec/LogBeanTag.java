@@ -22,6 +22,7 @@ public enum LogBeanTag {
     upstreamAddr(11),
     errorReason(12),
     code(13),
+    transportClientId(14),
     ;
 
     private final int value;
@@ -84,6 +85,9 @@ public enum LogBeanTag {
         if (logBean.getCode() != null) {
             props.putInteger(LogBeanTag.code.getValue(), logBean.getCode());
         }
+        if (logBean.getTransportClientId() != null) {
+            props.putLong(LogBeanTag.transportClientId.getValue(), logBean.getTransportClientId());
+        }
         return props;
     }
 
@@ -127,6 +131,9 @@ public enum LogBeanTag {
         }
         if (props.containsKey(LogBeanTag.code.getValue())) {
             logBean.setCode(props.getInteger(LogBeanTag.code.getValue()));
+        }
+        if (props.containsKey(LogBeanTag.transportClientId.getValue())) {
+            logBean.setTransportClientId(props.getLong(LogBeanTag.transportClientId.getValue()));
         }
         return logBean;
     }

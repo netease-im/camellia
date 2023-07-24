@@ -153,8 +153,8 @@ public class OkHttpUpstreamClient implements IUpstreamClient {
                         proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_CONNECT_FAIL);
                         response = new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.BAD_GATEWAY);
                     } else {
-                        proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_ERROR);
-                        response = new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                        proxyRequest.getLogBean().setErrorReason(ErrorReason.UPSTREAM_TIMEOUT);
+                        response = new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.GATEWAY_TIMEOUT);
                     }
                     future.complete(new ProxyResponse(response, proxyRequest.getLogBean()));
                     LogBean logBean = proxyRequest.getLogBean();

@@ -69,6 +69,7 @@ public class TransportTcpClient implements ITransportClient {
         TcpClient tcpClient = selectClient();
         if (tcpClient != null) {
             proxyRequest.getLogBean().setTransportAddr(tcpClient.getAddr().toString());
+            proxyRequest.getLogBean().setTransportClientId(tcpClient.getId());
             tcpClient.send(proxyRequest, future);
             return future;
         }
@@ -81,6 +82,7 @@ public class TransportTcpClient implements ITransportClient {
                     TcpClient client = selectClient();
                     if (client != null) {
                         proxyRequest.getLogBean().setTransportAddr(client.getAddr().toString());
+                        proxyRequest.getLogBean().setTransportClientId(client.getId());
                         client.send(proxyRequest, future);
                     } else {
                         proxyRequest.getLogBean().setErrorReason(ErrorReason.TRANSPORT_SERVER_SELECT_FAIL);

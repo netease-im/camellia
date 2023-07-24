@@ -7,6 +7,7 @@ public class LogBean {
     private String host;
     private String path;
     private String transportAddr;
+    private Long transportClientId;
     private String upstreamAddr;
     private Long startTime;
     private Long transportServerSendTime;
@@ -40,6 +41,14 @@ public class LogBean {
 
     public void setTransportAddr(String transportAddr) {
         this.transportAddr = transportAddr;
+    }
+
+    public Long getTransportClientId() {
+        return transportClientId;
+    }
+
+    public void setTransportClientId(Long transportClientId) {
+        this.transportClientId = transportClientId;
     }
 
     public String getUpstreamAddr() {

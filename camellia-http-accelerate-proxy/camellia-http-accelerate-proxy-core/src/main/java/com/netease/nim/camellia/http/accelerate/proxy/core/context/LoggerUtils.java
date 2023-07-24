@@ -43,6 +43,7 @@ public class LoggerUtils {
                 ProxyMonitor.updateTransportSpendTime2(logBean.getHost(), logBean.getCode(), transportSpendTime2);
             }
             logJson.put("transportAddr", logBean.getTransportAddr());
+            logJson.put("transportClientId", logBean.getTransportClientId());
             logJson.put("upstreamAddr", logBean.getUpstreamAddr());
             logJson.put("startTime", logBean.getStartTime());
             logJson.put("transportServerSendTime", logBean.getTransportServerSendTime());

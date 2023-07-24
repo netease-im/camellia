@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.http.accelerate.proxy.core.transport.tcp;
 
+import com.netease.nim.camellia.http.accelerate.proxy.core.context.ErrorReason;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.tcp.codec.*;
 import com.netease.nim.camellia.http.accelerate.proxy.core.conf.DynamicConf;
 import com.netease.nim.camellia.http.accelerate.proxy.core.context.ProxyRequest;
@@ -9,9 +10,15 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -36,7 +43,7 @@ public class TcpClient {
     private volatile Status status;
     private ScheduledFuture<?> scheduledFuture;
 
-    private final ConcurrentHashMap<Long, CompletableFuture<ProxyResponse>> requestMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, Request> requestMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, CompletableFuture<Boolean>> heartbeatMap = new ConcurrentHashMap<>();
 
     public TcpClient(TcpAddr addr) {
@@ -101,8 +108,18 @@ public class TcpClient {
         TcpPackHeader header = newHeader(TcpPackCmd.REQUEST);
         request.getLogBean().setTransportServerSendTime(System.currentTimeMillis());
         TcpPack pack = TcpPack.newPack(header, new RequestPack(request));
-        requestMap.put(header.getSeqId(), future);
+        requestMap.put(header.getSeqId(), new Request(future, request));
         channel.writeAndFlush(pack.encode(channel.alloc()));
+    }
+
+    private static class Request {
+        CompletableFuture<ProxyResponse> future;
+        ProxyRequest request;
+
+        public Request(CompletableFuture<ProxyResponse> future, ProxyRequest request) {
+            this.future = future;
+            this.request = request;
+        }
     }
 
     public synchronized void stop() {
@@ -120,6 +137,22 @@ public class TcpClient {
             }
         } catch (Exception e) {
             logger.error("scheduledFuture cancel error, addr = {}, id = {}", addr, id, e);
+        }
+        Set<Long> set1 = new HashSet<>(requestMap.keySet());
+        for (Long seqId : set1) {
+            Request request = requestMap.remove(seqId);
+            if (request != null) {
+                FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.GATEWAY_TIMEOUT);
+                request.request.getLogBean().setErrorReason(ErrorReason.TCP_CLIENT_STOP);
+                request.future.complete(new ProxyResponse(response, request.request.getLogBean()));
+            }
+        }
+        Set<Long> set2 = new HashSet<>(heartbeatMap.keySet());
+        for (Long seqId : set2) {
+            CompletableFuture<Boolean> future = heartbeatMap.remove(seqId);
+            if (future != null) {
+                future.complete(false);
+            }
         }
         logger.info("TcpClient stopped, addr = {}, id = {}", addr, id);
     }
@@ -148,7 +181,7 @@ public class TcpClient {
         if (header.getCmd() == TcpPackCmd.HEARTBEAT) {
             if (header.isAck()) {
                 HeartbeatAckPack ackPack = (HeartbeatAckPack) pack.getBody();
-                CompletableFuture<Boolean> future = heartbeatMap.get(seqId);
+                CompletableFuture<Boolean> future = heartbeatMap.remove(seqId);
                 if (future != null) {
                     future.complete(ackPack.isOnline());
                 } else {
@@ -160,9 +193,9 @@ public class TcpClient {
         } else if (header.getCmd() == TcpPackCmd.REQUEST) {
             if (header.isAck()) {
                 RequestAckPack ackPack = (RequestAckPack) pack.getBody();
-                CompletableFuture<ProxyResponse> future = requestMap.remove(seqId);
-                if (future != null) {
-                    future.complete(ackPack.getProxyResponse());
+                Request request = requestMap.remove(seqId);
+                if (request != null) {
+                    request.future.complete(ackPack.getProxyResponse());
                 } else {
                     logger.warn("unknown request seqId = {}", seqId);
                 }
@@ -184,7 +217,7 @@ public class TcpClient {
             CompletableFuture<Boolean> future = new CompletableFuture<>();
             heartbeatMap.put(header.getSeqId(), future);
             channel.writeAndFlush(pack.encode(channel.alloc()));
-            int timeout = DynamicConf.getInt("tcp.client.heartbeat.timeout.seconds", 10);
+            int timeout = DynamicConf.getInt("tcp.client.heartbeat.timeout.seconds", 20);
             Boolean online = future.get(timeout, TimeUnit.SECONDS);
             if (status != Status.INVALID && status != Status.CLOSING) {
                 if (online != null && online) {
