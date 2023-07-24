@@ -58,6 +58,8 @@ public class TcpClient {
             int soRcvBuf = DynamicConf.getInt("tcp.client.so.rcvbuf", 10*1024*1024);
             int soSndBuf = DynamicConf.getInt("tcp.client.so.sndbuf", 10*1024*1024);
             int connectTimeoutMillis = DynamicConf.getInt("tcp.client.connect.timeout.millis", 2000);
+            int low = DynamicConf.getInt("tcp.client.write.buffer.water.mark.low", 128*1024);
+            int high = DynamicConf.getInt("tcp.client.write.buffer.water.mark.high", 512*1024);
             Bootstrap bootstrap = new Bootstrap()
                     .group(nioEventLoopGroup)
                     .channel(NioSocketChannel.class)
@@ -66,6 +68,7 @@ public class TcpClient {
                     .option(ChannelOption.SO_RCVBUF, soRcvBuf)
                     .option(ChannelOption.SO_SNDBUF, soSndBuf)
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
+                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(low, high))
                     .handler(new ChannelInitializer<Channel>() {
                         @Override
                         protected void initChannel(Channel channel) {
@@ -208,8 +211,13 @@ public class TcpClient {
     }
 
     private void heartbeat() {
+        long startTime = System.currentTimeMillis();
         try {
             if (status == Status.CLOSING) {
+                return;
+            }
+            boolean disabled = DynamicConf.getBoolean("tcp.client.heartbeat.disabled", false);
+            if (disabled) {
                 return;
             }
             TcpPackHeader header = newHeader(TcpPackCmd.HEARTBEAT);
@@ -227,7 +235,7 @@ public class TcpClient {
                 }
             }
         } catch (Exception e) {
-            logger.error("heartbeat timeout, addr = {}, id = {}", addr, id);
+            logger.error("heartbeat timeout, addr = {}, id = {}, spendMs = {}", addr, id, System.currentTimeMillis() - startTime);
             status = Status.INVALID;
             stop();
         }

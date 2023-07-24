@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.http.accelerate.proxy.core.console;
 
+import com.netease.nim.camellia.http.accelerate.proxy.core.conf.DynamicConf;
 import com.netease.nim.camellia.http.accelerate.proxy.core.monitor.ProxyMonitor;
 import com.netease.nim.camellia.http.accelerate.proxy.core.proxy.IHttpAccelerateProxy;
 import com.netease.nim.camellia.http.accelerate.proxy.core.status.ServerStartupStatus;
@@ -81,6 +82,7 @@ public class ConsoleServiceAdaptor implements ConsoleService {
 
     @Override
     public ConsoleResult reload() {
+        DynamicConf.reload();
         transportRouter.reload();
         upstreamRouter.reload();
         return ConsoleResult.success();
