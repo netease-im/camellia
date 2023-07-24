@@ -14,6 +14,7 @@
 * camellia-hot-key-sdk使用ConcurrentHashMapCollector时如果key满了，打印的日志从error改成info
 * 优化了camellia-http-console和camellia-http-accelerate-proxy响应包的connection头的逻辑
 * 使用direct-buffer优化camellia-hot-key和camellia-http-accelerate-proxy的打包
+* camellia-hot-key的rule支持后缀匹配
 
 ### fix
 * 无

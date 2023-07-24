@@ -9,7 +9,7 @@ public enum RuleType {
     prefix_match(2),//前缀匹配
     match_all(3),//匹配所有
     contains(4),//包含子串
-
+    suffix_match(5),//后缀匹配
     ;
 
     private final int value;

@@ -70,10 +70,10 @@ public class CacheableHotKeyConfigService {
             cache.put(namespace, hotKeyConfig);
             if (callback) {
                 if (HotKeyConfigUtils.isChange(oldConfig, hotKeyConfig)) {
+                    logger.info("reload HotKeyConfig success, config = {}", JSONObject.toJSONString(hotKeyConfig));
                     hotKeyConfigService.invokeUpdate(namespace);
                 }
             }
-            logger.info("reload HotKeyConfig success, config = {}", JSONObject.toJSONString(hotKeyConfig));
         } catch (Exception e) {
             logger.error("reload error, namespace = {}", namespace);
         }

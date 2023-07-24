@@ -13,6 +13,7 @@
 * camellia-hot-key-sdk use ConcurrentHashMapCollector, update collector full log from error to info
 * optimize response-http-header=connection for http-console and http-accelerate-proxy
 * use direct-buffer optimize pack of camellia-hot-key and camellia-http-accelerate-proxy
+* camellia-hot-key support suffix match rule
 
 ### fix
 * none
