@@ -610,6 +610,16 @@ public class CamelliaRedisTemplate implements ICamelliaRedisTemplate {
     }
 
     @Override
+    public List<Double> zmscore(String key, String... members) {
+        return factory.getProxy().zmscore(key, members);
+    }
+
+    @Override
+    public List<Double> zmscore(byte[] key, byte[]... members) {
+        return factory.getProxy().zmscore(key, members);
+    }
+
+    @Override
     public List<byte[]> sort(byte[] key) {
         return factory.getProxy().sort(key);
     }

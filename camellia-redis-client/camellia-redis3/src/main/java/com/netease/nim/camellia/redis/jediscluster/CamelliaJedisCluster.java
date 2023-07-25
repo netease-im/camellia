@@ -1600,6 +1600,16 @@ public class CamelliaJedisCluster implements ICamelliaRedis {
     }
 
     @Override
+    public List<Double> zmscore(String key, String... members) {
+        return jedisCluster.zmscore(key, members);
+    }
+
+    @Override
+    public List<Double> zmscore(byte[] key, byte[]... members) {
+        return jedisCluster.zmscore(key, members);
+    }
+
+    @Override
     public List<byte[]> sort(byte[] key) {
         return jedisCluster.sort(key);
     }

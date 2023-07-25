@@ -8,6 +8,7 @@
 * camellia-redis(CamelliaRedisTemplate), redis-sentinel、redis-sentinel-slaves support setting sentinelPassword
 * camellia-redis3(CamelliaRedisTemplate), redis-sentinel、redis-sentinel-slaves support setting sentinelUserName and sentinelPassword
 * camellia-redis-proxy, redis-sentinel、redis-sentinel-slaves support setting sentinelUserName and sentinelPassword
+* camellia-redis3(CamelliaRedisTemplate)，support zmscore
 
 ### update
 * camellia-hot-key-sdk use ConcurrentHashMapCollector, update collector full log from error to info

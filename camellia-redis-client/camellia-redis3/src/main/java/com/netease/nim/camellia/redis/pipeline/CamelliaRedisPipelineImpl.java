@@ -2179,6 +2179,46 @@ public class CamelliaRedisPipelineImpl implements ICamelliaRedisPipeline {
 
     @ReadOp
     @Override
+    public Response<List<Double>> zmscore(@ShardingParam String key, String... members) {
+        LogUtil.debugLog(resource, key);
+        String command = "zmscore(String key, String[] members)";
+        before(key, command);
+        try {
+            Client client = clientPool.getClient(resource, SafeEncoder.encode(key));
+            client.zmscore(key, members);
+            return queable.getResponse(client, BuilderFactory.DOUBLE_LIST, resource, key, new ResponseQueable.Fallback() {
+                @Override
+                public void invoke(Client client) {
+                    client.zmscore(key, members);
+                }
+            });
+        } finally {
+            after(key, command);
+        }
+    }
+
+    @ReadOp
+    @Override
+    public Response<List<Double>> zmscore(@ShardingParam byte[] key, byte[]... members) {
+        LogUtil.debugLog(resource, key);
+        String command = "zmscore(byte[] key, byte[][] members)";
+        before(key, command);
+        try {
+            Client client = clientPool.getClient(resource, key);
+            client.zmscore(key, members);
+            return queable.getResponse(client, BuilderFactory.DOUBLE_LIST, resource, key, new ResponseQueable.Fallback() {
+                @Override
+                public void invoke(Client client) {
+                    client.zmscore(key, members);
+                }
+            });
+        } finally {
+            after(key, command);
+        }
+    }
+
+    @ReadOp
+    @Override
     public Response<Long> zlexcount(@ShardingParam final byte[] key, final byte[] min, final byte[] max) {
         LogUtil.debugLog(resource, key);
         String command = "zlexcount(byte[] key, byte[] min, byte[] max)";

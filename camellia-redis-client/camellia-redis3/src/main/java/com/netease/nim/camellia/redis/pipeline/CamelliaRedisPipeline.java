@@ -695,6 +695,18 @@ public class CamelliaRedisPipeline implements ICamelliaRedisPipeline {
     }
 
     @Override
+    public Response<List<Double>> zmscore(String key, String... members) {
+        check();
+        return pipeline.zmscore(key, members);
+    }
+
+    @Override
+    public Response<List<Double>> zmscore(byte[] key, byte[]... members) {
+        check();
+        return pipeline.zmscore(key, members);
+    }
+
+    @Override
     public Response<Long> zlexcount(byte[] key, byte[] min, byte[] max) {
         check();
         return pipeline.zlexcount(key, min, max);

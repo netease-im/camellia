@@ -3028,6 +3028,32 @@ public class CamelliaRedisImpl implements ICamelliaRedis {
 
     @ReadOp
     @Override
+    public List<Double> zmscore(@ShardingParam String key, String... members) {
+        LogUtil.debugLog(resource, key);
+        String command = "zmscore(String key, String[] members)";
+        before(key, command);
+        try {
+            return redis.zmscore(key, members);
+        } finally {
+            after(key, command);
+        }
+    }
+
+    @ReadOp
+    @Override
+    public List<Double> zmscore(@ShardingParam byte[] key, byte[]... members) {
+        LogUtil.debugLog(resource, key);
+        String command = "zmscore(byte[] key, byte[][] members)";
+        before(key, command);
+        try {
+            return redis.zmscore(key, members);
+        } finally {
+            after(key, command);
+        }
+    }
+
+    @ReadOp
+    @Override
     public List<byte[]> sort(@ShardingParam byte[] key) {
         LogUtil.debugLog(resource, key);
         String command = "sort(byte[] key)";

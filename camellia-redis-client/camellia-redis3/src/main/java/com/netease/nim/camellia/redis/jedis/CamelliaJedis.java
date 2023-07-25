@@ -2327,6 +2327,26 @@ public class CamelliaJedis implements ICamelliaRedis {
     }
 
     @Override
+    public List<Double> zmscore(String key, String... members) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.zmscore(key, members);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
+    public List<Double> zmscore(byte[] key, byte[]... members) {
+        Jedis jedis = jedisPool.getResource();
+        try {
+            return jedis.zmscore(key, members);
+        } finally {
+            CloseUtil.closeQuietly(jedis);
+        }
+    }
+
+    @Override
     public List<byte[]> sort(byte[] key) {
         Jedis jedis = jedisPool.getResource();
         try {

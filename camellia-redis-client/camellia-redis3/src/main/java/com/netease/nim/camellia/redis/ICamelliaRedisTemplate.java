@@ -395,6 +395,10 @@ public interface ICamelliaRedisTemplate {
 
     Double zscore(byte[] key, byte[] member);
 
+    List<Double> zmscore(String key, String... members);
+
+    List<Double> zmscore(byte[] key, byte[]... members);
+
     List<byte[]> sort(byte[] key);
 
     List<byte[]> sort(byte[] key, SortingParams sortingParameters);

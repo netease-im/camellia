@@ -9,6 +9,7 @@
 * camellia-redis(CamelliaRedisTemplate)，redis-sentinel、redis-sentinel-slaves支持设置sentinelPassword
 * camellia-redis3(CamelliaRedisTemplate)，redis-sentinel、redis-sentinel-slaves支持设置sentinelUserName和sentinelPassword
 * camellia-redis-proxy的redis-sentinel、redis-sentinel-slaves支持设置sentinelUserName和sentinelPassword
+* camellia-redis3(CamelliaRedisTemplate)，支持zmscore
 
 ### 更新
 * camellia-hot-key-sdk使用ConcurrentHashMapCollector时如果key满了，打印的日志从error改成info

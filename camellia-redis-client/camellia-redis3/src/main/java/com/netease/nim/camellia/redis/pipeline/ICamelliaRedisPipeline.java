@@ -258,6 +258,10 @@ public interface ICamelliaRedisPipeline extends Closeable {
 
     Response<Double> zscore(byte[] key, byte[] member);
 
+    Response<List<Double>> zmscore(String key, String... members);
+
+    Response<List<Double>> zmscore(byte[] key, byte[]... members);
+
     Response<Long> zlexcount(final byte[] key, final byte[] min, final byte[] max);
 
     Response<Set<byte[]>> zrangeByLex(final byte[] key, final byte[] min, final byte[] max);
