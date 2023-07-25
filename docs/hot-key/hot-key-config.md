@@ -72,21 +72,37 @@ namespace2=namespace2.json
       "type": "exact_match",
       "keyConfig": "abcdef",
       "checkMillis": 1000,
-      "checkThreshold": 100
+      "checkThreshold": 100,
+      "expireMills": 10000
     },
     {
       "name": "rule2",
       "type": "prefix_match",
       "keyConfig": "xyz",
       "checkMillis": 1000,
-      "checkThreshold": 100
+      "checkThreshold": 100,
+      "expireMills": 10000
     },
     {
       "name": "rule3",
+      "type": "suffix_match",
+      "keyConfig": "qwe",
+      "checkMillis": 1000,
+      "checkThreshold": 100
+    },
+    {
+      "name": "rule4",
+      "type": "contains",
+      "keyConfig": "opq",
+      "checkMillis": 1000,
+      "checkThreshold": 100
+    },
+    {
+      "name": "rule4",
       "type": "match_all",
       "checkMillis": 1000,
-      "checkThreshold": 10,
-      "expireMillis": 10000
+      "checkThreshold": 100,
+      "expireMills": 10000
     }
   ]
 }

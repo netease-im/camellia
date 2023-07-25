@@ -13,7 +13,7 @@
 * 支持`热key本地缓存`，本地缓存如果有更新，hot-key-server会自动广播给所有sdk，从而保证数据的`弱`一致性（可能有百ms级的延迟）
 * `namespace`维度划分服务，一个hot-key-server支持同时服务多个`namespace`
 * 一个namespace下可以配置多条`rule`
-* rule里配置key的匹配规则（字符串完全匹配、字符串前缀匹配、字符串包含、匹配所有），以及热key的定义（时间窗口+阈值）
+* rule里配置key的匹配规则（字符串完全匹配、字符串前缀匹配、字符串包含、匹配所有、后缀匹配），以及热key的定义（时间窗口+阈值）
 * 提供`CamelliaHotKeyMonitorSdk`（探测）和`CamelliaHotKeyCacheSdk`（探测+本地缓存）两种SDK，适配不同使用场景
 * 支持自定义热key配置数据源（默认为本地文件配置），从而可以对接到你们的`配置中心`或者`管理后台`
 * 支持topN统计（全局维度），依赖redis进行数据汇总，对redis仅有少量的调用
