@@ -6,6 +6,7 @@ import com.netease.nim.camellia.http.accelerate.proxy.core.route.transport.ITran
 import com.netease.nim.camellia.http.accelerate.proxy.core.route.upstream.DefaultUpstreamRouter;
 import com.netease.nim.camellia.http.accelerate.proxy.core.route.upstream.IUpstreamRouter;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.ITransportServer;
+import com.netease.nim.camellia.http.accelerate.proxy.core.transport.quic.TransportQuicServer;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.tcp.TransportTcpServer;
 import com.netease.nim.camellia.http.accelerate.proxy.core.conf.DynamicConf;
 import com.netease.nim.camellia.http.accelerate.proxy.core.proxy.IHttpAccelerateProxy;
@@ -58,8 +59,12 @@ public class Bootstrap {
             upstreamRouter.start();
 
             //3、转发server
-            ITransportServer transportServer = new TransportTcpServer(upstreamRouter);
-            transportServer.start();
+            ITransportServer transportTcpServer = new TransportTcpServer(upstreamRouter);
+            transportTcpServer.start();
+
+            //3、转发server
+            ITransportServer transportQuicServer = new TransportQuicServer(upstreamRouter);
+            transportQuicServer.start();
 
             //4、转发路由
             ITransportRouter transportRouter = new DefaultTransportRouter();
@@ -71,7 +76,7 @@ public class Bootstrap {
 
             //6、console
             ProxyConsoleServer consoleServer = new ProxyConsoleServer();
-            consoleServer.start(transportRouter, upstreamRouter, transportServer, proxy);
+            consoleServer.start(transportRouter, upstreamRouter, proxy, transportTcpServer, transportQuicServer);
 
             logger.info("camellia http accelerate proxy start success!");
         } catch (Exception e) {

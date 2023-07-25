@@ -9,6 +9,15 @@
       [
         "127.0.0.1:11600"
       ]
+    },
+    {
+      "server": "quic_server",
+      "type": "quic",
+      "connect": 1,
+      "addrs":
+      [
+        "127.0.0.1:11500"
+      ]
     }
   ],
   "routes":
@@ -16,7 +25,7 @@
     {
       "type": "match_host",
       "host": "api.netease.im",
-      "server": "default"
+      "server": "quic_server"
     },
     {
       "type": "match_host",

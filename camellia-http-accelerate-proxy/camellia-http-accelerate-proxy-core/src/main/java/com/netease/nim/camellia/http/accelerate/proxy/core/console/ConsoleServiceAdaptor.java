@@ -22,21 +22,23 @@ public class ConsoleServiceAdaptor implements ConsoleService {
 
     private final ITransportRouter transportRouter;
     private final IUpstreamRouter upstreamRouter;
-    private final ITransportServer transportServer;
+    private final ITransportServer[] transportServer;
     private final IHttpAccelerateProxy proxy;
 
-    public ConsoleServiceAdaptor(ITransportRouter transportRouter, IUpstreamRouter upstreamRouter, ITransportServer transportServer, IHttpAccelerateProxy proxy) {
+    public ConsoleServiceAdaptor(ITransportRouter transportRouter, IUpstreamRouter upstreamRouter, IHttpAccelerateProxy proxy, ITransportServer... transportServers) {
         this.transportRouter = transportRouter;
         this.upstreamRouter = upstreamRouter;
-        this.transportServer = transportServer;
+        this.transportServer = transportServers;
         this.proxy = proxy;
     }
 
     @Override
     public ConsoleResult status() {
         boolean online = ServerStatus.getStatus() == ServerStatus.Status.ONLINE;
-        if (transportServer.getStatus() == ServerStartupStatus.FAIL) {
-            online = false;
+        for (ITransportServer server : transportServer) {
+            if (server.getStatus() == ServerStartupStatus.FAIL) {
+                online = false;
+            }
         }
         if (proxy.getStatus() == ServerStartupStatus.FAIL) {
             online = false;

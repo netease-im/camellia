@@ -4,10 +4,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.http.accelerate.proxy.core.context.ProxyRequest;
 import com.netease.nim.camellia.http.accelerate.proxy.core.route.transport.config.*;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.ITransportClient;
-import com.netease.nim.camellia.http.accelerate.proxy.core.transport.tcp.TcpAddr;
-import com.netease.nim.camellia.http.accelerate.proxy.core.transport.tcp.TransportTcpClient;
+import com.netease.nim.camellia.http.accelerate.proxy.core.transport.model.ServerAddr;
+import com.netease.nim.camellia.http.accelerate.proxy.core.transport.AbstractTransportClients;
 import com.netease.nim.camellia.http.accelerate.proxy.core.conf.ConfigurationUtil;
 import com.netease.nim.camellia.http.accelerate.proxy.core.conf.DynamicConf;
+import com.netease.nim.camellia.http.accelerate.proxy.core.transport.quic.TransportQuicClients;
+import com.netease.nim.camellia.http.accelerate.proxy.core.transport.tcp.TransportTcpClients;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,26 +70,33 @@ public class DefaultTransportRouter implements ITransportRouter {
             String name = server.getServer();
             toRemovedServer.remove(name);
             TransportServerType type = server.getType();
+            DefaultDynamicTcpAddrs addrs = addrsMap.get(name);
+            if (addrs == null) {
+                addrs = new DefaultDynamicTcpAddrs(ServerAddr.toAddrs(server.getAddrs()));
+                addrsMap.put(name, addrs);
+            } else {
+                addrs.updateAddrs(ServerAddr.toAddrs(server.getAddrs()));
+            }
+            DefaultConnectGetter connectGetter = connectMap.get(name);
+            if (connectGetter == null) {
+                connectGetter = new DefaultConnectGetter(server.getConnect());
+                connectMap.put(name, connectGetter);
+            } else {
+                connectGetter.updateConnect(server.getConnect());
+            }
             if (type == TransportServerType.tcp) {
-                DefaultDynamicTcpAddrs addrs = addrsMap.get(name);
-                if (addrs == null) {
-                    addrs = new DefaultDynamicTcpAddrs(TcpAddr.toAddrs(server.getAddrs()));
-                    addrsMap.put(name, addrs);
-                } else {
-                    addrs.updateAddrs(TcpAddr.toAddrs(server.getAddrs()));
+                ITransportClient transportClients = serverMap.get(name);
+                if (transportClients == null) {
+                    transportClients = new TransportTcpClients(addrs, connectGetter);
+                    transportClients.start();
+                    serverMap.put(name, transportClients);
                 }
-                DefaultConnectGetter connectGetter = connectMap.get(name);
-                if (connectGetter == null) {
-                    connectGetter = new DefaultConnectGetter(server.getConnect());
-                    connectMap.put(name, connectGetter);
-                } else {
-                    connectGetter.updateConnect(server.getConnect());
-                }
-                ITransportClient transportClient = serverMap.get(name);
-                if (transportClient == null) {
-                    transportClient = new TransportTcpClient(addrs, connectGetter);
-                    transportClient.start();
-                    serverMap.put(name, transportClient);
+            } else if (type == TransportServerType.quic) {
+                ITransportClient transportClients = serverMap.get(name);
+                if (transportClients == null) {
+                    transportClients = new TransportQuicClients(addrs, connectGetter);
+                    transportClients.start();
+                    serverMap.put(name, transportClients);
                 }
             } else {
                 throw new IllegalArgumentException(type + " not support");

@@ -49,6 +49,10 @@ public class DynamicConf {
         return ConfigurationUtil.getInteger(conf, key, defaultValue);
     }
 
+    public static long getLong(String key, long defaultValue) {
+        return ConfigurationUtil.getLong(conf, key, defaultValue);
+    }
+
     public static String getString(String key, String defaultValue) {
         return ConfigurationUtil.get(conf, key, defaultValue);
     }

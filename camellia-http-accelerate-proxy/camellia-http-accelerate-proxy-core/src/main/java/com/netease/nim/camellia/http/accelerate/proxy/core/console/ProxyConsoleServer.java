@@ -13,11 +13,11 @@ import com.netease.nim.camellia.http.accelerate.proxy.core.route.upstream.IUpstr
  */
 public class ProxyConsoleServer {
 
-    public void start(ITransportRouter transportRouter, IUpstreamRouter upstreamRouter, ITransportServer transportServer, IHttpAccelerateProxy proxy) {
+    public void start(ITransportRouter transportRouter, IUpstreamRouter upstreamRouter, IHttpAccelerateProxy proxy, ITransportServer... transportServers) {
         CamelliaHttpConsoleConfig config = new CamelliaHttpConsoleConfig();
         config.setHost(DynamicConf.getString("console.host", "0.0.0.0"));
         config.setPort(DynamicConf.getInt("console.port", 11700));
-        config.setConsoleService(new ConsoleServiceAdaptor(transportRouter, upstreamRouter, transportServer, proxy));
+        config.setConsoleService(new ConsoleServiceAdaptor(transportRouter, upstreamRouter, proxy, transportServers));
         CamelliaHttpConsoleServer consoleServer = new CamelliaHttpConsoleServer(config);
         consoleServer.start();
     }

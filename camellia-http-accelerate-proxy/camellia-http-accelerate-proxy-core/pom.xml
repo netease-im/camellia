@@ -38,6 +38,11 @@
 			<artifactId>okhttp</artifactId>
 			<version>4.11.0</version>
 		</dependency>
+		<dependency>
+			<groupId>io.netty.incubator</groupId>
+			<artifactId>netty-incubator-codec-native-quic</artifactId>
+			<version>0.0.21.Final</version>
+		</dependency>
     </dependencies>
 	<build>
 		<plugins>
