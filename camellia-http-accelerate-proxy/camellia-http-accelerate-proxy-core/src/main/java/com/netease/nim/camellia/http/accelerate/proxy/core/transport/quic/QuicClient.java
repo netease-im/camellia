@@ -42,14 +42,22 @@ public class QuicClient extends AbstractClient {
     public void start0() throws Exception {
         QuicSslContext context = QuicSslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).
                 applicationProtocols("camellia").build();
+
         long maxIdleTimeoutMillis = DynamicConf.getLong("transport.quic.client.max.idle.timeout.millis", 60 * 1000L);
         long initialMaxData = DynamicConf.getLong("transport.quic.client.initial.max.data", 10000_0000L);
         long initialMaxStreamDataBidiLocal = DynamicConf.getLong("transport.quic.client.initial.max.stream.data.bidirectional.local", 10000_0000L);
+        long initialMaxStreamDataBidiRemote = DynamicConf.getLong("transport.quic.client.initial.max.stream.data.bidirectional.remote", 10000_0000L);
+        long initialMaxStreamsBidirectional = DynamicConf.getLong("transport.quic.client.initial.max.streams.bidirectional", 10000L);
+        long initialMaxStreamsUnidirectional = DynamicConf.getLong("transport.quic.client.initial.max.streams.unidirectional", 10000L);
+
         ChannelHandler codec = new QuicClientCodecBuilder()
                 .sslContext(context)
                 .maxIdleTimeout(maxIdleTimeoutMillis, TimeUnit.MILLISECONDS)
                 .initialMaxData(initialMaxData)
                 .initialMaxStreamDataBidirectionalLocal(initialMaxStreamDataBidiLocal)
+                .initialMaxStreamDataBidirectionalRemote(initialMaxStreamDataBidiRemote)
+                .initialMaxStreamsBidirectional(initialMaxStreamsBidirectional)
+                .initialMaxStreamsUnidirectional(initialMaxStreamsUnidirectional)
                 .build();
         int connectTimeoutMillis = DynamicConf.getInt("transport.quic.client.connect.timeout.millis", 2000);
 
@@ -57,7 +65,9 @@ public class QuicClient extends AbstractClient {
         this.channel = bs.group(nioEventLoopGroup)
                 .channel(NioDatagramChannel.class)
                 .handler(codec)
-                .bind(0).sync().channel();
+                .bind(0)
+                .sync()
+                .channel();
 
         this.quicChannel = QuicChannel.newBootstrap(channel)
                 .remoteAddress(new InetSocketAddress(getAddr().getHost(), getAddr().getPort()))

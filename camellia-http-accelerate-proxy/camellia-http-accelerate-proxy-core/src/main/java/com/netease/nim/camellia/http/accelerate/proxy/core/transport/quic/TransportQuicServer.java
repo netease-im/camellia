@@ -74,8 +74,8 @@ public class TransportQuicServer extends AbstractTransportServer {
             long initialMaxData = DynamicConf.getLong("transport.quic.server.initial.max.data", 10000_0000L);
             long initialMaxStreamDataBidiLocal = DynamicConf.getLong("transport.quic.server.initial.max.stream.data.bidirectional.local", 10000_0000L);
             long initialMaxStreamDataBidiRemote = DynamicConf.getLong("transport.quic.server.initial.max.stream.data.bidirectional.remote", 10000_0000L);
-            long initialMaxStreamsBidi = DynamicConf.getLong("transport.quic.server.initial.max.streams.bidirectional", 10000L);
-            long initialMaxStreamsUni = DynamicConf.getLong("transport.quic.server.initial.max.streams.unidirectional", 10000L);
+            long initialMaxStreamsBidirectional = DynamicConf.getLong("transport.quic.server.initial.max.streams.bidirectional", 10000L);
+            long initialMaxStreamsUnidirectional = DynamicConf.getLong("transport.quic.server.initial.max.streams.unidirectional", 10000L);
 
             NioEventLoopGroup group = new NioEventLoopGroup(workThread, new DefaultThreadFactory("transport-quic-server-work-group"));
             ChannelHandler codec = new QuicServerCodecBuilder().sslContext(context)
@@ -83,8 +83,8 @@ public class TransportQuicServer extends AbstractTransportServer {
                     .initialMaxData(initialMaxData)
                     .initialMaxStreamDataBidirectionalLocal(initialMaxStreamDataBidiLocal)
                     .initialMaxStreamDataBidirectionalRemote(initialMaxStreamDataBidiRemote)
-                    .initialMaxStreamsBidirectional(initialMaxStreamsBidi)
-                    .initialMaxStreamsUnidirectional(initialMaxStreamsUni)
+                    .initialMaxStreamsBidirectional(initialMaxStreamsBidirectional)
+                    .initialMaxStreamsUnidirectional(initialMaxStreamsUnidirectional)
                     .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                     .handler(new ChannelInboundHandlerAdapter() {
                         @Override
@@ -117,7 +117,8 @@ public class TransportQuicServer extends AbstractTransportServer {
             bs.group(group)
                     .channel(NioDatagramChannel.class)
                     .handler(codec)
-                    .bind(host, port).sync();
+                    .bind(host, port)
+                    .sync();
             logger.info("transport quic server start success, host = {}, port = {}", host, port);
             status = ServerStartupStatus.SUCCESS;
         } catch (Exception e) {
