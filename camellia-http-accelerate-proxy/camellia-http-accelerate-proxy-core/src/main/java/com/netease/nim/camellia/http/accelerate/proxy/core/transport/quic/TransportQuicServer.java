@@ -38,7 +38,7 @@ public class TransportQuicServer extends AbstractTransportServer {
         String host = DynamicConf.getString("transport.quic.server.host", "0.0.0.0");
         int port = DynamicConf.getInt("transport.quic.server.port", 11500);
         if (port <= 0) {
-            logger.warn("transport tcp server skip start");
+            logger.warn("transport quic server skip start");
             status = ServerStartupStatus.SKIP;
             return;
         }

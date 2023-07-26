@@ -103,4 +103,13 @@ public class TcpClient extends AbstractClient {
         logger.info("TcpClient stopped, addr = {}, id = {}", getAddr(), getId());
     }
 
+    @Override
+    public int heartbeatIntervalSeconds() {
+        return DynamicConf.getInt("tcp.client.heartbeat.interval.seconds", 10);
+    }
+
+    @Override
+    public int heartbeatTimeoutSeconds() {
+        return DynamicConf.getInt("tcp.client.heartbeat.timeout.seconds", 10);
+    }
 }

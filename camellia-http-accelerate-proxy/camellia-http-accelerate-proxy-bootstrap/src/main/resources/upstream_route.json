@@ -2,13 +2,23 @@
   "upstreams":
   [
     {
-      "upstream": "yunxin",
+      "upstream": "yunxin-api",
       "type": "http",
       "heartbeatUri": "/",
       "heartbeatTimeout": 1000,
       "addrs":
       [
         "http://59.111.183.225:80"
+      ]
+    },
+    {
+      "upstream": "yunxin-lbs",
+      "type": "http",
+      "heartbeatUri": "/",
+      "heartbeatTimeout": 1000,
+      "addrs":
+      [
+        "http://59.111.211.9:80"
       ]
     },
     {
@@ -27,7 +37,12 @@
     {
       "type": "match_host",
       "host": "api.netease.im",
-      "upstream": "yunxin"
+      "upstream": "yunxin-api"
+    },
+    {
+      "type": "match_host",
+      "host": "lbs.netease.im",
+      "upstream": "yunxin-lbs"
     },
     {
       "type": "match_host",

@@ -27,7 +27,7 @@ public abstract class AbstractClient implements Client {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractClient.class);
 
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(),
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors() * 4,
             new CamelliaThreadFactory("transport-client-heartbeat"));
     private static final AtomicLong idGen = new AtomicLong(0);
 
@@ -46,6 +46,14 @@ public abstract class AbstractClient implements Client {
         this.id = idGen.incrementAndGet();
     }
 
+    public int heartbeatIntervalSeconds() {
+        return DynamicConf.getInt("transport.client.heartbeat.interval.seconds", 10);
+    }
+
+    public int heartbeatTimeoutSeconds() {
+        return DynamicConf.getInt("transport.client.heartbeat.timeout.seconds", 10);
+    }
+
     @Override
     public void start() {
         try {
@@ -55,7 +63,7 @@ public abstract class AbstractClient implements Client {
             heartbeat();
             logger.info("transport client start success, type = {}, addr = {}, id = {}, heartbeatSpendMs = {}",
                     getType(), getAddr(), getId(), (System.currentTimeMillis() - startTime));
-            int intervalSeconds = DynamicConf.getInt("transport.client.heartbeat.interval.seconds", 10);
+            int intervalSeconds = heartbeatIntervalSeconds();
             scheduledFuture = scheduler.scheduleAtFixedRate(this::heartbeat, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
         } catch (Exception e) {
             stop();
@@ -168,7 +176,7 @@ public abstract class AbstractClient implements Client {
             CompletableFuture<Boolean> future = new CompletableFuture<>();
             heartbeatMap.put(header.getSeqId(), future);
             send0(pack);
-            int timeout = DynamicConf.getInt("transport.client.heartbeat.timeout.seconds", 10);
+            int timeout = heartbeatTimeoutSeconds();
             Boolean online = future.get(timeout, TimeUnit.SECONDS);
             if (status != Status.INVALID && status != Status.CLOSING) {
                 if (online != null && online) {

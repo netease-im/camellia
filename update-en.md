@@ -10,6 +10,7 @@
 * camellia-redis-proxy, redis-sentinel、redis-sentinel-slaves support setting sentinelUserName and sentinelPassword
 * camellia-redis3(CamelliaRedisTemplate)，support zmscore
 * camellia-http-accelerate-proxy support quic as the transport protocol
+* camellia-http-accelerate-proxy support compress for http-content
 
 ### update
 * camellia-hot-key-sdk use ConcurrentHashMapCollector, update collector full log from error to info

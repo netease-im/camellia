@@ -129,4 +129,14 @@ public class QuicClient extends AbstractClient {
     public TransportServerType getType() {
         return TransportServerType.quic;
     }
+
+    @Override
+    public int heartbeatIntervalSeconds() {
+        return DynamicConf.getInt("quic.client.heartbeat.interval.seconds", 3);
+    }
+
+    @Override
+    public int heartbeatTimeoutSeconds() {
+        return DynamicConf.getInt("quic.client.heartbeat.timeout.seconds", 3);
+    }
 }
