@@ -135,11 +135,11 @@ public class QuicClient extends AbstractClient {
 
     @Override
     public int heartbeatIntervalSeconds() {
-        return DynamicConf.getInt("quic.client.heartbeat.interval.seconds", 3);
+        return DynamicConf.getInt("quic.client.heartbeat.interval.seconds", 10);
     }
 
     @Override
     public int heartbeatTimeoutSeconds() {
-        return DynamicConf.getInt("quic.client.heartbeat.timeout.seconds", 3);
+        return DynamicConf.getInt("quic.client.heartbeat.timeout.seconds", 10);
     }
 }
