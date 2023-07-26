@@ -100,11 +100,14 @@ public class QuicClient extends AbstractClient {
                             public void channelInactive(ChannelHandlerContext ctx) throws Exception {
                                 super.channelInactive(ctx);
                                 logger.warn("quic connection closed, id = {}, addr = {}", getId(), getAddr());
-                                stop();
                             }
                         });
                     }
                 }).sync().getNow();
+        streamChannel.closeFuture().addListener((ChannelFutureListener) channelFuture -> {
+            logger.warn("quic client closed, addr = {}, id = {}", getAddr(), getId(), channelFuture.cause());
+            stop();
+        });
     }
 
     @Override
