@@ -36,12 +36,12 @@
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
-			<version>4.11.0</version>
+			<version>${okhttp4.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.netty.incubator</groupId>
 			<artifactId>netty-incubator-codec-native-quic</artifactId>
-			<version>0.0.21.Final</version>
+			<version>${netty-incubator-codec-native-quic.version}</version>
 		</dependency>
     </dependencies>
 	<build>
