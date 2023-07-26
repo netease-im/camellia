@@ -51,8 +51,10 @@ public abstract class AbstractClient implements Client {
         try {
             start0();
             status = Status.ONLINE;
+            long startTime = System.currentTimeMillis();
             heartbeat();
-            logger.info("transport client start success, type = {}, addr = {}, id = {}", getType(), getAddr(), getId());
+            logger.info("transport client start success, type = {}, addr = {}, id = {}, heartbeatSpendMs = {}",
+                    getType(), getAddr(), getId(), (System.currentTimeMillis() - startTime));
             int intervalSeconds = DynamicConf.getInt("transport.client.heartbeat.interval.seconds", 10);
             scheduledFuture = scheduler.scheduleAtFixedRate(this::heartbeat, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
         } catch (Exception e) {
