@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.http.accelerate.proxy.core.transport.quic;
 
+import com.netease.nim.camellia.http.accelerate.proxy.core.route.transport.config.TransportServerType;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.AbstractTransportClients;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.Client;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.model.DynamicAddrs;
@@ -17,5 +18,10 @@ public class TransportQuicClients extends AbstractTransportClients {
     @Override
     public Client initClinet(ServerAddr addr) {
         return new QuicClient(addr);
+    }
+
+    @Override
+    public TransportServerType transportServerType() {
+        return TransportServerType.quic;
     }
 }

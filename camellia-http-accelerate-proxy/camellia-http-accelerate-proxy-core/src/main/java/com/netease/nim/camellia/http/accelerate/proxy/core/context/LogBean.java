@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.http.accelerate.proxy.core.context;
 
+import com.netease.nim.camellia.http.accelerate.proxy.core.route.transport.config.TransportServerType;
+
 /**
  * Created by caojiajun on 2023/7/10
  */
@@ -8,6 +10,7 @@ public class LogBean {
     private String path;
     private String transportAddr;
     private Long transportClientId;
+    private TransportServerType transportServerType;
     private String upstreamAddr;
     private Long startTime;
     private Long transportServerSendTime;
@@ -49,6 +52,14 @@ public class LogBean {
 
     public void setTransportClientId(Long transportClientId) {
         this.transportClientId = transportClientId;
+    }
+
+    public TransportServerType getTransportServerType() {
+        return transportServerType;
+    }
+
+    public void setTransportServerType(TransportServerType transportServerType) {
+        this.transportServerType = transportServerType;
     }
 
     public String getUpstreamAddr() {

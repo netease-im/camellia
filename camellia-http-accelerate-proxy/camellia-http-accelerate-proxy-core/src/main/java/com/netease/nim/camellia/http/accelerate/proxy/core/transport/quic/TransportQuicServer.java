@@ -70,7 +70,7 @@ public class TransportQuicServer extends AbstractTransportServer {
                     .applicationProtocols("camellia").build();
             int workThread = DynamicConf.getInt("transport.quic.server.work.thread", Runtime.getRuntime().availableProcessors());
 
-            long maxIdleTimeoutMillis = DynamicConf.getLong("transport.quic.server.max.idle.timeout.millis", 60 * 1000L);
+            long maxIdleTimeoutMillis = DynamicConf.getLong("transport.quic.server.max.idle.timeout.millis", 120 * 1000L);
             long initialMaxData = DynamicConf.getLong("transport.quic.server.initial.max.data", 10000_0000L);
             long initialMaxStreamDataBidiLocal = DynamicConf.getLong("transport.quic.server.initial.max.stream.data.bidirectional.local", 10000_0000L);
             long initialMaxStreamDataBidiRemote = DynamicConf.getLong("transport.quic.server.initial.max.stream.data.bidirectional.remote", 10000_0000L);
@@ -98,19 +98,31 @@ public class TransportQuicServer extends AbstractTransportServer {
                             ChannelPipeline pipeline = ch.pipeline();
                             pipeline.addLast(ProxyPackDecoder.getName(), new ProxyPackDecoder()); // IN
                             pipeline.addLast(new ChannelInboundHandlerAdapter() {
-                                        @Override
-                                        public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                                            try {
-                                                if (msg instanceof ProxyPack) {
-                                                    onProxyPack(ctx, (ProxyPack) msg);
-                                                } else {
-                                                    logger.warn("unknown pack");
-                                                }
-                                            } catch (Exception e) {
-                                                logger.error("pack error", e);
+                                    @Override
+                                    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                                        try {
+                                            if (msg instanceof ProxyPack) {
+                                                onProxyPack(ctx, (ProxyPack) msg);
+                                            } else {
+                                                logger.warn("unknown pack");
                                             }
+                                        } catch (Exception e) {
+                                            logger.error("pack error", e);
                                         }
-                                    });
+                                    }
+
+                                    @Override
+                                    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+                                        super.channelActive(ctx);
+                                        logger.info("new quic client connection, channel = {}", ctx.channel());
+                                    }
+
+                                    @Override
+                                    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                                        super.channelInactive(ctx);
+                                        logger.info("quic client connection disconnect, channel = {}", ctx.channel());
+                                    }
+                            });
                         }
                     }).build();
             Bootstrap bs = new Bootstrap();

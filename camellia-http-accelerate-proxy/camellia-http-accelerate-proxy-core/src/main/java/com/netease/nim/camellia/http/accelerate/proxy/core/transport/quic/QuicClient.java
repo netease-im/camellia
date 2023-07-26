@@ -95,6 +95,13 @@ public class QuicClient extends AbstractClient {
                                     logger.error("pack error", e);
                                 }
                             }
+
+                            @Override
+                            public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                                super.channelInactive(ctx);
+                                logger.warn("quic connection closed, id = {}, addr = {}", getId(), getAddr());
+                                stop();
+                            }
                         });
                     }
                 }).sync().getNow();

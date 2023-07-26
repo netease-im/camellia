@@ -3,6 +3,7 @@ package com.netease.nim.camellia.http.accelerate.proxy.core.transport.codec;
 import com.netease.nim.camellia.codec.Props;
 import com.netease.nim.camellia.http.accelerate.proxy.core.context.ErrorReason;
 import com.netease.nim.camellia.http.accelerate.proxy.core.context.LogBean;
+import com.netease.nim.camellia.http.accelerate.proxy.core.route.transport.config.TransportServerType;
 
 /**
  * Created by caojiajun on 2023/7/10
@@ -23,6 +24,7 @@ public enum LogBeanTag {
     errorReason(12),
     code(13),
     transportClientId(14),
+    transportServerType(15),
     ;
 
     private final int value;
@@ -88,6 +90,9 @@ public enum LogBeanTag {
         if (logBean.getTransportClientId() != null) {
             props.putLong(LogBeanTag.transportClientId.getValue(), logBean.getTransportClientId());
         }
+        if (logBean.getTransportServerType() != null) {
+            props.putInteger(LogBeanTag.transportServerType.getValue(), logBean.getTransportServerType().getValue());
+        }
         return props;
     }
 
@@ -134,6 +139,9 @@ public enum LogBeanTag {
         }
         if (props.containsKey(LogBeanTag.transportClientId.getValue())) {
             logBean.setTransportClientId(props.getLong(LogBeanTag.transportClientId.getValue()));
+        }
+        if (props.containsKey(LogBeanTag.transportServerType.getValue())) {
+            logBean.setTransportServerType(TransportServerType.getByValue(props.getInteger(LogBeanTag.transportServerType.getValue())));
         }
         return logBean;
     }

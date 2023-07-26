@@ -63,7 +63,7 @@ public class TransportTcpServer extends AbstractTransportServer {
                         @Override
                         protected void initChannel(Channel channel) {
                             ChannelPipeline pipeline = channel.pipeline();
-                            pipeline.addLast(ProxyPackDecoder.getName(), new ProxyPackDecoder()); // IN
+                            pipeline.addLast(ProxyPackDecoder.getName(), new ProxyPackDecoder());
                             pipeline.addLast(new ChannelInboundHandlerAdapter() {
                                 @Override
                                 public void channelRead(ChannelHandlerContext ctx, Object msg) {
@@ -77,7 +77,19 @@ public class TransportTcpServer extends AbstractTransportServer {
                                         logger.error("pack error", e);
                                     }
                                 }
-                            }); // IN
+
+                                @Override
+                                public void channelActive(ChannelHandlerContext ctx) throws Exception {
+                                    super.channelActive(ctx);
+                                    logger.info("new tcp client connection, channel = {}", ctx.channel());
+                                }
+
+                                @Override
+                                public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                                    super.channelInactive(ctx);
+                                    logger.info("tcp client connection disconnect, channel = {}", ctx.channel());
+                                }
+                            });
                         }
                     });
             bootstrap.bind(port).sync();

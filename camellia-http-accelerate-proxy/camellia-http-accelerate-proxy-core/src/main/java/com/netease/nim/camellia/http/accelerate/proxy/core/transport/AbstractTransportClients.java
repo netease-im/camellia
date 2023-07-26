@@ -5,6 +5,7 @@ import com.netease.nim.camellia.http.accelerate.proxy.core.conf.DynamicConf;
 import com.netease.nim.camellia.http.accelerate.proxy.core.constants.Constants;
 import com.netease.nim.camellia.http.accelerate.proxy.core.context.ProxyRequest;
 import com.netease.nim.camellia.http.accelerate.proxy.core.context.ProxyResponse;
+import com.netease.nim.camellia.http.accelerate.proxy.core.route.transport.config.TransportServerType;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.model.DynamicAddrs;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.model.Status;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.model.ServerAddr;
@@ -25,9 +26,9 @@ public abstract class AbstractTransportClients implements ITransportClient {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractTransportClients.class);
 
-    private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("tcp-client-scheduler"));
+    private final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("transport-client-scheduler"));
     private final ThreadPoolExecutor executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), Runtime.getRuntime().availableProcessors(),
-            0, TimeUnit.SECONDS, new LinkedBlockingDeque<>(10000), new CamelliaThreadFactory("tcp-client-executor"));
+            0, TimeUnit.SECONDS, new LinkedBlockingDeque<>(10000), new CamelliaThreadFactory("transport-client-executor"));
 
     private final DynamicAddrs dynamicAddrs;
     private final DynamicValueGetter<Integer> connectCount;
@@ -45,10 +46,12 @@ public abstract class AbstractTransportClients implements ITransportClient {
 
     public abstract Client initClinet(ServerAddr addr);
 
+    public abstract TransportServerType transportServerType();
+
     @Override
     public void start() {
         refresh();
-        int intervalSeconds = DynamicConf.getInt("tcp.client.refresh.interval.seconds", 30);
+        int intervalSeconds = DynamicConf.getInt("transport.client.refresh.interval.seconds", 30);
         scheduledFuture = scheduledExecutor.scheduleAtFixedRate(this::refresh, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
     }
 
@@ -73,6 +76,7 @@ public abstract class AbstractTransportClients implements ITransportClient {
         if (client1 != null) {
             proxyRequest.getLogBean().setTransportAddr(client1.getAddr().toString());
             proxyRequest.getLogBean().setTransportClientId(client1.getId());
+            proxyRequest.getLogBean().setTransportServerType(transportServerType());
             client1.send(proxyRequest, future);
             return future;
         }
@@ -86,6 +90,7 @@ public abstract class AbstractTransportClients implements ITransportClient {
                     if (client2 != null) {
                         proxyRequest.getLogBean().setTransportAddr(client2.getAddr().toString());
                         proxyRequest.getLogBean().setTransportClientId(client2.getId());
+                        proxyRequest.getLogBean().setTransportServerType(transportServerType());
                         client2.send(proxyRequest, future);
                     } else {
                         proxyRequest.getLogBean().setErrorReason(ErrorReason.TRANSPORT_SERVER_SELECT_FAIL);

@@ -44,6 +44,7 @@ public class LoggerUtils {
             }
             logJson.put("transportAddr", logBean.getTransportAddr());
             logJson.put("transportClientId", logBean.getTransportClientId());
+            logJson.put("transportServerType", logBean.getTransportServerType());
             logJson.put("upstreamAddr", logBean.getUpstreamAddr());
             logJson.put("startTime", logBean.getStartTime());
             logJson.put("transportServerSendTime", logBean.getTransportServerSendTime());

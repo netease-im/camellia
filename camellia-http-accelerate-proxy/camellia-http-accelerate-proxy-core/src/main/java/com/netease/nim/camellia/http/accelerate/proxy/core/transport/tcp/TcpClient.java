@@ -56,7 +56,7 @@ public class TcpClient extends AbstractClient {
                     @Override
                     protected void initChannel(Channel channel) {
                         ChannelPipeline pipeLine = channel.pipeline();
-                        pipeLine.addLast(ProxyPackDecoder.getName(), new ProxyPackDecoder()); // IN
+                        pipeLine.addLast(ProxyPackDecoder.getName(), new ProxyPackDecoder());
                         pipeLine.addLast(new ChannelInboundHandlerAdapter() {
                             @Override
                             public void channelRead(ChannelHandlerContext ctx, Object msg) {
@@ -70,7 +70,13 @@ public class TcpClient extends AbstractClient {
                                     logger.error("pack error", e);
                                 }
                             }
-                        }); // IN
+
+                            @Override
+                            public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                                logger.warn("tcp connection closed, id = {}, addr = {}", getId(), getAddr());
+                                super.channelInactive(ctx);
+                            }
+                        });
                     }
                 });
         ServerAddr addr = getAddr();
