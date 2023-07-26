@@ -45,15 +45,15 @@ public class HotKeyConfigPackUtils {
 
     public static void marshal(HotKeyConfig config, Pack pack) {
         Props namespaceProps = new Props();
-        namespaceProps.put(NamespaceTag.namespace.value, config.getNamespace());
+        namespaceProps.putString(NamespaceTag.namespace.value, config.getNamespace());
         ArrayMable<Props> rulesArray = new ArrayMable<>(Props.class);
         List<Rule> rules = config.getRules();
         for (Rule rule : rules) {
             Props props = new Props();
-            props.put(RuleTag.name.value, rule.getName());
+            props.putString(RuleTag.name.value, rule.getName());
             props.putInteger(RuleTag.type.value, rule.getType().getValue());
             if (rule.getKeyConfig() != null) {
-                props.put(RuleTag.keyConfig.value, rule.getKeyConfig());
+                props.putString(RuleTag.keyConfig.value, rule.getKeyConfig());
             }
             if (rule.getCheckMillis() != null) {
                 props.putLong(RuleTag.checkMillis.value, rule.getCheckMillis());
@@ -76,14 +76,14 @@ public class HotKeyConfigPackUtils {
         unpack.popMarshallable(namespaceProps);
         unpack.popMarshallable(rulesArray);
         HotKeyConfig config = new HotKeyConfig();
-        config.setNamespace(namespaceProps.get(NamespaceTag.namespace.value));
+        config.setNamespace(namespaceProps.getString(NamespaceTag.namespace.value));
         List<Rule> rules = new ArrayList<>();
         for (Props props : rulesArray.list) {
             Rule rule = new Rule();
-            rule.setName(props.get(RuleTag.name.value));
+            rule.setName(props.getString(RuleTag.name.value));
             rule.setType(RuleType.getByValue(props.getInteger(RuleTag.type.value)));
             if (props.containsKey(RuleTag.keyConfig.value)) {
-                rule.setKeyConfig(props.get(RuleTag.keyConfig.value));
+                rule.setKeyConfig(props.getString(RuleTag.keyConfig.value));
             }
             if (props.containsKey(RuleTag.checkMillis.value)) {
                 rule.setCheckMillis(props.getLong(RuleTag.checkMillis.value));

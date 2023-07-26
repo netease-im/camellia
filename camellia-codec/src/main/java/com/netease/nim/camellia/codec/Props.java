@@ -1,174 +1,22 @@
 package com.netease.nim.camellia.codec;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.serializer.SerializeConfig;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class Props implements Marshallable {
+public class Props implements IProps, Marshallable {
 
-    public Map<Integer, Value> props = new HashMap<>();
-
-    public void marshal(Pack p) {
-        p.putVarUint(props.size());
-        for (Iterator<Integer> it = iterator(); it.hasNext();) {
-            int tag = it.next();
-            p.putVarUint(tag);
-            Value value = props.get(tag);
-            p.putVarbin(value.bytes);
-        }
-    }
-
-    public void unmarshal(Unpack p) {
-        int cnt = p.popVarUint();
-        for (int i = 0; i < cnt; ++i) {
-            int tag = p.popVarUint();
-            props.put(tag, new Value(p.popVarbin()));
-        }
-    }
+    private final Map<Integer, Value> map = new HashMap<>();
 
     public boolean equals(Props prop) {
-        return this.props.equals(prop.props);
-    }
-
-    public Iterator<Integer> iterator() {
-        return props.keySet().iterator();
-    }
-
-    public String get(Integer tag) {
-        Value v = props.get(tag);
-
-        if (v != null) {
-            return props.get(tag).toString();
-        }
-        return null;
-    }
-
-
-    public String get(Integer tag, String defaultStr) {
-        Value v = props.get(tag);
-        if (v != null) {
-            return props.get(tag).toString();
-        }
-        return defaultStr;
-    }
-
-
-    public byte[] getBytes(Integer tag) {
-        Value v = props.get(tag);
-        if (v != null) {
-            return v.bytes;
-        }
-        return null;
-    }
-
-    public void putBytes(Integer tag, byte[] bytes) {
-        Value v = new Value(bytes);
-        props.put(tag, v);
-    }
-
-    public void put(Integer tag, String value) {
-        props.put(tag, new Value(value));
-    }
-
-    public int getInteger(Integer tag) {
-        String value = get(tag);
-        if (value == null || value.equals(""))
-            return 0;
-        return Integer.parseInt(value);
-    }
-
-    public int getInteger(Integer tag, Integer defaultV) {
-        String value = get(tag);
-        if (value == null || value.equals(""))
-            return defaultV;
-        try {
-            return Integer.parseInt(value);
-        } catch (Exception ex) {
-            return defaultV;
-        }
-    }
-
-    public void putInteger(Integer tag, int value) {
-        props.put(tag, new Value(String.valueOf(value)));
-    }
-
-    public long getLong(Integer tag) {
-        String value = get(tag);
-        try {
-            if (value == null || value.equals(""))
-                return 0;
-            return Long.parseLong(value);
-        } catch (Exception ex) {
-            return 0;
-        }
-    }
-
-    public long getLong(Integer tag,long defaultVal) {
-        String value = get(tag);
-        try {
-            if (value == null || value.equals(""))
-                return 0;
-            return Long.parseLong(value);
-        } catch (Exception ex) {
-            return defaultVal;
-        }
-    }
-
-    public double getDouble(Integer tag){
-        String value = get(tag);
-        try {
-            if (value == null || value.equals(""))
-                return 0.0;
-            return Double.parseDouble(value);
-        } catch (Exception ex) {
-            return 0.0;
-        }
-    }
-
-    public void putLong(Integer tag, long value) {
-        props.put(tag, new Value(String.valueOf(value)));
-    }
-
-    public int size() {
-        return props.size();
-    }
-
-    public void clear() {
-        props.clear();
+        return this.map.equals(prop.map);
     }
 
     public Props duplicate() {
         Props ret = new Props();
-
-        for (Map.Entry<Integer, Value> entry: props.entrySet()) {
-            ret.putValue(entry.getKey(), entry.getValue());
-        }
-
+        ret.map.putAll(map);
         return ret;
-    }
-
-    public void putValue(Integer key, Value value) {
-        props.put(key, value);
-    }
-
-    public static byte[] fromString(String str) {
-        return (str == null ? "" : str).getBytes(StandardCharsets.UTF_8);
-    }
-
-    public static String fromBytes(byte[] bytes) {
-        if (bytes != null) {
-            return new String(bytes, StandardCharsets.UTF_8);
-        } else {
-            return null;
-        }
-    }
-
-    public Value remove(Integer tag) {
-        return props.remove(tag);
     }
 
     public String toString() {
@@ -177,51 +25,300 @@ public class Props implements Marshallable {
 
     public JSONObject toJSONObject() {
         JSONObject jo = new JSONObject(true);
-        for (Map.Entry<Integer, Value> entry: props.entrySet()) {
+        for (Map.Entry<Integer, Value> entry: map.entrySet()) {
             jo.put(String.valueOf(entry.getKey()), entry.getValue().toString());
         }
         return jo;
     }
 
-    public JSONObject toJSONObject(final Map<String, String> readableKeyMap) {
-        JSONObject jo = new JSONObject(true);
-        for (Map.Entry<Integer, Value> entry: props.entrySet()) {
-            String key = String.valueOf(entry.getKey());
-            key = String.format("%s [%s]", key, readableKeyMap.get(key));
-            jo.put(key, entry.getValue().toString());
+    @Override
+    public void marshal(Pack p) {
+        p.putVarUint(map.size());
+        for (Map.Entry<Integer, Value> entry : map.entrySet()) {
+            Integer tag = entry.getKey();
+            Value value = entry.getValue();
+            p.putVarUint(tag);
+            p.putVarbin(value.bytes);
         }
-        return jo;
     }
 
-    public String toJSONString() {
-        return JSON.toJSONStringZ(toJSONObject(),
-            SerializeConfig.getGlobalInstance(),
-            SerializerFeature.PrettyFormat, SerializerFeature.QuoteFieldNames);
-    }
-
-    public Collection<String> values() {
-        ArrayList<String> list = new ArrayList<String>(props.size());
-        for (Value value: props.values()) {
-            list.add(value.toString());
+    @Override
+    public void unmarshal(Unpack p) {
+        int cnt = p.popVarUint();
+        for (int i = 0; i < cnt; ++i) {
+            int tag = p.popVarUint();
+            map.put(tag, new Value(p.popVarbin()));
         }
-        return list;
     }
 
+    @Override
+    public String getString(int tag) {
+        Value v = map.get(tag);
+        if (v != null) {
+            return v.toString();
+        }
+        return null;
+    }
+
+    @Override
+    public String getString(int tag, String defaultStr) {
+        Value v = map.get(tag);
+        if (v != null) {
+            return v.toString();
+        }
+        return defaultStr;
+    }
+
+
+    @Override
+    public byte[] getBytes(int tag) {
+        Value v = map.get(tag);
+        if (v != null) {
+            return v.bytes;
+        }
+        return null;
+    }
+
+    @Override
+    public void putBytes(int tag, byte[] bytes) {
+        Value v = new Value(bytes);
+        map.put(tag, v);
+    }
+
+    @Override
+    public void putString(int tag, String value) {
+        map.put(tag, new Value(value));
+    }
+
+    @Override
+    public int getInteger(int tag) {
+        String value = getString(tag);
+        if (value == null) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    @Override
+    public int getInteger(int tag, int defaultV) {
+        String value = getString(tag);
+        if (value == null) {
+            return defaultV;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (Exception ex) {
+            return defaultV;
+        }
+    }
+
+    @Override
+    public void putInteger(int tag, int value) {
+        map.put(tag, new Value(String.valueOf(value)));
+    }
+
+    @Override
+    public long getLong(int tag) {
+        String value = getString(tag);
+        if (value == null) {
+            return 0L;
+        }
+        try {
+            return Long.parseLong(value);
+        } catch (Exception ex) {
+            return 0L;
+        }
+    }
+
+    @Override
+    public long getLong(int tag, long defaultV) {
+        String value = getString(tag);
+        if (value == null) {
+            return defaultV;
+        }
+        try {
+            return Long.parseLong(value);
+        } catch (Exception ex) {
+            return defaultV;
+        }
+    }
+
+    @Override
+    public double getDouble(int tag){
+        String value = getString(tag);
+        if (value == null) {
+            return 0.0;
+        }
+        try {
+            return Double.parseDouble(value);
+        } catch (Exception ex) {
+            return 0.0;
+        }
+    }
+
+    @Override
+    public void putLong(int tag, long value) {
+        map.put(tag, new Value(String.valueOf(value)));
+    }
+
+    @Override
+    public int size() {
+        return map.size();
+    }
+
+    @Override
+    public List<Integer> tags() {
+        return new ArrayList<>(map.keySet());
+    }
+
+    @Override
+    public void clear() {
+        map.clear();
+    }
+
+    @Override
+    public void remove(int tag) {
+        map.remove(tag);
+    }
+
+    @Override
+    public byte[] getBytes(int tag, byte[] defaultValue) {
+        Value value = map.get(tag);
+        if (value == null) {
+            return defaultValue;
+        }
+        return value.bytes;
+    }
+
+    @Override
+    public void putByte(int tag, byte value) {
+        putString(tag, String.valueOf(value));
+    }
+
+    @Override
+    public byte getByte(int tag) {
+        String value = getString(tag);
+        if (value == null) {
+            return 0;
+        }
+        try {
+            return Byte.parseByte(value);
+        } catch (Exception ex) {
+            return 0;
+        }
+    }
+
+    @Override
+    public byte getByte(int tag, byte defaultValue) {
+        String value = getString(tag);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Byte.parseByte(value);
+        } catch (Exception ex) {
+            return defaultValue;
+        }
+    }
+
+    @Override
+    public void putShort(int tag, short value) {
+        putString(tag, String.valueOf(value));
+    }
+
+    @Override
+    public short getShort(int tag) {
+        String value = getString(tag);
+        if (value == null) {
+            return 0;
+        }
+        try {
+            return Byte.parseByte(value);
+        } catch (Exception ex) {
+            return 0;
+        }
+    }
+
+    @Override
+    public short getShort(int tag, short defaultValue) {
+        String value = getString(tag);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Byte.parseByte(value);
+        } catch (Exception ex) {
+            return defaultValue;
+        }
+    }
+
+    @Override
+    public void putDouble(int tag, double value) {
+        putString(tag, String.valueOf(value));
+    }
+
+    @Override
+    public double getDouble(int tag, double defaultValue) {
+        String value = getString(tag);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Double.parseDouble(value);
+        } catch (Exception ex) {
+            return defaultValue;
+        }
+    }
+
+    @Override
+    public void putFloat(int tag, float value) {
+        putString(tag, String.valueOf(value));
+    }
+
+    @Override
+    public float getFloat(int tag) {
+        String value = getString(tag);
+        if (value == null) {
+            return 0.0f;
+        }
+        try {
+            return Float.parseFloat(value);
+        } catch (Exception ex) {
+            return 0.0f;
+        }
+    }
+
+    @Override
+    public float getFloat(int tag, float defaultValue) {
+        String value = getString(tag);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Float.parseFloat(value);
+        } catch (Exception ex) {
+            return defaultValue;
+        }
+    }
+
+    @Override
     public boolean containsKey(int key) {
-        return props.containsKey(key);
+        return map.containsKey(key);
     }
 
-    public final static class Value {
+    private final static class Value {
         private String str;
         private byte[] bytes;
 
         public Value(byte[] bytes) {
-            super();
             setBytes(bytes);
         }
 
         public Value(String str) {
-            super();
             set(str);
         }
 
@@ -231,22 +328,45 @@ public class Props implements Marshallable {
         }
 
         private void setBytes(byte[] bytes) {
-            this.str = null;
             if (bytes == null) {
                 this.bytes = fromString("");
                 this.str = "";
             } else {
                 this.bytes = bytes;
+                this.str = fromBytes(bytes);
             }
         }
 
         @Override
         public String toString() {
-            if (str == null) {
-                str = fromBytes(bytes);
-            }
             return str;
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Value value = (Value) o;
+            return Objects.equals(str, value.str) && Arrays.equals(bytes, value.bytes);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Objects.hash(str);
+            result = 31 * result + Arrays.hashCode(bytes);
+            return result;
+        }
+    }
+
+    private static byte[] fromString(String str) {
+        return (str == null ? "" : str).getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static String fromBytes(byte[] bytes) {
+        if (bytes != null) {
+            return new String(bytes, StandardCharsets.UTF_8);
+        } else {
+            return null;
+        }
     }
 }

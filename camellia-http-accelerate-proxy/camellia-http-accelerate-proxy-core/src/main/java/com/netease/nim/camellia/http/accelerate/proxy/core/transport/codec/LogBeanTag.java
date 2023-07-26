@@ -49,13 +49,13 @@ public enum LogBeanTag {
     public static Props logBean(LogBean logBean) {
         Props props = new Props();
         if (logBean.getTraceId() != null) {
-            props.put(LogBeanTag.traceId.getValue(), logBean.getTraceId());
+            props.putString(LogBeanTag.traceId.getValue(), logBean.getTraceId());
         }
         if (logBean.getHost() != null) {
-            props.put(LogBeanTag.host.getValue(), logBean.getHost());
+            props.putString(LogBeanTag.host.getValue(), logBean.getHost());
         }
         if (logBean.getPath() != null) {
-            props.put(LogBeanTag.path.getValue(), logBean.getPath());
+            props.putString(LogBeanTag.path.getValue(), logBean.getPath());
         }
         if (logBean.getStartTime() != null) {
             props.putLong(LogBeanTag.startTime.getValue(), logBean.getStartTime());
@@ -76,10 +76,10 @@ public enum LogBeanTag {
             props.putLong(LogBeanTag.endTime.getValue(), logBean.getEndTime());
         }
         if (logBean.getTransportAddr() != null) {
-            props.put(LogBeanTag.transportAddr.getValue(), logBean.getTransportAddr());
+            props.putString(LogBeanTag.transportAddr.getValue(), logBean.getTransportAddr());
         }
         if (logBean.getUpstreamAddr() != null) {
-            props.put(LogBeanTag.upstreamAddr.getValue(), logBean.getUpstreamAddr());
+            props.putString(LogBeanTag.upstreamAddr.getValue(), logBean.getUpstreamAddr());
         }
         if (logBean.getErrorReason() != null) {
             props.putInteger(LogBeanTag.errorReason.getValue(), logBean.getErrorReason().getValue());
@@ -99,13 +99,13 @@ public enum LogBeanTag {
     public static LogBean parseProps(Props props) {
         LogBean logBean = new LogBean();
         if (props.containsKey(LogBeanTag.traceId.getValue())) {
-            logBean.setTraceId(props.get(LogBeanTag.traceId.getValue()));
+            logBean.setTraceId(props.getString(LogBeanTag.traceId.getValue()));
         }
         if (props.containsKey(LogBeanTag.host.getValue())) {
-            logBean.setHost(props.get(LogBeanTag.host.getValue()));
+            logBean.setHost(props.getString(LogBeanTag.host.getValue()));
         }
         if (props.containsKey(LogBeanTag.path.getValue())) {
-            logBean.setPath(props.get(LogBeanTag.path.getValue()));
+            logBean.setPath(props.getString(LogBeanTag.path.getValue()));
         }
         if (props.containsKey(LogBeanTag.startTime.getValue())) {
             logBean.setStartTime(props.getLong(LogBeanTag.startTime.getValue()));
@@ -126,10 +126,10 @@ public enum LogBeanTag {
             logBean.setEndTime(props.getLong(LogBeanTag.endTime.getValue()));
         }
         if (props.containsKey(LogBeanTag.transportAddr.getValue())) {
-            logBean.setTransportAddr(props.get(LogBeanTag.transportAddr.getValue()));
+            logBean.setTransportAddr(props.getString(LogBeanTag.transportAddr.getValue()));
         }
         if (props.containsKey(LogBeanTag.upstreamAddr.getValue())) {
-            logBean.setUpstreamAddr(props.get(LogBeanTag.upstreamAddr.getValue()));
+            logBean.setUpstreamAddr(props.getString(LogBeanTag.upstreamAddr.getValue()));
         }
         if (props.containsKey(LogBeanTag.errorReason.getValue())) {
             logBean.setErrorReason(ErrorReason.getByValue(props.getInteger(LogBeanTag.errorReason.getValue())));

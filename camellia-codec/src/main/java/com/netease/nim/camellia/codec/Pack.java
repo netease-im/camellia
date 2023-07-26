@@ -69,6 +69,16 @@ public class Pack {
         }
     }
 
+    public Pack putFloat(float val) {
+        try {
+            ensureCapacity(Integer.SIZE / Byte.SIZE);
+            buf.writeInt(Float.floatToRawIntBits(val));
+            return this;
+        } catch (IndexOutOfBoundsException bex) {
+            throw new PackException();
+        }
+    }
+
     public Pack putBoolean(boolean val) {
         try {
             ensureCapacity(1);
@@ -83,6 +93,16 @@ public class Pack {
         try {
             ensureCapacity(Long.SIZE / Byte.SIZE);
             buf.writeLong(val);
+            return this;
+        } catch (IndexOutOfBoundsException bex) {
+            throw new PackException();
+        }
+    }
+
+    public Pack putDouble(double val) {
+        try {
+            ensureCapacity(Long.SIZE / Byte.SIZE);
+            buf.writeLong(Double.doubleToLongBits(val));
             return this;
         } catch (IndexOutOfBoundsException bex) {
             throw new PackException();

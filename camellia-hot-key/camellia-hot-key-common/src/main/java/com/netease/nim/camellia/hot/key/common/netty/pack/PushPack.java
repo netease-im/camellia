@@ -47,8 +47,8 @@ public class PushPack extends HotKeyPackBody {
         ArrayMable<Props> arrayMable = new ArrayMable<>(new ArrayList<>(list.size()), Props.class);
         for (KeyCounter counter : list) {
             Props props = new Props();
-            props.put(Tag.namespace.value, counter.getNamespace());
-            props.put(Tag.key.value, counter.getKey());
+            props.putString(Tag.namespace.value, counter.getNamespace());
+            props.putString(Tag.key.value, counter.getKey());
             props.putInteger(Tag.action.value, counter.getAction().getValue());
             props.putLong(Tag.count.value, counter.getCount());
             arrayMable.add(props);
@@ -63,8 +63,8 @@ public class PushPack extends HotKeyPackBody {
         list = new ArrayList<>(arrayMable.list.size());
         for (Props props : arrayMable.list) {
             KeyCounter counter = new KeyCounter();
-            counter.setNamespace(props.get(Tag.namespace.value));
-            counter.setKey(props.get(Tag.key.value));
+            counter.setNamespace(props.getString(Tag.namespace.value));
+            counter.setKey(props.getString(Tag.key.value));
             counter.setAction(KeyAction.getByValue(props.getInteger(Tag.action.value)));
             counter.setCount(props.getLong(Tag.count.value));
             list.add(counter);

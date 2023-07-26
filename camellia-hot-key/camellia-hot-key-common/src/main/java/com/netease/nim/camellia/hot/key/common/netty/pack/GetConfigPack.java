@@ -45,9 +45,9 @@ public class GetConfigPack extends HotKeyPackBody {
     @Override
     public void marshal(Pack pack) {
         Props props = new Props();
-        props.put(Tag.namespace.value, namespace);
+        props.putString(Tag.namespace.value, namespace);
         if (source != null) {
-            props.put(Tag.source.value, source);
+            props.putString(Tag.source.value, source);
         }
         pack.putMarshallable(props);
     }
@@ -56,7 +56,7 @@ public class GetConfigPack extends HotKeyPackBody {
     public void unmarshal(Unpack unpack) {
         Props property = new Props();
         unpack.popMarshallable(property);
-        namespace = property.get(Tag.namespace.value);
-        source = property.get(Tag.source.value);
+        namespace = property.getString(Tag.namespace.value);
+        source = property.getString(Tag.source.value);
     }
 }

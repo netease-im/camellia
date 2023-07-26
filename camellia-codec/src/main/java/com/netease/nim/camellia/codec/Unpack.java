@@ -92,9 +92,28 @@ public class Unpack {
         }
     }
 
+    public float popFloat() {
+        try {
+            int i = buffer.readInt();
+            return Float.intBitsToFloat(i);
+        } catch (IndexOutOfBoundsException ex) {
+            throw new UnpackException(ex);
+        }
+    }
+
+
     public long popLong() {
         try {
             return buffer.readLong();
+        } catch (IndexOutOfBoundsException ex) {
+            throw new UnpackException(ex);
+        }
+    }
+
+    public double popDouble() {
+        try {
+            long l = buffer.readLong();
+            return Double.longBitsToDouble(l);
         } catch (IndexOutOfBoundsException ex) {
             throw new UnpackException(ex);
         }

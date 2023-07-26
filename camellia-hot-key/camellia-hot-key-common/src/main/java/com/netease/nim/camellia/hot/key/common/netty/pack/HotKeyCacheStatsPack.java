@@ -45,8 +45,8 @@ public class HotKeyCacheStatsPack extends HotKeyPackBody {
         ArrayMable<Props> arrayMable = new ArrayMable<>(Props.class);
         for (HotKeyCacheStats stats : statsList) {
             Props props = new Props();
-            props.put(Tag.namespace.value, stats.getNamespace());
-            props.put(Tag.key.value, stats.getKey());
+            props.putString(Tag.namespace.value, stats.getNamespace());
+            props.putString(Tag.key.value, stats.getKey());
             props.putLong(Tag.hitCount.value, stats.getHitCount());
             arrayMable.add(props);
         }
@@ -60,8 +60,8 @@ public class HotKeyCacheStatsPack extends HotKeyPackBody {
         statsList = new ArrayList<>();
         for (Props props : arrayMable.list) {
             HotKeyCacheStats stats = new HotKeyCacheStats();
-            stats.setNamespace(props.get(Tag.namespace.value));
-            stats.setKey(props.get(Tag.key.value));
+            stats.setNamespace(props.getString(Tag.namespace.value));
+            stats.setKey(props.getString(Tag.key.value));
             stats.setHitCount(props.getLong(Tag.hitCount.value));
             statsList.add(stats);
         }
