@@ -4,6 +4,7 @@ import com.netease.nim.camellia.http.accelerate.proxy.core.conf.DynamicConf;
 import com.netease.nim.camellia.http.accelerate.proxy.core.route.transport.config.TransportServerType;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.AbstractClient;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.codec.ProxyPack;
+import com.netease.nim.camellia.http.accelerate.proxy.core.transport.codec.ProxyPackCmd;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.codec.ProxyPackDecoder;
 import com.netease.nim.camellia.http.accelerate.proxy.core.transport.model.ServerAddr;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
@@ -33,6 +34,7 @@ public class QuicClient extends AbstractClient {
     private Channel channel;
     private QuicChannel quicChannel;
     private QuicStreamChannel streamChannel;
+    private QuicStreamChannel heartbeatStreamChannel;
 
     public QuicClient(ServerAddr addr) {
         super(addr);
@@ -75,50 +77,31 @@ public class QuicClient extends AbstractClient {
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
                 .connect()
                 .get();
-
-        this.streamChannel = quicChannel.createStream(QuicStreamType.BIDIRECTIONAL,
-                new ChannelInitializer<Channel>() {
-                    @Override
-                    protected void initChannel(Channel channel) {
-                        ChannelPipeline pipeLine = channel.pipeline();
-                        pipeLine.addLast(ProxyPackDecoder.getName(), new ProxyPackDecoder());
-                        pipeLine.addLast(new ChannelInboundHandlerAdapter() {
-                            @Override
-                            public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                                try {
-                                    if (msg instanceof ProxyPack) {
-                                        onProxyPack((ProxyPack) msg);
-                                    } else {
-                                        logger.warn("unknown pack");
-                                    }
-                                } catch (Exception e) {
-                                    logger.error("pack error", e);
-                                }
-                            }
-
-                            @Override
-                            public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-                                super.channelInactive(ctx);
-                                logger.warn("quic connection closed, id = {}, addr = {}", getId(), getAddr());
-                            }
-                        });
-                    }
-                }).sync().getNow();
-        streamChannel.closeFuture().addListener((ChannelFutureListener) channelFuture -> {
+        this.streamChannel = quicChannel.createStream(QuicStreamType.BIDIRECTIONAL, new QuicStreamChannelInitializer(this)).sync().getNow();
+        this.heartbeatStreamChannel = quicChannel.createStream(QuicStreamType.BIDIRECTIONAL, new QuicStreamChannelInitializer(this)).sync().getNow();
+        this.channel.closeFuture().addListener((ChannelFutureListener) channelFuture -> {
             logger.warn("quic client closed, addr = {}, id = {}", getAddr(), getId(), channelFuture.cause());
             stop();
         });
     }
 
+
     @Override
     public void send0(ProxyPack proxyPack) {
-        streamChannel.writeAndFlush(proxyPack.encode(channel.alloc()));
+        if (proxyPack.getHeader().getCmd() == ProxyPackCmd.HEARTBEAT) {
+            heartbeatStreamChannel.writeAndFlush(proxyPack.encode(channel.alloc()));
+        } else {
+            streamChannel.writeAndFlush(proxyPack.encode(channel.alloc()));
+        }
     }
 
     @Override
     public void stop0() {
         if (streamChannel != null) {
             streamChannel.close();
+        }
+        if (heartbeatStreamChannel != null) {
+            heartbeatStreamChannel.close();
         }
         if (quicChannel != null) {
             quicChannel.close();
@@ -141,5 +124,40 @@ public class QuicClient extends AbstractClient {
     @Override
     public int heartbeatTimeoutSeconds() {
         return DynamicConf.getInt("quic.client.heartbeat.timeout.seconds", 10);
+    }
+
+
+    private static class QuicStreamChannelInitializer extends ChannelInitializer<Channel> {
+
+        private final QuicClient quicClient;
+
+        public QuicStreamChannelInitializer(QuicClient quicClient) {
+            this.quicClient = quicClient;
+        }
+        @Override
+        protected void initChannel(Channel channel) {
+            ChannelPipeline pipeLine = channel.pipeline();
+            pipeLine.addLast(ProxyPackDecoder.getName(), new ProxyPackDecoder());
+            pipeLine.addLast(new ChannelInboundHandlerAdapter() {
+                @Override
+                public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                    try {
+                        if (msg instanceof ProxyPack) {
+                            quicClient.onProxyPack((ProxyPack) msg);
+                        } else {
+                            logger.warn("unknown pack");
+                        }
+                    } catch (Exception e) {
+                        logger.error("pack error", e);
+                    }
+                }
+
+                @Override
+                public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                    super.channelInactive(ctx);
+                    logger.warn("quic stream closed, id = {}, addr = {}", quicClient.getId(), quicClient.getAddr());
+                }
+            });
+        }
     }
 }
