@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import java.util.*;
 
 /**
+ * 在某些场景下，会比Props更节省内存一点
  * Created by caojiajun on 2023/7/26
  */
 public class XProps implements IProps {
@@ -490,7 +491,7 @@ public class XProps implements IProps {
 
         @Override
         public int hashCode() {
-            return Objects.hash(type, data);
+            return toString().hashCode();
         }
     }
 }

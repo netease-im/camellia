@@ -83,12 +83,14 @@ public class Props implements IProps {
 
     @Override
     public void putBytes(int tag, byte[] bytes) {
+        if (bytes == null) return;
         Value v = new Value(bytes);
         map.put(tag, v);
     }
 
     @Override
     public void putString(int tag, String value) {
+        if (value == null) return;
         map.put(tag, new Value(value));
     }
 
@@ -313,30 +315,23 @@ public class Props implements IProps {
     }
 
     private final static class Value {
-        private String str;
-        private byte[] bytes;
+        private final String str;
+        private final byte[] bytes;
 
         public Value(byte[] bytes) {
-            setBytes(bytes);
+            if (bytes == null) {
+                throw new IllegalArgumentException("bytes is null");
+            }
+            this.bytes = bytes;
+            this.str = new String(bytes, StandardCharsets.UTF_8);
         }
 
         public Value(String str) {
-            set(str);
-        }
-
-        private void set(String str) {
-            this.str = str;
-            this.bytes = fromString(str);
-        }
-
-        private void setBytes(byte[] bytes) {
-            if (bytes == null) {
-                this.bytes = fromString("");
-                this.str = "";
-            } else {
-                this.bytes = bytes;
-                this.str = fromBytes(bytes);
+            if (str == null) {
+                throw new IllegalArgumentException("str is null");
             }
+            this.str = str;
+            this.bytes = str.getBytes(StandardCharsets.UTF_8);
         }
 
         @Override
@@ -357,18 +352,6 @@ public class Props implements IProps {
             int result = Objects.hash(str);
             result = 31 * result + Arrays.hashCode(bytes);
             return result;
-        }
-
-        private byte[] fromString(String str) {
-            return (str == null ? "" : str).getBytes(StandardCharsets.UTF_8);
-        }
-
-        private String fromBytes(byte[] bytes) {
-            if (bytes != null) {
-                return new String(bytes, StandardCharsets.UTF_8);
-            } else {
-                return null;
-            }
         }
     }
 }

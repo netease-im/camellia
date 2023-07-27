@@ -102,6 +102,9 @@ public class TestProps {
         props.putString(60, "defdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdef");
         props.putFloat(5, 1.0f);
         props.putDouble(6, 6.0);
+        props.putDouble(7, Double.MAX_VALUE);
+        props.putInteger(8, Integer.MAX_VALUE);
+        props.putLong(9, Long.MAX_VALUE);
 
         System.out.println(props.getByte(1) == (byte) 1);
         System.out.println(props.getShort(2) == (short) 2);
@@ -111,6 +114,9 @@ public class TestProps {
         System.out.println(props.getString(60).equals("defdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdef"));
         System.out.println(props.getFloat(5) == 1.0f);
         System.out.println(props.getDouble(6) == 6.0);
+        System.out.println(props.getDouble(7) == Double.MAX_VALUE);
+        System.out.println(props.getInteger(8) == Integer.MAX_VALUE);
+        System.out.println(props.getLong(9) == Long.MAX_VALUE);
 
 //        for (int i=10000; i<20000; i++) {
 //            props.putString(i, UUID.randomUUID().toString());
