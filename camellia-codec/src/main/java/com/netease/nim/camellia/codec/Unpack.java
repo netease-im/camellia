@@ -154,4 +154,18 @@ public class Unpack {
         return value | (b << i);
     }
 
+    public long popVarUlong() {
+        long value = 0;
+        int i = 0;
+        long b;
+        while (((b = buffer.readByte()) & 0x80L) != 0) {
+            value |= (b & 0x7F) << i;
+            i += 7;
+            if (i > 63) {
+                throw new UnpackException(
+                        "Variable length quantity is too long");
+            }
+        }
+        return value | (b << i);
+    }
 }

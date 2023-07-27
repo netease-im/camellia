@@ -1,11 +1,13 @@
 package com.netease.nim.camellia.codec;
 
+import com.alibaba.fastjson.JSONObject;
+
 import java.util.*;
 
 /**
  * Created by caojiajun on 2023/7/26
  */
-public class XProps implements IProps, Marshallable {
+public class XProps implements IProps {
 
     private final Map<Integer, XValue> map = new HashMap<>();
 
@@ -13,6 +15,24 @@ public class XProps implements IProps, Marshallable {
         XProps ret = new XProps();
         ret.map.putAll(map);
         return ret;
+    }
+
+    public boolean equals(XProps prop) {
+        return this.map.equals(prop.map);
+    }
+
+    public String toString() {
+        return toJSONObject().toString();
+    }
+
+    public JSONObject toJSONObject() {
+        JSONObject json = new JSONObject(true);
+        List<Integer> tags = tags();
+        Collections.sort(tags);
+        for (Integer tag : tags) {
+            json.put(String.valueOf(tag), map.get(tag).toString());
+        }
+        return json;
     }
 
     @Override
@@ -215,8 +235,8 @@ public class XProps implements IProps, Marshallable {
     }
 
     @Override
-    public void remove(int tag) {
-        map.remove(tag);
+    public boolean remove(int tag) {
+        return map.remove(tag) != null;
     }
 
     @Override
@@ -272,12 +292,12 @@ public class XProps implements IProps, Marshallable {
 
         public XValue(int value) {
             this.type = INT;
-            this.data = new IntMable(value);
+            this.data = new VarIntMable(value);
         }
 
         public XValue(long value) {
             this.type = LONG;
-            this.data = new LongMable(value);
+            this.data = new VarLongMable(value);
         }
 
         public XValue(double value) {
@@ -314,9 +334,9 @@ public class XProps implements IProps, Marshallable {
             } else if (type == SHORT) {
                 data = new ShortMable();
             } else if (type == INT) {
-                data = new IntMable();
+                data = new VarIntMable();
             } else if (type == LONG) {
-                data = new LongMable();
+                data = new VarLongMable();
             } else if (type == DOUBLE) {
                 data = new DoubleMable();
             } else if (type == FLOAT) {
@@ -331,60 +351,146 @@ public class XProps implements IProps, Marshallable {
             unpack.popMarshallable(data);
         }
 
+        private String name(byte type) {
+            if (type == BYTE) {
+                return "BYTE";
+            } else if (type == SHORT) {
+                return "SHORT";
+            } else if (type == INT) {
+                return "INT";
+            } else if (type == LONG) {
+                return "LONG";
+            } else if (type == DOUBLE) {
+                return "DOUBLE";
+            } else if (type == FLOAT) {
+                return "FLOAT";
+            } else if (type == BYTE_ARRAY) {
+                return "BYTE_ARRAY";
+            } else if (type == STRING) {
+                return "STRING";
+            } else {
+                return "UNKNOWN=" + type;
+            }
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("type=").append(name(type)).append(",");
+            if (type == BYTE) {
+                builder.append("value=").append(getByte());
+            } else if (type == SHORT) {
+                builder.append("value=").append(getShort());
+            } else if (type == INT) {
+                builder.append("value=").append(getInt());
+            } else if (type == LONG) {
+                builder.append("value=").append(getLong());
+            } else if (type == DOUBLE) {
+                builder.append("value=").append(getDouble());
+            } else if (type == FLOAT) {
+                builder.append("value=").append(getFloat());
+            } else if (type == BYTE_ARRAY) {
+                builder.append("value=").append(Base64.getEncoder().encodeToString(getBytes()));
+            } else if (type == STRING) {
+                builder.append("value=").append(getStr());
+            }
+            return builder.toString();
+        }
+
         public byte getByte() {
             if (type != BYTE) {
-                throw new IllegalArgumentException("type not match");
+                throw new IllegalArgumentException("type not match, expect " + name(BYTE) + ", actual " + name(type));
             }
             return ((ByteMable) data).getData();
         }
 
         public short getShort() {
             if (type != SHORT) {
-                throw new IllegalArgumentException("type not match");
+                throw new IllegalArgumentException("type not match, expect " + name(SHORT) + ", actual " + name(type));
             }
             return ((ShortMable) data).getData();
         }
 
         public int getInt() {
             if (type != INT) {
-                throw new IllegalArgumentException("type not match");
+                throw new IllegalArgumentException("type not match, expect " + name(INT) + ", actual " + name(type));
             }
-            return ((IntMable) data).getData();
+            return ((VarIntMable) data).getData();
         }
 
         public long getLong() {
             if (type != LONG) {
-                throw new IllegalArgumentException("type not match");
+                throw new IllegalArgumentException("type not match, expect " + name(LONG) + ", actual " + name(type));
             }
-            return ((LongMable) data).getData();
+            return ((VarLongMable) data).getData();
         }
 
         public double getDouble() {
             if (type != DOUBLE) {
-                throw new IllegalArgumentException("type not match");
+                throw new IllegalArgumentException("type not match, expect " + name(DOUBLE) + ", actual " + name(type));
             }
             return ((DoubleMable) data).getData();
         }
 
         public float getFloat() {
             if (type != FLOAT) {
-                throw new IllegalArgumentException("type not match");
+                throw new IllegalArgumentException("type not match, expect " + name(FLOAT) + ", actual " + name(type));
             }
             return ((FloatMable) data).getData();
         }
 
         public String getStr() {
             if (type != STRING) {
-                throw new IllegalArgumentException("type not match");
+                throw new IllegalArgumentException("type not match, expect " + name(STRING) + ", actual " + name(type));
             }
             return ((StrMable) data).getData();
         }
 
         public byte[] getBytes() {
             if (type != BYTE_ARRAY) {
-                throw new IllegalArgumentException("type not match");
+                throw new IllegalArgumentException("type not match, expect " + name(BYTE_ARRAY) + ", actual " + name(type));
             }
             return ((BytesMable) data).getData();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            XValue value = (XValue) o;
+            if (type != value.type) {
+                return false;
+            }
+            if (data == null && value.data != null) {
+                return false;
+            }
+            if (data != null && value.data == null) {
+                return false;
+            }
+            if (type == BYTE) {
+                return getByte() == value.getByte();
+            } else if (type == SHORT) {
+                return getShort() == value.getShort();
+            } else if (type == INT) {
+                return getInt() == value.getInt();
+            } else if (type == LONG) {
+                return getLong() == value.getLong();
+            } else if (type == DOUBLE) {
+                return getDouble() == value.getDouble();
+            } else if (type == FLOAT) {
+                return getFloat() == value.getFloat();
+            } else if (type == BYTE_ARRAY) {
+                return Arrays.equals(getBytes(), value.getBytes());
+            } else if (type == STRING) {
+                return getStr().equals(value.getStr());
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(type, data);
         }
     }
 }

@@ -185,4 +185,11 @@ public class Pack {
         buf.writeByte((byte) (value & 0x7F));
     }
 
+    public void putVarUlong(long value) {
+        while ((value & 0xFFFFFFFFFFFFFF80L) != 0L) {
+            buf.writeByte((byte) ((value & 0x7F) | 0x80));
+            value >>>= 7;
+        }
+        buf.writeByte((byte) (value & 0x7F));
+    }
 }

@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Created by caojiajun on 2023/7/26
  */
-public interface IProps {
+public interface IProps extends Marshallable {
 
     void putString(int tag, String value);
 
@@ -61,7 +61,7 @@ public interface IProps {
 
     void clear();
 
-    void remove(int tag);
+    boolean remove(int tag);
 
     List<Integer> tags();
 }

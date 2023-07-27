@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class Props implements IProps, Marshallable {
+public class Props implements IProps {
 
     private final Map<Integer, Value> map = new HashMap<>();
 
@@ -24,11 +24,13 @@ public class Props implements IProps, Marshallable {
     }
 
     public JSONObject toJSONObject() {
-        JSONObject jo = new JSONObject(true);
-        for (Map.Entry<Integer, Value> entry: map.entrySet()) {
-            jo.put(String.valueOf(entry.getKey()), entry.getValue().toString());
+        JSONObject json = new JSONObject(true);
+        List<Integer> tags = tags();
+        Collections.sort(tags);
+        for (Integer tag : tags) {
+            json.put(String.valueOf(tag), map.get(tag).toString());
         }
-        return jo;
+        return json;
     }
 
     @Override
@@ -181,8 +183,8 @@ public class Props implements IProps, Marshallable {
     }
 
     @Override
-    public void remove(int tag) {
-        map.remove(tag);
+    public boolean remove(int tag) {
+        return map.remove(tag) != null;
     }
 
     @Override
@@ -356,17 +358,17 @@ public class Props implements IProps, Marshallable {
             result = 31 * result + Arrays.hashCode(bytes);
             return result;
         }
-    }
 
-    private static byte[] fromString(String str) {
-        return (str == null ? "" : str).getBytes(StandardCharsets.UTF_8);
-    }
+        private byte[] fromString(String str) {
+            return (str == null ? "" : str).getBytes(StandardCharsets.UTF_8);
+        }
 
-    private static String fromBytes(byte[] bytes) {
-        if (bytes != null) {
-            return new String(bytes, StandardCharsets.UTF_8);
-        } else {
-            return null;
+        private String fromBytes(byte[] bytes) {
+            if (bytes != null) {
+                return new String(bytes, StandardCharsets.UTF_8);
+            } else {
+                return null;
+            }
         }
     }
 }
