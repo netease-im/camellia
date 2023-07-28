@@ -132,7 +132,7 @@ camellia-redis-proxy:
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-proxy-nacos</artifactId>
-    <version>1.2.11</version>
+    <version>1.2.12</version>
 </dependency>
 ```
 随后如下配置：   

@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.12（2023/07/xx）
+# 1.2.12（2023/07/28）
 ### add
 * camellia-http-accelerate-proxy，proxy and transport-server support setting bind host, default 0.0.0.0
 * camellia-http-accelerate-proxy，transport-route and upstream-route support disabled
