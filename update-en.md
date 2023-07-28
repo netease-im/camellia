@@ -11,6 +11,7 @@
 * camellia-redis3(CamelliaRedisTemplate)，support zmscore
 * camellia-http-accelerate-proxy support quic as the transport protocol
 * camellia-http-accelerate-proxy support compress for http-content
+* camellia-codec provide XProps
 
 ### update
 * camellia-hot-key-sdk use ConcurrentHashMapCollector, update collector full log from error to info

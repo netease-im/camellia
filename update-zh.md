@@ -12,6 +12,7 @@
 * camellia-redis3(CamelliaRedisTemplate)，支持zmscore
 * camellia-http-accelerate-proxy支持使用quic作为转发层协议
 * camellia-http-accelerate-proxy支持对http-content进行压缩传输
+* camellia-codec新增XProps工具类，某些情况下比Props更节省内存
 
 ### 更新
 * camellia-hot-key-sdk使用ConcurrentHashMapCollector时如果key满了，打印的日志从error改成info
