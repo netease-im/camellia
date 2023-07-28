@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-http-console</artifactId>
-	<version>1.2.12</version>
+	<version>1.2.13-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia</artifactId>
-		<version>1.2.12</version>
+		<version>1.2.13-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -26,7 +26,7 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-tools</artifactId>
-			<version>1.2.12</version>
+			<version>1.2.13-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>
