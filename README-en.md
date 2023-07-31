@@ -10,7 +10,8 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 
 ### camellia-redis-proxy  
 high performance redis-proxy:  
-* base on netty4, support redis-standalone/redis-sentinel/redis-cluster, also support [twemproxy](https://github.com/twitter/twemproxy) 、[codis](https://github.com/CodisLabs/codis) as the upstream(such as migration scenarios)
+* base on netty4, support redis-standalone/redis-sentinel/redis-cluster
+* support [twemproxy](https://github.com/twitter/twemproxy) 、[codis](https://github.com/CodisLabs/codis) as the upstream(such as migration scenarios)
 * support [kvrocks](https://github.com/apache/kvrocks) 、 [pika](https://github.com/OpenAtomFoundation/pika) 、 [tendis](https://github.com/Tencent/Tendis)  as the upstream
 * support GET/SET/EVAL, support MGET/MSET, support blocking BLPOP, support PUBSUB/TRANSACTION, support STREAMS/JSON/SEARCH, support TAIR_HASH/TAIR_ZSET/TAIR_STRING
 * support sharding/read-write-separate/double-write on proxy  
