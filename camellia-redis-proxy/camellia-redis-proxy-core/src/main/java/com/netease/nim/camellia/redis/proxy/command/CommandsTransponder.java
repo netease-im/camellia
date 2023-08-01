@@ -204,7 +204,7 @@ public class CommandsTransponder {
                                 task.replyCompleted(ErrorReply.DB_INDEX_OUT_OF_RANGE);
                             } else {
                                 IUpstreamClientTemplate template = factory.tryGet(channelInfo.getBid(), channelInfo.getBgroup());
-                                if (template != null && !template.isMultiDBSupport()) {
+                                if (template != null && !template.isMultiDBSupport() && db != 0) {
                                     task.replyCompleted(ErrorReply.DB_INDEX_OUT_OF_RANGE);
                                 } else {
                                     //需要把之前db的命令先发出去

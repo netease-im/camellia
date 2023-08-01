@@ -1,5 +1,17 @@
 [中文版](update-zh.md)
 
+
+# 1.2.13（2023/08/xx）
+### add
+* none
+
+### update
+* none
+
+### fix
+* camellia-redis-proxy `select 0` command should reply ok when upstream is redis-cluster
+
+
 # 1.2.12（2023/07/28）
 ### add
 * camellia-http-accelerate-proxy，proxy and transport-server support setting bind host, default 0.0.0.0

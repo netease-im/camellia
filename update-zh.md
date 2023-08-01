@@ -1,6 +1,17 @@
 [ENGLISH](update-en.md)
 
 
+# 1.2.13（2023/08/xx）
+### 新增
+* 无
+
+### 更新
+* 无
+
+### fix
+* camellia-redis-proxy代理到redis-cluster时，select 0不应该返回error
+
+
 # 1.2.12（2023/07/28）
 ### 新增
 * camellia-http-accelerate-proxy，proxy和transport-server支持设置绑定的host（默认是0.0.0.0）
