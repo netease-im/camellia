@@ -89,14 +89,17 @@ public class HttpAccelerateProxy implements IHttpAccelerateProxy {
                                     CompletableFuture<ProxyResponse> future;
                                     ServerStatus.updateLastUseTime();
                                     LogBean logBean = new LogBean();
+                                    final ProxyRequest proxyRequest = new ProxyRequest(httpRequest, logBean);
                                     try {
                                         logBean.setHost(httpRequest.headers().get("Host"));
                                         logBean.setTraceId(UUID.randomUUID().toString().replace("-", ""));
                                         QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.uri());
                                         logBean.setPath(queryStringDecoder.path());
                                         logBean.setStartTime(System.currentTimeMillis());
-                                        ProxyRequest proxyRequest = new ProxyRequest(httpRequest, logBean);
                                         ITransportClient client = router.select(proxyRequest);
+                                        if (client == null) {
+                                            client = router.selectBackup(proxyRequest);
+                                        }
                                         if (client == null) {
                                             future = new CompletableFuture<>();
                                             logBean.setErrorReason(ErrorReason.TRANSPORT_SERVER_ROUTE_FAIL);
@@ -106,43 +109,22 @@ public class HttpAccelerateProxy implements IHttpAccelerateProxy {
                                         }
                                     } catch (Exception e) {
                                         future = new CompletableFuture<>();
+                                        future.complete(new ProxyResponse(Constants.INTERNAL_SERVER_ERROR, logBean));
                                         logBean.setErrorReason(ErrorReason.TRANSPORT_SERVER_ROUTE_FAIL);
                                         logger.error(e.getMessage(), e);
                                     }
-                                    future.thenAccept(proxyResponse -> {
-                                        try {
-                                            FullHttpResponse response = proxyResponse.getResponse();
-                                            proxyResponse.getLogBean().setCode(response.status().code());
-                                            boolean keepAlive = HttpUtil.isKeepAlive(httpRequest);
-                                            boolean close = false;
-                                            if (keepAlive) {
-                                                if (!httpRequest.protocolVersion().isKeepAliveDefault()) {
-                                                    response.headers().set(CONNECTION, CLOSE);
-                                                    close = true;
-                                                } else {
-                                                    response.headers().set(CONNECTION, KEEP_ALIVE);
-                                                }
-                                            } else {
-                                                response.headers().set(CONNECTION, CLOSE);
-                                                close = true;
+                                    future.thenAccept(proxyResponse1 -> {
+                                        if (proxyResponse1.getResponse().status() == HttpResponseStatus.BAD_GATEWAY) {
+                                            //retry if 502
+                                            ITransportClient client = router.selectBackup(proxyRequest);
+                                            if (client != null) {
+                                                proxyRequest.getLogBean().setErrorReason(null);
+                                                CompletableFuture<ProxyResponse> future1 = client.send(proxyRequest);
+                                                future1.thenAccept(proxyResponse2 -> respResponse(ctx, httpRequest, proxyResponse2));
+                                                return;
                                             }
-                                            response.headers().set(TRANSFER_ENCODING, CHUNKED);
-                                            ChannelFuture f = ctx.writeAndFlush(response);
-                                            if (close) {
-                                                f.addListener(ChannelFutureListener.CLOSE);
-                                            }
-                                            try {
-                                                int refCnt = httpRequest.refCnt();
-                                                if (refCnt > 0) {
-                                                    httpRequest.release(refCnt);
-                                                }
-                                            } catch (Exception e) {
-                                                logger.error(e.getMessage(), e);
-                                            }
-                                        } finally {
-                                            proxyResponse.getLogBean().setEndTime(System.currentTimeMillis());
-                                            LoggerUtils.logging(proxyResponse.getLogBean());
                                         }
+                                        respResponse(ctx, httpRequest, proxyResponse1);
                                     });
                                 }
                             });
@@ -155,6 +137,42 @@ public class HttpAccelerateProxy implements IHttpAccelerateProxy {
             status = ServerStartupStatus.FAIL;
             logger.error("http accelerate proxy start error, host = {}, port = {}", host, port, e);
             throw new IllegalStateException(e);
+        }
+    }
+
+    private void respResponse(ChannelHandlerContext ctx, FullHttpRequest httpRequest, ProxyResponse proxyResponse) {
+        try {
+            FullHttpResponse response = proxyResponse.getResponse();
+            proxyResponse.getLogBean().setCode(response.status().code());
+            boolean keepAlive = HttpUtil.isKeepAlive(httpRequest);
+            boolean close = false;
+            if (keepAlive) {
+                if (!httpRequest.protocolVersion().isKeepAliveDefault()) {
+                    response.headers().set(CONNECTION, CLOSE);
+                    close = true;
+                } else {
+                    response.headers().set(CONNECTION, KEEP_ALIVE);
+                }
+            } else {
+                response.headers().set(CONNECTION, CLOSE);
+                close = true;
+            }
+            response.headers().set(TRANSFER_ENCODING, CHUNKED);
+            ChannelFuture f = ctx.writeAndFlush(response);
+            if (close) {
+                f.addListener(ChannelFutureListener.CLOSE);
+            }
+            try {
+                int refCnt = httpRequest.refCnt();
+                if (refCnt > 0) {
+                    httpRequest.release(refCnt);
+                }
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+        } finally {
+            proxyResponse.getLogBean().setEndTime(System.currentTimeMillis());
+            LoggerUtils.logging(proxyResponse.getLogBean());
         }
     }
 

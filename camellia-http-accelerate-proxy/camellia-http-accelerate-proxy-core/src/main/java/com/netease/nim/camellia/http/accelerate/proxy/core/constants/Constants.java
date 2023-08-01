@@ -10,4 +10,6 @@ import io.netty.handler.codec.http.HttpVersion;
 public class Constants {
 
     public static final DefaultFullHttpResponse BAD_GATEWAY = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_GATEWAY);
+
+    public static final DefaultFullHttpResponse INTERNAL_SERVER_ERROR = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR);
 }

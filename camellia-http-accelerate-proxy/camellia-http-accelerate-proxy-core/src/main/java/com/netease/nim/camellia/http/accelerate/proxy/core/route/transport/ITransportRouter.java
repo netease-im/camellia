@@ -13,4 +13,6 @@ public interface ITransportRouter {
     void reload();
 
     ITransportClient select(ProxyRequest request);
+
+    ITransportClient selectBackup(ProxyRequest request);
 }

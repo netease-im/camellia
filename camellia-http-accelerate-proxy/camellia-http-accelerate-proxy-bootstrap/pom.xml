@@ -23,6 +23,14 @@
 			<artifactId>logback-classic</artifactId>
 			<version>1.2.0</version>
 		</dependency>
+		<dependency>
+			<groupId>io.netty.incubator</groupId>
+			<artifactId>netty-incubator-codec-native-quic</artifactId>
+			<version>${netty-incubator-codec-native-quic.version}</version>
+			<classifier>osx-x86_64</classifier>
+<!--			<classifier>linux-x86_64</classifier>-->
+<!--			<classifier>windows-x86_64</classifier>-->
+		</dependency>
     </dependencies>
 	<build>
 		<plugins>

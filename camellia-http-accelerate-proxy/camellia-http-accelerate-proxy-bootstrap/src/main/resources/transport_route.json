@@ -29,6 +29,12 @@
     },
     {
       "type": "match_host",
+      "host": "lbs.netease.im",
+      "server": "tcp",
+      "backupServer": "quic_server"
+    },
+    {
+      "type": "match_host",
       "host": "www.baidu.com",
       "server": "default"
     },

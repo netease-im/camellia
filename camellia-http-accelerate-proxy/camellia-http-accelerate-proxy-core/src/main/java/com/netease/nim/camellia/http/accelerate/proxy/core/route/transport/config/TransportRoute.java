@@ -8,6 +8,7 @@ public class TransportRoute {
     private TransportRouteType type;
     private String host;
     private String server;
+    private String backupServer;
 
     public TransportRouteType getType() {
         return type;
@@ -31,5 +32,13 @@ public class TransportRoute {
 
     public void setServer(String server) {
         this.server = server;
+    }
+
+    public String getBackupServer() {
+        return backupServer;
+    }
+
+    public void setBackupServer(String backupServer) {
+        this.backupServer = backupServer;
     }
 }

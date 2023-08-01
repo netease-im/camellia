@@ -3,7 +3,7 @@
 
 # 1.2.13（2023/08/xx）
 ### add
-* none
+* camellia-http-accelerate-proxy support setting backupServer
 
 ### update
 * none

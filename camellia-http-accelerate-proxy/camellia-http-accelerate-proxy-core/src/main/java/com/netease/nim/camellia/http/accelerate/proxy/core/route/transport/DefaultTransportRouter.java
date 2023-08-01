@@ -118,10 +118,19 @@ public class DefaultTransportRouter implements ITransportRouter {
 
     @Override
     public ITransportClient select(ProxyRequest request) {
+        return selectClient(request, false);
+    }
+
+    @Override
+    public ITransportClient selectBackup(ProxyRequest request) {
+        return selectClient(request, true);
+    }
+
+    public ITransportClient selectClient(ProxyRequest request, boolean backUp) {
         try {
             List<TransportRoute> routes = routerConfig.getRoutes();
             for (TransportRoute route : routes) {
-                String server = select0(request, route);
+                String server = select0(request, route, backUp);
                 if (server == null) continue;
                 ITransportClient client = serverMap.get(server);
                 if (client != null) {
@@ -135,16 +144,25 @@ public class DefaultTransportRouter implements ITransportRouter {
         }
     }
 
-    private String select0(ProxyRequest request, TransportRoute route) {
+
+    private String select0(ProxyRequest request, TransportRoute route, boolean backUp) {
         try {
             TransportRouteType type = route.getType();
             if (type == TransportRouteType.match_all) {
-                return route.getServer();
+                if (backUp) {
+                    return route.getBackupServer();
+                } else {
+                    return route.getServer();
+                }
             }
             String host = request.getLogBean().getHost();
             if (type == TransportRouteType.match_host) {
                 if (route.getHost().equals(host)) {
-                    return route.getServer();
+                    if (backUp) {
+                        return route.getBackupServer();
+                    } else {
+                        return route.getServer();
+                    }
                 }
             }
             return null;

@@ -3,7 +3,7 @@
 
 # 1.2.13（2023/08/xx）
 ### 新增
-* 无
+* camellia-http-accelerate-proxy支持设置backupServer
 
 ### 更新
 * 无
