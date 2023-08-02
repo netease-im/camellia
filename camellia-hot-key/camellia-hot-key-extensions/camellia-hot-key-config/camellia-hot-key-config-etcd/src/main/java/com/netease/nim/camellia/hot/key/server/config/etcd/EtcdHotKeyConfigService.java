@@ -9,6 +9,7 @@ import com.netease.nim.camellia.tools.utils.ConfigContentType;
 import com.netease.nim.camellia.tools.utils.ConfigurationUtil;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
+import io.etcd.jetcd.ClientBuilder;
 import io.etcd.jetcd.KeyValue;
 import io.etcd.jetcd.kv.GetResponse;
 import org.slf4j.Logger;
@@ -45,12 +46,12 @@ public class EtcdHotKeyConfigService extends HotKeyConfigService {
         Map<String, String> config = properties.getConfig();
         String etcdServer = null;
         try {
-            // Get etcd config by prefix.
             String target = config.get("etcd.target");
             Client client;
+            ClientBuilder builder;
             if (target != null) {
                 //e.g  ip:///etcd0:2379,etcd1:2379,etcd2:2379
-                client = Client.builder().target(target).build();
+                builder = Client.builder().target(target);
                 etcdServer = target;
             } else {
                 //e.g http://etcd0:2379,http://etcd1:2379,http://etcd2:2379
@@ -59,9 +60,33 @@ public class EtcdHotKeyConfigService extends HotKeyConfigService {
                     throw new IllegalArgumentException("missing 'etcd.target' or 'etcd.endpoints'");
                 }
                 String[] split = endpoints.split(",");
-                client = Client.builder().endpoints(split).build();
+                builder = Client.builder().endpoints(split);
                 etcdServer = endpoints;
             }
+            String user = config.get("etcd.user");
+            String password = config.get("etcd.password");
+            String namespace = config.get("etcd.namespace");
+            String authority = config.get("etcd.authority");
+            if (user != null) {
+                builder.user(ByteSequence.from(user, StandardCharsets.UTF_8));
+            }
+            if (password != null) {
+                builder.password(ByteSequence.from(password, StandardCharsets.UTF_8));
+            }
+            if (namespace != null) {
+                builder.namespace(ByteSequence.from(namespace, StandardCharsets.UTF_8));
+            }
+            if (authority != null) {
+                builder.authority(authority);
+            }
+            for (Map.Entry<String, String> entry : config.entrySet()) {
+                String prefix = "etcd.header.";
+                if (entry.getKey().startsWith(prefix)) {
+                    String header = entry.getKey().substring(prefix.length());
+                    builder.authHeader(header, entry.getValue());
+                }
+            }
+            client = builder.build();
             this.client = client;
             String key = config.get("etcd.config.key");
             if (key == null) {
@@ -76,8 +101,8 @@ public class EtcdHotKeyConfigService extends HotKeyConfigService {
             client.getWatchClient().watch(configKey, response -> reloadExecutor.submit(() -> {
                 logger.info("etcd conf update!");
                 reload();
-                for (String namespace : configMap.keySet()) {
-                    EtcdHotKeyConfigService.this.invokeUpdate(namespace);
+                for (String ns : configMap.keySet()) {
+                    EtcdHotKeyConfigService.this.invokeUpdate(ns);
                 }
             }));
             logger.info("EtcdHotKeyConfigService init success, etcdServer = {}", etcdServer);
