@@ -5,6 +5,8 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 
 ## 特性
 * 支持代理到redis-standalone、redis-sentinel、redis-cluster
+* 支持其他proxy作为后端（如双写迁移场景），如 [twemproxy](https://github.com/twitter/twemproxy) 、[codis](https://github.com/CodisLabs/codis) 等
+* 支持 [kvrocks](https://github.com/apache/kvrocks) 、 [pika](https://github.com/OpenAtomFoundation/pika) 、 [tendis](https://github.com/Tencent/Tendis) 等作为后端
 * 支持自定义分片
 * 支持读写分离
 * 支持双（多）写，可以proxy直连双写，也可以基于mq（如kafka）双写，也可以基于插件体系自定义双写规则
@@ -20,7 +22,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持RedisJSON和RedisSearch系列命令
 * 支持读slave（redis-sentinel/redis-cluster均支持配置读从节点）
 * 支持多租户，即租户A路由到redis1，租户B路由到redis2（可以通过不同的clientname区分，也可以通过不同的password区分）
-* 支持多租户动态路由，支持自定义的动态路由数据源
+* 支持多租户动态路由，支持自定义的动态路由数据源(内置：本地配置文件、nacos、etcd等，也可以自定义)
 * 支持自定义插件，并且内置了很多插件，可以按需使用（包括：大key监控、热key监控、热key缓存、key命名空间、ip黑白名单、速率控制等等）
 * 支持丰富的监控，可以监控客户端连接数、调用量、方法耗时、大key、热key、后端redis连接数和耗时等，并且支持以http接口形式获取监控数据
 * 支持info命令获取服务器相关信息（包括后端redis集群的信息）

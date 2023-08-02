@@ -203,15 +203,15 @@ public interface HotKeyCacheStatsCallback {
 ### 配置
 
 #### 字段说明
-|         字段名         |   类型   | 是否必填 |                                                            说明                                                             |
-|:-------------------:|:------:|:----:|:-------------------------------------------------------------------------------------------------------------------------:|
-|      namespace      | string |  是   |                                                           命名空间                                                            |
-|      rule.name      | string |  是   |                                              规则名字，每个namespace下的rule.name需要唯一                                              |
-|      rule.type      | string |  是   |         规则类型，包括：`exact_match`（精确匹配）、`prefix_match`（前缀匹配）、`match_all`（匹配所有）、`contains`（包含子串）、`suffix_match`（后缀匹配）          |
-|   rule.keyConfig    | string |  否   |                                  exact_match时表示key本身，prefix_match时表示前缀，match_all没有这个配置项                                   |
-|  rule.checkMillis   |  long  |  是   |                                              检查周期，单位ms，需要是100ms的整数倍，否则会被四舍五入                                              |
-| rule.checkThreshold |  long  |  是   |                                                           检查阈值                                                            |
-|  rule.expireMills   |  long  |  否   | 检测到热key后的过期时间，只有配置了本字段，hot-key的信息才会广播给SDK，从而CamelliaHotKeyMonitorSdk才能获取的Result，CamelliaHotKeyCacheSdk本地缓存功能才生效，否则仅做服务器统计 |
+|         字段名         |   类型   | 是否必填 |                                                               说明                                                               |
+|:-------------------:|:------:|:----:|:------------------------------------------------------------------------------------------------------------------------------:|
+|      namespace      | string |  是   |                                                              命名空间                                                              |
+|      rule.name      | string |  是   |                                                规则名字，每个namespace下的rule.name需要唯一                                                 |
+|      rule.type      | string |  是   | 规则类型，包括：`exact_match`（精确匹配）、`prefix_match`（前缀匹配）、`match_all`（匹配所有）、`contains`（包含子串）、`suffix_match`（后缀匹配）、`not_contains`（不包含子串） |
+|   rule.keyConfig    | string |  否   |                                     exact_match时表示key本身，prefix_match时表示前缀，match_all没有这个配置项                                     |
+|  rule.checkMillis   |  long  |  是   |                                                检查周期，单位ms，需要是100ms的整数倍，否则会被四舍五入                                                 |
+| rule.checkThreshold |  long  |  是   |                                                              检查阈值                                                              |
+|  rule.expireMills   |  long  |  否   |   检测到热key后的过期时间，只有配置了本字段，hot-key的信息才会广播给SDK，从而CamelliaHotKeyMonitorSdk才能获取的Result，CamelliaHotKeyCacheSdk本地缓存功能才生效，否则仅做服务器统计    |
 
 备注：服务器会根据rules数组的顺序依次进行规则匹配，匹配到一个之后就返回
 
@@ -248,6 +248,13 @@ public interface HotKeyCacheStatsCallback {
     {
       "name": "rule4",
       "type": "contains",
+      "keyConfig": "opq",
+      "checkMillis": 1000,
+      "checkThreshold": 100
+    },
+    {
+      "name": "rule4",
+      "type": "not_contains",
       "keyConfig": "opq",
       "checkMillis": 1000,
       "checkThreshold": 100

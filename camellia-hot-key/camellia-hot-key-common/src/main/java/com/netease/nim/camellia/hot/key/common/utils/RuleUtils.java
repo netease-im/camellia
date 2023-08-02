@@ -38,18 +38,10 @@ public class RuleUtils {
             return key.contains(rule.getKeyConfig());
         } else if (ruleType == RuleType.suffix_match) {
             return key.endsWith(rule.getKeyConfig());
+        } else if (ruleType == RuleType.not_contains) {
+            return !key.contains(rule.getKeyConfig());
         }
         return false;
     }
 
-    public static long maxCheckMillis(HotKeyConfig config) {
-        List<Rule> rules = config.getRules();
-        long maxCheckMillis = -1;
-        for (Rule rule : rules) {
-            if (rule.getCheckMillis() > maxCheckMillis) {
-                maxCheckMillis = rule.getCheckMillis();
-            }
-        }
-        return maxCheckMillis;
-    }
 }

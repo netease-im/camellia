@@ -10,6 +10,7 @@ public enum RuleType {
     match_all(3),//匹配所有
     contains(4),//包含子串
     suffix_match(5),//后缀匹配
+    not_contains(6),//不包括子串
     ;
 
     private final int value;
