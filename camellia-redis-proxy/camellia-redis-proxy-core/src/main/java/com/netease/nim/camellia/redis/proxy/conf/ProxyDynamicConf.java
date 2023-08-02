@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
+import com.netease.nim.camellia.tools.utils.ConfigurationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

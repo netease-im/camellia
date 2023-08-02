@@ -3,8 +3,8 @@ package com.netease.nim.camellia.redis.proxy.config.nacos;
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
-import com.netease.nim.camellia.redis.proxy.conf.ConfigContentType;
-import com.netease.nim.camellia.redis.proxy.conf.ConfigurationUtil;
+import com.netease.nim.camellia.tools.utils.ConfigContentType;
+import com.netease.nim.camellia.tools.utils.ConfigurationUtil;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfLoader;
 import org.slf4j.Logger;
@@ -39,16 +39,12 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
         return map;
     }
 
+    /**
+     * Init config from nacos
+     */
     @Override
     public void init(Map<String, String> initConf) {
         this.initConf = new HashMap<>(initConf);
-        init();
-    }
-
-    /**
-     * Init config from nacos property file
-     */
-    private void init() {
         Properties nacosProps = new Properties();
         try {
             // Get nacos config by prefix.

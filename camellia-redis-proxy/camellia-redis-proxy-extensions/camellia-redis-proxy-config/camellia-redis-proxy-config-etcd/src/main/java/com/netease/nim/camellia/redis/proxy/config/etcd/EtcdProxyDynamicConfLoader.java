@@ -1,7 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.config.etcd;
 
-import com.netease.nim.camellia.redis.proxy.conf.ConfigContentType;
-import com.netease.nim.camellia.redis.proxy.conf.ConfigurationUtil;
+import com.netease.nim.camellia.tools.utils.ConfigContentType;
+import com.netease.nim.camellia.tools.utils.ConfigurationUtil;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfLoader;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import io.etcd.jetcd.ByteSequence;
@@ -46,10 +46,6 @@ public class EtcdProxyDynamicConfLoader implements ProxyDynamicConfLoader {
     @Override
     public void init(Map<String, String> initConf) {
         this.initConf = new HashMap<>(initConf);
-        init();
-    }
-
-    private void init() {
         String etcdServer = null;
         try {
             // Get nacos config by prefix.

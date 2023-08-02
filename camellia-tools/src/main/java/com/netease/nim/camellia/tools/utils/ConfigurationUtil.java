@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.conf;
+package com.netease.nim.camellia.tools.utils;
 
 import com.alibaba.fastjson.JSONObject;
 
