@@ -7,6 +7,8 @@ import com.alibaba.nacos.api.config.listener.Listener;
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyConfigService;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
+import com.netease.nim.camellia.tools.utils.ConfigContentType;
+import com.netease.nim.camellia.tools.utils.ConfigurationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +29,7 @@ public class NacosHotKeyConfigService extends HotKeyConfigService {
     private String group;
     private long timeoutMs;
     private ConfigService configService;
+    private ConfigContentType contentType;
     private Map<String, String> configMap = new HashMap<>();
 
     @Override
@@ -68,6 +71,7 @@ public class NacosHotKeyConfigService extends HotKeyConfigService {
                     throw new IllegalArgumentException("illegal 'nacos.timeoutMs'");
                 }
             }
+            contentType = ConfigContentType.getByValue(config.get("nacos.config.type"), ConfigContentType.properties);
             boolean success = reload();
             if (!success) {
                 throw new IllegalStateException("reload from nacos error");
@@ -81,8 +85,8 @@ public class NacosHotKeyConfigService extends HotKeyConfigService {
                 public void receiveConfigInfo(String content) {
                     try {
                         logger.info("nacos conf update!");
+                        NacosHotKeyConfigService.this.configMap = ConfigurationUtil.contentToMap(content, contentType);
                         Set<String> namespaceSet = NacosHotKeyConfigService.this.configMap.keySet();
-                        NacosHotKeyConfigService.this.configMap = toMap(content);
                         for (String namespace : namespaceSet) {
                             NacosHotKeyConfigService.this.invokeUpdate(namespace);
                         }
@@ -101,30 +105,11 @@ public class NacosHotKeyConfigService extends HotKeyConfigService {
     private boolean reload() {
         try {
             String content = configService.getConfig(dataId, group, timeoutMs);
-            configMap = toMap(content);
+            configMap = ConfigurationUtil.contentToMap(content, contentType);
             return true;
         } catch (Exception e) {
             logger.error("reload from nacos error, dataId = {}, group = {}, timeouMs = {}", dataId, group, timeoutMs, e);
             return false;
         }
-    }
-
-    private Map<String, String> toMap(String content) {
-        String[] split = content.split("\n");
-        Map<String, String> conf = new HashMap<>();
-        for (String line : split) {
-            line = line.trim();
-            if (line.length() == 0) {
-                continue;
-            }
-            if (line.startsWith("#")) {
-                continue;
-            }
-            int index = line.indexOf("=");
-            String key = line.substring(0, index);
-            String value = line.substring(index + 1);
-            conf.put(key, value);
-        }
-        return conf;
     }
 }
