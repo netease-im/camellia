@@ -15,7 +15,7 @@
 * 一个namespace下可以配置多条`rule`
 * rule里配置key的匹配规则（字符串完全匹配、字符串前缀匹配、字符串包含、匹配所有、后缀匹配），以及热key的定义（时间窗口+阈值）
 * 提供`CamelliaHotKeyMonitorSdk`（探测）和`CamelliaHotKeyCacheSdk`（探测+本地缓存）两种SDK，适配不同使用场景
-* 支持自定义热key配置数据源（默认为本地文件配置），从而可以对接到你们的`配置中心`或者`管理后台`
+* 支持自定义热key配置数据源（默认为本地文件配置，也内置了nacos、etcd两种实现），从而可以对接到你们的`配置中心`或者`管理后台`
 * 支持topN统计（全局维度），依赖redis进行数据汇总，对redis仅有少量的调用
 * 支持服务器自定义事件回调（热key回调+topN回调），从而可以对接到你们的`监控报警系统`或者`频控流控系统`
 * 支持自定义的注册发现器（内置了zk和eureka两种实现，具体见：[hot-key-discovery](hot-key-discovery.md)

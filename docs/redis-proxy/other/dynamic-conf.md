@@ -150,18 +150,61 @@ camellia-redis-proxy:
   password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
   monitor-enable: false  #monitor enable/disable configure
   monitor-interval-seconds: 60 #monitor data refresh interval seconds
-  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.config.nacos.config.NacosProxyDynamicConfLoader
+  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader
   config:
     "nacos.serverAddr": "127.0.0.1:8848"
     "nacos.dataId": "xxx"
     "nacos.group": "xxx"
+    "nacos.config.type": "properties" #也可以配置为json
   transpond:
     type: local #local、remote、custom
     local:
       type: simple #simple、complex
       resource: redis://@127.0.0.1:6379 #target transpond redis address
 ```
-如果还需其他nacos相关的配置，请在application.yml配置以`nacos.`作为前缀的kv对，NacosProxyDynamicConfLoader会去掉前缀后，把kv对传递给nacos的sdk
+* 如果还需其他nacos相关的配置，请在application.yml配置以`nacos.`作为前缀的kv对，NacosProxyDynamicConfLoader会去掉前缀后，把kv对传递给nacos的sdk
+* 默认是properties类型，如果是json类型，则会把json的第一层key-value转换为properties
+
+
+### EtcdProxyDynamicConfLoader
+这是proxy提供的集成nacos获取配置的一个loader，首先你需要额外引入maven依赖，如下：
+```
+<dependency>
+    <groupId>com.netease.nim</groupId>
+    <artifactId>camellia-redis-proxy-config-etcd</artifactId>
+    <version>1.2.12</version>
+</dependency>
+```
+随后如下配置：
+
+* application.yml
+```yml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  console-port: 16379 #console port, default 16379, if setting -16379, proxy will choose a random port, if setting 0, will disable console
+  password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
+  monitor-enable: false  #monitor enable/disable configure
+  monitor-interval-seconds: 60 #monitor data refresh interval seconds
+  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.config.etcd.EtcdProxyDynamicConfLoader
+  config:
+    "etcd.target": "ip:///etcd0:2379,etcd1:2379,etcd2:2379"
+    #"etcd.endpoints": "http://etcd0:2379,http://etcd1:2379,http://etcd2:2379" #etcd.target和etcd.endpoints二选一，优先使用etcd.target
+    "etcd.config.key": "/xxx/xx"
+    "etcd.config.type": "properties" #也可以配置为json
+  transpond:
+    type: local #local、remote、custom
+    local:
+      type: simple #simple、complex
+      resource: redis://@127.0.0.1:6379 #target transpond redis address
+```
+
+* 默认是properties类型，如果是json类型，则会把json的第一层key-value转换为properties
+
 
 ### 自定义loader
 你也可以自己实现loader，loader的接口定义如下：
