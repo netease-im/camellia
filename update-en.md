@@ -7,6 +7,7 @@
 * camellia-redis-proxy use nacos as config server, support json/properties, default properties
 * camellia-redis-proxy support ectd as config server, support json/properties, default properties
 * camellia-hot-key-server support ectd as config server, support json/properties, default json
+* camellia-hot-key support `not_contains` rule type
 
 ### update
 * `ProxyDynamicConfLoader` rename method `updateInitConf` to `init`
