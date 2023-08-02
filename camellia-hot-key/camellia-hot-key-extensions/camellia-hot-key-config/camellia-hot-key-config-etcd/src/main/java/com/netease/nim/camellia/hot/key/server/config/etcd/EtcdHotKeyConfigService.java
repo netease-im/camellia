@@ -1,10 +1,12 @@
-package com.netease.nim.camellia.redis.proxy.config.etcd;
+package com.netease.nim.camellia.hot.key.server.config.etcd;
 
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
+import com.netease.nim.camellia.hot.key.server.conf.HotKeyConfigService;
+import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.ConfigContentType;
 import com.netease.nim.camellia.tools.utils.ConfigurationUtil;
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfLoader;
-import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.KeyValue;
@@ -21,36 +23,30 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Created by caojiajun on 2023/8/2
+ * Created by caojiajun on 2023/5/15
  */
-public class EtcdProxyDynamicConfLoader implements ProxyDynamicConfLoader {
+public class EtcdHotKeyConfigService extends HotKeyConfigService {
 
-    private static final Logger logger = LoggerFactory.getLogger(EtcdProxyDynamicConfLoader.class);
-    private static final ExecutorService reloadExecutor = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(EtcdProxyDynamicConfLoader.class));
-
-    private Map<String, String> initConf = new HashMap<>();
-    private ByteSequence configKey;
+    private static final Logger logger = LoggerFactory.getLogger(EtcdHotKeyConfigService.class);
+    private static final ExecutorService reloadExecutor = Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory(EtcdHotKeyConfigService.class));
+    private Map<String, String> configMap = new HashMap<>();
     private Client client;
-    private ConfigContentType contentType = ConfigContentType.properties;
-    private Map<String, String> conf = new HashMap<>();
+    private ByteSequence configKey;
+    private ConfigContentType contentType;
 
     @Override
-    public Map<String, String> load() {
-        //reload
-        reload();
-        //conf
-        Map<String, String> map = new HashMap<>(initConf);
-        map.putAll(conf);
-        return map;
+    public HotKeyConfig get(String namespace) {
+        String configStr = configMap.get(namespace);
+        return JSONObject.parseObject(configStr, HotKeyConfig.class);
     }
 
     @Override
-    public void init(Map<String, String> initConf) {
-        this.initConf = new HashMap<>(initConf);
+    public void init(HotKeyServerProperties properties) {
+        Map<String, String> config = properties.getConfig();
         String etcdServer = null;
         try {
             // Get etcd config by prefix.
-            String target = initConf.get("etcd.target");
+            String target = config.get("etcd.target");
             Client client;
             if (target != null) {
                 //e.g  ip:///etcd0:2379,etcd1:2379,etcd2:2379
@@ -58,7 +54,7 @@ public class EtcdProxyDynamicConfLoader implements ProxyDynamicConfLoader {
                 etcdServer = target;
             } else {
                 //e.g http://etcd0:2379,http://etcd1:2379,http://etcd2:2379
-                String endpoints = initConf.get("etcd.endpoints");
+                String endpoints = config.get("etcd.endpoints");
                 if (endpoints == null) {
                     throw new IllegalArgumentException("missing 'etcd.target' or 'etcd.endpoints'");
                 }
@@ -67,11 +63,11 @@ public class EtcdProxyDynamicConfLoader implements ProxyDynamicConfLoader {
                 etcdServer = endpoints;
             }
             this.client = client;
-            String key = initConf.get("etcd.config.key");
+            String key = config.get("etcd.config.key");
             if (key == null) {
                 throw new IllegalArgumentException("missing 'etcd.config.key'");
             }
-            contentType = ConfigContentType.getByValue(initConf.get("etcd.config.type"), ConfigContentType.properties);
+            contentType = ConfigContentType.getByValue(config.get("etcd.config.type"), ConfigContentType.json);
             configKey = ByteSequence.from(key.getBytes(StandardCharsets.UTF_8));
             boolean success = reload();
             if (!success) {
@@ -80,11 +76,13 @@ public class EtcdProxyDynamicConfLoader implements ProxyDynamicConfLoader {
             client.getWatchClient().watch(configKey, response -> reloadExecutor.submit(() -> {
                 logger.info("etcd conf update!");
                 reload();
-                ProxyDynamicConf.reload();
+                for (String namespace : configMap.keySet()) {
+                    EtcdHotKeyConfigService.this.invokeUpdate(namespace);
+                }
             }));
-            logger.info("EtcdProxyDynamicConfLoader init success, etcdServer = {}", etcdServer);
+            logger.info("EtcdHotKeyConfigService init success, etcdServer = {}", etcdServer);
         } catch (Exception e) {
-            logger.info("EtcdProxyDynamicConfLoader init error, etcdServer = {}", etcdServer, e);
+            logger.info("EtcdHotKeyConfigService init error, etcdServer = {}", etcdServer, e);
             throw new IllegalArgumentException(e);
         }
     }
@@ -99,12 +97,11 @@ public class EtcdProxyDynamicConfLoader implements ProxyDynamicConfLoader {
             }
             KeyValue value = kvs.get(0);
             String content = value.getValue().toString();
-            this.conf = ConfigurationUtil.contentToMap(content, contentType);
+            this.configMap = ConfigurationUtil.contentToMap(content, contentType);
             return true;
         } catch (Exception e) {
             logger.error("reload from etcd error, configKey = {}", configKey, e);
             return false;
         }
     }
-
 }

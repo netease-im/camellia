@@ -4,8 +4,9 @@
 # 1.2.13（2023/08/xx）
 ### add
 * camellia-http-accelerate-proxy support setting backupServer
-* camellia-redis-proxy use nacos as config server, support json, default properties
-* camellia-redis-proxy support ectd as config server, support json, default properties
+* camellia-redis-proxy use nacos as config server, support json/properties, default properties
+* camellia-redis-proxy support ectd as config server, support json/properties, default properties
+* camellia-hot-key-server support ectd as config server, support json/properties, default json
 
 ### update
 * `ProxyDynamicConfLoader` rename method `updateInitConf` to `init`

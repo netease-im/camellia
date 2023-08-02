@@ -8,15 +8,15 @@ public enum ConfigContentType {
     json,
     ;
 
-    public static ConfigContentType getByValue(String value) {
+    public static ConfigContentType getByValue(String value, ConfigContentType defaultValue) {
         if (value == null) {
-            return properties;
+            return defaultValue;
         }
         for (ConfigContentType type : ConfigContentType.values()) {
             if (type.name().equalsIgnoreCase(value)) {
                 return type;
             }
         }
-        return properties;
+        return defaultValue;
     }
 }

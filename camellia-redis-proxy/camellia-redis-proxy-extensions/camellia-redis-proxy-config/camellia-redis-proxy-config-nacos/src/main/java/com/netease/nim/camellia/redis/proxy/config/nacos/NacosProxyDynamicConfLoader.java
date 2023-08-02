@@ -76,8 +76,7 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
                     throw new IllegalArgumentException("illegal 'nacos.timeoutMs'");
                 }
             }
-            contentType = ConfigContentType.getByValue(initConf.get("nacos.config.type"));
-
+            contentType = ConfigContentType.getByValue(initConf.get("nacos.config.type"), ConfigContentType.properties);
             boolean success = reload();
             if (!success) {
                 throw new IllegalStateException("reload from nacos error");

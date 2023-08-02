@@ -15,5 +15,6 @@
 
 	<modules>
 		<module>camellia-hot-key-config-nacos</module>
+		<module>camellia-hot-key-config-etcd</module>
 	</modules>
 </project>

@@ -4,8 +4,9 @@
 # 1.2.13（2023/08/xx）
 ### 新增
 * camellia-http-accelerate-proxy支持设置backupServer
-* camellia-redis-proxy集成nacos作为配置中心时，支持json格式，默认properties格式
-* camellia-redis-proxy支持集成etcd作为配置中心，支持json格式，默认properties格式
+* camellia-redis-proxy集成nacos作为配置中心时，新增支持json格式，默认还是之前的properties格式
+* camellia-redis-proxy支持集成etcd作为配置中心，支持json/properties格式，默认properties格式
+* camellia-hot-key-server支持集成etcd作为配置中心，支持json/properties格式，默认properties格式
 
 ### 更新
 * `ProxyDynamicConfLoader` 重命名方法 `updateInitConf` 为 `init`
