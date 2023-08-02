@@ -61,7 +61,8 @@ public class HotKeyConfigUtils {
         if (type == RuleType.match_all) {
             rule.setKeyConfig(null);
         }
-        if (type == RuleType.prefix_match || type == RuleType.exact_match || type == RuleType.contains || type == RuleType.suffix_match) {
+        if (type == RuleType.prefix_match || type == RuleType.exact_match
+                || type == RuleType.contains || type == RuleType.suffix_match || type == RuleType.not_contains) {
             if (rule.getKeyConfig() == null) {
                 return false;
             }
