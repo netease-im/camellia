@@ -41,7 +41,9 @@ public class ProxyDynamicConf {
     public static void init(Map<String, String> initConf, ProxyDynamicConfLoader loader) {
         ProxyDynamicConf.loader = loader;
         if (initConf != null && !initConf.isEmpty()) {
-            loader.updateInitConf(initConf);
+            loader.init(initConf);
+        } else {
+            loader.init(new HashMap<>());
         }
         reload();
         int reloadIntervalSeconds = ConfigurationUtil.getInteger(conf, "dynamic.conf.reload.interval.seconds", 600);

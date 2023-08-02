@@ -131,7 +131,7 @@ camellia-redis-proxy:
 ```
 <dependency>
     <groupId>com.netease.nim</groupId>
-    <artifactId>camellia-redis-proxy-nacos</artifactId>
+    <artifactId>camellia-redis-proxy-config-nacos</artifactId>
     <version>1.2.12</version>
 </dependency>
 ```
@@ -150,7 +150,7 @@ camellia-redis-proxy:
   password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
   monitor-enable: false  #monitor enable/disable configure
   monitor-interval-seconds: 60 #monitor data refresh interval seconds
-  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.nacos.NacosProxyDynamicConfLoader
+  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.config.nacos.config.NacosProxyDynamicConfLoader
   config:
     "nacos.serverAddr": "127.0.0.1:8848"
     "nacos.dataId": "xxx"
@@ -169,17 +169,17 @@ camellia-redis-proxy:
 public interface ProxyDynamicConfLoader {
 
     /**
-     * ProxyDynamicConf会定期调用load方法来更新配置
-     * @return 配置
-     */
-    Map<String, String> load();
-
-    /**
      * ProxyDynamicConf初始化时，会把yml文件中的kv配置通过这个接口传递给loader
      * 这个方法只会被调用一次
      * @param initConf yml中的初始配置
      */
-    void updateInitConf(Map<String, String> initConf);
+    void init(Map<String, String> initConf);
+
+    /**
+     * ProxyDynamicConf会定期调用load方法来更新配置
+     * @return 配置
+     */
+    Map<String, String> load();
 
 }
 ```

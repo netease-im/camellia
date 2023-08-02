@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.nacos.springboot;
+package com.netease.nim.camellia.redis.proxy.config.nacos.springboot;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

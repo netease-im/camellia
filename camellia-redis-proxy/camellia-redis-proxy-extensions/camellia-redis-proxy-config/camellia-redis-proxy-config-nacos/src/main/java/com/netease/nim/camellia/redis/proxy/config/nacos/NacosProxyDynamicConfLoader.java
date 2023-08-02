@@ -1,8 +1,10 @@
-package com.netease.nim.camellia.redis.proxy.nacos;
+package com.netease.nim.camellia.redis.proxy.config.nacos;
 
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
+import com.netease.nim.camellia.redis.proxy.conf.ConfigContentType;
+import com.netease.nim.camellia.redis.proxy.conf.ConfigurationUtil;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfLoader;
 import org.slf4j.Logger;
@@ -18,13 +20,14 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(NacosProxyDynamicConfLoader.class);
 
-    private final Map<String, String> initConf = new HashMap<>();
+    private Map<String, String> initConf = new HashMap<>();
     private Map<String, String> conf = new HashMap<>();
 
     private String dataId;
     private String group;
     private long timeoutMs;
     private ConfigService configService;
+    private ConfigContentType contentType = ConfigContentType.properties;
 
     @Override
     public Map<String, String> load() {
@@ -37,8 +40,8 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
     }
 
     @Override
-    public void updateInitConf(Map<String, String> initConf) {
-        this.initConf.putAll(initConf);
+    public void init(Map<String, String> initConf) {
+        this.initConf = new HashMap<>(initConf);
         init();
     }
 
@@ -77,6 +80,8 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
                     throw new IllegalArgumentException("illegal 'nacos.timeoutMs'");
                 }
             }
+            contentType = ConfigContentType.getByValue(initConf.get("nacos.config.type"));
+
             boolean success = reload();
             if (!success) {
                 throw new IllegalStateException("reload from nacos error");
@@ -91,7 +96,7 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
                 public void receiveConfigInfo(String content) {
                     try {
                         logger.info("nacos conf update!");
-                        NacosProxyDynamicConfLoader.this.conf = toMap(content);
+                        NacosProxyDynamicConfLoader.this.conf = ConfigurationUtil.contentToMap(content, contentType);
                         ProxyDynamicConf.reload();
                     } catch (Exception e) {
                         logger.error("receiveConfigInfo error, content = {}", content);
@@ -111,7 +116,7 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
     private boolean reload() {
         try {
             String content = configService.getConfig(dataId, group, timeoutMs);
-            this.conf = toMap(content);
+            this.conf = ConfigurationUtil.contentToMap(content, contentType);
             return true;
         } catch (Exception e) {
             logger.error("reload from nacos error, dataId = {}, group = {}, timeouMs = {}", dataId, group, timeoutMs, e);
@@ -119,29 +124,5 @@ public class NacosProxyDynamicConfLoader implements ProxyDynamicConfLoader {
         }
     }
 
-    /**
-     * Parse the content into config map. The content must be a key-value pair, such as key=value.
-     * The type of property file is best;
-     * @param content Contents of the configuration file
-     * @return Config map
-     */
-    private Map<String, String> toMap(String content) {
-        String[] split = content.split("\n");
-        Map<String, String> conf = new HashMap<>();
-        for (String line : split) {
-            line = line.trim();
-            if (line.length() == 0) {
-                continue;
-            }
-            if (line.startsWith("#")) {
-                continue;
-            }
-            int index = line.indexOf("=");
-            String key = line.substring(0, index);
-            String value = line.substring(index + 1);
-            conf.put(key, value);
-        }
-        return conf;
-    }
 
 }

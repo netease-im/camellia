@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.nacos.springboot;
+package com.netease.nim.camellia.redis.proxy.config.nacos.springboot;
 
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.config.ConfigService;

@@ -4,9 +4,13 @@
 # 1.2.13（2023/08/xx）
 ### 新增
 * camellia-http-accelerate-proxy支持设置backupServer
+* camellia-redis-proxy集成nacos作为配置中心时，支持json格式，默认properties格式
+* camellia-redis-proxy支持集成etcd作为配置中心，支持json格式，默认properties格式
 
 ### 更新
-* 无
+* `ProxyDynamicConfLoader` 重命名方法 `updateInitConf` 为 `init`
+* `camellia-redis-proxy-nacos` 重命名 artifactId 为 `camellia-redis-proxy-config-nacos`
+* `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader` 重命名为 `com.netease.nim.camellia.redis.proxy.config.nacos.config.NacosProxyDynamicConfLoader`
 
 ### fix
 * camellia-redis-proxy代理到redis-cluster时，select 0不应该返回error

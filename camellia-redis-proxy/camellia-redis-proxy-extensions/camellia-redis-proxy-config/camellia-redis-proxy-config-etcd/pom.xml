@@ -3,12 +3,12 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-redis-proxy-nacos</artifactId>
+	<artifactId>camellia-redis-proxy-config-etcd</artifactId>
 	<version>1.2.13-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia-redis-proxy-extensions</artifactId>
+		<artifactId>camellia-redis-proxy-config</artifactId>
 		<version>1.2.13-SNAPSHOT</version>
 	</parent>
 
@@ -19,14 +19,9 @@
 			<version>1.2.13-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>com.alibaba.nacos</groupId>
-			<artifactId>nacos-client</artifactId>
-			<version>${nacos.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.alibaba.nacos</groupId>
-			<artifactId>nacos-api</artifactId>
-			<version>${nacos.version}</version>
+			<groupId>io.etcd</groupId>
+			<artifactId>jetcd-core</artifactId>
+			<version>${jetcd.version}</version>
 		</dependency>
 	</dependencies>
 

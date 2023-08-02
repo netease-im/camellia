@@ -70,6 +70,7 @@
 		<mybatis-spring-boot-starter.version>1.3.2</mybatis-spring-boot-starter.version>
 		<mysql-connector-java.version>5.1.30</mysql-connector-java.version>
 		<caffeine.version>2.9.3</caffeine.version>
+		<jetcd.version>0.7.6</jetcd.version>
 	</properties>
 
 	<profiles>

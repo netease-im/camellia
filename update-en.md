@@ -4,9 +4,13 @@
 # 1.2.13（2023/08/xx）
 ### add
 * camellia-http-accelerate-proxy support setting backupServer
+* camellia-redis-proxy use nacos as config server, support json, default properties
+* camellia-redis-proxy support ectd as config server, support json, default properties
 
 ### update
-* none
+* `ProxyDynamicConfLoader` rename method `updateInitConf` to `init`
+* `camellia-redis-proxy-nacos` rename artifactId to `camellia-redis-proxy-config-nacos`
+* `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader` rename to `com.netease.nim.camellia.redis.proxy.config.nacos.config.NacosProxyDynamicConfLoader`
 
 ### fix
 * camellia-redis-proxy `select 0` command should reply ok when upstream is redis-cluster

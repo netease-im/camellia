@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
+import com.alibaba.fastjson.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -84,4 +86,34 @@ public class ConfigurationUtil {
             return defaultValue;
         }
     }
+
+    public static Map<String, String> contentToMap(String content, ConfigContentType contentType) {
+        if (contentType == ConfigContentType.properties) {
+            String[] split = content.split("\n");
+            Map<String, String> conf = new HashMap<>();
+            for (String line : split) {
+                line = line.trim();
+                if (line.length() == 0) {
+                    continue;
+                }
+                if (line.startsWith("#")) {
+                    continue;
+                }
+                int index = line.indexOf("=");
+                String key = line.substring(0, index);
+                String value = line.substring(index + 1);
+                conf.put(key, value);
+            }
+            return conf;
+        } else if (contentType == ConfigContentType.json) {
+            JSONObject json = JSONObject.parseObject(content);
+            Map<String, String> conf = new HashMap<>();
+            for (Map.Entry<String, Object> entry : json.entrySet()) {
+                conf.put(entry.getKey(), entry.getValue().toString());
+            }
+            return conf;
+        }
+        return new HashMap<>();
+    }
+
 }
