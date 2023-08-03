@@ -14,7 +14,7 @@
 ### 更新
 * `ProxyDynamicConfLoader` 重命名方法 `updateInitConf` 为 `init`
 * `camellia-redis-proxy-nacos` 重命名 artifactId 为 `camellia-redis-proxy-config-nacos`
-* `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader` 重命名为 `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader`
+* `com.netease.nim.camellia.redis.proxy.nacos.NacosProxyDynamicConfLoader` 重命名为 `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader`
 
 ### fix
 * camellia-redis-proxy代理到redis-cluster时，select 0不应该返回error

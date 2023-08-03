@@ -14,7 +14,7 @@
 ### update
 * `ProxyDynamicConfLoader` rename method `updateInitConf` to `init`
 * `camellia-redis-proxy-nacos` rename artifactId to `camellia-redis-proxy-config-nacos`
-* `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader` rename to `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader`
+* `com.netease.nim.camellia.redis.proxy.nacos.NacosProxyDynamicConfLoader` rename to `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader`
 
 ### fix
 * camellia-redis-proxy `select 0` command should reply ok when upstream is redis-cluster
