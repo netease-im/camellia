@@ -14,11 +14,8 @@ public class DynamicConfClientAuthProvider implements ClientAuthProvider {
 
     private final ConcurrentLinkedHashMap<String, ClientIdentity> cache = new ConcurrentLinkedHashMap.Builder<String, ClientIdentity>()
             .initialCapacity(100).maximumWeightedCapacity(1000).build();
-    private final ClientIdentity authFail;
 
     public DynamicConfClientAuthProvider() {
-        authFail = new ClientIdentity();
-        authFail.setPass(false);
         ProxyDynamicConf.registerCallback(cache::clear);
     }
 
@@ -31,13 +28,13 @@ public class DynamicConfClientAuthProvider implements ClientAuthProvider {
             }
             String string = ProxyDynamicConf.getString(password + ".auth.conf", null);
             if (string == null) {
-                cache.put(password, authFail);
-                return authFail;
+                cache.put(password, ClientIdentity.AUTH_FAIL);
+                return ClientIdentity.AUTH_FAIL;
             }
             String[] split = string.split("\\|");
             if (split.length != 2) {
-                cache.put(password, authFail);
-                return authFail;
+                cache.put(password, ClientIdentity.AUTH_FAIL);
+                return ClientIdentity.AUTH_FAIL;
             }
             long bid = Long.parseLong(split[0]);
             String bgroup = split[1];
@@ -48,8 +45,8 @@ public class DynamicConfClientAuthProvider implements ClientAuthProvider {
             cache.put(password, clientIdentity);
             return clientIdentity;
         } catch (Exception e) {
-            cache.put(password, authFail);
-            return authFail;
+            cache.put(password, ClientIdentity.AUTH_FAIL);
+            return ClientIdentity.AUTH_FAIL;
         }
     }
 

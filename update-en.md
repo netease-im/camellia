@@ -8,11 +8,12 @@
 * camellia-redis-proxy support ectd as config server, support json/properties, default properties
 * camellia-hot-key-server support ectd as config server, support json/properties, default json
 * camellia-hot-key support `not_contains` rule type
+* camellia-redis-proxy provide MultiTenantProxyRouteConfUpdater and MultiTenantClientAuthProvider
 
 ### update
 * `ProxyDynamicConfLoader` rename method `updateInitConf` to `init`
 * `camellia-redis-proxy-nacos` rename artifactId to `camellia-redis-proxy-config-nacos`
-* `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader` rename to `com.netease.nim.camellia.redis.proxy.config.nacos.config.NacosProxyDynamicConfLoader`
+* `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader` rename to `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader`
 
 ### fix
 * camellia-redis-proxy `select 0` command should reply ok when upstream is redis-cluster

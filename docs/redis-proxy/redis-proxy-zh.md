@@ -277,6 +277,7 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 关于自定义分片函数，具体见：[sharding](other/sharding.md)
 * 如何使用spring管理bean生成，具体见：[spring](other/spring.md)
 * 关于多租户的一个完整示例，具体见：[multi-telant](other/multi-telant.md)
+* 另一个关于多租户的一个完整示例，具体见：[multi-telant2](other/multi-telant2.md)
 * 多读场景下自动摘除故障读节点读，具体见：[multi-read](other/multi-read.md)
 * 关于ProxyDynamicConf(camellia-redis-proxy.properties)，具体见：[dynamic-conf](other/dynamic-conf.md)
 

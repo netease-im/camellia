@@ -8,11 +8,12 @@
 * camellia-redis-proxy支持集成etcd作为配置中心，支持json/properties格式，默认properties格式
 * camellia-hot-key-server支持集成etcd作为配置中心，支持json/properties格式，默认properties格式
 * camellia-hot-key支持`not_contains`规则类型
+* 新增MultiTenantProxyRouteConfUpdater和MultiTenantClientAuthProvider，新提供一种更简便的多租户配置方案
 
 ### 更新
 * `ProxyDynamicConfLoader` 重命名方法 `updateInitConf` 为 `init`
 * `camellia-redis-proxy-nacos` 重命名 artifactId 为 `camellia-redis-proxy-config-nacos`
-* `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader` 重命名为 `com.netease.nim.camellia.redis.proxy.config.nacos.config.NacosProxyDynamicConfLoader`
+* `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader` 重命名为 `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader`
 
 ### fix
 * camellia-redis-proxy代理到redis-cluster时，select 0不应该返回error
