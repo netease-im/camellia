@@ -52,15 +52,28 @@ public class QuicClient extends AbstractClient {
         long initialMaxStreamsBidirectional = DynamicConf.getLong("transport.quic.client.initial.max.streams.bidirectional", 10000L);
         long initialMaxStreamsUnidirectional = DynamicConf.getLong("transport.quic.client.initial.max.streams.unidirectional", 10000L);
 
-        ChannelHandler codec = new QuicClientCodecBuilder()
+        String algorithm = DynamicConf.getString("transport.quic.client.congestion.control.algorithm", null);
+        QuicCongestionControlAlgorithm congestionControlAlgorithm = null;
+        if (algorithm != null) {
+            for (QuicCongestionControlAlgorithm value : QuicCongestionControlAlgorithm.values()) {
+                if (value.name().equalsIgnoreCase(algorithm)) {
+                    congestionControlAlgorithm = value;
+                }
+            }
+        }
+
+        QuicClientCodecBuilder builder = new QuicClientCodecBuilder()
                 .sslContext(context)
                 .maxIdleTimeout(maxIdleTimeoutMillis, TimeUnit.MILLISECONDS)
                 .initialMaxData(initialMaxData)
                 .initialMaxStreamDataBidirectionalLocal(initialMaxStreamDataBidiLocal)
                 .initialMaxStreamDataBidirectionalRemote(initialMaxStreamDataBidiRemote)
                 .initialMaxStreamsBidirectional(initialMaxStreamsBidirectional)
-                .initialMaxStreamsUnidirectional(initialMaxStreamsUnidirectional)
-                .build();
+                .initialMaxStreamsUnidirectional(initialMaxStreamsUnidirectional);
+        if (congestionControlAlgorithm != null) {
+            builder.congestionControlAlgorithm(congestionControlAlgorithm);
+        }
+        ChannelHandler codec = builder.build();
         int connectTimeoutMillis = DynamicConf.getInt("transport.quic.client.connect.timeout.millis", 2000);
 
         Bootstrap bs = new Bootstrap();

@@ -9,6 +9,7 @@
 * camellia-hot-key-server支持集成etcd作为配置中心，支持json/properties格式，默认properties格式
 * camellia-hot-key支持`not_contains`规则类型
 * 新增MultiTenantProxyRouteConfUpdater和MultiTenantClientAuthProvider，新提供一种更简便的多租户配置方案
+* camellia-htt-accelerate-proxy支持设置quic的congestion.control.algorithm
 
 ### 更新
 * `ProxyDynamicConfLoader` 重命名方法 `updateInitConf` 为 `init`

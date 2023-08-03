@@ -77,14 +77,29 @@ public class TransportQuicServer extends AbstractTransportServer {
             long initialMaxStreamsBidirectional = DynamicConf.getLong("transport.quic.server.initial.max.streams.bidirectional", 10000L);
             long initialMaxStreamsUnidirectional = DynamicConf.getLong("transport.quic.server.initial.max.streams.unidirectional", 10000L);
 
+            String algorithm = DynamicConf.getString("transport.quic.server.congestion.control.algorithm", null);
+            QuicCongestionControlAlgorithm congestionControlAlgorithm = null;
+            if (algorithm != null) {
+                for (QuicCongestionControlAlgorithm value : QuicCongestionControlAlgorithm.values()) {
+                    if (value.name().equalsIgnoreCase(algorithm)) {
+                        congestionControlAlgorithm = value;
+                    }
+                }
+            }
+
             NioEventLoopGroup group = new NioEventLoopGroup(workThread, new DefaultThreadFactory("transport-quic-server-work-group"));
-            ChannelHandler codec = new QuicServerCodecBuilder().sslContext(context)
+            QuicServerCodecBuilder builder = new QuicServerCodecBuilder().sslContext(context)
                     .maxIdleTimeout(maxIdleTimeoutMillis, TimeUnit.MILLISECONDS)
                     .initialMaxData(initialMaxData)
                     .initialMaxStreamDataBidirectionalLocal(initialMaxStreamDataBidiLocal)
                     .initialMaxStreamDataBidirectionalRemote(initialMaxStreamDataBidiRemote)
                     .initialMaxStreamsBidirectional(initialMaxStreamsBidirectional)
                     .initialMaxStreamsUnidirectional(initialMaxStreamsUnidirectional)
+                    .congestionControlAlgorithm(congestionControlAlgorithm);
+            if (congestionControlAlgorithm != null) {
+                builder.congestionControlAlgorithm(congestionControlAlgorithm);
+            }
+            ChannelHandler codec = builder
                     .tokenHandler(InsecureQuicTokenHandler.INSTANCE)
                     .handler(new ChannelInboundHandlerAdapter() {
                         @Override

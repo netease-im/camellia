@@ -9,6 +9,7 @@
 * camellia-hot-key-server support ectd as config server, support json/properties, default json
 * camellia-hot-key support `not_contains` rule type
 * camellia-redis-proxy provide MultiTenantProxyRouteConfUpdater and MultiTenantClientAuthProvider
+* camellia-htt-accelerate-proxy support setting congestion.control.algorithm of quic
 
 ### update
 * `ProxyDynamicConfLoader` rename method `updateInitConf` to `init`
