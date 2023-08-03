@@ -50,7 +50,7 @@ camellia-redis-proxy:
     "etcd.target": "ip:///etcd0:2379,etcd1:2379,etcd2:2379"
     #"etcd.endpoints": "http://etcd0:2379,http://etcd1:2379,http://etcd2:2379" #etcd.target和etcd.endpoints二选一，优先使用etcd.target
     "etcd.config.key": "index/camellia/test"
-    "etcd.config.type": "json" #也可以配置为json
+    "etcd.config.type": "json"
   transpond:
     type: custom
     custom:
