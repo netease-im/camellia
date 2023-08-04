@@ -4,19 +4,19 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis-proxy-mq-common</artifactId>
-	<version>1.2.13</version>
+	<version>1.2.14-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-redis-proxy-mq</artifactId>
-		<version>1.2.13</version>
+		<version>1.2.14-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-proxy-core</artifactId>
-			<version>1.2.13</version>
+			<version>1.2.14-SNAPSHOT</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.msgpack/msgpack-core -->

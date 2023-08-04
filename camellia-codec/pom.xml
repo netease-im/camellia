@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-codec</artifactId>
-	<version>1.2.13</version>
+	<version>1.2.14-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia</artifactId>
-		<version>1.2.13</version>
+		<version>1.2.14-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
