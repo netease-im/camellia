@@ -17,10 +17,10 @@ camellia主要包括以下功能模块：
 * 支持普通的GET/SET/EVAL，也支持MGET/MSET，也支持阻塞型的BLPOP，也支持PUBSUB和TRANSACTION，也支持STREAMS/JSON/SEARCH，也支持TAIR_HASH/TAIR_ZSET/TAIR_STRING
 * 支持自定义分片、读写分离、双（多）写、双（多）读   
 * 支持多租户（可以同时代理多组路由，可以通过不同的登录密码来区分）     
-* 支持多租户动态路由，支持自定义的动态路由数据源(内置：本地配置文件、nacos、etcd等，也可以自定义)
+* 支持多租户动态路由，支持自定义的动态路由数据源（内置：本地配置文件、nacos、etcd等，也可以自定义）
 * 支持读从节点（redis-sentinel、redis-cluster都支持）
 * 高可用，可以基于lb组成集群，也可以基于注册中心组成集群，也可以伪装成redis-cluster组成集群
-* 支持自定义插件，并且内置了很多插件，可以按需使用（包括：大key监控、热key监控、热key缓存、key命名空间、ip黑白名单、速率控制等等） 
+* 支持自定义插件，并且内置了很多插件，可以按需使用（包括：大key监控、热key监控、热key缓存、key命名空间、ip黑白名单、速率控制等等）  
 * 支持丰富的监控，如TPS、RT、热key、大key、慢查询、连接数等   
 * 支持整合hbase实现string/zset/hash等数据结构的冷热分离存储操作     
 [快速开始](/docs/redis-proxy/redis-proxy-zh.md)  
@@ -93,7 +93,7 @@ camellia主要包括以下功能模块：
 [快速开始](/docs/tools/tools.md)  
 
 ## 版本
-最新版本是1.2.12，已经发布到maven中央仓库（2023/07/28）  
+最新版本是1.2.13，已经发布到maven中央仓库（2023/08/04）  
 [更新日志](/update-zh.md)  
 
 ## 谁在使用Camellia

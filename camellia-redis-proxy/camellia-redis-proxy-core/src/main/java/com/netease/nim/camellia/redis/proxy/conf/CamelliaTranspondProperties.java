@@ -311,7 +311,6 @@ public class CamelliaTranspondProperties {
         private int failCountThreshold = Constants.Transpond.failCountThreshold;
         private long failBanMillis = Constants.Transpond.failBanMillis;
         private int defaultTranspondWorkThread = Constants.Transpond.defaultTranspondWorkThread;
-        private MultiWriteMode multiWriteMode = Constants.Transpond.multiWriteMode;
         private boolean preheat = Constants.Transpond.preheat;
         public boolean closeIdleConnection = Constants.Transpond.closeIdleConnection;//是否关闭空闲连接（到后端redis的）
         public long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;//判断一个连接空闲的阈值，单位秒
@@ -380,14 +379,6 @@ public class CamelliaTranspondProperties {
 
         public void setDefaultTranspondWorkThread(int defaultTranspondWorkThread) {
             this.defaultTranspondWorkThread = defaultTranspondWorkThread;
-        }
-
-        public MultiWriteMode getMultiWriteMode() {
-            return multiWriteMode;
-        }
-
-        public void setMultiWriteMode(MultiWriteMode multiWriteMode) {
-            this.multiWriteMode = multiWriteMode;
         }
 
         public boolean isPreheat() {

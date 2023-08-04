@@ -11,30 +11,18 @@
 表示如果配置的第一个写地址返回了，则立即返回给客户端，这是默认的模式
 #### all_resources_no_check
 表示需要配置的所有写地址都返回了，才返回给给客户端，返回的是第一个地址的返回结果，你可以这样配置来生效这种模式：
-```yaml
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      type: complex
-      json-file: resource-table.json
-    redis-conf:
-      multi-write-mode: all_resources_no_check
-```
 #### all_resources_check_error
 表示需要配置的所有写地址都返回了，才返回给客户端，并且会校验是否所有地址都是返回的非error结果，如果是，则返回第一个地址的返回结果；否则返回第一个错误结果，你可以这样配置来生效这种模式：
-```yaml
-camellia-redis-proxy:
-  password: pass123
-  transpond:
-    type: local
-    local:
-      type: complex
-      json-file: resource-table.json
-    redis-conf:
-      multi-write-mode: all_resources_check_error
-```  
+
+配置方法如下：
+camellia-redis-proxy.properties
+```properties
+multi.write.mode=first_resource_only
+#multi.write.mode=all_resources_no_check
+#multi.write.mode=all_resources_check_error
+###也支持按租户配置，如下：
+1.default.multi.write.mode=first_resource_only
+```
 
 ### 双写延迟问题
 #### 直接双写模式

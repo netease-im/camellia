@@ -9,6 +9,8 @@ import com.netease.nim.camellia.core.util.*;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.base.resource.RedisType;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.conf.DynamicConfCallback;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.ProxyRouteType;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.route.ProxyRouteConfUpdater;
@@ -52,7 +54,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
 
     private final long bid;
     private final String bgroup;
-    private final MultiWriteMode multiWriteMode;
+    private MultiWriteMode multiWriteMode;
 
     private RedisProxyEnv env;
     private Monitor monitor;
@@ -65,6 +67,24 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
     private ScanCursorCalculator cursorCalculator;
 
     private final ResourceSelector.ResourceChecker resourceChecker;
+
+    private final DynamicConfCallback multiWriteModeCallback = new DynamicConfCallback() {
+        @Override
+        public void callback() {
+            String string = ProxyDynamicConf.getString("multi.write.mode", bid, bgroup, null);
+            MultiWriteMode multiWriteMode = MultiWriteMode.getByValue(string);
+            if (UpstreamRedisClientTemplate.this.multiWriteMode == null) {
+                UpstreamRedisClientTemplate.this.multiWriteMode = multiWriteMode;
+                logger.info("UpstreamRedisClientTemplate multiWriteMode init, bid = {}, bgroup = {}, multiWriteMode = {}", bid, bgroup, multiWriteMode);
+            } else {
+                if (UpstreamRedisClientTemplate.this.multiWriteMode != multiWriteMode) {
+                    logger.info("UpstreamRedisClientTemplate multiWriteMode reload, bid = {}, bgroup = {}, multiWriteMode = {} -> {}",
+                            bid, bgroup, UpstreamRedisClientTemplate.this.multiWriteMode, multiWriteMode);
+                    UpstreamRedisClientTemplate.this.multiWriteMode = multiWriteMode;
+                }
+            }
+        }
+    };
 
     public UpstreamRedisClientTemplate(ResourceTable resourceTable) {
         this(RedisProxyEnv.defaultRedisEnv(), resourceTable);
@@ -91,7 +111,8 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         this.bgroup = bgroup;
         this.factory = env.getClientFactory();
         this.resourceChecker = env.getResourceChecker();
-        this.multiWriteMode = env.getMultiWriteMode();
+        multiWriteModeCallback.callback();
+        ProxyDynamicConf.registerCallback(multiWriteModeCallback);
         CamelliaApiResponse response = service.getResourceTable(bid, bgroup, null);
         String md5 = response.getMd5();
         if (response.getResourceTable() == null) {
@@ -126,12 +147,13 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         this.bgroup = bgroup;
         this.factory = env.getClientFactory();
         this.resourceChecker = env.getResourceChecker();
-        this.multiWriteMode = env.getMultiWriteMode();
+        multiWriteModeCallback.callback();
+        ProxyDynamicConf.registerCallback(multiWriteModeCallback);
         ResourceTable resourceTable = updater.getResourceTable(bid, bgroup);
         RedisResourceUtil.checkResourceTable(resourceTable);
         this.update(resourceTable);
         if (logger.isInfoEnabled()) {
-            logger.info("AsyncCamelliaRedisTemplate init success, bid = {}, bgroup = {}, resourceTable = {}, ProxyRouteConfUpdater = {}", bid, bgroup,
+            logger.info("UpstreamRedisClientTemplate init success, bid = {}, bgroup = {}, resourceTable = {}, ProxyRouteConfUpdater = {}", bid, bgroup,
                     ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(resourceTable)), updater.getClass().getName());
         }
         if (reloadIntervalMillis > 0) {
@@ -700,6 +722,7 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         } else {
             RouteConfMonitor.deregisterRedisClientTemplate(bid, bgroup);
         }
+        ProxyDynamicConf.deregisterCallback(multiWriteModeCallback);
         if (logger.isInfoEnabled()) {
             logger.info("UpstreamRedisClientTemplate shutdown, bid = {}, bgroup = {}", bid, bgroup);
         }

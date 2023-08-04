@@ -357,8 +357,6 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
             logger.info("ShardingFunc, className = {}", shardingFuncClassName);
         }
 
-        logger.info("multi write mode = {}", redisConf.getMultiWriteMode());
-
         GlobalRedisProxyEnv.setDiscoveryFactory(ConfigInitUtil.initProxyDiscoveryFactory(redisConf, proxyBeanFactory));
 
         ProxyEnv proxyEnv = builder.build();
@@ -367,7 +365,6 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
                 .proxyEnv(proxyEnv)
                 .clientFactory(clientFactory)
                 .resourceChecker(new ScheduledResourceChecker(clientFactory))
-                .multiWriteMode(redisConf.getMultiWriteMode())
                 .build();
     }
 }

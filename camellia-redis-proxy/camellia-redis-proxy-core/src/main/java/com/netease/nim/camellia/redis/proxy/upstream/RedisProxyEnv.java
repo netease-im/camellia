@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.proxy.upstream;
 
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.util.ResourceSelector;
-import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 
 /**
  *
@@ -14,7 +13,6 @@ public class RedisProxyEnv {
     private ResourceSelector.ResourceChecker resourceChecker;
 
     private ProxyEnv proxyEnv = ProxyEnv.defaultProxyEnv();
-    private MultiWriteMode multiWriteMode = MultiWriteMode.FIRST_RESOURCE_ONLY;
 
     private RedisProxyEnv() {
     }
@@ -39,10 +37,6 @@ public class RedisProxyEnv {
 
     public ProxyEnv getProxyEnv() {
         return proxyEnv;
-    }
-
-    public MultiWriteMode getMultiWriteMode() {
-        return multiWriteMode;
     }
 
     public static class Builder {
@@ -72,13 +66,6 @@ public class RedisProxyEnv {
         public Builder proxyEnv(ProxyEnv proxyEnv) {
             if (proxyEnv != null) {
                 redisEnv.proxyEnv = proxyEnv;
-            }
-            return this;
-        }
-
-        public Builder multiWriteMode(MultiWriteMode multiWriteMode) {
-            if (multiWriteMode != null) {
-                redisEnv.multiWriteMode = multiWriteMode;
             }
             return this;
         }

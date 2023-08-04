@@ -1,7 +1,7 @@
 [中文版](update-zh.md)
 
 
-# 1.2.13（2023/08/xx）
+# 1.2.13（2023/08/04）
 ### add
 * camellia-http-accelerate-proxy support setting backupServer
 * camellia-redis-proxy use nacos as config server, support json/properties, default properties
@@ -10,6 +10,7 @@
 * camellia-hot-key support `not_contains` rule type
 * camellia-redis-proxy provide MultiTenantProxyRouteConfUpdater and MultiTenantClientAuthProvider
 * camellia-htt-accelerate-proxy support setting congestion.control.algorithm of quic
+* camellia-redis-proxy multi-write-mode migrate from yml to ProxyDynamicConf, support tenant level config, support dynamic config
 
 ### update
 * `ProxyDynamicConfLoader` rename method `updateInitConf` to `init`

@@ -116,6 +116,16 @@ public class ProxyDynamicConf {
         }
     }
 
+    /**
+     * 取消注册回调
+     * @param callback 回调
+     */
+    public static void deregisterCallback(DynamicConfCallback callback) {
+        if (callback != null) {
+            callbackSet.remove(callback);
+        }
+    }
+
     // Get value from {@link ProxyDynamicConf#conf}. If value is null , this method will return defaultValue.
     private static Integer _getInt(String key, Integer defaultValue) {
         return ConfigurationUtil.getInteger(conf, key, defaultValue);

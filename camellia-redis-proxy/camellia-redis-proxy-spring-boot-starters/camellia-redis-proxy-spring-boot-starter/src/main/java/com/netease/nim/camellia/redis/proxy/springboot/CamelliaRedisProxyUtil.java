@@ -186,7 +186,6 @@ public class CamelliaRedisProxyUtil {
         redisConfProperties.setHeartbeatTimeoutMillis(properties.getHeartbeatTimeoutMillis());
         redisConfProperties.setRedisClusterMaxAttempts(properties.getRedisClusterMaxAttempts());
         redisConfProperties.setDefaultTranspondWorkThread(properties.getDefaultTranspondWorkThread());
-        redisConfProperties.setMultiWriteMode(properties.getMultiWriteMode());
         redisConfProperties.setPreheat(properties.isPreheat());
         redisConfProperties.setCloseIdleConnection(properties.isCloseIdleConnection());
         redisConfProperties.setCheckIdleConnectionThresholdSeconds(properties.getCheckIdleConnectionThresholdSeconds());

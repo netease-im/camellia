@@ -1,7 +1,7 @@
 [ENGLISH](update-en.md)
 
 
-# 1.2.13（2023/08/xx）
+# 1.2.13（2023/08/04）
 ### 新增
 * camellia-http-accelerate-proxy支持设置backupServer
 * camellia-redis-proxy集成nacos作为配置中心时，新增支持json格式，默认还是之前的properties格式
@@ -10,6 +10,7 @@
 * camellia-hot-key支持`not_contains`规则类型
 * 新增MultiTenantProxyRouteConfUpdater和MultiTenantClientAuthProvider，新提供一种更简便的多租户配置方案
 * camellia-htt-accelerate-proxy支持设置quic的congestion.control.algorithm
+* camellia-redis-proxy multi-write-mode的配置从yml迁移到ProxyDynamicConf，支持租户级别配置，并且支持动态变更
 
 ### 更新
 * `ProxyDynamicConfLoader` 重命名方法 `updateInitConf` 为 `init`

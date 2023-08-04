@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.springboot.conf;
 
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
-import com.netease.nim.camellia.redis.proxy.conf.MultiWriteMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.HashMap;
@@ -450,7 +449,6 @@ public class TranspondProperties {
         private int failCountThreshold = Constants.Transpond.failCountThreshold;
         private long failBanMillis = Constants.Transpond.failBanMillis;
         private int defaultTranspondWorkThread = Constants.Transpond.defaultTranspondWorkThread;
-        private MultiWriteMode multiWriteMode = Constants.Transpond.multiWriteMode;
         private boolean preheat = Constants.Transpond.preheat;
         private boolean closeIdleConnection = Constants.Transpond.closeIdleConnection;//是否关闭空闲连接（到后端redis的）
         private long checkIdleConnectionThresholdSeconds = Constants.Transpond.checkIdleConnectionThresholdSeconds;//判断一个连接空闲的阈值，单位秒
@@ -519,14 +517,6 @@ public class TranspondProperties {
 
         public void setDefaultTranspondWorkThread(int defaultTranspondWorkThread) {
             this.defaultTranspondWorkThread = defaultTranspondWorkThread;
-        }
-
-        public MultiWriteMode getMultiWriteMode() {
-            return multiWriteMode;
-        }
-
-        public void setMultiWriteMode(MultiWriteMode multiWriteMode) {
-            this.multiWriteMode = multiWriteMode;
         }
 
         public boolean isPreheat() {
