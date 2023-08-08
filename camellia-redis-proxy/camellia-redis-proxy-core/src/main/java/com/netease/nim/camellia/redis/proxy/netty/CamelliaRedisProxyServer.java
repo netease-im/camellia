@@ -4,13 +4,19 @@ import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
+import com.netease.nim.camellia.redis.proxy.util.SSLUtils;
 import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.ssl.SslHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+
 
 /**
  *
@@ -38,6 +44,12 @@ public class CamelliaRedisProxyServer {
 
     public void start() throws Exception {
         ServerBootstrap serverBootstrap = new ServerBootstrap();
+        final SSLContext sslContext;
+        if (serverProperties.isTlsEnable()) {
+            sslContext = SSLUtils.proxyFrontendSSLContext();
+        } else {
+            sslContext = null;
+        }
         serverBootstrap.group(GlobalRedisProxyEnv.getBossGroup(), GlobalRedisProxyEnv.getWorkGroup())
                 .channel(GlobalRedisProxyEnv.getServerChannelClass())
                 .option(ChannelOption.SO_BACKLOG, serverProperties.getSoBacklog())
@@ -51,6 +63,13 @@ public class CamelliaRedisProxyServer {
                     @Override
                     public void initChannel(SocketChannel ch) {
                         ChannelPipeline p = ch.pipeline();
+                        if (sslContext != null) {
+                            SSLEngine sslEngine = sslContext.createSSLEngine();
+                            sslEngine.setNeedClientAuth(false);
+                            sslEngine.setUseClientMode(false);
+                            SslHandler sslHandler =  new SslHandler(sslEngine);
+                            p.addLast(sslHandler);
+                        }
                         if (serverProperties.getReaderIdleTimeSeconds() >= 0 && serverProperties.getWriterIdleTimeSeconds() >= 0
                                 && serverProperties.getAllIdleTimeSeconds() >= 0) {
                             p.addLast(new IdleCloseHandler(serverProperties.getReaderIdleTimeSeconds(),
@@ -75,6 +94,7 @@ public class CamelliaRedisProxyServer {
                 serverProperties.getSoBacklog(), serverProperties.getSoSndbuf(), serverProperties.getSoRcvbuf(), serverProperties.isSoKeepalive());
         logger.info("CamelliaRedisProxyServer, tcp_no_delay = {}, tcp_quick_ack = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
                 serverProperties.isTcpNoDelay(), GlobalRedisProxyEnv.isServerTcpQuickAckEnable(), serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh());
+        logger.info("CamelliaRedisProxyServer, proxy frontend tls enable = {}", sslContext != null);
         logger.info("CamelliaRedisProxyServer start at port: {}", port);
         GlobalRedisProxyEnv.setPort(port);
         GlobalRedisProxyEnv.getProxyShutdown().setServerChannelFuture(future);

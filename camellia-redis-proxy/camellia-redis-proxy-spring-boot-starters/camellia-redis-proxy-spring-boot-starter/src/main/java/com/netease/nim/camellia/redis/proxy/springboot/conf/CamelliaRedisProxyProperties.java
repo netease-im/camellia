@@ -32,6 +32,11 @@ public class CamelliaRedisProxyProperties {
     private String applicationName = "";
 
     /**
+     * proxy tls 是否开启
+     */
+    private boolean tlsEnable = Constants.Server.tlsEnable;
+
+    /**
      * proxy的console port，会起一个console http server，可以自己实现一些自定义指令
      * 如果设置为Constants.Server.consolePortRandSig，则会随机选择一个可用端口
      */
@@ -135,6 +140,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setApplicationName(String applicationName) {
         this.applicationName = applicationName;
+    }
+
+    public boolean isTlsEnable() {
+        return tlsEnable;
+    }
+
+    public void setTlsEnable(boolean tlsEnable) {
+        this.tlsEnable = tlsEnable;
     }
 
     public int getConsolePort() {

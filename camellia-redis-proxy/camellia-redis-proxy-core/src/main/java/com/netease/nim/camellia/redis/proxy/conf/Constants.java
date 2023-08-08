@@ -21,6 +21,7 @@ public class Constants {
         public static final int consolePort = 16379;
         public static final int consolePortRandSig = -16379;
         public static final boolean monitorEnable = false;
+        public static final boolean tlsEnable = false;
         public static final int monitorIntervalSeconds = 60;
         public static final String monitorCallbackClassName = LoggingMonitorCallback.class.getName();
         public static final String clientAuthByConfigProvider = ClientAuthByConfigProvider.class.getName();

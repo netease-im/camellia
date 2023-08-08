@@ -1,6 +1,17 @@
 [ENGLISH](update-en.md)
 
 
+# 1.2.14（2023/08/xx）
+### 新增
+* camellia-redis-proxy支持面向proxy的客户端开启tls
+
+### 更新
+* 无
+
+### fix
+* 无
+
+
 # 1.2.13（2023/08/04）
 ### 新增
 * camellia-http-accelerate-proxy支持设置backupServer

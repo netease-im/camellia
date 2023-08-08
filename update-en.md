@@ -1,6 +1,17 @@
 [中文版](update-zh.md)
 
 
+# 1.2.14（2023/08/xx）
+### add
+* camellia-redis-proxy support frontend tls
+
+### update
+* none
+
+### fix
+* none
+
+
 # 1.2.13（2023/08/04）
 ### add
 * camellia-http-accelerate-proxy support setting backupServer

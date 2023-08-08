@@ -71,6 +71,7 @@
 		<mysql-connector-java.version>5.1.30</mysql-connector-java.version>
 		<caffeine.version>2.9.3</caffeine.version>
 		<jetcd.version>0.7.6</jetcd.version>
+		<bouncycastle.version>1.70</bouncycastle.version>
 	</properties>
 
 	<profiles>
