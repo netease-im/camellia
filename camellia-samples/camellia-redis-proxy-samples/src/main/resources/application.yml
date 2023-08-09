@@ -12,6 +12,7 @@ camellia-redis-proxy:
   monitor-enable: false  #monitor enable/disable configure
   monitor-interval-seconds: 60 #monitor data refresh interval seconds
 #  tls-enable: true
+#  proxy-frontend-tls-provider-class-name: com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider
 #  cluster-mode-enable: true #cluster-mode, if setting true, proxy-cluster disguised as a redis-cluster, should configure proxy.cluster.mode.nodes=xx in camellia-redis-proxy.properties
 #  cport: -1 #cluster-mode is setting true, proxy will use this cport to heartbeat, if setting -1, cport = port + 10000
 #  netty-transport-mode: epoll
@@ -44,6 +45,7 @@ camellia-redis-proxy:
 #      header-map: # custom header map for request to camellia-dashboard (optional)
 #        api-key: secretToken # header name: api-key, header value: secretToken
 #    redis-conf:
+#      proxy-upstream-tls-provider-class-name: com.netease.nim.camellia.redis.proxy.tls.upstream.DefaultProxyUpstreamTlsProvider
 #      multi-write-mode: first_resource_only #multi write mode, see MultiWriteMode.java, FIRST_RESOURCE_ONLY/ALL_RESOURCES_NO_CHECKALL_RESOURCES_CHECK_ERROR
 #      close-idle-connection: true #if close upstream idle redis-connection, default true
 #      check-idle-connection-threshold-seconds: 600  #upstream redis-connection idle check threshold, default 600s
