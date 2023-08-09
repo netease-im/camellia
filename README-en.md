@@ -15,7 +15,8 @@ high performance redis-proxy:
 * support [kvrocks](https://github.com/apache/kvrocks) 、 [pika](https://github.com/OpenAtomFoundation/pika) 、 [tendis](https://github.com/Tencent/Tendis)  as the upstream
 * support GET/SET/EVAL, support MGET/MSET, support blocking BLPOP, support PUBSUB/TRANSACTION, support STREAMS/JSON/SEARCH, support TAIR_HASH/TAIR_ZSET/TAIR_STRING
 * support sharding/read-write-separate/double-write on proxy  
-* support multi-route-conf            
+* support multi-route-conf   
+* support ssl/tls, both client to proxy and proxy to upstream redis
 * support tps/rt/big-key/hot-key/slow-command monitor  
 * support custom command interceptor, support hot-key-cache(GET command)，support value converter and so on    
 [QUICK START](/docs/redis-proxy/redis-proxy-en.md)  
