@@ -19,6 +19,7 @@ public class CamelliaServerProperties {
     private String applicationName;
     private String password;
     private boolean tlsEnable = Constants.Server.tlsEnable;
+    private String proxyFrontendTlsProviderClassName = Constants.Server.proxyFrontendTlsProviderClassName;
     private boolean monitorEnable = Constants.Server.monitorEnable;
     private int monitorIntervalSeconds = Constants.Server.monitorIntervalSeconds;
     private ProxyBeanFactory proxyBeanFactory = DefaultBeanFactory.INSTANCE;
@@ -91,6 +92,14 @@ public class CamelliaServerProperties {
 
     public void setTlsEnable(boolean tlsEnable) {
         this.tlsEnable = tlsEnable;
+    }
+
+    public String getProxyFrontendTlsProviderClassName() {
+        return proxyFrontendTlsProviderClassName;
+    }
+
+    public void setProxyFrontendTlsProviderClassName(String proxyFrontendTlsProviderClassName) {
+        this.proxyFrontendTlsProviderClassName = proxyFrontendTlsProviderClassName;
     }
 
     public boolean isMonitorEnable() {

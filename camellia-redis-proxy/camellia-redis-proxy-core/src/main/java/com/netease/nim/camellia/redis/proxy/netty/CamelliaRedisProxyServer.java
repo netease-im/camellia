@@ -4,6 +4,8 @@ import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
+import com.netease.nim.camellia.redis.proxy.tls.frontend.ProxyFrontendTlsProvider;
+import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import com.netease.nim.camellia.redis.proxy.util.SSLUtils;
 import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
 import io.netty.bootstrap.ServerBootstrap;
@@ -45,10 +47,16 @@ public class CamelliaRedisProxyServer {
     public void start() throws Exception {
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         final SSLContext sslContext;
+        ProxyFrontendTlsProvider proxyFrontendTlsProvider;
         if (serverProperties.isTlsEnable()) {
-            sslContext = SSLUtils.proxyFrontendSSLContext();
+            proxyFrontendTlsProvider = ConfigInitUtil.initProxyFrontendTlsProvider(serverProperties);
+            if (proxyFrontendTlsProvider == null) {
+                throw new IllegalArgumentException(serverProperties.getProxyFrontendTlsProviderClassName() + " init fail");
+            }
+            sslContext = proxyFrontendTlsProvider.createSSLContext();
         } else {
             sslContext = null;
+            proxyFrontendTlsProvider = null;
         }
         serverBootstrap.group(GlobalRedisProxyEnv.getBossGroup(), GlobalRedisProxyEnv.getWorkGroup())
                 .channel(GlobalRedisProxyEnv.getServerChannelClass())
@@ -63,12 +71,8 @@ public class CamelliaRedisProxyServer {
                     @Override
                     public void initChannel(SocketChannel ch) {
                         ChannelPipeline p = ch.pipeline();
-                        if (sslContext != null) {
-                            SSLEngine sslEngine = sslContext.createSSLEngine();
-                            sslEngine.setNeedClientAuth(false);
-                            sslEngine.setUseClientMode(false);
-                            SslHandler sslHandler =  new SslHandler(sslEngine);
-                            p.addLast(sslHandler);
+                        if (sslContext != null && ch.localAddress().getPort() == GlobalRedisProxyEnv.getPort()) {
+                            p.addLast(proxyFrontendTlsProvider.createSslHandler(sslContext));
                         }
                         if (serverProperties.getReaderIdleTimeSeconds() >= 0 && serverProperties.getWriterIdleTimeSeconds() >= 0
                                 && serverProperties.getAllIdleTimeSeconds() >= 0) {

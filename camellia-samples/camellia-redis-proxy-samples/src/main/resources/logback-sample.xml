@@ -100,6 +100,18 @@
               <appender-ref ref="STATS" />
        </logger>
 
+       <logger name="camellia.redis.proxy.bigKeyStats" level="INFO" additivity="false" >
+              <appender-ref ref="BIG-KEY-STATS" />
+       </logger>
+
+       <logger name="camellia.redis.proxy.hotKeyStats" level="INFO" additivity="false" >
+              <appender-ref ref="HOT-KEY-STATS" />
+       </logger>
+
+       <logger name="camellia.redis.proxy.slowCommandStats" level="INFO" additivity="false" >
+              <appender-ref ref="SLOW-COMMAND-STATS" />
+       </logger>
+
        <root level="INFO">
               <appender-ref ref="APP" />
        </root>

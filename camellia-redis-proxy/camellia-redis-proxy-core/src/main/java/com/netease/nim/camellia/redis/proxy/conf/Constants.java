@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.redis.proxy.command.DefaultQueueFactory;
 import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
+import com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateFactory;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.proxy.cluster.DefaultProxyClusterModeProvider;
@@ -22,6 +23,7 @@ public class Constants {
         public static final int consolePortRandSig = -16379;
         public static final boolean monitorEnable = false;
         public static final boolean tlsEnable = false;
+        public static final String proxyFrontendTlsProviderClassName = DefaultProxyFrontendTlsProvider.class.getName();
         public static final int monitorIntervalSeconds = 60;
         public static final String monitorCallbackClassName = LoggingMonitorCallback.class.getName();
         public static final String clientAuthByConfigProvider = ClientAuthByConfigProvider.class.getName();

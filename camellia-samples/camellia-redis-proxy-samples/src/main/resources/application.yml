@@ -1,4 +1,3 @@
-
 server:
   port: 6380
 spring:
@@ -6,31 +5,32 @@ spring:
     name: camellia-redis-proxy-server
 
 camellia-redis-proxy:
-  #port: 6380 #priority greater than server.port, if missing, use server.port; if setting -6379, proxy will choose a random port
-  #application-name: camellia-redis-proxy-server  #priority greater than spring.application.name, if missing, use spring.application.name
+#  port: 6380 #priority greater than server.port, if missing, use server.port; if setting -6379, proxy will choose a random port
+#  application-name: camellia-redis-proxy-server  #priority greater than spring.application.name, if missing, use spring.application.name
   console-port: 16379 #console port, default 16379, if setting -16379, proxy will choose a random port, if setting 0, will disable console
   password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
   monitor-enable: false  #monitor enable/disable configure
   monitor-interval-seconds: 60 #monitor data refresh interval seconds
-  #  cluster-mode-enable: true #cluster-mode, if setting true, proxy-cluster disguised as a redis-cluster, should configure proxy.cluster.mode.nodes=xx in camellia-redis-proxy.properties
-  #  cport: -1 #cluster-mode is setting true, proxy will use this cport to heartbeat, if setting -1, cport = port + 10000
-  #  netty-transport-mode: epoll
+#  tls-enable: true
+#  cluster-mode-enable: true #cluster-mode, if setting true, proxy-cluster disguised as a redis-cluster, should configure proxy.cluster.mode.nodes=xx in camellia-redis-proxy.properties
+#  cport: -1 #cluster-mode is setting true, proxy will use this cport to heartbeat, if setting -1, cport = port + 10000
+#  netty-transport-mode: epoll
   plugins: #plugin list
     - monitorPlugin
     - bigKeyPlugin
     - hotKeyPlugin
-  #  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.conf.FileBasedProxyDynamicConfLoader
-  ##you can get this config from ProxyDynamicConf.java, priority less than camellia-redis-proxy.properties
-  ##you can configure dynamic.conf.file.name here to replace camellia-redis-proxy.properties
-  #  config:
-  #    "dynamic.conf.file.name": "xxx.properties"
-  #    "xxx": "yyy"
+#  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.conf.FileBasedProxyDynamicConfLoader
+#  #you can get this config from ProxyDynamicConf.java, priority less than camellia-redis-proxy.properties
+#  #you can configure dynamic.conf.file.name here to replace camellia-redis-proxy.properties
+#  config:
+#    "dynamic.conf.file.name": "xxx.properties"
+#    "xxx": "yyy"
   transpond:
     type: local #local、remote、custom
     local:
       type: simple #simple、complex
-      resource: redis://@127.0.0.1:6379 #target transpond redis address
-#      resource: redis-cluster://@127.0.0.1:6379,127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6382,127.0.0.1:6383,127.0.0.1:6384
+      resource: redis://@127.0.0.1:6379
+#      resource: redis-cluster://@10.189.31.13:6601,10.189.31.14:6603,10.189.31.15:6605
 #      resource: redis-sentinel://@127.0.0.1:26379/master1
 #      resource: redis-sentinel-slaves://@127.0.0.1:26379/master1
 #      type: complex
@@ -47,4 +47,3 @@ camellia-redis-proxy:
 #      close-idle-connection: true #if close upstream idle redis-connection, default true
 #      check-idle-connection-threshold-seconds: 600  #upstream redis-connection idle check threshold, default 600s
 #      preheat: true #preheat upstream redis-connection, default true
-

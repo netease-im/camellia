@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.conf.FileBasedProxyDynamicConfLoader
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfLoader;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
+import com.netease.nim.camellia.redis.proxy.tls.frontend.ProxyFrontendTlsProvider;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateFactory;
 
@@ -58,6 +59,15 @@ public class ConfigInitUtil {
         String className = redisConfProperties.getProxyDiscoveryFactoryClassName();
         if (className != null) {
             return (ProxyDiscoveryFactory) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
+        }
+        return null;
+    }
+
+    public static ProxyFrontendTlsProvider initProxyFrontendTlsProvider(CamelliaServerProperties properties) {
+        String className = properties.getProxyFrontendTlsProviderClassName();
+        if (className != null) {
+            ProxyBeanFactory proxyBeanFactory = properties.getProxyBeanFactory();
+            return (ProxyFrontendTlsProvider) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
         }
         return null;
     }
