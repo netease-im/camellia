@@ -4,6 +4,8 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.base.resource.RedisClusterResource;
 import com.netease.nim.camellia.redis.base.resource.RedisClusterSlavesResource;
+import com.netease.nim.camellia.redis.base.resource.RedissClusterResource;
+import com.netease.nim.camellia.redis.base.resource.RedissClusterSlavesResource;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
@@ -51,14 +53,17 @@ public class RedisClusterClient implements IUpstreamClient {
     private RedisClusterResource redisClusterResource;
     private RedisClusterSlavesResource redisClusterSlavesResource;
 
-    public RedisClusterClient(RedisClusterSlavesResource redisClusterSlavesResource, int maxAttempts) {
+    private RedissClusterResource redissClusterResource;
+    private RedissClusterSlavesResource redissClusterSlavesResource;
+
+    public RedisClusterClient(RedisClusterSlavesResource resource, int maxAttempts) {
         this.cursorCalculator = new ScanCursorCalculator(ProxyDynamicConf.getInt("redis-cluster.scan.node.bits.len", 10));
-        this.redisClusterSlavesResource = redisClusterSlavesResource;
-        this.url = redisClusterSlavesResource.getUrl();
-        this.userName = redisClusterSlavesResource.getUserName();
-        this.password = redisClusterSlavesResource.getPassword();
+        this.redisClusterSlavesResource = resource;
+        this.url = resource.getUrl();
+        this.userName = resource.getUserName();
+        this.password = resource.getPassword();
         this.maxAttempts = maxAttempts;
-        this.clusterSlotInfo = new RedisClusterSlotInfo(redisClusterSlavesResource);
+        this.clusterSlotInfo = new RedisClusterSlotInfo(resource);
         Future<Boolean> future = this.clusterSlotInfo.renew();
         try {
             if (future == null || !future.get()) {
@@ -70,17 +75,17 @@ public class RedisClusterClient implements IUpstreamClient {
             throw new CamelliaRedisException("RedisClusterSlotInfo init fail", e);
         }
         startSchedule();
-        logger.info("RedisClusterClient init success, resource = {}", redisClusterSlavesResource.getUrl());
+        logger.info("RedisClusterClient init success, resource = {}", resource.getUrl());
     }
 
-    public RedisClusterClient(RedisClusterResource redisClusterResource, int maxAttempts) {
+    public RedisClusterClient(RedissClusterSlavesResource resource, int maxAttempts) {
         this.cursorCalculator = new ScanCursorCalculator(ProxyDynamicConf.getInt("redis-cluster.scan.node.bits.len", 10));
-        this.redisClusterResource = redisClusterResource;
-        this.url = redisClusterResource.getUrl();
-        this.userName = redisClusterResource.getUserName();
-        this.password = redisClusterResource.getPassword();
+        this.redissClusterSlavesResource = resource;
+        this.url = resource.getUrl();
+        this.userName = resource.getUserName();
+        this.password = resource.getPassword();
         this.maxAttempts = maxAttempts;
-        this.clusterSlotInfo = new RedisClusterSlotInfo(redisClusterResource);
+        this.clusterSlotInfo = new RedisClusterSlotInfo(resource);
         Future<Boolean> future = this.clusterSlotInfo.renew();
         try {
             if (future == null || !future.get()) {
@@ -92,7 +97,51 @@ public class RedisClusterClient implements IUpstreamClient {
             throw new CamelliaRedisException("RedisClusterSlotInfo init fail", e);
         }
         startSchedule();
-        logger.info("RedisClusterClient init success, resource = {}", redisClusterResource.getUrl());
+        logger.info("RedisClusterClient init success, resource = {}", resource.getUrl());
+    }
+
+    public RedisClusterClient(RedisClusterResource resource, int maxAttempts) {
+        this.cursorCalculator = new ScanCursorCalculator(ProxyDynamicConf.getInt("redis-cluster.scan.node.bits.len", 10));
+        this.redisClusterResource = resource;
+        this.url = resource.getUrl();
+        this.userName = resource.getUserName();
+        this.password = resource.getPassword();
+        this.maxAttempts = maxAttempts;
+        this.clusterSlotInfo = new RedisClusterSlotInfo(resource);
+        Future<Boolean> future = this.clusterSlotInfo.renew();
+        try {
+            if (future == null || !future.get()) {
+                throw new CamelliaRedisException("RedisClusterSlotInfo init fail");
+            }
+        } catch (CamelliaRedisException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CamelliaRedisException("RedisClusterSlotInfo init fail", e);
+        }
+        startSchedule();
+        logger.info("RedisClusterClient init success, resource = {}", resource.getUrl());
+    }
+
+    public RedisClusterClient(RedissClusterResource resource, int maxAttempts) {
+        this.cursorCalculator = new ScanCursorCalculator(ProxyDynamicConf.getInt("redis-cluster.scan.node.bits.len", 10));
+        this.redissClusterResource = resource;
+        this.url = resource.getUrl();
+        this.userName = resource.getUserName();
+        this.password = resource.getPassword();
+        this.maxAttempts = maxAttempts;
+        this.clusterSlotInfo = new RedisClusterSlotInfo(resource);
+        Future<Boolean> future = this.clusterSlotInfo.renew();
+        try {
+            if (future == null || !future.get()) {
+                throw new CamelliaRedisException("RedisClusterSlotInfo init fail");
+            }
+        } catch (CamelliaRedisException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CamelliaRedisException("RedisClusterSlotInfo init fail", e);
+        }
+        startSchedule();
+        logger.info("RedisClusterClient init success, resource = {}", resource.getUrl());
     }
 
     private void startSchedule() {
@@ -113,6 +162,8 @@ public class RedisClusterClient implements IUpstreamClient {
     public Resource getResource() {
         if (redisClusterResource != null) return redisClusterResource;
         if (redisClusterSlavesResource != null) return redisClusterSlavesResource;
+        if (redissClusterResource != null) return redissClusterResource;
+        if (redissClusterSlavesResource != null) return redissClusterSlavesResource;
         return null;
     }
 
@@ -122,7 +173,7 @@ public class RedisClusterClient implements IUpstreamClient {
         Set<RedisClusterSlotInfo.Node> nodes = this.clusterSlotInfo.getNodes();
         for (RedisClusterSlotInfo.Node node : nodes) {
             logger.info("try preheat, url = {}, node = {}", PasswordMaskUtils.maskResource(url), PasswordMaskUtils.maskAddr(node.getAddr()));
-            boolean result = RedisConnectionHub.getInstance().preheat(node.getHost(), node.getPort(), node.getUserName(), node.getPassword());
+            boolean result = RedisConnectionHub.getInstance().preheat(getResource(), node.getHost(), node.getPort(), node.getUserName(), node.getPassword());
             logger.info("preheat result = {}, url = {}, node = {}", result, PasswordMaskUtils.maskResource(url), PasswordMaskUtils.maskAddr(node.getAddr()));
         }
         logger.info("preheat ok, url = {}", PasswordMaskUtils.maskResource(url));
@@ -229,7 +280,7 @@ public class RedisClusterClient implements IUpstreamClient {
                         continue;
                     }
                     RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(slot);
-                    bindConnection = command.getChannelInfo().acquireBindRedisConnection(node.getAddr());
+                    bindConnection = command.getChannelInfo().acquireBindRedisConnection(getResource(), node.getAddr());
                     if (bindConnection == null) {
                         future.complete(ErrorReply.UPSTREAM_BIND_CONNECTION_NULL);
                         continue;
@@ -393,7 +444,7 @@ public class RedisClusterClient implements IUpstreamClient {
             }
             if (bindConnection == null) {
                 RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(slot);
-                bindConnection = command.getChannelInfo().acquireBindRedisConnection(node.getAddr());
+                bindConnection = command.getChannelInfo().acquireBindRedisConnection(getResource(), node.getAddr());
                 channelInfo.setBindConnection(slot, bindConnection);
                 if (!commandFlusher.isEmpty()) {
                     commandFlusher.flush();
@@ -453,7 +504,7 @@ public class RedisClusterClient implements IUpstreamClient {
                     future.complete(ErrorReply.UPSTREAM_CONNECTION_REDIS_CLUSTER_NODE_NULL);
                     return;
                 }
-                bindConnection = command.getChannelInfo().acquireBindSubscribeRedisConnection(node.getAddr());
+                bindConnection = command.getChannelInfo().acquireBindSubscribeRedisConnection(getResource(), node.getAddr());
                 channelInfo.setBindConnection(bindConnection);
                 first = true;
             }
@@ -519,7 +570,7 @@ public class RedisClusterClient implements IUpstreamClient {
             Set<RedisClusterSlotInfo.Node> nodes = clusterSlotInfo.getNodes();
             boolean futureSetting = false;
             for (RedisClusterSlotInfo.Node node : nodes) {
-                RedisConnection redisConnection = RedisConnectionHub.getInstance().get(node.getAddr());
+                RedisConnection redisConnection = RedisConnectionHub.getInstance().get(getResource(), node.getAddr());
                 //只返回第一个reply
                 commandFlusher.sendCommand(redisConnection, command, !futureSetting ? future : new CompletableFuture<>());
                 futureSetting = true;
@@ -528,7 +579,7 @@ public class RedisClusterClient implements IUpstreamClient {
             Set<RedisClusterSlotInfo.Node> nodes = clusterSlotInfo.getNodes();
             List<CompletableFuture<Reply>> futures = new ArrayList<>();
             for (RedisClusterSlotInfo.Node node : nodes) {
-                RedisConnection redisConnection = RedisConnectionHub.getInstance().get(node.getAddr());
+                RedisConnection redisConnection = RedisConnectionHub.getInstance().get(getResource(), node.getAddr());
                 CompletableFuture<Reply> f = new CompletableFuture<>();
                 commandFlusher.sendCommand(redisConnection, command, f);
                 futures.add(f);
@@ -617,7 +668,7 @@ public class RedisClusterClient implements IUpstreamClient {
                                     redisConnection.sendCommand(Collections.singletonList(command), Collections.singletonList(this));
                                     redisConnection.startIdleCheck();
                                 } else {
-                                    RedisConnection connection = RedisConnectionHub.getInstance().newConnection(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
+                                    RedisConnection connection = RedisConnectionHub.getInstance().newConnection(clusterClient.getResource(), addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
                                     try {
                                         if (connection == null || !connection.isValid()) {
                                             ErrorLogCollector.collect(RedisClusterClient.class,
@@ -638,7 +689,7 @@ public class RedisClusterClient implements IUpstreamClient {
                                     }
                                 }
                             } else {
-                                RedisConnection connection = RedisConnectionHub.getInstance().get(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
+                                RedisConnection connection = RedisConnectionHub.getInstance().get(clusterClient.getResource(), addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
                                 try {
                                     if (connection == null || !connection.isValid()) {
                                         ErrorLogCollector.collect(RedisClusterClient.class,
@@ -671,7 +722,7 @@ public class RedisClusterClient implements IUpstreamClient {
                                     redisConnection.sendCommand(Arrays.asList(ASKING, command), Arrays.asList(new CompletableFuture<>(), this));
                                     redisConnection.startIdleCheck();
                                 } else {
-                                    RedisConnection connection = RedisConnectionHub.getInstance().newConnection(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
+                                    RedisConnection connection = RedisConnectionHub.getInstance().newConnection(clusterClient.getResource(), addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
                                     try {
                                         if (connection == null || !connection.isValid()) {
                                             ErrorLogCollector.collect(RedisClusterClient.class,
@@ -692,7 +743,7 @@ public class RedisClusterClient implements IUpstreamClient {
                                     }
                                 }
                             } else {
-                                RedisConnection connection = RedisConnectionHub.getInstance().get(strings[1], Integer.parseInt(strings[2]), clusterClient.userName, clusterClient.password);
+                                RedisConnection connection = RedisConnectionHub.getInstance().get(clusterClient.getResource(), strings[1], Integer.parseInt(strings[2]), clusterClient.userName, clusterClient.password);
                                 try {
                                     if (connection == null || !connection.isValid()) {
                                         ErrorLogCollector.collect(RedisClusterClient.class,
@@ -895,7 +946,7 @@ public class RedisClusterClient implements IUpstreamClient {
             future.complete(ErrorReply.UPSTREAM_CONNECTION_REDIS_CLUSTER_NODE_NULL);
             return;
         }
-        RedisConnection connection = command.getChannelInfo().acquireBindRedisConnection(node.getAddr());
+        RedisConnection connection = command.getChannelInfo().acquireBindRedisConnection(getResource(), node.getAddr());
         if (connection == null) {
             ErrorLogCollector.collect(RedisClusterClient.class, "blockingCommand bind connection null, node=" + node.getAddr() + " fail");
             future.complete(ErrorReply.UPSTREAM_BIND_CONNECTION_NULL);

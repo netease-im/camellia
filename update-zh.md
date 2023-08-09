@@ -3,7 +3,8 @@
 
 # 1.2.14（2023/08/xx）
 ### 新增
-* camellia-redis-proxy支持面向proxy的客户端开启tls
+* camellia-redis-proxy支持client到proxy的连接开启tls
+* camellia-redis-proxy支持proxy到redis开启tls
 
 ### 更新
 * 无
@@ -29,7 +30,7 @@
 * `com.netease.nim.camellia.redis.proxy.nacos.NacosProxyDynamicConfLoader` 重命名为 `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader`
 
 ### fix
-* camellia-redis-proxy代理到redis-cluster时，select 0不应该返回error
+* camellia-redis-proxy代理到redis-cluster时，select 0不应该返回error，1.2.1引入该bug
 
 
 # 1.2.12（2023/07/28）

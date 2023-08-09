@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream;
 
+import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
@@ -26,9 +27,11 @@ public interface IUpstreamClient {
 
     void shutdown();
 
+    Resource getResource();
+
     default RedisConnectionStatus getStatus(RedisConnectionAddr addr) {
         if (addr == null) return RedisConnectionStatus.INVALID;
-        RedisConnection redisConnection = RedisConnectionHub.getInstance().get(addr);
+        RedisConnection redisConnection = RedisConnectionHub.getInstance().get(getResource(), addr);
         if (redisConnection == null) {
             return RedisConnectionStatus.INVALID;
         }

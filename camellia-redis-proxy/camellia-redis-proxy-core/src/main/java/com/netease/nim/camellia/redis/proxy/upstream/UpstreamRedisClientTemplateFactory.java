@@ -347,7 +347,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
 
         UpstreamRedisClientFactory clientFactory = new UpstreamRedisClientFactory.Default(redisConf.getRedisClusterMaxAttempts());
 
-        RedisConnectionHub.getInstance().init(properties);
+        RedisConnectionHub.getInstance().init(properties, proxyBeanFactory);
 
         ProxyEnv.Builder builder = new ProxyEnv.Builder();
         String shardingFuncClassName = redisConf.getShardingFunc();

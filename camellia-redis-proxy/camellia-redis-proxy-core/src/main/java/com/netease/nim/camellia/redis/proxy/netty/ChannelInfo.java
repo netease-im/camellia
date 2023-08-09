@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 
+import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
@@ -140,7 +141,7 @@ public class ChannelInfo {
         return null;
     }
 
-    public RedisConnection acquireBindRedisConnection(RedisConnectionAddr addr) {
+    public RedisConnection acquireBindRedisConnection(Resource resource, RedisConnectionAddr addr) {
         if (mock) {
             return null;
         }
@@ -151,7 +152,7 @@ public class ChannelInfo {
                 return connection;
             }
         }
-        RedisConnection connection = RedisConnectionHub.getInstance().newConnection(addr);
+        RedisConnection connection = RedisConnectionHub.getInstance().newConnection(resource, addr);
         if (connection == null || !connection.isValid()) return null;
         if (bindRedisConnectionCache == null) {
             synchronized (this) {
@@ -164,7 +165,7 @@ public class ChannelInfo {
         return connection;
     }
 
-    public RedisConnection acquireBindSubscribeRedisConnection(RedisConnectionAddr addr) {
+    public RedisConnection acquireBindSubscribeRedisConnection(Resource resource, RedisConnectionAddr addr) {
         if (mock) {
             return null;
         }
@@ -175,7 +176,7 @@ public class ChannelInfo {
                 return connection;
             }
         }
-        RedisConnection connection = RedisConnectionHub.getInstance().newConnection(addr);
+        RedisConnection connection = RedisConnectionHub.getInstance().newConnection(resource, addr);
         if (connection == null || !connection.isValid()) return null;
         if (bindSubscribeRedisConnectionCache == null) {
             synchronized (this) {

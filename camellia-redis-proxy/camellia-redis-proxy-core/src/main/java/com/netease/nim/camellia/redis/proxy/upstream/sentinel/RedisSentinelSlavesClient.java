@@ -4,6 +4,7 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.base.resource.RedisSentinelResource;
 import com.netease.nim.camellia.redis.base.resource.RedisSentinelSlavesResource;
+import com.netease.nim.camellia.redis.base.resource.RedissSentinelSlavesResource;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.AbstractSimpleRedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.HostAndPort;
@@ -31,47 +32,79 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
     private final List<RedisSentinelMasterListener> masterListenerList = new ArrayList<>();
     private final List<RedisSentinelSlavesListener> slavesListenerList = new ArrayList<>();
 
-    private final RedisSentinelSlavesResource resource;
-    private RedisConnectionAddr master;
+    private final Resource resource;
+    private final String masterName;
+    private final String userName;
+    private final String password;
+    private final int db;
+    private final String sentinelUserName;
+    private final String sentinelPassword;
+    private final List<RedisSentinelResource.Node> nodes;
+    private final boolean withMaster;
+
+    private RedisConnectionAddr masterAddr;
     private List<RedisConnectionAddr> slaves;
+
+    public RedisSentinelSlavesClient(RedissSentinelSlavesResource resource) {
+        this.resource = resource;
+        this.masterName = resource.getMaster();
+        this.userName = resource.getUserName();
+        this.password = resource.getPassword();
+        this.db = resource.getDb();
+        this.sentinelUserName = resource.getSentinelUserName();
+        this.sentinelPassword = resource.getSentinelPassword();
+        this.nodes = resource.getNodes();
+        this.withMaster = resource.isWithMaster();
+        init();
+    }
 
     public RedisSentinelSlavesClient(RedisSentinelSlavesResource resource) {
         this.resource = resource;
+        this.masterName = resource.getMaster();
+        this.userName = resource.getUserName();
+        this.password = resource.getPassword();
+        this.db = resource.getDb();
+        this.sentinelUserName = resource.getSentinelUserName();
+        this.sentinelPassword = resource.getSentinelPassword();
+        this.nodes = resource.getNodes();
+        this.withMaster = resource.isWithMaster();
+        init();
+    }
+
+    private void init() {
         boolean sentinelAvailable = false;
-        if (resource.isWithMaster()) {
-            for (RedisSentinelResource.Node node : resource.getNodes()) {
-                RedisSentinelMasterResponse masterResponse = RedisSentinelUtils.getMasterAddr(node.getHost(), node.getPort(), resource.getMaster(),
-                        resource.getSentinelUserName(), resource.getSentinelPassword());
+        if (withMaster) {
+            for (RedisSentinelResource.Node node : nodes) {
+                RedisSentinelMasterResponse masterResponse = RedisSentinelUtils.getMasterAddr(resource, node.getHost(), node.getPort(), masterName,
+                        sentinelUserName, sentinelPassword);
                 if (masterResponse.isSentinelAvailable()) {
                     sentinelAvailable = true;
                 }
                 if (masterResponse.getMaster() != null) {
-                    this.master = new RedisConnectionAddr(masterResponse.getMaster().getHost(), masterResponse.getMaster().getPort(),
-                            resource.getUserName(), resource.getPassword(), resource.getDb());
-                    logger.info("redis-sentinel-slaves init, url = {}, master = {}", PasswordMaskUtils.maskResource(resource.getUrl()), PasswordMaskUtils.maskAddr(this.master));
+                    this.masterAddr = new RedisConnectionAddr(masterResponse.getMaster().getHost(), masterResponse.getMaster().getPort(), userName, password, db);
+                    logger.info("redis-sentinel-slaves init, url = {}, master = {}", PasswordMaskUtils.maskResource(resource.getUrl()), PasswordMaskUtils.maskAddr(this.masterName));
                     break;
                 }
             }
         }
-        for (RedisSentinelResource.Node node : resource.getNodes()) {
-            RedisSentinelSlavesResponse slavesResponse = RedisSentinelUtils.getSlaveAddrs(node.getHost(), node.getPort(), resource.getMaster(), resource.getSentinelUserName(), resource.getSentinelPassword());
+        for (RedisSentinelResource.Node node : nodes) {
+            RedisSentinelSlavesResponse slavesResponse = RedisSentinelUtils.getSlaveAddrs(getResource(), node.getHost(), node.getPort(), masterName, sentinelUserName, sentinelPassword);
             if (slavesResponse.isSentinelAvailable()) {
                 sentinelAvailable = true;
             }
             if (slavesResponse.getSlaves() != null) {
                 List<RedisConnectionAddr> slaves = new ArrayList<>();
                 for (HostAndPort slave : slavesResponse.getSlaves()) {
-                    slaves.add(new RedisConnectionAddr(slave.getHost(), slave.getPort(), resource.getUserName(),
-                            resource.getPassword(), resource.getDb()));
+                    slaves.add(new RedisConnectionAddr(slave.getHost(), slave.getPort(), userName, password, db));
                 }
                 this.slaves = slaves;
                 logger.info("redis-sentinel-slaves init, url = {}, slaves = {}", PasswordMaskUtils.maskResource(resource.getUrl()), PasswordMaskUtils.maskAddrs(slaves));
                 break;
             }
         }
-        if (master == null && (slaves == null || slaves.isEmpty())) {
+        if (masterName == null && (slaves == null || slaves.isEmpty())) {
             if (sentinelAvailable) {
-                if (resource.isWithMaster()) {
+                if (withMaster) {
                     throw new CamelliaRedisException("can connect to sentinel, but cannot found master/slaves node");
                 } else {
                     throw new CamelliaRedisException("can connect to sentinel, but cannot found slaves node");
@@ -81,21 +114,19 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
             }
         }
 
-        for (RedisSentinelResource.Node node : resource.getNodes()) {
-            if (resource.isWithMaster()) {
+        for (RedisSentinelResource.Node node : nodes) {
+            if (withMaster) {
                 RedisSentinelMasterListener.MasterUpdateCallback masterUpdateCallback = master -> {
                     synchronized (lock) {
                         try {
-                            RedisConnectionAddr oldMaster = RedisSentinelSlavesClient.this.master;
+                            RedisConnectionAddr oldMaster = RedisSentinelSlavesClient.this.masterAddr;
                             if (master == null) {
                                 if (oldMaster != null) {
-                                    RedisSentinelSlavesClient.this.master = null;
+                                    RedisSentinelSlavesClient.this.masterAddr = null;
                                     logger.info("master update, url = {}, newMaster = {}, oldMaster = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), null, PasswordMaskUtils.maskAddr(oldMaster));
                                 }
                             } else {
-                                String password = RedisSentinelSlavesClient.this.resource.getPassword();
-                                RedisConnectionAddr newMaster = new RedisConnectionAddr(master.getHost(), master.getPort(), resource.getUserName(), password, resource.getDb());
-
+                                RedisConnectionAddr newMaster = new RedisConnectionAddr(master.getHost(), master.getPort(), userName, password, db);
                                 boolean needUpdate = false;
                                 if (oldMaster == null) {
                                     needUpdate = true;
@@ -103,7 +134,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                                     needUpdate = true;
                                 }
                                 if (needUpdate) {
-                                    RedisSentinelSlavesClient.this.master = newMaster;
+                                    RedisSentinelSlavesClient.this.masterAddr = newMaster;
                                     logger.info("master update, url = {}, newMaster = {}, oldMaster = {}",
                                             PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(newMaster), PasswordMaskUtils.maskAddr(oldMaster));
                                 }
@@ -114,7 +145,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                     }
                 };
                 RedisSentinelMasterListener masterListener = new RedisSentinelMasterListener(resource, new HostAndPort(node.getHost(), node.getPort()),
-                        resource.getMaster(), resource.getSentinelUserName(), resource.getSentinelPassword(), masterUpdateCallback);
+                        masterName, sentinelUserName, sentinelPassword, masterUpdateCallback);
                 masterListener.setDaemon(true);
                 masterListener.start();
                 masterListenerList.add(masterListener);
@@ -126,10 +157,9 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                         if (slaves == null) {
                             slaves = new ArrayList<>();
                         }
-                        String password = RedisSentinelSlavesClient.this.resource.getPassword();
                         List<RedisConnectionAddr> newSlaves = new ArrayList<>();
                         for (HostAndPort slave : slaves) {
-                            newSlaves.add(new RedisConnectionAddr(slave.getHost(), slave.getPort(), resource.getUserName(), password, resource.getDb()));
+                            newSlaves.add(new RedisConnectionAddr(slave.getHost(), slave.getPort(), userName, password, db));
                         }
                         List<RedisConnectionAddr> oldSlaves = RedisSentinelSlavesClient.this.slaves;
                         boolean needUpdate = false;
@@ -163,7 +193,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                 }
             };
             RedisSentinelSlavesListener listener = new RedisSentinelSlavesListener(resource, new HostAndPort(node.getHost(), node.getPort()),
-                    resource.getMaster(), resource.getSentinelUserName(), resource.getSentinelPassword(), slavesUpdateCallback);
+                    masterName, sentinelUserName, sentinelPassword, slavesUpdateCallback);
             listener.setDaemon(true);
             listener.start();
             slavesListenerList.add(listener);
@@ -174,15 +204,15 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
     @Override
     public void preheat() {
         logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
-        if (master != null) {
-            logger.info("try preheat, url = {}, master = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(master));
-            boolean result = RedisConnectionHub.getInstance().preheat(master.getHost(), master.getPort(), master.getUserName(), master.getPassword(), master.getDb());
-            logger.info("preheat result = {}, url = {}, master = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(master));
+        if (masterAddr != null) {
+            logger.info("try preheat, url = {}, master = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(masterName));
+            boolean result = RedisConnectionHub.getInstance().preheat(getResource(), masterAddr.getHost(), masterAddr.getPort(), masterAddr.getUserName(), masterAddr.getPassword(), masterAddr.getDb());
+            logger.info("preheat result = {}, url = {}, master = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(masterName));
         }
         if (slaves != null) {
             for (RedisConnectionAddr slave : slaves) {
                 logger.info("try preheat, url = {}, slave = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(slave));
-                boolean result = RedisConnectionHub.getInstance().preheat(slave.getHost(), slave.getPort(), slave.getUserName(), slave.getPassword(), slave.getDb());
+                boolean result = RedisConnectionHub.getInstance().preheat(getResource(), slave.getHost(), slave.getPort(), slave.getUserName(), slave.getPassword(), slave.getDb());
                 logger.info("preheat result = {}, url = {}, slave = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(slave));
             }
         }
@@ -191,12 +221,16 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
 
     @Override
     public boolean isValid() {
-        if (master != null) {
-            if (getStatus(master) == RedisConnectionStatus.VALID) return true;
+        if (masterName != null) {
+            if (getStatus(masterAddr) == RedisConnectionStatus.VALID) {
+                return true;
+            }
         }
         List<RedisConnectionAddr> slaveNodes = new ArrayList<>(slaves);
         for (RedisConnectionAddr slave : slaveNodes) {
-            if (getStatus(slave) == RedisConnectionStatus.VALID) return true;
+            if (getStatus(slave) == RedisConnectionStatus.VALID) {
+                return true;
+            }
         }
         return false;
     }
@@ -204,8 +238,8 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
     @Override
     public RedisConnectionAddr getAddr() {
         try {
-            if (master != null) {
-                if (slaves.isEmpty()) return master;
+            if (masterAddr != null) {
+                if (slaves.isEmpty()) return masterAddr;
                 try {
                     int maxLoop = slaves.size() + 1;
                     int index = ThreadLocalRandom.current().nextInt(maxLoop);
@@ -214,7 +248,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                             //current
                             RedisConnectionAddr addr;
                             if (index == 0) {
-                                addr = master;
+                                addr = masterAddr;
                             } else {
                                 addr = slaves.get(index - 1);
                             }
@@ -233,12 +267,12 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                     }
                     index = ThreadLocalRandom.current().nextInt(slaves.size() + 1);
                     if (index == 0) {
-                        return master;
+                        return masterAddr;
                     } else {
                         return slaves.get(index - 1);
                     }
                 } catch (Exception e) {
-                    return master;
+                    return masterAddr;
                 }
             } else {
                 if (slaves.isEmpty()) return null;

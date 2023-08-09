@@ -171,7 +171,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
         AtomicBoolean lock = CamelliaMapUtils.computeIfAbsent(heartbeatLock, node, n -> new AtomicBoolean(false));
         if (lock.compareAndSet(false, true)) {
             try {
-                RedisConnection connection = RedisConnectionHub.getInstance().get(toAddr(node));
+                RedisConnection connection = RedisConnectionHub.getInstance().get(null, toAddr(node));
                 if (connection != null) {
                     CompletableFuture<Reply> future = connection.sendCommand(RedisCommand.CLUSTER.raw(),
                             Utils.stringToBytes(RedisKeyword.PROXY_HEARTBEAT.name()), Utils.stringToBytes(current().toString()),

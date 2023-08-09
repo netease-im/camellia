@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.standalone;
 
 import com.netease.nim.camellia.core.model.Resource;
+import com.netease.nim.camellia.redis.base.resource.RedissResource;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.base.resource.RedisResource;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
@@ -16,13 +17,19 @@ public class RedisStandaloneClient extends AbstractSimpleRedisClient {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisStandaloneClient.class);
 
-    private final RedisResource redisResource;
+    private final Resource resource;
     private final RedisConnectionAddr addr;
 
-    public RedisStandaloneClient(RedisResource redisResource) {
-        this.redisResource = redisResource;
-        this.addr = new RedisConnectionAddr(redisResource.getHost(), redisResource.getPort(), redisResource.getUserName(), redisResource.getPassword(), redisResource.getDb());
-        logger.info("RedisStandaloneClient init success, resource = {}", redisResource.getUrl());
+    public RedisStandaloneClient(RedisResource resource) {
+        this.resource = resource;
+        this.addr = new RedisConnectionAddr(resource.getHost(), resource.getPort(), resource.getUserName(), resource.getPassword(), resource.getDb());
+        logger.info("RedisStandaloneClient init success, resource = {}", resource.getUrl());
+    }
+
+    public RedisStandaloneClient(RedissResource resource) {
+        this.resource = resource;
+        this.addr = new RedisConnectionAddr(resource.getHost(), resource.getPort(), resource.getUserName(), resource.getPassword(), resource.getDb());
+        logger.info("RedisStandaloneClient init success, resource = {}", resource.getUrl());
     }
 
     @Override
@@ -32,7 +39,7 @@ public class RedisStandaloneClient extends AbstractSimpleRedisClient {
 
     @Override
     public Resource getResource() {
-        return redisResource;
+        return resource;
     }
 
     @Override

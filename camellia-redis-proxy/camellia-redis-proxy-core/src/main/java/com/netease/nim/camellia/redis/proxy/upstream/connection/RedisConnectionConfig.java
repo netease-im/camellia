@@ -1,6 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.upstream.connection;
 
+import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvider;
 import io.netty.channel.EventLoop;
+
+import javax.net.ssl.SSLContext;
 
 /**
  * Created by caojiajun on 2021/5/14
@@ -33,6 +36,10 @@ public class RedisConnectionConfig {
     private int writeBufferWaterMarkHigh;
 
     private FastFailStats fastFailStats;
+
+    private SSLContext sslContext;
+
+    private ProxyUpstreamTlsProvider proxyUpstreamTlsProvider;
 
     public String getHost() {
         return host;
@@ -208,5 +215,21 @@ public class RedisConnectionConfig {
 
     public void setFastFailStats(FastFailStats fastFailStats) {
         this.fastFailStats = fastFailStats;
+    }
+
+    public SSLContext getSslContext() {
+        return sslContext;
+    }
+
+    public void setSslContext(SSLContext sslContext) {
+        this.sslContext = sslContext;
+    }
+
+    public ProxyUpstreamTlsProvider getProxyUpstreamTlsProvider() {
+        return proxyUpstreamTlsProvider;
+    }
+
+    public void setProxyUpstreamTlsProvider(ProxyUpstreamTlsProvider proxyUpstreamTlsProvider) {
+        this.proxyUpstreamTlsProvider = proxyUpstreamTlsProvider;
     }
 }

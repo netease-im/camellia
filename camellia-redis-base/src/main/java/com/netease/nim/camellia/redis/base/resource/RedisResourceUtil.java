@@ -42,8 +42,9 @@ public class RedisResourceUtil {
             if (url == null) {
                 throw new CamelliaRedisException("url is null");
             }
-            if (url.startsWith(RedisType.Redis.getPrefix())) {
-                String substring = url.substring(RedisType.Redis.getPrefix().length());
+            RedisType redisType = RedisType.parseRedisType(resource);
+            if (redisType == RedisType.Redis || redisType == RedisType.Rediss) {
+                String substring = url.substring(redisType.getPrefix().length());
 
                 if (!substring.contains("@")) {
                     throw new CamelliaRedisException("missing @");
@@ -73,9 +74,13 @@ public class RedisResourceUtil {
                 String[] split2 = hostAndPortString.split(":");
                 String host = split2[0];
                 int port = Integer.parseInt(split2[1]);
-                return new RedisResource(host, port, userName, password, db);
-            } else if (url.startsWith(RedisType.RedisSentinel.getPrefix())) {
-                String substring = url.substring(RedisType.RedisSentinel.getPrefix().length());
+                if (redisType == RedisType.Rediss) {
+                    return new RedissResource(host, port, userName, password, db);
+                } else {
+                    return new RedisResource(host, port, userName, password, db);
+                }
+            } else if (redisType == RedisType.RedisSentinel || redisType == RedisType.RedissSentinel) {
+                String substring = url.substring(redisType.getPrefix().length());
                 if (!substring.contains("@")) {
                     throw new CamelliaRedisException("missing @");
                 }
@@ -122,9 +127,13 @@ public class RedisResourceUtil {
                 } else {
                     master = masterWithParams;
                 }
-                return new RedisSentinelResource(master, nodeList, userName, password, db, sentinelUserName, sentinelPassword);
-            } else if (url.startsWith(RedisType.RedisCluster.getPrefix())) {
-                String substring = url.substring(RedisType.RedisCluster.getPrefix().length());
+                if (redisType == RedisType.RedissSentinel) {
+                    return new RedissSentinelResource(master, nodeList, userName, password, db, sentinelUserName, sentinelPassword);
+                } else {
+                    return new RedisSentinelResource(master, nodeList, userName, password, db, sentinelUserName, sentinelPassword);
+                }
+            } else if (redisType == RedisType.RedisCluster || redisType == RedisType.RedissCluster) {
+                String substring = url.substring(redisType.getPrefix().length());
                 if (!substring.contains("@")) {
                     throw new CamelliaRedisException("missing @");
                 }
@@ -143,13 +152,21 @@ public class RedisResourceUtil {
                     int port = Integer.parseInt(split1[1]);
                     nodeList.add(new RedisClusterResource.Node(ip, port));
                 }
-                RedisClusterResource redisClusterResource = new RedisClusterResource(nodeList, userName, password);
-                if (!redisClusterResource.getUrl().equals(resource.getUrl())) {
-                    throw new CamelliaRedisException("resource url not equals");
+                if (redisType == RedisType.RedisCluster) {
+                    RedisClusterResource redisClusterResource = new RedisClusterResource(nodeList, userName, password);
+                    if (!redisClusterResource.getUrl().equals(resource.getUrl())) {
+                        throw new CamelliaRedisException("resource url not equals");
+                    }
+                    return redisClusterResource;
+                } else {
+                    RedissClusterResource redissClusterResource = new RedissClusterResource(nodeList, userName, password);
+                    if (!redissClusterResource.getUrl().equals(resource.getUrl())) {
+                        throw new CamelliaRedisException("resource url not equals");
+                    }
+                    return redissClusterResource;
                 }
-                return redisClusterResource;
-            } else if (url.startsWith(RedisType.RedisSentinelSlaves.getPrefix())) {
-                String substring = url.substring(RedisType.RedisSentinelSlaves.getPrefix().length());
+            } else if (redisType == RedisType.RedisSentinelSlaves || redisType == RedisType.RedissSentinelSlaves) {
+                String substring = url.substring(redisType.getPrefix().length());
                 if (!substring.contains("@")) {
                     throw new CamelliaRedisException("missing @");
                 }
@@ -202,9 +219,13 @@ public class RedisResourceUtil {
                 } else {
                     master = masterWithParams;
                 }
-                return new RedisSentinelSlavesResource(master, nodeList, userName, password, withMaster, db, sentinelUserName, sentinelPassword);
-            } else if (url.startsWith(RedisType.RedisClusterSlaves.getPrefix())) {
-                String substring = url.substring(RedisType.RedisClusterSlaves.getPrefix().length());
+                if (redisType == RedisType.RedisSentinelSlaves) {
+                    return new RedisSentinelSlavesResource(master, nodeList, userName, password, withMaster, db, sentinelUserName, sentinelPassword);
+                } else {
+                    return new RedissSentinelSlavesResource(master, nodeList, userName, password, withMaster, db, sentinelUserName, sentinelPassword);
+                }
+            } else if (redisType == RedisType.RedisClusterSlaves || redisType == RedisType.RedissClusterSlaves) {
+                String substring = url.substring(redisType.getPrefix().length());
                 if (!substring.contains("@")) {
                     throw new CamelliaRedisException("missing @");
                 }
@@ -241,9 +262,13 @@ public class RedisResourceUtil {
                     int port = Integer.parseInt(split1[1]);
                     nodeList.add(new RedisClusterResource.Node(ip, port));
                 }
-                return new RedisClusterSlavesResource(nodeList, userName, password, withMaster);
-            } else if (url.startsWith(RedisType.RedisProxies.getPrefix())) {
-                String substring = url.substring(RedisType.RedisProxies.getPrefix().length());
+                if (redisType == RedisType.RedisClusterSlaves) {
+                    return new RedisClusterSlavesResource(nodeList, userName, password, withMaster);
+                } else {
+                    return new RedissClusterSlavesResource(nodeList, userName, password, withMaster);
+                }
+            } else if (redisType == RedisType.RedisProxies || redisType == RedisType.RedissProxies) {
+                String substring = url.substring(redisType.getPrefix().length());
                 if (!substring.contains("@")) {
                     throw new CamelliaRedisException("missing @");
                 }
@@ -278,9 +303,13 @@ public class RedisResourceUtil {
                     int port = Integer.parseInt(split1[1]);
                     nodeList.add(new RedisProxiesResource.Node(ip, port));
                 }
-                return new RedisProxiesResource(nodeList, userName, password, db);
-            } else if (url.startsWith(RedisType.RedisProxiesDiscovery.getPrefix())) {
-                String substring = url.substring(RedisType.RedisProxiesDiscovery.getPrefix().length());
+                if (redisType == RedisType.RedisProxies) {
+                    return new RedisProxiesResource(nodeList, userName, password, db);
+                } else {
+                    return new RedissProxiesResource(nodeList, userName, password, db);
+                }
+            } else if (redisType == RedisType.RedisProxiesDiscovery || redisType == RedisType.RedissProxiesDiscovery) {
+                String substring = url.substring(redisType.getPrefix().length());
                 if (!substring.contains("@")) {
                     throw new CamelliaRedisException("missing @");
                 }
@@ -306,7 +335,11 @@ public class RedisResourceUtil {
                 } else {
                     proxyName = str;
                 }
-                return new RedisProxiesDiscoveryResource(userName, password, proxyName, db);
+                if (redisType == RedisType.RedisProxiesDiscovery) {
+                    return new RedisProxiesDiscoveryResource(userName, password, proxyName, db);
+                } else {
+                    return new RedissProxiesDiscoveryResource(userName, password, proxyName, db);
+                }
             }
             throw new CamelliaRedisException("not redis resource");
         } catch (CamelliaRedisException e) {

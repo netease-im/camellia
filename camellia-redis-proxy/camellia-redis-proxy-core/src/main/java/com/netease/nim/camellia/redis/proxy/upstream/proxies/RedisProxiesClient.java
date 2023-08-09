@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.proxies;
 
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.resource.RedisProxiesResource;
+import com.netease.nim.camellia.redis.base.resource.RedissProxiesResource;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +18,20 @@ public class RedisProxiesClient extends AbstractRedisProxiesClient {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisProxiesClient.class);
 
-    private final RedisProxiesResource resource;
+    private final Resource resource;
     private final List<RedisConnectionAddr> list = new ArrayList<>();
 
     public RedisProxiesClient(RedisProxiesResource resource) {
+        this.resource = resource;
+        List<RedisProxiesResource.Node> nodes = resource.getNodes();
+        for (RedisProxiesResource.Node node : nodes) {
+            list.add(new RedisConnectionAddr(node.getHost(), node.getPort(), resource.getUserName(), resource.getPassword(), resource.getDb()));
+        }
+        init();
+        logger.info("RedisProxiesClient init success, resource = {}", resource.getUrl());
+    }
+
+    public RedisProxiesClient(RedissProxiesResource resource) {
         this.resource = resource;
         List<RedisProxiesResource.Node> nodes = resource.getNodes();
         for (RedisProxiesResource.Node node : nodes) {

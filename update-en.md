@@ -3,7 +3,8 @@
 
 # 1.2.14（2023/08/xx）
 ### add
-* camellia-redis-proxy support frontend tls
+* camellia-redis-proxy support tls between client and proxy
+* camellia-redis-proxy support tls between proxy and upstream redis
 
 ### update
 * none
@@ -29,7 +30,7 @@
 * `com.netease.nim.camellia.redis.proxy.nacos.NacosProxyDynamicConfLoader` rename to `com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader`
 
 ### fix
-* camellia-redis-proxy `select 0` command should reply ok when upstream is redis-cluster
+* camellia-redis-proxy `select 0` command should reply ok when upstream is redis-cluster, bug from 1.2.1
 
 
 # 1.2.12（2023/07/28）

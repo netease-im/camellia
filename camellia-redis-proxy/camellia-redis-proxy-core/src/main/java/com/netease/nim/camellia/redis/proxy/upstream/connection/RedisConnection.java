@@ -125,6 +125,9 @@ public class RedisConnection {
                         @Override
                         protected void initChannel(Channel channel) {
                             ChannelPipeline pipeline = channel.pipeline();
+                            if (config.getSslContext() != null && config.getProxyUpstreamTlsProvider() != null) {
+                                pipeline.addLast(config.getProxyUpstreamTlsProvider().createSslHandler(config.getSslContext()));
+                            }
                             pipeline.addLast(new ReplyDecoder());
                             pipeline.addLast(new ReplyAggregateDecoder());
                             pipeline.addLast(new ReplyHandler(queue, connectionName, config.isTcpQuickAck()));

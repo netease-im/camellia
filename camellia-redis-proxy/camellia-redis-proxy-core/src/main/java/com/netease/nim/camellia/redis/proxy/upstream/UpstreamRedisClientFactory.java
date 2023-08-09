@@ -42,65 +42,128 @@ public interface UpstreamRedisClientFactory {
             this.maxAttempts = maxAttempts;
         }
 
-        public IUpstreamClient get(RedisResource redisResource) {
-            IUpstreamClient client = map.get(redisResource.getUrl());
+        public IUpstreamClient get(RedisResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(redisResource.getUrl(),
-                        k -> new RedisStandaloneClient(redisResource));
+                client = map.computeIfAbsent(resource.getUrl(),
+                        k -> new RedisStandaloneClient(resource));
             }
             return client;
         }
 
-        public IUpstreamClient get(RedisClusterResource redisClusterResource) {
-            IUpstreamClient client = map.get(redisClusterResource.getUrl());
+        public IUpstreamClient get(RedissResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(redisClusterResource.getUrl(),
-                        k -> new RedisClusterClient(redisClusterResource, maxAttempts));
+                client = map.computeIfAbsent(resource.getUrl(),
+                        k -> new RedisStandaloneClient(resource));
             }
             return client;
         }
 
-        public IUpstreamClient get(RedisClusterSlavesResource redisClusterSlavesResource) {
-            IUpstreamClient client = map.get(redisClusterSlavesResource.getUrl());
+        public IUpstreamClient get(RedisClusterResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(redisClusterSlavesResource.getUrl(),
-                        k -> new RedisClusterClient(redisClusterSlavesResource, maxAttempts));
+                client = map.computeIfAbsent(resource.getUrl(),
+                        k -> new RedisClusterClient(resource, maxAttempts));
             }
             return client;
         }
 
-        public IUpstreamClient get(RedisSentinelResource redisSentinelResource) {
-            IUpstreamClient client = map.get(redisSentinelResource.getUrl());
+        public IUpstreamClient get(RedissClusterResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(redisSentinelResource.getUrl(),
-                        k -> new RedisSentinelClient(redisSentinelResource));
+                client = map.computeIfAbsent(resource.getUrl(),
+                        k -> new RedisClusterClient(resource, maxAttempts));
             }
             return client;
         }
 
-        public IUpstreamClient get(RedisSentinelSlavesResource redisSentinelSlavesResource) {
-            IUpstreamClient client = map.get(redisSentinelSlavesResource.getUrl());
+        public IUpstreamClient get(RedisClusterSlavesResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(redisSentinelSlavesResource.getUrl(),
-                        k -> new RedisSentinelSlavesClient(redisSentinelSlavesResource));
+                client = map.computeIfAbsent(resource.getUrl(),
+                        k -> new RedisClusterClient(resource, maxAttempts));
             }
             return client;
         }
 
-        public IUpstreamClient get(RedisProxiesResource redisProxiesResource) {
-            IUpstreamClient client = map.get(redisProxiesResource.getUrl());
+        public IUpstreamClient get(RedissClusterSlavesResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(redisProxiesResource.getUrl(),
-                        k -> new RedisProxiesClient(redisProxiesResource));
+                client = map.computeIfAbsent(resource.getUrl(),
+                        k -> new RedisClusterClient(resource, maxAttempts));
             }
             return client;
         }
 
-        public IUpstreamClient get(RedisProxiesDiscoveryResource redisProxiesDiscoveryResource) {
-            IUpstreamClient client = map.get(redisProxiesDiscoveryResource.getUrl());
+        public IUpstreamClient get(RedisSentinelResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
             if (client == null) {
-                client = map.computeIfAbsent(redisProxiesDiscoveryResource.getUrl(),
-                        k -> new RedisProxiesDiscoveryClient(redisProxiesDiscoveryResource));
+                client = map.computeIfAbsent(resource.getUrl(),
+                        k -> new RedisSentinelClient(resource));
+            }
+            return client;
+        }
+
+        public IUpstreamClient get(RedissSentinelResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
+            if (client == null) {
+                client = map.computeIfAbsent(resource.getUrl(),
+                        k -> new RedisSentinelClient(resource));
+            }
+            return client;
+        }
+
+        public IUpstreamClient get(RedisSentinelSlavesResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
+            if (client == null) {
+                client = map.computeIfAbsent(resource.getUrl(),
+                        k -> new RedisSentinelSlavesClient(resource));
+            }
+            return client;
+        }
+
+        public IUpstreamClient get(RedissSentinelSlavesResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
+            if (client == null) {
+                client = map.computeIfAbsent(resource.getUrl(),
+                        k -> new RedisSentinelSlavesClient(resource));
+            }
+            return client;
+        }
+
+        public IUpstreamClient get(RedisProxiesResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
+            if (client == null) {
+                client = map.computeIfAbsent(resource.getUrl(),
+                        k -> new RedisProxiesClient(resource));
+            }
+            return client;
+        }
+
+        public IUpstreamClient get(RedissProxiesResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
+            if (client == null) {
+                client = map.computeIfAbsent(resource.getUrl(),
+                        k -> new RedisProxiesClient(resource));
+            }
+            return client;
+        }
+
+        public IUpstreamClient get(RedisProxiesDiscoveryResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
+            if (client == null) {
+                client = map.computeIfAbsent(resource.getUrl(),
+                        k -> new RedisProxiesDiscoveryClient(resource));
+            }
+            return client;
+        }
+
+        public IUpstreamClient get(RedissProxiesDiscoveryResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
+            if (client == null) {
+                client = map.computeIfAbsent(resource.getUrl(),
+                        k -> new RedisProxiesDiscoveryClient(resource));
             }
             return client;
         }
@@ -115,18 +178,32 @@ public interface UpstreamRedisClientFactory {
                         Resource resource = RedisResourceUtil.parseResourceByUrl(new Resource(url));
                         if (resource instanceof RedisResource) {
                             client = get((RedisResource) resource);
+                        } else if (resource instanceof RedissResource) {
+                            client = get((RedissResource) resource);
                         } else if (resource instanceof RedisClusterResource) {
                             client = get((RedisClusterResource) resource);
+                        } else if (resource instanceof RedissClusterResource) {
+                            client = get((RedissClusterResource) resource);
                         } else if (resource instanceof RedisSentinelResource) {
                             client = get((RedisSentinelResource) resource);
+                        } else if (resource instanceof RedissSentinelResource) {
+                            client = get((RedissSentinelResource) resource);
                         } else if (resource instanceof RedisSentinelSlavesResource) {
                             client = get((RedisSentinelSlavesResource) resource);
+                        } else if (resource instanceof RedissSentinelSlavesResource) {
+                            client = get((RedissSentinelSlavesResource) resource);
                         } else if (resource instanceof RedisClusterSlavesResource) {
                             client = get((RedisClusterSlavesResource) resource);
+                        } else if (resource instanceof RedissClusterSlavesResource) {
+                            client = get((RedissClusterSlavesResource) resource);
                         } else if (resource instanceof RedisProxiesResource) {
                             client = get((RedisProxiesResource) resource);
+                        } else if (resource instanceof RedissProxiesResource) {
+                            client = get((RedissProxiesResource) resource);
                         } else if (resource instanceof RedisProxiesDiscoveryResource) {
                             client = get((RedisProxiesDiscoveryResource) resource);
+                        } else if (resource instanceof RedissProxiesDiscoveryResource) {
+                            client = get((RedissProxiesDiscoveryResource) resource);
                         } else {
                             throw new CamelliaRedisException("not support resource");
                         }

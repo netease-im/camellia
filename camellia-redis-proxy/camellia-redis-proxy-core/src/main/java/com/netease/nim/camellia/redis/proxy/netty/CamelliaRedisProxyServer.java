@@ -70,19 +70,19 @@ public class CamelliaRedisProxyServer {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel ch) {
-                        ChannelPipeline p = ch.pipeline();
+                        ChannelPipeline pipeline = ch.pipeline();
                         if (sslContext != null && ch.localAddress().getPort() == GlobalRedisProxyEnv.getPort()) {
-                            p.addLast(proxyFrontendTlsProvider.createSslHandler(sslContext));
+                            pipeline.addLast(proxyFrontendTlsProvider.createSslHandler(sslContext));
                         }
                         if (serverProperties.getReaderIdleTimeSeconds() >= 0 && serverProperties.getWriterIdleTimeSeconds() >= 0
                                 && serverProperties.getAllIdleTimeSeconds() >= 0) {
-                            p.addLast(new IdleCloseHandler(serverProperties.getReaderIdleTimeSeconds(),
+                            pipeline.addLast(new IdleCloseHandler(serverProperties.getReaderIdleTimeSeconds(),
                                     serverProperties.getWriterIdleTimeSeconds(), serverProperties.getAllIdleTimeSeconds()));
                         }
-                        p.addLast(new CommandDecoder(serverProperties.getCommandDecodeMaxBatchSize(), serverProperties.getCommandDecodeBufferInitializerSize()));
-                        p.addLast(new ReplyEncoder());
-                        p.addLast(initHandler);
-                        p.addLast(serverHandler);
+                        pipeline.addLast(new CommandDecoder(serverProperties.getCommandDecodeMaxBatchSize(), serverProperties.getCommandDecodeBufferInitializerSize()));
+                        pipeline.addLast(new ReplyEncoder());
+                        pipeline.addLast(initHandler);
+                        pipeline.addLast(serverHandler);
                     }
                 });
         if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable()) {

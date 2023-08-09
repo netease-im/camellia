@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.conf;
 import com.netease.nim.camellia.redis.proxy.command.DefaultQueueFactory;
 import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider;
+import com.netease.nim.camellia.redis.proxy.tls.upstream.DefaultProxyUpstreamTlsProvider;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateFactory;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.proxy.cluster.DefaultProxyClusterModeProvider;
@@ -81,6 +82,8 @@ public class Constants {
         public static final boolean closeIdleConnection = true;//是否关闭空闲连接（到后端redis的）
         public static final long checkIdleConnectionThresholdSeconds = 60 * 10;//判断一个连接空闲的阈值，单位秒
         public static final int closeIdleConnectionDelaySeconds = 60;//判断一个连接空闲后，再过多少秒去执行关闭操作
+
+        public static final String proxyUpstreamTlsProviderClassName = DefaultProxyUpstreamTlsProvider.class.getName();
 
         public static final int soSndbuf = 10 * 1024 * 1024;
         public static final int soRcvbuf = 10 * 1024 * 1024;
