@@ -14,20 +14,20 @@ public class DefaultProxyFrontendTlsProvider implements ProxyFrontendTlsProvider
 
     @Override
     public SSLContext createSSLContext() {
-        String caFilePath;
-        String caFile = ProxyDynamicConf.getString("proxy.frontend.tls.ca.file", null);
-        if (caFile == null) {
-            caFilePath = ProxyDynamicConf.getString("proxy.frontend.tls.ca.file.path", null);
+        String caCertFilePath;
+        String caCertFile = ProxyDynamicConf.getString("proxy.frontend.tls.ca.cert.file", null);
+        if (caCertFile == null) {
+            caCertFilePath = ProxyDynamicConf.getString("proxy.frontend.tls.ca.cert.file.path", null);
         } else {
-            caFilePath = SSLContextUtil.getFilePath(caFile);
+            caCertFilePath = SSLContextUtil.getFilePath(caCertFile);
         }
-        if (caFilePath == null) {
-            throw new IllegalArgumentException("caFilePath not found");
+        if (caCertFilePath == null) {
+            throw new IllegalArgumentException("caCertFilePath not found");
         }
         String crtFilePath;
-        String crtFile = ProxyDynamicConf.getString("proxy.frontend.tls.crt.file", null);
+        String crtFile = ProxyDynamicConf.getString("proxy.frontend.tls.cert.file", null);
         if (crtFile == null) {
-            crtFilePath = ProxyDynamicConf.getString("proxy.frontend.tls.crt.file.path", null);
+            crtFilePath = ProxyDynamicConf.getString("proxy.frontend.tls.cert.file.path", null);
         } else {
             crtFilePath = SSLContextUtil.getFilePath(crtFile);
         }
@@ -45,7 +45,7 @@ public class DefaultProxyFrontendTlsProvider implements ProxyFrontendTlsProvider
             throw new IllegalArgumentException("keyFilePath not found");
         }
         String password = ProxyDynamicConf.getString("proxy.frontend.tls.password", null);
-        return SSLContextUtil.genSSLContext(caFilePath, crtFilePath, keyFilePath, password);
+        return SSLContextUtil.genSSLContext(caCertFilePath, crtFilePath, keyFilePath, password);
     }
 
     @Override
