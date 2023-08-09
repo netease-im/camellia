@@ -27,14 +27,14 @@ public class CamelliaRedisProxyProperties {
     private int port = -1;
 
     /**
+     * proxy的tls的port，如果小于等于0，则表示不启用tls
+     */
+    private int tlsPort = -1;
+
+    /**
      * proxy的名字，用于注册到注册中心，如果没有指定，则使用spring.application.name
      */
     private String applicationName = "";
-
-    /**
-     * proxy tls 是否开启
-     */
-    private boolean tlsEnable = Constants.Server.tlsEnable;
 
     /**
      * proxy tls provider的className
@@ -139,20 +139,20 @@ public class CamelliaRedisProxyProperties {
         this.port = port;
     }
 
+    public int getTlsPort() {
+        return tlsPort;
+    }
+
+    public void setTlsPort(int tlsPort) {
+        this.tlsPort = tlsPort;
+    }
+
     public String getApplicationName() {
         return applicationName;
     }
 
     public void setApplicationName(String applicationName) {
         this.applicationName = applicationName;
-    }
-
-    public boolean isTlsEnable() {
-        return tlsEnable;
-    }
-
-    public void setTlsEnable(boolean tlsEnable) {
-        this.tlsEnable = tlsEnable;
     }
 
     public String getProxyFrontendTlsProviderClassName() {

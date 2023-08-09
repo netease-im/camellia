@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.redis.base.proxy;
 
+import java.util.Objects;
+
 /**
  *
  * Created by caojiajun on 2019/11/6.
@@ -7,6 +9,7 @@ package com.netease.nim.camellia.redis.base.proxy;
 public final class Proxy {
     private String host;
     private int port;
+    private int tlsPort;
 
     public Proxy() {
     }
@@ -32,22 +35,25 @@ public final class Proxy {
         this.port = port;
     }
 
+    public int getTlsPort() {
+        return tlsPort;
+    }
+
+    public void setTlsPort(int tlsPort) {
+        this.tlsPort = tlsPort;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         Proxy proxy = (Proxy) o;
-
-        if (port != proxy.port) return false;
-        return host != null ? host.equals(proxy.host) : proxy.host == null;
+        return port == proxy.port && tlsPort == proxy.tlsPort && Objects.equals(host, proxy.host);
     }
 
     @Override
     public int hashCode() {
-        int result = host != null ? host.hashCode() : 0;
-        result = 31 * result + port;
-        return result;
+        return Objects.hash(host, port, tlsPort);
     }
 
     @Override

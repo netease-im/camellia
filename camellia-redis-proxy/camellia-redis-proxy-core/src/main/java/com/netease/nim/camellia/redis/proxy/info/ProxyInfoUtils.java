@@ -252,7 +252,12 @@ public class ProxyInfoUtils {
         builder.append("os_name:").append(osBean.getName()).append("\r\n");
         builder.append("os_version:").append(osBean.getVersion()).append("\r\n");
         builder.append("system_load_average:").append(osBean.getSystemLoadAverage()).append("\r\n");
-        builder.append("tcp_port:").append(GlobalRedisProxyEnv.getPort()).append("\r\n");
+        if ((GlobalRedisProxyEnv.getPort() <= 0 && GlobalRedisProxyEnv.getTlsPort() > 0) || (GlobalRedisProxyEnv.getPort() == GlobalRedisProxyEnv.getTlsPort())) {
+            builder.append("tcp_port:").append(GlobalRedisProxyEnv.getTlsPort()).append("\r\n");
+        } else {
+            builder.append("tcp_port:").append(GlobalRedisProxyEnv.getPort()).append("\r\n");
+            builder.append("tcp_tls_port:").append(GlobalRedisProxyEnv.getTlsPort()).append("\r\n");
+        }
         builder.append("http_console_port:").append(GlobalRedisProxyEnv.getConsolePort()).append("\r\n");
         long uptime = runtimeMXBean.getUptime();
         long uptimeInSeconds = uptime / 1000L;

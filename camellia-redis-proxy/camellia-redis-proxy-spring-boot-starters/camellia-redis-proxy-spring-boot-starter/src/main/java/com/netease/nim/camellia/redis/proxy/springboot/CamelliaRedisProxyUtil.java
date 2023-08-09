@@ -31,13 +31,13 @@ public class CamelliaRedisProxyUtil {
         } else {
             serverProperties.setPort(properties.getPort());
         }
+        serverProperties.setTlsPort(properties.getTlsPort());
         if (properties.getApplicationName() != null && properties.getApplicationName().trim().length() == 0) {
             serverProperties.setApplicationName(applicationName);
         } else {
             serverProperties.setApplicationName(properties.getApplicationName());
         }
         serverProperties.setPassword(properties.getPassword());
-        serverProperties.setTlsEnable(properties.isTlsEnable());
         serverProperties.setProxyFrontendTlsProviderClassName(properties.getProxyFrontendTlsProviderClassName());
         serverProperties.setMonitorEnable(properties.isMonitorEnable());
         serverProperties.setMonitorIntervalSeconds(properties.getMonitorIntervalSeconds());

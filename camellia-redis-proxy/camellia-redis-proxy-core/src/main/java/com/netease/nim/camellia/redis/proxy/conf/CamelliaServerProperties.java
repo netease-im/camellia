@@ -15,10 +15,10 @@ import java.util.Map;
  */
 public class CamelliaServerProperties {
     private int port = Constants.Server.severPort;
+    private int tlsPort = -1;
     private int cport = -1;
     private String applicationName;
     private String password;
-    private boolean tlsEnable = Constants.Server.tlsEnable;
     private String proxyFrontendTlsProviderClassName = Constants.Server.proxyFrontendTlsProviderClassName;
     private boolean monitorEnable = Constants.Server.monitorEnable;
     private int monitorIntervalSeconds = Constants.Server.monitorIntervalSeconds;
@@ -62,6 +62,14 @@ public class CamelliaServerProperties {
         this.port = port;
     }
 
+    public int getTlsPort() {
+        return tlsPort;
+    }
+
+    public void setTlsPort(int tlsPort) {
+        this.tlsPort = tlsPort;
+    }
+
     public int getCport() {
         return cport;
     }
@@ -84,14 +92,6 @@ public class CamelliaServerProperties {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public boolean isTlsEnable() {
-        return tlsEnable;
-    }
-
-    public void setTlsEnable(boolean tlsEnable) {
-        this.tlsEnable = tlsEnable;
     }
 
     public String getProxyFrontendTlsProviderClassName() {

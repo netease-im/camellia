@@ -57,6 +57,7 @@ public class GlobalRedisProxyEnv {
     private static boolean serverTcpQuickAck = false;
 
     private static int port;
+    private static int tlsPort;
     private static int cport;
     private static int consolePort;
 
@@ -117,6 +118,9 @@ public class GlobalRedisProxyEnv {
     public static void setPort(int port) {
         GlobalRedisProxyEnv.port = port;
     }
+    public static void setTlsPort(int tlsPort) {
+        GlobalRedisProxyEnv.tlsPort = tlsPort;
+    }
 
     public static void setCport(int cport) {
         GlobalRedisProxyEnv.cport = cport;
@@ -176,6 +180,10 @@ public class GlobalRedisProxyEnv {
 
     public static int getPort() {
         return port;
+    }
+
+    public static int getTlsPort() {
+        return tlsPort;
     }
 
     public static int getCport() {

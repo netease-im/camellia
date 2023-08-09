@@ -20,12 +20,12 @@ public class DefaultProxyShutdown implements ProxyShutdown {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultProxyShutdown.class);
 
-    private ChannelFuture serverChannelFuture;
+    private ChannelFuture[] serverChannelFuture;
     private ChannelFuture cportChannelFuture;
     private ChannelFuture consoleChannelFuture;
     private IUpstreamClientTemplateFactory factory;
 
-    final void setServerChannelFuture(ChannelFuture serverChannelFuture) {
+    final void setServerChannelFuture(ChannelFuture... serverChannelFuture) {
         this.serverChannelFuture = serverChannelFuture;
     }
 
@@ -46,9 +46,12 @@ public class DefaultProxyShutdown implements ProxyShutdown {
         boolean success = true;
         if (serverChannelFuture != null) {
             try {
-                serverChannelFuture.channel().close()
-                        .addListener((ChannelFutureListener) channelFuture ->
-                                logger.warn("camellia redis proxy server port shutdown for addr = {}", channelFuture.channel().localAddress()));
+                for (ChannelFuture future : serverChannelFuture) {
+                    if (future == null) continue;
+                    future.channel().close()
+                            .addListener((ChannelFutureListener) channelFuture ->
+                                    logger.warn("camellia redis proxy server port shutdown for addr = {}", channelFuture.channel().localAddress()));
+                }
                 serverChannelFuture = null;
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);

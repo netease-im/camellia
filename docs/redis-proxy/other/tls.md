@@ -12,7 +12,7 @@
 
 #### step2，配置proxy
 
-* application.yml里开启tls
+* application.yml里开启tls-port，小于等于0则表示不开启
 
 ```yml
 server:
@@ -26,7 +26,7 @@ camellia-redis-proxy:
   password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
   monitor-enable: false  #monitor enable/disable configure
   monitor-interval-seconds: 60 #monitor data refresh interval seconds
-  tls-enable: true
+  tls-port: 6381
   transpond:
     type: local #local、remote、custom
     local:
@@ -69,7 +69,7 @@ camellia-redis-proxy:
   password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
   monitor-enable: false  #monitor enable/disable configure
   monitor-interval-seconds: 60 #monitor data refresh interval seconds
-  tls-enable: true
+  tls-port: 6381
   proxy-frontend-tls-provider-class-name: xxx.xxx.xxx.MyProxyFrontendTlsProvider
   transpond:
     type: local #local、remote、custom

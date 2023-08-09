@@ -32,6 +32,7 @@ public class CamelliaRedisProxyServer {
     private final ServerHandler serverHandler;
     private final InitHandler initHandler = new InitHandler();
     private int port;
+    private int tlsPort;
 
     public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, ICommandInvoker invoker) {
         GlobalRedisProxyEnv.init(serverProperties);
@@ -48,7 +49,8 @@ public class CamelliaRedisProxyServer {
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         final SSLContext sslContext;
         ProxyFrontendTlsProvider proxyFrontendTlsProvider;
-        if (serverProperties.isTlsEnable()) {
+        int tlsPort = serverProperties.getTlsPort();
+        if (tlsPort > 0) {
             proxyFrontendTlsProvider = ConfigInitUtil.initProxyFrontendTlsProvider(serverProperties);
             if (proxyFrontendTlsProvider == null) {
                 throw new IllegalArgumentException(serverProperties.getProxyFrontendTlsProviderClassName() + " init fail");
@@ -71,7 +73,7 @@ public class CamelliaRedisProxyServer {
                     @Override
                     public void initChannel(SocketChannel ch) {
                         ChannelPipeline pipeline = ch.pipeline();
-                        if (sslContext != null && ch.localAddress().getPort() == GlobalRedisProxyEnv.getPort()) {
+                        if (sslContext != null && ch.localAddress().getPort() == GlobalRedisProxyEnv.getTlsPort()) {
                             pipeline.addLast(proxyFrontendTlsProvider.createSslHandler(sslContext));
                         }
                         if (serverProperties.getReaderIdleTimeSeconds() >= 0 && serverProperties.getWriterIdleTimeSeconds() >= 0
@@ -93,16 +95,30 @@ public class CamelliaRedisProxyServer {
         if (port == Constants.Server.serverPortRandSig) {
             port = SocketUtils.findRandomAvailablePort();
         }
-        ChannelFuture future = serverBootstrap.bind(port).sync();
+        ChannelFuture future1 = null;
+        ChannelFuture future2 = null;
+        if (port > 0) {
+            future1 = serverBootstrap.bind(port).sync();
+        }
+        if (tlsPort > 0 && tlsPort != port) {
+            future2 = serverBootstrap.bind(tlsPort).sync();
+        }
         logger.info("CamelliaRedisProxyServer, so_backlog = {}, so_sendbuf = {}, so_rcvbuf = {}, so_keepalive = {}",
                 serverProperties.getSoBacklog(), serverProperties.getSoSndbuf(), serverProperties.getSoRcvbuf(), serverProperties.isSoKeepalive());
         logger.info("CamelliaRedisProxyServer, tcp_no_delay = {}, tcp_quick_ack = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
                 serverProperties.isTcpNoDelay(), GlobalRedisProxyEnv.isServerTcpQuickAckEnable(), serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh());
-        logger.info("CamelliaRedisProxyServer, proxy frontend tls enable = {}", sslContext != null);
-        logger.info("CamelliaRedisProxyServer start at port: {}", port);
+        if (port > 0 && port != tlsPort) {
+            logger.info("CamelliaRedisProxyServer start at port: {}", port);
+        }
+        if (tlsPort > 0) {
+            logger.info("CamelliaRedisProxyServer start at port: {} with tls", tlsPort);
+        }
+
         GlobalRedisProxyEnv.setPort(port);
-        GlobalRedisProxyEnv.getProxyShutdown().setServerChannelFuture(future);
+        GlobalRedisProxyEnv.setTlsPort(tlsPort);
+        GlobalRedisProxyEnv.getProxyShutdown().setServerChannelFuture(future1, future2);
         this.port = port;
+        this.tlsPort = tlsPort;
         if (serverProperties.isClusterModeEnable()) {
             int cport = serverProperties.getCport();
             if (cport <= 0) {
@@ -119,5 +135,9 @@ public class CamelliaRedisProxyServer {
 
     public int getPort() {
         return port;
+    }
+
+    public int getTlsPort() {
+        return tlsPort;
     }
 }

@@ -11,7 +11,7 @@ camellia-redis-proxy:
   password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
   monitor-enable: false  #monitor enable/disable configure
   monitor-interval-seconds: 60 #monitor data refresh interval seconds
-#  tls-enable: true
+#  tls-port: 6381
 #  proxy-frontend-tls-provider-class-name: com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider
 #  cluster-mode-enable: true #cluster-mode, if setting true, proxy-cluster disguised as a redis-cluster, should configure proxy.cluster.mode.nodes=xx in camellia-redis-proxy.properties
 #  cport: -1 #cluster-mode is setting true, proxy will use this cport to heartbeat, if setting -1, cport = port + 10000

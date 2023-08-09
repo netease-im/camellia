@@ -22,7 +22,7 @@ public class CamelliaRedisProxyZkRegisterBoot {
 
     private ZkProxyRegistry registry;
 
-    public CamelliaRedisProxyZkRegisterBoot(CamelliaRedisProxyZkRegistryProperties properties, String applicationName, int port) {
+    public CamelliaRedisProxyZkRegisterBoot(CamelliaRedisProxyZkRegistryProperties properties, String applicationName, int port, int tlsPort) {
         if (!properties.isEnable()) {
             logger.info("camellia redis proxy zk registry not enable");
             return;
@@ -35,6 +35,7 @@ public class CamelliaRedisProxyZkRegisterBoot {
         try {
             proxy = new Proxy();
             proxy.setPort(port);
+            proxy.setTlsPort(tlsPort);
             String host = properties.getHost();
             if (host != null && host.length() > 0) {
                 proxy.setHost(host);

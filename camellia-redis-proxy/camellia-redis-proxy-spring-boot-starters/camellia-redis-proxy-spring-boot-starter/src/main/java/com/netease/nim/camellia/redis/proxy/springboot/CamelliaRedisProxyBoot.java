@@ -13,6 +13,7 @@ public class CamelliaRedisProxyBoot {
 
     private final String applicationName;
     private final int port;
+    private final int tlsPort;
 
     public CamelliaRedisProxyBoot(CamelliaServerProperties serverProperties,
                                   ICommandInvoker commandInvoker) throws Exception {
@@ -21,6 +22,7 @@ public class CamelliaRedisProxyBoot {
         CamelliaRedisProxyServer server = new CamelliaRedisProxyServer(serverProperties, commandInvoker);
         server.start();
         this.port = server.getPort();
+        this.tlsPort = server.getTlsPort();
     }
 
     public String getApplicationName() {
@@ -29,5 +31,9 @@ public class CamelliaRedisProxyBoot {
 
     public int getPort() {
         return port;
+    }
+
+    public int getTlsPort() {
+        return tlsPort;
     }
 }
