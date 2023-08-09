@@ -5,6 +5,7 @@
 ### 新增
 * camellia-redis-proxy支持client到proxy的连接开启tls
 * camellia-redis-proxy支持proxy到redis开启tls
+* camellia-redis-proxy使用`info upstream-info`命令获取后端信息时，`redis-sentinel`也支持使用`sentinelUserName`和`sentinelPassword`
 
 ### 更新
 * 无

@@ -5,6 +5,7 @@
 ### add
 * camellia-redis-proxy support tls between client and proxy
 * camellia-redis-proxy support tls between proxy and upstream redis
+* camellia-redis-proxy use command `info upstream-info`, `redis-sentinel` support `sentinelUserName` and `sentinelPassword`
 
 ### update
 * none

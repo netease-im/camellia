@@ -95,8 +95,10 @@ public class UpstreamInfoUtils {
             }
         } else if (resource instanceof RedisSentinelResource) {
             infoJson.put("type", "sentinel");
-            RedisSentinelInfo redisSentinelInfo = getRedisSentinelInfo(resource, ((RedisSentinelResource) resource).getNodes(),
-                    ((RedisSentinelResource) resource).getUserName(), ((RedisSentinelResource) resource).getPassword(), ((RedisSentinelResource) resource).getMaster());
+            RedisSentinelResource redisSentinelResource = (RedisSentinelResource) resource;
+            RedisSentinelInfo redisSentinelInfo = getRedisSentinelInfo(resource, redisSentinelResource.getNodes(),
+                    redisSentinelResource.getUserName(), redisSentinelResource.getPassword(),redisSentinelResource.getMaster(),
+                    redisSentinelResource.getSentinelUserName(), redisSentinelResource.getSentinelPassword());
             if (redisSentinelInfo.master != null && redisSentinelInfo.redisInfo != null) {
                 infoJson.put("status", "ok");
                 otherInfoJsonArray.add(infoItem("master_node", PasswordMaskUtils.maskAddr(redisSentinelInfo.master)));
@@ -254,22 +256,28 @@ public class UpstreamInfoUtils {
                     String userName;
                     String password;
                     String master;
+                    String sentinelUserName;
+                    String sentinelPassword;
                     if (redisResource instanceof RedisSentinelResource) {
                         sentinels = ((RedisSentinelResource) redisResource).getNodes();
                         userName = ((RedisSentinelResource) redisResource).getUserName();
                         password = ((RedisSentinelResource) redisResource).getPassword();
                         master = ((RedisSentinelResource) redisResource).getMaster();
+                        sentinelUserName = ((RedisSentinelResource) redisResource).getSentinelUserName();
+                        sentinelPassword = ((RedisSentinelResource) redisResource).getSentinelPassword();
                     } else {
                         sentinels = ((RedisSentinelSlavesResource) redisResource).getNodes();
                         userName = ((RedisSentinelSlavesResource) redisResource).getUserName();
                         password = ((RedisSentinelSlavesResource) redisResource).getPassword();
                         master = ((RedisSentinelSlavesResource) redisResource).getMaster();
+                        sentinelUserName = ((RedisSentinelSlavesResource) redisResource).getSentinelUserName();
+                        sentinelPassword = ((RedisSentinelSlavesResource) redisResource).getSentinelPassword();
                     }
                     JSONObject redisNodeInfoJson = new JSONObject();
                     upstream.put("redis-node-info", redisNodeInfoJson);
 
                     builder.append("### redis-node-info").append("\r\n");
-                    RedisSentinelInfo redisSentinelInfo = getRedisSentinelInfo(resource, sentinels, userName, password, master);
+                    RedisSentinelInfo redisSentinelInfo = getRedisSentinelInfo(resource, sentinels, userName, password, master, sentinelUserName, sentinelPassword);
                     if (redisSentinelInfo.master != null) {
                         builder.append("master_url:").append(redisSentinelInfo.master).append("\r\n");
 
@@ -567,10 +575,11 @@ public class UpstreamInfoUtils {
         RedisInfo redisInfo;
         RedisConnectionAddr master;
     }
-    private static RedisSentinelInfo getRedisSentinelInfo(Resource resource, List<RedisSentinelResource.Node> sentinels, String userName, String password, String masterName) {
+    private static RedisSentinelInfo getRedisSentinelInfo(Resource resource, List<RedisSentinelResource.Node> sentinels, String userName,
+                                                          String password, String masterName, String sentinelUserName, String sentinelPassword) {
         RedisSentinelInfo redisSentinelInfo = new RedisSentinelInfo();
         for (RedisSentinelResource.Node node : sentinels) {
-            HostAndPort master = getRedisSentinelMaster(resource, node.getHost(), node.getPort(), masterName);
+            HostAndPort master = getRedisSentinelMaster(resource, node.getHost(), node.getPort(), masterName, sentinelUserName, sentinelPassword);
             if (master != null) {
                 RedisConnectionAddr addr = new RedisConnectionAddr(master.getHost(), master.getPort(), userName, password, false, 0, false);
                 redisSentinelInfo.master = addr;
@@ -584,10 +593,10 @@ public class UpstreamInfoUtils {
         return redisSentinelInfo;
     }
 
-    private static HostAndPort getRedisSentinelMaster(Resource resource, String host, int port, String masterName) {
+    private static HostAndPort getRedisSentinelMaster(Resource resource, String host, int port, String masterName, String sentinelUserName, String sentinelPassword) {
         RedisConnection redisConnection = null;
         try {
-            redisConnection = RedisConnectionHub.getInstance().newConnection(resource, host, port, null, null);
+            redisConnection = RedisConnectionHub.getInstance().newConnection(resource, host, port, sentinelUserName, sentinelPassword);
             if (redisConnection != null) {
                 CompletableFuture<Reply> future1 = redisConnection.sendCommand(RedisCommand.SENTINEL.raw(),
                         RedisSentinelUtils.SENTINEL_GET_MASTER_ADDR_BY_NAME, Utils.stringToBytes(masterName));
