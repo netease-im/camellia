@@ -8,7 +8,7 @@
 * camellia-redis-proxy使用`info upstream-info`命令获取后端信息时，`redis-sentinel`也支持使用`sentinelUserName`和`sentinelPassword`
 
 ### 更新
-* none
+* camellia-redis-proxy的console支持关闭，设置端口为0即可
 
 ### fix
 * camellia-redis-proxy的console的随机端口功能无效的问题，1.2.11引入

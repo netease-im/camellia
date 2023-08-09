@@ -26,6 +26,9 @@ public class CamelliaConsoleServerBoot {
 
     @PostConstruct
     public void init() throws Exception {
+        if (properties.getConsolePort() == 0) {
+            return;
+        }
         CamelliaHttpConsoleConfig config = new CamelliaHttpConsoleConfig();
         if (properties.getConsolePort() == Constants.Server.consolePortRandSig) {
             config.setPort(SocketUtils.findRandomAvailablePort());

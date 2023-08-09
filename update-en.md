@@ -8,7 +8,7 @@
 * camellia-redis-proxy use command `info upstream-info`, `redis-sentinel` support `sentinelUserName` and `sentinelPassword`
 
 ### update
-* none
+* camellia-redis-proxy support disabled console by setting console-port=0
 
 ### fix
 * camellia-redis-proxy random console port not available, bug from 1.2.11
