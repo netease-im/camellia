@@ -8,10 +8,10 @@
 * camellia-redis-proxy使用`info upstream-info`命令获取后端信息时，`redis-sentinel`也支持使用`sentinelUserName`和`sentinelPassword`
 
 ### 更新
-* 无
+* none
 
 ### fix
-* 无
+* camellia-redis-proxy的console的随机端口功能无效的问题，1.2.11引入
 
 
 # 1.2.13（2023/08/04）

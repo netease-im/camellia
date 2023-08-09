@@ -11,7 +11,7 @@
 * none
 
 ### fix
-* none
+* camellia-redis-proxy random console port not available, bug from 1.2.11
 
 
 # 1.2.13（2023/08/04）
