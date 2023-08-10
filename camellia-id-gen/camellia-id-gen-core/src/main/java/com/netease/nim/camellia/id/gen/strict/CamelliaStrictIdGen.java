@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 基于数据库和redis的严格递增的id生成器
- *
+ * <p>
  * Created by caojiajun on 2021/9/24
  */
 public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {

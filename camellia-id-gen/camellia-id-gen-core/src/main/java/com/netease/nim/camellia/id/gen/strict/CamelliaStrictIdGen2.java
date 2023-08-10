@@ -26,6 +26,8 @@ import java.util.concurrent.TimeUnit;
  * seq取12位的情况下（最大4096/秒），用到52位（js的最大精度），可以使用34865年
  * seq取13位的情况下（最大8192/秒），用到52位（js的最大精度），可以使用17432年
  * <p>
+ * 相比CamelliaStrictIdGen的风险点在于，如果redis中的key丢失了（主从切换或者驱逐等），可能导致id在短时间内（1s内）产生重复或者回溯
+ * <p>
  * Created by caojiajun on 2023/8/9
  */
 public class CamelliaStrictIdGen2 {
