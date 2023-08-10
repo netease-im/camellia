@@ -10,6 +10,7 @@
 
 ### update
 * camellia-redis-proxy support disabled console by setting console-port=0
+* http-accelerate-proxy transport of quic, use BBR as default congestion control algorithm
 
 ### fix
 * camellia-redis-proxy random console port not available, bug from 1.2.11

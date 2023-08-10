@@ -52,7 +52,7 @@ public class QuicClient extends AbstractClient {
         long initialMaxStreamsBidirectional = DynamicConf.getLong("transport.quic.client.initial.max.streams.bidirectional", 10000L);
         long initialMaxStreamsUnidirectional = DynamicConf.getLong("transport.quic.client.initial.max.streams.unidirectional", 10000L);
 
-        String algorithm = DynamicConf.getString("transport.quic.client.congestion.control.algorithm", null);
+        String algorithm = DynamicConf.getString("transport.quic.client.congestion.control.algorithm", QuicCongestionControlAlgorithm.BBR.name());
         QuicCongestionControlAlgorithm congestionControlAlgorithm = null;
         if (algorithm != null) {
             for (QuicCongestionControlAlgorithm value : QuicCongestionControlAlgorithm.values()) {

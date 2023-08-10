@@ -10,6 +10,7 @@
 
 ### 更新
 * camellia-redis-proxy的console支持关闭，设置端口为0即可
+* camellia-http-accelerate-proxy使用quic作为传输通道时，使用bbr作为默认拥塞控制算法（之前是配置缺省）
 
 ### fix
 * camellia-redis-proxy的console的随机端口功能无效的问题，1.2.11引入
