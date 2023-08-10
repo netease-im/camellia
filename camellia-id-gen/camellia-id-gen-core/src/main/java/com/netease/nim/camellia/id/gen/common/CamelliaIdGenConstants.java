@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.id.gen.common;
 
+import javax.swing.plaf.PanelUI;
+
 /**
  * Created by caojiajun on 2021/9/26
  */
@@ -78,5 +80,18 @@ public class CamelliaIdGenConstants {
         //默认为0，表示不需要单元id
         //如果为4，则表示最多支持16个单元id，会基于数据库生成的id在右边补上4bit的单元id
         public static final int regionBits = 0;
+    }
+
+    public static class Strict2 {
+        //redis的key前缀
+        public static final String cacheKeyPrefix = "strict2";
+        //起始时间戳，默认2023-08-01 00:00:00
+        public static final long twepoch = 1690819200000L;
+        //cache过期时间
+        public static final int cacheExpireSeconds = 60;
+        //seq位数
+        public static final int seqBits = 11;
+        //redis时间和本地时间校准的阈值，60s
+        public static final int redisTimeCheckThresholdSeconds = 60;
     }
 }

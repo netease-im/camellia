@@ -11,3 +11,6 @@
 
 ## 严格递增的id生成算法（基于数据库+redis）
 详见：[strict](strict.md)
+
+## 严格递增的id生成算法（基于redis+ntp时间戳）
+详见：[strict2](strict2.md)
