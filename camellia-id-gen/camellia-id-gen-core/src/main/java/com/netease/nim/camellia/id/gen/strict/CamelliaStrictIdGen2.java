@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Created by caojiajun on 2023/8/9
  */
-public class CamelliaStrictIdGen2 {
+public class CamelliaStrictIdGen2 implements ICamelliaStrictIdGen {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaStrictIdGen2.class);
 
@@ -97,6 +97,16 @@ public class CamelliaStrictIdGen2 {
                 }
             }
         }
+    }
+
+    @Override
+    public long peekId(String tag) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long decodeRegionId(long id) {
+        throw new UnsupportedOperationException();
     }
 
     private long now() {
