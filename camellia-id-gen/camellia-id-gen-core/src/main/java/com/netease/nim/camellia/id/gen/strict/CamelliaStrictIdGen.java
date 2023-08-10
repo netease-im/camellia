@@ -19,6 +19,12 @@ import java.util.concurrent.TimeUnit;
 /**
  * 基于数据库和redis的严格递增的id生成器
  * <p>
+ * 数据库记录每个tag当前分配到的id
+ * 每个发号器节点会从数据库中取一段id后塞到redis的list中（不同节点会通过分布式锁保证id不会乱序）
+ * 每个发号器节点先从redis中取id，如果取不到则穿透到数据库进行load
+ * redis中的id即将耗尽时会提前从db中load最新一批的id
+ * 发号器节点会统计每个批次分配完毕消耗的时间来动态调整批次大小
+ * <p>
  * Created by caojiajun on 2021/9/24
  */
 public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
