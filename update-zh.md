@@ -4,7 +4,7 @@
 # 1.2.14（2023/08/xx）
 ### 新增
 * camellia-redis-proxy支持client到proxy的连接开启tls
-* camellia-redis-proxy支持proxy到redis开启tls
+* camellia-redis-proxy支持proxy到redis的连接开启tls
 * camellia-redis-proxy使用`info upstream-info`命令获取后端信息时，`redis-sentinel`也支持使用`sentinelUserName`和`sentinelPassword`
 * camellia-id-gen新增CamelliaStrictIdGen2，基于redis/ntp时间戳实现严格递增序列
 
