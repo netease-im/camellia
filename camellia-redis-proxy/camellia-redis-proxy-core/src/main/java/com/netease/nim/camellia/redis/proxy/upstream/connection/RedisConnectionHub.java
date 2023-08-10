@@ -2,8 +2,10 @@ package com.netease.nim.camellia.redis.proxy.upstream.connection;
 
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
+import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvider;
 import com.netease.nim.camellia.redis.proxy.tls.upstream.RedisResourceTlsEnableCache;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
@@ -70,7 +72,7 @@ public class RedisConnectionHub {
     private final ConcurrentHashMap<Object, LockMap> lockMapMap = new ConcurrentHashMap<>();
 
     private ProxyUpstreamTlsProvider tlsProvider;
-    private ConcurrentHashMap<String, SSLContext> sslContextCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, SSLContext> sslContextCache = new ConcurrentHashMap<>();
 
     public static RedisConnectionHub instance = new RedisConnectionHub();
     private RedisConnectionHub() {
@@ -287,6 +289,19 @@ public class RedisConnectionHub {
                 if (redisConnection == null) {
                     logger.error("preheat fail, addr = {}", PasswordMaskUtils.maskAddr(addr));
                     throw new CamelliaRedisException("preheat fail, addr = " + PasswordMaskUtils.maskAddr(addr));
+                }
+                Reply reply;
+                try {
+                    CompletableFuture<Reply> future = redisConnection.sendCommand(RedisCommand.PING.raw());
+                    int timeout = ProxyDynamicConf.getInt("preheat.ping.timeout.seconds", 10);
+                    reply = future.get(timeout, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    throw new CamelliaRedisException("preheat fail, addr = " + PasswordMaskUtils.maskAddr(addr), e);
+                }
+                String resp = Utils.checkPingReply(reply);
+                if (resp == null) {
+                    logger.error("preheat fail, addr = {}, reply = {}", PasswordMaskUtils.maskAddr(addr), reply);
+                    throw new CamelliaRedisException("preheat fail, addr = " + PasswordMaskUtils.maskAddr(addr) + ", reply = " + reply);
                 }
             }
             logger.info("preheat success, addr = {}", PasswordMaskUtils.maskAddr(addr));

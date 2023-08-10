@@ -419,27 +419,10 @@ public class RedisConnection {
         CompletableFuture<Reply> future = sendPing();
         try {
             Reply reply = future.get(timeoutMillis, TimeUnit.MILLISECONDS);
-            if (reply instanceof StatusReply) {
-                if (((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.PONG.getStatus())) {
-                    if (logEnable && logger.isInfoEnabled()) {
-                        logger.info("{} send `PING` command success, reply = {}", connectionName, ((StatusReply) reply).getStatus());
-                    }
-                    return;
-                }
-            }
-            if (reply instanceof MultiBulkReply) {
-                Reply[] replies = ((MultiBulkReply) reply).getReplies();
-                if (replies.length > 0) {
-                    Reply reply1 = replies[0];
-                    if (reply1 instanceof BulkReply) {
-                        if (Utils.bytesToString(((BulkReply) reply1).getRaw()).equalsIgnoreCase(StatusReply.PONG.getStatus())) {
-                            if (logEnable && logger.isInfoEnabled()) {
-                                logger.info("{} send `PING` command success, reply = {}", connectionName, Utils.bytesToString(((BulkReply) reply1).getRaw()));
-                            }
-                            return;
-                        }
-                    }
-                }
+            String resp = Utils.checkPingReply(reply);
+            if (resp != null) {
+                logger.info("{} send `PING` command success, reply = {}", connectionName, resp);
+                return;
             }
             logger.error("{} send `PING` command fail, reply = {}", connectionName, reply);
             throw new CamelliaRedisException("ping fail");

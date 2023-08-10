@@ -267,4 +267,34 @@ public class Utils {
             return bid + "|" + bgroup;
         }
     }
+
+    /**
+     * if ping fail, return null
+     * @param reply reply
+     * @return resp string
+     */
+    public static String checkPingReply(Reply reply) {
+        if (reply == null) {
+            return null;
+        }
+        if (reply instanceof StatusReply) {
+            String resp = ((StatusReply) reply).getStatus();
+            if (resp != null && resp.equalsIgnoreCase(StatusReply.PONG.getStatus())) {
+                return resp;
+            }
+        }
+        if (reply instanceof MultiBulkReply) {
+            Reply[] replies = ((MultiBulkReply) reply).getReplies();
+            if (replies.length > 0) {
+                Reply reply1 = replies[0];
+                if (reply1 instanceof BulkReply) {
+                    String resp = Utils.bytesToString(((BulkReply) reply1).getRaw());
+                    if (resp != null && resp.equalsIgnoreCase(StatusReply.PONG.getStatus())) {
+                        return resp;
+                    }
+                }
+            }
+        }
+        return null;
+    }
 }
