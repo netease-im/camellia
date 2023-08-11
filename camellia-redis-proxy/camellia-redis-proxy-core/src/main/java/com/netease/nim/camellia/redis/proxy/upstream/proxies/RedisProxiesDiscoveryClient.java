@@ -42,7 +42,7 @@ public class RedisProxiesDiscoveryClient extends AbstractRedisProxiesClient {
         this.userName = resource.getUserName();
         this.password = resource.getPassword();
         this.db = resource.getDb();
-        init0();
+        init();
     }
 
     public RedisProxiesDiscoveryClient(RedissProxiesDiscoveryResource resource) {
@@ -57,11 +57,11 @@ public class RedisProxiesDiscoveryClient extends AbstractRedisProxiesClient {
         this.userName = resource.getUserName();
         this.password = resource.getPassword();
         this.db = resource.getDb();
-        init0();
+        init();
     }
 
-    private void init0() {
-        init();
+    protected void init() {
+        super.init();
         proxyDiscovery.setCallback(new CamelliaDiscovery.Callback<Proxy>() {
             @Override
             public void add(Proxy proxy) {

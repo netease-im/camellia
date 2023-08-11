@@ -12,6 +12,7 @@
 * camellia-redis-proxy的console支持关闭，设置端口为0即可
 * camellia-http-accelerate-proxy使用quic作为传输通道时，使用bbr作为默认拥塞控制算法（之前是配置缺省）
 * 优化camellia-redis-proxy的预热逻辑，如果预热失败，则启动失败
+* camellia-redis-proxy代理到redis-sentinel时增加定时获取master节点的逻辑，作为订阅master变更的兜底补充
 
 ### fix
 * camellia-redis-proxy的console的随机端口功能无效的问题，1.2.11引入

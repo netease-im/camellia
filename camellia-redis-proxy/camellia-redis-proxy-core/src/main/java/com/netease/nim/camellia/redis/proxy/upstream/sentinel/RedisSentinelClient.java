@@ -4,17 +4,22 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.base.resource.RedisSentinelResource;
 import com.netease.nim.camellia.redis.base.resource.RedissSentinelResource;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.AbstractSimpleRedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.HostAndPort;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -23,6 +28,8 @@ import java.util.Objects;
 public class RedisSentinelClient extends AbstractSimpleRedisClient {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisSentinelClient.class);
+
+    private final AtomicInteger renewIndex = new AtomicInteger(0);
 
     private final Resource resource;
     private final String master;
@@ -35,6 +42,7 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
     private volatile RedisConnectionAddr redisConnectionAddr;
     private final List<RedisSentinelMasterListener> masterListenerList = new ArrayList<>();
     private final Object lock = new Object();
+    private ScheduledFuture<?> scheduledFuture;
 
     public RedisSentinelClient(RedissSentinelResource resource) {
         this.resource = resource;
@@ -45,6 +53,7 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
         this.sentinelUserName = resource.getSentinelUserName();
         this.sentinelPassword = resource.getSentinelPassword();
         this.nodes = resource.getNodes();
+        init();
     }
 
     public RedisSentinelClient(RedisSentinelResource resource) {
@@ -56,6 +65,7 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
         this.sentinelUserName = resource.getSentinelUserName();
         this.sentinelPassword = resource.getSentinelPassword();
         this.nodes = resource.getNodes();
+        init();
     }
 
     private void init() {
@@ -99,6 +109,17 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
             masterListener.start();
             masterListenerList.add(masterListener);
         }
+        int intervalSeconds = ProxyDynamicConf.getInt("redis.sentinel.schedule.renew.interval.seconds", 600);
+        scheduledFuture = ExecutorUtils.scheduleAtFixedRate(() -> {
+            try {
+                int index = Math.abs(renewIndex.getAndIncrement()) % masterListenerList.size();
+                RedisSentinelMasterListener masterListener = masterListenerList.get(index);
+                masterListener.renew();
+            } catch (Exception e) {
+                logger.error("redis sentinel schedule renew error, resource = {}", resource.getUrl(), e);
+            }
+        }, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
+
         logger.info("RedisSentinelClient init success, resource = {}", resource.getUrl());
     }
 
@@ -119,6 +140,9 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
 
     @Override
     public synchronized void shutdown() {
+        if (scheduledFuture != null) {
+            scheduledFuture.cancel(false);
+        }
         for (RedisSentinelMasterListener listener : masterListenerList) {
             listener.shutdown();
         }

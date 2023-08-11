@@ -39,7 +39,7 @@ public class RedisConnection {
     private static final Logger logger = LoggerFactory.getLogger(RedisConnection.class);
     private static final AtomicLong id = new AtomicLong(0);
 
-    private static final CamelliaScheduleExecutor heartBeatScheduled = new CamelliaScheduleExecutor("camellia-redis-connection-heart-beat", 1, 1024*32);
+    private static final CamelliaScheduleExecutor heartBeatScheduled = new CamelliaScheduleExecutor("camellia-redis-connection-heartbeat", 1, 1024*32);
     private static final CamelliaScheduleExecutor idleCheckScheduled = new CamelliaScheduleExecutor("camellia-redis-connection-idle-check", 1, 1024*32);
     private static final ExecutorService initializeExecutor = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(10240), new DefaultThreadFactory("camellia-redis-connection-initialize"), new ThreadPoolExecutor.AbortPolicy());
@@ -421,7 +421,9 @@ public class RedisConnection {
             Reply reply = future.get(timeoutMillis, TimeUnit.MILLISECONDS);
             String resp = Utils.checkPingReply(reply);
             if (resp != null) {
-                logger.info("{} send `PING` command success, reply = {}", connectionName, resp);
+                if (logEnable && logger.isInfoEnabled()) {
+                    logger.info("{} send `PING` command success, reply = {}", connectionName, resp);
+                }
                 return;
             }
             logger.error("{} send `PING` command fail, reply = {}", connectionName, reply);
