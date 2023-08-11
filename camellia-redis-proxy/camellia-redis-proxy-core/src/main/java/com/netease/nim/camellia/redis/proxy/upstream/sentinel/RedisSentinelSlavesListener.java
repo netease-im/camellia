@@ -86,6 +86,21 @@ public class RedisSentinelSlavesListener extends Thread {
         logger.info("redis sentinel slaves listener thread stop, resource = {}, sentinel = {}", PasswordMaskUtils.maskResource(resource.getUrl()), sentinel.getUrl());
     }
 
+    public void renew() {
+        try {
+            RedisSentinelSlavesResponse slavesResponse = RedisSentinelUtils.getSlaveAddrs(resource,
+                    sentinel.getHost(), sentinel.getPort(), master, userName, password);
+            if (slavesResponse.isSentinelAvailable()) {
+                List<HostAndPort> slaves = slavesResponse.getSlaves();
+                if (slaves != null) {
+                    callback.slavesUpdate(slaves);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("renew slaves error, resource = {}, sentinel = {}", PasswordMaskUtils.maskResource(resource), sentinel, e);
+        }
+    }
+
     public void shutdown() {
         running = false;
     }

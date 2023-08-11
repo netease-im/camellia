@@ -6,7 +6,6 @@ import com.netease.nim.camellia.redis.base.resource.RedisClusterSlavesResource;
 import com.netease.nim.camellia.redis.base.resource.RedissClusterResource;
 import com.netease.nim.camellia.redis.base.resource.RedissClusterSlavesResource;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
-import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
@@ -15,15 +14,12 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
-import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by caojiajun on 2019/12/18.
@@ -31,9 +27,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class RedisClusterSlotInfo {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisClusterSlotInfo.class);
-
-    private static final ExecutorService redisClusterRenewExec = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(), 0, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(1024), new DefaultThreadFactory("redis-cluster-renew"), new ThreadPoolExecutor.AbortPolicy());
 
     public static final int SLOT_SIZE = 16384;
 
@@ -274,66 +267,46 @@ public class RedisClusterSlotInfo {
         return masterNodeList.size();
     }
 
-    private long lastRenewTimestamp = 0L;
-    private final AtomicBoolean renew = new AtomicBoolean(false);
-
     /**
      * renew node list
      *
      * @return success/fail
      */
-    public Future<Boolean> renew() {
-        //限制1s内最多renew一次
-        if (TimeCache.currentMillis - lastRenewTimestamp < 1000) {
-            return null;
-        }
-        if (renew.compareAndSet(false, true)) {
-            try {
-                return redisClusterRenewExec.submit(() -> {
-                    try {
-                        boolean success = false;
-                        List<RedisClusterResource.Node> initNodes = new ArrayList<>(this.nodes);
-                        Collections.shuffle(initNodes);
-                        for (RedisClusterResource.Node node : initNodes) {
-                            success = tryRenew(node.getHost(), node.getPort(), userName, password);
-                            if (success) break;
-                        }
-                        if (!success) {
-                            List<Node> masterNodes = new ArrayList<>(this.masterNodeList);
-                            Collections.shuffle(masterNodes);
-                            for (Node node : masterNodes) {
-                                success = tryRenew(node.getHost(), node.getPort(), userName, password);
-                                if (success) break;
-                            }
-                        }
-                        if (!success) {
-                            List<Node> slaveNodes = new ArrayList<>(this.slaveNodeSet);
-                            Collections.shuffle(slaveNodes);
-                            for (Node node : slaveNodes) {
-                                success = tryRenew(node.getHost(), node.getPort(), userName, password);
-                                if (success) break;
-                            }
-                        }
-                        if (success) {
-                            logger.info("renew success, url = {}, master-slave-info:\r\n{}", maskUrl, masterSlaveInfo());
-                        } else {
-                            ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew fail, url = " + maskUrl);
-                        }
-                        lastRenewTimestamp = TimeCache.currentMillis;
-                        return success;
-                    } catch (Exception e) {
-                        ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew error, url = " + maskUrl, e);
-                        return false;
-                    } finally {
-                        renew.set(false);
-                    }
-                });
-            } catch (Exception e) {
-                ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew error, url = " + maskUrl, e);
-                renew.set(false);
+    public boolean renew() {
+        try {
+            boolean success = false;
+            List<RedisClusterResource.Node> initNodes = new ArrayList<>(this.nodes);
+            Collections.shuffle(initNodes);
+            for (RedisClusterResource.Node node : initNodes) {
+                success = tryRenew(node.getHost(), node.getPort(), userName, password);
+                if (success) break;
             }
+            if (!success) {
+                List<Node> masterNodes = new ArrayList<>(this.masterNodeList);
+                Collections.shuffle(masterNodes);
+                for (Node node : masterNodes) {
+                    success = tryRenew(node.getHost(), node.getPort(), userName, password);
+                    if (success) break;
+                }
+            }
+            if (!success) {
+                List<Node> slaveNodes = new ArrayList<>(this.slaveNodeSet);
+                Collections.shuffle(slaveNodes);
+                for (Node node : slaveNodes) {
+                    success = tryRenew(node.getHost(), node.getPort(), userName, password);
+                    if (success) break;
+                }
+            }
+            if (success) {
+                logger.info("renew success, url = {}, master-slave-info:\r\n{}", maskUrl, masterSlaveInfo());
+            } else {
+                ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew fail, url = " + maskUrl);
+            }
+            return success;
+        } catch (Exception e) {
+            ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew error, url = " + maskUrl, e);
+            return false;
         }
-        return null;
     }
 
     public boolean isValid() {

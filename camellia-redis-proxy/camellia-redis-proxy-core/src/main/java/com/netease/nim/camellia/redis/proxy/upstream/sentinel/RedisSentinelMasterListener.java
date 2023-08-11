@@ -11,7 +11,6 @@ import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
-import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +30,6 @@ public class RedisSentinelMasterListener extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(RedisSentinelMasterListener.class);
 
     private static final AtomicLong id = new AtomicLong(0);
-    private static final ThreadPoolExecutor renewExecutor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
-            new LinkedBlockingDeque<>(1024), new DefaultThreadFactory("sentinel-master-renew-executor"));
 
     private final Resource resource;
     private final HostAndPort sentinel;
@@ -114,27 +111,17 @@ public class RedisSentinelMasterListener extends Thread {
     }
 
     public void renew() {
-        if (renewLock.compareAndSet(false, true)) {
-            try {
-                renewExecutor.submit(() -> {
-                    try {
-                        RedisSentinelMasterResponse response = RedisSentinelUtils.getMasterAddr(resource, sentinel.getHost(), sentinel.getPort(),
-                                master, userName, password);
-                        if (response.isSentinelAvailable()) {
-                            HostAndPort hostAndPort = response.getMaster();
-                            if (hostAndPort != null) {
-                                callback.masterUpdate(hostAndPort);
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.error("renew error, resource = {}, sentinel = {}", PasswordMaskUtils.maskResource(resource), sentinel, e);
-                    } finally {
-                        renewLock.set(false);
-                    }
-                });
-            } catch (Exception e) {
-                logger.error("submit renew task error, resource = {}, sentinel = {}", PasswordMaskUtils.maskResource(resource), sentinel, e);
+        try {
+            RedisSentinelMasterResponse response = RedisSentinelUtils.getMasterAddr(resource, sentinel.getHost(), sentinel.getPort(),
+                    master, userName, password);
+            if (response.isSentinelAvailable()) {
+                HostAndPort hostAndPort = response.getMaster();
+                if (hostAndPort != null) {
+                    callback.masterUpdate(hostAndPort);
+                }
             }
+        } catch (Exception e) {
+            logger.error("renew master error, resource = {}, sentinel = {}", PasswordMaskUtils.maskResource(resource), sentinel, e);
         }
     }
 

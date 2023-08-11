@@ -7,15 +7,13 @@ import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionA
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.AbstractSimpleRedisClient;
-import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
+import com.netease.nim.camellia.redis.proxy.upstream.utils.Renew;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Created by caojiajun on 2023/2/2
@@ -27,7 +25,7 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
     private final Object lock = new Object();
     private List<RedisConnectionAddr> originalList = new ArrayList<>();
     private List<RedisConnectionAddr> dynamicList = new ArrayList<>();
-    private ScheduledFuture<?> scheduledFuture;
+    private Renew renew;
 
     @Override
     public void preheat() {
@@ -46,13 +44,13 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
             throw new CamelliaRedisException("init fail, no reachable proxy, resource = " + getResource().getUrl());
         }
         int seconds = ProxyDynamicConf.getInt("redis.proxies.reload.interval.seconds", 60);
-        this.scheduledFuture = ExecutorUtils.scheduleAtFixedRate(() -> refresh(false), seconds, seconds, TimeUnit.SECONDS);
+        this.renew = new Renew(getResource(), this::renew0, seconds);
     }
 
     @Override
     public synchronized void shutdown() {
-        if (scheduledFuture != null) {
-            scheduledFuture.cancel(false);
+        if (renew != null) {
+            renew.stop();
         }
         logger.warn("upstream client shutdown, url = {}", getUrl());
     }
@@ -150,4 +148,12 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
         }
     }
 
+    @Override
+    protected void upstreamNotAvailable() {
+        renew.renew();
+    }
+
+    private void renew0() {
+        refresh(false);
+    }
 }

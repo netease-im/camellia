@@ -12,17 +12,15 @@ import com.netease.nim.camellia.redis.proxy.upstream.utils.HostAndPort;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
+import com.netease.nim.camellia.redis.proxy.upstream.utils.Renew;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
-import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -32,8 +30,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisSentinelSlavesClient.class);
-
-    private final AtomicInteger renewIndex = new AtomicInteger(0);
+    private final AtomicInteger masterRenewIndex = new AtomicInteger(0);
+    private final AtomicInteger slaveRenewIndex = new AtomicInteger(0);
     private final Object lock = new Object();
     private final List<RedisSentinelMasterListener> masterListenerList = new ArrayList<>();
     private final List<RedisSentinelSlavesListener> slavesListenerList = new ArrayList<>();
@@ -51,7 +49,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
     private RedisConnectionAddr masterAddr;
     private List<RedisConnectionAddr> slaves;
 
-    private ScheduledFuture<?> scheduledFuture;
+    private Renew renew;
 
     public RedisSentinelSlavesClient(RedissSentinelSlavesResource resource) {
         this.resource = resource;
@@ -207,19 +205,8 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
             slavesListenerList.add(listener);
         }
 
-        if (!masterListenerList.isEmpty()) {
-            int intervalSeconds = ProxyDynamicConf.getInt("redis.sentinel.schedule.renew.interval.seconds", 600);
-            scheduledFuture = ExecutorUtils.scheduleAtFixedRate(() -> {
-                try {
-                    int index = Math.abs(renewIndex.getAndIncrement()) % masterListenerList.size();
-                    RedisSentinelMasterListener masterListener = masterListenerList.get(index);
-                    masterListener.renew();
-                } catch (Exception e) {
-                    logger.error("redis sentinel schedule renew error, resource = {}", resource.getUrl(), e);
-                }
-            }, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
-        }
-
+        int intervalSeconds = ProxyDynamicConf.getInt("redis.sentinel.schedule.renew.interval.seconds", 600);
+        renew = new Renew(resource, this::renew0, intervalSeconds);
         logger.info("RedisSentinelSlavesClient init success, resource = {}", resource.getUrl());
     }
 
@@ -337,8 +324,8 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
 
     @Override
     public synchronized void shutdown() {
-        if (scheduledFuture != null) {
-            scheduledFuture.cancel(false);
+        if (renew != null) {
+            renew.stop();
         }
         for (RedisSentinelMasterListener listener : masterListenerList) {
             listener.shutdown();
@@ -347,5 +334,27 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
             listener.shutdown();
         }
         logger.warn("upstream client shutdown, url = {}", getUrl());
+    }
+
+    @Override
+    protected void upstreamNotAvailable() {
+        renew.renew();
+    }
+
+    private void renew0() {
+        try {
+            if (!masterListenerList.isEmpty()) {
+                int index = Math.abs(masterRenewIndex.getAndIncrement()) % masterListenerList.size();
+                RedisSentinelMasterListener masterListener = masterListenerList.get(index);
+                masterListener.renew();
+            }
+            if (!slavesListenerList.isEmpty()) {
+                int index = Math.abs(slaveRenewIndex.getAndIncrement()) % slavesListenerList.size();
+                RedisSentinelSlavesListener slavesListener = slavesListenerList.get(index);
+                slavesListener.renew();
+            }
+        } catch (Exception e) {
+            logger.error("redis sentinel slaves renew error, resource = {}", PasswordMaskUtils.maskResource(resource.getUrl()), e);
+        }
     }
 }
