@@ -41,7 +41,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
     private RedisConnectionAddr getAddr(int db) {
         RedisConnectionAddr addr = getAddr();
         if (addr == null) {
-            upstreamNotAvailable();
+            renew();
             return null;
         }
         if (db < 0 || db == addr.getDb()) {
@@ -160,7 +160,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                     }
                 } else {
                     future.complete(ErrorReply.UPSTREAM_BIND_CONNECTION_NULL);
-                    upstreamNotAvailable();
+                    renew();
                 }
             } else if (redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
                 if (bindConnection != null) {
@@ -196,7 +196,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                 }
                 if (bindConnection == null) {
                     future.complete(ErrorReply.UPSTREAM_BIND_CONNECTION_NULL);
-                    upstreamNotAvailable();
+                    renew();
                 } else {
                     if (!filterCommands.isEmpty()) {
                         flush(db, filterCommands, filterFutures, hasBlockingCommands);
@@ -302,7 +302,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             connection.sendCommand(commands, completableFutureList);
             connection.startIdleCheck();
         } else {
-            upstreamNotAvailable();
+            renew();
             String log = "RedisConnection[" + PasswordMaskUtils.maskAddr(addr) + "] is null, command return NOT_AVAILABLE, resource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
                 completableFuture.complete(ErrorReply.UPSTREAM_BIND_CONNECTION_NULL);
@@ -325,7 +325,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         if (connection != null) {
             connection.sendCommand(commands, completableFutureList);
         } else {
-            upstreamNotAvailable();
+            renew();
             String log = "RedisConnection[" + PasswordMaskUtils.maskAddr(addr) + "] is null, command return NOT_AVAILABLE, resource = " + PasswordMaskUtils.maskResource(getResource().getUrl());
             for (CompletableFuture<Reply> completableFuture : completableFutureList) {
                 completableFuture.complete(ErrorReply.UPSTREAM_CONNECTION_NULL);
@@ -334,7 +334,8 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
         }
     }
 
-    protected void upstreamNotAvailable() {
+    @Override
+    public void renew() {
         //do nothing
     }
 }

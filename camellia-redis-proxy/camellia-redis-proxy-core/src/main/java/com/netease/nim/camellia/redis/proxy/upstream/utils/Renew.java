@@ -57,7 +57,7 @@ public class Renew {
         }
     }
 
-    public void stop() {
+    public void close() {
         if (scheduledFuture != null) {
             scheduledFuture.cancel(false);
         }

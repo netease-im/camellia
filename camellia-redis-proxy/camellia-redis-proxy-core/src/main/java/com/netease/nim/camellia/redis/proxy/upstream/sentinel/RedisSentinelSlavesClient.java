@@ -324,9 +324,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
 
     @Override
     public synchronized void shutdown() {
-        if (renew != null) {
-            renew.stop();
-        }
+        renew.close();
         for (RedisSentinelMasterListener listener : masterListenerList) {
             listener.shutdown();
         }
@@ -337,7 +335,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
     }
 
     @Override
-    protected void upstreamNotAvailable() {
+    public void renew() {
         renew.renew();
     }
 

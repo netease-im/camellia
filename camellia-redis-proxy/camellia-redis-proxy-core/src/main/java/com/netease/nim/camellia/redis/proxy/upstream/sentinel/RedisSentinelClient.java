@@ -11,15 +11,12 @@ import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionS
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.AbstractSimpleRedisClient;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.HostAndPort;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.Renew;
-import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -132,9 +129,7 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
 
     @Override
     public synchronized void shutdown() {
-        if (renew != null) {
-            renew.stop();
-        }
+        renew.close();
         for (RedisSentinelMasterListener listener : masterListenerList) {
             listener.shutdown();
         }
@@ -142,7 +137,7 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
     }
 
     @Override
-    protected void upstreamNotAvailable() {
+    public void renew() {
         renew.renew();
     }
 

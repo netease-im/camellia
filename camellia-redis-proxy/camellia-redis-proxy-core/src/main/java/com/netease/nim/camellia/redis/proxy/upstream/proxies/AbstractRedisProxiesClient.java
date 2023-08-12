@@ -49,9 +49,7 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
 
     @Override
     public synchronized void shutdown() {
-        if (renew != null) {
-            renew.stop();
-        }
+        renew.close();
         logger.warn("upstream client shutdown, url = {}", getUrl());
     }
 
@@ -149,7 +147,7 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
     }
 
     @Override
-    protected void upstreamNotAvailable() {
+    public void renew() {
         renew.renew();
     }
 

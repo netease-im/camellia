@@ -110,6 +110,11 @@ public class RedisClusterClient implements IUpstreamClient {
         renew = new Renew(getResource(), this::renew0, intervalSeconds);
     }
 
+    @Override
+    public void renew() {
+        renew.renew();
+    }
+
     private boolean renew0() {
         try {
             return clusterSlotInfo.renew();
@@ -118,6 +123,7 @@ public class RedisClusterClient implements IUpstreamClient {
             return false;
         }
     }
+
 
     /**
      * get resource
@@ -155,9 +161,7 @@ public class RedisClusterClient implements IUpstreamClient {
 
     @Override
     public synchronized void shutdown() {
-        if (renew != null) {
-            renew.stop();
-        }
+        renew.close();
         logger.warn("upstream client shutdown, url = {}", getUrl());
     }
 
@@ -593,7 +597,7 @@ public class RedisClusterClient implements IUpstreamClient {
             if (connection != null && connection.isValid()) {
                 break;
             } else {
-                renew.renew();
+                renew();
             }
         }
         return connection;
@@ -616,7 +620,7 @@ public class RedisClusterClient implements IUpstreamClient {
             try {
                 if (attempts < clusterClient.maxAttempts) {
                     if (reply instanceof ErrorReply) {
-                        clusterClient.renew.renew();
+                        clusterClient.renew();
                         String error = ((ErrorReply) reply).getError();
                         if (error.startsWith("MOVED")) {
                             attempts++;
@@ -637,7 +641,7 @@ public class RedisClusterClient implements IUpstreamClient {
                                         if (connection == null || !connection.isValid()) {
                                             ErrorLogCollector.collect(RedisClusterClient.class,
                                                     "MOVED, [BlockingCommand] [RedisConnection newConnection fail], command = " + command.getName() + ", attempts = " + attempts);
-                                            clusterClient.renew.renew();
+                                            clusterClient.renew();
                                             CompletableFutureWrapper.this.future.complete(reply);
                                         } else {
                                             ErrorLogCollector.collect(RedisClusterClient.class,
@@ -658,7 +662,7 @@ public class RedisClusterClient implements IUpstreamClient {
                                     if (connection == null || !connection.isValid()) {
                                         ErrorLogCollector.collect(RedisClusterClient.class,
                                                 "MOVED, [RedisConnection get fail], command = " + command.getName() + ", attempts = " + attempts);
-                                        clusterClient.renew.renew();
+                                        clusterClient.renew();
                                         CompletableFutureWrapper.this.future.complete(reply);
                                     } else {
                                         ErrorLogCollector.collect(RedisClusterClient.class,
@@ -691,7 +695,7 @@ public class RedisClusterClient implements IUpstreamClient {
                                         if (connection == null || !connection.isValid()) {
                                             ErrorLogCollector.collect(RedisClusterClient.class,
                                                     "ASK, [BlockingCommand] [RedisConnection newConnection fail], command = " + command.getName() + ", attempts = " + attempts);
-                                            clusterClient.renew.renew();
+                                            clusterClient.renew();
                                             CompletableFutureWrapper.this.future.complete(reply);
                                         } else {
                                             ErrorLogCollector.collect(RedisClusterClient.class,
@@ -712,7 +716,7 @@ public class RedisClusterClient implements IUpstreamClient {
                                     if (connection == null || !connection.isValid()) {
                                         ErrorLogCollector.collect(RedisClusterClient.class,
                                                 "ASK, [RedisConnection get fail], command = " + command.getName() + ", attempts = " + attempts);
-                                        clusterClient.renew.renew();
+                                        clusterClient.renew();
                                         CompletableFutureWrapper.this.future.complete(reply);
                                     } else {
                                         ErrorLogCollector.collect(RedisClusterClient.class,
