@@ -66,7 +66,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
         }
         RedisConnectionAddr addr = getAddr();
-        boolean result = RedisConnectionHub.getInstance().preheat(getResource(), addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), addr.getDb());
+        boolean result = RedisConnectionHub.getInstance().preheat(this, addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), addr.getDb());
         if (logger.isInfoEnabled()) {
             logger.info("preheat result = {}, url = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()));
         }
@@ -134,7 +134,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
                 boolean first = false;
                 if (bindConnection == null) {
-                    bindConnection = command.getChannelInfo().acquireBindSubscribeRedisConnection(getResource(), getAddr(db));
+                    bindConnection = command.getChannelInfo().acquireBindSubscribeRedisConnection(this, getAddr(db));
                     channelInfo.setBindConnection(bindConnection);
                     first = true;
                 }
@@ -191,7 +191,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                 }
             } else if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
                 if (bindConnection == null) {
-                    bindConnection = command.getChannelInfo().acquireBindRedisConnection(getResource(), getAddr(db));
+                    bindConnection = command.getChannelInfo().acquireBindRedisConnection(this, getAddr(db));
                     channelInfo.setBindConnection(bindConnection);
                 }
                 if (bindConnection == null) {
@@ -297,7 +297,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             return;
         }
         Command lastBlockingCommand = commands.get(commands.size() - 1);
-        RedisConnection connection = lastBlockingCommand.getChannelInfo().acquireBindRedisConnection(getResource(), addr);
+        RedisConnection connection = lastBlockingCommand.getChannelInfo().acquireBindRedisConnection(this, addr);
         if (connection != null) {
             connection.sendCommand(commands, completableFutureList);
             connection.startIdleCheck();
@@ -321,7 +321,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             }
             return;
         }
-        RedisConnection connection = RedisConnectionHub.getInstance().get(getResource(), addr);
+        RedisConnection connection = RedisConnectionHub.getInstance().get(this, addr);
         if (connection != null) {
             connection.sendCommand(commands, completableFutureList);
         } else {

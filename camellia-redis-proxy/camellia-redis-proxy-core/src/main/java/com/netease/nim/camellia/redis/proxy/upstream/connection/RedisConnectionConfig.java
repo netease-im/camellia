@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.connection;
 
 import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvider;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import io.netty.channel.EventLoop;
 
 import javax.net.ssl.SSLContext;
@@ -40,6 +41,8 @@ public class RedisConnectionConfig {
     private SSLContext sslContext;
 
     private ProxyUpstreamTlsProvider proxyUpstreamTlsProvider;
+
+    private IUpstreamClient upstreamClient;
 
     public String getHost() {
         return host;
@@ -231,5 +234,13 @@ public class RedisConnectionConfig {
 
     public void setProxyUpstreamTlsProvider(ProxyUpstreamTlsProvider proxyUpstreamTlsProvider) {
         this.proxyUpstreamTlsProvider = proxyUpstreamTlsProvider;
+    }
+
+    public IUpstreamClient getUpstreamClient() {
+        return upstreamClient;
+    }
+
+    public void setUpstreamClient(IUpstreamClient upstreamClient) {
+        this.upstreamClient = upstreamClient;
     }
 }

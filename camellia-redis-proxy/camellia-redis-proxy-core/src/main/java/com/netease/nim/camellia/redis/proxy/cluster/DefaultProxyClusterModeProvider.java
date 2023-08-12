@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.cluster;
 
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
@@ -171,7 +172,7 @@ public class DefaultProxyClusterModeProvider implements ProxyClusterModeProvider
         AtomicBoolean lock = CamelliaMapUtils.computeIfAbsent(heartbeatLock, node, n -> new AtomicBoolean(false));
         if (lock.compareAndSet(false, true)) {
             try {
-                RedisConnection connection = RedisConnectionHub.getInstance().get(null, toAddr(node));
+                RedisConnection connection = RedisConnectionHub.getInstance().get(toAddr(node));
                 if (connection != null) {
                     CompletableFuture<Reply> future = connection.sendCommand(RedisCommand.CLUSTER.raw(),
                             Utils.stringToBytes(RedisKeyword.PROXY_HEARTBEAT.name()), Utils.stringToBytes(current().toString()),

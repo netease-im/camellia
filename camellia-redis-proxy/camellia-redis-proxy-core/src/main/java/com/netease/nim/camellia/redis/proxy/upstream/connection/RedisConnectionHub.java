@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvider;
 import com.netease.nim.camellia.redis.proxy.tls.upstream.RedisResourceTlsEnableCache;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.tools.utils.LockMap;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
@@ -139,20 +140,10 @@ public class RedisConnectionHub {
         eventLoopThreadLocal.set(eventLoop);
     }
 
-
-    /**
-     * 获取一个连接，优先使用相同eventLoop的连接，如果获取不到，则走公共连接池
-     * @param resource 归属的resource
-     * @param host host
-     * @param port port
-     * @param userName userName
-     * @param password password
-     * @return RedisConnection
-     */
-    public RedisConnection get(Resource resource, String host, int port, String userName, String password) {
+    public RedisConnection get(IUpstreamClient upstreamClient, String host, int port, String userName, String password) {
         try {
             RedisConnectionAddr addr = new RedisConnectionAddr(host, port, userName, password, false, 0, false);
-            return get(resource, addr);
+            return get(upstreamClient, addr);
         } catch (Exception e) {
             ErrorLogCollector.collect(RedisConnectionHub.class,
                     "get RedisConnection error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
@@ -160,14 +151,24 @@ public class RedisConnectionHub {
         }
     }
 
+    public RedisConnection get(RedisConnectionAddr addr) {
+        return get(null, null, addr);
+    }
+
+    public RedisConnection get(IUpstreamClient upstreamClient, RedisConnectionAddr addr) {
+        Resource resource = upstreamClient == null ? null : upstreamClient.getResource();
+        return get(resource, upstreamClient, addr);
+    }
+
 
     /**
      * 获取一个连接，优先使用相同eventLoop的连接，如果获取不到，则走公共连接池
      * @param resource 归属的resource
+     * @param upstreamClient upstreamClient
      * @param addr addr
      * @return RedisConnection
      */
-    public RedisConnection get(Resource resource, RedisConnectionAddr addr) {
+    public RedisConnection get(Resource resource, IUpstreamClient upstreamClient, RedisConnectionAddr addr) {
         try {
             RedisConnection cache = addr.getCache();
             if (cache != null && cache.isValid()) {
@@ -186,7 +187,7 @@ public class RedisConnectionHub {
                 }
                 //如果没有初始化好，或者已有连接不可用了，则初始化一个
                 LockMap lockMap = CamelliaMapUtils.computeIfAbsent(this.lockMapMap, eventLoop, k -> new LockMap());
-                connection = initRedisConnection(resource, map, lockMap, eventLoop, addr);
+                connection = initRedisConnection(resource, upstreamClient, map, lockMap, eventLoop, addr);
                 if (connection != null && connection.isValid()) {
                     addr.setCache(connection);//如果是使用当前eventLoop初始化的，则可以放入快速缓存
                     return connection;
@@ -200,7 +201,7 @@ public class RedisConnectionHub {
             //如果没有，则使用公共eventLoopGroup去初始化一个连接
             eventLoop = eventLoopGroup.next();
             LockMap lockMap = CamelliaMapUtils.computeIfAbsent(this.lockMapMap, addr.getUrl(), k -> new LockMap());
-            connection = initRedisConnection(resource, map, lockMap, eventLoop, addr);
+            connection = initRedisConnection(resource, upstreamClient, map, lockMap, eventLoop, addr);
             if (connection != null && connection.isValid()) {
                 return connection;
             }
@@ -209,6 +210,16 @@ public class RedisConnectionHub {
             return null;
         } catch (Exception e) {
             ErrorLogCollector.collect(RedisConnectionHub.class, "get RedisConnection error, addr = " + addr.getUrl(), e);
+            return null;
+        }
+    }
+
+    public RedisConnection newConnection(IUpstreamClient upstreamClient, String host, int port, String userName, String password) {
+        try {
+            return newConnection(upstreamClient.getResource(), upstreamClient, new RedisConnectionAddr(host, port, userName, password, false, 0, false));
+        } catch (Exception e) {
+            ErrorLogCollector.collect(RedisConnectionHub.class,
+                    "new RedisConnection error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
             return null;
         }
     }
@@ -223,7 +234,7 @@ public class RedisConnectionHub {
      */
     public RedisConnection newConnection(Resource resource, String host, int port, String userName, String password) {
         try {
-            return newConnection(resource, new RedisConnectionAddr(host, port, userName, password, false, 0, false));
+            return newConnection(resource, null, new RedisConnectionAddr(host, port, userName, password, false, 0, false));
         } catch (Exception e) {
             ErrorLogCollector.collect(RedisConnectionHub.class,
                     "new RedisConnection error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
@@ -231,18 +242,25 @@ public class RedisConnectionHub {
         }
     }
 
+    public RedisConnection newConnection(IUpstreamClient upstreamClient, RedisConnectionAddr addr) {
+        Resource resource = upstreamClient == null ? null : upstreamClient.getResource();
+        return newConnection(resource, upstreamClient, addr);
+    }
+
     /**
      * 新建一个连接，优先使用当前eventLoop新建连接，如果没有，则走公共eventLoopGroup新建连接
+     * @param resource resource
+     * @param upstreamClient upstreamClient
      * @param addr addr
      * @return RedisConnection
      */
-    public RedisConnection newConnection(Resource resource, RedisConnectionAddr addr) {
+    public RedisConnection newConnection(Resource resource, IUpstreamClient upstreamClient, RedisConnectionAddr addr) {
         try {
             EventLoop eventLoop = eventLoopThreadLocal.get();
             if (eventLoop == null) {
                 eventLoop = eventLoopGroup.next();
             }
-            RedisConnection connection = initRedisConnection(eventLoop, addr, false, false, true, resource);
+            RedisConnection connection = initRedisConnection(eventLoop, addr, false, false, true, resource, upstreamClient);
             if (connection.isValid()) {
                 return connection;
             } else {
@@ -250,25 +268,14 @@ public class RedisConnectionHub {
                 return null;
             }
         } catch (Exception e) {
-            ErrorLogCollector.collect(RedisConnectionHub.class, "new RedisConnection error, addr = " + addr.getUrl(), e);
+            ErrorLogCollector.collect(RedisConnectionHub.class, "new RedisConnection error, addr = " + PasswordMaskUtils.maskAddr(addr), e);
             return null;
         }
     }
 
     /**
      * 预热一组连接（使用主EventLoopGroup）
-     * @param host host
-     * @param port port
-     * @param userName userName
-     * @param password password
-     * @return true/false
-     */
-    public boolean preheat(Resource resource, String host, int port, String userName, String password) {
-        return preheat(resource, host, port, userName, password, 0);
-    }
-
-    /**
-     * 预热一组连接（使用主EventLoopGroup）
+     * @param upstreamClient upstreamClient
      * @param host host
      * @param port port
      * @param userName userName
@@ -276,7 +283,7 @@ public class RedisConnectionHub {
      * @param db db
      * @return true/false
      */
-    public boolean preheat(Resource resource, String host, int port, String userName, String password, int db) {
+    public boolean preheat(IUpstreamClient upstreamClient, String host, int port, String userName, String password, int db) {
         EventLoopGroup workGroup = GlobalRedisProxyEnv.getWorkGroup();
         int workThread = GlobalRedisProxyEnv.getWorkThread();
         RedisConnectionAddr addr = new RedisConnectionAddr(host, port, userName, password, db);
@@ -285,7 +292,7 @@ public class RedisConnectionHub {
             for (int i = 0; i < GlobalRedisProxyEnv.getWorkThread(); i++) {
                 EventLoop eventLoop = workGroup.next();
                 updateEventLoop(eventLoop);
-                RedisConnection redisConnection = get(resource, new RedisConnectionAddr(host, port, userName, password, db));
+                RedisConnection redisConnection = get(upstreamClient, new RedisConnectionAddr(host, port, userName, password, db));
                 if (redisConnection == null) {
                     logger.error("preheat fail, addr = {}", PasswordMaskUtils.maskAddr(addr));
                     throw new CamelliaRedisException("preheat fail, addr = " + PasswordMaskUtils.maskAddr(addr));
@@ -319,7 +326,7 @@ public class RedisConnectionHub {
     }
 
     //初始化一个连接，初始化完成后会放入map，会做并发控制，map中只有一个实例
-    private RedisConnection initRedisConnection(Resource resource, ConcurrentHashMap<String, RedisConnection> map, LockMap lockMap,
+    private RedisConnection initRedisConnection(Resource resource, IUpstreamClient upstreamClient, ConcurrentHashMap<String, RedisConnection> map, LockMap lockMap,
                                                 EventLoop eventLoop, RedisConnectionAddr addr) {
         String url = addr.getUrl();
         RedisConnection connection = map.get(url);
@@ -327,7 +334,7 @@ public class RedisConnectionHub {
             synchronized (lockMap.getLockObj(url)) {
                 connection = map.get(url);
                 if (connection == null || !connection.isValid()) {
-                    connection = initRedisConnection(eventLoop, addr, true, true, false, resource);
+                    connection = initRedisConnection(eventLoop, addr, true, true, false, resource, null);
                     if (connection.isValid()) {
                         RedisConnection oldConnection = map.put(url, connection);
                         if (oldConnection != null) {
@@ -347,7 +354,8 @@ public class RedisConnectionHub {
 
     //初始化一个连接
     private RedisConnection initRedisConnection(EventLoop eventLoop, RedisConnectionAddr addr, boolean heartbeatEnable,
-                                                boolean checkIdle, boolean skipCommandSpendTimeMonitor, Resource resource) {
+                                                boolean checkIdle, boolean skipCommandSpendTimeMonitor,
+                                                Resource resource, IUpstreamClient upstreamClient) {
         RedisConnectionConfig config = new RedisConnectionConfig();
         config.setHost(addr.getHost());
         config.setPort(addr.getPort());

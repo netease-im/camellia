@@ -33,7 +33,7 @@ public interface IUpstreamClient {
 
     default RedisConnectionStatus getStatus(RedisConnectionAddr addr) {
         if (addr == null) return RedisConnectionStatus.INVALID;
-        RedisConnection redisConnection = RedisConnectionHub.getInstance().get(getResource(), addr);
+        RedisConnection redisConnection = RedisConnectionHub.getInstance().get(this, addr);
         if (redisConnection == null) {
             return RedisConnectionStatus.INVALID;
         }

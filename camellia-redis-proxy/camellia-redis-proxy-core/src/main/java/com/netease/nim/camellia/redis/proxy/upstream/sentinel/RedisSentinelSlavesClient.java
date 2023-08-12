@@ -215,13 +215,13 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
         logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
         if (masterAddr != null) {
             logger.info("try preheat, url = {}, master = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(masterName));
-            boolean result = RedisConnectionHub.getInstance().preheat(getResource(), masterAddr.getHost(), masterAddr.getPort(), masterAddr.getUserName(), masterAddr.getPassword(), masterAddr.getDb());
+            boolean result = RedisConnectionHub.getInstance().preheat(this, masterAddr.getHost(), masterAddr.getPort(), masterAddr.getUserName(), masterAddr.getPassword(), masterAddr.getDb());
             logger.info("preheat result = {}, url = {}, master = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(masterName));
         }
         if (slaves != null) {
             for (RedisConnectionAddr slave : slaves) {
                 logger.info("try preheat, url = {}, slave = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(slave));
-                boolean result = RedisConnectionHub.getInstance().preheat(getResource(), slave.getHost(), slave.getPort(), slave.getUserName(), slave.getPassword(), slave.getDb());
+                boolean result = RedisConnectionHub.getInstance().preheat(this, slave.getHost(), slave.getPort(), slave.getUserName(), slave.getPassword(), slave.getDb());
                 logger.info("preheat result = {}, url = {}, slave = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(slave));
             }
         }

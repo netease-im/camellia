@@ -162,6 +162,13 @@ public class RedisConnection {
                     config.getFastFailStats().incrFail(addr.getUrl());
                     status = RedisConnectionStatus.INVALID;
                     logger.error("{} connect fail", connectionName, future.cause());
+                    try {
+                        if (config.getUpstreamClient() != null) {
+                            config.getUpstreamClient().renew();
+                        }
+                    } catch (Exception e) {
+                        logger.error("upstream client renew fail by {}", connectionName, e);
+                    }
                 }
             });
         } catch (Exception e) {
@@ -387,6 +394,13 @@ public class RedisConnection {
             status = RedisConnectionStatus.INVALID;
             logger.error("{} initialize fail", connectionName, e);
             stop();
+            try {
+                if (config.getUpstreamClient() != null) {
+                    config.getUpstreamClient().renew();
+                }
+            } catch (Exception ex) {
+                logger.error("upstream client renew fail by {}", connectionName, ex);
+            }
         }
     }
 

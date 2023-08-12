@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.base.resource.RedisClusterResource;
 import com.netease.nim.camellia.redis.base.resource.RedisClusterSlavesResource;
 import com.netease.nim.camellia.redis.base.resource.RedissClusterResource;
 import com.netease.nim.camellia.redis.base.resource.RedissClusterSlavesResource;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
@@ -40,6 +41,8 @@ public class RedisClusterSlotInfo {
     private volatile Set<Node> masterSlaveNodeSet = new HashSet<>();
     private volatile NodeWithSlaves[] nodeWithSlavesArray = new NodeWithSlaves[SLOT_SIZE];
 
+    private final RedisClusterClient  redisClusterClient;
+
     private final Type type;
 
     private RedisClusterResource redisClusterResource;
@@ -52,10 +55,12 @@ public class RedisClusterSlotInfo {
     private final String userName;
     private final String password;
 
-    public RedisClusterSlotInfo(RedisClusterResource resource) {
+
+    public RedisClusterSlotInfo(RedisClusterResource resource, RedisClusterClient  redisClusterClient) {
         if (resource == null) {
             throw new CamelliaRedisException("resource is null");
         }
+        this.redisClusterClient = redisClusterClient;
         this.redisClusterResource = resource;
         this.maskUrl = PasswordMaskUtils.maskResource(resource.getUrl());
         this.nodes = resource.getNodes();
@@ -64,10 +69,11 @@ public class RedisClusterSlotInfo {
         this.type = Type.MASTER_ONLY;
     }
 
-    public RedisClusterSlotInfo(RedissClusterResource resource) {
+    public RedisClusterSlotInfo(RedissClusterResource resource, RedisClusterClient  redisClusterClient) {
         if (resource == null) {
             throw new CamelliaRedisException("resource is null");
         }
+        this.redisClusterClient = redisClusterClient;
         this.redissClusterResource = resource;
         this.maskUrl = PasswordMaskUtils.maskResource(resource.getUrl());
         this.nodes = resource.getNodes();
@@ -76,10 +82,11 @@ public class RedisClusterSlotInfo {
         this.type = Type.MASTER_ONLY;
     }
 
-    public RedisClusterSlotInfo(RedisClusterSlavesResource resource) {
+    public RedisClusterSlotInfo(RedisClusterSlavesResource resource, RedisClusterClient  redisClusterClient) {
         if (resource == null) {
             throw new CamelliaRedisException("resource is null");
         }
+        this.redisClusterClient = redisClusterClient;
         this.redisClusterSlavesResource = resource;
         this.maskUrl = PasswordMaskUtils.maskResource(resource.getUrl());
         this.nodes = resource.getNodes();
@@ -92,10 +99,11 @@ public class RedisClusterSlotInfo {
         }
     }
 
-    public RedisClusterSlotInfo(RedissClusterSlavesResource resource) {
+    public RedisClusterSlotInfo(RedissClusterSlavesResource resource, RedisClusterClient  redisClusterClient) {
         if (redisClusterSlavesResource == null) {
             throw new CamelliaRedisException("resource is null");
         }
+        this.redisClusterClient = redisClusterClient;
         this.redissClusterSlavesResource = resource;
         this.maskUrl = PasswordMaskUtils.maskResource(resource.getUrl());
         this.nodes = resource.getNodes();
@@ -136,7 +144,7 @@ public class RedisClusterSlotInfo {
     public RedisConnection getConnection(int slot) {
         Node node = getNode(slot);
         if (node == null) return null;
-        return RedisConnectionHub.getInstance().get(getResource(), node.getAddr());
+        return RedisConnectionHub.getInstance().get(redisClusterClient, node.getAddr());
     }
 
     /**
@@ -214,7 +222,7 @@ public class RedisClusterSlotInfo {
             Node master = this.masterNodeList.get(index);
             if (master == null) return null;
             if (type == Type.MASTER_ONLY) {
-                return RedisConnectionHub.getInstance().get(getResource(), master.getAddr());
+                return RedisConnectionHub.getInstance().get(redisClusterClient, master.getAddr());
             } else if (type == Type.SLAVE_ONLY) {
                 List<Node> slaves = masterSlaveMap.get(master);
                 try {
@@ -223,30 +231,30 @@ public class RedisClusterSlotInfo {
                     }
                     if (slaves.size() == 1) {
                         Node slave = slaves.get(0);
-                        return RedisConnectionHub.getInstance().get(getResource(), slave.getAddr());
+                        return RedisConnectionHub.getInstance().get(redisClusterClient, slave.getAddr());
                     } else {
                         int i = ThreadLocalRandom.current().nextInt(slaves.size());
                         Node slave = slaves.get(i);
-                        return RedisConnectionHub.getInstance().get(getResource(), slave.getAddr());
+                        return RedisConnectionHub.getInstance().get(redisClusterClient, slave.getAddr());
                     }
                 } catch (Exception e) {
                     Node slave = slaves.get(0);
-                    return RedisConnectionHub.getInstance().get(getResource(), slave.getAddr());
+                    return RedisConnectionHub.getInstance().get(redisClusterClient, slave.getAddr());
                 }
             } else if (type == Type.MASTER_SLAVE) {
                 try {
                     List<Node> slaves = masterSlaveMap.get(master);
                     if (slaves == null || slaves.isEmpty()) {
-                        return RedisConnectionHub.getInstance().get(getResource(), master.getAddr());
+                        return RedisConnectionHub.getInstance().get(redisClusterClient, master.getAddr());
                     }
                     int i = ThreadLocalRandom.current().nextInt(slaves.size() + 1);
                     if (i == 0) {
-                        return RedisConnectionHub.getInstance().get(getResource(), master.getAddr());
+                        return RedisConnectionHub.getInstance().get(redisClusterClient, master.getAddr());
                     }
                     Node slave = slaves.get(i - 1);
-                    return RedisConnectionHub.getInstance().get(getResource(), slave.getAddr());
+                    return RedisConnectionHub.getInstance().get(redisClusterClient, slave.getAddr());
                 } catch (Exception e) {
-                    return RedisConnectionHub.getInstance().get(getResource(), master.getAddr());
+                    return RedisConnectionHub.getInstance().get(redisClusterClient, master.getAddr());
                 }
             } else {
                 return null;
@@ -561,7 +569,7 @@ public class RedisClusterSlotInfo {
 
     private boolean checkValid(Node node) {
         if (node == null) return false;
-        RedisConnection redisConnection = RedisConnectionHub.getInstance().get(getResource(), node.getAddr());
+        RedisConnection redisConnection = RedisConnectionHub.getInstance().get(redisClusterClient, node.getAddr());
         if (redisConnection == null) {
             return false;
         }

@@ -141,7 +141,7 @@ public class ChannelInfo {
         return null;
     }
 
-    public RedisConnection acquireBindRedisConnection(Resource resource, RedisConnectionAddr addr) {
+    public RedisConnection acquireBindRedisConnection(IUpstreamClient upstreamClient, RedisConnectionAddr addr) {
         if (mock) {
             return null;
         }
@@ -152,7 +152,7 @@ public class ChannelInfo {
                 return connection;
             }
         }
-        RedisConnection connection = RedisConnectionHub.getInstance().newConnection(resource, addr);
+        RedisConnection connection = RedisConnectionHub.getInstance().newConnection(upstreamClient, addr);
         if (connection == null || !connection.isValid()) return null;
         if (bindRedisConnectionCache == null) {
             synchronized (this) {
@@ -165,7 +165,7 @@ public class ChannelInfo {
         return connection;
     }
 
-    public RedisConnection acquireBindSubscribeRedisConnection(Resource resource, RedisConnectionAddr addr) {
+    public RedisConnection acquireBindSubscribeRedisConnection(IUpstreamClient upstreamClient, RedisConnectionAddr addr) {
         if (mock) {
             return null;
         }
@@ -176,7 +176,7 @@ public class ChannelInfo {
                 return connection;
             }
         }
-        RedisConnection connection = RedisConnectionHub.getInstance().newConnection(resource, addr);
+        RedisConnection connection = RedisConnectionHub.getInstance().newConnection(upstreamClient, addr);
         if (connection == null || !connection.isValid()) return null;
         if (bindSubscribeRedisConnectionCache == null) {
             synchronized (this) {
