@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.proxy.upstream.utils;
 
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
-import com.netease.nim.camellia.redis.proxy.upstream.proxies.AbstractRedisProxiesClient;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
@@ -46,14 +45,14 @@ public class Renew {
                         renewTask.run();
                         lastRenewTimestamp = TimeCache.currentMillis;
                     } catch (Exception e) {
-                        ErrorLogCollector.collect(AbstractRedisProxiesClient.class, "renew error, url = " + PasswordMaskUtils.maskResource(resource), e);
+                        ErrorLogCollector.collect(Renew.class, "renew error, url = " + PasswordMaskUtils.maskResource(resource), e);
                     } finally {
                         renewLock.set(false);
                     }
                 });
             }
         } catch (Exception e) {
-            ErrorLogCollector.collect(AbstractRedisProxiesClient.class, "submit renew task error, url = " + PasswordMaskUtils.maskResource(resource), e);
+            ErrorLogCollector.collect(Renew.class, "submit renew task error, url = " + PasswordMaskUtils.maskResource(resource), e);
         }
     }
 
