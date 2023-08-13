@@ -115,10 +115,10 @@ public class DefaultProxyShutdown implements ProxyShutdown {
         int size = 0;
         List<IUpstreamClient> upstreamClients = new ArrayList<>(clientFactory.getAll());
         for (IUpstreamClient client : upstreamClients) {
-            IUpstreamClient upstreamClient = clientFactory.remove(client.getUrl());
+            IUpstreamClient upstreamClient = clientFactory.remove(client.getResource().getUrl());
             if (upstreamClient != null) {
                 upstreamClient.shutdown();
-                logger.warn("upstream client = {} shutdown", upstreamClient.getUrl());
+                logger.warn("upstream client = {} shutdown", upstreamClient.getResource().getUrl());
                 size ++;
             }
         }

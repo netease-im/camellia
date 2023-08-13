@@ -38,10 +38,11 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
         logger.info("preheat success, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
     }
 
-    protected void init() {
+    @Override
+    public void start() {
         refresh(true);
         if (originalList.isEmpty()) {
-            throw new CamelliaRedisException("init fail, no reachable proxy, resource = " + getResource().getUrl());
+            throw new CamelliaRedisException("init fail, no reachable proxy, resource = " + PasswordMaskUtils.maskResource(getResource()));
         }
         int seconds = ProxyDynamicConf.getInt("redis.proxies.reload.interval.seconds", 60);
         this.renew = new Renew(getResource(), this::renew0, seconds);
@@ -49,8 +50,10 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
 
     @Override
     public synchronized void shutdown() {
-        renew.close();
-        logger.warn("upstream client shutdown, url = {}", getUrl());
+        if (renew != null) {
+            renew.close();
+        }
+        logger.warn("upstream client shutdown, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
 
     @Override
@@ -148,7 +151,9 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
 
     @Override
     public void renew() {
-        renew.renew();
+        if (renew != null) {
+            renew.renew();
+        }
     }
 
     private void renew0() {

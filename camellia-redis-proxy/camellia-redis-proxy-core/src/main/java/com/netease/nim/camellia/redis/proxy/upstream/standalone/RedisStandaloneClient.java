@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.standalone;
 
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.resource.RedissResource;
+import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.base.resource.RedisResource;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
@@ -23,13 +24,16 @@ public class RedisStandaloneClient extends AbstractSimpleRedisClient {
     public RedisStandaloneClient(RedisResource resource) {
         this.resource = resource;
         this.addr = new RedisConnectionAddr(resource.getHost(), resource.getPort(), resource.getUserName(), resource.getPassword(), resource.getDb());
-        logger.info("RedisStandaloneClient init success, resource = {}", resource.getUrl());
     }
 
     public RedisStandaloneClient(RedissResource resource) {
         this.resource = resource;
         this.addr = new RedisConnectionAddr(resource.getHost(), resource.getPort(), resource.getUserName(), resource.getPassword(), resource.getDb());
-        logger.info("RedisStandaloneClient init success, resource = {}", resource.getUrl());
+    }
+
+    @Override
+    public void start() {
+        logger.info("RedisStandaloneClient start success, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
 
     @Override

@@ -19,9 +19,9 @@ public interface IUpstreamClient {
 
     void sendCommand(int db, List<Command> commands, List<CompletableFuture<Reply>> futureList);
 
-    void preheat();
+    void start();
 
-    String getUrl();
+    void preheat();
 
     boolean isValid();
 

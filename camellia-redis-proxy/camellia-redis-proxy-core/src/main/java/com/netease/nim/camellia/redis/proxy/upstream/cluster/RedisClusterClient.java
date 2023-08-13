@@ -62,8 +62,6 @@ public class RedisClusterClient implements IUpstreamClient {
         this.password = resource.getPassword();
         this.maxAttempts = maxAttempts;
         this.clusterSlotInfo = new RedisClusterSlotInfo(resource, this);
-        initRenew();
-        logger.info("RedisClusterClient init success, resource = {}", resource.getUrl());
     }
 
     public RedisClusterClient(RedissClusterSlavesResource resource, int maxAttempts) {
@@ -74,8 +72,6 @@ public class RedisClusterClient implements IUpstreamClient {
         this.password = resource.getPassword();
         this.maxAttempts = maxAttempts;
         this.clusterSlotInfo = new RedisClusterSlotInfo(resource, this);
-        initRenew();
-        logger.info("RedisClusterClient init success, resource = {}", resource.getUrl());
     }
 
     public RedisClusterClient(RedisClusterResource resource, int maxAttempts) {
@@ -86,8 +82,6 @@ public class RedisClusterClient implements IUpstreamClient {
         this.password = resource.getPassword();
         this.maxAttempts = maxAttempts;
         this.clusterSlotInfo = new RedisClusterSlotInfo(resource, this);
-        initRenew();
-        logger.info("RedisClusterClient init success, resource = {}", resource.getUrl());
     }
 
     public RedisClusterClient(RedissClusterResource resource, int maxAttempts) {
@@ -98,21 +92,23 @@ public class RedisClusterClient implements IUpstreamClient {
         this.password = resource.getPassword();
         this.maxAttempts = maxAttempts;
         this.clusterSlotInfo = new RedisClusterSlotInfo(resource, this);
-        initRenew();
-        logger.info("RedisClusterClient init success, resource = {}", resource.getUrl());
     }
 
-    private void initRenew() {
+    @Override
+    public void start() {
         if (!renew0()) {
             throw new CamelliaRedisException("RedisClusterSlotInfo init fail, resource = " + PasswordMaskUtils.maskResource(getResource()));
         }
         int intervalSeconds = ProxyDynamicConf.getInt("redis.cluster.schedule.renew.interval.seconds", 600);
         renew = new Renew(getResource(), this::renew0, intervalSeconds);
+        logger.info("RedisClusterClient start success, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
 
     @Override
     public void renew() {
-        renew.renew();
+        if (renew != null) {
+            renew.renew();
+        }
     }
 
     private boolean renew0() {
@@ -150,19 +146,16 @@ public class RedisClusterClient implements IUpstreamClient {
     }
 
     @Override
-    public String getUrl() {
-        return redisClusterResource.getUrl();
-    }
-
-    @Override
     public boolean isValid() {
         return clusterSlotInfo.isValid();
     }
 
     @Override
     public synchronized void shutdown() {
-        renew.close();
-        logger.warn("upstream client shutdown, url = {}", getUrl());
+        if (renew != null) {
+            renew.close();
+        }
+        logger.warn("upstream client shutdown, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
 
     public void sendCommand(int db, List<Command> commands, List<CompletableFuture<Reply>> futureList) {
@@ -171,7 +164,7 @@ public class RedisClusterClient implements IUpstreamClient {
             for (Command command : commands) {
                 commandNames.add(command.getName());
             }
-            logger.debug("receive commands, url = {}, db = {}, commands = {}", getUrl(), db, commandNames);
+            logger.debug("receive commands, url = {}, db = {}, commands = {}", PasswordMaskUtils.maskResource(getResource()), db, commandNames);
         }
         if (db > 0) {
             for (CompletableFuture<Reply> future : futureList) {
@@ -636,7 +629,7 @@ public class RedisClusterClient implements IUpstreamClient {
                                     redisConnection.sendCommand(Collections.singletonList(command), Collections.singletonList(this));
                                     redisConnection.startIdleCheck();
                                 } else {
-                                    RedisConnection connection = RedisConnectionHub.getInstance().newConnection(clusterClient, addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
+                                    RedisConnection connection = RedisConnectionHub.getInstance().newConnection(clusterClient.getResource(), addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword());
                                     try {
                                         if (connection == null || !connection.isValid()) {
                                             ErrorLogCollector.collect(RedisClusterClient.class,

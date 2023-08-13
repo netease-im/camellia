@@ -51,7 +51,6 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
         this.sentinelUserName = resource.getSentinelUserName();
         this.sentinelPassword = resource.getSentinelPassword();
         this.nodes = resource.getNodes();
-        init();
     }
 
     public RedisSentinelClient(RedisSentinelResource resource) {
@@ -63,10 +62,10 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
         this.sentinelUserName = resource.getSentinelUserName();
         this.sentinelPassword = resource.getSentinelPassword();
         this.nodes = resource.getNodes();
-        init();
     }
 
-    private void init() {
+    @Override
+    public void start() {
         boolean sentinelAvailable = false;
         for (RedisSentinelResource.Node node : nodes) {
             RedisSentinelMasterResponse redisSentinelMasterResponse = RedisSentinelUtils.getMasterAddr(resource, node.getHost(), node.getPort(),
@@ -109,7 +108,7 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
         }
         int intervalSeconds = ProxyDynamicConf.getInt("redis.sentinel.schedule.renew.interval.seconds", 600);
         renew = new Renew(resource, this::renew0, intervalSeconds);
-        logger.info("RedisSentinelClient init success, resource = {}", resource.getUrl());
+        logger.info("RedisSentinelClient start success, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
 
     @Override
@@ -133,12 +132,14 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
         for (RedisSentinelMasterListener listener : masterListenerList) {
             listener.shutdown();
         }
-        logger.warn("upstream client shutdown, url = {}", getUrl());
+        logger.warn("upstream client shutdown, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
 
     @Override
     public void renew() {
-        renew.renew();
+        if (renew != null) {
+            renew.renew();
+        }
     }
 
     private void renew0() {

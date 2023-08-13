@@ -56,26 +56,21 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
     }
 
     @Override
-    public String getUrl() {
-        return getResource().getUrl();
-    }
-
-    @Override
     public void preheat() {
         if (logger.isInfoEnabled()) {
-            logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
+            logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource()));
         }
         RedisConnectionAddr addr = getAddr();
         boolean result = RedisConnectionHub.getInstance().preheat(this, addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), addr.getDb());
         if (logger.isInfoEnabled()) {
-            logger.info("preheat result = {}, url = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()));
+            logger.info("preheat result = {}, url = {}", result, PasswordMaskUtils.maskResource(getResource()));
         }
     }
 
     @Override
     public void shutdown() {
         //do nothing
-        logger.warn("upstream client shutdown, url = {}", getUrl());
+        logger.warn("upstream client shutdown, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
 
     public void sendCommand(int db, List<Command> commands, List<CompletableFuture<Reply>> futureList) {
@@ -84,7 +79,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             for (Command command : commands) {
                 commandNames.add(command.getName());
             }
-            logger.debug("receive commands, url = {}, db = {}, commands = {}", getUrl(), db, commandNames);
+            logger.debug("receive commands, resource = {}, db = {}, commands = {}", PasswordMaskUtils.maskResource(getResource()), db, commandNames);
         }
         if (commands.size() == 1) {
             Command command = commands.get(0);

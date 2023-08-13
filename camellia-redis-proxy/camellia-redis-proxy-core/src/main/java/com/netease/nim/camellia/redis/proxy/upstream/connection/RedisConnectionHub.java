@@ -214,16 +214,6 @@ public class RedisConnectionHub {
         }
     }
 
-    public RedisConnection newConnection(IUpstreamClient upstreamClient, String host, int port, String userName, String password) {
-        try {
-            return newConnection(upstreamClient.getResource(), upstreamClient, new RedisConnectionAddr(host, port, userName, password, false, 0, false));
-        } catch (Exception e) {
-            ErrorLogCollector.collect(RedisConnectionHub.class,
-                    "new RedisConnection error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
-            return null;
-        }
-    }
-
     /**
      * 新建一个连接，优先使用当前eventLoop新建连接，如果没有，则走公共eventLoopGroup新建连接
      * @param host host

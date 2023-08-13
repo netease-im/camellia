@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 
-import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
@@ -307,7 +306,7 @@ public class ChannelInfo {
             for (Command command : cachedCommands) {
                 CompletableFuture<Reply> future = new CompletableFuture<>();
                 if (ProxyMonitorCollector.isMonitorEnable()) {
-                    UpstreamFailMonitor.stats(upstreamClient.getUrl(), command, future);
+                    UpstreamFailMonitor.stats(upstreamClient.getResource().getUrl(), command, future);
                 }
                 futureList.add(future);
             }

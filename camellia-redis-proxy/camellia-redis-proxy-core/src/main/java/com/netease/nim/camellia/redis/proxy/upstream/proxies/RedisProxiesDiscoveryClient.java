@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.base.resource.RedisProxiesDiscoveryResourc
 import com.netease.nim.camellia.redis.base.proxy.IProxyDiscovery;
 import com.netease.nim.camellia.redis.base.proxy.Proxy;
 import com.netease.nim.camellia.redis.base.resource.RedissProxiesDiscoveryResource;
+import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import org.slf4j.Logger;
@@ -42,7 +43,6 @@ public class RedisProxiesDiscoveryClient extends AbstractRedisProxiesClient {
         this.userName = resource.getUserName();
         this.password = resource.getPassword();
         this.db = resource.getDb();
-        init();
     }
 
     public RedisProxiesDiscoveryClient(RedissProxiesDiscoveryResource resource) {
@@ -57,11 +57,10 @@ public class RedisProxiesDiscoveryClient extends AbstractRedisProxiesClient {
         this.userName = resource.getUserName();
         this.password = resource.getPassword();
         this.db = resource.getDb();
-        init();
     }
 
-    protected void init() {
-        super.init();
+    @Override
+    public void start() {
         proxyDiscovery.setCallback(new CamelliaDiscovery.Callback<Proxy>() {
             @Override
             public void add(Proxy proxy) {
@@ -74,7 +73,7 @@ public class RedisProxiesDiscoveryClient extends AbstractRedisProxiesClient {
                 RedisProxiesDiscoveryClient.this.remove(toAddr(proxy));
             }
         });
-        logger.info("RedisProxiesDiscoveryClient init success, resource = {}", resource.getUrl());
+        logger.info("RedisProxiesDiscoveryClient start success, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
 
     @Override

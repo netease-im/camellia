@@ -61,7 +61,6 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
         this.sentinelPassword = resource.getSentinelPassword();
         this.nodes = resource.getNodes();
         this.withMaster = resource.isWithMaster();
-        init();
     }
 
     public RedisSentinelSlavesClient(RedisSentinelSlavesResource resource) {
@@ -74,10 +73,10 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
         this.sentinelPassword = resource.getSentinelPassword();
         this.nodes = resource.getNodes();
         this.withMaster = resource.isWithMaster();
-        init();
     }
 
-    private void init() {
+    @Override
+    public void start() {
         boolean sentinelAvailable = false;
         if (withMaster) {
             for (RedisSentinelResource.Node node : nodes) {
@@ -129,7 +128,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                             if (master == null) {
                                 if (oldMaster != null) {
                                     RedisSentinelSlavesClient.this.masterAddr = null;
-                                    logger.info("master update, url = {}, newMaster = {}, oldMaster = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), null, PasswordMaskUtils.maskAddr(oldMaster));
+                                    logger.info("master update, url = {}, newMaster = {}, oldMaster = {}", PasswordMaskUtils.maskResource(getResource()), null, PasswordMaskUtils.maskAddr(oldMaster));
                                 }
                             } else {
                                 RedisConnectionAddr newMaster = new RedisConnectionAddr(master.getHost(), master.getPort(), userName, password, db);
@@ -207,7 +206,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
 
         int intervalSeconds = ProxyDynamicConf.getInt("redis.sentinel.schedule.renew.interval.seconds", 600);
         renew = new Renew(resource, this::renew0, intervalSeconds);
-        logger.info("RedisSentinelSlavesClient init success, resource = {}", resource.getUrl());
+        logger.info("RedisSentinelSlavesClient start success, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
 
     @Override
@@ -324,19 +323,23 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
 
     @Override
     public synchronized void shutdown() {
-        renew.close();
+        if (renew != null) {
+            renew.close();
+        }
         for (RedisSentinelMasterListener listener : masterListenerList) {
             listener.shutdown();
         }
         for (RedisSentinelSlavesListener listener : slavesListenerList) {
             listener.shutdown();
         }
-        logger.warn("upstream client shutdown, url = {}", getUrl());
+        logger.warn("upstream client shutdown, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
 
     @Override
     public void renew() {
-        renew.renew();
+        if (renew != null) {
+            renew.renew();
+        }
     }
 
     private void renew0() {

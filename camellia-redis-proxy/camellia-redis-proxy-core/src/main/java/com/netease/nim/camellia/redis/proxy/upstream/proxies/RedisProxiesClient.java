@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.proxies;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.base.resource.RedisProxiesResource;
 import com.netease.nim.camellia.redis.base.resource.RedissProxiesResource;
+import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,6 @@ public class RedisProxiesClient extends AbstractRedisProxiesClient {
         for (RedisProxiesResource.Node node : nodes) {
             list.add(new RedisConnectionAddr(node.getHost(), node.getPort(), resource.getUserName(), resource.getPassword(), resource.getDb()));
         }
-        init();
         logger.info("RedisProxiesClient init success, resource = {}", resource.getUrl());
     }
 
@@ -37,8 +37,13 @@ public class RedisProxiesClient extends AbstractRedisProxiesClient {
         for (RedisProxiesResource.Node node : nodes) {
             list.add(new RedisConnectionAddr(node.getHost(), node.getPort(), resource.getUserName(), resource.getPassword(), resource.getDb()));
         }
-        init();
         logger.info("RedisProxiesClient init success, resource = {}", resource.getUrl());
+    }
+
+    @Override
+    public void start() {
+        super.start();
+        logger.info("RedisProxiesClient start success, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
 
     @Override
