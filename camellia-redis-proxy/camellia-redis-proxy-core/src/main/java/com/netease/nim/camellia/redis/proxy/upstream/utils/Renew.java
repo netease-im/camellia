@@ -40,16 +40,21 @@ public class Renew {
                 return;
             }
             if (renewLock.compareAndSet(false, true)) {
-                renewExecutor.submit(() -> {
-                    try {
-                        renewTask.run();
-                        lastRenewTimestamp = TimeCache.currentMillis;
-                    } catch (Exception e) {
-                        ErrorLogCollector.collect(Renew.class, "renew error, url = " + PasswordMaskUtils.maskResource(resource), e);
-                    } finally {
-                        renewLock.set(false);
-                    }
-                });
+                try {
+                    renewExecutor.submit(() -> {
+                        try {
+                            renewTask.run();
+                            lastRenewTimestamp = TimeCache.currentMillis;
+                        } catch (Exception e) {
+                            ErrorLogCollector.collect(Renew.class, "renew error, url = " + PasswordMaskUtils.maskResource(resource), e);
+                        } finally {
+                            renewLock.set(false);
+                        }
+                    });
+                } catch (Exception e) {
+                    renewLock.set(false);
+                    throw e;
+                }
             }
         } catch (Exception e) {
             ErrorLogCollector.collect(Renew.class, "submit renew task error, url = " + PasswordMaskUtils.maskResource(resource), e);
