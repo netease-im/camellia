@@ -12,7 +12,7 @@ import java.util.List;
  * redis-sentinel://password@host:port,host:port,host:port/master
  * 3、有密码且有账号
  * redis-sentinel://username:password@host:port,host:port,host:port/master
- *
+ * <p>
  * Created by caojiajun on 2019/10/15.
  */
 public class RedisSentinelResource extends Resource {
@@ -23,6 +23,7 @@ public class RedisSentinelResource extends Resource {
     private final int db;
     private final String sentinelUserName;
     private final String sentinelPassword;
+    private final boolean sentinelSSL;
 
     public RedisSentinelResource(String master, List<Node> nodes, String userName, String password) {
         this(master, nodes, userName, password, 0);
@@ -34,6 +35,11 @@ public class RedisSentinelResource extends Resource {
 
     public RedisSentinelResource(String master, List<Node> nodes, String userName, String password, int db,
                                  String sentinelUserName, String sentinelPassword) {
+        this(master, nodes, userName, password, db, sentinelUserName, sentinelPassword, false);
+    }
+
+    public RedisSentinelResource(String master, List<Node> nodes, String userName, String password, int db,
+                                 String sentinelUserName, String sentinelPassword, boolean sentinelSSL) {
         this.master = master;
         this.nodes = nodes;
         this.password = password;
@@ -41,6 +47,7 @@ public class RedisSentinelResource extends Resource {
         this.db = db;
         this.sentinelUserName = sentinelUserName;
         this.sentinelPassword = sentinelPassword;
+        this.sentinelSSL = sentinelSSL;
         StringBuilder url = new StringBuilder();
         url.append(RedisType.RedisSentinel.getPrefix());
         if (userName != null && password != null) {
@@ -58,7 +65,7 @@ public class RedisSentinelResource extends Resource {
         url.append(master);
 
         boolean withParam = false;
-        if (db > 0 || sentinelUserName != null || sentinelPassword != null) {
+        if (db > 0 || sentinelUserName != null || sentinelPassword != null || sentinelSSL) {
             url.append("?");
             withParam = true;
         }
@@ -70,6 +77,9 @@ public class RedisSentinelResource extends Resource {
         }
         if (sentinelPassword != null) {
             url.append("sentinelPassword=").append(sentinelPassword).append("&");
+        }
+        if (sentinelSSL) {
+            url.append("sentinelSSL=true").append("&");
         }
         if (withParam) {
             url.deleteCharAt(url.length() - 1);
@@ -107,6 +117,10 @@ public class RedisSentinelResource extends Resource {
 
     public String getSentinelPassword() {
         return sentinelPassword;
+    }
+
+    public boolean isSentinelSSL() {
+        return sentinelSSL;
     }
 
     public static class Node {

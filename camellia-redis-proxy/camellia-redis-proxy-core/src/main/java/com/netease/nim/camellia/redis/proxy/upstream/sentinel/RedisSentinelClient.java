@@ -30,6 +30,7 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
     private final AtomicInteger renewIndex = new AtomicInteger(0);
 
     private final Resource resource;
+    private final Resource sentinelResource;
     private final String master;
     private final String userName;
     private final String password;
@@ -44,6 +45,7 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
 
     public RedisSentinelClient(RedissSentinelResource resource) {
         this.resource = resource;
+        this.sentinelResource = RedisSentinelUtils.parseSentinelResource(resource);
         this.master = resource.getMaster();
         this.userName = resource.getUserName();
         this.password = resource.getPassword();
@@ -55,6 +57,7 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
 
     public RedisSentinelClient(RedisSentinelResource resource) {
         this.resource = resource;
+        this.sentinelResource = RedisSentinelUtils.parseSentinelResource(resource);
         this.master = resource.getMaster();
         this.userName = resource.getUserName();
         this.password = resource.getPassword();
@@ -68,7 +71,7 @@ public class RedisSentinelClient extends AbstractSimpleRedisClient {
     public void start() {
         boolean sentinelAvailable = false;
         for (RedisSentinelResource.Node node : nodes) {
-            RedisSentinelMasterResponse redisSentinelMasterResponse = RedisSentinelUtils.getMasterAddr(resource, node.getHost(), node.getPort(),
+            RedisSentinelMasterResponse redisSentinelMasterResponse = RedisSentinelUtils.getMasterAddr(sentinelResource, node.getHost(), node.getPort(),
                     master, sentinelUserName, sentinelPassword);
             if (redisSentinelMasterResponse.isSentinelAvailable()) {
                 sentinelAvailable = redisSentinelMasterResponse.isSentinelAvailable();

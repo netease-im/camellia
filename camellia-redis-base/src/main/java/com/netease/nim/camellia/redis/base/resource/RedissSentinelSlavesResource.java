@@ -27,7 +27,10 @@ public class RedissSentinelSlavesResource extends Resource {
     private final int db;
     private final String sentinelUserName;
     private final String sentinelPassword;
-    public RedissSentinelSlavesResource(String master, List<RedisSentinelResource.Node> nodes, String userName, String password, boolean withMaster, int db, String sentinelUserName, String sentinelPassword) {
+    private final boolean sentinelSSL;
+
+    public RedissSentinelSlavesResource(String master, List<RedisSentinelResource.Node> nodes, String userName, String password,
+                                        boolean withMaster, int db, String sentinelUserName, String sentinelPassword, boolean sentinelSSL) {
         this.master = master;
         this.nodes = nodes;
         this.password = password;
@@ -36,8 +39,9 @@ public class RedissSentinelSlavesResource extends Resource {
         this.db = db;
         this.sentinelUserName = sentinelUserName;
         this.sentinelPassword = sentinelPassword;
+        this.sentinelSSL = sentinelSSL;
         StringBuilder url = new StringBuilder();
-        url.append(RedisType.RedisSentinelSlaves.getPrefix());
+        url.append(RedisType.RedissSentinelSlaves.getPrefix());
         if (userName != null && password != null) {
             url.append(userName).append(":").append(password);
         } else if (userName == null && password != null) {
@@ -61,8 +65,16 @@ public class RedissSentinelSlavesResource extends Resource {
         if (sentinelPassword != null) {
             url.append("sentinelPassword=").append(sentinelPassword).append("&");
         }
+        if (sentinelSSL) {
+            url.append("sentinelSSL=true").append("&");
+        }
         url.deleteCharAt(url.length() - 1);
         this.setUrl(url.toString());
+    }
+
+    public RedissSentinelSlavesResource(String master, List<RedisSentinelResource.Node> nodes, String userName, String password,
+                                        boolean withMaster, int db, String sentinelUserName, String sentinelPassword) {
+        this(master, nodes, userName, password, withMaster, db, sentinelUserName, sentinelPassword, false);
     }
 
     public RedissSentinelSlavesResource(String master, List<RedisSentinelResource.Node> nodes, String userName, String password, boolean withMaster, int db) {
@@ -107,5 +119,9 @@ public class RedissSentinelSlavesResource extends Resource {
 
     public String getSentinelPassword() {
         return sentinelPassword;
+    }
+
+    public boolean isSentinelSSL() {
+        return sentinelSSL;
     }
 }

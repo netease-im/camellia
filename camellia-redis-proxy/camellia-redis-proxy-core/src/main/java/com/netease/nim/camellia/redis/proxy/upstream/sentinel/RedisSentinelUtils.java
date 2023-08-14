@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.sentinel;
 
 import com.netease.nim.camellia.core.model.Resource;
+import com.netease.nim.camellia.redis.base.resource.*;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.HostAndPort;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
@@ -118,4 +119,43 @@ public class RedisSentinelUtils {
         }
         return null;
     }
+
+    public static Resource parseSentinelResource(Resource resource) {
+        resource = RedisResourceUtil.parseResourceByUrl(resource);
+        if (resource instanceof RedisSentinelResource) {
+            if (((RedisSentinelResource) resource).isSentinelSSL()) {
+                return new SSentinelResource(((RedisSentinelResource) resource).getNodes(), ((RedisSentinelResource) resource).getSentinelUserName(),
+                        ((RedisSentinelResource) resource).getSentinelPassword());
+            } else {
+                return new SentinelResource(((RedisSentinelResource) resource).getNodes(), ((RedisSentinelResource) resource).getSentinelUserName(),
+                        ((RedisSentinelResource) resource).getSentinelPassword());
+            }
+        } else if (resource instanceof RedissSentinelResource) {
+            if (((RedissSentinelResource) resource).isSentinelSSL()) {
+                return new SSentinelResource(((RedissSentinelResource) resource).getNodes(), ((RedissSentinelResource) resource).getSentinelUserName(),
+                        ((RedissSentinelResource) resource).getSentinelPassword());
+            } else {
+                return new SentinelResource(((RedissSentinelResource) resource).getNodes(), ((RedissSentinelResource) resource).getSentinelUserName(),
+                        ((RedissSentinelResource) resource).getSentinelPassword());
+            }
+        } else if (resource instanceof RedisSentinelSlavesResource) {
+            if (((RedisSentinelSlavesResource) resource).isSentinelSSL()) {
+                return new SSentinelResource(((RedisSentinelSlavesResource) resource).getNodes(), ((RedisSentinelSlavesResource) resource).getSentinelUserName(),
+                        ((RedisSentinelSlavesResource) resource).getSentinelPassword());
+            } else {
+                return new SentinelResource(((RedisSentinelSlavesResource) resource).getNodes(), ((RedisSentinelSlavesResource) resource).getSentinelUserName(),
+                        ((RedisSentinelSlavesResource) resource).getSentinelPassword());
+            }
+        } else if (resource instanceof RedissSentinelSlavesResource) {
+            if (((RedissSentinelSlavesResource) resource).isSentinelSSL()) {
+                return new SSentinelResource(((RedissSentinelSlavesResource) resource).getNodes(), ((RedissSentinelSlavesResource) resource).getSentinelUserName(),
+                        ((RedissSentinelSlavesResource) resource).getSentinelPassword());
+            } else {
+                return new SentinelResource(((RedissSentinelSlavesResource) resource).getNodes(), ((RedissSentinelSlavesResource) resource).getSentinelUserName(),
+                        ((RedissSentinelSlavesResource) resource).getSentinelPassword());
+            }
+        }
+        throw new IllegalArgumentException("not a sentinel resource");
+    }
+
 }

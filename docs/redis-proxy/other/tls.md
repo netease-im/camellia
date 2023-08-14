@@ -3,6 +3,7 @@
 
 * 支持client到proxy启用ssl/tls
 * 支持proxy到后端redis启用ssl/tls
+* 对于redis-sentinel/redis-sentinel-slave的后端类型，sentinel和redis可以分开进行tls配置
 
 ### client到proxy
 

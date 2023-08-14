@@ -14,7 +14,7 @@ public enum RedisType {
     Redis("redis://", false),
 
     //格式：rediss://password@127.0.0.1:6379
-    //CamelliaRedisTemplate和camellia-redis-proxy同时支持
+    //CamelliaRedisTemplate和camellia-redis-proxy同时支持（暂不支持CamelliaRedisTemplate）
     Rediss("rediss://", true),
 
     //格式：redis-sentinel://password@127.0.0.1:6379,127.0.0.1:6380/masterName
@@ -22,7 +22,7 @@ public enum RedisType {
     RedisSentinel("redis-sentinel://", false),
 
     //格式：rediss-sentinel://password@127.0.0.1:6379,127.0.0.1:6380/masterName
-    //CamelliaRedisTemplate和camellia-redis-proxy同时支持
+    //CamelliaRedisTemplate和camellia-redis-proxy同时支持（暂不支持CamelliaRedisTemplate）
     RedissSentinel("rediss-sentinel://", true),
 
     //格式：redis-cluster://password@127.0.0.1:6379,127.0.0.1:6380
@@ -30,7 +30,7 @@ public enum RedisType {
     RedisCluster("redis-cluster://", false),
 
     //格式：rediss-cluster://password@127.0.0.1:6379,127.0.0.1:6380
-    //CamelliaRedisTemplate和camellia-redis-proxy同时支持
+    //CamelliaRedisTemplate和camellia-redis-proxy同时支持（暂不支持CamelliaRedisTemplate）
     RedissCluster("rediss-cluster://", true),
 
     //格式：redis-proxy://id
@@ -46,7 +46,7 @@ public enum RedisType {
     RedisSentinelSlaves("redis-sentinel-slaves://", false),
 
     //格式：rediss-sentinel-slaves://password@127.0.0.1:6379,127.0.0.1:6380/masterName?withMaster=true
-    //CamelliaRedisTemplate和camellia-redis-proxy同时支持
+    //CamelliaRedisTemplate和camellia-redis-proxy同时支持（暂不支持CamelliaRedisTemplate）
     RedissSentinelSlaves("rediss-sentinel-slaves://", true),
 
     //格式：redis-cluster-slaves://password@127.0.0.1:6379,127.0.0.1:6380?withMaster=true
@@ -62,7 +62,7 @@ public enum RedisType {
     RedisProxies("redis-proxies://", false),//camellia-redis-proxy会随机挑选一个proxy节点，并当做普通redis去访问
 
     //格式：rediss-proxies://password@127.0.0.1:6379,127.0.0.1:6380
-    //CamelliaRedisTemplate和camellia-redis-proxy同时支持
+    //CamelliaRedisTemplate和camellia-redis-proxy同时支持（暂不支持CamelliaRedisTemplate）
     RedissProxies("rediss-proxies://", true),//camellia-redis-proxy会随机挑选一个proxy节点，并当做普通redis去访问
 
     //格式：redis-proxies-discovery://password@proxyName
@@ -70,9 +70,14 @@ public enum RedisType {
     RedisProxiesDiscovery("redis-proxies-discovery://", false),//camellia-redis-proxy会随机挑选一个proxy节点，并当做普通redis去访问
 
     //格式：rediss-proxies-discovery://password@proxyName
-    //CamelliaRedisTemplate和camellia-redis-proxy同时支持
+    //CamelliaRedisTemplate和camellia-redis-proxy同时支持（暂不支持CamelliaRedisTemplate）
     RedissProxiesDiscovery("rediss-proxies-discovery://", true),//camellia-redis-proxy会随机挑选一个proxy节点，并当做普通redis去访问
 
+    //camellia-redis-proxy内部使用
+    Sentinel("sentinel://", false),
+
+    //camellia-redis-proxy内部使用
+    SSentinel("ssentinel://", true),
     ;
     private final String prefix;
     private final boolean tlsEnable;

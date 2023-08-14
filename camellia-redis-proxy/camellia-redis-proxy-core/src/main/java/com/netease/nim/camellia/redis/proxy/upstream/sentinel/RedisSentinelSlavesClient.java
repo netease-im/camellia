@@ -37,6 +37,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
     private final List<RedisSentinelSlavesListener> slavesListenerList = new ArrayList<>();
 
     private final Resource resource;
+    private final Resource sentinelResource;
     private final String masterName;
     private final String userName;
     private final String password;
@@ -53,6 +54,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
 
     public RedisSentinelSlavesClient(RedissSentinelSlavesResource resource) {
         this.resource = resource;
+        this.sentinelResource = RedisSentinelUtils.parseSentinelResource(resource);
         this.masterName = resource.getMaster();
         this.userName = resource.getUserName();
         this.password = resource.getPassword();
@@ -65,6 +67,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
 
     public RedisSentinelSlavesClient(RedisSentinelSlavesResource resource) {
         this.resource = resource;
+        this.sentinelResource = RedisSentinelUtils.parseSentinelResource(resource);
         this.masterName = resource.getMaster();
         this.userName = resource.getUserName();
         this.password = resource.getPassword();
@@ -80,7 +83,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
         boolean sentinelAvailable = false;
         if (withMaster) {
             for (RedisSentinelResource.Node node : nodes) {
-                RedisSentinelMasterResponse masterResponse = RedisSentinelUtils.getMasterAddr(resource, node.getHost(), node.getPort(), masterName,
+                RedisSentinelMasterResponse masterResponse = RedisSentinelUtils.getMasterAddr(sentinelResource, node.getHost(), node.getPort(), masterName,
                         sentinelUserName, sentinelPassword);
                 if (masterResponse.isSentinelAvailable()) {
                     sentinelAvailable = true;
@@ -93,7 +96,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
             }
         }
         for (RedisSentinelResource.Node node : nodes) {
-            RedisSentinelSlavesResponse slavesResponse = RedisSentinelUtils.getSlaveAddrs(getResource(), node.getHost(), node.getPort(), masterName, sentinelUserName, sentinelPassword);
+            RedisSentinelSlavesResponse slavesResponse = RedisSentinelUtils.getSlaveAddrs(sentinelResource, node.getHost(), node.getPort(), masterName, sentinelUserName, sentinelPassword);
             if (slavesResponse.isSentinelAvailable()) {
                 sentinelAvailable = true;
             }

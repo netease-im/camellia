@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -32,6 +31,7 @@ public class RedisSentinelMasterListener extends Thread {
     private static final AtomicLong id = new AtomicLong(0);
 
     private final Resource resource;
+    private final Resource sentinelResource;
     private final HostAndPort sentinel;
     private final MasterUpdateCallback callback;
     private final String master;
@@ -40,10 +40,10 @@ public class RedisSentinelMasterListener extends Thread {
     private boolean running = true;
     private static final int futureBuffer = 32;
     private final AtomicLong futureCount = new AtomicLong();
-    private final AtomicBoolean renewLock = new AtomicBoolean(false);
 
     public RedisSentinelMasterListener(Resource resource, HostAndPort sentinel, String master, String userName, String password, MasterUpdateCallback callback) {
         this.resource = resource;
+        this.sentinelResource = RedisSentinelUtils.parseSentinelResource(resource);
         this.sentinel = sentinel;
         this.callback = callback;
         this.userName = userName;
@@ -66,7 +66,7 @@ public class RedisSentinelMasterListener extends Thread {
                     if (redisConnection != null && !redisConnection.isValid()) {
                         redisConnection.stop();
                     }
-                    redisConnection = RedisConnectionHub.getInstance().newConnection(resource, sentinel.getHost(), sentinel.getPort(), userName, password);
+                    redisConnection = RedisConnectionHub.getInstance().newConnection(sentinelResource, sentinel.getHost(), sentinel.getPort(), userName, password);
                     while (redisConnection == null || !redisConnection.isValid()) {
                         logger.error("connect to sentinel fail, sentinel = {}. sleeping 5000ms and retrying.", sentinel.getUrl());
                         try {
@@ -74,7 +74,7 @@ public class RedisSentinelMasterListener extends Thread {
                         } catch (InterruptedException e) {
                             logger.error(e.getMessage(), e);
                         }
-                        redisConnection = RedisConnectionHub.getInstance().newConnection(resource, sentinel.getHost(), sentinel.getPort(), userName, password);
+                        redisConnection = RedisConnectionHub.getInstance().newConnection(sentinelResource, sentinel.getHost(), sentinel.getPort(), userName, password);
                     }
                 }
                 if (redisConnection.isValid()) {
@@ -112,7 +112,7 @@ public class RedisSentinelMasterListener extends Thread {
 
     public void renew() {
         try {
-            RedisSentinelMasterResponse response = RedisSentinelUtils.getMasterAddr(resource, sentinel.getHost(), sentinel.getPort(),
+            RedisSentinelMasterResponse response = RedisSentinelUtils.getMasterAddr(sentinelResource, sentinel.getHost(), sentinel.getPort(),
                     master, userName, password);
             if (response.isSentinelAvailable()) {
                 HostAndPort hostAndPort = response.getMaster();

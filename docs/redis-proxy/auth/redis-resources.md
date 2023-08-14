@@ -43,6 +43,8 @@ redis-sentinel://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName
 redis-sentinel://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?db=1
 ##有账号也有密码，且设置了db，且设置了sentinel的账号和密码
 redis-sentinel://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?db=1&sentinelUserName=xxx&sentinelPassword=xxx
+##sentinel带tls
+redis-sentinel://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?db=1&sentinelUserName=xxx&sentinelPassword=xxx&sentinelSSL=true
 ```
 带tls
 ```
@@ -106,6 +108,8 @@ redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterNa
 redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true&db=1
 ##有账号也有密码，且设置了db，且设置了sentinel的账号和密码
 redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true&db=1&sentinelUserName=xxx&sentinelPassword=xxx
+##sentinel带tls
+redis-sentinel-slaves://username:passwd@127.0.0.1:16379,127.0.0.1:16379/masterName?withMaster=true&db=1&sentinelUserName=xxx&sentinelPassword=xxx&sentinelSSL=true
 
 ##redis-sentinel-slaves会自动感知：节点宕机、主从切换和节点扩容
 ```

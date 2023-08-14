@@ -324,7 +324,7 @@ public class RedisConnectionHub {
             synchronized (lockMap.getLockObj(url)) {
                 connection = map.get(url);
                 if (connection == null || !connection.isValid()) {
-                    connection = initRedisConnection(eventLoop, addr, true, true, false, resource, null);
+                    connection = initRedisConnection(eventLoop, addr, true, true, false, resource, upstreamClient);
                     if (connection.isValid()) {
                         RedisConnection oldConnection = map.put(url, connection);
                         if (oldConnection != null) {
@@ -380,6 +380,7 @@ public class RedisConnectionHub {
                 ErrorLogCollector.collect(RedisConnectionHub.class, "resource = " + PasswordMaskUtils.maskResource(resource.getUrl()) + " createSSLContext error");
             }
         }
+        config.setUpstreamClient(upstreamClient);
         RedisConnection connection = new RedisConnection(config);
         connection.start();
         return connection;

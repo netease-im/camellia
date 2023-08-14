@@ -113,6 +113,7 @@ public class RedisResourceUtil {
                 int db = 0;
                 String sentinelUserName = null;
                 String sentinelPassword = null;
+                boolean sentinelSSL = false;
                 if (masterWithParams.contains("?")) {
                     int i = masterWithParams.indexOf("?");
                     master = masterWithParams.substring(0, i);
@@ -122,15 +123,22 @@ public class RedisResourceUtil {
                     if (dbStr != null) {
                         db = Integer.parseInt(dbStr);
                     }
+                    String sentinelSSLStr = params.get("sentinelSSL");
+                    if (sentinelSSLStr != null && sentinelSSLStr.trim().length() > 0) {
+                        if (!sentinelSSLStr.equals("true") && !sentinelSSLStr.equals("false")) {
+                            throw new CamelliaRedisException("sentinelSSL only support true/false");
+                        }
+                        sentinelSSL = Boolean.parseBoolean(sentinelSSLStr);
+                    }
                     sentinelUserName = params.get("sentinelUserName");
                     sentinelPassword = params.get("sentinelPassword");
                 } else {
                     master = masterWithParams;
                 }
                 if (redisType == RedisType.RedissSentinel) {
-                    return new RedissSentinelResource(master, nodeList, userName, password, db, sentinelUserName, sentinelPassword);
+                    return new RedissSentinelResource(master, nodeList, userName, password, db, sentinelUserName, sentinelPassword, sentinelSSL);
                 } else {
-                    return new RedisSentinelResource(master, nodeList, userName, password, db, sentinelUserName, sentinelPassword);
+                    return new RedisSentinelResource(master, nodeList, userName, password, db, sentinelUserName, sentinelPassword, sentinelSSL);
                 }
             } else if (redisType == RedisType.RedisCluster || redisType == RedisType.RedissCluster) {
                 String substring = url.substring(redisType.getPrefix().length());
@@ -198,6 +206,7 @@ public class RedisResourceUtil {
                 int db = 0;
                 String sentinelUserName = null;
                 String sentinelPassword = null;
+                boolean sentinelSSL = false;
                 if (masterWithParams.contains("?")) {
                     int i = masterWithParams.indexOf("?");
                     master = masterWithParams.substring(0, i);
@@ -210,6 +219,13 @@ public class RedisResourceUtil {
                         }
                         withMaster = Boolean.parseBoolean(withMasterStr);
                     }
+                    String sentinelSSLStr = params.get("sentinelSSL");
+                    if (sentinelSSLStr != null && sentinelSSLStr.trim().length() > 0) {
+                        if (!sentinelSSLStr.equals("true") && !sentinelSSLStr.equals("false")) {
+                            throw new CamelliaRedisException("sentinelSSL only support true/false");
+                        }
+                        sentinelSSL = Boolean.parseBoolean(sentinelSSLStr);
+                    }
                     String dbStr = params.get("db");
                     if (dbStr != null) {
                         db = Integer.parseInt(dbStr);
@@ -220,9 +236,9 @@ public class RedisResourceUtil {
                     master = masterWithParams;
                 }
                 if (redisType == RedisType.RedisSentinelSlaves) {
-                    return new RedisSentinelSlavesResource(master, nodeList, userName, password, withMaster, db, sentinelUserName, sentinelPassword);
+                    return new RedisSentinelSlavesResource(master, nodeList, userName, password, withMaster, db, sentinelUserName, sentinelPassword, sentinelSSL);
                 } else {
-                    return new RedissSentinelSlavesResource(master, nodeList, userName, password, withMaster, db, sentinelUserName, sentinelPassword);
+                    return new RedissSentinelSlavesResource(master, nodeList, userName, password, withMaster, db, sentinelUserName, sentinelPassword, sentinelSSL);
                 }
             } else if (redisType == RedisType.RedisClusterSlaves || redisType == RedisType.RedissClusterSlaves) {
                 String substring = url.substring(redisType.getPrefix().length());
@@ -339,6 +355,31 @@ public class RedisResourceUtil {
                     return new RedisProxiesDiscoveryResource(userName, password, proxyName, db);
                 } else {
                     return new RedissProxiesDiscoveryResource(userName, password, proxyName, db);
+                }
+            } else if (redisType == RedisType.Sentinel || redisType == RedisType.SSentinel) {
+                String substring = url.substring(redisType.getPrefix().length());
+                if (!substring.contains("@")) {
+                    throw new CamelliaRedisException("missing @");
+                }
+                int index = substring.lastIndexOf("@");
+                String[] userNameAndPassword = getUserNameAndPassword(substring.substring(0, index));
+                String userName = userNameAndPassword[0];
+                String password = userNameAndPassword[1];
+
+                String split = substring.substring(index + 1);
+
+                String[] split2 = split.split(",");
+                List<RedisSentinelResource.Node> nodeList = new ArrayList<>();
+                for (String node : split2) {
+                    String[] split1 = node.split(":");
+                    String ip = split1[0];
+                    int port = Integer.parseInt(split1[1]);
+                    nodeList.add(new RedisSentinelResource.Node(ip, port));
+                }
+                if (redisType == RedisType.Sentinel) {
+                    return new SentinelResource(nodeList, userName, password);
+                } else {
+                    return new SSentinelResource(nodeList, userName, password);
                 }
             }
             throw new CamelliaRedisException("not redis resource");
