@@ -46,7 +46,7 @@ public class Renew {
                             renewTask.run();
                             lastRenewTimestamp = TimeCache.currentMillis;
                         } catch (Exception e) {
-                            ErrorLogCollector.collect(Renew.class, "renew error, url = " + PasswordMaskUtils.maskResource(resource), e);
+                            ErrorLogCollector.collect(Renew.class, "renew error, resource = " + PasswordMaskUtils.maskResource(resource), e);
                         } finally {
                             renewLock.set(false);
                         }
@@ -57,7 +57,7 @@ public class Renew {
                 }
             }
         } catch (Exception e) {
-            ErrorLogCollector.collect(Renew.class, "submit renew task error, url = " + PasswordMaskUtils.maskResource(resource), e);
+            ErrorLogCollector.collect(Renew.class, "submit renew task error, resource = " + PasswordMaskUtils.maskResource(resource), e);
         }
     }
 

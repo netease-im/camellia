@@ -29,13 +29,13 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
 
     @Override
     public void preheat() {
-        logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
+        logger.info("try preheat, resource = {}", PasswordMaskUtils.maskResource(getResource()));
         for (RedisConnectionAddr addr : getAll()) {
-            logger.info("try preheat, url = {}, proxy = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(addr));
+            logger.info("try preheat, resource = {}, proxy = {}", PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(addr));
             boolean result = RedisConnectionHub.getInstance().preheat(this, addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), addr.getDb());
-            logger.info("preheat result = {}, url = {}, proxy = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(addr));
+            logger.info("preheat result = {}, resource = {}, proxy = {}", result, PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(addr));
         }
-        logger.info("preheat success, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
+        logger.info("preheat success, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
 
     @Override
@@ -72,7 +72,7 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
     private void refresh(boolean first) {
         List<RedisConnectionAddr> list = getAll();
         if (list == null || list.isEmpty()) {
-            logger.warn("addr list is empty, skip refresh, resource = {}", getResource());
+            logger.warn("addr list is empty, skip refresh, resource = {}", PasswordMaskUtils.maskResource(getResource()));
             return;
         }
         synchronized (lock) {
@@ -86,7 +86,7 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
                 }
             }
             if (validList.isEmpty()) {
-                logger.warn("no reachable addr list {}, skip refresh, resource = {}", list, getResource());
+                logger.warn("no reachable addr list {}, skip refresh, resource = {}", list, PasswordMaskUtils.maskResource(getResource()));
                 return;
             }
             this.originalList = new ArrayList<>(validList);

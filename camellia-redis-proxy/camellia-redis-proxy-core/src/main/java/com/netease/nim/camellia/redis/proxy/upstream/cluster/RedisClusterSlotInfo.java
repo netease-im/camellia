@@ -5,7 +5,6 @@ import com.netease.nim.camellia.redis.base.resource.RedisClusterResource;
 import com.netease.nim.camellia.redis.base.resource.RedisClusterSlavesResource;
 import com.netease.nim.camellia.redis.base.resource.RedissClusterResource;
 import com.netease.nim.camellia.redis.base.resource.RedissClusterSlavesResource;
-import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionStatus;
 import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
@@ -42,14 +41,8 @@ public class RedisClusterSlotInfo {
     private volatile NodeWithSlaves[] nodeWithSlavesArray = new NodeWithSlaves[SLOT_SIZE];
 
     private final RedisClusterClient  redisClusterClient;
-
+    private final Resource resource;
     private final Type type;
-
-    private RedisClusterResource redisClusterResource;
-    private RedisClusterSlavesResource redisClusterSlavesResource;
-
-    private RedissClusterResource redissClusterResource;
-    private RedissClusterSlavesResource redissClusterSlavesResource;
     private final String maskUrl;
     private final List<RedisClusterResource.Node> nodes;
     private final String userName;
@@ -61,7 +54,7 @@ public class RedisClusterSlotInfo {
             throw new CamelliaRedisException("resource is null");
         }
         this.redisClusterClient = redisClusterClient;
-        this.redisClusterResource = resource;
+        this.resource = resource;
         this.maskUrl = PasswordMaskUtils.maskResource(resource.getUrl());
         this.nodes = resource.getNodes();
         this.password = resource.getPassword();
@@ -74,7 +67,7 @@ public class RedisClusterSlotInfo {
             throw new CamelliaRedisException("resource is null");
         }
         this.redisClusterClient = redisClusterClient;
-        this.redissClusterResource = resource;
+        this.resource = resource;
         this.maskUrl = PasswordMaskUtils.maskResource(resource.getUrl());
         this.nodes = resource.getNodes();
         this.password = resource.getPassword();
@@ -87,7 +80,7 @@ public class RedisClusterSlotInfo {
             throw new CamelliaRedisException("resource is null");
         }
         this.redisClusterClient = redisClusterClient;
-        this.redisClusterSlavesResource = resource;
+        this.resource = resource;
         this.maskUrl = PasswordMaskUtils.maskResource(resource.getUrl());
         this.nodes = resource.getNodes();
         this.password = resource.getPassword();
@@ -100,11 +93,11 @@ public class RedisClusterSlotInfo {
     }
 
     public RedisClusterSlotInfo(RedissClusterSlavesResource resource, RedisClusterClient  redisClusterClient) {
-        if (redisClusterSlavesResource == null) {
+        if (resource == null) {
             throw new CamelliaRedisException("resource is null");
         }
         this.redisClusterClient = redisClusterClient;
-        this.redissClusterSlavesResource = resource;
+        this.resource = resource;
         this.maskUrl = PasswordMaskUtils.maskResource(resource.getUrl());
         this.nodes = resource.getNodes();
         this.password = resource.getPassword();
@@ -128,11 +121,7 @@ public class RedisClusterSlotInfo {
      * @return resource
      */
     public Resource getResource() {
-        if (redisClusterResource != null) return redisClusterResource;
-        if (redisClusterSlavesResource != null) return redisClusterSlavesResource;
-        if (redissClusterResource != null) return redissClusterResource;
-        if (redissClusterSlavesResource != null) return redissClusterSlavesResource;
-        return null;
+        return resource;
     }
 
     /**
@@ -179,7 +168,7 @@ public class RedisClusterSlotInfo {
                 return null;
             }
         } catch (Exception e) {
-            ErrorLogCollector.collect(RedisClusterSlotInfo.class, "getNode error, url = " + maskUrl + ", slot = " + slot, e);
+            ErrorLogCollector.collect(RedisClusterSlotInfo.class, "getNode error, resource = " + maskUrl + ", slot = " + slot, e);
             return null;
         }
     }
@@ -261,7 +250,7 @@ public class RedisClusterSlotInfo {
             }
         } catch (Exception e) {
             ErrorLogCollector.collect(RedisClusterSlotInfo.class,
-                    "getClientByIndex error, url = " + maskUrl + ", index = " + index, e);
+                    "getClientByIndex error, resource = " + maskUrl + ", index = " + index, e);
             return null;
         }
     }
@@ -306,13 +295,13 @@ public class RedisClusterSlotInfo {
                 }
             }
             if (success) {
-                logger.info("renew success, url = {}, master-slave-info:\r\n{}", maskUrl, masterSlaveInfo());
+                logger.info("renew success, resource = {}, master-slave-info:\r\n{}", maskUrl, masterSlaveInfo());
             } else {
-                ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew fail, url = " + maskUrl);
+                ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew fail, resource = " + maskUrl);
             }
             return success;
         } catch (Exception e) {
-            ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew error, url = " + maskUrl, e);
+            ErrorLogCollector.collect(RedisClusterSlotInfo.class, "renew error, resource = " + maskUrl, e);
             return false;
         }
     }
@@ -390,11 +379,11 @@ public class RedisClusterSlotInfo {
             connection = RedisConnectionHub.getInstance().newConnection(getResource(), host, port, userName, password);
             if (connection == null || !connection.isValid()) return false;
             CompletableFuture<Reply> future = connection.sendCommand(RedisCommand.CLUSTER.raw(), Utils.stringToBytes("slots"));
-            logger.info("tryRenew, connection = {}, url = {}", connection.getConnectionName(), maskUrl);
+            logger.info("tryRenew, connection = {}, resource = {}", connection.getConnectionName(), maskUrl);
             Reply reply = future.get(10000, TimeUnit.MILLISECONDS);
             return clusterNodes(reply);
         } catch (Exception e) {
-            logger.error("tryRenew error, host = {}, port = {}, url = {}", host, port, maskUrl, e);
+            logger.error("tryRenew error, host = {}, port = {}, resource = {}", host, port, maskUrl, e);
             return false;
         } finally {
             if (connection != null) {
@@ -453,7 +442,7 @@ public class RedisClusterSlotInfo {
             }
             boolean success = size == SLOT_SIZE;
             if (logger.isDebugEnabled()) {
-                logger.debug("node.size = {}, url = {}", masterNodeSet.size(), maskUrl);
+                logger.debug("node.size = {}, resource = {}", masterNodeSet.size(), maskUrl);
             }
             if (!masterNodeSet.isEmpty()) {
                 this.masterNodeSet = masterNodeSet;
@@ -478,7 +467,7 @@ public class RedisClusterSlotInfo {
                 this.nodeWithSlavesArray = nodeWithSlavesArray;
             }
             if (!success) {
-                logger.error("slot size is {}, not {}, url = {}", size, SLOT_SIZE, maskUrl);
+                logger.error("slot size is {}, not {}, resource = {}", size, SLOT_SIZE, maskUrl);
             }
             return success;
         } catch (CamelliaRedisException e) {
@@ -529,7 +518,7 @@ public class RedisClusterSlotInfo {
                 }
                 return null;
             } catch (Exception ex) {
-                ErrorLogCollector.collect(RedisClusterSlotInfo.class, "selectMasterSlavesNode error, url = " + getResource(), ex);
+                ErrorLogCollector.collect(RedisClusterSlotInfo.class, "selectMasterSlavesNode error, resource = " + maskUrl, ex);
                 return null;
             }
         }
@@ -561,7 +550,7 @@ public class RedisClusterSlotInfo {
             try {
                 return slaves.get(0);
             } catch (Exception ex) {
-                ErrorLogCollector.collect(RedisClusterSlotInfo.class, "selectSlavesNode error, url = " + getResource(), ex);
+                ErrorLogCollector.collect(RedisClusterSlotInfo.class, "selectSlavesNode error, resource = " + maskUrl, ex);
                 return null;
             }
         }

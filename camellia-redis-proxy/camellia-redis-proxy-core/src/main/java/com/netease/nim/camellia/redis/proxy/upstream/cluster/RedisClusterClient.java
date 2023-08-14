@@ -42,21 +42,18 @@ public class RedisClusterClient implements IUpstreamClient {
     private final ScanCursorCalculator cursorCalculator;
 
     private final int maxAttempts;
+    private final Resource resource;
     private final RedisClusterSlotInfo clusterSlotInfo;
 
     private final String url;
     private final String userName;
     private final String password;
-    private RedisClusterResource redisClusterResource;
-    private RedisClusterSlavesResource redisClusterSlavesResource;
 
-    private RedissClusterResource redissClusterResource;
-    private RedissClusterSlavesResource redissClusterSlavesResource;
     private Renew renew;
 
     public RedisClusterClient(RedisClusterSlavesResource resource, int maxAttempts) {
         this.cursorCalculator = new ScanCursorCalculator(ProxyDynamicConf.getInt("redis-cluster.scan.node.bits.len", 10));
-        this.redisClusterSlavesResource = resource;
+        this.resource = resource;
         this.url = resource.getUrl();
         this.userName = resource.getUserName();
         this.password = resource.getPassword();
@@ -66,7 +63,7 @@ public class RedisClusterClient implements IUpstreamClient {
 
     public RedisClusterClient(RedissClusterSlavesResource resource, int maxAttempts) {
         this.cursorCalculator = new ScanCursorCalculator(ProxyDynamicConf.getInt("redis-cluster.scan.node.bits.len", 10));
-        this.redissClusterSlavesResource = resource;
+        this.resource = resource;
         this.url = resource.getUrl();
         this.userName = resource.getUserName();
         this.password = resource.getPassword();
@@ -76,7 +73,7 @@ public class RedisClusterClient implements IUpstreamClient {
 
     public RedisClusterClient(RedisClusterResource resource, int maxAttempts) {
         this.cursorCalculator = new ScanCursorCalculator(ProxyDynamicConf.getInt("redis-cluster.scan.node.bits.len", 10));
-        this.redisClusterResource = resource;
+        this.resource = resource;
         this.url = resource.getUrl();
         this.userName = resource.getUserName();
         this.password = resource.getPassword();
@@ -86,7 +83,7 @@ public class RedisClusterClient implements IUpstreamClient {
 
     public RedisClusterClient(RedissClusterResource resource, int maxAttempts) {
         this.cursorCalculator = new ScanCursorCalculator(ProxyDynamicConf.getInt("redis-cluster.scan.node.bits.len", 10));
-        this.redissClusterResource = resource;
+        this.resource = resource;
         this.url = resource.getUrl();
         this.userName = resource.getUserName();
         this.password = resource.getPassword();
@@ -126,11 +123,7 @@ public class RedisClusterClient implements IUpstreamClient {
      * @return resource
      */
     public Resource getResource() {
-        if (redisClusterResource != null) return redisClusterResource;
-        if (redisClusterSlavesResource != null) return redisClusterSlavesResource;
-        if (redissClusterResource != null) return redissClusterResource;
-        if (redissClusterSlavesResource != null) return redissClusterSlavesResource;
-        return null;
+        return resource;
     }
 
     @Override
@@ -164,7 +157,7 @@ public class RedisClusterClient implements IUpstreamClient {
             for (Command command : commands) {
                 commandNames.add(command.getName());
             }
-            logger.debug("receive commands, url = {}, db = {}, commands = {}", PasswordMaskUtils.maskResource(getResource()), db, commandNames);
+            logger.debug("receive commands, resource = {}, db = {}, commands = {}", PasswordMaskUtils.maskResource(getResource()), db, commandNames);
         }
         if (db > 0) {
             for (CompletableFuture<Reply> future : futureList) {

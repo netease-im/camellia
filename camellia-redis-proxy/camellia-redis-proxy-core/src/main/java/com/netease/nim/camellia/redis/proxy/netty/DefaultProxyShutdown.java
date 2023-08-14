@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
+import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.redis.proxy.upstream.*;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
@@ -118,7 +119,7 @@ public class DefaultProxyShutdown implements ProxyShutdown {
             IUpstreamClient upstreamClient = clientFactory.remove(client.getResource().getUrl());
             if (upstreamClient != null) {
                 upstreamClient.shutdown();
-                logger.warn("upstream client = {} shutdown", upstreamClient.getResource().getUrl());
+                logger.warn("upstream client = {} shutdown", PasswordMaskUtils.maskResource(upstreamClient.getResource()));
                 size ++;
             }
         }

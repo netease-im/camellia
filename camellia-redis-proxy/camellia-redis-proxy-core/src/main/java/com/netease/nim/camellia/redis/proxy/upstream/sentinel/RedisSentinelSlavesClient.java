@@ -128,7 +128,7 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                             if (master == null) {
                                 if (oldMaster != null) {
                                     RedisSentinelSlavesClient.this.masterAddr = null;
-                                    logger.info("master update, url = {}, newMaster = {}, oldMaster = {}", PasswordMaskUtils.maskResource(getResource()), null, PasswordMaskUtils.maskAddr(oldMaster));
+                                    logger.info("master update, resource = {}, newMaster = {}, oldMaster = {}", PasswordMaskUtils.maskResource(getResource()), null, PasswordMaskUtils.maskAddr(oldMaster));
                                 }
                             } else {
                                 RedisConnectionAddr newMaster = new RedisConnectionAddr(master.getHost(), master.getPort(), userName, password, db);
@@ -140,12 +140,12 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                                 }
                                 if (needUpdate) {
                                     RedisSentinelSlavesClient.this.masterAddr = newMaster;
-                                    logger.info("master update, url = {}, newMaster = {}, oldMaster = {}",
-                                            PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(newMaster), PasswordMaskUtils.maskAddr(oldMaster));
+                                    logger.info("master update, resource = {}, newMaster = {}, oldMaster = {}",
+                                            PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(newMaster), PasswordMaskUtils.maskAddr(oldMaster));
                                 }
                             }
                         } catch (Exception e) {
-                            logger.error("MasterUpdateCallback error, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), e);
+                            logger.error("MasterUpdateCallback error, resource = {}", PasswordMaskUtils.maskResource(getResource()), e);
                         }
                     }
                 };
@@ -189,11 +189,11 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
                         }
                         if (needUpdate) {
                             RedisSentinelSlavesClient.this.slaves = newSlaves;
-                            logger.info("slaves update, url = {}, newSlaves = {}, oldSlaves = {}",
-                                    PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddrs(newSlaves), PasswordMaskUtils.maskAddrs(oldSlaves));
+                            logger.info("slaves update, resource = {}, newSlaves = {}, oldSlaves = {}",
+                                    PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddrs(newSlaves), PasswordMaskUtils.maskAddrs(oldSlaves));
                         }
                     } catch (Exception e) {
-                        logger.error("SlavesUpdateCallback error, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), e);
+                        logger.error("SlavesUpdateCallback error, resource = {}", PasswordMaskUtils.maskResource(getResource()), e);
                     }
                 }
             };
@@ -211,20 +211,20 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
 
     @Override
     public void preheat() {
-        logger.info("try preheat, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
+        logger.info("try preheat, resource = {}", PasswordMaskUtils.maskResource(getResource()));
         if (masterAddr != null) {
-            logger.info("try preheat, url = {}, master = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(masterName));
+            logger.info("try preheat, resource = {}, master = {}", PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(masterName));
             boolean result = RedisConnectionHub.getInstance().preheat(this, masterAddr.getHost(), masterAddr.getPort(), masterAddr.getUserName(), masterAddr.getPassword(), masterAddr.getDb());
-            logger.info("preheat result = {}, url = {}, master = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(masterName));
+            logger.info("preheat result = {}, resource = {}, master = {}", result, PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(masterName));
         }
         if (slaves != null) {
             for (RedisConnectionAddr slave : slaves) {
-                logger.info("try preheat, url = {}, slave = {}", PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(slave));
+                logger.info("try preheat, resource = {}, slave = {}", PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(slave));
                 boolean result = RedisConnectionHub.getInstance().preheat(this, slave.getHost(), slave.getPort(), slave.getUserName(), slave.getPassword(), slave.getDb());
-                logger.info("preheat result = {}, url = {}, slave = {}", result, PasswordMaskUtils.maskResource(getResource().getUrl()), PasswordMaskUtils.maskAddr(slave));
+                logger.info("preheat result = {}, resource = {}, slave = {}", result, PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(slave));
             }
         }
-        logger.info("preheat success, url = {}", PasswordMaskUtils.maskResource(getResource().getUrl()));
+        logger.info("preheat success, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
 
     @Override
