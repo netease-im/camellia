@@ -6,6 +6,8 @@ import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledFuture;
@@ -18,6 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class Renew {
 
+    private static final Logger logger = LoggerFactory.getLogger(Renew.class);
     private static final ThreadPoolExecutor renewExecutor = new ThreadPoolExecutor(2, 2, 0, TimeUnit.SECONDS,
             new LinkedBlockingDeque<>(1024), new DefaultThreadFactory("renew-executor"));
 
@@ -43,6 +46,7 @@ public class Renew {
                 try {
                     renewExecutor.submit(() -> {
                         try {
+                            logger.info("try renew, resource = {}", PasswordMaskUtils.maskResource(resource));
                             renewTask.run();
                             lastRenewTimestamp = TimeCache.currentMillis;
                         } catch (Exception e) {
