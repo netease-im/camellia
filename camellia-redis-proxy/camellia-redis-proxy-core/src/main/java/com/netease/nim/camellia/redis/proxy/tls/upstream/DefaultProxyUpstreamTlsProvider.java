@@ -35,7 +35,8 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
 
     @Override
     public SslHandler createSslHandler(Resource resource) {
-        SSLEngine sslEngine = getSSLContext(resource).createSSLEngine();
+        SSLContext sslContext = getSSLContext(resource);
+        SSLEngine sslEngine = sslContext.createSSLEngine();
         sslEngine.setUseClientMode(true);
         return new SslHandler(sslEngine);
     }
