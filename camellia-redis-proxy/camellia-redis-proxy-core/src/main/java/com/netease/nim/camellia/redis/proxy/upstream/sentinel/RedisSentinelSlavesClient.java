@@ -215,17 +215,28 @@ public class RedisSentinelSlavesClient extends AbstractSimpleRedisClient {
     @Override
     public void preheat() {
         logger.info("try preheat, resource = {}", PasswordMaskUtils.maskResource(getResource()));
+        boolean success = false;
         if (masterAddr != null) {
             logger.info("try preheat, resource = {}, master = {}", PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(masterName));
             boolean result = RedisConnectionHub.getInstance().preheat(this, masterAddr.getHost(), masterAddr.getPort(), masterAddr.getUserName(), masterAddr.getPassword(), masterAddr.getDb());
             logger.info("preheat result = {}, resource = {}, master = {}", result, PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(masterName));
+            if (result) {
+                success = true;
+            }
         }
         if (slaves != null) {
             for (RedisConnectionAddr slave : slaves) {
                 logger.info("try preheat, resource = {}, slave = {}", PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(slave));
                 boolean result = RedisConnectionHub.getInstance().preheat(this, slave.getHost(), slave.getPort(), slave.getUserName(), slave.getPassword(), slave.getDb());
                 logger.info("preheat result = {}, resource = {}, slave = {}", result, PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(slave));
+                if (result) {
+                    success = true;
+                }
             }
+        }
+        if (!success) {
+            logger.info("preheat failed, resource = {}", PasswordMaskUtils.maskResource(getResource()));
+            throw new CamelliaRedisException("preheat failed, resource = " + PasswordMaskUtils.maskResource(getResource()));
         }
         logger.info("preheat success, resource = {}", PasswordMaskUtils.maskResource(getResource()));
     }
