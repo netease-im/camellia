@@ -30,7 +30,7 @@ camellia-redis-proxy:
     type: local #local、remote、custom
     local:
       type: simple #simple、complex
-      resource: rediss://@127.0.0.1:6379
+      resource: redis://@127.0.0.1:6379
 #      resource: rediss://@127.0.0.1:6379
 #      resource: redis-cluster://@10.189.31.13:6601,10.189.31.14:6603,10.189.31.15:6605
 #      resource: redis-sentinel://@127.0.0.1:26379/mymaster1
