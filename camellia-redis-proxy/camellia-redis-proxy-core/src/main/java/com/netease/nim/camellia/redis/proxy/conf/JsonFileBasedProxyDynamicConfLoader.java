@@ -36,11 +36,7 @@ public class JsonFileBasedProxyDynamicConfLoader implements ProxyDynamicConfLoad
                 try {
                     data = FileUtil.readFileByPath(url.getPath());
                 } catch (Exception e) {
-                    URL resource = ProxyDynamicConf.class.getClassLoader().getResource(fileName);
-                    if (resource == null) {
-                        throw new IllegalArgumentException("load error, fileName = " + fileName, e);
-                    }
-                    data = FileUtil.readFileByPath(resource.getPath());
+                    data = FileUtil.readFileByNameInStream(fileName);
                 }
                 Map<String, String> props = ConfigurationUtil.contentToMap(data, ConfigContentType.json);
                 conf.putAll(props);
