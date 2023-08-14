@@ -4,6 +4,8 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTransferUtil;
+import com.netease.nim.camellia.redis.base.resource.RedisSentinelResource;
+import com.netease.nim.camellia.redis.base.resource.RedisSentinelSlavesResource;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
@@ -43,6 +45,26 @@ public class PasswordMaskUtils {
             if (maskUrl != null) {
                 return maskUrl;
             }
+            Resource resource = RedisResourceUtil.parseResourceByUrl(new Resource(url));
+            if (resource instanceof RedisSentinelResource) {
+                String password = ((RedisSentinelResource) resource).getPassword() == null ? null : maskStr(((RedisSentinelResource) resource).getPassword().length());
+                String sentinelPassword = ((RedisSentinelResource) resource).getSentinelPassword() == null ? null : maskStr(((RedisSentinelResource) resource).getSentinelPassword().length());
+                RedisSentinelResource redisSentinelResource = new RedisSentinelResource(((RedisSentinelResource) resource).getMaster(),
+                        ((RedisSentinelResource) resource).getNodes(), ((RedisSentinelResource) resource).getUserName(),
+                        password, ((RedisSentinelResource) resource).getDb(), ((RedisSentinelResource) resource).getSentinelUserName(), sentinelPassword);
+                cache.put(url, redisSentinelResource.getUrl());
+                return redisSentinelResource.getUrl();
+            } else if (resource instanceof RedisSentinelSlavesResource) {
+                String password = ((RedisSentinelSlavesResource) resource).getPassword() == null ? null : maskStr(((RedisSentinelSlavesResource) resource).getPassword().length());
+                String sentinelPassword = ((RedisSentinelSlavesResource) resource).getSentinelPassword() == null ? null : maskStr(((RedisSentinelSlavesResource) resource).getSentinelPassword().length());
+                RedisSentinelSlavesResource redisSentinelSlavesResource = new RedisSentinelSlavesResource(((RedisSentinelSlavesResource) resource).getMaster(),
+                        ((RedisSentinelSlavesResource) resource).getNodes(), ((RedisSentinelSlavesResource) resource).getUserName(),
+                        password, ((RedisSentinelSlavesResource) resource).isWithMaster(), ((RedisSentinelSlavesResource) resource).getDb(),
+                        ((RedisSentinelSlavesResource) resource).getSentinelUserName(), sentinelPassword);
+                cache.put(url, redisSentinelSlavesResource.getUrl());
+                return redisSentinelSlavesResource.getUrl();
+            }
+
             int i = url.indexOf("://");
             int j = url.lastIndexOf("@");
             String userNameAndPassword = url.substring(i + 3, j);
