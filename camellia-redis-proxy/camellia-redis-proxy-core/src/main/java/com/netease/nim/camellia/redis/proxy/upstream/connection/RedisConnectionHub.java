@@ -7,7 +7,7 @@ import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvider;
-import com.netease.nim.camellia.redis.proxy.tls.upstream.RedisResourceTlsEnableCache;
+import com.netease.nim.camellia.redis.proxy.tls.upstream.TlsEnableCache;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.tools.utils.LockMap;
@@ -391,7 +391,7 @@ public class RedisConnectionHub {
         config.setWriteBufferWaterMarkLow(writeBufferWaterMarkLow);
         config.setWriteBufferWaterMarkHigh(writeBufferWaterMarkHigh);
         config.setFastFailStats(fastFailStats);
-        if (resource != null && RedisResourceTlsEnableCache.tlsEnable(resource) && tlsProvider != null) {
+        if (resource != null && TlsEnableCache.tlsEnable(resource) && tlsProvider != null) {
             config.setProxyUpstreamTlsProvider(tlsProvider);
             config.setResource(resource);
         }

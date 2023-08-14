@@ -15,7 +15,7 @@ public class DefaultProxyFrontendTlsProvider implements ProxyFrontendTlsProvider
     private SSLContext sslContext;
     @Override
     public boolean init() {
-        this.sslContext = createSSLContext();
+        createSSLContext();
         return true;
     }
 
@@ -27,7 +27,7 @@ public class DefaultProxyFrontendTlsProvider implements ProxyFrontendTlsProvider
         return new SslHandler(sslEngine);
     }
 
-    private SSLContext createSSLContext() {
+    private void createSSLContext() {
         String caCertFilePath;
         String caCertFile = ProxyDynamicConf.getString("proxy.frontend.tls.ca.cert.file", null);
         if (caCertFile == null) {
@@ -59,7 +59,7 @@ public class DefaultProxyFrontendTlsProvider implements ProxyFrontendTlsProvider
             throw new IllegalArgumentException("keyFilePath not found");
         }
         String password = ProxyDynamicConf.getString("proxy.frontend.tls.password", null);
-        return SSLContextUtil.genSSLContext(caCertFilePath, crtFilePath, keyFilePath, password);
+        this.sslContext = SSLContextUtil.genSSLContext(caCertFilePath, crtFilePath, keyFilePath, password);
     }
 
 

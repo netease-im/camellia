@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by caojiajun on 2023/8/9
  */
-public class RedisResourceTlsEnableCache {
+public class TlsEnableCache {
     private static final ConcurrentHashMap<String, Boolean> cache = new ConcurrentHashMap<>();
 
     static {
