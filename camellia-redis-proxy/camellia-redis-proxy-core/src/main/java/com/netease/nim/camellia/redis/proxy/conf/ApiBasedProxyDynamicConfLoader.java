@@ -21,7 +21,9 @@ public class ApiBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
         return conf;
     }
 
-    private void init() {
+    @Override
+    public void init(Map<String, String> initConf) {
+        this.initConf = new HashMap<>(initConf);
         String url = initConf.get("camellia.config.url");
         String namespace = initConf.get("camellia.config.namespace");
         if (url == null) {
@@ -32,12 +34,6 @@ public class ApiBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
         }
         this.camelliaConfig = new ApiBasedCamelliaConfig(url, namespace);
         this.camelliaConfig.addCallback(ProxyDynamicConf::reload);
-    }
-
-    @Override
-    public void init(Map<String, String> initConf) {
-        this.initConf = new HashMap<>(initConf);
-        init();
     }
 
 }

@@ -7,6 +7,7 @@
 * camellia-redis-proxy support tls between proxy and upstream redis
 * camellia-redis-proxy use command `info upstream-info`, `redis-sentinel` support `sentinelUserName` and `sentinelPassword`
 * camellia-id-gen provide CamelliaStrictIdGen2, which only dependency on redis and ntp timestamp
+* camellia-redis-proxy support local json config
 
 ### update
 * camellia-redis-proxy support disabled console by setting console-port=0

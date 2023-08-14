@@ -4,9 +4,10 @@ import com.netease.nim.camellia.tools.utils.ConfigurationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -47,7 +48,7 @@ public class FileBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
             if (url != null) {
                 Properties props = new Properties();
                 try {
-                    props.load(new FileInputStream(url.getPath()));
+                    props.load(Files.newInputStream(Paths.get(url.getPath())));
                 } catch (IOException e) {
                     props.load(ProxyDynamicConf.class.getClassLoader().getResourceAsStream(fileName));
                 }
@@ -57,7 +58,7 @@ public class FileBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
             if (filePath != null) {
                 try {
                     Properties props = new Properties();
-                    props.load(new FileInputStream(filePath));
+                    props.load(Files.newInputStream(Paths.get(filePath)));
                     conf.putAll(ConfigurationUtil.propertiesToMap(props));
                 } catch (Exception e) {
                     logger.error("dynamic.conf.file.path={} load error, use classpath:{} default", filePath, fileName, e);

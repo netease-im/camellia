@@ -34,7 +34,6 @@ public class CamelliaRedisProxyServer {
         GlobalRedisProxyEnv.init(serverProperties);
         this.serverProperties = serverProperties;
         this.serverHandler = new ServerHandler(invoker);
-        this.serverHandler.setServerProperties(serverProperties);
         if (logger.isInfoEnabled()) {
             logger.info("CamelliaRedisProxyServer init, netty-transport-mode = {}, bossThread = {}, workThread = {}",
                     GlobalRedisProxyEnv.getNettyTransportMode(), GlobalRedisProxyEnv.getBossThread(), GlobalRedisProxyEnv.getWorkThread());
