@@ -53,7 +53,7 @@ proxy.frontend.tls.key.file.path=/xxx/redis-7.0.11/tests/tls/redis.key
 ```java
 public interface ProxyFrontendTlsProvider {
 
-    SSLContext createSSLContext();
+    boolean init();
 
     SslHandler createSslHandler(SSLContext sslContext);
 }
@@ -123,9 +123,9 @@ json示例：
 ```java
 public interface ProxyUpstreamTlsProvider {
 
-    SSLContext createSSLContext(Resource resource);
+    boolean init();
 
-    SslHandler createSslHandler(SSLContext sslContext);
+    SslHandler createSslHandler(Resource resource);
 }
 ```
 ```yml

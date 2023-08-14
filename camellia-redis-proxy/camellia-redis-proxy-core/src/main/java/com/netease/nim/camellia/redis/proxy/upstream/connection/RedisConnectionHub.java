@@ -28,7 +28,6 @@ import io.netty.util.concurrent.FastThreadLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLContext;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -73,7 +72,6 @@ public class RedisConnectionHub {
     private final ConcurrentHashMap<Object, LockMap> lockMapMap = new ConcurrentHashMap<>();
 
     private ProxyUpstreamTlsProvider tlsProvider;
-    private final ConcurrentHashMap<String, SSLContext> sslContextCache = new ConcurrentHashMap<>();
 
     public static RedisConnectionHub instance = new RedisConnectionHub();
     private RedisConnectionHub() {
@@ -126,7 +124,11 @@ public class RedisConnectionHub {
                 this.soSndbuf, this.writeBufferWaterMarkLow, this.writeBufferWaterMarkHigh);
 
         this.tlsProvider = ConfigInitUtil.initProxyUpstreamTlsProvider(properties, proxyBeanFactory);
-        logger.info("RedisConnectionHub, ProxyUpstreamTlsProvider = {}", properties.getRedisConf().getProxyUpstreamTlsProviderClassName());
+        if (tlsProvider != null) {
+            boolean success = this.tlsProvider.init();
+            logger.info("RedisConnectionHub, ProxyUpstreamTlsProvider = {}, init = {}",
+                    properties.getRedisConf().getProxyUpstreamTlsProviderClassName(), success);
+        }
 
         ProxyDynamicConf.registerCallback(this::reloadConf);
         reloadConf();
@@ -389,14 +391,9 @@ public class RedisConnectionHub {
         config.setWriteBufferWaterMarkLow(writeBufferWaterMarkLow);
         config.setWriteBufferWaterMarkHigh(writeBufferWaterMarkHigh);
         config.setFastFailStats(fastFailStats);
-        if (resource != null && RedisResourceTlsEnableCache.tlsEnable(resource)) {
-            SSLContext sslContext = CamelliaMapUtils.computeIfAbsent(sslContextCache, resource.getUrl(), url -> tlsProvider.createSSLContext(resource));
-            if (sslContext != null) {
-                config.setSslContext(sslContext);
-                config.setProxyUpstreamTlsProvider(tlsProvider);
-            } else {
-                ErrorLogCollector.collect(RedisConnectionHub.class, "resource = " + PasswordMaskUtils.maskResource(resource.getUrl()) + " createSSLContext error");
-            }
+        if (resource != null && RedisResourceTlsEnableCache.tlsEnable(resource) && tlsProvider != null) {
+            config.setProxyUpstreamTlsProvider(tlsProvider);
+            config.setResource(resource);
         }
         config.setUpstreamClient(upstreamClient);
         RedisConnection connection = new RedisConnection(config);

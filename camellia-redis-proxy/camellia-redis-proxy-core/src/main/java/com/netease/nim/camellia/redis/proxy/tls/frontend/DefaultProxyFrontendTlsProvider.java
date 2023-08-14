@@ -12,8 +12,22 @@ import javax.net.ssl.SSLEngine;
  */
 public class DefaultProxyFrontendTlsProvider implements ProxyFrontendTlsProvider {
 
+    private SSLContext sslContext;
     @Override
-    public SSLContext createSSLContext() {
+    public boolean init() {
+        this.sslContext = createSSLContext();
+        return true;
+    }
+
+    @Override
+    public SslHandler createSslHandler() {
+        SSLEngine sslEngine = sslContext.createSSLEngine();
+        sslEngine.setNeedClientAuth(ProxyDynamicConf.getBoolean("proxy.frontend.tls.need.client.auth", true));
+        sslEngine.setUseClientMode(false);
+        return new SslHandler(sslEngine);
+    }
+
+    private SSLContext createSSLContext() {
         String caCertFilePath;
         String caCertFile = ProxyDynamicConf.getString("proxy.frontend.tls.ca.cert.file", null);
         if (caCertFile == null) {
@@ -48,11 +62,5 @@ public class DefaultProxyFrontendTlsProvider implements ProxyFrontendTlsProvider
         return SSLContextUtil.genSSLContext(caCertFilePath, crtFilePath, keyFilePath, password);
     }
 
-    @Override
-    public SslHandler createSslHandler(SSLContext sslContext) {
-        SSLEngine sslEngine = sslContext.createSSLEngine();
-        sslEngine.setNeedClientAuth(ProxyDynamicConf.getBoolean("proxy.frontend.tls.need.client.auth", true));
-        sslEngine.setUseClientMode(false);
-        return new SslHandler(sslEngine);
-    }
+
 }

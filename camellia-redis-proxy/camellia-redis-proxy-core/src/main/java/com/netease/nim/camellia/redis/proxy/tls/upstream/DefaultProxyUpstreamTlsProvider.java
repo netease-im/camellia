@@ -26,9 +26,26 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
     private SSLContext defaultSSLContext;
     private final ConcurrentHashMap<String, SSLContext> sslContextMap = new ConcurrentHashMap<>();
 
-    public DefaultProxyUpstreamTlsProvider() {
+    @Override
+    public boolean init() {
         reload();
         ProxyDynamicConf.registerCallback(this::reload);
+        return true;
+    }
+
+    @Override
+    public SslHandler createSslHandler(Resource resource) {
+        SSLEngine sslEngine = getSSLContext(resource).createSSLEngine();
+        sslEngine.setUseClientMode(true);
+        return new SslHandler(sslEngine);
+    }
+
+    private SSLContext getSSLContext(Resource resource) {
+        SSLContext sslContext = sslContextMap.get(resource.getUrl());
+        if (sslContext != null) {
+            return sslContext;
+        }
+        return defaultSSLContext;
     }
 
     //只会初始化一次，新增的可以通过动态配置添加
@@ -144,19 +161,6 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
                 caCertFilePath, certFilePath, keyFilePath);
     }
 
-    @Override
-    public SSLContext createSSLContext(Resource resource) {
-        SSLContext sslContext = sslContextMap.get(resource.getUrl());
-        if (sslContext != null) {
-            return sslContext;
-        }
-        return defaultSSLContext;
-    }
 
-    @Override
-    public SslHandler createSslHandler(SSLContext sslContext) {
-        SSLEngine sslEngine = sslContext.createSSLEngine();
-        sslEngine.setUseClientMode(true);
-        return new SslHandler(sslEngine);
-    }
+
 }
