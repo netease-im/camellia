@@ -140,21 +140,34 @@ public class RedisConnectionHub {
         eventLoopThreadLocal.set(eventLoop);
     }
 
+    /**
+     * 获取一个连接，优先使用相同eventLoop的连接，如果获取不到，则走公共连接池
+     * @param host host
+     * @param port port
+     * @param userName userName
+     * @param password password
+     * @return RedisConnection
+     */
     public RedisConnection get(IUpstreamClient upstreamClient, String host, int port, String userName, String password) {
-        try {
-            RedisConnectionAddr addr = new RedisConnectionAddr(host, port, userName, password, false, 0, false);
-            return get(upstreamClient, addr);
-        } catch (Exception e) {
-            ErrorLogCollector.collect(RedisConnectionHub.class,
-                    "get RedisConnection error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
-            return null;
-        }
+        RedisConnectionAddr addr = new RedisConnectionAddr(host, port, userName, password, false, 0, false);
+        return get(upstreamClient, addr);
     }
 
+    /**
+     * 获取一个连接，优先使用相同eventLoop的连接，如果获取不到，则走公共连接池
+     * @param addr addr
+     * @return RedisConnection
+     */
     public RedisConnection get(RedisConnectionAddr addr) {
         return get(null, null, addr);
     }
 
+    /**
+     * 获取一个连接，优先使用相同eventLoop的连接，如果获取不到，则走公共连接池
+     * @param upstreamClient upstreamClient
+     * @param addr addr
+     * @return RedisConnection
+     */
     public RedisConnection get(IUpstreamClient upstreamClient, RedisConnectionAddr addr) {
         Resource resource = upstreamClient == null ? null : upstreamClient.getResource();
         return get(resource, upstreamClient, addr);
@@ -216,6 +229,7 @@ public class RedisConnectionHub {
 
     /**
      * 新建一个连接，优先使用当前eventLoop新建连接，如果没有，则走公共eventLoopGroup新建连接
+     * @param resource resource
      * @param host host
      * @param port port
      * @param userName userName
@@ -223,15 +237,15 @@ public class RedisConnectionHub {
      * @return RedisConnection
      */
     public RedisConnection newConnection(Resource resource, String host, int port, String userName, String password) {
-        try {
-            return newConnection(resource, null, new RedisConnectionAddr(host, port, userName, password, false, 0, false));
-        } catch (Exception e) {
-            ErrorLogCollector.collect(RedisConnectionHub.class,
-                    "new RedisConnection error, host = " + host + ",port=" + port + ",userName=" + userName + ",password=" + password, e);
-            return null;
-        }
+        return newConnection(resource, null, new RedisConnectionAddr(host, port, userName, password, false, 0, false));
     }
 
+    /**
+     * 新建一个连接，优先使用当前eventLoop新建连接，如果没有，则走公共eventLoopGroup新建连接
+     * @param upstreamClient upstreamClient
+     * @param addr addr
+     * @return RedisConnection
+     */
     public RedisConnection newConnection(IUpstreamClient upstreamClient, RedisConnectionAddr addr) {
         Resource resource = upstreamClient == null ? null : upstreamClient.getResource();
         return newConnection(resource, upstreamClient, addr);
@@ -307,6 +321,10 @@ public class RedisConnectionHub {
         return false;
     }
 
+    /**
+     * getAllConnections
+     * @return connections
+     */
     public Set<RedisConnection> getAllConnections() {
         Set<RedisConnection> set = new HashSet<>(map.values());
         for (Map.Entry<EventLoop, ConcurrentHashMap<String, RedisConnection>> entry : eventLoopMap.entrySet()) {
