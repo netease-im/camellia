@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.function.Consumer;
 
 /**
  *
@@ -14,6 +15,20 @@ import java.nio.charset.StandardCharsets;
 public class FileUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
+
+    public static void readFileInLine(String filePath, Consumer<String> consumer) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))){
+            while (true) {
+                String line = reader.readLine();
+                if (line == null) {
+                    break;
+                }
+                consumer.accept(line);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static String getAbsoluteFilePath(String file) {
         URL resource = Thread.currentThread().getContextClassLoader().getResource(file);
