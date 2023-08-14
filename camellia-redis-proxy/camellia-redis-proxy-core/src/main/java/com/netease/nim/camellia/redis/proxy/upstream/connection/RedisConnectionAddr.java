@@ -101,7 +101,7 @@ public class RedisConnectionAddr {
     }
 
     public void setCache(RedisConnection cache) {
-        if (cache == null) return;
+        if (this.cache == null || cache == null) return;
         this.cache.set(cache);
     }
 
