@@ -97,18 +97,12 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
                         } else {
                             certFilePath = SSLContextUtil.getFilePath(certFile);
                         }
-                        if (certFilePath == null) {
-                            throw new IllegalArgumentException("crtFilePath not found");
-                        }
                         String keyFilePath;
                         String keyFile = json.getString("key.file");
                         if (keyFile == null) {
                             keyFilePath = json.getString("key.file.path");
                         } else {
                             keyFilePath = SSLContextUtil.getFilePath(keyFile);
-                        }
-                        if (keyFilePath == null) {
-                            throw new IllegalArgumentException("keyFilePath not found");
                         }
                         String password = json.getString("password");
                         SSLContext sslContext = SSLContextUtil.genSSLContext(caCertFilePath, certFilePath, keyFilePath, password);
@@ -143,18 +137,12 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
         } else {
             certFilePath = SSLContextUtil.getFilePath(crtFile);
         }
-        if (certFilePath == null) {
-            return;
-        }
         String keyFilePath;
         String keyFile = ProxyDynamicConf.getString("proxy.upstream.tls.key.file", null);
         if (keyFile == null) {
             keyFilePath = ProxyDynamicConf.getString("proxy.upstream.tls.key.file.path", null);
         } else {
             keyFilePath = SSLContextUtil.getFilePath(keyFile);
-        }
-        if (keyFilePath == null) {
-            return;
         }
         String password = ProxyDynamicConf.getString("proxy.upstream.tls.password", null);
         defaultSSLContext = SSLContextUtil.genSSLContext(caCertFilePath, certFilePath, keyFilePath, password);

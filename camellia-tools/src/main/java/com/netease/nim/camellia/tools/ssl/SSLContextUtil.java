@@ -34,8 +34,8 @@ public class SSLContextUtil {
             pass = new char[0];
         }
         try (InputStream caInputStream = Files.newInputStream(Paths.get(caCrtFilePath));
-             InputStream crtInputStream = Files.newInputStream(Paths.get(crtFilePath));
-             InputStream keyInputStream = Files.newInputStream(Paths.get(keyFilePath))) {
+             InputStream crtInputStream = crtFilePath == null ? null : Files.newInputStream(Paths.get(crtFilePath));
+             InputStream keyInputStream = keyFilePath == null ? null : Files.newInputStream(Paths.get(keyFilePath))) {
             Security.addProvider(new BouncyCastleProvider());
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             //ca
@@ -45,21 +45,23 @@ public class SSLContextUtil {
             }
             //crt
             X509Certificate cert = null;
-            if (crtInputStream.available() > 0) {
+            if (crtInputStream != null && crtInputStream.available() > 0) {
                 cert = (X509Certificate) cf.generateCertificate(crtInputStream);
             }
             //key
-            PrivateKey key;
-            try (PEMParser pemParser = new PEMParser(new InputStreamReader(keyInputStream))) {
-                Object object = pemParser.readObject();
-                PEMDecryptorProvider decProv = new JcePEMDecryptorProviderBuilder().build(pass);
-                JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
-                if (object instanceof PEMEncryptedKeyPair) {
-                    key = converter.getKeyPair(((PEMEncryptedKeyPair) object).decryptKeyPair(decProv)).getPrivate();
-                } else if (object instanceof PrivateKeyInfo) {
-                    key = converter.getPrivateKey((PrivateKeyInfo) object);
-                } else {
-                    key = converter.getKeyPair((PEMKeyPair) object).getPrivate();
+            PrivateKey key = null;
+            if (keyInputStream != null) {
+                try (PEMParser pemParser = new PEMParser(new InputStreamReader(keyInputStream))) {
+                    Object object = pemParser.readObject();
+                    PEMDecryptorProvider decProv = new JcePEMDecryptorProviderBuilder().build(pass);
+                    JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+                    if (object instanceof PEMEncryptedKeyPair) {
+                        key = converter.getKeyPair(((PEMEncryptedKeyPair) object).decryptKeyPair(decProv)).getPrivate();
+                    } else if (object instanceof PrivateKeyInfo) {
+                        key = converter.getPrivateKey((PrivateKeyInfo) object);
+                    } else {
+                        key = converter.getKeyPair((PEMKeyPair) object).getPrivate();
+                    }
                 }
             }
 
@@ -71,8 +73,10 @@ public class SSLContextUtil {
 
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
             ks.load(null, null);
-            ks.setCertificateEntry("certificate", cert);
-            ks.setKeyEntry("private-key", key, pass, new java.security.cert.Certificate[]{cert});
+            if (cert != null && key != null) {
+                ks.setCertificateEntry("certificate", cert);
+                ks.setKeyEntry("private-key", key, pass, new java.security.cert.Certificate[]{cert});
+            }
             KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             kmf.init(ks, pass);
             SSLContext context = SSLContext.getInstance("TLS");

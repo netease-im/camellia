@@ -23,6 +23,7 @@ public class DefaultProxyFrontendTlsProvider implements ProxyFrontendTlsProvider
     public SslHandler createSslHandler() {
         SSLEngine sslEngine = sslContext.createSSLEngine();
         sslEngine.setNeedClientAuth(ProxyDynamicConf.getBoolean("proxy.frontend.tls.need.client.auth", true));
+        sslEngine.setWantClientAuth(ProxyDynamicConf.getBoolean("proxy.frontend.tls.want.client.auth", true));
         sslEngine.setUseClientMode(false);
         return new SslHandler(sslEngine);
     }
