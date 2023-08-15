@@ -33,14 +33,14 @@ public class SSLContextUtil {
         } else {
             pass = new char[0];
         }
-        try (InputStream caInputStream = Files.newInputStream(Paths.get(caCrtFilePath));
+        try (InputStream caInputStream = caCrtFilePath == null ? null : Files.newInputStream(Paths.get(caCrtFilePath));
              InputStream crtInputStream = crtFilePath == null ? null : Files.newInputStream(Paths.get(crtFilePath));
              InputStream keyInputStream = keyFilePath == null ? null : Files.newInputStream(Paths.get(keyFilePath))) {
             Security.addProvider(new BouncyCastleProvider());
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             //ca
             X509Certificate caCert = null;
-            if (caInputStream.available() > 0) {
+            if (caInputStream != null && caInputStream.available() > 0) {
                 caCert = (X509Certificate) cf.generateCertificate(caInputStream);
             }
             //crt
@@ -67,7 +67,9 @@ public class SSLContextUtil {
 
             KeyStore caKs = KeyStore.getInstance(KeyStore.getDefaultType());
             caKs.load(null, null);
-            caKs.setCertificateEntry("ca-certificate", caCert);
+            if (caCert != null) {
+                caKs.setCertificateEntry("ca-certificate", caCert);
+            }
             TrustManagerFactory tmf = TrustManagerFactory.getInstance("X509");
             tmf.init(caKs);
 

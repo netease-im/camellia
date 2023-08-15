@@ -84,6 +84,7 @@ camellia-redis-proxy:
 proxy.frontend.tls.need.client.auth=false
 proxy.frontend.tls.want.client.auth=false
 ```
+此时，ca.cert.file可以不配置
 
 
 ### proxy到后端redis

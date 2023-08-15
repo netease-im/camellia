@@ -36,9 +36,6 @@ public class DefaultProxyFrontendTlsProvider implements ProxyFrontendTlsProvider
         } else {
             caCertFilePath = SSLContextUtil.getFilePath(caCertFile);
         }
-        if (caCertFilePath == null) {
-            throw new IllegalArgumentException("caCertFilePath not found");
-        }
         String crtFilePath;
         String crtFile = ProxyDynamicConf.getString("proxy.frontend.tls.cert.file", null);
         if (crtFile == null) {
