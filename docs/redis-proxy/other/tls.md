@@ -79,12 +79,13 @@ camellia-redis-proxy:
       resource: rediss://@127.0.0.1:6379
 ```
 
-* 默认开启双写认证，如果要关闭客户端认证，可以这样配置
+* 默认开启双向认证，如果要关闭客户端认证，可以这样配置
 ```properties
 proxy.frontend.tls.need.client.auth=false
 proxy.frontend.tls.want.client.auth=false
+#此时，proxy.frontend.tls.ca.cert.file可以不配置
 ```
-此时，ca.cert.file可以不配置
+
 
 
 ### proxy到后端redis
