@@ -5,12 +5,14 @@ import com.netease.nim.camellia.hot.key.common.exception.CamelliaHotKeyException
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 import com.netease.nim.camellia.hot.key.common.utils.HotKeyConfigUtils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.utils.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -31,11 +33,11 @@ public class FileBasedHotKeyConfigService extends HotKeyConfigService {
     private boolean reload() {
         try {
             Map<String, String> namespaceMap = new HashMap<>();
-            URL url = FileBasedHotKeyConfigService.class.getClassLoader().getResource(fileName);
-            if (url != null) {
+            String filePath = FileUtil.getFilePath(fileName);
+            if (filePath != null) {
                 Properties props = new Properties();
                 try {
-                    props.load(new FileInputStream(url.getPath()));
+                    props.load(Files.newInputStream(Paths.get(filePath)));
                 } catch (IOException e) {
                     props.load(FileBasedHotKeyConfigService.class.getClassLoader().getResourceAsStream(fileName));
                 }

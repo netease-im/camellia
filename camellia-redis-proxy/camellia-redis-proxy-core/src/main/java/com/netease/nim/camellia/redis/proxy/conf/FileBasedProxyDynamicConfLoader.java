@@ -1,11 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.tools.utils.ConfigurationUtil;
+import com.netease.nim.camellia.tools.utils.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -44,11 +44,11 @@ public class FileBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
             fileName = DEFAULT_FILE_NAME;
         }
         try {
-            URL url = ProxyDynamicConf.class.getClassLoader().getResource(fileName);
-            if (url != null) {
+            String fileNamePath = FileUtil.getFilePath(fileName);
+            if (fileNamePath != null) {
                 Properties props = new Properties();
                 try {
-                    props.load(Files.newInputStream(Paths.get(url.getPath())));
+                    props.load(Files.newInputStream(Paths.get(fileNamePath)));
                 } catch (IOException e) {
                     props.load(ProxyDynamicConf.class.getClassLoader().getResourceAsStream(fileName));
                 }

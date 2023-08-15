@@ -4,8 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.function.Consumer;
 
 /**
@@ -15,6 +17,18 @@ import java.util.function.Consumer;
 public class FileUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
+
+    public static String getFilePath(String file) {
+        try {
+            URL resource = FileUtil.class.getClassLoader().getResource(file);
+            if (resource == null) {
+                return null;
+            }
+            return Paths.get(resource.toURI()).toString();
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
 
     public static void readFileInLine(String filePath, Consumer<String> consumer) {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))){

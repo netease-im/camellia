@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.tls.frontend;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.tools.ssl.SSLContextUtil;
+import com.netease.nim.camellia.tools.utils.FileUtil;
 import io.netty.handler.ssl.SslHandler;
 
 import javax.net.ssl.SSLContext;
@@ -34,14 +35,14 @@ public class DefaultProxyFrontendTlsProvider implements ProxyFrontendTlsProvider
         if (caCertFile == null) {
             caCertFilePath = ProxyDynamicConf.getString("proxy.frontend.tls.ca.cert.file.path", null);
         } else {
-            caCertFilePath = SSLContextUtil.getFilePath(caCertFile);
+            caCertFilePath = FileUtil.getFilePath(caCertFile);
         }
         String crtFilePath;
         String crtFile = ProxyDynamicConf.getString("proxy.frontend.tls.cert.file", null);
         if (crtFile == null) {
             crtFilePath = ProxyDynamicConf.getString("proxy.frontend.tls.cert.file.path", null);
         } else {
-            crtFilePath = SSLContextUtil.getFilePath(crtFile);
+            crtFilePath = FileUtil.getFilePath(crtFile);
         }
         if (crtFilePath == null) {
             throw new IllegalArgumentException("crtFilePath not found");
@@ -51,7 +52,7 @@ public class DefaultProxyFrontendTlsProvider implements ProxyFrontendTlsProvider
         if (keyFile == null) {
             keyFilePath = ProxyDynamicConf.getString("proxy.frontend.tls.key.file.path", null);
         } else {
-            keyFilePath = SSLContextUtil.getFilePath(keyFile);
+            keyFilePath = FileUtil.getFilePath(keyFile);
         }
         if (keyFilePath == null) {
             throw new IllegalArgumentException("keyFilePath not found");

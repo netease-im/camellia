@@ -14,7 +14,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
@@ -89,11 +88,4 @@ public class SSLContextUtil {
         }
     }
 
-    public static String getFilePath(String file) {
-        URL resource = SSLContextUtil.class.getClassLoader().getResource(file);
-        if (resource == null) {
-            throw new IllegalArgumentException(file + " not found");
-        }
-        return resource.getPath();
-    }
 }
