@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.tools.ssl;
 
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
@@ -16,10 +17,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.KeyPair;
-import java.security.KeyStore;
-import java.security.SecureRandom;
-import java.security.Security;
+import java.security.*;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 /**
@@ -51,15 +49,17 @@ public class SSLContextUtil {
                 cert = (X509Certificate) cf.generateCertificate(crtInputStream);
             }
             //key
-            KeyPair key;
+            PrivateKey key;
             try (PEMParser pemParser = new PEMParser(new InputStreamReader(keyInputStream))) {
                 Object object = pemParser.readObject();
                 PEMDecryptorProvider decProv = new JcePEMDecryptorProviderBuilder().build(pass);
                 JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
                 if (object instanceof PEMEncryptedKeyPair) {
-                    key = converter.getKeyPair(((PEMEncryptedKeyPair) object).decryptKeyPair(decProv));
+                    key = converter.getKeyPair(((PEMEncryptedKeyPair) object).decryptKeyPair(decProv)).getPrivate();
+                } else if (object instanceof PrivateKeyInfo) {
+                    key = converter.getPrivateKey((PrivateKeyInfo) object);
                 } else {
-                    key = converter.getKeyPair((PEMKeyPair) object);
+                    key = converter.getKeyPair((PEMKeyPair) object).getPrivate();
                 }
             }
 
@@ -72,7 +72,7 @@ public class SSLContextUtil {
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
             ks.load(null, null);
             ks.setCertificateEntry("certificate", cert);
-            ks.setKeyEntry("private-key", key.getPrivate(), pass, new java.security.cert.Certificate[]{cert});
+            ks.setKeyEntry("private-key", key, pass, new java.security.cert.Certificate[]{cert});
             KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             kmf.init(ks, pass);
             SSLContext context = SSLContext.getInstance("TLS");
