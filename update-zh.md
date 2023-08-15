@@ -3,8 +3,8 @@
 
 # 1.2.14（2023/08/xx）
 ### 新增
-* camellia-redis-proxy支持client到proxy的连接开启tls
-* camellia-redis-proxy支持proxy到redis的连接开启tls
+* camellia-redis-proxy支持client到proxy的连接开启tls，感谢 [HelloWorld1018](https://github.com/HelloWorld1018) 的测试和bugfix
+* camellia-redis-proxy支持proxy到redis的连接开启tls，感谢 [HelloWorld1018](https://github.com/HelloWorld1018) 的测试和bugfix
 * camellia-redis-proxy使用`info upstream-info`命令获取后端信息时，`redis-sentinel`也支持使用`sentinelUserName`和`sentinelPassword`
 * camellia-id-gen新增CamelliaStrictIdGen2，基于redis/ntp时间戳实现严格递增序列
 * camellia-redis-proxy支持本地配置文件为json格式
@@ -20,6 +20,7 @@
 * camellia-redis-proxy的console的随机端口功能无效的问题，1.2.11引入
 * camellia-redis-proxy使用sentinelPassword时，打印的日志也需要隐藏密码
 * camellia-redis-proxy当redis-cluster出现主从切换时，修复NPE（不影响切换）
+* camellia-redis-proxy代理到sentinel时如果出现`+reset-master`时没有切换到问题，感谢 [segment11](https://github.com/segment11) 发现这个问题
 
 
 # 1.2.13（2023/08/04）

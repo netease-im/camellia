@@ -20,6 +20,7 @@
 * camellia-redis-proxy random console port not available, bug from 1.2.11
 * camellia-redis-proxy need mask sentinelPassword when logging
 * camellia-redis-proxy fix NPE when redis-cluster fail-over
+* camellia-redis-proxy do not renew upstream addrs when proxy pass to redis-sentinel and in `+reset-master` case
 
 
 # 1.2.13（2023/08/04）
