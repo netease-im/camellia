@@ -39,14 +39,14 @@ camellia-redis-proxy:
 * classpath下配置示例
 ```properties
 proxy.frontend.tls.ca.cert.file=ca.crt
-proxy.frontend.tls.cert.file=redis.crt
-proxy.frontend.tls.key.file=redis.key
+proxy.frontend.tls.cert.file=server.crt
+proxy.frontend.tls.key.file=server.key
 ```
 * 绝对路径下配置示例
 ```properties
-proxy.frontend.tls.cert.file.path=/xxx/redis-7.0.11/tests/tls/redis.crt
+proxy.frontend.tls.cert.file.path=/xxx/redis-7.0.11/tests/tls/server.crt
 proxy.frontend.tls.ca.cert.file.path=/xxx/redis-7.0.11/tests/tls/ca.crt
-proxy.frontend.tls.key.file.path=/xxx/redis-7.0.11/tests/tls/redis.key
+proxy.frontend.tls.key.file.path=/xxx/redis-7.0.11/tests/tls/server.key
 ```
 
 上述描述的是默认配置方法，你也可以自定义，实现ProxyFrontendTlsProvider接口即可，然后配置到application.yml里，如下：
@@ -79,6 +79,12 @@ camellia-redis-proxy:
       resource: rediss://@127.0.0.1:6379
 ```
 
+* 默认开启双写认证，如果要关闭客户端认证，可以这样配置
+```properties
+proxy.frontend.tls.need.client.auth=false
+proxy.frontend.tls.want.client.auth=false
+```
+
 
 ### proxy到后端redis
 
@@ -89,32 +95,33 @@ camellia-redis-proxy:
 * classpath下配置示例
 ```properties
 proxy.upstream.tls.ca.cert.file=ca.crt
-proxy.upstream.tls.cert.file=redis.crt
-proxy.upstream.tls.key.file=redis.key
+proxy.upstream.tls.cert.file=client.crt
+proxy.upstream.tls.key.file=client.key
 ```
 * 绝对路径下配置示例
 ```properties
-proxy.upstream.tls.cert.file.path=/Users/caojiajun/tools/redis-7.0.11/tests/tls/redis.crt
+proxy.upstream.tls.cert.file.path=/Users/caojiajun/tools/redis-7.0.11/tests/tls/client.crt
 proxy.upstream.tls.ca.cert.file.path=/Users/caojiajun/tools/redis-7.0.11/tests/tls/ca.crt
-proxy.upstream.tls.key.file.path=/Users/caojiajun/tools/redis-7.0.11/tests/tls/redis.key
+proxy.upstream.tls.key.file.path=/Users/caojiajun/tools/redis-7.0.11/tests/tls/client.key
 ```      
 
 * 配置映射关系（camellia-redis-proxy.properties)
 ```properties
-proxy.upstream.tls.config=[{"resource":"rediss://@127.0.0.1:6379","ca.cert.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/ca.crt","cert.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/redis.crt","key.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/redis.key"}]
+proxy.upstream.tls.config=[{"resource":"rediss://@127.0.0.1:6379","ca.cert.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/ca.crt","cert.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/client.crt","key.file.path":"/Users/caojiajun/tools/redis-7.0.11/tests/tls/client.key"}]
 ```
 * 配置是一个json数组，每一项代表一个映射关系
 * resource是redis地址(注意需要使用带tls带地址串，如rediss://@127.0.0.1:6379，而不能使用redis://@127.0.0.1:6379)，具体见：[redis-resources](../auth/redis-resources.md)
 * ca.cert.file.path、cert.file.path、key.file.path是证书路径
 * ca.cert.file、cert.file、key.file是证书名称（classpath下），和路径二选一
+* cert.file和key.file是可选的，如果不配置，则表示走单向认证
 
 json示例：
 ```json
 {
     "resource": "rediss://@127.0.0.1:6379",
     "ca.cert.file.path": "/xxx/redis-7.0.11/tests/tls/ca.crt",
-    "cert.file.path": "/xxx/redis-7.0.11/tests/tls/redis.crt",
-    "key.file.path": "/xxx/redis-7.0.11/tests/tls/redis.key"
+    "cert.file.path": "/xxx/redis-7.0.11/tests/tls/client.crt",
+    "key.file.path": "/xxx/redis-7.0.11/tests/tls/client.key"
 }
 ```
 
