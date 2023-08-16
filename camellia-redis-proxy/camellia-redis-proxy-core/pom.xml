@@ -44,16 +44,6 @@
 			<version>${concurrentlinkedhashmap.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcprov-jdk15on</artifactId>
-			<version>1.70</version>
-		</dependency>
-		<dependency>
-			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcpkix-jdk15on</artifactId>
-			<version>1.70</version>
-		</dependency>
-		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-http-console</artifactId>
 			<version>1.2.14-SNAPSHOT</version>
