@@ -1,7 +1,7 @@
 [ENGLISH](update-en.md)
 
 
-# 1.2.14（2023/08/xx）
+# 1.2.14（2023/08/18）
 ### 新增
 * camellia-redis-proxy支持client到proxy的连接开启tls，感谢 [HelloWorld1018](https://github.com/HelloWorld1018) 的测试和bugfix
 * camellia-redis-proxy支持proxy到redis的连接开启tls，感谢 [HelloWorld1018](https://github.com/HelloWorld1018) 的测试和bugfix

@@ -1,7 +1,7 @@
 [中文版](update-zh.md)
 
 
-# 1.2.14（2023/08/xx）
+# 1.2.14（2023/08/18）
 ### add
 * camellia-redis-proxy support tls between client and proxy
 * camellia-redis-proxy support tls between proxy and upstream redis
