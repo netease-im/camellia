@@ -4,14 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis-spring-boot-starters</artifactId>
-	<version>1.2.14</version>
+	<version>1.2.15-SNAPSHOT</version>
 
 	<packaging>pom</packaging>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-redis-client</artifactId>
-		<version>1.2.14</version>
+		<version>1.2.15-SNAPSHOT</version>
 	</parent>
 
 	<modules>

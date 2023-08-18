@@ -4,19 +4,19 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis-proxy-config-nacos</artifactId>
-	<version>1.2.14</version>
+	<version>1.2.15-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-redis-proxy-config</artifactId>
-		<version>1.2.14</version>
+		<version>1.2.15-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-proxy-core</artifactId>
-			<version>1.2.14</version>
+			<version>1.2.15-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.alibaba.nacos</groupId>
