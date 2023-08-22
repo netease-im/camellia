@@ -5,10 +5,11 @@
 * 无
 
 ### 更新
-* 无
+* 重构FileUtil为FileUtils
 
 ### fix
 * camellia-redis-proxy的client到proxy开启tls时，双向认证不生效的问题
+* 修复camellia-redis-proxy打成fatjar运行时部分配置文件读取失败的问题
 
 
 # 1.2.14（2023/08/18）

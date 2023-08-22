@@ -5,17 +5,14 @@ import com.netease.nim.camellia.hot.key.common.exception.CamelliaHotKeyException
 import com.netease.nim.camellia.hot.key.common.model.HotKeyConfig;
 import com.netease.nim.camellia.hot.key.common.utils.HotKeyConfigUtils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
-import com.netease.nim.camellia.tools.utils.FileUtil;
+import com.netease.nim.camellia.tools.utils.ConfigContentType;
+import com.netease.nim.camellia.tools.utils.ConfigurationUtil;
+import com.netease.nim.camellia.tools.utils.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -32,19 +29,16 @@ public class FileBasedHotKeyConfigService extends HotKeyConfigService {
 
     private boolean reload() {
         try {
-            Map<String, String> namespaceMap = new HashMap<>();
-            String filePath = FileUtil.getFilePath(fileName);
-            if (filePath != null) {
-                Properties props = new Properties();
-                try {
-                    props.load(Files.newInputStream(Paths.get(filePath)));
-                } catch (IOException e) {
-                    props.load(FileBasedHotKeyConfigService.class.getClassLoader().getResourceAsStream(fileName));
-                }
-                namespaceMap.putAll(ConfigurationUtil.propertiesToMap(props));
-            } else {
+            FileUtils.FileInfo fileInfo = FileUtils.readByFileName(fileName);
+            if (fileInfo == null) {
                 return false;
             }
+            if (fileInfo.getFileContent() == null) {
+                return false;
+            }
+            Map<String, String> map = ConfigurationUtil.contentToMap(fileInfo.getFileContent(), ConfigContentType.properties);
+
+            Map<String, String> namespaceMap = new HashMap<>(map);
             if (namespaceMap.isEmpty()) {
                 logger.warn("namespaceMap is empty");
                 return false;
@@ -53,16 +47,14 @@ public class FileBasedHotKeyConfigService extends HotKeyConfigService {
             for (Map.Entry<String, String> entry : namespaceMap.entrySet()) {
                 String namespace = entry.getKey();
                 String ruleJsonFile = entry.getValue();
-                URL resource = Thread.currentThread().getContextClassLoader().getResource(ruleJsonFile);
-                if (resource == null) {
+                FileUtils.FileInfo info = FileUtils.readByFileName(ruleJsonFile);
+                if (info == null) {
                     continue;
                 }
-                String path = resource.getPath();
-                String jsonString = ConfigurationUtil.getJsonString(path);
-                if (jsonString == null) {
+                if (info.getFileContent() == null) {
                     continue;
                 }
-                HotKeyConfig hotKeyConfig = JSONObject.parseObject(jsonString, HotKeyConfig.class);
+                HotKeyConfig hotKeyConfig = JSONObject.parseObject(info.getFileContent(), HotKeyConfig.class);
                 if (!namespace.equals(hotKeyConfig.getNamespace())) {
                     logger.warn("namespace not match, config will skip reload, {} <-> {}", namespace, hotKeyConfig.getNamespace());
                     continue;

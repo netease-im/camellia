@@ -3,7 +3,7 @@ package com.netease.nim.camellia.core.api;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.model.ResourceTableChecker;
 import com.netease.nim.camellia.core.util.*;
-import com.netease.nim.camellia.tools.utils.FileUtil;
+import com.netease.nim.camellia.tools.utils.FileUtils;
 import com.netease.nim.camellia.tools.utils.MD5Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +40,10 @@ public class ReloadableLocalFileCamelliaApi implements CamelliaApi {
             long lastModified = file.lastModified();
             if (resourceTable == null || lastModified != this.lastModified) {
                 this.lastModified = lastModified;
-                String content = FileUtil.readFileByPath(filePath);
-                if (content == null) return;
-                content = content.trim();
+                FileUtils.FileInfo fileInfo = FileUtils.readByFilePath(filePath);
+                if (fileInfo == null) return;
+                if (fileInfo.getFileContent() == null) return;
+                String content = fileInfo.getFileContent().trim();
                 ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(content);
                 if (checker != null) {
                     boolean pass = checker.check(resourceTable);

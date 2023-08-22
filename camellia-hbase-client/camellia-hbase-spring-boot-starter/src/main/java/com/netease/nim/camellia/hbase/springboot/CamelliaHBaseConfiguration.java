@@ -6,7 +6,6 @@ import com.netease.nim.camellia.core.api.ReloadableLocalFileCamelliaApi;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
-import com.netease.nim.camellia.tools.utils.FileUtil;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.hbase.CamelliaHBaseEnv;
@@ -16,6 +15,7 @@ import com.netease.nim.camellia.hbase.connection.CamelliaHBaseConnectionFactory;
 import com.netease.nim.camellia.hbase.resource.HBaseResource;
 import com.netease.nim.camellia.hbase.util.CamelliaHBaseInitUtil;
 import com.netease.nim.camellia.hbase.util.HBaseResourceUtil;
+import com.netease.nim.camellia.tools.utils.FileUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -70,24 +70,24 @@ public class CamelliaHBaseConfiguration {
                     if (jsonFile == null) {
                         throw new IllegalArgumentException("missing jsonFile");
                     }
-                    String fileContent = FileUtil.readFileByName(jsonFile);
-                    if (fileContent == null) {
+                    FileUtils.FileInfo fileInfo = FileUtils.readDynamic(jsonFile);
+                    if (fileInfo == null || fileInfo.getFileContent() == null) {
                         throw new IllegalArgumentException(jsonFile + " read fail");
                     }
-                    resourceTable = ReadableResourceTableUtil.parseTable(fileContent);
+                    resourceTable = ReadableResourceTableUtil.parseTable(fileInfo.getFileContent());
                     HBaseResourceUtil.checkResourceTable(resourceTable);
                     if (!yml.isDynamic()) {
                         return new CamelliaHBaseTemplate(env, resourceTable);
                     } else {
-                        String filePath = FileUtil.getAbsoluteFilePath(jsonFile);
-                        if (filePath == null) {
+                        if (fileInfo.getFilePath() == null) {
                             return new CamelliaHBaseTemplate(env, resourceTable);
                         }
                         long checkIntervalMillis = yml.getCheckIntervalMillis();
                         if (checkIntervalMillis <= 0) {
                             throw new IllegalArgumentException("checkIntervalMillis <= 0");
                         }
-                        ReloadableLocalFileCamelliaApi camelliaApi = new ReloadableLocalFileCamelliaApi(filePath, HBaseResourceUtil.HBaseResourceTableChecker);
+                        ReloadableLocalFileCamelliaApi camelliaApi = new ReloadableLocalFileCamelliaApi(fileInfo.getFilePath(),
+                                HBaseResourceUtil.HBaseResourceTableChecker);
                         return new CamelliaHBaseTemplate(env, camelliaApi, checkIntervalMillis);
                     }
                 } else {

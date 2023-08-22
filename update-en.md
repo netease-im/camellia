@@ -5,10 +5,11 @@
 * none
 
 ### update
-* none
+* refactor FileUtil to FileUtils
 
 ### fix
 * camellia-redis-proxy frontend tls bidirectional authentication not effective
+* camellia-redis-proxy run in fatjar, some config file read fail
 
 
 # 1.2.14（2023/08/18）

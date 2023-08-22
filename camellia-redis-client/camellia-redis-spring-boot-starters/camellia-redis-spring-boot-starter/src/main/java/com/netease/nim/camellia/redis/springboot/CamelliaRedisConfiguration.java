@@ -5,7 +5,6 @@ import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.redis.resource.RedisClientResourceUtil;
-import com.netease.nim.camellia.tools.utils.FileUtil;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.core.util.ResourceTableUtil;
 import com.netease.nim.camellia.redis.CamelliaRedisEnv;
@@ -16,6 +15,7 @@ import com.netease.nim.camellia.redis.jediscluster.JedisClusterFactory;
 import com.netease.nim.camellia.redis.proxy.*;
 import com.netease.nim.camellia.redis.proxy.discovery.jedis.ProxyJedisPoolConfig;
 import com.netease.nim.camellia.redis.resource.RedisTemplateResourceTableUpdater;
+import com.netease.nim.camellia.tools.utils.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,20 +82,20 @@ public class CamelliaRedisConfiguration {
                 if (jsonFile == null) {
                     throw new IllegalArgumentException("missing jsonFile");
                 }
-                String fileContent = FileUtil.readFileByName(jsonFile);
-                if (fileContent == null) {
+                FileUtils.FileInfo fileInfo = FileUtils.readDynamic(jsonFile);
+                if (fileInfo == null || fileInfo.getFileContent() == null) {
                     throw new IllegalArgumentException(jsonFile + " read fail");
                 }
-                ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(fileContent);
+                ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(fileInfo.getFileContent());
                 RedisClientResourceUtil.checkResourceTable(resourceTable);
                 if (!local.isDynamic()) {
                     return new CamelliaRedisTemplate(redisEnv, resourceTable);
                 }
-                String filePath = FileUtil.getAbsoluteFilePath(jsonFile);
-                if (filePath == null) {
+                if (fileInfo.getFilePath() == null) {
                     return new CamelliaRedisTemplate(redisEnv, resourceTable);
                 }
-                ReloadableLocalFileCamelliaApi camelliaApi = new ReloadableLocalFileCamelliaApi(filePath, RedisClientResourceUtil.RedisResourceTableChecker);
+                ReloadableLocalFileCamelliaApi camelliaApi = new ReloadableLocalFileCamelliaApi(fileInfo.getFilePath(),
+                        RedisClientResourceUtil.RedisResourceTableChecker);
                 long checkIntervalMillis = local.getCheckIntervalMillis();
                 if (checkIntervalMillis <= 0) {
                     throw new IllegalArgumentException("checkIntervalMillis <= 0");

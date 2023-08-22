@@ -8,7 +8,7 @@ import com.netease.nim.camellia.redis.base.resource.RedisType;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.tools.ssl.SSLContextUtil;
-import com.netease.nim.camellia.tools.utils.FileUtil;
+import com.netease.nim.camellia.tools.utils.FileUtils;
 import io.netty.handler.ssl.SslHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +86,7 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
                         if (caCertFile == null) {
                             caCertFilePath = json.getString("ca.cert.file.path");
                         } else {
-                            caCertFilePath = FileUtil.getFilePath(caCertFile);
+                            caCertFilePath = FileUtils.getClasspathFilePath(caCertFile);
                         }
                         if (caCertFilePath == null) {
                             throw new IllegalArgumentException("caCertFilePath not found");
@@ -96,14 +96,14 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
                         if (certFile == null) {
                             certFilePath = json.getString("cert.file.path");
                         } else {
-                            certFilePath = FileUtil.getFilePath(certFile);
+                            certFilePath = FileUtils.getClasspathFilePath(certFile);
                         }
                         String keyFilePath;
                         String keyFile = json.getString("key.file");
                         if (keyFile == null) {
                             keyFilePath = json.getString("key.file.path");
                         } else {
-                            keyFilePath = FileUtil.getFilePath(keyFile);
+                            keyFilePath = FileUtils.getClasspathFilePath(keyFile);
                         }
                         String password = json.getString("password");
                         SSLContext sslContext = SSLContextUtil.genSSLContext(caCertFilePath, certFilePath, keyFilePath, password);
@@ -126,7 +126,7 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
         if (caFile == null) {
             caCertFilePath = ProxyDynamicConf.getString("proxy.upstream.tls.ca.cert.file.path", null);
         } else {
-            caCertFilePath = FileUtil.getFilePath(caFile);
+            caCertFilePath = FileUtils.getClasspathFilePath(caFile);
         }
         if (caCertFilePath == null) {
             return;
@@ -136,14 +136,14 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
         if (crtFile == null) {
             certFilePath = ProxyDynamicConf.getString("proxy.upstream.tls.cert.file.path", null);
         } else {
-            certFilePath = FileUtil.getFilePath(crtFile);
+            certFilePath = FileUtils.getClasspathFilePath(crtFile);
         }
         String keyFilePath;
         String keyFile = ProxyDynamicConf.getString("proxy.upstream.tls.key.file", null);
         if (keyFile == null) {
             keyFilePath = ProxyDynamicConf.getString("proxy.upstream.tls.key.file.path", null);
         } else {
-            keyFilePath = FileUtil.getFilePath(keyFile);
+            keyFilePath = FileUtils.getClasspathFilePath(keyFile);
         }
         String password = ProxyDynamicConf.getString("proxy.upstream.tls.password", null);
         defaultSSLContext = SSLContextUtil.genSSLContext(caCertFilePath, certFilePath, keyFilePath, password);

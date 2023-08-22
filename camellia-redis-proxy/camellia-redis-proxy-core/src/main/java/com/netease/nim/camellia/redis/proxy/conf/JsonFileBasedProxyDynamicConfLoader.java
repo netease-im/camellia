@@ -2,11 +2,10 @@ package com.netease.nim.camellia.redis.proxy.conf;
 
 import com.netease.nim.camellia.tools.utils.ConfigContentType;
 import com.netease.nim.camellia.tools.utils.ConfigurationUtil;
-import com.netease.nim.camellia.tools.utils.FileUtil;
+import com.netease.nim.camellia.tools.utils.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,25 +29,17 @@ public class JsonFileBasedProxyDynamicConfLoader implements ProxyDynamicConfLoad
             fileName = DEFAULT_FILE_NAME;
         }
         try {
-            URL url = ProxyDynamicConf.class.getClassLoader().getResource(fileName);
-            if (url != null) {
-                String data;
-                try {
-                    data = FileUtil.readFileByPath(url.getPath());
-                } catch (Exception e) {
-                    data = FileUtil.readFileByNameInStream(fileName);
-                }
-                Map<String, String> props = ConfigurationUtil.contentToMap(data, ConfigContentType.json);
-                conf.putAll(props);
+            FileUtils.FileInfo fileInfo = FileUtils.readByFileName(fileName);
+            if (fileInfo != null && fileInfo.getFileContent() != null) {
+                Map<String, String> map = ConfigurationUtil.contentToMap(fileInfo.getFileContent(), ConfigContentType.json);
+                conf.putAll(map);
             }
             String filePath = conf.get(DYNAMIC_CONF_FILE_PATH);
             if (filePath != null) {
-                try {
-                    String data = FileUtil.readFileByPath(filePath);
-                    Map<String, String> props = ConfigurationUtil.contentToMap(data, ConfigContentType.json);
-                    conf.putAll(props);
-                } catch (Exception e) {
-                    logger.error("dynamic.conf.file.path={} load error, use classpath:{} default", filePath, fileName, e);
+                FileUtils.FileInfo info = FileUtils.readByFilePath(filePath);
+                if (info != null && info.getFileContent() != null) {
+                    Map<String, String> map = ConfigurationUtil.contentToMap(info.getFileContent(), ConfigContentType.json);
+                    conf.putAll(map);
                 }
             }
             return conf;

@@ -11,10 +11,9 @@ import com.netease.nim.camellia.redis.proxy.springboot.conf.CamelliaRedisProxyPr
 import com.netease.nim.camellia.redis.proxy.springboot.conf.NettyProperties;
 import com.netease.nim.camellia.redis.proxy.springboot.conf.TranspondProperties;
 import com.netease.nim.camellia.redis.base.resource.RedisResourceUtil;
-import com.netease.nim.camellia.tools.utils.FileUtil;
+import com.netease.nim.camellia.tools.utils.FileUtils;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 
-import java.net.URL;
 
 /**
  *
@@ -110,33 +109,15 @@ public class CamelliaRedisProxyUtil {
             if (jsonFile == null) {
                 throw new IllegalArgumentException("missing 'jsonFile' of local");
             }
-            String filePath = null;
-            String fileContent;
-            //先去classpath下找
-            URL resource = Thread.currentThread().getContextClassLoader().getResource(jsonFile);
-            if (resource != null) {
-                filePath = resource.getPath();
-                fileContent = FileUtil.readFileByPath(filePath);//尝试用文件路径的方式去加载
-                if (fileContent == null) {
-                    filePath = null;
-                    fileContent = FileUtil.readFileByNameInStream(jsonFile);//尝试用流的方式去加载
-                }
-            } else {
-                fileContent = FileUtil.readFileByNameInStream(jsonFile);//尝试用文件路径的方式去加载
-            }
-            if (fileContent == null) {
-                filePath = jsonFile;
-                fileContent = FileUtil.readFileByPath(filePath);//尝试当做绝对路径去加载
-            }
-            if (fileContent == null) {
+            FileUtils.FileInfo fileInfo = FileUtils.readDynamic(jsonFile);
+            if (fileInfo == null || fileInfo.getFileContent() == null) {
                 throw new IllegalArgumentException(jsonFile + " read fail");
             }
-            fileContent = fileContent.trim();
-            resourceTable = ReadableResourceTableUtil.parseTable(fileContent);
+            resourceTable = ReadableResourceTableUtil.parseTable(fileInfo.getFileContent());
             RedisResourceUtil.checkResourceTable(resourceTable);
             boolean dynamic = properties.isDynamic();
-            if (dynamic && filePath != null) {
-                localProperties.setResourceTableFilePath(filePath);
+            if (dynamic && fileInfo.getFilePath() != null) {
+                localProperties.setResourceTableFilePath(fileInfo.getFilePath());
                 long checkIntervalMillis = properties.getCheckIntervalMillis();
                 if (checkIntervalMillis <= 0) {
                     throw new IllegalArgumentException("local.checkIntervalMillis <= 0");

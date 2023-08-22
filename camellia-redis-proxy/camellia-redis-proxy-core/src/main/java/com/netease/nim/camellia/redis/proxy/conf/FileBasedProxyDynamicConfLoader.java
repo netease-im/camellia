@@ -1,16 +1,13 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
+import com.netease.nim.camellia.tools.utils.ConfigContentType;
 import com.netease.nim.camellia.tools.utils.ConfigurationUtil;
-import com.netease.nim.camellia.tools.utils.FileUtil;
+import com.netease.nim.camellia.tools.utils.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * Load configuration from the file.
@@ -44,24 +41,17 @@ public class FileBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
             fileName = DEFAULT_FILE_NAME;
         }
         try {
-            String fileNamePath = FileUtil.getFilePath(fileName);
-            if (fileNamePath != null) {
-                Properties props = new Properties();
-                try {
-                    props.load(Files.newInputStream(Paths.get(fileNamePath)));
-                } catch (IOException e) {
-                    props.load(ProxyDynamicConf.class.getClassLoader().getResourceAsStream(fileName));
-                }
-                conf.putAll(ConfigurationUtil.propertiesToMap(props));
+            FileUtils.FileInfo fileInfo = FileUtils.readByFileName(fileName);
+            if (fileInfo != null && fileInfo.getFileContent() != null) {
+                Map<String, String> map = ConfigurationUtil.contentToMap(fileInfo.getFileContent(), ConfigContentType.properties);
+                conf.putAll(map);
             }
             String filePath = conf.get(DYNAMIC_CONF_FILE_PATH);
             if (filePath != null) {
-                try {
-                    Properties props = new Properties();
-                    props.load(Files.newInputStream(Paths.get(filePath)));
-                    conf.putAll(ConfigurationUtil.propertiesToMap(props));
-                } catch (Exception e) {
-                    logger.error("dynamic.conf.file.path={} load error, use classpath:{} default", filePath, fileName, e);
+                FileUtils.FileInfo info = FileUtils.readByFilePath(filePath);
+                if (info != null && info.getFileContent() != null) {
+                    Map<String, String> map = ConfigurationUtil.contentToMap(info.getFileContent(), ConfigContentType.properties);
+                    conf.putAll(map);
                 }
             }
             return conf;
