@@ -53,6 +53,9 @@ java -XX:+UseG1GC -XX:+UseContainerSupport -Xms4096m -Xmx4096m -server -jar came
 java -XX:+UseG1GC --add-opens java.base/java.lang=ALL-UNNAMED -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher
 ```
 
+how to build snapshot *.tar.gz package: [build-snapshot-package](build-snapshot-package.md)
+
+
 Installation using service to run Camellia Redis Proxy server - 使用服务安装来运行Camellia Redis代理服务器。
 1- cd /root
 2- groupadd camelliarp
@@ -89,3 +92,6 @@ KillMode=mixed
 WantedBy=multi-user.target
 ```
 9- systemctl enable camellia_rp.service --now
+
+
+
