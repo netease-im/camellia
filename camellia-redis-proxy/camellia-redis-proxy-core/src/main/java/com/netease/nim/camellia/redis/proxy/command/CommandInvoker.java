@@ -65,6 +65,7 @@ public class CommandInvoker implements ICommandInvoker {
                 logger.info("CommandsTransponder init success");
                 threadLocal.set(trandponder);
             }
+            channelInfo.active(commands.get(commands.size() - 1).getRedisCommand());
             trandponder.transpond(channelInfo, commands);
         } catch (Exception e) {
             ctx.close();

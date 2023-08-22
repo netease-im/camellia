@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.monitor.UpstreamFailMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -11,6 +12,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
@@ -31,9 +34,15 @@ public class ChannelInfo {
 
     private static final AttributeKey<ChannelInfo> ATTRIBUTE_KEY = AttributeKey.valueOf("CI");
 
+    private static final AtomicLong idGen = new AtomicLong(0);
+
     private final boolean mock;
+    private final long id = idGen.incrementAndGet();
 
     private final String consid;
+    private final long createTime = System.currentTimeMillis();
+    private long updateTime = System.currentTimeMillis();
+    private RedisCommand lastCommand = null;
     private ChannelStats channelStats = ChannelStats.NO_AUTH;
     private final ChannelHandlerContext ctx;
     /**
@@ -67,6 +76,7 @@ public class ChannelInfo {
     private String clientName;
     private Long bid;
     private String bgroup;
+    private String userName;
 
     private int db = -1;
 
@@ -407,6 +417,55 @@ public class ChannelInfo {
 
     public void setTransactionTag(boolean transactionTag) {
         this.transactionTag = transactionTag;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public long getAge() {
+        return (System.currentTimeMillis() - createTime) / 1000L;
+    }
+
+    public int getSub() {
+        if (subscribeChannels == null) {
+            return 0;
+        }
+        return subscribeChannels.size();
+    }
+
+    public int getPSub() {
+        if (psubscribeChannels == null) {
+            return 0;
+        }
+        return psubscribeChannels.size();
+    }
+
+    public long getIdle() {
+        return (System.currentTimeMillis() - updateTime) / 1000L;
+    }
+
+    public void active(RedisCommand command) {
+        updateTime = TimeCache.currentMillis;
+        lastCommand = command;
+    }
+
+    public RedisCommand getCmd() {
+        if (lastCommand == null) {
+            return null;
+        }
+        return lastCommand;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getUserName() {
+        if (userName == null) {
+            return "default";
+        }
+        return userName;
     }
 
     public static enum ChannelStats {

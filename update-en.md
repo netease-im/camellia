@@ -2,7 +2,7 @@
 
 # 1.2.15（2023/08/xx）
 ### add
-* none
+* camellia-redis-proxy support `client info` and `client list` command
 
 ### update
 * refactor FileUtil to FileUtils
