@@ -52,3 +52,40 @@ java -XX:+UseG1GC -XX:+UseContainerSupport -Xms4096m -Xmx4096m -server -jar came
 ```
 java -XX:+UseG1GC --add-opens java.base/java.lang=ALL-UNNAMED -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher
 ```
+
+Installation using service to run Camellia Redis Proxy server - 使用服务安装来运行Camellia Redis代理服务器。
+1- cd /root
+2- groupadd camelliarp
+3- useradd camelliarp -g camelliarp
+4- wget https://github.com/netease-im/camellia/releases/download/1.2.14/camellia-redis-proxy-1.2.14.tar.gz
+5- tar zxvf camellia-redis-proxy-1.2.14.tar.gz
+6- mv camellia-redis-proxy-1.2.14 /home/camelliarp/crp
+7- chown -R camelliarp:camelliarp /home/camelliarp/crp
+8- vi /etc/systemd/system/camellia_rp.service
+```
+[Unit]
+Description=Camellia Redis Proxy service.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+SuccessExitStatus=143
+User=camelliarp
+Group=camelliarp
+Type=simple
+WorkingDirectory=/home/camelliarp/crp
+NoNewPrivileges=yes
+NonBlocking=yes
+PrivateDevices=true
+PrivateTmp=true
+ProtectSystem=full
+RuntimeDirectory=camelliarp
+RuntimeDirectoryMode=0755
+ExecStart=/usr/bin/java -XX:+UseG1GC -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher
+ExecStop=/bin/kill -15 $MAINPID
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target
+```
+9- systemctl enable camellia_rp.service --now
