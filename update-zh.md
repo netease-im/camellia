@@ -1,5 +1,15 @@
 [ENGLISH](update-en.md)
 
+# 1.2.15（2023/08/xx）
+### 新增
+* 无
+
+### 更新
+* 无
+
+### fix
+* camellia-redis-proxy的client到proxy开启tls时，双向认证不生效的问题
+
 
 # 1.2.14（2023/08/18）
 ### 新增

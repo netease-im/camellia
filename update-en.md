@@ -1,5 +1,15 @@
 [中文版](update-zh.md)
 
+# 1.2.15（2023/08/xx）
+### add
+* none
+
+### update
+* none
+
+### fix
+* camellia-redis-proxy frontend tls bidirectional authentication not effective
+
 
 # 1.2.14（2023/08/18）
 ### add
