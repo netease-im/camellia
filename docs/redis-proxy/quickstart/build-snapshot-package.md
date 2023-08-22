@@ -5,7 +5,7 @@ how to build snapshot *.tar.gz package
 git clone https://github.com/netease-im/camellia.git
 cd camellia
 mvn clean package
-cp camellia-redis-proxy/camellia-redis-proxy/bootstrap/target/xxx.jar /yourdict/redis-proxy/xxx.jar
+cp camellia-redis-proxy/camellia-redis-proxy-bootstrap/target/xxx.jar /yourdict/redis-proxy/xxx.jar
 cd /yourdict/redis-proxy
 tar xvf xxx.jar
 rm -rf xxx.jar
