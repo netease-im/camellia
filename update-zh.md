@@ -6,6 +6,7 @@
 
 ### 更新
 * 重构FileUtil为FileUtils
+* camellia-redis-proxy代理到redis-cluster时，如果ASK/MOVED超过次数上限，避免错误信息透传回客户端
 
 ### fix
 * camellia-redis-proxy的client到proxy开启tls时，双向认证不生效的问题

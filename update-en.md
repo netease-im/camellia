@@ -6,6 +6,7 @@
 
 ### update
 * refactor FileUtil to FileUtils
+* camellia-redis-proxy avoid MOVED/ASK error info send to client
 
 ### fix
 * camellia-redis-proxy frontend tls bidirectional authentication not effective
