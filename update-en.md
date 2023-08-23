@@ -3,6 +3,7 @@
 # 1.2.15（2023/08/xx）
 ### add
 * camellia-redis-proxy support `client info` and `client list` command
+* camellia-redis-proxy support proxy_protocol to get real client ip in 4-layer-proxy
 
 ### update
 * refactor FileUtil to FileUtils

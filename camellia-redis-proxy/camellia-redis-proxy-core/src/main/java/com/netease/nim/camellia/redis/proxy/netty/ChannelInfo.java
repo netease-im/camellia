@@ -61,7 +61,7 @@ public class ChannelInfo {
      * 连接代理的客户端地址
      * The client address of the proxy server.
      */
-    private final SocketAddress clientSocketAddress;
+    private SocketAddress clientSocketAddress;
     private final boolean fromCport;
     private volatile ConcurrentHashMap<BytesKey, Boolean> subscribeChannels;
     private volatile ConcurrentHashMap<BytesKey, Boolean> psubscribeChannels;
@@ -81,6 +81,9 @@ public class ChannelInfo {
     private int multi = -1;
 
     private int db = -1;
+
+    private String sourceAddress = null;
+    private int sourcePort = -1;
 
     public ChannelInfo() {
         this.consid = null;
@@ -487,6 +490,9 @@ public class ChannelInfo {
 
     public String getAddr() {
         try {
+            if (sourceAddress != null && sourcePort > 0) {
+                return sourceAddress + ":" + sourcePort;
+            }
             SocketAddress address = ctx.channel().remoteAddress();
             if (address instanceof InetSocketAddress) {
                 String ip = ((InetSocketAddress) address).getAddress().getHostAddress();
@@ -513,6 +519,12 @@ public class ChannelInfo {
             ErrorLogCollector.collect(ClientCommandUtil.class, "parse laddr for client info error", e);
             return null;
         }
+    }
+
+    public void updateSourceAddr(String sourceAddress, int sourcePort) {
+        this.sourceAddress = sourceAddress;
+        this.sourcePort = sourcePort;
+        this.clientSocketAddress = new InetSocketAddress(sourceAddress, sourcePort);
     }
 
     public static enum ChannelStats {

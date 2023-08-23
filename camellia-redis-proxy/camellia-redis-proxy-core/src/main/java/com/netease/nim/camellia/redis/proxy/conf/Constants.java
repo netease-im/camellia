@@ -23,6 +23,7 @@ public class Constants {
         public static final int consolePort = 16379;
         public static final int consolePortRandSig = -16379;
         public static final boolean monitorEnable = false;
+        public static final boolean proxyProtocolEnable = false;
         public static final String proxyFrontendTlsProviderClassName = DefaultProxyFrontendTlsProvider.class.getName();
         public static final int monitorIntervalSeconds = 60;
         public static final String monitorCallbackClassName = LoggingMonitorCallback.class.getName();

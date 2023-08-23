@@ -11,6 +11,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +69,12 @@ public class CamelliaRedisProxyServer {
                     @Override
                     public void initChannel(SocketChannel ch) {
                         ChannelPipeline pipeline = ch.pipeline();
+
+                        if (serverProperties.isProxyProtocolEnable()) {
+                            pipeline.addLast(new HAProxyMessageDecoder());
+                            pipeline.addLast(new HAProxySourceIpHandler());
+                        }
+
                         if (sslEnable && ch.localAddress().getPort() == GlobalRedisProxyEnv.getTlsPort()) {
                             pipeline.addLast(proxyFrontendTlsProvider.createSslHandler());
                         }

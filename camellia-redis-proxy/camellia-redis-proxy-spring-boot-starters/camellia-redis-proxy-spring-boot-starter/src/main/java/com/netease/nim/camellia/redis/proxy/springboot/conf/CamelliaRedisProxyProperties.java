@@ -37,6 +37,11 @@ public class CamelliaRedisProxyProperties {
     private String applicationName = "";
 
     /**
+     * 是否开启proxy-protocol协议解析
+     */
+    private boolean proxyProtocolEnable = Constants.Server.proxyProtocolEnable;
+
+    /**
      * proxy tls provider的className
      */
     private String proxyFrontendTlsProviderClassName = Constants.Server.proxyFrontendTlsProviderClassName;
@@ -185,6 +190,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setCport(int cport) {
         this.cport = cport;
+    }
+
+    public boolean isProxyProtocolEnable() {
+        return proxyProtocolEnable;
+    }
+
+    public void setProxyProtocolEnable(boolean proxyProtocolEnable) {
+        this.proxyProtocolEnable = proxyProtocolEnable;
     }
 
     public String getClusterModeProviderClassName() {
