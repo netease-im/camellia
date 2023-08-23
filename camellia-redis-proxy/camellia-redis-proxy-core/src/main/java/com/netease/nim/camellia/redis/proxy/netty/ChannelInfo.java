@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 
+import com.netease.nim.camellia.redis.proxy.auth.ClientCommandUtil;
 import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -40,8 +41,8 @@ public class ChannelInfo {
     private final long id = idGen.incrementAndGet();
 
     private final String consid;
-    private final long createTime = System.currentTimeMillis();
-    private long updateTime = System.currentTimeMillis();
+    private final long createTime = TimeCache.currentMillis;
+    private long updateTime = TimeCache.currentMillis;
     private RedisCommand lastCommand = null;
     private ChannelStats channelStats = ChannelStats.NO_AUTH;
     private final ChannelHandlerContext ctx;
@@ -77,6 +78,7 @@ public class ChannelInfo {
     private Long bid;
     private String bgroup;
     private String userName;
+    private int multi = -1;
 
     private int db = -1;
 
@@ -268,6 +270,10 @@ public class ChannelInfo {
         this.inTransaction = inTransaction;
         if (!inTransaction) {
             this.transactionTag = false;
+            this.multi = -1;
+        }
+        if (inTransaction) {
+            this.multi = 0;
         }
     }
 
@@ -424,7 +430,7 @@ public class ChannelInfo {
     }
 
     public long getAge() {
-        return (System.currentTimeMillis() - createTime) / 1000L;
+        return (TimeCache.currentMillis - createTime) / 1000L;
     }
 
     public int getSub() {
@@ -441,13 +447,24 @@ public class ChannelInfo {
         return psubscribeChannels.size();
     }
 
-    public long getIdle() {
-        return (System.currentTimeMillis() - updateTime) / 1000L;
+    public int getMulti() {
+        if (inTransaction) {
+            return multi;//这里实现是不严格的
+        }
+        return -1;
     }
 
-    public void active(RedisCommand command) {
+    public long getIdle() {
+        return (TimeCache.currentMillis - updateTime) / 1000L;
+    }
+
+    public void active(List<Command> commands) {
+        if (commands.isEmpty()) return;
         updateTime = TimeCache.currentMillis;
-        lastCommand = command;
+        lastCommand = commands.get(commands.size() - 1).getRedisCommand();
+        if (inTransaction) {
+            multi += commands.size();
+        }
     }
 
     public RedisCommand getCmd() {
@@ -466,6 +483,36 @@ public class ChannelInfo {
             return "default";
         }
         return userName;
+    }
+
+    public String getAddr() {
+        try {
+            SocketAddress address = ctx.channel().remoteAddress();
+            if (address instanceof InetSocketAddress) {
+                String ip = ((InetSocketAddress) address).getAddress().getHostAddress();
+                int port = ((InetSocketAddress) address).getPort();
+                return ip + ":" + port;
+            }
+            return null;
+        } catch (Exception e) {
+            ErrorLogCollector.collect(ClientCommandUtil.class, "parse addr for client info error", e);
+            return null;
+        }
+    }
+
+    public String getLAddr() {
+        try {
+            SocketAddress address = ctx.channel().localAddress();
+            if (address instanceof InetSocketAddress) {
+                String ip = ((InetSocketAddress) address).getAddress().getHostAddress();
+                int port = ((InetSocketAddress) address).getPort();
+                return ip + ":" + port;
+            }
+            return null;
+        } catch (Exception e) {
+            ErrorLogCollector.collect(ClientCommandUtil.class, "parse laddr for client info error", e);
+            return null;
+        }
     }
 
     public static enum ChannelStats {

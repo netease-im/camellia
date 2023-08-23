@@ -14,8 +14,6 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.Map;
 
 /**
@@ -102,11 +100,11 @@ public class ClientCommandUtil {
     private static String clientInfo(ChannelInfo channelInfo) {
         StringBuilder builder = new StringBuilder();
         builder.append("id=").append(channelInfo.getId()).append(" ");
-        String addr = addr(channelInfo.getCtx().channel().remoteAddress());
-        String laddr = addr(channelInfo.getCtx().channel().localAddress());
+        String addr = channelInfo.getAddr();
         if (addr != null) {
             builder.append("addr=").append(addr).append(" ");
         }
+        String laddr = channelInfo.getLAddr();
         if (laddr != null) {
             builder.append("laddr=").append(laddr).append(" ");
         }
@@ -126,25 +124,12 @@ public class ClientCommandUtil {
         builder.append("idle=").append(channelInfo.getIdle()).append(" ");
         builder.append("sub=").append(channelInfo.getSub()).append(" ");
         builder.append("psub=").append(channelInfo.getPSub()).append(" ");
+        builder.append("multi=").append(channelInfo.getMulti()).append(" ");
         if (channelInfo.getCmd() != null) {
             builder.append("cmd=").append(channelInfo.getCmd().strRaw()).append(" ");
         }
         builder.append("user=").append(channelInfo.getUserName());
         builder.append("\n");
         return builder.toString();
-    }
-
-    private static String addr(SocketAddress address) {
-        try {
-            if (address instanceof InetSocketAddress) {
-                String ip = ((InetSocketAddress) address).getAddress().getHostAddress();
-                int port = ((InetSocketAddress) address).getPort();
-                return ip + ":" + port;
-            }
-            return null;
-        } catch (Exception e) {
-            ErrorLogCollector.collect(ClientCommandUtil.class, "parse addr for client info error", e);
-            return null;
-        }
     }
 }
