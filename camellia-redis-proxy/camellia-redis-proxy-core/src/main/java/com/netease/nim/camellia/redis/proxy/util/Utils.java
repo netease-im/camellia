@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.util;
 
 import com.netease.nim.camellia.redis.proxy.auth.IdentityInfo;
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 
 import java.nio.charset.Charset;
@@ -296,5 +297,10 @@ public class Utils {
             }
         }
         return null;
+    }
+
+    public static boolean idleCloseHandlerEnable(CamelliaServerProperties serverProperties) {
+        return serverProperties.getReaderIdleTimeSeconds() >= 0 && serverProperties.getWriterIdleTimeSeconds() >= 0
+                && serverProperties.getAllIdleTimeSeconds() >= 0;
     }
 }

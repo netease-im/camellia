@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.tls.frontend.ProxyFrontendTlsProvider;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
 import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.EpollChannelOption;
@@ -69,23 +70,27 @@ public class CamelliaRedisProxyServer {
                     @Override
                     public void initChannel(SocketChannel ch) {
                         ChannelPipeline pipeline = ch.pipeline();
-
+                        //proxy protocol
                         if (serverProperties.isProxyProtocolEnable()) {
                             pipeline.addLast(new HAProxyMessageDecoder());
                             pipeline.addLast(new HAProxySourceIpHandler());
                         }
-
+                        //tls
                         if (sslEnable && ch.localAddress().getPort() == GlobalRedisProxyEnv.getTlsPort()) {
                             pipeline.addLast(proxyFrontendTlsProvider.createSslHandler());
                         }
-                        if (serverProperties.getReaderIdleTimeSeconds() >= 0 && serverProperties.getWriterIdleTimeSeconds() >= 0
-                                && serverProperties.getAllIdleTimeSeconds() >= 0) {
+                        //idle close
+                        if (Utils.idleCloseHandlerEnable(serverProperties)) {
                             pipeline.addLast(new IdleCloseHandler(serverProperties.getReaderIdleTimeSeconds(),
                                     serverProperties.getWriterIdleTimeSeconds(), serverProperties.getAllIdleTimeSeconds()));
                         }
+                        //command decoder
                         pipeline.addLast(new CommandDecoder(serverProperties.getCommandDecodeMaxBatchSize(), serverProperties.getCommandDecodeBufferInitializerSize()));
+                        //reply encoder
                         pipeline.addLast(new ReplyEncoder());
+                        //connect manager
                         pipeline.addLast(initHandler);
+                        //command transponder
                         pipeline.addLast(serverHandler);
                     }
                 });

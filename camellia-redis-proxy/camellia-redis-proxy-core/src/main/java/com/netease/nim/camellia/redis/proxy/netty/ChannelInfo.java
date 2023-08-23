@@ -462,11 +462,15 @@ public class ChannelInfo {
     }
 
     public void active(List<Command> commands) {
-        if (commands.isEmpty()) return;
-        updateTime = TimeCache.currentMillis;
-        lastCommand = commands.get(commands.size() - 1).getRedisCommand();
-        if (inTransaction) {
-            multi += commands.size();
+        try {
+            if (commands.isEmpty()) return;
+            updateTime = TimeCache.currentMillis;
+            lastCommand = commands.get(commands.size() - 1).getRedisCommand();
+            if (inTransaction) {
+                multi += commands.size();
+            }
+        } catch (Exception e) {
+            ErrorLogCollector.collect(ClientCommandUtil.class, "active error", e);
         }
     }
 
