@@ -109,6 +109,7 @@ public class CamelliaRedisProxyServer {
                 serverProperties.getSoBacklog(), serverProperties.getSoSndbuf(), serverProperties.getSoRcvbuf(), serverProperties.isSoKeepalive());
         logger.info("CamelliaRedisProxyServer, tcp_no_delay = {}, tcp_quick_ack = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
                 serverProperties.isTcpNoDelay(), GlobalRedisProxyEnv.isServerTcpQuickAckEnable(), serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh());
+        logger.info("CamelliaRedisProxyServer, proxy_protocol_enable = {}", serverProperties.isProxyProtocolEnable());
         if (port > 0 && port != tlsPort) {
             logger.info("CamelliaRedisProxyServer start at port: {}", port);
         }
