@@ -4,9 +4,15 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.tools.ssl.SSLContextUtil;
 import com.netease.nim.camellia.tools.utils.FileUtils;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.util.concurrent.DefaultThreadFactory;
+import io.netty.util.concurrent.ImmediateExecutor;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by caojiajun on 2023/8/9
@@ -14,9 +20,22 @@ import javax.net.ssl.SSLEngine;
 public class DefaultProxyFrontendTlsProvider implements ProxyFrontendTlsProvider {
 
     private SSLContext sslContext;
+    private boolean startTls = false;
+    private Executor executor = ImmediateExecutor.INSTANCE;
+
     @Override
     public boolean init() {
         createSSLContext();
+        this.startTls = ProxyDynamicConf.getBoolean("proxy.frontend.tls.startTls.enable", false);
+        int poolSize = ProxyDynamicConf.getInt("proxy.frontend.tls.executor.pool.size", 0);
+        int queueSize = ProxyDynamicConf.getInt("proxy.frontend.tls.executor.queue.size", 10240);
+        if (poolSize <= 0) {
+            this.executor = ImmediateExecutor.INSTANCE;
+        } else {
+            this.executor = new ThreadPoolExecutor(poolSize, poolSize, 0, TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<>(queueSize), new DefaultThreadFactory("proxy-frontend-tls-executor"),
+                    new ThreadPoolExecutor.CallerRunsPolicy());
+        }
         return true;
     }
 
@@ -58,7 +77,7 @@ public class DefaultProxyFrontendTlsProvider implements ProxyFrontendTlsProvider
             sslEngine.setEnabledCipherSuites(cipherSuites);
         }
         sslEngine.setUseClientMode(false);
-        return new SslHandler(sslEngine);
+        return new SslHandler(sslEngine, startTls, executor);
     }
 
     private void createSSLContext() {

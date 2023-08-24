@@ -10,12 +10,14 @@ import com.netease.nim.camellia.redis.proxy.monitor.PasswordMaskUtils;
 import com.netease.nim.camellia.tools.ssl.SSLContextUtil;
 import com.netease.nim.camellia.tools.utils.FileUtils;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.util.concurrent.DefaultThreadFactory;
+import io.netty.util.concurrent.ImmediateExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 
 /**
  * Created by caojiajun on 2023/8/9
@@ -26,11 +28,23 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
 
     private SSLContext defaultSSLContext;
     private final ConcurrentHashMap<String, SSLContext> sslContextMap = new ConcurrentHashMap<>();
+    private boolean startTls = false;
+    private Executor executor = ImmediateExecutor.INSTANCE;
 
     @Override
     public boolean init() {
         reload();
         ProxyDynamicConf.registerCallback(this::reload);
+        this.startTls = ProxyDynamicConf.getBoolean("proxy.upstream.tls.startTls.enable", false);
+        int poolSize = ProxyDynamicConf.getInt("proxy.upstream.tls.executor.pool.size", 0);
+        int queueSize = ProxyDynamicConf.getInt("proxy.upstream.tls.executor.queue.size", 10240);
+        if (poolSize <= 0) {
+            this.executor = ImmediateExecutor.INSTANCE;
+        } else {
+            this.executor = new ThreadPoolExecutor(poolSize, poolSize, 0, TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<>(queueSize), new DefaultThreadFactory("proxy-upstream-tls-executor"),
+                    new ThreadPoolExecutor.CallerRunsPolicy());
+        }
         return true;
     }
 
@@ -39,7 +53,7 @@ public class DefaultProxyUpstreamTlsProvider implements ProxyUpstreamTlsProvider
         SSLContext sslContext = getSSLContext(resource);
         SSLEngine sslEngine = sslContext.createSSLEngine();
         sslEngine.setUseClientMode(true);
-        return new SslHandler(sslEngine);
+        return new SslHandler(sslEngine, startTls, executor);
     }
 
     private SSLContext getSSLContext(Resource resource) {
