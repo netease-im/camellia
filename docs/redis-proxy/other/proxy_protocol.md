@@ -36,10 +36,11 @@ camellia-redis-proxy:
   password: pass123
   tls-port: 6381
   proxy-protocol-enable: true
-  proxy-protocol-ports: 6381
+  proxy-protocol-ports: 6380,6381
   transpond:
     type: local
     local:
       type: simple
       resource: redis://@127.0.0.1:6379
 ```
+if missing `proxy-protocol-ports` config, means tls-port/not-tls-port both enable proxy-protocol
