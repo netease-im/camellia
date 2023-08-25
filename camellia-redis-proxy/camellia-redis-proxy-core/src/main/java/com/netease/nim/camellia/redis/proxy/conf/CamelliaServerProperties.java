@@ -20,6 +20,7 @@ public class CamelliaServerProperties {
     private String applicationName;
     private String password;
     private boolean proxyProtocolEnable = Constants.Server.proxyProtocolEnable;
+    private String proxyProtocolPorts = "";
     private String proxyFrontendTlsProviderClassName = Constants.Server.proxyFrontendTlsProviderClassName;
     private boolean monitorEnable = Constants.Server.monitorEnable;
     private int monitorIntervalSeconds = Constants.Server.monitorIntervalSeconds;
@@ -109,6 +110,14 @@ public class CamelliaServerProperties {
 
     public void setProxyProtocolEnable(boolean proxyProtocolEnable) {
         this.proxyProtocolEnable = proxyProtocolEnable;
+    }
+
+    public String getProxyProtocolPorts() {
+        return proxyProtocolPorts;
+    }
+
+    public void setProxyProtocolPorts(String proxyProtocolPorts) {
+        this.proxyProtocolPorts = proxyProtocolPorts;
     }
 
     public boolean isMonitorEnable() {

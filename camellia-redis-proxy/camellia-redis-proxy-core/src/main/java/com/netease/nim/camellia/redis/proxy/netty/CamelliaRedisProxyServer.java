@@ -16,6 +16,7 @@ import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Set;
 
 
 /**
@@ -57,6 +58,14 @@ public class CamelliaRedisProxyServer {
             sslEnable = false;
             proxyFrontendTlsProvider = null;
         }
+        int port = serverProperties.getPort();
+        //如果设置为这个特殊的负数端口，则会随机选择一个可用的端口
+        if (port == Constants.Server.serverPortRandSig) {
+            port = SocketUtils.findRandomAvailablePort();
+        }
+        final boolean proxyProtocolEnable = serverProperties.isProxyProtocolEnable();
+        Set<Integer> proxyProtocolPorts = ConfigInitUtil.proxyProtocolPorts(serverProperties, port, tlsPort);
+
         serverBootstrap.group(GlobalRedisProxyEnv.getBossGroup(), GlobalRedisProxyEnv.getWorkGroup())
                 .channel(GlobalRedisProxyEnv.getServerChannelClass())
                 .option(ChannelOption.SO_BACKLOG, serverProperties.getSoBacklog())
@@ -71,7 +80,7 @@ public class CamelliaRedisProxyServer {
                     public void initChannel(SocketChannel ch) {
                         ChannelPipeline pipeline = ch.pipeline();
                         //proxy protocol
-                        if (serverProperties.isProxyProtocolEnable()) {
+                        if (proxyProtocolEnable && proxyProtocolPorts.contains(ch.localAddress().getPort())) {
                             pipeline.addLast(new HAProxyMessageDecoder());
                             pipeline.addLast(new HAProxySourceIpHandler());
                         }
@@ -97,11 +106,7 @@ public class CamelliaRedisProxyServer {
         if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable()) {
             serverBootstrap.childOption(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
         }
-        int port = serverProperties.getPort();
-        //如果设置为这个特殊的负数端口，则会随机选择一个可用的端口
-        if (port == Constants.Server.serverPortRandSig) {
-            port = SocketUtils.findRandomAvailablePort();
-        }
+
         ChannelFuture future1 = null;
         ChannelFuture future2 = null;
         if (port > 0) {
@@ -114,7 +119,10 @@ public class CamelliaRedisProxyServer {
                 serverProperties.getSoBacklog(), serverProperties.getSoSndbuf(), serverProperties.getSoRcvbuf(), serverProperties.isSoKeepalive());
         logger.info("CamelliaRedisProxyServer, tcp_no_delay = {}, tcp_quick_ack = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
                 serverProperties.isTcpNoDelay(), GlobalRedisProxyEnv.isServerTcpQuickAckEnable(), serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh());
-        logger.info("CamelliaRedisProxyServer, proxy_protocol_enable = {}", serverProperties.isProxyProtocolEnable());
+        logger.info("CamelliaRedisProxyServer, proxy_protocol_enable = {}", proxyProtocolEnable);
+        if (proxyProtocolEnable) {
+            logger.info("CamelliaRedisProxyServer, proxy_protocol_ports = {}", proxyProtocolPorts);
+        }
         if (port > 0 && port != tlsPort) {
             logger.info("CamelliaRedisProxyServer start at port: {}", port);
         }

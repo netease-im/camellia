@@ -42,6 +42,11 @@ public class CamelliaRedisProxyProperties {
     private boolean proxyProtocolEnable = Constants.Server.proxyProtocolEnable;
 
     /**
+     * 开启proxy-protocol协议的端口，多个端口用逗号分隔，如果不设置，则默认所有端口都开启
+     */
+    private String proxyProtocolPorts = "";
+
+    /**
      * proxy tls provider的className
      */
     private String proxyFrontendTlsProviderClassName = Constants.Server.proxyFrontendTlsProviderClassName;
@@ -198,6 +203,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setProxyProtocolEnable(boolean proxyProtocolEnable) {
         this.proxyProtocolEnable = proxyProtocolEnable;
+    }
+
+    public String getProxyProtocolPorts() {
+        return proxyProtocolPorts;
+    }
+
+    public void setProxyProtocolPorts(String proxyProtocolPorts) {
+        this.proxyProtocolPorts = proxyProtocolPorts;
     }
 
     public String getClusterModeProviderClassName() {

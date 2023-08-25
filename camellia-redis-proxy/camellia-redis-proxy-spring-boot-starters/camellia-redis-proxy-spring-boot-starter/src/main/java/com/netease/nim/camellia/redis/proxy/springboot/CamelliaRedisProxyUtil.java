@@ -40,6 +40,7 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setProxyFrontendTlsProviderClassName(properties.getProxyFrontendTlsProviderClassName());
         serverProperties.setMonitorEnable(properties.isMonitorEnable());
         serverProperties.setProxyProtocolEnable(properties.isProxyProtocolEnable());
+        serverProperties.setProxyProtocolPorts(properties.getProxyProtocolPorts());
         serverProperties.setMonitorIntervalSeconds(properties.getMonitorIntervalSeconds());
         serverProperties.setMonitorCallbackClassName(properties.getMonitorCallbackClassName());
         serverProperties.setClientAuthProviderClassName(properties.getClientAuthProviderClassName());

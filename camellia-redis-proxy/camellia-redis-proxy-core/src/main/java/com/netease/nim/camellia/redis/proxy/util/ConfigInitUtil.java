@@ -14,6 +14,9 @@ import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvide
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateFactory;
 
+import java.util.HashSet;
+import java.util.Set;
+
 
 /**
  * Created by caojiajun on 2020/10/22
@@ -79,5 +82,29 @@ public class ConfigInitUtil {
             return (ProxyUpstreamTlsProvider) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
         }
         return null;
+    }
+
+    public static Set<Integer> proxyProtocolPorts(CamelliaServerProperties properties, int port, int tlsPort) {
+        Set<Integer> set = new HashSet<>();
+        String ports = properties.getProxyProtocolPorts();
+        if (ports == null || ports.trim().length() == 0) {
+            if (port > 0) {
+                set.add(port);
+            }
+            if (tlsPort > 0) {
+                set.add(tlsPort);
+            }
+        } else {
+            String[] split = ports.trim().split(",");
+            for (String str : split) {
+                if (port > 0 && str.trim().equalsIgnoreCase(String.valueOf(port))) {
+                    set.add(port);
+                }
+                if (tlsPort > 0 && str.trim().equalsIgnoreCase(String.valueOf(tlsPort))) {
+                    set.add(tlsPort);
+                }
+            }
+        }
+        return set;
     }
 }

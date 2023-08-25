@@ -21,3 +21,25 @@ camellia-redis-proxy:
       type: simple
       resource: redis://@127.0.0.1:6379
 ```
+
+* if you enable proxy-protocol on some port, not all ports, you can use proxy-protocol-ports to specify the ports
+
+```yaml
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  console-port: 16379
+  password: pass123
+  tls-port: 6381
+  proxy-protocol-enable: true
+  proxy-protocol-ports: 6381
+  transpond:
+    type: local
+    local:
+      type: simple
+      resource: redis://@127.0.0.1:6379
+```
