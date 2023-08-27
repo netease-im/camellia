@@ -58,6 +58,12 @@ public class SSLContextUtil {
                         key = converter.getKeyPair(((PEMEncryptedKeyPair) object).decryptKeyPair(decProv)).getPrivate();
                     } else if (object instanceof PrivateKeyInfo) {
                         key = converter.getPrivateKey((PrivateKeyInfo) object);
+                    } else if (object instanceof PKCS8EncryptedPrivateKeyInfo) {
+                        PKCS8EncryptedPrivateKeyInfo privateKeyInfo = (PKCS8EncryptedPrivateKeyInfo) object;
+                        InputDecryptorProvider provider = new JceOpenSSLPKCS8DecryptorProviderBuilder()
+                            .setProvider(BouncyCastleProvider.PROVIDER_NAME)
+                            .build(pass);
+                        key = converter.getPrivateKey(privateKeyInfo.decryptPrivateKeyInfo(provider));
                     } else {
                         key = converter.getKeyPair((PEMKeyPair) object).getPrivate();
                     }
