@@ -474,11 +474,11 @@ public class ChannelInfo {
         }
     }
 
-    public RedisCommand getCmd() {
+    public String getCmd() {
         if (lastCommand == null) {
-            return null;
+            return "NULL";
         }
-        return lastCommand;
+        return lastCommand.strRaw();
     }
 
     public void setUserName(String userName) {

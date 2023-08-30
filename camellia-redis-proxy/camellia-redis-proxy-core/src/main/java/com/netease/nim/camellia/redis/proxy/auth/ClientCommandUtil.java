@@ -125,9 +125,7 @@ public class ClientCommandUtil {
         builder.append("sub=").append(channelInfo.getSub()).append(" ");
         builder.append("psub=").append(channelInfo.getPSub()).append(" ");
         builder.append("multi=").append(channelInfo.getMulti()).append(" ");
-        if (channelInfo.getCmd() != null) {
-            builder.append("cmd=").append(channelInfo.getCmd().strRaw()).append(" ");
-        }
+        builder.append("cmd=").append(channelInfo.getCmd()).append(" ");
         builder.append("user=").append(channelInfo.getUserName());
         builder.append("\n");
         return builder.toString();
