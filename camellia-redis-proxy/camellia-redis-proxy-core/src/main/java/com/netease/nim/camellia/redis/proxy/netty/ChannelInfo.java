@@ -525,6 +525,10 @@ public class ChannelInfo {
         }
     }
 
+    public boolean getAuth() {
+        return channelStats == ChannelStats.AUTH_OK;
+    }
+
     public void updateSourceAddr(String sourceAddress, int sourcePort) {
         this.sourceAddress = sourceAddress;
         this.sourcePort = sourcePort;
