@@ -8,9 +8,10 @@
 ### update
 * refactor FileUtil to FileUtils
 * camellia-redis-proxy avoid MOVED/ASK error info send to client
+* camellia-redis-proxy support PKCS8 SSL/TLS certs
 
 ### fix
-* camellia-redis-proxy frontend tls bidirectional authentication not effective
+* camellia-redis-proxy frontend tls bidirectional authentication not effective, thanks[@InputOutputZ](https://github.com/InputOutputZ) find this bug
 * camellia-redis-proxy run in fatjar, some config file read fail
 
 

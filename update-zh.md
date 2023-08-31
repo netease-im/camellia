@@ -8,9 +8,10 @@
 ### 更新
 * 重构FileUtil为FileUtils
 * camellia-redis-proxy代理到redis-cluster时，如果ASK/MOVED超过次数上限，避免错误信息透传回客户端
+* camellia-redis-proxy支持PKCS8的SSL/TLS证书，感谢 [HelloWorld1018](https://github.com/HelloWorld1018) 提供该功能
 
 ### fix
-* camellia-redis-proxy的client到proxy开启tls时，双向认证不生效的问题
+* camellia-redis-proxy的client到proxy开启tls时，双向认证不生效的问题，感谢 [@InputOutputZ](https://github.com/InputOutputZ) 发现这个bug
 * 修复camellia-redis-proxy打成fatjar运行时部分配置文件读取失败的问题
 
 

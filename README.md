@@ -17,7 +17,7 @@ camellia主要包括以下功能模块：
 * 支持普通的GET/SET/EVAL，也支持MGET/MSET，也支持阻塞型的BLPOP，也支持PUBSUB和TRANSACTION，也支持STREAMS/JSON/SEARCH，也支持TAIR_HASH/TAIR_ZSET/TAIR_STRING
 * 支持SCAN命令，即使后端是redis-cluster或者自定义分片，也可以透明的扫描到所有key
 * 支持SELECT命令，从而可以使用多database
-* 支持SSL/TLS（proxy到client支持，proxy到redis也支持）
+* 支持SSL/TLS（client到proxy支持，proxy到redis也支持）
 * 支持自定义分片、读写分离、双（多）写、双（多）读   
 * 支持多租户（可以同时代理多组路由，可以通过不同的登录密码来区分）     
 * 支持多租户动态路由，支持自定义的动态路由数据源（内置：本地配置文件、nacos、etcd等，也可以自定义）
