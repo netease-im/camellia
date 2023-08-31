@@ -32,7 +32,7 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * Full Supported
 ```
 ##DataBase
-PING,AUTH,HELLO,ECHO,CLIENT,QUIT,EXISTS,DEL,TYPE,EXPIRE,
+PING,AUTH,HELLO,ECHO,QUIT,EXISTS,DEL,TYPE,EXPIRE,
 EXPIREAT,TTL,PERSIST,PEXPIRE,PEXPIREAT,PTTL,SORT,UNLINK,TOUCH,DUMP,RESTORE,SCAN,COMMAND,CONFIG,
 ##String
 SET,GET,GETSET,MGET,SETNX,SETEX,MSET,DECRBY,DECR,INCRBY,INCR,APPEND,
@@ -141,6 +141,8 @@ only support in special case or special parameter
 SELECT,
 #only support 'CONFIG GET XXX'
 CONFIG,
+#only support 'CLIENT LIST'、'CLIENT INFO'、'CLIENT GETNAME'、'CLIENT SETNAME'
+CLIENT
 #only support RESP2
 HELLO,
 #only proxy start with cluster-mode support
