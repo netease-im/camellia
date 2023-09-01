@@ -4,24 +4,24 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-hot-key-server-samples</artifactId>
-	<version>1.2.15</version>
+	<version>1.2.16-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-hot-key-samples</artifactId>
-		<version>1.2.15</version>
+		<version>1.2.16-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-hot-key-server-spring-boot-starter</artifactId>
-			<version>1.2.15</version>
+			<version>1.2.16-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-hot-key-server-zk-registry-spring-boot-starter</artifactId>
-			<version>1.2.15</version>
+			<version>1.2.16-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>

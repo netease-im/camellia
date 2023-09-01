@@ -4,19 +4,19 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis3-toolkit</artifactId>
-	<version>1.2.15</version>
+	<version>1.2.16-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-redis-client</artifactId>
-		<version>1.2.15</version>
+		<version>1.2.16-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-toolkit</artifactId>
-			<version>1.2.15</version>
+			<version>1.2.16-SNAPSHOT</version>
 			<exclusions>
 				<exclusion>
 					<groupId>com.netease.nim</groupId>
@@ -27,7 +27,7 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis3</artifactId>
-			<version>1.2.15</version>
+			<version>1.2.16-SNAPSHOT</version>
 		</dependency>
     </dependencies>
 	<build>
