@@ -1,9 +1,9 @@
 [ENGLISH](update-en.md)
 
-# 1.2.15（2023/08/xx）
+# 1.2.15（2023/09/01）
 ### 新增
 * camellia-redis-proxy支持`client info`和`client list`命令
-* camellia-redis-proxy在使用haproxy等四层代理服务时，支持开启proxy_protocol去获取真实的客户端ip和端口
+* camellia-redis-proxy在使用haproxy等四层代理服务时，支持开启`proxy_protocol`去获取真实的客户端ip和端口
 
 ### 更新
 * 重构FileUtil为FileUtils

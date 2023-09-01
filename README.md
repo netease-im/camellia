@@ -96,11 +96,11 @@ camellia主要包括以下功能模块：
 [快速开始](/docs/tools/tools.md)  
 
 ## RELEASE版本
-最新版本是1.2.14，已经发布到maven中央仓库（2023/08/18）  
+最新版本是1.2.15，已经发布到maven中央仓库（2023/09/01）  
 [更新日志](/update-zh.md)  
 
 ## SNAPSHOT版本
-当前最新是1.2.15-SNAPSHOT  
+当前最新是1.2.16-SNAPSHOT  
 ```xml
 <repositories>
   <repository>
