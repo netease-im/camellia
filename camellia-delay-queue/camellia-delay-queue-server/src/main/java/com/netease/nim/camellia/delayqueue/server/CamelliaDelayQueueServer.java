@@ -101,9 +101,9 @@ public class CamelliaDelayQueueServer {
             }
             long ttlMillis = request.getTtlMillis();
             if (ttlMillis <= 0) {
-                msg.setExpireTime(now + serverConfig.getTtlMillis());
+                msg.setExpireTime(msg.getTriggerTime() + serverConfig.getTtlMillis());
             } else {
-                msg.setExpireTime(now + ttlMillis);
+                msg.setExpireTime(msg.getTriggerTime() + ttlMillis);
             }
             int maxRetry = request.getMaxRetry();
             if (maxRetry < 0) {

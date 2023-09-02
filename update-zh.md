@@ -1,5 +1,16 @@
 [ENGLISH](update-en.md)
 
+# 1.2.16（2023/09/xx）
+### 新增
+* 无
+
+### 更新
+* 无
+
+### fix
+* camellia-delay-queue，发送消息的ttl字段，含义应该是消息延迟到达后的存活时间，而不是消息发送后的存活时间，感谢 [fuhaodev](https://github.com/fuhaodev） 发现这个问题
+
+
 # 1.2.15（2023/09/01）
 ### 新增
 * camellia-redis-proxy支持`client info`和`client list`命令

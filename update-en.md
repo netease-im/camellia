@@ -1,5 +1,16 @@
 [中文版](update-zh.md)
 
+# 1.2.16（2023/09/xx）
+### add
+* none
+
+### update
+* none
+
+### fix
+* camellia-delay-queue, ttl param of send msg, should calc from msg delay trigger time, rather than msg send time, thanks [fuhaodev](https://github.com/fuhaodev) find this bug
+
+
 # 1.2.15（2023/09/01）
 ### add
 * camellia-redis-proxy support `client info` and `client list` command
