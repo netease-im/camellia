@@ -13,7 +13,7 @@
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-hot-key-server-spring-boot-starter</artifactId>
-  <version>1.2.15</version>
+  <version>1.2.16</version>
 </dependency>
 ```
 2) 编写主类Application.java, 如下:

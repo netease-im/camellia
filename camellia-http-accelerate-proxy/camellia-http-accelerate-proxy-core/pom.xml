@@ -4,29 +4,29 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-http-accelerate-proxy-core</artifactId>
-	<version>1.2.16-SNAPSHOT</version>
+	<version>1.2.16</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-http-accelerate-proxy</artifactId>
-		<version>1.2.16-SNAPSHOT</version>
+		<version>1.2.16</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-codec</artifactId>
-			<version>1.2.16-SNAPSHOT</version>
+			<version>1.2.16</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-tools</artifactId>
-			<version>1.2.16-SNAPSHOT</version>
+			<version>1.2.16</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-http-console</artifactId>
-			<version>1.2.16-SNAPSHOT</version>
+			<version>1.2.16</version>
 		</dependency>
 		<dependency>
 			<groupId>io.netty</groupId>

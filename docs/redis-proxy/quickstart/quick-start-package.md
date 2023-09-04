@@ -1,11 +1,11 @@
 
 ## 快速开始（基于安装包）
 
-下载最新版安装包并解压（v1.2.15）：
+下载最新版安装包并解压（v1.2.16）：
 ```
-wget https://github.com/netease-im/camellia/releases/download/1.2.15/camellia-redis-proxy-1.2.15.tar.gz
-tar zxvf camellia-redis-proxy-1.2.15.tar.gz
-cd camellia-redis-proxy-1.2.15/
+wget https://github.com/netease-im/camellia/releases/download/1.2.16/camellia-redis-proxy-1.2.16.tar.gz
+tar zxvf camellia-redis-proxy-1.2.16.tar.gz
+cd camellia-redis-proxy-1.2.16/
 ```
 按需修改BOOT-INF/classes/下的配置文件：
 * application.yml
@@ -34,9 +34,9 @@ java -XX:+UseG1GC -XX:+UseContainerSupport -Xms4096m -Xmx4096m -server org.sprin
 
 特别的，在某些业务场景中下，可能希望proxy的可执行文件与配置文件application.yml分开，此时可以把tar包重新打成jar包，并配合spring提供的spring.config.location参数来指定application.yml，具体如下：
 ```
-wget https://github.com/netease-im/camellia/releases/download/1.2.15/camellia-redis-proxy-1.2.15.tar.gz
-tar zxvf camellia-redis-proxy-1.2.15.tar.gz
-cd camellia-redis-proxy-1.2.15/
+wget https://github.com/netease-im/camellia/releases/download/1.2.16/camellia-redis-proxy-1.2.16.tar.gz
+tar zxvf camellia-redis-proxy-1.2.16.tar.gz
+cd camellia-redis-proxy-1.2.16/
 jar -cvf0M camellia-redis-proxy.jar BOOT-INF/ META-INF/ org/
 ```
 此时，就会生成一个camellia-redis-proxy.jar，随后使用java -jar命令启动即可，如下：
@@ -61,9 +61,9 @@ How to run Camellia Redis Proxy server using service - 如何使用服务运行C
 ```
 groupadd camelliarp
 useradd camelliarp -g camelliarp
-wget https://github.com/netease-im/camellia/releases/download/1.2.15/camellia-redis-proxy-1.2.15.tar.gz
-tar zxvf camellia-redis-proxy-1.2.15.tar.gz
-mv camellia-redis-proxy-1.2.15 /home/camelliarp/crp
+wget https://github.com/netease-im/camellia/releases/download/1.2.16/camellia-redis-proxy-1.2.16.tar.gz
+tar zxvf camellia-redis-proxy-1.2.16.tar.gz
+mv camellia-redis-proxy-1.2.16 /home/camelliarp/crp
 chown -R camelliarp:camelliarp /home/camelliarp/crp
 ```
 

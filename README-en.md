@@ -84,11 +84,11 @@ provide some simple and practical tools, like:
 [QUICK START](/docs/tools/tools.md)
 
 ## Release-Version
-latest version is 1.2.15, have deploy to maven central repository on 2023/09/01    
+latest version is 1.2.16, have deploy to maven central repository on 2023/09/04    
 [CHANGE_LOG](/update-en.md)  
 
 ## SNAPSHOT-version
-latest version is 1.2.16-SNAPSHOT  
+latest version is 1.2.17-SNAPSHOT  
 ```xml
 <repositories>
   <repository>
