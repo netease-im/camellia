@@ -280,7 +280,7 @@ public class CamelliaDelayQueueSdk {
             this.id = idGen.incrementAndGet();
             this.consumerExec = new ThreadPoolExecutor(config.getConsumeThreads(), config.getConsumeThreads(),
                     0, TimeUnit.SECONDS, new SynchronousQueue<>(),
-                    new CamelliaThreadFactory("camellia-delay-queue-consume-msg[\" + topic + \"]"), new ThreadPoolExecutor.CallerRunsPolicy());
+                    new CamelliaThreadFactory("camellia-delay-queue-consume-msg[" + topic + "]"), new ThreadPoolExecutor.CallerRunsPolicy());
         }
 
         public long getId() {
@@ -330,7 +330,7 @@ public class CamelliaDelayQueueSdk {
                                             boolean ack;
                                             try {
                                                 ack = listener.onMsg(delayMsg);
-                                            } catch (Exception e) {
+                                            } catch (Throwable e) {
                                                 logger.error("listener onMsg error, will ack false and retry, delayMsg = {}", JSONObject.toJSONString(delayMsg), e);
                                                 ack = false;
                                             }
