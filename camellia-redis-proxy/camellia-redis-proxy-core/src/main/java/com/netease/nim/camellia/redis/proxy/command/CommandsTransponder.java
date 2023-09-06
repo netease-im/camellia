@@ -77,17 +77,17 @@ public class CommandsTransponder {
                         commands.size(), taskQueue.getChannelInfo().getConsid(), commandNameList);
             }
 
+            if (channelInfo.getChannelStats() == ChannelInfo.ChannelStats.INVALID) {
+                channelInfo.getCtx().channel().close();
+                logger.warn("too many connects, connect will be force closed, consid = {}, client.addr = {}",
+                        channelInfo.getConsid(), channelInfo.getCtx().channel().remoteAddress());
+                return;
+            }
+
             List<CommandTask> tasks = new ArrayList<>(commands.size());
             ChannelHandlerContext ctx = channelInfo.getCtx();
 
             for (Command command : commands) {
-                if (channelInfo.getChannelStats() == ChannelInfo.ChannelStats.INVALID) {
-                    channelInfo.getCtx().channel().close();
-                    logger.warn("too many connects, connect will be force closed, consid = {}, client.addr = {}",
-                            channelInfo.getConsid(), channelInfo.getCtx().channel().remoteAddress());
-                    return;
-                }
-
                 //设置channelInfo
                 command.setChannelInfo(channelInfo);
 
