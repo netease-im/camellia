@@ -5,7 +5,7 @@
 * 无
 
 ### 更新
-* camellia-redis-proxy配置连接上限时，如果达到上限，先返回一个error再关闭连接
+* camellia-redis-proxy配置连接上限时，如果达到上限，先返回一个error再关闭连接，且支持设置延迟关闭
 
 ### fix
 * 无

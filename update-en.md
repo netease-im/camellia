@@ -5,7 +5,7 @@
 * none
 
 ### update
-* camellia-redis-proxy config max clients, if reached, send error reply before connection closed
+* camellia-redis-proxy config max clients, if reached, send error reply before connection closed, and support configure delay close
 
 ### fix
 * none
