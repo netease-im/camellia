@@ -5,7 +5,7 @@
 * 无
 
 ### 更新
-* 无
+* camellia-redis-proxy配置连接上限时，如果达到上限，先返回一个error再关闭连接
 
 ### fix
 * camellia-delay-queue，发送消息的ttl字段，含义应该是消息延迟到达后的存活时间，而不是消息发送后的存活时间，感谢 [fuhaodev](https://github.com/fuhaodev) 发现这个问题

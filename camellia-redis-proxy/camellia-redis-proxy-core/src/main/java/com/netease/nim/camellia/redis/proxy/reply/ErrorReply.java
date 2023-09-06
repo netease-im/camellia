@@ -31,11 +31,11 @@ public class ErrorReply implements Reply {
     public static final ErrorReply NO_AUTH = new ErrorReply("NOAUTH Authentication required");
     public static final ErrorReply INVALID_PASSWORD = new ErrorReply("ERR invalid password");
     public static final ErrorReply WRONG_PASS = new ErrorReply("WRONGPASS invalid username-password pair or user is disabled.");
-    public static final ErrorReply TOO_MANY_CONNECTS = new ErrorReply("ERR too many connects");
     public static final ErrorReply DB_INDEX_OUT_OF_RANGE = new ErrorReply("ERR DB index is out of range");
     public static final ErrorReply REDIS_CLUSTER_MOVED_ERROR = new ErrorReply("ERR redis cluster MOVED error");
     public static final ErrorReply REDIS_CLUSTER_ASK_ERROR = new ErrorReply("ERR redis cluster ASK error");
     public static final ErrorReply SYNTAX_ERROR = new ErrorReply(Utils.syntaxError);
+    public static final ErrorReply TOO_MANY_CLIENTS = new ErrorReply("ERR max number of clients reached");
 
     private static final char MARKER = Marker.ErrorReply.getMarker();
     private final String error;

@@ -5,7 +5,7 @@
 * none
 
 ### update
-* none
+* camellia-redis-proxy config max clients, if reached, send error reply before connection closed
 
 ### fix
 * camellia-delay-queue, ttl param of send msg, should calc from msg delay trigger time, rather than msg send time, thanks [fuhaodev](https://github.com/fuhaodev) find this bug

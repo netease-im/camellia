@@ -2,8 +2,10 @@ package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.auth.ConnectLimiter;
 import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
+import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -30,7 +32,8 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
         int threshold = ConnectLimiter.connectThreshold();
         int currentConnect = ChannelMonitor.connect();
         if (currentConnect >= threshold) {
-            ctx.close();
+            ctx.channel().writeAndFlush(ErrorReply.TOO_MANY_CLIENTS)
+                    .addListener((ChannelFutureListener) future -> ctx.channel().close());
             logger.warn("too many connects, connect will be force closed, current = {}, max = {}, consid = {}, client.addr = {}",
                     currentConnect, threshold, channelInfo.getConsid(), ctx.channel().remoteAddress());
             return;
