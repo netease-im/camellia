@@ -1,11 +1,22 @@
 [ENGLISH](update-en.md)
 
-# 1.2.16（2023/09/04）
+# 1.2.17（2023/09/xx）
 ### 新增
 * 无
 
 ### 更新
 * camellia-redis-proxy配置连接上限时，如果达到上限，先返回一个error再关闭连接
+
+### fix
+* 无
+
+
+# 1.2.16（2023/09/04）
+### 新增
+* 无
+
+### 更新
+* 无
 
 ### fix
 * camellia-delay-queue，发送消息的ttl字段，含义应该是消息延迟到达后的存活时间，而不是消息发送后的存活时间，感谢 [fuhaodev](https://github.com/fuhaodev) 发现这个问题

@@ -333,7 +333,7 @@ public class CommandsTransponder {
                 int threshold = ConnectLimiter.connectThreshold(bid, bgroup);
                 if (currentConnect >= threshold) {
                     ChannelHandlerContext ctx = channelInfo.getCtx();
-                    ctx.writeAndFlush(ErrorReply.TOO_MANY_CLIENTS)
+                    ctx.channel().writeAndFlush(ErrorReply.TOO_MANY_CLIENTS)
                             .addListener((ChannelFutureListener) future -> ctx.channel().close());
                     logger.warn("too many connects, connect will be force closed, bid = {}, bgroup = {}, current = {}, max = {}, consid = {}, client.addr = {}",
                             bid, bgroup, currentConnect, threshold, channelInfo.getConsid(), channelInfo.getCtx().channel().remoteAddress());

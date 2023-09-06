@@ -1,11 +1,22 @@
 [中文版](update-zh.md)
 
-# 1.2.16（2023/09/04）
+# 1.2.17（2023/09/xx）
 ### add
 * none
 
 ### update
 * camellia-redis-proxy config max clients, if reached, send error reply before connection closed
+
+### fix
+* none
+
+
+# 1.2.16（2023/09/04）
+### add
+* none
+
+### update
+* none
 
 ### fix
 * camellia-delay-queue, ttl param of send msg, should calc from msg delay trigger time, rather than msg send time, thanks [fuhaodev](https://github.com/fuhaodev) find this bug
