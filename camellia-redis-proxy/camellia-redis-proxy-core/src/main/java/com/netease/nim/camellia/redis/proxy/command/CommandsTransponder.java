@@ -18,7 +18,9 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
@@ -27,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -78,6 +81,13 @@ public class CommandsTransponder {
             ChannelHandlerContext ctx = channelInfo.getCtx();
 
             for (Command command : commands) {
+                if (channelInfo.getChannelStats() == ChannelInfo.ChannelStats.INVALID) {
+                    channelInfo.getCtx().channel().close();
+                    logger.warn("too many connects, connect will be force closed, consid = {}, client.addr = {}",
+                            channelInfo.getConsid(), channelInfo.getCtx().channel().remoteAddress());
+                    return;
+                }
+
                 //设置channelInfo
                 command.setChannelInfo(channelInfo);
 
@@ -333,8 +343,16 @@ public class CommandsTransponder {
                 int threshold = ConnectLimiter.connectThreshold(bid, bgroup);
                 if (currentConnect >= threshold) {
                     ChannelHandlerContext ctx = channelInfo.getCtx();
-                    ctx.channel().writeAndFlush(ErrorReply.TOO_MANY_CLIENTS)
-                            .addListener((ChannelFutureListener) future -> ctx.channel().close());
+                    channelInfo.setChannelStats(ChannelInfo.ChannelStats.INVALID);
+                    ChannelFuture channelFuture = ctx.channel().writeAndFlush(ErrorReply.TOO_MANY_CLIENTS);
+                    channelFuture.addListener((ChannelFutureListener) channelFuture1 -> {
+                        long delayMillis = ConnectLimiter.delayCloseMillis();
+                        if (delayMillis > 0) {
+                            ExecutorUtils.submitDelayTask(() -> ctx.channel().close(), delayMillis, TimeUnit.MILLISECONDS);
+                        } else {
+                            ctx.channel().close();
+                        }
+                    });
                     logger.warn("too many connects, connect will be force closed, bid = {}, bgroup = {}, current = {}, max = {}, consid = {}, client.addr = {}",
                             bid, bgroup, currentConnect, threshold, channelInfo.getConsid(), channelInfo.getCtx().channel().remoteAddress());
                     return false;

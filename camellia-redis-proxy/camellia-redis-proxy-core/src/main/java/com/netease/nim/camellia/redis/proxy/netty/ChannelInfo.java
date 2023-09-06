@@ -538,5 +538,7 @@ public class ChannelInfo {
     public static enum ChannelStats {
         AUTH_OK,
         NO_AUTH,
+        INVALID,
+        ;
     }
 }

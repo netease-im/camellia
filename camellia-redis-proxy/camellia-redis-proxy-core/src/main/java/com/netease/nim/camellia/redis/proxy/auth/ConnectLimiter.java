@@ -48,4 +48,8 @@ public class ConnectLimiter {
         return threshold;
     }
 
+    public static long delayCloseMillis() {
+        return ProxyDynamicConf.getLong("too.many.clients.close.delay.millis", -1);
+    }
+
 }
