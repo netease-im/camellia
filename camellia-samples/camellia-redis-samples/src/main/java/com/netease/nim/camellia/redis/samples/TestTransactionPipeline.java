@@ -23,10 +23,7 @@ public class TestTransactionPipeline {
 
     public static void main(String[] args) throws InterruptedException {
 
-//        String url = "redis://@127.0.0.1:6379";
         String url = "redis://pass123@127.0.0.1:6380";
-//        String url = "redis-cluster://c17b87cda@10.200.132.167:6381,10.200.132.169:6381";
-//        String url = "redis-cluster://uLWXcgh6Nvk@10.189.31.16:6101,10.189.31.16:6102,10.189.31.16:6103";
         ResourceTable resourceTable = ResourceTableUtil.simpleTable(RedisResourceUtil.parseResourceByUrl(new Resource(url)));
 
         CamelliaRedisEnv redisEnv = new CamelliaRedisEnv.Builder()
@@ -36,8 +33,8 @@ public class TestTransactionPipeline {
 
         CamelliaRedisTemplate template = new CamelliaRedisTemplate(redisEnv, resourceTable);
 
-        String url1 = "redis-cluster://@10.189.31.13:6601,10.189.31.14:6603,10.189.31.15:6605";
-        String url2 = "redis-cluster://@nim-redis-perftest-jd-1.v1.yunxin.jd1.vpc:7000,nim-redis-perftest-jd-2.v1.yunxin.jd1.vpc:7006,nim-redis-perftest-jd-3.v1.yunxin.jd1.vpc:7010";
+        String url1 = "redis-cluster://@127.0.0.1:6379,127.0.0.1:6380";
+        String url2 = "redis-cluster://@127.0.0.1:6381,127.0.0.1:6382";
         CamelliaRedisTemplate template1 = new CamelliaRedisTemplate(redisEnv,
                 ResourceTableUtil.simpleTable(RedisResourceUtil.parseResourceByUrl(new Resource(url1))));
         CamelliaRedisTemplate template2 = new CamelliaRedisTemplate(redisEnv,
