@@ -18,10 +18,12 @@ import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.toolkit.lock.CamelliaRedisLock;
 import com.netease.nim.camellia.tools.cache.CamelliaLocalCache;
 import com.netease.nim.camellia.tools.utils.MD5Util;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -50,6 +52,8 @@ public class ConfigService {
 
     @Autowired
     private ConfigNamespaceDaoWrapper configNamespaceDaoWrapper;
+    @Autowired(required = false)
+    private ConfigChangeInterceptor interceptor;
 
     private static final String TAG = "config";
     private final CamelliaLocalCache localCache = new CamelliaLocalCache();
@@ -115,7 +119,7 @@ public class ConfigService {
         return daoWrapper.findByNamespaceAndKey(namespace, key);
     }
 
-    public int deleteConfig(String namespace, long id, String key, Long version, String operatorInfo) {
+    public int deleteConfig(HttpServletRequest request, String namespace, long id, String key, Long version, String operatorInfo) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
         ParamCheckUtils.checkParam(key, "key", maxKeyLen);
         ParamCheckUtils.checkParam(operatorInfo, "operatorInfo", maxOperatorInfoLen);
@@ -147,6 +151,15 @@ public class ConfigService {
                 LogBean.get().addProps("config.has.changed", true);
                 throw new AppException(HttpStatus.BAD_REQUEST.value(), "config has changed");
             }
+
+            if (interceptor != null) {
+                boolean pass = interceptor.deleteConfig(request, config, EnvContext.getUser(), operatorInfo);
+                if (!pass) {
+                    LogBean.get().addProps("interceptor.pass", false);
+                    throw new AppException(HttpResponseStatus.FORBIDDEN.code(), "forbidden");
+                }
+            }
+
             int delete = daoWrapper.delete(config);
             LogBean.get().addProps("delete", delete);
             configHistoryService.configDelete(config, EnvContext.getUser(), operatorInfo);
@@ -156,7 +169,7 @@ public class ConfigService {
         }
     }
 
-    public Config createOrUpdateConfig(String namespace, String key, String value, Integer type, String info, Long version, Integer validFlag, String operatorInfo) {
+    public Config createOrUpdateConfig(HttpServletRequest request, String namespace, String key, String value, Integer type, String info, Long version, Integer validFlag, String operatorInfo) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
         ParamCheckUtils.checkParam(key, "key", maxKeyLen);
         ParamCheckUtils.checkParam(operatorInfo, "operatorInfo", maxOperatorInfoLen);
@@ -207,6 +220,15 @@ public class ConfigService {
                 config.setCreator(EnvContext.getUser());
                 config.setOperator(EnvContext.getUser());
                 checkConfigType(config.getValue(), ConfigType.getByValue(config.getType()));
+
+                if (interceptor != null) {
+                    boolean pass = interceptor.createConfig(request, config, EnvContext.getUser(), operatorInfo);
+                    if (!pass) {
+                        LogBean.get().addProps("interceptor.pass", false);
+                        throw new AppException(HttpResponseStatus.FORBIDDEN.code(), "forbidden");
+                    }
+                }
+
                 int create = daoWrapper.create(config);
                 LogBean.get().addProps("create", create);
                 configHistoryService.configCreate(daoWrapper.findByNamespaceAndKey(namespace, key), operatorInfo);
@@ -241,6 +263,15 @@ public class ConfigService {
                     checkConfigType(config.getValue(), ConfigType.getByValue(config.getType()));
                     config.setOperator(EnvContext.getUser());
                     config.setVersion(oldConfig.getVersion() + 1);
+
+                    if (interceptor != null) {
+                        boolean pass = interceptor.updateConfig(request, oldConfig, config, EnvContext.getUser(), operatorInfo);
+                        if (!pass) {
+                            LogBean.get().addProps("interceptor.pass", false);
+                            throw new AppException(HttpResponseStatus.FORBIDDEN.code(), "forbidden");
+                        }
+                    }
+
                     int update = daoWrapper.update(config);
                     LogBean.get().addProps("update", update);
                     Config newConfig = daoWrapper.findByNamespaceAndKey(namespace, key);

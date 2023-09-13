@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Objects;
 
 /**
@@ -43,7 +44,10 @@ public class ConfigNamespaceService {
     @Autowired
     private ConfigHistoryService configHistoryService;
 
-    public ConfigNamespace createOrUpdateConfigNamespace(String namespace, String info, String alias, Integer version, Integer validFlag, String operatorInfo) {
+    @Autowired(required = false)
+    private ConfigChangeInterceptor interceptor;
+
+    public ConfigNamespace createOrUpdateConfigNamespace(HttpServletRequest request, String namespace, String info, String alias, Integer version, Integer validFlag, String operatorInfo) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
         ParamCheckUtils.checkValidFlag(validFlag);
         ParamCheckUtils.checkParam(operatorInfo, "operatorInfo", maxOperatorInfoLen);
@@ -74,6 +78,13 @@ public class ConfigNamespaceService {
                 configNamespace.setCreator(EnvContext.getUser());
                 configNamespace.setOperator(EnvContext.getUser());
                 configNamespace.setVersion(1);
+                if (interceptor != null) {
+                    boolean pass = interceptor.createNamespace(request, configNamespace, EnvContext.getUser(), operatorInfo);
+                    if (!pass) {
+                        LogBean.get().addProps("interceptor.pass", false);
+                        throw new AppException(HttpResponseStatus.FORBIDDEN.code(), "forbidden");
+                    }
+                }
                 int create = dao.create(configNamespace);
                 LogBean.get().addProps("create", create);
                 configHistoryService.namespaceCreate(dao.getByNamespace(namespace), operatorInfo);
@@ -99,6 +110,15 @@ public class ConfigNamespaceService {
                     configNamespace.setUpdateTime(now);
                     configNamespace.setOperator(EnvContext.getUser());
                     configNamespace.setVersion(oldConfig.getVersion() + 1);
+
+                    if (interceptor != null) {
+                        boolean pass = interceptor.updateNamespace(request, oldConfig, configNamespace, EnvContext.getUser(), operatorInfo);
+                        if (!pass) {
+                            LogBean.get().addProps("interceptor.pass", false);
+                            throw new AppException(HttpResponseStatus.FORBIDDEN.code(), "forbidden");
+                        }
+                    }
+
                     int update = dao.update(configNamespace);
                     LogBean.get().addProps("update", update);
                     ConfigNamespace newConfig = dao.getByNamespace(namespace);
@@ -111,7 +131,7 @@ public class ConfigNamespaceService {
         }
     }
 
-    public int deleteConfigNamespace(long id, String namespace, Integer version, String operatorInfo) {
+    public int deleteConfigNamespace(HttpServletRequest request, long id, String namespace, Integer version, String operatorInfo) {
         ParamCheckUtils.checkParam(namespace, "namespace", maxNamespaceLen);
         ParamCheckUtils.checkParam(operatorInfo, "operatorInfo", maxOperatorInfoLen);
         String lockKey = CacheUtil.buildCacheKey("camellia_config_namespace", namespace, "~lock");
@@ -137,6 +157,13 @@ public class ConfigNamespaceService {
             if (!page.getList().isEmpty()) {
                 LogBean.get().addProps("config.namespace.has.no.delete.config", true);
                 throw new AppException(HttpStatus.FORBIDDEN.value(), "config namespace has no delete config");
+            }
+            if (interceptor != null) {
+                boolean pass = interceptor.deleteNamespace(request, configNamespace, EnvContext.getUser(), operatorInfo);
+                if (!pass) {
+                    LogBean.get().addProps("interceptor.pass", false);
+                    throw new AppException(HttpResponseStatus.FORBIDDEN.code(), "forbidden");
+                }
             }
             int delete = dao.delete(configNamespace);
             LogBean.get().addProps("delete", delete);

@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,6 +63,9 @@ public class UserDashboardController {
 
     @Autowired
     UserAccessService userAccessService;
+
+    @Autowired(required = false)
+    OperationInterceptor interceptor;
 
     @PostMapping("/transfer")
     public WebResult transferTable(@RequestBody TransferAO transferAO) {
@@ -168,7 +172,7 @@ public class UserDashboardController {
     @ApiOperation(value = "创建资源表", notes = "需要did,创建接口")
     @PostMapping("/createTable")
     @ActionSecurity(action = ActionType.WRITE, role = ActionRole.NORMAL, resource = "table")
-    public WebResult createResourceTable(@RequestBody TableAO tableAO) {
+    public WebResult createResourceTable(HttpServletRequest request, @RequestBody TableAO tableAO) {
         ParaCheckUtil.checkParam(tableAO.getDid(), "did");
         ParaCheckUtil.checkParam(tableAO.getTable(), "table");
         ParaCheckUtil.checkParam(tableAO.getInfo(), "info");
@@ -186,6 +190,15 @@ public class UserDashboardController {
         LogBean.get().addProps("table", table);
         LogBean.get().addProps("info", info);
         LogBean.get().addProps("type", type);
+
+        if (interceptor != null) {
+            boolean pass = interceptor.createTable(request, AppInfoContext.getUser().getUsername(), tableAO);
+            if (!pass) {
+                LogBean.get().addProps("interceptor.pass", false);
+                throw new AppException(AppCode.FORBIDDEN, "forbidden");
+            }
+        }
+
         TableBO tableBO = tableService.createTable(did, table, info, type);
         return WebResult.success(tableBO);
     }
@@ -193,7 +206,7 @@ public class UserDashboardController {
     @ApiOperation(value = "更改资源table", notes = "需要did,tid,detail,info")
     @PostMapping("/changeTable")
     @ActionSecurity(action = ActionType.WRITE, role = ActionRole.NORMAL, resource = "table")
-    public WebResult changeResourceTable(@RequestBody TableAO tableAO) {
+    public WebResult changeResourceTable(HttpServletRequest request, @RequestBody TableAO tableAO) {
         ParaCheckUtil.checkParam(tableAO.getTid(), "tid");
         ParaCheckUtil.checkParam(tableAO.getDid(), "did");
         ParaCheckUtil.checkParam(tableAO.getTable(), "table");
@@ -212,6 +225,16 @@ public class UserDashboardController {
         LogBean.get().addProps("table", table);
         LogBean.get().addProps("info", info);
         LogBean.get().addProps("type", type);
+
+        if (interceptor != null) {
+            TableBO oldTable = tableService.getTable(did, tableAO.getTid());
+            boolean pass = interceptor.changeTable(request, AppInfoContext.getUser().getUsername(), oldTable, tableAO);
+            if (!pass) {
+                LogBean.get().addProps("interceptor.pass", false);
+                throw new AppException(AppCode.FORBIDDEN, "forbidden");
+            }
+        }
+
         TableWithTableRefs tableWithTableRefs = tableService.changeTable(did, tid, table, info, type);
         return WebResult.success(tableWithTableRefs);
 
@@ -220,7 +243,7 @@ public class UserDashboardController {
     @ApiOperation(value = "删除单个资源表", notes = "需要指定tid")
     @DeleteMapping("/table")
     @ActionSecurity(action = ActionType.WRITE, role = ActionRole.NORMAL, resource = "table")
-    public WebResult deleteResourceTable(@RequestBody TableAO tableAO) {
+    public WebResult deleteResourceTable(HttpServletRequest request, @RequestBody TableAO tableAO) {
         ParaCheckUtil.checkParam(tableAO.getTid(), "tid");
         ParaCheckUtil.checkParam(tableAO.getDid(), "did");
 
@@ -229,6 +252,16 @@ public class UserDashboardController {
         Long tid = tableAO.getTid();
         LogBean.get().addProps("did", did);
         LogBean.get().addProps("tid", tid);
+
+        if (interceptor != null) {
+            TableBO oldTable = tableService.getTable(did, tableAO.getTid());
+            boolean pass = interceptor.deleteTable(request, AppInfoContext.getUser().getUsername(), oldTable, tableAO);
+            if (!pass) {
+                LogBean.get().addProps("interceptor.pass", false);
+                throw new AppException(AppCode.FORBIDDEN, "forbidden");
+            }
+        }
+
         tableService.deleteTable(did, tid);
         return WebResult.success();
     }
@@ -237,7 +270,7 @@ public class UserDashboardController {
     @ApiOperation(value = "创建或者更新资源表引用关系", notes = "资源表引用关系")
     @PostMapping("/createOrUpdateTableRef")
     @ActionSecurity(action = ActionType.WRITE, role = ActionRole.NORMAL, resource = "tableRef")
-    public WebResult createOrUpdateTableRef(@RequestBody TableRefAO tableRefAO) {
+    public WebResult createOrUpdateTableRef(HttpServletRequest request, @RequestBody TableRefAO tableRefAO) {
         ParaCheckUtil.checkParam(tableRefAO.getDid(), "did");
         ParaCheckUtil.checkParam(tableRefAO.getBid(), "bid");
         ParaCheckUtil.checkParam(tableRefAO.getBgroup(), "bgroup");
@@ -255,15 +288,34 @@ public class UserDashboardController {
         LogBean.get().addProps("bgroup", bgroup);
         LogBean.get().addProps("tid", tid);
         LogBean.get().addProps("info", info);
+
+        if (interceptor != null) {
+            boolean pass = interceptor.createOrUpdateTableRef(request, AppInfoContext.getUser().getUsername(), getTableRef(did, bid, bgroup), tableRefAO);
+            if (!pass) {
+                LogBean.get().addProps("interceptor.pass", false);
+                throw new AppException(AppCode.FORBIDDEN, "forbidden");
+            }
+        }
+
         TableRefBO tableRefBO = tableRefService.bindBigBgroupWithTid(did, bid, bgroup, tid, info);
         return WebResult.success(tableRefBO);
     }
 
+    private TableRefBO getTableRef(long did, long bid, String bgroup) {
+        CamelliaTableRefPage tableRef1 = tableRefService.getTableRef(did, bid, bgroup, null, null,
+                0, 1, null, null);
+        List<TableRefBO> tableRefs = tableRef1.getTableRefs();
+        TableRefBO oldTableRef = null;
+        if (tableRefs != null && !tableRefs.isEmpty()) {
+            oldTableRef = tableRefs.get(0);
+        }
+        return oldTableRef;
+    }
 
     @ApiOperation(value = "删除单个资源表引用关系", notes = "需要指定did,bid和bgroup")
     @DeleteMapping("/tableRef")
     @ActionSecurity(action = ActionType.WRITE, role = ActionRole.NORMAL, resource = "tableRef")
-    public WebResult deleteTableRef(@RequestBody TableRefAO tableRefAO) {
+    public WebResult deleteTableRef(HttpServletRequest request, @RequestBody TableRefAO tableRefAO) {
         ParaCheckUtil.checkParam(tableRefAO.getDid(), "did");
         ParaCheckUtil.checkParam(tableRefAO.getBid(), "bid");
         ParaCheckUtil.checkParam(tableRefAO.getBgroup(), "bgroup");
@@ -274,6 +326,15 @@ public class UserDashboardController {
         LogBean.get().addProps("did", did);
         LogBean.get().addProps("bid", bid);
         LogBean.get().addProps("bgroup", bgroup);
+
+        if (interceptor != null) {
+            boolean pass = interceptor.deleteTableRef(request, AppInfoContext.getUser().getUsername(), getTableRef(did, bid, bgroup), tableRefAO);
+            if (!pass) {
+                LogBean.get().addProps("interceptor.pass", false);
+                throw new AppException(AppCode.FORBIDDEN, "forbidden");
+            }
+        }
+
         tableRefService.delete(did, bid, bgroup);
         return WebResult.success();
     }
@@ -352,7 +413,7 @@ public class UserDashboardController {
     @ApiOperation(value = "创建或者更新资源描述", notes = "需要指定did,资源url和描述")
     @PostMapping("/createOrUpdateResource")
     @ActionSecurity(action = ActionType.WRITE, role = ActionRole.NORMAL, resource = "resource")
-    public WebResult createOrUpdateResource(@RequestBody URLAO urlao) {
+    public WebResult createOrUpdateResource(HttpServletRequest request, @RequestBody URLAO urlao) {
         ParaCheckUtil.checkParam(urlao.getDid(), "did");
         ParaCheckUtil.checkParam(urlao.getUrl(), "url");
         long did = Long.parseLong(urlao.getDid());
@@ -361,6 +422,15 @@ public class UserDashboardController {
         LogBean.get().addProps("did", did);
         LogBean.get().addProps("url", url);
         LogBean.get().addProps("info", info);
+
+        if (interceptor != null) {
+            boolean pass = interceptor.createOrUpdateResource(request, AppInfoContext.getUser().getUsername(), urlao);
+            if (!pass) {
+                LogBean.get().addProps("interceptor.pass", false);
+                throw new AppException(AppCode.FORBIDDEN, "forbidden");
+            }
+        }
+
         resourceService.createOrUpdateResource(did, url, info);
         return WebResult.success();
     }
@@ -368,13 +438,22 @@ public class UserDashboardController {
     @ApiOperation(value = "删除单个资源", notes = "需要指定did,资源ID")
     @DeleteMapping("/resource")
     @ActionSecurity(action = ActionType.WRITE, role = ActionRole.NORMAL, resource = "resource")
-    public WebResult deleteResource(@RequestBody URLAO urlao) {
+    public WebResult deleteResource(HttpServletRequest request, @RequestBody URLAO urlao) {
         ParaCheckUtil.checkParam(urlao.getDid(), "did");
         ParaCheckUtil.checkParam(urlao.getId(), "id");
         long did = Long.parseLong(urlao.getDid());
         Long id = urlao.getId();
         LogBean.get().addProps("did", did);
         LogBean.get().addProps("id", id);
+
+        if (interceptor != null) {
+            boolean pass = interceptor.deleteResource(request, AppInfoContext.getUser().getUsername(), urlao);
+            if (!pass) {
+                LogBean.get().addProps("interceptor.pass", false);
+                throw new AppException(AppCode.FORBIDDEN, "forbidden");
+            }
+        }
+
         resourceService.delete(did, id);
         return WebResult.success();
     }

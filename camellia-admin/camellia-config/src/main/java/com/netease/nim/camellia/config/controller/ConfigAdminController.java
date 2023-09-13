@@ -8,6 +8,7 @@ import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Locale;
 
 
@@ -26,7 +27,8 @@ public class ConfigAdminController {
     private ConfigNamespaceService configNamespaceService;
 
     @PostMapping("/createOrUpdateConfig")
-    public WebResult createOrUpdateConfig(@RequestParam("namespace") String namespace,
+    public WebResult createOrUpdateConfig(HttpServletRequest request,
+                                          @RequestParam("namespace") String namespace,
                                           @RequestParam("key") String key,
                                           @RequestParam(value = "value", required = false) String value,
                                           @RequestParam(value = "type", required = false) Integer type,
@@ -44,7 +46,7 @@ public class ConfigAdminController {
         LogBean.get().addProps("info", info);
         LogBean.get().addProps("validFlag", validFlag);
         LogBean.get().addProps("operatorInfo", operatorInfo);
-        Config config = configService.createOrUpdateConfig(namespace, key, value, type, info, version, validFlag, operatorInfo);
+        Config config = configService.createOrUpdateConfig(request, namespace, key, value, type, info, version, validFlag, operatorInfo);
         LogBean.get().addProps("config", config);
         return WebResult.success(config);
     }
@@ -98,7 +100,8 @@ public class ConfigAdminController {
     }
 
     @PostMapping("/deleteConfig")
-    public WebResult deleteConfig(@RequestParam("namespace") String namespace,
+    public WebResult deleteConfig(HttpServletRequest request,
+                                  @RequestParam("namespace") String namespace,
                                   @RequestParam("id") long id,
                                   @RequestParam("key") String key,
                                   @RequestParam(value = "version", required = false) Long version,
@@ -109,7 +112,7 @@ public class ConfigAdminController {
         LogBean.get().addProps("namespace", namespace);
         LogBean.get().addProps("key", key);
         LogBean.get().addProps("operatorInfo", operatorInfo);
-        int ret = configService.deleteConfig(namespace, id, key, version, operatorInfo);
+        int ret = configService.deleteConfig(request, namespace, id, key, version, operatorInfo);
         return WebResult.success(ret);
     }
 
@@ -168,7 +171,8 @@ public class ConfigAdminController {
     }
 
     @PostMapping("/createOrUpdateConfigNamespace")
-    public WebResult createOrUpdateConfigNamespace(@RequestParam("namespace") String namespace,
+    public WebResult createOrUpdateConfigNamespace(HttpServletRequest request,
+                                                   @RequestParam("namespace") String namespace,
                                                    @RequestParam(value = "info", required = false) String info,
                                                    @RequestParam(value = "alias", required = false) String alias,
                                                    @RequestParam(value = "version", required = false) Integer version,
@@ -181,13 +185,14 @@ public class ConfigAdminController {
         LogBean.get().addProps("version", version);
         LogBean.get().addProps("alias", alias);
         LogBean.get().addProps("operatorInfo", operatorInfo);
-        ConfigNamespace configNamespace = configNamespaceService.createOrUpdateConfigNamespace(namespace, info, alias, version, validFlag, operatorInfo);
+        ConfigNamespace configNamespace = configNamespaceService.createOrUpdateConfigNamespace(request, namespace, info, alias, version, validFlag, operatorInfo);
         LogBean.get().addProps("configNamespace", configNamespace);
         return WebResult.success(configNamespace);
     }
 
     @PostMapping("/deleteConfigNamespace")
-    public WebResult deleteConfigNamespace(@RequestParam(value = "id", required = false) Long id,
+    public WebResult deleteConfigNamespace(HttpServletRequest request,
+                                           @RequestParam(value = "id", required = false) Long id,
                                            @RequestParam(value = "version") Integer version,
                                            @RequestParam("namespace") String namespace,
                                            @RequestParam(value = "operatorInfo") String operatorInfo) {
@@ -196,7 +201,7 @@ public class ConfigAdminController {
         LogBean.get().addProps("id", id);
         LogBean.get().addProps("version", version);
         LogBean.get().addProps("operatorInfo", operatorInfo);
-        int ret = configNamespaceService.deleteConfigNamespace(id, namespace, version, operatorInfo);
+        int ret = configNamespaceService.deleteConfigNamespace(request, id, namespace, version, operatorInfo);
         LogBean.get().addProps("ret", ret);
         return WebResult.success(ret);
     }

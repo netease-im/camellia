@@ -2,7 +2,7 @@
 
 # 1.2.17（2023/09/xx）
 ### add
-* none
+* camelia-config/camellia-console support custom ConfigChangeInterceptor to control config change flow
 
 ### update
 * camellia-redis-proxy config max clients, if reached, send error reply before connection closed, and support configure delay close
