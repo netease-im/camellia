@@ -34,8 +34,8 @@ public class WebResult {
     }
 
     public static WebResult Exception(Exception exception){
-        if(exception instanceof  AppException){
-            return new WebResult(((AppException)exception).getCode(),((AppException)exception).getMsg());
+        if (exception instanceof  AppException) {
+            return new WebResult(((AppException)exception).getCode(),((AppException)exception).getMsg(), ((AppException) exception).getData());
         }
         return new WebResult(HttpStatus.INTERNAL_SERVER_ERROR.value(),exception.getMessage());
     }

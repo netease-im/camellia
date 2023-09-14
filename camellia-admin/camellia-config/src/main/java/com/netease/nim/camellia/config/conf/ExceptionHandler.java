@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.config.conf;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netease.nim.camellia.config.controller.WebResult;
 import com.netease.nim.camellia.config.exception.AppException;
@@ -41,7 +42,7 @@ public class ExceptionHandler implements HandlerExceptionResolver {
                 exception.setCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
                 logger.error("error, uri = {}", httpServletRequest.getRequestURI(), ex);
             }
-            mapper.writeValue(httpServletResponse.getOutputStream(), new WebResult(exception.getCode(), exception.getMsg()));
+            mapper.writeValue(httpServletResponse.getOutputStream(), new WebResult(exception.getCode(), exception.getMsg(), exception.getData()));
         } catch (Exception e) {
             logger.error("response error, uri = {}", httpServletRequest.getRequestURI(), ex);
         }

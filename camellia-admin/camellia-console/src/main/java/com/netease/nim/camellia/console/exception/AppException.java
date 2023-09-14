@@ -8,6 +8,7 @@ package com.netease.nim.camellia.console.exception;
 public class AppException extends RuntimeException{
     private int code;
     private String msg;
+    private Object data;
 
     public AppException() {
     }
@@ -20,6 +21,13 @@ public class AppException extends RuntimeException{
         super(msg);
         this.code = code;
         this.msg = msg;
+    }
+
+    public AppException(int code, String msg, Object data) {
+        super(msg);
+        this.code = code;
+        this.msg = msg;
+        this.data = data;
     }
 
     public AppException(int code, String msg,Throwable cause) {
@@ -47,5 +55,13 @@ public class AppException extends RuntimeException{
 
     public void setMsg(String msg) {
         this.msg = msg;
+    }
+
+    public Object getData() {
+        return data;
+    }
+
+    public void setData(Object data) {
+        this.data = data;
     }
 }
