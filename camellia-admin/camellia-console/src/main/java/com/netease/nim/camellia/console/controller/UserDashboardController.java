@@ -303,7 +303,7 @@ public class UserDashboardController {
 
     private TableRefBO getTableRef(long did, long bid, String bgroup) {
         CamelliaTableRefPage tableRef1 = tableRefService.getTableRef(did, bid, bgroup, null, null,
-                0, 1, null, null);
+                1, 1, null, null);
         List<TableRefBO> tableRefs = tableRef1.getTableRefs();
         TableRefBO oldTableRef = null;
         if (tableRefs != null && !tableRefs.isEmpty()) {
