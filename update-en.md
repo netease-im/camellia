@@ -6,6 +6,7 @@
 
 ### update
 * camellia-redis-proxy config max clients, if reached, send error reply before connection closed, and support configure delay close
+* optimize the performance of CamelliaStrictIdGen's peekId api
 
 ### fix
 * none

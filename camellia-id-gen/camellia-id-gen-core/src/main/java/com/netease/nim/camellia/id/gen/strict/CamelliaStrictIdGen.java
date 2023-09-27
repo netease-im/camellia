@@ -142,23 +142,23 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
             String cacheKey = cacheKey(tag);
             int retry = maxRetry;
             while (retry-- > 0) {
-                Long size = template.llen(cacheKey);
-                List<String> list;
-                if (size < 10) {
-                    list = template.lrange(cacheKey, 0, -1);
-                } else {
-                    list = template.lrange(cacheKey, size - 10, size + 100);
-                    if (list.isEmpty()) {
-                        list = template.lrange(cacheKey, 0, -1);
-                    }
+                String lastId = template.lindex(cacheKey, -1);
+                if (lastId != null) {
+                    return Long.parseLong(lastId);
                 }
-                if (!list.isEmpty()) {
-                    return Long.parseLong(list.get(list.size() - 1));
-                } else {
-                    boolean success = tryLoadIds(tag);
-                    if (!success) {
-                        TimeUnit.MILLISECONDS.sleep(retryIntervalMillis);
-                    }
+                String cachePeekKey = cachePeekKey(tag);
+                String value = template.get(cachePeekKey);
+                if (value != null) {
+                    return Long.parseLong(value);
+                }
+                Long selectId = idLoader.selectId(tag);
+                if (selectId != null) {
+                    template.setex(cachePeekKey, cacheExpireSeconds, String.valueOf(selectId + 1));
+                    return selectId + 1;
+                }
+                boolean success = tryLoadIds(tag);
+                if (!success) {
+                    TimeUnit.MILLISECONDS.sleep(retryIntervalMillis);
                 }
             }
         } catch (Exception e) {
@@ -235,12 +235,14 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
                     }
                     ids.add(String.valueOf(id));
                 }
+                String cachePeekKey = cachePeekKey(tag);
                 //把新获取到的id导入到redis的队列里，并记录load时间以及load的step
                 try (ICamelliaRedisPipeline pipelined = template.pipelined()) {
                     pipelined.lpush(cacheKey, ids.toArray(new String[0]));
                     pipelined.expire(cacheKey, cacheExpireSeconds);
                     pipelined.setex(cacheHoldKey, cacheExpireSeconds, String.valueOf(System.currentTimeMillis()));
                     pipelined.setex(currentStepKey, cacheExpireSeconds, String.valueOf(newStep));
+                    pipelined.del(cachePeekKey);
                     pipelined.sync();
                     if (logger.isDebugEnabled()) {
                         logger.debug("load ids from idLoader success, cacheKey = {}, start = {}, end = {}", cacheKey, range.getStart(), range.getEnd());
@@ -294,6 +296,10 @@ public class CamelliaStrictIdGen implements ICamelliaStrictIdGen {
 
     private String cacheKey(String tag) {
         return cacheKeyPrefix + "|" + tag;
+    }
+
+    private String cachePeekKey(String tag) {
+        return cacheKeyPrefix + "|peek|" + tag;
     }
 
     private String lockKey(String cacheKey) {
