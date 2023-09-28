@@ -3,6 +3,11 @@
 ## 简介
 基于camellia-core和hbase-client开发的hbase客户端CamelliaHBaseTemplate  
 
+## feature
+* enhanced hbase client
+* base on camellia-core and hbase-client，main class is CamelliaHBaseTemplate
+* support client read-write-separate/double-write
+
 ## 特性
 * 多读多写（如读写分离、双写等）  
 * 支持配置在线修改（需整合camellia-dashboard）

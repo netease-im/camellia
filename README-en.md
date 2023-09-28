@@ -6,6 +6,22 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 ![GitHub](https://img.shields.io/badge/license-MIT-green.svg)
 ![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.netease.nim/camellia/badge.svg)
   
+## Summary
+
+Camellia provide easy-to-use server toolkits:  
+
+* [redis-proxy](/docs/redis-proxy/redis-proxy-en.md)
+* [id-generator](/docs/id-gen/id-gen.md)
+* [delay-queue](/docs/delay-queue/delay-queue.md)
+* [hot-key](/docs/hot-key/hot-key.md)
+
+camellia also provide enhanced sdk (based on other open source sdk): 
+* [redis-client](/docs/redis-client/redis-client.md)
+* [hbase-client](/docs/hbase-client/hbase-client.md)
+* [feign-client](/docs/feign/feign.md)
+* [dao-cache](/docs/cache/cache.md)
+* [tools](/docs/tools/tools.md)
+
 ## Instruction
 
 ### camellia-redis-proxy  
@@ -43,45 +59,6 @@ hot key detect and cache:
 * provide monitor data     
 [QUICK START](/docs/hot-key/hot-key.md)
 
-### camellia-redis(enhanced-redis-client)
-* base on camellia-core and jedis(2.9.3)，main class is CamelliaRedisTemplate, can invoke redis-standalone/redis-sentinel/redis-cluster in identical way，support pipeline
-* support client sharding/read-write-separate/double-write
-* support read from slave(redis-sentinel)
-* provide CamelliaRedisLock、CamelliaFreq utils  
-[QUICK START](/docs/redis-client/redis-client.md)
-
-### camellia-hbase(enhanced-hbase-client)  
-* base on camellia-core and hbase-client，main class is CamelliaHBaseTemplate    
-* support client read-write-separate/double-write  
-[QUICK START](/docs/hbase-client/hbase-client.md)  
-
-### camellia-feign(enhanced-feign-client)  
-join camellia-core and open-feign, so your feign-client have this feature: 
-* support dynamic route
-* support custom route by request param
-* support custom load balance policy by request param
-* support read-write-separate/double-write
-* support dynamic conf, such like timeout  
-[QUICK START](/docs/feign/feign.md)
-
-### camellia-cache(enhanced-spring-cache)  
-base on spring-cache:  
-* support redis, support local-cache(Caffeine)
-* support mget/mevict by annotation
-* support setting different ttl, support setting cache null value
-* support custom serialize/deserialize, default use jackson, support cache value compress
-* support dynamic cache clear by update cache key prefix  
-[QUICK START](/docs/cache/cache.md)
-
-### camellia-tools
-provide some simple and practical tools, like:  
-* compress
-* encrypt
-* thread pool
-* distribution lock
-* circuit breaker
-* ......  
-[QUICK START](/docs/tools/tools.md)
 
 ## Release-Version
 latest version is 1.2.16, have deploy to maven central repository on 2023/09/04    

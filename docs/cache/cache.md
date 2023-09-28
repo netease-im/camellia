@@ -1,5 +1,15 @@
 
 ## camellia-cache
+
+## feature
+base on spring-cache:
+* support redis, support local-cache(Caffeine)
+* support mget/mevict by annotation
+* support setting different ttl, support setting cache null value
+* support custom serialize/deserialize, default use jackson, support cache value compress
+* support dynamic cache clear by update cache key prefix
+
+## 特性  
 基于spring-cache二次开发： 
 * 支持redis，也支持本地缓存（Caffeine）
 * 支持基于注解执行mget，mevict等批量操作

@@ -3,6 +3,14 @@
 ## 介绍
 camellia-feign封装了feign，集成到camellia的体系中，提供一些额外的能力
 
+## feature
+join camellia-core and open-feign, so your feign-client have this feature:  
+* support dynamic route
+* support custom route by request param
+* support custom load balance policy by request param
+* support read-write-separate/double-write
+* support dynamic conf, such like timeout
+
 ## 特性
 * 支持动态路由，运行期间支持动态配置新的路由规则
 * 支持camellia-core的通用能力，如读写分离、双写
