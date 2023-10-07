@@ -1,8 +1,10 @@
 [中文版](update-zh.md)
 
-# 1.2.17（2023/09/xx）
+# 1.2.17（2023/10/xx）
 ### add
 * camelia-config/camellia-console support custom ConfigChangeInterceptor to control config change flow
+* camellia-redis-proxy enhance plugin, you can rewrite route by plugin to every command
+* camellia-redis-proxy add build-in plugin `HotKeyRouteRewriteProxyPlugin`, which can rewrite route by hot-key
 
 ### update
 * camellia-redis-proxy config max clients, if reached, send error reply before connection closed, and support configure delay close

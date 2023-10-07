@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.auth.HelloCommandUtil;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
+import com.netease.nim.camellia.redis.proxy.plugin.rewrite.RouteRewriteResult;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
@@ -27,7 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -101,6 +104,7 @@ public class CommandsTransponder {
                     return;
                 }
 
+                RouteRewriteResult rewriterResult = null;
                 List<ProxyPlugin> requestPlugins = proxyPluginInitResp.getRequestPlugins();
                 if (!requestPlugins.isEmpty()) {
                     boolean pluginBreak = false;
@@ -109,6 +113,10 @@ public class CommandsTransponder {
                     for (ProxyPlugin plugin : proxyPluginInitResp.getRequestPlugins()) {
                         try {
                             ProxyPluginResponse response = plugin.executeRequest(request);
+                            RouteRewriteResult result = response.getRouteRewriterResult();
+                            if (result != null) {
+                                rewriterResult = result;
+                            }
                             if (!response.isPass()) {
                                 reply(channelInfo, task, command.getRedisCommand(), response.getReply(), true);
                                 hasCommandsSkip = true;
@@ -307,13 +315,38 @@ public class CommandsTransponder {
                     channelInfo.setInSubscribe(true);
                 }
 
+                //检查是否有路由rewrite
+                if (rewriterResult != null) {
+                    long bid = rewriterResult.getBid();
+                    String bgroup = rewriterResult.getBgroup();
+                    if (bid > 0 && bgroup != null) {
+                        //判定路由是否有变更
+                        if (!Objects.equals(bid, channelInfo.getBid()) || !bgroup.equals(channelInfo.getBgroup())) {
+                            //如果路由被变更了，则需要把之前的命令先发出去
+                            if (!tasks.isEmpty()) {
+                                List<Command> list = new ArrayList<>(tasks.size());
+                                for (CommandTask commandTask : tasks) {
+                                    list.add(commandTask.getCommand());
+                                }
+                                flush(channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getDb(), tasks, list);
+                            }
+                            //rewrite后的路由直接发出去
+                            flush(bid, bgroup, channelInfo.getDb(), Collections.singletonList(task), Collections.singletonList(command));
+                            //重置
+                            tasks = new ArrayList<>();
+                            hasCommandsSkip = true;
+                            continue;
+                        }
+                    }
+                }
+
                 tasks.add(task);
             }
             if (tasks.isEmpty()) return;
             if (hasCommandsSkip) {
                 commands = new ArrayList<>(tasks.size());
-                for (CommandTask asyncTask : tasks) {
-                    commands.add(asyncTask.getCommand());
+                for (CommandTask commandTask : tasks) {
+                    commands.add(commandTask.getCommand());
                 }
             }
             //写入到后端
@@ -400,8 +433,7 @@ public class CommandsTransponder {
                 try {
                     futureList = template.sendCommand(db, commands);
                 } catch (Exception e) {
-                    String log = "IUpstreamClientTemplate sendCommand error"
-                            + ", bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e;
+                    String log = "sendCommand error, bid = " + bid + ", bgroup = " + bgroup + ", ex = " + e;
                     ErrorLogCollector.collect(CommandsTransponder.class, log, e);
                     for (CommandTask task : tasks) {
                         task.replyCompleted(ErrorReply.UPSTREAM_NOT_AVAILABLE);
@@ -415,7 +447,7 @@ public class CommandsTransponder {
                 }
             }
         } catch (Exception e) {
-            ErrorLogCollector.collect(CommandsTransponder.class, "flush commands error", e);
+            ErrorLogCollector.collect(CommandsTransponder.class, "flush0 commands error", e);
         }
     }
 

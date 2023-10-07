@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.plugin.bigkey.BigKeyProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.converter.ConverterProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkey.HotKeyProxyPlugin;
+import com.netease.nim.camellia.redis.proxy.plugin.hotkey.HotKeyRouteRewriteProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.hotkeycache.HotKeyCacheProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.misc.DelayDoubleDeleteProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.misc.MultiWriteProxyPlugin;
@@ -35,6 +36,8 @@ public enum BuildInProxyPluginEnum {
 
     //用于监控热key
     HOT_KEY_PLUGIN("hotKeyPlugin", HotKeyProxyPlugin.class, 20000, 0),
+    //用于监控热key并转发到自定义路由
+    HOT_KEY_ROUTE_REWRITE_PLUGIN("hotKeyRouteRewritePlugin", HotKeyRouteRewriteProxyPlugin.class, 20000, 0),
     //用于热key缓存（仅支持GET命令）
     HOT_KEY_CACHE_PLUGIN("hotKeyCachePlugin", HotKeyCacheProxyPlugin.class, 10000, Integer.MIN_VALUE + 10000),
 

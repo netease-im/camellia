@@ -93,6 +93,8 @@ public enum BuildInProxyPluginEnum {
 
     //用于监控热key
     HOT_KEY_PLUGIN("hotKeyPlugin", HotKeyProxyPlugin.class, 20000, 0),
+    //用于监控热key并转发到自定义路由
+    HOT_KEY_ROUTE_REWRITE_PLUGIN("hotKeyRouteRewritePlugin", HotKeyRouteRewriteProxyPlugin.class, 20000, 0),
     //用于热key缓存（仅支持GET命令）
     HOT_KEY_CACHE_PLUGIN("hotKeyCachePlugin", HotKeyCacheProxyPlugin.class, 10000, Integer.MIN_VALUE + 10000),
 
@@ -133,6 +135,7 @@ public enum BuildInProxyPluginEnum {
 * IPCheckProxyPlugin，用于控制客户端接入，支持ip黑白名单，具体见：[ip-checker](ip-checker.md)
 * DynamicIpCheckProxyPlugin，用于控制客户端接入，支持ip黑白名单，通过camellia-dashboard托管配置，具体见：[dynamic-ip-checker](dynamic-ip-checker.md)
 * CommandDisableProxyPlugin，用于屏蔽某些命令，具体见：[command-disable](command-disable.md)
+* HotKeyRouteRewriteProxyPlugin，覆盖了HotKeyProxyPlugin的功能，用于监控热key并转发到自定义路由，具体见：[hot-key-route-rewrite](hot-key-route-rewrite.md)
 
 ### 内置插件修改默认执行顺序的方法(1.2.4开始支持)
 在camellia-redis-proxy.properties或者application.yml的config中，配置如下key-value-config：
