@@ -51,7 +51,7 @@ hot.key.monitor.counter.check.threshold=500
 hot.key.monitor.max.hot.key.count=32
 
 ### 热key转发配置
-hot.key.route.rewrite.className=com.netease.nim.camellia.redis.proxy.plugin.rewrite.DefaultRouteRewriteChecker
+hot.key.route.rewriter.className=com.netease.nim.camellia.redis.proxy.plugin.rewrite.DefaultRouteRewriter
 1.default.hotkey.route.rewrite.config=[{"command":"get","bid":100,"bgroup":"default"},{"command":"all_commands","bid":200,"bgroup":"default"}]
 2.default.hotkey.route.rewrite.config=[{"command":"read_commands","bid":300,"bgroup":"default"}]
 ```

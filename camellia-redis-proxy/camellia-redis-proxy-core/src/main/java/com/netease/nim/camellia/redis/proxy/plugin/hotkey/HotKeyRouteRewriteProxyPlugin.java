@@ -4,8 +4,8 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
-import com.netease.nim.camellia.redis.proxy.plugin.rewrite.DefaultRouteRewriteChecker;
-import com.netease.nim.camellia.redis.proxy.plugin.rewrite.RouteRewriteChecker;
+import com.netease.nim.camellia.redis.proxy.plugin.rewrite.DefaultRouteRewriter;
+import com.netease.nim.camellia.redis.proxy.plugin.rewrite.RouteRewriter;
 import com.netease.nim.camellia.redis.proxy.plugin.rewrite.RouteRewriteResult;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 
@@ -17,18 +17,18 @@ import java.util.List;
 public class HotKeyRouteRewriteProxyPlugin implements ProxyPlugin {
 
     private HotKeyHunterManager manager;
-    private HotKeyRouteRewriteCallback callback;
+    private HotKeyRouteRewriter rewriter;
 
     @Override
     public void init(ProxyBeanFactory factory) {
-        String rewriteCheckerClassName = ProxyDynamicConf.getString("hot.key.route.rewrite.className", DefaultRouteRewriteChecker.class.getName());
-        RouteRewriteChecker routeRewriteChecker = (RouteRewriteChecker) factory.getBean(BeanInitUtils.parseClass(rewriteCheckerClassName));
+        String rewriteCheckerClassName = ProxyDynamicConf.getString("hot.key.route.rewriter.className", DefaultRouteRewriter.class.getName());
+        RouteRewriter routeRewriter = (RouteRewriter) factory.getBean(BeanInitUtils.parseClass(rewriteCheckerClassName));
 
         String callbackClassName = ProxyDynamicConf.getString("hot.key.monitor.callback.className", DummyHotKeyMonitorCallback.class.getName());
         HotKeyMonitorCallback monitorCallback = (HotKeyMonitorCallback) factory.getBean(BeanInitUtils.parseClass(callbackClassName));
 
-        this.callback = new HotKeyRouteRewriteCallback(monitorCallback, routeRewriteChecker);
-        this.manager = new HotKeyHunterManager(this.callback);
+        this.rewriter = new HotKeyRouteRewriter(monitorCallback, routeRewriter);
+        this.manager = new HotKeyHunterManager(this.rewriter);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class HotKeyRouteRewriteProxyPlugin implements ProxyPlugin {
         List<byte[]> keys = command.getKeys();
         hotKeyHunter.incr(keys);
         //hot key route rewrite
-        RouteRewriteResult result = callback.checkRewrite(request);
+        RouteRewriteResult result = rewriter.rewrite(request);
         if (result != null) {
             return new ProxyPluginResponse(result);
         }

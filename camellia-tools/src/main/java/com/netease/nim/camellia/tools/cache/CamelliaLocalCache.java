@@ -189,6 +189,14 @@ public class CamelliaLocalCache {
     }
 
     /**
+     * 是否存在
+     */
+    public boolean exists(String tag, Object key) {
+        long ttl = ttl(tag, key);
+        return ttl > 0 || ttl == -1;
+    }
+
+    /**
      * 获取ttl
      */
     public long ttl(String tag, Object key) {

@@ -120,6 +120,13 @@ public class NamespaceCamelliaLocalCache {
     /**
      * 获取ttl
      */
+    public boolean exists(String namespace, Object key) {
+        return get(namespace).exists("", key);
+    }
+
+    /**
+     * 获取ttl
+     */
     public long ttl(String namespace, Object key) {
         return get(namespace).ttl("", key);
     }

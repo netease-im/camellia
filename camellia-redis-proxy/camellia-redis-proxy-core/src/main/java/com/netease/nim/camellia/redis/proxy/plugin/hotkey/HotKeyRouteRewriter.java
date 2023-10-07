@@ -8,7 +8,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyRequest;
 import com.netease.nim.camellia.redis.proxy.plugin.rewrite.RouteRewriteResult;
-import com.netease.nim.camellia.redis.proxy.plugin.rewrite.RouteRewriteChecker;
+import com.netease.nim.camellia.redis.proxy.plugin.rewrite.RouteRewriter;
 import com.netease.nim.camellia.tools.cache.NamespaceCamelliaLocalCache;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
@@ -17,15 +17,15 @@ import java.util.List;
 /**
  * Created by caojiajun on 2023/10/7
  */
-public class HotKeyRouteRewriteCallback implements HotKeyMonitorCallback, RouteRewriteChecker {
+public class HotKeyRouteRewriter implements HotKeyMonitorCallback, RouteRewriter {
 
     private final HotKeyMonitorCallback callback;
-    private final RouteRewriteChecker routeRewriteChecker;
+    private final RouteRewriter routeRewriter;
     private final NamespaceCamelliaLocalCache cache;
 
-    public HotKeyRouteRewriteCallback(HotKeyMonitorCallback callback, RouteRewriteChecker routeRewriteChecker) {
+    public HotKeyRouteRewriter(HotKeyMonitorCallback callback, RouteRewriter routeRewriter) {
         this.callback = callback;
-        this.routeRewriteChecker = routeRewriteChecker;
+        this.routeRewriter = routeRewriter;
         int namespaceCapacity = ProxyDynamicConf.getInt("hotkey.route.rewrite.namespace.capacity", 100);
         int capacity = ProxyDynamicConf.getInt("hotkey.route.rewrite.key.capacity", 1000);
         this.cache = new NamespaceCamelliaLocalCache(namespaceCapacity, capacity, false);
@@ -42,7 +42,7 @@ public class HotKeyRouteRewriteCallback implements HotKeyMonitorCallback, RouteR
     }
 
     @Override
-    public RouteRewriteResult checkRewrite(ProxyRequest request) {
+    public RouteRewriteResult rewrite(ProxyRequest request) {
         Command command = request.getCommand();
         //阻塞型命令不支持
         if (command.isBlocking()) {
@@ -72,9 +72,8 @@ public class HotKeyRouteRewriteCallback implements HotKeyMonitorCallback, RouteR
         CommandContext commandContext = command.getCommandContext();
         byte[] key = command.getKeys().get(0);
         String namespace = commandContext.getBid() + "|" + commandContext.getBgroup();
-        long ttl = cache.ttl(namespace, new BytesKey(key));
-        if (ttl > 0) {
-            return routeRewriteChecker.checkRewrite(request);
+        if (cache.exists(namespace, new BytesKey(key))) {
+            return routeRewriter.rewrite(request);
         }
         return null;
     }

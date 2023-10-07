@@ -15,12 +15,12 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by caojiajun on 2023/10/7
  */
-public class DefaultRouteRewriteChecker implements RouteRewriteChecker {
+public class DefaultRouteRewriter implements RouteRewriter {
 
     private final ConcurrentHashMap<String, RewriteConfig> configCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, RouteRewriteResult> commandCache = new ConcurrentHashMap<>();
 
-    public DefaultRouteRewriteChecker() {
+    public DefaultRouteRewriter() {
         ProxyDynamicConf.registerCallback(() -> {
             configCache.clear();
             commandCache.clear();
@@ -28,7 +28,7 @@ public class DefaultRouteRewriteChecker implements RouteRewriteChecker {
     }
 
     @Override
-    public RouteRewriteResult checkRewrite(ProxyRequest request) {
+    public RouteRewriteResult rewrite(ProxyRequest request) {
         try {
             Command command = request.getCommand();
             RedisCommand redisCommand = command.getRedisCommand();
@@ -76,7 +76,7 @@ public class DefaultRouteRewriteChecker implements RouteRewriteChecker {
             }
             return null;
         } catch (Exception e) {
-            ErrorLogCollector.collect(DefaultRouteRewriteChecker.class, "check rewrite error", e);
+            ErrorLogCollector.collect(DefaultRouteRewriter.class, "check rewrite error", e);
             return null;
         }
     }
@@ -110,7 +110,7 @@ public class DefaultRouteRewriteChecker implements RouteRewriteChecker {
             }
             return rewriteConfig;
         } catch (Exception e) {
-            ErrorLogCollector.collect(DefaultRouteRewriteChecker.class, "init rewrite config error, config = " + configStr, e);
+            ErrorLogCollector.collect(DefaultRouteRewriter.class, "init rewrite config error, config = " + configStr, e);
             return new RewriteConfig();
         }
     }

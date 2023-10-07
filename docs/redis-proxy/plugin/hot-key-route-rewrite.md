@@ -36,7 +36,7 @@ camellia-redis-proxy:
 ## HotKeyRouteRewriteProxyPlugin独有的配置
 
 ### 判定为热key后，需要rewrite的路由，是一个接口RouteRewriteChecker，可以自定义实现，默认是DefaultRouteRewriteChecker
-hot.key.route.rewrite.className=com.netease.nim.camellia.redis.proxy.plugin.rewrite.DefaultRouteRewriteChecker
+hot.key.route.rewriter.className=com.netease.nim.camellia.redis.proxy.plugin.rewrite.DefaultRouteRewriter
 
 ### 使用DefaultRouteRewriteChecker时，可以配置以下参数
 #### 表示来自租户bid=1,bgroup=default的命令，如果命令归属的key是热key，如果是get命令则路由到bid=100,bgroup=default，如果是zrange命令则路由到bid=200,bgroup=default
