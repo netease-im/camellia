@@ -143,7 +143,12 @@ public class RedisConnection {
             ChannelFuture future = bootstrap.connect(host, port);
             this.channel = future.channel();
             this.channel.closeFuture().addListener(f -> {
-                logger.warn("{} disconnect", connectionName);
+                Throwable cause = f.cause();
+                if (cause != null) {
+                    logger.warn("{} disconnect", connectionName, cause);
+                } else {
+                    logger.warn("{} disconnect", connectionName);
+                }
                 stop();
             });
             future.addListener((ChannelFutureListener) channelFuture -> {
