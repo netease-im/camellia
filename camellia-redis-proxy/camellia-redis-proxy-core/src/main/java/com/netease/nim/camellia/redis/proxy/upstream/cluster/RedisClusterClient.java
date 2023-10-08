@@ -132,7 +132,7 @@ public class RedisClusterClient implements IUpstreamClient {
         Set<RedisClusterSlotInfo.Node> nodes = this.clusterSlotInfo.getNodes();
         for (RedisClusterSlotInfo.Node node : nodes) {
             logger.info("try preheat, url = {}, node = {}", PasswordMaskUtils.maskResource(url), PasswordMaskUtils.maskAddr(node.getAddr()));
-            boolean result = RedisConnectionHub.getInstance().preheat(this, node.getHost(), node.getPort(), node.getUserName(), node.getPassword(), 0);
+            boolean result = RedisConnectionHub.getInstance().preheat(this, node.getAddr());
             logger.info("preheat result = {}, url = {}, node = {}", result, PasswordMaskUtils.maskResource(url), PasswordMaskUtils.maskAddr(node.getAddr()));
         }
         logger.info("preheat ok, url = {}", PasswordMaskUtils.maskResource(url));

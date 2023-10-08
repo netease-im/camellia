@@ -5,8 +5,6 @@ import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvide
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import io.netty.channel.EventLoop;
 
-import javax.net.ssl.SSLContext;
-
 /**
  * Created by caojiajun on 2021/5/14
  */
@@ -14,6 +12,7 @@ public class RedisConnectionConfig {
 
     private String host;
     private int port;
+    private String udsPath;
     private String userName;
     private String password;
     private boolean readonly;
@@ -59,6 +58,14 @@ public class RedisConnectionConfig {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public String getUdsPath() {
+        return udsPath;
+    }
+
+    public void setUdsPath(String udsPath) {
+        this.udsPath = udsPath;
     }
 
     public String getUserName() {

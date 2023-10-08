@@ -2,7 +2,22 @@ package com.netease.nim.camellia.redis.proxy.util;
 
 import com.netease.nim.camellia.redis.proxy.auth.IdentityInfo;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
+import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
+import io.netty.channel.Channel;
+import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.EpollDomainSocketChannel;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.kqueue.KQueueDomainSocketChannel;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.kqueue.KQueueSocketChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
+import io.netty.incubator.channel.uring.IOUringSocketChannel;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -302,5 +317,40 @@ public class Utils {
     public static boolean idleCloseHandlerEnable(CamelliaServerProperties serverProperties) {
         return serverProperties.getReaderIdleTimeSeconds() >= 0 && serverProperties.getWriterIdleTimeSeconds() >= 0
                 && serverProperties.getAllIdleTimeSeconds() >= 0;
+    }
+
+    public static ChannelType channelType(RedisConnectionAddr addr) {
+        if (addr.getHost() != null && addr.getPort() > 0) {
+            return ChannelType.tcp;
+        } else if (addr.getUdsPath() != null) {
+            return ChannelType.uds;
+        } else {
+            return ChannelType.unknown;
+        }
+    }
+
+    public static Class<? extends Channel> socketChannel(ChannelType channelType, EventLoop eventLoop) {
+        EventLoopGroup parent = eventLoop.parent();
+        if (channelType == ChannelType.tcp) {
+            if (parent instanceof EpollEventLoopGroup) {
+                return EpollSocketChannel.class;
+            } else if (parent instanceof KQueueEventLoopGroup) {
+                return KQueueSocketChannel.class;
+            } else if (parent instanceof IOUringEventLoopGroup) {
+                return IOUringSocketChannel.class;
+            } else if (parent instanceof NioEventLoopGroup) {
+                return NioSocketChannel.class;
+            }
+            return NioSocketChannel.class;
+        } else if (channelType == ChannelType.uds) {
+            if (parent instanceof EpollEventLoopGroup) {
+                return EpollDomainSocketChannel.class;
+            } else if (parent instanceof KQueueEventLoopGroup) {
+                return KQueueDomainSocketChannel.class;
+            }
+            return null;
+        } else {
+            throw new IllegalArgumentException("unknown channelType");
+        }
     }
 }

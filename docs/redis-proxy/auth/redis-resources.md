@@ -253,3 +253,13 @@ rediss-proxies-discovery://username:passwd@proxyName
 ##有密码且有账号，且设置了db
 rediss-proxies-discovery://username:passwd@proxyName?db=1
 ```
+
+### redis-uds(unix-domain-socket)
+```
+##没有密码
+redis-uds://@/tmp/redis.sock
+##有密码
+redis-uds://password@/tmp/redis.sock
+##有密码且有账号
+redis-uds://user:password@/tmp/redis.sock?db=0
+```

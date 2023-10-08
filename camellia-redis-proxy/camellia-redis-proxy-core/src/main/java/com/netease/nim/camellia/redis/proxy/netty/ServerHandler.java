@@ -38,7 +38,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
             logger.error("error", e);
         } finally {
             try {
-                if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable() && channelInfo.getChannelType() == ChannelInfo.ChannelType.tcp) {
+                if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable() && channelInfo.getChannelType() == ChannelType.tcp) {
                     ctx.channel().config().setOption(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
                 }
             } catch (Exception e) {

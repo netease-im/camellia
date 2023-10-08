@@ -381,6 +381,33 @@ public class RedisResourceUtil {
                 } else {
                     return new SSentinelResource(nodeList, userName, password);
                 }
+            } else if (redisType == RedisType.UnixDomainSocket) {
+                String substring = url.substring(redisType.getPrefix().length());
+                if (!substring.contains("@")) {
+                    throw new CamelliaRedisException("missing @");
+                }
+                int index = substring.lastIndexOf("@");
+                String[] userNameAndPassword = getUserNameAndPassword(substring.substring(0, index));
+                String userName = userNameAndPassword[0];
+                String password = userNameAndPassword[1];
+
+                String str = substring.substring(index + 1);
+
+                String udsPath;
+                int db = 0;
+                if (str.contains("?")) {
+                    int i = str.indexOf("?");
+                    udsPath = str.substring(0, i);
+                    String queryString = str.substring(i + 1);
+                    Map<String, String> params = getParams(queryString);
+                    String dbStr = params.get("db");
+                    if (dbStr != null) {
+                        db = Integer.parseInt(dbStr);
+                    }
+                } else {
+                    udsPath = str;
+                }
+                return new RedisUnixDomainSocketResource(udsPath, userName, password, db);
             }
             throw new CamelliaRedisException("not redis resource");
         } catch (CamelliaRedisException e) {

@@ -154,6 +154,14 @@ public class TestResource {
         test("camellia-redis-proxy://passwd@proxyName?bid=1&bgroup=default", "camellia-redis-proxy://passwd@proxyName?bid=1&bgroup=default");
         test("camellia-redis-proxy://passwd@proxyName?db=1", "camellia-redis-proxy://passwd@proxyName?db=1");
         test("camellia-redis-proxy://passwd@proxyName?bid=1&bgroup=default&db=1", "camellia-redis-proxy://passwd@proxyName?bid=1&bgroup=default&db=1");
+
+        test("redis-uds://@/tmp/redis.sock", "redis-uds://@/tmp/redis.sock");
+        test("redis-uds://@/tmp/redis.sock?db", "redis-uds://@/tmp/redis.sock");
+        test("redis-uds://@/tmp/redis.sock?db=", "redis-uds://@/tmp/redis.sock");
+        test("redis-uds://@/tmp/redis.sock?db=1", "redis-uds://@/tmp/redis.sock?db=1");
+        test("redis-uds://password@/tmp/redis.sock?db=1", "redis-uds://password@/tmp/redis.sock?db=1");
+        test("redis-uds://username:password@/tmp/redis.sock?db=1", "redis-uds://username:password@/tmp/redis.sock?db=1");
+        test("redis-uds://username:password@/tmp/redis.sock", "redis-uds://username:password@/tmp/redis.sock");
         System.out.println("success");
     }
 

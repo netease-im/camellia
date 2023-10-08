@@ -18,6 +18,7 @@ import com.netease.nim.camellia.tools.utils.SysUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.EpollChannelOption;
+import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,7 @@ public class RedisConnection {
     private final RedisConnectionAddr addr;
     private final String host;
     private final int port;
+    private final String udsPath;
     private final String userName;
     private final String password;
     private final int db;
@@ -83,10 +85,15 @@ public class RedisConnection {
         this.config = config;
         this.host = config.getHost();
         this.port = config.getPort();
+        this.udsPath = config.getUdsPath();
         this.userName = config.getUserName();
         this.password = config.getPassword();
         this.db = config.getDb();
-        this.addr = new RedisConnectionAddr(host, port, userName, password, config.isReadonly(), config.getDb(), false);
+        if (host != null && port > 0) {
+            this.addr = new RedisConnectionAddr(host, port, userName, password, config.isReadonly(), config.getDb(), false);
+        } else {
+            this.addr = new RedisConnectionAddr(udsPath, userName, password, config.isReadonly(), config.getDb(), false);
+        }
         this.eventLoop = config.getEventLoop();
         this.commandPackRecycler = new CommandPackRecycler(eventLoop);
         this.heartbeatIntervalSeconds = config.getHeartbeatIntervalSeconds();
@@ -112,35 +119,56 @@ public class RedisConnection {
             }
             RedisConnectionMonitor.addRedisConnection(this);
             Bootstrap bootstrap = new Bootstrap();
-            bootstrap.group(eventLoop)
-                    .channel(GlobalRedisProxyEnv.getSocketChannelClass())
-                    .option(ChannelOption.SO_KEEPALIVE, config.isSoKeepalive())
-                    .option(ChannelOption.TCP_NODELAY, config.isTcpNoDelay())
-                    .option(ChannelOption.SO_SNDBUF, config.getSoSndbuf())
-                    .option(ChannelOption.SO_RCVBUF, config.getSoRcvbuf())
-                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
-                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(config.getWriteBufferWaterMarkLow(),
-                            config.getWriteBufferWaterMarkHigh()))
-                    .handler(new ChannelInitializer<Channel>() {
-                        @Override
-                        protected void initChannel(Channel channel) {
-                            ChannelPipeline pipeline = channel.pipeline();
-                            if (config.getProxyUpstreamTlsProvider() != null && config.getResource() != null) {
-                                pipeline.addLast(config.getProxyUpstreamTlsProvider().createSslHandler(config.getResource()));
-                            }
-                            pipeline.addLast(new ReplyDecoder());
-                            pipeline.addLast(new ReplyAggregateDecoder());
-                            pipeline.addLast(new ReplyHandler(queue, connectionName, config.isTcpQuickAck()));
-                            pipeline.addLast(new CommandPackEncoder(RedisConnection.this, commandPackRecycler, queue));
-                        }
-                    });
-            if (config.isTcpQuickAck()) {
+            bootstrap.group(eventLoop);
+            ChannelType channelType = Utils.channelType(addr);
+            Class<? extends Channel> socketChannel = Utils.socketChannel(channelType, eventLoop);
+            if (socketChannel == null) {
+                status = RedisConnectionStatus.INVALID;
+                ErrorLogCollector.collect(RedisConnection.class, "socketChannel is null, channelType = " + channelType);
+                return;
+            }
+            if (channelType == ChannelType.tcp) {
+                bootstrap.channel(socketChannel)
+                        .option(ChannelOption.SO_KEEPALIVE, config.isSoKeepalive())
+                        .option(ChannelOption.TCP_NODELAY, config.isTcpNoDelay())
+                        .option(ChannelOption.SO_SNDBUF, config.getSoSndbuf())
+                        .option(ChannelOption.SO_RCVBUF, config.getSoRcvbuf())
+                        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
+                        .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(config.getWriteBufferWaterMarkLow(),
+                                config.getWriteBufferWaterMarkHigh()));
+            } else if (channelType == ChannelType.uds) {
+                bootstrap.channel(socketChannel);
+            } else {
+                status = RedisConnectionStatus.INVALID;
+                ErrorLogCollector.collect(RedisConnection.class, "illegal channelType = " + channelType);
+                return;
+            }
+            bootstrap.handler(new ChannelInitializer<Channel>() {
+                @Override
+                protected void initChannel(Channel channel) {
+                    ChannelPipeline pipeline = channel.pipeline();
+                    if (config.getProxyUpstreamTlsProvider() != null && config.getResource() != null) {
+                        pipeline.addLast(config.getProxyUpstreamTlsProvider().createSslHandler(config.getResource()));
+                    }
+                    pipeline.addLast(new ReplyDecoder());
+                    pipeline.addLast(new ReplyAggregateDecoder());
+                    pipeline.addLast(new ReplyHandler(queue, connectionName, config.isTcpQuickAck()));
+                    pipeline.addLast(new CommandPackEncoder(RedisConnection.this, commandPackRecycler, queue));
+                }
+            });
+
+            if (config.isTcpQuickAck() && channelType == ChannelType.tcp) {
                 bootstrap.option(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
             }
             if (logger.isInfoEnabled()) {
                 logger.info("{} try connect...", connectionName);
             }
-            ChannelFuture future = bootstrap.connect(host, port);
+            ChannelFuture future;
+            if (host != null && port > 0) {
+                future = bootstrap.connect(host, port);
+            } else {
+                future = bootstrap.connect(new DomainSocketAddress(udsPath));
+            }
             this.channel = future.channel();
             this.channel.closeFuture().addListener(f -> {
                 Throwable cause = f.cause();

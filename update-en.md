@@ -5,7 +5,7 @@
 * camelia-config/camellia-console support custom ConfigChangeInterceptor to control config change flow
 * camellia-redis-proxy enhance plugin, you can rewrite route by plugin to every command
 * camellia-redis-proxy add build-in plugin `HotKeyRouteRewriteProxyPlugin`, which can rewrite route by hot-key
-* camellia-redis-proxy support unix-domain-socket, client can access proxy by uds
+* camellia-redis-proxy support unix-domain-socket, both client to proxy and proxy to upstream redis
 
 ### update
 * camellia-redis-proxy config max clients, if reached, send error reply before connection closed, and support configure delay close

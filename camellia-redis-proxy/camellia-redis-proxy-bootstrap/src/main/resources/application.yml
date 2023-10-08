@@ -33,6 +33,7 @@ camellia-redis-proxy:
     local:
       type: simple #simple、complex
       resource: redis://@127.0.0.1:6379
+#      resource: redis-uds://@/Users/caojiajun/temp/redis.sock
 #      resource: rediss://@127.0.0.1:6379
 #      resource: redis-cluster://@10.189.31.13:6601,10.189.31.14:6603,10.189.31.15:6605
 #      resource: redis-sentinel://@127.0.0.1:26379/mymaster1
@@ -51,4 +52,4 @@ camellia-redis-proxy:
 #      multi-write-mode: first_resource_only #multi write mode, see MultiWriteMode.java, FIRST_RESOURCE_ONLY/ALL_RESOURCES_NO_CHECKALL_RESOURCES_CHECK_ERROR
 #      close-idle-connection: true #if close upstream idle redis-connection, default true
 #      check-idle-connection-threshold-seconds: 600  #upstream redis-connection idle check threshold, default 600s
-#      preheat: true #preheat upstream redis-connection, default true
+#      preheat: false #preheat upstream redis-connection, default true

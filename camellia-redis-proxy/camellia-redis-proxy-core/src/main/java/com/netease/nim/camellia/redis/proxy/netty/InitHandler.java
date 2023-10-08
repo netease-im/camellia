@@ -24,9 +24,9 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(InitHandler.class);
 
-    private final ChannelInfo.ChannelType channelType;
+    private final ChannelType channelType;
 
-    public InitHandler(ChannelInfo.ChannelType channelType) {
+    public InitHandler(ChannelType channelType) {
         this.channelType = channelType;
     }
 
@@ -60,7 +60,7 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try {
-            if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable() && channelType == ChannelInfo.ChannelType.tcp) {
+            if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable() && channelType == ChannelType.tcp) {
                 ctx.channel().config().setOption(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
             }
         } catch (Exception e) {

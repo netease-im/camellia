@@ -23,7 +23,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持RedisJSON和RedisSearch系列命令
 * 支持读slave（redis-sentinel/redis-cluster均支持配置读从节点）
 * 支持SSL/TLS（proxy到client支持，proxy到redis也支持），具体见：[ssl/tls](/docs/redis-proxy/other/tls.md)
-* 支持unix-domain-socket，客户端可以直接使用unix-domain-socket连接到proxy，具体见：[uds](/docs/redis-proxy/other/uds.md)
+* 支持unix-domain-socket（client到proxy支持，proxy到redis也支持），具体见：[uds](/docs/redis-proxy/other/uds.md)
 * 支持多租户，即租户A路由到redis1，租户B路由到redis2（可以通过不同的clientname区分，也可以通过不同的password区分）
 * 支持多租户动态路由，支持自定义的动态路由数据源(内置：本地配置文件、nacos、etcd等，也可以自定义)
 * 支持自定义插件，并且内置了很多插件，可以按需使用（包括：大key监控、热key监控、热key缓存、key命名空间、ip黑白名单、速率控制等等）

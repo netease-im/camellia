@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.connection;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
 import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -46,6 +47,7 @@ public class RedisConnectionHub {
 
     private final ConcurrentHashMap<String, RedisConnection> map = new ConcurrentHashMap<>();
     private EventLoopGroup eventLoopGroup = null;
+    private EventLoopGroup udsEventLoopGroup = null;
 
     private final ConcurrentHashMap<EventLoop, ConcurrentHashMap<String, RedisConnection>> eventLoopMap = new ConcurrentHashMap<>();
 
@@ -95,12 +97,21 @@ public class RedisConnectionHub {
         NettyTransportMode nettyTransportMode = GlobalRedisProxyEnv.getNettyTransportMode();
         if (nettyTransportMode == NettyTransportMode.epoll) {
             this.eventLoopGroup = new EpollEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"));
+            this.udsEventLoopGroup = eventLoopGroup;
         } else if (nettyTransportMode == NettyTransportMode.kqueue) {
             this.eventLoopGroup = new KQueueEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"));
+            this.udsEventLoopGroup = eventLoopGroup;
         } else if (nettyTransportMode == NettyTransportMode.io_uring) {
             this.eventLoopGroup = new IOUringEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"));
         } else {
             this.eventLoopGroup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection"));
+        }
+        if (udsEventLoopGroup == null) {
+            if (GlobalRedisProxyEnv.isEpollAvailable()) {
+                this.udsEventLoopGroup = new EpollEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-uds"));
+            } else if (GlobalRedisProxyEnv.isKQueueAvailable()) {
+                this.udsEventLoopGroup = new KQueueEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-redis-connection-uds"));
+            }
         }
 
         fastFailStats = new FastFailStats(redisConf.getFailCountThreshold(), redisConf.getFailBanMillis());
@@ -192,7 +203,7 @@ public class RedisConnectionHub {
             String url = addr.getUrl();
             //优先使用相同eventLoop的连接
             EventLoop eventLoop = eventLoopThreadLocal.get();
-            if (eventLoop != null) {
+            if (eventLoop != null && eventLoopMatch(addr, eventLoop)) {
                 //看看是否已经初始化好了，如果是，直接返回
                 ConcurrentHashMap<String, RedisConnection> map = CamelliaMapUtils.computeIfAbsent(eventLoopMap, eventLoop, k -> new ConcurrentHashMap<>());
                 RedisConnection connection = map.get(url);
@@ -213,8 +224,15 @@ public class RedisConnectionHub {
             if (connection != null && connection.isValid()) {
                 return connection;
             }
+            ChannelType channelType = Utils.channelType(addr);
             //如果没有，则使用公共eventLoopGroup去初始化一个连接
-            eventLoop = eventLoopGroup.next();
+            if (channelType == ChannelType.tcp) {
+                eventLoop = eventLoopGroup.next();
+            } else if (channelType == ChannelType.uds) {//使用uds应该只能有一个连接
+                eventLoop = udsEventLoopGroup.next();
+            } else {
+                return null;
+            }
             LockMap lockMap = CamelliaMapUtils.computeIfAbsent(this.lockMapMap, addr.getUrl(), k -> new LockMap());
             connection = initRedisConnection(resource, upstreamClient, map, lockMap, eventLoop, addr);
             if (connection != null && connection.isValid()) {
@@ -262,10 +280,7 @@ public class RedisConnectionHub {
      */
     public RedisConnection newConnection(Resource resource, IUpstreamClient upstreamClient, RedisConnectionAddr addr) {
         try {
-            EventLoop eventLoop = eventLoopThreadLocal.get();
-            if (eventLoop == null) {
-                eventLoop = eventLoopGroup.next();
-            }
+            EventLoop eventLoop = selectEventLoop(addr);
             RedisConnection connection = initRedisConnection(eventLoop, addr, false, false, true, resource, upstreamClient);
             if (connection.isValid()) {
                 return connection;
@@ -280,25 +295,31 @@ public class RedisConnectionHub {
     }
 
     /**
-     * 预热一组连接（使用主EventLoopGroup）
+     * 预热一组连接
      * @param upstreamClient upstreamClient
-     * @param host host
-     * @param port port
-     * @param userName userName
-     * @param password password
-     * @param db db
+     * @param addr addr
      * @return true/false
      */
-    public boolean preheat(IUpstreamClient upstreamClient, String host, int port, String userName, String password, int db) {
-        EventLoopGroup workGroup = GlobalRedisProxyEnv.getWorkGroup();
+    public boolean preheat(IUpstreamClient upstreamClient, RedisConnectionAddr addr) {
+        ChannelType channelType = Utils.channelType(addr);
+        EventLoopGroup workGroup;
         int workThread = GlobalRedisProxyEnv.getWorkThread();
-        RedisConnectionAddr addr = new RedisConnectionAddr(host, port, userName, password, db);
+        if (channelType == ChannelType.tcp) {
+            workGroup = GlobalRedisProxyEnv.getWorkGroup();
+            addr = new RedisConnectionAddr(addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), false, addr.getDb(), false);
+        } else if (channelType == ChannelType.uds) {
+            workGroup = GlobalRedisProxyEnv.getUdsWorkGroup();
+            addr = new RedisConnectionAddr(addr.getUdsPath(), addr.getUserName(), addr.getPassword(), false, addr.getDb(), false);
+        } else {
+            return false;
+        }
+
         if (workGroup != null && workThread > 0) {
             logger.info("try preheat, addr = {}", PasswordMaskUtils.maskAddr(addr));
             for (int i = 0; i < GlobalRedisProxyEnv.getWorkThread(); i++) {
                 EventLoop eventLoop = workGroup.next();
                 updateEventLoop(eventLoop);
-                RedisConnection redisConnection = get(upstreamClient, new RedisConnectionAddr(host, port, userName, password, db));
+                RedisConnection redisConnection = get(upstreamClient, addr);
                 if (redisConnection == null) {
                     logger.error("preheat fail, addr = {}", PasswordMaskUtils.maskAddr(addr));
                     throw new CamelliaRedisException("preheat fail, addr = " + PasswordMaskUtils.maskAddr(addr));
@@ -369,6 +390,7 @@ public class RedisConnectionHub {
         RedisConnectionConfig config = new RedisConnectionConfig();
         config.setHost(addr.getHost());
         config.setPort(addr.getPort());
+        config.setUdsPath(addr.getUdsPath());
         config.setUserName(addr.getUserName());
         config.setPassword(addr.getPassword());
         config.setReadonly(addr.isReadonly());
@@ -399,6 +421,48 @@ public class RedisConnectionHub {
         RedisConnection connection = new RedisConnection(config);
         connection.start();
         return connection;
+    }
+
+    private boolean eventLoopMatch(RedisConnectionAddr addr, EventLoop eventLoop) {
+        ChannelType channelType = Utils.channelType(addr);
+        if (channelType == ChannelType.tcp) {
+            return true;
+        } else if (channelType == ChannelType.uds) {
+            if (eventLoop.parent() instanceof EpollEventLoopGroup) {
+                return true;
+            }
+            return eventLoop.parent() instanceof KQueueEventLoopGroup;
+        } else {
+            return false;
+        }
+    }
+
+    private EventLoop selectEventLoop(RedisConnectionAddr addr) {
+        ChannelType channelType = Utils.channelType(addr);
+        EventLoop loop = eventLoopThreadLocal.get();
+        if (loop == null) {
+            if (channelType == ChannelType.tcp) {
+                return eventLoopGroup.next();
+            } else if (channelType == ChannelType.uds) {
+                return udsEventLoopGroup.next();
+            } else {
+                return null;
+            }
+        } else {
+            if (channelType == ChannelType.tcp) {
+                return loop;
+            } else if (channelType == ChannelType.uds) {
+                if (loop.parent() instanceof EpollEventLoopGroup) {
+                    return loop;
+                }
+                if (loop.parent() instanceof KQueueEventLoopGroup) {
+                    return loop;
+                }
+                return udsEventLoopGroup.next();
+            } else {
+                return null;
+            }
+        }
     }
 
     private void reloadConf() {

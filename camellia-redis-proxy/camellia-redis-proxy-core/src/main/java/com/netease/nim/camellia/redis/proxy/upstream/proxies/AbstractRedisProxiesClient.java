@@ -32,7 +32,7 @@ public abstract class AbstractRedisProxiesClient extends AbstractSimpleRedisClie
         logger.info("try preheat, resource = {}", PasswordMaskUtils.maskResource(getResource()));
         for (RedisConnectionAddr addr : getAll()) {
             logger.info("try preheat, resource = {}, proxy = {}", PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(addr));
-            boolean result = RedisConnectionHub.getInstance().preheat(this, addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), addr.getDb());
+            boolean result = RedisConnectionHub.getInstance().preheat(this, addr);
             logger.info("preheat result = {}, resource = {}, proxy = {}", result, PasswordMaskUtils.maskResource(getResource()), PasswordMaskUtils.maskAddr(addr));
         }
         logger.info("preheat success, resource = {}", PasswordMaskUtils.maskResource(getResource()));

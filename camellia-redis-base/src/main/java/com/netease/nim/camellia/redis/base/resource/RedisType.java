@@ -78,6 +78,11 @@ public enum RedisType {
 
     //camellia-redis-proxy内部使用
     SSentinel("ssentinel://", true),
+
+    //格式：redis-uds://password@path?db=1
+    //仅camellia-redis-proxy支持
+    UnixDomainSocket("redis-uds://", false),
+
     ;
     private final String prefix;
     private final boolean tlsEnable;

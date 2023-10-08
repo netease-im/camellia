@@ -11,6 +11,7 @@ import java.util.Objects;
 public class RedisConnectionAddr {
     private final String host;
     private final int port;
+    private final String udsPath;
     private final String userName;
     private final String password;
     private final boolean readonly;
@@ -36,9 +37,46 @@ public class RedisConnectionAddr {
         this(host, port, userName, password, readonly, db, true);
     }
 
+    public RedisConnectionAddr(String udsPath, String userName, String password, boolean readonly, int db, boolean cacheEnable) {
+        this.host = null;
+        this.port = -1;
+        this.udsPath = udsPath;
+        this.password = password;
+        this.userName = userName;
+        this.readonly = readonly;
+        this.db = db;
+        StringBuilder builder = new StringBuilder();
+        if (userName != null && password != null) {
+            builder.append(userName).append(":").append(password);
+        } else if (userName == null && password != null) {
+            builder.append(password);
+        }
+        boolean withParam = false;
+        if (readonly) {
+            builder.append("@").append(udsPath).append("?readonly=").append(true);
+            withParam = true;
+        } else {
+            builder.append("@").append(udsPath);
+        }
+        if (db > 0) {
+            if (withParam) {
+                builder.append("&db=").append(db);
+            } else {
+                builder.append("?db=").append(db);
+            }
+        }
+        this.url = builder.toString();
+        if (cacheEnable) {
+            this.cache = new FastThreadLocal<>();
+        } else {
+            this.cache = null;
+        }
+    }
+
     public RedisConnectionAddr(String host, int port, String userName, String password, boolean readonly, int db, boolean cacheEnable) {
         this.host = host;
         this.port = port;
+        this.udsPath = null;
         this.password = password;
         this.userName = userName;
         this.readonly = readonly;
@@ -77,6 +115,10 @@ public class RedisConnectionAddr {
 
     public int getPort() {
         return port;
+    }
+
+    public String getUdsPath() {
+        return udsPath;
     }
 
     public String getPassword() {

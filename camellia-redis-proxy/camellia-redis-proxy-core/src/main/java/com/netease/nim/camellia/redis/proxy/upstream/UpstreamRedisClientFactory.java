@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.proxies.RedisProxiesDiscove
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelClient;
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelSlavesClient;
 import com.netease.nim.camellia.redis.proxy.upstream.standalone.RedisStandaloneClient;
+import com.netease.nim.camellia.redis.proxy.upstream.uds.RedisUnixDomainSocketClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +62,19 @@ public interface UpstreamRedisClientFactory {
                 client = map.computeIfAbsent(resource.getUrl(),
                         u -> {
                             RedisStandaloneClient client0 = new RedisStandaloneClient(resource);
+                            client0.start();
+                            return client0;
+                        });
+            }
+            return client;
+        }
+
+        public IUpstreamClient get(RedisUnixDomainSocketResource resource) {
+            IUpstreamClient client = map.get(resource.getUrl());
+            if (client == null) {
+                client = map.computeIfAbsent(resource.getUrl(),
+                        u -> {
+                            RedisUnixDomainSocketClient client0 = new RedisUnixDomainSocketClient(resource);
                             client0.start();
                             return client0;
                         });
@@ -260,6 +274,8 @@ public interface UpstreamRedisClientFactory {
                             client = get((RedisProxiesDiscoveryResource) resource);
                         } else if (resource instanceof RedissProxiesDiscoveryResource) {
                             client = get((RedissProxiesDiscoveryResource) resource);
+                        } else if (resource instanceof RedisUnixDomainSocketResource) {
+                            client = get((RedisUnixDomainSocketResource) resource);
                         } else {
                             throw new CamelliaRedisException("not support resource");
                         }

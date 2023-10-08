@@ -33,7 +33,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 * 支持SCAN命令，即使后端是redis-cluster或者自定义分片，也可以透明的扫描到所有key
 * 支持SELECT命令，从而可以使用多database
 * 支持SSL/TLS（client到proxy支持，proxy到redis也支持）
-* 支持unix-domain-socket，客户端可以直接使用unix-domain-socket连接到proxy
+* 支持unix-domain-socket（client到proxy支持，proxy到redis也支持）
 * 支持自定义分片、读写分离、双（多）写、双（多）读   
 * 支持多租户（可以同时代理多组路由，可以通过不同的登录密码来区分）     
 * 支持多租户动态路由，支持自定义的动态路由数据源（内置：本地配置文件、nacos、etcd等，也可以自定义）

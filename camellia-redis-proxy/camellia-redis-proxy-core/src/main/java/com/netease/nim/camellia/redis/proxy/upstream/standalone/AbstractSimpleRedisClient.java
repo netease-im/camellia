@@ -61,7 +61,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
             logger.info("try preheat, resource = {}", PasswordMaskUtils.maskResource(getResource()));
         }
         RedisConnectionAddr addr = getAddr();
-        boolean result = RedisConnectionHub.getInstance().preheat(this, addr.getHost(), addr.getPort(), addr.getUserName(), addr.getPassword(), addr.getDb());
+        boolean result = RedisConnectionHub.getInstance().preheat(this, addr);
         if (logger.isInfoEnabled()) {
             logger.info("preheat result = {}, resource = {}", result, PasswordMaskUtils.maskResource(getResource()));
         }

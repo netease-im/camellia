@@ -31,8 +31,8 @@ public class CamelliaRedisProxyServer {
 
     private final CamelliaServerProperties serverProperties;
     private final ServerHandler serverHandler;
-    private final InitHandler tcpInitHandler = new InitHandler(ChannelInfo.ChannelType.tcp);
-    private final InitHandler udsInitHandler = new InitHandler(ChannelInfo.ChannelType.uds);
+    private final InitHandler tcpInitHandler = new InitHandler(ChannelType.tcp);
+    private final InitHandler udsInitHandler = new InitHandler(ChannelType.uds);
     private int port;
     private int tlsPort;
     private String udsPath;
@@ -81,15 +81,15 @@ public class CamelliaRedisProxyServer {
                         new WriteBufferWaterMark(serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh()))
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
-                    public void initChannel(SocketChannel ch) {
-                        ChannelPipeline pipeline = ch.pipeline();
+                    public void initChannel(SocketChannel channel) {
+                        ChannelPipeline pipeline = channel.pipeline();
                         //proxy protocol
-                        if (proxyProtocolEnable && proxyProtocolPorts.contains(ch.localAddress().getPort())) {
+                        if (proxyProtocolEnable && proxyProtocolPorts.contains(channel.localAddress().getPort())) {
                             pipeline.addLast(new HAProxyMessageDecoder());
                             pipeline.addLast(new HAProxySourceIpHandler());
                         }
                         //tls
-                        if (sslEnable && ch.localAddress().getPort() == GlobalRedisProxyEnv.getTlsPort()) {
+                        if (sslEnable && channel.localAddress().getPort() == GlobalRedisProxyEnv.getTlsPort()) {
                             pipeline.addLast(proxyFrontendTlsProvider.createSslHandler());
                         }
                         //idle close
@@ -156,7 +156,7 @@ public class CamelliaRedisProxyServer {
 
     private ChannelFuture startUds() throws Exception {
         String udsPath = serverProperties.getUdsPath();
-        if (udsPath == null || udsPath.trim().length() == 0) {
+        if (udsPath == null || udsPath.length() == 0) {
             logger.info("CamelliaRedisProxyServer uds disabled, skip start");
             return null;
         }
@@ -172,8 +172,8 @@ public class CamelliaRedisProxyServer {
                 .channel(serverUdsChannelClass)
                 .childHandler(new ChannelInitializer<UnixChannel>() {
                     @Override
-                    public void initChannel(UnixChannel ch) {
-                        ChannelPipeline pipeline = ch.pipeline();
+                    public void initChannel(UnixChannel channel) {
+                        ChannelPipeline pipeline = channel.pipeline();
                         //idle close
                         if (Utils.idleCloseHandlerEnable(serverProperties)) {
                             pipeline.addLast(new IdleCloseHandler(serverProperties.getReaderIdleTimeSeconds(),
@@ -191,6 +191,7 @@ public class CamelliaRedisProxyServer {
                 });
         ChannelFuture future = serverBootstrap.bind(new DomainSocketAddress(udsPath)).sync();
         this.udsPath = udsPath;
+        GlobalRedisProxyEnv.setUdsPath(udsPath);
         logger.info("CamelliaRedisProxyServer start uds at {}", udsPath);
         return future;
     }

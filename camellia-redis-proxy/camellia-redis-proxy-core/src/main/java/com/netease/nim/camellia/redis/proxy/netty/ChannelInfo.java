@@ -94,7 +94,7 @@ public class ChannelInfo {
         this.channelType = ChannelType.unknown;
     }
 
-    private ChannelInfo(ChannelHandlerContext ctx, ChannelInfo.ChannelType channelType) {
+    private ChannelInfo(ChannelHandlerContext ctx, ChannelType channelType) {
         this.ctx = ctx;
         this.consid = UUID.randomUUID().toString();
         this.clientSocketAddress = ctx.channel().remoteAddress();
@@ -114,7 +114,7 @@ public class ChannelInfo {
      * @param channelType channelType
      * @return ChannelInfo ChannelInfo
      */
-    public static ChannelInfo init(ChannelHandlerContext ctx, ChannelInfo.ChannelType channelType) {
+    public static ChannelInfo init(ChannelHandlerContext ctx, ChannelType channelType) {
         ChannelInfo channelInfo = new ChannelInfo(ctx, channelType);
         ctx.channel().attr(ATTRIBUTE_KEY).set(channelInfo);
         return channelInfo;
@@ -549,13 +549,6 @@ public class ChannelInfo {
         AUTH_OK,
         NO_AUTH,
         INVALID,
-        ;
-    }
-
-    public static enum ChannelType {
-        tcp,
-        uds,
-        unknown,
         ;
     }
 }

@@ -8,16 +8,19 @@ import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFact
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
-import io.netty.channel.epoll.*;
-import io.netty.channel.kqueue.*;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerDomainSocketChannel;
+import io.netty.channel.epoll.EpollServerSocketChannel;
+import io.netty.channel.kqueue.KQueue;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.kqueue.KQueueServerDomainSocketChannel;
+import io.netty.channel.kqueue.KQueueServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.incubator.channel.uring.IOUring;
 import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
 import io.netty.incubator.channel.uring.IOUringServerSocketChannel;
-import io.netty.incubator.channel.uring.IOUringSocketChannel;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +54,6 @@ public class GlobalRedisProxyEnv {
     private static EventLoopGroup udsWorkGroup;
     private static Class<? extends ServerChannel> serverChannelClass = NioServerSocketChannel.class;
     private static Class<? extends ServerChannel> serverUdsChannelClass = null;
-    private static Class<? extends SocketChannel> socketChannelClass = NioSocketChannel.class;
-    private static boolean udsEventLoopShared = false;
     private static boolean serverTcpQuickAck = false;
 
     private static int port;
@@ -83,11 +84,9 @@ public class GlobalRedisProxyEnv {
                 workGroup = new EpollEventLoopGroup(workThread, new DefaultThreadFactory(WORK_GROUP_NAME));
                 udsWorkGroup = workGroup;
                 serverChannelClass = EpollServerSocketChannel.class;
-                socketChannelClass = EpollSocketChannel.class;
                 serverUdsChannelClass = EpollServerDomainSocketChannel.class;
                 serverTcpQuickAck = serverProperties.isTcpQuickAck();
                 nettyTransportMode = NettyTransportMode.epoll;
-                udsEventLoopShared = true;
             } else if (nettyTransportMode == NettyTransportMode.kqueue && isKQueueAvailable()) {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new KQueueEventLoopGroup(bossThread, new DefaultThreadFactory(BOSS_GROUP_NAME));
@@ -96,17 +95,14 @@ public class GlobalRedisProxyEnv {
                 workGroup = new KQueueEventLoopGroup(workThread, new DefaultThreadFactory(WORK_GROUP_NAME));
                 udsWorkGroup = workGroup;
                 serverChannelClass = KQueueServerSocketChannel.class;
-                socketChannelClass = KQueueSocketChannel.class;
                 serverUdsChannelClass = KQueueServerDomainSocketChannel.class;
                 nettyTransportMode = NettyTransportMode.kqueue;
-                udsEventLoopShared = true;
             } else if (nettyTransportMode == NettyTransportMode.io_uring && isIOUringAvailable()) {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new IOUringEventLoopGroup(bossThread, new DefaultThreadFactory(BOSS_GROUP_NAME));
                 workThread = serverProperties.getWorkThread();
                 workGroup = new IOUringEventLoopGroup(workThread, new DefaultThreadFactory(WORK_GROUP_NAME));
                 serverChannelClass = IOUringServerSocketChannel.class;
-                socketChannelClass = IOUringSocketChannel.class;
                 nettyTransportMode = NettyTransportMode.io_uring;
             } else {
                 bossThread = serverProperties.getBossThread();
@@ -114,7 +110,6 @@ public class GlobalRedisProxyEnv {
                 workThread = serverProperties.getWorkThread();
                 workGroup = new NioEventLoopGroup(workThread, new DefaultThreadFactory(WORK_GROUP_NAME));
                 serverChannelClass = NioServerSocketChannel.class;
-                socketChannelClass = NioSocketChannel.class;
                 nettyTransportMode = NettyTransportMode.nio;
             }
             if (udsBossGroup == null || udsWorkGroup == null) {
@@ -205,10 +200,6 @@ public class GlobalRedisProxyEnv {
         return serverChannelClass;
     }
 
-    public static Class<? extends SocketChannel> getSocketChannelClass() {
-        return socketChannelClass;
-    }
-
     public static Class<? extends ServerChannel> getServerUdsChannelClass() {
         return serverUdsChannelClass;
     }
@@ -280,10 +271,6 @@ public class GlobalRedisProxyEnv {
             logger.warn("kqueue is unavailable, e = {}", e.toString());
             return false;
         }
-    }
-
-    public static boolean isUdsEventLoopShared() {
-        return udsEventLoopShared;
     }
 
     public static QueueFactory getQueueFactory() {
