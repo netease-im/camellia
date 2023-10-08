@@ -94,28 +94,28 @@ public class ChannelInfo {
         this.channelType = ChannelType.unknown;
     }
 
-    private ChannelInfo(ChannelHandlerContext ctx) {
+    private ChannelInfo(ChannelHandlerContext ctx, ChannelInfo.ChannelType channelType) {
         this.ctx = ctx;
         this.consid = UUID.randomUUID().toString();
         this.clientSocketAddress = ctx.channel().remoteAddress();
         this.commandTaskQueue = new CommandTaskQueue(this);
         SocketAddress socketAddress = ctx.channel().localAddress();
+        this.channelType = channelType;
         if (socketAddress instanceof InetSocketAddress) {
             this.fromCport = ((InetSocketAddress) socketAddress).getPort() == GlobalRedisProxyEnv.getCport();
-            this.channelType = ChannelType.tcp;
         } else {
             this.fromCport = false;
-            this.channelType = ChannelType.uds;
         }
     }
 
     /**
      * 初始化ChannelInfo
-     * @param ctx ChannelHandlerContext
+     * @param ctx ChannelHandlerContex
+     * @param channelType channelType
      * @return ChannelInfo ChannelInfo
      */
-    public static ChannelInfo init(ChannelHandlerContext ctx) {
-        ChannelInfo channelInfo = new ChannelInfo(ctx);
+    public static ChannelInfo init(ChannelHandlerContext ctx, ChannelInfo.ChannelType channelType) {
+        ChannelInfo channelInfo = new ChannelInfo(ctx, channelType);
         ctx.channel().attr(ATTRIBUTE_KEY).set(channelInfo);
         return channelInfo;
     }

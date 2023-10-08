@@ -27,8 +27,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, List<Command> commandList) {
+        ChannelInfo channelInfo = ChannelInfo.get(ctx);
         try {
-            ChannelInfo channelInfo = ChannelInfo.get(ctx);
             if (!channelInfo.isFromCport()) {
                 ServerStatus.updateLastUseTime();
             }
@@ -38,7 +38,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<List<Command>> {
             logger.error("error", e);
         } finally {
             try {
-                if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable()) {
+                if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable() && channelInfo.getChannelType() == ChannelInfo.ChannelType.tcp) {
                     ctx.channel().config().setOption(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
                 }
             } catch (Exception e) {

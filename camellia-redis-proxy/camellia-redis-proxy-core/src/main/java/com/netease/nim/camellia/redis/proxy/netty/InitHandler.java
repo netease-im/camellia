@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
 import com.netease.nim.camellia.redis.proxy.auth.ConnectLimiter;
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
@@ -14,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -26,10 +24,16 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(InitHandler.class);
 
+    private final ChannelInfo.ChannelType channelType;
+
+    public InitHandler(ChannelInfo.ChannelType channelType) {
+        this.channelType = channelType;
+    }
+
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
-        ChannelInfo channelInfo = ChannelInfo.init(ctx);
+        ChannelInfo channelInfo = ChannelInfo.init(ctx, channelType);
         int threshold = ConnectLimiter.connectThreshold();
         int currentConnect = ChannelMonitor.connect();
         if (currentConnect >= threshold) {
@@ -56,7 +60,7 @@ public class InitHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try {
-            if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable()) {
+            if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable() && channelType == ChannelInfo.ChannelType.tcp) {
                 ctx.channel().config().setOption(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
             }
         } catch (Exception e) {

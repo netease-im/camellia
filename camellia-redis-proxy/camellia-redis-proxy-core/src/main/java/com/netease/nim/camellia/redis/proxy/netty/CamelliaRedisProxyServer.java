@@ -31,7 +31,8 @@ public class CamelliaRedisProxyServer {
 
     private final CamelliaServerProperties serverProperties;
     private final ServerHandler serverHandler;
-    private final InitHandler initHandler = new InitHandler();
+    private final InitHandler tcpInitHandler = new InitHandler(ChannelInfo.ChannelType.tcp);
+    private final InitHandler udsInitHandler = new InitHandler(ChannelInfo.ChannelType.uds);
     private int port;
     private int tlsPort;
     private String udsPath;
@@ -101,7 +102,7 @@ public class CamelliaRedisProxyServer {
                         //reply encoder
                         pipeline.addLast(new ReplyEncoder());
                         //connect manager
-                        pipeline.addLast(initHandler);
+                        pipeline.addLast(tcpInitHandler);
                         //command transponder
                         pipeline.addLast(serverHandler);
                     }
@@ -183,7 +184,7 @@ public class CamelliaRedisProxyServer {
                         //reply encoder
                         pipeline.addLast(new ReplyEncoder());
                         //connect manager
-                        pipeline.addLast(initHandler);
+                        pipeline.addLast(udsInitHandler);
                         //command transponder
                         pipeline.addLast(serverHandler);
                     }
