@@ -281,6 +281,9 @@ public class RedisConnectionHub {
     public RedisConnection newConnection(Resource resource, IUpstreamClient upstreamClient, RedisConnectionAddr addr) {
         try {
             EventLoop eventLoop = selectEventLoop(addr);
+            if (eventLoop == null) {
+                return null;
+            }
             RedisConnection connection = initRedisConnection(eventLoop, addr, false, false, true, resource, upstreamClient);
             if (connection.isValid()) {
                 return connection;
@@ -428,13 +431,10 @@ public class RedisConnectionHub {
         if (channelType == ChannelType.tcp) {
             return true;
         } else if (channelType == ChannelType.uds) {
-            if (eventLoop.parent() instanceof EpollEventLoopGroup) {
-                return true;
-            }
-            return eventLoop.parent() instanceof KQueueEventLoopGroup;
-        } else {
-            return false;
+            EventLoopGroup parent = eventLoop.parent();
+            return (parent instanceof EpollEventLoopGroup) || (parent instanceof KQueueEventLoopGroup);
         }
+        return false;
     }
 
     private EventLoop selectEventLoop(RedisConnectionAddr addr) {
@@ -445,24 +445,22 @@ public class RedisConnectionHub {
                 return eventLoopGroup.next();
             } else if (channelType == ChannelType.uds) {
                 return udsEventLoopGroup.next();
-            } else {
-                return null;
             }
         } else {
             if (channelType == ChannelType.tcp) {
                 return loop;
             } else if (channelType == ChannelType.uds) {
-                if (loop.parent() instanceof EpollEventLoopGroup) {
+                EventLoopGroup parent = loop.parent();
+                if (parent instanceof EpollEventLoopGroup) {
                     return loop;
                 }
-                if (loop.parent() instanceof KQueueEventLoopGroup) {
+                if (parent instanceof KQueueEventLoopGroup) {
                     return loop;
                 }
                 return udsEventLoopGroup.next();
-            } else {
-                return null;
             }
         }
+        return null;
     }
 
     private void reloadConf() {
