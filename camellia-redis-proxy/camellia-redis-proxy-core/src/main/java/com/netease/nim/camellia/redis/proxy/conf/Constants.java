@@ -85,8 +85,8 @@ public class Constants {
 
         public static final String proxyUpstreamTlsProviderClassName = DefaultProxyUpstreamTlsProvider.class.getName();
 
-        public static final int soSndbuf = 10 * 1024 * 1024;
-        public static final int soRcvbuf = 10 * 1024 * 1024;
+        public static final int soSndbuf = 6 * 1024 * 1024;
+        public static final int soRcvbuf = 6 * 1024 * 1024;
         public static final boolean tcpNoDelay = true;
         public static final boolean tcpQuickAck = false;
         public static final boolean soKeepalive = true;

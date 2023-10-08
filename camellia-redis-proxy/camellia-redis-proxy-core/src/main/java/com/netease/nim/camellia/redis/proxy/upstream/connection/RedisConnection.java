@@ -127,21 +127,16 @@ public class RedisConnection {
                 ErrorLogCollector.collect(RedisConnection.class, "socketChannel is null, channelType = " + channelType);
                 return;
             }
+            bootstrap.channel(socketChannel)
+                    .option(ChannelOption.SO_KEEPALIVE, config.isSoKeepalive())
+                    .option(ChannelOption.TCP_NODELAY, config.isTcpNoDelay())
+                    .option(ChannelOption.SO_SNDBUF, config.getSoSndbuf())
+                    .option(ChannelOption.SO_RCVBUF, config.getSoRcvbuf())
+                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
+                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(config.getWriteBufferWaterMarkLow(),
+                            config.getWriteBufferWaterMarkHigh()));
             if (channelType == ChannelType.tcp) {
-                bootstrap.channel(socketChannel)
-                        .option(ChannelOption.SO_KEEPALIVE, config.isSoKeepalive())
-                        .option(ChannelOption.TCP_NODELAY, config.isTcpNoDelay())
-                        .option(ChannelOption.SO_SNDBUF, config.getSoSndbuf())
-                        .option(ChannelOption.SO_RCVBUF, config.getSoRcvbuf())
-                        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
-                        .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(config.getWriteBufferWaterMarkLow(),
-                                config.getWriteBufferWaterMarkHigh()));
-            } else if (channelType == ChannelType.uds) {
-                bootstrap.channel(socketChannel);
-            } else {
-                status = RedisConnectionStatus.INVALID;
-                ErrorLogCollector.collect(RedisConnection.class, "illegal channelType = " + channelType);
-                return;
+                bootstrap.option(ChannelOption.TCP_NODELAY, config.isTcpNoDelay());
             }
             bootstrap.handler(new ChannelInitializer<Channel>() {
                 @Override

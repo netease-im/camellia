@@ -35,8 +35,8 @@ camellia-redis-proxy:
     #tcp connect between proxy and redis
     netty:
       so-keepalive: true #default true
-      so-sndbuf: 10485760 #default 10M
-      so-rcvbuf: 10485760 #default 10M
+      so-sndbuf: 6291456 #default 6M
+      so-rcvbuf: 6291456 #default 6M
       write-buffer-water-mark-low: 131072 #default 128k
       write-buffer-water-mark-high: 524288 #default 512k
       tcp-no-delay: true #default true
