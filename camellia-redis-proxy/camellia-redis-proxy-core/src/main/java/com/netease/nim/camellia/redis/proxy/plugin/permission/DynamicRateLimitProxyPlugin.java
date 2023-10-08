@@ -39,7 +39,6 @@ public class DynamicRateLimitProxyPlugin implements ProxyPlugin {
     // rateLimitConfMap is used to store the rate limit configuration of each bid/bgroup
     private final ConcurrentHashMap<String, RateLimitConf> rateLimitConfMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Counter> counterMap = new ConcurrentHashMap<>();
-
     private String md5;
     private CamelliaMiscApi api;
 
@@ -55,47 +54,6 @@ public class DynamicRateLimitProxyPlugin implements ProxyPlugin {
         }
     }
 
-    private void reload() {
-        List<RateLimitDto> dtoList = fetchData();
-        if (dtoList == null) {
-            return;
-        }
-        Map<String, RateLimitConf> newData = dtoList.stream()
-                .collect(
-                        Collectors.toMap(
-                                conf -> TenantUtils.buildKey(conf.getBid(), conf.getBgroup()),
-                                conf -> new RateLimitConf(conf.getCheckMillis(), conf.getMaxCount())));
-        // update rate limit config map
-        // 1. remove old data (rate limit config map) that has been deleted in the new data
-        // 2. insert/update new data into rate limit config map
-        // this way can avoid the problem of data inconsistency between the old rate limit config map and the new rate limit config map
-        rateLimitConfMap.keySet().stream().filter(key -> !newData.containsKey(key)).forEach(rateLimitConfMap::remove);
-
-        rateLimitConfMap.putAll(newData);
-        globalRateLimitConf = null;
-    }
-
-
-    /**
-     * Fetch rate limit config from camellia-dashboard via http request
-     *
-     * @return rate limit config list
-     */
-    private List<RateLimitDto> fetchData() {
-        try {
-            DataWithMd5Response<List<RateLimitDto>> response = api.getRateLimitConfigurationList(md5);
-            if (response != null && CamelliaApiCode.SUCCESS.getCode() == response.getCode() && response.getData() != null) {
-                String newMd5 = response.getMd5();
-                if (Utils.hasChange(this.md5, newMd5)) {
-                    this.md5 = newMd5;
-                    return response.getData();
-                }
-            }
-        } catch (Exception e) {
-            ErrorLogCollector.collect(DynamicRateLimitProxyPlugin.class, "cannot fetch rate limit configurations from camellia-dashboard", e);
-        }
-        return null;
-    }
 
 
     @Override
@@ -145,6 +103,49 @@ public class DynamicRateLimitProxyPlugin implements ProxyPlugin {
             ErrorLogCollector.collect(DynamicRateLimitProxyPlugin.class, "rate limit error", e);
             return ProxyPluginResponse.SUCCESS;
         }
+    }
+
+
+    private void reload() {
+        List<RateLimitDto> dtoList = fetchData();
+        if (dtoList == null) {
+            return;
+        }
+        Map<String, RateLimitConf> newData = dtoList.stream()
+                .collect(
+                        Collectors.toMap(
+                                conf -> TenantUtils.buildKey(conf.getBid(), conf.getBgroup()),
+                                conf -> new RateLimitConf(conf.getCheckMillis(), conf.getMaxCount())));
+        // update rate limit config map
+        // 1. remove old data (rate limit config map) that has been deleted in the new data
+        // 2. insert/update new data into rate limit config map
+        // this way can avoid the problem of data inconsistency between the old rate limit config map and the new rate limit config map
+        rateLimitConfMap.keySet().stream().filter(key -> !newData.containsKey(key)).forEach(rateLimitConfMap::remove);
+
+        rateLimitConfMap.putAll(newData);
+        globalRateLimitConf = null;
+    }
+
+
+    /**
+     * Fetch rate limit config from camellia-dashboard via http request
+     *
+     * @return rate limit config list
+     */
+    private List<RateLimitDto> fetchData() {
+        try {
+            DataWithMd5Response<List<RateLimitDto>> response = api.getRateLimitConfigurationList(md5);
+            if (response != null && CamelliaApiCode.SUCCESS.getCode() == response.getCode() && response.getData() != null) {
+                String newMd5 = response.getMd5();
+                if (Utils.hasChange(this.md5, newMd5)) {
+                    this.md5 = newMd5;
+                    return response.getData();
+                }
+            }
+        } catch (Exception e) {
+            ErrorLogCollector.collect(DynamicRateLimitProxyPlugin.class, "cannot fetch rate limit configurations from camellia-dashboard", e);
+        }
+        return null;
     }
 
     private Counter getGlobalCounter() {

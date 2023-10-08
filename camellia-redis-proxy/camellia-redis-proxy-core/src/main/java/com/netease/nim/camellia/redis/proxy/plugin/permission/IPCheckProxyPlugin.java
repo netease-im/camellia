@@ -20,20 +20,20 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 一个支持设置客户端ip校验的Plugin，支持黑名单和白名单两种模式
  * 配置存储于ProxyDynamicConf(camellia-redis-proxy.properties)中，支持动态修改，也支持根据bid/bgroup设置不同的策略
- *
+ * <p>
  * 黑名单示例（支持ip，也支持网段，逗号分隔）：
  * ip.check.mode=1
  * ip.black.list=2.2.2.2,5.5.5.5,3.3.3.0/24,6.6.0.0/16
- *
+ * <p>
  * 白名单示例（支持ip，也支持网段，逗号分隔）：
  * ip.check.mode=2
  * ip.white.list=2.2.2.2,5.5.5.5,3.3.3.0/24,6.6.0.0/16
- *
+ * <p>
  * 根据bid/bgroup设置不同的策略：
  * 黑名单示例（表示bid=1,bgroup=default的黑名单配置）：
  * 1.default.ip.check.mode=1
  * 1.default.ip.black.list=2.2.2.2,5.5.5.5,3.3.3.0/24,6.6.0.0/16
- *
+ * <p>
  * 白名单示例（表示bid=1,bgroup=default的白名单配置）：
  * 1.default.ip.check.mode=2
  * 1.default.ip.white.list=2.2.2.2,5.5.5.5,3.3.3.0/24,6.6.0.0/16
@@ -91,18 +91,16 @@ public class IPCheckProxyPlugin implements ProxyPlugin {
             Command command = request.getCommand();
             CommandContext commandContext = command.getCommandContext();
             String consid = command.getChannelInfo().getConsid();
-            String key = null;
-            if (consid != null) {
-                key = consid + "|" + commandContext.getBid() + "|" + commandContext.getBgroup();
+            if (consid == null) {
+                return ProxyPluginResponse.SUCCESS;
             }
-            if (key != null) {
-                Boolean checkCache = this.checkCache.get(key);
-                if (checkCache != null) {
-                    if (checkCache) {
-                        return ProxyPluginResponse.SUCCESS;
-                    } else {
-                        return FORBIDDEN;
-                    }
+            String key = consid + "|" + commandContext.getBid() + "|" + commandContext.getBgroup();
+            Boolean checkCache = this.checkCache.get(key);
+            if (checkCache != null) {
+                if (checkCache) {
+                    return ProxyPluginResponse.SUCCESS;
+                } else {
+                    return FORBIDDEN;
                 }
             }
             SocketAddress clientSocketAddress = commandContext.getClientSocketAddress();
@@ -111,16 +109,12 @@ public class IPCheckProxyPlugin implements ProxyPlugin {
                 if (ip != null) {
                     if (!checkIp(commandContext.getBid(), commandContext.getBgroup(), ip)) {
                         ErrorLogCollector.collect(IPCheckProxyPlugin.class, "ip = " + ip + " check fail");
-                        if (key != null) {
-                            this.checkCache.put(key, Boolean.FALSE);
-                        }
+                        this.checkCache.put(key, Boolean.FALSE);
                         return FORBIDDEN;
                     }
                 }
             }
-            if (key != null) {
-                this.checkCache.put(key, Boolean.TRUE);
-            }
+            this.checkCache.put(key, Boolean.TRUE);
             return ProxyPluginResponse.SUCCESS;
         } catch (Exception e) {
             ErrorLogCollector.collect(IPCheckProxyPlugin.class, "ip check error", e);

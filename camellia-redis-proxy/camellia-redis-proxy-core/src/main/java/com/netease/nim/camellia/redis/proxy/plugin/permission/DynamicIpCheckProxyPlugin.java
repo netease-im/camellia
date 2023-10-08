@@ -29,19 +29,18 @@ import java.util.stream.Collectors;
  */
 public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
     private static final Logger logger = LoggerFactory.getLogger(DynamicIpCheckProxyPlugin.class);
-    protected static final ProxyPluginResponse FORBIDDEN = new ProxyPluginResponse(false, "ip forbidden");
+    private static final ProxyPluginResponse FORBIDDEN = new ProxyPluginResponse(false, "ip forbidden");
 
     // This key is applied for all bid and bgroup if bid and bgroup is null
-    public static final String DEFAULT_KEY = TenantUtils.buildKey(-1L, "default");
+    private static final String DEFAULT_KEY = TenantUtils.buildKey(-1L, "default");
 
     private final ConcurrentLinkedHashMap<String, Boolean> checkCache = new ConcurrentLinkedHashMap.Builder<String, Boolean>()
             .initialCapacity(1000)
             .maximumWeightedCapacity(10000)
             .build();
 
-    protected final Map<String, IpCheckInfo> cache = new ConcurrentHashMap<>();
+    private final Map<String, IpCheckInfo> cache = new ConcurrentHashMap<>();
     private String md5;
-
     private CamelliaMiscApi api;
 
     @Override
@@ -70,6 +69,53 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
             }
         };
     }
+
+
+    /**
+     * when proxy configure in multi-tenants
+     * first commands like AUTH/HELLO will check ip of global config
+     * other commands will check bid/brgoup config
+     *
+     * @param request the context of the request command
+     * @return ProxyPluginResponse
+     */
+    @Override
+    public ProxyPluginResponse executeRequest(ProxyRequest request) {
+        try {
+            Command command = request.getCommand();
+            CommandContext commandContext = command.getCommandContext();
+            String consid = command.getChannelInfo().getConsid();
+            if (consid == null) {
+                return ProxyPluginResponse.SUCCESS;
+            }
+            String key = consid + "|" + commandContext.getBid() + "|" + commandContext.getBgroup();
+            Boolean checkCache = this.checkCache.get(key);
+            if (checkCache != null) {
+                if (checkCache) {
+                    return ProxyPluginResponse.SUCCESS;
+                } else {
+                    return FORBIDDEN;
+                }
+            }
+            SocketAddress clientSocketAddress = commandContext.getClientSocketAddress();
+            if (clientSocketAddress instanceof InetSocketAddress) {
+                String ip = ((InetSocketAddress) clientSocketAddress).getAddress().getHostAddress();
+                if (ip != null) {
+                    if (!checkIp(commandContext.getBid(), commandContext.getBgroup(), ip)) {
+                        ErrorLogCollector.collect(DynamicIpCheckProxyPlugin.class, "ip = " + ip + " check fail");
+                        this.checkCache.put(key, Boolean.FALSE);
+                        return FORBIDDEN;
+                    }
+                }
+            }
+            this.checkCache.put(key, Boolean.TRUE);
+            return ProxyPluginResponse.SUCCESS;
+        } catch (Exception e) {
+            ErrorLogCollector.collect(DynamicIpCheckProxyPlugin.class, "ip check error", e);
+            return ProxyPluginResponse.SUCCESS;
+        }
+    }
+
 
     private void reload() {
         List<IpCheckerDto> ipCheckers = fetchIpCheckerData();
@@ -109,58 +155,6 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
         return null;
     }
 
-
-    /**
-     * when proxy configure in multi-tenants
-     * first commands like AUTH/HELLO will check ip of global config
-     * other commands will check bid/brgoup config
-     *
-     * @param request the context of the request command
-     * @return ProxyPluginResponse
-     */
-    @Override
-    public ProxyPluginResponse executeRequest(ProxyRequest request) {
-        try {
-            Command command = request.getCommand();
-            CommandContext commandContext = command.getCommandContext();
-            String consid = command.getChannelInfo().getConsid();
-            String key = null;
-            if (consid != null) {
-                key = consid + "|" + commandContext.getBid() + "|" + commandContext.getBgroup();
-            }
-            if (key != null) {
-                Boolean checkCache = this.checkCache.get(key);
-                if (checkCache != null) {
-                    if (checkCache) {
-                        return ProxyPluginResponse.SUCCESS;
-                    } else {
-                        return FORBIDDEN;
-                    }
-                }
-            }
-            SocketAddress clientSocketAddress = commandContext.getClientSocketAddress();
-            if (clientSocketAddress instanceof InetSocketAddress) {
-                String ip = ((InetSocketAddress) clientSocketAddress).getAddress().getHostAddress();
-                if (ip != null) {
-                    if (!checkIp(commandContext.getBid(), commandContext.getBgroup(), ip)) {
-                        ErrorLogCollector.collect(DynamicIpCheckProxyPlugin.class, "ip = " + ip + " check fail");
-                        if (key != null) {
-                            this.checkCache.put(key, Boolean.FALSE);
-                        }
-                        return FORBIDDEN;
-                    }
-                }
-            }
-            if (key != null) {
-                this.checkCache.put(key, Boolean.TRUE);
-            }
-            return ProxyPluginResponse.SUCCESS;
-        } catch (Exception e) {
-            ErrorLogCollector.collect(DynamicIpCheckProxyPlugin.class, "ip check error", e);
-            return ProxyPluginResponse.SUCCESS;
-        }
-    }
-
     /**
      * Check Ip whether is allowed
      * Load data from cache first by key = bid|bgroup
@@ -171,7 +165,7 @@ public class DynamicIpCheckProxyPlugin implements ProxyPlugin {
      * @param ip     ip
      * @return is accessible ip
      */
-    public boolean checkIp(Long bid, String bgroup, String ip) {
+    private boolean checkIp(Long bid, String bgroup, String ip) {
         String key = TenantUtils.buildKey(bid, bgroup);
         IpCheckInfo ipCheckInfo = cache.get(key);
         if (ipCheckInfo != null) {

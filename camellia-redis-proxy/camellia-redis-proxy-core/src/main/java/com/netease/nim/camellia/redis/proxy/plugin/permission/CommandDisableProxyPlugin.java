@@ -28,37 +28,6 @@ public class CommandDisableProxyPlugin implements ProxyPlugin {
         ProxyDynamicConf.registerCallback(this::reload);
     }
 
-    private void reload() {
-        try {
-            String string = ProxyDynamicConf.getString("disabled.commands", "");
-            if (string == null || string.trim().length() == 0) {
-                this.disabledCommands = new HashSet<>();
-            } else {
-                String[] split = string.split(",");
-                Set<RedisCommand> disabledCommands = new HashSet<>();
-                for (String str : split) {
-                    if (str == null || str.trim().length() == 0) continue;
-                    RedisCommand command = RedisCommand.getSupportRedisCommandByName(str.trim().toLowerCase());
-                    if (command == null) {
-                        logger.warn("command = {} not support by proxy, skip disable", str);
-                    } else {
-                        disabledCommands.add(command);
-                    }
-                }
-                this.disabledCommands = disabledCommands;
-            }
-            logger.info("disabled.commands update, commands = {}", disabledCommands);
-            Map<RedisCommand, ProxyPluginResponse> errorReplyMap = new HashMap<>();
-            for (RedisCommand command : this.disabledCommands) {
-                ProxyPluginResponse response = new ProxyPluginResponse(false, new ErrorReply("ERR command '" + command.strRaw() + "' is disabled in proxy"));
-                errorReplyMap.put(command, response);
-            }
-            this.errorReplyMap = errorReplyMap;
-        } catch (Exception e) {
-            logger.error("reload error", e);
-        }
-    }
-
     @Override
     public ProxyPluginOrder order() {
         return new ProxyPluginOrder() {
@@ -90,5 +59,36 @@ public class CommandDisableProxyPlugin implements ProxyPlugin {
             }
         }
         return ProxyPluginResponse.SUCCESS;
+    }
+
+    private void reload() {
+        try {
+            String string = ProxyDynamicConf.getString("disabled.commands", "");
+            if (string == null || string.trim().length() == 0) {
+                this.disabledCommands = new HashSet<>();
+            } else {
+                String[] split = string.split(",");
+                Set<RedisCommand> disabledCommands = new HashSet<>();
+                for (String str : split) {
+                    if (str == null || str.trim().length() == 0) continue;
+                    RedisCommand command = RedisCommand.getSupportRedisCommandByName(str.trim().toLowerCase());
+                    if (command == null) {
+                        logger.warn("command = {} not support by proxy, skip disable", str);
+                    } else {
+                        disabledCommands.add(command);
+                    }
+                }
+                this.disabledCommands = disabledCommands;
+            }
+            logger.info("disabled.commands update, commands = {}", disabledCommands);
+            Map<RedisCommand, ProxyPluginResponse> errorReplyMap = new HashMap<>();
+            for (RedisCommand command : this.disabledCommands) {
+                ProxyPluginResponse response = new ProxyPluginResponse(false, new ErrorReply("ERR command '" + command.strRaw() + "' is disabled in proxy"));
+                errorReplyMap.put(command, response);
+            }
+            this.errorReplyMap = errorReplyMap;
+        } catch (Exception e) {
+            logger.error("reload error", e);
+        }
     }
 }
