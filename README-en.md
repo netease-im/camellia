@@ -33,6 +33,7 @@ high performance redis-proxy:
 * support sharding/read-write-separate/double-write on proxy  
 * support multi-route-conf   
 * support ssl/tls, both client to proxy and proxy to upstream redis
+* support unix-domain-socket, client can access proxy by uds
 * support tps/rt/big-key/hot-key/slow-command monitor  
 * support custom command interceptor, support hot-key-cache(GET command)，support value converter and so on    
 [QUICK START](/docs/redis-proxy/redis-proxy-en.md)  

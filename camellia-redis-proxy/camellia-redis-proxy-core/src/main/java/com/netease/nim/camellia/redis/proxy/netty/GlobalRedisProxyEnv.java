@@ -8,14 +8,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFact
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
-import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.kqueue.KQueue;
-import io.netty.channel.kqueue.KQueueEventLoopGroup;
-import io.netty.channel.kqueue.KQueueServerSocketChannel;
-import io.netty.channel.kqueue.KQueueSocketChannel;
+import io.netty.channel.epoll.*;
+import io.netty.channel.kqueue.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -42,6 +36,8 @@ public class GlobalRedisProxyEnv {
 
     private static final String BOSS_GROUP_NAME = "camellia-boss-group";
     private static final String WORK_GROUP_NAME = "camellia-work-group";
+    private static final String UDS_BOSS_GROUP_NAME = "camellia-uds-boss-group";
+    private static final String UDS_WORK_GROUP_NAME = "camellia-uds-work-group";
 
     private static final AtomicBoolean initOk = new AtomicBoolean(false);
 
@@ -49,17 +45,21 @@ public class GlobalRedisProxyEnv {
 
     private static int bossThread;
     private static EventLoopGroup bossGroup;
+    private static EventLoopGroup udsBossGroup;
     private static int workThread;
     private static EventLoopGroup workGroup;
+    private static EventLoopGroup udsWorkGroup;
     private static Class<? extends ServerChannel> serverChannelClass = NioServerSocketChannel.class;
+    private static Class<? extends ServerChannel> serverUdsChannelClass = null;
     private static Class<? extends SocketChannel> socketChannelClass = NioSocketChannel.class;
-
+    private static boolean udsEventLoopShared = false;
     private static boolean serverTcpQuickAck = false;
 
     private static int port;
     private static int tlsPort;
     private static int cport;
     private static int consolePort;
+    private static String udsPath;
 
     private static IUpstreamClientTemplateFactory clientTemplateFactory;
     private static ProxyDiscoveryFactory discoveryFactory;
@@ -78,20 +78,28 @@ public class GlobalRedisProxyEnv {
             if (nettyTransportMode == NettyTransportMode.epoll && isEpollAvailable()) {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new EpollEventLoopGroup(bossThread, new DefaultThreadFactory(BOSS_GROUP_NAME));
+                udsBossGroup = bossGroup;
                 workThread = serverProperties.getWorkThread();
                 workGroup = new EpollEventLoopGroup(workThread, new DefaultThreadFactory(WORK_GROUP_NAME));
+                udsWorkGroup = workGroup;
                 serverChannelClass = EpollServerSocketChannel.class;
                 socketChannelClass = EpollSocketChannel.class;
+                serverUdsChannelClass = EpollServerDomainSocketChannel.class;
                 serverTcpQuickAck = serverProperties.isTcpQuickAck();
                 nettyTransportMode = NettyTransportMode.epoll;
+                udsEventLoopShared = true;
             } else if (nettyTransportMode == NettyTransportMode.kqueue && isKQueueAvailable()) {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new KQueueEventLoopGroup(bossThread, new DefaultThreadFactory(BOSS_GROUP_NAME));
+                udsBossGroup = bossGroup;
                 workThread = serverProperties.getWorkThread();
                 workGroup = new KQueueEventLoopGroup(workThread, new DefaultThreadFactory(WORK_GROUP_NAME));
+                udsWorkGroup = workGroup;
                 serverChannelClass = KQueueServerSocketChannel.class;
                 socketChannelClass = KQueueSocketChannel.class;
+                serverUdsChannelClass = KQueueServerDomainSocketChannel.class;
                 nettyTransportMode = NettyTransportMode.kqueue;
+                udsEventLoopShared = true;
             } else if (nettyTransportMode == NettyTransportMode.io_uring && isIOUringAvailable()) {
                 bossThread = serverProperties.getBossThread();
                 bossGroup = new IOUringEventLoopGroup(bossThread, new DefaultThreadFactory(BOSS_GROUP_NAME));
@@ -109,6 +117,17 @@ public class GlobalRedisProxyEnv {
                 socketChannelClass = NioSocketChannel.class;
                 nettyTransportMode = NettyTransportMode.nio;
             }
+            if (udsBossGroup == null || udsWorkGroup == null) {
+                if (isEpollAvailable()) {
+                    udsBossGroup = new EpollEventLoopGroup(bossThread, new DefaultThreadFactory(UDS_BOSS_GROUP_NAME));
+                    udsWorkGroup = new EpollEventLoopGroup(workThread, new DefaultThreadFactory(UDS_WORK_GROUP_NAME));
+                    serverUdsChannelClass = EpollServerDomainSocketChannel.class;
+                } else if (isKQueueAvailable()) {
+                    udsBossGroup = new KQueueEventLoopGroup(bossThread, new DefaultThreadFactory(UDS_BOSS_GROUP_NAME));
+                    udsWorkGroup = new KQueueEventLoopGroup(workThread, new DefaultThreadFactory(UDS_WORK_GROUP_NAME));
+                    serverUdsChannelClass = KQueueServerDomainSocketChannel.class;
+                }
+            }
             queueFactory = (QueueFactory) serverProperties.getProxyBeanFactory()
                     .getBean(BeanInitUtils.parseClass(serverProperties.getQueueFactoryClassName()));
             initOk.set(true);
@@ -124,6 +143,10 @@ public class GlobalRedisProxyEnv {
 
     public static void setCport(int cport) {
         GlobalRedisProxyEnv.cport = cport;
+    }
+
+    public static void setUdsPath(String udsPath) {
+        GlobalRedisProxyEnv.udsPath = udsPath;
     }
 
     public static void setConsolePort(int consolePort) {
@@ -170,12 +193,24 @@ public class GlobalRedisProxyEnv {
         return workGroup;
     }
 
+    public static EventLoopGroup getUdsBossGroup() {
+        return udsBossGroup;
+    }
+
+    public static EventLoopGroup getUdsWorkGroup() {
+        return udsWorkGroup;
+    }
+
     public static Class<? extends ServerChannel> getServerChannelClass() {
         return serverChannelClass;
     }
 
     public static Class<? extends SocketChannel> getSocketChannelClass() {
         return socketChannelClass;
+    }
+
+    public static Class<? extends ServerChannel> getServerUdsChannelClass() {
+        return serverUdsChannelClass;
     }
 
     public static int getPort() {
@@ -188,6 +223,10 @@ public class GlobalRedisProxyEnv {
 
     public static int getCport() {
         return cport;
+    }
+
+    public static String getUdsPath() {
+        return udsPath;
     }
 
     public static int getConsolePort() {
@@ -241,6 +280,10 @@ public class GlobalRedisProxyEnv {
             logger.warn("kqueue is unavailable, e = {}", e.toString());
             return false;
         }
+    }
+
+    public static boolean isUdsEventLoopShared() {
+        return udsEventLoopShared;
     }
 
     public static QueueFactory getQueueFactory() {

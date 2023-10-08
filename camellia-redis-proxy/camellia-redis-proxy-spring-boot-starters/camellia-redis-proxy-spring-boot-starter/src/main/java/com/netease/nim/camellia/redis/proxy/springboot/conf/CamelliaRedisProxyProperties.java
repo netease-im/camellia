@@ -32,6 +32,11 @@ public class CamelliaRedisProxyProperties {
     private int tlsPort = -1;
 
     /**
+     * proxy使用unix-domain-socket启动的文件路径
+     */
+    private String udsPath = "";
+
+    /**
      * proxy的名字，用于注册到注册中心，如果没有指定，则使用spring.application.name
      */
     private String applicationName = "";
@@ -155,6 +160,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setTlsPort(int tlsPort) {
         this.tlsPort = tlsPort;
+    }
+
+    public String getUdsPath() {
+        return udsPath;
+    }
+
+    public void setUdsPath(String udsPath) {
+        this.udsPath = udsPath;
     }
 
     public String getApplicationName() {

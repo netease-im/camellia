@@ -37,7 +37,6 @@ public class ChannelInfo {
 
     private static final AtomicLong idGen = new AtomicLong(0);
 
-    private final boolean mock;
     private final long id = idGen.incrementAndGet();
 
     private final String consid;
@@ -63,6 +62,7 @@ public class ChannelInfo {
      */
     private SocketAddress clientSocketAddress;
     private final boolean fromCport;
+    private final ChannelType channelType;
     private volatile ConcurrentHashMap<BytesKey, Boolean> subscribeChannels;
     private volatile ConcurrentHashMap<BytesKey, Boolean> psubscribeChannels;
 
@@ -90,8 +90,8 @@ public class ChannelInfo {
         this.ctx = null;
         this.clientSocketAddress = null;
         this.commandTaskQueue = null;
-        this.mock = true;
         this.fromCport = false;
+        this.channelType = ChannelType.unknown;
     }
 
     private ChannelInfo(ChannelHandlerContext ctx) {
@@ -99,8 +99,14 @@ public class ChannelInfo {
         this.consid = UUID.randomUUID().toString();
         this.clientSocketAddress = ctx.channel().remoteAddress();
         this.commandTaskQueue = new CommandTaskQueue(this);
-        this.mock = false;
-        this.fromCport = ((InetSocketAddress) ctx.channel().localAddress()).getPort() == GlobalRedisProxyEnv.getCport();
+        SocketAddress socketAddress = ctx.channel().localAddress();
+        if (socketAddress instanceof InetSocketAddress) {
+            this.fromCport = ((InetSocketAddress) socketAddress).getPort() == GlobalRedisProxyEnv.getCport();
+            this.channelType = ChannelType.tcp;
+        } else {
+            this.fromCport = false;
+            this.channelType = ChannelType.uds;
+        }
     }
 
     /**
@@ -129,7 +135,7 @@ public class ChannelInfo {
     }
 
     public void updateBindRedisConnectionCache(RedisConnection redisConnection) {
-        if (mock) {
+        if (channelType == ChannelType.unknown) {
             return;
         }
         if (bindRedisConnectionCache == null) {
@@ -143,7 +149,7 @@ public class ChannelInfo {
     }
 
     public RedisConnection tryAcquireBindRedisConnection(RedisConnectionAddr addr) {
-        if (mock) {
+        if (channelType == ChannelType.unknown) {
             return null;
         }
         if (bindRedisConnectionCache != null && !bindRedisConnectionCache.isEmpty()) {
@@ -156,7 +162,7 @@ public class ChannelInfo {
     }
 
     public RedisConnection acquireBindRedisConnection(IUpstreamClient upstreamClient, RedisConnectionAddr addr) {
-        if (mock) {
+        if (channelType == ChannelType.unknown) {
             return null;
         }
         if (bindRedisConnectionCache != null && !bindRedisConnectionCache.isEmpty()) {
@@ -180,7 +186,7 @@ public class ChannelInfo {
     }
 
     public RedisConnection acquireBindSubscribeRedisConnection(IUpstreamClient upstreamClient, RedisConnectionAddr addr) {
-        if (mock) {
+        if (channelType == ChannelType.unknown) {
             return null;
         }
         if (bindSubscribeRedisConnectionCache != null && !bindSubscribeRedisConnectionCache.isEmpty()) {
@@ -219,6 +225,10 @@ public class ChannelInfo {
 
     public ChannelHandlerContext getCtx() {
         return ctx;
+    }
+
+    public ChannelType getChannelType() {
+        return channelType;
     }
 
     public String getConsid() {
@@ -539,6 +549,13 @@ public class ChannelInfo {
         AUTH_OK,
         NO_AUTH,
         INVALID,
+        ;
+    }
+
+    public static enum ChannelType {
+        tcp,
+        uds,
+        unknown,
         ;
     }
 }

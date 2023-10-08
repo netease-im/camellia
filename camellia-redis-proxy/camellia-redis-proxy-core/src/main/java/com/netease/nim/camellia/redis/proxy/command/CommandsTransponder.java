@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.auth.ConnectLimiter;
 import com.netease.nim.camellia.redis.proxy.auth.HelloCommandUtil;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.plugin.rewrite.RouteRewriteResult;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplate;
@@ -63,8 +64,15 @@ public class CommandsTransponder {
 
     public void transpond(ChannelInfo channelInfo, List<Command> commands) {
         if (!eventLoopSetSuccess) {
-            RedisConnectionHub.getInstance().updateEventLoop(channelInfo.getCtx().channel().eventLoop());
-            eventLoopSetSuccess = true;
+            if (channelInfo.getChannelType() == ChannelInfo.ChannelType.tcp) {
+                RedisConnectionHub.getInstance().updateEventLoop(channelInfo.getCtx().channel().eventLoop());
+                eventLoopSetSuccess = true;
+            } else if (channelInfo.getChannelType() == ChannelInfo.ChannelType.uds) {
+                if (GlobalRedisProxyEnv.isUdsEventLoopShared()) {
+                    RedisConnectionHub.getInstance().updateEventLoop(channelInfo.getCtx().channel().eventLoop());
+                    eventLoopSetSuccess = true;
+                }
+            }
         }
         try {
             boolean hasCommandsSkip = false;

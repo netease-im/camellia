@@ -12,6 +12,8 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.unix.DomainSocketAddress;
+import io.netty.channel.unix.UnixChannel;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,7 @@ public class CamelliaRedisProxyServer {
     private final InitHandler initHandler = new InitHandler();
     private int port;
     private int tlsPort;
+    private String udsPath;
 
     public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, ICommandInvoker invoker) {
         GlobalRedisProxyEnv.init(serverProperties);
@@ -132,7 +135,6 @@ public class CamelliaRedisProxyServer {
 
         GlobalRedisProxyEnv.setPort(port);
         GlobalRedisProxyEnv.setTlsPort(tlsPort);
-        GlobalRedisProxyEnv.getProxyShutdown().setServerChannelFuture(future1, future2);
         this.port = port;
         this.tlsPort = tlsPort;
         if (serverProperties.isClusterModeEnable()) {
@@ -145,8 +147,51 @@ public class CamelliaRedisProxyServer {
             GlobalRedisProxyEnv.getProxyShutdown().setCportChannelFuture(channelFuture);
             logger.info("CamelliaRedisProxyServer start in cluster mode at cport: {}", cport);
         }
+        ChannelFuture future3 = startUds();
+        GlobalRedisProxyEnv.getProxyShutdown().setServerChannelFuture(future1, future2, future3);
         logger.info("CamelliaRedisProxyServer start success, version = {}", ProxyInfoUtils.VERSION);
         GlobalRedisProxyEnv.invokeStartOkCallback();
+    }
+
+    private ChannelFuture startUds() throws Exception {
+        String udsPath = serverProperties.getUdsPath();
+        if (udsPath == null || udsPath.trim().length() == 0) {
+            logger.info("CamelliaRedisProxyServer uds disabled, skip start");
+            return null;
+        }
+        ServerBootstrap serverBootstrap = new ServerBootstrap();
+        EventLoopGroup bossGroup = GlobalRedisProxyEnv.getUdsBossGroup();
+        EventLoopGroup workGroup = GlobalRedisProxyEnv.getUdsWorkGroup();
+        Class<? extends ServerChannel> serverUdsChannelClass = GlobalRedisProxyEnv.getServerUdsChannelClass();
+        if (bossGroup == null || workGroup == null || serverUdsChannelClass == null) {
+            logger.warn("CamelliaRedisProxyServer uds start failed because os not support");
+            return null;
+        }
+        serverBootstrap.group(bossGroup, workGroup)
+                .channel(serverUdsChannelClass)
+                .childHandler(new ChannelInitializer<UnixChannel>() {
+                    @Override
+                    public void initChannel(UnixChannel ch) {
+                        ChannelPipeline pipeline = ch.pipeline();
+                        //idle close
+                        if (Utils.idleCloseHandlerEnable(serverProperties)) {
+                            pipeline.addLast(new IdleCloseHandler(serverProperties.getReaderIdleTimeSeconds(),
+                                    serverProperties.getWriterIdleTimeSeconds(), serverProperties.getAllIdleTimeSeconds()));
+                        }
+                        //command decoder
+                        pipeline.addLast(new CommandDecoder(serverProperties.getCommandDecodeMaxBatchSize(), serverProperties.getCommandDecodeBufferInitializerSize()));
+                        //reply encoder
+                        pipeline.addLast(new ReplyEncoder());
+                        //connect manager
+                        pipeline.addLast(initHandler);
+                        //command transponder
+                        pipeline.addLast(serverHandler);
+                    }
+                });
+        ChannelFuture future = serverBootstrap.bind(new DomainSocketAddress(udsPath)).sync();
+        this.udsPath = udsPath;
+        logger.info("CamelliaRedisProxyServer start uds at {}", udsPath);
+        return future;
     }
 
     public int getPort() {
@@ -155,5 +200,9 @@ public class CamelliaRedisProxyServer {
 
     public int getTlsPort() {
         return tlsPort;
+    }
+
+    public String getUdsPath() {
+        return udsPath;
     }
 }

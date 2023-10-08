@@ -5,6 +5,7 @@
 * camellia-config/camellia-console支持自定义ConfigChangeInterceptor，用于控制配置变更的流程（如审批）
 * camellia-redis-proxy增强plugin的功能，允许对单个命令选择自定义的路由
 * camellia-redis-proxy内置HotKeyRouteRewriteProxyPlugin，允许对热key进行自定义的路由
+* camellia-redis-proxy支持unix-domain-socket，客户端可以使用uds访问proxy
 
 ### 更新
 * camellia-redis-proxy配置连接上限时，如果达到上限，先返回一个error再关闭连接，且支持设置延迟关闭

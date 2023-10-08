@@ -17,6 +17,7 @@ public class CamelliaServerProperties {
     private int port = Constants.Server.severPort;
     private int tlsPort = -1;
     private int cport = -1;
+    private String udsPath = "";
     private String applicationName;
     private String password;
     private boolean proxyProtocolEnable = Constants.Server.proxyProtocolEnable;
@@ -78,6 +79,14 @@ public class CamelliaServerProperties {
 
     public void setCport(int cport) {
         this.cport = cport;
+    }
+
+    public String getUdsPath() {
+        return udsPath;
+    }
+
+    public void setUdsPath(String udsPath) {
+        this.udsPath = udsPath;
     }
 
     public String getApplicationName() {

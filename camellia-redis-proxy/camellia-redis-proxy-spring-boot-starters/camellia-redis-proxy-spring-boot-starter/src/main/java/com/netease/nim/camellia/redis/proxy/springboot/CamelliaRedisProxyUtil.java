@@ -61,6 +61,7 @@ public class CamelliaRedisProxyUtil {
         serverProperties.setClusterModeEnable(properties.isClusterModeEnable());
         serverProperties.setClusterModeProviderClassName(properties.getClusterModeProviderClassName());
         serverProperties.setCport(properties.getCport());
+        serverProperties.setUdsPath(properties.getUdsPath());
         serverProperties.setCommandDecodeMaxBatchSize(netty.getCommandDecodeMaxBatchSize());
         serverProperties.setCommandDecodeBufferInitializerSize(netty.getCommandDecodeBufferInitializerSize());
         serverProperties.setTcpNoDelay(netty.isTcpNoDelay());
