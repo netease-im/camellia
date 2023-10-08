@@ -159,7 +159,7 @@ public class RedisConnection {
                 logger.info("{} try connect...", connectionName);
             }
             ChannelFuture future;
-            if (host != null && port > 0) {
+            if (channelType == ChannelType.tcp) {
                 future = bootstrap.connect(host, port);
             } else {
                 future = bootstrap.connect(new DomainSocketAddress(udsPath));
