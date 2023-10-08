@@ -3,9 +3,10 @@
 
 ### 说明
 * 功能覆盖了HotKeyProxyPlugin，因此所有HotKeyProxyPlugin的配置项都支持，见：[HotKeyProxyPlugin](hot-key.md)
-* 还提供了根据热key对单个命令进行自定义路由的功能，即当HotKeyProxyPlugin发现是热key后
-* 仅支持命令仅包含一个key的情况，如get、zrange等，而mget等命令则不支持
+* 还提供了根据热key对单个命令进行自定义路由的功能，即当HotKeyProxyPlugin发现是热key后把这个key的相关命令转发给特定的其他redis后端
+* 仅支持命令仅包含一个key的情况，如get、zrange等，mget等命令则不支持
 * 发布订阅、事务命令、阻塞型命令不支持
+* 原理是配置多条路由，然后在plugin中修改路由
 
 ### 启用方式
 ```yaml
