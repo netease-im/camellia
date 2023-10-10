@@ -62,7 +62,7 @@
 * camellia-redis-proxy的console的随机端口功能无效的问题，1.2.11引入
 * camellia-redis-proxy使用sentinelPassword时，打印的日志也需要隐藏密码
 * camellia-redis-proxy当redis-cluster出现主从切换时，修复NPE（不影响切换）
-* camellia-redis-proxy代理到sentinel时如果出现`+reset-master`时没有切换到问题，感谢 [segment11](https://github.com/segment11) 发现这个问题
+* camellia-redis-proxy代理到sentinel时如果出现`+reset-master`时没有切换的问题，感谢 [segment11](https://github.com/segment11) 发现这个问题
 
 
 # 1.2.13（2023/08/04）
