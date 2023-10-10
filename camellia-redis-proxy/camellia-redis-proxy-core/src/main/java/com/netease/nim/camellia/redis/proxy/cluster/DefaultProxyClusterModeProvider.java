@@ -1,7 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.cluster;
 
 import com.alibaba.fastjson.JSONObject;
-import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionAddr;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;

@@ -26,7 +26,8 @@ public class MqMultiWriteProducerProxyPlugin implements ProxyPlugin {
     @Override
     public void init(ProxyBeanFactory factory) {
         String className = ProxyDynamicConf.getString("mq.multi.write.sender.className", null);
-        mqSender = (MqPackSender) factory.getBean(BeanInitUtils.parseClass(className));
+        this.mqSender = (MqPackSender) factory.getBean(BeanInitUtils.parseClass(className));
+        logger.info("mqSender init success, className = {}", className);
 
         this.skipDb = ProxyDynamicConf.getBoolean("mq.multi.write.plugin.skip.db.enable", false);
         ProxyDynamicConf.registerCallback(() -> skipDb = ProxyDynamicConf.getBoolean("mq.multi.write.plugin.skip.db.enable", false));
