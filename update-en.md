@@ -11,6 +11,7 @@
 * camellia-redis-proxy config max clients, if reached, send error reply before connection closed, and support configure delay close
 * optimize the performance of CamelliaStrictIdGen's peekId api
 * camellia-redis-proxy upstream redis conection modify default config of sendbuf/rcvbuf from 10M to 6M
+* camellia-redis-proxy optimize MultiWriteProxyPlugin
 
 ### fix
 * none

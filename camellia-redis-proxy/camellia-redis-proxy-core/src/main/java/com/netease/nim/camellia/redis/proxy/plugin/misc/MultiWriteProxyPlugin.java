@@ -11,10 +11,11 @@ import com.netease.nim.camellia.redis.proxy.upstream.RedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import io.netty.util.concurrent.DefaultThreadFactory;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 
 /**
  * 个用于自定义实现双写策略的插件
@@ -23,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class MultiWriteProxyPlugin implements ProxyPlugin {
 
+    private ThreadPoolExecutor executor;
     private MultiWriteFunc multiWriteFunc;
     private boolean skipDb;
 
@@ -31,6 +33,9 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
         String multiWriteFuncClassName = ProxyDynamicConf.getString("multi.write.func.className", PrefixMatchHotKeyCacheKeyChecker.class.getName());
         this.multiWriteFunc = (MultiWriteFunc) factory.getBean(BeanInitUtils.parseClass(multiWriteFuncClassName));
         this.skipDb = ProxyDynamicConf.getBoolean("multi.write.plugin.skip.db.enable", false);
+        int poolSize = ProxyDynamicConf.getInt("multi.write.executor.pool.size", Runtime.getRuntime().availableProcessors());
+        int queueSize = ProxyDynamicConf.getInt("multi.write.executor.queue.size", 10000);
+        this.executor = new ThreadPoolExecutor(poolSize, poolSize, 0, TimeUnit.SECONDS, new LinkedBlockingDeque<>(queueSize), new DefaultThreadFactory("multi-write"));
         ProxyDynamicConf.registerCallback(() -> skipDb = ProxyDynamicConf.getBoolean("multi.write.plugin.skip.db.enable", false));
     }
 
@@ -129,12 +134,17 @@ public class MultiWriteProxyPlugin implements ProxyPlugin {
                 if (urls != null && !urls.isEmpty()) {
                     for (String url : urls) {
                         try {
-                            IUpstreamClient client = redisProxyEnv.getClientFactory().get(url);
-                            client.sendCommand(db, Collections.singletonList(command),
-                                    Collections.singletonList(new CompletableFuture<>()));
+                            executor.submit(() -> {
+                                try {
+                                    IUpstreamClient client = redisProxyEnv.getClientFactory().get(url);
+                                    client.sendCommand(db, Collections.singletonList(command),
+                                            Collections.singletonList(new CompletableFuture<>()));
+                                } catch (Exception e) {
+                                    ErrorLogCollector.collect(MultiWriteProxyPlugin.class, "multi write error, url = " + url, e);
+                                }
+                            });
                         } catch (Exception e) {
-                            ErrorLogCollector.collect(MultiWriteProxyPlugin.class,
-                                    "multi write error, url = " + url, e);
+                            ErrorLogCollector.collect(MultiWriteProxyPlugin.class, "submit multi write error, url = " + url, e);
                         }
                     }
                 }

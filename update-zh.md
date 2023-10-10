@@ -11,6 +11,7 @@
 * camellia-redis-proxy配置连接上限时，如果达到上限，先返回一个error再关闭连接，且支持设置延迟关闭
 * 优化CamelliaStrictIdGen的peekId接口的性能
 * camellia-redis-proxy后向连接的sendbuf和rcvbuf的默认配置从10M调整为6M
+* camellia-redis-proxy优化MultiWriteProxyPlugin的实现
 
 ### fix
 * 无
