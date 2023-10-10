@@ -49,7 +49,6 @@ camellia-redis-proxy:
 #        api-key: secretToken # header name: api-key, header value: secretToken
 #    redis-conf:
 #      proxy-upstream-tls-provider-class-name: com.netease.nim.camellia.redis.proxy.tls.upstream.DefaultProxyUpstreamTlsProvider
-#      multi-write-mode: first_resource_only #multi write mode, see MultiWriteMode.java, FIRST_RESOURCE_ONLY/ALL_RESOURCES_NO_CHECKALL_RESOURCES_CHECK_ERROR
 #      close-idle-connection: true #if close upstream idle redis-connection, default true
 #      check-idle-connection-threshold-seconds: 600  #upstream redis-connection idle check threshold, default 600s
 #      preheat: false #preheat upstream redis-connection, default true

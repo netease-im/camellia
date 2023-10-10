@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.2.17（2023/10/xx）
+# 1.2.17（2023/10/10）
 ### 新增
 * camellia-config/camellia-console支持自定义ConfigChangeInterceptor，用于控制配置变更的流程（如审批）
 * camellia-redis-proxy增强plugin的功能，允许对单个命令选择自定义的路由

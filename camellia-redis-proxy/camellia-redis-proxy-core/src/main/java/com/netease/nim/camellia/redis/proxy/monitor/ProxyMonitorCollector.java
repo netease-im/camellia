@@ -45,7 +45,7 @@ public class ProxyMonitorCollector {
             }
             ProxyDynamicConf.registerCallback(ProxyMonitorCollector::reloadConf);
             reloadConf();
-            logger.info("RedisMonitor init success, intervalSeconds = {}, monitorEnable = {}", intervalSeconds, monitorEnable);
+            logger.info("proxy monitor collector init success, intervalSeconds = {}, monitorEnable = {}", intervalSeconds, monitorEnable);
         }
     }
 

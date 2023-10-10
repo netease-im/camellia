@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.17（2023/10/xx）
+# 1.2.17（2023/10/10）
 ### add
 * camelia-config/camellia-console support custom ConfigChangeInterceptor to control config change flow
 * camellia-redis-proxy enhance plugin, you can rewrite route by plugin to every command

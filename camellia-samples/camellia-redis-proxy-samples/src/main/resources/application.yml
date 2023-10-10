@@ -13,9 +13,11 @@ camellia-redis-proxy:
   monitor-interval-seconds: 60 #monitor data refresh interval seconds
 #  tls-port: 6381
 #  proxy-frontend-tls-provider-class-name: com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider
+#  proxy-protocol-enable: false
 #  cluster-mode-enable: true #cluster-mode, if setting true, proxy-cluster disguised as a redis-cluster, should configure proxy.cluster.mode.nodes=xx in camellia-redis-proxy.properties
 #  cport: -1 #cluster-mode is setting true, proxy will use this cport to heartbeat, if setting -1, cport = port + 10000
-#  netty-transport-mode: epoll
+#  uds-path: /tmp/camellia-redis-proxy.sock
+#  netty-transport-mode: kqueue
   plugins: #plugin list
     - monitorPlugin
     - bigKeyPlugin
@@ -31,10 +33,11 @@ camellia-redis-proxy:
     local:
       type: simple #simple、complex
       resource: redis://@127.0.0.1:6379
+#      resource: redis-uds://@/Users/caojiajun/temp/redis.sock
 #      resource: rediss://@127.0.0.1:6379
 #      resource: redis-cluster://@10.189.31.13:6601,10.189.31.14:6603,10.189.31.15:6605
-#      resource: redis-sentinel://@127.0.0.1:26379/master1
-#      resource: redis-sentinel-slaves://@127.0.0.1:26379/master1
+#      resource: redis-sentinel://@127.0.0.1:26379/mymaster1
+#      resource: redis-sentinel-slaves://@127.0.0.1:26379/mymaster1?withMaster=false
 #      type: complex
 #      json-file: resource-table.json
 #    type: remote
@@ -46,7 +49,6 @@ camellia-redis-proxy:
 #        api-key: secretToken # header name: api-key, header value: secretToken
 #    redis-conf:
 #      proxy-upstream-tls-provider-class-name: com.netease.nim.camellia.redis.proxy.tls.upstream.DefaultProxyUpstreamTlsProvider
-#      multi-write-mode: first_resource_only #multi write mode, see MultiWriteMode.java, FIRST_RESOURCE_ONLY/ALL_RESOURCES_NO_CHECKALL_RESOURCES_CHECK_ERROR
 #      close-idle-connection: true #if close upstream idle redis-connection, default true
 #      check-idle-connection-threshold-seconds: 600  #upstream redis-connection idle check threshold, default 600s
-#      preheat: true #preheat upstream redis-connection, default true
+#      preheat: false #preheat upstream redis-connection, default true

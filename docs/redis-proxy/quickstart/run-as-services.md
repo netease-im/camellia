@@ -5,9 +5,9 @@ How to run Camellia Redis Proxy server using service - 如何使用服务运行C
 ```
 groupadd camelliarp
 useradd camelliarp -g camelliarp
-wget https://github.com/netease-im/camellia/releases/download/1.2.16/camellia-redis-proxy-1.2.16.tar.gz
-tar zxvf camellia-redis-proxy-1.2.16.tar.gz
-mv camellia-redis-proxy-1.2.16 /home/camelliarp/crp
+wget https://github.com/netease-im/camellia/releases/download/1.2.17/camellia-redis-proxy-1.2.17.tar.gz
+tar zxvf camellia-redis-proxy-1.2.17.tar.gz
+mv camellia-redis-proxy-1.2.17 /home/camelliarp/crp
 chown -R camelliarp:camelliarp /home/camelliarp/crp
 ```
 
