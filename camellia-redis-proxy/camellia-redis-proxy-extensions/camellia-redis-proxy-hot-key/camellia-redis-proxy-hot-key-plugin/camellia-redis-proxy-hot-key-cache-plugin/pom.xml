@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.netease.nim</groupId>
         <artifactId>camellia-redis-proxy-hot-key-plugin</artifactId>
-        <version>1.2.17</version>
+        <version>1.2.18-SNAPSHOT</version>
     </parent>
 
     <artifactId>camellia-redis-proxy-hot-key-cache-plugin</artifactId>
@@ -15,7 +15,7 @@
         <dependency>
             <groupId>com.netease.nim</groupId>
             <artifactId>camellia-redis-proxy-hot-key-common</artifactId>
-            <version>1.2.17</version>
+            <version>1.2.18-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

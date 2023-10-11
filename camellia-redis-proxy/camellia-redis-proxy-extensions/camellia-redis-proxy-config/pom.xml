@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>camellia-redis-proxy-config</artifactId>
-    <version>1.2.17</version>
+    <version>1.2.18-SNAPSHOT</version>
 
     <packaging>pom</packaging>
     <modules>
@@ -16,7 +16,7 @@
     <parent>
         <groupId>com.netease.nim</groupId>
         <artifactId>camellia-redis-proxy-extensions</artifactId>
-        <version>1.2.17</version>
+        <version>1.2.18-SNAPSHOT</version>
     </parent>
 
 </project>
