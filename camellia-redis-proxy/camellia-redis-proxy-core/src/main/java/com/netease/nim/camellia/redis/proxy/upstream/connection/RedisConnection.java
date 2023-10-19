@@ -18,6 +18,7 @@ import com.netease.nim.camellia.tools.utils.SysUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.EpollChannelOption;
+import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
@@ -138,6 +139,8 @@ public class RedisConnection {
             if (channelType == ChannelType.tcp) {
                 bootstrap.option(ChannelOption.TCP_NODELAY, config.isTcpNoDelay());
             }
+            final boolean tcpQuicAck = config.isTcpQuickAck() && channelType == ChannelType.tcp
+                    && EpollSocketChannel.class.isAssignableFrom(socketChannel);
             bootstrap.handler(new ChannelInitializer<Channel>() {
                 @Override
                 protected void initChannel(Channel channel) {
@@ -147,12 +150,11 @@ public class RedisConnection {
                     }
                     pipeline.addLast(new ReplyDecoder());
                     pipeline.addLast(new ReplyAggregateDecoder());
-                    pipeline.addLast(new ReplyHandler(queue, connectionName, config.isTcpQuickAck()));
+                    pipeline.addLast(new ReplyHandler(queue, connectionName, tcpQuicAck));
                     pipeline.addLast(new CommandPackEncoder(RedisConnection.this, commandPackRecycler, queue));
                 }
             });
-
-            if (config.isTcpQuickAck() && channelType == ChannelType.tcp) {
+            if (tcpQuicAck) {
                 bootstrap.option(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
             }
             if (logger.isInfoEnabled()) {
