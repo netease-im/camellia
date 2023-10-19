@@ -1,5 +1,16 @@
 [ENGLISH](update-en.md)
 
+# 1.2.18（2023/10/xx）
+### 新增
+* camellia-redis-proxy支持自定义UpstreamAddrConverter，从而可以窜改后端地址(ip或者udsPath)，一个典型应用场景是如果proxy和redis混部在同一组机器上，访问本机节点使用uds或者127.0.0.1加速访问，访问非本机节点则使用局域网ip
+
+### 更新
+* 无
+
+### fix
+* 无
+
+
 # 1.2.17（2023/10/10）
 ### 新增
 * camellia-config/camellia-console支持自定义ConfigChangeInterceptor，用于控制配置变更的流程（如审批）

@@ -122,25 +122,40 @@ public class RedisConnection {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(eventLoop);
             ChannelType channelType = Utils.channelType(addr);
-            Class<? extends Channel> socketChannel = Utils.socketChannel(channelType, eventLoop);
-            if (socketChannel == null) {
+            Class<? extends Channel> channelClass = Utils.channelClass(channelType, eventLoop);
+            if (channelClass == null) {
                 status = RedisConnectionStatus.INVALID;
                 ErrorLogCollector.collect(RedisConnection.class, "socketChannel is null, channelType = " + channelType);
                 return;
             }
-            bootstrap.channel(socketChannel)
-                    .option(ChannelOption.SO_KEEPALIVE, config.isSoKeepalive())
-                    .option(ChannelOption.TCP_NODELAY, config.isTcpNoDelay())
+            String host = this.host;
+            String udsPath = this.udsPath;
+            UpstreamAddrConverter upstreamHostConverter = config.getUpstreamHostConverter();
+            if (upstreamHostConverter != null) {
+                UpstreamAddrConverter.UpstreamAddrConverterContext context = new UpstreamAddrConverter.UpstreamAddrConverterContext(host, udsPath, eventLoop, channelClass);
+                UpstreamAddrConverter.UpstreamAddrConverterResult result = upstreamHostConverter.convert(context);
+                if (result != null) {
+                    logger.info("upstream addr convert, old.host = {}, new.host = {}, old.udsPath = {}, new.udsPath = {}, old.socketChannel = {}, new.socketChannel = {}, old.channelType = {}, new.channelType = {}",
+                            host, result.getHost(), udsPath, result.getUdsPath(), channelClass.getSimpleName(),
+                            result.getChannelClass().getSimpleName(), channelType, result.getChannelType());
+                    host = result.getHost();
+                    udsPath = result.getUdsPath();
+                    channelClass = result.getChannelClass();
+                    channelType = result.getChannelType();
+                }
+            }
+            bootstrap.channel(channelClass)
                     .option(ChannelOption.SO_SNDBUF, config.getSoSndbuf())
                     .option(ChannelOption.SO_RCVBUF, config.getSoRcvbuf())
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
                     .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(config.getWriteBufferWaterMarkLow(),
                             config.getWriteBufferWaterMarkHigh()));
             if (channelType == ChannelType.tcp) {
-                bootstrap.option(ChannelOption.TCP_NODELAY, config.isTcpNoDelay());
+                bootstrap.option(ChannelOption.TCP_NODELAY, config.isTcpNoDelay())
+                        .option(ChannelOption.SO_KEEPALIVE, config.isSoKeepalive());
             }
-            final boolean tcpQuicAck = config.isTcpQuickAck() && channelType == ChannelType.tcp
-                    && EpollSocketChannel.class.isAssignableFrom(socketChannel);
+            final boolean tcpQuickAck = config.isTcpQuickAck() && channelType == ChannelType.tcp
+                    && EpollSocketChannel.class.isAssignableFrom(channelClass);
             bootstrap.handler(new ChannelInitializer<Channel>() {
                 @Override
                 protected void initChannel(Channel channel) {
@@ -150,11 +165,11 @@ public class RedisConnection {
                     }
                     pipeline.addLast(new ReplyDecoder());
                     pipeline.addLast(new ReplyAggregateDecoder());
-                    pipeline.addLast(new ReplyHandler(queue, connectionName, tcpQuicAck));
+                    pipeline.addLast(new ReplyHandler(queue, connectionName, tcpQuickAck));
                     pipeline.addLast(new CommandPackEncoder(RedisConnection.this, commandPackRecycler, queue));
                 }
             });
-            if (tcpQuicAck) {
+            if (tcpQuickAck) {
                 bootstrap.option(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
             }
             if (logger.isInfoEnabled()) {

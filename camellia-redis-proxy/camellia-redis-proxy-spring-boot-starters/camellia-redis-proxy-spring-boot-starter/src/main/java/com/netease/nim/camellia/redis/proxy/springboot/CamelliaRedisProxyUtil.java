@@ -177,6 +177,8 @@ public class CamelliaRedisProxyUtil {
         redisConfProperties.setCheckIdleConnectionThresholdSeconds(properties.getCheckIdleConnectionThresholdSeconds());
         redisConfProperties.setCloseIdleConnectionDelaySeconds(properties.getCloseIdleConnectionDelaySeconds());
         redisConfProperties.setProxyDiscoveryFactoryClassName(properties.getProxyDiscoveryFactoryClassName());
+        redisConfProperties.setProxyUpstreamTlsProviderClassName(properties.getProxyUpstreamTlsProviderClassName());
+        redisConfProperties.setUpstreamAddrConverterClassName(properties.getUpstreamAddrConverterClassName());
         return redisConfProperties;
     }
 

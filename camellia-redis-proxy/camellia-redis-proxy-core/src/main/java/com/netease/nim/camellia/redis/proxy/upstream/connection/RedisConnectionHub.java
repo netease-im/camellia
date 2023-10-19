@@ -74,6 +74,7 @@ public class RedisConnectionHub {
     private final ConcurrentHashMap<Object, LockMap> lockMapMap = new ConcurrentHashMap<>();
 
     private ProxyUpstreamTlsProvider tlsProvider;
+    private UpstreamAddrConverter upstreamAddrConverter;
 
     public static RedisConnectionHub instance = new RedisConnectionHub();
     private RedisConnectionHub() {
@@ -139,6 +140,10 @@ public class RedisConnectionHub {
             boolean success = this.tlsProvider.init();
             logger.info("RedisConnectionHub, ProxyUpstreamTlsProvider = {}, init = {}",
                     properties.getRedisConf().getProxyUpstreamTlsProviderClassName(), success);
+        }
+        this.upstreamAddrConverter = ConfigInitUtil.initUpstreamAddrConverter(properties, proxyBeanFactory);
+        if (upstreamAddrConverter != null) {
+            logger.info("RedisConnectionHub, UpstreamAddrConverter = {}", properties.getRedisConf().getUpstreamAddrConverterClassName());
         }
 
         ProxyDynamicConf.registerCallback(this::reloadConf);
@@ -421,6 +426,7 @@ public class RedisConnectionHub {
             config.setResource(resource);
         }
         config.setUpstreamClient(upstreamClient);
+        config.setUpstreamHostConverter(upstreamAddrConverter);
         RedisConnection connection = new RedisConnection(config);
         connection.start();
         return connection;

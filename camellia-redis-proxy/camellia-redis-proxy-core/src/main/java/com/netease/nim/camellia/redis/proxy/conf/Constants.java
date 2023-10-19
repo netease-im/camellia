@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider;
 import com.netease.nim.camellia.redis.proxy.tls.upstream.DefaultProxyUpstreamTlsProvider;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateFactory;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.DefaultUpstreamAddrConverter;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import com.netease.nim.camellia.redis.proxy.cluster.DefaultProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.route.DynamicConfProxyRouteConfUpdater;
@@ -44,8 +45,8 @@ public class Constants {
         public static final boolean tcpNoDelay = true;
         public static final boolean tcpQuickAck = false;
         public static final int soBacklog = 1024;
-        public static final int soSndbuf = 10 * 1024 * 1024;
-        public static final int soRcvbuf = 10 * 1024 * 1024;
+        public static final int soSndbuf = 6 * 1024 * 1024;
+        public static final int soRcvbuf = 6 * 1024 * 1024;
         public static final boolean soKeepalive = true;
         public static final int readerIdleTimeSeconds = -1;
         public static final int writerIdleTimeSeconds = -1;
@@ -84,6 +85,7 @@ public class Constants {
         public static final int closeIdleConnectionDelaySeconds = 60;//判断一个连接空闲后，再过多少秒去执行关闭操作
 
         public static final String proxyUpstreamTlsProviderClassName = DefaultProxyUpstreamTlsProvider.class.getName();
+        public static final String upstreamAddrConverterClassName = DefaultUpstreamAddrConverter.class.getName();
 
         public static final int soSndbuf = 6 * 1024 * 1024;
         public static final int soRcvbuf = 6 * 1024 * 1024;

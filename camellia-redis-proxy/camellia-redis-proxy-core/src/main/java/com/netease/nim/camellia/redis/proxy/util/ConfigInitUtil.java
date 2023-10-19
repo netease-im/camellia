@@ -13,6 +13,7 @@ import com.netease.nim.camellia.redis.proxy.tls.frontend.ProxyFrontendTlsProvide
 import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvider;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplateFactory;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.UpstreamAddrConverter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -80,6 +81,14 @@ public class ConfigInitUtil {
         String className = properties.getRedisConf().getProxyUpstreamTlsProviderClassName();
         if (className != null) {
             return (ProxyUpstreamTlsProvider) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
+        }
+        return null;
+    }
+
+    public static UpstreamAddrConverter initUpstreamAddrConverter(CamelliaTranspondProperties properties, ProxyBeanFactory proxyBeanFactory) {
+        String className = properties.getRedisConf().getUpstreamAddrConverterClassName();
+        if (className != null) {
+            return (UpstreamAddrConverter) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
         }
         return null;
     }

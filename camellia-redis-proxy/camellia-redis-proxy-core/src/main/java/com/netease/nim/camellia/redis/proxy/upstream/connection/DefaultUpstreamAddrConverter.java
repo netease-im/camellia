@@ -1,0 +1,167 @@
+package com.netease.nim.camellia.redis.proxy.upstream.connection;
+
+import com.alibaba.fastjson.JSONArray;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
+import com.netease.nim.camellia.tools.utils.InetUtils;
+import io.netty.channel.Channel;
+import io.netty.channel.epoll.EpollDomainSocketChannel;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.kqueue.KQueueDomainSocketChannel;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.kqueue.KQueueSocketChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
+import io.netty.incubator.channel.uring.IOUringSocketChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by caojiajun on 2023/10/19
+ */
+public class DefaultUpstreamAddrConverter implements UpstreamAddrConverter {
+
+    private static final Logger logger = LoggerFactory.getLogger(DefaultUpstreamAddrConverter.class);
+
+    private static final String CURRENT_HOST = "@CurrentHost@";
+
+    private List<Config> configList = new ArrayList<>();
+    private String currentHost;
+
+    public DefaultUpstreamAddrConverter() {
+        reloadConfig();
+        ProxyDynamicConf.registerCallback(this::reloadConfig);
+    }
+
+    @Override
+    public UpstreamAddrConverterResult convert(UpstreamAddrConverterContext context) {
+        try {
+            boolean enable = ProxyDynamicConf.getBoolean("upstream.addr.converter.enable", false);
+            if (!enable) {
+                return null;
+            }
+            if (configList == null || configList.isEmpty()) {
+                return null;
+            }
+            String host = context.getHost();
+            String udsPath = context.getUdsPath();
+            for (Config config : configList) {
+                if (host != null && config.getOriginalHost() != null) {
+                    if (config.getOriginalHost().equals(CURRENT_HOST)) {
+                        if (host.equals(currentHost)) {
+                            return result(context, config);
+                        }
+                    } else {
+                        if (host.equals(config.getOriginalHost())) {
+                            return result(context, config);
+                        }
+                    }
+                }
+                if (udsPath != null && config.getOriginalUdsPath() != null && udsPath.equals(config.getOriginalUdsPath())) {
+                    return result(context, config);
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            ErrorLogCollector.collect(DefaultUpstreamAddrConverter.class, "DefaultUpstreamAddrConverter convert error", e);
+            return null;
+        }
+    }
+
+    private UpstreamAddrConverterResult result(UpstreamAddrConverterContext context, Config config) {
+        if (config.getTargetHost() != null) {
+            if (SocketChannel.class.isAssignableFrom(context.getChannelClass())) {
+                return new UpstreamAddrConverterResult(config.getTargetHost(), null, context.getChannelClass(), ChannelType.tcp);
+            }
+            Class<? extends Channel> socketChannel = null;
+            if (context.getEventLoop().parent() instanceof EpollEventLoopGroup) {
+                socketChannel = EpollSocketChannel.class;
+            } else if (context.getEventLoop().parent() instanceof KQueueEventLoopGroup) {
+                socketChannel = KQueueSocketChannel.class;
+            } else if (context.getEventLoop().parent() instanceof IOUringEventLoopGroup) {
+                socketChannel = IOUringSocketChannel.class;
+            } else if (context.getEventLoop().parent() instanceof NioEventLoopGroup) {
+                socketChannel = NioSocketChannel.class;
+            }
+            if (socketChannel != null) {
+                return new UpstreamAddrConverterResult(config.getTargetHost(), null, socketChannel, ChannelType.tcp);
+            }
+        }
+        if (config.getTargetUdsPath() != null) {
+            if (context.getEventLoop().parent() instanceof EpollEventLoopGroup) {
+                return new UpstreamAddrConverterResult(null, config.getTargetUdsPath(), EpollDomainSocketChannel.class, ChannelType.uds);
+            } else if (context.getEventLoop().parent() instanceof KQueueEventLoopGroup) {
+                return new UpstreamAddrConverterResult(null, config.getTargetUdsPath(), KQueueDomainSocketChannel.class, ChannelType.uds);
+            }
+        }
+        return null;
+    }
+
+    private void reloadConfig() {
+        try {
+            String string = ProxyDynamicConf.getString("upstream.addr.converter.config", null);
+            if (string != null) {
+                configList = JSONArray.parseArray(string, Config.class);
+            } else {
+                configList = new ArrayList<>();
+            }
+            String currentHost = ProxyDynamicConf.getString("current.proxy.host", null);
+            if (currentHost == null) {
+                InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress();
+                if (inetAddress != null) {
+                    currentHost = inetAddress.getHostAddress();
+                }
+            }
+            this.currentHost = currentHost;
+        } catch (Exception e) {
+            logger.error("reload upstream addr converter config error", e);
+        }
+    }
+
+    private static class Config {
+        private String originalHost;
+        private String originalUdsPath;
+        private String targetHost;
+        private String targetUdsPath;
+
+        public String getOriginalHost() {
+            return originalHost;
+        }
+
+        public void setOriginalHost(String originalHost) {
+            this.originalHost = originalHost;
+        }
+
+        public String getOriginalUdsPath() {
+            return originalUdsPath;
+        }
+
+        public void setOriginalUdsPath(String originalUdsPath) {
+            this.originalUdsPath = originalUdsPath;
+        }
+
+        public String getTargetHost() {
+            return targetHost;
+        }
+
+        public void setTargetHost(String targetHost) {
+            this.targetHost = targetHost;
+        }
+
+        public String getTargetUdsPath() {
+            return targetUdsPath;
+        }
+
+        public void setTargetUdsPath(String targetUdsPath) {
+            this.targetUdsPath = targetUdsPath;
+        }
+    }
+}

@@ -17,8 +17,8 @@ camellia-redis-proxy:
     boss-thread: 1 #default 1
     work-thread: -1 #default -1, means work thread equals to cpu-num, generally, it is optimal
     so-backlog: 1024 #default 1024
-    so-sndbuf: 10485760 #default 10M
-    so-rcvbuf: 10485760 #default 10M
+    so-sndbuf: 6291456 #default 6M
+    so-rcvbuf: 6291456 #default 6M
     write-buffer-water-mark-low: 131072 #default 128k
     write-buffer-water-mark-high: 524288 #default 512k
     #you should set reader-idle-time-seconds/writer-idle-time-seconds/all-idle-time-seconds >= 0 to enable idle check

@@ -317,6 +317,7 @@ public class CamelliaTranspondProperties {
         public int closeIdleConnectionDelaySeconds = Constants.Transpond.closeIdleConnectionDelaySeconds;//判断一个连接空闲后，再过多少秒去执行关闭操作
         private String proxyDiscoveryFactoryClassName;
         private String proxyUpstreamTlsProviderClassName = Constants.Transpond.proxyUpstreamTlsProviderClassName;
+        private String upstreamAddrConverterClassName = Constants.Transpond.upstreamAddrConverterClassName;
 
         public String getShardingFunc() {
             return shardingFunc;
@@ -428,6 +429,14 @@ public class CamelliaTranspondProperties {
 
         public void setProxyUpstreamTlsProviderClassName(String proxyUpstreamTlsProviderClassName) {
             this.proxyUpstreamTlsProviderClassName = proxyUpstreamTlsProviderClassName;
+        }
+
+        public String getUpstreamAddrConverterClassName() {
+            return upstreamAddrConverterClassName;
+        }
+
+        public void setUpstreamAddrConverterClassName(String upstreamAddrConverterClassName) {
+            this.upstreamAddrConverterClassName = upstreamAddrConverterClassName;
         }
     }
 }

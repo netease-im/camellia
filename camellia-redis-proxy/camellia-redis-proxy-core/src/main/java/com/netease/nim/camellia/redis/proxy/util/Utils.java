@@ -329,7 +329,7 @@ public class Utils {
         }
     }
 
-    public static Class<? extends Channel> socketChannel(ChannelType channelType, EventLoop eventLoop) {
+    public static Class<? extends Channel> channelClass(ChannelType channelType, EventLoop eventLoop) {
         EventLoopGroup parent = eventLoop.parent();
         if (channelType == ChannelType.tcp) {
             if (parent instanceof EpollEventLoopGroup) {

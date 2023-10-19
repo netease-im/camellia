@@ -44,6 +44,8 @@ public class RedisConnectionConfig {
 
     private Resource resource;
 
+    private UpstreamAddrConverter upstreamHostConverter;
+
     public String getHost() {
         return host;
     }
@@ -250,5 +252,13 @@ public class RedisConnectionConfig {
 
     public void setResource(Resource resource) {
         this.resource = resource;
+    }
+
+    public UpstreamAddrConverter getUpstreamHostConverter() {
+        return upstreamHostConverter;
+    }
+
+    public void setUpstreamHostConverter(UpstreamAddrConverter upstreamHostConverter) {
+        this.upstreamHostConverter = upstreamHostConverter;
     }
 }
