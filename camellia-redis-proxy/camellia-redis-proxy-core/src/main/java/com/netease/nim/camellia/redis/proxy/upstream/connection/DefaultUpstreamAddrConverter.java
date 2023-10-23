@@ -55,13 +55,25 @@ public class DefaultUpstreamAddrConverter implements UpstreamAddrConverter {
             String udsPath = context.getUdsPath();
             for (Config config : configList) {
                 if (host != null && config.getOriginalHost() != null) {
-                    if (config.getOriginalHost().equals(CURRENT_HOST)) {
-                        if (host.equals(currentHost)) {
-                            return result(context, config);
+                    if (config.getOriginalPort() <= 0) {
+                        if (config.getOriginalHost().equals(CURRENT_HOST)) {
+                            if (host.equals(currentHost)) {
+                                return result(context, config);
+                            }
+                        } else {
+                            if (host.equals(config.getOriginalHost())) {
+                                return result(context, config);
+                            }
                         }
                     } else {
-                        if (host.equals(config.getOriginalHost())) {
-                            return result(context, config);
+                        if (config.getOriginalHost().equals(CURRENT_HOST) && config.getOriginalPort() == context.getPort()) {
+                            if (host.equals(currentHost)) {
+                                return result(context, config);
+                            }
+                        } else {
+                            if (host.equals(config.getOriginalHost()) && config.getOriginalPort() == context.getPort()) {
+                                return result(context, config);
+                            }
                         }
                     }
                 }
@@ -79,7 +91,7 @@ public class DefaultUpstreamAddrConverter implements UpstreamAddrConverter {
     private UpstreamAddrConverterResult result(UpstreamAddrConverterContext context, Config config) {
         if (config.getTargetHost() != null) {
             if (SocketChannel.class.isAssignableFrom(context.getChannelClass())) {
-                return new UpstreamAddrConverterResult(config.getTargetHost(), null, context.getChannelClass(), ChannelType.tcp);
+                return new UpstreamAddrConverterResult(config.getTargetHost(), config.getTargetPort(), null, context.getChannelClass(), ChannelType.tcp);
             }
             Class<? extends Channel> socketChannel = null;
             if (context.getEventLoop().parent() instanceof EpollEventLoopGroup) {
@@ -92,14 +104,14 @@ public class DefaultUpstreamAddrConverter implements UpstreamAddrConverter {
                 socketChannel = NioSocketChannel.class;
             }
             if (socketChannel != null) {
-                return new UpstreamAddrConverterResult(config.getTargetHost(), null, socketChannel, ChannelType.tcp);
+                return new UpstreamAddrConverterResult(config.getTargetHost(), config.getTargetPort(), null, socketChannel, ChannelType.tcp);
             }
         }
         if (config.getTargetUdsPath() != null) {
             if (context.getEventLoop().parent() instanceof EpollEventLoopGroup) {
-                return new UpstreamAddrConverterResult(null, config.getTargetUdsPath(), EpollDomainSocketChannel.class, ChannelType.uds);
+                return new UpstreamAddrConverterResult(null, -1, config.getTargetUdsPath(), EpollDomainSocketChannel.class, ChannelType.uds);
             } else if (context.getEventLoop().parent() instanceof KQueueEventLoopGroup) {
-                return new UpstreamAddrConverterResult(null, config.getTargetUdsPath(), KQueueDomainSocketChannel.class, ChannelType.uds);
+                return new UpstreamAddrConverterResult(null, -1, config.getTargetUdsPath(), KQueueDomainSocketChannel.class, ChannelType.uds);
             }
         }
         return null;
@@ -128,8 +140,10 @@ public class DefaultUpstreamAddrConverter implements UpstreamAddrConverter {
 
     private static class Config {
         private String originalHost;
+        private int originalPort;
         private String originalUdsPath;
         private String targetHost;
+        private int targetPort;
         private String targetUdsPath;
 
         public String getOriginalHost() {
@@ -138,6 +152,14 @@ public class DefaultUpstreamAddrConverter implements UpstreamAddrConverter {
 
         public void setOriginalHost(String originalHost) {
             this.originalHost = originalHost;
+        }
+
+        public int getOriginalPort() {
+            return originalPort;
+        }
+
+        public void setOriginalPort(int originalPort) {
+            this.originalPort = originalPort;
         }
 
         public String getOriginalUdsPath() {
@@ -154,6 +176,14 @@ public class DefaultUpstreamAddrConverter implements UpstreamAddrConverter {
 
         public void setTargetHost(String targetHost) {
             this.targetHost = targetHost;
+        }
+
+        public int getTargetPort() {
+            return targetPort;
+        }
+
+        public void setTargetPort(int targetPort) {
+            this.targetPort = targetPort;
         }
 
         public String getTargetUdsPath() {

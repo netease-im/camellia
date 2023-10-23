@@ -57,8 +57,38 @@ camellia-redis-proxy:
 
 ```properties
 upstream.addr.converter.enable=true
-upstream.addr.converter.config=[{"originalHost": "@CurrentHost@", "targetUdsPath": "/Users/caojiajun/temp/redis.sock"}]
+upstream.addr.converter.config=[{"originalHost": "@CurrentHost@", "originalPort": 6601, "targetUdsPath": "/Users/caojiajun/temp/redis.sock"}]
 ```
 
 假设proxy部署在10.189.31.13这个节点上，则proxy访问本机的redis-server会走uds，而不是走10.189.31.13
+
+
+#### 允许的配置字段
+```java
+private static class Config {
+    private String originalHost;
+    private int originalPort;
+    private String originalUdsPath;
+    private String targetHost;
+    private int targetPort;
+    private String targetUdsPath;
+}
+```
+
+匹配：  
+* 如果originalPort大于0，先匹配originalHost+originalPort
+* 如果originalPort缺失或者小于等于0，则只匹配originalHost
+* 如果originalHost为空，则匹配originalUdsPath
+
+备注：如果originalHost为特殊的@CurrentHost@字符串，则会检查originalHost会使用本机ip去匹配  
+本机ip默认自动获取，如果要手动指定，则可以配置：    
+```properties
+current.proxy.host=10.189.31.13
+```
+
+返回：  
+* 如果targetHost不为空，targetPort大于等于0，则替换为targetHost+targetPort
+* 如果targetHost不为空，targetPort缺失或者小于等于0，则替换为targetHost+originalPort
+* 如果targetHost为空，则替换为targetUdsPath
+* 否则，保持不变
 

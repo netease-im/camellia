@@ -15,12 +15,14 @@ public interface UpstreamAddrConverter {
 
     public static class UpstreamAddrConverterResult {
         private final String host;
+        private final int port;
         private final String udsPath;
         private final Class<? extends Channel> channelClass;
         private final ChannelType channelType;
 
-        public UpstreamAddrConverterResult(String host, String udsPath, Class<? extends Channel> socketChannel, ChannelType channelType) {
+        public UpstreamAddrConverterResult(String host, int port, String udsPath, Class<? extends Channel> socketChannel, ChannelType channelType) {
             this.host = host;
+            this.port = port;
             this.udsPath = udsPath;
             this.channelClass = socketChannel;
             this.channelType = channelType;
@@ -28,6 +30,10 @@ public interface UpstreamAddrConverter {
 
         public String getHost() {
             return host;
+        }
+
+        public int getPort() {
+            return port;
         }
 
         public String getUdsPath() {
@@ -45,12 +51,14 @@ public interface UpstreamAddrConverter {
 
     public static class UpstreamAddrConverterContext {
         private final String host;
+        private final int port;
         private final String udsPath;
         private final EventLoop eventLoop;
         private final Class<? extends Channel> channelClass;
 
-        public UpstreamAddrConverterContext(String host, String udsPath, EventLoop eventLoop, Class<? extends Channel> channelClass) {
+        public UpstreamAddrConverterContext(String host, int port, String udsPath, EventLoop eventLoop, Class<? extends Channel> channelClass) {
             this.host = host;
+            this.port = port;
             this.udsPath = udsPath;
             this.eventLoop = eventLoop;
             this.channelClass = channelClass;
@@ -58,6 +66,10 @@ public interface UpstreamAddrConverter {
 
         public String getHost() {
             return host;
+        }
+
+        public int getPort() {
+            return port;
         }
 
         public String getUdsPath() {

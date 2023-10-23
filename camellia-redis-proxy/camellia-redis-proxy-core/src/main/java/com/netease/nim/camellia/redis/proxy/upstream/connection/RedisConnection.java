@@ -129,17 +129,26 @@ public class RedisConnection {
                 return;
             }
             String host = this.host;
+            int port = this.port;
             String udsPath = this.udsPath;
             UpstreamAddrConverter upstreamHostConverter = config.getUpstreamHostConverter();
             if (upstreamHostConverter != null) {
-                UpstreamAddrConverter.UpstreamAddrConverterContext context = new UpstreamAddrConverter.UpstreamAddrConverterContext(host, udsPath, eventLoop, channelClass);
+                UpstreamAddrConverter.UpstreamAddrConverterContext context = new UpstreamAddrConverter.UpstreamAddrConverterContext(host, port, udsPath, eventLoop, channelClass);
                 UpstreamAddrConverter.UpstreamAddrConverterResult result = upstreamHostConverter.convert(context);
                 if (result != null) {
-                    logger.info("upstream addr convert, old.host = {}, new.host = {}, old.udsPath = {}, new.udsPath = {}, old.socketChannel = {}, new.socketChannel = {}, old.channelType = {}, new.channelType = {}",
-                            host, result.getHost(), udsPath, result.getUdsPath(), channelClass.getSimpleName(),
+                    logger.info("upstream addr convert, old.host = {}, new.host = {}, old.port = {}, new.port = {}," +
+                                    " old.udsPath = {}, new.udsPath = {}, old.socketChannel = {}, new.socketChannel = {}, old.channelType = {}, new.channelType = {}",
+                            host, result.getHost(), udsPath, result.getUdsPath(), port, result.getPort(), channelClass.getSimpleName(),
                             result.getChannelClass().getSimpleName(), channelType, result.getChannelType());
-                    host = result.getHost();
-                    udsPath = result.getUdsPath();
+                    if (result.getHost() != null) {
+                        host = result.getHost();
+                    }
+                    if (result.getPort() > 0) {
+                        port = result.getPort();
+                    }
+                    if (result.getUdsPath() != null) {
+                        udsPath = result.getUdsPath();
+                    }
                     channelClass = result.getChannelClass();
                     channelType = result.getChannelType();
                 }
