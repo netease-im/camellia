@@ -1,8 +1,12 @@
 package com.netease.nim.camellia.feign.conf;
 
 import com.netease.nim.camellia.core.conf.CamelliaConfig;
+import com.netease.nim.camellia.core.discovery.CamelliaServerSelector;
+import com.netease.nim.camellia.core.discovery.HashCamelliaServerSelector;
+import com.netease.nim.camellia.core.discovery.RandomCamelliaServerSelector;
 import com.netease.nim.camellia.feign.client.DynamicOption;
 import com.netease.nim.camellia.feign.client.DynamicRouteConfGetter;
+import com.netease.nim.camellia.feign.resource.FeignResource;
 import com.netease.nim.camellia.tools.circuitbreaker.CircuitBreakerConfig;
 
 import java.util.concurrent.TimeUnit;
@@ -34,10 +38,22 @@ public class DynamicCamelliaFeignDynamicOptionGetter implements CamelliaFeignDyn
         circuitBreakerConfig.setRequestVolumeThreshold(() -> globalConfig.getLong(bid, bgroup, "circuit.request.volume.threshold", 20L));
         circuitBreakerConfig.setSingleTestIntervalMillis(() -> globalConfig.getLong(bid, bgroup, "circuit.single.test.interval.millis", 5000L));
         circuitBreakerConfig.setLogEnable(() -> globalConfig.getBoolean(bid, bgroup, "circuit.log.enable", true));
+
+        String string = globalConfig.getString(bid + ".server.selector.policy", "random");
+        CamelliaServerSelector<FeignResource> serverSelector;
+        if (string.equalsIgnoreCase("random")) {
+            serverSelector = new RandomCamelliaServerSelector<>();
+        } else if (string.equalsIgnoreCase("hash")) {
+            serverSelector = new HashCamelliaServerSelector<>();
+        } else {
+            serverSelector = new RandomCamelliaServerSelector<>();
+        }
+
         return new DynamicOption.Builder()
                 .readTimeout(() -> globalConfig.getLong(bid, bgroup, "readTimeout", 3000L), () -> TimeUnit.MILLISECONDS)
                 .connectTimeout(() -> globalConfig.getLong(bid, bgroup, "connectTimeout", 3000L), () -> TimeUnit.MILLISECONDS)
                 .circuitBreakerConfig(circuitBreakerConfig)
+                .serverSelector(serverSelector)
                 .build();
     }
 
