@@ -34,7 +34,7 @@ tar zcvf redis-proxy.tar.gz ./redis-proxy
 
 ### 5、配置etcd
 
-* 把3中的redis-proxy.tar.gz解压，修改`./BOOT-INF/lib`目录下的配置文件
+* 把3中的redis-proxy.tar.gz解压，修改`./BOOT-INF/classes`目录下的配置文件
 * 修改`./BOOT-INF/classes/logback.xml`，可以参考logback-sample.xml，修改LOG_HOME即可，也可以不修改（则日志会输出到控制台）
 * 修改`./BOOT-INF/classes/application.yml`，添加etcd配置
 
