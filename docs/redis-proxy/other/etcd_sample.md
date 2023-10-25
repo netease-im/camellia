@@ -125,4 +125,12 @@ json示例：
 
 ### 7、启动proxy
 
-调用`./start.sh`依次启动所有proxy节点即可
+调用`./start.sh`依次启动所有proxy节点即可  
+
+如果是jdk17/jdk21，则需要修改start.sh
+```shell
+java -XX:+UseG1GC --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.math=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.security=ALL-UNNAMED --add-opens java.base/java.text=ALL-UNNAMED --add-opens java.base/java.time=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/jdk.internal.access=ALL-UNNAMED --add-opens java.base/jdk.internal.misc=ALL-UNNAMED --add-opens java.base/sun.net.util=ALL-UNNAMED -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher
+```
+
+`-XX:+UseG1GC` 表示gc策略，建议使用G1，如果是jdk17/jdk21，也可以使用`-XX:+UseZGC `
+`-Xms4096m -Xmx4096m` 表示内存大小，建议配置成一样的
