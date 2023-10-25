@@ -2,12 +2,13 @@
 
 ## 使用etcd管理并启动proxy的一个完整示例
 
-示例说明：
+### 0、示例背景
 * 需要使用etcd管理proxy配置
-* 使用使用proxy的双写功能
+* 使用proxy的双写功能
 * 使用proxy的伪集群模式
 
 ### 1. 安装etcd
+参考：[etcd](https://github.com/etcd-io/etcd)
 
 ### 2、下载camellia-redis-proxy
 参考：[quick_start](../quickstart/quick-start-package.md)
