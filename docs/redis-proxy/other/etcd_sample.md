@@ -11,9 +11,9 @@
 如已经安装则跳过
 
 ### 2、安装maven
-如已经安装则跳过
+参考：[etcd](https://github.com/apache/maven)
 
-### 3. 安装etcd
+### 3、安装etcd
 参考：[etcd](https://github.com/etcd-io/etcd)
 
 ### 4、编译camellia-redis-proxy-etcd-bootstrap并打包
