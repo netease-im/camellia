@@ -1,11 +1,11 @@
 [中文版](update-zh.md)
 
-# 1.2.18（2023/10/xx）
+# 1.2.18（2023/10/25）
 ### add
 * camellia-redis-proxy support custom UpstreamAddrConverter, so you can modify upstream redis addr, a typical use case is if proxy and redis are deployed on the same machine, access local node using uds or 127.0.0.1, other nodes using lan ip
 
 ### update
-* none
+* camellia-feign，DynamicCamelliaFeignDynamicOptionGetter support configure load balance policy
 
 ### fix
 * none

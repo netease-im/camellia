@@ -4,19 +4,19 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-hot-key-server</artifactId>
-	<version>1.2.18-SNAPSHOT</version>
+	<version>1.2.18</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-hot-key</artifactId>
-		<version>1.2.18-SNAPSHOT</version>
+		<version>1.2.18</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-hot-key-common</artifactId>
-			<version>1.2.18-SNAPSHOT</version>
+			<version>1.2.18</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jctools</groupId>
@@ -26,17 +26,17 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis</artifactId>
-			<version>1.2.18-SNAPSHOT</version>
+			<version>1.2.18</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-toolkit</artifactId>
-			<version>1.2.18-SNAPSHOT</version>
+			<version>1.2.18</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-http-console</artifactId>
-			<version>1.2.18-SNAPSHOT</version>
+			<version>1.2.18</version>
 		</dependency>
     </dependencies>
 	<build>

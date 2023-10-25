@@ -1,11 +1,11 @@
 [ENGLISH](update-en.md)
 
-# 1.2.18（2023/10/xx）
+# 1.2.18（2023/10/25）
 ### 新增
-* camellia-redis-proxy支持自定义UpstreamAddrConverter，从而可以窜改后端地址(ip或者udsPath)，一个典型应用场景是如果proxy和redis混部在同一组机器上，访问本机节点使用uds或者127.0.0.1加速访问，访问非本机节点则使用局域网ip
+* camellia-redis-proxy支持自定义UpstreamAddrConverter，从而可以篡改后端地址(ip或者udsPath)，一个典型应用场景是如果proxy和redis混部在同一组机器上，访问本机节点使用uds或者127.0.0.1加速访问，访问非本机节点则使用局域网ip
 
 ### 更新
-* 无
+* camellia-feign，DynamicCamelliaFeignDynamicOptionGetter支持设置负载均衡策略
 
 ### fix
 * 无

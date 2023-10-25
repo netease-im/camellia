@@ -5,14 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>camellia-delay-queue-spring-boot-starters</artifactId>
-    <version>1.2.18-SNAPSHOT</version>
+    <version>1.2.18</version>
 
     <packaging>pom</packaging>
 
     <parent>
         <groupId>com.netease.nim</groupId>
         <artifactId>camellia-delay-queue</artifactId>
-        <version>1.2.18-SNAPSHOT</version>
+        <version>1.2.18</version>
     </parent>
 
     <modules>
