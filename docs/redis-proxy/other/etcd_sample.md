@@ -11,7 +11,7 @@
 如已经安装则跳过
 
 ### 2、安装maven
-参考：[etcd](https://github.com/apache/maven)
+参考：[maven](https://github.com/apache/maven)
 
 ### 3、安装etcd
 参考：[etcd](https://github.com/etcd-io/etcd)
