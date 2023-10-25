@@ -103,7 +103,7 @@ json示例：
 * proxy.cluster.mode.nodes表示proxy的节点列表
 * multi.tenant.route.config表示路由配置，是一个数组，可以配置多个路由，通过不同的密码区分
 * name表示路由名称，不得重复
-* password表示密码，用于区分不同的路由
+* password表示密码，用于区分不同的路由，不得重复
 * route表示路由规则，示例中表达了一个简单的双写规则
 
 其他路由配置方式，可以参考：[complex](../auth/complex.md) 和 [redis-resource](../auth/redis-resources.md)
