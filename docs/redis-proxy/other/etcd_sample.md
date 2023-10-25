@@ -107,6 +107,9 @@ json示例：
 
 其他路由配置方式，可以参考：[complex](../auth/complex.md) 和 [redis-resource](../auth/redis-resources.md)
 
+一个etcd的配置截图（使用了etcd-manager这个ui工具）：     
+<img src="etcd.jpg" width="100%" height="100%">
+
 ### 6、启动proxy
 
 调用`./start.sh`依次启动所有proxy节点即可
