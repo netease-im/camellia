@@ -1,0 +1,30 @@
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  console-port: 16379
+  #  monitor-enable: false
+  #  monitor-interval-seconds: 60
+  client-auth-provider-class-name: com.netease.nim.camellia.redis.proxy.auth.MultiTenantClientAuthProvider
+  cluster-mode-enable: true #cluster-mode，把proxy伪装成cluster
+  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.config.etcd.EtcdProxyDynamicConfLoader
+  config:
+    "etcd.target": "ip:///etcd0:2379,etcd1:2379,etcd2:2379"
+    #    "etcd.endpoints": "http://etcd0:2379,http://etcd1:2379,http://etcd2:2379" #etcd.target和etcd.endpoints二选一，优先使用etcd.target
+    #    "etcd.user": "xx"
+    #    "etcd.password": "xx"
+    #    "etcd.namespace": "xx"
+    #    "etcd.authority": "xx"
+    "etcd.config.key": "/xx/xxx"
+    "etcd.config.type": "json" #也可以配置为json/properties
+  #  plugins: #引入哪些插件，内建的插件可以用别名，自定义插件用全类名
+  #    - monitorPlugin
+  #    - bigKeyPlugin
+  #    - hotKeyPlugin
+  transpond:
+    type: custom
+    custom:
+      proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.MultiTenantProxyRouteConfUpdater

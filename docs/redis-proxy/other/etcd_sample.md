@@ -7,24 +7,36 @@
 * 使用proxy的双写功能
 * 使用proxy的伪集群模式
 
-### 1. 安装etcd
+### 1、安装java（jdk8+）
+如已经安装则跳过
+
+### 2、安装maven
+如已经安装则跳过
+
+### 3. 安装etcd
 参考：[etcd](https://github.com/etcd-io/etcd)
 
-### 2、下载camellia-redis-proxy
-参考：[quick_start](../quickstart/quick-start-package.md)
-
-### 3、下载camellia-redis-proxy-config-etcd
-
+### 4、编译camellia-redis-proxy-etcd-bootstrap并打包
+```shell
+git clone https://github.com/netease-im/camellia.git
+cd camellia
+mvn clean package
+cp camellia-redis-proxy/camellia-redis-proxy-etcd-bootstrap/target/xxx.jar /yourdict/redis-proxy/xxx.jar
+cd /yourdict/redis-proxy
+jar xvf xxx.jar
+rm -rf xxx.jar
+touch start.sh
+echo "java -XX:+UseG1GC -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher" > start.sh
+chmod +x start.sh
+cd ..
+tar zcvf redis-proxy.tar.gz ./redis-proxy
 ```
-wget https://repo1.maven.org/maven2/com/netease/nim/camellia-redis-proxy-config-etcd/1.2.18/camellia-redis-proxy-config-etcd-1.2.18.jar
-```
 
-### 4、配置etcd
+### 5、配置etcd
 
-* 把3中的camellia-redis-proxy-config-etcd-1.2.18.jar复制到camellia-redis-proxy的`./BOOT-INF/lib`目录下
+* 把3中的redis-proxy.tar.gz解压，修改`./BOOT-INF/lib`目录下的配置文件
 * 修改`./BOOT-INF/classes/logback.xml`，可以参考logback-sample.xml，修改LOG_HOME即可，也可以不修改（则日志会输出到控制台）
 * 修改`./BOOT-INF/classes/application.yml`，添加etcd配置
-* 其他配置文件均可以删除（因为我们使用etcd管理配置，所以不需要其他配置文件）
 
 必填项：  
 * etcd.target和etcd.endpoints二选一
@@ -65,7 +77,7 @@ camellia-redis-proxy:
       proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.MultiTenantProxyRouteConfUpdater
 ```
 
-### 5、在etcd中配置路由
+### 6、在etcd中配置路由
 
 json示例：
 ```json
@@ -111,6 +123,6 @@ json示例：
 一个etcd的配置截图（使用了etcd-manager这个ui工具）：     
 <img src="etcd.jpg" width="100%" height="100%">
 
-### 6、启动proxy
+### 7、启动proxy
 
 调用`./start.sh`依次启动所有proxy节点即可
