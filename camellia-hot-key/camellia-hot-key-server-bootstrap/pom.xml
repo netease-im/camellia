@@ -4,19 +4,19 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-hot-key-server-bootstrap</artifactId>
-	<version>1.2.18</version>
+	<version>1.2.19-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-hot-key</artifactId>
-		<version>1.2.18</version>
+		<version>1.2.19-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-hot-key-server-spring-boot-starter</artifactId>
-			<version>1.2.18</version>
+			<version>1.2.19-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>
