@@ -32,7 +32,7 @@ cd ..
 tar zcvf redis-proxy.tar.gz ./redis-proxy
 ```
 
-### 5、配置etcd
+### 5、配置nacos
 
 * 把`redis-proxy.tar.gz`解压，修改`./BOOT-INF/classes`目录下的配置文件
 * 修改`./BOOT-INF/classes/logback.xml`，可以参考logback-sample.xml去覆盖logback.xml，修改LOG_HOME即可（默认的logback.xml是标准输出）
@@ -74,7 +74,7 @@ camellia-redis-proxy:
       proxy-route-conf-updater-class-name: com.netease.nim.camellia.redis.proxy.route.MultiTenantProxyRouteConfUpdater
 ```
 
-### 6、在etcd中配置路由
+### 6、在nacos中配置路由
 
 json示例：
 ```json
