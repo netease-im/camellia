@@ -2,7 +2,6 @@ package com.netease.nim.camellia.hot.key.sdk.samples;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 

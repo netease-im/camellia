@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.hot.key.sdk.samples;
 
-import com.netease.nim.camellia.hot.key.extensions.discovery.zk.ZkHotKeyServerDiscovery;
 import com.netease.nim.camellia.hot.key.sdk.CamelliaHotKeyMonitorSdk;
 import com.netease.nim.camellia.hot.key.sdk.CamelliaHotKeySdk;
 import com.netease.nim.camellia.hot.key.sdk.conf.CamelliaHotKeyMonitorSdkConfig;

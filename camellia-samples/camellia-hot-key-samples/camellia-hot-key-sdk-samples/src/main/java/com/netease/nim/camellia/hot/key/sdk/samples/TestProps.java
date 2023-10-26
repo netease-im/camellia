@@ -5,7 +5,6 @@ import org.bouncycastle.util.encoders.Hex;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.UUID;
 
 /**
  * Created by caojiajun on 2023/7/27
