@@ -1,9 +1,9 @@
 
 
-## 使用etcd管理并启动proxy的一个完整示例
+## 使用nacos管理并启动proxy的一个完整示例
 
 ### 0、示例背景
-* 需要使用etcd管理proxy配置
+* 需要使用nacos管理proxy配置
 * 使用proxy的双写功能
 * 使用proxy的伪集群模式
 
@@ -13,15 +13,15 @@
 ### 2、安装maven
 参考：[maven](https://github.com/apache/maven)
 
-### 3、安装etcd
-参考：[etcd](https://github.com/etcd-io/etcd)
+### 3、安装nacos
+参考：[nacos](https://github.com/alibaba/nacos)
 
-### 4、编译camellia-redis-proxy-etcd-bootstrap并打包
+### 4、编译camellia-redis-proxy-nacos-bootstrap并打包
 ```shell
 git clone https://github.com/netease-im/camellia.git
 cd camellia
 mvn clean package
-cp camellia-redis-proxy/camellia-redis-proxy-etcd-bootstrap/target/xxx.jar /yourdict/redis-proxy/xxx.jar
+cp camellia-redis-proxy/camellia-redis-proxy-nacos-bootstrap/target/xxx.jar /yourdict/redis-proxy/xxx.jar
 cd /yourdict/redis-proxy
 jar xvf xxx.jar
 rm -rf xxx.jar
@@ -39,9 +39,10 @@ tar zcvf redis-proxy.tar.gz ./redis-proxy
 * 修改`./BOOT-INF/classes/application.yml`，添加etcd配置
 
 必填项：  
-* etcd.target和etcd.endpoints二选一
-* etcd.config.key，表示从etcd中获取配置的路径
-* etcd.config.type，配置类型，建议json（也支持properties）
+* nacos.serverAddr nacos服务器地址串
+* nacos.dataId，表示配置的dataId，dataId+group标识一个配置文件
+* nacos.group，表示配置的group，dataId+group标识一个配置文件
+* nacos.config.type，配置类型，建议json（也支持properties）
 
 
 ```yml
@@ -52,22 +53,17 @@ spring:
     name: camellia-redis-proxy-server
 
 camellia-redis-proxy:
-  console-port: 16379 #http-console的端口，可以做上下线操作，也可以获取监控数据
+  console-port: 16379
 #  monitor-enable: false
 #  monitor-interval-seconds: 60
   client-auth-provider-class-name: com.netease.nim.camellia.redis.proxy.auth.MultiTenantClientAuthProvider
   cluster-mode-enable: true #cluster-mode，把proxy伪装成cluster
-  cport: 16380 #cluster-mode下proxy之间互相心跳的端口，默认是port+10000
-  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.config.etcd.EtcdProxyDynamicConfLoader
+  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.config.nacos.NacosProxyDynamicConfLoader
   config:
-    "etcd.target": "ip:///etcd0:2379,etcd1:2379,etcd2:2379"
-#    "etcd.endpoints": "http://etcd0:2379,http://etcd1:2379,http://etcd2:2379" #etcd.target和etcd.endpoints二选一，优先使用etcd.target
-#    "etcd.user": "xx"
-#    "etcd.password": "xx"
-#    "etcd.namespace": "xx"
-#    "etcd.authority": "xx"
-    "etcd.config.key": "/xx/xxx"
-    "etcd.config.type": "json" #也可以配置为json/properties
+    "nacos.serverAddr": "127.0.0.1:8848"
+    "nacos.dataId": "xxx"
+    "nacos.group": "xxx"
+    "nacos.config.type": "json" #也可以配置为json/properties
 #  plugins: #引入哪些插件，内建的插件可以用别名，自定义插件用全类名
 #    - monitorPlugin
 #    - bigKeyPlugin
@@ -121,8 +117,8 @@ json示例：
 
 其他路由配置方式，可以参考：[complex](../auth/complex.md) 和 [redis-resource](../auth/redis-resources.md)
 
-一个etcd的配置截图（使用了etcd-manager这个ui工具）：     
-<img src="etcd.jpg" width="100%" height="100%">
+一个etcd的配置截图：       
+<img src="nacos.png" width="100%" height="100%">
 
 ### 7、启动proxy
 

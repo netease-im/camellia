@@ -19,5 +19,6 @@
 		<module>camellia-redis-proxy-spring-boot-starters</module>
 		<module>camellia-redis-proxy-bootstrap</module>
 		<module>camellia-redis-proxy-etcd-bootstrap</module>
+		<module>camellia-redis-proxy-nacos-bootstrap</module>
     </modules>
 </project>
