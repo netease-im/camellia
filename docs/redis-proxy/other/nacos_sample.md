@@ -117,7 +117,7 @@ json示例：
 
 其他路由配置方式，可以参考：[complex](../auth/complex.md) 和 [redis-resource](../auth/redis-resources.md)
 
-一个etcd的配置截图：       
+一个nacos的配置截图：       
 <img src="nacos.png" width="100%" height="100%">
 
 ### 7、启动proxy
