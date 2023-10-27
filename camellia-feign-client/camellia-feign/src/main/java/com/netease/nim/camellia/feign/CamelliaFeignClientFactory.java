@@ -42,6 +42,7 @@ public class CamelliaFeignClientFactory {
         this.camelliaApi = camelliaApi;
         this.checkIntervalMillis = checkIntervalMillis;
         this.dynamicOptionGetter = dynamicOptionGetter;
+        GlobalCamelliaFeignEnv.register(dynamicOptionGetter);
     }
 
     public CamelliaFeignClientFactory(CamelliaFeignEnv feignEnv, CamelliaApi camelliaApi) {

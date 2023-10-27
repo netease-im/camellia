@@ -101,6 +101,7 @@ public class FeignCallback<T> implements MethodInterceptor {
                 Resource resource = FeignResourceUtils.parseResourceByUrl(r);
                 if (resource instanceof FeignResource) {
                     pool = new SimpleResourcePool((FeignResource) resource);
+                    GlobalCamelliaFeignEnv.register(resource, serverSelector, Collections.singletonList(pool.getResource(null)));
                 } else if (resource instanceof FeignDiscoveryResource) {
                     CamelliaDiscovery<FeignServerInfo> discovery = feignEnv.getDiscoveryFactory().getDiscovery(((FeignDiscoveryResource) resource).getServiceName());
                     CamelliaServerHealthChecker<FeignServerInfo> healthChecker = feignEnv.getHealthChecker();
@@ -121,6 +122,7 @@ public class FeignCallback<T> implements MethodInterceptor {
                 }
             }
             this.resourceSelector = new ResourceSelector(resourceTable, feignEnv.getProxyEnv());
+            GlobalCamelliaFeignEnv.register(bid, bgroup, apiType, resourceSelector);
         } catch (Exception e) {
             logger.error("refresh error, class = {}", apiType.getName(), e);
             if (throwError) {

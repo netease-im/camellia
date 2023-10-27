@@ -6,7 +6,7 @@ import com.netease.nim.camellia.core.util.ResourceUtil;
  *
  * Created by caojiajun on 2019/11/7.
  */
-public class Resource {
+public class Resource implements Comparable<Resource> {
     private String url;
 
     public Resource() {
@@ -37,5 +37,10 @@ public class Resource {
     @Override
     public String toString() {
         return url;
+    }
+
+    @Override
+    public int compareTo(Resource o) {
+        return ResourceUtil.resourceCompare(this, o);
     }
 }

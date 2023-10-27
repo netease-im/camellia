@@ -2,6 +2,7 @@ package com.netease.nim.camellia.feign.discovery;
 
 import com.netease.nim.camellia.feign.resource.FeignResource;
 
+
 /**
  * Created by caojiajun on 2022/3/1
  */
@@ -11,6 +12,7 @@ public class SimpleResourcePool implements FeignResourcePool {
 
     public SimpleResourcePool(FeignResource feignResource) {
         this.feignResource = feignResource;
+
     }
 
     @Override

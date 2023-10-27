@@ -15,6 +15,18 @@ import java.util.*;
  */
 public class ResourceUtil {
 
+    public static int resourceCompare(Resource resource1, Resource resource2) {
+        String url1 = resource1 == null ? "" : resource1.getUrl();
+        if (url1 == null) {
+            url1 = "";
+        }
+        String url2 = resource2 == null ? "" : resource2.getUrl();
+        if (url2 == null) {
+            url2 = "";
+        }
+        return url1.compareTo(url2);
+    }
+
     public static int resourceHashCode(Resource resource) {
         if (resource == null) return 0;
         if (resource.getUrl() == null) return 0;
