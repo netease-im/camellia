@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * 只有全局仅有一个CamelliaFeignClientFactory实例的情况下，才能使用该类
  * Created by caojiajun on 2023/10/26
  */
 public class GlobalCamelliaFeignEnv {
@@ -82,21 +83,33 @@ public class GlobalCamelliaFeignEnv {
     }
 
     public static void register(CamelliaFeignDynamicOptionGetter dynamicOptionGetter) {
-        if (GlobalCamelliaFeignEnv.dynamicOptionGetter != null) {
-            logger.warn("GlobalCamelliaFeignEnv already registered");
-            return;
+        try {
+            if (GlobalCamelliaFeignEnv.dynamicOptionGetter != null) {
+                logger.warn("GlobalCamelliaFeignEnv already registered");
+                return;
+            }
+            GlobalCamelliaFeignEnv.dynamicOptionGetter = dynamicOptionGetter;
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
-        GlobalCamelliaFeignEnv.dynamicOptionGetter = dynamicOptionGetter;
     }
 
     public static void register(Long bid, String bgroup, Class<?> apiType, ResourceSelector resourceSelector) {
-        String key = bid + "|" + bgroup + "|" + apiType.getName();
-        resourceSelectorMap.put(key, resourceSelector);
+        try {
+            String key = bid + "|" + bgroup + "|" + apiType.getName();
+            resourceSelectorMap.put(key, resourceSelector);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     public static void register(Resource resource, CamelliaServerSelector<FeignResource> serverSelector, List<FeignResource> resourceList) {
-        SelectorInfo selectorInfo = new SelectorInfo(serverSelector, resourceList);
-        selectorInfoMap.put(resource.getUrl(), selectorInfo);
+        try {
+            SelectorInfo selectorInfo = new SelectorInfo(serverSelector, resourceList);
+            selectorInfoMap.put(resource.getUrl(), selectorInfo);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     private static long code(Resource resource, int code) {

@@ -1,5 +1,18 @@
 [ENGLISH](update-en.md)
 
+# 1.2.19（2023/10/xx）
+### 新增
+* 新增camellia-redis-proxy-nacos-bootstrap，从而方便运维人员不需要进行java开发即可使用nacos管理proxy集群
+* 新增camellia-redis-proxy-etcd-bootstrap，从而方便运维人员不需要进行java开发即可使用etcd管理proxy集群
+* camelia-feign，新增GlobalCamelliaFeignEnv类，从而在使用哈希策略时，可以提前进行负载均衡计算，从而可以在调用前就知道调用的服务实例分布情况，方便进行请求合并
+
+### 更新
+* 无
+
+### fix
+* 无
+
+
 # 1.2.18（2023/10/25）
 ### 新增
 * camellia-redis-proxy支持自定义UpstreamAddrConverter，从而可以篡改后端地址(ip或者udsPath)，一个典型应用场景是如果proxy和redis混部在同一组机器上，访问本机节点使用uds或者127.0.0.1加速访问，访问非本机节点则使用局域网ip

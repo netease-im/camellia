@@ -1,5 +1,18 @@
 [中文版](update-zh.md)
 
+# 1.2.19（2023/10/xx）
+### add
+* provide camellia-redis-proxy-nacos-bootstrap, so Operations Engineer can use nacos to manager camellia-redis-proxy cluster without java development
+* provide camellia-redis-proxy-etcd-bootstrap, so Operations Engineer can use etcd to manager camellia-redis-proxy cluster without java development
+* camelia-feign, add util GlobalCamelliaFeignEnv, so you can calc load balance code before request when use hash policy
+
+### update
+* none
+
+### fix
+* none
+
+
 # 1.2.18（2023/10/25）
 ### add
 * camellia-redis-proxy support custom UpstreamAddrConverter, so you can modify upstream redis addr, a typical use case is if proxy and redis are deployed on the same machine, access local node using uds or 127.0.0.1, other nodes using lan ip
