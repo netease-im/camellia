@@ -5,6 +5,7 @@
 * 新增camellia-redis-proxy-nacos-bootstrap，从而方便运维人员不需要进行java开发即可使用nacos管理proxy集群
 * 新增camellia-redis-proxy-etcd-bootstrap，从而方便运维人员不需要进行java开发即可使用etcd管理proxy集群
 * camelia-feign，新增GlobalCamelliaFeignEnv类，从而在使用哈希策略时，可以提前进行负载均衡计算，从而可以在调用前就知道调用的服务实例分布情况，方便进行请求合并
+* camellia-redis-proxy的console新增`/shutdownUpstreamClient?resource=redis://@127.0.0.1:6379`接口，用于卸载到某个redis集群的连接
 
 ### 更新
 * 无

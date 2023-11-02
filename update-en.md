@@ -5,6 +5,7 @@
 * provide camellia-redis-proxy-nacos-bootstrap, so Operations Engineer can use nacos to manager camellia-redis-proxy cluster without java development
 * provide camellia-redis-proxy-etcd-bootstrap, so Operations Engineer can use etcd to manager camellia-redis-proxy cluster without java development
 * camelia-feign, add util GlobalCamelliaFeignEnv, so you can calc load balance code before request when use hash policy
+* camellia-redis-proxy console add api `/shutdownUpstreamClient?resource=redis://@127.0.0.1:6379`, so you can shutdown upstream client
 
 ### update
 * none

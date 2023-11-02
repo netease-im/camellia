@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.netty.ServerStatus;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -170,6 +171,24 @@ public class ConsoleServiceAdaptor implements ConsoleService {
             }
         }
         return ConsoleResult.error("param wrong");
+    }
+
+    @Override
+    public ConsoleResult shutdownUpstreamClient(Map<String, List<String>> params) {
+        List<String> list = params.get("resource");
+        if (list == null) {
+            return ConsoleResult.error("resource param missing");
+        }
+        if (list.isEmpty()) {
+            return ConsoleResult.error("illegal resource param");
+        }
+        String resource = list.get(0);
+        IUpstreamClient upstreamClient = GlobalRedisProxyEnv.getClientTemplateFactory().getEnv().getClientFactory().remove(resource);
+        if (upstreamClient == null) {
+            return ConsoleResult.error("upstream client not found, resource = " + resource);
+        }
+        upstreamClient.shutdown();
+        return ConsoleResult.success();
     }
 
     public void setServerPort(int serverPort) {
