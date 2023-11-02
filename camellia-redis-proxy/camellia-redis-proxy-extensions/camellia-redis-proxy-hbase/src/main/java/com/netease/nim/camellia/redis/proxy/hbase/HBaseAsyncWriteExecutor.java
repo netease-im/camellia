@@ -129,15 +129,17 @@ public class HBaseAsyncWriteExecutor {
                             flushDelete(deleteBuffer);
                         }
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     logger.error("hbase async write error", e);
                 }
             }
         }
 
         private void flushPuts(List<Put> putBuffer) {
+            if (putBuffer.isEmpty()) {
+                return;
+            }
             int size = putBuffer.size();
-            if (size <= 0) return;
             hBaseTemplate.put(hbaseTableName(), putBuffer);
             putBuffer.clear();
             if (logger.isDebugEnabled()) {
@@ -146,8 +148,10 @@ public class HBaseAsyncWriteExecutor {
         }
 
         private void flushDelete(List<Delete> deleteBuffer) {
+            if (deleteBuffer.isEmpty()) {
+                return;
+            }
             int size = deleteBuffer.size();
-            if (size <= 0) return;
             hBaseTemplate.delete(hbaseTableName(), deleteBuffer);
             deleteBuffer.clear();
             if (logger.isDebugEnabled()) {
