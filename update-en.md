@@ -6,6 +6,7 @@
 * provide camellia-redis-proxy-etcd-bootstrap, so Operations Engineer can use etcd to manager camellia-redis-proxy cluster without java development
 * camelia-feign, add util GlobalCamelliaFeignEnv, so you can calc load balance code before request when use hash policy
 * camellia-redis-proxy console add api `/shutdownUpstreamClient?resource=redis://@127.0.0.1:6379`, so you can shutdown upstream client
+* camellia-redis-proxy support shard-pubsub, support `SSUBSCRIBE/SUNSUBSCRIBE/SPUBLISH` commands
 
 ### update
 * none

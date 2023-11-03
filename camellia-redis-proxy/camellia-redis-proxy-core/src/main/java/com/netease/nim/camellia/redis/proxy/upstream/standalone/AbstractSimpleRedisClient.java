@@ -126,7 +126,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                 continue;
             }
 
-            if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
+            if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE || redisCommand == RedisCommand.SSUBSCRIBE) {
                 boolean first = false;
                 if (bindConnection == null) {
                     bindConnection = command.getChannelInfo().acquireBindSubscribeRedisConnection(this, getAddr(db));
@@ -148,8 +148,10 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                             byte[] channel = objects[j];
                             if (redisCommand == RedisCommand.SUBSCRIBE) {
                                 channelInfo.addSubscribeChannels(channel);
-                            } else {
+                            } else if (redisCommand == RedisCommand.PSUBSCRIBE) {
                                 channelInfo.addPSubscribeChannels(channel);
+                            } else {
+                                channelInfo.addSSubscribeChannels(channel);
                             }
                         }
                     }
@@ -157,15 +159,17 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                     future.complete(ErrorReply.UPSTREAM_BIND_CONNECTION_NULL);
                     renew();
                 }
-            } else if (redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
+            } else if (redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE || redisCommand == RedisCommand.SUNSUBSCRIBE) {
                 if (bindConnection != null) {
                     if (command.getObjects() != null && command.getObjects().length > 1) {
                         for (int j = 1; j < command.getObjects().length; j++) {
                             byte[] channel = command.getObjects()[j];
                             if (redisCommand == RedisCommand.UNSUBSCRIBE) {
                                 channelInfo.removeSubscribeChannels(channel);
-                            } else {
+                            } else if (redisCommand == RedisCommand.PUNSUBSCRIBE) {
                                 channelInfo.removePSubscribeChannels(channel);
+                            } else {
+                                channelInfo.removeSSubscribeChannels(channel);
                             }
                             if (!channelInfo.hasSubscribeChannels()) {
                                 channelInfo.setBindConnection(null);

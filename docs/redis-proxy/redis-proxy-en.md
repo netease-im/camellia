@@ -111,7 +111,7 @@ only support while no custom sharding
 since 1.1.4, PUBSUB support multi-write, will sub first write redis resource, pub all write redis resource   
 ```
 ##PUBSUB(will sub first write redis resource, pub all write redis resource)
-SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,
+SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,SSUBSCRIBE,SUNSUBSCRIBE,SPUBLISH,
 ```
 
 * Partially Supported 2   

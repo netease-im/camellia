@@ -449,11 +449,20 @@ public class RedisClusterClient implements IUpstreamClient {
 
     private void pubsub(Command command, CompletableFuture<Reply> future, ChannelInfo channelInfo, RedisConnectionCommandFlusher commandFlusher,
                         RedisCommand redisCommand, RedisConnection bindConnection) {
-        if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
+        if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE
+                || redisCommand == RedisCommand.SSUBSCRIBE) {
             boolean first = false;
             if (bindConnection == null) {
-                int randomSlot = ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE);
-                RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(randomSlot);
+                int targetSlot = -1;
+                if (redisCommand == RedisCommand.SSUBSCRIBE) {
+                    if (command.getObjects().length > 1) {
+                        targetSlot = RedisClusterCRC16Utils.getSlot(command.getObjects()[1]);
+                    }
+                }
+                if (targetSlot < 0) {
+                    targetSlot = ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE);
+                }
+                RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(targetSlot);
                 if (node == null) {
                     future.complete(ErrorReply.UPSTREAM_CONNECTION_REDIS_CLUSTER_NODE_NULL);
                     return;
@@ -472,8 +481,10 @@ public class RedisClusterClient implements IUpstreamClient {
                         byte[] channel = objects[j];
                         if (redisCommand == RedisCommand.SUBSCRIBE) {
                             command.getChannelInfo().addSubscribeChannels(channel);
-                        } else {
+                        } else if (redisCommand == RedisCommand.PSUBSCRIBE) {
                             command.getChannelInfo().addPSubscribeChannels(channel);
+                        } else {
+                            command.getChannelInfo().addSSubscribeChannels(channel);
                         }
                     }
                 }
@@ -482,15 +493,18 @@ public class RedisClusterClient implements IUpstreamClient {
             }
             return;
         }
-        if (bindConnection != null && (redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE)) {
+        if (bindConnection != null && (redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE
+                || redisCommand == RedisCommand.SUNSUBSCRIBE)) {
             byte[][] objects = command.getObjects();
             if (objects != null && objects.length > 1) {
                 for (int j = 1; j < objects.length; j++) {
                     byte[] channel = objects[j];
                     if (redisCommand == RedisCommand.UNSUBSCRIBE) {
                         channelInfo.removeSubscribeChannels(channel);
-                    } else {
+                    } else if (redisCommand == RedisCommand.PUNSUBSCRIBE) {
                         channelInfo.removePSubscribeChannels(channel);
+                    } else {
+                        channelInfo.removeSSubscribeChannels(channel);
                     }
                     if (!channelInfo.hasSubscribeChannels()) {
                         channelInfo.setBindConnection(null);
@@ -504,7 +518,16 @@ public class RedisClusterClient implements IUpstreamClient {
             commandFlusher.flush();
             PubSubUtils.sendByBindClient(getResource(), bindConnection, command.getChannelInfo().getCommandTaskQueue(), command, future, false);
         } else {
-            RedisConnection connection = getConnection(ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE));
+            int targetSlot = -1;
+            if (PubSubUtils.isShardPubSub(redisCommand)) {
+                if (command.getObjects().length > 1) {
+                    targetSlot = RedisClusterCRC16Utils.getSlot(command.getObjects()[1]);
+                }
+            }
+            if (targetSlot < 0) {
+                targetSlot = ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE);
+            }
+            RedisConnection connection = getConnection(targetSlot);
             if (connection != null) {
                 commandFlusher.sendCommand(connection, command, new CompletableFutureWrapper(this, future, command));
             } else {

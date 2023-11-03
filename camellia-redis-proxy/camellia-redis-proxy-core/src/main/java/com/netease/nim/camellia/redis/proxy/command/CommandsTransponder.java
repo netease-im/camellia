@@ -147,10 +147,10 @@ public class CommandsTransponder {
 
                 //subscribe状态下，只能使用指定的命令
                 if (channelInfo.isInSubscribe()) {
-                    if (redisCommand != RedisCommand.SUBSCRIBE && redisCommand != RedisCommand.PSUBSCRIBE
-                            && redisCommand != RedisCommand.UNSUBSCRIBE && redisCommand != RedisCommand.PUNSUBSCRIBE
+                    if (redisCommand != RedisCommand.SUBSCRIBE && redisCommand != RedisCommand.SSUBSCRIBE && redisCommand != RedisCommand.PSUBSCRIBE
+                            && redisCommand != RedisCommand.UNSUBSCRIBE && redisCommand != RedisCommand.SUNSUBSCRIBE && redisCommand != RedisCommand.PUNSUBSCRIBE
                             && redisCommand != RedisCommand.PING && redisCommand != RedisCommand.QUIT) {
-                        ErrorReply errorReply = new ErrorReply("Command " + redisCommand.strRaw() + " not allowed while subscribed. Allowed commands are: [PSUBSCRIBE, PUNSUBSCRIBE, SUBSCRIBE, UNSUBSCRIBE, QUIT, PING]");
+                        ErrorReply errorReply = new ErrorReply("ERR Can't execute '" + redisCommand.strRaw() + "': only (P|S)SUBSCRIBE / (P|S)UNSUBSCRIBE / PING / QUIT are allowed in this context");
                         reply(channelInfo, task, redisCommand, errorReply, false);
                         hasCommandsSkip = true;
                         continue;

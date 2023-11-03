@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.CommandContext;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.monitor.UpstreamFailMonitor;
+import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.plugin.converter.KeyConverter;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -40,13 +41,21 @@ public class PubSubUtils {
             futures.add(completableFuture);
             completableFuture.thenAccept(reply -> {
                 //parse reply must before send reply to connection
-                Long subscribeChannelCount = tryGetSubscribeChannelCount(reply);
+                SubscribeCount subscribeCount = tryGetSubscribeChannelCount(reply);
                 future.complete(reply);
                 //after send reply, update channel subscribe status
-                if (subscribeChannelCount != null && subscribeChannelCount <= 0) {
-                    taskQueue.getChannelInfo().setInSubscribe(false);
-                    taskQueue.clear();
-                    connection.clearQueue();
+                if (subscribeCount != null && subscribeCount.count != null) {
+                    ChannelInfo channelInfo = taskQueue.getChannelInfo();
+                    if (subscribeCount.shardPubSub) {
+                        channelInfo.updateSSubscribeCount(subscribeCount.count);
+                    } else {
+                        channelInfo.updateSubscribeCount(subscribeCount.count);
+                    }
+                    if (channelInfo.isSubscribeCountZero()) {
+                        channelInfo.setInSubscribe(false);
+                        taskQueue.clear();
+                        connection.clearQueue();
+                    }
                 }
             });
         }
@@ -58,13 +67,21 @@ public class PubSubUtils {
                         sendByBindClient(resource, connection, taskQueue, null, null, false, redisCommand);
                     }
                     //parse reply must before send reply to connection
-                    Long subscribeChannelCount = tryGetSubscribeChannelCount(reply);
+                    SubscribeCount subscribeCount = tryGetSubscribeChannelCount(reply);
                     taskQueue.reply(redisCommand, reply, false);
                     //after send reply, update channel subscribe status
-                    if (subscribeChannelCount != null && subscribeChannelCount <= 0) {
-                        taskQueue.getChannelInfo().setInSubscribe(false);
-                        taskQueue.clear();
-                        connection.clearQueue();
+                    if (subscribeCount != null && subscribeCount.count != null) {
+                        ChannelInfo channelInfo = taskQueue.getChannelInfo();
+                        if (subscribeCount.shardPubSub) {
+                            channelInfo.updateSSubscribeCount(subscribeCount.count);
+                        } else {
+                            channelInfo.updateSubscribeCount(subscribeCount.count);
+                        }
+                        if (channelInfo.isSubscribeCountZero()) {
+                            channelInfo.setInSubscribe(false);
+                            taskQueue.clear();
+                            connection.clearQueue();
+                        }
                     }
                     //monitor
                     if (ProxyMonitorCollector.isMonitorEnable()) {
@@ -88,9 +105,9 @@ public class PubSubUtils {
                 if (replies.length > 1) {
                     if (replies[0] instanceof BulkReply) {
                         String type = Utils.bytesToString(((BulkReply) replies[0]).getRaw());
-                        if (type.equalsIgnoreCase("psubscribe") || type.equalsIgnoreCase("subscribe")
-                                || type.equalsIgnoreCase("unsubscribe") || type.equalsIgnoreCase("punsubscribe")
-                                || type.equalsIgnoreCase("message")) {
+                        if (type.equalsIgnoreCase("psubscribe") || type.equalsIgnoreCase("subscribe") || type.equalsIgnoreCase("ssubscribe")
+                                || type.equalsIgnoreCase("unsubscribe") || type.equalsIgnoreCase("punsubscribe") || type.equalsIgnoreCase("sunsubscribe")
+                                || type.equalsIgnoreCase("message") || type.equalsIgnoreCase("smessage")) {
                             if (replies.length == 3) {
                                 Reply reply1 = replies[1];
                                 if (reply1 instanceof BulkReply) {
@@ -121,7 +138,11 @@ public class PubSubUtils {
         }
     }
 
-    private static Long tryGetSubscribeChannelCount(Reply reply) {
+    public static boolean isShardPubSub(RedisCommand redisCommand) {
+        return redisCommand == RedisCommand.SPUBLISH || redisCommand == RedisCommand.SSUBSCRIBE || redisCommand == RedisCommand.SUNSUBSCRIBE;
+    }
+
+    private static SubscribeCount tryGetSubscribeChannelCount(Reply reply) {
         try {
             if (reply instanceof MultiBulkReply) {
                 Reply[] replies = ((MultiBulkReply) reply).getReplies();
@@ -131,13 +152,17 @@ public class PubSubUtils {
                         byte[] raw = ((BulkReply) firstReply).getRaw();
                         String str = Utils.bytesToString(raw);
                         if (str.equalsIgnoreCase(RedisCommand.SUBSCRIBE.strRaw())) {
-                            return subscribeChannelCount(replies);
+                            return new SubscribeCount(false, subscribeChannelCount(replies));
                         } else if (str.equalsIgnoreCase(RedisCommand.UNSUBSCRIBE.strRaw())) {
-                            return subscribeChannelCount(replies);
+                            return new SubscribeCount(false, subscribeChannelCount(replies));
                         } else if (str.equalsIgnoreCase(RedisCommand.PSUBSCRIBE.strRaw())) {
-                            return subscribeChannelCount(replies);
+                            return new SubscribeCount(false, subscribeChannelCount(replies));
                         } else if (str.equalsIgnoreCase(RedisCommand.PUNSUBSCRIBE.strRaw())) {
-                            return subscribeChannelCount(replies);
+                            return new SubscribeCount(false, subscribeChannelCount(replies));
+                        } else if (str.equalsIgnoreCase(RedisCommand.SSUBSCRIBE.strRaw())) {
+                            return new SubscribeCount(true, subscribeChannelCount(replies));
+                        } else if (str.equalsIgnoreCase(RedisCommand.SUNSUBSCRIBE.strRaw())) {
+                            return new SubscribeCount(true, subscribeChannelCount(replies));
                         }
                     }
                 }
@@ -146,6 +171,16 @@ public class PubSubUtils {
         } catch (Exception e) {
             ErrorLogCollector.collect(PubSubUtils.class, "tryGetSubscribeChannelCount error", e);
             return null;
+        }
+    }
+
+    private static class SubscribeCount {
+        boolean shardPubSub;
+        Long count;
+
+        public SubscribeCount(boolean shardPubSub, Long count) {
+            this.shardPubSub = shardPubSub;
+            this.count = count;
         }
     }
 

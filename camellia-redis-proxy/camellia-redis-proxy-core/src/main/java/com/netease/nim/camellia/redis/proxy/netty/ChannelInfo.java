@@ -65,6 +65,9 @@ public class ChannelInfo {
     private final ChannelType channelType;
     private volatile ConcurrentHashMap<BytesKey, Boolean> subscribeChannels;
     private volatile ConcurrentHashMap<BytesKey, Boolean> psubscribeChannels;
+    private volatile ConcurrentHashMap<BytesKey, Boolean> ssubscribeChannels;
+    private volatile long subscribeCount = 0;
+    private volatile long ssubscribeCount = 0;
 
     private boolean transactionTag = false;
 
@@ -387,6 +390,21 @@ public class ChannelInfo {
         }
     }
 
+    public void addSSubscribeChannels(byte[]...channels) {
+        if (ssubscribeChannels == null) {
+            synchronized (this) {
+                if (ssubscribeChannels == null) {
+                    ssubscribeChannels = new ConcurrentHashMap<>();
+                }
+            }
+        }
+        if (channels != null) {
+            for (byte[] channel : channels) {
+                ssubscribeChannels.put(new BytesKey(channel), true);
+            }
+        }
+    }
+
     public void removePSubscribeChannels(byte[]...channels) {
         if (psubscribeChannels != null && channels != null) {
             for (byte[] channel : channels) {
@@ -395,11 +413,37 @@ public class ChannelInfo {
         }
     }
 
+    public void removeSSubscribeChannels(byte[]...channels) {
+        if (ssubscribeChannels != null && channels != null) {
+            for (byte[] channel : channels) {
+                ssubscribeChannels.remove(new BytesKey(channel));
+            }
+        }
+    }
+
     public boolean hasSubscribeChannels() {
         if (subscribeChannels != null && !subscribeChannels.isEmpty())  {
             return true;
         }
-        return psubscribeChannels != null && !psubscribeChannels.isEmpty();
+        if (psubscribeChannels != null && !psubscribeChannels.isEmpty()) {
+            return true;
+        }
+        if (ssubscribeChannels != null && !ssubscribeChannels.isEmpty()) {
+            return true;
+        }
+        return false;
+    }
+
+    public void updateSubscribeCount(long subscribeCount) {
+        this.subscribeCount = subscribeCount;
+    }
+
+    public void updateSSubscribeCount(long ssubscribeCount) {
+        this.ssubscribeCount = ssubscribeCount;
+    }
+
+    public boolean isSubscribeCountZero() {
+        return subscribeCount == 0 && ssubscribeCount == 0;
     }
 
     public boolean isInSubscribe() {

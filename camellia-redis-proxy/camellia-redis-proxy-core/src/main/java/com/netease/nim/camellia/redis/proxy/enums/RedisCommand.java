@@ -290,11 +290,15 @@ public enum RedisCommand {
      * only support while no custom sharding
      */
     SUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, Blocking.TRUE, CommandKeyType.None),
+    SSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, Blocking.TRUE, CommandKeyType.None),
     PUBLISH(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, Blocking.FALSE, CommandKeyType.None),
+    SPUBLISH(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, Blocking.FALSE, CommandKeyType.None),
     UNSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, Blocking.FALSE, CommandKeyType.None),
+    SUNSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, Blocking.FALSE, CommandKeyType.None),
     PSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, Blocking.TRUE, CommandKeyType.None),
     PUNSUBSCRIBE(CommandSupportType.PARTIALLY_SUPPORT_1, Type.WRITE, CommandType.PUB_SUB, Blocking.FALSE, CommandKeyType.None),
     PUBSUB(CommandSupportType.PARTIALLY_SUPPORT_1, Type.READ, CommandType.PUB_SUB, Blocking.FALSE, CommandKeyType.None),
+
 
     /**
      * Partially Support-2
