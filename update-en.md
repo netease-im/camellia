@@ -9,12 +9,14 @@
 * camellia-redis-proxy support shard-pubsub, support `SSUBSCRIBE/SUNSUBSCRIBE/SPUBLISH` commands
 * camellia-redis-proxy support `FUNCTION/TFUNCTION` commands
 * camellia-redis-proxy support `SCRIPT KILL` command
+* camellia-redis-proxy support `EXPIRETIME/PEXPIRETIME/LCS/SINTERCARD/SORT_RO/BITFIELD_RO` commands
 
 ### update
 * none
 
 ### fix
-* camellia-redis-proxy，eval_ro/evalsha_ro commands do not route correct when upstream route is custom-sharding or redis-cluster 
+* camellia-redis-proxy，eval_ro/evalsha_ro commands do not route correct when upstream route is custom-sharding or redis-cluster
+* camellia-redis-proxy，eval/eval_sha/eval_ro/evasha_ro, if num-keys is 0 and upstream route is redis-cluster, return error reply
 
 
 # 1.2.18（2023/10/25）

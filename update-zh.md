@@ -9,12 +9,14 @@
 * camellia-redis-proxy支持shard-pubsub，也就是支持`SSUBSCRIBE/SUNSUBSCRIBE/SPUBLISH`命令
 * camellia-redis-proxy支持`FUNCTION/TFUNCTION`相关命令
 * camellia-redis-proxy支持`SCRIPT KILL`命令
+* camellia-redis-proxy支持`EXPIRETIME/PEXPIRETIME/LCS/SINTERCARD/SORT_RO/BITFIELD_RO`命令
 
 ### 更新
 * 无
 
 ### fix
 * camellia-redis-proxy，eval_ro和evalsha_ro命令在后端是自定义分片或者redis-cluster时，没有正确路由的问题
+* camellia-redis-proxy，使用eval/eval_sha/eval_ro/evasha_ro时，如果key数量为0，且后端是redis-cluster时，返回slot错误的问题
 
 
 # 1.2.18（2023/10/25）

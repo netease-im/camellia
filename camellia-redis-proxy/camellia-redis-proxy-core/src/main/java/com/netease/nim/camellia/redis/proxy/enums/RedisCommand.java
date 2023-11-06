@@ -75,6 +75,7 @@ public enum RedisCommand {
     ZCARD(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ZSET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     ZSCORE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ZSET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     SORT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    SORT_RO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     ZCOUNT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ZSET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     ZRANGE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ZSET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     ZRANGEBYSCORE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.ZSET, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
@@ -120,6 +121,7 @@ public enum RedisCommand {
     GEORADIUSBYMEMBER(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.GE0, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     GEOSEARCH(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.GE0, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     BITFIELD(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    BITFIELD_RO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     ECHO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     PFADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.HYPER_LOG_LOG, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     XACK(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STREAM, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
@@ -229,6 +231,8 @@ public enum RedisCommand {
     JSON_STRLEN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     JSON_TOGGLE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     JSON_TYPE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    EXPIRETIME(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    PEXPIRETIME(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
 
     /**
      * Restrictive Support
@@ -290,6 +294,8 @@ public enum RedisCommand {
     TFCALL(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TFUNCTION, Blocking.FALSE, CommandKeyType.COMPLEX),
     TFCALLASYNC(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TFUNCTION, Blocking.FALSE, CommandKeyType.COMPLEX),
     TFUNCTION(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TFUNCTION, Blocking.FALSE, CommandKeyType.None),
+    SINTERCARD(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.SET, Blocking.FALSE, CommandKeyType.COMPLEX),
+    LCS(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.STRING, Blocking.FALSE, CommandKeyType.COMPLEX),
 
     /**
      * Partially Support-1

@@ -56,6 +56,7 @@ public class KeyParser {
                 case LMOVE:
                 case ZRANGESTORE:
                 case BLMOVE:
+                case LCS:
                     if (command.getObjects().length >= 3) {
                         dynamicKey(command, keys, 1, 2);
                     }
@@ -84,6 +85,7 @@ public class KeyParser {
                 case EXZINTERCARD:
                 case ZMPOP:
                 case LMPOP:
+                case SINTERCARD:
                     if (objects.length >= 3) {
                         int keyCount = (int) Utils.bytesToNum(objects[1]);
                         if (keyCount > 0) {

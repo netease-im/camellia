@@ -172,6 +172,7 @@ public class Converters {
                 case LMOVE:
                 case ZRANGESTORE:
                 case BLMOVE:
+                case LCS:
                     if (command.getObjects().length >= 3) {
                         byte[] convertedKey1 = convert(commandContext, redisCommand, objects[1], convert);
                         objects[1] = convertedKey1;
@@ -207,6 +208,7 @@ public class Converters {
                 case EXZINTERCARD:
                 case ZMPOP:
                 case LMPOP:
+                case SINTERCARD:
                     if (objects.length >= 3) {
                         int keyCount2 = (int) Utils.bytesToNum(objects[1]);
                         if (keyCount2 > 0) {
