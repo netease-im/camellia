@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,14 +29,6 @@ import java.util.Map;
 public class ConsoleServiceAdaptor implements ConsoleService {
 
     private static final Logger logger = LoggerFactory.getLogger(ConsoleServiceAdaptor.class);
-
-    private int serverPort;
-    public ConsoleServiceAdaptor(int serverPort) {
-        this.serverPort = serverPort;
-    }
-
-    public ConsoleServiceAdaptor() {
-    }
 
     @Override
     public ConsoleResult status() {
@@ -81,30 +74,38 @@ public class ConsoleServiceAdaptor implements ConsoleService {
 
     @Override
     public ConsoleResult check() {
-        int port = serverPort;
-        if (port <= 0) {
-            port = GlobalRedisProxyEnv.getPort();
+        List<Integer> ports = new ArrayList<>();
+        if (GlobalRedisProxyEnv.getPort() > 0) {
+            ports.add(GlobalRedisProxyEnv.getPort());
         }
-        if (port <= 0) {
+        if (GlobalRedisProxyEnv.getTlsPort() > 0) {
+            ports.add(GlobalRedisProxyEnv.getTlsPort());
+        }
+        if (GlobalRedisProxyEnv.getCport() > 0) {
+            ports.add(GlobalRedisProxyEnv.getCport());
+        }
+        if (ports.isEmpty()) {
             return ConsoleResult.success();
         }
-        Socket socket = new Socket();
-        try {
-            socket.connect(new InetSocketAddress("127.0.0.1", port), 200);
-            if (logger.isDebugEnabled()) {
-                logger.debug("check serverPort = " + port + " success");
-            }
-            return ConsoleResult.success("check serverPort = " + port + " success");
-        } catch (IOException e) {
-            logger.error("check serverPort = " + port + " fail");
-            return ConsoleResult.error("check serverPort = " + port + " error");
-        } finally {
+        for (Integer port : ports) {
+            Socket socket = new Socket();
             try {
-                socket.close();
+                socket.connect(new InetSocketAddress("127.0.0.1", port), 200);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("check serverPort = " + port + " success");
+                }
             } catch (IOException e) {
-                logger.error("close error", e);
+                logger.error("check serverPort = " + port + " fail");
+                return ConsoleResult.error("check serverPort = " + port + " error");
+            } finally {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    logger.error("close error", e);
+                }
             }
         }
+        return ConsoleResult.success();
     }
 
     @Override
@@ -175,23 +176,28 @@ public class ConsoleServiceAdaptor implements ConsoleService {
 
     @Override
     public ConsoleResult shutdownUpstreamClient(Map<String, List<String>> params) {
-        List<String> list = params.get("resource");
-        if (list == null) {
-            return ConsoleResult.error("resource param missing");
+        if (logger.isDebugEnabled()) {
+            logger.debug("shutdownUpstreamClient, params = {}", params);
         }
-        if (list.isEmpty()) {
-            return ConsoleResult.error("illegal resource param");
+        String url = null;
+        for (Map.Entry<String, List<String>> entry : params.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase("url")) {
+                url = entry.getValue().get(0);
+            }
         }
-        String resource = list.get(0);
-        IUpstreamClient upstreamClient = GlobalRedisProxyEnv.getClientTemplateFactory().getEnv().getClientFactory().remove(resource);
-        if (upstreamClient == null) {
-            return ConsoleResult.error("upstream client not found, resource = " + resource);
+        if (url != null) {
+            try {
+                IUpstreamClient upstreamClient = GlobalRedisProxyEnv.getClientTemplateFactory().getEnv().getClientFactory().remove(url);
+                if (upstreamClient == null) {
+                    return ConsoleResult.error("upstream client not found, url = " + url);
+                }
+                upstreamClient.shutdown();
+                return ConsoleResult.success();
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                return ConsoleResult.error("internal error");
+            }
         }
-        upstreamClient.shutdown();
-        return ConsoleResult.success();
-    }
-
-    public void setServerPort(int serverPort) {
-        this.serverPort = serverPort;
+        return ConsoleResult.error("param wrong");
     }
 }
