@@ -1,7 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.monitor.model.*;
 
@@ -188,7 +190,16 @@ public class StatsJsonConverter {
             JSONObject json = new JSONObject();
             json.put("bid", routeConf.getBid() == null ? "default" : routeConf.getBid());
             json.put("bgroup", routeConf.getBgroup() == null ? "default" : routeConf.getBgroup());
-            json.put("resourceTable", routeConf.getResourceTable());
+            if (ProxyDynamicConf.getBoolean("resource.table.monitor.json.format.enable", false)) {
+                try {
+                    String jsonString = JSON.toJSONString(JSONObject.parseObject(routeConf.getResourceTable()), SerializerFeature.PrettyFormat);
+                    json.put("resourceTable", jsonString);
+                } catch (Exception e) {
+                    json.put("resourceTable", routeConf.getResourceTable());
+                }
+            } else {
+                json.put("resourceTable", routeConf.getResourceTable());
+            }
             json.put("updateTime", dataFormat.get().format(new Date(routeConf.getUpdateTime())));
             routeConfJsonArray.add(json);
         }
