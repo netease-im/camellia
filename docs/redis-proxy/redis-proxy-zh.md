@@ -110,6 +110,8 @@ GEOSEARCHSTORE,
 ##TairZSet
 EXZUNIONSTORE,EXZUNION,EXZINTERSTORE,EXZINTER,EXZINTERCARD,
 EXZDIFFSTORE,EXZDIFF,EXBZPOPMIN,EXBZPOPMAX,
+##FUNCTION
+FUNCTION,FCALL,FCALL_RO,
 ```
 
 * 部分支持1  
@@ -277,7 +279,7 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 使用nacos托管proxy配置，具体见：[nacos-conf](other/nacos-conf.md)
 * 关于双（多）写的若干问题，具体见：[multi-write](other/multi-write.md)
 * 关于scan和相关说明，具体见：[scan](other/scan.md)
-* 关于lua的相关说明，具体见：[lua](other/lua.md)
+* 关于lua/function/tfunction的相关说明，具体见：[lua](other/lua_function.md)
 * 使用redis-shake进行数据迁移的说明，具体见：[redis-shake](other/redis-shake.md)
 * 关于自定义分片函数，具体见：[sharding](other/sharding.md)
 * 如何使用spring管理bean生成，具体见：[spring](other/spring.md)

@@ -7,12 +7,14 @@
 * camelia-feign, add util GlobalCamelliaFeignEnv, so you can calc load balance code before request when use hash policy
 * camellia-redis-proxy console add api `/shutdownUpstreamClient?resource=redis://@127.0.0.1:6379`, so you can shutdown upstream client
 * camellia-redis-proxy support shard-pubsub, support `SSUBSCRIBE/SUNSUBSCRIBE/SPUBLISH` commands
+* camellia-redis-proxy support `FUNCTION/TFUNCTION` commands
+* camellia-redis-proxy support `SCRIPT KILL` command
 
 ### update
 * none
 
 ### fix
-* none
+* camellia-redis-proxy，eval_ro/evalsha_ro commands do not route correct when upstream route is custom-sharding or redis-cluster 
 
 
 # 1.2.18（2023/10/25）

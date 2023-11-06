@@ -271,12 +271,27 @@ public class RedisClusterClient implements IUpstreamClient {
                 continue;
             }
 
+            if (redisCommand == RedisCommand.FUNCTION) {
+                function(commandFlusher, command, future);
+                continue;
+            }
+
+            if (redisCommand == RedisCommand.TFUNCTION) {
+                tfunction(commandFlusher, command, future);
+                continue;
+            }
+
             if (redisCommand.getSupportType() == RedisCommand.CommandSupportType.RESTRICTIVE_SUPPORT) {
                 List<byte[]> keys = command.getKeys();
-                int slot = RedisClusterCRC16Utils.checkSlot(keys);
-                if (slot < 0) {
-                    future.complete(new ErrorReply("CROSSSLOT Keys in request don't hash to the same slot"));
-                    continue;
+                int slot;
+                if (keys.isEmpty()) {
+                    slot = ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE);
+                } else {
+                    slot = RedisClusterCRC16Utils.checkSlot(keys);
+                    if (slot < 0) {
+                        future.complete(new ErrorReply("CROSSSLOT Keys in request don't hash to the same slot"));
+                        continue;
+                    }
                 }
                 if (command.isBlocking()) {
                     blockingCommand(slot, command, commandFlusher, future);
@@ -543,7 +558,8 @@ public class RedisClusterClient implements IUpstreamClient {
             return;
         }
         String ope = Utils.bytesToString(objects[1]);
-        if (ope.equalsIgnoreCase(RedisKeyword.FLUSH.name()) || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())) {
+        if (ope.equalsIgnoreCase(RedisKeyword.FLUSH.name()) || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())
+                || ope.equalsIgnoreCase(RedisKeyword.KILL.name())) {
             Set<RedisClusterSlotInfo.Node> nodes = clusterSlotInfo.getNodes();
             boolean futureSetting = false;
             for (RedisClusterSlotInfo.Node node : nodes) {
@@ -562,6 +578,63 @@ public class RedisClusterClient implements IUpstreamClient {
                 futures.add(f);
             }
             CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeMultiIntegerReply(replies)));
+        } else {
+            future.complete(ErrorReply.NOT_SUPPORT);
+        }
+    }
+
+    private void function(RedisConnectionCommandFlusher commandFlusher, Command command, CompletableFuture<Reply> future) {
+        byte[][] objects = command.getObjects();
+        if (objects.length <= 1) {
+            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
+            return;
+        }
+        String ope = Utils.bytesToString(objects[1]);
+        if (ope.equalsIgnoreCase(RedisKeyword.DELETE.name()) || ope.equalsIgnoreCase(RedisKeyword.FLUSH.name()) || ope.equalsIgnoreCase(RedisKeyword.KILL.name())
+                || ope.equalsIgnoreCase(RedisKeyword.LOAD.name()) || ope.equalsIgnoreCase(RedisKeyword.RESTORE.name())) {
+            //所有节点都要下发
+            Set<RedisClusterSlotInfo.Node> nodes = clusterSlotInfo.getNodes();
+            boolean futureSetting = false;
+            for (RedisClusterSlotInfo.Node node : nodes) {
+                RedisConnection redisConnection = RedisConnectionHub.getInstance().get(this, node.getAddr());
+                //只返回第一个reply
+                commandFlusher.sendCommand(redisConnection, command, !futureSetting ? future : new CompletableFuture<>());
+                futureSetting = true;
+            }
+        } else if (ope.equalsIgnoreCase(RedisKeyword.DUMP.name()) || ope.equalsIgnoreCase(RedisKeyword.LIST.name())) {
+            //任选一个节点即可
+            int targetSlot = ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE);
+            RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(targetSlot);
+            RedisConnection redisConnection = RedisConnectionHub.getInstance().get(this, node.getAddr());
+            commandFlusher.sendCommand(redisConnection, command, future);
+        } else {
+            future.complete(ErrorReply.NOT_SUPPORT);
+        }
+    }
+
+    private void tfunction(RedisConnectionCommandFlusher commandFlusher, Command command, CompletableFuture<Reply> future) {
+        byte[][] objects = command.getObjects();
+        if (objects.length <= 1) {
+            future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
+            return;
+        }
+        String ope = Utils.bytesToString(objects[1]);
+        if (ope.equalsIgnoreCase(RedisKeyword.DELETE.name()) || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())) {
+            //所有节点都要下发
+            Set<RedisClusterSlotInfo.Node> nodes = clusterSlotInfo.getNodes();
+            boolean futureSetting = false;
+            for (RedisClusterSlotInfo.Node node : nodes) {
+                RedisConnection redisConnection = RedisConnectionHub.getInstance().get(this, node.getAddr());
+                //只返回第一个reply
+                commandFlusher.sendCommand(redisConnection, command, !futureSetting ? future : new CompletableFuture<>());
+                futureSetting = true;
+            }
+        } else if (ope.equalsIgnoreCase(RedisKeyword.LIST.name())) {
+            //任选一个节点即可
+            int targetSlot = ThreadLocalRandom.current().nextInt(RedisClusterSlotInfo.SLOT_SIZE);
+            RedisClusterSlotInfo.Node node = clusterSlotInfo.getNode(targetSlot);
+            RedisConnection redisConnection = RedisConnectionHub.getInstance().get(this, node.getAddr());
+            commandFlusher.sendCommand(redisConnection, command, future);
         } else {
             future.complete(ErrorReply.NOT_SUPPORT);
         }

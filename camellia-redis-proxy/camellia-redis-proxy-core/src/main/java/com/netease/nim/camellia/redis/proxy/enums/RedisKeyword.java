@@ -21,6 +21,7 @@ public enum RedisKeyword {
     WITHCOORD, WITHDIST, WITHHASH,
     STREAMS,BLOCK,
     SLOTS, NODES, INFO, PROXY_HEARTBEAT,
+    DELETE,DUMP,RESTORE,STATS,
     ;
 
     private final byte[] raw;

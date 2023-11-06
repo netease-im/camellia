@@ -41,7 +41,13 @@ public class KeyParser {
                     break;
                 case EVAL:
                 case EVALSHA:
-                    evalOrEvalSha(command, keys);
+                case EVAL_RO:
+                case EVALSHA_RO:
+                case FCALL:
+                case FCALL_RO:
+                case TFCALL:
+                case TFCALLASYNC:
+                    evalOrFcall(command, keys);
                     break;
                 case RENAME:
                 case RENAMENX:
@@ -166,7 +172,7 @@ public class KeyParser {
         }
     }
 
-    private static void evalOrEvalSha(Command command, List<byte[]> keys) {
+    private static void evalOrFcall(Command command, List<byte[]> keys) {
         byte[][] objects = command.getObjects();
         long keyCount = Utils.bytesToNum(objects[2]);
         if (keyCount == 1) {

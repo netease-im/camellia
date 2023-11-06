@@ -18,7 +18,6 @@ public enum RedisCommand {
     QUIT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     COMMAND(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     SCAN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
-    SCRIPT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.SCRIPT, Blocking.FALSE, CommandKeyType.None),
     SET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     GET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.SIMPLE_MULTI),
@@ -235,6 +234,7 @@ public enum RedisCommand {
      * Restrictive Support
      * only support while keys in this command location at the same server or same slot, especially, blocking command don't support multi-write
      */
+    SCRIPT(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SCRIPT, Blocking.FALSE, CommandKeyType.None),
     EVAL(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SCRIPT, Blocking.FALSE, CommandKeyType.COMPLEX),
     EVALSHA(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.SCRIPT, Blocking.FALSE, CommandKeyType.COMPLEX),
     EVAL_RO(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.SCRIPT, Blocking.FALSE, CommandKeyType.COMPLEX),
@@ -284,6 +284,12 @@ public enum RedisCommand {
     BZMPOP(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.ZSET, Blocking.TRUE, CommandKeyType.COMPLEX),
     LMPOP(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.LIST, Blocking.FALSE, CommandKeyType.COMPLEX),
     BLMPOP(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.LIST, Blocking.TRUE, CommandKeyType.COMPLEX),
+    FUNCTION(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.FUNCTION, Blocking.FALSE, CommandKeyType.None),
+    FCALL(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.FUNCTION, Blocking.FALSE, CommandKeyType.COMPLEX),
+    FCALL_RO(CommandSupportType.RESTRICTIVE_SUPPORT, Type.READ, CommandType.FUNCTION, Blocking.FALSE, CommandKeyType.COMPLEX),
+    TFCALL(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TFUNCTION, Blocking.FALSE, CommandKeyType.COMPLEX),
+    TFCALLASYNC(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TFUNCTION, Blocking.FALSE, CommandKeyType.COMPLEX),
+    TFUNCTION(CommandSupportType.RESTRICTIVE_SUPPORT, Type.WRITE, CommandType.TFUNCTION, Blocking.FALSE, CommandKeyType.None),
 
     /**
      * Partially Support-1
@@ -462,6 +468,8 @@ public enum RedisCommand {
         TAIR_STRING,
         JSON,
         SEARCH,
+        FUNCTION,
+        TFUNCTION,
         ;
     }
 

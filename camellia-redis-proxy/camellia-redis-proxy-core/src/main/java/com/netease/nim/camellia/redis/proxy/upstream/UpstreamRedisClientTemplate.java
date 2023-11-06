@@ -516,8 +516,8 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                 }
                 CompletableFuture<Reply> future;
                 String ope = Utils.bytesToString(objects[1]);
-                if (ope.equalsIgnoreCase(RedisKeyword.FLUSH.name())
-                        || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())) {
+                if (ope.equalsIgnoreCase(RedisKeyword.FLUSH.name()) || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())
+                        || ope.equalsIgnoreCase(RedisKeyword.KILL.name())) {
                     List<Resource> resources = resourceSelector.getAllWriteResources();
                     future = doWrite(resources, commandFlusher, command);
                 } else if (ope.equalsIgnoreCase(RedisKeyword.EXISTS.name())) {
@@ -529,6 +529,56 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     }
                     future = new CompletableFuture<>();
                     CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeMultiIntegerReply(replies)));
+                } else {
+                    future = new CompletableFuture<>();
+                    future.complete(ErrorReply.NOT_SUPPORT);
+                }
+                futureList.add(future);
+                continue;
+            }
+
+            if (redisCommand == RedisCommand.FUNCTION) {
+                byte[][] objects = command.getObjects();
+                if (objects.length <= 1) {
+                    CompletableFuture<Reply> future = new CompletableFuture<>();
+                    future.complete(ErrorReply.argNumWrong(redisCommand));
+                    futureList.add(future);
+                    continue;
+                }
+                CompletableFuture<Reply> future;
+                String ope = Utils.bytesToString(objects[1]);
+                if (ope.equalsIgnoreCase(RedisKeyword.DELETE.name()) || ope.equalsIgnoreCase(RedisKeyword.FLUSH.name())
+                        || ope.equalsIgnoreCase(RedisKeyword.KILL.name()) || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())
+                        || ope.equalsIgnoreCase(RedisKeyword.RESTORE.name())) {
+                    List<Resource> resources = resourceSelector.getAllWriteResources();
+                    future = doWrite(resources, commandFlusher, command);
+                } else if (ope.equalsIgnoreCase(RedisKeyword.DUMP.name()) || ope.equalsIgnoreCase(RedisKeyword.LIST.name())) {
+                    Resource resource = resourceSelector.getReadResource(Utils.EMPTY_ARRAY);
+                    future = doRead(resource, commandFlusher, command);
+                } else {
+                    future = new CompletableFuture<>();
+                    future.complete(ErrorReply.NOT_SUPPORT);
+                }
+                futureList.add(future);
+                continue;
+            }
+
+            if (redisCommand == RedisCommand.TFUNCTION) {
+                byte[][] objects = command.getObjects();
+                if (objects.length <= 1) {
+                    CompletableFuture<Reply> future = new CompletableFuture<>();
+                    future.complete(ErrorReply.argNumWrong(redisCommand));
+                    futureList.add(future);
+                    continue;
+                }
+                CompletableFuture<Reply> future;
+                String ope = Utils.bytesToString(objects[1]);
+                if (ope.equalsIgnoreCase(RedisKeyword.DELETE.name()) || ope.equalsIgnoreCase(RedisKeyword.LOAD.name())) {
+                    List<Resource> resources = resourceSelector.getAllWriteResources();
+                    future = doWrite(resources, commandFlusher, command);
+                } else if (ope.equalsIgnoreCase(RedisKeyword.LIST.name())) {
+                    Resource resource = resourceSelector.getReadResource(Utils.EMPTY_ARRAY);
+                    future = doRead(resource, commandFlusher, command);
                 } else {
                     future = new CompletableFuture<>();
                     future.complete(ErrorReply.NOT_SUPPORT);

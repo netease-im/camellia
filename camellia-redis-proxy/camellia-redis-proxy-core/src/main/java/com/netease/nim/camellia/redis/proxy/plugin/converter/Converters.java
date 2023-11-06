@@ -142,6 +142,12 @@ public class Converters {
                     break;
                 case EVAL:
                 case EVALSHA:
+                case EVAL_RO:
+                case EVALSHA_RO:
+                case FCALL:
+                case FCALL_RO:
+                case TFCALL:
+                case TFCALLASYNC:
                     long keyCount = Utils.bytesToNum(objects[2]);
                     if (keyCount == 1) {
                         if (objects.length < 4) {
