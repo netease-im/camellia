@@ -36,7 +36,7 @@ public class ProxyInfoUtils {
     private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(8), new DefaultThreadFactory("proxy-info"));
 
-    public static final String VERSION = "v1.2.18";
+    public static final String VERSION = "v1.2.19";
     private static final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
     private static final OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
     private static final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
@@ -244,7 +244,7 @@ public class ProxyInfoUtils {
         StringBuilder builder = new StringBuilder();
         builder.append("# Server").append("\r\n");
         builder.append("camellia_redis_proxy_version:" + VERSION).append("\r\n");
-        builder.append("redis_version:6.2.6").append("\r\n");//spring actuator默认会使用info命令返回的redis_version字段来做健康检查，这里直接返回一个固定的版本号
+        builder.append("redis_version:7.0.11").append("\r\n");//spring actuator默认会使用info命令返回的redis_version字段来做健康检查，这里直接返回一个固定的版本号
         builder.append("available_processors:").append(osBean.getAvailableProcessors()).append("\r\n");
         builder.append("netty_boss_thread:").append(GlobalRedisProxyEnv.getBossThread()).append("\r\n");
         builder.append("netty_work_thread:").append(GlobalRedisProxyEnv.getWorkThread()).append("\r\n");

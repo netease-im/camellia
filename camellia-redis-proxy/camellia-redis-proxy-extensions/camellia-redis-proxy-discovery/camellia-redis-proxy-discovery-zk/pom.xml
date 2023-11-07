@@ -5,29 +5,29 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>camellia-redis-proxy-discovery-zk</artifactId>
-    <version>1.2.19-SNAPSHOT</version>
+    <version>1.2.19</version>
 
     <parent>
         <groupId>com.netease.nim</groupId>
         <artifactId>camellia-redis-proxy-discovery</artifactId>
-        <version>1.2.19-SNAPSHOT</version>
+        <version>1.2.19</version>
     </parent>
 
     <dependencies>
         <dependency>
             <groupId>com.netease.nim</groupId>
             <artifactId>camellia-redis-proxy-discovery-common</artifactId>
-            <version>1.2.19-SNAPSHOT</version>
+            <version>1.2.19</version>
         </dependency>
         <dependency>
             <groupId>com.netease.nim</groupId>
             <artifactId>camellia-core</artifactId>
-            <version>1.2.19-SNAPSHOT</version>
+            <version>1.2.19</version>
         </dependency>
         <dependency>
             <groupId>com.netease.nim</groupId>
             <artifactId>camellia-zk</artifactId>
-            <version>1.2.19-SNAPSHOT</version>
+            <version>1.2.19</version>
         </dependency>
     </dependencies>
 

@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.19（2023/10/xx）
+# 1.2.19（2023/11/07）
 ### add
 * provide camellia-redis-proxy-nacos-bootstrap, so Operations Engineer can use nacos to manager camellia-redis-proxy cluster without java development
 * provide camellia-redis-proxy-etcd-bootstrap, so Operations Engineer can use etcd to manager camellia-redis-proxy cluster without java development

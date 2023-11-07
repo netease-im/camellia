@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.2.19（2023/10/xx）
+# 1.2.19（2023/11/07）
 ### 新增
 * 新增camellia-redis-proxy-nacos-bootstrap，从而方便运维人员不需要进行java开发即可使用nacos管理proxy集群
 * 新增camellia-redis-proxy-etcd-bootstrap，从而方便运维人员不需要进行java开发即可使用etcd管理proxy集群

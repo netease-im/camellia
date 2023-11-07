@@ -19,12 +19,13 @@
 ### 4、编译camellia-redis-proxy-etcd-bootstrap并打包
 ```shell
 git clone https://github.com/netease-im/camellia.git
+git checkout v1.2.19
 cd camellia
 mvn clean package
-cp camellia-redis-proxy/camellia-redis-proxy-etcd-bootstrap/target/xxx.jar /yourdict/redis-proxy/xxx.jar
+cp camellia-redis-proxy/camellia-redis-proxy-etcd-bootstrap/target/camellia-redis-proxy-etcd-bootstrap-1.2.19.jar /yourdict/redis-proxy/camellia-redis-proxy-etcd-bootstrap-1.2.19.jar
 cd /yourdict/redis-proxy
-jar xvf xxx.jar
-rm -rf xxx.jar
+jar xvf camellia-redis-proxy-etcd-bootstrap-1.2.19.jar
+rm -rf camellia-redis-proxy-etcd-bootstrap-1.2.19.jar
 touch start.sh
 echo "java -XX:+UseG1GC -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher" > start.sh
 chmod +x start.sh
