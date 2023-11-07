@@ -440,11 +440,11 @@ public class CamelliaNakedClient<R, W> {
                 } catch (CamelliaNakedClientRetriableException e) {
                     retry ++;
                     throwException = e;
-                    if (feignResource != null) {
+                    if (feignResource != null && !feignEnv.getFallbackExceptionChecker().isSkipError(e)) {
                         resourcePool.onError(feignResource);
                     }
                 } catch (Exception e) {
-                    if (feignResource != null) {
+                    if (feignResource != null && !feignEnv.getFallbackExceptionChecker().isSkipError(e)) {
                         resourcePool.onError(feignResource);
                     }
                     throw e;

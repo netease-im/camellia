@@ -3,6 +3,7 @@ package com.netease.nim.camellia.feign.discovery;
 import com.netease.nim.camellia.core.discovery.CamelliaDiscovery;
 import com.netease.nim.camellia.core.discovery.CamelliaServerSelector;
 import com.netease.nim.camellia.core.discovery.CamelliaServerHealthChecker;
+import com.netease.nim.camellia.core.discovery.GlobalDiscoveryEnv;
 import com.netease.nim.camellia.feign.GlobalCamelliaFeignEnv;
 import com.netease.nim.camellia.feign.resource.FeignDiscoveryResource;
 import com.netease.nim.camellia.feign.resource.FeignResource;
@@ -10,9 +11,7 @@ import com.netease.nim.camellia.tools.cache.CamelliaLocalCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -104,12 +103,18 @@ public class DiscoveryResourcePool implements FeignResourcePool {
     public void onError(FeignResource feignResource) {
         try {
             synchronized (lock) {
-                dynamicList.remove(feignResource);
+                Set<FeignResource> set = new HashSet<>(dynamicList);
+                set.remove(feignResource);
+                List<FeignResource> list = new ArrayList<>(set);
+                Collections.sort(list);
+                dynamicList = new ArrayList<>(list);
                 if (dynamicList.isEmpty()) {
                     GlobalCamelliaFeignEnv.register(discoveryResource, serverSelector, new ArrayList<>(originalList));
                 } else {
-                    Collections.sort(dynamicList);
                     GlobalCamelliaFeignEnv.register(discoveryResource, serverSelector, new ArrayList<>(dynamicList));
+                }
+                if (GlobalDiscoveryEnv.logInfoEnable) {
+                    logger.info("onError feignResource = {}, dynamicList = {}, originalList = {}", feignResource, dynamicList, originalList);
                 }
             }
         } catch (Exception e) {
@@ -120,10 +125,16 @@ public class DiscoveryResourcePool implements FeignResourcePool {
     private void add(FeignResource feignResource) {
         try {
             synchronized (lock) {
-                originalList.add(feignResource);
-                Collections.sort(originalList);
-                dynamicList = new ArrayList<>(originalList);
-                GlobalCamelliaFeignEnv.register(discoveryResource, serverSelector, new ArrayList<>(dynamicList));
+                Set<FeignResource> set = new HashSet<>(originalList);
+                set.add(feignResource);
+                List<FeignResource> list = new ArrayList<>(set);
+                Collections.sort(list);
+                originalList = new ArrayList<>(list);
+                dynamicList = new ArrayList<>(list);
+                GlobalCamelliaFeignEnv.register(discoveryResource, serverSelector, new ArrayList<>(list));
+                if (GlobalDiscoveryEnv.logInfoEnable) {
+                    logger.info("add feignResource = {}, dynamicList = {}, originalList = {}", feignResource, dynamicList, originalList);
+                }
             }
         } catch (Exception e) {
             logger.error("add error", e);
@@ -133,16 +144,20 @@ public class DiscoveryResourcePool implements FeignResourcePool {
     private void remove(FeignResource feignResource) {
         try {
             synchronized (lock) {
-                ArrayList<FeignResource> list = new ArrayList<>(originalList);
-                list.remove(feignResource);
-                if (list.isEmpty()) {
+                Set<FeignResource> set = new HashSet<>(originalList);
+                set.remove(feignResource);
+                if (set.isEmpty()) {
                     logger.warn("last server, skip remove");
                     return;
                 }
+                List<FeignResource> list = new ArrayList<>(set);
                 Collections.sort(list);
-                originalList = list;
-                dynamicList = new ArrayList<>(originalList);
-                GlobalCamelliaFeignEnv.register(discoveryResource, serverSelector, new ArrayList<>(dynamicList));
+                originalList = new ArrayList<>(list);
+                dynamicList = new ArrayList<>(list);
+                GlobalCamelliaFeignEnv.register(discoveryResource, serverSelector, new ArrayList<>(list));
+                if (GlobalDiscoveryEnv.logInfoEnable) {
+                    logger.info("remove feignResource = {}, dynamicList = {}, originalList = {}", feignResource, dynamicList, originalList);
+                }
             }
         } catch (Exception e) {
             logger.error("remove error", e);
@@ -170,10 +185,14 @@ public class DiscoveryResourcePool implements FeignResourcePool {
         for (FeignServerInfo feignServerInfo : all) {
             list.add(toFeignResource(feignServerInfo));
         }
+        Collections.sort(list);
         this.originalList = new ArrayList<>(list);
-        this.dynamicList = new ArrayList<>(originalList);
+        this.dynamicList = new ArrayList<>(list);
 
-        GlobalCamelliaFeignEnv.register(discoveryResource, serverSelector, new ArrayList<>(dynamicList));
+        GlobalCamelliaFeignEnv.register(discoveryResource, serverSelector, new ArrayList<>(list));
+        if (GlobalDiscoveryEnv.logInfoEnable) {
+            logger.info("reload, dynamicList = {}, originalList = {}", dynamicList, originalList);
+        }
     }
 
     private FeignResource toFeignResource(FeignServerInfo feignServerInfo) {
