@@ -7,13 +7,10 @@ import com.netease.nim.camellia.redis.proxy.command.CommandContext;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.monitor.UpstreamFailMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
+import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
 import com.netease.nim.camellia.redis.proxy.plugin.converter.KeyConverter;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
-import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
-import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
-import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
@@ -40,6 +37,12 @@ public class PubSubUtils {
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
             futures.add(completableFuture);
             completableFuture.thenAccept(reply -> {
+                if (reply instanceof ErrorReply) {
+                    String error = ((ErrorReply) reply).getError();
+                    if (error != null && error.startsWith("MOVED")) {
+                        reply = ErrorReply.COMMAND_MOVED_BY_UPSTREAM_SERVER;
+                    }
+                }
                 //parse reply must before send reply to connection
                 SubscribeCount subscribeCount = tryGetSubscribeChannelCount(reply);
                 future.complete(reply);
@@ -65,6 +68,12 @@ public class PubSubUtils {
                 completableFuture.thenAccept(reply -> {
                     if (connection.queueSize() < 8 && connection.isValid()) {
                         sendByBindClient(resource, connection, taskQueue, null, null, false, redisCommand);
+                    }
+                    if (reply instanceof ErrorReply) {
+                        String error = ((ErrorReply) reply).getError();
+                        if (error != null && error.startsWith("MOVED")) {
+                            reply = ErrorReply.COMMAND_MOVED_BY_UPSTREAM_SERVER;
+                        }
                     }
                     //parse reply must before send reply to connection
                     SubscribeCount subscribeCount = tryGetSubscribeChannelCount(reply);

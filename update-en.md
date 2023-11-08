@@ -1,5 +1,17 @@
 [中文版](update-zh.md)
 
+
+# 1.2.20（2023/11/xx）
+### add
+* none
+
+### update
+* camellia-redis-proxy optimize error reply in sharding-pubsub
+
+### fix
+* none
+
+
 # 1.2.19（2023/11/07）
 ### add
 * provide camellia-redis-proxy-nacos-bootstrap, so Operations Engineer can use nacos to manager camellia-redis-proxy cluster without java development

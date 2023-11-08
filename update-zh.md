@@ -1,5 +1,17 @@
 [ENGLISH](update-en.md)
 
+
+# 1.2.20（2023/11/xx）
+### 新增
+* 无
+
+### 更新
+* camellia-redis-proxy，当使用shard-pubsub命令时，后端可能返回`MOVED XXX`错误信息，proxy应该重写error信息，避免上游的ip被暴露给客户端
+
+### fix
+* 无
+
+
 # 1.2.19（2023/11/07）
 ### 新增
 * 新增camellia-redis-proxy-nacos-bootstrap，从而方便运维人员不需要进行java开发即可使用nacos管理proxy集群
