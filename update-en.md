@@ -7,6 +7,7 @@
 
 ### update
 * camellia-redis-proxy optimize error reply in sharding-pubsub
+* camellia-redis-proxy optimize idle-check logic
 
 ### fix
 * none

@@ -58,6 +58,10 @@ public class CommandTaskQueue {
         queue.clear();
     }
 
+    public boolean isEmpty() {
+        return queue.isEmpty();
+    }
+
     public void callback() {
         if (callbacking.compareAndSet(false, true)) {
             try {

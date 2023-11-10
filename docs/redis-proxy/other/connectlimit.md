@@ -88,3 +88,18 @@ all.idle.client.connection.force.close.enable=true
 ##bid/bgroup level configuration, the priority is higher than the global configuration
 1.default.all.idle.client.connection.force.close.enable=true
 ````
+
+other config
+```
+## default true, such as SUBSCRIBE
+### global level
+idle.client.connection.force.close.check.in.subscribe=true
+### bid/bgroup level
+1.default.idle.client.connection.force.close.check.in.subscribe=true
+
+## default false, such as BLPOP
+### global level
+idle.client.connection.force.close.check.command.running=false
+### bid/bgroup level
+1.default.idle.client.connection.force.close.check.command.running=false
+```

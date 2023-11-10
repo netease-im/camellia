@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
+import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleState;
@@ -27,28 +28,33 @@ public class IdleCloseHandler extends IdleStateHandler {
         Long bid = channelInfo == null ? null : channelInfo.getBid();
         String bgroup = channelInfo == null ? null : channelInfo.getBgroup();
         boolean inSubscribe = channelInfo != null && channelInfo.isInSubscribe();
+        boolean isCommandRunning = channelInfo != null && channelInfo.getCommandTaskQueue() != null && !channelInfo.getCommandTaskQueue().isEmpty();
+        boolean checkInSubscribe = ProxyDynamicConf.getBoolean("idle.client.connection.force.close.check.in.subscribe", bid, bgroup, true);
+        boolean checkCommandRunning = ProxyDynamicConf.getBoolean("idle.client.connection.force.close.check.command.running", bid, bgroup, false);
+        logger.info("client connection {}, client.addr = {}, consid = {}, bid = {}, bgroup = {}",
+                evt.state(), ctx.channel().remoteAddress(), consid, bid, bgroup);
+        if (isCommandRunning && checkCommandRunning) {
+            return;
+        }
+        if (inSubscribe && checkInSubscribe) {
+            return;
+        }
         if (evt.state() == IdleState.READER_IDLE) {
-            logger.info("client connection reader idle, client.addr = {}, consid = {}, bid = {}, bgroup = {}",
-                    ctx.channel().remoteAddress(), consid, bid, bgroup);
-            if (!inSubscribe && ProxyDynamicConf.getBoolean("reader.idle.client.connection.force.close.enable", bid, bgroup, false)) {
-                logger.warn("client connection force close for reader idle, client.addr = {}, consid = {}, bid = {}, bgroup = {}",
-                        ctx.channel().remoteAddress(), consid, bid, bgroup);
+            if (ProxyDynamicConf.getBoolean("reader.idle.client.connection.force.close.enable", bid, bgroup, false)) {
+                logger.warn("client connection force close for {}, client.addr = {}, consid = {}, bid = {}, bgroup = {}",
+                        evt.state(), ctx.channel().remoteAddress(), consid, bid, bgroup);
                 ctx.close();
             }
         } else if (evt.state() == IdleState.WRITER_IDLE) {
-            logger.info("client connection writer idle, client.addr = {}, consid = {}, bid = {}, bgroup = {}",
-                    ctx.channel().remoteAddress(), consid, bid, bgroup);
-            if (!inSubscribe && ProxyDynamicConf.getBoolean("writer.idle.client.connection.force.close.enable", bid, bgroup, false)) {
-                logger.warn("client connection force close for writer idle, client.addr = {}, consid = {}, bid = {}, bgroup = {}",
-                        ctx.channel().remoteAddress(), consid, bid, bgroup);
+            if (ProxyDynamicConf.getBoolean("writer.idle.client.connection.force.close.enable", bid, bgroup, false)) {
+                logger.warn("client connection force close for {}, client.addr = {}, consid = {}, bid = {}, bgroup = {}",
+                        evt.state(), ctx.channel().remoteAddress(), consid, bid, bgroup);
                 ctx.close();
             }
         } else if (evt.state() == IdleState.ALL_IDLE) {
-            logger.info("client connection all idle, client.addr = {}, consid = {}, bid = {}, bgroup = {}",
-                    ctx.channel().remoteAddress(), consid, bid, bgroup);
-            if (!inSubscribe && ProxyDynamicConf.getBoolean("all.idle.client.connection.force.close.enable", bid, bgroup, false)) {
-                logger.warn("client connection force close for all idle, client.addr = {}, consid = {}, bid = {}, bgroup = {}",
-                        ctx.channel().remoteAddress(), consid, bid, bgroup);
+            if (ProxyDynamicConf.getBoolean("all.idle.client.connection.force.close.enable", bid, bgroup, false)) {
+                logger.warn("client connection force close for {}, client.addr = {}, consid = {}, bid = {}, bgroup = {}",
+                        evt.state(), ctx.channel().remoteAddress(), consid, bid, bgroup);
                 ctx.close();
             }
         }
