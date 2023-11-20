@@ -8,6 +8,8 @@
 ### 更新
 * camellia-redis-proxy，当使用shard-pubsub命令时，后端可能返回`MOVED XXX`错误信息，proxy应该重写error信息，避免上游的ip被暴露给客户端
 * camellia-redis-proxy，当开启客户端连接idle检测，如果是一个类似于blpop的阻塞型命令，支持配置是否关闭连接
+* camellia-redis-proxy，对接camellia-dashboard时，从HttpURLConnection改成OkHttpClient作为底层http-client
+* camellia-redis-proxy，对接camellia-dashboard时，支持使用v2-api，降低http-body的大小
 
 ### fix
 * 无

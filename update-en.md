@@ -8,6 +8,8 @@
 ### update
 * camellia-redis-proxy optimize error reply in sharding-pubsub
 * camellia-redis-proxy optimize idle-check logic
+* camellia-redis-proxy，when use camellia-dashboard, replace HttpURLConnection to OkHttpClient as the http-client
+* camellia-redis-proxy，when use camellia-dashboard, support use v2-api, reduce the http body size
 
 ### fix
 * none

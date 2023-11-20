@@ -1,12 +1,17 @@
 package com.netease.nim.camellia.core.api;
 
 import com.netease.nim.camellia.core.conf.FileBasedCamelliaConfig;
+import feign.Client;
 import feign.Feign;
 import feign.Request;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
+import feign.okhttp.OkHttpClient;
+import okhttp3.ConnectionPool;
+import okhttp3.Dispatcher;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by caojiajun on 2019/11/25.
@@ -57,6 +62,17 @@ public class CamelliaApiUtil {
                 }
             }
         }
+        Dispatcher dispatcher = new Dispatcher();
+        dispatcher.setMaxRequests(2048);
+        dispatcher.setMaxRequestsPerHost(256);
+        okhttp3.OkHttpClient okHttpClient = new okhttp3.OkHttpClient.Builder()
+                .readTimeout(readTimeoutMillis, TimeUnit.MILLISECONDS)
+                .writeTimeout(readTimeoutMillis, TimeUnit.MILLISECONDS)
+                .connectTimeout(connectTimeoutMillis, TimeUnit.MILLISECONDS)
+                .connectionPool(new ConnectionPool(256, 4, TimeUnit.SECONDS))
+                .dispatcher(dispatcher)
+                .build();
+        Client client = new OkHttpClient(okHttpClient);
         return Feign.builder()
                 .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder())
@@ -70,6 +86,7 @@ public class CamelliaApiUtil {
                         }
                     }
                 })
+                .client(client)
                 .options(new Request.Options(connectTimeoutMillis, readTimeoutMillis))
                 .target(clazz, url);
     }

@@ -29,6 +29,11 @@
 			<version>${openFeign9.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-okhttp</artifactId>
+			<version>${openFeign9.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
 			<version>${okhttp.version}</version>
