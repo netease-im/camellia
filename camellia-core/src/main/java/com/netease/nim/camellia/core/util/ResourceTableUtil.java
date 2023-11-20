@@ -31,6 +31,18 @@ public class ResourceTableUtil {
         return v2Response;
     }
 
+    public static CamelliaApiResponse toV1Response(CamelliaApiV2Response response) {
+        CamelliaApiResponse v1Response = new CamelliaApiResponse();
+        v1Response.setCode(response.getCode());
+        v1Response.setMd5(response.getMd5());
+        String routeTable = response.getRouteTable();
+        if (routeTable != null) {
+            ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(routeTable);
+            v1Response.setResourceTable(resourceTable);
+        }
+        return v1Response;
+    }
+
     public static ResourceTable immutableResourceTable(ResourceTable resourceTable) {
         if (resourceTable == null) return null;
         ResourceTable immutableResourceTable = new ResourceTable();

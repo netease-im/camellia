@@ -113,7 +113,13 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         this.resourceChecker = env.getResourceChecker();
         multiWriteModeCallback.callback();
         ProxyDynamicConf.registerCallback(multiWriteModeCallback);
-        CamelliaApiResponse response = service.getResourceTable(bid, bgroup, null);
+        boolean v2 = ProxyDynamicConf.getBoolean("dashboard.api.v2.enable", false);
+        CamelliaApiResponse response;
+        if (v2) {
+            response = ResourceTableUtil.toV1Response(service.getResourceTableV2(bid, bgroup, null));
+        } else {
+            response = service.getResourceTable(bid, bgroup, null);
+        }
         String md5 = response.getMd5();
         if (response.getResourceTable() == null) {
             throw new CamelliaRedisException("resourceTable is null");
@@ -121,8 +127,8 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
         RedisResourceUtil.checkResourceTable(response.getResourceTable());
         this.update(response.getResourceTable());
         if (logger.isInfoEnabled()) {
-            logger.info("UpstreamRedisClientTemplate init success, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}", bid, bgroup, md5,
-                    ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(response.getResourceTable())));
+            logger.info("UpstreamRedisClientTemplate init success, api-version = {}, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}",
+                    v2 ? "v2" : "v1", bid, bgroup, md5, ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(response.getResourceTable())));
         }
         if (reload) {
             DashboardReloadTask dashboardReloadTask = new DashboardReloadTask(this, service, bid, bgroup, md5);
@@ -1233,38 +1239,30 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
             if (running.compareAndSet(false, true)) {
                 try {
                     boolean v2 = ProxyDynamicConf.getBoolean("dashboard.api.v2.enable", false);
-                    int code;
-                    ResourceTable resourceTable;
-                    String md5;
+                    CamelliaApiResponse response;
                     if (v2) {
-                        CamelliaApiV2Response response = service.getResourceTableV2(bid, bgroup, this.md5);
-                        code = response.getCode();
-                        resourceTable = ReadableResourceTableUtil.parseTable(response.getRouteTable());
-                        md5 = response.getMd5();
+                        response = ResourceTableUtil.toV1Response(service.getResourceTableV2(bid, bgroup, this.md5));
                     } else {
-                        CamelliaApiResponse response = service.getResourceTable(bid, bgroup, this.md5);
-                        code = response.getCode();
-                        resourceTable = response.getResourceTable();
-                        md5 = response.getMd5();
+                        response = service.getResourceTable(bid, bgroup, this.md5);
                     }
-                    if (code == CamelliaApiCode.NOT_MODIFY.getCode()) {
+                    if (response.getCode() == CamelliaApiCode.NOT_MODIFY.getCode()) {
                         if (logger.isTraceEnabled()) {
                             logger.trace("not modify, bid = {}, bgroup = {}, md5 = {}", bid, bgroup, md5);
                         }
                         return;
                     }
                     try {
-                        RedisResourceUtil.checkResourceTable(resourceTable);
+                        RedisResourceUtil.checkResourceTable(response.getResourceTable());
                     } catch (Exception e) {
                         logger.error("resourceTable check error, skip reload, bid = {}, bgroup = {}, resourceTable = {}",
-                                bid, bgroup, ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(resourceTable)), e);
+                                bid, bgroup, ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(response.getResourceTable())), e);
                         return;
                     }
-                    template.update(resourceTable);
-                    this.md5 = md5;
+                    template.update(response.getResourceTable());
+                    this.md5 = response.getMd5();
                     if (logger.isInfoEnabled()) {
                         logger.info("reload success, api_version = {}, bid = {}, bgroup = {}, md5 = {}, resourceTable = {}", v2 ? "v2" : "v1", bid, bgroup, md5,
-                                ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(resourceTable)));
+                                ReadableResourceTableUtil.readableResourceTable(PasswordMaskUtils.maskResourceTable(response.getResourceTable())));
                     }
                 } catch (Exception e) {
                     Throwable ex = ExceptionUtils.onError(e);
