@@ -5,9 +5,7 @@ import com.netease.nim.camellia.tools.utils.LockMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -109,7 +107,7 @@ public class CamelliaLinearInitializationExecutor<K, T> implements CamelliaExecu
                             }
                         }
                     } catch (Exception e) {
-                        logger.error("initialize error, key = {}", keyStr);
+                        logger.error("initialize error, key = {}", keyStr, e);
                         synchronized (lockMap.getLockObj(keyStr)) {
                             clearFutureQueue(keyStr, null);
                         }
@@ -173,7 +171,7 @@ public class CamelliaLinearInitializationExecutor<K, T> implements CamelliaExecu
             try {
                 completableFuture.complete(value);
             } catch (Exception e) {
-                logger.error("complete error, key = {}", keyStr);
+                logger.error("complete error, key = {}", keyStr, e);
             }
             completableFuture = queue.poll();
         }

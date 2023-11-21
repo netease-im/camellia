@@ -51,7 +51,9 @@ public class ApiController implements CamelliaApi {
 
     @ApiOperation(value = "获取资源表", notes = "这是一个心跳接口，客户端定时来拉取（如5s），通过MD5值判断是否有更新")
     @GetMapping(value = "/v2/resourceTable")
-    public CamelliaApiV2Response getResourceTableV2(Long bid, String bgroup, String md5) {
+    public CamelliaApiV2Response getResourceTableV2(@RequestParam("bid") Long bid,
+                                                    @RequestParam("bgroup") String bgroup,
+                                                    @RequestParam(value = "md5", required = false) String md5) {
         LogBean.get().addProps("bid", bid);
         LogBean.get().addProps("bgroup", bgroup);
         LogBean.get().addProps("md5", md5);
