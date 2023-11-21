@@ -116,7 +116,9 @@ public class CamelliaRedisProxyUtil {
             if (fileInfo == null || fileInfo.getFileContent() == null) {
                 throw new IllegalArgumentException(jsonFile + " read fail");
             }
-            resourceTable = ReadableResourceTableUtil.parseTable(fileInfo.getFileContent());
+            String fileContent = fileInfo.getFileContent();
+            fileContent = fileContent.trim();
+            resourceTable = ReadableResourceTableUtil.parseTable(fileContent);
             RedisResourceUtil.checkResourceTable(resourceTable);
             boolean dynamic = properties.isDynamic();
             if (dynamic && fileInfo.getFilePath() != null) {
