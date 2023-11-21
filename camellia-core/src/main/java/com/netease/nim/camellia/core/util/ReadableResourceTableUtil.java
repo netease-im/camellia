@@ -17,6 +17,7 @@ import java.util.*;
 public class ReadableResourceTableUtil {
 
     public static ResourceTable parseTable(String string) {
+        string = string.trim();
         JSONObject jsonObject;
         try {
             jsonObject = JSONObject.parseObject(string);
