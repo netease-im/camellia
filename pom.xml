@@ -53,7 +53,7 @@
 		<okhttp.version>3.14.9</okhttp.version>
 		<okhttp4.version>4.11.0</okhttp4.version>
 		<slf4j.version>1.7.7</slf4j.version>
-		<netty.version>4.1.101.Final</netty.version>
+		<netty.version>4.1.100.Final</netty.version>
 		<jctools.version>4.0.1</jctools.version>
 		<netty-incubator-transport-native-io_uring.version>0.0.23.Final</netty-incubator-transport-native-io_uring.version>
 		<netty-incubator-codec-native-quic.version>0.0.51.Final</netty-incubator-codec-native-quic.version>
