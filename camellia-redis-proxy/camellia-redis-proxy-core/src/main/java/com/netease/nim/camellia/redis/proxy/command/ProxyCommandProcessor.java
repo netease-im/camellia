@@ -3,22 +3,24 @@ package com.netease.nim.camellia.redis.proxy.command;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthProvider;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
+import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPluginInitResp;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
-import com.netease.nim.camellia.tools.utils.SysUtils;
+import com.netease.nim.camellia.tools.utils.InetUtils;
 import io.netty.util.concurrent.DefaultThreadFactory;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -30,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ProxyCommandProcessor {
 
-    private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(SysUtils.getCpuNum(), SysUtils.getCpuNum(),
+    private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 2,
             0, TimeUnit.SECONDS, new LinkedBlockingDeque<>(1024),
             new DefaultThreadFactory("proxy-command-invoker"), new ThreadPoolExecutor.AbortPolicy());
 
@@ -88,6 +90,9 @@ public class ProxyCommandProcessor {
                             break;
                         case CONFIG:
                             future.complete(config(args));
+                            break;
+                        case SERVERS:
+                            future.complete(servers());
                             break;
                         default:
                             future.complete(error);
@@ -193,9 +198,47 @@ public class ProxyCommandProcessor {
         }
     }
 
+    private static Reply servers() {
+        if (proxyClusterModeProcessor != null) {
+            //开关
+            BulkReply redisClusterModeEnable = new BulkReply(Utils.stringToBytes("redis_cluster_mode_enable:true"));
+            //current
+            ProxyNode currentNode = proxyClusterModeProcessor.getCurrentNode();
+            BulkReply current = new BulkReply(Utils.stringToBytes(currentNode.toString()));
+            //list
+            List<BulkReply> list = new ArrayList<>();
+            List<ProxyNode> onlineNodes = proxyClusterModeProcessor.getOnlineNodes();
+            for (ProxyNode onlineNode : onlineNodes) {
+                list.add(new BulkReply(Utils.stringToBytes(onlineNode.toString())));
+            }
+            return new MultiBulkReply(new Reply[]{redisClusterModeEnable, current, new MultiBulkReply(list.toArray(new Reply[0]))});
+        } else {
+            //开关
+            BulkReply redisClusterModeEnable = new BulkReply(Utils.stringToBytes("redis_cluster_mode_enable:false"));
+            //current
+            ProxyNode currentNode = getCurrentNode();
+            BulkReply current = new BulkReply(Utils.stringToBytes(currentNode.toString()));
+            //list
+            List<BulkReply> list = new ArrayList<>();
+            List<ProxyNode> nodes = getNodes();
+            boolean containsCurrent = false;
+            for (ProxyNode node : nodes) {
+                if (node.equals(currentNode)) {
+                    containsCurrent = true;
+                }
+                list.add(new BulkReply(Utils.stringToBytes(node.toString())));
+            }
+            if (!containsCurrent) {
+                list.add(new BulkReply(Utils.stringToBytes(currentNode.toString())));
+            }
+            return new MultiBulkReply(new Reply[]{redisClusterModeEnable, current, new MultiBulkReply(list.toArray(new Reply[0]))});
+        }
+    }
+
     private static enum Section {
         INFO,
         CONFIG,
+        SERVERS,
         ;
 
         public static Section byValue(String section) {
@@ -206,5 +249,39 @@ public class ProxyCommandProcessor {
             }
             return null;
         }
+    }
+
+    private static ProxyNode getCurrentNode() {
+        String currentNodeHost = ProxyDynamicConf.getString("proxy.node.current.host", null);
+        if (currentNodeHost == null) {
+            InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress();
+            if (inetAddress == null) {
+                currentNodeHost = "127.0.0.1";
+            } else {
+                currentNodeHost = inetAddress.getHostAddress();
+            }
+        }
+        ProxyNode currentNode = new ProxyNode();
+        currentNode.setHost(currentNodeHost);
+        currentNode.setPort(GlobalRedisProxyEnv.getPort());
+        currentNode.setCport(GlobalRedisProxyEnv.getCport());
+        return currentNode;
+    }
+
+    private static List<ProxyNode> getNodes() {
+        String string = ProxyDynamicConf.getString("proxy.nodes", "");
+        List<ProxyNode> list = new ArrayList<>();
+        if (string != null && string.trim().length() > 0) {
+            string = string.trim();
+            String[] split = string.split(",");
+            for (String str : split) {
+                ProxyNode proxyNode = ProxyNode.parseString(str);
+                if (proxyNode == null) {
+                    continue;
+                }
+                list.add(proxyNode);
+            }
+        }
+        return list;
     }
 }

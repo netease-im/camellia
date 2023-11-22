@@ -216,6 +216,22 @@ public class ProxyClusterModeProcessor {
         }
     }
 
+    /**
+     * 获取当前节点
+     * @return 当前节点
+     */
+    public ProxyNode getCurrentNode() {
+        return currentNode;
+    }
+
+    /**
+     * 获取在线节点列表
+     * @return 节点列表
+     */
+    public List<ProxyNode> getOnlineNodes() {
+        return new ArrayList<>(onlineNodes);
+    }
+
     private CompletableFuture<Reply> wrapper(Reply reply) {
         CompletableFuture<Reply> future = new CompletableFuture<>();
         future.complete(reply);

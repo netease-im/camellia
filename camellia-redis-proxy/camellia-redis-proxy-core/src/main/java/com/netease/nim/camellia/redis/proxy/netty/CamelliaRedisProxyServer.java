@@ -138,16 +138,23 @@ public class CamelliaRedisProxyServer {
         GlobalRedisProxyEnv.setTlsPort(tlsPort);
         this.port = port;
         this.tlsPort = tlsPort;
+        int cport = serverProperties.getCport();
         if (serverProperties.isClusterModeEnable()) {
-            int cport = serverProperties.getCport();
             if (cport <= 0) {
                 cport = port + 10000;
             }
+        }
+        if (cport > 0) {
             ChannelFuture channelFuture = serverBootstrap.bind(cport).sync();
             GlobalRedisProxyEnv.setCport(cport);
             GlobalRedisProxyEnv.getProxyShutdown().setCportChannelFuture(channelFuture);
-            logger.info("CamelliaRedisProxyServer start in cluster mode at cport: {}", cport);
+            if (serverProperties.isClusterModeEnable()) {
+                logger.info("CamelliaRedisProxyServer start in cluster mode at cport: {}", cport);
+            } else {
+                logger.info("CamelliaRedisProxyServer start at cport: {}", cport);
+            }
         }
+
         ChannelFuture future3 = startUds();
         GlobalRedisProxyEnv.getProxyShutdown().setServerChannelFuture(future1, future2, future3);
         logger.info("CamelliaRedisProxyServer start success, version = {}", ProxyInfoUtils.VERSION);
