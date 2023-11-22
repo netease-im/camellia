@@ -18,6 +18,7 @@ public class ProxyDynamicConf {
 
     private static final Logger logger = LoggerFactory.getLogger(ProxyDynamicConf.class);
 
+    private static Map<String, String> initConf = new HashMap<>();
     private static Map<String, String> conf = new HashMap<>();
     private static final Set<DynamicConfCallback> callbackSet = new HashSet<>();
 
@@ -42,6 +43,7 @@ public class ProxyDynamicConf {
     public static void init(Map<String, String> initConf, ProxyDynamicConfLoader loader) {
         ProxyDynamicConf.loader = loader;
         if (initConf != null && !initConf.isEmpty()) {
+            ProxyDynamicConf.initConf = initConf;
             loader.init(initConf);
         } else {
             loader.init(new HashMap<>());
@@ -64,8 +66,8 @@ public class ProxyDynamicConf {
      * 获取配置
      * @return conf
      */
-    public static Map<String, String> getConf() {
-        return new HashMap<>(conf);
+    public static ConfigResp getConfigResp() {
+        return new ConfigResp(initConf, conf);
     }
 
     /**

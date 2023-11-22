@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthProvider;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
+import com.netease.nim.camellia.redis.proxy.conf.ConfigResp;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
@@ -21,7 +22,6 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -180,16 +180,19 @@ public class ProxyCommandProcessor {
         }
         String type = Utils.bytesToString(args[2]);
         if (type.equalsIgnoreCase("list")) {//proxy config list
+            ConfigResp configResp = ProxyDynamicConf.getConfigResp();
+            IntegerReply sizeReply = new IntegerReply((long) configResp.getConfigSize());
+            BulkReply initConfigMd5 = new BulkReply(Utils.stringToBytes(configResp.getInitConfigMd5()));
+            BulkReply specialConfigMd5 = new BulkReply(Utils.stringToBytes(configResp.getSpecialConfigMd5()));
+            BulkReply configMd5 = new BulkReply(Utils.stringToBytes(configResp.getConfigsMd5()));
+            MultiBulkReply meta = new MultiBulkReply(new Reply[]{sizeReply, initConfigMd5, specialConfigMd5, configMd5});
             List<MultiBulkReply> list = new ArrayList<>();
-            Map<String, String> conf = ProxyDynamicConf.getConf();
-            IntegerReply sizeReply = new IntegerReply((long)conf.size());
-            for (Map.Entry<String, String> entry : conf.entrySet()) {
-                BulkReply key = new BulkReply(Utils.stringToBytes(entry.getKey()));
-                BulkReply value = new BulkReply(Utils.stringToBytes(entry.getValue()));
-                MultiBulkReply config = new MultiBulkReply(new Reply[] {key, value});
-                list.add(config);
+            for (ConfigResp.ConfigEntry config : configResp.getConfigs()) {
+                BulkReply key = new BulkReply(Utils.stringToBytes(config.getKey()));
+                BulkReply value = new BulkReply(Utils.stringToBytes(config.getValue()));
+                list.add(new MultiBulkReply(new Reply[]{key, value}));
             }
-            return new MultiBulkReply(new Reply[]{sizeReply, new MultiBulkReply(list.toArray(new Reply[0]))});
+            return new MultiBulkReply(new Reply[]{meta, new MultiBulkReply(list.toArray(new Reply[0]))});
         } else if (type.equalsIgnoreCase("reload")) {//proxy config reload
             ProxyDynamicConf.reload();
             return StatusReply.OK;
