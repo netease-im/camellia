@@ -18,6 +18,10 @@ public class AuthCommandProcessor {
         this.clientAuthProvider = clientAuthProvider;
     }
 
+    public ClientAuthProvider getClientAuthProvider() {
+        return clientAuthProvider;
+    }
+
     public Reply invokeAuthCommand(ChannelInfo channelInfo, Command auth) {
         if (!this.clientAuthProvider.isPasswordRequired()) {
             return new ErrorReply("ERR Client sent AUTH, but no password is set");

@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream;
 
+import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiUtil;
 import com.netease.nim.camellia.core.api.ResourceTableRemoveCallback;
@@ -7,6 +8,7 @@ import com.netease.nim.camellia.core.api.ResourceTableUpdateCallback;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
 import com.netease.nim.camellia.core.client.env.ShardingFunc;
 import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.redis.proxy.command.ProxyCommandProcessor;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultBeanFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.utils.ScheduledResourceChecker;
@@ -229,6 +231,8 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         if (local == null) {
             throw new IllegalArgumentException("local is null");
         }
+        JSONObject transpondConfig = new JSONObject(true);
+        transpondConfig.put("type", "local");
         ResourceTable resourceTable = local.getResourceTable();
         if (resourceTable != null) {
             localInstance = new UpstreamRedisClientTemplate(env, resourceTable);
@@ -236,12 +240,15 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
             String resourceTableFilePath = local.getResourceTableFilePath();
             if (resourceTableFilePath != null) {
                 localInstance = new UpstreamRedisClientTemplate(env, resourceTableFilePath, local.getCheckIntervalMillis());
+                transpondConfig.put("resourceTableFilePath", resourceTableFilePath);
             }
         }
         if (localInstance == null) {
             throw new IllegalArgumentException("local.resourceTable/local.resourceTableFilePath is null");
         }
         multiTenantsSupport = false;
+        transpondConfig.put("multiTenantsSupport", false);
+        ProxyCommandProcessor.setTranspondConfig(transpondConfig);
     }
 
     private void initRemote() {
@@ -253,6 +260,9 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         if (url == null) {
             throw new IllegalArgumentException("remote.url is null");
         }
+        JSONObject transpondConfig = new JSONObject(true);
+        transpondConfig.put("type", "remote");
+        transpondConfig.put("url", url);
 
         apiService = CamelliaApiUtil.init(url, remote.getConnectTimeoutMillis(), remote.getReadTimeoutMillis(), remote.getHeaderMap());
         logger.info("ApiService init, url = {}", url);
@@ -260,6 +270,8 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         logger.info("Remote dynamic = {}", dynamic);
         if (remote.getBid() > 0 && remote.getBgroup() != null) {
             remoteInstance = initRemoteInstance(remote.getBid(), remote.getBgroup());
+            transpondConfig.put("bid", remote.getBid());
+            transpondConfig.put("brgoup", remote.getBgroup());
         }
         multiTenantsSupport = remote.isDynamic();
         if (multiTenantsSupport) {
@@ -272,6 +284,8 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
                 executor.put(remote.getBid() + "|" + remote.getBgroup(), remoteInstance);
             }
         }
+        transpondConfig.put("multiTenantsSupport", multiTenantsSupport);
+        ProxyCommandProcessor.setTranspondConfig(transpondConfig);
     }
 
     private void initCustom() {
@@ -284,11 +298,18 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         if (proxyRouteConfUpdater == null) {
             throw new IllegalArgumentException("proxyRouteConfUpdater is null");
         }
+
+        JSONObject transpondConfig = new JSONObject(true);
+        transpondConfig.put("type", "custom");
+        transpondConfig.put("proxyRouteConfUpdater", proxyRouteConfUpdater.getClass().getName());
+
         this.updater = proxyRouteConfUpdater;
         boolean dynamic = custom.isDynamic();
         logger.info("Custom dynamic = {}", dynamic);
         if (custom.getBid() > 0 && custom.getBgroup() != null) {
             customInstance = initCustomInstance(custom.getBid(), custom.getBgroup());
+            transpondConfig.put("bid", custom.getBid());
+            transpondConfig.put("brgoup", custom.getBgroup());
         }
         multiTenantsSupport = custom.isDynamic();
         if (multiTenantsSupport) {
@@ -301,6 +322,8 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
                 executor.put(custom.getBid() + "|" + custom.getBgroup(), customInstance);
             }
         }
+        transpondConfig.put("multiTenantsSupport", multiTenantsSupport);
+        ProxyCommandProcessor.setTranspondConfig(transpondConfig);
     }
 
     private UpstreamRedisClientTemplate initCustomInstance(long bid, String bgroup) {

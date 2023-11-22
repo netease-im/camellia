@@ -46,7 +46,6 @@ public class CommandsTransponder {
     private final ProxyClusterModeProcessor clusterModeProcessor;
     private final IUpstreamClientTemplateFactory factory;
     private final ProxyPluginFactory proxyPluginFactory;
-
     private boolean eventLoopSetSuccess = false;
 
     private ProxyPluginInitResp proxyPluginInitResp;
@@ -57,8 +56,15 @@ public class CommandsTransponder {
         this.clusterModeProcessor = commandInvokeConfig.getClusterModeProcessor();
         this.proxyPluginFactory = commandInvokeConfig.getProxyPluginFactory();
         this.proxyPluginInitResp = proxyPluginFactory.initPlugins();
+        ProxyCommandProcessor.updateProxyPluginInitResp(proxyPluginInitResp);
+        ProxyCommandProcessor.setUpstreamClientTemplateFactory(factory);
+        ProxyCommandProcessor.setClientAuthProvider(authCommandProcessor.getClientAuthProvider());
+        ProxyCommandProcessor.setProxyClusterModeProcessor(clusterModeProcessor);
         // 刷新插件用的
-        proxyPluginFactory.registerPluginUpdate(() -> proxyPluginInitResp = proxyPluginFactory.initPlugins());
+        proxyPluginFactory.registerPluginUpdate(() -> {
+            proxyPluginInitResp = proxyPluginFactory.initPlugins();
+            ProxyCommandProcessor.updateProxyPluginInitResp(proxyPluginInitResp);
+        });
     }
 
     public void transpond(ChannelInfo channelInfo, List<Command> commands) {
@@ -250,6 +256,14 @@ public class CommandsTransponder {
                     //info命令
                     if (redisCommand == RedisCommand.INFO) {
                         CompletableFuture<Reply> future = ProxyInfoUtils.getInfoReply(command, factory);
+                        future.thenAccept(task::replyCompleted);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+
+                    //proxy命令
+                    if (redisCommand == RedisCommand.PROXY) {
+                        CompletableFuture<Reply> future = ProxyCommandProcessor.process(command);
                         future.thenAccept(task::replyCompleted);
                         hasCommandsSkip = true;
                         continue;
