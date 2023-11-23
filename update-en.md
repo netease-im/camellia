@@ -3,7 +3,7 @@
 
 # 1.2.20（2023/11/xx）
 ### add
-* none
+* camellia-redis-proxy support `PROXY` command, so you can use any proxy node to manager other proxy nodes' config, sometimes to replace nacos/etcd as the config center
 
 ### update
 * camellia-redis-proxy optimize error reply in sharding-pubsub
