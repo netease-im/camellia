@@ -50,6 +50,7 @@ public class ProxyCommandProcessor {
             new DefaultThreadFactory("proxy-command-invoker"), new ThreadPoolExecutor.AbortPolicy());
 
     private static final ErrorReply error = new ErrorReply("ERR unknown section for 'PROXY' command");
+    private static final ErrorReply md5NotMatch = new ErrorReply("ERR md5 not match");
     private static final ErrorReply notWritable = new ErrorReply("ERR configLoader is not writable");
     private static final ErrorReply writeError = new ErrorReply("ERR configLoader write error");
 
@@ -253,6 +254,28 @@ public class ProxyCommandProcessor {
 
             //reply
             return new MultiBulkReply(new Reply[]{currentReply, othersReply});
+        } else if (type.equalsIgnoreCase("checkMd5")) {
+            ConfigResp configResp = ProxyDynamicConf.getConfigResp();
+            String specialConfigMd5 = configResp.getSpecialConfigMd5();
+            if (args.length < 4) {
+                return ErrorReply.SYNTAX_ERROR;
+            }
+            String md5 = Utils.bytesToString(args[3]);
+            if (specialConfigMd5.equalsIgnoreCase(md5)) {
+                return StatusReply.OK;
+            } else {
+                return md5NotMatch;
+            }
+        } else if (type.equalsIgnoreCase("checkMd5All")) {
+            ConfigResp configResp = ProxyDynamicConf.getConfigResp();
+            String specialConfigMd5 = configResp.getSpecialConfigMd5();
+            ProxyNode currentNode = getCurrentNode();
+            byte[][] cmd = new byte[][]{RedisCommand.PROXY.raw(), Section.CONFIG.raw(), Utils.stringToBytes("checkMd5"), Utils.stringToBytes(specialConfigMd5)};
+            List<ProxyNode> nodes = getNodes();
+
+            Reply othersReply = broadcastCommand(nodes, currentNode, cmd);
+
+            return new MultiBulkReply(new Reply[]{new BulkReply(Utils.stringToBytes(specialConfigMd5)), othersReply});
         } else {
             return ErrorReply.SYNTAX_ERROR;
         }
