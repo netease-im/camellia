@@ -293,6 +293,7 @@ camellia-redis-proxy提供了丰富的监控功能，包括：
 * 使用自定义分片时调整分片数量的一个思路，具体见：[custom_resharding](other/custom_resharding.md)
 * 使用etcd管理proxy配置的一个完整示例【运维实施】，具体见：[etcd-sample](other/etcd_sample.md)
 * 使用nacos管理proxy配置的一个完整示例【运维实施】，具体见：[nacos-sample](other/nacos_sample.md)
+* 使用proxy命令批量管理proxy集群配置的说明，具体见：[proxy_command](other/proxy_command.md)
 
 ## 应用场景
 * 业务开始使用redis-standalone或者redis-sentinel，现在需要切换到redis-cluster，但是客户端需要改造（比如jedis访问redis-sentinel和redis-cluster是不一样的），此时你可以使用proxy，从而做到不改造（使用四层代理LB）或者很少的改造（使用注册中心）
