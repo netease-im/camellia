@@ -8,12 +8,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Load configuration from the file.
  * Created by caojiajun on 2023/2/24
  */
-public class FileBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
+public class FileBasedProxyDynamicConfLoader implements WritableProxyDynamicConfLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(FileBasedProxyDynamicConfLoader.class);
     private static final String DEFAULT_FILE_NAME = "camellia-redis-proxy.properties";
@@ -25,6 +26,10 @@ public class FileBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
 
     private Map<String, String> initConf = new HashMap<>();
 
+    private String targetFilePath;
+
+    private final ReentrantLock lock = new ReentrantLock();
+
     /**
      * 如果没有配置{@link FileBasedProxyDynamicConfLoader#DYNAMIC_CONF_FILE_NAME}，就从 {@link FileBasedProxyDynamicConfLoader#DEFAULT_FILE_NAME} 中读取
      * 如果指定了{@link FileBasedProxyDynamicConfLoader#DYNAMIC_CONF_FILE_PATH} 也会进行读取。
@@ -35,33 +40,69 @@ public class FileBasedProxyDynamicConfLoader implements ProxyDynamicConfLoader {
      */
     @Override
     public Map<String, String> load() {
-        Map<String, String> conf = new HashMap<>(initConf);
-        String fileName = conf.get(DYNAMIC_CONF_FILE_NAME);
-        if (fileName == null) {
-            fileName = DEFAULT_FILE_NAME;
-        }
+        lock.lock();
         try {
-            FileUtils.FileInfo fileInfo = FileUtils.readByFileName(fileName);
-            if (fileInfo != null && fileInfo.getFileContent() != null) {
-                Map<String, String> map = ConfigurationUtil.contentToMap(fileInfo.getFileContent(), ConfigContentType.properties);
-                conf.putAll(map);
+            Map<String, String> conf = new HashMap<>(initConf);
+            String fileName = conf.get(DYNAMIC_CONF_FILE_NAME);
+            if (fileName == null) {
+                fileName = DEFAULT_FILE_NAME;
             }
-            String filePath = conf.get(DYNAMIC_CONF_FILE_PATH);
-            if (filePath != null) {
-                FileUtils.FileInfo info = FileUtils.readByFilePath(filePath);
-                if (info != null && info.getFileContent() != null) {
-                    Map<String, String> map = ConfigurationUtil.contentToMap(info.getFileContent(), ConfigContentType.properties);
+            try {
+                FileUtils.FileInfo fileInfo = FileUtils.readByFileName(fileName);
+                if (fileInfo != null && fileInfo.getFileContent() != null) {
+                    Map<String, String> map = ConfigurationUtil.contentToMap(fileInfo.getFileContent(), ConfigContentType.properties);
                     conf.putAll(map);
+                    if (fileInfo.getFilePath() != null) {
+                        targetFilePath = fileInfo.getFilePath();
+                    }
                 }
+                String filePath = conf.get(DYNAMIC_CONF_FILE_PATH);
+                if (filePath != null) {
+                    FileUtils.FileInfo info = FileUtils.readByFilePath(filePath);
+                    if (info != null && info.getFileContent() != null) {
+                        Map<String, String> map = ConfigurationUtil.contentToMap(info.getFileContent(), ConfigContentType.properties);
+                        conf.putAll(map);
+                        if (info.getFilePath() != null) {
+                            targetFilePath = info.getFilePath();
+                        }
+                    }
+                }
+                return conf;
+            } catch (Exception e) {
+                throw new IllegalArgumentException("load error, fileName = " + fileName, e);
             }
-            return conf;
-        } catch (Exception e) {
-            throw new IllegalArgumentException("load error, fileName = " + fileName, e);
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public void init(Map<String, String> initConf) {
         this.initConf = new HashMap<>(initConf);
+    }
+
+    @Override
+    public boolean write(Map<String, String> config) {
+        if (targetFilePath == null) {
+            logger.warn("targetFilePath is null, skip write");
+            return false;
+        }
+        lock.lock();
+        try {
+            StringBuilder builder = new StringBuilder();
+            for (Map.Entry<String, String> entry : config.entrySet()) {
+                builder.append(entry.getKey()).append("=").append(entry.getValue()).append("\r\n");
+            }
+            logger.info("try write config to file, targetFilePath = {}, config.size = {}", targetFilePath, config.size());
+            boolean ok = FileUtils.write(targetFilePath, builder.toString());
+            if (ok) {
+                logger.info("write config to file success, targetFilePath = {}, config.size = {}", targetFilePath, config.size());
+            } else {
+                logger.warn("write config to file fail, targetFilePath = {}, config.size = {}", targetFilePath, config.size());
+            }
+            return ok;
+        } finally {
+            lock.unlock();
+        }
     }
 }

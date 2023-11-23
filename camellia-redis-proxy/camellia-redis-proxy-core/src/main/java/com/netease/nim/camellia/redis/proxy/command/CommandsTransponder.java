@@ -212,6 +212,9 @@ public class CommandsTransponder {
                         byte[][] args = command.getObjects();
                         skipAuth = args.length >= 2 && Utils.bytesToString(args[1]).equalsIgnoreCase(RedisKeyword.PROXY_HEARTBEAT.name());
                     }
+                    if (redisCommand == RedisCommand.PROXY && channelInfo.isFromCport()) {
+                        skipAuth = true;
+                    }
                     if (channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK && !skipAuth) {
                         task.replyCompleted(ErrorReply.NO_AUTH);
                         hasCommandsSkip = true;

@@ -6,6 +6,8 @@ import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
 import com.netease.nim.camellia.redis.proxy.conf.ConfigResp;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfLoader;
+import com.netease.nim.camellia.redis.proxy.conf.WritableProxyDynamicConfLoader;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
@@ -27,7 +29,9 @@ import org.slf4j.LoggerFactory;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -46,6 +50,8 @@ public class ProxyCommandProcessor {
             new DefaultThreadFactory("proxy-command-invoker"), new ThreadPoolExecutor.AbortPolicy());
 
     private static final ErrorReply error = new ErrorReply("ERR unknown section for 'PROXY' command");
+    private static final ErrorReply notWritable = new ErrorReply("ERR configLoader is not writable");
+    private static final ErrorReply writeError = new ErrorReply("ERR configLoader write error");
 
     private static ProxyPluginInitResp proxyPluginInitResp;
     private static IUpstreamClientTemplateFactory upstreamClientTemplateFactory;
@@ -215,9 +221,57 @@ public class ProxyCommandProcessor {
             Reply othersReply = broadcastCommand(nodes, currentNode, new byte[][]{RedisCommand.PROXY.raw(), Section.CONFIG.raw(), Utils.stringToBytes("reload")});
             //reply
             return new MultiBulkReply(new Reply[]{currentReply, othersReply});
+        } else if (type.equalsIgnoreCase("write")) {
+            if (args.length < 4) {
+                return ErrorReply.SYNTAX_ERROR;
+            }
+            byte[] configContent = args[3];
+            ProxyDynamicConfLoader configLoader = ProxyDynamicConf.getConfigLoader();
+            if (configLoader instanceof WritableProxyDynamicConfLoader) {
+                Map<String, String> map = bytesToConfigMap(configContent);
+                boolean ok = ((WritableProxyDynamicConfLoader) configLoader).write(map);
+                if (ok) {
+                    ProxyDynamicConf.reload();
+                    return StatusReply.OK;
+                } else {
+                    return writeError;
+                }
+            }
+            return notWritable;
+        } else if (type.equalsIgnoreCase("broadcast")) {
+            ProxyDynamicConf.reload();
+            ConfigResp configResp = ProxyDynamicConf.getConfigResp();
+            List<ConfigResp.ConfigEntry> specialConfig = configResp.getSpecialConfig();
+            byte[] configContent = configMapToBytes(ConfigResp.toMap(specialConfig));
+            byte[][] cmd = new byte[][]{RedisCommand.PROXY.raw(), Section.CONFIG.raw(), Utils.stringToBytes("write"), configContent};
+
+            ProxyNode currentNode = getCurrentNode();
+            List<ProxyNode> nodes = getNodes();
+
+            Reply currentReply = wrapper(currentNode, StatusReply.OK);
+            Reply othersReply = broadcastCommand(nodes, currentNode, cmd);
+
+            //reply
+            return new MultiBulkReply(new Reply[]{currentReply, othersReply});
         } else {
             return ErrorReply.SYNTAX_ERROR;
         }
+    }
+
+    private static Map<String, String> bytesToConfigMap(byte[] configContent) {
+        String str = Utils.bytesToString(configContent);
+        JSONObject json = JSONObject.parseObject(str);
+        Map<String, String> config = new HashMap<>();
+        for (Map.Entry<String, Object> entry : json.entrySet()) {
+            config.put(entry.getKey(), String.valueOf(entry.getValue()));
+        }
+        return config;
+    }
+
+    private static byte[] configMapToBytes(Map<String, String> config) {
+        JSONObject json = new JSONObject();
+        json.putAll(config);
+        return Utils.stringToBytes(json.toJSONString());
     }
 
     private static Reply listMeta() {
@@ -247,16 +301,21 @@ public class ProxyCommandProcessor {
     }
 
     private static Reply sendCommand(ProxyNode node, byte[][] args) {
+        RedisConnection connection = null;
         try {
             if (node.getCport() <= 0) {
                 return new ErrorReply("ERR target proxy node cport disabled");
             }
-            RedisConnection connection = RedisConnectionHub.getInstance().newConnection(null, node.getHost(), node.getCport(), null, null);
+            connection = RedisConnectionHub.getInstance().newConnection(null, node.getHost(), node.getCport(), null, null);
             CompletableFuture<Reply> future = connection.sendCommand(args);
             return future.get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
             logger.error("target proxy node command invoke error, node = {}", node, e);
             return new ErrorReply("ERR target proxy node command invoke error");
+        } finally {
+            if (connection != null) {
+                connection.stop(true);
+            }
         }
     }
 

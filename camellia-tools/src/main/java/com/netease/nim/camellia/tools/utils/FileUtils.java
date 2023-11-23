@@ -93,6 +93,16 @@ public class FileUtils {
         }
     }
 
+    public static boolean write(String filePath, String content) {
+        try (FileWriter fileWriter = new FileWriter(filePath, false)) {
+            fileWriter.write(content);
+            return true;
+        } catch (Exception e) {
+            logger.error("write error, filePath = {}", filePath, e);
+            return false;
+        }
+    }
+
     private static String readFileContentByFileNameInStream(String fileName) {
         byte[] buffer;
         InputStream fis = null;
