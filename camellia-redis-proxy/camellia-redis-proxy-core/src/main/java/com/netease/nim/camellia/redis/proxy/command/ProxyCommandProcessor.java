@@ -14,25 +14,34 @@ import com.netease.nim.camellia.redis.proxy.plugin.ProxyPlugin;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPluginInitResp;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnection;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.InetUtils;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Created by caojiajun on 2023/11/21
  */
 public class ProxyCommandProcessor {
 
-    private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 2,
+    private static final Logger logger = LoggerFactory.getLogger(ProxyCommandProcessor.class);
+
+    private static final int executorSize;
+    static {
+        executorSize = Math.max(4, Math.min(SysUtils.getCpuNum(), 8));
+    }
+    private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(executorSize, executorSize,
             0, TimeUnit.SECONDS, new LinkedBlockingDeque<>(1024),
             new DefaultThreadFactory("proxy-command-invoker"), new ThreadPoolExecutor.AbortPolicy());
 
@@ -64,6 +73,11 @@ public class ProxyCommandProcessor {
         ProxyCommandProcessor.transpondConfig = transpondConfig;
     }
 
+    /**
+     * process method
+     * @param command command
+     * @return reply
+     */
     public static CompletableFuture<Reply> process(Command command) {
         RedisCommand redisCommand = command.getRedisCommand();
         CompletableFuture<Reply> future = new CompletableFuture<>();
@@ -117,7 +131,7 @@ public class ProxyCommandProcessor {
         StringBuilder builder = new StringBuilder();
         builder.append("version:" + ProxyInfoUtils.VERSION).append("\r\n");
         if (upstreamClientTemplateFactory != null) {
-            builder.append("upstream_client_template_factory:").append(className(upstreamClientTemplateFactory, simpleClassName)).append("\r\n");
+            builder.append("upstream_client_template_factory:").append(Utils.className(upstreamClientTemplateFactory, simpleClassName)).append("\r\n");
         } else {
             builder.append("upstream_client_template_factory:").append("\r\n");
         }
@@ -127,12 +141,12 @@ public class ProxyCommandProcessor {
             builder.append("transpond_config:").append("\r\n");
         }
         if (clientAuthProvider != null) {
-            builder.append("client_auth_provider:").append(className(clientAuthProvider, simpleClassName)).append("\r\n");
+            builder.append("client_auth_provider:").append(Utils.className(clientAuthProvider, simpleClassName)).append("\r\n");
         } else {
             builder.append("client_auth_provider:").append("\r\n");
         }
         builder.append("cluster_mode_enable:").append(proxyClusterModeProcessor != null).append("\r\n");
-        builder.append("proxy_dynamic_conf_loader:").append(className(ProxyDynamicConf.getConfigLoader(), simpleClassName)).append("\r\n");
+        builder.append("proxy_dynamic_conf_loader:").append(Utils.className(ProxyDynamicConf.getConfigLoader(), simpleClassName)).append("\r\n");
         builder.append("monitor_enable:").append(ProxyMonitorCollector.isMonitorEnable()).append("\r\n");
         builder.append("command_spend_time_monitor_enable:").append(ProxyMonitorCollector.isCommandSpendTimeMonitorEnable()).append("\r\n");
         builder.append("upstream_redis_spend_time_monitor_enable:").append(ProxyMonitorCollector.isUpstreamRedisSpendTimeMonitorEnable()).append("\r\n");
@@ -143,7 +157,7 @@ public class ProxyCommandProcessor {
             List<ProxyPlugin> requestPlugins = proxyPluginInitResp.getRequestPlugins();
             StringBuilder requestPluginsStr = new StringBuilder();
             for (ProxyPlugin plugin : requestPlugins) {
-                requestPluginsStr.append(className(plugin, simpleClassName)).append(",");
+                requestPluginsStr.append(Utils.className(plugin, simpleClassName)).append(",");
             }
             if (requestPluginsStr.length() > 0) {
                 requestPluginsStr.deleteCharAt(requestPluginsStr.length() - 1);
@@ -152,7 +166,7 @@ public class ProxyCommandProcessor {
             List<ProxyPlugin> replyPlugins = proxyPluginInitResp.getReplyPlugins();
             StringBuilder replyPluginsStr = new StringBuilder();
             for (ProxyPlugin plugin : replyPlugins) {
-                replyPluginsStr.append(className(plugin, simpleClassName)).append(",");
+                replyPluginsStr.append(Utils.className(plugin, simpleClassName)).append(",");
             }
             if (replyPluginsStr.length() > 0) {
                 replyPluginsStr.deleteCharAt(replyPluginsStr.length() - 1);
@@ -162,18 +176,6 @@ public class ProxyCommandProcessor {
         return new BulkReply(Utils.stringToBytes(builder.toString()));
     }
 
-    private static String className(Object obj, boolean simpleClassName) {
-        if (obj == null) {
-            return "";
-        }
-        Class<?> clazz = obj.getClass();
-        if (simpleClassName) {
-            return clazz.getSimpleName();
-        } else {
-            return clazz.getName();
-        }
-    }
-
     private static Reply config(byte[][] args) {
         if (args.length <= 2) {
             return ErrorReply.SYNTAX_ERROR;
@@ -181,24 +183,99 @@ public class ProxyCommandProcessor {
         String type = Utils.bytesToString(args[2]);
         if (type.equalsIgnoreCase("list")) {//proxy config list
             ConfigResp configResp = ProxyDynamicConf.getConfigResp();
-            IntegerReply sizeReply = new IntegerReply((long) configResp.getConfigSize());
-            BulkReply initConfigMd5 = new BulkReply(Utils.stringToBytes(configResp.getInitConfigMd5()));
-            BulkReply specialConfigMd5 = new BulkReply(Utils.stringToBytes(configResp.getSpecialConfigMd5()));
-            BulkReply configMd5 = new BulkReply(Utils.stringToBytes(configResp.getConfigsMd5()));
-            MultiBulkReply meta = new MultiBulkReply(new Reply[]{sizeReply, initConfigMd5, specialConfigMd5, configMd5});
+            //meta
+            Reply configMeta = configMetaReply(configResp);
+            //detail
             List<MultiBulkReply> list = new ArrayList<>();
-            for (ConfigResp.ConfigEntry config : configResp.getConfigs()) {
+            for (ConfigResp.ConfigEntry config : configResp.getAllConfig()) {
                 BulkReply key = new BulkReply(Utils.stringToBytes(config.getKey()));
                 BulkReply value = new BulkReply(Utils.stringToBytes(config.getValue()));
                 list.add(new MultiBulkReply(new Reply[]{key, value}));
             }
-            return new MultiBulkReply(new Reply[]{meta, new MultiBulkReply(list.toArray(new Reply[0]))});
-        } else if (type.equalsIgnoreCase("reload")) {//proxy config reload
-            ProxyDynamicConf.reload();
-            return StatusReply.OK;
+            return new MultiBulkReply(new Reply[]{configMeta, new MultiBulkReply(list.toArray(new Reply[0]))});
+        } else if (type.equalsIgnoreCase("listMeta")) {
+            return listMeta();
+        } else if (type.equalsIgnoreCase("listMetaAll")) {
+            //current
+            ProxyNode currentNode = getCurrentNode();
+            Reply currentReply = wrapper(currentNode, listMeta());
+            //others
+            List<ProxyNode> nodes = getNodes();
+            Reply othersReply = broadcastCommand(nodes, currentNode, new byte[][]{RedisCommand.PROXY.raw(), Section.CONFIG.raw(), Utils.stringToBytes("listMeta")});
+            //reply
+            return new MultiBulkReply(new Reply[]{currentReply, othersReply});
+        } else if (type.equalsIgnoreCase("reload")) {
+            return reload();
+        } else if (type.equalsIgnoreCase("reloadAll")) {
+            //current
+            ProxyNode currentNode = getCurrentNode();
+            Reply currentReply = wrapper(currentNode, reload());
+            //others
+            List<ProxyNode> nodes = getNodes();
+            Reply othersReply = broadcastCommand(nodes, currentNode, new byte[][]{RedisCommand.PROXY.raw(), Section.CONFIG.raw(), Utils.stringToBytes("reload")});
+            //reply
+            return new MultiBulkReply(new Reply[]{currentReply, othersReply});
         } else {
             return ErrorReply.SYNTAX_ERROR;
         }
+    }
+
+    private static Reply listMeta() {
+        ConfigResp configResp = ProxyDynamicConf.getConfigResp();
+        return configMetaReply(configResp);
+    }
+
+    private static Reply reload() {
+        ProxyDynamicConf.reload();
+        return StatusReply.OK;
+    }
+
+    private static Reply wrapper(ProxyNode node, Reply reply) {
+        return new MultiBulkReply(new Reply[]{nodeReply(node), reply});
+    }
+
+    private static Reply broadcastCommand(List<ProxyNode> nodes, ProxyNode currentNode, byte[][] args) {
+        List<MultiBulkReply> list = new ArrayList<>();
+        for (ProxyNode node : nodes) {
+            if (node.equals(currentNode)) {
+                continue;
+            }
+            Reply reply = sendCommand(node, args);
+            list.add(new MultiBulkReply(new Reply[]{nodeReply(node), reply}));
+        }
+        return new MultiBulkReply(list.toArray(new Reply[0]));
+    }
+
+    private static Reply sendCommand(ProxyNode node, byte[][] args) {
+        try {
+            if (node.getCport() <= 0) {
+                return new ErrorReply("ERR target proxy node cport disabled");
+            }
+            RedisConnection connection = RedisConnectionHub.getInstance().newConnection(null, node.getHost(), node.getCport(), null, null);
+            CompletableFuture<Reply> future = connection.sendCommand(args);
+            return future.get(10, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            logger.error("target proxy node command invoke error, node = {}", node, e);
+            return new ErrorReply("ERR target proxy node command invoke error");
+        }
+    }
+
+    private static Reply configMetaReply(ConfigResp configResp) {
+        MultiBulkReply initConfigSize = wrapper("init.config.size", configResp.getInitConfig().size());
+        MultiBulkReply initConfigMd5 = wrapper("init.config.md5", configResp.getInitConfigMd5());
+        MultiBulkReply specialConfigSize = wrapper("special.config.size", configResp.getSpecialConfig().size());
+        MultiBulkReply specialConfigMd5 = wrapper("special.config.md5", configResp.getSpecialConfigMd5());
+        MultiBulkReply configSize = wrapper("all.config.size", configResp.getAllConfig().size());
+        MultiBulkReply configMd5 = wrapper("all.config.md5", configResp.getAllConfigMd5());
+        return new MultiBulkReply(new Reply[]{initConfigSize, initConfigMd5, specialConfigSize, specialConfigMd5, configSize, configMd5});
+    }
+
+    private static MultiBulkReply wrapper(String config, Object value) {
+        return new MultiBulkReply(new Reply[]{new BulkReply(Utils.stringToBytes(config)), new BulkReply(Utils.stringToBytes(String.valueOf(value)))});
+    }
+
+    private static Reply nodeReply(ProxyNode node) {
+        return new BulkReply(Utils.stringToBytes(node.toString()));
     }
 
     private static Reply servers() {
@@ -207,12 +284,12 @@ public class ProxyCommandProcessor {
             BulkReply redisClusterModeEnable = new BulkReply(Utils.stringToBytes("redis_cluster_mode_enable:true"));
             //current
             ProxyNode currentNode = proxyClusterModeProcessor.getCurrentNode();
-            BulkReply current = new BulkReply(Utils.stringToBytes(currentNode.toString()));
+            Reply current = nodeReply(currentNode);
             //list
-            List<BulkReply> list = new ArrayList<>();
+            List<Reply> list = new ArrayList<>();
             List<ProxyNode> onlineNodes = proxyClusterModeProcessor.getOnlineNodes();
             for (ProxyNode onlineNode : onlineNodes) {
-                list.add(new BulkReply(Utils.stringToBytes(onlineNode.toString())));
+                list.add(nodeReply(onlineNode));
             }
             return new MultiBulkReply(new Reply[]{redisClusterModeEnable, current, new MultiBulkReply(list.toArray(new Reply[0]))});
         } else {
@@ -220,19 +297,19 @@ public class ProxyCommandProcessor {
             BulkReply redisClusterModeEnable = new BulkReply(Utils.stringToBytes("redis_cluster_mode_enable:false"));
             //current
             ProxyNode currentNode = getCurrentNode();
-            BulkReply current = new BulkReply(Utils.stringToBytes(currentNode.toString()));
+            Reply current = nodeReply(currentNode);
             //list
-            List<BulkReply> list = new ArrayList<>();
+            List<Reply> list = new ArrayList<>();
             List<ProxyNode> nodes = getNodes();
             boolean containsCurrent = false;
             for (ProxyNode node : nodes) {
                 if (node.equals(currentNode)) {
                     containsCurrent = true;
                 }
-                list.add(new BulkReply(Utils.stringToBytes(node.toString())));
+                list.add(nodeReply(node));
             }
             if (!containsCurrent) {
-                list.add(new BulkReply(Utils.stringToBytes(currentNode.toString())));
+                list.add(nodeReply(currentNode));
             }
             return new MultiBulkReply(new Reply[]{redisClusterModeEnable, current, new MultiBulkReply(list.toArray(new Reply[0]))});
         }
@@ -251,6 +328,10 @@ public class ProxyCommandProcessor {
                 }
             }
             return null;
+        }
+
+        public byte[] raw() {
+            return name().getBytes(StandardCharsets.UTF_8);
         }
     }
 
@@ -287,4 +368,5 @@ public class ProxyCommandProcessor {
         }
         return list;
     }
+
 }

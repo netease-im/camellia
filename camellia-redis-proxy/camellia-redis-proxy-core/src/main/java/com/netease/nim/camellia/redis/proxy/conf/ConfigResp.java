@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.conf;
 
-import com.alibaba.fastjson.JSON;
 import com.netease.nim.camellia.tools.utils.MD5Util;
 
 import java.util.*;
@@ -14,13 +13,12 @@ public class ConfigResp {
     private final String initConfigMd5;
     private final List<ConfigEntry> specialConfig;
     private final String specialConfigMd5;
-    private final List<ConfigEntry> configs;
-    private final String configsMd5;
-    private final int size;
+    private final List<ConfigEntry> allConfig;
+    private final String allConfigMd5;
 
     public ConfigResp(Map<String, String> initConfigs, Map<String, String> configs) {
         this.initConfig = toList(initConfigs);
-        this.initConfigMd5 = MD5Util.md5(JSON.toJSONString(initConfig));
+        this.initConfigMd5 = MD5Util.md5(this.initConfig.toString());
         Map<String, String> specialConfigMap = new HashMap<>();
         for (Map.Entry<String, String> entry : configs.entrySet()) {
             String key = entry.getKey();
@@ -31,19 +29,26 @@ public class ConfigResp {
             }
         }
         this.specialConfig = toList(specialConfigMap);
-        this.specialConfigMd5 = MD5Util.md5(JSON.toJSONString(specialConfig));
-        this.configs = toList(configs);
-        this.configsMd5 = MD5Util.md5(JSON.toJSONString(this.configs));
-        this.size = configs.size();
+        this.specialConfigMd5 = MD5Util.md5(this.specialConfig.toString());
+        this.allConfig = toList(configs);
+        this.allConfigMd5 = MD5Util.md5(this.allConfig.toString());
     }
 
-    private static List<ConfigEntry> toList(Map<String, String> configMap) {
+    public static List<ConfigEntry> toList(Map<String, String> configMap) {
         List<ConfigEntry> list = new ArrayList<>();
         for (Map.Entry<String, String> entry : configMap.entrySet()) {
             list.add(new ConfigEntry(entry.getKey(), entry.getValue()));
         }
         Collections.sort(list);
         return list;
+    }
+
+    public static Map<String, String> toMap(List<ConfigEntry> list) {
+        Map<String, String> map = new HashMap<>();
+        for (ConfigEntry entry : list) {
+            map.put(entry.getKey(), entry.getValue());
+        }
+        return map;
     }
 
     public List<ConfigEntry> getInitConfig() {
@@ -62,16 +67,12 @@ public class ConfigResp {
         return specialConfigMd5;
     }
 
-    public List<ConfigEntry> getConfigs() {
-        return configs;
+    public List<ConfigEntry> getAllConfig() {
+        return allConfig;
     }
 
-    public String getConfigsMd5() {
-        return configsMd5;
-    }
-
-    public int getConfigSize() {
-        return size;
+    public String getAllConfigMd5() {
+        return allConfigMd5;
     }
 
     public static class ConfigEntry implements Comparable<ConfigEntry> {

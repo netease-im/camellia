@@ -353,4 +353,16 @@ public class Utils {
             throw new IllegalArgumentException("unknown channelType");
         }
     }
+
+    public static String className(Object obj, boolean simpleClassName) {
+        if (obj == null) {
+            return "";
+        }
+        Class<?> clazz = obj.getClass();
+        if (simpleClassName) {
+            return clazz.getSimpleName();
+        } else {
+            return clazz.getName();
+        }
+    }
 }
