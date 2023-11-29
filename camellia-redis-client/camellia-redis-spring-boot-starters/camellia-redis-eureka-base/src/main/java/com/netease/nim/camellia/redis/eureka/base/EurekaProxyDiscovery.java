@@ -37,14 +37,20 @@ public class EurekaProxyDiscovery extends ReloadableCamelliaDiscovery<Proxy> imp
         List<ServiceInstance> instances = discoveryClient.getInstances(applicationName);
         Set<Proxy> proxySet = new HashSet<>();
         for (ServiceInstance instance : instances) {
-            if (instance instanceof EurekaDiscoveryClient.EurekaServiceInstance) {
-                InstanceInfo instanceInfo = ((EurekaDiscoveryClient.EurekaServiceInstance) instance).getInstanceInfo();
-                if (instanceInfo.getStatus() != InstanceInfo.InstanceStatus.UP) continue;
-                String ipAddr = instanceInfo.getIPAddr();
-                int port = instanceInfo.getPort();
-                Proxy proxy = new Proxy();
-                proxy.setHost(ipAddr);
-                proxy.setPort(port);
+            try {
+                if (instance instanceof EurekaDiscoveryClient.EurekaServiceInstance) {
+                    InstanceInfo instanceInfo = ((EurekaDiscoveryClient.EurekaServiceInstance) instance).getInstanceInfo();
+                    if (instanceInfo.getStatus() != InstanceInfo.InstanceStatus.UP) continue;
+                    String ipAddr = instanceInfo.getIPAddr();
+                    int port = instanceInfo.getPort();
+                    Proxy proxy = new Proxy(ipAddr, port);
+                    proxySet.add(proxy);
+                } else {
+                    Proxy proxy = new Proxy(instance.getHost(), instance.getPort());
+                    proxySet.add(proxy);
+                }
+            } catch (Throwable e) {
+                Proxy proxy = new Proxy(instance.getHost(), instance.getPort());
                 proxySet.add(proxy);
             }
         }

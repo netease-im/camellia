@@ -32,12 +32,20 @@ public class EurekaHotKeyServerDiscovery extends ReloadableCamelliaDiscovery<Hot
         List<ServiceInstance> instances = discoveryClient.getInstances(applicationName);
         Set<HotKeyServerAddr> addrs = new HashSet<>();
         for (ServiceInstance instance : instances) {
-            if (instance instanceof EurekaDiscoveryClient.EurekaServiceInstance) {
-                InstanceInfo instanceInfo = ((EurekaDiscoveryClient.EurekaServiceInstance) instance).getInstanceInfo();
-                if (instanceInfo.getStatus() != InstanceInfo.InstanceStatus.UP) continue;
-                String ipAddr = instanceInfo.getIPAddr();
-                int port = instanceInfo.getPort();
-                HotKeyServerAddr proxy = new HotKeyServerAddr(ipAddr, port);
+            try {
+                if (instance instanceof EurekaDiscoveryClient.EurekaServiceInstance) {
+                    InstanceInfo instanceInfo = ((EurekaDiscoveryClient.EurekaServiceInstance) instance).getInstanceInfo();
+                    if (instanceInfo.getStatus() != InstanceInfo.InstanceStatus.UP) continue;
+                    String ipAddr = instanceInfo.getIPAddr();
+                    int port = instanceInfo.getPort();
+                    HotKeyServerAddr proxy = new HotKeyServerAddr(ipAddr, port);
+                    addrs.add(proxy);
+                } else {
+                    HotKeyServerAddr proxy = new HotKeyServerAddr(instance.getHost(), instance.getPort());
+                    addrs.add(proxy);
+                }
+            } catch (Throwable e) {
+                HotKeyServerAddr proxy = new HotKeyServerAddr(instance.getHost(), instance.getPort());
                 addrs.add(proxy);
             }
         }
