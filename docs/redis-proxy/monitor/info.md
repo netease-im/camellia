@@ -124,6 +124,8 @@ non_heap_memory_max:-1
 non_heap_memory_max_human:-1B
 non_heap_memory_committed:33882112
 non_heap_memory_committed_human:32.31M
+netty_direct_memory:63882112
+netty_direct_memory_human:62.31M
 
 ```
 

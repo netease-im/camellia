@@ -11,6 +11,7 @@
 * camellia-redis-proxy，对接camellia-dashboard时，从HttpURLConnection改成OkHttpClient作为底层http-client
 * camellia-redis-proxy，对接camellia-dashboard时，支持使用v2-api，降低http-body的大小
 * camellia-redis-proxy，使用local/complex配置方式时，读取配置文件新增trim逻辑
+* camellia-redis-proxy，`info memory`新增netty_direct_memory字段
 
 ### fix
 * 无

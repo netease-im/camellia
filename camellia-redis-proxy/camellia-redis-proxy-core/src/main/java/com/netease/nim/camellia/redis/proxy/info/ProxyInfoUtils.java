@@ -39,7 +39,6 @@ public class ProxyInfoUtils {
     public static final String VERSION = "v1.2.19";
     private static final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
     private static final OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
-    private static final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
     private static final List<GarbageCollectorMXBean> garbageCollectorMXBeanList = ManagementFactory.getGarbageCollectorMXBeans();
 
     private static final AtomicLong commandsCount = new AtomicLong();
@@ -355,33 +354,34 @@ public class ProxyInfoUtils {
     private static String getMemory() {
         StringBuilder builder = new StringBuilder();
         builder.append("# Memory").append("\r\n");
-        long freeMemory = Runtime.getRuntime().freeMemory();
-        long totalMemory = Runtime.getRuntime().totalMemory();
-        long maxMemory = Runtime.getRuntime().maxMemory();
+        MemoryInfo memoryInfo = MemoryInfoUtils.getMemoryInfo();
+        long freeMemory = memoryInfo.getFreeMemory();
+        long totalMemory = memoryInfo.getTotalMemory();
+        long maxMemory = memoryInfo.getMaxMemory();
         builder.append("free_memory:").append(freeMemory).append("\r\n");
         builder.append("free_memory_human:").append(humanReadableByteCountBin(freeMemory)).append("\r\n");
         builder.append("total_memory:").append(totalMemory).append("\r\n");
         builder.append("total_memory_human:").append(humanReadableByteCountBin(totalMemory)).append("\r\n");
         builder.append("max_memory:").append(maxMemory).append("\r\n");
         builder.append("max_memory_human:").append(humanReadableByteCountBin(maxMemory)).append("\r\n");
-        MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
-        builder.append("heap_memory_init:").append(heapMemoryUsage.getInit()).append("\r\n");
-        builder.append("heap_memory_init_human:").append(humanReadableByteCountBin(heapMemoryUsage.getInit())).append("\r\n");
-        builder.append("heap_memory_used:").append(heapMemoryUsage.getUsed()).append("\r\n");
-        builder.append("heap_memory_used_human:").append(humanReadableByteCountBin(heapMemoryUsage.getUsed())).append("\r\n");
-        builder.append("heap_memory_max:").append(heapMemoryUsage.getMax()).append("\r\n");
-        builder.append("heap_memory_max_human:").append(humanReadableByteCountBin(heapMemoryUsage.getMax())).append("\r\n");
-        builder.append("heap_memory_committed:").append(heapMemoryUsage.getCommitted()).append("\r\n");
-        builder.append("heap_memory_committed_human:").append(humanReadableByteCountBin(heapMemoryUsage.getCommitted())).append("\r\n");
-        MemoryUsage nonHeapMemoryUsage = memoryMXBean.getNonHeapMemoryUsage();
-        builder.append("non_heap_memory_init:").append(nonHeapMemoryUsage.getInit()).append("\r\n");
-        builder.append("non_heap_memory_init_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getInit())).append("\r\n");
-        builder.append("non_heap_memory_used:").append(nonHeapMemoryUsage.getUsed()).append("\r\n");
-        builder.append("non_heap_memory_used_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getUsed())).append("\r\n");
-        builder.append("non_heap_memory_max:").append(nonHeapMemoryUsage.getMax()).append("\r\n");
-        builder.append("non_heap_memory_max_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getMax())).append("\r\n");
-        builder.append("non_heap_memory_committed:").append(nonHeapMemoryUsage.getCommitted()).append("\r\n");
-        builder.append("non_heap_memory_committed_human:").append(humanReadableByteCountBin(nonHeapMemoryUsage.getCommitted())).append("\r\n");
+        builder.append("heap_memory_init:").append(memoryInfo.getHeapMemoryInit()).append("\r\n");
+        builder.append("heap_memory_init_human:").append(humanReadableByteCountBin(memoryInfo.getHeapMemoryInit())).append("\r\n");
+        builder.append("heap_memory_used:").append(memoryInfo.getHeapMemoryUsed()).append("\r\n");
+        builder.append("heap_memory_used_human:").append(humanReadableByteCountBin(memoryInfo.getHeapMemoryUsed())).append("\r\n");
+        builder.append("heap_memory_max:").append(memoryInfo.getHeapMemoryMax()).append("\r\n");
+        builder.append("heap_memory_max_human:").append(humanReadableByteCountBin(memoryInfo.getHeapMemoryMax())).append("\r\n");
+        builder.append("heap_memory_committed:").append(memoryInfo.getHeapMemoryCommitted()).append("\r\n");
+        builder.append("heap_memory_committed_human:").append(humanReadableByteCountBin(memoryInfo.getHeapMemoryCommitted())).append("\r\n");
+        builder.append("non_heap_memory_init:").append(memoryInfo.getNonHeapMemoryInit()).append("\r\n");
+        builder.append("non_heap_memory_init_human:").append(humanReadableByteCountBin(memoryInfo.getNonHeapMemoryInit())).append("\r\n");
+        builder.append("non_heap_memory_used:").append(memoryInfo.getNonHeapMemoryUsed()).append("\r\n");
+        builder.append("non_heap_memory_used_human:").append(humanReadableByteCountBin(memoryInfo.getNonHeapMemoryUsed())).append("\r\n");
+        builder.append("non_heap_memory_max:").append(memoryInfo.getNonHeapMemoryMax()).append("\r\n");
+        builder.append("non_heap_memory_max_human:").append(humanReadableByteCountBin(memoryInfo.getNonHeapMemoryMax())).append("\r\n");
+        builder.append("non_heap_memory_committed:").append(memoryInfo.getNonHeapMemoryCommitted()).append("\r\n");
+        builder.append("non_heap_memory_committed_human:").append(humanReadableByteCountBin(memoryInfo.getNonHeapMemoryCommitted())).append("\r\n");
+        builder.append("netty_direct_memory:").append(memoryInfo.getNettyDirectMemory()).append("\r\n");
+        builder.append("netty_direct_memory_human:").append(humanReadableByteCountBin(memoryInfo.getNettyDirectMemory())).append("\r\n");
         return builder.toString();
     }
 

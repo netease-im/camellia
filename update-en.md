@@ -11,6 +11,7 @@
 * camellia-redis-proxy，when use camellia-dashboard, replace HttpURLConnection to OkHttpClient as the http-client
 * camellia-redis-proxy，when use camellia-dashboard, support use v2-api, reduce the http body size
 * camellia-redis-proxy，when use local/complex mode, add trim logic when read config file
+* camellia-redis-proxy，`info memory` add netty_direct_memory field
 
 ### fix
 * none
