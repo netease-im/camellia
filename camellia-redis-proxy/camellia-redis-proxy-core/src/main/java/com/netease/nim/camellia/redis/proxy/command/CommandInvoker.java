@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.auth.AuthCommandProcessor;
 import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultProxyPluginFactory;
+import com.netease.nim.camellia.redis.proxy.plugin.ProxyPluginInitResp;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
@@ -34,7 +35,9 @@ public class CommandInvoker implements ICommandInvoker {
         ProxyDynamicConfLoader dynamicConfLoader = ConfigInitUtil.initProxyDynamicConfLoader(serverProperties);
         ProxyDynamicConf.init(serverProperties.getConfig(), dynamicConfLoader);
 
-        this.factory = ConfigInitUtil.initUpstreamClientTemplateFactory(serverProperties, transpondProperties);
+        ProxyCommandProcessor proxyCommandProcessor = new ProxyCommandProcessor();
+
+        this.factory = ConfigInitUtil.initUpstreamClientTemplateFactory(serverProperties, transpondProperties, proxyCommandProcessor);
         GlobalRedisProxyEnv.setClientTemplateFactory(factory);
 
         MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);
@@ -48,9 +51,18 @@ public class CommandInvoker implements ICommandInvoker {
                     .getBean(BeanInitUtils.parseClass(serverProperties.getClusterModeProviderClassName()));
             clusterModeProcessor = new ProxyClusterModeProcessor(provider);
         }
-        // initialize plugins
+
+        proxyCommandProcessor.setClientAuthProvider(authCommandProcessor.getClientAuthProvider());
+        proxyCommandProcessor.setClusterModeEnable(serverProperties.isClusterModeEnable());
+        proxyCommandProcessor.setProxyNodesDiscovery(ConfigInitUtil.initProxyNodesDiscovery(serverProperties, clusterModeProcessor));
+
         DefaultProxyPluginFactory proxyPluginFactory = new DefaultProxyPluginFactory(serverProperties.getPlugins(), serverProperties.getProxyBeanFactory());
-        this.commandInvokeConfig = new CommandInvokeConfig(authCommandProcessor, clusterModeProcessor, proxyPluginFactory);
+
+        ProxyPluginInitResp proxyPluginInitResp = proxyPluginFactory.initPlugins();
+        proxyCommandProcessor.updateProxyPluginInitResp(proxyPluginInitResp);
+        proxyPluginFactory.registerPluginUpdate(() -> proxyCommandProcessor.updateProxyPluginInitResp(proxyPluginFactory.initPlugins()));
+
+        this.commandInvokeConfig = new CommandInvokeConfig(authCommandProcessor, clusterModeProcessor, proxyPluginFactory, proxyCommandProcessor);
     }
 
     private static final FastThreadLocal<CommandsTransponder> threadLocal = new FastThreadLocal<>();

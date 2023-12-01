@@ -27,8 +27,6 @@ import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -48,15 +46,17 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
 
     private boolean multiTenantsSupport = true;//是否支持多租户
     private final ProxyBeanFactory proxyBeanFactory;
+    private final ProxyCommandProcessor proxyCommandProcessor;
 
     private UpstreamRedisClientTemplate remoteInstance;
     private UpstreamRedisClientTemplate localInstance;
     private UpstreamRedisClientTemplate customInstance;
     private CamelliaLinearInitializationExecutor<String, IUpstreamClientTemplate> executor;
 
-    public UpstreamRedisClientTemplateFactory(CamelliaTranspondProperties properties, ProxyBeanFactory proxyBeanFactory) {
+    public UpstreamRedisClientTemplateFactory(CamelliaTranspondProperties properties, ProxyBeanFactory proxyBeanFactory, ProxyCommandProcessor proxyCommandProcessor) {
         this.properties = properties;
         this.proxyBeanFactory = proxyBeanFactory != null ? proxyBeanFactory : DefaultBeanFactory.INSTANCE;
+        this.proxyCommandProcessor = proxyCommandProcessor;
         init();
         logger.info("UpstreamRedisClientTemplateFactory init success");
     }
@@ -248,7 +248,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         }
         multiTenantsSupport = false;
         transpondConfig.put("multiTenantsSupport", false);
-        ProxyCommandProcessor.setTranspondConfig(transpondConfig);
+        proxyCommandProcessor.setTranspondConfig(transpondConfig);
     }
 
     private void initRemote() {
@@ -285,7 +285,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
             }
         }
         transpondConfig.put("multiTenantsSupport", multiTenantsSupport);
-        ProxyCommandProcessor.setTranspondConfig(transpondConfig);
+        proxyCommandProcessor.setTranspondConfig(transpondConfig);
     }
 
     private void initCustom() {
@@ -323,7 +323,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
             }
         }
         transpondConfig.put("multiTenantsSupport", multiTenantsSupport);
-        ProxyCommandProcessor.setTranspondConfig(transpondConfig);
+        proxyCommandProcessor.setTranspondConfig(transpondConfig);
     }
 
     private UpstreamRedisClientTemplate initCustomInstance(long bid, String bgroup) {

@@ -46,6 +46,7 @@ public class CommandsTransponder {
     private final ProxyClusterModeProcessor clusterModeProcessor;
     private final IUpstreamClientTemplateFactory factory;
     private final ProxyPluginFactory proxyPluginFactory;
+    private final ProxyCommandProcessor proxyCommandProcessor;
     private boolean eventLoopSetSuccess = false;
 
     private ProxyPluginInitResp proxyPluginInitResp;
@@ -55,16 +56,10 @@ public class CommandsTransponder {
         this.authCommandProcessor = commandInvokeConfig.getAuthCommandProcessor();
         this.clusterModeProcessor = commandInvokeConfig.getClusterModeProcessor();
         this.proxyPluginFactory = commandInvokeConfig.getProxyPluginFactory();
+        this.proxyCommandProcessor = commandInvokeConfig.getProxyCommandProcessor();
         this.proxyPluginInitResp = proxyPluginFactory.initPlugins();
-        ProxyCommandProcessor.updateProxyPluginInitResp(proxyPluginInitResp);
-        ProxyCommandProcessor.setUpstreamClientTemplateFactory(factory);
-        ProxyCommandProcessor.setClientAuthProvider(authCommandProcessor.getClientAuthProvider());
-        ProxyCommandProcessor.setProxyClusterModeProcessor(clusterModeProcessor);
         // 刷新插件用的
-        proxyPluginFactory.registerPluginUpdate(() -> {
-            proxyPluginInitResp = proxyPluginFactory.initPlugins();
-            ProxyCommandProcessor.updateProxyPluginInitResp(proxyPluginInitResp);
-        });
+        proxyPluginFactory.registerPluginUpdate(() -> proxyPluginInitResp = proxyPluginFactory.initPlugins());
     }
 
     public void transpond(ChannelInfo channelInfo, List<Command> commands) {
@@ -266,7 +261,7 @@ public class CommandsTransponder {
 
                     //proxy命令
                     if (redisCommand == RedisCommand.PROXY) {
-                        CompletableFuture<Reply> future = ProxyCommandProcessor.process(command);
+                        CompletableFuture<Reply> future = proxyCommandProcessor.process(command);
                         future.thenAccept(task::replyCompleted);
                         hasCommandsSkip = true;
                         continue;

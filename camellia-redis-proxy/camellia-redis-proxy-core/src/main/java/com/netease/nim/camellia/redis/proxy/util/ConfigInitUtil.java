@@ -3,10 +3,12 @@ package com.netease.nim.camellia.redis.proxy.util;
 import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthByConfigProvider;
 import com.netease.nim.camellia.redis.proxy.auth.ClientAuthProvider;
-import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
-import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
-import com.netease.nim.camellia.redis.proxy.conf.FileBasedProxyDynamicConfLoader;
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConfLoader;
+import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
+import com.netease.nim.camellia.redis.proxy.command.DefaultProxyNodesDiscovery;
+import com.netease.nim.camellia.redis.proxy.command.ProxyCommandProcessor;
+import com.netease.nim.camellia.redis.proxy.command.ProxyNodesDiscovery;
+import com.netease.nim.camellia.redis.proxy.command.RedisProxyNodesDiscovery;
+import com.netease.nim.camellia.redis.proxy.conf.*;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.tls.frontend.ProxyFrontendTlsProvider;
@@ -24,11 +26,25 @@ import java.util.Set;
  */
 public class ConfigInitUtil {
 
-    public static IUpstreamClientTemplateFactory initUpstreamClientTemplateFactory(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
+    public static ProxyNodesDiscovery initProxyNodesDiscovery(CamelliaServerProperties serverProperties, ProxyClusterModeProcessor proxyClusterModeProcessor) {
+        String className = ProxyDynamicConf.getString("proxy.nodes.discovery.className", DefaultProxyNodesDiscovery.class.getName());
+        if (className.equals(DefaultProxyNodesDiscovery.class.getName())) {
+            return new DefaultProxyNodesDiscovery(proxyClusterModeProcessor);
+        } else if (className.equals(RedisProxyNodesDiscovery.class.getName())) {
+            return new RedisProxyNodesDiscovery(serverProperties, proxyClusterModeProcessor);
+        } else {
+            ProxyBeanFactory proxyBeanFactory = serverProperties.getProxyBeanFactory();
+            return (ProxyNodesDiscovery) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
+        }
+    }
+
+    public static IUpstreamClientTemplateFactory initUpstreamClientTemplateFactory(CamelliaServerProperties serverProperties,
+                                                                                   CamelliaTranspondProperties transpondProperties,
+                                                                                   ProxyCommandProcessor proxyCommandProcessor) {
         String className = serverProperties.getUpstreamClientTemplateFactoryClassName();
         ProxyBeanFactory proxyBeanFactory = serverProperties.getProxyBeanFactory();
         if (className == null || className.equals(UpstreamRedisClientTemplateFactory.class.getName())) {
-            return new UpstreamRedisClientTemplateFactory(transpondProperties, proxyBeanFactory);
+            return new UpstreamRedisClientTemplateFactory(transpondProperties, proxyBeanFactory, proxyCommandProcessor);
         }
         return (IUpstreamClientTemplateFactory) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));
     }

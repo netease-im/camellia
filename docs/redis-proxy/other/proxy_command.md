@@ -25,23 +25,43 @@ reply_plugins:HotKeyProxyPlugin,BigKeyProxyPlugin,MonitorProxyPlugin
 ### 查询proxy列表
 * 有两种情况，开启或者未开启伪redis-cluster模式
 * 如果开启了伪redis-cluster模式，则返回的是伪redis-cluster模式下自动发现的所以节点
-* 如果没有开启伪redis-cluster模式，则返回的列表需要在配置文件中配置，如下：  
+* 如果没有开启伪redis-cluster模式，则需要从其他途径获取节点列表，默认提供了两种方式：
+* 方式一（默认）：
+* 配置文件中配置，如下：  
 ```properties
 proxy.nodes=10.221.145.235:6380@7380,10.221.145.235:6381@7381
 ```
+* 方式二（基于redis心跳）：
+* 配置文件中配置，如下：  
+```properties
+#表示启用RedisProxyNodesDiscovery
+proxy.nodes.discovery.className=com.netease.nim.camellia.redis.proxy.command.RedisProxyNodesDiscovery
+#表示RedisProxyNodesDiscovery使用的redis地址
+proxy.nodes.discovery.redis.url=redis://@127.0.0.1:6379
+###
+#RedisProxyNodesDiscovery会定时发送心跳到redis，key为前缀+application.yml中的applicationName
+#所有proxy节点会定时从redis中获取心跳结果，也就是proxy集群列表
+##相关配置参数如下：
+#心跳目标key的前缀
+proxy.nodes.discovery.redis.heartbeat.key.prefix=camellia_redis_proxy_heartbeat
+#心跳间隔，默认5s
+proxy.nodes.discovery.redis.heartbeat.interval.seconds=5
+#心跳过期时间，默认30s，也就是30s没有心跳代表某个proxy节点已经下线了
+proxy.nodes.discovery.redis.heartbeat.timeout.seconds=30
+```
+* 方式三（自定义）：
+* 自己实现ProxyNodesDiscovery接口即可
 
 示例：
 ```shell
 127.0.0.1:6380> proxy servers
-1) "redis_cluster_mode_enable:false"
-2) "10.221.145.235:6380@7380"
-3) 1) "10.221.145.235:6380@7380"
+1) "10.221.145.235:6380@7380"
+2) 1) "10.221.145.235:6380@7380"
    2) "10.221.145.235:6381@7381"
 127.0.0.1:6380> 
 ```
-第一行表示是否开启伪redis-cluster模式
-第二行表示本节点的信息，格式为：ip:port@cport
-第三行表示所有节点的信息，是一个数组（如果是伪redis-cluster模式，则只会展示在线节点）
+第一行表示本节点的信息，格式为：ip:port@cport
+第二行表示所有节点的信息，是一个数组（如果是伪redis-cluster模式，则只会展示在线节点）
 
 ### 查询自定义配置
 ```shell
