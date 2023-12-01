@@ -12,11 +12,15 @@ public class HAProxySourceIpHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (msg instanceof HAProxyMessage) {
-            ChannelInfo channelInfo = ChannelInfo.get(ctx);
-            HAProxyMessage haProxyMessage = (HAProxyMessage) msg;
-            String sourceAddress = haProxyMessage.sourceAddress();
-            int sourcePort = haProxyMessage.sourcePort();
-            channelInfo.updateSourceAddr(sourceAddress, sourcePort);
+            try {
+                ChannelInfo channelInfo = ChannelInfo.get(ctx);
+                HAProxyMessage haProxyMessage = (HAProxyMessage) msg;
+                String sourceAddress = haProxyMessage.sourceAddress();
+                int sourcePort = haProxyMessage.sourcePort();
+                channelInfo.updateSourceAddr(sourceAddress, sourcePort);
+            } finally {
+                ((HAProxyMessage) msg).release();
+            }
         } else {
             ctx.fireChannelRead(msg);
         }
