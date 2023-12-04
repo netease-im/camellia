@@ -32,36 +32,47 @@ public class CommandInvoker implements ICommandInvoker {
     private final CommandInvokeConfig commandInvokeConfig;
 
     public CommandInvoker(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
+        //init ProxyDynamicConf
         ProxyDynamicConfLoader dynamicConfLoader = ConfigInitUtil.initProxyDynamicConfLoader(serverProperties);
         ProxyDynamicConf.init(serverProperties.getConfig(), dynamicConfLoader);
 
+        //init ProxyCommandProcessor
         ProxyCommandProcessor proxyCommandProcessor = new ProxyCommandProcessor();
 
+        //init IUpstreamClientTemplateFactory
         this.factory = ConfigInitUtil.initUpstreamClientTemplateFactory(serverProperties, transpondProperties, proxyCommandProcessor);
         GlobalRedisProxyEnv.setClientTemplateFactory(factory);
 
-        MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);
-        ProxyMonitorCollector.init(serverProperties, monitorCallback);
-
-        AuthCommandProcessor authCommandProcessor = new AuthCommandProcessor(ConfigInitUtil.initClientAuthProvider(serverProperties));
-
+        //init ProxyClusterModeProcessor
         ProxyClusterModeProcessor clusterModeProcessor = null;
         if (serverProperties.isClusterModeEnable()) {
             ProxyClusterModeProvider provider = (ProxyClusterModeProvider)serverProperties.getProxyBeanFactory()
                     .getBean(BeanInitUtils.parseClass(serverProperties.getClusterModeProviderClassName()));
             clusterModeProcessor = new ProxyClusterModeProcessor(provider);
         }
-
-        proxyCommandProcessor.setClientAuthProvider(authCommandProcessor.getClientAuthProvider());
         proxyCommandProcessor.setClusterModeEnable(serverProperties.isClusterModeEnable());
+
+        //init ProxyNodesDiscovery
         proxyCommandProcessor.setProxyNodesDiscovery(ConfigInitUtil.initProxyNodesDiscovery(serverProperties, clusterModeProcessor));
 
-        DefaultProxyPluginFactory proxyPluginFactory = new DefaultProxyPluginFactory(serverProperties.getPlugins(), serverProperties.getProxyBeanFactory());
+        //init monitor
+        MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);
+        ProxyMonitorCollector.init(serverProperties, monitorCallback);
 
+        //init AuthCommandProcessor
+        AuthCommandProcessor authCommandProcessor = new AuthCommandProcessor(ConfigInitUtil.initClientAuthProvider(serverProperties));
+        proxyCommandProcessor.setClientAuthProvider(authCommandProcessor.getClientAuthProvider());
+
+        //init plugins
+        DefaultProxyPluginFactory proxyPluginFactory = new DefaultProxyPluginFactory(serverProperties.getPlugins(), serverProperties.getProxyBeanFactory());
         ProxyPluginInitResp proxyPluginInitResp = proxyPluginFactory.initPlugins();
         proxyCommandProcessor.updateProxyPluginInitResp(proxyPluginInitResp);
         proxyPluginFactory.registerPluginUpdate(() -> proxyCommandProcessor.updateProxyPluginInitResp(proxyPluginFactory.initPlugins()));
 
+        //try sync config
+        proxyCommandProcessor.trySyncConfig();
+
+        //init CommandInvokeConfig
         this.commandInvokeConfig = new CommandInvokeConfig(authCommandProcessor, clusterModeProcessor, proxyPluginFactory, proxyCommandProcessor);
     }
 

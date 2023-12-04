@@ -110,8 +110,8 @@ public class RedisProxyNodesDiscovery extends AbstractProxyNodesDiscovery {
                 logger.error("heartbeat, EXPIRE error, reply = {}", reply3);
             }
             Reply reply4 = future4.get(10, TimeUnit.SECONDS);
-            List<ProxyNode> proxyNodes = new ArrayList<>();
             if (reply4 instanceof MultiBulkReply) {
+                List<ProxyNode> proxyNodes = new ArrayList<>();
                 Reply[] replies = ((MultiBulkReply) reply4).getReplies();
                 for (Reply reply : replies) {
                     if (reply instanceof BulkReply) {
@@ -124,14 +124,14 @@ public class RedisProxyNodesDiscovery extends AbstractProxyNodesDiscovery {
                         proxyNodes.add(proxyNode);
                     }
                 }
+                Collections.sort(proxyNodes);
+                if (!this.proxyNodeList.equals(proxyNodes)) {
+                    this.proxyNodeList = proxyNodes;
+                    logger.info("proxy node list update, list = {}", this.proxyNodeList);
+                }
             } else if (reply4 instanceof ErrorReply) {
                 success = false;
                 logger.error("heartbeat, ZRANGE error, reply = {}", reply4);
-            }
-            Collections.sort(proxyNodes);
-            if (!this.proxyNodeList.equals(proxyNodes)) {
-                this.proxyNodeList = proxyNodes;
-                logger.info("proxy node list update, list = {}", this.proxyNodeList);
             }
             if (!success) {
                 logger.error("heartbeat error, redisUrl = {}", redisUrl);
