@@ -29,7 +29,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 * 支持redis-standalone/redis-sentinel/redis-cluster
 * 支持其他proxy作为后端（如双写迁移场景），如 [twemproxy](https://github.com/twitter/twemproxy) 、[codis](https://github.com/CodisLabs/codis) 等
 * 支持 [kvrocks](https://github.com/apache/kvrocks) 、 [pika](https://github.com/OpenAtomFoundation/pika) 、 [tendis](https://github.com/Tencent/Tendis) 等作为后端    
-* 支持普通的GET/SET/EVAL，也支持MGET/MSET，也支持阻塞型的BLPOP，也支持PUBSUB和TRANSACTION，也支持STREAMS/JSON/SEARCH，也支持TAIR_HASH/TAIR_ZSET/TAIR_STRING
+* 支持普通的GET/SET/EVAL，也支持MGET/MSET，也支持阻塞型的BLPOP，也支持PUBSUB和TRANSACTION，也支持STREAMS/JSON/SEARCH/BloomFilter/CuckooFilter，也支持TAIR_HASH/TAIR_ZSET/TAIR_STRING
 * 支持SCAN命令，即使后端是redis-cluster或者自定义分片，也可以透明的扫描到所有key
 * 支持SELECT命令，从而可以使用多database
 * 支持SSL/TLS（client到proxy支持，proxy到redis也支持）

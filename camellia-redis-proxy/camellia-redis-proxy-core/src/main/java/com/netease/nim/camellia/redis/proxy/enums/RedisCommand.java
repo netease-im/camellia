@@ -234,6 +234,18 @@ public enum RedisCommand {
     JSON_TYPE(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.JSON, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXPIRETIME(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     PEXPIRETIME(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CF_ADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CF_ADDNX(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CF_COUNT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CF_DEL(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CF_EXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CF_INFO(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CF_INSERT(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CF_INSERTNX(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CF_LOADCHUNK(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CF_MEXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CF_SCANDUMP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+
 
     /**
      * Restrictive Support
@@ -404,6 +416,8 @@ public enum RedisCommand {
             this.strRaw = "json." + name().toLowerCase().substring(5);
         } else if (commandType == CommandType.SEARCH) {
             this.strRaw = "ft." + name().toLowerCase().substring(3);
+        } else if (commandType == CommandType.CF) {
+            this.strRaw = "cf." + name().toLowerCase().substring(3);
         } else {
             this.strRaw = name().toLowerCase();
         }
@@ -477,6 +491,7 @@ public enum RedisCommand {
         SEARCH,
         FUNCTION,
         TFUNCTION,
+        CF,
         ;
     }
 

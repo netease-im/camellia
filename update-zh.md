@@ -4,6 +4,7 @@
 # 1.2.20（2023/11/xx）
 ### 新增
 * camellia-redis-proxy新增`PROXY`命令，从而可以通过任意proxy节点管理所有其他节点的动态配置，从而可以不依赖etcd/nacos等中心化的配置中心
+* camellia-redis-proxy新增对CuckooFilter系列命令对支持
 
 ### 更新
 * camellia-redis-proxy，当使用shard-pubsub命令时，后端可能返回`MOVED XXX`错误信息，proxy应该重写error信息，避免上游的ip被暴露给客户端
