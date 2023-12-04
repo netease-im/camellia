@@ -246,6 +246,7 @@ OK
 config.auto.sync.target.proxy.node=10.221.145.235:6380@7380
 config.auto.sync.enable=true
 ```
+则proxy启动时会自动从指定节点同步配置（只会同步一次）
 
 
 ### 应用场景
