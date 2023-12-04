@@ -24,7 +24,7 @@ reply_plugins:HotKeyProxyPlugin,BigKeyProxyPlugin,MonitorProxyPlugin
 
 ### 查询proxy列表
 * 有两种情况，开启或者未开启伪redis-cluster模式
-* 如果开启了伪redis-cluster模式，则返回的是伪redis-cluster模式下自动发现的所以节点
+* 如果开启了伪redis-cluster模式，则返回的是伪redis-cluster模式下自动发现的所有节点
 * 如果没有开启伪redis-cluster模式，则需要从其他途径获取节点列表，默认提供了两种方式：
 * 方式一（默认）：
 * 配置文件中配置，如下：  
@@ -252,6 +252,7 @@ config.auto.sync.enable=true
 ### 应用场景
 * 可以选定某个节点，修改配置，然后broadcast到其他节点，这样就可以实现动态批量修改配置，从而不依赖于etcd/nacos等配置中心
 * 只有实现了WritableProxyDynamicConfLoader的ProxyDynamicConfLoader才可以这样操作
-* 内置的FileBasedProxyDynamicConfLoader（默认，基于camellia-redis-proxy.properties文件）和JsonFileBasedProxyDynamicConfLoader（基于camelia-redis-proxy.json文件）支持
+* 内置的FileBasedProxyDynamicConfLoader（默认，基于camellia-redis-proxy.properties文件）实现了WritableProxyDynamicConfLoader
+* 内置的JsonFileBasedProxyDynamicConfLoader（基于camelia-redis-proxy.json文件）实现了WritableProxyDynamicConfLoader
 * 对于proxy节点的个性化配置（和集群内其他节点不一样的配置），配置在application.yml里 
 * 对于proxy节点的公共配置，则配置在camellia-redis-proxy.properties或者camellia-redis-proxy.json里
