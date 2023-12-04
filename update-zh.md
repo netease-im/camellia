@@ -15,7 +15,8 @@
 * camellia-redis-proxy，`info memory`新增netty_direct_memory字段
 
 ### fix
-* 无
+* camellia-redis-proxy, 修复内存泄漏问题，当且仅当开启proxy_protocol_v2协议获取真实客户端ip时产生
+* camellia-redis-proxy, 修复MonitorProxyPlugin的NPE问题，当且仅当出现不支持的命令时产生
 
 
 # 1.2.19（2023/11/07）

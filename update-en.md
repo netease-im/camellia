@@ -15,7 +15,8 @@
 * camellia-redis-proxy，`info memory` add netty_direct_memory field
 
 ### fix
-* none
+* camellia-redis-proxy, fix memory leak when proxy_protocol_v2 enabled
+* camellia-redis-proxy, fix MonitorProxyPlugin NPE for unknown command
 
 
 # 1.2.19（2023/11/07）
