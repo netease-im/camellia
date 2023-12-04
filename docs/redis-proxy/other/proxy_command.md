@@ -93,9 +93,30 @@ proxy.nodes.discovery.redis.heartbeat.timeout.seconds=30
 127.0.0.1:6380>
 ```
 * 第一部分（meta，包括size和md5）： 
-* init.config表示初始配置，也就是application.yml中config的配置，size表示数量，md5表示md5值
+* init.config表示初始配置，也就是application.yml中config的配置（如下的：k1=v1,k2=v2），size表示数量，md5表示md5值
+```yaml
+camellia-redis-proxy:
+#  port: 6380 #priority greater than server.port, if missing, use server.port; if setting -6379, proxy will choose a random port
+#  application-name: camellia-redis-proxy-server  #priority greater than spring.application.name, if missing, use spring.application.name
+  console-port: 16379 #console port, default 16379, if setting -16379, proxy will choose a random port, if setting 0, will disable console
+  password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
+  monitor-enable: false  #monitor enable/disable configure
+  monitor-interval-seconds: 60 #monitor data refresh interval seconds
+  config:
+    "k1": "v1"
+    "k2": "v2"
+  transpond:
+    type: local #local、remote、custom
+    local:
+      type: simple #simple、complex
+      resource: redis://@127.0.0.1:6379
+```
 * special.config表示特殊配置，也就是camellia-redis-proxy.properties或者camellia-redis-proxy.json中的配置，size表示数量，md5表示md5值，会覆盖init.config的配置
-* all.config表示合并后的配置，size表示数量，md5表示md5值，最终ProxyDynamicConf.java获取到的就是这个配置
+```properties
+k2=v222
+k3=v3
+```
+* all.config表示合并后的配置，size表示数量，md5表示md5值，最终ProxyDynamicConf.java获取到的就是这个配置:（k1=v1,k2=v222,k3=v3）
 * 
 * 第二部分（详情）：
 * 表示all.config的详情，是一个数组，通过key-value对的形式展示
@@ -214,7 +235,22 @@ OK
 * 第二部分为其他节点的md5校验情况，ok表示一致，error表示不一致
 * 可以用于`proxy config broadcast`后，确认所有配置是否一致
 
+### 当启动一个全新节点时，希望从指定节点同步配置
+```shell
+127.0.0.1:6381> proxy config syncfrom 10.221.145.235:6380@7380
+OK
+127.0.0.1:6381>
+```
+特别的，如果你希望这个同步操作是自动的，则可以在新节点上配置如下：
+```properties
+config.auto.sync.target.proxy.node=10.221.145.235:6380@7380
+config.auto.sync.enable=true
+```
+
+
 ### 应用场景
 * 可以选定某个节点，修改配置，然后broadcast到其他节点，这样就可以实现动态批量修改配置，从而不依赖于etcd/nacos等配置中心
 * 只有实现了WritableProxyDynamicConfLoader的ProxyDynamicConfLoader才可以这样操作
 * 内置的FileBasedProxyDynamicConfLoader（默认，基于camellia-redis-proxy.properties文件）和JsonFileBasedProxyDynamicConfLoader（基于camelia-redis-proxy.json文件）支持
+* 对于proxy节点的个性化配置（和集群内其他节点不一样的配置），配置在application.yml里 
+* 对于proxy节点的公共配置，则配置在camellia-redis-proxy.properties或者camellia-redis-proxy.json里

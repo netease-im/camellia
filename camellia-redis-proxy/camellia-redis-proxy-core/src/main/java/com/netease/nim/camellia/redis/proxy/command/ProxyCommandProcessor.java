@@ -406,7 +406,7 @@ public class ProxyCommandProcessor {
 
     private void syncFromProxyNode(ProxyNode targetNode) {
         if (targetNode == null) {
-            throw new IllegalArgumentException("config.auto.sync.target.proxy.node parse error, targetNode = " + targetNode);
+            throw new IllegalArgumentException("syncFromProxyNode error, targetNode is null");
         }
         if (proxyNodesDiscovery != null && targetNode.equals(proxyNodesDiscovery.current())) {
             logger.warn("skip syncFromProxyNode, targetNode = {}, current = {}", targetNode, proxyNodesDiscovery.current());
@@ -419,7 +419,7 @@ public class ProxyCommandProcessor {
         };
         Reply reply = sendCommand(targetNode, cmd);
         if (reply instanceof ErrorReply) {
-            throw new IllegalArgumentException("config.auto.sync.target.proxy.node sync error, targetNode = " + targetNode + ", reply = " + reply);
+            throw new IllegalArgumentException("syncFromProxyNode error, targetNode = " + targetNode + ", reply = " + reply);
         }
         if (reply instanceof BulkReply) {
             byte[] raw = ((BulkReply) reply).getRaw();
@@ -429,15 +429,15 @@ public class ProxyCommandProcessor {
                 boolean ok = ((WritableProxyDynamicConfLoader) configLoader).write(map);
                 if (ok) {
                     ProxyDynamicConf.reload();
-                    logger.info("config auto sync success, targetNode = {}, config.size = {}", targetNode, map.size());
+                    logger.info("syncFromProxyNode success, targetNode = {}, config.size = {}", targetNode, map.size());
                     return;
                 }
             } else {
-                throw new IllegalArgumentException("ProxyDynamicConfLoader not writable");
+                throw new IllegalArgumentException("syncFromProxyNode error, ProxyDynamicConfLoader not writable");
             }
         }
-        logger.error("proxy config sync error, target = {}, reply = {}", targetNode, reply);
-        throw new IllegalArgumentException("config auto sync error");
+        logger.error("syncFromProxyNode error, target = {}, reply = {}", targetNode, reply);
+        throw new IllegalArgumentException("syncFromProxyNode error");
     }
 
     private static enum Section {
