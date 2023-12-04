@@ -212,7 +212,7 @@ public class RedisClusterClient implements IUpstreamClient {
             if (channelInfo.isInSubscribe() && bindConnection != null && redisCommand.getCommandType() != RedisCommand.CommandType.PUB_SUB) {
                 commandFlusher.flush();
                 CommandTaskQueue taskQueue = channelInfo.getCommandTaskQueue();
-                PubSubUtils.sendByBindClient(getResource(), bindConnection, taskQueue, command, future, false);
+                PubSubUtils.sendByBindConnection(getResource(), bindConnection, taskQueue, command, future, false);
                 continue;
             }
 
@@ -489,7 +489,7 @@ public class RedisClusterClient implements IUpstreamClient {
             if (bindConnection != null) {
                 CommandTaskQueue taskQueue = channelInfo.getCommandTaskQueue();
                 commandFlusher.flush();
-                PubSubUtils.sendByBindClient(getResource(), bindConnection, taskQueue, command, future, first);
+                PubSubUtils.sendByBindConnection(getResource(), bindConnection, taskQueue, command, future, first);
                 byte[][] objects = command.getObjects();
                 if (objects != null && objects.length > 1) {
                     for (int j = 1; j < objects.length; j++) {
@@ -531,7 +531,7 @@ public class RedisClusterClient implements IUpstreamClient {
 
         if (bindConnection != null) {
             commandFlusher.flush();
-            PubSubUtils.sendByBindClient(getResource(), bindConnection, command.getChannelInfo().getCommandTaskQueue(), command, future, false);
+            PubSubUtils.sendByBindConnection(getResource(), bindConnection, command.getChannelInfo().getCommandTaskQueue(), command, future, false);
         } else {
             int targetSlot = -1;
             if (PubSubUtils.isShardPubSub(redisCommand)) {

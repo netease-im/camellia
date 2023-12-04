@@ -122,7 +122,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                     hasBlockingCommands = false;
                 }
                 CommandTaskQueue taskQueue = command.getChannelInfo().getCommandTaskQueue();
-                PubSubUtils.sendByBindClient(getResource(), bindConnection, taskQueue, command, future, false);
+                PubSubUtils.sendByBindConnection(getResource(), bindConnection, taskQueue, command, future, false);
                 continue;
             }
 
@@ -141,7 +141,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                         hasBlockingCommands = false;
                     }
                     CommandTaskQueue taskQueue = command.getChannelInfo().getCommandTaskQueue();
-                    PubSubUtils.sendByBindClient(getResource(), bindConnection, taskQueue, command, future, first);
+                    PubSubUtils.sendByBindConnection(getResource(), bindConnection, taskQueue, command, future, first);
                     byte[][] objects = command.getObjects();
                     if (objects != null && objects.length > 1) {
                         for (int j = 1; j < objects.length; j++) {
@@ -183,7 +183,7 @@ public abstract class AbstractSimpleRedisClient implements IUpstreamClient {
                         filterFutures = new ArrayList<>();
                         hasBlockingCommands = false;
                     }
-                    PubSubUtils.sendByBindClient(getResource(), bindConnection, channelInfo.getCommandTaskQueue(), command, future, false);
+                    PubSubUtils.sendByBindConnection(getResource(), bindConnection, channelInfo.getCommandTaskQueue(), command, future, false);
                 } else {
                     filterCommands.add(command);
                     filterFutures.add(future);

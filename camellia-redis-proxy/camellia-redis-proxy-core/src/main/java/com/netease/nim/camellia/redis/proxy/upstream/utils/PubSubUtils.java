@@ -25,13 +25,13 @@ import java.util.concurrent.CompletableFuture;
  */
 public class PubSubUtils {
 
-    public static void sendByBindClient(Resource resource, RedisConnection connection, CommandTaskQueue taskQueue,
-                                        Command command, CompletableFuture<Reply> future, boolean first) {
-        sendByBindClient(resource, connection, taskQueue, command, future, first, command.getRedisCommand());
+    public static void sendByBindConnection(Resource resource, RedisConnection connection, CommandTaskQueue taskQueue,
+                                            Command command, CompletableFuture<Reply> future, boolean first) {
+        sendByBindConnection(resource, connection, taskQueue, command, future, first, command.getRedisCommand());
     }
 
-    private static void sendByBindClient(Resource resource, RedisConnection connection, CommandTaskQueue taskQueue,
-                                         Command command, CompletableFuture<Reply> future, boolean first, RedisCommand redisCommand) {
+    private static void sendByBindConnection(Resource resource, RedisConnection connection, CommandTaskQueue taskQueue,
+                                             Command command, CompletableFuture<Reply> future, boolean first, RedisCommand redisCommand) {
         List<CompletableFuture<Reply>> futures = new ArrayList<>();
         if (future != null && first) {
             CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
@@ -67,7 +67,7 @@ public class PubSubUtils {
                 CompletableFuture<Reply> completableFuture = new CompletableFuture<>();
                 completableFuture.thenAccept(reply -> {
                     if (connection.queueSize() < 8 && connection.isValid()) {
-                        sendByBindClient(resource, connection, taskQueue, null, null, false, redisCommand);
+                        sendByBindConnection(resource, connection, taskQueue, null, null, false, redisCommand);
                     }
                     if (reply instanceof ErrorReply) {
                         String error = ((ErrorReply) reply).getError();
