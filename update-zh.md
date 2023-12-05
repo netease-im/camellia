@@ -1,7 +1,7 @@
 [ENGLISH](update-en.md)
 
 
-# 1.2.20（2023/11/xx）
+# 1.2.20（2023/12/05）
 ### 新增
 * camellia-redis-proxy新增`PROXY`命令，从而可以通过任意proxy节点管理所有其他节点的动态配置，从而可以不依赖etcd/nacos等中心化的配置中心
 * camellia-redis-proxy新增对CuckooFilter系列命令的支持

@@ -1,7 +1,7 @@
 [中文版](update-zh.md)
 
 
-# 1.2.20（2023/11/xx）
+# 1.2.20（2023/12/05）
 ### add
 * camellia-redis-proxy support `PROXY` command, so you can use any proxy node to manager other proxy nodes' config, sometimes to replace nacos/etcd as the config center
 * camellia-redis-proxy support CuckooFilter commands

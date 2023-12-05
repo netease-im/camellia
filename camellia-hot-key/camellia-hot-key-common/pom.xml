@@ -4,24 +4,24 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-hot-key-common</artifactId>
-	<version>1.2.20-SNAPSHOT</version>
+	<version>1.2.20</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-hot-key</artifactId>
-		<version>1.2.20-SNAPSHOT</version>
+		<version>1.2.20</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-core</artifactId>
-			<version>1.2.20-SNAPSHOT</version>
+			<version>1.2.20</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-codec</artifactId>
-			<version>1.2.20-SNAPSHOT</version>
+			<version>1.2.20</version>
 		</dependency>
 		<dependency>
 			<groupId>io.netty</groupId>
