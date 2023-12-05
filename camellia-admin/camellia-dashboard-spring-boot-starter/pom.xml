@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-dashboard-spring-boot-starter</artifactId>
-	<version>1.2.20</version>
+	<version>1.2.21-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-admin</artifactId>
-		<version>1.2.20</version>
+		<version>1.2.21-SNAPSHOT</version>
 	</parent>
 
 
@@ -45,7 +45,7 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-dashboard</artifactId>
-			<version>1.2.20</version>
+			<version>1.2.21-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

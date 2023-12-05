@@ -4,24 +4,24 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-id-gen-segment-server-bootstrap</artifactId>
-	<version>1.2.20</version>
+	<version>1.2.21-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-id-gen-server-bootstraps</artifactId>
-		<version>1.2.20</version>
+		<version>1.2.21-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-id-gen-segment-spring-boot-starter</artifactId>
-			<version>1.2.20</version>
+			<version>1.2.21-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-id-gen-id-loader</artifactId>
-			<version>1.2.20</version>
+			<version>1.2.21-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>
