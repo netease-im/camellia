@@ -58,7 +58,7 @@ public class ProxyClusterModeProcessor {
 
     public ProxyClusterModeProcessor(ProxyClusterModeProvider provider) {
         this.provider = provider;
-        GlobalRedisProxyEnv.addStartOkCallback(this::init);
+        GlobalRedisProxyEnv.addAfterStartCallback(this::init);
     }
 
     private synchronized void init() {

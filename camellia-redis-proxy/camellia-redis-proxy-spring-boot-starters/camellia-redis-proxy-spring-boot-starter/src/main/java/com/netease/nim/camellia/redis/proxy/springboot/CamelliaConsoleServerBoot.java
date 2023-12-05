@@ -39,6 +39,6 @@ public class CamelliaConsoleServerBoot {
         CamelliaHttpConsoleServer consoleServer = new CamelliaHttpConsoleServer(config);
         ChannelFuture future = consoleServer.start();
         GlobalRedisProxyEnv.setConsolePort(config.getPort());
-        GlobalRedisProxyEnv.getProxyShutdown().setConsoleChannelFuture(future);
+        GlobalRedisProxyEnv.getProxyShutdown().setConsoleFuture(future);
     }
 }

@@ -69,9 +69,6 @@ public class CommandInvoker implements ICommandInvoker {
         proxyCommandProcessor.updateProxyPluginInitResp(proxyPluginInitResp);
         proxyPluginFactory.registerPluginUpdate(() -> proxyCommandProcessor.updateProxyPluginInitResp(proxyPluginFactory.initPlugins()));
 
-        //try sync config
-        proxyCommandProcessor.trySyncConfig();
-
         //init CommandInvokeConfig
         this.commandInvokeConfig = new CommandInvokeConfig(authCommandProcessor, clusterModeProcessor, proxyPluginFactory, proxyCommandProcessor);
     }

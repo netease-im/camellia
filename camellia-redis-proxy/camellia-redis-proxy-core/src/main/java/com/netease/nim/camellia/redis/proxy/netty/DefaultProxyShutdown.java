@@ -21,50 +21,50 @@ public class DefaultProxyShutdown implements ProxyShutdown {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultProxyShutdown.class);
 
-    private ChannelFuture[] serverChannelFuture;
-    private ChannelFuture cportChannelFuture;
-    private ChannelFuture consoleChannelFuture;
+    private final List<ChannelFuture> serverFutures = new ArrayList<>();
+    private ChannelFuture cportFuture;
+    private ChannelFuture consoleFuture;
     private IUpstreamClientTemplateFactory factory;
 
-    final void setServerChannelFuture(ChannelFuture... serverChannelFuture) {
-        this.serverChannelFuture = serverChannelFuture;
+    final synchronized void addServerFuture(ChannelFuture serverFuture) {
+        serverFutures.add(serverFuture);
     }
 
-    final void setCportChannelFuture(ChannelFuture cportChannelFuture) {
-        this.cportChannelFuture = cportChannelFuture;
+    final synchronized void setCportFuture(ChannelFuture cportFuture) {
+        this.cportFuture = cportFuture;
     }
 
-    final void updateUpstreamClientTemplateFactory(IUpstreamClientTemplateFactory factory) {
+    final synchronized void updateUpstreamClientTemplateFactory(IUpstreamClientTemplateFactory factory) {
         this.factory = factory;
     }
 
-    public final void setConsoleChannelFuture(ChannelFuture consoleChannelFuture) {
-        this.consoleChannelFuture = consoleChannelFuture;
+    public synchronized final void setConsoleFuture(ChannelFuture consoleFuture) {
+        this.consoleFuture = consoleFuture;
     }
 
     @Override
     public synchronized boolean closeServer() {
         boolean success = true;
-        if (serverChannelFuture != null) {
+        if (!serverFutures.isEmpty()) {
             try {
-                for (ChannelFuture future : serverChannelFuture) {
+                for (ChannelFuture future : serverFutures) {
                     if (future == null) continue;
                     future.channel().close()
                             .addListener((ChannelFutureListener) channelFuture ->
                                     logger.warn("camellia redis proxy server port shutdown for addr = {}", channelFuture.channel().localAddress()));
                 }
-                serverChannelFuture = null;
+                serverFutures.clear();
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 success = false;
             }
         }
-        if (cportChannelFuture != null) {
+        if (cportFuture != null) {
             try {
-                cportChannelFuture.channel().close()
+                cportFuture.channel().close()
                         .addListener((ChannelFutureListener) channelFuture ->
                                 logger.warn("camellia redis proxy server cport shutdown for addr = {}", channelFuture.channel().localAddress()));
-                cportChannelFuture = null;
+                cportFuture = null;
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 success = false;
@@ -77,12 +77,12 @@ public class DefaultProxyShutdown implements ProxyShutdown {
     @Override
     public boolean closeConsoleServer() {
         boolean success = true;
-        if (consoleChannelFuture != null) {
+        if (consoleFuture != null) {
             try {
-                consoleChannelFuture.channel().close()
+                consoleFuture.channel().close()
                         .addListener((ChannelFutureListener) channelFuture ->
                                 logger.warn("camellia redis proxy server console port shutdown for addr = {}", channelFuture.channel().localAddress()));
-                consoleChannelFuture = null;
+                consoleFuture = null;
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 success = false;

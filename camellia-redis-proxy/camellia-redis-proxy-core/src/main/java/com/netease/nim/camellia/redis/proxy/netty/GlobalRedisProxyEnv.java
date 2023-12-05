@@ -69,7 +69,8 @@ public class GlobalRedisProxyEnv {
 
     private static final DefaultProxyShutdown proxyShutdown = new DefaultProxyShutdown();
 
-    private static final Set<Runnable> callbackSet = new HashSet<>();
+    private static final Set<Runnable> beforeStartCallbackSet = new HashSet<>();
+    private static final Set<Runnable> afterStartCallbackSet = new HashSet<>();
 
     public static void init(CamelliaServerProperties serverProperties) {
         if (initOk.get()) return;
@@ -157,16 +158,31 @@ public class GlobalRedisProxyEnv {
         GlobalRedisProxyEnv.discoveryFactory = discoveryFactory;
     }
 
-    public static synchronized void addStartOkCallback(Runnable callback) {
-        callbackSet.add(callback);
+    public static synchronized void addBeforeStartCallback(Runnable callback) {
+        beforeStartCallbackSet.add(callback);
     }
 
-    public static void invokeStartOkCallback() {
-        for (Runnable runnable : callbackSet) {
+    public static synchronized void addAfterStartCallback(Runnable callback) {
+        afterStartCallbackSet.add(callback);
+    }
+
+    public static void invokeAfterStartCallback() {
+        for (Runnable runnable : afterStartCallbackSet) {
             try {
                 runnable.run();
             } catch (Exception e) {
-                logger.error("callback error", e);
+                logger.error("after start callback error", e);
+                throw new IllegalStateException(e);
+            }
+        }
+    }
+
+    public static void invokeBeforeStartCallback() {
+        for (Runnable runnable : beforeStartCallbackSet) {
+            try {
+                runnable.run();
+            } catch (Exception e) {
+                logger.error("before start callback error", e);
                 throw new IllegalStateException(e);
             }
         }

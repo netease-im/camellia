@@ -18,6 +18,8 @@ import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 
@@ -48,7 +50,7 @@ public class CamelliaRedisProxyServer {
     }
 
     public void start() throws Exception {
-        ServerBootstrap serverBootstrap = new ServerBootstrap();
+        ServerBootstrap bootstrap = new ServerBootstrap();
         final boolean sslEnable;
         ProxyFrontendTlsProvider proxyFrontendTlsProvider;
         int tlsPort = serverProperties.getTlsPort();
@@ -70,7 +72,7 @@ public class CamelliaRedisProxyServer {
         final boolean proxyProtocolEnable = serverProperties.isProxyProtocolEnable();
         Set<Integer> proxyProtocolPorts = ConfigInitUtil.proxyProtocolPorts(serverProperties, port, tlsPort);
 
-        serverBootstrap.group(GlobalRedisProxyEnv.getBossGroup(), GlobalRedisProxyEnv.getWorkGroup())
+        bootstrap.group(GlobalRedisProxyEnv.getBossGroup(), GlobalRedisProxyEnv.getWorkGroup())
                 .channel(GlobalRedisProxyEnv.getServerChannelClass())
                 .option(ChannelOption.SO_BACKLOG, serverProperties.getSoBacklog())
                 .childOption(ChannelOption.SO_SNDBUF, serverProperties.getSoSndbuf())
@@ -108,17 +110,10 @@ public class CamelliaRedisProxyServer {
                     }
                 });
         if (GlobalRedisProxyEnv.isServerTcpQuickAckEnable()) {
-            serverBootstrap.childOption(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
+            bootstrap.childOption(EpollChannelOption.TCP_QUICKACK, Boolean.TRUE);
         }
 
-        ChannelFuture future1 = null;
-        ChannelFuture future2 = null;
-        if (port > 0) {
-            future1 = serverBootstrap.bind(port).sync();
-        }
-        if (tlsPort > 0 && tlsPort != port) {
-            future2 = serverBootstrap.bind(tlsPort).sync();
-        }
+        //log
         logger.info("CamelliaRedisProxyServer, so_backlog = {}, so_sendbuf = {}, so_rcvbuf = {}, so_keepalive = {}",
                 serverProperties.getSoBacklog(), serverProperties.getSoSndbuf(), serverProperties.getSoRcvbuf(), serverProperties.isSoKeepalive());
         logger.info("CamelliaRedisProxyServer, tcp_no_delay = {}, tcp_quick_ack = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
@@ -127,17 +122,21 @@ public class CamelliaRedisProxyServer {
         if (proxyProtocolEnable) {
             logger.info("CamelliaRedisProxyServer, proxy_protocol_ports = {}", proxyProtocolPorts);
         }
-        if (port > 0 && port != tlsPort) {
-            logger.info("CamelliaRedisProxyServer start at port: {}", port);
-        }
-        if (tlsPort > 0) {
-            logger.info("CamelliaRedisProxyServer start at port: {} with tls", tlsPort);
-        }
 
-        GlobalRedisProxyEnv.setPort(port);
-        GlobalRedisProxyEnv.setTlsPort(tlsPort);
+        List<BindInfo> bindInfoList = new ArrayList<>();
+        //port
+        if (port > 0) {
+            bindInfoList.add(new BindInfo(bootstrap, port, false, false, null));
+        }
+        //tls port
+        if (tlsPort > 0 && tlsPort != port) {
+            bindInfoList.add(new BindInfo(bootstrap, tlsPort, false, true, null));
+        }
         this.port = port;
         this.tlsPort = tlsPort;
+        GlobalRedisProxyEnv.setPort(port);
+        GlobalRedisProxyEnv.setTlsPort(tlsPort);
+        //cport
         int cport = serverProperties.getCport();
         if (serverProperties.isClusterModeEnable()) {
             if (cport <= 0) {
@@ -145,29 +144,53 @@ public class CamelliaRedisProxyServer {
             }
         }
         if (cport > 0) {
-            ChannelFuture channelFuture = serverBootstrap.bind(cport).sync();
+            bindInfoList.add(new BindInfo(bootstrap, cport, true, false, null));
             GlobalRedisProxyEnv.setCport(cport);
-            GlobalRedisProxyEnv.getProxyShutdown().setCportChannelFuture(channelFuture);
-            if (serverProperties.isClusterModeEnable()) {
-                logger.info("CamelliaRedisProxyServer start in cluster mode at cport: {}", cport);
-            } else {
-                logger.info("CamelliaRedisProxyServer start at cport: {}", cport);
-            }
+        }
+        //uds
+        BindInfo bindInfo = startUds();
+        if (bindInfo != null) {
+            bindInfoList.add(bindInfo);
         }
 
-        ChannelFuture future3 = startUds();
-        GlobalRedisProxyEnv.getProxyShutdown().setServerChannelFuture(future1, future2, future3);
+        //before callback
+        GlobalRedisProxyEnv.invokeBeforeStartCallback();
+        //bind
+        for (BindInfo info : bindInfoList) {
+            if (info.port > 0 && !info.cport && !info.tls && info.udsPath == null) {
+                logger.info("CamelliaRedisProxyServer start at port: {}", port);
+                ChannelFuture future = info.bootstrap.bind(info.port).sync();
+                GlobalRedisProxyEnv.getProxyShutdown().addServerFuture(future);
+            } else if (info.port > 0 && !info.cport && info.tls && info.udsPath == null) {
+                ChannelFuture future = info.bootstrap.bind(info.port).sync();
+                logger.info("CamelliaRedisProxyServer start at port: {} with tls", tlsPort);
+                GlobalRedisProxyEnv.getProxyShutdown().addServerFuture(future);
+            } else if (info.port > 0 && info.cport && !info.tls && info.udsPath == null) {
+                if (serverProperties.isClusterModeEnable()) {
+                    logger.info("CamelliaRedisProxyServer start in cluster mode at cport: {}", info.port);
+                } else {
+                    logger.info("CamelliaRedisProxyServer start at cport: {}", info.port);
+                }
+                ChannelFuture future = info.bootstrap.bind(info.port).sync();
+                GlobalRedisProxyEnv.getProxyShutdown().setCportFuture(future);
+            } else if (info.udsPath != null) {
+                ChannelFuture future = info.bootstrap.bind(new DomainSocketAddress(udsPath)).sync();
+                logger.info("CamelliaRedisProxyServer start at uds: {}", info.udsPath);
+                GlobalRedisProxyEnv.getProxyShutdown().addServerFuture(future);
+            }
+        }
+        //after callback
+        GlobalRedisProxyEnv.invokeAfterStartCallback();
         logger.info("CamelliaRedisProxyServer start success, version = {}", ProxyInfoUtils.VERSION);
-        GlobalRedisProxyEnv.invokeStartOkCallback();
     }
 
-    private ChannelFuture startUds() throws Exception {
+    private BindInfo startUds() {
         String udsPath = serverProperties.getUdsPath();
         if (udsPath == null || udsPath.length() == 0) {
             logger.info("CamelliaRedisProxyServer uds disabled, skip start");
             return null;
         }
-        ServerBootstrap serverBootstrap = new ServerBootstrap();
+        ServerBootstrap bootstrap = new ServerBootstrap();
         EventLoopGroup bossGroup = GlobalRedisProxyEnv.getUdsBossGroup();
         EventLoopGroup workGroup = GlobalRedisProxyEnv.getUdsWorkGroup();
         Class<? extends ServerChannel> serverUdsChannelClass = GlobalRedisProxyEnv.getServerUdsChannelClass();
@@ -175,7 +198,7 @@ public class CamelliaRedisProxyServer {
             logger.warn("CamelliaRedisProxyServer uds start failed because os not support");
             return null;
         }
-        serverBootstrap.group(bossGroup, workGroup)
+        bootstrap.group(bossGroup, workGroup)
                 .channel(serverUdsChannelClass)
                 .option(ChannelOption.SO_BACKLOG, serverProperties.getSoBacklog())
                 .childOption(ChannelOption.SO_SNDBUF, serverProperties.getSoSndbuf())
@@ -201,11 +224,25 @@ public class CamelliaRedisProxyServer {
                         pipeline.addLast(serverHandler);
                     }
                 });
-        ChannelFuture future = serverBootstrap.bind(new DomainSocketAddress(udsPath)).sync();
         this.udsPath = udsPath;
         GlobalRedisProxyEnv.setUdsPath(udsPath);
-        logger.info("CamelliaRedisProxyServer start uds at {}", udsPath);
-        return future;
+        return new BindInfo(bootstrap, -1, false, false, udsPath);
+    }
+
+    private static class BindInfo {
+        ServerBootstrap bootstrap;
+        int port;
+        boolean tls;
+        boolean cport;
+        String udsPath;
+
+        public BindInfo(ServerBootstrap bootstrap, int port, boolean cport, boolean tls, String udsPath) {
+            this.bootstrap = bootstrap;
+            this.port = port;
+            this.cport = cport;
+            this.tls = tls;
+            this.udsPath = udsPath;
+        }
     }
 
     public int getPort() {

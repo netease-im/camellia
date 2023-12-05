@@ -60,7 +60,11 @@ public class ProxyCommandProcessor {
     private ClientAuthProvider clientAuthProvider;
     private ProxyNodesDiscovery proxyNodesDiscovery;
 
-    public void trySyncConfig() {
+    public ProxyCommandProcessor() {
+        GlobalRedisProxyEnv.addBeforeStartCallback(this::trySyncConfig);
+    }
+
+    private void trySyncConfig() {
         String targetNode = ProxyDynamicConf.getString("config.auto.sync.target.proxy.node", null);
         boolean autoSync = ProxyDynamicConf.getBoolean("config.auto.sync.enable", false);
         if (autoSync && targetNode != null) {

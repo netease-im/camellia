@@ -39,7 +39,7 @@ public class RedisProxyNodesDiscovery extends AbstractProxyNodesDiscovery {
         String heartbeatKeyPrefix = ProxyDynamicConf.getString("proxy.nodes.discovery.redis.heartbeat.key.prefix", "camellia_redis_proxy_heartbeat");
         this.heartbeatKey = heartbeatKeyPrefix + "|" + serverProperties.getApplicationName();
         GlobalRedisProxyEnv.getClientTemplateFactory().getEnv().getClientFactory().get(redisUrl);
-        GlobalRedisProxyEnv.addStartOkCallback(this::init);
+        GlobalRedisProxyEnv.addAfterStartCallback(this::init);
     }
 
     private void init() {
@@ -110,7 +110,7 @@ public class RedisProxyNodesDiscovery extends AbstractProxyNodesDiscovery {
                 logger.error("heartbeat, EXPIRE error, reply = {}", reply3);
             }
             Reply reply4 = future4.get(10, TimeUnit.SECONDS);
-            if (reply4 instanceof MultiBulkReply) {
+            if (reply4 instanceof MultiBulkReply && success) {
                 List<ProxyNode> proxyNodes = new ArrayList<>();
                 Reply[] replies = ((MultiBulkReply) reply4).getReplies();
                 for (Reply reply : replies) {
