@@ -54,7 +54,7 @@ proxy.nodes.discovery.redis.heartbeat.timeout.seconds=30
 
 示例：
 ```shell
-127.0.0.1:6380> proxy servers
+127.0.0.1:6380> proxy nodes
 1) "10.221.145.235:6380@7380"
 2) 1) "10.221.145.235:6380@7380"
    2) "10.221.145.235:6381@7381"

@@ -125,8 +125,8 @@ public class ProxyCommandProcessor {
                         case CONFIG:
                             future.complete(config(args));
                             break;
-                        case SERVERS:
-                            future.complete(servers());
+                        case NODES:
+                            future.complete(nodes());
                             break;
                         default:
                             future.complete(error);
@@ -395,7 +395,7 @@ public class ProxyCommandProcessor {
         return new BulkReply(Utils.stringToBytes(node.toString()));
     }
 
-    private Reply servers() {
+    private Reply nodes() {
         //current
         ProxyNode currentNode = proxyNodesDiscovery.current();
         Reply current = nodeReply(currentNode);
@@ -447,7 +447,7 @@ public class ProxyCommandProcessor {
     private static enum Section {
         INFO,
         CONFIG,
-        SERVERS,
+        NODES,
         ;
 
         public static Section byValue(String section) {
