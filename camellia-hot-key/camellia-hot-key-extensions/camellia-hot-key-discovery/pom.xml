@@ -15,6 +15,7 @@
 
 	<modules>
 		<module>camellia-hot-key-discovery-eureka</module>
+		<module>camellia-hot-key-discovery-eureka3</module>
 		<module>camellia-hot-key-discovery-zk</module>
 	</modules>
 </project>
