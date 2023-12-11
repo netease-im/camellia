@@ -8,6 +8,7 @@
 * camellia-delay-queue-spring-boot-starters, support spring-boot3
 * camellia-feign-spring-boot-starters, support spring-boot3
 * camellia-hbase-spring-boot-starters, support spring-boot3
+* camellia-id-gen-spring-boot-starters, support spring-boot3
 
 ### update
 * none
