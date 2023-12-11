@@ -6,6 +6,7 @@
 * camellia-redis-spring-boot-starters, support spring-boot3
 * camellia-cache-spring-boot-starters, support spring-boot3
 * camellia-delay-queue-spring-boot-starters, support spring-boot3
+* camellia-feign-spring-boot-starters, support spring-boot3
 
 ### update
 * none
