@@ -21,6 +21,9 @@
 		<module>camellia-console-spring-boot-starter</module>
 		<module>camellia-config</module>
 		<module>camellia-config-spring-boot-starter</module>
+
+		<module>camellia-config-sdk-spring-boot</module>
 		<module>camellia-config-sdk-spring-boot-starter</module>
+		<module>camellia-config-sdk-spring-boot3-starter</module>
 	</modules>
 </project>
