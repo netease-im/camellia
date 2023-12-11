@@ -35,6 +35,8 @@
 		<java.version>1.8</java.version>
 		<spring.boot.version>2.0.9.RELEASE</spring.boot.version>
 		<spring.cloud.version>Finchley.RELEASE</spring.cloud.version>
+		<spring.boot3.version>2.7.18</spring.boot3.version>
+		<spring.cloud3.version>2021.0.8</spring.cloud3.version>
 		<spring-cloud-openfeign.version>2.0.0.RELEASE</spring-cloud-openfeign.version>
 		<spring-boot-maven-plugin.version>2.0.6.RELEASE</spring-boot-maven-plugin.version>
 		<spring-web.version>5.0.10.RELEASE</spring-web.version>

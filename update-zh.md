@@ -1,6 +1,17 @@
 [ENGLISH](update-en.md)
 
 
+# 1.2.21（2023/12/xx）
+### 新增
+* camellia-redis-spring-boot-starters，支持spring-boot3
+
+### 更新
+* 无
+
+### fix
+* 无
+
+
 # 1.2.20（2023/12/05）
 ### 新增
 * camellia-redis-proxy新增`PROXY`命令，从而可以通过任意proxy节点管理所有其他节点的动态配置，从而可以不依赖etcd/nacos等中心化的配置中心

@@ -35,7 +35,7 @@ import java.util.Map;
 @Configuration
 @EnableConfigurationProperties({CamelliaRedisProperties.class})
 public class CamelliaRedisConfiguration {
-
+@Deprecated
     private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisConfiguration.class);
 
     @Bean

@@ -1,6 +1,17 @@
 [中文版](update-zh.md)
 
 
+# 1.2.21（2023/12/xx）
+### add
+* camellia-redis-spring-boot-starters, support spring-boot3
+
+### update
+* none
+
+### fix
+* none
+
+
 # 1.2.20（2023/12/05）
 ### add
 * camellia-redis-proxy support `PROXY` command, so you can use any proxy node to manager other proxy nodes' config, sometimes to replace nacos/etcd as the config center
