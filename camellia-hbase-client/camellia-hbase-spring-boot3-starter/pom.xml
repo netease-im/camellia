@@ -3,12 +3,12 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-redis-spring-boot3-starter</artifactId>
+	<artifactId>camellia-hbase-spring-boot3-starter</artifactId>
 	<version>1.2.21-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia-redis-spring-boot-starters</artifactId>
+		<artifactId>camellia-hbase-client</artifactId>
 		<version>1.2.21-SNAPSHOT</version>
 	</parent>
 
@@ -27,7 +27,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-spring-boot</artifactId>
+			<artifactId>camellia-hbase-spring-boot</artifactId>
 			<version>1.2.21-SNAPSHOT</version>
 		</dependency>
     </dependencies>

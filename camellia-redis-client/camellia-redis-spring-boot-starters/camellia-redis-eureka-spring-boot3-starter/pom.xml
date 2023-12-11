@@ -39,7 +39,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-eureka-spring-boot-starter-base</artifactId>
+			<artifactId>camellia-redis-eureka-spring-boot</artifactId>
 			<version>1.2.21-SNAPSHOT</version>
 		</dependency>
     </dependencies>

@@ -3,12 +3,12 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-delay-queue-sdk-spring-boot-starter-base</artifactId>
+	<artifactId>camellia-feign-spring-boot</artifactId>
 	<version>1.2.21-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia-delay-queue-spring-boot-starters</artifactId>
+		<artifactId>camellia-feign-client</artifactId>
 		<version>1.2.21-SNAPSHOT</version>
 	</parent>
 
@@ -21,15 +21,17 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring.cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
 	<dependencies>
-		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-delay-queue-sdk</artifactId>
-			<version>1.2.21-SNAPSHOT</version>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-autoconfigure</artifactId>
@@ -40,18 +42,17 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter</artifactId>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-commons</artifactId>
 		</dependency>
+
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.kafka</groupId>
-			<artifactId>spring-kafka</artifactId>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-feign</artifactId>
+			<version>1.2.21-SNAPSHOT</version>
 		</dependency>
     </dependencies>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -80,4 +81,5 @@
 			</plugin>
 		</plugins>
 	</build>
+
 </project>

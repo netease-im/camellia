@@ -3,7 +3,7 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-delay-queue-server-spring-boot-starter-base</artifactId>
+	<artifactId>camellia-delay-queue-sdk-spring-boot</artifactId>
 	<version>1.2.21-SNAPSHOT</version>
 
 	<parent>
@@ -27,12 +27,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-delay-queue-server</artifactId>
-			<version>1.2.21-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-spring-boot-starter</artifactId>
+			<artifactId>camellia-delay-queue-sdk</artifactId>
 			<version>1.2.21-SNAPSHOT</version>
 		</dependency>
 		<dependency>
@@ -51,6 +46,10 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
 		</dependency>
     </dependencies>
 	<build>

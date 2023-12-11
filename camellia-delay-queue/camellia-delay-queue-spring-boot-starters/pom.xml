@@ -16,11 +16,11 @@
     </parent>
 
     <modules>
-        <module>camellia-delay-queue-server-spring-boot-starter-base</module>
+        <module>camellia-delay-queue-server-spring-boot</module>
         <module>camellia-delay-queue-server-spring-boot-starter</module>
         <module>camellia-delay-queue-server-spring-boot3-starter</module>
 
-        <module>camellia-delay-queue-sdk-spring-boot-starter-base</module>
+        <module>camellia-delay-queue-sdk-spring-boot</module>
         <module>camellia-delay-queue-sdk-spring-boot-starter</module>
         <module>camellia-delay-queue-sdk-spring-boot3-starter</module>
     </modules>

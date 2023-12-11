@@ -3,12 +3,12 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-cache-spring-boot-starter-base</artifactId>
+	<artifactId>camellia-hbase-spring-boot</artifactId>
 	<version>1.2.21-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
-		<artifactId>camellia-cache</artifactId>
+		<artifactId>camellia-hbase-client</artifactId>
 		<version>1.2.21-SNAPSHOT</version>
 	</parent>
 
@@ -27,15 +27,9 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-cache-core</artifactId>
+			<artifactId>camellia-hbase</artifactId>
 			<version>1.2.21-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis</artifactId>
-			<version>1.2.21-SNAPSHOT</version>
-		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-autoconfigure</artifactId>
@@ -43,19 +37,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.github.ben-manes.caffeine</groupId>
-			<artifactId>caffeine</artifactId>
-			<version>${caffeine.version}</version>
 		</dependency>
     </dependencies>
 	<build>

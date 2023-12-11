@@ -16,7 +16,7 @@
 
 	<modules>
 		<module>camellia-feign</module>
-		<module>camellia-feign-spring-boot-starter-base</module>
+		<module>camellia-feign-spring-boot</module>
 		<module>camellia-feign-spring-boot-starter</module>
 		<module>camellia-feign-spring-boot3-starter</module>
 	</modules>

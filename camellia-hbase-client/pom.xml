@@ -16,6 +16,8 @@
 
 	<modules>
 		<module>camellia-hbase</module>
+		<module>camellia-hbase-spring-boot</module>
 		<module>camellia-hbase-spring-boot-starter</module>
+		<module>camellia-hbase-spring-boot3-starter</module>
 	</modules>
 </project>

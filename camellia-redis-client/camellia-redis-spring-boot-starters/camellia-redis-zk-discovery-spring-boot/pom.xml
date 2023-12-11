@@ -3,7 +3,7 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-redis-spring-boot-starter-base</artifactId>
+	<artifactId>camellia-redis-zk-discovery-spring-boot</artifactId>
 	<version>1.2.21-SNAPSHOT</version>
 
 	<parent>
@@ -32,7 +32,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-toolkit</artifactId>
+			<artifactId>camellia-redis-proxy-discovery-zk</artifactId>
 			<version>1.2.21-SNAPSHOT</version>
 		</dependency>
 		<dependency>
@@ -48,6 +48,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>com.netease.nim</groupId>
+            <artifactId>camellia-redis-proxy-discovery-common</artifactId>
+            <version>1.2.21-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 	<build>
 		<plugins>

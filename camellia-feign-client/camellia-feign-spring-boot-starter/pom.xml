@@ -34,7 +34,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-feign-spring-boot-starter-base</artifactId>
+			<artifactId>camellia-feign-spring-boot</artifactId>
 			<version>1.2.21-SNAPSHOT</version>
 		</dependency>
     </dependencies>
