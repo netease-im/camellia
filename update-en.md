@@ -4,6 +4,7 @@
 # 1.2.21（2023/12/xx）
 ### add
 * camellia-redis-spring-boot-starters, support spring-boot3
+* camellia-cache-spring-boot-starter, support spring-boot3
 
 ### update
 * none

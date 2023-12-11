@@ -16,6 +16,8 @@
 
 	<modules>
 		<module>camellia-cache-core</module>
+		<module>camellia-cache-spring-boot-starter-base</module>
 		<module>camellia-cache-spring-boot-starter</module>
+		<module>camellia-cache-spring-boot3-starter</module>
 	</modules>
 </project>
