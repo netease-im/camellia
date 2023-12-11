@@ -35,26 +35,8 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-redis-eureka-base</artifactId>
+			<artifactId>camellia-spring-redis-eureka-discovery-spring-boot</artifactId>
 			<version>1.2.21-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-spring-redis-base</artifactId>
-			<version>1.2.21-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-autoconfigure</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-configuration-processor</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
 	</dependencies>
 

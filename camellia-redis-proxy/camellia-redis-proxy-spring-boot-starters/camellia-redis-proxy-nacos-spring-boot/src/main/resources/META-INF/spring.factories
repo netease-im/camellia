@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  springboot.com.netease.nim.camellia.redis.proxy.config.nacos.CamelliaRedisProxyNacosConfiguration

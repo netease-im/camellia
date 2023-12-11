@@ -11,6 +11,7 @@
 * camellia-id-gen-spring-boot-starters, support spring-boot3
 * camellia-hot-key-spring-boot-starters, support spring-boot3
 * camellia-config-spring-boot-starters, support spring-boot3
+* camellia-redis-proxy-spring-boot-starters, support spring-boot3
 
 ### update
 * none
