@@ -1,9 +1,9 @@
 package com.netease.nim.camellia.delayqueue.server.springboot;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Created by caojiajun on 2023/1/15
@@ -16,39 +16,32 @@ public class CamelliaHealthController {
     private static final String ERROR = "{\"code\":500}";
 
     @RequestMapping(value = "/status")
-    public void status(HttpServletResponse response) throws Exception {
+    public ResponseEntity<String> status() {
         if (CamelliaDelayQueueServerStatus.getStatus() == CamelliaDelayQueueServerStatus.Status.ONLINE) {
-            response.setStatus(HttpServletResponse.SC_OK);
-            response.getWriter().println(OK);
+            return new ResponseEntity<>(OK, HttpStatus.OK);
         } else {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().println(ERROR);
+            return new ResponseEntity<>(ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @RequestMapping(value = "/check")
-    public void check(HttpServletResponse response) throws Exception {
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().println(OK);
+    public ResponseEntity<String> check() {
+        return new ResponseEntity<>(OK, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/online")
-    public void online(HttpServletResponse response) throws Exception {
+    public ResponseEntity<String> online() {
         CamelliaDelayQueueServerStatus.setStatus(CamelliaDelayQueueServerStatus.Status.ONLINE);
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().println(OK);
+        return new ResponseEntity<>(OK, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/offline")
-    public void offline(HttpServletResponse response) throws Exception {
+    public ResponseEntity<String> offline() {
         CamelliaDelayQueueServerStatus.setStatus(CamelliaDelayQueueServerStatus.Status.OFFLINE);
         if (CamelliaDelayQueueServerStatus.isIdle()) {
-            response.setStatus(HttpServletResponse.SC_OK);
-            response.getWriter().println(OK);
+            return new ResponseEntity<>(OK, HttpStatus.OK);
         } else {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().println(ERROR);
+            return new ResponseEntity<>(ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
 }
