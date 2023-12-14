@@ -11,10 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.async.DeferredResult;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 
@@ -34,44 +32,39 @@ public class CamelliaDelayQueueController {
     private CamelliaDelayQueueLongPollingTaskExecutor executor;
 
     @PostMapping("/longPollingMsg")
-    public void longPollingMsg(@RequestParam("topic") String topic,
-                               @RequestParam(value = "ackTimeoutMillis", required = false, defaultValue = "-1") long ackTimeoutMillis,
-                               @RequestParam(value = "batch", required = false, defaultValue = "-1") int batch,
-                               @RequestParam(value = "longPollingTimeoutMillis", required = false, defaultValue = "-1") long longPollingTimeoutMillis,
-                               HttpServletRequest httpServletRequest,
-                               HttpServletResponse httpServletResponse) {
+    public DeferredResult<String> longPollingMsg(@RequestParam("topic") String topic,
+                                         @RequestParam(value = "ackTimeoutMillis", required = false, defaultValue = "-1") long ackTimeoutMillis,
+                                         @RequestParam(value = "batch", required = false, defaultValue = "-1") int batch,
+                                         @RequestParam(value = "longPollingTimeoutMillis", required = false, defaultValue = "-1") long longPollingTimeoutMillis) {
         CamelliaDelayQueueServerStatus.updateLastUseTime();
         CamelliaDelayMsgPullRequest request = new CamelliaDelayMsgPullRequest();
         request.setTopic(topic);
         request.setAckTimeoutMillis(ackTimeoutMillis);
         request.setBatch(batch);
-        httpServletResponse.setCharacterEncoding("utf-8");
+        DeferredResult<String> result = new DeferredResult<>();
         //先直接取，如果取得到，直接返回，不需要异步hold连接
         try {
             CamelliaDelayMsgPullResponse response = server.pullMsg(request);
             if (response.getCode() != 200) {
-                httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-                httpServletResponse.getWriter().println(JSONObject.toJSONString(response));
-                return;
+                result.setResult(JSONObject.toJSONString(response));
+                return result;
             }
             if (response.getDelayMsgList() != null && !response.getDelayMsgList().isEmpty()) {
-                httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-                httpServletResponse.getWriter().println(JSONObject.toJSONString(response));
-                return;
+                result.setResult(JSONObject.toJSONString(response));
+                return result;
             }
         } catch (Exception e) {
             logger.error("longPollingMsg error, topic = {}", topic, e);
         }
         //开启异步长轮询
-        AsyncContext asyncContext = httpServletRequest.startAsync();
         try {
-            asyncContext.setTimeout(0);
-            CamelliaDelayQueueLongPollingTask task = new CamelliaDelayQueueLongPollingTask(request, longPollingTimeoutMillis, asyncContext);
+            CamelliaDelayQueueLongPollingTask task = new CamelliaDelayQueueLongPollingTask(request, longPollingTimeoutMillis, result);
             executor.submit(task);
         } catch (Exception e) {
             logger.error("longPollingMsg error, topic = {}", topic, e);
-            asyncContext.complete();
+            result.setErrorResult("internal error");
         }
+        return result;
     }
 
     @PostMapping("/sendMsg")

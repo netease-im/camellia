@@ -10,8 +10,8 @@ import io.netty.util.HashedWheelTimer;
 import io.netty.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.context.request.async.DeferredResult;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -177,14 +177,12 @@ public class CamelliaDelayQueueLongPollingTaskExecutor {
         try {
             if (task.tryLock()) {
                 CamelliaDelayMsgPullResponse response = server.pullMsg(task.getRequest());
-                HttpServletResponse httpServletResponse = (HttpServletResponse) task.getAsyncContext().getResponse();
-                httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-                httpServletResponse.getWriter().println(JSONObject.toJSONString(response));
-                task.getAsyncContext().complete();
+                DeferredResult<String> result = task.getResult();
+                result.setResult(JSONObject.toJSONString(response));
             }
         } catch (Exception e) {
             logger.error("camellia delay queue long polling runnable error, topic = {}", task.getRequest().getTopic(), e);
-            task.getAsyncContext().complete();
+            task.getResult().setErrorResult("internal error");
         }
     }
 }

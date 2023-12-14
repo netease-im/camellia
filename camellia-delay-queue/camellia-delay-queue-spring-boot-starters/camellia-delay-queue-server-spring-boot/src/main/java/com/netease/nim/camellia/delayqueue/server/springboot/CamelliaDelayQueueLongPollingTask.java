@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.delayqueue.server.springboot;
 
 import com.netease.nim.camellia.delayqueue.common.domain.CamelliaDelayMsgPullRequest;
+import org.springframework.web.context.request.async.DeferredResult;
 
 import javax.servlet.AsyncContext;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -12,22 +13,22 @@ public class CamelliaDelayQueueLongPollingTask {
 
     private final CamelliaDelayMsgPullRequest request;
     private final long longPollingTimeoutMillis;
-    private final AsyncContext asyncContext;
+    private final DeferredResult<String> result;
     private final AtomicBoolean done = new AtomicBoolean(false);
     private Runnable cancelCallback;
 
-    public CamelliaDelayQueueLongPollingTask(CamelliaDelayMsgPullRequest request, long longPollingTimeoutMillis, AsyncContext asyncContext) {
+    public CamelliaDelayQueueLongPollingTask(CamelliaDelayMsgPullRequest request, long longPollingTimeoutMillis, DeferredResult<String> result) {
         this.request = request;
         this.longPollingTimeoutMillis = longPollingTimeoutMillis;
-        this.asyncContext = asyncContext;
+        this.result = result;
     }
 
     public CamelliaDelayMsgPullRequest getRequest() {
         return request;
     }
 
-    public AsyncContext getAsyncContext() {
-        return asyncContext;
+    public DeferredResult<String> getResult() {
+        return result;
     }
 
     public long getLongPollingTimeoutMillis() {
