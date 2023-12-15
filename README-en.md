@@ -15,6 +15,8 @@ Camellia provide easy-to-use server toolkits:
 * [delay-queue](/docs/delay-queue/delay-queue.md)
 * [hot-key](/docs/hot-key/hot-key.md)
 
+if you want use java21/spring-boot3 to run these servers，see: [camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
+
 camellia also provide enhanced sdk (based on other open source sdk): 
 * [redis-client](/docs/redis-client/redis-client.md)
 * [hbase-client](/docs/hbase-client/hbase-client.md)
