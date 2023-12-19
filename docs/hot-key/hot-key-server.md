@@ -270,3 +270,4 @@ public interface HotKeyCacheStatsCallback {
 }
 ```
 
+### 如果要使用java21/spring-boot3/docker，请参考：[camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)

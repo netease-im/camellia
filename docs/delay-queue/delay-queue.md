@@ -120,6 +120,8 @@ camellia-redis:
 ### 使用按照包启动delay-queue服务器
 使用安装包快速启动delay-queue-server，具体见：[quick-start-package](quick-start-package.md)
 
+### 如果要使用java21/spring-boot3/docker，请参考：[camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
+
 ### producer示例
 建立一个spring-boot工程，引入maven依赖：  
 ```

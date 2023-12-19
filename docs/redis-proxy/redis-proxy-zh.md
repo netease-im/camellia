@@ -229,6 +229,8 @@ OK
 ## 快速开始四（不使用spring-boot-stater)
 参见：[quick-start-no-spring-boot](quickstart/quick-start-no-spring-boot.md)
 
+## 如果要使用java21/spring-boot3/docker，请参考：[camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
+
 ## 源码解读
 具体可见：[代码结构](code/proxy-code.md)
 
