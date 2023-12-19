@@ -1,7 +1,7 @@
 [中文版](update-zh.md)
 
 
-# 1.2.21（2023/12/xx）
+# 1.2.21（2023/12/19）
 ### add
 * camellia-redis-spring-boot-starters, support spring-boot3
 * camellia-cache-spring-boot-starters, support spring-boot3

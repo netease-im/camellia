@@ -1,7 +1,7 @@
 [ENGLISH](update-en.md)
 
 
-# 1.2.21（2023/12/xx）
+# 1.2.21（2023/12/19）
 ### 新增
 * camellia-redis-spring-boot-starters，支持spring-boot3
 * camellia-cache-spring-boot-starters, 支持spring-boot3

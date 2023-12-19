@@ -9,7 +9,7 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-redis-proxy-nacos-spring-boot-starter</artifactId>
-    <version>1.2.20</version>
+    <version>1.2.21</version>
 </dependency>
 ```
 

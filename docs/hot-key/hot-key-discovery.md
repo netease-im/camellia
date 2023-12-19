@@ -13,7 +13,7 @@
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-hot-key-server-zk-registry-spring-boot-starter</artifactId>
-    <version>1.2.20</version>
+    <version>1.2.21</version>
 </dependency>
 ```
 
@@ -85,7 +85,7 @@ public class MyConsoleService extends ConsoleServiceAdaptor {
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-hot-key-discovery-zk</artifactId>
-    <version>1.2.20</version>
+    <version>1.2.21</version>
 </dependency>
 ```
 
@@ -200,7 +200,7 @@ public class MyConsoleService extends ConsoleServiceAdaptor {
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-hot-key-discovery-eureka</artifactId>
-    <version>1.2.20</version>
+    <version>1.2.21</version>
 </dependency>
 ```
 
