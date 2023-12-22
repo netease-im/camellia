@@ -14,6 +14,8 @@ import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.tools.sys.MemoryInfo;
+import com.netease.nim.camellia.tools.sys.MemoryInfoCollector;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -354,7 +356,7 @@ public class ProxyInfoUtils {
     private static String getMemory() {
         StringBuilder builder = new StringBuilder();
         builder.append("# Memory").append("\r\n");
-        MemoryInfo memoryInfo = MemoryInfoUtils.getMemoryInfo();
+        MemoryInfo memoryInfo = MemoryInfoCollector.getMemoryInfo();
         long freeMemory = memoryInfo.getFreeMemory();
         long totalMemory = memoryInfo.getTotalMemory();
         long maxMemory = memoryInfo.getMaxMemory();
@@ -393,7 +395,7 @@ public class ProxyInfoUtils {
                 GarbageCollectorMXBean garbageCollectorMXBean = garbageCollectorMXBeanList.get(i);
                 builder.append("gc").append(i).append("_name:").append(garbageCollectorMXBean.getName()).append("\r\n");
                 builder.append("gc").append(i).append("_collection_count:").append(garbageCollectorMXBean.getCollectionCount()).append("\r\n");
-                builder.append("gc").append(i).append("_collection_time:").append(garbageCollectorMXBean.getCollectionCount()).append("\r\n");
+                builder.append("gc").append(i).append("_collection_time:").append(garbageCollectorMXBean.getCollectionTime()).append("\r\n");
             }
         }
         return builder.toString();

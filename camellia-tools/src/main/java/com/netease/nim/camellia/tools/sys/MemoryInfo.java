@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.info;
+package com.netease.nim.camellia.tools.sys;
 
 /**
  * Created by caojiajun on 2023/11/29

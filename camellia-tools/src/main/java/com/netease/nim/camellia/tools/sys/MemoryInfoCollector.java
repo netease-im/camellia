@@ -1,6 +1,6 @@
-package com.netease.nim.camellia.redis.proxy.info;
+package com.netease.nim.camellia.tools.sys;
 
-import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.tools.utils.ReflectUtils;
 import io.netty.util.internal.PlatformDependent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,16 +13,16 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Created by caojiajun on 2023/11/29
  */
-public class MemoryInfoUtils {
+public class MemoryInfoCollector {
 
-    private static final Logger logger = LoggerFactory.getLogger(MemoryInfoUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(MemoryInfoCollector.class);
 
     private static final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
 
     private static AtomicLong nettyDirectMemory;
     static {
         try {
-            Field filed = Utils.findField(PlatformDependent.class, "DIRECT_MEMORY_COUNTER");
+            Field filed = ReflectUtils.findField(PlatformDependent.class, "DIRECT_MEMORY_COUNTER");
             filed.setAccessible(true);
             nettyDirectMemory = (AtomicLong) filed.get(PlatformDependent.class);
             if (nettyDirectMemory == null) {
