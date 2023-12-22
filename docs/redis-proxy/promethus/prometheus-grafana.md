@@ -44,10 +44,10 @@ scrape_configs:
       - targets: ["10.221.145.235:16379","10.221.145.234:16379"]%
 ```
 
-config job_name, e.g. `redis_proxy_1`
-config targets, e.g. `["10.221.145.235:16379","10.221.145.234:16379"]`
+config job_name, e.g. `redis_proxy_1`  
+config targets, e.g. `["10.221.145.235:16379","10.221.145.234:16379"]`  
 
-`10.221.145.235/10.221.145.234` is proxy ip, `16379` is proxy console port
+`10.221.145.235/10.221.145.234` is proxy ip, `16379` is proxy console port  
 
 ### step3 install grafana
 add datasource prometheus
