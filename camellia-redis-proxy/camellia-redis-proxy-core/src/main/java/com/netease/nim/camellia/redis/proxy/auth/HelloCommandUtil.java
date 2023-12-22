@@ -1,10 +1,10 @@
 package com.netease.nim.camellia.redis.proxy.auth;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
-import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
-import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
-import com.netease.nim.camellia.redis.proxy.reply.Reply;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 /**
@@ -18,7 +18,7 @@ public class HelloCommandUtil {
     public static Reply invokeHelloCommand(ChannelInfo channelInfo, AuthCommandProcessor authCommandProcessor, Command command) {
         byte[][] objects = command.getObjects();
         if (objects.length == 1) {
-            return MultiBulkReply.EMPTY;
+            return helloCmdReply();
         }
         if (objects.length > 2) {
             for (int i=1; i<objects.length; i++) {
@@ -47,6 +47,30 @@ public class HelloCommandUtil {
                 }
             }
         }
-        return MultiBulkReply.EMPTY;
+        return helloCmdReply();
     }
+
+    private static MultiBulkReply helloCmdReply() {
+        Reply[] reply = new Reply[14];
+        reply[0] = new BulkReply(Utils.stringToBytes("server"));
+        reply[1] = new BulkReply(Utils.stringToBytes("redis"));
+        reply[2] = new BulkReply(Utils.stringToBytes("version"));
+        reply[3] = new BulkReply(Utils.stringToBytes(ProxyInfoUtils.RedisVersion));
+        reply[4] = new BulkReply(Utils.stringToBytes("proto"));
+        reply[5] = new IntegerReply(2L);
+        reply[6] = new BulkReply(Utils.stringToBytes("id"));
+        reply[7] = new IntegerReply(194L);
+        reply[8] = new BulkReply(Utils.stringToBytes("mode"));
+        if (GlobalRedisProxyEnv.isClusterModeEnable()) {
+            reply[9] = new BulkReply(Utils.stringToBytes("cluster"));
+        } else {
+            reply[9] = new BulkReply(Utils.stringToBytes("standalone"));
+        }
+        reply[10] = new BulkReply(Utils.stringToBytes("role"));
+        reply[11] = new BulkReply(Utils.stringToBytes("master"));
+        reply[12] = new BulkReply(Utils.stringToBytes("modules"));
+        reply[13] = MultiBulkReply.EMPTY;
+        return new MultiBulkReply(reply);
+    }
+
 }

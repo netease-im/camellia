@@ -142,6 +142,7 @@ public class CamelliaRedisProxyServer {
             if (cport <= 0) {
                 cport = port + 10000;
             }
+            GlobalRedisProxyEnv.setClusterModeEnable(true);
         }
         if (cport > 0) {
             bindInfoList.add(new BindInfo(bootstrap, cport, true, false, null));

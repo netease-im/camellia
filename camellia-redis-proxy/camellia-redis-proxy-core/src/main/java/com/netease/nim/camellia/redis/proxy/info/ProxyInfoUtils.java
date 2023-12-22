@@ -39,6 +39,7 @@ public class ProxyInfoUtils {
             new LinkedBlockingQueue<>(8), new DefaultThreadFactory("proxy-info"));
 
     public static final String VERSION = "v1.2.21";
+    public static final String RedisVersion = "7.0.11";
     private static final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
     private static final OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
     private static final List<GarbageCollectorMXBean> garbageCollectorMXBeanList = ManagementFactory.getGarbageCollectorMXBeans();
@@ -245,8 +246,13 @@ public class ProxyInfoUtils {
         StringBuilder builder = new StringBuilder();
         builder.append("# Server").append("\r\n");
         builder.append("camellia_redis_proxy_version:" + VERSION).append("\r\n");
-        builder.append("redis_version:7.0.11").append("\r\n");//spring actuator默认会使用info命令返回的redis_version字段来做健康检查，这里直接返回一个固定的版本号
+        builder.append("redis_version:").append(RedisVersion).append("\r\n");//spring actuator默认会使用info命令返回的redis_version字段来做健康检查，这里直接返回一个固定的版本号
         builder.append("available_processors:").append(osBean.getAvailableProcessors()).append("\r\n");
+        if (GlobalRedisProxyEnv.isClusterModeEnable()) {
+            builder.append("redis_mode:").append("cluster").append("\r\n");
+        } else {
+            builder.append("redis_mode:").append("standalone").append("\r\n");
+        }
         builder.append("netty_boss_thread:").append(GlobalRedisProxyEnv.getBossThread()).append("\r\n");
         builder.append("netty_work_thread:").append(GlobalRedisProxyEnv.getWorkThread()).append("\r\n");
         builder.append("arch:").append(osBean.getArch()).append("\r\n");
