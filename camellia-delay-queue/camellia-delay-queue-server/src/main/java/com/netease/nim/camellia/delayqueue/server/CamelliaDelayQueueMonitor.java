@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.delayqueue.server;
 
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.tools.sys.CpuUsageCollector;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.delayqueue.common.domain.*;
 import com.netease.nim.camellia.delayqueue.common.exception.CamelliaDelayMsgErrorCode;
@@ -36,17 +37,23 @@ public class CamelliaDelayQueueMonitor {
     private static ConcurrentHashMap<String, CamelliaStatistics> readyQueueTimeGapMap = new ConcurrentHashMap<>();
 
     private static CamelliaDelayQueueMonitorData monitorData = new CamelliaDelayQueueMonitorData();
+    private static CpuUsageCollector cpuUsageCollector;
 
     public static void init(int monitorIntervalSeconds) {
         if (initOk.compareAndSet(false, true)) {
             Executors.newSingleThreadScheduledExecutor()
                     .scheduleAtFixedRate(CamelliaDelayQueueMonitor::calcMonitorData, monitorIntervalSeconds, monitorIntervalSeconds, TimeUnit.SECONDS);
             logger.info("CamelliaDelayQueueMonitor init success, monitorIntervalSeconds = {}", monitorIntervalSeconds);
+            cpuUsageCollector = new CpuUsageCollector(monitorIntervalSeconds);
         }
     }
 
     public static CamelliaDelayQueueMonitorData getMonitorData() {
         return monitorData;
+    }
+
+    public static CpuUsageCollector getCpuUsageCollector() {
+        return cpuUsageCollector;
     }
 
     public static void sendMsg(CamelliaDelayMsgSendRequest request, CamelliaDelayMsgSendResponse response) {
