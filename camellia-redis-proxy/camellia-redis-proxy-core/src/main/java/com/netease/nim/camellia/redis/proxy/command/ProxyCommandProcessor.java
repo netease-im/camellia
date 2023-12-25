@@ -149,7 +149,7 @@ public class ProxyCommandProcessor {
             simpleClassName = Boolean.parseBoolean(Utils.bytesToString(args[2]));
         }
         StringBuilder builder = new StringBuilder();
-        builder.append("version:" + ProxyInfoUtils.VERSION).append("\r\n");
+        builder.append("camellia_version:" + ProxyInfoUtils.VERSION).append("\r\n");
         IUpstreamClientTemplateFactory upstreamClientTemplateFactory = GlobalRedisProxyEnv.getClientTemplateFactory();
         if (upstreamClientTemplateFactory != null) {
             builder.append("upstream_client_template_factory:").append(Utils.className(upstreamClientTemplateFactory, simpleClassName)).append("\r\n");

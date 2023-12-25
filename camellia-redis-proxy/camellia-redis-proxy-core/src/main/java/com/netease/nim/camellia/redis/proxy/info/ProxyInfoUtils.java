@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.info;
 
 import com.alibaba.fastjson.JSONObject;
+import com.netease.nim.camellia.core.constant.CamelliaVersion;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
@@ -38,7 +39,7 @@ public class ProxyInfoUtils {
     private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(8), new DefaultThreadFactory("proxy-info"));
 
-    public static final String VERSION = "v1.2.21";
+    public static final String VERSION = CamelliaVersion.version;
     public static final String RedisVersion = "7.0.11";
     private static final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
     private static final OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
@@ -245,7 +246,7 @@ public class ProxyInfoUtils {
     private static String getServer() {
         StringBuilder builder = new StringBuilder();
         builder.append("# Server").append("\r\n");
-        builder.append("camellia_redis_proxy_version:" + VERSION).append("\r\n");
+        builder.append("camellia_version:" + VERSION).append("\r\n");
         builder.append("redis_version:").append(RedisVersion).append("\r\n");//spring actuator默认会使用info命令返回的redis_version字段来做健康检查，这里直接返回一个固定的版本号
         builder.append("available_processors:").append(osBean.getAvailableProcessors()).append("\r\n");
         if (GlobalRedisProxyEnv.isClusterModeEnable()) {
