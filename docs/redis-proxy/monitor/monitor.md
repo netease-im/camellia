@@ -67,4 +67,4 @@ proxy实现了info命令，支持返回如下信息：Server/Clients/Route/Upstr
 详见[detect](detect.md)
 
 ### 使用prometheus和grafana监控proxy集群  
-详见[prometheus-grafana](prometheus-grafana.md)
+详见[prometheus-grafana](.././prometheus/prometheus-grafana.md)
