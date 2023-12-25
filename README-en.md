@@ -10,7 +10,7 @@ Camellia is originally develop as basic architecture for netease-yunxin's server
 
 Camellia provide easy-to-use server toolkits:
 
-### servers
+### server
 
 * [redis-proxy](/docs/redis-proxy/redis-proxy-en.md)
 * [id-generator](/docs/id-gen/id-gen.md)
@@ -19,7 +19,7 @@ Camellia provide easy-to-use server toolkits:
 
 if you want use java21/spring-boot3 to run these servers，see: [camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
 
-### sdks
+### sdk
 
 camellia also provide enhanced sdk (based on other open source sdk): 
 * [redis-client](/docs/redis-client/redis-client.md)

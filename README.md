@@ -10,7 +10,7 @@ Camellia是网易云信开发的服务器基础组件，所有模块均已应用
 
 Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 
-### 独立部署的中间件服务（servers）
+### 独立部署的中间件服务（server）
 
 * [redis代理](/docs/redis-proxy/redis-proxy-zh.md) 
 * [发号器](/docs/id-gen/id-gen.md)
@@ -19,7 +19,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 
 以上中间件默认使用java8/spring-boot2运行，如果要使用java21/spring-boot3，请参考：[camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
 
-### 增强的三方库（sdks）
+### 增强的三方库（sdk）
 
 此外，还包括其他众多简单易用的三方库（基于开源版本进行二次增强）：
 * [redis客户端](/docs/redis-client/redis-client.md) 
