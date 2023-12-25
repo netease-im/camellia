@@ -88,7 +88,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "uptime{instance=~\"$node\"}",
+              "expr": "uptime{instance=~\"$node\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -156,7 +156,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "start_time{instance=~\"$node\"}",
+              "expr": "start_time{instance=~\"$node\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -228,7 +228,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "cpu{instance=~\"$node\", type=\"cpu_num\"}",
+              "expr": "cpu{instance=~\"$node\", type=\"cpu_num\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -299,7 +299,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "thread{instance=~\"$node\", type=\"work_thread\"}",
+              "expr": "thread{instance=~\"$node\", type=\"work_thread\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -377,7 +377,7 @@
               "disableTextWrap": false,
               "editorMode": "builder",
               "exemplar": false,
-              "expr": "proxy_info{instance=~\"$node\"}",
+              "expr": "proxy_info{instance=~\"$node\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": true,
@@ -498,7 +498,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "cpu{instance=~\"$node\", type=\"usage\"}",
+              "expr": "cpu{instance=~\"$node\", type=\"usage\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -598,7 +598,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "code",
-              "expr": "sum(memory_info{instance=~\"$node\"}) without (instance)",
+              "expr": "sum(memory_info{instance=~\"$node\", job=\"test1\"}) without (instance)",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -697,7 +697,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "code",
-              "expr": "sum(gc{instance=~\"$node\"}) without (instance)",
+              "expr": "sum(gc{instance=~\"$node\",job=\"test1\"}) without (instance)",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -787,7 +787,7 @@
             "h": 9,
             "w": 8,
             "x": 0,
-            "y": 2
+            "y": 12
           },
           "id": 1,
           "options": {
@@ -810,7 +810,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "client_connect{instance=~\"$node\"}",
+              "expr": "client_connect{instance=~\"$node\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -900,7 +900,7 @@
             "h": 9,
             "w": 8,
             "x": 8,
-            "y": 2
+            "y": 12
           },
           "id": 15,
           "options": {
@@ -923,7 +923,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "code",
-              "expr": "sum(qps{instance=~\"$node\"}) without (instance)",
+              "expr": "sum(qps{instance=~\"$node\",job=\"test1\"}) without (instance)",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -1000,7 +1000,7 @@
             "h": 9,
             "w": 8,
             "x": 16,
-            "y": 2
+            "y": 12
           },
           "id": 4,
           "options": {
@@ -1023,7 +1023,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "code",
-              "expr": "sum(command_qps{instance=~\"$node\"}) without (instance)",
+              "expr": "sum(command_qps{instance=~\"$node\",job=\"test1\"}) without (instance)",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -1100,7 +1100,7 @@
             "h": 9,
             "w": 8,
             "x": 0,
-            "y": 11
+            "y": 21
           },
           "id": 16,
           "options": {
@@ -1123,7 +1123,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "code",
-              "expr": "avg(command_spend_stats{instance=~\"$node\", type=\"avg\"}) without (instance)",
+              "expr": "avg(command_spend_stats{job=\"test1\", instance=~\"$node\", type=\"avg\"}) without (instance)",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -1200,7 +1200,7 @@
             "h": 9,
             "w": 16,
             "x": 8,
-            "y": 11
+            "y": 21
           },
           "id": 3,
           "options": {
@@ -1232,7 +1232,7 @@
               "disableTextWrap": false,
               "editorMode": "builder",
               "exemplar": false,
-              "expr": "command_spend_stats{instance=~\"$node\"}",
+              "expr": "command_spend_stats{instance=~\"$node\", job=\"test1\"}",
               "format": "heatmap",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
@@ -1409,7 +1409,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "code",
-              "expr": "sum(client_connect_detail{instance=~\"$node\"}) without (instance)",
+              "expr": "sum(client_connect_detail{instance=~\"$node\",job=\"test1\"}) without (instance)",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -1509,7 +1509,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "code",
-              "expr": "sum(tenant_qps{instance=~\"$node\"}) without (instance)",
+              "expr": "sum(tenant_qps{instance=~\"$node\",job=\"test1\"}) without (instance)",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -1609,7 +1609,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "tenant_command_qps{instance=~\"$node\"}",
+              "expr": "tenant_command_qps{instance=~\"$node\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -1709,7 +1709,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "tenant_command_spend_stats{instance=~\"$node\", type=\"avg\"}",
+              "expr": "tenant_command_spend_stats{instance=~\"$node\", type=\"avg\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -1785,7 +1785,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "tenant_command_spend_stats{instance=~\"$node\"}",
+              "expr": "tenant_command_spend_stats{instance=~\"$node\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -1943,7 +1943,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "proxy_route_conf{instance=~\"$node\"}",
+              "expr": "proxy_route_conf{instance=~\"$node\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -2055,7 +2055,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "code",
-              "expr": "sum(upstream_redis_connect{instance=~\"$node\"}) without (instance)",
+              "expr": "sum(upstream_redis_connect{instance=~\"$node\",job=\"test1\"}) without (instance)",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -2154,7 +2154,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "code",
-              "expr": "sum(upstream_redis_connect_detail{instance=~\"$node\"}) without (instance)",
+              "expr": "sum(upstream_redis_connect_detail{instance=~\"$node\",job=\"test1\"}) without (instance)",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -2254,7 +2254,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "code",
-              "expr": "sum(upstream_redis_qps{instance=~\"$node\"}) without (instance)",
+              "expr": "sum(upstream_redis_qps{instance=~\"$node\",job=\"test1\"}) without (instance)",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -2334,7 +2334,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "upstream_redis_spend_stats{instance=~\"$node\"}",
+              "expr": "upstream_redis_spend_stats{instance=~\"$node\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -2510,7 +2510,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "client_fail{instance=~\"$node\"}",
+              "expr": "client_fail{instance=~\"$node\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -2609,7 +2609,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "upstream_fail{instance=~\"$node\"}",
+              "expr": "upstream_fail{instance=~\"$node\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -2722,7 +2722,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "slow_command{instance=~\"$node\"}",
+              "expr": "slow_command{instance=~\"$node\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -2836,7 +2836,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "string_big_key{instance=~\"$node\"}",
+              "expr": "string_big_key{instance=~\"$node\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -2935,7 +2935,7 @@
               },
               "disableTextWrap": false,
               "editorMode": "builder",
-              "expr": "collection_big_key{instance=~\"$node\"}",
+              "expr": "collection_big_key{instance=~\"$node\", job=\"test1\"}",
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
@@ -2953,7 +2953,7 @@
       "type": "row"
     },
     {
-      "collapsed": true,
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -2961,322 +2961,320 @@
         "y": 7
       },
       "id": 32,
-      "panels": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ca547f68-c185-4008-9fe7-0ffa290eb12c"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "ops"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 10,
-            "w": 9,
-            "x": 0,
-            "y": 8
-          },
-          "id": 40,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "ca547f68-c185-4008-9fe7-0ffa290eb12c"
-              },
-              "disableTextWrap": false,
-              "editorMode": "builder",
-              "expr": "hot_key{instance=~\"$node\", type=\"qps\"}",
-              "fullMetaSearch": false,
-              "includeNullMetadata": true,
-              "instant": false,
-              "legendFormat": "__auto",
-              "range": true,
-              "refId": "A",
-              "useBackend": false
-            }
-          ],
-          "title": "hot_key（qps）",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ca547f68-c185-4008-9fe7-0ffa290eb12c"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 10,
-            "w": 8,
-            "x": 9,
-            "y": 8
-          },
-          "id": 39,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "ca547f68-c185-4008-9fe7-0ffa290eb12c"
-              },
-              "disableTextWrap": false,
-              "editorMode": "builder",
-              "expr": "hot_key{instance=~\"$node\", type=\"count\"}",
-              "fullMetaSearch": false,
-              "includeNullMetadata": true,
-              "instant": false,
-              "legendFormat": "__auto",
-              "range": true,
-              "refId": "A",
-              "useBackend": false
-            }
-          ],
-          "title": "hot_key（ops）",
-          "type": "timeseries"
-        }
-      ],
+      "panels": [],
       "title": "proxy hotkey",
       "type": "row"
     },
     {
-      "collapsed": true,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ca547f68-c185-4008-9fe7-0ffa290eb12c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
       "gridPos": {
-        "h": 1,
-        "w": 24,
+        "h": 10,
+        "w": 9,
         "x": 0,
         "y": 8
       },
-      "id": 33,
-      "panels": [
+      "id": 40,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "ca547f68-c185-4008-9fe7-0ffa290eb12c"
           },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 14,
-            "w": 10,
-            "x": 0,
-            "y": 9
-          },
-          "id": 41,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "ca547f68-c185-4008-9fe7-0ffa290eb12c"
-              },
-              "disableTextWrap": false,
-              "editorMode": "builder",
-              "expr": "hot_key_cache_hit{instance=~\"$node\"}",
-              "fullMetaSearch": false,
-              "includeNullMetadata": true,
-              "instant": false,
-              "legendFormat": "__auto",
-              "range": true,
-              "refId": "A",
-              "useBackend": false
-            }
-          ],
-          "title": "hot_key_cache_hit",
-          "type": "timeseries"
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "hot_key{instance=~\"$node\", type=\"qps\", job=\"test1\"}",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
         }
       ],
+      "title": "hot_key（qps）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ca547f68-c185-4008-9fe7-0ffa290eb12c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 9,
+        "y": 8
+      },
+      "id": 39,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ca547f68-c185-4008-9fe7-0ffa290eb12c"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "hot_key{instance=~\"$node\", type=\"count\", job=\"test1\"}",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "title": "hot_key（ops）",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 33,
+      "panels": [],
       "title": "proxy hotkey cache",
       "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ca547f68-c185-4008-9fe7-0ffa290eb12c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 10,
+        "x": 0,
+        "y": 19
+      },
+      "id": 41,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ca547f68-c185-4008-9fe7-0ffa290eb12c"
+          },
+          "disableTextWrap": false,
+          "editorMode": "builder",
+          "expr": "hot_key_cache_hit{instance=~\"$node\", job=\"test1\"}",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A",
+          "useBackend": false
+        }
+      ],
+      "title": "hot_key_cache_hit",
+      "type": "timeseries"
     }
   ],
   "refresh": "",
@@ -3286,14 +3284,12 @@
     "list": [
       {
         "current": {
-          "selected": true,
+          "selected": false,
           "text": [
-            "10.221.145.235:8091",
-            "10.221.145.235:8090"
+            "10.221.145.235:8091"
           ],
           "value": [
-            "10.221.145.235:8091",
-            "10.221.145.235:8090"
+            "10.221.145.235:8091"
           ]
         },
         "datasource": {
@@ -3327,6 +3323,6 @@
   "timezone": "",
   "title": "New dashboard1",
   "uid": "a7c2844f-b5c0-4da8-9f69-4bfb68404171",
-  "version": 80,
+  "version": 82,
   "weekStart": ""
 }
