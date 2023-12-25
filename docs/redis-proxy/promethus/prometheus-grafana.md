@@ -225,6 +225,10 @@ upstream_redis_spend_stats{upstream="***@10.2.2.3:6379", type="p99"} 0.265288
 proxy_route_conf{tenant="1_default", route="redis://@127.0.0.1:6379"} 1
 proxy_route_conf{tenant="2_default", route="redis-cluster://@127.0.0.1:6379,127.0.0.2:6379"} 1
 proxy_route_conf{tenant="3_default", route="{'type':'simple','operation':{'read':'redis://passwd123@127.0.0.1:6379','type':'rw_separate','write':'redis-sentinel://passwd2@127.0.0.1:6379,127.0.0.1:6378/master'}}"} 1
+# HELP upstream_redis_qps Redis Proxy Upstream Upstream Redis QPS
+# TYPE upstream_redis_qps gauge
+upstream_redis_qps{upstream="redis://@127.0.0.1:6379"} 227
+upstream_redis_qps{upstream="redis-cluster://@127.0.0.1:6379,127.0.0.2:6379"} 311
 # HELP client_fail Redis Proxy Fail
 # TYPE client_fail gauge
 client_fail{reason="ChannelNotActive",} 6
@@ -274,48 +278,48 @@ hot_key_cache_hit{tenant="1_default",key="hkeyhit0"} 1241
 
 * single node
 
-![img_4.png](img_4.png)
+![img_5.png](img_5.png)
 
 * multi node
 
-![img_5.png](img_5.png)
+![img_6.png](img_6.png)
 
 #### proxy frontend(tenant)
 
 * single node
 
-![img_6.png](img_6.png)
+![img_7.png](img_7.png)
 
 * multi node
 
-![img_7.png](img_7.png)
+![img_8.png](img_8.png)
 
 #### proxy upstream
 
 * single node
 
-![img_8.png](img_8.png)
+![img_9.png](img_9.png)
 
 * multi node
 
-![img_9.png](img_9.png)
+![img_10.png](img_10.png)
 
 #### proxy fail
 
-![img_10.png](img_10.png)
+![img_11.png](img_11.png)
 
 #### proxy slow command
 
-![img_11.png](img_11.png)
+![img_12.png](img_12.png)
 
 #### proxy big key
 
-![img_12.png](img_12.png)
+![img_13.png](img_13.png)
 
 #### proxy hot key
 
-![img_13.png](img_13.png)
+![img_14.png](img_14.png)
 
 #### proxy hot key cache hit
 
-![img_14.png](img_14.png)
+![img_15.png](img_15.png)
