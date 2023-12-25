@@ -62,6 +62,37 @@ you should:
 
 #### metrics
 ```
+# HELP proxy_info Redis Proxy Info
+# TYPE proxy_info gauge
+proxy_info{camellia_version="1.2.22",arch="x86_64",os_name="Mac OS X",os_version="14.1.2",system_load_average="4.59716796875",vm_vendor="Oracle Corporation",vm_name="Java HotSpot(TM) 64-Bit Server VM",vm_version="17.0.1+12-LTS-39",jvm_info="mixed mode, sharing",java_version="17.0.1",} 1
+# HELP uptime Redis Proxy Uptime
+# TYPE uptime gauge
+uptime 494556717
+# HELP start_time Redis Proxy Uptime
+# TYPE start_time gauge
+start_time 1702972469910
+# HELP memory_info Redis Proxy Memory
+# TYPE memory_info gauge
+memory_info{type="free_memory"} 1884673280
+memory_info{type="total_memory"} 5368709120
+memory_info{type="max_memory"} 5368709120
+memory_info{type="heap_memory_usage"} 1943755264
+memory_info{type="no_heap_memory_usage"} 271743648
+memory_info{type="netty_direct_memory"} 1168062208
+# HELP cpu Redis Proxy Cpu
+# TYPE cpu gauge
+cpu{type="cpu_num"} 12
+cpu{type="usage"} 213
+# HELP thread Redis Proxy Thread
+# TYPE thread gauge
+thread{type="boss_thread"} 1
+thread{type="work_thread"} 12
+# HELP gc Redis Proxy gc
+# TYPE gc gauge
+gc{name="G1 Young Generation", type="count"} 8
+gc{name="G1 Young Generation", type="time"} 33
+gc{name="G1 Old Generation", type="count"} 0
+gc{name="G1 Old Generation", type="time"} 0
 # HELP client_connect Redis Proxy Connect Count
 # TYPE client_connect gauge
 client_connect 71
@@ -161,37 +192,6 @@ tenant_command_spend_stats{tenant="2_default",command="expire",type="max"} 9.110
 tenant_command_spend_stats{tenant="2_default",command="expire",type="p50"} 0.116325
 tenant_command_spend_stats{tenant="2_default",command="expire",type="p90"} 0.191287
 tenant_command_spend_stats{tenant="2_default",command="expire",type="p99"} 0.240845
-# HELP proxy_info Redis Proxy Info
-# TYPE proxy_info gauge
-proxy_info{proxy_version="1.2.22",arch="x86_64",os_name="Mac OS X",os_version="14.1.2",system_load_average="4.59716796875",vm_vendor="Oracle Corporation",vm_name="Java HotSpot(TM) 64-Bit Server VM",vm_version="17.0.1+12-LTS-39",jvm_info="mixed mode, sharing",java_version="17.0.1",} 1
-# HELP uptime Redis Proxy Uptime
-# TYPE uptime gauge
-uptime 494556717
-# HELP start_time Redis Proxy Uptime
-# TYPE start_time gauge
-start_time 1702972469910
-# HELP memory_info Redis Proxy Memory
-# TYPE memory_info gauge
-memory_info{type="free_memory"} 1884673280
-memory_info{type="total_memory"} 5368709120
-memory_info{type="max_memory"} 5368709120
-memory_info{type="heap_memory_usage"} 1943755264
-memory_info{type="no_heap_memory_usage"} 271743648
-memory_info{type="netty_direct_memory"} 1168062208
-# HELP cpu Redis Proxy Cpu
-# TYPE cpu gauge
-cpu{type="cpu_num"} 12
-cpu{type="usage"} 213
-# HELP thread Redis Proxy Thread
-# TYPE thread gauge
-thread{type="boss_thread"} 1
-thread{type="work_thread"} 12
-# HELP gc Redis Proxy gc
-# TYPE gc gauge
-gc{name="G1 Young Generation", type="count"} 8
-gc{name="G1 Young Generation", type="time"} 33
-gc{name="G1 Old Generation", type="count"} 0
-gc{name="G1 Old Generation", type="time"} 0
 # HELP upstream_redis_connect Redis Proxy Upstream Redis Connect Count
 # TYPE upstream_redis_connect gauge
 upstream_redis_connect 140
