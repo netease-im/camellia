@@ -45,4 +45,7 @@ public interface ConsoleService extends IConsoleService {
 
     @ConsoleApi(uri = "/shutdownUpstreamClient")
     ConsoleResult shutdownUpstreamClient(Map<String, List<String>> params);
+
+    @ConsoleApi(uri = "/metrics")
+    ConsoleResult metrics();
 }

@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.plugin.hotkey.HotKeyMonitor;
 import com.netease.nim.camellia.redis.proxy.plugin.monitor.CommandCountMonitor;
 import com.netease.nim.camellia.redis.proxy.plugin.monitor.CommandSpendMonitor;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
+import com.netease.nim.camellia.tools.sys.CpuUsageCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,10 +34,13 @@ public class ProxyMonitorCollector {
 
     private static Stats stats = new Stats();
 
+    private static CpuUsageCollector cpuUsageCollector;
+
     public static void init(CamelliaServerProperties serverProperties, MonitorCallback monitorCallback) {
         if (initOk.compareAndSet(false, true)) {
             int seconds = serverProperties.getMonitorIntervalSeconds();
             intervalSeconds = seconds;
+            cpuUsageCollector = new CpuUsageCollector(intervalSeconds);
             ExecutorUtils.scheduleAtFixedRate(ProxyMonitorCollector::collect, seconds, seconds, TimeUnit.SECONDS);
             ProxyMonitorCollector.monitorEnable = serverProperties.isMonitorEnable();
             ProxyMonitorCollector.monitorCallback = monitorCallback;
@@ -46,6 +50,8 @@ public class ProxyMonitorCollector {
             ProxyDynamicConf.registerCallback(ProxyMonitorCollector::reloadConf);
             reloadConf();
             logger.info("proxy monitor collector init success, intervalSeconds = {}, monitorEnable = {}", intervalSeconds, monitorEnable);
+        } else {
+            cpuUsageCollector = new CpuUsageCollector();
         }
     }
 
@@ -85,6 +91,10 @@ public class ProxyMonitorCollector {
      */
     public static Stats getStats() {
         return stats;
+    }
+
+    public static CpuUsageCollector getCpuUsageCollector() {
+        return cpuUsageCollector;
     }
 
     /**

@@ -200,4 +200,9 @@ public class ConsoleServiceAdaptor implements ConsoleService {
         }
         return ConsoleResult.error("param wrong");
     }
+
+    @Override
+    public ConsoleResult metrics() {
+        return ConsoleResult.success(PrometheusMetrics.metrics());
+    }
 }
