@@ -48,8 +48,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   }
                 ]
               },
@@ -116,8 +115,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   }
                 ]
               },
@@ -184,8 +182,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -256,8 +253,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -334,8 +330,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -457,8 +452,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -557,8 +551,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -657,8 +650,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2665,8 +2657,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -3266,10 +3257,12 @@
         "current": {
           "selected": true,
           "text": [
-            "10.221.145.235:8090"
+            "10.221.145.235:8090",
+            "10.221.145.235:8091"
           ],
           "value": [
-            "10.221.145.235:8090"
+            "10.221.145.235:8090",
+            "10.221.145.235:8091"
           ]
         },
         "datasource": {
@@ -3301,8 +3294,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "New dashboard1",
+  "title": "redis_proxy",
   "uid": "a7c2844f-b5c0-4da8-9f69-4bfb68404171",
-  "version": 87,
+  "version": 88,
   "weekStart": ""
 }
