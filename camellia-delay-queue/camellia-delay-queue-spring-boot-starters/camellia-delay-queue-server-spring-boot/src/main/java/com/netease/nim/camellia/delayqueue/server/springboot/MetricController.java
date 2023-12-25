@@ -30,9 +30,9 @@ public class MetricController {
         StringBuilder builder = new StringBuilder();
 
         //proxy_info
-        builder.append("# HELP proxy_info Delay Queue Info\n");
-        builder.append("# TYPE proxy_info gauge\n");
-        builder.append("proxy_info");
+        builder.append("# HELP info Delay Queue Info\n");
+        builder.append("# TYPE info gauge\n");
+        builder.append("info");
         builder.append("{");
         builder.append("camellia_version=\"").append(CamelliaVersion.version).append("\"").append(",");
         builder.append("arch=\"").append(osBean.getArch()).append("\"").append(",");
