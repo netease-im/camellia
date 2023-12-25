@@ -5,6 +5,7 @@ import com.netease.nim.camellia.hot.key.server.callback.HotKeyInfo;
 import com.netease.nim.camellia.hot.key.server.conf.ClientConnectHub;
 import com.netease.nim.camellia.hot.key.server.conf.HotKeyServerProperties;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.sys.CpuUsageCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,7 @@ public class HotKeyServerMonitorCollector {
     private static int monitorIntervalSeconds = 60;
     private static String applicationName;
     private static HotKeyCallbackManager callbackManager;
+    private static CpuUsageCollector cpuUsageCollector;
 
     public static void init(HotKeyServerProperties properties, HotKeyCallbackManager callbackManager) {
         if (initOk.compareAndSet(false, true)) {
@@ -35,8 +37,10 @@ public class HotKeyServerMonitorCollector {
             scheduler.scheduleAtFixedRate(HotKeyServerMonitorCollector::collect, properties.getMonitorIntervalSeconds(), properties.getMonitorIntervalSeconds(), TimeUnit.SECONDS);
             logger.info("HotKeyServerMonitorCollector init success, monitor-interval-seconds = {}", properties.getMonitorIntervalSeconds());
             HotKeyServerMonitorCollector.callbackManager = callbackManager;
+            cpuUsageCollector = new CpuUsageCollector(monitorIntervalSeconds);
         } else {
             logger.warn("duplicate HotKeyServerMonitorCollector init");
+            cpuUsageCollector = new CpuUsageCollector();
         }
     }
 
@@ -44,6 +48,10 @@ public class HotKeyServerMonitorCollector {
 
     public static HotKeyServerStats getHotKeyServerStats() {
         return serverStats;
+    }
+
+    public static CpuUsageCollector getCpuUsageCollector() {
+        return cpuUsageCollector;
     }
 
     private static void collect() {

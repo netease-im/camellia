@@ -33,6 +33,9 @@ public interface ConsoleService extends IConsoleService {
     @ConsoleApi(uri = "/reload")
     ConsoleResult reload();
 
+    @ConsoleApi(uri = "/metrics")
+    ConsoleResult metrics();
+
     @ConsoleApi(uri = "/custom")
     ConsoleResult custom(Map<String, List<String>> params);
 

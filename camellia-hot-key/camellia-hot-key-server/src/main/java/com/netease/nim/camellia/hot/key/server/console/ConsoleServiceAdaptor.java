@@ -94,6 +94,11 @@ public class ConsoleServiceAdaptor implements ConsoleService {
     }
 
     @Override
+    public ConsoleResult metrics() {
+        return ConsoleResult.success(PrometheusMetrics.metrics());
+    }
+
+    @Override
     public ConsoleResult reload() {
         ConfReloadHolder.reload();
         logger.info("conf reload success");

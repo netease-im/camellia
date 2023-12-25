@@ -45,6 +45,8 @@ public class CamelliaDelayQueueMonitor {
                     .scheduleAtFixedRate(CamelliaDelayQueueMonitor::calcMonitorData, monitorIntervalSeconds, monitorIntervalSeconds, TimeUnit.SECONDS);
             logger.info("CamelliaDelayQueueMonitor init success, monitorIntervalSeconds = {}", monitorIntervalSeconds);
             cpuUsageCollector = new CpuUsageCollector(monitorIntervalSeconds);
+        } else {
+            cpuUsageCollector = new CpuUsageCollector();
         }
     }
 
