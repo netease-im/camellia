@@ -31,7 +31,7 @@ public class PrometheusMetrics {
         builder.append("# TYPE proxy_info gauge\n");
         builder.append("proxy_info");
         builder.append("{");
-        builder.append("proxy_version=\"").append(ProxyInfoUtils.VERSION).append("\"").append(",");
+        builder.append("camellia_version=\"").append(ProxyInfoUtils.VERSION).append("\"").append(",");
         builder.append("arch=\"").append(osBean.getArch()).append("\"").append(",");
         builder.append("os_name=\"").append(osBean.getName()).append("\"").append(",");
         builder.append("os_version=\"").append(osBean.getVersion()).append("\"").append(",");
