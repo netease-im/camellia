@@ -6,6 +6,7 @@
 * rule里的expireMillis是可选的，只要配置了本字段：CamelliaHotKeyMonitorSdk才能获取到是否热key的结果，CamelliaHotKeyCacheSdk才真正启用本地缓存
 * 提供了丰富的扩展口
 * 提供了丰富的监控数据
+* 支持使用prometheus/grafana来监控proxy集群，参考：[prometheus-grafana](prometheus-grafana.md)
 
 ### 快速开始
 1) 首先创建一个spring-boot的工程，然后添加以下依赖:
