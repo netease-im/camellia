@@ -46,7 +46,8 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 * 支持读从节点（redis-sentinel、redis-cluster都支持）
 * 高可用，可以基于lb组成集群，也可以基于注册中心组成集群，也可以伪装成redis-cluster组成集群
 * 支持自定义插件，并且内置了很多插件，可以按需使用（包括：大key监控、热key监控、热key缓存、key命名空间、ip黑白名单、速率控制等等）  
-* 支持丰富的监控，如TPS、RT、热key、大key、慢查询、连接数等   
+* 支持丰富的监控，如TPS、RT、热key、大key、慢查询、连接数等
+* 支持使用prometheus/grafana来监控proxy集群
 * 支持整合hbase实现string/zset/hash等数据结构的冷热分离存储操作     
 [快速开始](/docs/redis-proxy/redis-proxy-zh.md)  
 
