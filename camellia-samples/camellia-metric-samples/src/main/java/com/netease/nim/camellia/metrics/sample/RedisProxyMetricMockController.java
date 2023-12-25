@@ -56,12 +56,12 @@ public class RedisProxyMetricMockController {
 
         builder.append("# HELP memory_info Redis Proxy Memory\n");
         builder.append("# TYPE memory_info gauge\n");
-        long freeMemory = (long) (1024*1024*1024*2.0f*(ThreadLocalRandom.current().nextFloat(0.1f) + 0.8f));
+        long freeMemory = (long) (1024*1024*1024*2.0f*(ThreadLocalRandom.current().nextDouble(0.1f) + 0.8f));
         long totalMemory = (long) (1024*1024*1024*5.0f);
         long maxMemory = (long) (1024*1024*1024*5.0f);
-        long heapMemoryUsage = (long) (1024*1024*1024*3.0f*(ThreadLocalRandom.current().nextFloat(0.3f) + 0.6f));
-        long noneHeapMemoryUsage = (long) (1024*1024*128*3.0f*(ThreadLocalRandom.current().nextFloat(0.3f) + 0.6f));
-        long nettyDirectMemory = (long) (1024*1024*512*3.0f*(ThreadLocalRandom.current().nextFloat(0.3f) + 0.6f));
+        long heapMemoryUsage = (long) (1024*1024*1024*3.0f*(ThreadLocalRandom.current().nextDouble(0.3f) + 0.6f));
+        long noneHeapMemoryUsage = (long) (1024*1024*128*3.0f*(ThreadLocalRandom.current().nextDouble(0.3f) + 0.6f));
+        long nettyDirectMemory = (long) (1024*1024*512*3.0f*(ThreadLocalRandom.current().nextDouble(0.3f) + 0.6f));
         builder.append(String.format("memory_info{type=\"free_memory\"} %d\n", freeMemory));
         builder.append(String.format("memory_info{type=\"total_memory\"} %d\n", totalMemory));
         builder.append(String.format("memory_info{type=\"max_memory\"} %d\n", maxMemory));
@@ -134,11 +134,11 @@ public class RedisProxyMetricMockController {
         commands.add("zadd");
         for (String command : commands) {
             int count = ThreadLocalRandom.current().nextInt(100);
-            float avg = ThreadLocalRandom.current().nextFloat(0.3f);
-            float p50 = ThreadLocalRandom.current().nextFloat(0.3f);
-            float p90 = p50 + ThreadLocalRandom.current().nextFloat(0.1f);
-            float p99 = p90 + ThreadLocalRandom.current().nextFloat(0.3f);
-            float max = p99 + ThreadLocalRandom.current().nextFloat(10.0f);
+            double avg = ThreadLocalRandom.current().nextDouble(0.3f);
+            double p50 = ThreadLocalRandom.current().nextDouble(0.3f);
+            double p90 = p50 + ThreadLocalRandom.current().nextDouble(0.1f);
+            double p99 = p90 + ThreadLocalRandom.current().nextDouble(0.3f);
+            double max = p99 + ThreadLocalRandom.current().nextDouble(10.0f);
             builder.append(String.format("command_spend_stats{command=\"%s\",type=\"count\"} %d\n", command, count));
             builder.append(String.format("command_spend_stats{command=\"%s\",type=\"avg\"} %f\n", command, avg));
             builder.append(String.format("command_spend_stats{command=\"%s\",type=\"max\"} %f\n", command, max));
@@ -172,11 +172,11 @@ public class RedisProxyMetricMockController {
         for (String tenant : tenants) {
             for (String command : tenantCommands) {
                 int count = ThreadLocalRandom.current().nextInt(100);
-                float avg = ThreadLocalRandom.current().nextFloat(0.3f);
-                float p50 = ThreadLocalRandom.current().nextFloat(0.3f);
-                float p90 = p50 + ThreadLocalRandom.current().nextFloat(0.1f);
-                float p99 = p90 + ThreadLocalRandom.current().nextFloat(0.3f);
-                float max = p99 + ThreadLocalRandom.current().nextFloat(10.0f);
+                double avg = ThreadLocalRandom.current().nextDouble(0.3f);
+                double p50 = ThreadLocalRandom.current().nextDouble(0.3f);
+                double p90 = p50 + ThreadLocalRandom.current().nextDouble(0.1f);
+                double p99 = p90 + ThreadLocalRandom.current().nextDouble(0.3f);
+                double max = p99 + ThreadLocalRandom.current().nextDouble(10.0f);
                 builder.append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"count\"} %d\n", tenant, command, count));
                 builder.append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"avg\"} %f\n", tenant, command, avg));
                 builder.append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"max\"} %f\n", tenant, command, max));
@@ -205,11 +205,11 @@ public class RedisProxyMetricMockController {
         upstreams.add("***@10.2.2.3:6379");
         for (String upstream : upstreams) {
             int count = ThreadLocalRandom.current().nextInt(300) + 50;
-            float avg = ThreadLocalRandom.current().nextFloat(0.3f);
-            float p50 = ThreadLocalRandom.current().nextFloat(0.3f);
-            float p90 = p50 + ThreadLocalRandom.current().nextFloat(0.1f);
-            float p99 = p90 + ThreadLocalRandom.current().nextFloat(0.3f);
-            float max = p99 + ThreadLocalRandom.current().nextFloat(10.0f);
+            double avg = ThreadLocalRandom.current().nextDouble(0.3f);
+            double p50 = ThreadLocalRandom.current().nextDouble(0.3f);
+            double p90 = p50 + ThreadLocalRandom.current().nextDouble(0.1f);
+            double p99 = p90 + ThreadLocalRandom.current().nextDouble(0.3f);
+            double max = p99 + ThreadLocalRandom.current().nextDouble(10.0f);
             builder.append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"count\"} %d\n", upstream, count));
             builder.append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"avg\"} %f\n", upstream, avg));
             builder.append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"max\"} %f\n", upstream, max));
