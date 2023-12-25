@@ -1,11 +1,16 @@
 package com.netease.nim.camellia.delayqueue.server.springboot;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.constant.CamelliaVersion;
 import com.netease.nim.camellia.delayqueue.server.CamelliaDelayQueueMonitor;
 import com.netease.nim.camellia.delayqueue.server.CamelliaDelayQueueMonitorData;
+import com.netease.nim.camellia.delayqueue.server.CamelliaDelayQueueServer;
+import com.netease.nim.camellia.delayqueue.server.CamelliaDelayQueueTopicInfo;
 import com.netease.nim.camellia.tools.sys.CpuUsage;
 import com.netease.nim.camellia.tools.sys.MemoryInfo;
 import com.netease.nim.camellia.tools.sys.MemoryInfoCollector;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,6 +29,9 @@ public class MetricController {
     private static final OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
     private static final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
     private static final List<GarbageCollectorMXBean> garbageCollectorMXBeanList = ManagementFactory.getGarbageCollectorMXBeans();
+
+    @Autowired
+    private CamelliaDelayQueueServer server;
 
     @GetMapping(value = "/metrics", produces = "text/plain;charset=UTF-8")
     public String metrics() {
@@ -130,6 +138,25 @@ public class MetricController {
             builder.append(String.format("ready_queue_time_gap{topic=\"%s\", type=\"%s\"} %d\n", topic, "max", timeGapStats.getMax()));
         }
 
+        List<CamelliaDelayQueueTopicInfo> topicInfoList = server.getTopicInfoList();
+        builder.append("# HELP topic_info Delay Queue Topic Info\n");
+        builder.append("# TYPE topic_info gauge\n");
+        for (CamelliaDelayQueueTopicInfo topicInfo : topicInfoList) {
+            String topic = topicInfo.getTopic();
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "readyQueueSize", topicInfo.getReadyQueueSize()));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "ackQueueSize", topicInfo.getAckQueueSize()));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "waitingQueueSize", topicInfo.getWaitingQueueSize()));
+            CamelliaDelayQueueTopicInfo.WaitingQueueInfo waitingQueueInfo = topicInfo.getWaitingQueueInfo();
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_0_1min", waitingQueueInfo.getSizeOf0To1min()));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_1min_10min", waitingQueueInfo.getSizeOf1minTo10min()));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_10min_30min", waitingQueueInfo.getSizeOf10minTo30min()));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_30min_1hour", waitingQueueInfo.getSizeOf30minTo1hour()));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_1hour_6hour", waitingQueueInfo.getSizeOf1hourTo6hour()));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_6hour_1day", waitingQueueInfo.getSizeOf6hourTo1day()));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_1day_7day", waitingQueueInfo.getSizeOf1dayTo7day()));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_7day_30day", waitingQueueInfo.getSizeOf7dayTo30day()));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_30day_infinite", waitingQueueInfo.getSizeOf30dayToInfinite()));
+        }
         return builder.toString();
     }
 }

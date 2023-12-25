@@ -17,7 +17,10 @@ Camellia provide easy-to-use server toolkits:
 * [delay-queue](/docs/delay-queue/delay-queue.md)
 * [hot-key](/docs/hot-key/hot-key.md)
 
-if you want use java21/spring-boot3 to run these servers，see: [camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
+more:   
+* if you want use java21/spring-boot3 to run these servers，see: [camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)  
+* these servers support use prometheus/grafana to monitor, see: [prometheus/grafana](docs/prometheus_grafana.md)  
+
 
 ### sdk
 

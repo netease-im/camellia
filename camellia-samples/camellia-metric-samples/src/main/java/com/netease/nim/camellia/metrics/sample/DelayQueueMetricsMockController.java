@@ -122,6 +122,23 @@ public class DelayQueueMetricsMockController {
             builder.append(String.format("ready_queue_time_gap{topic=\"%s\", type=\"%s\"} %d\n", topic, "max", ThreadLocalRandom.current().nextInt(1000) + 200));
         }
 
+        builder.append("# HELP topic_info Delay Queue Topic Info\n");
+        builder.append("# TYPE topic_info gauge\n");
+        for (String topic : topics) {
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "readyQueueSize", ThreadLocalRandom.current().nextInt(10)));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "ackQueueSize", ThreadLocalRandom.current().nextInt(10)));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "waitingQueueSize", ThreadLocalRandom.current().nextInt(10)));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_0_1min", ThreadLocalRandom.current().nextInt(10)));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_1min_10min", ThreadLocalRandom.current().nextInt(10)));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_10min_30min", ThreadLocalRandom.current().nextInt(10)));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_30min_1hour", ThreadLocalRandom.current().nextInt(10)));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_1hour_6hour", ThreadLocalRandom.current().nextInt(10)));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_6hour_1day", ThreadLocalRandom.current().nextInt(10)));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_1day_7day", ThreadLocalRandom.current().nextInt(10)));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_7day_30day", ThreadLocalRandom.current().nextInt(10)));
+            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_30day_infinite", ThreadLocalRandom.current().nextInt(10)));
+        }
+
         return builder.toString();
     }
 }

@@ -17,7 +17,10 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 * [延迟队列](/docs/delay-queue/delay-queue.md)
 * [热点key探测](/docs/hot-key/hot-key.md)
 
-以上中间件默认使用java8/spring-boot2运行，如果要使用java21/spring-boot3，请参考：[camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
+更多：   
+* 以上中间件默认使用java8/spring-boot2运行，如果要使用java21/spring-boot3，请参考：[camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
+* 以上中间件支持使用prometheus/grafana对服务进行监控，请参考：[prometheus/grafana](docs/prometheus_grafana.md)
+
 
 ### 增强的三方库（sdk）
 

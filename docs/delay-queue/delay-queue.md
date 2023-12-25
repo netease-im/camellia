@@ -9,6 +9,7 @@
 * 提供了camellia-delay-queue-server-spring-boot-starter，快速部署delay-queue-server集群
 * 支持节点水平扩展，支持多topic
 * 提供丰富的监控数据
+* 支持使用prometheus/grafana来监控proxy集群，参考：[prometheus-grafana](prometheus-grafana.md)
 * 提供了一个java-sdk，也提供了camellia-delay-queue-sdk-spring-boot-starter，方便快速接入
 * 注意事项：1.0.61版本开始支持长轮询，且java-sdk默认使用长轮询，如果有升级，请注意升级顺序（需要先升级server，再升级sdk）
 
@@ -627,4 +628,5 @@ GET /camellia/delayQueue/getTopicInfoList HTTP/1.1
   ]
 }
 ```
+
 
