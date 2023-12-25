@@ -54,6 +54,8 @@ add datasource prometheus
 
 ### step4 import grafana-config.json to grafana
 
+[grafana-conf.json](grafana-conf.json)
+
 you should:  
 * replace `job` name in json, e.g. `test2` to `delay_queue_1`
 * replace `prometheus.uid` in json, e.g. `ca547f68-c185-4008-9fe7-0ffa290eb12c`

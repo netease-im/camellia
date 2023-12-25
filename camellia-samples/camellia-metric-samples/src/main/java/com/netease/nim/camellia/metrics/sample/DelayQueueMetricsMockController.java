@@ -45,8 +45,6 @@ public class DelayQueueMetricsMockController {
         builder.append("java_version=\"").append(System.getProperties().get("java.version")).append("\"").append(",");
         builder.append("}").append(" 1").append("\n");
 
-        long startTime = System.currentTimeMillis() - runtimeMXBean.getUptime();
-
         //uptime
         builder.append("# HELP uptime Delay Queue Uptime\n");
         builder.append("# TYPE uptime gauge\n");
