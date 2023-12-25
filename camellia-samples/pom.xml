@@ -35,6 +35,7 @@
         <module>camellia-cache-samples</module>
         <module>camellia-cache-samples2</module>
         <module>camellia-hot-key-samples</module>
+        <module>camellia-metric-samples</module>
     </modules>
 
 </project>
