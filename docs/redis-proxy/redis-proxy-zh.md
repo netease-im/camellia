@@ -224,10 +224,7 @@ OK
 ## 快速开始二（基于安装包）
 参见：[quick-start-package](quickstart/quick-start-package.md)
 
-## 快速开始三（基于fatJar和sample-code)
-参见：[quick-start-fat-jar](quickstart/quick-start-fat-jar.md)
-
-## 快速开始四（不使用spring-boot-stater)
+## 快速开始三（不使用spring-boot-stater)
 参见：[quick-start-no-spring-boot](quickstart/quick-start-no-spring-boot.md)
 
 ## 如果要使用java21/spring-boot3/docker，请参考：[camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
