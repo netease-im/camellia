@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.id.gen.springboot.strict;
 
 import com.netease.nim.camellia.id.gen.common.IDLoader;
+import com.netease.nim.camellia.id.gen.monitor.IdGenMonitor;
 import com.netease.nim.camellia.id.gen.strict.CamelliaStrictIdGen;
 import com.netease.nim.camellia.id.gen.strict.CamelliaStrictIdGenConfig;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
@@ -38,6 +39,7 @@ public class CamelliaIdGenStrictConfiguration {
         config.setRetryIntervalMillis(properties.getRetryIntervalMillis());
         config.setRegionId(properties.getRegionId());
         config.setLockExpireMillis(properties.getLockExpireMillis());
+        IdGenMonitor.init(properties.getMonitorIntervalSeconds());
         return new CamelliaStrictIdGen(config);
     }
 }

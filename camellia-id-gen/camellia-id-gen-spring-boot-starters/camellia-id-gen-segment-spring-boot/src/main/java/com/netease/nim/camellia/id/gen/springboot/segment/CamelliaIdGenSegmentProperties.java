@@ -12,6 +12,7 @@ import java.util.List;
 @ConfigurationProperties(prefix = "camellia-id-gen-segment")
 public class CamelliaIdGenSegmentProperties {
 
+    private int monitorIntervalSeconds = CamelliaIdGenConstants.monitorIntervalSeconds;
     private int regionBits = CamelliaIdGenConstants.Segment.regionBits;
     private long regionId;
     private int regionIdShiftingBits = 0;//regionId偏移量，默认不偏移
@@ -90,6 +91,14 @@ public class CamelliaIdGenSegmentProperties {
         public void setBlackListTags(List<String> blackListTags) {
             this.blackListTags = blackListTags;
         }
+    }
+
+    public int getMonitorIntervalSeconds() {
+        return monitorIntervalSeconds;
+    }
+
+    public void setMonitorIntervalSeconds(int monitorIntervalSeconds) {
+        this.monitorIntervalSeconds = monitorIntervalSeconds;
     }
 
     public int getRegionBits() {

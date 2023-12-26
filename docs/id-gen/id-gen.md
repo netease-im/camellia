@@ -1,7 +1,8 @@
 
 # camellia-id-gen
 ## 简介  
-提供了多种id生成算法，开箱即用，包括雪花算法、严格递增的id生成算法、趋势递增的id生成算法等  
+* 提供了多种id生成算法，开箱即用，包括雪花算法、严格递增的id生成算法、趋势递增的id生成算法等  
+* 支持使用prometheus/grafana来监控id-gen-server集群，参考：[prometheus-grafana](prometheus-grafana.md)  
 
 ## 雪花算法
 详见：[snowflake](snowflake.md)

@@ -9,6 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "camellia-id-gen-strict")
 public class CamelliaIdGenStrictProperties {
 
+    private int monitorIntervalSeconds = CamelliaIdGenConstants.monitorIntervalSeconds;
     private String cacheKeyPrefix = CamelliaIdGenConstants.Strict.cacheKeyPrefix;
     private long lockExpireMillis = CamelliaIdGenConstants.Strict.lockExpireMillis;
     private int cacheExpireSeconds = CamelliaIdGenConstants.Strict.cacheExpireSeconds;
@@ -20,6 +21,14 @@ public class CamelliaIdGenStrictProperties {
     private int regionBits = CamelliaIdGenConstants.Strict.regionBits;
     private int regionId;
     private int regionIdShiftingBits = 0;//regionId偏移量，默认不偏移
+
+    public int getMonitorIntervalSeconds() {
+        return monitorIntervalSeconds;
+    }
+
+    public void setMonitorIntervalSeconds(int monitorIntervalSeconds) {
+        this.monitorIntervalSeconds = monitorIntervalSeconds;
+    }
 
     public String getCacheKeyPrefix() {
         return cacheKeyPrefix;

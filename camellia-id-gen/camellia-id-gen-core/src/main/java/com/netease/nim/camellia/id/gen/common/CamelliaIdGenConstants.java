@@ -1,11 +1,12 @@
 package com.netease.nim.camellia.id.gen.common;
 
-import javax.swing.plaf.PanelUI;
 
 /**
  * Created by caojiajun on 2021/9/26
  */
 public class CamelliaIdGenConstants {
+
+    public static final int monitorIntervalSeconds = 60;
 
     public static class Snowflake {
 

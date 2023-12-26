@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.id.gen.springboot.snowflake;
 
 import com.netease.nim.camellia.id.gen.common.CamelliaIdGenException;
+import com.netease.nim.camellia.id.gen.monitor.IdGenMonitor;
 import com.netease.nim.camellia.id.gen.snowflake.CamelliaSnowflakeConfig;
 import com.netease.nim.camellia.id.gen.snowflake.CamelliaSnowflakeIdGen;
 import com.netease.nim.camellia.id.gen.snowflake.RedisWorkerIdGen;
@@ -37,6 +38,7 @@ public class CamelliaIdGenSnowflakeConfiguration {
         config.setRegionBits(properties.getRegionBits());
         config.setRegionId(properties.getRegionId());
         config.setWorkerIdGen(workerIdGen(properties));
+        IdGenMonitor.init(properties.getMonitorIntervalSeconds());
         return config;
     }
 

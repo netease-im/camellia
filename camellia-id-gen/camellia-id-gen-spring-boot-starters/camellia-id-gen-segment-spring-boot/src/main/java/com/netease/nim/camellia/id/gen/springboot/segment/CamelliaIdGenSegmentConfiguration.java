@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.id.gen.springboot.segment;
 
 import com.netease.nim.camellia.id.gen.common.IDLoader;
+import com.netease.nim.camellia.id.gen.monitor.IdGenMonitor;
 import com.netease.nim.camellia.id.gen.segment.CamelliaSegmentIdGen;
 import com.netease.nim.camellia.id.gen.segment.CamelliaSegmentIdGenConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ public class CamelliaIdGenSegmentConfiguration {
         config.setTagCount(properties.getTagCount());
         config.setStep(properties.getStep());
         config.setIdLoader(idLoader);
+        IdGenMonitor.init(properties.getMonitorIntervalSeconds());
         return new CamelliaSegmentIdGen(config);
     }
 

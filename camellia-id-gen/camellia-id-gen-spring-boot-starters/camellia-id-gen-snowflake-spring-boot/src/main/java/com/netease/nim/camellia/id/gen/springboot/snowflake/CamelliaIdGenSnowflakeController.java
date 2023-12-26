@@ -26,91 +26,101 @@ public class CamelliaIdGenSnowflakeController {
 
     @GetMapping("/genId")
     public IdGenResult genId() {
+        String uri = "/camellia/id/gen/snowflake/genId";
+        long startTime = System.currentTimeMillis();
         try {
             CamelliaIdGenSnowflakeServerStatus.updateLastUseTime();
             long id = camelliaSnowflakeIdGen.genId();
             if (logger.isDebugEnabled()) {
                 logger.debug("genId, id = {}", id);
             }
-            return IdGenResult.success(id);
+            return IdGenResult.success(uri, startTime, id);
         } catch (CamelliaIdGenException e) {
             logger.error(e.getMessage(), e);
-            return IdGenResult.error(e.getMessage());
+            return IdGenResult.error(uri, startTime, e.getMessage());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            return IdGenResult.error("internal error");
+            return IdGenResult.error(uri, startTime, "internal error");
         }
     }
 
     @GetMapping("/decodeTs")
     public IdGenResult decodeTs(@RequestParam("id") long id) {
+        String uri = "/camellia/id/gen/snowflake/decodeTs";
+        long startTime = System.currentTimeMillis();
         try {
             CamelliaIdGenSnowflakeServerStatus.updateLastUseTime();
             long ts = camelliaSnowflakeIdGen.decodeTs(id);
             if (logger.isDebugEnabled()) {
                 logger.debug("decodeTs, id = {}, ts = {}", id, ts);
             }
-            return IdGenResult.success(ts);
+            return IdGenResult.success(uri, startTime, ts);
         } catch (CamelliaIdGenException e) {
             logger.error(e.getMessage(), e);
-            return IdGenResult.error(e.getMessage());
+            return IdGenResult.error(uri, startTime, e.getMessage());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            return IdGenResult.error("internal error");
+            return IdGenResult.error(uri, startTime, "internal error");
         }
     }
 
     @GetMapping("/decodeRegionId")
     public IdGenResult decodeRegionId(@RequestParam("id") long id) {
+        String uri = "/camellia/id/gen/snowflake/decodeRegionId";
+        long startTime = System.currentTimeMillis();
         try {
             CamelliaIdGenSnowflakeServerStatus.updateLastUseTime();
             long regionId = camelliaSnowflakeIdGen.decodeRegionId(id);
             if (logger.isDebugEnabled()) {
                 logger.debug("decodeRegionId, id = {}, regionId = {}", id, regionId);
             }
-            return IdGenResult.success(regionId);
+            return IdGenResult.success(uri, startTime, regionId);
         } catch (CamelliaIdGenException e) {
             logger.error(e.getMessage(), e);
-            return IdGenResult.error(e.getMessage());
+            return IdGenResult.error(uri, startTime, e.getMessage());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            return IdGenResult.error("internal error");
+            return IdGenResult.error(uri, startTime, "internal error");
         }
     }
 
     @GetMapping("/decodeSequence")
     public IdGenResult decodeSequence(@RequestParam("id") long id) {
+        String uri = "/camellia/id/gen/snowflake/decodeSequence";
+        long startTime = System.currentTimeMillis();
         try {
             CamelliaIdGenSnowflakeServerStatus.updateLastUseTime();
             long regionId = camelliaSnowflakeIdGen.decodeSequence(id);
             if (logger.isDebugEnabled()) {
                 logger.debug("decodeSequence, id = {}, regionId = {}", id, regionId);
             }
-            return IdGenResult.success(regionId);
+            return IdGenResult.success(uri, startTime, regionId);
         } catch (CamelliaIdGenException e) {
             logger.error(e.getMessage(), e);
-            return IdGenResult.error(e.getMessage());
+            return IdGenResult.error(uri, startTime, e.getMessage());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            return IdGenResult.error("internal error");
+            return IdGenResult.error(uri, startTime, "internal error");
         }
     }
 
     @GetMapping("/decodeWorkerId")
     public IdGenResult decodeWorkerId(@RequestParam("id") long id) {
+        String uri = "/camellia/id/gen/snowflake/decodeWorkerId";
+        long startTime = System.currentTimeMillis();
         try {
             CamelliaIdGenSnowflakeServerStatus.updateLastUseTime();
             long regionId = camelliaSnowflakeIdGen.decodeWorkerId(id);
             if (logger.isDebugEnabled()) {
                 logger.debug("decodeWorkerId, id = {}, regionId = {}", id, regionId);
             }
-            return IdGenResult.success(regionId);
+            return IdGenResult.success(uri, startTime, regionId);
         } catch (CamelliaIdGenException e) {
             logger.error(e.getMessage(), e);
-            return IdGenResult.error(e.getMessage());
+            return IdGenResult.error(uri, startTime, e.getMessage());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            return IdGenResult.error("internal error");
+            return IdGenResult.error(uri,startTime, "internal error");
         }
     }
 }

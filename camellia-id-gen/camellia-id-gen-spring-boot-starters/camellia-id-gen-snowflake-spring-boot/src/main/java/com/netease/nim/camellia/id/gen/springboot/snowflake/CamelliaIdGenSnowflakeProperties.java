@@ -10,6 +10,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "camellia-id-gen-snowflake")
 public class CamelliaIdGenSnowflakeProperties {
 
+    private int monitorIntervalSeconds = CamelliaIdGenConstants.monitorIntervalSeconds;
+
     private long twepoch = CamelliaIdGenConstants.Snowflake.twepoch;
 
     private int regionBits = CamelliaIdGenConstants.Snowflake.regionBits;
@@ -61,6 +63,14 @@ public class CamelliaIdGenSnowflakeProperties {
         public void setExitIfRenewFail(boolean exitIfRenewFail) {
             this.exitIfRenewFail = exitIfRenewFail;
         }
+    }
+
+    public int getMonitorIntervalSeconds() {
+        return monitorIntervalSeconds;
+    }
+
+    public void setMonitorIntervalSeconds(int monitorIntervalSeconds) {
+        this.monitorIntervalSeconds = monitorIntervalSeconds;
     }
 
     public long getTwepoch() {
