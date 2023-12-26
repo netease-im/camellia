@@ -1,5 +1,20 @@
 [ENGLISH](update-en.md)
 
+# 1.2.22（2023/12/xx）
+### 新增
+* camellia-redis-proxy增强使用prometheus/grafana进行监控的能力
+* camellia-hot-key增强使用prometheus/grafana进行监控的能力
+* camellia-delay-queue新增使用prometheus/grafana监控的能力
+* camellia-id-gen新增使用prometheus/grafana监控的能力
+
+### 更新
+* camellia-redis-proxy的info命令，新增redis_mode字段的返回
+* camellia-redis-proxy的info命令，camellia_redis_proxy_version字段名修改为camellia_version
+* camellia-redis-proxy的hello命令，新增version、redis_version等字段的返回，用于兼容部分redis客户端的行为（如高版本lettuce）
+
+### fix
+* camellia-redis-proxy的info命令，collection_time字段结果有误
+
 
 # 1.2.21（2023/12/19）
 ### 新增

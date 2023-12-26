@@ -1,6 +1,22 @@
 [中文版](update-zh.md)
 
 
+# 1.2.22（2023/12/xx）
+### add
+* camellia-redis-proxy enhances prometheus/grafana
+* camellia-hot-key enhances prometheus/grafana
+* camellia-delay-queue support prometheus/grafana
+* camellia-id-gen support prometheus/grafana
+
+### 更新
+* camellia-redis-proxy, info command, add redis_mode field
+* camellia-redis-proxy, info command, rename camellia_redis_proxy_version to camellia_version
+* camellia-redis-proxy, hello command, add version、redis_version fields to compatible lettuce client
+
+### fix
+* camellia-redis-proxy, info command, fix collection_time value
+
+
 # 1.2.21（2023/12/19）
 ### add
 * camellia-redis-spring-boot-starters, support spring-boot3
