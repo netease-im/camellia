@@ -100,6 +100,8 @@ camellia-redis-proxy:
 ```
 #随机挑选几个proxy节点配置即可（都配上当然更好），格式为ip:port@cport
 proxy.cluster.mode.nodes=192.168.3.218:6380@16380,192.168.3.218:6390@16390
+#sentinel里模拟的master的名字，默认是camellia_sentinel
+proxy.sentinel.mode.master.name=camellia_sentinel
 ```
 依次启动所有proxy即可    
 节点宕机、节点扩容，proxy集群内部会通过心跳自动感知（心跳通过cport和自定义的redis协议去实现）         
