@@ -175,6 +175,22 @@ public class ProxySentinelModeProcessor {
         return future;
     }
 
+    /**
+     * 获取当前节点
+     * @return 当前节点
+     */
+    public ProxyNode getCurrentNode() {
+        return currentNode;
+    }
+
+    /**
+     * 获取在线节点列表
+     * @return 节点列表
+     */
+    public List<ProxyNode> getOnlineNodes() {
+        return new ArrayList<>(onlineNodes);
+    }
+
     private void schedule() {
         try {
             //clear inactive client
@@ -218,7 +234,7 @@ public class ProxySentinelModeProcessor {
             if (reply instanceof StatusReply) {
                 return ((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.OK.getStatus());
             }
-            logger.error("proxy sentinel mode, heartbeat fail, node = {}, reply = {}", node, reply);
+            logger.warn("proxy sentinel mode, heartbeat fail, node = {}, reply = {}", node, reply);
             return false;
         } catch (Exception e) {
             logger.error("proxy sentinel mode, heartbeat error, node = {}", node, e);
@@ -244,7 +260,7 @@ public class ProxySentinelModeProcessor {
     }
 
     private Node getNode(String consid) {
-        return CamelliaMapUtils.computeIfAbsent(clientMap, consid, k -> new Node(null, null));
+        return CamelliaMapUtils.computeIfAbsent(clientMap, consid, k -> new Node());
     }
 
     private ProxyNode selectOnlineNode(ChannelInfo channelInfo) {
@@ -281,14 +297,14 @@ public class ProxySentinelModeProcessor {
             list.remove(proxyNode);
             Collections.sort(list);
             onlineNodes = list;
-            logger.info("proxy node = {} down!", proxyNode);
+            logger.warn("proxy node = {} down!", proxyNode);
             //notify
             Set<String> set = new HashSet<>(clientMap.keySet());
             for (String consid : set) {
                 Node node = clientMap.get(consid);
                 if (node == null) continue;
                 if (!node.subscribe) continue;
-                if (node.proxyNode == null || node.proxyNode.equals(proxyNode)) {
+                if (node.proxyNode != null && node.proxyNode.equals(proxyNode)) {
                     ChannelInfo channelInfo = node.channelInfo;
                     if (channelInfo == null) continue;
                     ProxyNode target = selectOnlineNode(channelInfo);
@@ -321,30 +337,9 @@ public class ProxySentinelModeProcessor {
         channelInfo.getCommandTaskQueue().reply(RedisCommand.SUBSCRIBE, reply, false, false);
     }
 
-    /**
-     * 获取当前节点
-     * @return 当前节点
-     */
-    public ProxyNode getCurrentNode() {
-        return currentNode;
-    }
-
-    /**
-     * 获取在线节点列表
-     * @return 节点列表
-     */
-    public List<ProxyNode> getOnlineNodes() {
-        return new ArrayList<>(onlineNodes);
-    }
-
     private static class Node {
         ChannelInfo channelInfo;
         ProxyNode proxyNode;
         boolean subscribe = false;
-
-        public Node(ChannelInfo channelInfo, ProxyNode proxyNode) {
-            this.channelInfo = channelInfo;
-            this.proxyNode = proxyNode;
-        }
     }
 }

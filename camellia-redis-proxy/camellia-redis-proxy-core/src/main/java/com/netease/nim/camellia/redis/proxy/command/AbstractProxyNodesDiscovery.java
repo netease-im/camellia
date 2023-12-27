@@ -39,6 +39,9 @@ public abstract class AbstractProxyNodesDiscovery implements ProxyNodesDiscovery
         if (proxyClusterModeProcessor != null) {
             return proxyClusterModeProcessor.getCurrentNode();
         }
+        if (proxySentinelModeProcessor != null) {
+            return proxySentinelModeProcessor.getCurrentNode();
+        }
         String currentNodeHost = ProxyDynamicConf.getString("proxy.node.current.host", null);
         if (currentNodeHost == null) {
             InetAddress inetAddress = InetUtils.findFirstNonLoopbackAddress();
