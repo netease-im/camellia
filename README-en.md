@@ -44,7 +44,8 @@ high performance redis-proxy:
 * support ssl/tls, both client to proxy and proxy to upstream redis
 * support unix-domain-socket, both client to proxy and proxy to upstream redis
 * support tps/rt/big-key/hot-key/slow-command monitor  
-* support custom command interceptor, support hot-key-cache(GET command)，support value converter and so on    
+* support disguise as redis-cluster/redis-sentinel for high availability
+* support custom command plugin, support hot-key-cache(GET command)，support value converter and so on    
 [QUICK START](/docs/redis-proxy/redis-proxy-en.md)  
 
 ### camellia-id-gen
