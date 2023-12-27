@@ -28,7 +28,13 @@ public class CamelliaDelayQueueSdk {
     public CamelliaDelayQueueSdk(CamelliaDelayQueueSdkConfig sdkConfig) {
         this.sdkConfig = sdkConfig;
         this.api = new CamelliaDelayQueueApi(sdkConfig);
-        logger.info("CamelliaDelayQueueSdk init success, sdkConfig = {}", JSONObject.toJSONString(sdkConfig));
+        if (sdkConfig.getDiscovery() != null) {
+            logger.info("CamelliaDelayQueueSdk init success, discovery = {}, listenerConfig = {}, httpConfig = {}",
+                    sdkConfig.getDiscovery().getClass().getName(), JSONObject.toJSONString(sdkConfig.getListenerConfig()), JSONObject.toJSONString(sdkConfig.getHttpConfig()));
+        } else if (sdkConfig.getUrl() != null) {
+            logger.info("CamelliaDelayQueueSdk init success, url = {}, listenerConfig = {}, httpConfig = {}",
+                    sdkConfig.getUrl(), JSONObject.toJSONString(sdkConfig.getListenerConfig()), JSONObject.toJSONString(sdkConfig.getHttpConfig()));
+        }
     }
 
     /**
