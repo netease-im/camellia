@@ -304,12 +304,13 @@ public class ProxySentinelModeProcessor {
                 Node node = clientMap.get(consid);
                 if (node == null) continue;
                 if (!node.subscribe) continue;
-                if (node.proxyNode != null && node.proxyNode.equals(proxyNode)) {
+                if (node.channelInfo == null || node.proxyNode == null) continue;
+                if (node.proxyNode.equals(proxyNode)) {
                     ChannelInfo channelInfo = node.channelInfo;
-                    if (channelInfo == null) continue;
                     ProxyNode target = selectOnlineNode(channelInfo);
                     notify(channelInfo, node.proxyNode, target);
-                    logger.info("notify client switch proxy, client = {}, new proxy = {}", channelInfo.getLAddr(), target);
+                    logger.info("notify client switch proxy for node down, client = {}, old proxy = {}, new proxy = {}",
+                            channelInfo.getLAddr(), node.proxyNode, target);
                     node.proxyNode = target;
                 }
             }
@@ -324,6 +325,22 @@ public class ProxySentinelModeProcessor {
             Collections.sort(list);
             onlineNodes = list;
             logger.info("proxy node = {} up!", proxyNode);
+            //notify
+            Set<String> set = new HashSet<>(clientMap.keySet());
+            for (String consid : set) {
+                Node node = clientMap.get(consid);
+                if (node == null) continue;
+                if (!node.subscribe) continue;
+                if (node.channelInfo == null || node.proxyNode == null) continue;
+                ChannelInfo channelInfo = node.channelInfo;
+                ProxyNode target = selectOnlineNode(channelInfo);
+                if (!node.proxyNode.equals(target)) {
+                    notify(channelInfo, node.proxyNode, target);
+                    logger.info("notify client switch proxy for load balance, client = {}, old proxy = {}, new proxy = {}",
+                            channelInfo.getLAddr(), node.proxyNode, target);
+                    node.proxyNode = target;
+                }
+            }
         }
     }
 
