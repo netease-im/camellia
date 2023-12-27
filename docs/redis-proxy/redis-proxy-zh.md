@@ -253,17 +253,11 @@ OK
 
 ## 部署和接入
 在生产环境，需要部署至少2个proxy实例来保证高可用，并且proxy是可以水平扩展的，包括：
-* 部署模式
-* 集成Zookeeper
+* 基于lb组成集群（如lvs等）
+* 基于注册中心组成集群
 * 伪redis-cluster模式
 * 伪redis-sentinel模式
-* 随机端口
 * 优雅上下线
-* 客户端接入（java之jedis）
-* 客户端接入（java之SpringRedisTemplate)
-* 客户端接入（其他语言）
-* 注意事项（容器环境部署）
-* 部署最佳实践
 
 具体可见：[部署和接入](deploy/deploy.md)
 
