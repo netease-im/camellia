@@ -7,6 +7,7 @@
 * camellia-hot-key enhances prometheus/grafana
 * camellia-delay-queue support prometheus/grafana
 * camellia-id-gen support prometheus/grafana
+* camellia-redis-proxy support redis-sentinel-mode for high availability proxy cluster
 
 ### 更新
 * camellia-redis-proxy, info command, add redis_mode field
