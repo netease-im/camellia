@@ -30,6 +30,8 @@ camellia-redis-proxy:
 ```
 #把所有proxy节点配置上，格式为ip:port@cport
 proxy.sentinel.mode.nodes=192.168.3.218:6380@16380,192.168.3.218:6390@16390
+#sentinel里模拟的master的名字，默认是camellia_sentinel
+proxy.sentinel.mode.master.name=camellia_sentinel
 ```
 
 其他可以配置的参数：
