@@ -316,6 +316,10 @@ public class ChannelInfo {
     }
 
     public void addInTransactionCommands(Command command) {
+        if (command.isBlocking()) {
+            ErrorLogCollector.collect(ChannelInfo.class, "blocking command do not support transaction multi-write");
+            return;
+        }
         if (cachedCommands == null) {
             synchronized (this) {
                 if (cachedCommands == null) {
@@ -323,34 +327,31 @@ public class ChannelInfo {
                 }
             }
         }
-        if (command.isBlocking()) {
-            ErrorLogCollector.collect(ChannelInfo.class, "blocking command do not support transaction multi-write");
-            return;
-        }
         cachedCommands.add(command);
     }
 
     public void flushInTransactionCommands(int db, IUpstreamClient upstreamClient) {
-        if (upstreamClient != null && !cachedCommands.isEmpty()) {
-            List<CompletableFuture<Reply>> futureList = new ArrayList<>();
-            for (Command command : cachedCommands) {
-                CompletableFuture<Reply> future = new CompletableFuture<>();
-                if (ProxyMonitorCollector.isMonitorEnable()) {
-                    UpstreamFailMonitor.stats(upstreamClient.getResource().getUrl(), command, future);
-                }
-                futureList.add(future);
+        if (upstreamClient == null) return;
+        if (cachedCommands == null) return;
+        if (cachedCommands.isEmpty()) return;
+        List<CompletableFuture<Reply>> futureList = new ArrayList<>();
+        for (Command command : cachedCommands) {
+            CompletableFuture<Reply> future = new CompletableFuture<>();
+            if (ProxyMonitorCollector.isMonitorEnable()) {
+                UpstreamFailMonitor.stats(upstreamClient.getResource().getUrl(), command, future);
             }
-            upstreamClient.sendCommand(db, cachedCommands, futureList);
+            futureList.add(future);
         }
+        upstreamClient.sendCommand(db, cachedCommands, futureList);
     }
 
     public void clearInTransactionCommands() {
-        if (cachedCommands != null) {
-            cachedCommands.clear();
-        }
+        if (cachedCommands == null) return;
+        cachedCommands.clear();
     }
 
     public void addSubscribeChannels(byte[]...channels) {
+        if (channels == null) return;
         if (subscribeChannels == null) {
             synchronized (this) {
                 if (subscribeChannels == null) {
@@ -358,22 +359,21 @@ public class ChannelInfo {
                 }
             }
         }
-        if (channels != null) {
-            for (byte[] channel : channels) {
-                subscribeChannels.put(new BytesKey(channel), true);
-            }
+        for (byte[] channel : channels) {
+            subscribeChannels.put(new BytesKey(channel), true);
         }
     }
 
     public void removeSubscribeChannels(byte[]...channels) {
-        if (subscribeChannels != null && channels != null) {
-            for (byte[] channel : channels) {
-                subscribeChannels.remove(new BytesKey(channel));
-            }
+        if (subscribeChannels == null) return;
+        if (channels == null) return;
+        for (byte[] channel : channels) {
+            subscribeChannels.remove(new BytesKey(channel));
         }
     }
 
     public void addPSubscribeChannels(byte[]...channels) {
+        if (channels == null) return;
         if (psubscribeChannels == null) {
             synchronized (this) {
                 if (psubscribeChannels == null) {
@@ -381,14 +381,13 @@ public class ChannelInfo {
                 }
             }
         }
-        if (channels != null) {
-            for (byte[] channel : channels) {
-                psubscribeChannels.put(new BytesKey(channel), true);
-            }
+        for (byte[] channel : channels) {
+            psubscribeChannels.put(new BytesKey(channel), true);
         }
     }
 
     public void addSSubscribeChannels(byte[]...channels) {
+        if (channels == null) return;
         if (ssubscribeChannels == null) {
             synchronized (this) {
                 if (ssubscribeChannels == null) {
@@ -396,26 +395,24 @@ public class ChannelInfo {
                 }
             }
         }
-        if (channels != null) {
-            for (byte[] channel : channels) {
-                ssubscribeChannels.put(new BytesKey(channel), true);
-            }
+        for (byte[] channel : channels) {
+            ssubscribeChannels.put(new BytesKey(channel), true);
         }
     }
 
     public void removePSubscribeChannels(byte[]...channels) {
-        if (psubscribeChannels != null && channels != null) {
-            for (byte[] channel : channels) {
-                psubscribeChannels.remove(new BytesKey(channel));
-            }
+        if (psubscribeChannels == null) return;
+        if (channels == null) return;
+        for (byte[] channel : channels) {
+            psubscribeChannels.remove(new BytesKey(channel));
         }
     }
 
     public void removeSSubscribeChannels(byte[]...channels) {
-        if (ssubscribeChannels != null && channels != null) {
-            for (byte[] channel : channels) {
-                ssubscribeChannels.remove(new BytesKey(channel));
-            }
+        if (ssubscribeChannels == null) return;
+        if (channels == null) return;
+        for (byte[] channel : channels) {
+            ssubscribeChannels.remove(new BytesKey(channel));
         }
     }
 
