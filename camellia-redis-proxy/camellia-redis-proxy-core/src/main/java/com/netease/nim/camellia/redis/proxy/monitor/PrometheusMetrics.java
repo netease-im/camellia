@@ -41,6 +41,7 @@ public class PrometheusMetrics {
         builder.append("vm_version=\"").append(runtimeMXBean.getVmVersion()).append("\"").append(",");
         builder.append("jvm_info=\"").append(System.getProperties().get("java.vm.info")).append("\"").append(",");
         builder.append("java_version=\"").append(System.getProperties().get("java.version")).append("\"").append(",");
+        builder.append("proxy_mode=\"").append(GlobalRedisProxyEnv.proxyMode()).append("\"").append(",");
         builder.append("}").append(" 1").append("\n");
 
         long startTime = System.currentTimeMillis() - runtimeMXBean.getUptime();
