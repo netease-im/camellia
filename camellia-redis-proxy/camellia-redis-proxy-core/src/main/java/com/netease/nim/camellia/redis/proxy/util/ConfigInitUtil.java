@@ -11,6 +11,7 @@ import com.netease.nim.camellia.redis.proxy.command.RedisProxyNodesDiscovery;
 import com.netease.nim.camellia.redis.proxy.conf.*;
 import com.netease.nim.camellia.redis.proxy.monitor.MonitorCallback;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
+import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.tls.frontend.ProxyFrontendTlsProvider;
 import com.netease.nim.camellia.redis.proxy.tls.upstream.ProxyUpstreamTlsProvider;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
@@ -26,12 +27,13 @@ import java.util.Set;
  */
 public class ConfigInitUtil {
 
-    public static ProxyNodesDiscovery initProxyNodesDiscovery(CamelliaServerProperties serverProperties, ProxyClusterModeProcessor proxyClusterModeProcessor) {
+    public static ProxyNodesDiscovery initProxyNodesDiscovery(CamelliaServerProperties serverProperties,
+                                                              ProxyClusterModeProcessor proxyClusterModeProcessor, ProxySentinelModeProcessor proxySentinelModeProcessor) {
         String className = ProxyDynamicConf.getString("proxy.nodes.discovery.className", DefaultProxyNodesDiscovery.class.getName());
         if (className.equals(DefaultProxyNodesDiscovery.class.getName())) {
-            return new DefaultProxyNodesDiscovery(proxyClusterModeProcessor);
+            return new DefaultProxyNodesDiscovery(proxyClusterModeProcessor, proxySentinelModeProcessor);
         } else if (className.equals(RedisProxyNodesDiscovery.class.getName())) {
-            return new RedisProxyNodesDiscovery(serverProperties, proxyClusterModeProcessor);
+            return new RedisProxyNodesDiscovery(serverProperties, proxyClusterModeProcessor, proxySentinelModeProcessor);
         } else {
             ProxyBeanFactory proxyBeanFactory = serverProperties.getProxyBeanFactory();
             return (ProxyNodesDiscovery) proxyBeanFactory.getBean(BeanInitUtils.parseClass(className));

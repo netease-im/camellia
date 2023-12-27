@@ -254,6 +254,7 @@ public class ProxyInfoUtils {
         } else {
             builder.append("redis_mode:").append("standalone").append("\r\n");
         }
+        builder.append("proxy_mode:").append(GlobalRedisProxyEnv.proxyMode()).append("\r\n");
         builder.append("netty_boss_thread:").append(GlobalRedisProxyEnv.getBossThread()).append("\r\n");
         builder.append("netty_work_thread:").append(GlobalRedisProxyEnv.getWorkThread()).append("\r\n");
         builder.append("arch:").append(osBean.getArch()).append("\r\n");

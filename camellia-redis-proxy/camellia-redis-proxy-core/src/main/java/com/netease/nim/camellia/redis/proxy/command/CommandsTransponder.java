@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.plugin.*;
 import com.netease.nim.camellia.redis.proxy.plugin.rewrite.RouteRewriteResult;
+import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
@@ -44,6 +45,7 @@ public class CommandsTransponder {
 
     private final AuthCommandProcessor authCommandProcessor;
     private final ProxyClusterModeProcessor clusterModeProcessor;
+    private final ProxySentinelModeProcessor sentinelModeProcessor;
     private final IUpstreamClientTemplateFactory factory;
     private final ProxyPluginFactory proxyPluginFactory;
     private final ProxyCommandProcessor proxyCommandProcessor;
@@ -55,6 +57,7 @@ public class CommandsTransponder {
         this.factory = factory;
         this.authCommandProcessor = commandInvokeConfig.getAuthCommandProcessor();
         this.clusterModeProcessor = commandInvokeConfig.getClusterModeProcessor();
+        this.sentinelModeProcessor = commandInvokeConfig.getSentinelModeProcessor();
         this.proxyPluginFactory = commandInvokeConfig.getProxyPluginFactory();
         this.proxyCommandProcessor = commandInvokeConfig.getProxyCommandProcessor();
         this.proxyPluginInitResp = proxyPluginFactory.initPlugins();
@@ -210,11 +213,21 @@ public class CommandsTransponder {
                     if (redisCommand == RedisCommand.PROXY && channelInfo.isFromCport()) {
                         skipAuth = true;
                     }
+                    if (sentinelModeProcessor != null && channelInfo.isFromCport()) {
+                        skipAuth = true;
+                    }
                     if (channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK && !skipAuth) {
                         task.replyCompleted(ErrorReply.NO_AUTH);
                         hasCommandsSkip = true;
                         continue;
                     }
+                }
+
+                if (channelInfo.isFromCport() && sentinelModeProcessor != null) {
+                    CompletableFuture<Reply> future = sentinelModeProcessor.sentinelCommands(command);
+                    future.thenAccept(task::replyCompleted);
+                    hasCommandsSkip = true;
+                    continue;
                 }
 
                 //DB类型的命令，after auth
@@ -375,7 +388,7 @@ public class CommandsTransponder {
     private void reply(ChannelInfo channelInfo, CommandTask task, RedisCommand redisCommand, Reply reply, boolean fromPlugin) {
         if (channelInfo.isInSubscribe()) {
             CommandTaskQueue taskQueue = channelInfo.getCommandTaskQueue();
-            taskQueue.reply(redisCommand, reply, fromPlugin);
+            taskQueue.reply(redisCommand, reply, fromPlugin, true);
         } else {
             task.replyCompleted(reply, fromPlugin);
         }

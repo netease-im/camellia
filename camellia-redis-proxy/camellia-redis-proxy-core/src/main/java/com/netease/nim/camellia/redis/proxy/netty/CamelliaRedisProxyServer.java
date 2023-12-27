@@ -143,6 +143,11 @@ public class CamelliaRedisProxyServer {
                 cport = port + 10000;
             }
             GlobalRedisProxyEnv.setClusterModeEnable(true);
+        } else if (serverProperties.isSentinelModeEnable()) {
+            if (cport <= 0) {
+                cport = port + 10000;
+            }
+            GlobalRedisProxyEnv.setSentinelModeEnable(true);
         }
         if (cport > 0) {
             bindInfoList.add(new BindInfo(bootstrap, cport, true, false, null));
@@ -169,6 +174,8 @@ public class CamelliaRedisProxyServer {
             } else if (info.port > 0 && info.cport && !info.tls && info.udsPath == null) {
                 if (serverProperties.isClusterModeEnable()) {
                     logger.info("CamelliaRedisProxyServer start in cluster mode at cport: {}", info.port);
+                } else if (serverProperties.isSentinelModeEnable()) {
+                    logger.info("CamelliaRedisProxyServer start in sentinel mode at cport: {}", info.port);
                 } else {
                     logger.info("CamelliaRedisProxyServer start at cport: {}", info.port);
                 }

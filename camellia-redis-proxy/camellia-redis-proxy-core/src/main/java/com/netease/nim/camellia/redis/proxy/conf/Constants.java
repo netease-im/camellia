@@ -30,6 +30,7 @@ public class Constants {
         public static final String monitorCallbackClassName = LoggingMonitorCallback.class.getName();
         public static final String clientAuthByConfigProvider = ClientAuthByConfigProvider.class.getName();
         public static final boolean clusterModeEnable = false;
+        public static final boolean sentinelModeEnable = false;
         public static final String clusterModeProviderClassName = DefaultProxyClusterModeProvider.class.getName();
         public static final String queueFactoryClassName = DefaultQueueFactory.class.getName();
 

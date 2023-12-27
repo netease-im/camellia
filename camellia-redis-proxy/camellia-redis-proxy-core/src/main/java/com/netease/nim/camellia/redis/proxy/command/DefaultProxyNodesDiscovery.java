@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.command;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +13,8 @@ import java.util.List;
  */
 public class DefaultProxyNodesDiscovery extends AbstractProxyNodesDiscovery {
 
-    public DefaultProxyNodesDiscovery(ProxyClusterModeProcessor proxyClusterModeProcessor) {
-        super(proxyClusterModeProcessor);
+    public DefaultProxyNodesDiscovery(ProxyClusterModeProcessor proxyClusterModeProcessor, ProxySentinelModeProcessor proxySentinelModeProcessor) {
+        super(proxyClusterModeProcessor, proxySentinelModeProcessor);
     }
 
     @Override

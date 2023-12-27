@@ -37,6 +37,7 @@ public class CamelliaServerProperties {
     private Map<String, String> config = new HashMap<>();
 
     private boolean clusterModeEnable = Constants.Server.clusterModeEnable;
+    private boolean sentinelModeEnable = Constants.Server.sentinelModeEnable;
     private String clusterModeProviderClassName = Constants.Server.clusterModeProviderClassName;
     private String queueFactoryClassName = Constants.Server.queueFactoryClassName;
 
@@ -209,6 +210,14 @@ public class CamelliaServerProperties {
 
     public void setClusterModeEnable(boolean clusterModeEnable) {
         this.clusterModeEnable = clusterModeEnable;
+    }
+
+    public boolean isSentinelModeEnable() {
+        return sentinelModeEnable;
+    }
+
+    public void setSentinelModeEnable(boolean sentinelModeEnable) {
+        this.sentinelModeEnable = sentinelModeEnable;
     }
 
     public String getClusterModeProviderClassName() {

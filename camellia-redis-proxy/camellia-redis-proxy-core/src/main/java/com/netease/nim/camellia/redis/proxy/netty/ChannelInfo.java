@@ -1,7 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.netty;
 
-
-import com.netease.nim.camellia.redis.proxy.auth.ClientCommandUtil;
 import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
@@ -524,7 +522,7 @@ public class ChannelInfo {
                 multi += commands.size();
             }
         } catch (Exception e) {
-            ErrorLogCollector.collect(ClientCommandUtil.class, "active error", e);
+            ErrorLogCollector.collect(ChannelInfo.class, "active error", e);
         }
     }
 
@@ -559,7 +557,23 @@ public class ChannelInfo {
             }
             return null;
         } catch (Exception e) {
-            ErrorLogCollector.collect(ClientCommandUtil.class, "parse addr for client info error", e);
+            ErrorLogCollector.collect(ChannelInfo.class, "parse addr for client info error", e);
+            return null;
+        }
+    }
+
+    public String getSourceAddress() {
+        try {
+            if (sourceAddress != null) {
+                return sourceAddress;
+            }
+            SocketAddress address = ctx.channel().remoteAddress();
+            if (address instanceof InetSocketAddress) {
+                return ((InetSocketAddress) address).getAddress().getHostAddress();
+            }
+            return null;
+        } catch (Exception e) {
+            ErrorLogCollector.collect(ChannelInfo.class, "parse source addr error", e);
             return null;
         }
     }
@@ -574,7 +588,7 @@ public class ChannelInfo {
             }
             return null;
         } catch (Exception e) {
-            ErrorLogCollector.collect(ClientCommandUtil.class, "parse laddr for client info error", e);
+            ErrorLogCollector.collect(ChannelInfo.class, "parse laddr for client info error", e);
             return null;
         }
     }

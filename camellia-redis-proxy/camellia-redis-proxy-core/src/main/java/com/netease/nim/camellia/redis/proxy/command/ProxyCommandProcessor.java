@@ -54,7 +54,6 @@ public class ProxyCommandProcessor {
     private static final ErrorReply notWritable = new ErrorReply("ERR configLoader is not writable");
     private static final ErrorReply writeError = new ErrorReply("ERR configLoader write error");
 
-    private boolean clusterModeEnable;
     private ProxyPluginInitResp proxyPluginInitResp;
     private JSONObject transpondConfig = null;
     private ClientAuthProvider clientAuthProvider;
@@ -79,10 +78,6 @@ public class ProxyCommandProcessor {
 
     public void setClientAuthProvider(ClientAuthProvider clientAuthProvider) {
         this.clientAuthProvider = clientAuthProvider;
-    }
-
-    public void setClusterModeEnable(boolean clusterModeEnable) {
-        this.clusterModeEnable = clusterModeEnable;
     }
 
     public void setProxyNodesDiscovery(ProxyNodesDiscovery proxyNodesDiscovery) {
@@ -166,7 +161,7 @@ public class ProxyCommandProcessor {
         } else {
             builder.append("client_auth_provider:").append("\r\n");
         }
-        builder.append("cluster_mode_enable:").append(clusterModeEnable).append("\r\n");
+        builder.append("proxy_mode:").append(GlobalRedisProxyEnv.proxyMode()).append("\r\n");
         builder.append("proxy_dynamic_conf_loader:").append(Utils.className(ProxyDynamicConf.getConfigLoader(), simpleClassName)).append("\r\n");
         builder.append("monitor_enable:").append(ProxyMonitorCollector.isMonitorEnable()).append("\r\n");
         builder.append("command_spend_time_monitor_enable:").append(ProxyMonitorCollector.isCommandSpendTimeMonitorEnable()).append("\r\n");

@@ -68,6 +68,11 @@ public class CamelliaRedisProxyProperties {
     private boolean clusterModeEnable = Constants.Server.clusterModeEnable;
 
     /**
+     * proxy是否启用sentinel模式，伪装成redis-sentinel
+     */
+    private boolean sentinelModeEnable = Constants.Server.sentinelModeEnable;
+
+    /**
      * cluster模式下的cport
      */
     private int cport = -1;
@@ -200,6 +205,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setClusterModeEnable(boolean clusterModeEnable) {
         this.clusterModeEnable = clusterModeEnable;
+    }
+
+    public boolean isSentinelModeEnable() {
+        return sentinelModeEnable;
+    }
+
+    public void setSentinelModeEnable(boolean sentinelModeEnable) {
+        this.sentinelModeEnable = sentinelModeEnable;
     }
 
     public int getCport() {

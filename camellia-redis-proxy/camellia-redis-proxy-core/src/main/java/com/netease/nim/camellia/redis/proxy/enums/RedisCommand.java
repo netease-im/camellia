@@ -15,6 +15,7 @@ public enum RedisCommand {
      */
     PING(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     PROXY(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    SENTINEL(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     AUTH(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     QUIT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     COMMAND(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
@@ -393,7 +394,7 @@ public enum RedisCommand {
     DEBUG(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     SLOWLOG(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     OBJECT(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
-    SENTINEL(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
+
     TIME(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     MIGRATE(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     WAIT(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),

@@ -18,6 +18,8 @@ redis_version:7.0.11  ##spring actuator默认会使用info命令返回的redis_v
 available_processors:4      ##cpu核数
 netty_boss_thread:1     ##netty的bossGroup的线程数，默认=1
 netty_work_thread:4   ##netty的工作线程数，默认=cpu核数
+redis_mode:standalone
+proxy_mode:standalone
 arch:amd64   ##系统架构
 os_name:Linux  ##操作系统名称                                 
 os_version:4.9.0-3-amd64  ##操作系统版本

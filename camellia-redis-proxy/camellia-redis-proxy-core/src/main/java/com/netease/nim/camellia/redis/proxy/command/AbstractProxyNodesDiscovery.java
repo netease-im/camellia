@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
 import com.netease.nim.camellia.tools.utils.InetUtils;
 
 import java.net.InetAddress;
@@ -15,15 +16,20 @@ import java.util.List;
 public abstract class AbstractProxyNodesDiscovery implements ProxyNodesDiscovery {
 
     private final ProxyClusterModeProcessor proxyClusterModeProcessor;
+    private final ProxySentinelModeProcessor proxySentinelModeProcessor;
 
-    public AbstractProxyNodesDiscovery(ProxyClusterModeProcessor proxyClusterModeProcessor) {
+    public AbstractProxyNodesDiscovery(ProxyClusterModeProcessor proxyClusterModeProcessor, ProxySentinelModeProcessor proxySentinelModeProcessor) {
         this.proxyClusterModeProcessor = proxyClusterModeProcessor;
+        this.proxySentinelModeProcessor = proxySentinelModeProcessor;
     }
 
     @Override
     public List<ProxyNode> discovery() {
         if (proxyClusterModeProcessor != null) {
             return proxyClusterModeProcessor.getOnlineNodes();
+        }
+        if (proxySentinelModeProcessor != null) {
+            return proxySentinelModeProcessor.getOnlineNodes();
         }
         return null;
     }

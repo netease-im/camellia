@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultProxyPluginFactory;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPluginInitResp;
+import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
@@ -43,17 +44,19 @@ public class CommandInvoker implements ICommandInvoker {
         this.factory = ConfigInitUtil.initUpstreamClientTemplateFactory(serverProperties, transpondProperties, proxyCommandProcessor);
         GlobalRedisProxyEnv.setClientTemplateFactory(factory);
 
-        //init ProxyClusterModeProcessor
+        //init ProxyClusterModeProcessor/ProxySentinelModeProcessor
         ProxyClusterModeProcessor clusterModeProcessor = null;
+        ProxySentinelModeProcessor sentinelModeProcessor = null;
         if (serverProperties.isClusterModeEnable()) {
             ProxyClusterModeProvider provider = (ProxyClusterModeProvider)serverProperties.getProxyBeanFactory()
                     .getBean(BeanInitUtils.parseClass(serverProperties.getClusterModeProviderClassName()));
             clusterModeProcessor = new ProxyClusterModeProcessor(provider);
+        } else if (serverProperties.isSentinelModeEnable()) {
+            sentinelModeProcessor = new ProxySentinelModeProcessor();
         }
-        proxyCommandProcessor.setClusterModeEnable(serverProperties.isClusterModeEnable());
 
         //init ProxyNodesDiscovery
-        proxyCommandProcessor.setProxyNodesDiscovery(ConfigInitUtil.initProxyNodesDiscovery(serverProperties, clusterModeProcessor));
+        proxyCommandProcessor.setProxyNodesDiscovery(ConfigInitUtil.initProxyNodesDiscovery(serverProperties, clusterModeProcessor, sentinelModeProcessor));
 
         //init monitor
         MonitorCallback monitorCallback = ConfigInitUtil.initMonitorCallback(serverProperties);
@@ -70,7 +73,7 @@ public class CommandInvoker implements ICommandInvoker {
         proxyPluginFactory.registerPluginUpdate(() -> proxyCommandProcessor.updateProxyPluginInitResp(proxyPluginFactory.initPlugins()));
 
         //init CommandInvokeConfig
-        this.commandInvokeConfig = new CommandInvokeConfig(authCommandProcessor, clusterModeProcessor, proxyPluginFactory, proxyCommandProcessor);
+        this.commandInvokeConfig = new CommandInvokeConfig(authCommandProcessor, clusterModeProcessor, sentinelModeProcessor, proxyPluginFactory, proxyCommandProcessor);
     }
 
     private static final FastThreadLocal<CommandsTransponder> threadLocal = new FastThreadLocal<>();

@@ -109,8 +109,8 @@ public class CommandTaskQueue {
         }
     }
 
-    public void reply(RedisCommand redisCommand, Reply reply, boolean fromPlugin) {
-        if (!channelInfo.isInSubscribe()) {
+    public void reply(RedisCommand redisCommand, Reply reply, boolean fromPlugin, boolean checkSubscribeStatus) {
+        if (checkSubscribeStatus && !channelInfo.isInSubscribe()) {
             return;
         }
         if (logger.isDebugEnabled()) {
@@ -135,7 +135,7 @@ public class CommandTaskQueue {
 
         ChannelFuture future = channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet()));
 
-        if (reply instanceof ErrorReply) {
+        if (checkSubscribeStatus && reply instanceof ErrorReply) {
             RedisConnection bindConnection = channelInfo.getBindConnection();
             if (bindConnection != null && !bindConnection.isValid()) {
                 future.addListener((ChannelFutureListener) channelFuture -> {

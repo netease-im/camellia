@@ -65,6 +65,7 @@ public class GlobalRedisProxyEnv {
     private static IUpstreamClientTemplateFactory clientTemplateFactory;
     private static ProxyDiscoveryFactory discoveryFactory;
     private static boolean clusterModeEnable;
+    private static boolean sentinelModeEnable;
 
     private static QueueFactory queueFactory = new DefaultQueueFactory();
 
@@ -161,6 +162,10 @@ public class GlobalRedisProxyEnv {
 
     public static void setClusterModeEnable(boolean clusterModeEnable) {
         GlobalRedisProxyEnv.clusterModeEnable = clusterModeEnable;
+    }
+
+    public static void setSentinelModeEnable(boolean sentinelModeEnable) {
+        GlobalRedisProxyEnv.sentinelModeEnable = sentinelModeEnable;
     }
 
     public static synchronized void addBeforeStartCallback(Runnable callback) {
@@ -263,6 +268,20 @@ public class GlobalRedisProxyEnv {
 
     public static boolean isClusterModeEnable() {
         return clusterModeEnable;
+    }
+
+    public static boolean isSentinelModeEnable() {
+        return sentinelModeEnable;
+    }
+
+    public static String proxyMode() {
+        if (clusterModeEnable) {
+            return "cluster";
+        } else if (sentinelModeEnable) {
+            return "sentinel";
+        } else {
+            return "standalone";
+        }
     }
 
     public static boolean isEpollAvailable() {

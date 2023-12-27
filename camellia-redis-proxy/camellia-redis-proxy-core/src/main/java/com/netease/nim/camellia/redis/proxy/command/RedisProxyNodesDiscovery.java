@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -30,10 +31,10 @@ public class RedisProxyNodesDiscovery extends AbstractProxyNodesDiscovery {
     private final String heartbeatKey;
     private List<ProxyNode> proxyNodeList = new ArrayList<>();
 
-    public RedisProxyNodesDiscovery(CamelliaServerProperties serverProperties, ProxyClusterModeProcessor proxyClusterModeProcessor) {
-        super(proxyClusterModeProcessor);
+    public RedisProxyNodesDiscovery(CamelliaServerProperties serverProperties, ProxyClusterModeProcessor proxyClusterModeProcessor, ProxySentinelModeProcessor proxySentinelModeProcessor) {
+        super(proxyClusterModeProcessor, proxySentinelModeProcessor);
         this.redisUrl = ProxyDynamicConf.getString("proxy.nodes.discovery.redis.url", "");
-        if (redisUrl == null || redisUrl.trim().length() == 0) {
+        if (redisUrl == null || redisUrl.trim().isEmpty()) {
             throw new IllegalArgumentException("'proxy.nodes.discovery.redis.url' is empty");
         }
         String heartbeatKeyPrefix = ProxyDynamicConf.getString("proxy.nodes.discovery.redis.heartbeat.key.prefix", "camellia_redis_proxy_heartbeat");

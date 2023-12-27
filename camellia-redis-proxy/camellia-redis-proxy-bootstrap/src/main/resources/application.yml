@@ -15,7 +15,8 @@ camellia-redis-proxy:
 #  proxy-frontend-tls-provider-class-name: com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider
 #  proxy-protocol-enable: false
 #  cluster-mode-enable: true #cluster-mode, if setting true, proxy-cluster disguised as a redis-cluster, should configure proxy.cluster.mode.nodes=xx in camellia-redis-proxy.properties
-#  cport: -1 #cluster-mode is setting true, proxy will use this cport to heartbeat, if setting -1, cport = port + 10000
+#  sentinel-mode-enable: true #sentinel-mode, if setting true, proxy-cluster disguised as a redis-sentinel, should configure proxy.sentinel.mode.nodes=xx in camellia-redis-proxy.properties
+#  cport: -1 #cluster-mode/sentinel-mode is setting true, proxy will use this cport to heartbeat, if setting -1, cport = port + 10000
 #  uds-path: /tmp/camellia-redis-proxy.sock
 #  netty-transport-mode: kqueue
   plugins: #plugin list

@@ -11,7 +11,7 @@ camellia_version:v1.2.21
 upstream_client_template_factory:UpstreamRedisClientTemplateFactory
 transpond_config:{"type":"local","multiTenantsSupport":false}
 client_auth_provider:ClientAuthByConfigProvider
-cluster_mode_enable:false
+proxy_mode:standalone
 proxy_dynamic_conf_loader:FileBasedProxyDynamicConfLoader
 monitor_enable:false
 command_spend_time_monitor_enable:false
@@ -23,9 +23,10 @@ reply_plugins:HotKeyProxyPlugin,BigKeyProxyPlugin,MonitorProxyPlugin
 包括了proxy版本，是否开启监控，路由配置，插件配置等信息
 
 ### 查询proxy列表
-* 有两种情况，开启或者未开启伪redis-cluster模式
+* 有三种情况，开启伪redis-cluster模式、开启伪redis-sentinel模式、默认standalone模式
 * 如果开启了伪redis-cluster模式，则返回的是伪redis-cluster模式下自动发现的所有节点
-* 如果没有开启伪redis-cluster模式，则需要从其他途径获取节点列表，默认提供了两种方式：
+* 如果开启了伪redis-sentinel模式，则返回的是伪redis-sentinel模式下配置的所有节点
+* 如果是默认standalone模式，则需要从其他途径获取节点列表，默认提供了两种方式：
 * 方式一（默认）：
 * 配置文件中配置，如下：  
 ```properties

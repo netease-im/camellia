@@ -1,33 +1,34 @@
 server:
-  port: 6380
+  port: 6381
 spring:
   application:
     name: camellia-redis-proxy-server
 
 camellia-redis-proxy:
-#  port: 6380 #priority greater than server.port, if missing, use server.port; if setting -6379, proxy will choose a random port
-#  application-name: camellia-redis-proxy-server  #priority greater than spring.application.name, if missing, use spring.application.name
-  console-port: 16379 #console port, default 16379, if setting -16379, proxy will choose a random port, if setting 0, will disable console
+  #  port: 6380 #priority greater than server.port, if missing, use server.port; if setting -6379, proxy will choose a random port
+  #  application-name: camellia-redis-proxy-server  #priority greater than spring.application.name, if missing, use spring.application.name
+  console-port: 16378 #console port, default 16379, if setting -16379, proxy will choose a random port, if setting 0, will disable console
   password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
   monitor-enable: false  #monitor enable/disable configure
   monitor-interval-seconds: 60 #monitor data refresh interval seconds
-#  tls-port: 6381
-#  proxy-frontend-tls-provider-class-name: com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider
-#  proxy-protocol-enable: false
-#  cluster-mode-enable: true #cluster-mode, if setting true, proxy-cluster disguised as a redis-cluster, should configure proxy.cluster.mode.nodes=xx in camellia-redis-proxy.properties
-#  cport: -1 #cluster-mode is setting true, proxy will use this cport to heartbeat, if setting -1, cport = port + 10000
-#  uds-path: /tmp/camellia-redis-proxy.sock
-#  netty-transport-mode: kqueue
+  #  tls-port: 6381
+  #  proxy-frontend-tls-provider-class-name: com.netease.nim.camellia.redis.proxy.tls.frontend.DefaultProxyFrontendTlsProvider
+  #  proxy-protocol-enable: false
+  #  cluster-mode-enable: true #cluster-mode, if setting true, proxy-cluster disguised as a redis-cluster, should configure proxy.cluster.mode.nodes=xx in camellia-redis-proxy.properties
+#  sentinel-mode-enable: true #sentinel-mode, if setting true, proxy-cluster disguised as a redis-sentinel, should configure proxy.sentinel.mode.nodes=xx in camellia-redis-proxy.properties
+  #  cport: -1 #cluster-mode/sentinel-mode is setting true, proxy will use this cport to heartbeat, if setting -1, cport = port + 10000
+  #  uds-path: /tmp/camellia-redis-proxy.sock
+  #  netty-transport-mode: kqueue
   plugins: #plugin list
     - monitorPlugin
     - bigKeyPlugin
     - hotKeyPlugin
-#  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.conf.FileBasedProxyDynamicConfLoader
-#  #you can get this config from ProxyDynamicConf.java, priority less than camellia-redis-proxy.properties
-#  #you can configure dynamic.conf.file.name here to replace camellia-redis-proxy.properties
+  #  proxy-dynamic-conf-loader-class-name: com.netease.nim.camellia.redis.proxy.conf.FileBasedProxyDynamicConfLoader
+  #  #you can get this config from ProxyDynamicConf.java, priority less than camellia-redis-proxy.properties
+  #  #you can configure dynamic.conf.file.name here to replace camellia-redis-proxy.properties
 #  config:
-#    "dynamic.conf.file.name": "xxx.properties"
-#    "xxx": "yyy"
+  #    "dynamic.conf.file.name": "xxx.properties"
+  #    "xxx": "yyy"
   transpond:
     type: local #local、remote、custom
     local:

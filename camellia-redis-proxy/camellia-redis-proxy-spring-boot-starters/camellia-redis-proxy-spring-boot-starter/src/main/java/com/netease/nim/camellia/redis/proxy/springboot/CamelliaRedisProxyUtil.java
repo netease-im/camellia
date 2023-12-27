@@ -59,6 +59,7 @@ public class CamelliaRedisProxyUtil {
             serverProperties.setWorkThread(SysUtils.getCpuNum());
         }
         serverProperties.setClusterModeEnable(properties.isClusterModeEnable());
+        serverProperties.setSentinelModeEnable(properties.isSentinelModeEnable());
         serverProperties.setClusterModeProviderClassName(properties.getClusterModeProviderClassName());
         serverProperties.setCport(properties.getCport());
         serverProperties.setUdsPath(properties.getUdsPath());
