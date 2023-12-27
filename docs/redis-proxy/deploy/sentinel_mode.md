@@ -1,6 +1,6 @@
 ## 伪redis-sentinel模式
 
-* 伪redis-sentinel模式，如下：
+* 伪redis-sentinel模式，如下：  
   <img src="redis-proxy-sentinel.png" width="60%" height="60%">
 
 此时，可以把proxy节点同时当作sentinel节点和redis节点，通过不同的端口区分，通过cport去模拟sentinel获取master节点的请求，返回的是proxy自己（多个proxy节点哈希选一个，从而不同的proxy节点返回的master是相同的）     
@@ -62,3 +62,4 @@ proxy.sentinel.mode.current.node.host=10.1.1.1
 
 ```
 
+通过console的/online接口和/offline接口可以完成节点的上下线  

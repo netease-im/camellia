@@ -29,7 +29,7 @@ camellia-redis-proxy:
 ```     
 随后你需要在camellia-redis-proxy.properties里选择若干个个proxy节点配置，如下：
 ```
-#随机挑选几个proxy节点配置即可（都配上当然更好），格式为ip:port@cport
+#随机挑选几个proxy节点配置即可（都配上当然更好，不需要全部配置，但是配置的必须是活着的节点，否则重启会失败），格式为ip:port@cport
 proxy.cluster.mode.nodes=192.168.3.218:6380@16380,192.168.3.218:6390@16390
 ```
 依次启动所有proxy即可    
