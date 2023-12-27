@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.monitor.model.Stats;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.netty.ServerStatus;
+import com.netease.nim.camellia.redis.proxy.sentinel.SentinelModeStatus;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +57,9 @@ public class ConsoleServiceAdaptor implements ConsoleService {
         if (ClusterModeStatus.getStatus() == ClusterModeStatus.Status.OFFLINE) {
             ClusterModeStatus.setStatus(ClusterModeStatus.Status.ONLINE);
         }
+        if (SentinelModeStatus.getStatus() == SentinelModeStatus.Status.OFFLINE) {
+            SentinelModeStatus.setStatus(SentinelModeStatus.Status.ONLINE);
+        }
         return ConsoleResult.success();
     }
 
@@ -63,6 +67,7 @@ public class ConsoleServiceAdaptor implements ConsoleService {
     public ConsoleResult offline() {
         ServerStatus.setStatus(ServerStatus.Status.OFFLINE);
         ClusterModeStatus.setStatus(ClusterModeStatus.Status.OFFLINE);
+        SentinelModeStatus.setStatus(SentinelModeStatus.Status.OFFLINE);
         if (ServerStatus.isIdle()) {
             logger.info("offline success");
             return ConsoleResult.success("is idle");
