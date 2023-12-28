@@ -3,10 +3,14 @@
 * 伪redis-sentinel模式，如下：  
   <img src="redis-proxy-sentinel.png" width="60%" height="60%">
 
-此时，可以把proxy节点同时当作sentinel节点和redis节点，通过不同的端口区分，通过cport去模拟sentinel获取master节点的请求，返回的是proxy自己（多个proxy节点哈希选一个，从而不同的proxy节点返回的master是相同的）     
-客户端需要同时监听多个proxy节点（当作sentinel节点），当一个proxy节点宕机，则另外一个proxy节点会通过sentinel协议去告知客户端（只会告知把master设置为宕机节点的客户端），master已经变成我了，快切过来  
+* 此时，可以把proxy节点同时当作sentinel节点和redis节点，通过不同的端口区分，通过cport去模拟sentinel获取master节点的请求，返回的是proxy自己（多个proxy节点哈希选一个，从而不同的proxy节点返回的master是相同的）     
+* 客户端需要同时监听多个proxy节点（当作sentinel节点），当一个proxy节点宕机，则另外一个proxy节点会通过sentinel协议去告知客户端（只会告知把master设置为宕机节点的客户端），master已经变成我了，快切过来  
 
-这种模式下，可以把proxy集群当作一个redis-sentinel集群去访问，从而不需要外部服务即可组成高可用集群
+* 这种模式下，可以把proxy集群当作一个redis-sentinel集群去访问，从而不需要外部服务即可组成高可用集群
+
+* 对于不同的客户端，会下发不同的proxy节点作为伪master，从而达到负载均衡的效果
+* 当一台proxy节点挂了，会通知正在使用该节点的客户端进行伪master切换，从而达到高可用的效果
+
 ```yaml
 server:
   port: 6380

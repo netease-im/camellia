@@ -29,6 +29,7 @@ public class ErrorReply implements Reply {
     public static final ErrorReply TOO_BUSY = new ErrorReply("ERR proxy too busy");
     public static final ErrorReply REPEAT_OPERATION = new ErrorReply("ERR repeat operation");
     public static final ErrorReply NO_AUTH = new ErrorReply("NOAUTH Authentication required");
+    public static final ErrorReply NO_PASSWORD_SET = new ErrorReply("ERR Client sent AUTH, but no password is set");
     public static final ErrorReply INVALID_PASSWORD = new ErrorReply("ERR invalid password");
     public static final ErrorReply WRONG_PASS = new ErrorReply("WRONGPASS invalid username-password pair or user is disabled.");
     public static final ErrorReply DB_INDEX_OUT_OF_RANGE = new ErrorReply("ERR DB index is out of range");
