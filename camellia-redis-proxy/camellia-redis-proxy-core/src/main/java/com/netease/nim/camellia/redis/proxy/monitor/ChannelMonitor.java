@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.model.BidBgroupConnectStats;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,6 +76,10 @@ public class ChannelMonitor {
         return new HashMap<>(map);
     }
 
+    public static ChannelInfo getChannel(String consid) {
+        return map.get(consid);
+    }
+
     public static Set<ChannelInfo> getChannelMap(long bid, String bgroup) {
         if (bid == -1) {
             return new HashSet<>(map.values());
@@ -121,11 +126,7 @@ public class ChannelMonitor {
         ExecutorUtils.submitToSingleThreadExecutor(() -> {
             try {
                 String key = Utils.getCacheKey(bid, bgroup);
-                ConcurrentHashMap<String, ChannelInfo> subMap = bidbgroupMap.get(key);
-                if (subMap == null) {
-                    subMap = new ConcurrentHashMap<>();
-                    bidbgroupMap.put(key, subMap);
-                }
+                ConcurrentHashMap<String, ChannelInfo> subMap = CamelliaMapUtils.computeIfAbsent(bidbgroupMap, key, k -> new ConcurrentHashMap<>());
                 subMap.put(channelInfo.getConsid(), channelInfo);
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);

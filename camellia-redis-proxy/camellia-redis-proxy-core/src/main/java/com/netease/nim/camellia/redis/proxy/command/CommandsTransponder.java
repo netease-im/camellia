@@ -161,6 +161,16 @@ public class CommandsTransponder {
                     }
                 }
 
+                //sentinel mode
+                if (sentinelModeProcessor != null && channelInfo.isFromCport()) {
+                    CompletableFuture<Reply> future = sentinelModeProcessor.sentinelCommands(command);
+                    if (future != null) {
+                        future.thenAccept(task::replyCompleted);
+                    }
+                    hasCommandsSkip = true;
+                    continue;
+                }
+
                 //DB类型的命令，before auth
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.DB) {
                     if (redisCommand == RedisCommand.PING) {
@@ -213,21 +223,11 @@ public class CommandsTransponder {
                     if (redisCommand == RedisCommand.PROXY && channelInfo.isFromCport()) {
                         skipAuth = true;
                     }
-                    if (sentinelModeProcessor != null && channelInfo.isFromCport()) {
-                        skipAuth = true;
-                    }
                     if (channelInfo.getChannelStats() != ChannelInfo.ChannelStats.AUTH_OK && !skipAuth) {
                         task.replyCompleted(ErrorReply.NO_AUTH);
                         hasCommandsSkip = true;
                         continue;
                     }
-                }
-
-                if (channelInfo.isFromCport() && sentinelModeProcessor != null) {
-                    CompletableFuture<Reply> future = sentinelModeProcessor.sentinelCommands(command);
-                    future.thenAccept(task::replyCompleted);
-                    hasCommandsSkip = true;
-                    continue;
                 }
 
                 //DB类型的命令，after auth
@@ -268,6 +268,13 @@ public class CommandsTransponder {
                     if (redisCommand == RedisCommand.INFO) {
                         CompletableFuture<Reply> future = ProxyInfoUtils.getInfoReply(command, factory);
                         future.thenAccept(task::replyCompleted);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+
+                    //sentinel不往后发
+                    if (redisCommand == RedisCommand.SENTINEL) {
+                        task.replyCompleted(ErrorReply.NOT_SUPPORT);
                         hasCommandsSkip = true;
                         continue;
                     }

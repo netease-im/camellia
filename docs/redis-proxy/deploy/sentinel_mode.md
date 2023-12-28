@@ -42,6 +42,10 @@ proxy.sentinel.mode.heartbeat.interval.seconds=5
 proxy.sentinel.mode.heartbeat.timeout.seconds=20
 #proxy节点的ip，默认会自动获取本机ip，一般不需要配置
 proxy.sentinel.mode.current.node.host=10.1.1.1
+#sentinel的账号，默认null
+proxy.sentinel.mode.sentinel.username=xxx
+#sentinel的密码，默认null
+proxy.sentinel.mode.sentinel.password=xxx
 ```
 
 ```高可用原理

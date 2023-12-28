@@ -12,8 +12,8 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
  */
 public class HelloCommandUtil {
 
-    private static final ErrorReply AUTH_SYNTAX_ERROR = new ErrorReply("ERR Syntax error in HELLO option 'auth'");
-    private static final ErrorReply SETNAME_SYNTAX_ERROR = new ErrorReply("ERR Syntax error in HELLO option 'setname'");
+    public static final ErrorReply AUTH_SYNTAX_ERROR = new ErrorReply("ERR Syntax error in HELLO option 'auth'");
+    public static final ErrorReply SETNAME_SYNTAX_ERROR = new ErrorReply("ERR Syntax error in HELLO option 'setname'");
 
     public static Reply invokeHelloCommand(ChannelInfo channelInfo, AuthCommandProcessor authCommandProcessor, Command command) {
         byte[][] objects = command.getObjects();
@@ -50,7 +50,7 @@ public class HelloCommandUtil {
         return helloCmdReply();
     }
 
-    private static MultiBulkReply helloCmdReply() {
+    public static MultiBulkReply helloCmdReply() {
         Reply[] reply = new Reply[14];
         reply[0] = new BulkReply(Utils.stringToBytes("server"));
         reply[1] = new BulkReply(Utils.stringToBytes("redis"));
