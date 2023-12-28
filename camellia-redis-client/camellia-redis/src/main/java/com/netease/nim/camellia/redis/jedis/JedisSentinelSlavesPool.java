@@ -268,6 +268,9 @@ public class JedisSentinelSlavesPool extends JedisPool {
                 try {
                     if (jedis == null) {
                         jedis = new Jedis(host, port);
+                        if (password != null) {
+                            jedis.auth(password);
+                        }
                     }
                     refresh(jedis);
                     TimeUnit.MILLISECONDS.sleep(checkIntervalMillis);
@@ -326,6 +329,9 @@ public class JedisSentinelSlavesPool extends JedisPool {
                 try (Jedis jedis = new Jedis(host, port)) {
                     if (!running.get()) {
                         break;
+                    }
+                    if (password != null) {
+                        jedis.auth(password);
                     }
                     List<String> masterAddr = jedis.sentinelGetMasterAddrByName(masterName);
                     if (masterAddr == null || masterAddr.size() != 2) {

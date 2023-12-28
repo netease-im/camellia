@@ -16,6 +16,7 @@
 
 ### fix
 * camellia-redis-proxy的info命令，collection_time字段结果有误
+* CamelliaRedisTemplate，使用redis-sentinel/redis-sentinel-slaves时，如果sentinel有password，可能导致主从切换失败的问题
 
 
 # 1.2.21（2023/12/19）

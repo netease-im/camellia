@@ -238,11 +238,10 @@ public class JedisSentinelPool extends Pool<Jedis> {
             while (running.get()) {
 
                 j = new Jedis(host, port);
-                if (password != null) {
-                    j.auth(password);
-                }
-
                 try {
+                    if (password != null) {
+                        j.auth(password);
+                    }
                     // double check that it is not being shutdown
                     if (!running.get()) {
                         break;
@@ -282,7 +281,7 @@ public class JedisSentinelPool extends Pool<Jedis> {
                         }
                     }, "+switch-master");
 
-                } catch (JedisException e) {
+                } catch (Exception e) {
 
                     if (running.get()) {
                         log.log(Level.SEVERE, "Lost connection to Sentinel at " + host + ":" + port

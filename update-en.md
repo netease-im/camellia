@@ -17,6 +17,7 @@
 
 ### fix
 * camellia-redis-proxy, info command, fix collection_time value
+* CamelliaRedisTemplate，when use redis-sentinel/redis-sentinel-slaves with password, master switch maybe not effective
 
 
 # 1.2.21（2023/12/19）
