@@ -12,6 +12,7 @@
 * camellia-redis-proxy的info命令，新增redis_mode字段的返回
 * camellia-redis-proxy的info命令，camellia_redis_proxy_version字段名修改为camellia_version
 * camellia-redis-proxy的hello命令，新增version、redis_version等字段的返回，用于兼容部分redis客户端的行为（如高版本lettuce）
+* camellia-delay-queue-sdk，修改了日志打印，避免jdk17下初始化报错的问题
 
 ### fix
 * camellia-redis-proxy的info命令，collection_time字段结果有误

@@ -9,10 +9,11 @@
 * camellia-id-gen support prometheus/grafana
 * camellia-redis-proxy support redis-sentinel-mode for high availability proxy cluster
 
-### 更新
+### update
 * camellia-redis-proxy, info command, add redis_mode field
 * camellia-redis-proxy, info command, rename camellia_redis_proxy_version to camellia_version
 * camellia-redis-proxy, hello command, add version、redis_version fields to compatible lettuce client
+* camellia-delay-queue-sdk，modify log, avoid error in jdk17+
 
 ### fix
 * camellia-redis-proxy, info command, fix collection_time value
