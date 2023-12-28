@@ -155,7 +155,7 @@ public class PrometheusMetrics {
         builder.append("# TYPE client_connect_detail gauge\n");
         List<BidBgroupConnectStats> bidBgroupConnectStats = ChannelMonitor.bidBgroupConnect();
         for (BidBgroupConnectStats bidBgroupConnectStat : bidBgroupConnectStats) {
-            String tenant = bidBgroupConnectStat.getBid() + "_" + bidBgroupConnectStat.getBgroup();
+            String tenant = tenant(bidBgroupConnectStat.getBid(), bidBgroupConnectStat.getBgroup());
             builder.append(String.format("client_connect_detail{tenant=\"%s\"} %d\n", tenant, bidBgroupConnectStat.getConnect()));
         }
 
@@ -164,7 +164,7 @@ public class PrometheusMetrics {
         builder.append("# TYPE tenant_qps gauge\n");
         List<BidBgroupStats> bidBgroupStatsList = stats.getBidBgroupStatsList();
         for (BidBgroupStats bidBgroupStats : bidBgroupStatsList) {
-            String tenant = bidBgroupStats.getBid() + "_" + bidBgroupStats.getBgroup();
+            String tenant = tenant(bidBgroupStats.getBid(), bidBgroupStats.getBgroup());
             builder.append(String.format("tenant_qps{tenant=\"%s\"} %d\n", tenant, bidBgroupStats.getCount() / intervalSeconds));
         }
 
@@ -173,7 +173,7 @@ public class PrometheusMetrics {
         builder.append("# TYPE tenant_command_qps gauge\n");
         List<DetailStats> detailStatsList = stats.getDetailStatsList();
         for (DetailStats detailStats : detailStatsList) {
-            String tenant = detailStats.getBid() + "_" + detailStats.getBgroup();
+            String tenant = tenant(detailStats.getBid(), detailStats.getBgroup());
             String command = detailStats.getCommand();
             builder.append(String.format("tenant_command_qps{tenant=\"%s\",command=\"%s\"} %d\n", tenant, command, detailStats.getCount() / intervalSeconds));
         }
@@ -183,7 +183,7 @@ public class PrometheusMetrics {
         builder.append("# TYPE tenant_command_spend_stats gauge\n");
         List<BidBgroupSpendStats> bidBgroupSpendStatsList = stats.getBidBgroupSpendStatsList();
         for (BidBgroupSpendStats bidBgroupSpendStats : bidBgroupSpendStatsList) {
-            String tenant = bidBgroupSpendStats.getBid() + "_" + bidBgroupSpendStats.getBgroup();
+            String tenant = tenant(bidBgroupSpendStats.getBid(), bidBgroupSpendStats.getBgroup());
             long count1 = bidBgroupSpendStats.getCount();
             String command = bidBgroupSpendStats.getCommand();
             double avg = bidBgroupSpendStats.getAvgSpendMs();
@@ -204,7 +204,7 @@ public class PrometheusMetrics {
         builder.append("# TYPE proxy_route_conf gauge\n");
         List<RouteConf> routeConfList = stats.getRouteConfList();
         for (RouteConf routeConf : routeConfList) {
-            String tenant = routeConf.getBid() + "_" + routeConf.getBgroup();
+            String tenant = tenant(routeConf.getBid(), routeConf.getBgroup());
             String resourceTable = routeConf.getResourceTable();
             resourceTable = resourceTable.replaceAll("\"", "'");
             builder.append(String.format("proxy_route_conf{tenant=\"%s\", route=\"%s\"} 1\n", tenant, resourceTable));
@@ -278,7 +278,7 @@ public class PrometheusMetrics {
         builder.append("# TYPE slow_command gauge\n");
         List<SlowCommandStats> slowCommandStatsList = stats.getSlowCommandStatsList();
         for (SlowCommandStats slowCommandStats : slowCommandStatsList) {
-            String tenant = slowCommandStats.getBid() + "_" + slowCommandStats.getBgroup();
+            String tenant = tenant(slowCommandStats.getBid(), slowCommandStats.getBgroup());
             String command = slowCommandStats.getCommand();
             String keys = slowCommandStats.getKeys();
             double spendMillis = slowCommandStats.getSpendMillis();
@@ -293,7 +293,7 @@ public class PrometheusMetrics {
         for (BigKeyStats bigKeyStats : bigKeyStatsList) {
             String commandType = bigKeyStats.getCommandType();
             if (!commandType.equalsIgnoreCase("string")) continue;
-            String tenant = bigKeyStats.getBid() + "_" + bigKeyStats.getBgroup();
+            String tenant = tenant(bigKeyStats.getBid(), bigKeyStats.getBgroup());
             String command = bigKeyStats.getCommand();
             String key = bigKeyStats.getKey();
             long size = bigKeyStats.getSize();
@@ -306,7 +306,7 @@ public class PrometheusMetrics {
         for (BigKeyStats bigKeyStats : bigKeyStatsList) {
             String commandType = bigKeyStats.getCommandType();
             if (commandType.equalsIgnoreCase("string")) continue;
-            String tenant = bigKeyStats.getBid() + "_" + bigKeyStats.getBgroup();
+            String tenant = tenant(bigKeyStats.getBid(), bigKeyStats.getBgroup());
             String command = bigKeyStats.getCommand();
             String key = bigKeyStats.getKey();
             long size = bigKeyStats.getSize();
@@ -318,7 +318,7 @@ public class PrometheusMetrics {
         builder.append("# TYPE hot_key gauge\n");
         List<HotKeyStats> hotKeyStatsList = stats.getHotKeyStatsList();
         for (HotKeyStats hotKeyStats : hotKeyStatsList) {
-            String tenant = hotKeyStats.getBid() + "_" + hotKeyStats.getBgroup();
+            String tenant = tenant(hotKeyStats.getBid(), hotKeyStats.getBgroup());
             String key = hotKeyStats.getKey();
             long count1 = hotKeyStats.getCount();
             long max = hotKeyStats.getMax();
@@ -331,12 +331,19 @@ public class PrometheusMetrics {
         builder.append("# TYPE hot_key_cache_hit gauge\n");
         List<HotKeyCacheStats> hotKeyCacheStatsList = stats.getHotKeyCacheStatsList();
         for (HotKeyCacheStats hotKeyCacheStats : hotKeyCacheStatsList) {
-            String tenant = hotKeyCacheStats.getBid() + "_" + hotKeyCacheStats.getBgroup();
+            String tenant = tenant(hotKeyCacheStats.getBid(), hotKeyCacheStats.getBgroup());
             String key = hotKeyCacheStats.getKey();
             long hitCount = hotKeyCacheStats.getHitCount();
             builder.append(String.format("hot_key_cache_hit{tenant=\"%s\",key=\"%s\"} %d\n", tenant, key, hitCount));
         }
 
         return builder.toString();
+    }
+
+    private static String tenant(Object bid, Object bgroup) {
+        if (bid == null || bgroup == null) {
+            return "default_default";
+        }
+        return bid + "_" + bgroup;
     }
 }
