@@ -82,14 +82,16 @@ public class ProxySentinelModeProcessor {
             throw new IllegalArgumentException("illegal 'proxy.sentinel.mode.nodes' in ProxyDynamicConf");
         }
         List<ProxyNode> onlineNodes = new ArrayList<>();
-        if (SentinelModeStatus.getStatus() == SentinelModeStatus.Status.ONLINE) {
-            onlineNodes.add(currentNode);
-        }
         for (ProxyNode node : allNodes) {
-            if (node.equals(currentNode)) continue;
-            boolean online = heartbeat(node);
-            if (online) {
-                onlineNodes.add(node);
+            if (node.equals(currentNode)) {
+                if (SentinelModeStatus.getStatus() == SentinelModeStatus.Status.ONLINE) {
+                    onlineNodes.add(currentNode);
+                }
+            } else {
+                boolean online = heartbeat(node);
+                if (online) {
+                    onlineNodes.add(node);
+                }
             }
         }
         Collections.sort(onlineNodes);
@@ -330,20 +332,21 @@ public class ProxySentinelModeProcessor {
                     connectionMap.remove(consid);
                 }
             }
-            //check current node
-            if (SentinelModeStatus.getStatus() == SentinelModeStatus.Status.ONLINE) {
-                nodeUp(currentNode);
-            } else {
-                nodeDown(currentNode);
-            }
-            //check other nodes
+            //check nodes
             for (ProxyNode node : allNodes) {
-                if (node.equals(currentNode)) continue;
-                boolean online = heartbeat(node);
-                if (online) {
-                    nodeUp(node);
+                if (node.equals(currentNode)) {
+                    if (SentinelModeStatus.getStatus() == SentinelModeStatus.Status.ONLINE) {
+                        nodeUp(currentNode);
+                    } else {
+                        nodeDown(currentNode);
+                    }
                 } else {
-                    nodeDown(node);
+                    boolean online = heartbeat(node);
+                    if (online) {
+                        nodeUp(node);
+                    } else {
+                        nodeDown(node);
+                    }
                 }
             }
         } catch (Exception e) {
