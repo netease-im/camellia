@@ -111,16 +111,18 @@ public class ProxySentinelModeProcessor {
     public CompletableFuture<Reply> sentinelCommands(Command command) {
         RedisCommand redisCommand = command.getRedisCommand();
         ChannelInfo channelInfo = command.getChannelInfo();
-        Connection connection = getNode(channelInfo.getConsid());
+        Connection connection = getConnection(channelInfo.getConsid());
+        connection.channelInfo = channelInfo;
         byte[][] args = command.getObjects();
         if (redisCommand == RedisCommand.AUTH) {
             Reply reply = auth(connection, command);
-            return wrapper(channelInfo, redisCommand, reply);
+            return wrapper(connection, redisCommand, reply);
         }
         if (redisCommand == RedisCommand.HELLO) {
             Reply reply = hello(connection, command);
-            return wrapper(channelInfo, redisCommand, reply);
+            return wrapper(connection, redisCommand, reply);
         }
+        //ping, skip auth
         if (redisCommand == RedisCommand.PING) {
             Reply reply;
             if (connection.subscribe) {
@@ -130,65 +132,76 @@ public class ProxySentinelModeProcessor {
             } else {
                 reply = StatusReply.PONG;
             }
-            return wrapper(channelInfo, redisCommand, reply);
+            return wrapper(connection, redisCommand, reply);
         }
         if (redisCommand == RedisCommand.SENTINEL) {
             if (args.length < 2) {
-                return wrapper(channelInfo, redisCommand, ErrorReply.argNumWrong(redisCommand));
+                return wrapper(connection, redisCommand, ErrorReply.argNumWrong(redisCommand));
             }
             String param = Utils.bytesToString(args[1]);
             //heartbeat, skip auth
             if (param.equalsIgnoreCase(heartbeat)) {
                 if (SentinelModeStatus.getStatus() == SentinelModeStatus.Status.ONLINE) {
-                    return wrapper(channelInfo, redisCommand, StatusReply.OK);
+                    return wrapper(connection, redisCommand, StatusReply.OK);
                 } else {
-                    return wrapper(channelInfo, redisCommand, SENTINEL_MODE_NOT_ONLINE);
+                    return wrapper(connection, redisCommand, SENTINEL_MODE_NOT_ONLINE);
                 }
             }
             //check auth
             if (requirePassword() && !connection.auth) {
-                return wrapper(channelInfo, redisCommand, ErrorReply.NO_AUTH);
+                return wrapper(connection, redisCommand, ErrorReply.NO_AUTH);
             }
             //get master addr by name
             if (!param.equalsIgnoreCase(Utils.bytesToString(RedisSentinelUtils.SENTINEL_GET_MASTER_ADDR_BY_NAME))) {
-                return wrapper(channelInfo, redisCommand, ErrorReply.NOT_SUPPORT);
+                return wrapper(connection, redisCommand, ErrorReply.NOT_SUPPORT);
             }
             if (args.length < 3) {
-                return wrapper(channelInfo, redisCommand, ErrorReply.argNumWrong(redisCommand));
+                return wrapper(connection, redisCommand, ErrorReply.argNumWrong(redisCommand));
             }
             String masterName = Utils.bytesToString(args[2]);
             if (!masterName.equals(this.masterName)) {
-                return wrapper(channelInfo, redisCommand, UNKNOWN_MASTER_NAME);
+                return wrapper(connection, redisCommand, UNKNOWN_MASTER_NAME);
             }
-            Reply reply = masterNode(channelInfo);
-            return wrapper(channelInfo, redisCommand, reply);
+            ProxyNode target = selectOnlineNode(channelInfo);
+            Reply reply;
+            if (target == null) {
+                reply = SENTINEL_MODE_NOT_AVAILABLE;
+            } else {
+                Reply[] replies = new Reply[2];
+                replies[0] = new BulkReply(Utils.stringToBytes(target.getHost()));
+                replies[1] = new BulkReply(Utils.stringToBytes(String.valueOf(target.getPort())));
+                if (channelInfo.getConsid() != null) {
+                    connection.proxyNode = target;
+                }
+                reply = new MultiBulkReply(replies);
+            }
+            return wrapper(connection, redisCommand, reply);
         }
         //check auth
         if (requirePassword() && !connection.auth) {
-            return wrapper(channelInfo, redisCommand, ErrorReply.NO_AUTH);
+            return wrapper(connection, redisCommand, ErrorReply.NO_AUTH);
         }
         //subscribe
         if (redisCommand == RedisCommand.SUBSCRIBE) {
             if (args.length < 2) {
-                return wrapper(channelInfo, redisCommand, ErrorReply.argNumWrong(redisCommand));
+                return wrapper(connection, redisCommand, ErrorReply.argNumWrong(redisCommand));
             }
             String param = Utils.bytesToString(args[1]);
             //only support +switch-master
             if (!param.equalsIgnoreCase(Utils.bytesToString(RedisSentinelUtils.MASTER_SWITCH))) {
-                return wrapper(channelInfo, redisCommand, ErrorReply.NOT_SUPPORT);
+                return wrapper(connection, redisCommand, ErrorReply.NOT_SUPPORT);
             }
-            connection.channelInfo = channelInfo;
             Reply[] replies = new Reply[3];
             replies[0] = new BulkReply(Utils.stringToBytes("subscribe"));
             replies[1] = new BulkReply(Utils.stringToBytes("+switch-master"));
             replies[2] = new IntegerReply(1L);
-            CompletableFuture<Reply> future = wrapper(channelInfo, redisCommand, new MultiBulkReply(replies));
+            CompletableFuture<Reply> future = wrapper(connection, redisCommand, new MultiBulkReply(replies));
             //set subscribe to true after wrapper
             connection.subscribe = true;
             return future;
         }
         //other command not support
-        return wrapper(channelInfo, redisCommand, ErrorReply.NOT_SUPPORT);
+        return wrapper(connection, redisCommand, ErrorReply.NOT_SUPPORT);
     }
 
     private Reply auth(Connection connection, Command command) {
@@ -259,10 +272,9 @@ public class ProxySentinelModeProcessor {
         return false;
     }
 
-    private CompletableFuture<Reply> wrapper(ChannelInfo channelInfo, RedisCommand redisCommand, Reply reply) {
-        Connection node = getNode(channelInfo.getConsid());
-        if (node.subscribe) {
-            channelInfo.getCommandTaskQueue().reply(redisCommand, reply, false, false);
+    private CompletableFuture<Reply> wrapper(Connection connection, RedisCommand redisCommand, Reply reply) {
+        if (connection.subscribe) {
+            connection.channelInfo.getCommandTaskQueue().reply(redisCommand, reply, false, false);
             return null;
         } else {
             CompletableFuture<Reply> future = new CompletableFuture<>();
@@ -300,7 +312,14 @@ public class ProxySentinelModeProcessor {
                 }
                 ChannelInfo info = ChannelMonitor.getChannel(consid);
                 if (info == null) {
-                    connectionMap.remove(consid);
+                    if (connection.channelInfo == null) {
+                        connectionMap.remove(consid);
+                        continue;
+                    }
+                    boolean active = connection.channelInfo.getCtx().channel().isActive();
+                    if (!active) {
+                        connectionMap.remove(consid);
+                    }
                     continue;
                 }
                 if (connection.channelInfo == null) {
@@ -373,24 +392,7 @@ public class ProxySentinelModeProcessor {
         }
     }
 
-
-    private Reply masterNode(ChannelInfo channelInfo) {
-        ProxyNode target = selectOnlineNode(channelInfo);
-        if (target == null) {
-            return SENTINEL_MODE_NOT_AVAILABLE;
-        }
-        Reply[] replies = new Reply[2];
-        replies[0] = new BulkReply(Utils.stringToBytes(target.getHost()));
-        replies[1] = new BulkReply(Utils.stringToBytes(String.valueOf(target.getPort())));
-        if (channelInfo.getConsid() != null) {
-            Connection node = getNode(channelInfo.getConsid());
-            node.channelInfo = channelInfo;
-            node.proxyNode = target;
-        }
-        return new MultiBulkReply(replies);
-    }
-
-    private Connection getNode(String consid) {
+    private Connection getConnection(String consid) {
         return CamelliaMapUtils.computeIfAbsent(connectionMap, consid, k -> new Connection());
     }
 
@@ -432,17 +434,17 @@ public class ProxySentinelModeProcessor {
             //notify
             Set<String> set = new HashSet<>(connectionMap.keySet());
             for (String consid : set) {
-                Connection node = connectionMap.get(consid);
-                if (node == null) continue;
-                if (!node.subscribe) continue;
-                if (node.channelInfo == null || node.proxyNode == null) continue;
-                if (node.proxyNode.equals(proxyNode)) {
-                    ChannelInfo channelInfo = node.channelInfo;
+                Connection connection = connectionMap.get(consid);
+                if (connection == null) continue;
+                if (!connection.subscribe) continue;
+                if (connection.channelInfo == null || connection.proxyNode == null) continue;
+                if (connection.proxyNode.equals(proxyNode)) {
+                    ChannelInfo channelInfo = connection.channelInfo;
                     ProxyNode target = selectOnlineNode(channelInfo);
-                    notify(channelInfo, node.proxyNode, target);
+                    notify(channelInfo, connection.proxyNode, target);
                     logger.info("notify client switch proxy for node down, client = {}, old proxy = {}, new proxy = {}",
-                            channelInfo.getLAddr(), node.proxyNode, target);
-                    node.proxyNode = target;
+                            channelInfo.getLAddr(), connection.proxyNode, target);
+                    connection.proxyNode = target;
                 }
             }
         }
@@ -459,17 +461,17 @@ public class ProxySentinelModeProcessor {
             //notify
             Set<String> set = new HashSet<>(connectionMap.keySet());
             for (String consid : set) {
-                Connection node = connectionMap.get(consid);
-                if (node == null) continue;
-                if (!node.subscribe) continue;
-                if (node.channelInfo == null || node.proxyNode == null) continue;
-                ChannelInfo channelInfo = node.channelInfo;
+                Connection connection = connectionMap.get(consid);
+                if (connection == null) continue;
+                if (!connection.subscribe) continue;
+                if (connection.channelInfo == null || connection.proxyNode == null) continue;
+                ChannelInfo channelInfo = connection.channelInfo;
                 ProxyNode target = selectOnlineNode(channelInfo);
-                if (!node.proxyNode.equals(target)) {
-                    notify(channelInfo, node.proxyNode, target);
+                if (!connection.proxyNode.equals(target)) {
+                    notify(channelInfo, connection.proxyNode, target);
                     logger.info("notify client switch proxy for load balance, client = {}, old proxy = {}, new proxy = {}",
-                            channelInfo.getLAddr(), node.proxyNode, target);
-                    node.proxyNode = target;
+                            channelInfo.getLAddr(), connection.proxyNode, target);
+                    connection.proxyNode = target;
                 }
             }
         }
