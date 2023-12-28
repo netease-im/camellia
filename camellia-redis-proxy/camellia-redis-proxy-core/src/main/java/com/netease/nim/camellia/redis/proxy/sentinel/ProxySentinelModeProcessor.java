@@ -457,32 +457,32 @@ public class ProxySentinelModeProcessor {
     private void nodeDown(ProxyNode proxyNode) {
         lock.lock();
         try {
+            logger.warn("proxy node = {} down!", proxyNode);
             if (onlineNodes.contains(proxyNode)) {
                 //update
                 List<ProxyNode> list = new ArrayList<>(onlineNodes);
                 list.remove(proxyNode);
                 Collections.sort(list);
                 onlineNodes = list;
-                logger.warn("proxy node = {} down!", proxyNode);
-                //notify
-                Set<String> set = new HashSet<>(connectionMap.keySet());
-                for (String consid : set) {
-                    try {
-                        Connection connection = connectionMap.get(consid);
-                        if (connection == null) continue;
-                        if (!connection.subscribe) continue;
-                        if (connection.channelInfo == null || connection.proxyNode == null) continue;
-                        if (connection.proxyNode.equals(proxyNode)) {
-                            ChannelInfo channelInfo = connection.channelInfo;
-                            ProxyNode target = selectOnlineNode(channelInfo);
-                            notify(channelInfo, connection.proxyNode, target);
-                            logger.info("notify client switch proxy for node down, client = {}, old proxy = {}, new proxy = {}",
-                                    channelInfo.getLAddr(), connection.proxyNode, target);
-                            connection.proxyNode = target;
-                        }
-                    } catch (Exception e) {
-                        logger.error("notify client switch proxy for node down error, consid = {}", consid, e);
+            }
+            //notify
+            Set<String> set = new HashSet<>(connectionMap.keySet());
+            for (String consid : set) {
+                try {
+                    Connection connection = connectionMap.get(consid);
+                    if (connection == null) continue;
+                    if (!connection.subscribe) continue;
+                    if (connection.channelInfo == null || connection.proxyNode == null) continue;
+                    if (connection.proxyNode.equals(proxyNode)) {
+                        ChannelInfo channelInfo = connection.channelInfo;
+                        ProxyNode target = selectOnlineNode(channelInfo);
+                        notify(channelInfo, connection.proxyNode, target);
+                        logger.info("notify client switch proxy for node down, client = {}, old proxy = {}, new proxy = {}",
+                                channelInfo.getLAddr(), connection.proxyNode, target);
+                        connection.proxyNode = target;
                     }
+                } catch (Exception e) {
+                    logger.error("notify client switch proxy for node down error, consid = {}", consid, e);
                 }
             }
         } finally {
@@ -500,25 +500,25 @@ public class ProxySentinelModeProcessor {
                 Collections.sort(list);
                 onlineNodes = list;
                 logger.info("proxy node = {} up!", proxyNode);
-                //notify
-                Set<String> set = new HashSet<>(connectionMap.keySet());
-                for (String consid : set) {
-                    try {
-                        Connection connection = connectionMap.get(consid);
-                        if (connection == null) continue;
-                        if (!connection.subscribe) continue;
-                        if (connection.channelInfo == null || connection.proxyNode == null) continue;
-                        ChannelInfo channelInfo = connection.channelInfo;
-                        ProxyNode target = selectOnlineNode(channelInfo);
-                        if (!connection.proxyNode.equals(target)) {
-                            notify(channelInfo, connection.proxyNode, target);
-                            logger.info("notify client switch proxy for load balance, client = {}, old proxy = {}, new proxy = {}",
-                                    channelInfo.getLAddr(), connection.proxyNode, target);
-                            connection.proxyNode = target;
-                        }
-                    } catch (Exception e) {
-                        logger.error("notify client switch proxy for load balance, consid = {}", consid, e);
+            }
+            //notify
+            Set<String> set = new HashSet<>(connectionMap.keySet());
+            for (String consid : set) {
+                try {
+                    Connection connection = connectionMap.get(consid);
+                    if (connection == null) continue;
+                    if (!connection.subscribe) continue;
+                    if (connection.channelInfo == null || connection.proxyNode == null) continue;
+                    ChannelInfo channelInfo = connection.channelInfo;
+                    ProxyNode target = selectOnlineNode(channelInfo);
+                    if (!connection.proxyNode.equals(target)) {
+                        notify(channelInfo, connection.proxyNode, target);
+                        logger.info("notify client switch proxy for load balance, client = {}, old proxy = {}, new proxy = {}",
+                                channelInfo.getLAddr(), connection.proxyNode, target);
+                        connection.proxyNode = target;
                     }
+                } catch (Exception e) {
+                    logger.error("notify client switch proxy for load balance, consid = {}", consid, e);
                 }
             }
         } finally {
