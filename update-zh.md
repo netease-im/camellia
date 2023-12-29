@@ -7,6 +7,7 @@
 * camellia-delay-queue新增使用prometheus/grafana监控的能力
 * camellia-id-gen新增使用prometheus/grafana监控的能力
 * camellia-redis-proxy支持伪redis-sentinel模式，可以模拟sentinel主从切换来组成高可用集群
+* camellia-redis-proxy支持使用-D启动参数来指定自定义配置文件
 
 ### 更新
 * camellia-redis-proxy的info命令，新增redis_mode字段的返回

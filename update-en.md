@@ -8,6 +8,7 @@
 * camellia-delay-queue support prometheus/grafana
 * camellia-id-gen support prometheus/grafana
 * camellia-redis-proxy support redis-sentinel-mode for high availability proxy cluster
+* camellia-redis-proxy support use `-D` to specify custom config file
 
 ### update
 * camellia-redis-proxy, info command, add redis_mode field
