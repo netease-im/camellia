@@ -9,12 +9,13 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * support double(multi) write
 * support double(multi) read
 * support set password
-* support SELECT commands, only upstream do not contain redis-cluster(in this case, only support SELECT 0), upstream can be redis-standalone/redis-sentinel/redis-proxies or their compose of sharding/read-write-seperate
+* support SELECT commands, only upstream do not contain redis-cluster(in this case, only support SELECT 0), upstream can be redis-standalone/redis-sentinel/redis-proxies or their compose of sharding/read-write-separate
 * support blocking commands, such as BLPOP/BRPOP/BRPOPLPUSH/BZPOPMIN/BZPOPMAX and so on
 * support pub-sub commands
 * support transaction command, only when proxy route to redis-standalone/redis-sentinel/redis-cluster with no-sharding/no-read-write-separate
 * support stream commands of redis5.0
 * support scan command of redis-standalone/redis-sentinel/redis-cluster, even custom sharding
+* supported commands, see: [supported_commands](supported_commands.md)
 * support custom sharding
 * support ssl/tls, both client to proxy and proxy to upstream redis
 * support unix-domain-socket, client can access proxy by uds
@@ -28,137 +29,6 @@ camellia-redis-proxy is a high performance proxy for redis, which base on netty4
 * provide default register/discovery component depends on zookeeper, if client's language is java, then you can adjust slightly by use RedisProxyJedisPool instead of JedisPool  
 * provide spring-boot-starter, then you can use proxy in register/discovery mode when client is SpringRedisTemplate
 
-
-## Supported Commands
-* Full Supported
-```
-##DataBase
-PING,AUTH,HELLO,ECHO,QUIT,EXISTS,DEL,TYPE,EXPIRE,
-EXPIREAT,TTL,PERSIST,PEXPIRE,PEXPIREAT,PTTL,SORT,UNLINK,TOUCH,DUMP,RESTORE,SCAN,COMMAND,CONFIG,EXPIRETIME,PEXPIRETIME,SORT_RO,
-##String
-SET,GET,GETSET,MGET,SETNX,SETEX,MSET,DECRBY,DECR,INCRBY,INCR,APPEND,
-STRLEN,INCRBYFLOAT,PSETEX,SETRANGE,GETRANGE,SUBSTR,GETEX,GETDEL,
-##Hash
-HSET,HGET,HSETNX,HMSET,HMGET,HINCRBY,HEXISTS,HDEL,HLEN,HKEYS,
-HVALS,HGETALL,HINCRBYFLOAT,HSCAN,HSTRLEN,HRANDFIELD,
-##List
-RPUSH,LPUSH,LLEN,LRANGE,LTRIM,LINDEX,LSET,LREM,LPOP,RPOP,LINSERT,LPUSHX,RPUSHX,LPOS,
-##Set
-SADD,SMEMBERS,SREM,SPOP,SCARD,SISMEMBER,SRANDMEMBER,SSCAN,SMISMEMBER,
-##ZSet
-ZADD,ZINCRBY,ZRANK,ZCARD,ZSCORE,ZCOUNT,ZRANGE,ZRANGEBYSCORE,ZRANGEBYLEX,
-ZREVRANK,ZREVRANGE,ZREVRANGEBYSCORE,ZREVRANGEBYLEX,ZREM,
-ZREMRANGEBYRANK,ZREMRANGEBYSCORE,ZREMRANGEBYLEX,ZLEXCOUNT,ZSCAN,
-ZPOPMAX,ZPOPMIN,ZMSCORE,ZRANDMEMBER,
-##BitMap
-SETBIT,GETBIT,BITPOS,BITCOUNT,BITFIELD,BITFIELD_RO,
-##Geo
-GEOADD,GEODIST,GEOHASH,GEOPOS,GEORADIUS,GEORADIUSBYMEMBER,GEOSEARCH,
-##HyperLogLog
-PFADD
-##Stream
-XACK,XADD,XCLAIM,XDEL,XLEN,XPENDING,XRANGE,XREVRANGE,XTRIM,XGROUP,XINFO,
-##BloomFilter
-BF.ADD,BF.EXISTS,BF.INFO,BF.INSERT,BF.LOADCHUNK,BF.MADD,BF.MEXISTS,BF.SCANDUMP,
-##TairZSet
-EXZADD,EXZINCRBY,EXZSCORE,EXZRANGE,EXZREVRANGE,EXZRANGEBYSCORE,EXZREVRANGEBYSCORE,
-EXZRANGEBYLEX,EXZREVRANGEBYLEX,EXZREM,EXZREMRANGEBYSCORE,EXZREMRANGEBYRANK,EXZREMRANGEBYLEX,
-EXZCARD,EXZRANK,EXZREVRANK,EXZCOUNT,EXZMSCORE,EXZLEXCOUNT,EXZRANDMEMBER,EXZSCAN,EXZPOPMAX,EXZPOPMIN,
-##TairHash
-EXHSET,EXHGET,EXHMSET,EXHPEXPIREAT,EXHPEXPIRE,EXHEXPIREAT,EXHEXPIRE,EXHPERSIST,EXHPTTL,EXHTTL,
-EXHVER,EXHSETVER,EXHINCRBY,EXHINCRBYFLOAT,EXHGETWITHVER,EXHMGET,EXHMGETWITHVER,EXHDEL,EXHLEN,
-EXHEXISTS,EXHSTRLEN,EXHKEYS,EXHVALS,EXHGETALL,EXHGETALLWITHVER,EXHSCAN,
-##TairString
-EXSET,EXGET,EXSETVER,EXINCRBY,EXINCRBYFLOAT,EXCAS,EXCAD,EXAPPEND,EXPREPEND,EXGAE,
-##RedisJSON
-JSON.ARRAPPEND,JSON.ARRINDEX,JSON.ARRINSERT,JSON.ARRLEN,JSON.ARRPOP,JSON.ARRTRIM,JSON.CLEAR,
-JSON.DEL,JSON.FORGET,JSON.GET,JSON.MGET,JSON.NUMINCRBY,JSON.NUMMULTBY,JSON.OBJKEYS,JSON.OBJLEN,
-JSON.RESP,JSON.SET,JSON.STRAPPEND,JSON.STRLEN,JSON.TOGGLE,JSON.TYPE,
-##CuckooFilter
-CF.ADD,CF.ADDNX,CF.COUNT,CF.DEL,CF.EXISTS,CF.INFO,CF.INSERT,
-CF.INSERTNX,CF.LOADCHUNK,CF.MEXISTS,CF.SCANDUMP,
-```
-
-* Restrictive Supported  
-support only when all the keys in these command route to same redis-server or same redis-cluster slot  
-especially, blocking command don't support multi-write  
-```
-##DataBase
-RENAME,RENAMENX,
-##String
-MSETNX,LCS,
-##Set
-SINTER,SINTERSTORE,SUNION,SUNIONSTORE,SDIFF,SDIFFSTORE,SMOVE,SINTERCARD
-##List
-BLPOP,BRPOP,RPOPLPUSH,BRPOPLPUSH,LMOVE,BLMOVE,LMPOP,BLMPOP,
-##ZSet
-ZINTER,ZINTERSTORE,ZINTERCARD,ZUNION,ZUNIONSTORE,ZDIFF,ZDIFFSTORE,
-BZPOPMAX,BZPOPMIN,ZRANGESTORE,ZMPOP,BZMPOP,
-##HyperLogLog
-PFCOUNT,PFMERGE,
-##BitMap
-BITOP,
-##Script
-EVAL,EVALSHA,EVAL_RO,EVALSHA_RO,SCRIPT,
-##Stream
-XREADGROUP,XREAD,
-##Geo
-GEOSEARCHSTORE,
-##TairZSet
-EXZUNIONSTORE,EXZUNION,EXZINTERSTORE,EXZINTER,EXZINTERCARD,
-EXZDIFFSTORE,EXZDIFF,EXBZPOPMIN,EXBZPOPMAX,
-##FUNCTION
-FUNCTION,FCALL,FCALL_RO,
-```
-
-* Partially Supported 1   
-only support while no custom sharding  
-since 1.1.4, PUBSUB support multi-write, will sub first write redis resource, pub all write redis resource   
-```
-##PUBSUB(will sub first write redis resource, pub all write redis resource)
-SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,SSUBSCRIBE,SUNSUBSCRIBE,SPUBLISH,
-```
-
-* Partially Supported 2   
-only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel or redis-cluster)   
-since 1.2.6, TRANSACTION commands support multi-write only when read-resources without multi and read-resource equals to the first write resource  
-```
-##TRANSACTION(keys must in same slot)
-MULTI,DISCARD,EXEC,WATCH,UNWATCH,
-##RedisSearch
-FT.LIST,FT.AGGREGATE,FT.ALIASADD,FT.ALIASDEL,FT.ALIASUPDATE,FT.ALTER,FT.CONFIG,
-FT.CREATE,FT.CURSOR,FT.DICTADD,FT.DICTDEL,FT.DICTDUMP,FT.DROPINDEX,FT.EXPLAIN,
-FT.EXPLAINCLI,FT.INFO,FT.PROFILE,FT.SEARCH,FT.SPELLCHECK,FT.SYNDUMP,
-FT.SYNUPDATE,FT.TAGVALS,
-```
-
-* Partially Supported 3   
-only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel)   
-```
-##DataBase
-KEYS,RANDOMKEY,
-``` 
-
-* Partially Supported 4   
-only support in special case or special parameter
-```
-##DataBase
-#if upstream contains redis-cluster, only support 'select 0', other-wise, support select xx
-SELECT,
-#only support 'CONFIG GET XXX'
-CONFIG,
-#only support 'CLIENT LIST'、'CLIENT INFO'、'CLIENT GETNAME'、'CLIENT SETNAME'
-CLIENT
-#only support RESP2
-HELLO,
-#only proxy start with cluster-mode support
-#only support: 'cluster info', 'cluster nodes', 'cluser slots', 'cluser proxy_heartbeat'
-CLUSTER,
-#direct reply OK for proxy start with cluster-mode
-ASKING,
-#proxy info
-INFO,
-``` 
 
 ## Quick Start
 1) you need a spring-boot project first, then add dependency in your pom.xml，like this（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   

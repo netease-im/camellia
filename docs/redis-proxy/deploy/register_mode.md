@@ -3,7 +3,7 @@
 注册发现模式(使用zk/eureka/consul), 如下:  
   <img src="redis-proxy-zk.png" width="60%" height="60%">
 
-此时，你需要在客户端侧实现一下负载均衡策略
+此时，你需要在客户端侧实现一下负载均衡策略，此时proxy仍然是当作单点redis去访问的
 
 
 ### zk为例

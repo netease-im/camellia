@@ -8,6 +8,7 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 支持其他proxy作为后端（如双写迁移场景），如 [twemproxy](https://github.com/twitter/twemproxy) 、[codis](https://github.com/CodisLabs/codis) 等
 * 支持 [kvrocks](https://github.com/apache/kvrocks) 、 [pika](https://github.com/OpenAtomFoundation/pika) 、 [tendis](https://github.com/Tencent/Tendis) 等作为后端
 * 支持普通的GET/SET/EVAL，也支持MGET/MSET，也支持阻塞型的BLPOP，也支持PUBSUB和TRANSACTION，也支持STREAMS/JSON/SEARCH，也支持TAIR_HASH/TAIR_ZSET/TAIR_STRING
+* 支持的命令列表，具体见：[supported_commands](supported_commands.md)
 * 支持自定义分片
 * 支持读写分离
 * 支持双（多）写，可以proxy直连双写，也可以基于mq（如kafka）双写，也可以基于插件体系自定义双写规则
@@ -35,137 +36,6 @@ camellia-redis-proxy是一款高性能的redis代理，使用netty4开发
 * 提供了一个默认的注册发现实现组件（依赖zookeeper），如果端侧是java，则可以很简单的将JedisPool替换为RedisProxyJedisPool，即可接入redis proxy  
 * 提供了一个spring-boot-starter用于SpringRedisTemplate以注册发现模式接入proxy
 * 支持整合hbase实现string/zset/hash等数据结构的冷热分离存储操作，具体见: [redis-proxy-hbase](/docs/redis-proxy-hbase/redis-proxy-hbase.md)
-
-## 支持的命令
-* 完整支持
-```
-##DataBase
-PING,AUTH,HELLO,ECHO,QUIT,EXISTS,DEL,TYPE,EXPIRE,
-EXPIREAT,TTL,PERSIST,PEXPIRE,PEXPIREAT,PTTL,SORT,UNLINK,TOUCH,DUMP,RESTORE,SCAN,COMMAND,CONFIG,EXPIRETIME,PEXPIRETIME,SORT_RO,
-##String
-SET,GET,GETSET,MGET,SETNX,SETEX,MSET,DECRBY,DECR,INCRBY,INCR,APPEND,
-STRLEN,INCRBYFLOAT,PSETEX,SETRANGE,GETRANGE,SUBSTR,GETEX,GETDEL,
-##Hash
-HSET,HGET,HSETNX,HMSET,HMGET,HINCRBY,HEXISTS,HDEL,HLEN,HKEYS,
-HVALS,HGETALL,HINCRBYFLOAT,HSCAN,HSTRLEN,HRANDFIELD,
-##List
-RPUSH,LPUSH,LLEN,LRANGE,LTRIM,LINDEX,LSET,LREM,LPOP,RPOP,LINSERT,LPUSHX,RPUSHX,LPOS,
-##Set
-SADD,SMEMBERS,SREM,SPOP,SCARD,SISMEMBER,SRANDMEMBER,SSCAN,SMISMEMBER,
-##ZSet
-ZADD,ZINCRBY,ZRANK,ZCARD,ZSCORE,ZCOUNT,ZRANGE,ZRANGEBYSCORE,ZRANGEBYLEX,
-ZREVRANK,ZREVRANGE,ZREVRANGEBYSCORE,ZREVRANGEBYLEX,ZREM,
-ZREMRANGEBYRANK,ZREMRANGEBYSCORE,ZREMRANGEBYLEX,ZLEXCOUNT,ZSCAN,
-ZPOPMAX,ZPOPMIN,ZMSCORE,ZRANDMEMBER,
-##BitMap
-SETBIT,GETBIT,BITPOS,BITCOUNT,BITFIELD,BITFIELD_RO,
-##Geo
-GEOADD,GEODIST,GEOHASH,GEOPOS,GEORADIUS,GEORADIUSBYMEMBER,GEOSEARCH,
-##HyperLogLog
-PFADD
-##Stream
-XACK,XADD,XCLAIM,XDEL,XLEN,XPENDING,XRANGE,XREVRANGE,XTRIM,XGROUP,XINFO,
-##BloomFilter
-BF.ADD,BF.EXISTS,BF.INFO,BF.INSERT,BF.LOADCHUNK,BF.MADD,BF.MEXISTS,BF.SCANDUMP,
-##TairZSet
-EXZADD,EXZINCRBY,EXZSCORE,EXZRANGE,EXZREVRANGE,EXZRANGEBYSCORE,EXZREVRANGEBYSCORE,
-EXZRANGEBYLEX,EXZREVRANGEBYLEX,EXZREM,EXZREMRANGEBYSCORE,EXZREMRANGEBYRANK,EXZREMRANGEBYLEX,
-EXZCARD,EXZRANK,EXZREVRANK,EXZCOUNT,EXZMSCORE,EXZLEXCOUNT,EXZRANDMEMBER,EXZSCAN,EXZPOPMAX,EXZPOPMIN,
-##TairHash
-EXHSET,EXHGET,EXHMSET,EXHPEXPIREAT,EXHPEXPIRE,EXHEXPIREAT,EXHEXPIRE,EXHPERSIST,EXHPTTL,EXHTTL,
-EXHVER,EXHSETVER,EXHINCRBY,EXHINCRBYFLOAT,EXHGETWITHVER,EXHMGET,EXHMGETWITHVER,EXHDEL,EXHLEN,
-EXHEXISTS,EXHSTRLEN,EXHKEYS,EXHVALS,EXHGETALL,EXHGETALLWITHVER,EXHSCAN,
-##TairString
-EXSET,EXGET,EXSETVER,EXINCRBY,EXINCRBYFLOAT,EXCAS,EXCAD,EXAPPEND,EXPREPEND,EXGAE,
-##RedisJSON
-JSON.ARRAPPEND,JSON.ARRINDEX,JSON.ARRINSERT,JSON.ARRLEN,JSON.ARRPOP,JSON.ARRTRIM,JSON.CLEAR,
-JSON.DEL,JSON.FORGET,JSON.GET,JSON.MGET,JSON.NUMINCRBY,JSON.NUMMULTBY,JSON.OBJKEYS,JSON.OBJLEN,
-JSON.RESP,JSON.SET,JSON.STRAPPEND,JSON.STRLEN,JSON.TOGGLE,JSON.TYPE,
-##CuckooFilter
-CF.ADD,CF.ADDNX,CF.COUNT,CF.DEL,CF.EXISTS,CF.INFO,CF.INSERT,
-CF.INSERTNX,CF.LOADCHUNK,CF.MEXISTS,CF.SCANDUMP,
-```
-
-* 限制性支持
-当且仅当以下命令涉及的key被分在相同分片，或者被分在redis cluster的相同slot下  
-特别的，如果是阻塞式的命令，则不允许双（多）写  
-```
-##DataBase
-RENAME,RENAMENX,
-##String
-MSETNX,LCS,
-##Set
-SINTER,SINTERSTORE,SUNION,SUNIONSTORE,SDIFF,SDIFFSTORE,SMOVE,SINTERCARD
-##List
-BLPOP,BRPOP,RPOPLPUSH,BRPOPLPUSH,LMOVE,BLMOVE,LMPOP,BLMPOP,
-##ZSet
-ZINTER,ZINTERSTORE,ZINTERCARD,ZUNION,ZUNIONSTORE,ZDIFF,ZDIFFSTORE,
-BZPOPMAX,BZPOPMIN,ZRANGESTORE,ZMPOP,BZMPOP,
-##HyperLogLog
-PFCOUNT,PFMERGE,
-##BitMap
-BITOP,
-##Script
-EVAL,EVALSHA,EVAL_RO,EVALSHA_RO,SCRIPT,
-##Stream
-XREADGROUP,XREAD,
-##Geo
-GEOSEARCHSTORE,
-##TairZSet
-EXZUNIONSTORE,EXZUNION,EXZINTERSTORE,EXZINTER,EXZINTERCARD,
-EXZDIFFSTORE,EXZDIFF,EXBZPOPMIN,EXBZPOPMAX,
-##FUNCTION
-FUNCTION,FCALL,FCALL_RO,
-```
-
-* 部分支持1  
-当且仅当路由不是自定义分片    
-备注：1.1.4开始，PUBSUB命令支持双写（会订阅双写中的第一个地址，发布给双写中的所有地址）  
-```
-##PUBSUB(will sub first write redis resource, pub all write redis resource)
-SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,SSUBSCRIBE,SUNSUBSCRIBE,SPUBLISH,
-```
-
-* 部分支持2  
-当且仅当路由后端是单个redis-standalone或者单个redis-sentinel或者单个redis-cluster  
-备注：1.2.6版本开始，TRANSACTION支持双写，但是要求读地址只能配置一个，且必须和写地址的第一个是一样的     
-```
-##TRANSACTION(keys must in same slot)
-MULTI,DISCARD,EXEC,WATCH,UNWATCH,
-##RedisSearch
-FT.LIST,FT.AGGREGATE,FT.ALIASADD,FT.ALIASDEL,FT.ALIASUPDATE,FT.ALTER,FT.CONFIG,
-FT.CREATE,FT.CURSOR,FT.DICTADD,FT.DICTDEL,FT.DICTDUMP,FT.DROPINDEX,FT.EXPLAIN,
-FT.EXPLAINCLI,FT.INFO,FT.PROFILE,FT.SEARCH,FT.SPELLCHECK,FT.SYNDUMP,
-FT.SYNUPDATE,FT.TAGVALS,
-```
-
-* 部分支持3
-当且仅当路由后端是单个redis-standalone或者单个redis-sentinel  
-```
-##DataBase
-KEYS,RANDOMKEY,
-``` 
-
-* 部分支持4
-仅支持部分参数
-```
-##DataBase
-#if upstream contains redis-cluster, only support 'select 0', other-wise, support select xx
-SELECT,
-#only support 'CONFIG GET XXX'
-CONFIG,
-#only support 'CLIENT LIST'、'CLIENT INFO'、'CLIENT GETNAME'、'CLIENT SETNAME'
-CLIENT
-#only support RESP2
-HELLO,
-#only proxy start with cluster-mode support
-#only support: 'cluster info', 'cluster nodes', 'cluser slots', 'cluser proxy_heartbeat'
-CLUSTER,
-#direct reply OK for proxy start with cluster-mode
-ASKING,
-#proxy info
-INFO,
-``` 
 
 ## 快速开始一
 1) 首先创建一个spring-boot的工程，然后添加以下依赖（最新1.2.21），如下：（see [sample-code](/camellia-samples/camellia-redis-proxy-samples)）:   
@@ -253,10 +123,11 @@ OK
 
 ## 部署和接入
 在生产环境，需要部署至少2个proxy实例来保证高可用，并且proxy是可以水平扩展的，包括：
-* 基于lb组成集群（如lvs等）
+* 基于lb组成集群（如lvs等，或者k8s中的service等）
 * 基于注册中心组成集群
 * 伪redis-cluster模式
 * 伪redis-sentinel模式
+* jvm-in-sidecar模式
 * 优雅上下线
 
 具体可见：[部署和接入](deploy/deploy.md)

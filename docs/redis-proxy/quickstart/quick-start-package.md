@@ -11,9 +11,8 @@ cd camellia-redis-proxy-1.2.21/
 * application.yml
 * logback.xml
 * camellia-redis-proxy.properties
-* resource-table.json
 
-按需调整start.sh的启动参数（主要是JVM参数），默认参数如下（确保已经安装了jdk8或以上，并添加到path）：
+按需调整start.sh的启动参数（主要是JVM参数），默认参数如下（确保已经安装了`jdk1.8.0_202`或以上，并添加到path）：
 ```
 java -XX:+UseG1GC -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher
 ```
@@ -21,16 +20,6 @@ java -XX:+UseG1GC -Xms4096m -Xmx4096m -server org.springframework.boot.loader.Ja
 ```
 ./start.sh
 ```
-
-如果是在docker里，则调用start_in_docker.sh，默认参数如下（主要是添加了UseContainerSupport，需要jdk8u191以上）：
-```
-java -XX:+UseG1GC -XX:+UseContainerSupport -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher
-```
-启动如下：
-```
-./start_in_docker.sh
-```
-
 
 特别的，在某些业务场景中下，可能希望proxy的可执行文件与配置文件application.yml分开，此时可以把tar包重新打成jar包，并配合spring提供的spring.config.location参数来指定application.yml，具体如下：
 ```
@@ -41,20 +30,30 @@ jar -cvf0M camellia-redis-proxy.jar BOOT-INF/ META-INF/ org/
 ```
 此时，就会生成一个camellia-redis-proxy.jar，随后使用java -jar命令启动即可，如下：
 ```
-java -XX:+UseG1GC -Xms4096m -Xmx4096m -server -jar camellia-redis-proxy.jar --spring.config.location=file:/xxx/xxx/application.yml
-```
-如果是在docker里，记得添加UseContainerSupport参数，如下：
-```
-java -XX:+UseG1GC -XX:+UseContainerSupport -Xms4096m -Xmx4096m -server -jar camellia-redis-proxy.jar --spring.config.location=file:/xxx/xxx/application.yml
+java -XX:+UseG1GC -Xms4096m -Xmx4096m -server -jar camellia-redis-proxy.jar  
 ```
 
-如果需要使用jdk17/jdk21运行proxy，则增加启动参数`-Dio.netty.tryReflectionSetAccessible=true --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.math=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.security=ALL-UNNAMED --add-opens java.base/java.text=ALL-UNNAMED --add-opens java.base/java.time=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/jdk.internal.access=ALL-UNNAMED --add-opens java.base/jdk.internal.misc=ALL-UNNAMED --add-opens java.base/sun.net.util=ALL-UNNAMED`，如下：
+proxy默认会去`./BOOT-INF/classes/`目录下加载配置文件，你可以通过以下启动参数去指定配置文件（application.yml、logback.xml、camellia-redis-proxy.properties/camellia-redis-proxy.json）
 ```
-java -XX:+UseG1GC -Dio.netty.tryReflectionSetAccessible=true --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.math=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.security=ALL-UNNAMED --add-opens java.base/java.text=ALL-UNNAMED --add-opens java.base/java.time=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/jdk.internal.access=ALL-UNNAMED --add-opens java.base/jdk.internal.misc=ALL-UNNAMED --add-opens java.base/sun.net.util=ALL-UNNAMED -Xms4096m -Xmx4096m -server org.springframework.boot.loader.JarLauncher
+--spring.config.location=file:/xxx/xxx/application.yml
+```
+```
+-Dlogging.config=/xxx/xxx/logback.xml
+```
+```
+-Ddynamic.conf.file.path=/xxx/xxx/camellia-redis-proxy.properties
+-Ddynamic.conf.file.path=/xxx/xxx/camellia-redis-proxy.json
 ```
 
-其他：
 
-How to build snapshot *.tar.gz package: [build-snapshot-package](build-snapshot-package.md)
 
-How to run Camellia Redis Proxy server using service: [run-as-service](run-as-services.md)
+others：  
+
+* How to run in jdk11/jdk17/jdk21, [jdk17](jdk17.md)  
+
+* How to build/run by spring-boot3/jdk21/docker, [camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)  
+
+* How to build latest snapshot *.tar.gz package: [build-snapshot-package](build-snapshot-package.md)  
+
+* How to run Camellia Redis Proxy server using service: [run-as-service](run-as-services.md)  
+
