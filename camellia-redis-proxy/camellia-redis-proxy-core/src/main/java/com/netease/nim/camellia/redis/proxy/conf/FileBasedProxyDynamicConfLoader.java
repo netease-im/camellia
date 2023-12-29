@@ -67,6 +67,17 @@ public class FileBasedProxyDynamicConfLoader implements WritableProxyDynamicConf
                         }
                     }
                 }
+                String path = System.getProperty(DYNAMIC_CONF_FILE_PATH);
+                if (path != null) {
+                    FileUtils.FileInfo info = FileUtils.readByFilePath(path);
+                    if (info != null && info.getFileContent() != null) {
+                        Map<String, String> map = ConfigurationUtil.contentToMap(info.getFileContent(), ConfigContentType.properties);
+                        conf.putAll(map);
+                        if (info.getFilePath() != null) {
+                            targetFilePath = info.getFilePath();
+                        }
+                    }
+                }
                 return conf;
             } catch (Exception e) {
                 throw new IllegalArgumentException("load error, fileName = " + fileName, e);
