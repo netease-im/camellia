@@ -1,6 +1,6 @@
 [ENGLISH](update-en.md)
 
-# 1.2.22（2023/12/xx）
+# 1.2.22（2023/12/29）
 ### 新增
 * camellia-redis-proxy增强使用prometheus/grafana进行监控的能力
 * camellia-hot-key增强使用prometheus/grafana进行监控的能力

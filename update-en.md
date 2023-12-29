@@ -1,7 +1,7 @@
 [中文版](update-zh.md)
 
 
-# 1.2.22（2023/12/xx）
+# 1.2.22（2023/12/29）
 ### add
 * camellia-redis-proxy enhances prometheus/grafana
 * camellia-hot-key enhances prometheus/grafana

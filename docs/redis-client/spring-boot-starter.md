@@ -7,7 +7,7 @@
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis-spring-boot-starter</artifactId>
-  <version>1.2.21</version>
+  <version>1.2.22</version>
 </dependency>
 ```
 * 底层依赖jedis-3.6.3
@@ -15,7 +15,7 @@
 <dependency>
   <groupId>com.netease.nim</groupId>
   <artifactId>camellia-redis3-spring-boot-starter</artifactId>
-  <version>1.2.21</version>
+  <version>1.2.22</version>
 </dependency>
 ```
 

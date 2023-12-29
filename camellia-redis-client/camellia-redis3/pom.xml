@@ -4,19 +4,19 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-redis3</artifactId>
-	<version>1.2.22-SNAPSHOT</version>
+	<version>1.2.22</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-redis-client</artifactId>
-		<version>1.2.22-SNAPSHOT</version>
+		<version>1.2.22</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-base</artifactId>
-			<version>1.2.22-SNAPSHOT</version>
+			<version>1.2.22</version>
 		</dependency>
 		<dependency>
 			<groupId>redis.clients</groupId>
@@ -26,7 +26,7 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-proxy-discovery-jedis3</artifactId>
-			<version>1.2.22-SNAPSHOT</version>
+			<version>1.2.22</version>
 		</dependency>
     </dependencies>
 	<build>

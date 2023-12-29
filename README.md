@@ -58,14 +58,16 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 提供了多种id生成算法，开箱即用，包括：  
 * 雪花算法（支持设置单元标记）   
 * 严格递增的id生成算法（步长支持动态调整）  
-* 趋势递增的id生成算法（支持设置单元标记，支持多单元id同步）         
+* 趋势递增的id生成算法（支持设置单元标记，支持多单元id同步）    
+* 支持使用prometheus/grafana来监控id-gen-server集群   
 [快速开始](/docs/id-gen/id-gen.md)
 
 ### camellia-delay-queue
 基于redis实现的延迟队列服务：
 * 独立部署delay-queue-server服务器，支持水平扩展，支持多topic，以http协议对外提供服务（短轮询or长轮询），支持多语言客户端
 * 提供了一个java-sdk，并且支持以spring-boot方式快速接入
-* 支持丰富的监控数据    
+* 支持丰富的监控数据     
+* 支持使用prometheus/grafana来监控delay-queue-server集群    
 [快速开始](/docs/delay-queue/delay-queue.md)
 
 ### camellia-hot-key  
@@ -75,15 +77,16 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 * 支持自定义数据源（内置：本地配置文件、nacos、etcd，也可以自己实现）  
 * 支持自定义注册中心（内置：zk、eureka，也可以自己实现）  
 * 支持丰富的监控数据     
+* 支持使用prometheus/grafana来监控hot-key-server集群   
 [快速开始](/docs/hot-key/hot-key.md)  
 
 
 ## RELEASE版本
-最新版本是1.2.21，已经发布到maven中央仓库（2023/12/19）  
+最新版本是1.2.22，已经发布到maven中央仓库（2023/12/29）  
 [更新日志](/update-zh.md)  
 
 ## SNAPSHOT版本
-当前最新是1.2.22-SNAPSHOT  
+当前最新是1.2.23-SNAPSHOT  
 ```xml
 <repositories>
   <repository>
