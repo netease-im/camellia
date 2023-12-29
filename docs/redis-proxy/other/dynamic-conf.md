@@ -98,7 +98,23 @@ camellia-redis-proxy:
 ```
 上述配置表示，proxy除了读取默认的camellia-redis-proxy.properties之外（可以没有这个文件），还会读取/xx/xx/custom.properties，后者覆盖前者  
 
-此外，你也可以使用json格式的配置文件，使用JsonFileBasedProxyDynamicConfLoader替换FileBasedProxyDynamicConfLoader即可
+或者你也可以在启动时增加`-Ddynamic.conf.file.path=/xxx/xxx/camellia-redis-proxy.properties`启动参数来指定配置文件的绝对路径，这个优先级是最高的，会覆盖前面的
+
+此外，你也可以使用json格式的配置文件，使用JsonFileBasedProxyDynamicConfLoader替换FileBasedProxyDynamicConfLoader即可，以下两个配置是等价的：  
+```properties
+k1=v1
+k2=v2
+k3={"k":"v"}
+```
+```json
+{
+  "k1": "v1",
+  "k2": "v2",
+  "k3": {
+    "k": "v"
+  }
+}
+```
 
 ### ApiBasedProxyDynamicConfLoader
 这是proxy内置的另外一个loader，读取的是camellia-config服务器，具体见：[camellia-config](/docs/config/config.md)  
