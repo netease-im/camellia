@@ -84,6 +84,9 @@ OK
 3) (nil)
 ```
 
+## Quick Start by release package
+see [quick_start](quickstart/quick-start-package.md)  
+
 ## Different Yaml Config Samples
 ### 1) route to standalone redis server  
 * application.yml  
