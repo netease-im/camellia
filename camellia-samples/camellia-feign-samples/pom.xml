@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-feign-samples</artifactId>
-	<version>1.2.22</version>
+	<version>1.2.23-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-samples</artifactId>
-		<version>1.2.22</version>
+		<version>1.2.23-SNAPSHOT</version>
 	</parent>
 
 	<dependencyManagement>
@@ -43,7 +43,7 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-feign-spring-boot-starter</artifactId>
-			<version>1.2.22</version>
+			<version>1.2.23-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.openfeign</groupId>
