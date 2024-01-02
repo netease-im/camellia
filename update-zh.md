@@ -1,7 +1,7 @@
 [ENGLISH](update-en.md)
 
 
-# 1.2.23（2024/01/xx）
+# 1.2.23（2024/01/02）
 ### 新增
 * camellia-redis-proxy支持对后端redis连接初始化的延迟加载
 

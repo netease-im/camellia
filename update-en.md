@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.23（2024/01/xx）
+# 1.2.23（2024/01/02）
 ### update
 * camellia-redis-proxy support upstream redis connection lazy init
 
