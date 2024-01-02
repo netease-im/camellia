@@ -1,7 +1,7 @@
 
 ## 关于redis-proxy初始化
 
-#### step1 
+#### 初始化 
 
 ```yaml
 server:
@@ -57,9 +57,9 @@ upstream.lazy.init.enable=true
 ```
 
 
-#### step2
+#### 预热
 
-此外，redis-proxy启动时默认会新建对所有后端redis节点的连接，并发送ping命令（用于检查和预热），如果失败，则proxy进程启动失败（但是进程不会退出）
+在开启初始化的前提下，redis-proxy启动时默认会新建对所有后端redis节点的连接，并发送ping命令（用于检查和预热），如果失败，则proxy进程启动失败（但是进程不会退出）
 
 `redis-cluster`类型的后端，会发送ping给所有master节点
 
@@ -91,7 +91,7 @@ camellia-redis-proxy:
       preheat: false
 ```
 
-#### step3
+#### 多租户场景
 
 对于开启多租户的proxy，初始化逻辑略有不同（remote和custom）  
 
