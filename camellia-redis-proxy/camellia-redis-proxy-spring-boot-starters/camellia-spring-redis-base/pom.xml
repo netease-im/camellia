@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-spring-redis-base</artifactId>
-	<version>1.2.23</version>
+	<version>1.2.24-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-redis-proxy-spring-boot-starters</artifactId>
-		<version>1.2.23</version>
+		<version>1.2.24-SNAPSHOT</version>
 	</parent>
 
 	<dependencyManagement>
@@ -39,7 +39,7 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-redis-proxy-discovery-jedis2</artifactId>
-			<version>1.2.23</version>
+			<version>1.2.24-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
