@@ -1,5 +1,17 @@
 [ENGLISH](update-en.md)
 
+
+# 1.2.23（2024/01/xx）
+### 新增
+* 无
+
+### 更新
+* camellia-redis-proxy优化了sentinel-mode下连接管理的逻辑
+
+### fix
+* 无
+
+
 # 1.2.22（2023/12/29）
 ### 新增
 * camellia-redis-proxy增强使用prometheus/grafana进行监控的能力

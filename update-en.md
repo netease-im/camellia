@@ -1,5 +1,15 @@
 [中文版](update-zh.md)
 
+# 1.2.23（2024/01/xx）
+### update
+* none
+
+### update
+* camellia-redis-proxy, optimize connection manager logic in sentinel mode
+
+### fix
+* none
+
 
 # 1.2.22（2023/12/29）
 ### add

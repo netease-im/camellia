@@ -5,7 +5,6 @@ import com.netease.nim.camellia.redis.proxy.cluster.ProxyNode;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.monitor.ChannelMonitor;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.reply.*;
@@ -117,8 +116,7 @@ public class ProxySentinelModeProcessor {
     public CompletableFuture<Reply> sentinelCommands(Command command) {
         RedisCommand redisCommand = command.getRedisCommand();
         ChannelInfo channelInfo = command.getChannelInfo();
-        Connection connection = getConnection(channelInfo.getConsid());
-        connection.channelInfo = channelInfo;
+        Connection connection = getConnection(channelInfo);
         byte[][] args = command.getObjects();
         if (redisCommand == RedisCommand.AUTH) {
             Reply reply = auth(connection, command);
@@ -349,25 +347,6 @@ public class ProxySentinelModeProcessor {
                 if (connection == null) {
                     continue;
                 }
-                ChannelInfo info = ChannelMonitor.getChannel(consid);
-                if (info == null) {
-                    if (connection.channelInfo == null) {
-                        connectionMap.remove(consid);
-                        continue;
-                    }
-                    ChannelHandlerContext ctx = connection.channelInfo.getCtx();
-                    if (ctx == null) {
-                        continue;
-                    }
-                    boolean active = ctx.channel().isActive();
-                    if (!active) {
-                        connectionMap.remove(consid);
-                    }
-                    continue;
-                }
-                if (connection.channelInfo == null) {
-                    continue;
-                }
                 ChannelHandlerContext ctx = connection.channelInfo.getCtx();
                 if (ctx == null) {
                     continue;
@@ -423,8 +402,8 @@ public class ProxySentinelModeProcessor {
         }
     }
 
-    private Connection getConnection(String consid) {
-        return CamelliaMapUtils.computeIfAbsent(connectionMap, consid, k -> new Connection());
+    private Connection getConnection(ChannelInfo channelInfo) {
+        return CamelliaMapUtils.computeIfAbsent(connectionMap, channelInfo.getConsid(), k -> new Connection(channelInfo));
     }
 
     private ProxyNode selectOnlineNode(ChannelInfo channelInfo) {
@@ -541,5 +520,9 @@ public class ProxySentinelModeProcessor {
         ProxyNode proxyNode;
         boolean subscribe = false;
         boolean auth = false;
+
+        public Connection(ChannelInfo channelInfo) {
+            this.channelInfo = channelInfo;
+        }
     }
 }
