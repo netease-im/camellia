@@ -47,6 +47,14 @@ public interface IUpstreamClientTemplateFactory {
     }
 
     /**
+     * lasy init enable
+     * @return true/false
+     */
+    default boolean lazyInitEnable() {
+        return false;
+    }
+
+    /**
      * shutdown
      * @return size
      */

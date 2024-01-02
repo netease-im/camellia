@@ -39,11 +39,14 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
 
     private static final Logger logger = LoggerFactory.getLogger(UpstreamRedisClientTemplateFactory.class);
 
+    private String EXECUTOR_KEY;
+
     private final CamelliaTranspondProperties properties;
     private RedisProxyEnv env;
     private CamelliaApi apiService;
     private ProxyRouteConfUpdater updater;
 
+    private boolean lazyInitEnable;
     private boolean multiTenantsSupport = true;//是否支持多租户
     private final ProxyBeanFactory proxyBeanFactory;
     private final ProxyCommandProcessor proxyCommandProcessor;
@@ -67,22 +70,47 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
             if (!multiTenantsSupport) {
                 CamelliaTranspondProperties.Type type = properties.getType();
                 if (type == CamelliaTranspondProperties.Type.LOCAL) {
-                    return localInstance;
+                    if (localInstance != null) {
+                        return localInstance;
+                    }
+                    if (executor != null && EXECUTOR_KEY != null) {
+                        return executor.get(EXECUTOR_KEY);
+                    }
                 } else if (type == CamelliaTranspondProperties.Type.REMOTE) {
-                    return remoteInstance;
+                    if (remoteInstance != null) {
+                        return remoteInstance;
+                    }
+                    if (executor != null && EXECUTOR_KEY != null) {
+                        return executor.get(EXECUTOR_KEY);
+                    }
                 } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
-                    return customInstance;
-                } else {
-                    return null;
+                    if (customInstance != null) {
+                        return customInstance;
+                    }
+                    if (executor != null && EXECUTOR_KEY != null) {
+                        return executor.get(EXECUTOR_KEY);
+                    }
                 }
+                return null;
             }
             if (bid == null || bid <= 0 || bgroup == null) {
                 CamelliaTranspondProperties.Type type = properties.getType();
                 if (type == CamelliaTranspondProperties.Type.REMOTE) {
-                    return remoteInstance;
+                    if (remoteInstance != null) {
+                        return remoteInstance;
+                    }
+                    if (executor != null && EXECUTOR_KEY != null) {
+                        return executor.get(EXECUTOR_KEY);
+                    }
                 } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
-                    return customInstance;
+                    if (customInstance != null) {
+                        return customInstance;
+                    }
+                    if (executor != null && EXECUTOR_KEY != null) {
+                        return executor.get(EXECUTOR_KEY);
+                    }
                 }
+                return null;
             }
             CompletableFuture<IUpstreamClientTemplate> future = getOrInitializeAsync(bid, bgroup);
             if (future == null) return null;
@@ -97,27 +125,60 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
     public CompletableFuture<IUpstreamClientTemplate> getOrInitializeAsync(Long bid, String bgroup) {
         CamelliaTranspondProperties.Type type = properties.getType();
         if (type == CamelliaTranspondProperties.Type.LOCAL) {
-            return IUpstreamClientTemplateFactory.wrapper(localInstance);
+            if (localInstance != null) {
+                return IUpstreamClientTemplateFactory.wrapper(localInstance);
+            }
+            if (executor != null && EXECUTOR_KEY != null) {
+                return executor.getOrInitialize(EXECUTOR_KEY);
+            }
         } else if (type == CamelliaTranspondProperties.Type.REMOTE) {
             CamelliaTranspondProperties.RemoteProperties remote = properties.getRemote();
-            if (!remote.isDynamic()) {
-                return IUpstreamClientTemplateFactory.wrapper(remoteInstance);
-            }
-            if (bid == null || bid <= 0 || bgroup == null) {
-                return IUpstreamClientTemplateFactory.wrapper(remoteInstance);
+            if (remoteInstance != null) {
+                if (!remote.isDynamic()) {
+                    return IUpstreamClientTemplateFactory.wrapper(remoteInstance);
+                }
+                if (bid == null || bid <= 0 || bgroup == null) {
+                    return IUpstreamClientTemplateFactory.wrapper(remoteInstance);
+                }
             }
             if (executor != null) {
+                if (!remote.isDynamic()) {
+                    if (EXECUTOR_KEY != null) {
+                        return executor.getOrInitialize(EXECUTOR_KEY);
+                    }
+                    return null;
+                }
+                if (bid == null || bid <= 0 || bgroup == null) {
+                    if (EXECUTOR_KEY != null) {
+                        return executor.getOrInitialize(EXECUTOR_KEY);
+                    }
+                    return null;
+                }
                 return executor.getOrInitialize(Utils.getCacheKey(bid, bgroup));
             }
         } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
             CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
-            if (!custom.isDynamic()) {
-                return IUpstreamClientTemplateFactory.wrapper(customInstance);
-            }
-            if (bid == null || bid <= 0 || bgroup == null) {
-                return IUpstreamClientTemplateFactory.wrapper(customInstance);
+            if (customInstance != null) {
+                if (!custom.isDynamic()) {
+                    return IUpstreamClientTemplateFactory.wrapper(customInstance);
+                }
+                if (bid == null || bid <= 0 || bgroup == null) {
+                    return IUpstreamClientTemplateFactory.wrapper(customInstance);
+                }
             }
             if (executor != null) {
+                if (!custom.isDynamic()) {
+                    if (EXECUTOR_KEY != null) {
+                        return executor.getOrInitialize(EXECUTOR_KEY);
+                    }
+                    return null;
+                }
+                if (bid == null || bid <= 0 || bgroup == null) {
+                    if (EXECUTOR_KEY != null) {
+                        return executor.getOrInitialize(EXECUTOR_KEY);
+                    }
+                    return null;
+                }
                 return executor.getOrInitialize(Utils.getCacheKey(bid, bgroup));
             }
         }
@@ -128,27 +189,60 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
     public IUpstreamClientTemplate tryGet(Long bid, String bgroup) {
         CamelliaTranspondProperties.Type type = properties.getType();
         if (type == CamelliaTranspondProperties.Type.LOCAL) {
-            return localInstance;
+            if (localInstance != null) {
+                return localInstance;
+            }
+            if (executor != null && EXECUTOR_KEY != null) {
+                return executor.get(EXECUTOR_KEY);
+            }
         } else if (type == CamelliaTranspondProperties.Type.REMOTE) {
             CamelliaTranspondProperties.RemoteProperties remote = properties.getRemote();
-            if (!remote.isDynamic()) {
-                return remoteInstance;
-            }
-            if (bid == null || bid <= 0 || bgroup == null) {
-                return remoteInstance;
+            if (remoteInstance != null) {
+                if (!remote.isDynamic()) {
+                    return remoteInstance;
+                }
+                if (bid == null || bid <= 0 || bgroup == null) {
+                    return remoteInstance;
+                }
             }
             if (executor != null) {
+                if (!remote.isDynamic()) {
+                    if (EXECUTOR_KEY != null) {
+                        return executor.get(EXECUTOR_KEY);
+                    }
+                    return null;
+                }
+                if (bid == null || bid <= 0 || bgroup == null) {
+                    if (EXECUTOR_KEY != null) {
+                        return executor.get(EXECUTOR_KEY);
+                    }
+                    return null;
+                }
                 return executor.get(Utils.getCacheKey(bid, bgroup));
             }
         } else if (type == CamelliaTranspondProperties.Type.CUSTOM) {
             CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
-            if (!custom.isDynamic()) {
-                return customInstance;
-            }
-            if (bid == null || bid <= 0 || bgroup == null) {
-                return customInstance;
+            if (customInstance != null) {
+                if (!custom.isDynamic()) {
+                    return customInstance;
+                }
+                if (bid == null || bid <= 0 || bgroup == null) {
+                    return customInstance;
+                }
             }
             if (executor != null) {
+                if (!custom.isDynamic()) {
+                    if (EXECUTOR_KEY != null) {
+                        return executor.get(EXECUTOR_KEY);
+                    }
+                    return null;
+                }
+                if (bid == null || bid <= 0 || bgroup == null) {
+                    if (EXECUTOR_KEY != null) {
+                        return executor.get(EXECUTOR_KEY);
+                    }
+                    return null;
+                }
                 return executor.get(Utils.getCacheKey(bid, bgroup));
             }
         }
@@ -165,6 +259,10 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         return env;
     }
 
+    @Override
+    public boolean lazyInitEnable() {
+        return lazyInitEnable;
+    }
 
     @Override
     public synchronized int shutdown() {
@@ -204,6 +302,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         if (type == null) {
             throw new IllegalArgumentException();
         }
+        this.lazyInitEnable = ProxyDynamicConf.getBoolean("upstream.lazy.init.enable", false);
         initEnv();
         logger.info("CamelliaRedisProxy init, type = {}", type);
         if (type == CamelliaTranspondProperties.Type.LOCAL) {
@@ -233,6 +332,29 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         }
         JSONObject transpondConfig = new JSONObject(true);
         transpondConfig.put("type", "local");
+
+        ResourceTable resourceTable = local.getResourceTable();
+        if (resourceTable == null) {
+            String resourceTableFilePath = local.getResourceTableFilePath();
+            if (resourceTableFilePath != null) {
+                transpondConfig.put("resourceTableFilePath", resourceTableFilePath);
+            } else {
+                throw new IllegalArgumentException("local.resourceTable/local.resourceTableFilePath is null");
+            }
+        }
+        if (!lazyInitEnable) {
+            localInstance = initLocalTemplate(local);
+        } else {
+            executor = new CamelliaLinearInitializationExecutor<>("upstream-redis-client-template-init", key -> initLocalTemplate(local),
+                    () -> ProxyDynamicConf.getInt("upstream.redis.client.template.init.pending.size", 1000000));
+            EXECUTOR_KEY = "local";
+        }
+        multiTenantsSupport = false;
+        transpondConfig.put("multiTenantsSupport", false);
+        proxyCommandProcessor.setTranspondConfig(transpondConfig);
+    }
+
+    private UpstreamRedisClientTemplate initLocalTemplate(CamelliaTranspondProperties.LocalProperties local) {
         ResourceTable resourceTable = local.getResourceTable();
         if (resourceTable != null) {
             localInstance = new UpstreamRedisClientTemplate(env, resourceTable);
@@ -240,15 +362,9 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
             String resourceTableFilePath = local.getResourceTableFilePath();
             if (resourceTableFilePath != null) {
                 localInstance = new UpstreamRedisClientTemplate(env, resourceTableFilePath, local.getCheckIntervalMillis());
-                transpondConfig.put("resourceTableFilePath", resourceTableFilePath);
             }
         }
-        if (localInstance == null) {
-            throw new IllegalArgumentException("local.resourceTable/local.resourceTableFilePath is null");
-        }
-        multiTenantsSupport = false;
-        transpondConfig.put("multiTenantsSupport", false);
-        proxyCommandProcessor.setTranspondConfig(transpondConfig);
+        return localInstance;
     }
 
     private void initRemote() {
@@ -268,13 +384,22 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         logger.info("ApiService init, url = {}", url);
         boolean dynamic = remote.isDynamic();
         logger.info("Remote dynamic = {}", dynamic);
+
+        multiTenantsSupport = remote.isDynamic();
+
+        boolean executorInit = false;
+
         if (remote.getBid() > 0 && remote.getBgroup() != null) {
-            remoteInstance = initRemoteInstance(remote.getBid(), remote.getBgroup());
             transpondConfig.put("bid", remote.getBid());
             transpondConfig.put("brgoup", remote.getBgroup());
+            if (!lazyInitEnable) {
+                remoteInstance = initRemoteInstance(remote.getBid(), remote.getBgroup());
+            } else {
+                EXECUTOR_KEY = remote.getBid() + "|" + remote.getBgroup();
+                executorInit = true;
+            }
         }
-        multiTenantsSupport = remote.isDynamic();
-        if (multiTenantsSupport) {
+        if (multiTenantsSupport || executorInit) {
             executor = new CamelliaLinearInitializationExecutor<>("upstream-redis-client-template-init", key -> {
                 String[] split = key.split("\\|");
                 return initRemoteInstance(Long.parseLong(split[0]), split[1]);
@@ -306,13 +431,22 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         this.updater = proxyRouteConfUpdater;
         boolean dynamic = custom.isDynamic();
         logger.info("Custom dynamic = {}", dynamic);
+
+        multiTenantsSupport = custom.isDynamic();
+        boolean executorInit = false;
+
         if (custom.getBid() > 0 && custom.getBgroup() != null) {
-            customInstance = initCustomInstance(custom.getBid(), custom.getBgroup());
             transpondConfig.put("bid", custom.getBid());
             transpondConfig.put("brgoup", custom.getBgroup());
+            if (!lazyInitEnable) {
+                customInstance = initCustomInstance(custom.getBid(), custom.getBgroup());
+            } else {
+                EXECUTOR_KEY = custom.getBid() + "|" + custom.getBgroup();
+                executorInit = true;
+            }
         }
-        multiTenantsSupport = custom.isDynamic();
-        if (multiTenantsSupport) {
+
+        if (multiTenantsSupport || executorInit) {
             executor = new CamelliaLinearInitializationExecutor<>("upstream-redis-client-template-init", key -> {
                 String[] split = key.split("\\|");
                 return initCustomInstance(Long.parseLong(split[0]), split[1]);

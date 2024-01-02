@@ -3,7 +3,7 @@
 
 # 1.2.23（2024/01/xx）
 ### 新增
-* 无
+* camellia-redis-proxy支持对后端redis连接初始化的延迟加载
 
 ### 更新
 * camellia-redis-proxy优化了sentinel-mode下连接管理的逻辑

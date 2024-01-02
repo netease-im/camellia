@@ -435,7 +435,7 @@ public class CommandsTransponder {
 
     private void flush(Long bid, String bgroup, int db, List<CommandTask> tasks, List<Command> commands) {
         try {
-            if (!factory.isMultiTenantsSupport() || bid == null || bid <= 0 || bgroup == null) {
+            if (!factory.lazyInitEnable() && (!factory.isMultiTenantsSupport() || bid == null || bid <= 0 || bgroup == null)) {
                 IUpstreamClientTemplate template = factory.getOrInitialize(bid, bgroup);
                 flush0(template, bid, bgroup, db, tasks, commands);
                 return;

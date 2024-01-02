@@ -2,7 +2,7 @@
 
 # 1.2.23（2024/01/xx）
 ### update
-* none
+* camellia-redis-proxy support upstream redis connection lazy init
 
 ### update
 * camellia-redis-proxy, optimize connection manager logic in sentinel mode
