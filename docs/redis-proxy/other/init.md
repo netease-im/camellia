@@ -71,7 +71,7 @@ upstream.lazy.init.enable=true
 
 `redis-proxies`和`redis-proxies-discovery`类型的后端，会发送ping给所有节点
 
-如果不希望发送ping，则可以如下方式关闭：
+如果不希望启动时发送ping进行预热和检查，则可以如下方式关闭：
 
 ```yaml
 server:
