@@ -5,3 +5,6 @@
 [delay_queue](delay-queue/prometheus-grafana.md)  
 [hot-key](hot-key/prometheus-grafana.md)  
 [id-gen](id-gen/prometheus-grafana.md)
+
+
+[how_to_use_eureka_in_prometheus](prometheus/eureka.md)
