@@ -47,6 +47,11 @@ scrape_configs:
       regex: (.*);(.*)
       replacement: $1:$2
       target_label: __address__
+    - source_labels: [__meta_eureka_app_instance_ip_addr, __meta_eureka_app_instance_metadata_prometheus_port]
+      action: replace
+      regex: (.*);(.*)
+      replacement: $1:$2
+      target_label: instance
 
 ```
 
