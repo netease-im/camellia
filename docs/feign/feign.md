@@ -67,9 +67,9 @@ feign#https://www.abc.com
 
 #基于注册中心
 ##支持http
-feign#http://serviceName
+feign-discovery#http://serviceName
 ##也支持https
-feign#https://serviceName
+feign-discovery#https://serviceName
 
 ```
 此外，路由可以按照camellia的标准写法，支持读写分离、双写
