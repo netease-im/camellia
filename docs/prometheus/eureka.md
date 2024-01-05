@@ -42,9 +42,9 @@ scrape_configs:
     - source_labels: [__meta_eureka_app_instance_vip_address]
       regex: redis-proxy-1
       action: keep
-    - source_labels: [__address__, __meta_eureka_app_instance_metadata_prometheus_port]
+    - source_labels: [__meta_eureka_app_instance_ip_addr, __meta_eureka_app_instance_metadata_prometheus_port]
       action: replace
-      regex: ([^:]+)(?::\d+)?;(\d+)
+      regex: (.*);(.*)
       replacement: $1:$2
       target_label: __address__
 
