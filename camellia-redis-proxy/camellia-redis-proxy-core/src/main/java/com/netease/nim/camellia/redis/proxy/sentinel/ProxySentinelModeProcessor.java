@@ -15,6 +15,7 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import com.netease.nim.camellia.tools.utils.InetUtils;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,6 +139,17 @@ public class ProxySentinelModeProcessor {
             }
             return wrapper(connection, redisCommand, reply);
         }
+        //quit, skip auth
+        if (redisCommand == RedisCommand.QUIT) {
+            if (connection.subscribe) {
+                connection.channelInfo.getCtx().close();
+            } else {
+                connection.channelInfo.getCtx().writeAndFlush(StatusReply.OK)
+                        .addListener((ChannelFutureListener) future -> connection.channelInfo.getCtx().close());
+            }
+            return null;
+        }
+        //sentinel command
         if (redisCommand == RedisCommand.SENTINEL) {
             if (args.length < 2) {
                 return wrapper(connection, redisCommand, ErrorReply.argNumWrong(redisCommand));
