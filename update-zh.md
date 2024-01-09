@@ -5,10 +5,11 @@
 * 无
 
 ### 更新
-* camellia-redis-proxy `quit` 命令，先回一个`ok`在关闭连接，而不是直接关闭连接
+* camellia-redis-proxy `quit` 命令，先回一个`ok`再关闭连接，而不是直接关闭连接
+* camellia-redis-proxy，在开启伪redis-sentinel模式时，cport支持 `quit` 命令
 
 ### fix
-* 无
+* camellia-redis-proxy, 开启伪redis-sentinel模式下，`proxy` 命令无效的问题
 
 
 # 1.2.23（2024/01/02）

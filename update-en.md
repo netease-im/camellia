@@ -6,9 +6,10 @@
 
 ### update
 * camellia-redis-proxy `quit` command, reply `ok` before close connection
+* camellia-redis-proxy support `quit` command when sentinel mode enable 
 
 ### fix
-* none
+* camellia-redis-proxy, `proxy` command not available when sentinel mode enable
 
 
 # 1.2.23（2024/01/02）
