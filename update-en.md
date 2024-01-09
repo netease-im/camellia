@@ -1,5 +1,16 @@
 [中文版](update-zh.md)
 
+# 1.2.24（2024/01/xx）
+### add
+* none
+
+### update
+* camellia-redis-proxy `quit` command, reply `ok` before close connection
+
+### fix
+* none
+
+
 # 1.2.23（2024/01/02）
 ### update
 * camellia-redis-proxy support upstream redis connection lazy init

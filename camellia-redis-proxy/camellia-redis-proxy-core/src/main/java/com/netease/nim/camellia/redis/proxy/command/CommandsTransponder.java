@@ -182,7 +182,19 @@ public class CommandsTransponder {
                     }
                     //quit命令直接断开连接
                     if (redisCommand == RedisCommand.QUIT) {
-                        channelInfo.getCtx().close();
+                        if (channelInfo.isInSubscribe()) {
+                            channelInfo.getCtx().close();
+                        } else {
+                            if (!tasks.isEmpty()) {
+                                List<Command> list = new ArrayList<>(tasks.size());
+                                for (CommandTask asyncTask : tasks) {
+                                    list.add(asyncTask.getCommand());
+                                }
+                                flush(channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getDb(), tasks, list);
+                            }
+                            channelInfo.getCtx().channel().writeAndFlush(StatusReply.OK)
+                                    .addListener((ChannelFutureListener) future -> channelInfo.getCtx().channel().close());
+                        }
                         return;
                     }
 
