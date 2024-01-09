@@ -163,6 +163,14 @@ public class CommandsTransponder {
 
                 //sentinel mode
                 if (sentinelModeProcessor != null && channelInfo.isFromCport()) {
+                    //proxy command
+                    if (redisCommand == RedisCommand.PROXY) {
+                        CompletableFuture<Reply> future = proxyCommandProcessor.process(command);
+                        future.thenAccept(task::replyCompleted);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+                    //other command
                     CompletableFuture<Reply> future = sentinelModeProcessor.sentinelCommands(command);
                     if (future != null) {
                         future.thenAccept(task::replyCompleted);
