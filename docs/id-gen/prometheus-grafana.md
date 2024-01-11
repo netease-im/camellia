@@ -66,7 +66,7 @@ you should:
 ```
 # HELP info Id Gen Server Info
 # TYPE info gauge
-info{camellia_version="1.2.24",arch="x86_64",os_name="Mac OS X",os_version="10.16",system_load_average="2.96533203125",vm_vendor="Oracle Corporation",vm_name="Java HotSpot(TM) 64-Bit Server VM",vm_version="25.311-b11",jvm_info="mixed mode",java_version="1.8.0_311",} 1
+info{camellia_version="1.2.25",arch="x86_64",os_name="Mac OS X",os_version="10.16",system_load_average="2.96533203125",vm_vendor="Oracle Corporation",vm_name="Java HotSpot(TM) 64-Bit Server VM",vm_version="25.311-b11",jvm_info="mixed mode",java_version="1.8.0_311",} 1
 # HELP uptime Id Gen Server Uptime
 # TYPE uptime gauge
 uptime 277345051

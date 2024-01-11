@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.24（2024/01/10）
+# 1.2.25（2024/01/11）（1.2.24 is broken in maven central repository, so re-deploy in 1.2.25）
 ### add
 * none
 

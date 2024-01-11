@@ -10,7 +10,7 @@ CamelliaHashedExecutor在提交任务时额外提供了hashKey这样的参数，
 <dependency>
     <groupId>com.netease.nim</groupId>
     <artifactId>camellia-tools</artifactId>
-    <version>1.2.24</version>
+    <version>1.2.25</version>
 </dependency>
 ```
 

@@ -3,14 +3,14 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>camellia-redis-proxy-mq</artifactId>
-	<version>1.2.24</version>
+	<version>1.2.25</version>
 
 	<packaging>pom</packaging>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-redis-proxy-extensions</artifactId>
-		<version>1.2.24</version>
+		<version>1.2.25</version>
 	</parent>
 
 	<modules>
