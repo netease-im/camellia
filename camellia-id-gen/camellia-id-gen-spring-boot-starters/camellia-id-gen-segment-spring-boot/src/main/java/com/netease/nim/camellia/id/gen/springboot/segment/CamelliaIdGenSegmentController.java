@@ -29,7 +29,7 @@ public class CamelliaIdGenSegmentController {
     @GetMapping("/genIds")
     public IdGenResult genIds(@RequestParam("tag") String tag,
                               @RequestParam("count") int count) {
-        String uri = "/camellia/id/gen/segment/genIds?tag=" + tag;
+        String uri = "/camellia/id/gen/segment/genIds";
         long startTime = System.currentTimeMillis();
         try {
             CamelliaIdGenSegmentServerStatus.updateLastUseTime();
@@ -49,7 +49,7 @@ public class CamelliaIdGenSegmentController {
 
     @GetMapping("/genId")
     public IdGenResult genId(@RequestParam("tag") String tag) {
-        String uri = "/camellia/id/gen/segment/genId?tag=" + tag;
+        String uri = "/camellia/id/gen/segment/genId";
         long startTime = System.currentTimeMillis();
         try {
             CamelliaIdGenSegmentServerStatus.updateLastUseTime();
@@ -89,7 +89,7 @@ public class CamelliaIdGenSegmentController {
 
     @PostMapping("/update")
     public IdGenResult update(@RequestParam("tag") String tag, @RequestParam("id") long id) {
-        String uri = "/camellia/id/gen/segment/update?tag=" + tag;
+        String uri = "/camellia/id/gen/segment/update";
         long startTime = System.currentTimeMillis();
         try {
             CamelliaIdGenSegmentServerStatus.updateLastUseTime();
@@ -129,7 +129,7 @@ public class CamelliaIdGenSegmentController {
 
     @GetMapping("/selectId")
     public IdGenResult selectId(@RequestParam("tag") String tag) {
-        String uri = "/camellia/id/gen/segment/selectId?tag=" + tag;
+        String uri = "/camellia/id/gen/segment/selectId";
         long startTime = System.currentTimeMillis();
         try {
             CamelliaIdGenSegmentServerStatus.updateLastUseTime();

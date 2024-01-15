@@ -22,7 +22,7 @@ public class CamelliaIdGenStrictController {
 
     @GetMapping("/genId")
     public IdGenResult genId(@RequestParam("tag") String tag) {
-        String uri = "/camellia/id/gen/strict/genId?tag=" + tag;
+        String uri = "/camellia/id/gen/strict/genId";
         long startTime = System.currentTimeMillis();
         try {
             CamelliaIdGenStrictServerStatus.updateLastUseTime();
@@ -42,7 +42,7 @@ public class CamelliaIdGenStrictController {
 
     @GetMapping("/peekId")
     public IdGenResult peekId(@RequestParam("tag") String tag) {
-        String uri = "/camellia/id/gen/strict/peekId?tag=" + tag;
+        String uri = "/camellia/id/gen/strict/peekId";
         long startTime = System.currentTimeMillis();
         try {
             CamelliaIdGenStrictServerStatus.updateLastUseTime();
@@ -82,7 +82,7 @@ public class CamelliaIdGenStrictController {
 
     @PostMapping("/update")
     public IdGenResult update(@RequestParam("tag") String tag, @RequestParam("id") long id) {
-        String uri = "/camellia/id/gen/strict/update?tag=" + tag;
+        String uri = "/camellia/id/gen/strict/update";
         long startTime = System.currentTimeMillis();
         try {
             CamelliaIdGenStrictServerStatus.updateLastUseTime();
