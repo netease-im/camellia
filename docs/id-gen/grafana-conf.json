@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 7,
+  "id": 11,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -69,6 +69,7 @@
             "y": 1
           },
           "id": 5,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -84,7 +85,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -133,6 +134,7 @@
             "y": 1
           },
           "id": 6,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -148,7 +150,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -200,6 +202,7 @@
             "y": 1
           },
           "id": 7,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -215,7 +218,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -274,6 +277,7 @@
             "y": 3
           },
           "id": 1,
+          "interval": "60",
           "options": {
             "cellHeight": "sm",
             "footer": {
@@ -286,7 +290,7 @@
             },
             "showHeader": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -377,13 +381,10 @@
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
-              }
+              },
+              "unit": "percent"
             },
             "overrides": []
           },
@@ -394,6 +395,7 @@
             "y": 3
           },
           "id": 3,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -478,7 +480,8 @@
                     "value": 80
                   }
                 ]
-              }
+              },
+              "unit": "decbytes"
             },
             "overrides": []
           },
@@ -489,6 +492,7 @@
             "y": 3
           },
           "id": 2,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -588,6 +592,7 @@
             "y": 3
           },
           "id": 4,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -697,6 +702,7 @@
             "y": 2
           },
           "id": 8,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -796,6 +802,7 @@
             "y": 2
           },
           "id": 10,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -895,6 +902,7 @@
             "y": 2
           },
           "id": 9,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -982,6 +990,7 @@
             "y": 13
           },
           "id": 11,
+          "interval": "60",
           "options": {
             "cellHeight": "sm",
             "footer": {
@@ -995,7 +1004,7 @@
             "showHeader": true,
             "sortBy": []
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -1091,19 +1100,15 @@
     }
   ],
   "refresh": "",
-  "schemaVersion": 38,
+  "schemaVersion": 39,
   "tags": [],
   "templating": {
     "list": [
       {
         "current": {
-          "selected": true,
-          "text": [
-            "10.221.145.235:9900"
-          ],
-          "value": [
-            "10.221.145.235:9900"
-          ]
+          "selected": false,
+          "text": "10.88.130.34:8686",
+          "value": "10.88.130.34:8686"
         },
         "datasource": {
           "type": "prometheus",
@@ -1129,13 +1134,13 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "id_gen",
   "uid": "cfbc7d31-d6c4-4cca-ad55-272010f14010",
-  "version": 10,
+  "version": 12,
   "weekStart": ""
 }
