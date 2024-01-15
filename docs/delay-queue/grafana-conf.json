@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 4,
+  "id": 8,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -63,6 +63,7 @@
             "y": 1
           },
           "id": 5,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -78,7 +79,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -127,6 +128,7 @@
             "y": 1
           },
           "id": 6,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -142,7 +144,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -194,6 +196,7 @@
             "y": 1
           },
           "id": 7,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -209,7 +212,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -268,6 +271,7 @@
             "y": 3
           },
           "id": 1,
+          "interval": "60",
           "options": {
             "cellHeight": "sm",
             "footer": {
@@ -280,7 +284,7 @@
             },
             "showHeader": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -388,6 +392,7 @@
             "y": 3
           },
           "id": 3,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -483,6 +488,7 @@
             "y": 3
           },
           "id": 2,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -582,6 +588,7 @@
             "y": 3
           },
           "id": 4,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -691,6 +698,7 @@
             "y": 2
           },
           "id": 8,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -792,6 +800,7 @@
             "y": 2
           },
           "id": 11,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -893,6 +902,7 @@
             "y": 2
           },
           "id": 12,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -994,6 +1004,7 @@
             "y": 2
           },
           "id": 13,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -1095,6 +1106,7 @@
             "y": 10
           },
           "id": 14,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -1196,6 +1208,7 @@
             "y": 10
           },
           "id": 15,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -1297,6 +1310,7 @@
             "y": 10
           },
           "id": 16,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -1398,6 +1412,7 @@
             "y": 10
           },
           "id": 17,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -1513,6 +1528,7 @@
             "y": 3
           },
           "id": 19,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -1587,6 +1603,7 @@
             "y": 3
           },
           "id": 20,
+          "interval": "60",
           "options": {
             "cellHeight": "sm",
             "footer": {
@@ -1599,7 +1616,7 @@
             },
             "showHeader": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -1732,6 +1749,7 @@
             "y": 13
           },
           "id": 21,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -1806,6 +1824,7 @@
             "y": 13
           },
           "id": 22,
+          "interval": "60",
           "options": {
             "cellHeight": "sm",
             "footer": {
@@ -1818,7 +1837,7 @@
             },
             "showHeader": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -1965,6 +1984,7 @@
             "y": 4
           },
           "id": 24,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -2064,6 +2084,7 @@
             "y": 4
           },
           "id": 27,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -2163,6 +2184,7 @@
             "y": 4
           },
           "id": 26,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -2213,10 +2235,6 @@
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -2230,6 +2248,7 @@
             "y": 12
           },
           "id": 28,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -2245,7 +2264,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -2285,10 +2304,6 @@
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -2302,6 +2317,7 @@
             "y": 12
           },
           "id": 31,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -2317,7 +2333,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -2357,10 +2373,6 @@
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -2374,6 +2386,7 @@
             "y": 12
           },
           "id": 29,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -2389,7 +2402,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -2429,10 +2442,6 @@
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -2446,6 +2455,7 @@
             "y": 16
           },
           "id": 25,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -2461,7 +2471,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -2501,10 +2511,6 @@
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -2518,6 +2524,7 @@
             "y": 16
           },
           "id": 35,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -2533,7 +2540,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -2573,10 +2580,6 @@
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -2590,6 +2593,7 @@
             "y": 16
           },
           "id": 34,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -2605,7 +2609,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -2645,10 +2649,6 @@
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -2662,6 +2662,7 @@
             "y": 20
           },
           "id": 30,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -2677,7 +2678,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -2717,10 +2718,6 @@
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -2734,6 +2731,7 @@
             "y": 20
           },
           "id": 33,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -2749,7 +2747,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -2789,10 +2787,6 @@
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -2806,6 +2800,7 @@
             "y": 20
           },
           "id": 32,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -2821,7 +2816,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -2850,7 +2845,7 @@
     }
   ],
   "refresh": "",
-  "schemaVersion": 38,
+  "schemaVersion": 39,
   "tags": [],
   "templating": {
     "list": [
@@ -2858,10 +2853,10 @@
         "current": {
           "selected": true,
           "text": [
-            "10.221.145.235:9900"
+            "10.156.178.245:8889"
           ],
           "value": [
-            "10.221.145.235:9900"
+            "10.156.178.245:8889"
           ]
         },
         "datasource": {
@@ -2888,13 +2883,13 @@
     ]
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "delay_queue",
-  "uid": "c2e978f4-8a20-4ff2-b871-ad7b0cc0f423",
-  "version": 16,
+  "title": "delay-queue",
+  "uid": "c2e978f4-8a20-4ff2-b871-fa7b0cc0f423",
+  "version": 10,
   "weekStart": ""
 }
