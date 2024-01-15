@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 3,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -64,6 +64,7 @@
             "y": 1
           },
           "id": 13,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -79,7 +80,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -132,6 +133,7 @@
             "y": 1
           },
           "id": 14,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -147,7 +149,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -203,6 +205,7 @@
             "y": 1
           },
           "id": 6,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -219,7 +222,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -275,6 +278,7 @@
             "y": 1
           },
           "id": 8,
+          "interval": "60",
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -290,7 +294,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -353,6 +357,7 @@
             "y": 3
           },
           "id": 12,
+          "interval": "60",
           "options": {
             "cellHeight": "sm",
             "footer": {
@@ -367,7 +372,7 @@
             "showHeader": true,
             "sortBy": []
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -478,6 +483,7 @@
             "y": 3
           },
           "id": 7,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -578,6 +584,7 @@
             "y": 3
           },
           "id": 5,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -771,7 +778,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -786,9 +794,10 @@
             "h": 9,
             "w": 8,
             "x": 0,
-            "y": 10
+            "y": 2
           },
           "id": 1,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -882,7 +891,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -898,9 +908,10 @@
             "h": 9,
             "w": 8,
             "x": 8,
-            "y": 10
+            "y": 2
           },
           "id": 15,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -981,7 +992,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -997,9 +1009,10 @@
             "h": 9,
             "w": 8,
             "x": 16,
-            "y": 10
+            "y": 2
           },
           "id": 4,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -1080,7 +1093,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -1096,9 +1110,10 @@
             "h": 9,
             "w": 8,
             "x": 0,
-            "y": 19
+            "y": 11
           },
           "id": 16,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -1155,7 +1170,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -1195,9 +1211,10 @@
             "h": 9,
             "w": 16,
             "x": 8,
-            "y": 19
+            "y": 11
           },
           "id": 3,
+          "interval": "60",
           "options": {
             "cellHeight": "sm",
             "footer": {
@@ -1217,7 +1234,7 @@
             "showHeader": true,
             "sortBy": []
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -1365,7 +1382,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -1383,6 +1401,7 @@
             "y": 21
           },
           "id": 20,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -1463,7 +1482,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -1482,6 +1502,7 @@
             "y": 21
           },
           "id": 24,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -1562,7 +1583,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -1581,6 +1603,7 @@
             "y": 21
           },
           "id": 25,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -1661,7 +1684,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -1680,6 +1704,7 @@
             "y": 32
           },
           "id": 28,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -1735,7 +1760,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -1744,7 +1770,20 @@
                 ]
               }
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "instance"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 178
+                  }
+                ]
+              }
+            ]
           },
           "gridPos": {
             "h": 11,
@@ -1753,6 +1792,7 @@
             "y": 32
           },
           "id": 26,
+          "interval": "60",
           "options": {
             "cellHeight": "sm",
             "footer": {
@@ -1766,7 +1806,7 @@
             "showHeader": true,
             "sortBy": []
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -1892,7 +1932,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -1907,9 +1948,10 @@
             "h": 9,
             "w": 8,
             "x": 0,
-            "y": 22
+            "y": 4
           },
           "id": 22,
+          "interval": "60",
           "options": {
             "cellHeight": "sm",
             "footer": {
@@ -1923,7 +1965,7 @@
             "frameIndex": 0,
             "showHeader": true
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -2005,7 +2047,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -2020,9 +2063,10 @@
             "h": 9,
             "w": 8,
             "x": 8,
-            "y": 22
+            "y": 4
           },
           "id": 18,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -2103,7 +2147,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -2118,9 +2163,10 @@
             "h": 9,
             "w": 8,
             "x": 16,
-            "y": 22
+            "y": 4
           },
           "id": 19,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -2201,7 +2247,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -2217,9 +2264,10 @@
             "h": 11,
             "w": 8,
             "x": 0,
-            "y": 31
+            "y": 13
           },
           "id": 23,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -2276,7 +2324,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -2285,15 +2334,29 @@
                 ]
               }
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "upstream"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 286
+                  }
+                ]
+              }
+            ]
           },
           "gridPos": {
             "h": 11,
             "w": 16,
             "x": 8,
-            "y": 31
+            "y": 13
           },
           "id": 21,
+          "interval": "60",
           "options": {
             "cellHeight": "sm",
             "footer": {
@@ -2310,7 +2373,7 @@
             "showHeader": true,
             "sortBy": []
           },
-          "pluginVersion": "10.2.2",
+          "pluginVersion": "10.2.3",
           "targets": [
             {
               "datasource": {
@@ -2456,7 +2519,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -2471,9 +2535,10 @@
             "h": 11,
             "w": 9,
             "x": 0,
-            "y": 13
+            "y": 5
           },
           "id": 34,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -2554,7 +2619,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -2569,9 +2635,10 @@
             "h": 11,
             "w": 9,
             "x": 9,
-            "y": 13
+            "y": 5
           },
           "id": 35,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -2666,7 +2733,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -2682,9 +2750,10 @@
             "h": 10,
             "w": 12,
             "x": 0,
-            "y": 14
+            "y": 6
           },
           "id": 36,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -2779,7 +2848,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -2795,9 +2865,10 @@
             "h": 10,
             "w": 13,
             "x": 0,
-            "y": 15
+            "y": 7
           },
           "id": 37,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -2878,7 +2949,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -2893,9 +2965,10 @@
             "h": 10,
             "w": 13,
             "x": 0,
-            "y": 25
+            "y": 17
           },
           "id": 38,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -2990,7 +3063,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -3006,9 +3080,10 @@
             "h": 10,
             "w": 9,
             "x": 0,
-            "y": 16
+            "y": 8
           },
           "id": 40,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -3089,7 +3164,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -3104,9 +3180,10 @@
             "h": 10,
             "w": 8,
             "x": 9,
-            "y": 16
+            "y": 8
           },
           "id": 39,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -3201,7 +3278,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -3216,9 +3294,10 @@
             "h": 14,
             "w": 10,
             "x": 0,
-            "y": 17
+            "y": 9
           },
           "id": 41,
+          "interval": "60",
           "options": {
             "legend": {
               "calcs": [],
@@ -3258,7 +3337,7 @@
     }
   ],
   "refresh": "",
-  "schemaVersion": 38,
+  "schemaVersion": 39,
   "tags": [],
   "templating": {
     "list": [
@@ -3266,10 +3345,10 @@
         "current": {
           "selected": true,
           "text": [
-            "10.221.145.235:9900"
+            "10.88.129.223:16379"
           ],
           "value": [
-            "10.221.145.235:9900"
+            "10.88.129.223:16379"
           ]
         },
         "datasource": {
@@ -3296,13 +3375,13 @@
     ]
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "redis_proxy",
+  "title": "redis_proxy_1",
   "uid": "a7c2844f-b5c0-4da8-9f69-4bfb68404171",
-  "version": 7,
+  "version": 19,
   "weekStart": ""
 }
