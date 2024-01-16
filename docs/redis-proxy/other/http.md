@@ -121,11 +121,13 @@ curl -XPOST -d '{"requestId":"218hsqs9nsxaq","userName":"default","password":"pa
 
 ### 响应参数
 
-|    参数     |     类型     | 是否必填 |           说明            |
-|:---------:|:----------:|:----:|:-----------------------:|
-| requestId |   string   |  否   |         请求唯一标识          |
-| commands  |   array    |  是   |        每一行表示一个命令        |
-|  replies  | json array |  是   | 和commands一一对应，内部是一个嵌套结构 |
+|    参数     |     类型     | 是否必填 |                    说明                    |
+|:---------:|:----------:|:----:|:----------------------------------------:|
+|   code    |   number   |  是   | 业务错误码，200表示成功，其他表示失败，如果失败，则可能没有replies字段 |
+|    msg    |   string   |  否   |                   错误信息                   |
+| requestId |   string   |  否   |                  请求唯一标识                  |
+| commands  |   array    |  是   |                每一行表示一个命令                 |
+|  replies  | json array |  否   |         和commands一一对应，内部是一个嵌套结构          |
 
 `StatusReply` 示例：
 ```json
