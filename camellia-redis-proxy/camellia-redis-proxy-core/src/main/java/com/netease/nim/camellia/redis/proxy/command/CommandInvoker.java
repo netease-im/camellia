@@ -76,20 +76,30 @@ public class CommandInvoker implements ICommandInvoker {
         this.commandInvokeConfig = new CommandInvokeConfig(authCommandProcessor, clusterModeProcessor, sentinelModeProcessor, proxyPluginFactory, proxyCommandProcessor);
     }
 
+    @Override
+    public IUpstreamClientTemplateFactory getUpstreamClientTemplateFactory() {
+        return factory;
+    }
+
+    @Override
+    public CommandInvokeConfig getCommandInvokeConfig() {
+        return commandInvokeConfig;
+    }
+
     private static final FastThreadLocal<CommandsTransponder> threadLocal = new FastThreadLocal<>();
 
     @Override
     public void invoke(ChannelHandlerContext ctx, ChannelInfo channelInfo, List<Command> commands) {
         if (commands.isEmpty()) return;
         try {
-            CommandsTransponder trandponder = threadLocal.get();
-            if (trandponder == null) {
-                trandponder = new CommandsTransponder(factory, commandInvokeConfig);
+            CommandsTransponder transponder = threadLocal.get();
+            if (transponder == null) {
+                transponder = new CommandsTransponder(factory, commandInvokeConfig);
                 logger.info("CommandsTransponder init success");
-                threadLocal.set(trandponder);
+                threadLocal.set(transponder);
             }
             channelInfo.active(commands);
-            trandponder.transpond(channelInfo, commands);
+            transponder.transpond(channelInfo, commands);
         } catch (Exception e) {
             ctx.close();
             logger.error(e.getMessage(), e);

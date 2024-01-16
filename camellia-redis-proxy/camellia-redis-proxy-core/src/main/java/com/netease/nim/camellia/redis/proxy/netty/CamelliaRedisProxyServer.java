@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.netty;
 import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
+import com.netease.nim.camellia.redis.proxy.http.CamelliaRedisProxyHttpServer;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.tls.frontend.ProxyFrontendTlsProvider;
 import com.netease.nim.camellia.redis.proxy.util.ConfigInitUtil;
@@ -32,16 +33,19 @@ public class CamelliaRedisProxyServer {
     private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyServer.class);
 
     private final CamelliaServerProperties serverProperties;
+    private final ICommandInvoker invoker;
     private final ServerHandler serverHandler;
     private final InitHandler tcpInitHandler = new InitHandler(ChannelType.tcp);
     private final InitHandler udsInitHandler = new InitHandler(ChannelType.uds);
     private int port;
     private int tlsPort;
     private String udsPath;
+    private int httpPort;
 
     public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, ICommandInvoker invoker) {
         GlobalRedisProxyEnv.init(serverProperties);
         this.serverProperties = serverProperties;
+        this.invoker = invoker;
         this.serverHandler = new ServerHandler(invoker);
         if (logger.isInfoEnabled()) {
             logger.info("CamelliaRedisProxyServer init, netty-transport-mode = {}, bossThread = {}, workThread = {}",
@@ -126,11 +130,11 @@ public class CamelliaRedisProxyServer {
         List<BindInfo> bindInfoList = new ArrayList<>();
         //port
         if (port > 0) {
-            bindInfoList.add(new BindInfo(bootstrap, port, false, false, null));
+            bindInfoList.add(new BindInfo(bootstrap, port, false, false, null, false));
         }
         //tls port
         if (tlsPort > 0 && tlsPort != port) {
-            bindInfoList.add(new BindInfo(bootstrap, tlsPort, false, true, null));
+            bindInfoList.add(new BindInfo(bootstrap, tlsPort, false, true, null, false));
         }
         this.port = port;
         this.tlsPort = tlsPort;
@@ -150,28 +154,36 @@ public class CamelliaRedisProxyServer {
             GlobalRedisProxyEnv.setSentinelModeEnable(true);
         }
         if (cport > 0) {
-            bindInfoList.add(new BindInfo(bootstrap, cport, true, false, null));
+            bindInfoList.add(new BindInfo(bootstrap, cport, true, false, null, false));
             GlobalRedisProxyEnv.setCport(cport);
         }
         //uds
-        BindInfo bindInfo = startUds();
-        if (bindInfo != null) {
-            bindInfoList.add(bindInfo);
+        BindInfo udsBindInfo = startUds();
+        if (udsBindInfo != null) {
+            bindInfoList.add(udsBindInfo);
         }
+        //http
+        this.httpPort = serverProperties.getHttpPort();
+        CamelliaRedisProxyHttpServer httpServer = new CamelliaRedisProxyHttpServer(httpPort, invoker);
+        BindInfo httpBindInfo = httpServer.start();
+        if (httpBindInfo != null) {
+            bindInfoList.add(httpBindInfo);
+        }
+        GlobalRedisProxyEnv.setHttpPort(httpPort);
 
         //before callback
         GlobalRedisProxyEnv.invokeBeforeStartCallback();
         //bind
         for (BindInfo info : bindInfoList) {
-            if (info.port > 0 && !info.cport && !info.tls && info.udsPath == null) {
+            if (info.port > 0 && !info.cport && !info.tls && info.udsPath == null && !info.httpPort) {
                 logger.info("CamelliaRedisProxyServer start at port: {}", port);
                 ChannelFuture future = info.bootstrap.bind(info.port).sync();
                 GlobalRedisProxyEnv.getProxyShutdown().addServerFuture(future);
-            } else if (info.port > 0 && !info.cport && info.tls && info.udsPath == null) {
+            } else if (info.port > 0 && !info.cport && info.tls && info.udsPath == null && !info.httpPort) {
                 ChannelFuture future = info.bootstrap.bind(info.port).sync();
                 logger.info("CamelliaRedisProxyServer start at port: {} with tls", tlsPort);
                 GlobalRedisProxyEnv.getProxyShutdown().addServerFuture(future);
-            } else if (info.port > 0 && info.cport && !info.tls && info.udsPath == null) {
+            } else if (info.port > 0 && info.cport && !info.tls && info.udsPath == null && !info.httpPort) {
                 if (serverProperties.isClusterModeEnable()) {
                     logger.info("CamelliaRedisProxyServer start in cluster mode at cport: {}", info.port);
                 } else if (serverProperties.isSentinelModeEnable()) {
@@ -181,9 +193,13 @@ public class CamelliaRedisProxyServer {
                 }
                 ChannelFuture future = info.bootstrap.bind(info.port).sync();
                 GlobalRedisProxyEnv.getProxyShutdown().setCportFuture(future);
-            } else if (info.udsPath != null) {
+            } else if (info.udsPath != null && !info.httpPort) {
                 ChannelFuture future = info.bootstrap.bind(new DomainSocketAddress(udsPath)).sync();
                 logger.info("CamelliaRedisProxyServer start at uds: {}", info.udsPath);
+                GlobalRedisProxyEnv.getProxyShutdown().addServerFuture(future);
+            } else if (info.port > 0 && info.httpPort) {
+                ChannelFuture future = info.bootstrap.bind(info.port).sync();
+                logger.info("CamelliaRedisProxyServer start at http: {}", info.port);
                 GlobalRedisProxyEnv.getProxyShutdown().addServerFuture(future);
             }
         }
@@ -194,7 +210,7 @@ public class CamelliaRedisProxyServer {
 
     private BindInfo startUds() {
         String udsPath = serverProperties.getUdsPath();
-        if (udsPath == null || udsPath.length() == 0) {
+        if (udsPath == null || udsPath.isEmpty()) {
             logger.info("CamelliaRedisProxyServer uds disabled, skip start");
             return null;
         }
@@ -234,23 +250,29 @@ public class CamelliaRedisProxyServer {
                 });
         this.udsPath = udsPath;
         GlobalRedisProxyEnv.setUdsPath(udsPath);
-        return new BindInfo(bootstrap, -1, false, false, udsPath);
+        return new BindInfo(bootstrap, -1, false, false, udsPath, false);
     }
 
-    private static class BindInfo {
+    public static class BindInfo {
         ServerBootstrap bootstrap;
         int port;
         boolean tls;
         boolean cport;
         String udsPath;
+        boolean httpPort;
 
-        public BindInfo(ServerBootstrap bootstrap, int port, boolean cport, boolean tls, String udsPath) {
+        public BindInfo(ServerBootstrap bootstrap, int port, boolean cport, boolean tls, String udsPath, boolean httpPort) {
             this.bootstrap = bootstrap;
             this.port = port;
             this.cport = cport;
             this.tls = tls;
             this.udsPath = udsPath;
+            this.httpPort = httpPort;
         }
+    }
+
+    public int getHttpPort() {
+        return httpPort;
     }
 
     public int getPort() {
@@ -264,4 +286,5 @@ public class CamelliaRedisProxyServer {
     public String getUdsPath() {
         return udsPath;
     }
+
 }

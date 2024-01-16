@@ -61,6 +61,7 @@ public class GlobalRedisProxyEnv {
     private static int cport;
     private static int consolePort;
     private static String udsPath;
+    private static int httpPort;
 
     private static IUpstreamClientTemplateFactory clientTemplateFactory;
     private static ProxyDiscoveryFactory discoveryFactory;
@@ -141,6 +142,10 @@ public class GlobalRedisProxyEnv {
 
     public static void setCport(int cport) {
         GlobalRedisProxyEnv.cport = cport;
+    }
+
+    public static void setHttpPort(int httpPort) {
+        GlobalRedisProxyEnv.httpPort = httpPort;
     }
 
     public static void setUdsPath(String udsPath) {
@@ -240,6 +245,10 @@ public class GlobalRedisProxyEnv {
 
     public static int getCport() {
         return cport;
+    }
+
+    public static int getHttpPort() {
+        return httpPort;
     }
 
     public static String getUdsPath() {

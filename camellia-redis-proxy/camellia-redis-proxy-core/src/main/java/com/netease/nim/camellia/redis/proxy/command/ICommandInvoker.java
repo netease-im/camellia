@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.command;
 
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
+import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import io.netty.channel.ChannelHandlerContext;
 
 import java.util.List;
@@ -12,4 +13,8 @@ import java.util.List;
 public interface ICommandInvoker {
 
     void invoke(ChannelHandlerContext ctx, ChannelInfo channelInfo, List<Command> commands);
+
+    IUpstreamClientTemplateFactory getUpstreamClientTemplateFactory();
+
+    CommandInvokeConfig getCommandInvokeConfig();
 }

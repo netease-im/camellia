@@ -15,16 +15,16 @@ public class HttpCommandConverter {
     public static final char doubleQuotation = '\"';
     public static final char blank = ' ';
 
-    public static List<Command> toCommands(HttpCommandRequest request) {
+    public static List<Command> convert(HttpCommandRequest request) {
         List<String> commands = request.getCommands();
         List<Command> list = new ArrayList<>();
         for (String command : commands) {
-            list.add(toCommand(command));
+            list.add(convert(command));
         }
         return list;
     }
 
-    public static Command toCommand(String command) {
+    public static Command convert(String command) {
         if (!command.contains("'") && !command.contains("\"")) {
             String[] split = command.split(" ");
             byte[][] args = new byte[split.length][];

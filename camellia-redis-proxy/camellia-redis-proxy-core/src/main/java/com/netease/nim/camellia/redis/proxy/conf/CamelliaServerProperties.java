@@ -17,6 +17,7 @@ public class CamelliaServerProperties {
     private int port = Constants.Server.severPort;
     private int tlsPort = -1;
     private int cport = -1;
+    private int httpPort = -1;
     private String udsPath = "";
     private String applicationName;
     private String password;
@@ -88,6 +89,14 @@ public class CamelliaServerProperties {
 
     public void setUdsPath(String udsPath) {
         this.udsPath = udsPath;
+    }
+
+    public int getHttpPort() {
+        return httpPort;
+    }
+
+    public void setHttpPort(int httpPort) {
+        this.httpPort = httpPort;
     }
 
     public String getApplicationName() {

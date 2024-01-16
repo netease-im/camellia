@@ -14,19 +14,23 @@ public class TestHttp {
 
 
     public static void main(String[] args) {
-        test(HttpCommandConverter.toCommand("set k1 v1"), Arrays.asList("set", "k1", "v1"));
+        test(HttpCommandConverter.convert("set k1 v1"), Arrays.asList("set", "k1", "v1"));
         System.out.println("===");
-        test(HttpCommandConverter.toCommand("set k1 'ab c'"), Arrays.asList("set", "k1", "ab c"));
+        test(HttpCommandConverter.convert("set k1 'ab c'"), Arrays.asList("set", "k1", "ab c"));
         System.out.println("===");
-        test(HttpCommandConverter.toCommand("set k1 \"ab c\""), Arrays.asList("set", "k1", "ab c"));
+        test(HttpCommandConverter.convert("   set   k1 'ab c'"), Arrays.asList("set", "k1", "ab c"));
         System.out.println("===");
-        test(HttpCommandConverter.toCommand("set k1 \"ab'c\""), Arrays.asList("set", "k1", "ab'c"));
+        test(HttpCommandConverter.convert(" 'set' k1 'ab c'"), Arrays.asList("set", "k1", "ab c"));
         System.out.println("===");
-        test(HttpCommandConverter.toCommand("set k1 \"ab' c\""), Arrays.asList("set", "k1", "ab' c"));
+        test(HttpCommandConverter.convert("set k1 \"ab c\""), Arrays.asList("set", "k1", "ab c"));
         System.out.println("===");
-        test(HttpCommandConverter.toCommand("set k1 'ab\"c'"), Arrays.asList("set", "k1", "ab\"c"));
+        test(HttpCommandConverter.convert("set k1 \"ab'c\""), Arrays.asList("set", "k1", "ab'c"));
         System.out.println("===");
-        test(HttpCommandConverter.toCommand("set k1 'ab\" c'   abc"), Arrays.asList("set", "k1", "ab\" c", "abc"));
+        test(HttpCommandConverter.convert("set k1 \"ab' c\""), Arrays.asList("set", "k1", "ab' c"));
+        System.out.println("===");
+        test(HttpCommandConverter.convert("set k1 'ab\"c'"), Arrays.asList("set", "k1", "ab\"c"));
+        System.out.println("===");
+        test(HttpCommandConverter.convert("set k1 'ab\" c'   abc"), Arrays.asList("set", "k1", "ab\" c", "abc"));
 
         System.out.println("SUCCESS!!!");
     }

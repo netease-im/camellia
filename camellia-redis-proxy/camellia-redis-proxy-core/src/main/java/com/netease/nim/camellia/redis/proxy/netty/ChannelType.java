@@ -6,6 +6,7 @@ package com.netease.nim.camellia.redis.proxy.netty;
 public enum ChannelType {
     tcp,
     uds,
+    http,
     unknown,
     ;
 }

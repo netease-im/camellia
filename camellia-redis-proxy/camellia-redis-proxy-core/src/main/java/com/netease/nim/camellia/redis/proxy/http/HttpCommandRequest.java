@@ -8,6 +8,9 @@ import java.util.List;
 public class HttpCommandRequest {
 
     private String requestId;
+    private String userName;
+    private String password;
+    private int db = -1;
     private List<String> commands;
 
     public String getRequestId() {
@@ -16,6 +19,30 @@ public class HttpCommandRequest {
 
     public void setRequestId(String requestId) {
         this.requestId = requestId;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public int getDb() {
+        return db;
+    }
+
+    public void setDb(int db) {
+        this.db = db;
     }
 
     public List<String> getCommands() {

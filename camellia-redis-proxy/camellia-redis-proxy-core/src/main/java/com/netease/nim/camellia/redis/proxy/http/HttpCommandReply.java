@@ -8,6 +8,8 @@ import java.util.List;
 public class HttpCommandReply {
     private String requestId;
     private List<String> commands;
+    private int code;
+    private String msg;
     private List<Object> replies;
 
     public String getRequestId() {
@@ -24,6 +26,22 @@ public class HttpCommandReply {
 
     public void setCommands(List<String> commands) {
         this.commands = commands;
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public void setCode(int code) {
+        this.code = code;
+    }
+
+    public String getMsg() {
+        return msg;
+    }
+
+    public void setMsg(String msg) {
+        this.msg = msg;
     }
 
     public List<Object> getReplies() {

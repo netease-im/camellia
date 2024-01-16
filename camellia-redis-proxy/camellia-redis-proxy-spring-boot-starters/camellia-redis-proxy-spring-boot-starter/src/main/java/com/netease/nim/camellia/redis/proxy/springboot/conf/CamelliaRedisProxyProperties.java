@@ -37,6 +37,11 @@ public class CamelliaRedisProxyProperties {
     private String udsPath = "";
 
     /**
+     * proxy的http的port，如果小于等于0，则表示不启用http
+     */
+    private int httpPort = -1;
+
+    /**
      * proxy的名字，用于注册到注册中心，如果没有指定，则使用spring.application.name
      */
     private String applicationName = "";
@@ -173,6 +178,14 @@ public class CamelliaRedisProxyProperties {
 
     public void setUdsPath(String udsPath) {
         this.udsPath = udsPath;
+    }
+
+    public int getHttpPort() {
+        return httpPort;
+    }
+
+    public void setHttpPort(int httpPort) {
+        this.httpPort = httpPort;
     }
 
     public String getApplicationName() {

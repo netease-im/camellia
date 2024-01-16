@@ -30,8 +30,9 @@ public class CamelliaRedisProxyUtil {
         } else {
             serverProperties.setPort(properties.getPort());
         }
+        serverProperties.setHttpPort(properties.getHttpPort());
         serverProperties.setTlsPort(properties.getTlsPort());
-        if (properties.getApplicationName() != null && properties.getApplicationName().trim().length() == 0) {
+        if (properties.getApplicationName() != null && properties.getApplicationName().trim().isEmpty()) {
             serverProperties.setApplicationName(applicationName);
         } else {
             serverProperties.setApplicationName(properties.getApplicationName());
