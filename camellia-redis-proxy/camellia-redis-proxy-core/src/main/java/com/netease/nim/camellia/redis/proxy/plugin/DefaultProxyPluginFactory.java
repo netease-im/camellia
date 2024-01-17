@@ -68,7 +68,7 @@ public class DefaultProxyPluginFactory implements ProxyPluginFactory {
     public ProxyPluginInitResp initPlugins() {
         // 根据配置中的名称构建插件
         Set<String> pluginSet = new HashSet<>(defaultPlugins);
-        if (pluginConf != null && pluginConf.trim().length() != 0) {
+        if (pluginConf != null && !pluginConf.trim().isEmpty()) {
             String[] split = pluginConf.trim().split(",");
             pluginSet.addAll(Arrays.asList(split));
         }

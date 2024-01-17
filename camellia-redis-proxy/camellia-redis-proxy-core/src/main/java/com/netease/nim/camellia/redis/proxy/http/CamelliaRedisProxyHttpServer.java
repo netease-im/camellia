@@ -1,13 +1,12 @@
 package com.netease.nim.camellia.redis.proxy.http;
 
 import com.alibaba.fastjson.JSONObject;
-import com.netease.nim.camellia.redis.proxy.auth.ClientAuthProvider;
 import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
-import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -22,9 +21,9 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaderNames.TRANSFER_ENCODING;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.*;
+import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 
 /**
  * Created by caojiajun on 2024/1/16
@@ -128,7 +127,7 @@ public class CamelliaRedisProxyHttpServer {
                                             respResponse(ctx, httpRequest, httpResponse);
                                         });
                                     } catch (Exception e) {
-                                        logger.error("internal error", e);
+                                        ErrorLogCollector.collect(CamelliaRedisProxyHttpServer.class, "internal error", e);
                                         respResponse(ctx, httpRequest, INTERNAL_SERVER_ERROR);
                                     }
                                 }
@@ -157,6 +156,7 @@ public class CamelliaRedisProxyHttpServer {
             close = true;
         }
         httpResponse.headers().set(TRANSFER_ENCODING, CHUNKED);
+        httpResponse.headers().set(CONTENT_TYPE, APPLICATION_JSON);
         ChannelFuture f = ctx.writeAndFlush(httpResponse);
         if (close) {
             f.addListener(ChannelFutureListener.CLOSE);
