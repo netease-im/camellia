@@ -86,7 +86,8 @@ public class HttpCommandTransponder {
                 future.complete(wrapperError(request, BAD_REQUEST, "blocking commands not support"));
                 return future;
             }
-            if (redisCommand.getCommandType() == RedisCommand.CommandType.PUB_SUB) {
+            if (redisCommand.getCommandType() == RedisCommand.CommandType.PUB_SUB
+                    && (redisCommand != RedisCommand.PUBLISH && redisCommand != RedisCommand.SPUBLISH && redisCommand != RedisCommand.PUBSUB)) {
                 future.complete(wrapperError(request, BAD_REQUEST, "pub-sub commands not support"));
                 return future;
             }
@@ -186,14 +187,14 @@ public class HttpCommandTransponder {
         //reply merge
         CompletableFuture<List<Reply>> replyFuture = CompletableFutureUtils.allOf(futures);
         replyFuture.thenAccept(list -> {
-                List<Object> replies = HttpCommandReplyConverter.convert(list);
-                HttpCommandReply reply = new HttpCommandReply();
-                reply.setRequestId(request.getRequestId());
-                reply.setCode(SUCCESS);
-                reply.setCommands(request.getCommands());
-                reply.setReplies(replies);
-                future.complete(reply);
-            });
+            List<Object> replies = HttpCommandReplyConverter.convert(list, request.isReplyBase64());
+            HttpCommandReply reply = new HttpCommandReply();
+            reply.setRequestId(request.getRequestId());
+            reply.setCode(SUCCESS);
+            reply.setCommands(request.getCommands());
+            reply.setReplies(replies);
+            future.complete(reply);
+        });
         return future;
     }
 

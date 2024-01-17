@@ -11,7 +11,7 @@ PROXY,SELECT,HELLO,AUTH,SENTINEL,CLUSTER,ASKING,QUIT,
 ```
 ```
 阻塞型的命令
-发布订阅命令
+发布订阅命令（仅支持PUBLISH、SPUBLISH、PUBSUB）
 事务命令
 ```
 
@@ -112,15 +112,17 @@ curl -XPOST -d '{"requestId":"218hsqs9nsxaq","userName":"default","password":"pa
 
 ### 请求参数
 
-|    参数     |   类型   | 是否必填 |                         说明                          |
-|:---------:|:------:|:----:|:---------------------------------------------------:|
-| requestId | string |  否   |                       请求唯一标识                        |
-| userName  | string |  否   |                    取决于proxy的鉴权配置                    |
-| password  | string |  否   |                    取决于proxy的鉴权配置                    |
-|    db     | number |  否   |                   默认-1，表示不显式设置db                    |
-|    bid    | number |  否   | 默认null，如果proxy使用了password到bid/bgroup的多租户映射，则不能设置本参数 |
-|  bgroup   | string |  否   | 默认null，如果proxy使用了password到bid/bgroup的多租户映射，则不能设置本参数 |
-| commands  | array  |  是   |                      每一行表示一个命令                      |
+|      参数       |   类型    | 是否必填 |                                 说明                                 |
+|:-------------:|:-------:|:----:|:------------------------------------------------------------------:|
+|   requestId   | string  |  否   |                               请求唯一标识                               |
+|   userName    | string  |  否   |                           取决于proxy的鉴权配置                            |
+|   password    | string  |  否   |                           取决于proxy的鉴权配置                            |
+|      db       | number  |  否   |                           默认-1，表示不显式设置db                           |
+| requestBase64 | boolean |  否   | 默认false，如果设置为true，则除了第一个参数是直接的字符串，其他参数服务器都会做base64解码，方便客户端传递二进制的内容 |
+|  replyBase64  | boolean |  否   |             默认false，如果设置为true，则回包中的bulk类型，也回改成base64返回             |
+|      bid      | number  |  否   |        默认null，如果proxy使用了password到bid/bgroup的多租户映射，则不能设置本参数         |
+|    bgroup     | string  |  否   |        默认null，如果proxy使用了password到bid/bgroup的多租户映射，则不能设置本参数         |
+|   commands    |  array  |  是   |                             每一行表示一个命令                              |
 
 ### 响应参数
 
@@ -160,7 +162,15 @@ curl -XPOST -d '{"requestId":"218hsqs9nsxaq","userName":"default","password":"pa
 ```json
 {
   "error": false,
+  "base64": false,
   "value": "abc"
+}
+```
+```json
+{
+  "error": false,
+  "base64": true,
+  "value": "Y2FtZWxsaWE="
 }
 ```
 如果value是null，则没有 `value` 字段
@@ -173,10 +183,12 @@ curl -XPOST -d '{"requestId":"218hsqs9nsxaq","userName":"default","password":"pa
     [
         {
             "error": false,
+            "base64": false,
             "value": "v1"
         },
         {
             "error": false,
+            "base64": false,
             "value": "v2"
         },
         {
@@ -185,4 +197,4 @@ curl -XPOST -d '{"requestId":"218hsqs9nsxaq","userName":"default","password":"pa
     ]
 }
 ```
-`value` 是一个数组，每一项是一个 `reply`
+`value` 是一个数组，每一项是一个 `reply`  

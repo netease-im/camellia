@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 
@@ -15,7 +16,7 @@ import java.util.List;
  */
 public class HttpCommandReplyConverter {
 
-    public static List<Object> convert(List<Reply> replies) {
+    public static List<Object> convert(List<Reply> replies, boolean base64) {
         if (replies == null) {
             return null;
         }
@@ -24,12 +25,12 @@ public class HttpCommandReplyConverter {
         }
         List<Object> list = new ArrayList<>();
         for (Reply reply : replies) {
-            list.add(convert(reply));
+            list.add(convert(reply, base64));
         }
         return list;
     }
 
-    public static JSON convert(Reply reply) {
+    public static JSON convert(Reply reply, boolean base64) {
         if (reply instanceof StatusReply) {
             JSONObject json = new JSONObject();
             json.put("error", false);
@@ -48,7 +49,16 @@ public class HttpCommandReplyConverter {
         } else if (reply instanceof BulkReply) {
             JSONObject json = new JSONObject();
             json.put("error", false);
-            json.put("value", Utils.bytesToString(((BulkReply) reply).getRaw()));
+            byte[] raw = ((BulkReply) reply).getRaw();
+            if (raw == null) {
+                return json;
+            }
+            json.put("base64", base64);
+            if (base64) {
+                json.put("value", Base64.getEncoder().encodeToString(raw));
+            } else {
+                json.put("value", Utils.bytesToString(raw));
+            }
             return json;
         } else if (reply instanceof MultiBulkReply) {
             Reply[] replies = ((MultiBulkReply) reply).getReplies();
@@ -59,7 +69,7 @@ public class HttpCommandReplyConverter {
             } else {
                 JSONArray array = new JSONArray();
                 for (Reply subReply : replies) {
-                    array.add(convert(subReply));
+                    array.add(convert(subReply, base64));
                 }
                 json.put("value", array);
             }
