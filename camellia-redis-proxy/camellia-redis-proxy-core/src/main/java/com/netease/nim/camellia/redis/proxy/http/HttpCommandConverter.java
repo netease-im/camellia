@@ -37,10 +37,19 @@ public class HttpCommandConverter {
             boolean inArg = false;
             StringBuilder arg = new StringBuilder();
             Character quotation = null;
-            for (char c : command.toCharArray()) {
+            int index = 0;
+            char[] array = command.toCharArray();
+            for (char c : array) {
                 if (c == singleQuotation || c == doubleQuotation) {
                     if (inArg) {
                         if (quotation != null && quotation == c) {
+                            boolean lastChar = index == (array.length - 1);
+                            if (!lastChar) {
+                                boolean nextCharBlack = array[index + 1] == blank;
+                                if (!nextCharBlack) {
+                                    throw new IllegalArgumentException("Invalid argument(s)");
+                                }
+                            }
                             quotation = null;
                             inArg = false;
                             args.add(arg.toString());
@@ -66,6 +75,10 @@ public class HttpCommandConverter {
                     arg.append(c);
                     inArg = true;
                 }
+                index ++;
+            }
+            if (quotation != null) {
+                throw new IllegalArgumentException("Invalid argument(s)");
             }
             if (arg.length() > 0) {
                 args.add(arg.toString());
