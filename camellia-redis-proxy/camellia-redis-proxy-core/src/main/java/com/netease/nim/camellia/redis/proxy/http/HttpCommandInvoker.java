@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.http;
 
-import com.netease.nim.camellia.redis.proxy.auth.ClientAuthProvider;
 import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
@@ -28,8 +27,7 @@ public class HttpCommandInvoker {
         HttpCommandTransponder transponder = threadLocal.get();
         if (transponder == null) {
             IUpstreamClientTemplateFactory factory = invoker.getUpstreamClientTemplateFactory();
-            ClientAuthProvider clientAuthProvider = invoker.getCommandInvokeConfig().getAuthCommandProcessor().getClientAuthProvider();
-            transponder = new HttpCommandTransponder(clientAuthProvider, factory);
+            transponder = new HttpCommandTransponder(factory, invoker.getCommandInvokeConfig());
             logger.info("HttpCommandTransponder init success");
             threadLocal.set(transponder);
         }

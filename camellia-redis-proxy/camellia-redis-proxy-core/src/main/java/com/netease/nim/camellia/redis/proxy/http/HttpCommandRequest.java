@@ -10,6 +10,8 @@ public class HttpCommandRequest {
     private String requestId;
     private String userName;
     private String password;
+    private Long bid;
+    private String bgroup;
     private int db = -1;
     private List<String> commands;
 
@@ -35,6 +37,22 @@ public class HttpCommandRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Long getBid() {
+        return bid;
+    }
+
+    public void setBid(Long bid) {
+        this.bid = bid;
+    }
+
+    public String getBgroup() {
+        return bgroup;
+    }
+
+    public void setBgroup(String bgroup) {
+        this.bgroup = bgroup;
     }
 
     public int getDb() {

@@ -17,7 +17,7 @@ public class HttpCommandConverter {
 
     public static List<Command> convert(HttpCommandRequest request) {
         List<String> commands = request.getCommands();
-        List<Command> list = new ArrayList<>();
+        List<Command> list = new ArrayList<>(commands.size());
         for (String command : commands) {
             list.add(convert(command));
         }

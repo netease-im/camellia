@@ -110,7 +110,7 @@ public class CommandsTransponder {
                     return;
                 }
 
-                RouteRewriteResult rewriterResult = null;
+                RouteRewriteResult rewriteResult = null;
                 List<ProxyPlugin> requestPlugins = proxyPluginInitResp.getRequestPlugins();
                 if (!requestPlugins.isEmpty()) {
                     boolean pluginBreak = false;
@@ -121,7 +121,7 @@ public class CommandsTransponder {
                             ProxyPluginResponse response = plugin.executeRequest(request);
                             RouteRewriteResult result = response.getRouteRewriterResult();
                             if (result != null) {
-                                rewriterResult = result;
+                                rewriteResult = result;
                             }
                             if (!response.isPass()) {
                                 reply(channelInfo, task, command.getRedisCommand(), response.getReply(), true);
@@ -363,9 +363,9 @@ public class CommandsTransponder {
                 }
 
                 //检查是否有路由rewrite
-                if (rewriterResult != null) {
-                    long bid = rewriterResult.getBid();
-                    String bgroup = rewriterResult.getBgroup();
+                if (rewriteResult != null) {
+                    long bid = rewriteResult.getBid();
+                    String bgroup = rewriteResult.getBgroup();
                     if (bid > 0 && bgroup != null) {
                         //判定路由是否有变更
                         if (!Objects.equals(bid, channelInfo.getBid()) || !bgroup.equals(channelInfo.getBgroup())) {
