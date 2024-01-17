@@ -25,6 +25,8 @@ public enum BuildInProxyPluginEnum {
     //Dynamic IP Checker, configured by camellia-dashboard
     DYNAMIC_IP_CHECKER_PLUGIN("dynamicIpCheckerPlugin", DynamicIpCheckProxyPlugin.class, Integer.MAX_VALUE - 10000, 0),
 
+    //只读
+    READ_ONLY_PLUGIN("readOnlyPlugin", ReadOnlyProxyPlugin.class, Integer.MAX_VALUE - 15000, 0),
     //屏蔽某些命令
     COMMAND_DISABLE_PLUGIN("commandDisablePlugin", CommandDisableProxyPlugin.class, Integer.MAX_VALUE - 20000, 0),
     //用于控制请求速率
@@ -32,7 +34,7 @@ public enum BuildInProxyPluginEnum {
     //Dynamic Rate Limit, configured by camellia-dashboard
     DYNAMIC_RATE_LIMIT_PLUGIN("dynamicRateLimitPlugin", DynamicRateLimitProxyPlugin.class, Integer.MAX_VALUE - 30000, 0),
     //用于拦截非法的key，直接快速失败
-    TROUBLE_TRICK_KEYS_PLUGIN("troubleTrickKeys", TroubleTrickKeysProxyPlugin.class, Integer.MAX_VALUE - 40000, 0),
+    TROUBLE_TRICK_KEYS_PLUGIN("troubleTrickKeysPlugin", TroubleTrickKeysProxyPlugin.class, Integer.MAX_VALUE - 40000, 0),
 
     //用于监控热key
     HOT_KEY_PLUGIN("hotKeyPlugin", HotKeyProxyPlugin.class, 20000, 0),

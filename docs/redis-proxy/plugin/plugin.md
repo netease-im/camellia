@@ -82,6 +82,8 @@ public enum BuildInProxyPluginEnum {
     //Dynamic IP Checker, configured by camellia-dashboard
     DYNAMIC_IP_CHECKER_PLUGIN("dynamicIpCheckerPlugin", DynamicIpCheckProxyPlugin.class, Integer.MAX_VALUE - 10000, 0),
 
+    //只读
+    READ_ONLY_PLUGIN("readOnlyPlugin", ReadOnlyProxyPlugin.class, Integer.MAX_VALUE - 15000, 0),
     //屏蔽某些命令
     COMMAND_DISABLE_PLUGIN("commandDisablePlugin", CommandDisableProxyPlugin.class, Integer.MAX_VALUE - 20000, 0),
     //用于控制请求速率
@@ -89,7 +91,7 @@ public enum BuildInProxyPluginEnum {
     //Dynamic Rate Limit, configured by camellia-dashboard
     DYNAMIC_RATE_LIMIT_PLUGIN("dynamicRateLimitPlugin", DynamicRateLimitProxyPlugin.class, Integer.MAX_VALUE - 30000, 0),
     //用于拦截非法的key，直接快速失败
-    TROUBLE_TRICK_KEYS_PLUGIN("troubleTrickKeys", TroubleTrickKeysProxyPlugin.class, Integer.MAX_VALUE - 40000, 0),
+    TROUBLE_TRICK_KEYS_PLUGIN("troubleTrickKeysPlugin", TroubleTrickKeysProxyPlugin.class, Integer.MAX_VALUE - 40000, 0),
 
     //用于监控热key
     HOT_KEY_PLUGIN("hotKeyPlugin", HotKeyProxyPlugin.class, 20000, 0),
@@ -136,6 +138,7 @@ public enum BuildInProxyPluginEnum {
 * DynamicIpCheckProxyPlugin，用于控制客户端接入，支持ip黑白名单，通过camellia-dashboard托管配置，具体见：[dynamic-ip-checker](dynamic-ip-checker.md)
 * CommandDisableProxyPlugin，用于屏蔽某些命令，具体见：[command-disable](command-disable.md)
 * HotKeyRouteRewriteProxyPlugin，覆盖了HotKeyProxyPlugin的功能，用于监控热key并转发到自定义路由，具体见：[hot-key-route-rewrite](hot-key-route-rewrite.md)
+* ReadOnlyProxyPlugin，开启后，只接受读命令
 
 ### 内置插件修改默认执行顺序的方法(1.2.4开始支持)
 在camellia-redis-proxy.properties或者application.yml的config中，配置如下key-value-config：
