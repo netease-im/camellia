@@ -3,6 +3,8 @@ package com.netease.nim.camellia.redis.proxy.http;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.monitor.CommandFailMonitor;
+import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
@@ -142,6 +144,11 @@ public class CamelliaRedisProxyHttpServer {
     }
 
     private void respResponse(ChannelHandlerContext ctx, FullHttpRequest httpRequest, FullHttpResponse httpResponse) {
+        if (ProxyMonitorCollector.isMonitorEnable()) {
+            if (httpResponse.status() != HttpResponseStatus.OK) {
+                CommandFailMonitor.incr("http.code=" + httpResponse.status().code());
+            }
+        }
         boolean keepAlive = HttpUtil.isKeepAlive(httpRequest);
         boolean close = false;
         if (keepAlive) {
