@@ -42,7 +42,7 @@ camellia-redis-proxy:
 
 
 ```shell
-curl -XPOST -d '{"requestId":"218hsqs9nsxaq","userName":"default","password":"pass123","db":-1,"commands":["set k1 v1","set k2 v2","get k1","mget k1 k2 k3"]}' http://127.0.0.1:8080/commands
+curl -XPOST -d '{"requestId":"218hsqs9nsxaq","userName":"default","password":"pass123","commands":["set k1 v1","set k2 v2","get k1","mget k1 k2 k3"]}' http://127.0.0.1:8080/commands
 ```
 
 请求体
@@ -111,13 +111,15 @@ curl -XPOST -d '{"requestId":"218hsqs9nsxaq","userName":"default","password":"pa
 
 ### 请求参数
 
-|    参数     |   类型   | 是否必填 |      说明       |
-|:---------:|:------:|:----:|:-------------:|
-| requestId | string |  否   |    请求唯一标识     |
-| userName  | string |  否   | 取决于proxy的鉴权配置 |
-| password  | string |  否   | 取决于proxy的鉴权配置 |
-|    db     | number |  否   | 默认-1，表示显示设置db |
-| commands  | array  |  是   |   每一行表示一个命令   |
+|    参数     |   类型   | 是否必填 |                         说明                          |
+|:---------:|:------:|:----:|:---------------------------------------------------:|
+| requestId | string |  否   |                       请求唯一标识                        |
+| userName  | string |  否   |                    取决于proxy的鉴权配置                    |
+| password  | string |  否   |                    取决于proxy的鉴权配置                    |
+|    db     | number |  否   |                   默认-1，表示不显式设置db                    |
+|    bid    | number |  否   | 默认null，如果proxy使用了password到bid/bgroup的多租户映射，则不能设置本参数 |
+|  bgroup   | string |  否   | 默认null，如果proxy使用了password到bid/bgroup的多租户映射，则不能设置本参数 |
+| commands  | array  |  是   |                      每一行表示一个命令                      |
 
 ### 响应参数
 
