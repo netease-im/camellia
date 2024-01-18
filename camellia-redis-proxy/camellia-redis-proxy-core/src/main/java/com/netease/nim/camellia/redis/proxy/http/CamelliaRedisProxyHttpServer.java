@@ -8,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
+import com.netease.nim.camellia.redis.proxy.netty.InitHandler;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -69,6 +70,7 @@ public class CamelliaRedisProxyHttpServer {
 
             int maxContentLength = ProxyDynamicConf.getInt("http.server.max.content.length", 20*1024*1024);
 
+            InitHandler initHandler = new InitHandler(ChannelType.http);
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, soBacklog)
@@ -83,6 +85,7 @@ public class CamelliaRedisProxyHttpServer {
                             ChannelPipeline pipeline = channel.pipeline();
                             pipeline.addLast(new HttpServerCodec());
                             pipeline.addLast(new HttpObjectAggregator(maxContentLength));
+                            pipeline.addLast(initHandler);
                             pipeline.addLast(new SimpleChannelInboundHandler<FullHttpRequest>() {
 
                                 @Override
@@ -105,9 +108,6 @@ public class CamelliaRedisProxyHttpServer {
                                             return;
                                         }
                                         ChannelInfo channelInfo = ChannelInfo.get(ctx);
-                                        if (channelInfo == null) {
-                                            channelInfo = ChannelInfo.init(ctx, ChannelType.http);
-                                        }
                                         //request
                                         ByteBuf content = httpRequest.content();
                                         byte[] data = new byte[content.readableBytes()];

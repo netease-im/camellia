@@ -118,7 +118,7 @@ curl -XPOST -d '{"requestId":"218hsqs9nsxaq","userName":"default","password":"pa
 |   userName    | string  |  否   |                           取决于proxy的鉴权配置                            |
 |   password    | string  |  否   |                           取决于proxy的鉴权配置                            |
 |      db       | number  |  否   |                           默认-1，表示不显式设置db                           |
-| requestBase64 | boolean |  否   | 默认false，如果设置为true，则除了第一个参数是直接的字符串，其他参数服务器都会做base64解码，方便客户端传递二进制的内容 |
+| commandBase64 | boolean |  否   | 默认false，如果设置为true，则除了第一个参数是直接的字符串，其他参数服务器都会做base64解码，方便客户端传递二进制的内容 |
 |  replyBase64  | boolean |  否   |             默认false，如果设置为true，则回包中的bulk类型，也回改成base64返回             |
 |      bid      | number  |  否   |        默认null，如果proxy使用了password到bid/bgroup的多租户映射，则不能设置本参数         |
 |    bgroup     | string  |  否   |        默认null，如果proxy使用了password到bid/bgroup的多租户映射，则不能设置本参数         |

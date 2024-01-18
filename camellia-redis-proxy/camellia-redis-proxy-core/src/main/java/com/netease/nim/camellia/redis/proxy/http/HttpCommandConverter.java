@@ -20,7 +20,7 @@ public class HttpCommandConverter {
         List<String> commands = request.getCommands();
         List<Command> list = new ArrayList<>(commands.size());
         for (String command : commands) {
-            list.add(convert(command, request.isRequestBase64()));
+            list.add(convert(command, request.isCommandBase64()));
         }
         return list;
     }

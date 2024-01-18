@@ -13,7 +13,7 @@ public class HttpCommandRequest {
     private Long bid;
     private String bgroup;
     private int db = -1;
-    private boolean requestBase64 = false;
+    private boolean commandBase64 = false;
     private boolean replyBase64 = false;
     private List<String> commands;
 
@@ -65,12 +65,12 @@ public class HttpCommandRequest {
         this.db = db;
     }
 
-    public boolean isRequestBase64() {
-        return requestBase64;
+    public boolean isCommandBase64() {
+        return commandBase64;
     }
 
-    public void setRequestBase64(boolean requestBase64) {
-        this.requestBase64 = requestBase64;
+    public void setCommandBase64(boolean commandBase64) {
+        this.commandBase64 = commandBase64;
     }
 
     public boolean isReplyBase64() {
