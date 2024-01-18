@@ -42,6 +42,7 @@ public class HttpCommandTransponder {
         notSupportedCommands.add(RedisCommand.CLUSTER);
         notSupportedCommands.add(RedisCommand.ASKING);
         notSupportedCommands.add(RedisCommand.QUIT);
+        notSupportedCommands.add(RedisCommand.CLIENT);
     }
 
     private final ClientAuthProvider clientAuthProvider;
