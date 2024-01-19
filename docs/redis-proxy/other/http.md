@@ -10,10 +10,12 @@
 PROXY,SELECT,HELLO,AUTH,SENTINEL,CLUSTER,ASKING,QUIT,CLIENT,
 ```
 ```
-阻塞型的命令
 发布订阅命令（仅支持PUBLISH、SPUBLISH、PUBSUB）
-事务命令
 ```
+
+备注：  
+* 阻塞型命令请注意http超时和redis命令超时两个参数的设置
+* 事务型命令请务必在一次请求中包括`MULTI/EXEC/DISCARD`的完整命令组合
 
 ### 快速开始
 

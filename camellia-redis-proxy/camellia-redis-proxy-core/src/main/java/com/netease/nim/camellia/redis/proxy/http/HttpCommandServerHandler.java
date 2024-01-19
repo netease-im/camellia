@@ -125,17 +125,9 @@ public class HttpCommandServerHandler extends SimpleChannelInboundHandler<FullHt
                     aggregator.addResponse(wrapperError(aggregator, request, BAD_REQUEST, "command ‘" + command.getName() + "’ not support"));
                     return;
                 }
-                if (command.isBlocking()) {
-                    aggregator.addResponse(wrapperError(aggregator, request, BAD_REQUEST, "blocking commands not support"));
-                    return;
-                }
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.PUB_SUB
                         && (redisCommand != RedisCommand.PUBLISH && redisCommand != RedisCommand.SPUBLISH && redisCommand != RedisCommand.PUBSUB)) {
                     aggregator.addResponse(wrapperError(aggregator, request, BAD_REQUEST, "pub-sub commands not support"));
-                    return;
-                }
-                if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
-                    aggregator.addResponse(wrapperError(aggregator, request, BAD_REQUEST, "transaction commands not support"));
                     return;
                 }
             }
