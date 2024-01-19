@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.http;
 
 import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.netty.BindInfo;
 import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
 import com.netease.nim.camellia.redis.proxy.netty.InitHandler;
@@ -31,7 +32,7 @@ public class CamelliaRedisProxyHttpServer {
         this.serverHandler = new HttpCommandServerHandler(invoker);
     }
 
-    public CamelliaRedisProxyServer.BindInfo start() {
+    public BindInfo start() {
         try {
             if (port <= 0) {
                 logger.info("CamelliaRedisProxyServer http disabled, skip start");
@@ -71,7 +72,7 @@ public class CamelliaRedisProxyHttpServer {
                             pipeline.addLast(serverHandler);
                         }
                     });
-            return new CamelliaRedisProxyServer.BindInfo(bootstrap, port, false, false, null, true);
+            return new BindInfo(BindInfo.Type.HTTP, bootstrap, port);
         } catch (Exception e) {
             logger.error("camellia redis proxy http server start error, port = {}", port, e);
             throw new IllegalStateException(e);

@@ -130,11 +130,11 @@ public class CamelliaRedisProxyServer {
         List<BindInfo> bindInfoList = new ArrayList<>();
         //port
         if (port > 0) {
-            bindInfoList.add(new BindInfo(bootstrap, port, false, false, null, false));
+            bindInfoList.add(new BindInfo(BindInfo.Type.PORT, bootstrap, port));
         }
         //tls port
         if (tlsPort > 0 && tlsPort != port) {
-            bindInfoList.add(new BindInfo(bootstrap, tlsPort, false, true, null, false));
+            bindInfoList.add(new BindInfo(BindInfo.Type.TLS_PORT, bootstrap, tlsPort));
         }
         this.port = port;
         this.tlsPort = tlsPort;
@@ -154,7 +154,7 @@ public class CamelliaRedisProxyServer {
             GlobalRedisProxyEnv.setSentinelModeEnable(true);
         }
         if (cport > 0) {
-            bindInfoList.add(new BindInfo(bootstrap, cport, true, false, null, false));
+            bindInfoList.add(new BindInfo(BindInfo.Type.CPORT, bootstrap, cport));
             GlobalRedisProxyEnv.setCport(cport);
         }
         //uds
@@ -175,15 +175,15 @@ public class CamelliaRedisProxyServer {
         GlobalRedisProxyEnv.invokeBeforeStartCallback();
         //bind
         for (BindInfo info : bindInfoList) {
-            if (info.port > 0 && !info.cport && !info.tls && info.udsPath == null && !info.httpPort) {
+            if (info.port > 0 && info.type == BindInfo.Type.PORT) {
                 logger.info("CamelliaRedisProxyServer start at port: {}", port);
                 ChannelFuture future = info.bootstrap.bind(info.port).sync();
                 GlobalRedisProxyEnv.getProxyShutdown().addServerFuture(future);
-            } else if (info.port > 0 && !info.cport && info.tls && info.udsPath == null && !info.httpPort) {
+            } else if (info.port > 0 && info.type == BindInfo.Type.TLS_PORT) {
                 ChannelFuture future = info.bootstrap.bind(info.port).sync();
                 logger.info("CamelliaRedisProxyServer start at port: {} with tls", tlsPort);
                 GlobalRedisProxyEnv.getProxyShutdown().addServerFuture(future);
-            } else if (info.port > 0 && info.cport && !info.tls && info.udsPath == null && !info.httpPort) {
+            } else if (info.port > 0 && info.type == BindInfo.Type.CPORT) {
                 if (serverProperties.isClusterModeEnable()) {
                     logger.info("CamelliaRedisProxyServer start in cluster mode at cport: {}", info.port);
                 } else if (serverProperties.isSentinelModeEnable()) {
@@ -193,11 +193,11 @@ public class CamelliaRedisProxyServer {
                 }
                 ChannelFuture future = info.bootstrap.bind(info.port).sync();
                 GlobalRedisProxyEnv.getProxyShutdown().setCportFuture(future);
-            } else if (info.udsPath != null && !info.httpPort) {
+            } else if (info.udsPath != null && info.type == BindInfo.Type.UDS) {
                 ChannelFuture future = info.bootstrap.bind(new DomainSocketAddress(udsPath)).sync();
                 logger.info("CamelliaRedisProxyServer start at uds: {}", info.udsPath);
                 GlobalRedisProxyEnv.getProxyShutdown().addServerFuture(future);
-            } else if (info.port > 0 && info.httpPort) {
+            } else if (info.port > 0 && info.type == BindInfo.Type.HTTP) {
                 ChannelFuture future = info.bootstrap.bind(info.port).sync();
                 logger.info("CamelliaRedisProxyServer start at http: {}", info.port);
                 GlobalRedisProxyEnv.getProxyShutdown().addServerFuture(future);
@@ -250,25 +250,7 @@ public class CamelliaRedisProxyServer {
                 });
         this.udsPath = udsPath;
         GlobalRedisProxyEnv.setUdsPath(udsPath);
-        return new BindInfo(bootstrap, -1, false, false, udsPath, false);
-    }
-
-    public static class BindInfo {
-        ServerBootstrap bootstrap;
-        int port;
-        boolean tls;
-        boolean cport;
-        String udsPath;
-        boolean httpPort;
-
-        public BindInfo(ServerBootstrap bootstrap, int port, boolean cport, boolean tls, String udsPath, boolean httpPort) {
-            this.bootstrap = bootstrap;
-            this.port = port;
-            this.cport = cport;
-            this.tls = tls;
-            this.udsPath = udsPath;
-            this.httpPort = httpPort;
-        }
+        return new BindInfo(BindInfo.Type.UDS, bootstrap, udsPath);
     }
 
     public int getHttpPort() {
