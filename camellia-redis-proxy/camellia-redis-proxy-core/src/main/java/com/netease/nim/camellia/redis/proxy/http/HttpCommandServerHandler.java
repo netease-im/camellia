@@ -7,8 +7,6 @@ import com.netease.nim.camellia.redis.proxy.auth.ClientCommandUtil;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.monitor.CommandFailMonitor;
-import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
@@ -124,39 +122,39 @@ public class HttpCommandServerHandler extends SimpleChannelInboundHandler<FullHt
             for (Command command : commands) {
                 RedisCommand redisCommand = command.getRedisCommand();
                 if (redisCommand == null || redisCommand.getSupportType() == RedisCommand.CommandSupportType.NOT_SUPPORT || notSupportedCommands.contains(redisCommand)) {
-                    aggregator.addResponse(wrapperError(request, BAD_REQUEST, "command ‘" + command.getName() + "’ not support"));
+                    aggregator.addResponse(wrapperError(aggregator, request, BAD_REQUEST, "command ‘" + command.getName() + "’ not support"));
                     return;
                 }
                 if (command.isBlocking()) {
-                    aggregator.addResponse(wrapperError(request, BAD_REQUEST, "blocking commands not support"));
+                    aggregator.addResponse(wrapperError(aggregator, request, BAD_REQUEST, "blocking commands not support"));
                     return;
                 }
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.PUB_SUB
                         && (redisCommand != RedisCommand.PUBLISH && redisCommand != RedisCommand.SPUBLISH && redisCommand != RedisCommand.PUBSUB)) {
-                    aggregator.addResponse(wrapperError(request, BAD_REQUEST, "pub-sub commands not support"));
+                    aggregator.addResponse(wrapperError(aggregator, request, BAD_REQUEST, "pub-sub commands not support"));
                     return;
                 }
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.TRANSACTION) {
-                    aggregator.addResponse(wrapperError(request, BAD_REQUEST, "transaction commands not support"));
+                    aggregator.addResponse(wrapperError(aggregator, request, BAD_REQUEST, "transaction commands not support"));
                     return;
                 }
             }
             //check auth
             AuthCommandProcessor authCommandProcessor = invoker.getCommandInvokeConfig().getAuthCommandProcessor();
             if (authCommandProcessor.isPasswordRequired() && request.getPassword() == null) {
-                aggregator.addResponse(wrapperError(request, FORBIDDEN, "password required"));
+                aggregator.addResponse(wrapperError(aggregator, request, FORBIDDEN, "password required"));
                 return;
             }
             boolean pass = authCommandProcessor.checkPassword(channelInfo, request.getUserName(), request.getPassword());
             if (!pass) {
-                aggregator.addResponse(wrapperError(request, FORBIDDEN, "check password fail"));
+                aggregator.addResponse(wrapperError(aggregator, request, FORBIDDEN, "check password fail"));
                 return;
             }
             //check bid/bgroup
             if (request.getBid() != null && request.getBid() > 0 && request.getBgroup() != null) {
                 boolean updateClientName = ClientCommandUtil.updateClientName(channelInfo, ProxyUtil.buildClientName(request.getBid(), request.getBgroup()));
                 if (!updateClientName) {
-                    aggregator.addResponse(wrapperError(request, FORBIDDEN, "bid/bgroup conflict to username/password"));
+                    aggregator.addResponse(wrapperError(aggregator, request, FORBIDDEN, "bid/bgroup conflict to username/password"));
                     return;
                 }
             }
@@ -174,16 +172,17 @@ public class HttpCommandServerHandler extends SimpleChannelInboundHandler<FullHt
                 return;
             }
             aggregator.addResponse(HTTP_INTERNAL_SERVER_ERROR);
+            aggregator.failMonitor("HttpInternalError");
         }
     }
 
-    private HttpCommandReply wrapperError(HttpCommandRequest request, int code, String msg) {
+    private HttpCommandReply wrapperError(HttpCommandAggregator aggregator, HttpCommandRequest request, int code, String msg) {
         HttpCommandReply reply = new HttpCommandReply();
         reply.setRequestId(request.getRequestId());
         reply.setCode(code);
         reply.setMsg(msg);
-        if (ProxyMonitorCollector.isMonitorEnable() && code != SUCCESS) {
-            CommandFailMonitor.incr("code=" + code + ",msg=" + msg);
+        if (code != SUCCESS) {
+            aggregator.failMonitor("code=" + code + ",msg=" + msg);
         }
         return reply;
     }

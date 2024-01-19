@@ -3,8 +3,10 @@ package com.netease.nim.camellia.redis.proxy.http;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.monitor.CommandFailMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
+import com.netease.nim.camellia.redis.proxy.netty.ReplyEncoder;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.ReplyPack;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
@@ -102,6 +104,7 @@ public class HttpCommandAggregator {
         if (ProxyMonitorCollector.isMonitorEnable()) {
             CommandFailMonitor.incr(reason);
         }
+        ErrorLogCollector.collect(HttpCommandAggregator.class, "http api error, reason = " + reason + ", remote.ip=" + ctx.channel().remoteAddress());
     }
 
     private HttpResponse toHttpResponse(Request request, HttpCommandReply httpCommandReply) {
