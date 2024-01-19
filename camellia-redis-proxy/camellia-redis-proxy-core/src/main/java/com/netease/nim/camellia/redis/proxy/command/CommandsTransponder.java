@@ -193,7 +193,7 @@ public class CommandsTransponder {
                                 }
                                 flush(channelInfo.getBid(), channelInfo.getBgroup(), channelInfo.getDb(), tasks, list);
                             }
-                            channelInfo.getCtx().channel().writeAndFlush(StatusReply.OK)
+                            channelInfo.writeAndFlush(StatusReply.OK)
                                     .addListener((ChannelFutureListener) future -> channelInfo.getCtx().channel().close());
                         }
                         return;

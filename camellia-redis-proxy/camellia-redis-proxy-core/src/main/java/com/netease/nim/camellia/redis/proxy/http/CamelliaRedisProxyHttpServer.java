@@ -1,32 +1,19 @@
 package com.netease.nim.camellia.redis.proxy.http;
 
-import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.monitor.CommandFailMonitor;
-import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
-import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
 import com.netease.nim.camellia.redis.proxy.netty.InitHandler;
-import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CompletableFuture;
-
-import static io.netty.handler.codec.http.HttpHeaderNames.*;
-import static io.netty.handler.codec.http.HttpHeaderValues.*;
-import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 
 /**
  * Created by caojiajun on 2024/1/16
@@ -35,17 +22,13 @@ public class CamelliaRedisProxyHttpServer {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyHttpServer.class);
 
-    public static final DefaultFullHttpResponse METHOD_NOT_ALLOWED = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.METHOD_NOT_ALLOWED);
-    public static final DefaultFullHttpResponse NOT_FOUND = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
-    public static final DefaultFullHttpResponse BAD_REQUEST = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST);
-    public static final DefaultFullHttpResponse INTERNAL_SERVER_ERROR = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR);
-
     private final int port;
-    private final HttpCommandInvoker invoker;
+    private final InitHandler initHandler = new InitHandler(ChannelType.http);
+    private final HttpCommandServerHandler serverHandler;
 
     public CamelliaRedisProxyHttpServer(int port, ICommandInvoker invoker) {
         this.port = port;
-        this.invoker = new HttpCommandInvoker(invoker);
+        this.serverHandler = new HttpCommandServerHandler(invoker);
     }
 
     public CamelliaRedisProxyServer.BindInfo start() {
@@ -70,7 +53,6 @@ public class CamelliaRedisProxyHttpServer {
 
             int maxContentLength = ProxyDynamicConf.getInt("http.server.max.content.length", 20*1024*1024);
 
-            InitHandler initHandler = new InitHandler(ChannelType.http);
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, soBacklog)
@@ -86,95 +68,13 @@ public class CamelliaRedisProxyHttpServer {
                             pipeline.addLast(new HttpServerCodec());
                             pipeline.addLast(new HttpObjectAggregator(maxContentLength));
                             pipeline.addLast(initHandler);
-                            pipeline.addLast(new SimpleChannelInboundHandler<FullHttpRequest>() {
-
-                                @Override
-                                public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-                                    logger.error(cause.getMessage(), cause);
-                                    ctx.close();
-                                }
-
-                                @Override
-                                protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
-                                    try {
-                                        HttpMethod method = httpRequest.method();
-                                        if (method != HttpMethod.POST) {
-                                            respResponse(ctx, httpRequest, METHOD_NOT_ALLOWED);
-                                            return;
-                                        }
-                                        String uri = httpRequest.uri();
-                                        if (!uri.equals("/commands")) {
-                                            respResponse(ctx, httpRequest, NOT_FOUND);
-                                            return;
-                                        }
-                                        ChannelInfo channelInfo = ChannelInfo.get(ctx);
-                                        //request
-                                        ByteBuf content = httpRequest.content();
-                                        byte[] data = new byte[content.readableBytes()];
-                                        content.readBytes(data);
-                                        HttpCommandRequest request;
-                                        try {
-                                            request = JSONObject.parseObject(new String(data, StandardCharsets.UTF_8), HttpCommandRequest.class);
-                                        } catch (Exception e) {
-                                            respResponse(ctx, httpRequest, BAD_REQUEST);
-                                            return;
-                                        }
-                                        //reply
-                                        CompletableFuture<HttpCommandReply> future = invoker.invoke(channelInfo, request);
-                                        future.thenAccept(reply -> {
-                                            String string = JSONObject.toJSONString(reply);
-                                            ByteBuf byteBuf = Unpooled.wrappedBuffer(string.getBytes(StandardCharsets.UTF_8));
-                                            DefaultFullHttpResponse httpResponse = new DefaultFullHttpResponse(httpRequest.protocolVersion(),
-                                                    HttpResponseStatus.OK, byteBuf);
-                                            respResponse(ctx, httpRequest, httpResponse);
-                                        });
-                                    } catch (Exception e) {
-                                        ErrorLogCollector.collect(CamelliaRedisProxyHttpServer.class, "internal error", e);
-                                        respResponse(ctx, httpRequest, INTERNAL_SERVER_ERROR);
-                                    }
-                                }
-                            });
+                            pipeline.addLast(serverHandler);
                         }
                     });
             return new CamelliaRedisProxyServer.BindInfo(bootstrap, port, false, false, null, true);
         } catch (Exception e) {
             logger.error("camellia redis proxy http server start error, port = {}", port, e);
             throw new IllegalStateException(e);
-        }
-    }
-
-    private void respResponse(ChannelHandlerContext ctx, FullHttpRequest httpRequest, FullHttpResponse httpResponse) {
-        if (ProxyMonitorCollector.isMonitorEnable()) {
-            if (httpResponse.status() != HttpResponseStatus.OK) {
-                CommandFailMonitor.incr("http.code=" + httpResponse.status().code());
-            }
-        }
-        boolean keepAlive = HttpUtil.isKeepAlive(httpRequest);
-        boolean close = false;
-        if (keepAlive) {
-            if (!httpRequest.protocolVersion().isKeepAliveDefault()) {
-                httpResponse.headers().set(CONNECTION, CLOSE);
-                close = true;
-            } else {
-                httpResponse.headers().set(CONNECTION, KEEP_ALIVE);
-            }
-        } else {
-            httpResponse.headers().set(CONNECTION, CLOSE);
-            close = true;
-        }
-        httpResponse.headers().set(TRANSFER_ENCODING, CHUNKED);
-        httpResponse.headers().set(CONTENT_TYPE, APPLICATION_JSON);
-        ChannelFuture f = ctx.writeAndFlush(httpResponse);
-        if (close) {
-            f.addListener(ChannelFutureListener.CLOSE);
-        }
-        try {
-            int refCnt = httpRequest.refCnt();
-            if (refCnt > 0) {
-                httpRequest.release(refCnt);
-            }
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
         }
     }
 }

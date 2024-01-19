@@ -3,6 +3,8 @@ package com.netease.nim.camellia.redis.proxy.netty;
 import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.http.HttpCommandAggregator;
+import com.netease.nim.camellia.redis.proxy.http.HttpCommandRequest;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.monitor.UpstreamFailMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -13,16 +15,21 @@ import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionH
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.TimeCache;
 import com.netease.nim.camellia.tools.utils.BytesKey;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.DefaultChannelPromise;
 import io.netty.util.AttributeKey;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -61,6 +68,7 @@ public class ChannelInfo {
     private SocketAddress clientSocketAddress;
     private final boolean fromCport;
     private final ChannelType channelType;
+    private HttpCommandAggregator httpCommandAggregator;
     private volatile ConcurrentHashMap<BytesKey, Boolean> subscribeChannels;
     private volatile ConcurrentHashMap<BytesKey, Boolean> psubscribeChannels;
     private volatile ConcurrentHashMap<BytesKey, Boolean> ssubscribeChannels;
@@ -106,6 +114,9 @@ public class ChannelInfo {
             this.fromCport = ((InetSocketAddress) socketAddress).getPort() == GlobalRedisProxyEnv.getCport();
         } else {
             this.fromCport = false;
+        }
+        if (channelType == ChannelType.http) {
+            httpCommandAggregator = new HttpCommandAggregator(ctx);
         }
     }
 
@@ -227,6 +238,18 @@ public class ChannelInfo {
     public ChannelHandlerContext getCtx() {
         return ctx;
     }
+
+    public ChannelFuture writeAndFlush(Object object) {
+        if (channelType == ChannelType.http) {
+            httpCommandAggregator.addResponse(object);
+            DefaultChannelPromise future = new DefaultChannelPromise(ctx.channel());
+            future.setSuccess();
+            return future;
+        } else {
+            return ctx.writeAndFlush(object);
+        }
+    }
+
 
     public ChannelType getChannelType() {
         return channelType;
@@ -598,6 +621,10 @@ public class ChannelInfo {
         this.sourceAddress = sourceAddress;
         this.sourcePort = sourcePort;
         this.clientSocketAddress = new InetSocketAddress(sourceAddress, sourcePort);
+    }
+
+    public HttpCommandAggregator getHttpCommandAggregator() {
+        return httpCommandAggregator;
     }
 
     public static enum ChannelStats {

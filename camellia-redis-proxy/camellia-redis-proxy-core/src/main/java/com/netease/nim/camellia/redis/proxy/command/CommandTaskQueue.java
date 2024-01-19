@@ -78,7 +78,7 @@ public class CommandTaskQueue {
                                     task.getCommand() == null ? null : task.getCommand().getName(),
                                     reply.getClass().getSimpleName(), channelInfo.getConsid());
                         }
-                        future = channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet()));
+                        future = channelInfo.writeAndFlush(new ReplyPack(reply, id.incrementAndGet()));
                         queue.poll();
                     } else {
                         break;
@@ -124,7 +124,7 @@ public class CommandTaskQueue {
                 try {
                     ProxyPluginResponse response = plugin.executeReply(proxyReply);
                     if (!response.isPass()) {
-                        channelInfo.getCtx().writeAndFlush(new ReplyPack(response.getReply(), id.incrementAndGet()));
+                        channelInfo.writeAndFlush(new ReplyPack(response.getReply(), id.incrementAndGet()));
                         return;
                     }
                 } catch (Exception e) {
@@ -133,7 +133,7 @@ public class CommandTaskQueue {
             }
         }
 
-        ChannelFuture future = channelInfo.getCtx().writeAndFlush(new ReplyPack(reply, id.incrementAndGet()));
+        ChannelFuture future = channelInfo.writeAndFlush(new ReplyPack(reply, id.incrementAndGet()));
 
         if (checkSubscribeStatus && reply instanceof ErrorReply) {
             RedisConnection bindConnection = channelInfo.getBindConnection();
