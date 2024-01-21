@@ -78,7 +78,7 @@ public class CommandTaskQueue {
                                     task.getCommand() == null ? null : task.getCommand().getName(),
                                     reply.getClass().getSimpleName(), channelInfo.getConsid());
                         }
-                        future = channelInfo.writeAndFlush(new ReplyPack(reply, id.incrementAndGet()));
+                        future = channelInfo.writeAndFlush(task.getCommand(), new ReplyPack(reply, id.incrementAndGet()));
                         queue.poll();
                     } else {
                         break;

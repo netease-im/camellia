@@ -3,8 +3,8 @@ package com.netease.nim.camellia.redis.proxy.netty;
 import com.netease.nim.camellia.redis.proxy.command.CommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.http.HttpCommandAggregator;
-import com.netease.nim.camellia.redis.proxy.http.HttpCommandRequest;
+import com.netease.nim.camellia.redis.proxy.http.HttpCommandTask;
+import com.netease.nim.camellia.redis.proxy.http.HttpCommandTaskQueue;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
 import com.netease.nim.camellia.redis.proxy.monitor.UpstreamFailMonitor;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -24,12 +24,9 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -68,7 +65,7 @@ public class ChannelInfo {
     private SocketAddress clientSocketAddress;
     private final boolean fromCport;
     private final ChannelType channelType;
-    private HttpCommandAggregator httpCommandAggregator;
+    private HttpCommandTaskQueue httpCommandTaskQueue;
     private volatile ConcurrentHashMap<BytesKey, Boolean> subscribeChannels;
     private volatile ConcurrentHashMap<BytesKey, Boolean> psubscribeChannels;
     private volatile ConcurrentHashMap<BytesKey, Boolean> ssubscribeChannels;
@@ -116,7 +113,7 @@ public class ChannelInfo {
             this.fromCport = false;
         }
         if (channelType == ChannelType.http) {
-            httpCommandAggregator = new HttpCommandAggregator(ctx);
+            httpCommandTaskQueue = new HttpCommandTaskQueue(this);
         }
     }
 
@@ -239,12 +236,24 @@ public class ChannelInfo {
         return ctx;
     }
 
-    public ChannelFuture writeAndFlush(Object object) {
+    public ChannelFuture writeAndFlush(Command command, Object object) {
         if (channelType == ChannelType.http) {
-            httpCommandAggregator.addResponse(object);
+            HttpCommandTask httpCommandTask = command.getHttpCommandTask();
+            if (httpCommandTask == null) {
+                throw new IllegalArgumentException("illegal http command");
+            }
+            httpCommandTask.addResponse(object);
             DefaultChannelPromise future = new DefaultChannelPromise(ctx.channel());
             future.setSuccess();
             return future;
+        } else {
+            return ctx.writeAndFlush(object);
+        }
+    }
+
+    public ChannelFuture writeAndFlush(Object object) {
+        if (channelType == ChannelType.http) {
+            throw new IllegalArgumentException("illegal invoke in http channel");
         } else {
             return ctx.writeAndFlush(object);
         }
@@ -623,8 +632,8 @@ public class ChannelInfo {
         this.clientSocketAddress = new InetSocketAddress(sourceAddress, sourcePort);
     }
 
-    public HttpCommandAggregator getHttpCommandAggregator() {
-        return httpCommandAggregator;
+    public HttpCommandTaskQueue getHttpCommandTaskQueue() {
+        return httpCommandTaskQueue;
     }
 
     public static enum ChannelStats {

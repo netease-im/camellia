@@ -144,7 +144,7 @@ public class ProxySentinelModeProcessor {
             if (connection.subscribe) {
                 connection.channelInfo.getCtx().close();
             } else {
-                connection.channelInfo.writeAndFlush(StatusReply.OK)
+                connection.channelInfo.writeAndFlush(command, StatusReply.OK)
                         .addListener((ChannelFutureListener) future -> connection.channelInfo.getCtx().close());
             }
             return null;

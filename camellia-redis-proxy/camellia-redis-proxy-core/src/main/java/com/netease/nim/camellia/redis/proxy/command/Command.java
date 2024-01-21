@@ -3,6 +3,7 @@ package com.netease.nim.camellia.redis.proxy.command;
 
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
+import com.netease.nim.camellia.redis.proxy.http.HttpCommandTask;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.util.KeyParser;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -21,6 +22,7 @@ public class Command {
     private String keysStr = null;
     private CommandContext commandContext;
     private long startNanoTime = -1;
+    private HttpCommandTask httpCommandTask;
 
     public Command(byte[][] objects) {
         this.objects = objects;
@@ -138,6 +140,14 @@ public class Command {
 
     public void setChannelInfo(ChannelInfo channelInfo) {
         this.channelInfo = channelInfo;
+    }
+
+    public HttpCommandTask getHttpCommandTask() {
+        return httpCommandTask;
+    }
+
+    public void setHttpCommandTask(HttpCommandTask httpCommandTask) {
+        this.httpCommandTask = httpCommandTask;
     }
 
     public void fillParameters(Class<?>[] parameterTypes, Object[] parameters) {
