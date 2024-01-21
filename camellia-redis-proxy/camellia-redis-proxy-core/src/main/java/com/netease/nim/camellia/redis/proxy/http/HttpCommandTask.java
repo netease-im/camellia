@@ -23,12 +23,12 @@ public class HttpCommandTask {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpCommandTask.class);
     private final HttpCommandTaskQueue taskQueue;
-    private final Request request;
-    private Response response;
+    private final HttpCommandTaskRequest request;
+    private HttpCommandTaskResponse response;
     private final List<Reply> replyList = new ArrayList<>();
     private boolean finish = false;
 
-    public HttpCommandTask(HttpCommandTaskQueue taskQueue, Request request) {
+    public HttpCommandTask(HttpCommandTaskQueue taskQueue, HttpCommandTaskRequest request) {
         this.taskQueue = taskQueue;
         this.request = request;
     }
@@ -39,7 +39,7 @@ public class HttpCommandTask {
             return;
         }
         if (response instanceof HttpResponse) {
-            this.response = new Response((HttpResponse) response, request.isKeepAlive());
+            this.response = new HttpCommandTaskResponse((HttpResponse) response, request.isKeepAlive());
             taskQueue.callback();
             finish = true;
             return;
@@ -47,7 +47,7 @@ public class HttpCommandTask {
         HttpCommandRequest httpCommandRequest = request.getHttpCommandRequest();
         if (response instanceof HttpCommandReply) {
             HttpResponse httpResponse = toHttpResponse(request, (HttpCommandReply) response);
-            this.response = new Response(httpResponse, request.isKeepAlive());
+            this.response = new HttpCommandTaskResponse(httpResponse, request.isKeepAlive());
             taskQueue.callback();
             finish = true;
             return;
@@ -71,13 +71,14 @@ public class HttpCommandTask {
             httpCommandReply.setReplies(replies);
 
             HttpResponse httpResponse = toHttpResponse(request, httpCommandReply);
-            this.response = new Response(httpResponse, request.isKeepAlive());
+            this.response = new HttpCommandTaskResponse(httpResponse, request.isKeepAlive());
             taskQueue.callback();
             finish = true;
+            replyList.clear();
         }
     }
 
-    private HttpResponse toHttpResponse(Request request, HttpCommandReply httpCommandReply) {
+    private HttpResponse toHttpResponse(HttpCommandTaskRequest request, HttpCommandReply httpCommandReply) {
         String string = JSONObject.toJSONString(httpCommandReply);
         if (httpCommandReply.getCode() != 200) {
             taskQueue.failMonitor("code=" + httpCommandReply.getCode() + ",msg=" + httpCommandReply.getMsg());
@@ -86,7 +87,7 @@ public class HttpCommandTask {
         return new DefaultFullHttpResponse(request.getHttpVersion(), HttpResponseStatus.OK, byteBuf);
     }
 
-    public Response getResponse() {
+    public HttpCommandTaskResponse getResponse() {
         return response;
     }
 }

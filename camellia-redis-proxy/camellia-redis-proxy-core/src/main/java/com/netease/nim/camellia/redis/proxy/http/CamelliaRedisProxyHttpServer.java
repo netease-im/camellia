@@ -3,7 +3,6 @@ package com.netease.nim.camellia.redis.proxy.http;
 import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.BindInfo;
-import com.netease.nim.camellia.redis.proxy.netty.CamelliaRedisProxyServer;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
 import com.netease.nim.camellia.redis.proxy.netty.InitHandler;
 import io.netty.bootstrap.ServerBootstrap;
@@ -68,6 +67,7 @@ public class CamelliaRedisProxyHttpServer {
                             ChannelPipeline pipeline = channel.pipeline();
                             pipeline.addLast(new HttpServerCodec());
                             pipeline.addLast(new HttpObjectAggregator(maxContentLength));
+                            pipeline.addLast(new HttpResponsePackEncoder());
                             pipeline.addLast(initHandler);
                             pipeline.addLast(serverHandler);
                         }

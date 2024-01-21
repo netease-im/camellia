@@ -5,7 +5,7 @@ import io.netty.handler.codec.http.HttpVersion;
 /**
  * Created by caojiajun on 2024/1/21
  */
-public class Request {
+public class HttpCommandTaskRequest {
     private HttpVersion httpVersion;
     private boolean keepAlive;
     private HttpCommandRequest httpCommandRequest;

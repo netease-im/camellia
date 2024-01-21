@@ -5,12 +5,12 @@ import io.netty.handler.codec.http.HttpResponse;
 /**
  * Created by caojiajun on 2024/1/21
  */
-public class Response {
+public class HttpCommandTaskResponse {
 
     private HttpResponse httpResponse;
     private boolean keepalive;
 
-    public Response(HttpResponse httpResponse, boolean keepalive) {
+    public HttpCommandTaskResponse(HttpResponse httpResponse, boolean keepalive) {
         this.httpResponse = httpResponse;
         this.keepalive = keepalive;
     }

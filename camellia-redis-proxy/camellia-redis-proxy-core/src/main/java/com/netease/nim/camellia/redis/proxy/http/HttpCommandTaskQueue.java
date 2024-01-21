@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
@@ -26,6 +27,7 @@ public class HttpCommandTaskQueue {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpCommandTaskQueue.class);
     private final ChannelHandlerContext ctx;
+    private final AtomicLong id = new AtomicLong(0);
     private final ChannelInfo channelInfo;
     private final Queue<HttpCommandTask> queue = new LinkedBlockingQueue<>(10240);
     private final AtomicBoolean callbacking = new AtomicBoolean(false);
@@ -55,7 +57,7 @@ public class HttpCommandTaskQueue {
                 }
                 do {
                     HttpCommandTask task = queue.peek();
-                    Response response = task.getResponse();
+                    HttpCommandTaskResponse response = task.getResponse();
                     if (response != null) {
                         reply(response);
                         queue.poll();
@@ -76,7 +78,7 @@ public class HttpCommandTaskQueue {
         ErrorLogCollector.collect(HttpCommandTaskQueue.class, "http api error, reason = " + reason + ", remote.ip=" + ctx.channel().remoteAddress());
     }
 
-    private void reply(Response response) {
+    private void reply(HttpCommandTaskResponse response) {
         HttpResponse httpResponse = response.getHttpResponse();
         if (response.isKeepalive()) {
             httpResponse.headers().set(CONNECTION, KEEP_ALIVE);
@@ -85,7 +87,7 @@ public class HttpCommandTaskQueue {
         }
         httpResponse.headers().set(TRANSFER_ENCODING, CHUNKED);
         httpResponse.headers().set(CONTENT_TYPE, APPLICATION_JSON);
-        ChannelFuture f = ctx.writeAndFlush(httpResponse);
+        ChannelFuture f = ctx.writeAndFlush(new HttpResponsePack(httpResponse, id.incrementAndGet()));
         if (!response.isKeepalive()) {
             f.addListener(ChannelFutureListener.CLOSE);
         }

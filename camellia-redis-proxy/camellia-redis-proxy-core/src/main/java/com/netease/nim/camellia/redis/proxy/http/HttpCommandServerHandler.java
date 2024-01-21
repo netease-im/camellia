@@ -62,7 +62,7 @@ public class HttpCommandServerHandler extends SimpleChannelInboundHandler<FullHt
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
         ChannelInfo channelInfo = ChannelInfo.get(ctx);
         HttpCommandTaskQueue commandTaskQueue = channelInfo.getHttpCommandTaskQueue();
-        Request request = new Request();
+        HttpCommandTaskRequest request = new HttpCommandTaskRequest();
         request.setKeepAlive(isKeepAlive(httpRequest));
         request.setHttpVersion(httpRequest.protocolVersion());
         HttpCommandTask commandTask = new HttpCommandTask(commandTaskQueue, request);
