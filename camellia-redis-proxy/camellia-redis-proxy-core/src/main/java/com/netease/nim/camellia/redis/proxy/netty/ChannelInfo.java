@@ -242,7 +242,7 @@ public class ChannelInfo {
             if (httpCommandTask == null) {
                 throw new IllegalArgumentException("illegal http command");
             }
-            httpCommandTask.addResponse(object);
+            httpCommandTask.write(object);
             DefaultChannelPromise future = new DefaultChannelPromise(ctx.channel());
             future.setSuccess();
             return future;

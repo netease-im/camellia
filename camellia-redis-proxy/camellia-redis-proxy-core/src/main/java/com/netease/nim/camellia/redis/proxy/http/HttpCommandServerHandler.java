@@ -75,12 +75,12 @@ public class HttpCommandServerHandler extends SimpleChannelInboundHandler<FullHt
             }
             HttpMethod method = httpRequest.method();
             if (method != HttpMethod.POST) {
-                commandTask.addResponse(HTTP_METHOD_NOT_ALLOWED);
+                commandTask.write(HTTP_METHOD_NOT_ALLOWED);
                 return;
             }
             String uri = httpRequest.uri();
             if (!uri.equals("/commands")) {
-                commandTask.addResponse(HTTP_NOT_FOUND);
+                commandTask.write(HTTP_NOT_FOUND);
                 return;
             }
             //request
@@ -91,7 +91,7 @@ public class HttpCommandServerHandler extends SimpleChannelInboundHandler<FullHt
             try {
                 httpCommandRequest = JSONObject.parseObject(new String(data, StandardCharsets.UTF_8), HttpCommandRequest.class);
             } catch (Exception e) {
-                commandTask.addResponse(HTTP_BAD_REQUEST);
+                commandTask.write(HTTP_BAD_REQUEST);
                 return;
             }
             request.setHttpCommandRequest(httpCommandRequest);
@@ -100,19 +100,19 @@ public class HttpCommandServerHandler extends SimpleChannelInboundHandler<FullHt
             try {
                 commands = HttpCommandConverter.convert(httpCommandRequest);
             } catch (Exception e) {
-                commandTask.addResponse(HTTP_BAD_REQUEST);
+                commandTask.write(HTTP_BAD_REQUEST);
                 return;
             }
             //check supported command
             for (Command command : commands) {
                 RedisCommand redisCommand = command.getRedisCommand();
                 if (redisCommand == null || redisCommand.getSupportType() == RedisCommand.CommandSupportType.NOT_SUPPORT || notSupportedCommands.contains(redisCommand)) {
-                    commandTask.addResponse(wrapperError(httpCommandRequest, BAD_REQUEST, "command ‘" + command.getName() + "’ not support"));
+                    commandTask.write(wrapperError(httpCommandRequest, BAD_REQUEST, "command ‘" + command.getName() + "’ not support"));
                     return;
                 }
                 if (redisCommand.getCommandType() == RedisCommand.CommandType.PUB_SUB
                         && (redisCommand != RedisCommand.PUBLISH && redisCommand != RedisCommand.SPUBLISH && redisCommand != RedisCommand.PUBSUB)) {
-                    commandTask.addResponse(wrapperError(httpCommandRequest, BAD_REQUEST, "pub-sub commands not support"));
+                    commandTask.write(wrapperError(httpCommandRequest, BAD_REQUEST, "pub-sub commands not support"));
                     return;
                 }
                 command.setHttpCommandTask(commandTask);
@@ -120,19 +120,19 @@ public class HttpCommandServerHandler extends SimpleChannelInboundHandler<FullHt
             //check auth
             AuthCommandProcessor authCommandProcessor = invoker.getCommandInvokeConfig().getAuthCommandProcessor();
             if (authCommandProcessor.isPasswordRequired() && httpCommandRequest.getPassword() == null) {
-                commandTask.addResponse(wrapperError(httpCommandRequest, FORBIDDEN, "password required"));
+                commandTask.write(wrapperError(httpCommandRequest, FORBIDDEN, "password required"));
                 return;
             }
             boolean pass = authCommandProcessor.checkPassword(channelInfo, httpCommandRequest.getUserName(), httpCommandRequest.getPassword());
             if (!pass) {
-                commandTask.addResponse(wrapperError(httpCommandRequest, FORBIDDEN, "check password fail"));
+                commandTask.write(wrapperError(httpCommandRequest, FORBIDDEN, "check password fail"));
                 return;
             }
             //check bid/bgroup
             if (httpCommandRequest.getBid() != null && httpCommandRequest.getBid() > 0 && httpCommandRequest.getBgroup() != null) {
                 boolean updateClientName = ClientCommandUtil.updateClientName(channelInfo, ProxyUtil.buildClientName(httpCommandRequest.getBid(), httpCommandRequest.getBgroup()));
                 if (!updateClientName) {
-                    commandTask.addResponse(wrapperError(httpCommandRequest, FORBIDDEN, "bid/bgroup conflict to username/password"));
+                    commandTask.write(wrapperError(httpCommandRequest, FORBIDDEN, "bid/bgroup conflict to username/password"));
                     return;
                 }
             }
@@ -143,7 +143,7 @@ public class HttpCommandServerHandler extends SimpleChannelInboundHandler<FullHt
             //reply
             invoker.invoke(ctx, channelInfo, commands);
         } catch (Exception e) {
-            commandTask.addResponse(HTTP_INTERNAL_SERVER_ERROR);
+            commandTask.write(HTTP_INTERNAL_SERVER_ERROR);
             ErrorLogCollector.collect(HttpCommandServerHandler.class, "internal error", e);
         }
     }

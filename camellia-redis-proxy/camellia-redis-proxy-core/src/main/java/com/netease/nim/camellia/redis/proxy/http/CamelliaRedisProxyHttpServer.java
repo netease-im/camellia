@@ -72,9 +72,14 @@ public class CamelliaRedisProxyHttpServer {
                             pipeline.addLast(serverHandler);
                         }
                     });
+            logger.info("CamelliaRedisProxyHttpServer, bossThread = {}, workThread = {}", bossThread, workThread);
+            logger.info("CamelliaRedisProxyHttpServer, so_backlog = {}, so_sendbuf = {}, so_rcvbuf = {}, so_keepalive = {}",
+                    soBacklog, soSndBuf, soRcvBuf, soKeepalive);
+            logger.info("CamelliaRedisProxyHttpServer, tcp_no_delay = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
+                    tcpNoDelay, low, high);
             return new BindInfo(BindInfo.Type.HTTP, bootstrap, port);
         } catch (Exception e) {
-            logger.error("camellia redis proxy http server start error, port = {}", port, e);
+            logger.error("CamelliaRedisProxyHttpServer start error, port = {}", port, e);
             throw new IllegalStateException(e);
         }
     }

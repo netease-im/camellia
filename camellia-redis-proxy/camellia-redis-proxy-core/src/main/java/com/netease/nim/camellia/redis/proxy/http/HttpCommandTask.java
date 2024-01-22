@@ -33,7 +33,7 @@ public class HttpCommandTask {
         this.request = request;
     }
 
-    public void addResponse(Object response) {
+    public void write(Object response) {
         if (finish) {
             logger.error("HttpCommandTask is finish, duplicate response");
             return;
