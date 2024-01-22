@@ -1,5 +1,17 @@
 [ENGLISH](update-en.md)
 
+# 1.2.26（2024/01/xx）
+### 新增
+* camellia-redis-proxy新增通过http访问proxy执行command的功能
+* camellia-redis-proxy新增ReadOnlyProxyPlugin插件，开启后，会拦截写命令
+
+### 更新
+* camellia-id-gen修改了metrics的返回，接口监控粒度不再tag粒度
+
+### fix
+* 无
+
+
 # 1.2.25（2024/01/11）(1.2.24相关jar包在maven中央仓库已损坏，因此换一个版本号重新deploy)
 ### 新增
 * 无
