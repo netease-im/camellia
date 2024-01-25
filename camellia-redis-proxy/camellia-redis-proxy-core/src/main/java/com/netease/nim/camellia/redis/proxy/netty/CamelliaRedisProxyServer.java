@@ -14,7 +14,6 @@ import io.netty.channel.*;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.unix.DomainSocketAddress;
-import io.netty.channel.unix.UnixChannel;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,6 @@ public class CamelliaRedisProxyServer {
     private final ICommandInvoker invoker;
     private final ServerHandler serverHandler;
     private final InitHandler tcpInitHandler = new InitHandler(ChannelType.tcp);
-    private final InitHandler udsInitHandler = new InitHandler(ChannelType.uds);
     private int port;
     private int tlsPort;
     private String udsPath;
@@ -158,19 +156,21 @@ public class CamelliaRedisProxyServer {
             GlobalRedisProxyEnv.setCport(cport);
         }
         //uds
-        BindInfo udsBindInfo = startUds();
+        CamelliaRedisProxyUdsServer udsServer = new CamelliaRedisProxyUdsServer(serverProperties, serverHandler);
+        BindInfo udsBindInfo = udsServer.start();
         if (udsBindInfo != null) {
             bindInfoList.add(udsBindInfo);
+            this.udsPath = udsBindInfo.udsPath;
+            GlobalRedisProxyEnv.setUdsPath(udsPath);
         }
         //http
-        this.httpPort = serverProperties.getHttpPort();
-        CamelliaRedisProxyHttpServer httpServer = new CamelliaRedisProxyHttpServer(httpPort, invoker);
+        CamelliaRedisProxyHttpServer httpServer = new CamelliaRedisProxyHttpServer(serverProperties, invoker);
         BindInfo httpBindInfo = httpServer.start();
         if (httpBindInfo != null) {
             bindInfoList.add(httpBindInfo);
+            this.httpPort = serverProperties.getHttpPort();
+            GlobalRedisProxyEnv.setHttpPort(httpPort);
         }
-        GlobalRedisProxyEnv.setHttpPort(httpPort);
-
         //before callback
         GlobalRedisProxyEnv.invokeBeforeStartCallback();
         //bind
@@ -206,51 +206,6 @@ public class CamelliaRedisProxyServer {
         //after callback
         GlobalRedisProxyEnv.invokeAfterStartCallback();
         logger.info("CamelliaRedisProxyServer start success, version = {}", ProxyInfoUtils.VERSION);
-    }
-
-    private BindInfo startUds() {
-        String udsPath = serverProperties.getUdsPath();
-        if (udsPath == null || udsPath.isEmpty()) {
-            logger.info("CamelliaRedisProxyServer uds disabled, skip start");
-            return null;
-        }
-        ServerBootstrap bootstrap = new ServerBootstrap();
-        EventLoopGroup bossGroup = GlobalRedisProxyEnv.getUdsBossGroup();
-        EventLoopGroup workGroup = GlobalRedisProxyEnv.getUdsWorkGroup();
-        Class<? extends ServerChannel> serverUdsChannelClass = GlobalRedisProxyEnv.getServerUdsChannelClass();
-        if (bossGroup == null || workGroup == null || serverUdsChannelClass == null) {
-            logger.warn("CamelliaRedisProxyServer uds start failed because os not support");
-            return null;
-        }
-        bootstrap.group(bossGroup, workGroup)
-                .channel(serverUdsChannelClass)
-                .option(ChannelOption.SO_BACKLOG, serverProperties.getSoBacklog())
-                .childOption(ChannelOption.SO_SNDBUF, serverProperties.getSoSndbuf())
-                .childOption(ChannelOption.SO_RCVBUF, serverProperties.getSoRcvbuf())
-                .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK,
-                        new WriteBufferWaterMark(serverProperties.getWriteBufferWaterMarkLow(), serverProperties.getWriteBufferWaterMarkHigh()))
-                .childHandler(new ChannelInitializer<UnixChannel>() {
-                    @Override
-                    public void initChannel(UnixChannel channel) {
-                        ChannelPipeline pipeline = channel.pipeline();
-                        //idle close
-                        if (Utils.idleCloseHandlerEnable(serverProperties)) {
-                            pipeline.addLast(new IdleCloseHandler(serverProperties.getReaderIdleTimeSeconds(),
-                                    serverProperties.getWriterIdleTimeSeconds(), serverProperties.getAllIdleTimeSeconds()));
-                        }
-                        //command decoder
-                        pipeline.addLast(new CommandDecoder(serverProperties.getCommandDecodeMaxBatchSize(), serverProperties.getCommandDecodeBufferInitializerSize()));
-                        //reply encoder
-                        pipeline.addLast(new ReplyEncoder());
-                        //connect manager
-                        pipeline.addLast(udsInitHandler);
-                        //command transponder
-                        pipeline.addLast(serverHandler);
-                    }
-                });
-        this.udsPath = udsPath;
-        GlobalRedisProxyEnv.setUdsPath(udsPath);
-        return new BindInfo(BindInfo.Type.UDS, bootstrap, udsPath);
     }
 
     public int getHttpPort() {

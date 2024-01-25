@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.http;
 
 import com.netease.nim.camellia.redis.proxy.command.ICommandInvoker;
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.BindInfo;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelType;
@@ -22,19 +23,19 @@ public class CamelliaRedisProxyHttpServer {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaRedisProxyHttpServer.class);
 
-    private final int port;
+    private final CamelliaServerProperties serverProperties;
     private final InitHandler initHandler = new InitHandler(ChannelType.http);
     private final HttpCommandServerHandler serverHandler;
 
-    public CamelliaRedisProxyHttpServer(int port, ICommandInvoker invoker) {
-        this.port = port;
+    public CamelliaRedisProxyHttpServer(CamelliaServerProperties serverProperties, ICommandInvoker invoker) {
+        this.serverProperties = serverProperties;
         this.serverHandler = new HttpCommandServerHandler(invoker);
     }
 
     public BindInfo start() {
         try {
-            if (port <= 0) {
-                logger.info("CamelliaRedisProxyServer http disabled, skip start");
+            if (serverProperties.getHttpPort() <= 0) {
+                logger.info("CamelliaRedisProxyServer with http disabled, skip start");
                 return null;
             }
             int bossThread = ProxyDynamicConf.getInt("http.server.boss.thread", 1);
@@ -72,14 +73,14 @@ public class CamelliaRedisProxyHttpServer {
                             pipeline.addLast(serverHandler);
                         }
                     });
-            logger.info("CamelliaRedisProxyHttpServer, bossThread = {}, workThread = {}", bossThread, workThread);
-            logger.info("CamelliaRedisProxyHttpServer, so_backlog = {}, so_sendbuf = {}, so_rcvbuf = {}, so_keepalive = {}",
+            logger.info("CamelliaRedisProxyServer with http, bossThread = {}, workThread = {}", bossThread, workThread);
+            logger.info("CamelliaRedisProxyServer with http, so_backlog = {}, so_sendbuf = {}, so_rcvbuf = {}, so_keepalive = {}",
                     soBacklog, soSndBuf, soRcvBuf, soKeepalive);
-            logger.info("CamelliaRedisProxyHttpServer, tcp_no_delay = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
+            logger.info("CamelliaRedisProxyServer with http, tcp_no_delay = {}, write_buffer_water_mark_low = {}, write_buffer_water_mark_high = {}",
                     tcpNoDelay, low, high);
-            return new BindInfo(BindInfo.Type.HTTP, bootstrap, port);
+            return new BindInfo(BindInfo.Type.HTTP, bootstrap, serverProperties.getHttpPort());
         } catch (Exception e) {
-            logger.error("CamelliaRedisProxyHttpServer start error, port = {}", port, e);
+            logger.error("CamelliaRedisProxyServer with http start error, port = {}", serverProperties.getHttpPort(), e);
             throw new IllegalStateException(e);
         }
     }

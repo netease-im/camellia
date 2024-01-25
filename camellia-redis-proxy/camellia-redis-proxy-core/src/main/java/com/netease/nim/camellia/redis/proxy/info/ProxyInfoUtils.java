@@ -271,6 +271,10 @@ public class ProxyInfoUtils {
         if (udsPath != null) {
             builder.append("uds_path:").append(udsPath).append("\r\n");
         }
+        int httpPort = GlobalRedisProxyEnv.getHttpPort();
+        if (httpPort > 0) {
+            builder.append("http_port:").append(GlobalRedisProxyEnv.getHttpPort()).append("\r\n");
+        }
         builder.append("http_console_port:").append(GlobalRedisProxyEnv.getConsolePort()).append("\r\n");
         long uptime = runtimeMXBean.getUptime();
         long uptimeInSeconds = uptime / 1000L;
