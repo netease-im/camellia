@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.proxy.http;
 
 import com.netease.nim.camellia.redis.proxy.monitor.CommandFailMonitor;
 import com.netease.nim.camellia.redis.proxy.monitor.ProxyMonitorCollector;
-import com.netease.nim.camellia.redis.proxy.netty.ReplyEncoder;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
@@ -57,7 +56,7 @@ public class HttpResponsePackEncoder extends MessageToMessageEncoder<HttpRespons
             if (ProxyMonitorCollector.isMonitorEnable()) {
                 CommandFailMonitor.incr("HttpChannelNotActive");
             }
-            ErrorLogCollector.collect(ReplyEncoder.class, "http channel not active, remote.ip=" + ctx.channel().remoteAddress());
+            ErrorLogCollector.collect(HttpResponsePackEncoder.class, "http channel not active, remote.ip=" + ctx.channel().remoteAddress());
         }
     }
 }
