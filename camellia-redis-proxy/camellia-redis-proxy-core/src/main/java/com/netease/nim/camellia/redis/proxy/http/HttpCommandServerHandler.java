@@ -49,6 +49,7 @@ public class HttpCommandServerHandler extends SimpleChannelInboundHandler<FullHt
         notSupportedCommands.add(RedisCommand.ASKING);
         notSupportedCommands.add(RedisCommand.QUIT);
         notSupportedCommands.add(RedisCommand.CLIENT);
+        notSupportedCommands.add(RedisCommand.READONLY);
     }
 
     private final ICommandInvoker invoker;

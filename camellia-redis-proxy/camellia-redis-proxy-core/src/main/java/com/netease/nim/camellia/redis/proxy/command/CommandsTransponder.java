@@ -320,6 +320,13 @@ public class CommandsTransponder {
                         continue;
                     }
 
+                    //READONLY直接返回OK
+                    if (redisCommand == RedisCommand.READONLY) {
+                        task.replyCompleted(StatusReply.OK);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
+
                     //CONFIG命令只支持GET
                     if (redisCommand == RedisCommand.CONFIG) {
                         byte[][] objects = command.getObjects();
