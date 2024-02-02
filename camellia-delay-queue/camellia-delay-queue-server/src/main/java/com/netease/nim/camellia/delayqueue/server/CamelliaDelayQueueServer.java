@@ -70,10 +70,10 @@ public class CamelliaDelayQueueServer {
     public CamelliaDelayMsgSendResponse sendMsg(CamelliaDelayMsgSendRequest request) {
         try {
             String topic = request.getTopic();
-            if (topic == null || topic.length() == 0) {
+            if (topic == null || topic.isEmpty()) {
                 throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG, "topic is empty");
             }
-            if (request.getMsg() == null || request.getMsg().length() == 0) {
+            if (request.getMsg() == null || request.getMsg().isEmpty()) {
                 throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG, "msg is empty");
             }
             active(topic);
@@ -195,7 +195,7 @@ public class CamelliaDelayQueueServer {
      */
     public CamelliaDelayMsgPullResponse pullMsg(CamelliaDelayMsgPullRequest request) {
         try {
-            if (request.getTopic() == null || request.getTopic().length() == 0) {
+            if (request.getTopic() == null || request.getTopic().isEmpty()) {
                 throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG, "topic is empty");
             }
             String topic = request.getTopic();
@@ -275,11 +275,11 @@ public class CamelliaDelayQueueServer {
     public CamelliaDelayMsgDeleteResponse deleteMsg(CamelliaDelayMsgDeleteRequest request) {
         try {
             String topic = request.getTopic();
-            if (request.getTopic() == null || request.getTopic().length() == 0) {
+            if (request.getTopic() == null || request.getTopic().isEmpty()) {
                 throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG, "topic is empty");
             }
             String msgId = request.getMsgId();
-            if (request.getMsgId() == null || request.getMsgId().length() == 0) {
+            if (request.getMsgId() == null || request.getMsgId().isEmpty()) {
                 throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG, "msgId is empty");
             }
             active(topic);
@@ -322,11 +322,11 @@ public class CamelliaDelayQueueServer {
     public CamelliaDelayMsgGetResponse getMsg(CamelliaDelayMsgGetRequest request) {
         try {
             String topic = request.getTopic();
-            if (request.getTopic() == null || request.getTopic().length() == 0) {
+            if (request.getTopic() == null || request.getTopic().isEmpty()) {
                 throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG, "topic is empty");
             }
             String msgId = request.getMsgId();
-            if (request.getMsgId() == null || request.getMsgId().length() == 0) {
+            if (request.getMsgId() == null || request.getMsgId().isEmpty()) {
                 throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG, "msgId is empty");
             }
             active(topic);
@@ -367,11 +367,11 @@ public class CamelliaDelayQueueServer {
     public CamelliaDelayMsgAckResponse ackMsg(CamelliaDelayMsgAckRequest request) {
         try {
             String topic = request.getTopic();
-            if (request.getTopic() == null || request.getTopic().length() == 0) {
+            if (request.getTopic() == null || request.getTopic().isEmpty()) {
                 throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG, "topic is empty");
             }
             String msgId = request.getMsgId();
-            if (request.getMsgId() == null || request.getMsgId().length() == 0) {
+            if (request.getMsgId() == null || request.getMsgId().isEmpty()) {
                 throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG, "msgId is empty");
             }
             active(topic);

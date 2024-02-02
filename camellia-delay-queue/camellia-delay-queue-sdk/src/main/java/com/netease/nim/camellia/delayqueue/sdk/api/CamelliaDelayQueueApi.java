@@ -42,7 +42,7 @@ public class CamelliaDelayQueueApi {
             this.discovery = discovery;
         } else {
             String url = sdkConfig.getUrl();
-            if (url == null || url.trim().length() == 0) {
+            if (url == null || url.trim().isEmpty()) {
                 throw new CamelliaDelayQueueException(CamelliaDelayMsgErrorCode.PARAM_WRONG, "url/discovery is empty");
             }
             this.discovery = new LocalConfDelayQueueServerDiscovery(sdkConfig.getUrl());
