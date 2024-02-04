@@ -1,9 +1,10 @@
 [ENGLISH](update-en.md)
 
-# 1.2.26（2024/01/xx）
+# 1.2.26（2024/02/04）
 ### 新增
 * camellia-redis-proxy新增通过http访问proxy执行command的功能
 * camellia-redis-proxy新增ReadOnlyProxyPlugin插件，开启后，会拦截写命令
+* camellia-redis-proxy新增 `READONLY` 命令，直接返回 `ok`
 
 ### 更新
 * camellia-id-gen修改了metrics的返回，接口监控粒度不再tag粒度

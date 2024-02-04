@@ -1,9 +1,10 @@
 [中文版](update-zh.md)
 
-# 1.2.26（2024/01/xx）
+# 1.2.26（2024/02/04）
 ### add
 * camellia-redis-proxy support use http to invoke command (redis resp protocol over http)
 * camellia-redis-proxy add ReadOnlyProxyPlugin
+* camellia-redis-proxy support `READONLY` command, direct return `ok` reply
 
 ### update
 * camellia-id-gen optimize `/metrics`
