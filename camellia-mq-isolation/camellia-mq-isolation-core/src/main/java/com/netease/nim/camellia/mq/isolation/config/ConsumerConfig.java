@@ -1,8 +1,7 @@
-package com.netease.nim.camellia.mq.isolation;
+package com.netease.nim.camellia.mq.isolation.config;
 
 import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
 import com.netease.nim.camellia.mq.isolation.executor.MsgHandler;
-import com.netease.nim.camellia.mq.isolation.mq.MqInfoConfig;
 import com.netease.nim.camellia.mq.isolation.mq.MqSender;
 
 /**
@@ -11,7 +10,7 @@ import com.netease.nim.camellia.mq.isolation.mq.MqSender;
 public class ConsumerConfig {
 
     private int threads;
-    private MqInfoConfig mqInfoConfig;
+    private MqIsolationConfig mqIsolationConfig;
     private MqSender mqSender;
     private MsgHandler msgHandler;
     private ThreadContextSwitchStrategy strategy = new ThreadContextSwitchStrategy.Default();
@@ -24,12 +23,12 @@ public class ConsumerConfig {
         this.threads = threads;
     }
 
-    public MqInfoConfig getMqInfoConfig() {
-        return mqInfoConfig;
+    public MqIsolationConfig getMqIsolationConfig() {
+        return mqIsolationConfig;
     }
 
-    public void setMqInfoConfig(MqInfoConfig mqInfoConfig) {
-        this.mqInfoConfig = mqInfoConfig;
+    public void setMqIsolationConfig(MqIsolationConfig mqIsolationConfig) {
+        this.mqIsolationConfig = mqIsolationConfig;
     }
 
     public MqSender getMqSender() {

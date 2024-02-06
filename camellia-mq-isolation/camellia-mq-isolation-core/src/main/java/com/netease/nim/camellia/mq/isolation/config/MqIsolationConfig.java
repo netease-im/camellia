@@ -1,14 +1,16 @@
-package com.netease.nim.camellia.mq.isolation.mq;
+package com.netease.nim.camellia.mq.isolation.config;
 
+import com.netease.nim.camellia.mq.isolation.mq.MqInfo;
 
 import java.util.List;
 
 /**
  * Created by caojiajun on 2024/2/6
  */
-public class MqInfoConfig {
+public class MqIsolationConfig {
 
     private String namespace;
+
     private List<MqInfo> fast;
 
     private List<MqInfo> fastError;
@@ -25,7 +27,7 @@ public class MqInfoConfig {
 
     private List<MqInfo> autoIsolationLevel1;
 
-    private List<MqInfo> manualIsolation;
+    private List<ManualConfig> manualConfigs;
 
     public String getNamespace() {
         return namespace;
@@ -99,11 +101,32 @@ public class MqInfoConfig {
         this.autoIsolationLevel1 = autoIsolationLevel1;
     }
 
-    public List<MqInfo> getManualIsolation() {
-        return manualIsolation;
+    public List<ManualConfig> getManualConfigs() {
+        return manualConfigs;
     }
 
-    public void setManualIsolation(List<MqInfo> manualIsolation) {
-        this.manualIsolation = manualIsolation;
+    public void setManualConfigs(List<ManualConfig> manualConfigs) {
+        this.manualConfigs = manualConfigs;
+    }
+
+    public static class ManualConfig {
+        private String bizId;
+        private MqInfo mqInfo;
+
+        public String getBizId() {
+            return bizId;
+        }
+
+        public void setBizId(String bizId) {
+            this.bizId = bizId;
+        }
+
+        public MqInfo getMqInfo() {
+            return mqInfo;
+        }
+
+        public void setMqInfo(MqInfo mqInfo) {
+            this.mqInfo = mqInfo;
+        }
     }
 }
