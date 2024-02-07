@@ -33,7 +33,7 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaMqIsolationConsumer.class);
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(SysUtils.getCpuNum(),
-            new CamelliaThreadFactory("camellia-mq-isolation-config"));
+            new CamelliaThreadFactory("camellia-mq-isolation-consumer"));
 
     private final MsgHandler msgHandler;
     private final MqSender mqSender;
@@ -126,13 +126,7 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
         ConsumerMonitor.spend(namespace, packet.getMsg().getBizId(), result, spendMs);
     }
 
-    private TopicType topicType(MqInfo mqInfo) {
-        TopicType topicType = topicTypeMap.get(mqInfo);
-        if (topicType == null) {
-            return TopicType.FAST;
-        }
-        return topicType;
-    }
+
 
     private ConsumerContext newConsumerContext(MqIsolationMsgPacket packet, MqInfo mqInfo, TopicType topicType) {
         ConsumerContext context = new ConsumerContext();
@@ -188,6 +182,14 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
         return list.get(index);
     }
 
+    private TopicType topicType(MqInfo mqInfo) {
+        TopicType topicType = topicTypeMap.get(mqInfo);
+        if (topicType == null) {
+            return TopicType.FAST;
+        }
+        return topicType;
+    }
+
     private boolean initMqInfoConfig() {
         try {
             MqIsolationConfig config = controller.getMqIsolationConfig(namespace);
@@ -220,7 +222,9 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
 
     private void initMqInfo(Map<MqInfo, TopicType> map, Collection<MqInfo> list, TopicType topicType) {
         for (MqInfo mqInfo : list) {
-            if (map.containsKey(mqInfo)) {
+            if (topicType == TopicType.MANUAL_ISOLATION && map.containsKey(mqInfo)) {
+                continue;
+            } else if (map.containsKey(mqInfo)) {
                 throw new IllegalArgumentException("duplicate mq info");
             }
             map.put(mqInfo, topicType);

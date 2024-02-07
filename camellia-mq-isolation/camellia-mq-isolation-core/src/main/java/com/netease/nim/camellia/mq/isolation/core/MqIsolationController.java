@@ -39,4 +39,10 @@ public interface MqIsolationController {
      */
     List<MqInfo> selectMqInfo(String namespace, String bizId);
 
+    /**
+     * 心跳
+     * @param namespace namespace
+     * @param mqInfo mqInfo
+     */
+    void heartbeat(String namespace, MqInfo mqInfo);
 }
