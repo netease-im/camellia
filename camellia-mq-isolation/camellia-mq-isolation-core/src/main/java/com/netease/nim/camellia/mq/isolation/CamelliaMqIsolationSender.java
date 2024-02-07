@@ -7,20 +7,17 @@ import com.netease.nim.camellia.mq.isolation.domain.PacketSerializer;
 import com.netease.nim.camellia.mq.isolation.mq.MqInfo;
 import com.netease.nim.camellia.mq.isolation.mq.MqSender;
 import com.netease.nim.camellia.mq.isolation.mq.SenderResult;
-import com.netease.nim.camellia.mq.isolation.stats.SenderBizStats;
+import com.netease.nim.camellia.mq.isolation.stats.BizKey;
+import com.netease.nim.camellia.mq.isolation.stats.SenderBizStatsCollector;
 import com.netease.nim.camellia.tools.cache.CamelliaLoadingCache;
-import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.statistic.CamelliaStatisticsManager;
-import com.netease.nim.camellia.tools.statistic.CamelliaStatsData;
-import com.netease.nim.camellia.tools.utils.CamelliaMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by caojiajun on 2024/2/4
@@ -31,13 +28,14 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
 
     private final MqSender mqSender;
     private final MqIsolationController controller;
-    private final CamelliaLoadingCache<CacheKey, List<MqInfo>> selectMqInfoCache;
+    private final CamelliaLoadingCache<BizKey, List<MqInfo>> selectMqInfoCache;
     private final ConcurrentHashMap<String, CamelliaStatisticsManager> statsMap = new ConcurrentHashMap<>();
+    private final SenderBizStatsCollector collector;
 
     public CamelliaMqIsolationSender(SenderConfig senderConfig) {
         this.mqSender = senderConfig.getMqSender();
         this.controller = senderConfig.getController();
-        this.selectMqInfoCache = new CamelliaLoadingCache.Builder<CacheKey, List<MqInfo>>()
+        this.selectMqInfoCache = new CamelliaLoadingCache.Builder<BizKey, List<MqInfo>>()
                 .initialCapacity(senderConfig.getCacheCapacity())
                 .maxCapacity(senderConfig.getCacheCapacity())
                 .expireMillis(senderConfig.getCacheExpireSeconds() * 1000L)
@@ -54,8 +52,7 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
                     }
                     return mqInfos;
                 });
-        Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-mq-isolation-sender-stats"))
-                .scheduleAtFixedRate(this::reportStats, senderConfig.getReportIntervalSeconds(), senderConfig.getReportIntervalSeconds(), TimeUnit.SECONDS);
+        this.collector = new SenderBizStatsCollector(controller, senderConfig.getReportIntervalSeconds());
     }
 
 
@@ -66,7 +63,7 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
         try {
             return mqSender.send(mqInfo, data);
         } finally {
-            stats(msg.getNamespace(), msg.getBizId());
+            collector.stats(msg.getNamespace(), msg.getBizId());
         }
     }
 
@@ -82,35 +79,8 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
         return packet;
     }
 
-    private void stats(String namespace, String bizId) {
-        CamelliaStatisticsManager manager = CamelliaMapUtils.computeIfAbsent(statsMap, namespace, s -> new CamelliaStatisticsManager());
-        manager.update(bizId, 1);
-    }
-
-    private void reportStats() {
-        try {
-            List<SenderBizStats> statsList = new ArrayList<>();
-            for (Map.Entry<String, CamelliaStatisticsManager> entry : statsMap.entrySet()) {
-                String namespace = entry.getKey();
-                Map<String, CamelliaStatsData> map = entry.getValue().getStatsDataAndReset();
-                for (Map.Entry<String, CamelliaStatsData> dataEntry : map.entrySet()) {
-                    String bizId = dataEntry.getKey();
-                    CamelliaStatsData data = dataEntry.getValue();
-                    SenderBizStats stats = new SenderBizStats();
-                    stats.setNamespace(namespace);
-                    stats.setBizId(bizId);
-                    stats.setCount(data.getCount());
-                    statsList.add(stats);
-                }
-            }
-            controller.reportSenderBizStats(statsList);
-        } catch (Exception e) {
-            logger.error("report stats error", e);
-        }
-    }
-
     private MqInfo selectMqInfo(MqIsolationMsg msg) {
-        List<MqInfo> list = selectMqInfoCache.get(new CacheKey(msg.getNamespace(), msg.getBizId()));
+        List<MqInfo> list = selectMqInfoCache.get(new BizKey(msg.getNamespace(), msg.getBizId()));
         if (list == null || list.isEmpty()) {
             throw new IllegalArgumentException("select mqInfo error");
         }
@@ -122,37 +92,6 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
             return list.get(index);
         } catch (Exception e) {
             return list.get(0);
-        }
-    }
-
-    private static class CacheKey {
-        private final String namespace;
-        private final String bidId;
-
-        public CacheKey(String namespace, String bidId) {
-            this.namespace = namespace;
-            this.bidId = bidId;
-        }
-
-        public String getNamespace() {
-            return namespace;
-        }
-
-        public String getBidId() {
-            return bidId;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            CacheKey cacheKey = (CacheKey) o;
-            return Objects.equals(namespace, cacheKey.namespace) && Objects.equals(bidId, cacheKey.bidId);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(namespace, bidId);
         }
     }
 

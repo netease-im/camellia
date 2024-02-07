@@ -14,17 +14,15 @@ import com.netease.nim.camellia.mq.isolation.executor.MsgHandlerResult;
 import com.netease.nim.camellia.mq.isolation.mq.MqInfo;
 import com.netease.nim.camellia.mq.isolation.mq.MqSender;
 import com.netease.nim.camellia.mq.isolation.mq.TopicType;
+import com.netease.nim.camellia.mq.isolation.stats.ConsumerBizStatsCollector;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Created by caojiajun on 2024/2/4
@@ -32,37 +30,36 @@ import java.util.concurrent.ThreadLocalRandom;
 public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaMqIsolationConsumer.class);
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(SysUtils.getCpuNum(),
+            new CamelliaThreadFactory("camellia-mq-isolation-config"));
+
     private final MsgHandler msgHandler;
     private final MqSender mqSender;
     private final int threads;
     private final ConcurrentHashMap<String, MsgExecutor> executorMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<MqInfo, TopicType> topicTypeMap = new ConcurrentHashMap<>();
-    private final MqIsolationConfig mqIsolationConfig;
     private final ThreadContextSwitchStrategy strategy;
+    private final String namespace;
+    private final MqIsolationController controller;
+    private final ConsumerBizStatsCollector collector;
+
+    private ConcurrentHashMap<MqInfo, TopicType> topicTypeMap = new ConcurrentHashMap<>();
+    private MqIsolationConfig mqIsolationConfig;
 
     public CamelliaMqIsolationConsumer(ConsumerConfig config) {
-        this.mqIsolationConfig = config.getMqIsolationConfig();
+        this.namespace = config.getNamespace();
+        this.controller = config.getController();
+        this.mqIsolationConfig = controller.getMqIsolationConfig(namespace);
         this.msgHandler = config.getMsgHandler();
         this.threads = config.getThreads();
         this.mqSender = config.getMqSender();
         this.strategy = config.getStrategy();
-        initMqInfo(mqIsolationConfig.getFast(), TopicType.FAST);
-        initMqInfo(mqIsolationConfig.getFastError(), TopicType.FAST_ERROR);
-        initMqInfo(mqIsolationConfig.getSlow(), TopicType.SLOW);
-        initMqInfo(mqIsolationConfig.getSlowError(), TopicType.SLOW_ERROR);
-        initMqInfo(mqIsolationConfig.getRetryLevel0(), TopicType.RETRY_LEVEL_0);
-        initMqInfo(mqIsolationConfig.getRetryLevel1(), TopicType.RETRY_LEVEL_1);
-        initMqInfo(mqIsolationConfig.getAutoIsolationLevel0(), TopicType.AUTO_ISOLATION_LEVEL_0);
-        initMqInfo(mqIsolationConfig.getAutoIsolationLevel1(), TopicType.AUTO_ISOLATION_LEVEL_1);
-        List<MqIsolationConfig.ManualConfig> manualConfigs = mqIsolationConfig.getManualConfigs();
-        if (manualConfigs != null) {
-            Set<MqInfo> mqInfoSet = new HashSet<>();
-            for (MqIsolationConfig.ManualConfig manualConfig : manualConfigs) {
-                MqInfo mqInfo = manualConfig.getMqInfo();
-                mqInfoSet.add(mqInfo);
-            }
-            initMqInfo(mqInfoSet, TopicType.MANUAL_ISOLATION);
+        this.collector = new ConsumerBizStatsCollector(controller, config.getReportIntervalSeconds());
+        boolean success = initMqInfoConfig();
+        if (!success) {
+            throw new IllegalArgumentException("init mq config error");
         }
+        scheduler.scheduleAtFixedRate(this::initMqInfoConfig,
+                config.getReloadConfigIntervalSeconds(), config.getReloadConfigIntervalSeconds(), TimeUnit.SECONDS);
     }
 
     @Override
@@ -72,6 +69,9 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
             long startTime = System.currentTimeMillis();
             TopicType topicType = topicType(mqInfo);
             MqIsolationMsgPacket packet = PacketSerializer.unmarshal(data);
+            if (!packet.getMsg().getNamespace().equals(this.namespace)) {
+                throw new IllegalArgumentException("illegal namespace, expect '" + this.namespace + "', actual '" + packet.getMsg().getNamespace() + "'");
+            }
             //latency
             long mqLatency = startTime - packet.getMsgPushMqTime();
             long msgLatency = startTime - packet.getMsgCreateTime();
@@ -117,7 +117,7 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
     }
 
     private void monitor(MqIsolationMsgPacket packet, MsgHandlerResult result, long latencyMs, long spendMs) {
-        //todo
+        collector.stats(namespace, packet.getMsg().getBizId(), result.isSuccess(), spendMs);
     }
 
     private TopicType topicType(MqInfo mqInfo) {
@@ -182,12 +182,42 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
         return list.get(index);
     }
 
-    private void initMqInfo(Collection<MqInfo> list, TopicType topicType) {
+    private boolean initMqInfoConfig() {
+        try {
+            MqIsolationConfig config = controller.getMqIsolationConfig(namespace);
+            ConcurrentHashMap<MqInfo, TopicType> topicTypeMap = new ConcurrentHashMap<>();
+            initMqInfo(topicTypeMap, config.getFast(), TopicType.FAST);
+            initMqInfo(topicTypeMap, config.getFastError(), TopicType.FAST_ERROR);
+            initMqInfo(topicTypeMap, config.getSlow(), TopicType.SLOW);
+            initMqInfo(topicTypeMap, config.getSlowError(), TopicType.SLOW_ERROR);
+            initMqInfo(topicTypeMap, config.getRetryLevel0(), TopicType.RETRY_LEVEL_0);
+            initMqInfo(topicTypeMap, config.getRetryLevel1(), TopicType.RETRY_LEVEL_1);
+            initMqInfo(topicTypeMap, config.getAutoIsolationLevel0(), TopicType.AUTO_ISOLATION_LEVEL_0);
+            initMqInfo(topicTypeMap, config.getAutoIsolationLevel1(), TopicType.AUTO_ISOLATION_LEVEL_1);
+            List<MqIsolationConfig.ManualConfig> manualConfigs = config.getManualConfigs();
+            if (manualConfigs != null) {
+                Set<MqInfo> mqInfoSet = new HashSet<>();
+                for (MqIsolationConfig.ManualConfig manualConfig : manualConfigs) {
+                    MqInfo mqInfo = manualConfig.getMqInfo();
+                    mqInfoSet.add(mqInfo);
+                }
+                initMqInfo(topicTypeMap, mqInfoSet, TopicType.MANUAL_ISOLATION);
+            }
+            this.mqIsolationConfig = config;
+            this.topicTypeMap = topicTypeMap;
+            return true;
+        } catch (Exception e) {
+            logger.error("initMqInfoConfig error, namespace = {}", namespace, e);
+            return false;
+        }
+    }
+
+    private void initMqInfo(Map<MqInfo, TopicType> map, Collection<MqInfo> list, TopicType topicType) {
         for (MqInfo mqInfo : list) {
-            if (topicTypeMap.containsKey(mqInfo)) {
+            if (map.containsKey(mqInfo)) {
                 throw new IllegalArgumentException("duplicate mq info");
             }
-            topicTypeMap.put(mqInfo, topicType);
+            map.put(mqInfo, topicType);
         }
     }
 }
