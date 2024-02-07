@@ -11,7 +11,6 @@ public class SenderConfig {
     private MqIsolationController controller;
     private int reportIntervalSeconds = 10;
     private int cacheCapacity = 10000;
-    private int namespaceCacheCapacity = 1000;
     private int cacheExpireSeconds = 10;
 
     public MqSender getMqSender() {
@@ -44,14 +43,6 @@ public class SenderConfig {
 
     public void setCacheCapacity(int cacheCapacity) {
         this.cacheCapacity = cacheCapacity;
-    }
-
-    public int getNamespaceCacheCapacity() {
-        return namespaceCacheCapacity;
-    }
-
-    public void setNamespaceCacheCapacity(int namespaceCacheCapacity) {
-        this.namespaceCacheCapacity = namespaceCacheCapacity;
     }
 
     public int getCacheExpireSeconds() {

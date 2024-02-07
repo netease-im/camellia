@@ -31,32 +31,29 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
 
     private final MqSender mqSender;
     private final MqIsolationController controller;
-    private final SenderConfig senderConfig;
-
-    private CamelliaLoadingCache<String, List<MqInfo>> defaultMqInfo;
-    private CamelliaLoadingCache<CacheKey, List<MqInfo>> mqInfoCache;
-
-    private final ConcurrentHashMap<String, CamelliaStatisticsManager> manager = new ConcurrentHashMap<>();
+    private final CamelliaLoadingCache<CacheKey, List<MqInfo>> selectMqInfoCache;
+    private final ConcurrentHashMap<String, CamelliaStatisticsManager> statsMap = new ConcurrentHashMap<>();
 
     public CamelliaMqIsolationSender(SenderConfig senderConfig) {
-        this.senderConfig = senderConfig;
         this.mqSender = senderConfig.getMqSender();
         this.controller = senderConfig.getController();
-        init();
-    }
-
-    private void init() {
-        defaultMqInfo = new CamelliaLoadingCache.Builder<String, List<MqInfo>>()
-                .initialCapacity(senderConfig.getNamespaceCacheCapacity())
-                .maxCapacity(senderConfig.getNamespaceCacheCapacity())
-                .expireMillis(senderConfig.getCacheExpireSeconds() * 1000L)
-                .build(controller::defaultMqInfo);
-
-        mqInfoCache = new CamelliaLoadingCache.Builder<CacheKey, List<MqInfo>>()
+        this.selectMqInfoCache = new CamelliaLoadingCache.Builder<CacheKey, List<MqInfo>>()
                 .initialCapacity(senderConfig.getCacheCapacity())
                 .maxCapacity(senderConfig.getCacheCapacity())
                 .expireMillis(senderConfig.getCacheExpireSeconds() * 1000L)
-                .build(key -> controller.selectMqInfo(key.getNamespace(), key.getBidId()));
+                .build(key -> {
+                    List<MqInfo> mqInfos;
+                    try {
+                        mqInfos = controller.selectMqInfo(key.getNamespace(), key.getBidId());
+                    } catch (Exception e) {
+                        logger.error("select mq info error, use fast mq info backup", e);
+                        mqInfos = controller.getMqIsolationConfig(key.getNamespace()).getFast();
+                    }
+                    if (mqInfos == null || mqInfos.isEmpty()) {
+                        mqInfos = controller.getMqIsolationConfig(key.getNamespace()).getFast();
+                    }
+                    return mqInfos;
+                });
         Executors.newSingleThreadScheduledExecutor(new CamelliaThreadFactory("camellia-mq-isolation-sender-stats"))
                 .scheduleAtFixedRate(this::reportStats, senderConfig.getReportIntervalSeconds(), senderConfig.getReportIntervalSeconds(), TimeUnit.SECONDS);
     }
@@ -64,15 +61,7 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
 
     @Override
     public SenderResult send(MqIsolationMsg msg) {
-        MqIsolationMsgPacket packet = new MqIsolationMsgPacket();
-        packet.setMsg(msg);
-        packet.setMsgId(UUID.randomUUID().toString().replace("-", ""));
-        packet.setMsg(msg);
-        long now = System.currentTimeMillis();
-        packet.setMsgPushMqTime(now);
-        packet.setMsgCreateTime(now);
-        packet.setRetry(0);
-        byte[] data = PacketSerializer.marshal(packet);
+        byte[] data = PacketSerializer.marshal(newPacket(msg));
         MqInfo mqInfo = selectMqInfo(msg);
         try {
             return mqSender.send(mqInfo, data);
@@ -81,15 +70,27 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
         }
     }
 
+    private MqIsolationMsgPacket newPacket(MqIsolationMsg msg) {
+        MqIsolationMsgPacket packet = new MqIsolationMsgPacket();
+        packet.setMsg(msg);
+        packet.setMsgId(UUID.randomUUID().toString().replace("-", ""));
+        packet.setMsg(msg);
+        long now = System.currentTimeMillis();
+        packet.setMsgPushMqTime(now);
+        packet.setMsgCreateTime(now);
+        packet.setRetry(0);
+        return packet;
+    }
+
     private void stats(String namespace, String bizId) {
-        CamelliaStatisticsManager statisticsManager = CamelliaMapUtils.computeIfAbsent(manager, namespace, s -> new CamelliaStatisticsManager());
-        statisticsManager.update(bizId, 1);
+        CamelliaStatisticsManager manager = CamelliaMapUtils.computeIfAbsent(statsMap, namespace, s -> new CamelliaStatisticsManager());
+        manager.update(bizId, 1);
     }
 
     private void reportStats() {
         try {
             List<SenderBizStats> statsList = new ArrayList<>();
-            for (Map.Entry<String, CamelliaStatisticsManager> entry : manager.entrySet()) {
+            for (Map.Entry<String, CamelliaStatisticsManager> entry : statsMap.entrySet()) {
                 String namespace = entry.getKey();
                 Map<String, CamelliaStatsData> map = entry.getValue().getStatsDataAndReset();
                 for (Map.Entry<String, CamelliaStatsData> dataEntry : map.entrySet()) {
@@ -109,26 +110,18 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
     }
 
     private MqInfo selectMqInfo(MqIsolationMsg msg) {
-        List<MqInfo> mqInfos;
-        try {
-            mqInfos = mqInfoCache.get(new CacheKey(msg.getNamespace(), msg.getBizId()));
-        } catch (Exception e) {
-            mqInfos = defaultMqInfo.get(msg.getNamespace());
-        }
-        if (mqInfos == null || mqInfos.isEmpty()) {
-            mqInfos = defaultMqInfo.get(msg.getNamespace());
-        }
-        if (mqInfos == null || mqInfos.isEmpty()) {
+        List<MqInfo> list = selectMqInfoCache.get(new CacheKey(msg.getNamespace(), msg.getBizId()));
+        if (list == null || list.isEmpty()) {
             throw new IllegalArgumentException("select mqInfo error");
         }
-        if (mqInfos.size() == 1) {
-            return mqInfos.get(0);
+        if (list.size() == 1) {
+            return list.get(0);
         }
         try {
-            int index = ThreadLocalRandom.current().nextInt(mqInfos.size());
-            return mqInfos.get(index);
+            int index = ThreadLocalRandom.current().nextInt(list.size());
+            return list.get(index);
         } catch (Exception e) {
-            return mqInfos.get(0);
+            return list.get(0);
         }
     }
 
