@@ -17,5 +17,6 @@
 	<modules>
 		<module>camellia-mq-isolation-core</module>
 		<module>camellia-mq-isolation-controller</module>
+		<module>camellia-mq-isolation-kafka</module>
 	</modules>
 </project>

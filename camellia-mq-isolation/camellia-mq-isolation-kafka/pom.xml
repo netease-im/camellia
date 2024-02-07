@@ -3,7 +3,7 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>camellia-mq-isolation-core</artifactId>
+	<artifactId>camellia-mq-isolation-kafka</artifactId>
 	<version>1.2.27-SNAPSHOT</version>
 
 	<parent>
@@ -15,8 +15,13 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
-			<artifactId>camellia-core</artifactId>
+			<artifactId>camellia-mq-isolation-core</artifactId>
 			<version>1.2.27-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.kafka</groupId>
+			<artifactId>kafka-clients</artifactId>
+			<version>${kafka-clients.version}</version>
 		</dependency>
     </dependencies>
 	<build>
