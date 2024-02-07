@@ -38,6 +38,7 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
     private final MsgHandler msgHandler;
     private final MqSender mqSender;
     private final int threads;
+    private final double maxPermitPercent;
     private final ConcurrentHashMap<String, MsgExecutor> executorMap = new ConcurrentHashMap<>();
     private final ThreadContextSwitchStrategy strategy;
     private final String namespace;
@@ -53,6 +54,7 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
         this.mqIsolationConfig = controller.getMqIsolationConfig(namespace);
         this.msgHandler = config.getMsgHandler();
         this.threads = config.getThreads();
+        this.maxPermitPercent = config.getMaxPermitPercent();
         this.mqSender = config.getMqSender();
         this.strategy = config.getStrategy();
         this.collector = new ConsumerBizStatsCollector(controller, config.getReportIntervalSeconds());
@@ -84,24 +86,28 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
             MsgExecutor executor = selectExecutor(context);
             //try submit executor
             boolean success = executor.submit(topicType, packet.getMsg().getBizId(), () -> {
-                long handlerBeginTime = System.currentTimeMillis();
-                MsgHandlerResult result;
                 try {
-                    //====business handler start====
-                    result = msgHandler.onMsg(context);
-                    //====business handler end====
+                    long handlerBeginTime = System.currentTimeMillis();
+                    MsgHandlerResult result;
+                    try {
+                        //====business handler start====
+                        result = msgHandler.onMsg(context);
+                        //====business handler end====
+                    } catch (Throwable e) {
+                        logger.error("msgHandler onMsg error, mqInfo = {}, data = {}", mqInfo, new String(data, StandardCharsets.UTF_8), e);
+                        result = MsgHandlerResult.FAILED_WITHOUT_RETRY;
+                    }
+                    //monitor
+                    long spendMs = System.currentTimeMillis() - handlerBeginTime;
+                    monitor(packet, result, spendMs);
+                    //retry
+                    if (result == MsgHandlerResult.FAILED_WITH_RETRY) {
+                        retry(packet);
+                    }
+                    future.complete(true);
                 } catch (Throwable e) {
                     logger.error("unknown error, mqInfo = {}, data = {}", mqInfo, new String(data, StandardCharsets.UTF_8), e);
-                    result = MsgHandlerResult.FAILED_WITHOUT_RETRY;
                 }
-                //monitor
-                long spendMs = System.currentTimeMillis() - handlerBeginTime;
-                monitor(packet, result, spendMs);
-                //retry
-                if (result == MsgHandlerResult.FAILED_WITH_RETRY) {
-                    retry(packet);
-                }
-                future.complete(true);
             });
             //submit failure, send to auto isolation mq
             if (!success) {
@@ -109,7 +115,7 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
                 future.complete(true);
             }
         } catch (Throwable e) {
-            logger.error("onMsg error", e);
+            logger.error("onMsg error, mqInfo = {}, data = {}", mqInfo, new String(data, StandardCharsets.UTF_8), e);
             future.complete(false);
         }
         return future;
@@ -123,7 +129,7 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
     private TopicType topicType(MqInfo mqInfo) {
         TopicType topicType = topicTypeMap.get(mqInfo);
         if (topicType == null) {
-            throw new IllegalArgumentException("unknown mqInfo = " + mqInfo);
+            return TopicType.FAST;
         }
         return topicType;
     }
@@ -145,7 +151,7 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
         if (executor != null) {
             return executor;
         }
-        return executorMap.computeIfAbsent(name, k -> new MsgExecutor(name, threads, strategy));
+        return executorMap.computeIfAbsent(name, k -> new MsgExecutor(name, threads, maxPermitPercent, strategy));
     }
 
     private void retry(MqIsolationMsgPacket packet) {

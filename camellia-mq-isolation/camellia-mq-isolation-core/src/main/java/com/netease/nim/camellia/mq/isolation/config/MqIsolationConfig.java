@@ -110,8 +110,17 @@ public class MqIsolationConfig {
     }
 
     public static class ManualConfig {
+        private MatchType matchType;
         private String bizId;
         private MqInfo mqInfo;
+
+        public MatchType getMatchType() {
+            return matchType;
+        }
+
+        public void setMatchType(MatchType matchType) {
+            this.matchType = matchType;
+        }
 
         public String getBizId() {
             return bizId;
@@ -128,5 +137,11 @@ public class MqIsolationConfig {
         public void setMqInfo(MqInfo mqInfo) {
             this.mqInfo = mqInfo;
         }
+    }
+
+    public static enum MatchType {
+        exact_match,//精准匹配
+        prefix_match,//前缀匹配
+        ;
     }
 }

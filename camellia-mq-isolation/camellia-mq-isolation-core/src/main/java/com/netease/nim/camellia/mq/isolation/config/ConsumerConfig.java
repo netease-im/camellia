@@ -10,7 +10,7 @@ import com.netease.nim.camellia.mq.isolation.mq.MqSender;
  */
 public class ConsumerConfig {
 
-    private int threads;
+    private int threads = 200;
     private String namespace;
     private MqIsolationController controller;
     private MqSender mqSender;
@@ -18,6 +18,7 @@ public class ConsumerConfig {
     private ThreadContextSwitchStrategy strategy = new ThreadContextSwitchStrategy.Default();
     private int reportIntervalSeconds = 10;
     private int reloadConfigIntervalSeconds = 30;
+    private double maxPermitPercent = 0.5;
 
     public int getThreads() {
         return threads;
@@ -81,5 +82,13 @@ public class ConsumerConfig {
 
     public void setReloadConfigIntervalSeconds(int reloadConfigIntervalSeconds) {
         this.reloadConfigIntervalSeconds = reloadConfigIntervalSeconds;
+    }
+
+    public double getMaxPermitPercent() {
+        return maxPermitPercent;
+    }
+
+    public void setMaxPermitPercent(double maxPermitPercent) {
+        this.maxPermitPercent = maxPermitPercent;
     }
 }

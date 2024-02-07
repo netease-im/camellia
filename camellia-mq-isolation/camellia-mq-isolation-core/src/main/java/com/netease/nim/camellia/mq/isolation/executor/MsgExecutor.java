@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 public class MsgExecutor {
 
     private final int threads;
+    private final double maxPermitPercent;
     private final ThreadPoolExecutor executor;
     private final ThreadContextSwitchStrategy strategy;
 
@@ -24,11 +25,12 @@ public class MsgExecutor {
             .maximumWeightedCapacity(10000)
             .build();
 
-    public MsgExecutor(String name, int threads, ThreadContextSwitchStrategy strategy) {
+    public MsgExecutor(String name, int threads, double maxPermitPercent, ThreadContextSwitchStrategy strategy) {
         this.strategy = strategy;
         this.executor = new ThreadPoolExecutor(threads, threads, 0, TimeUnit.SECONDS,
                 new SynchronousQueue<>(), new CamelliaThreadFactory("camellia-mq-isolation[" + name + "]"), new ThreadPoolExecutor.CallerRunsPolicy());
         this.threads = threads;
+        this.maxPermitPercent = maxPermitPercent;
     }
 
     public boolean submit(TopicType topicType, String bizId, Runnable runnable) {
@@ -53,7 +55,7 @@ public class MsgExecutor {
     private Semaphore tryAcquire(String bizId) {
         Semaphore semaphore = semaphoreMap.get(bizId);
         if (semaphore == null) {
-            semaphore = semaphoreMap.computeIfAbsent(bizId, k -> new Semaphore(threads / 2));
+            semaphore = semaphoreMap.computeIfAbsent(bizId, k -> new Semaphore((int) (threads * maxPermitPercent)));
         }
         if (semaphore.tryAcquire()) {
             return semaphore;
