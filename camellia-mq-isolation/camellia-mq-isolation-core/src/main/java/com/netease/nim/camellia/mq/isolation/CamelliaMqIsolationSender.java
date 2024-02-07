@@ -7,16 +7,14 @@ import com.netease.nim.camellia.mq.isolation.domain.PacketSerializer;
 import com.netease.nim.camellia.mq.isolation.mq.MqInfo;
 import com.netease.nim.camellia.mq.isolation.mq.MqSender;
 import com.netease.nim.camellia.mq.isolation.mq.SenderResult;
-import com.netease.nim.camellia.mq.isolation.stats.BizKey;
+import com.netease.nim.camellia.mq.isolation.stats.model.BizKey;
 import com.netease.nim.camellia.mq.isolation.stats.SenderBizStatsCollector;
 import com.netease.nim.camellia.tools.cache.CamelliaLoadingCache;
-import com.netease.nim.camellia.tools.statistic.CamelliaStatisticsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -29,7 +27,6 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
     private final MqSender mqSender;
     private final MqIsolationController controller;
     private final CamelliaLoadingCache<BizKey, List<MqInfo>> selectMqInfoCache;
-    private final ConcurrentHashMap<String, CamelliaStatisticsManager> statsMap = new ConcurrentHashMap<>();
     private final SenderBizStatsCollector collector;
 
     public CamelliaMqIsolationSender(SenderConfig senderConfig) {
@@ -54,7 +51,6 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
                 });
         this.collector = new SenderBizStatsCollector(controller, senderConfig.getReportIntervalSeconds());
     }
-
 
     @Override
     public SenderResult send(MqIsolationMsg msg) {

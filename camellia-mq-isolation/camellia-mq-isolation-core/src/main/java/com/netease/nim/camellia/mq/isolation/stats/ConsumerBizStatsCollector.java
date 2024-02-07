@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.mq.isolation.stats;
 
 import com.netease.nim.camellia.mq.isolation.MqIsolationController;
+import com.netease.nim.camellia.mq.isolation.stats.model.ConsumerBizStats;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.statistic.CamelliaStatisticsManager;
 import com.netease.nim.camellia.tools.statistic.CamelliaStatsData;

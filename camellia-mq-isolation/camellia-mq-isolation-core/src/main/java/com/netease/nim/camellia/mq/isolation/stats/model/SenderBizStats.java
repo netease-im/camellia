@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.mq.isolation.stats;
+package com.netease.nim.camellia.mq.isolation.stats.model;
 
 /**
  * Created by caojiajun on 2024/2/6

@@ -2,8 +2,8 @@ package com.netease.nim.camellia.mq.isolation;
 
 import com.netease.nim.camellia.mq.isolation.config.MqIsolationConfig;
 import com.netease.nim.camellia.mq.isolation.mq.MqInfo;
-import com.netease.nim.camellia.mq.isolation.stats.ConsumerBizStats;
-import com.netease.nim.camellia.mq.isolation.stats.SenderBizStats;
+import com.netease.nim.camellia.mq.isolation.stats.model.ConsumerBizStats;
+import com.netease.nim.camellia.mq.isolation.stats.model.SenderBizStats;
 
 import java.util.List;
 

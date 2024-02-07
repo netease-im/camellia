@@ -1,16 +1,17 @@
-package com.netease.nim.camellia.mq.isolation.stats;
+package com.netease.nim.camellia.mq.isolation.stats.model;
+
+import com.netease.nim.camellia.mq.isolation.executor.MsgHandlerResult;
 
 /**
- * Created by caojiajun on 2024/2/6
+ * Created by caojiajun on 2024/2/7
  */
-public class ConsumerBizStats {
-
+public class NamespaceBizIdSpendStats {
     private String namespace;
     private String bizId;
-    private long success;
-    private long fail;
-    private double spendAvg;
-    private double spendMax;
+    private MsgHandlerResult result;
+    private long count;
+    private double avg;
+    private double max;
     private double p50;
     private double p90;
     private double p99;
@@ -31,36 +32,36 @@ public class ConsumerBizStats {
         this.bizId = bizId;
     }
 
-    public long getSuccess() {
-        return success;
+    public MsgHandlerResult getResult() {
+        return result;
     }
 
-    public void setSuccess(long success) {
-        this.success = success;
+    public void setResult(MsgHandlerResult result) {
+        this.result = result;
     }
 
-    public long getFail() {
-        return fail;
+    public long getCount() {
+        return count;
     }
 
-    public void setFail(long fail) {
-        this.fail = fail;
+    public void setCount(long count) {
+        this.count = count;
     }
 
-    public double getSpendAvg() {
-        return spendAvg;
+    public double getAvg() {
+        return avg;
     }
 
-    public void setSpendAvg(double spendAvg) {
-        this.spendAvg = spendAvg;
+    public void setAvg(double avg) {
+        this.avg = avg;
     }
 
-    public double getSpendMax() {
-        return spendMax;
+    public double getMax() {
+        return max;
     }
 
-    public void setSpendMax(double spendMax) {
-        this.spendMax = spendMax;
+    public void setMax(double max) {
+        this.max = max;
     }
 
     public double getP50() {

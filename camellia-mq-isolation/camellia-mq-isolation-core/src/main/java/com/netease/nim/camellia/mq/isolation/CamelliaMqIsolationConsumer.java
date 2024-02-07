@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
 import com.netease.nim.camellia.mq.isolation.config.ConsumerConfig;
 import com.netease.nim.camellia.mq.isolation.config.MqIsolationConfig;
+import com.netease.nim.camellia.mq.isolation.config.MqIsolationEnv;
 import com.netease.nim.camellia.mq.isolation.domain.ConsumerContext;
 import com.netease.nim.camellia.mq.isolation.domain.MqIsolationMsg;
 import com.netease.nim.camellia.mq.isolation.domain.MqIsolationMsgPacket;
@@ -15,6 +16,7 @@ import com.netease.nim.camellia.mq.isolation.mq.MqInfo;
 import com.netease.nim.camellia.mq.isolation.mq.MqSender;
 import com.netease.nim.camellia.mq.isolation.mq.TopicType;
 import com.netease.nim.camellia.mq.isolation.stats.ConsumerBizStatsCollector;
+import com.netease.nim.camellia.mq.isolation.stats.ConsumerMonitor;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.utils.SysUtils;
 import org.slf4j.Logger;
@@ -60,6 +62,7 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
         }
         scheduler.scheduleAtFixedRate(this::initMqInfoConfig,
                 config.getReloadConfigIntervalSeconds(), config.getReloadConfigIntervalSeconds(), TimeUnit.SECONDS);
+        ConsumerMonitor.init(MqIsolationEnv.monitorIntervalSeconds);
     }
 
     @Override
@@ -75,7 +78,7 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
             //latency
             long mqLatency = startTime - packet.getMsgPushMqTime();
             long msgLatency = startTime - packet.getMsgCreateTime();
-            latency(mqInfo, topicType, mqLatency, msgLatency);
+            ConsumerMonitor.latency(mqInfo, topicType, namespace, packet.getMsg().getBizId(), mqLatency, msgLatency);
             //select executor
             ConsumerContext context = newConsumerContext(packet, mqInfo, topicType);
             MsgExecutor executor = selectExecutor(context);
@@ -92,9 +95,9 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
                     result = MsgHandlerResult.FAILED_WITHOUT_RETRY;
                 }
                 //monitor
-                long latencyMs = System.currentTimeMillis() - packet.getMsgCreateTime();
                 long spendMs = System.currentTimeMillis() - handlerBeginTime;
-                monitor(packet, result, latencyMs, spendMs);
+                monitor(packet, result, spendMs);
+                //retry
                 if (result == MsgHandlerResult.FAILED_WITH_RETRY) {
                     retry(packet);
                 }
@@ -112,12 +115,9 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
         return future;
     }
 
-    private void latency(MqInfo mqInfo, TopicType topicType, long mqLatency, long msgLatency) {
-        //todo
-    }
-
-    private void monitor(MqIsolationMsgPacket packet, MsgHandlerResult result, long latencyMs, long spendMs) {
+    private void monitor(MqIsolationMsgPacket packet, MsgHandlerResult result, long spendMs) {
         collector.stats(namespace, packet.getMsg().getBizId(), result.isSuccess(), spendMs);
+        ConsumerMonitor.spend(namespace, packet.getMsg().getBizId(), result, spendMs);
     }
 
     private TopicType topicType(MqInfo mqInfo) {

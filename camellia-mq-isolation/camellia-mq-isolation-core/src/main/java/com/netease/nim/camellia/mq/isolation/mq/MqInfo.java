@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.mq.isolation.mq;
 
+import com.alibaba.fastjson.JSONObject;
+
 import java.util.Objects;
 
 /**
@@ -46,11 +48,24 @@ public class MqInfo {
         return Objects.hash(mq, topic);
     }
 
+    private String _string = null;
+
     @Override
     public String toString() {
-        return "MqInfo{" +
-                "mq='" + mq + '\'' +
-                ", topic='" + topic + '\'' +
-                '}';
+        if (_string != null) {
+            return _string;
+        }
+        JSONObject json = new JSONObject(true);
+        json.put("mq", mq);
+        json.put("topic", topic);
+        _string = json.toJSONString();
+        return _string;
+    }
+
+    public static MqInfo byString(String json) {
+        JSONObject jsonObject = JSONObject.parseObject(json);
+        String mq = jsonObject.getString("mq");
+        String topic = jsonObject.getString("topic");
+        return new MqInfo(mq, topic);
     }
 }
