@@ -3,6 +3,7 @@ package com.netease.nim.camellia.mq.isolation.core;
 import com.netease.nim.camellia.mq.isolation.core.config.ConsumerManagerConfig;
 import com.netease.nim.camellia.mq.isolation.core.config.ConsumerManagerType;
 import com.netease.nim.camellia.mq.isolation.core.config.MqIsolationConfig;
+import com.netease.nim.camellia.mq.isolation.core.mq.Consumer;
 import com.netease.nim.camellia.mq.isolation.core.mq.MqInfo;
 import com.netease.nim.camellia.mq.isolation.core.mq.TopicType;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
@@ -13,35 +14,35 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by caojiajun on 2024/2/7
  */
-public abstract class AbstractConsumerManager {
+public class ConsumerManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(AbstractConsumerManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(ConsumerManager.class);
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(SysUtils.getCpuNum(),
             new CamelliaThreadFactory("camellia-mq-isolation-consumer-manager"));
 
     private final ConsumerManagerConfig config;
     private final MqIsolationController controller;
     private final String namespace;
-    private final CamelliaMqIsolationConsumer consumer;
-    private final Set<MqInfo> startedMqInfoSet = new HashSet<>();
+    private final CamelliaMqIsolationMsgDispatcher dispatcher;
+    private final ConcurrentHashMap<MqInfo, Consumer> instanceMap = new ConcurrentHashMap<>();
     private final ReentrantLock lock = new ReentrantLock();
     private final AtomicBoolean initOk = new AtomicBoolean(false);
 
-    public AbstractConsumerManager(ConsumerManagerConfig config) {
+    public ConsumerManager(ConsumerManagerConfig config) {
         this.config = config;
+        if (config.getConsumerBuilder() == null) {
+            throw new IllegalArgumentException("consumer builder is null");
+        }
         this.namespace = config.getConsumerConfig().getNamespace();
         this.controller = config.getConsumerConfig().getController();
-        this.consumer = new CamelliaMqIsolationConsumer(config.getConsumerConfig());
+        this.dispatcher = new CamelliaMqIsolationMsgDispatcher(config.getConsumerConfig());
     }
 
     /**
@@ -62,20 +63,26 @@ public abstract class AbstractConsumerManager {
     }
 
     /**
-     * 由子类自行实现的start0方法，可能是kafka，也可能是rocketmq，或者其他
-     * @param mqInfo mqInfo
+     * 关闭
      */
-    protected abstract void start0(MqInfo mqInfo);
-
-    /**
-     * 在业务实现的start0方法中，在获取到消息后，需要调用本方法去执行实际的消费逻辑
-     * @param mqInfo 来源mqInfo
-     * @param data 数据
-     * @return 消费结果
-     */
-    protected final CompletableFuture<Boolean> onMsg(MqInfo mqInfo, byte[] data) {
-        return consumer.onMsg(mqInfo, data);
+    public void stop() {
+        lock.lock();
+        try {
+            Set<MqInfo> set = new HashSet<>(instanceMap.keySet());
+            for (MqInfo mqInfo: set) {
+                logger.info("try stop consumer, namespace = {}, mqInfo = {}", namespace, mqInfo);
+                Consumer instance = instanceMap.remove(mqInfo);
+                if (instance != null) {
+                    instance.stop();
+                    logger.info("stop consumer success, namespace = {}, mqInfo = {}", namespace, mqInfo);
+                }
+            }
+            logger.info("mq isolation consumer manager stop success");
+        } finally {
+            lock.unlock();
+        }
     }
+
 
     //启动消费线程
     private boolean initConsumers() {
@@ -199,14 +206,15 @@ public abstract class AbstractConsumerManager {
                 throw new IllegalArgumentException("illegal ConsumerManagerType");
             }
             for (MqInfo mqInfo : set) {
-                if (startedMqInfoSet.contains(mqInfo)) {
+                if (instanceMap.containsKey(mqInfo)) {
                     continue;
                 }
                 try {
                     logger.info("try start consumer, namespace = {}, mqInfo = {}", namespace, mqInfo);
-                    start0(mqInfo);
+                    Consumer instance = config.getConsumerBuilder().newConsumer(mqInfo, dispatcher);
+                    instance.start();
                     logger.info("start consumer success, namespace = {}, mqInfo = {}", namespace, mqInfo);
-                    startedMqInfoSet.add(mqInfo);
+                    instanceMap.put(mqInfo, instance);
                 } catch (Exception e) {
                     logger.error("start consumer error, namespace = {}, mqInfo = {}", namespace, mqInfo, e);
                     throw new IllegalStateException(e);
@@ -218,7 +226,7 @@ public abstract class AbstractConsumerManager {
             return false;
         } finally {
             try {
-                for (MqInfo mqInfo : startedMqInfoSet) {
+                for (MqInfo mqInfo : instanceMap.keySet()) {
                     controller.heartbeat(namespace, mqInfo);
                 }
             } catch (Exception e) {

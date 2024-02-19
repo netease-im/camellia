@@ -29,11 +29,11 @@ import java.util.concurrent.*;
 /**
  * Created by caojiajun on 2024/2/4
  */
-public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
+public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatcher {
 
-    private static final Logger logger = LoggerFactory.getLogger(CamelliaMqIsolationConsumer.class);
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaMqIsolationMsgDispatcher.class);
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(SysUtils.getCpuNum(),
-            new CamelliaThreadFactory("camellia-mq-isolation-consumer"));
+            new CamelliaThreadFactory("camellia-mq-isolation-dispatcher"));
 
     private final MsgHandler msgHandler;
     private final MqSender mqSender;
@@ -48,7 +48,7 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
     private ConcurrentHashMap<MqInfo, TopicType> topicTypeMap = new ConcurrentHashMap<>();
     private MqIsolationConfig mqIsolationConfig;
 
-    public CamelliaMqIsolationConsumer(ConsumerConfig config) {
+    public CamelliaMqIsolationMsgDispatcher(ConsumerConfig config) {
         this.namespace = config.getNamespace();
         this.controller = config.getController();
         this.mqIsolationConfig = controller.getMqIsolationConfig(namespace);
@@ -107,6 +107,7 @@ public class CamelliaMqIsolationConsumer implements MqIsolationConsumer {
                     future.complete(true);
                 } catch (Throwable e) {
                     logger.error("unknown error, mqInfo = {}, data = {}", mqInfo, new String(data, StandardCharsets.UTF_8), e);
+                    future.complete(false);
                 }
             });
             //submit failure, send to auto isolation mq

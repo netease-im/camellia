@@ -7,7 +7,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Created by caojiajun on 2024/2/6
  */
-public interface MqIsolationConsumer {
+public interface MqIsolationMsgDispatcher {
 
     /**
      * 消费者，从mq中取到消息后，调用本接口，去处理消息

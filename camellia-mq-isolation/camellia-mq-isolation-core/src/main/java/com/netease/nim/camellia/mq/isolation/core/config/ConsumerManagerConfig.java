@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.mq.isolation.core.config;
 
+import com.netease.nim.camellia.mq.isolation.core.mq.Consumer;
+import com.netease.nim.camellia.mq.isolation.core.mq.ConsumerBuilder;
 import com.netease.nim.camellia.mq.isolation.core.mq.MqInfo;
 import com.netease.nim.camellia.mq.isolation.core.mq.TopicType;
 
@@ -16,6 +18,7 @@ public class ConsumerManagerConfig {
     private Set<MqInfo> excludeMqInfoSet;
     private Set<TopicType> specifyTopicTypeSet;
     private Set<MqInfo> specifyMqInfoSet;
+    private ConsumerBuilder consumerBuilder;
 
     public ConsumerConfig getConsumerConfig() {
         return consumerConfig;
@@ -71,5 +74,13 @@ public class ConsumerManagerConfig {
 
     public void setSpecifyMqInfoSet(Set<MqInfo> specifyMqInfoSet) {
         this.specifyMqInfoSet = specifyMqInfoSet;
+    }
+
+    public ConsumerBuilder getConsumerBuilder() {
+        return consumerBuilder;
+    }
+
+    public void setConsumerBuilder(ConsumerBuilder consumerBuilder) {
+        this.consumerBuilder = consumerBuilder;
     }
 }
