@@ -124,7 +124,7 @@ public enum BuildInProxyPluginEnum {
 }
 ```
 内置插件列表：    
-* MonitorProxyPlugin，用于监控命令的请求qps和响应，具体见：[monitor-plugin](monitor-plugin.md)
+* MonitorProxyPlugin，用于监控命令的请求qps和响应，以及监控慢查询等，具体见：[monitor-plugin](monitor-plugin.md)
 * BigKeyProxyPlugin，用于监控大key，具体见：[big-key](big-key.md)
 * HotKeyProxyPlugin，用于监控热key，具体见：[hot-key](hot-key.md)
 * HotKeyCacheProxyPlugin，用于热key缓存，支持GET命令，具体见：[hot-key-cache](hot-key-cache.md)
@@ -151,7 +151,7 @@ public enum BuildInProxyPluginEnum {
 
 ### 其他camellia提供的插件（不是内置，需要额外引入maven依赖）
 * MqMultiWriteProducerProxyPlugin，用于使用mq进行异步双写，具体见：[mq-multi-write](mq-multi-write.md)
-* HotKeyMonitorPlugin/HotKeyCachePlugin，基于hot-key-sdk/hot-key-server的热key监控/缓存，具体见[hot-key-cache-extension](hot-key-cache-extension.md)
+* HotKeyMonitorPlugin/HotKeyCachePlugin，基于hot-key-sdk/hot-key-server的热key监控/缓存，具体见: [hot-key-cache-extension](hot-key-cache-extension.md)
 
 ### 自定义插件
 实现ProxyPlugin接口，并把实现类的全类名配置到application.yml或者camellia-redis-proxy.properties里即可
