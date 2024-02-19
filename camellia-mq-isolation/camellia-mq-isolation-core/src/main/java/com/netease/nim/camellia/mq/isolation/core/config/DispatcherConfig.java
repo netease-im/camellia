@@ -8,7 +8,7 @@ import com.netease.nim.camellia.mq.isolation.core.mq.MqSender;
 /**
  * Created by caojiajun on 2024/2/6
  */
-public class ConsumerConfig {
+public class DispatcherConfig {
 
     private int threads = 200;
     private String namespace;
@@ -19,6 +19,7 @@ public class ConsumerConfig {
     private int reportIntervalSeconds = 10;
     private int reloadConfigIntervalSeconds = 30;
     private double maxPermitPercent = 0.5;
+    private int retryLevelThreshold = 5;
 
     public int getThreads() {
         return threads;
@@ -90,5 +91,13 @@ public class ConsumerConfig {
 
     public void setMaxPermitPercent(double maxPermitPercent) {
         this.maxPermitPercent = maxPermitPercent;
+    }
+
+    public int getRetryLevelThreshold() {
+        return retryLevelThreshold;
+    }
+
+    public void setRetryLevelThreshold(int retryLevelThreshold) {
+        this.retryLevelThreshold = retryLevelThreshold;
     }
 }

@@ -2,7 +2,7 @@ package com.netease.nim.camellia.mq.isolation.core;
 
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
-import com.netease.nim.camellia.mq.isolation.core.config.ConsumerConfig;
+import com.netease.nim.camellia.mq.isolation.core.config.DispatcherConfig;
 import com.netease.nim.camellia.mq.isolation.core.config.MqIsolationConfig;
 import com.netease.nim.camellia.mq.isolation.core.config.MqIsolationEnv;
 import com.netease.nim.camellia.mq.isolation.core.domain.ConsumerContext;
@@ -35,6 +35,7 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(SysUtils.getCpuNum(),
             new CamelliaThreadFactory("camellia-mq-isolation-dispatcher"));
 
+    private final DispatcherConfig dispatcherConfig;
     private final MsgHandler msgHandler;
     private final MqSender mqSender;
     private final int threads;
@@ -48,7 +49,8 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
     private ConcurrentHashMap<MqInfo, TopicType> topicTypeMap = new ConcurrentHashMap<>();
     private MqIsolationConfig mqIsolationConfig;
 
-    public CamelliaMqIsolationMsgDispatcher(ConsumerConfig config) {
+    public CamelliaMqIsolationMsgDispatcher(DispatcherConfig config) {
+        this.dispatcherConfig = config;
         this.namespace = config.getNamespace();
         this.controller = config.getController();
         this.mqIsolationConfig = controller.getMqIsolationConfig(namespace);
@@ -157,7 +159,7 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
     }
 
     private MqInfo retryMq(MqIsolationMsgPacket packet) {
-        if (packet.getRetry() >= 5) {
+        if (packet.getRetry() >= dispatcherConfig.getRetryLevelThreshold()) {
             return rand(mqIsolationConfig.getRetryLevel1());
         }
         return rand(mqIsolationConfig.getRetryLevel0());

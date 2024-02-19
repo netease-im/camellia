@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.mq.isolation.core.config;
 
-import com.netease.nim.camellia.mq.isolation.core.mq.Consumer;
 import com.netease.nim.camellia.mq.isolation.core.mq.ConsumerBuilder;
 import com.netease.nim.camellia.mq.isolation.core.mq.MqInfo;
 import com.netease.nim.camellia.mq.isolation.core.mq.TopicType;
@@ -11,7 +10,7 @@ import java.util.Set;
  * Created by caojiajun on 2024/2/7
  */
 public class ConsumerManagerConfig {
-    private ConsumerConfig consumerConfig;
+    private DispatcherConfig dispatcherConfig;
     private ConsumerManagerType type;
     private int reloadConsumerIntervalSeconds = 30;
     private Set<TopicType> excludeTopicTypeSet;
@@ -20,12 +19,12 @@ public class ConsumerManagerConfig {
     private Set<MqInfo> specifyMqInfoSet;
     private ConsumerBuilder consumerBuilder;
 
-    public ConsumerConfig getConsumerConfig() {
-        return consumerConfig;
+    public DispatcherConfig getDispatcherConfig() {
+        return dispatcherConfig;
     }
 
-    public void setConsumerConfig(ConsumerConfig consumerConfig) {
-        this.consumerConfig = consumerConfig;
+    public void setDispatcherConfig(DispatcherConfig dispatcherConfig) {
+        this.dispatcherConfig = dispatcherConfig;
     }
 
     public ConsumerManagerType getType() {

@@ -34,15 +34,17 @@ public class ConsumerManager {
     private final ConcurrentHashMap<MqInfo, Consumer> instanceMap = new ConcurrentHashMap<>();
     private final ReentrantLock lock = new ReentrantLock();
     private final AtomicBoolean initOk = new AtomicBoolean(false);
+    private final AtomicBoolean stop = new AtomicBoolean(false);
+    private ScheduledFuture<?> future;
 
     public ConsumerManager(ConsumerManagerConfig config) {
         this.config = config;
         if (config.getConsumerBuilder() == null) {
             throw new IllegalArgumentException("consumer builder is null");
         }
-        this.namespace = config.getConsumerConfig().getNamespace();
-        this.controller = config.getConsumerConfig().getController();
-        this.dispatcher = new CamelliaMqIsolationMsgDispatcher(config.getConsumerConfig());
+        this.namespace = config.getDispatcherConfig().getNamespace();
+        this.controller = config.getDispatcherConfig().getController();
+        this.dispatcher = new CamelliaMqIsolationMsgDispatcher(config.getDispatcherConfig());
     }
 
     /**
@@ -54,7 +56,7 @@ public class ConsumerManager {
             if (!success) {
                 throw new IllegalArgumentException("mq isolation consumer start error");
             }
-            scheduler.scheduleAtFixedRate(this::initConsumers,
+            future = scheduler.scheduleAtFixedRate(this::initConsumers,
                     config.getReloadConsumerIntervalSeconds(), config.getReloadConsumerIntervalSeconds(), TimeUnit.SECONDS);
             logger.info("mq isolation consumer manager start success");
         } else {
@@ -66,8 +68,17 @@ public class ConsumerManager {
      * 关闭
      */
     public void stop() {
+        if (stop.get()) {
+            throw new IllegalStateException("mq isolation consumer stop twice!");
+        }
+        if (!initOk.get()) {
+            throw new IllegalStateException("mq isolation consumer not start!");
+        }
         lock.lock();
         try {
+            if (future != null) {
+                future.cancel(false);
+            }
             Set<MqInfo> set = new HashSet<>(instanceMap.keySet());
             for (MqInfo mqInfo: set) {
                 logger.info("try stop consumer, namespace = {}, mqInfo = {}", namespace, mqInfo);
@@ -78,6 +89,7 @@ public class ConsumerManager {
                 }
             }
             logger.info("mq isolation consumer manager stop success");
+            stop.set(true);
         } finally {
             lock.unlock();
         }
@@ -86,6 +98,9 @@ public class ConsumerManager {
 
     //启动消费线程
     private boolean initConsumers() {
+        if (stop.get()) {
+            return false;
+        }
         lock.lock();
         try {
             ConsumerManagerType type = config.getType();
