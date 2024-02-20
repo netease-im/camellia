@@ -1,10 +1,12 @@
-package com.netease.nim.camellia.mq.isolation.controller.conf;
+package com.netease.nim.camellia.mq.isolation.controller.springboot;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Created by caojiajun on 2024/2/20
+ * Created by caojiajun on 2023/3/28
  */
-public class MqIsolationControllerConfig {
-
+@ConfigurationProperties(prefix = "camellia-mq-isolation-controller")
+public class CamelliaMqIsolationControllerProperties {
     private String camelliaConfigUrl;
     private String camelliaConfigNamespace;
     private int camelliaConfigReloadIntervalSeconds = 5;
