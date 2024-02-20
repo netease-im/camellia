@@ -14,6 +14,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by caojiajun on 2024/2/20
@@ -22,9 +23,23 @@ public class CamelliaMqIsolationController implements MqIsolationController {
     private final String url;
     private final OkHttpClient okHttpClient;
 
-    public CamelliaMqIsolationController(String url) {
+    public CamelliaMqIsolationController(String url, int timeoutSeconds) {
         this.url = url;
-        this.okHttpClient = new OkHttpClient();
+        Dispatcher dispatcher = new Dispatcher();
+        dispatcher.setMaxRequests(4096);
+        dispatcher.setMaxRequestsPerHost(1024);
+        this.okHttpClient =  new OkHttpClient.Builder()
+                .readTimeout(timeoutSeconds, TimeUnit.SECONDS)
+                .writeTimeout(timeoutSeconds, TimeUnit.SECONDS)
+                .connectTimeout(timeoutSeconds, TimeUnit.SECONDS)
+                .dispatcher(dispatcher)
+                .connectionPool(new ConnectionPool(256, 3, TimeUnit.SECONDS))
+                .build();
+    }
+
+    public CamelliaMqIsolationController(String url, OkHttpClient okHttpClient) {
+        this.url = url;
+        this.okHttpClient = okHttpClient;
     }
 
     @Override
