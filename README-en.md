@@ -98,6 +98,6 @@ If you are using Camellia and feel it helps or you'd like to do some contributio
 wechat-id: hdnxttl  
 email: zj_caojiajun@163.com
 
-## Star History
+## Stargazers Over Time
 
-[![Star History Chart](https://api.star-history.com/svg?repos=netease-im/camellia&type=Date)](https://star-history.com/#netease-im/camellia&Date)
+[![Stargazers Over Time](https://starchart.cc/netease-im/camellia.svg)](https://starchart.cc/netease-im/camellia) 

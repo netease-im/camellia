@@ -109,6 +109,6 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 微信: hdnxttl（加此微信拉进技术交流群）    
 email: zj_caojiajun@163.com 
 
-## Star History
+## Stargazers Over Time
 
-[![Star History Chart](https://api.star-history.com/svg?repos=netease-im/camellia&type=Date)](https://star-history.com/#netease-im/camellia&Date)
+[![Stargazers Over Time](https://starchart.cc/netease-im/camellia.svg)](https://starchart.cc/netease-im/camellia)
