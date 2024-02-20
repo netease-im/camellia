@@ -10,6 +10,9 @@ import java.util.List;
 public class MqIsolationConfigUtils {
 
     public static boolean checkValid(MqIsolationConfig config) {
+        if (config == null) {
+            return false;
+        }
         String namespace = config.getNamespace();
         if (namespace == null) {
             return false;
@@ -29,9 +32,6 @@ public class MqIsolationConfigUtils {
                     return false;
                 }
                 if (manualConfig.getBizId() == null) {
-                    return false;
-                }
-                if (manualConfig.getMqInfo() == null) {
                     return false;
                 }
                 if (!checkMqInfo(manualConfig.getMqInfo())) {
