@@ -34,7 +34,7 @@ public class RouteService {
     private CamelliaRedisTemplate template;
 
     @Autowired
-    private ConfigService configService;
+    private ConfigServiceWrapper configServiceWrapper;
 
     private final CamelliaLocalCache cache = new CamelliaLocalCache();
 
@@ -51,7 +51,7 @@ public class RouteService {
 
     private List<MqInfo> selectMqInfo0(String namespace, String bizId) {
         //get config
-        MqIsolationConfig config = configService.getMqIsolationConfig(namespace);
+        MqIsolationConfig config = configServiceWrapper.getMqIsolationConfig(namespace);
 
         //check manual config
         List<ManualConfig> manualConfigs = config.getManualConfigs();
@@ -158,7 +158,7 @@ public class RouteService {
         String instanceId = request.getInstanceId();
         for (ConsumerBizStats consumerBizStats : list) {
             long timestamp = consumerBizStats.getTimestamp();
-            MqIsolationConfig config = configService.getMqIsolationConfig(request.getInstanceId());
+            MqIsolationConfig config = configServiceWrapper.getMqIsolationConfig(request.getInstanceId());
             int expireSeconds = config.getConsumerStatsExpireSeconds();
             String namespace = consumerBizStats.getNamespace();
             String bizId = consumerBizStats.getBizId();
@@ -180,7 +180,7 @@ public class RouteService {
     }
 
     private Map<Long, List<ConsumerBizStats>> queryConsumerStats(String namespace, String bizId) {
-        MqIsolationConfig config = configService.getMqIsolationConfig(namespace);
+        MqIsolationConfig config = configServiceWrapper.getMqIsolationConfig(namespace);
         int expireSeconds = config.getConsumerStatsExpireSeconds();
         String instanceKey = CacheUtil.buildCacheKey(consumer_instance_list, namespace, bizId);
         template.zremrangeByScore(instanceKey, 0, System.currentTimeMillis() - expireSeconds * 1000L);
@@ -206,7 +206,7 @@ public class RouteService {
         for (SenderBizStats senderBizStats : list) {
             String namespace = senderBizStats.getNamespace();
             long timestamp = senderBizStats.getTimestamp();
-            MqIsolationConfig config = configService.getMqIsolationConfig(namespace);
+            MqIsolationConfig config = configServiceWrapper.getMqIsolationConfig(namespace);
             int expireSeconds = config.getSenderStatsExpireSeconds();
 
             String bizId = senderBizStats.getBizId();
@@ -227,7 +227,7 @@ public class RouteService {
     }
 
     private Map<Long, List<SenderBizStats>> querySenderStats(String namespace, String bizId) {
-        MqIsolationConfig config = configService.getMqIsolationConfig(namespace);
+        MqIsolationConfig config = configServiceWrapper.getMqIsolationConfig(namespace);
         int expireSeconds = config.getSenderStatsExpireSeconds();
         String instanceKey = CacheUtil.buildCacheKey(sender_instance_list, namespace, bizId);
         template.zremrangeByScore(instanceKey, 0, System.currentTimeMillis() - expireSeconds * 1000L);
