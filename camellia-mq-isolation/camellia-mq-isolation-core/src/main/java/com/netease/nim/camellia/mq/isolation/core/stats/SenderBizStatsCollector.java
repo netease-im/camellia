@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.mq.isolation.core.stats;
 
 import com.netease.nim.camellia.mq.isolation.core.MqIsolationController;
+import com.netease.nim.camellia.mq.isolation.core.domain.SenderHeartbeat;
 import com.netease.nim.camellia.mq.isolation.core.env.MqIsolationEnv;
 import com.netease.nim.camellia.mq.isolation.core.stats.model.SenderBizStats;
 import com.netease.nim.camellia.mq.isolation.core.stats.model.SenderBizStatsRequest;
@@ -66,10 +67,21 @@ public class SenderBizStatsCollector {
                 stats.setTimestamp(now);
                 statsList.add(stats);
             }
+            if (statsList.isEmpty()) {
+                return;
+            }
+            //report stats
             SenderBizStatsRequest request = new SenderBizStatsRequest();
             request.setInstanceId(MqIsolationEnv.instanceId);
             request.setList(statsList);
             controller.reportSenderBizStats(request);
+            //heartbeat
+            SenderHeartbeat heartbeat = new SenderHeartbeat();
+            heartbeat.setInstanceId(MqIsolationEnv.instanceId);
+            heartbeat.setHost(MqIsolationEnv.host);
+            heartbeat.setNamespace(namespace);
+            heartbeat.setTimestamp(System.currentTimeMillis());
+            controller.senderHeartbeat(heartbeat);
         } catch (Exception e) {
             logger.error("report stats error", e);
         }

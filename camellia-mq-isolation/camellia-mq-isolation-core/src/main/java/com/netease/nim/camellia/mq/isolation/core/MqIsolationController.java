@@ -1,10 +1,10 @@
 package com.netease.nim.camellia.mq.isolation.core;
 
 import com.netease.nim.camellia.mq.isolation.core.config.MqIsolationConfig;
+import com.netease.nim.camellia.mq.isolation.core.domain.ConsumerHeartbeat;
+import com.netease.nim.camellia.mq.isolation.core.domain.SenderHeartbeat;
 import com.netease.nim.camellia.mq.isolation.core.mq.MqInfo;
-import com.netease.nim.camellia.mq.isolation.core.stats.model.ConsumerBizStats;
 import com.netease.nim.camellia.mq.isolation.core.stats.model.ConsumerBizStatsRequest;
-import com.netease.nim.camellia.mq.isolation.core.stats.model.SenderBizStats;
 import com.netease.nim.camellia.mq.isolation.core.stats.model.SenderBizStatsRequest;
 
 import java.util.List;
@@ -42,9 +42,14 @@ public interface MqIsolationController {
     List<MqInfo> selectMqInfo(String namespace, String bizId);
 
     /**
-     * 心跳
-     * @param namespace namespace
-     * @param mqInfo mqInfo
+     * 消费者心跳
+     * @param heartbeat heartbeat
      */
-    void heartbeat(String namespace, MqInfo mqInfo);
+    void consumerHeartbeat(ConsumerHeartbeat heartbeat);
+
+    /**
+     * 生产者心跳
+     * @param heartbeat heartbeat
+     */
+    void senderHeartbeat(SenderHeartbeat heartbeat);
 }

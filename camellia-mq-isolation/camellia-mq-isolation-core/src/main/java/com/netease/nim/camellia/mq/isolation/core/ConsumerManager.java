@@ -4,6 +4,8 @@ import com.netease.nim.camellia.mq.isolation.core.config.ConsumerManagerConfig;
 import com.netease.nim.camellia.mq.isolation.core.config.ConsumerManagerType;
 import com.netease.nim.camellia.mq.isolation.core.config.ManualConfig;
 import com.netease.nim.camellia.mq.isolation.core.config.MqIsolationConfig;
+import com.netease.nim.camellia.mq.isolation.core.domain.ConsumerHeartbeat;
+import com.netease.nim.camellia.mq.isolation.core.env.MqIsolationEnv;
 import com.netease.nim.camellia.mq.isolation.core.mq.Consumer;
 import com.netease.nim.camellia.mq.isolation.core.mq.MqInfo;
 import com.netease.nim.camellia.mq.isolation.core.mq.TopicType;
@@ -243,7 +245,13 @@ public class ConsumerManager {
         } finally {
             try {
                 for (MqInfo mqInfo : instanceMap.keySet()) {
-                    controller.heartbeat(namespace, mqInfo);
+                    ConsumerHeartbeat heartbeat = new ConsumerHeartbeat();
+                    heartbeat.setInstanceId(MqIsolationEnv.instanceId);
+                    heartbeat.setHost(MqIsolationEnv.host);
+                    heartbeat.setMqInfo(mqInfo);
+                    heartbeat.setNamespace(namespace);
+                    heartbeat.setTimestamp(System.currentTimeMillis());
+                    controller.consumerHeartbeat(heartbeat);
                 }
             } catch (Exception e) {
                 logger.error("heartbeat to controller error, namespace = {}", namespace, e);
