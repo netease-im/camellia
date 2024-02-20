@@ -39,6 +39,7 @@ high performance redis-proxy:
 * support [twemproxy](https://github.com/twitter/twemproxy) 、[codis](https://github.com/CodisLabs/codis) as the upstream(such as migration scenarios)
 * support [kvrocks](https://github.com/apache/kvrocks) 、 [pika](https://github.com/OpenAtomFoundation/pika) 、 [tendis](https://github.com/Tencent/Tendis)  as the upstream
 * support GET/SET/EVAL, support MGET/MSET, support blocking BLPOP, support PUBSUB/TRANSACTION, support STREAMS/JSON/SEARCH/BloomFilter/CuckooFilter, support TAIR_HASH/TAIR_ZSET/TAIR_STRING
+* all supported commands: [supported_commands](docs/redis-proxy/supported_commands.md)
 * support sharding/read-write-separate/double-write on proxy  
 * support multi-route-conf   
 * support ssl/tls, both client to proxy and proxy to upstream redis

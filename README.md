@@ -41,6 +41,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 * 支持普通的GET/SET/EVAL，也支持MGET/MSET，也支持阻塞型的BLPOP，也支持PUBSUB和TRANSACTION，也支持STREAMS/JSON/SEARCH/BloomFilter/CuckooFilter，也支持TAIR_HASH/TAIR_ZSET/TAIR_STRING
 * 支持SCAN命令，即使后端是redis-cluster或者自定义分片，也可以透明的扫描到所有key
 * 支持SELECT命令，从而可以使用多database
+* 所有支持的命令: [supported_commands](docs/redis-proxy/supported_commands.md)
 * 支持SSL/TLS（client到proxy支持，proxy到redis也支持）
 * 支持unix-domain-socket（client到proxy支持，proxy到redis也支持）
 * 支持使用http协议访问proxy，类似于 [webdis](https://github.com/nicolasff/webdis) ，但是接口定义不一样，具体见：[http](/docs/redis-proxy/other/http.md)

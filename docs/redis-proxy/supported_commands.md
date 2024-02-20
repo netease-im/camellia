@@ -84,15 +84,15 @@ FUNCTION,FCALL,FCALL_RO,
 
 * Partially Supported 1   
   only support while no custom sharding  
-  since 1.1.4, PUBSUB support multi-write, will sub first write redis resource, pub all write redis resource
+  PUBSUB commands support multi-write, will sub first write redis resource, pub all write redis resource
 ```
 ##PUBSUB(will sub first write redis resource, pub all write redis resource)
 SUBSCRIBE,PUBLISH,UNSUBSCRIBE,PSUBSCRIBE,PUNSUBSCRIBE,PUBSUB,SSUBSCRIBE,SUNSUBSCRIBE,SPUBLISH,
 ```
 
 * Partially Supported 2   
-  only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel or redis-cluster)   
-  since 1.2.6, TRANSACTION commands support multi-write only when read-resources without multi and read-resource equals to the first write resource
+  only support while have singleton-upstream(no custom sharding) (redis-standalone or redis-sentinel or redis-cluster)   
+  TRANSACTION commands support multi-write only when read-redis-resource is single(not random or order) and read-redis-resource equals to the first write-redis-resource
 ```
 ##TRANSACTION(keys must in same slot)
 MULTI,DISCARD,EXEC,WATCH,UNWATCH,
@@ -104,7 +104,7 @@ FT.SYNUPDATE,FT.TAGVALS,
 ```
 
 * Partially Supported 3   
-  only support while have singleton-upstream(no custom sharding) (standalone-redis or redis-sentinel)
+  only support while have singleton-upstream(no custom sharding) (redis-standalone or redis-sentinel)
 ```
 ##DataBase
 KEYS,RANDOMKEY,
@@ -127,6 +127,8 @@ HELLO,
 CLUSTER,
 #direct reply OK for proxy start with cluster-mode
 ASKING,
+#direct reply OK
+READONLY,
 #proxy info
 INFO,
 ``` 
