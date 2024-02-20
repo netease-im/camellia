@@ -2,6 +2,7 @@ package com.netease.nim.camellia.mq.isolation.core;
 
 import com.netease.nim.camellia.mq.isolation.core.config.ConsumerManagerConfig;
 import com.netease.nim.camellia.mq.isolation.core.config.ConsumerManagerType;
+import com.netease.nim.camellia.mq.isolation.core.config.ManualConfig;
 import com.netease.nim.camellia.mq.isolation.core.config.MqIsolationConfig;
 import com.netease.nim.camellia.mq.isolation.core.mq.Consumer;
 import com.netease.nim.camellia.mq.isolation.core.mq.MqInfo;
@@ -115,9 +116,9 @@ public class ConsumerManager {
                 set.addAll(mqIsolationConfig.getRetryLevel1());
                 set.addAll(mqIsolationConfig.getAutoIsolationLevel0());
                 set.addAll(mqIsolationConfig.getAutoIsolationLevel1());
-                List<MqIsolationConfig.ManualConfig> manualConfigs = mqIsolationConfig.getManualConfigs();
+                List<ManualConfig> manualConfigs = mqIsolationConfig.getManualConfigs();
                 if (manualConfigs != null) {
-                    for (MqIsolationConfig.ManualConfig manualConfig : manualConfigs) {
+                    for (ManualConfig manualConfig : manualConfigs) {
                         set.add(manualConfig.getMqInfo());
                     }
                 }
@@ -149,9 +150,9 @@ public class ConsumerManager {
                         set.addAll(mqIsolationConfig.getAutoIsolationLevel1());
                     }
                     if (!excludeTopicTypeSet.contains(TopicType.MANUAL_ISOLATION)) {
-                        List<MqIsolationConfig.ManualConfig> manualConfigs = mqIsolationConfig.getManualConfigs();
+                        List<ManualConfig> manualConfigs = mqIsolationConfig.getManualConfigs();
                         if (manualConfigs != null) {
-                            for (MqIsolationConfig.ManualConfig manualConfig : manualConfigs) {
+                            for (ManualConfig manualConfig : manualConfigs) {
                                 set.add(manualConfig.getMqInfo());
                             }
                         }
@@ -166,9 +167,9 @@ public class ConsumerManager {
                 set.addAll(mqIsolationConfig.getRetryLevel1());
                 set.addAll(mqIsolationConfig.getAutoIsolationLevel0());
                 set.addAll(mqIsolationConfig.getAutoIsolationLevel1());
-                List<MqIsolationConfig.ManualConfig> manualConfigs = mqIsolationConfig.getManualConfigs();
+                List<ManualConfig> manualConfigs = mqIsolationConfig.getManualConfigs();
                 if (manualConfigs != null) {
-                    for (MqIsolationConfig.ManualConfig manualConfig : manualConfigs) {
+                    for (ManualConfig manualConfig : manualConfigs) {
                         set.add(manualConfig.getMqInfo());
                     }
                 }
@@ -204,9 +205,9 @@ public class ConsumerManager {
                         set.addAll(mqIsolationConfig.getAutoIsolationLevel1());
                     }
                     if (specifyTopicTypeSet.contains(TopicType.MANUAL_ISOLATION)) {
-                        List<MqIsolationConfig.ManualConfig> manualConfigs = mqIsolationConfig.getManualConfigs();
+                        List<ManualConfig> manualConfigs = mqIsolationConfig.getManualConfigs();
                         if (manualConfigs != null) {
-                            for (MqIsolationConfig.ManualConfig manualConfig : manualConfigs) {
+                            for (ManualConfig manualConfig : manualConfigs) {
                                 set.add(manualConfig.getMqInfo());
                             }
                         }

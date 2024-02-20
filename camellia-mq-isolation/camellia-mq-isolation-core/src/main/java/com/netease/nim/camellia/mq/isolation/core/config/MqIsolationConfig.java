@@ -10,23 +10,23 @@ import java.util.List;
 public class MqIsolationConfig {
 
     private String namespace;
-
+    private Integer senderStatsIntervalSeconds;
+    private Integer senderStatsExpireSeconds;
+    private Integer consumerStatsIntervalSeconds;
+    private Integer consumerStatsExpireSeconds;
+    private Integer senderHeavyTrafficThreshold1;
+    private Integer senderHeavyTrafficThreshold2;
+    private Double senderHeavyTrafficPercent;
+    private Double consumerFailRateThreshold;
+    private Double consumerSpendMsAvgThreshold;
     private List<MqInfo> fast;
-
     private List<MqInfo> fastError;
-
     private List<MqInfo> slow;
-
     private List<MqInfo> slowError;
-
     private List<MqInfo> retryLevel0;
-
     private List<MqInfo> retryLevel1;
-
     private List<MqInfo> autoIsolationLevel0;
-
     private List<MqInfo> autoIsolationLevel1;
-
     private List<ManualConfig> manualConfigs;
 
     public String getNamespace() {
@@ -35,6 +35,78 @@ public class MqIsolationConfig {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    public Integer getSenderStatsIntervalSeconds() {
+        return senderStatsIntervalSeconds;
+    }
+
+    public void setSenderStatsIntervalSeconds(Integer senderStatsIntervalSeconds) {
+        this.senderStatsIntervalSeconds = senderStatsIntervalSeconds;
+    }
+
+    public Integer getSenderStatsExpireSeconds() {
+        return senderStatsExpireSeconds;
+    }
+
+    public void setSenderStatsExpireSeconds(Integer senderStatsExpireSeconds) {
+        this.senderStatsExpireSeconds = senderStatsExpireSeconds;
+    }
+
+    public Integer getConsumerStatsIntervalSeconds() {
+        return consumerStatsIntervalSeconds;
+    }
+
+    public void setConsumerStatsIntervalSeconds(Integer consumerStatsIntervalSeconds) {
+        this.consumerStatsIntervalSeconds = consumerStatsIntervalSeconds;
+    }
+
+    public Integer getConsumerStatsExpireSeconds() {
+        return consumerStatsExpireSeconds;
+    }
+
+    public void setConsumerStatsExpireSeconds(Integer consumerStatsExpireSeconds) {
+        this.consumerStatsExpireSeconds = consumerStatsExpireSeconds;
+    }
+
+    public Integer getSenderHeavyTrafficThreshold1() {
+        return senderHeavyTrafficThreshold1;
+    }
+
+    public void setSenderHeavyTrafficThreshold1(Integer senderHeavyTrafficThreshold1) {
+        this.senderHeavyTrafficThreshold1 = senderHeavyTrafficThreshold1;
+    }
+
+    public Integer getSenderHeavyTrafficThreshold2() {
+        return senderHeavyTrafficThreshold2;
+    }
+
+    public void setSenderHeavyTrafficThreshold2(Integer senderHeavyTrafficThreshold2) {
+        this.senderHeavyTrafficThreshold2 = senderHeavyTrafficThreshold2;
+    }
+
+    public Double getSenderHeavyTrafficPercent() {
+        return senderHeavyTrafficPercent;
+    }
+
+    public void setSenderHeavyTrafficPercent(Double senderHeavyTrafficPercent) {
+        this.senderHeavyTrafficPercent = senderHeavyTrafficPercent;
+    }
+
+    public Double getConsumerFailRateThreshold() {
+        return consumerFailRateThreshold;
+    }
+
+    public void setConsumerFailRateThreshold(Double consumerFailRateThreshold) {
+        this.consumerFailRateThreshold = consumerFailRateThreshold;
+    }
+
+    public Double getConsumerSpendMsAvgThreshold() {
+        return consumerSpendMsAvgThreshold;
+    }
+
+    public void setConsumerSpendMsAvgThreshold(Double consumerSpendMsAvgThreshold) {
+        this.consumerSpendMsAvgThreshold = consumerSpendMsAvgThreshold;
     }
 
     public List<MqInfo> getFast() {
@@ -107,41 +179,5 @@ public class MqIsolationConfig {
 
     public void setManualConfigs(List<ManualConfig> manualConfigs) {
         this.manualConfigs = manualConfigs;
-    }
-
-    public static class ManualConfig {
-        private MatchType matchType;
-        private String bizId;
-        private MqInfo mqInfo;
-
-        public MatchType getMatchType() {
-            return matchType;
-        }
-
-        public void setMatchType(MatchType matchType) {
-            this.matchType = matchType;
-        }
-
-        public String getBizId() {
-            return bizId;
-        }
-
-        public void setBizId(String bizId) {
-            this.bizId = bizId;
-        }
-
-        public MqInfo getMqInfo() {
-            return mqInfo;
-        }
-
-        public void setMqInfo(MqInfo mqInfo) {
-            this.mqInfo = mqInfo;
-        }
-    }
-
-    public static enum MatchType {
-        exact_match,//精准匹配
-        prefix_match,//前缀匹配
-        ;
     }
 }

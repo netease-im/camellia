@@ -9,7 +9,6 @@ import com.netease.nim.camellia.mq.isolation.core.mq.MqSender;
 public class SenderConfig {
     private MqSender mqSender;
     private MqIsolationController controller;
-    private int reportIntervalSeconds = 10;
     private int cacheCapacity = 10000;
     private int cacheExpireSeconds = 10;
 
@@ -27,14 +26,6 @@ public class SenderConfig {
 
     public void setController(MqIsolationController controller) {
         this.controller = controller;
-    }
-
-    public int getReportIntervalSeconds() {
-        return reportIntervalSeconds;
-    }
-
-    public void setReportIntervalSeconds(int reportIntervalSeconds) {
-        this.reportIntervalSeconds = reportIntervalSeconds;
     }
 
     public int getCacheCapacity() {

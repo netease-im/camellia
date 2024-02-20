@@ -3,6 +3,7 @@ package com.netease.nim.camellia.mq.isolation.core;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
 import com.netease.nim.camellia.mq.isolation.core.config.DispatcherConfig;
+import com.netease.nim.camellia.mq.isolation.core.config.ManualConfig;
 import com.netease.nim.camellia.mq.isolation.core.config.MqIsolationConfig;
 import com.netease.nim.camellia.mq.isolation.core.config.MqIsolationEnv;
 import com.netease.nim.camellia.mq.isolation.core.domain.ConsumerContext;
@@ -59,7 +60,7 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
         this.maxPermitPercent = config.getMaxPermitPercent();
         this.mqSender = config.getMqSender();
         this.strategy = config.getStrategy();
-        this.collector = new ConsumerBizStatsCollector(controller, config.getReportIntervalSeconds());
+        this.collector = new ConsumerBizStatsCollector(controller);
         boolean success = initMqInfoConfig();
         if (!success) {
             throw new IllegalArgumentException("init mq config error");
@@ -205,10 +206,10 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
             initMqInfo(topicTypeMap, config.getRetryLevel1(), TopicType.RETRY_LEVEL_1);
             initMqInfo(topicTypeMap, config.getAutoIsolationLevel0(), TopicType.AUTO_ISOLATION_LEVEL_0);
             initMqInfo(topicTypeMap, config.getAutoIsolationLevel1(), TopicType.AUTO_ISOLATION_LEVEL_1);
-            List<MqIsolationConfig.ManualConfig> manualConfigs = config.getManualConfigs();
+            List<ManualConfig> manualConfigs = config.getManualConfigs();
             if (manualConfigs != null) {
                 Set<MqInfo> mqInfoSet = new HashSet<>();
-                for (MqIsolationConfig.ManualConfig manualConfig : manualConfigs) {
+                for (ManualConfig manualConfig : manualConfigs) {
                     MqInfo mqInfo = manualConfig.getMqInfo();
                     mqInfoSet.add(mqInfo);
                 }

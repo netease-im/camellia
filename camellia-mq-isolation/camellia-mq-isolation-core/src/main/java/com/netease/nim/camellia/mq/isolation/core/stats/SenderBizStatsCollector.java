@@ -1,7 +1,9 @@
 package com.netease.nim.camellia.mq.isolation.core.stats;
 
 import com.netease.nim.camellia.mq.isolation.core.MqIsolationController;
+import com.netease.nim.camellia.mq.isolation.core.env.MqIsolationEnv;
 import com.netease.nim.camellia.mq.isolation.core.stats.model.SenderBizStats;
+import com.netease.nim.camellia.mq.isolation.core.stats.model.SenderBizStatsRequest;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import com.netease.nim.camellia.tools.statistic.CamelliaStatisticsManager;
 import com.netease.nim.camellia.tools.statistic.CamelliaStatsData;
@@ -13,10 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Created by caojiajun on 2024/2/7
@@ -29,34 +28,48 @@ public class SenderBizStatsCollector {
 
     private final ConcurrentHashMap<String, CamelliaStatisticsManager> statsMap = new ConcurrentHashMap<>();
     private final MqIsolationController controller;
+    private final ConcurrentHashMap<String, ScheduledFuture<?>> futureMap = new ConcurrentHashMap<>();
 
-    public SenderBizStatsCollector(MqIsolationController controller, int reportIntervalSeconds) {
+    public SenderBizStatsCollector(MqIsolationController controller) {
         this.controller = controller;
-        scheduler.scheduleAtFixedRate(this::reportStats, reportIntervalSeconds, reportIntervalSeconds, TimeUnit.SECONDS);
     }
 
     public void stats(String namespace, String bizId) {
         CamelliaStatisticsManager manager = CamelliaMapUtils.computeIfAbsent(statsMap, namespace, s -> new CamelliaStatisticsManager());
         manager.update(bizId, 1);
+        if (futureMap.containsKey(namespace)) {
+            return;
+        }
+        futureMap.computeIfAbsent(namespace,
+                n -> {
+                    int intervalSeconds = controller.getMqIsolationConfig(namespace).getSenderStatsIntervalSeconds();
+                    return scheduler.scheduleAtFixedRate(() -> reportStats(namespace, intervalSeconds), intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
+                });
     }
 
-    private void reportStats() {
+    private void reportStats(String namespace, int intervalSeconds) {
         try {
             List<SenderBizStats> statsList = new ArrayList<>();
-            for (Map.Entry<String, CamelliaStatisticsManager> entry : statsMap.entrySet()) {
-                String namespace = entry.getKey();
-                Map<String, CamelliaStatsData> map = entry.getValue().getStatsDataAndReset();
-                for (Map.Entry<String, CamelliaStatsData> dataEntry : map.entrySet()) {
-                    String bizId = dataEntry.getKey();
-                    CamelliaStatsData data = dataEntry.getValue();
-                    SenderBizStats stats = new SenderBizStats();
-                    stats.setNamespace(namespace);
-                    stats.setBizId(bizId);
-                    stats.setCount(data.getCount());
-                    statsList.add(stats);
-                }
+            CamelliaStatisticsManager manager = statsMap.get(namespace);
+            if (manager == null) {
+                return;
             }
-            controller.reportSenderBizStats(statsList);
+            long now = (System.currentTimeMillis() / intervalSeconds) * intervalSeconds;
+            Map<String, CamelliaStatsData> map = manager.getStatsDataAndReset();
+            for (Map.Entry<String, CamelliaStatsData> dataEntry : map.entrySet()) {
+                String bizId = dataEntry.getKey();
+                CamelliaStatsData data = dataEntry.getValue();
+                SenderBizStats stats = new SenderBizStats();
+                stats.setNamespace(namespace);
+                stats.setBizId(bizId);
+                stats.setCount(data.getCount());
+                stats.setTimestamp(now);
+                statsList.add(stats);
+            }
+            SenderBizStatsRequest request = new SenderBizStatsRequest();
+            request.setInstanceId(MqIsolationEnv.instanceId);
+            request.setList(statsList);
+            controller.reportSenderBizStats(request);
         } catch (Exception e) {
             logger.error("report stats error", e);
         }

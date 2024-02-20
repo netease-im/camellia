@@ -49,7 +49,7 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
                     }
                     return mqInfos;
                 });
-        this.collector = new SenderBizStatsCollector(controller, senderConfig.getReportIntervalSeconds());
+        this.collector = new SenderBizStatsCollector(controller);
     }
 
     @Override

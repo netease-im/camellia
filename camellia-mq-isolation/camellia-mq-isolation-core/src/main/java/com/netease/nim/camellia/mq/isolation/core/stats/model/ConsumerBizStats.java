@@ -14,6 +14,7 @@ public class ConsumerBizStats {
     private double p50;
     private double p90;
     private double p99;
+    private long timestamp;
 
     public String getNamespace() {
         return namespace;
@@ -85,5 +86,13 @@ public class ConsumerBizStats {
 
     public void setP99(double p99) {
         this.p99 = p99;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 }
