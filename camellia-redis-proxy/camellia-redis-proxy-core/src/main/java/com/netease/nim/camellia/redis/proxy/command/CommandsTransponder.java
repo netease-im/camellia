@@ -143,7 +143,14 @@ public class CommandsTransponder {
 
                 //不支持的命令直接返回NOT_SUPPORT
                 if (redisCommand == null || redisCommand.getSupportType() == RedisCommand.CommandSupportType.NOT_SUPPORT) {
-                    reply(channelInfo, task, redisCommand, ErrorReply.NOT_SUPPORT, false);
+                    ErrorReply errorReply;
+                    String name = command.getName();
+                    if (name != null) {
+                        errorReply = new ErrorReply("ERR proxy command '" + name + "' not support");
+                    } else {
+                        errorReply = ErrorReply.NOT_SUPPORT;
+                    }
+                    reply(channelInfo, task, redisCommand, errorReply, false);
                     ErrorLogCollector.collect(CommandsTransponder.class, "not support command = " + command.getName());
                     hasCommandsSkip = true;
                     continue;
