@@ -24,9 +24,9 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Created by caojiajun on 2024/2/7
  */
-public class ConsumerManager {
+public class CamelliaMqIsolationConsumerManager implements MqIsolationConsumerManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(ConsumerManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaMqIsolationConsumerManager.class);
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(SysUtils.getCpuNum(),
             new CamelliaThreadFactory("camellia-mq-isolation-consumer-manager"));
 
@@ -40,7 +40,7 @@ public class ConsumerManager {
     private final AtomicBoolean stop = new AtomicBoolean(false);
     private ScheduledFuture<?> future;
 
-    public ConsumerManager(ConsumerManagerConfig config) {
+    public CamelliaMqIsolationConsumerManager(ConsumerManagerConfig config) {
         this.config = config;
         if (config.getConsumerBuilder() == null) {
             throw new IllegalArgumentException("consumer builder is null");
@@ -53,6 +53,7 @@ public class ConsumerManager {
     /**
      * 启动
      */
+    @Override
     public void start() {
         if (initOk.compareAndSet(false, true)) {
             boolean success = initConsumers();
@@ -70,6 +71,7 @@ public class ConsumerManager {
     /**
      * 关闭
      */
+    @Override
     public void stop() {
         if (stop.get()) {
             throw new IllegalStateException("mq isolation consumer stop twice!");
