@@ -12,7 +12,6 @@ import java.util.Set;
 public class ConsumerManagerConfig {
     private DispatcherConfig dispatcherConfig;
     private ConsumerManagerType type;
-    private int reloadConsumerIntervalSeconds = 30;
     private Set<TopicType> excludeTopicTypeSet;
     private Set<MqInfo> excludeMqInfoSet;
     private Set<TopicType> specifyTopicTypeSet;
@@ -33,14 +32,6 @@ public class ConsumerManagerConfig {
 
     public void setType(ConsumerManagerType type) {
         this.type = type;
-    }
-
-    public int getReloadConsumerIntervalSeconds() {
-        return reloadConsumerIntervalSeconds;
-    }
-
-    public void setReloadConsumerIntervalSeconds(int reloadConsumerIntervalSeconds) {
-        this.reloadConsumerIntervalSeconds = reloadConsumerIntervalSeconds;
     }
 
     public Set<TopicType> getExcludeTopicTypeSet() {

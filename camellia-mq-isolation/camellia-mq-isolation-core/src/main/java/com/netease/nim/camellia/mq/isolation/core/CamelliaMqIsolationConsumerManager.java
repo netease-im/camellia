@@ -60,8 +60,9 @@ public class CamelliaMqIsolationConsumerManager implements MqIsolationConsumerMa
             if (!success) {
                 throw new IllegalArgumentException("mq isolation consumer start error");
             }
+            Integer consumerStatsIntervalSeconds = controller.getMqIsolationConfig(namespace).getConsumerStatsIntervalSeconds();
             future = scheduler.scheduleAtFixedRate(this::initConsumers,
-                    config.getReloadConsumerIntervalSeconds(), config.getReloadConsumerIntervalSeconds(), TimeUnit.SECONDS);
+                    consumerStatsIntervalSeconds, consumerStatsIntervalSeconds, TimeUnit.SECONDS);
             logger.info("mq isolation consumer manager start success");
         } else {
             throw new IllegalStateException("mq isolation consumer start twice!");

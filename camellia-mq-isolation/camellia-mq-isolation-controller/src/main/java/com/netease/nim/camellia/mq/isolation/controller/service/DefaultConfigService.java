@@ -31,8 +31,9 @@ public class DefaultConfigService implements ConfigService {
         } catch (Exception e) {
             return cache.get(namespace);
         }
-        boolean valid = MqIsolationConfigUtils.checkValid(mqIsolationConfig);
-        if (!valid) {
+        try {
+            MqIsolationConfigUtils.checkValid(mqIsolationConfig);
+        } catch (Exception e) {
             return cache.get(namespace);
         }
         cache.put(namespace, mqIsolationConfig);
