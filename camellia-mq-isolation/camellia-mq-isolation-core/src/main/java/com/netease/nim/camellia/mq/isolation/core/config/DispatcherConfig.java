@@ -16,7 +16,6 @@ public class DispatcherConfig {
     private MqSender mqSender;
     private MsgHandler msgHandler;
     private ThreadContextSwitchStrategy strategy = new ThreadContextSwitchStrategy.Default();
-    private int reportIntervalSeconds = 10;
     private int reloadConfigIntervalSeconds = 30;
     private double maxPermitPercent = 0.5;
     private int retryLevelThreshold = 5;
@@ -67,14 +66,6 @@ public class DispatcherConfig {
 
     public void setStrategy(ThreadContextSwitchStrategy strategy) {
         this.strategy = strategy;
-    }
-
-    public int getReportIntervalSeconds() {
-        return reportIntervalSeconds;
-    }
-
-    public void setReportIntervalSeconds(int reportIntervalSeconds) {
-        this.reportIntervalSeconds = reportIntervalSeconds;
     }
 
     public int getReloadConfigIntervalSeconds() {

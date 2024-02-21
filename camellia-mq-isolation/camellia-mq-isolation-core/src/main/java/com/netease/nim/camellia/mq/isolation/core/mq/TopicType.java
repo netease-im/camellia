@@ -27,7 +27,7 @@ public enum TopicType {
     RETRY_LEVEL_0(false),//重试，到这里的都是至少已经执行过1次的任务了
     RETRY_LEVEL_1(false),//重试，到这里的都是至少已经执行过5次的任务了
     AUTO_ISOLATION_LEVEL_0(true),//自动隔离，主要是应对突发流量的情况
-    AUTO_ISOLATION_LEVEL_1(false),//自动隔离，主要是应对突发流量的情况
+    AUTO_ISOLATION_LEVEL_1(false),//自动隔离，主要是应对突发流量的情况，level0中如果有多个bizId，且某个bizId倾斜特别大，则可能进一步隔离到level1
     MANUAL_ISOLATION(false),//手动隔离
     ;
 

@@ -1,9 +1,6 @@
 package com.netease.nim.camellia.mq.isolation.core;
 
-import com.netease.nim.camellia.mq.isolation.core.config.ConsumerManagerConfig;
-import com.netease.nim.camellia.mq.isolation.core.config.ConsumerManagerType;
-import com.netease.nim.camellia.mq.isolation.core.config.ManualConfig;
-import com.netease.nim.camellia.mq.isolation.core.config.MqIsolationConfig;
+import com.netease.nim.camellia.mq.isolation.core.config.*;
 import com.netease.nim.camellia.mq.isolation.core.domain.ConsumerHeartbeat;
 import com.netease.nim.camellia.mq.isolation.core.env.MqIsolationEnv;
 import com.netease.nim.camellia.mq.isolation.core.mq.Consumer;
@@ -109,7 +106,8 @@ public class CamelliaMqIsolationConsumerManager implements MqIsolationConsumerMa
         }
         lock.lock();
         try {
-            ConsumerManagerType type = config.getType();
+            ConsumerMqInfoConfig mqInfoConfig = config.getMqInfoConfig();
+            ConsumerManagerType type = mqInfoConfig.getType();
             MqIsolationConfig mqIsolationConfig = controller.getMqIsolationConfig(namespace);
             Set<MqInfo> set = new HashSet<>();
             if (type == ConsumerManagerType.all) {
@@ -128,7 +126,7 @@ public class CamelliaMqIsolationConsumerManager implements MqIsolationConsumerMa
                     }
                 }
             } else if (type == ConsumerManagerType.all_exclude_topic_type) {
-                Set<TopicType> excludeTopicTypeSet = config.getExcludeTopicTypeSet();
+                Set<TopicType> excludeTopicTypeSet = mqInfoConfig.getExcludeTopicTypeSet();
                 if (excludeTopicTypeSet != null && !excludeTopicTypeSet.isEmpty()) {
                     if (!excludeTopicTypeSet.contains(TopicType.FAST)) {
                         set.addAll(mqIsolationConfig.getFast());
@@ -178,12 +176,12 @@ public class CamelliaMqIsolationConsumerManager implements MqIsolationConsumerMa
                         set.add(manualConfig.getMqInfo());
                     }
                 }
-                Set<MqInfo> excludeMqInfoSet = config.getExcludeMqInfoSet();
+                Set<MqInfo> excludeMqInfoSet = mqInfoConfig.getExcludeMqInfoSet();
                 if (excludeMqInfoSet != null && !excludeMqInfoSet.isEmpty()) {
                     set.removeAll(excludeMqInfoSet);
                 }
             } else if (type == ConsumerManagerType.specify_topic_type) {
-                Set<TopicType> specifyTopicTypeSet = config.getSpecifyTopicTypeSet();
+                Set<TopicType> specifyTopicTypeSet = mqInfoConfig.getSpecifyTopicTypeSet();
                 if (specifyTopicTypeSet != null && !specifyTopicTypeSet.isEmpty()) {
                     if (specifyTopicTypeSet.contains(TopicType.FAST)) {
                         set.addAll(mqIsolationConfig.getFast());
@@ -219,7 +217,7 @@ public class CamelliaMqIsolationConsumerManager implements MqIsolationConsumerMa
                     }
                 }
             } else if (type == ConsumerManagerType.specify_mq_info) {
-                Set<MqInfo> specifyMqInfoSet = config.getSpecifyMqInfoSet();
+                Set<MqInfo> specifyMqInfoSet = mqInfoConfig.getSpecifyMqInfoSet();
                 if (specifyMqInfoSet != null) {
                     set.addAll(specifyMqInfoSet);
                 }
