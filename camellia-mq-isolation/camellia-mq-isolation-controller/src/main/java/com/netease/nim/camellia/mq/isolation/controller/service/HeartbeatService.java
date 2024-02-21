@@ -22,6 +22,7 @@ public class HeartbeatService {
 
     private static final String sender_heartbeat = "sender_heartbeat";
     private static final String consumer_heartbeat = "consumer_heartbeat";
+    private static final String mq_info_heartbeat = "mq_info_heartbeat";
 
     @Autowired
     private CamelliaRedisTemplate template;
@@ -59,8 +60,15 @@ public class HeartbeatService {
             pipeline.zadd(key, heartbeat.getTimestamp(), heartbeat.getInstanceId() + "|" + heartbeat.getHost() + "|" + heartbeat.getMqInfo().toString());
             pipeline.zremrangeByScore(key, 0, System.currentTimeMillis() - 60*1000);
             pipeline.expire(key, 60);
+            String mqInfoKey = CacheUtil.buildCacheKey(mq_info_heartbeat, heartbeat.getMqInfo().toString());
+            pipeline.setex(mqInfoKey, 60, "1");
             pipeline.sync();
         }
+    }
+
+    public boolean isActive(MqInfo mqInfo) {
+        String mqInfoKey = CacheUtil.buildCacheKey(mq_info_heartbeat, mqInfo.toString());
+        return template.exists(mqInfoKey);
     }
 
     public List<ConsumerHeartbeat> queryConsumerHeartbeat(String namespace) {

@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.mq.isolation.core.stats;
 
+import com.netease.nim.camellia.core.util.CollectionSplitUtil;
 import com.netease.nim.camellia.mq.isolation.core.MqIsolationController;
 import com.netease.nim.camellia.mq.isolation.core.env.MqIsolationEnv;
 import com.netease.nim.camellia.mq.isolation.core.stats.model.ConsumerBizStats;
@@ -90,10 +91,13 @@ public class ConsumerBizStatsCollector {
                 stats.setTimestamp(now);
                 statsList.add(stats);
             }
-            ConsumerBizStatsRequest request = new ConsumerBizStatsRequest();
-            request.setInstanceId(MqIsolationEnv.instanceId);
-            request.setList(statsList);
-            controller.reportConsumerBizStats(request);
+            List<List<ConsumerBizStats>> split = CollectionSplitUtil.split(statsList, 100);
+            for (List<ConsumerBizStats> list : split) {
+                ConsumerBizStatsRequest request = new ConsumerBizStatsRequest();
+                request.setInstanceId(MqIsolationEnv.instanceId);
+                request.setList(list);
+                controller.reportConsumerBizStats(request);
+            }
         } catch (Exception e) {
             logger.error("report stats error", e);
         }

@@ -13,6 +13,8 @@ import com.netease.nim.camellia.mq.isolation.core.stats.model.SenderBizStatsRequ
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.pipeline.ICamelliaRedisPipeline;
 import com.netease.nim.camellia.tools.cache.CamelliaLocalCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,8 @@ import java.util.*;
 @Service
 public class RouteService {
 
+    private static final Logger logger = LoggerFactory.getLogger(RouteService.class);
+
     private static final String sender_instance_list = "sender_instance_list";
     private static final String sender_stats = "sender_stats";
     private static final String consumer_instance_list = "consumer_instance_list";
@@ -35,6 +39,9 @@ public class RouteService {
 
     @Autowired
     private ConfigServiceWrapper configServiceWrapper;
+
+    @Autowired
+    private HeartbeatService heartbeatService;
 
     private final CamelliaLocalCache cache = new CamelliaLocalCache();
 
@@ -53,103 +60,146 @@ public class RouteService {
         //get config
         MqIsolationConfig config = configServiceWrapper.getMqIsolationConfig(namespace);
 
-        //check manual config
-        List<ManualConfig> manualConfigs = config.getManualConfigs();
-        if (manualConfigs != null && !manualConfigs.isEmpty()) {
-            for (ManualConfig manualConfig : manualConfigs) {
-                MatchType matchType = manualConfig.getMatchType();
-                if (matchType == MatchType.exact_match) {
-                    if (manualConfig.getBizId().equals(bizId)) {
-                        return Collections.singletonList(manualConfig.getMqInfo());
-                    }
-                } else if (matchType == MatchType.prefix_match) {
-                    if (bizId.startsWith(manualConfig.getBizId())) {
-                        return Collections.singletonList(manualConfig.getMqInfo());
+        try {
+            //check manual config
+            List<ManualConfig> manualConfigs = config.getManualConfigs();
+            if (manualConfigs != null && !manualConfigs.isEmpty()) {
+                for (ManualConfig manualConfig : manualConfigs) {
+                    MatchType matchType = manualConfig.getMatchType();
+                    if (matchType == MatchType.exact_match) {
+                        if (manualConfig.getBizId().equals(bizId)) {
+                            if (heartbeatService.isActive(manualConfig.getMqInfo())) {
+                                return Collections.singletonList(manualConfig.getMqInfo());
+                            }
+                        }
+                    } else if (matchType == MatchType.prefix_match) {
+                        if (bizId.startsWith(manualConfig.getBizId())) {
+                            if (heartbeatService.isActive(manualConfig.getMqInfo())) {
+                                return Collections.singletonList(manualConfig.getMqInfo());
+                            }
+                        }
                     }
                 }
             }
-        }
 
-        //check sender stats
-        int senderHeavyTrafficThreshold1 = config.getSenderHeavyTrafficThreshold1();
-        int senderHeavyTrafficThreshold2 = config.getSenderHeavyTrafficThreshold2();
-        double senderHeavyTrafficPercent = config.getSenderHeavyTrafficPercent();
+            //check sender stats
+            int senderHeavyTrafficThreshold1 = config.getSenderHeavyTrafficThreshold1();
+            int senderHeavyTrafficThreshold2 = config.getSenderHeavyTrafficThreshold2();
+            double senderHeavyTrafficPercent = config.getSenderHeavyTrafficPercent();
 
-        Map<Long, List<SenderBizStats>> senderStatsMap = querySenderStats(namespace, bizId);
+            Map<Long, List<SenderBizStats>> senderStatsMap = querySenderStats(namespace, bizId);
 
-        int dataSize = 0;
-        int senderHeavyTrafficCount = 0;
-        for (Map.Entry<Long, List<SenderBizStats>> entry : senderStatsMap.entrySet()) {
-            //说明数据可能不完整，跳过
-            if (System.currentTimeMillis() - entry.getKey() < config.getSenderStatsIntervalSeconds() * 1000L) {
-                continue;
+            int dataSize = 0;
+            int senderHeavyTrafficCount = 0;
+            for (Map.Entry<Long, List<SenderBizStats>> entry : senderStatsMap.entrySet()) {
+                //说明数据可能不完整，跳过
+                if (System.currentTimeMillis() - entry.getKey() < config.getSenderStatsIntervalSeconds() * 1000L) {
+                    continue;
+                }
+                List<SenderBizStats> subList = entry.getValue();
+                long count = 0;
+                for (SenderBizStats stats : subList) {
+                    count += stats.getCount();
+                }
+                //最近一个周期如果超过一个较大阈值，则直接自动隔离
+                //说明突发流量
+                if (count > senderHeavyTrafficThreshold1) {
+                    List<MqInfo> mqInfos = checkActive(config.getAutoIsolationLevel0());
+                    if (mqInfos != null) {
+                        return mqInfos;
+                    }
+                }
+                if (count > senderHeavyTrafficThreshold2) {
+                    senderHeavyTrafficCount ++;
+                }
+                dataSize ++;
             }
-            List<SenderBizStats> subList = entry.getValue();
-            long count = 0;
-            for (SenderBizStats stats : subList) {
-                count += stats.getCount();
+            //如果最近n个周期里有超过一定比例的超过较小阈值，则自动隔离
+            //说明持续高水位
+            if (senderHeavyTrafficCount > dataSize * senderHeavyTrafficPercent) {
+                List<MqInfo> mqInfos = checkActive(config.getAutoIsolationLevel0());
+                if (mqInfos != null) {
+                    return mqInfos;
+                }
             }
-            //最近一个周期如果超过一个较大阈值，则直接自动隔离
-            //说明突发流量
-            if (count > senderHeavyTrafficThreshold1) {
-                return config.getAutoIsolationLevel0();
-            }
-            if (count > senderHeavyTrafficThreshold2) {
-                senderHeavyTrafficCount ++;
-            }
-            dataSize ++;
-        }
-        //如果最近n个周期里有超过一定比例的超过较小阈值，则自动隔离
-        //说明持续高水位
-        if (senderHeavyTrafficCount > dataSize * senderHeavyTrafficPercent) {
-            return config.getAutoIsolationLevel0();
-        }
 
-        //check consumer stats
-        double failRateThreshold = config.getConsumerFailRateThreshold();
-        double spendMsAvgThreshold = config.getConsumerSpendMsAvgThreshold();
+            //check consumer stats
+            double failRateThreshold = config.getConsumerFailRateThreshold();
+            double spendMsAvgThreshold = config.getConsumerSpendMsAvgThreshold();
 
-        long success = 0;
-        long fail = 0;
-        double spendMsAll = 0;
-        Map<Long, List<ConsumerBizStats>> consumerStatsMap = queryConsumerStats(namespace, bizId);
-        for (Map.Entry<Long, List<ConsumerBizStats>> entry : consumerStatsMap.entrySet()) {
-            //说明数据可能不完整
-            if (System.currentTimeMillis() - entry.getKey() < config.getConsumerStatsIntervalSeconds() * 1000L) {
-                continue;
-            }
-            List<ConsumerBizStats> subList = entry.getValue();
+            long success = 0;
+            long fail = 0;
+            double spendMsAll = 0;
+            Map<Long, List<ConsumerBizStats>> consumerStatsMap = queryConsumerStats(namespace, bizId);
+            for (Map.Entry<Long, List<ConsumerBizStats>> entry : consumerStatsMap.entrySet()) {
+                //说明数据可能不完整
+                if (System.currentTimeMillis() - entry.getKey() < config.getConsumerStatsIntervalSeconds() * 1000L) {
+                    continue;
+                }
+                List<ConsumerBizStats> subList = entry.getValue();
 
-            for (ConsumerBizStats stats : subList) {
-                success += stats.getSuccess();
-                fail += stats.getFail();
-                spendMsAll += stats.getSpendAvg() * (stats.getSuccess() + stats.getFail());
+                for (ConsumerBizStats stats : subList) {
+                    success += stats.getSuccess();
+                    fail += stats.getFail();
+                    spendMsAll += stats.getSpendAvg() * (stats.getSuccess() + stats.getFail());
+                }
             }
-        }
-        //没有统计数据，则默认fast
-        if (success + fail <= 0) {
+            //没有统计数据，则默认fast
+            if (success + fail <= 0) {
+                return config.getFast();
+            }
+            double failRate = fail / (1.0 * (success + fail));
+            double spendMsAvg = spendMsAll / (success + fail);
+            //响应快，并且错误率低
+            if (spendMsAvg < spendMsAvgThreshold && failRate < failRateThreshold) {
+                List<MqInfo> mqInfos = checkActive(config.getFast());
+                if (mqInfos != null) {
+                    return mqInfos;
+                }
+            }
+            //响应快，但是错误率高
+            if (spendMsAvg < spendMsAvgThreshold && failRate > failRateThreshold) {
+                List<MqInfo> mqInfos = checkActive(config.getFastError());
+                if (mqInfos != null) {
+                    return mqInfos;
+                }
+            }
+            //响应慢，并且错误率高
+            if (spendMsAvg > spendMsAvgThreshold && failRate > failRateThreshold) {
+                List<MqInfo> mqInfos = checkActive(config.getSlowError());
+                if (mqInfos != null) {
+                    return mqInfos;
+                }
+            }
+            //响应慢，但是错误率低
+            if (spendMsAvg > spendMsAvgThreshold && failRate < failRateThreshold) {
+                List<MqInfo> mqInfos = checkActive(config.getSlow());
+                if (mqInfos != null) {
+                    return mqInfos;
+                }
+            }
+            //兜底
+            return config.getFast();
+        } catch (Exception e) {
+            logger.error("select mq info error, namespace = {}, bizId = {}, return default config = {}", namespace, bizId, config.getFast());
             return config.getFast();
         }
-        double failRate = fail / (1.0 * (success + fail));
-        double spendMsAvg = spendMsAll / (success + fail);
-        //响应快，并且错误率低
-        if (spendMsAvg < spendMsAvgThreshold && failRate < failRateThreshold) {
-            return config.getFast();
+    }
+
+    private List<MqInfo> checkActive(List<MqInfo> list) {
+        if (list == null || list.isEmpty()) {
+            return null;
         }
-        //响应快，但是错误率高
-        if (spendMsAvg < spendMsAvgThreshold && failRate > failRateThreshold) {
-            return config.getFastError();
+        List<MqInfo> ret = new ArrayList<>();
+        for (MqInfo mqInfo : list) {
+            if (heartbeatService.isActive(mqInfo)) {
+                ret.add(mqInfo);
+            }
         }
-        //响应慢，并且错误率高
-        if (spendMsAvg > spendMsAvgThreshold && failRate > failRateThreshold) {
-            return config.getSlowError();
+        if (ret.isEmpty()) {
+            return null;
         }
-        //响应慢，但是错误率低
-        if (spendMsAvg > spendMsAvgThreshold && failRate < failRateThreshold) {
-            return config.getSlow();
-        }
-        //兜底
-        return config.getFast();
+        return ret;
     }
 
     public void reportConsumerBizStats(ConsumerBizStatsRequest request) {
