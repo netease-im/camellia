@@ -19,7 +19,7 @@ public class ConfigController {
     private ConfigServiceWrapper configServiceWrapper;
 
     @RequestMapping(value = "/getMqIsolationConfig", method = RequestMethod.GET)
-    public WebResult getMqIsolationConfig(@RequestParam String namespace) {
+    public WebResult getMqIsolationConfig(@RequestParam(name = "namespace") String namespace) {
         MqIsolationConfig config = configServiceWrapper.getMqIsolationConfig(namespace);
         return WebResult.success(config);
     }

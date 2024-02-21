@@ -30,7 +30,7 @@ public class MqIsolationConfigUtils {
 
         //
         if (config.getSenderStatsIntervalSeconds() == null) {
-            config.setSenderStatsExpireSeconds(senderStatsIntervalSeconds);
+            config.setSenderStatsIntervalSeconds(senderStatsIntervalSeconds);
         }
         if (!checkPositiveNumber(config.getSenderStatsIntervalSeconds())) {
             throw new IllegalArgumentException("senderStatsIntervalSeconds is illegal");

@@ -31,13 +31,13 @@ public class HeartbeatController {
     }
 
     @RequestMapping(value = "/querySenderHeartbeat", method = RequestMethod.GET)
-    public WebResult querySenderHeartbeat(@RequestParam String namespace) {
+    public WebResult querySenderHeartbeat(@RequestParam(name = "namespace") String namespace) {
         List<SenderHeartbeat> list = heartbeatService.querySenderHeartbeat(namespace);
         return WebResult.success(list);
     }
 
     @RequestMapping(value = "/queryConsumerHeartbeat", method = RequestMethod.GET)
-    public WebResult queryConsumerHeartbeat(@RequestParam String namespace) {
+    public WebResult queryConsumerHeartbeat(@RequestParam(name = "namespace") String namespace) {
         List<ConsumerHeartbeat> list = heartbeatService.queryConsumerHeartbeat(namespace);
         return WebResult.success(list);
     }

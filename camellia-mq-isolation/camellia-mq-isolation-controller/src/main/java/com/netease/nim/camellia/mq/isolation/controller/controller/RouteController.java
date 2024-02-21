@@ -32,7 +32,8 @@ public class RouteController {
     }
 
     @RequestMapping(value = "/selectMq", method = RequestMethod.GET)
-    public WebResult selectMq(@RequestParam String namespace, @RequestParam String bizId) {
+    public WebResult selectMq(@RequestParam(name = "namespace") String namespace,
+                              @RequestParam(name = "bizId") String bizId) {
         List<MqInfo> mqInfos = routeService.selectMqInfo(namespace, bizId);
         return WebResult.success(mqInfos);
     }
