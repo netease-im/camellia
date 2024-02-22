@@ -10,5 +10,6 @@ public enum ConsumerManagerType {
     all_exclude_mq_info,//排除掉某些MqInfo之后，开启剩余的所有MqInfo的消费者线程
     specify_topic_type,//仅开启指定的TopicType的所有MqInfo的消费者线程
     specify_mq_info,//仅开启指定的MqInfo的消费者线程
+    specify_topic_type_exclude_mq_info,//指定TopicType，但是排除一部分MqInfo
     ;
 }

@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -111,71 +110,12 @@ public class CamelliaMqIsolationConsumerManager implements MqIsolationConsumerMa
             MqIsolationConfig mqIsolationConfig = controller.getMqIsolationConfig(namespace);
             Set<MqInfo> set = new HashSet<>();
             if (type == ConsumerManagerType.all) {
-                set.addAll(mqIsolationConfig.getFast());
-                set.addAll(mqIsolationConfig.getFastError());
-                set.addAll(mqIsolationConfig.getSlow());
-                set.addAll(mqIsolationConfig.getSlowError());
-                set.addAll(mqIsolationConfig.getRetryLevel0());
-                set.addAll(mqIsolationConfig.getRetryLevel1());
-                set.addAll(mqIsolationConfig.getAutoIsolationLevel0());
-                set.addAll(mqIsolationConfig.getAutoIsolationLevel1());
-                List<ManualConfig> manualConfigs = mqIsolationConfig.getManualConfigs();
-                if (manualConfigs != null) {
-                    for (ManualConfig manualConfig : manualConfigs) {
-                        set.add(manualConfig.getMqInfo());
-                    }
-                }
+                set = MqIsolationConfigUtils.getAllMqInfo(mqIsolationConfig);
             } else if (type == ConsumerManagerType.all_exclude_topic_type) {
                 Set<TopicType> excludeTopicTypeSet = mqInfoConfig.getExcludeTopicTypeSet();
-                if (excludeTopicTypeSet != null && !excludeTopicTypeSet.isEmpty()) {
-                    if (!excludeTopicTypeSet.contains(TopicType.FAST)) {
-                        set.addAll(mqIsolationConfig.getFast());
-                    }
-                    if (!excludeTopicTypeSet.contains(TopicType.FAST_ERROR)) {
-                        set.addAll(mqIsolationConfig.getFastError());
-                    }
-                    if (!excludeTopicTypeSet.contains(TopicType.SLOW)) {
-                        set.addAll(mqIsolationConfig.getSlow());
-                    }
-                    if (!excludeTopicTypeSet.contains(TopicType.SLOW_ERROR)) {
-                        set.addAll(mqIsolationConfig.getSlowError());
-                    }
-                    if (!excludeTopicTypeSet.contains(TopicType.RETRY_LEVEL_0)) {
-                        set.addAll(mqIsolationConfig.getRetryLevel0());
-                    }
-                    if (!excludeTopicTypeSet.contains(TopicType.RETRY_LEVEL_1)) {
-                        set.addAll(mqIsolationConfig.getRetryLevel1());
-                    }
-                    if (!excludeTopicTypeSet.contains(TopicType.AUTO_ISOLATION_LEVEL_0)) {
-                        set.addAll(mqIsolationConfig.getAutoIsolationLevel0());
-                    }
-                    if (!excludeTopicTypeSet.contains(TopicType.AUTO_ISOLATION_LEVEL_1)) {
-                        set.addAll(mqIsolationConfig.getAutoIsolationLevel1());
-                    }
-                    if (!excludeTopicTypeSet.contains(TopicType.MANUAL_ISOLATION)) {
-                        List<ManualConfig> manualConfigs = mqIsolationConfig.getManualConfigs();
-                        if (manualConfigs != null) {
-                            for (ManualConfig manualConfig : manualConfigs) {
-                                set.add(manualConfig.getMqInfo());
-                            }
-                        }
-                    }
-                }
+                set = MqIsolationConfigUtils.getMqInfoSetExcludeTopicType(mqIsolationConfig, excludeTopicTypeSet);
             } else if (type == ConsumerManagerType.all_exclude_mq_info) {
-                set.addAll(mqIsolationConfig.getFast());
-                set.addAll(mqIsolationConfig.getFastError());
-                set.addAll(mqIsolationConfig.getSlow());
-                set.addAll(mqIsolationConfig.getSlowError());
-                set.addAll(mqIsolationConfig.getRetryLevel0());
-                set.addAll(mqIsolationConfig.getRetryLevel1());
-                set.addAll(mqIsolationConfig.getAutoIsolationLevel0());
-                set.addAll(mqIsolationConfig.getAutoIsolationLevel1());
-                List<ManualConfig> manualConfigs = mqIsolationConfig.getManualConfigs();
-                if (manualConfigs != null) {
-                    for (ManualConfig manualConfig : manualConfigs) {
-                        set.add(manualConfig.getMqInfo());
-                    }
-                }
+                set = MqIsolationConfigUtils.getAllMqInfo(mqIsolationConfig);
                 Set<MqInfo> excludeMqInfoSet = mqInfoConfig.getExcludeMqInfoSet();
                 if (excludeMqInfoSet != null && !excludeMqInfoSet.isEmpty()) {
                     set.removeAll(excludeMqInfoSet);
@@ -183,43 +123,25 @@ public class CamelliaMqIsolationConsumerManager implements MqIsolationConsumerMa
             } else if (type == ConsumerManagerType.specify_topic_type) {
                 Set<TopicType> specifyTopicTypeSet = mqInfoConfig.getSpecifyTopicTypeSet();
                 if (specifyTopicTypeSet != null && !specifyTopicTypeSet.isEmpty()) {
-                    if (specifyTopicTypeSet.contains(TopicType.FAST)) {
-                        set.addAll(mqIsolationConfig.getFast());
-                    }
-                    if (specifyTopicTypeSet.contains(TopicType.FAST_ERROR)) {
-                        set.addAll(mqIsolationConfig.getFastError());
-                    }
-                    if (specifyTopicTypeSet.contains(TopicType.SLOW)) {
-                        set.addAll(mqIsolationConfig.getSlow());
-                    }
-                    if (specifyTopicTypeSet.contains(TopicType.SLOW_ERROR)) {
-                        set.addAll(mqIsolationConfig.getSlowError());
-                    }
-                    if (specifyTopicTypeSet.contains(TopicType.RETRY_LEVEL_0)) {
-                        set.addAll(mqIsolationConfig.getRetryLevel0());
-                    }
-                    if (specifyTopicTypeSet.contains(TopicType.RETRY_LEVEL_1)) {
-                        set.addAll(mqIsolationConfig.getRetryLevel1());
-                    }
-                    if (specifyTopicTypeSet.contains(TopicType.AUTO_ISOLATION_LEVEL_0)) {
-                        set.addAll(mqIsolationConfig.getAutoIsolationLevel0());
-                    }
-                    if (specifyTopicTypeSet.contains(TopicType.AUTO_ISOLATION_LEVEL_1)) {
-                        set.addAll(mqIsolationConfig.getAutoIsolationLevel1());
-                    }
-                    if (specifyTopicTypeSet.contains(TopicType.MANUAL_ISOLATION)) {
-                        List<ManualConfig> manualConfigs = mqIsolationConfig.getManualConfigs();
-                        if (manualConfigs != null) {
-                            for (ManualConfig manualConfig : manualConfigs) {
-                                set.add(manualConfig.getMqInfo());
-                            }
-                        }
+                    for (TopicType topicType : specifyTopicTypeSet) {
+                        set.addAll(MqIsolationConfigUtils.getMqInfoSetSpecifyTopicType(mqIsolationConfig, topicType));
                     }
                 }
             } else if (type == ConsumerManagerType.specify_mq_info) {
                 Set<MqInfo> specifyMqInfoSet = mqInfoConfig.getSpecifyMqInfoSet();
                 if (specifyMqInfoSet != null) {
                     set.addAll(specifyMqInfoSet);
+                }
+            } else if (type == ConsumerManagerType.specify_topic_type_exclude_mq_info) {
+                Set<TopicType> specifyTopicTypeSet = mqInfoConfig.getSpecifyTopicTypeSet();
+                if (specifyTopicTypeSet != null && !specifyTopicTypeSet.isEmpty()) {
+                    for (TopicType topicType : specifyTopicTypeSet) {
+                        set.addAll(MqIsolationConfigUtils.getMqInfoSetSpecifyTopicType(mqIsolationConfig, topicType));
+                    }
+                }
+                Set<MqInfo> excludeMqInfoSet = mqInfoConfig.getExcludeMqInfoSet();
+                if (excludeMqInfoSet != null && !excludeMqInfoSet.isEmpty()) {
+                    set.removeAll(excludeMqInfoSet);
                 }
             } else {
                 throw new IllegalArgumentException("illegal ConsumerManagerType");

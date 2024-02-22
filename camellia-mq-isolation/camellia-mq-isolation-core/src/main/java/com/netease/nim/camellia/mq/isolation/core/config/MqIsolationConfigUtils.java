@@ -167,6 +167,97 @@ public class MqIsolationConfigUtils {
         return topicTypeMap;
     }
 
+    public static Set<MqInfo> getAllMqInfo(MqIsolationConfig config) {
+        Set<MqInfo> set = new HashSet<>();
+        set.addAll(config.getFast());
+        set.addAll(config.getFastError());
+        set.addAll(config.getSlow());
+        set.addAll(config.getSlowError());
+        set.addAll(config.getRetryLevel0());
+        set.addAll(config.getRetryLevel1());
+        set.addAll(config.getAutoIsolationLevel0());
+        set.addAll(config.getAutoIsolationLevel1());
+        List<ManualConfig> manualConfigs = config.getManualConfigs();
+        if (manualConfigs != null) {
+            for (ManualConfig manualConfig : manualConfigs) {
+                set.add(manualConfig.getMqInfo());
+            }
+        }
+        return set;
+    }
+
+    public static Set<MqInfo> getMqInfoSetSpecifyTopicType(MqIsolationConfig config, TopicType type) {
+        switch (type) {
+            case FAST:
+                return new HashSet<>(config.getFast());
+            case SLOW:
+                return new HashSet<>(config.getSlow());
+            case FAST_ERROR:
+                return new HashSet<>(config.getFastError());
+            case SLOW_ERROR:
+                return new HashSet<>(config.getSlowError());
+            case RETRY_LEVEL_0:
+                return new HashSet<>(config.getRetryLevel0());
+            case RETRY_LEVEL_1:
+                return new HashSet<>(config.getRetryLevel1());
+            case AUTO_ISOLATION_LEVEL_0:
+                return new HashSet<>(config.getAutoIsolationLevel0());
+            case AUTO_ISOLATION_LEVEL_1:
+                return new HashSet<>(config.getAutoIsolationLevel1());
+            case MANUAL_ISOLATION:
+                List<ManualConfig> manualConfigs = config.getManualConfigs();
+                Set<MqInfo> set = new HashSet<>();
+                if (manualConfigs != null) {
+                    for (ManualConfig manualConfig : manualConfigs) {
+                        set.add(manualConfig.getMqInfo());
+                    }
+                }
+                return set;
+            default:
+                return new HashSet<>();
+        }
+    }
+
+    public static Set<MqInfo> getMqInfoSetExcludeTopicType(MqIsolationConfig config, Collection<TopicType> excludeTopicTypeSet) {
+        if (excludeTopicTypeSet == null || excludeTopicTypeSet.isEmpty()) {
+            return getAllMqInfo(config);
+        }
+        Set<MqInfo> set = new HashSet<>();
+        if (!excludeTopicTypeSet.contains(TopicType.FAST)) {
+            set.addAll(config.getFast());
+        }
+        if (!excludeTopicTypeSet.contains(TopicType.FAST_ERROR)) {
+            set.addAll(config.getFastError());
+        }
+        if (!excludeTopicTypeSet.contains(TopicType.SLOW)) {
+            set.addAll(config.getSlow());
+        }
+        if (!excludeTopicTypeSet.contains(TopicType.SLOW_ERROR)) {
+            set.addAll(config.getSlowError());
+        }
+        if (!excludeTopicTypeSet.contains(TopicType.RETRY_LEVEL_0)) {
+            set.addAll(config.getRetryLevel0());
+        }
+        if (!excludeTopicTypeSet.contains(TopicType.RETRY_LEVEL_1)) {
+            set.addAll(config.getRetryLevel1());
+        }
+        if (!excludeTopicTypeSet.contains(TopicType.AUTO_ISOLATION_LEVEL_0)) {
+            set.addAll(config.getAutoIsolationLevel0());
+        }
+        if (!excludeTopicTypeSet.contains(TopicType.AUTO_ISOLATION_LEVEL_1)) {
+            set.addAll(config.getAutoIsolationLevel1());
+        }
+        if (!excludeTopicTypeSet.contains(TopicType.MANUAL_ISOLATION)) {
+            List<ManualConfig> manualConfigs = config.getManualConfigs();
+            if (manualConfigs != null) {
+                for (ManualConfig manualConfig : manualConfigs) {
+                    set.add(manualConfig.getMqInfo());
+                }
+            }
+        }
+        return set;
+    }
+
     private static void initMqInfo(Map<MqInfo, TopicType> map, Collection<MqInfo> list, TopicType topicType) {
         for (MqInfo mqInfo : list) {
             if (topicType == TopicType.MANUAL_ISOLATION && map.containsKey(mqInfo)) {
