@@ -1,8 +1,10 @@
 package com.netease.nim.camellia.mq.isolation.core.config;
 
 import com.netease.nim.camellia.mq.isolation.core.mq.MqInfo;
+import com.netease.nim.camellia.mq.isolation.core.mq.TopicType;
 
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by caojiajun on 2024/2/20
@@ -138,6 +140,41 @@ public class MqIsolationConfigUtils {
                     throw new IllegalArgumentException("ManualConfig.MqInfo is illegal");
                 }
             }
+        }
+        //check mq info
+        topicTypeMap(config);
+    }
+
+    public static ConcurrentHashMap<MqInfo, TopicType> topicTypeMap(MqIsolationConfig config) {
+        ConcurrentHashMap<MqInfo, TopicType> topicTypeMap = new ConcurrentHashMap<>();
+        initMqInfo(topicTypeMap, config.getFast(), TopicType.FAST);
+        initMqInfo(topicTypeMap, config.getFastError(), TopicType.FAST_ERROR);
+        initMqInfo(topicTypeMap, config.getSlow(), TopicType.SLOW);
+        initMqInfo(topicTypeMap, config.getSlowError(), TopicType.SLOW_ERROR);
+        initMqInfo(topicTypeMap, config.getRetryLevel0(), TopicType.RETRY_LEVEL_0);
+        initMqInfo(topicTypeMap, config.getRetryLevel1(), TopicType.RETRY_LEVEL_1);
+        initMqInfo(topicTypeMap, config.getAutoIsolationLevel0(), TopicType.AUTO_ISOLATION_LEVEL_0);
+        initMqInfo(topicTypeMap, config.getAutoIsolationLevel1(), TopicType.AUTO_ISOLATION_LEVEL_1);
+        List<ManualConfig> manualConfigs = config.getManualConfigs();
+        if (manualConfigs != null) {
+            Set<MqInfo> mqInfoSet = new HashSet<>();
+            for (ManualConfig manualConfig : manualConfigs) {
+                MqInfo mqInfo = manualConfig.getMqInfo();
+                mqInfoSet.add(mqInfo);
+            }
+            initMqInfo(topicTypeMap, mqInfoSet, TopicType.MANUAL_ISOLATION);
+        }
+        return topicTypeMap;
+    }
+
+    private static void initMqInfo(Map<MqInfo, TopicType> map, Collection<MqInfo> list, TopicType topicType) {
+        for (MqInfo mqInfo : list) {
+            if (topicType == TopicType.MANUAL_ISOLATION && map.containsKey(mqInfo)) {
+                continue;
+            } else if (map.containsKey(mqInfo)) {
+                throw new IllegalArgumentException("duplicate mq info");
+            }
+            map.put(mqInfo, topicType);
         }
     }
 

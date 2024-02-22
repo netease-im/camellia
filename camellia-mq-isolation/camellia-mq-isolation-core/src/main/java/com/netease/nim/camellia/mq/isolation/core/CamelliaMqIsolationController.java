@@ -9,6 +9,8 @@ import com.netease.nim.camellia.mq.isolation.core.mq.MqInfo;
 import com.netease.nim.camellia.mq.isolation.core.stats.model.ConsumerBizStatsRequest;
 import com.netease.nim.camellia.mq.isolation.core.stats.model.SenderBizStatsRequest;
 import okhttp3.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -20,6 +22,9 @@ import java.util.concurrent.TimeUnit;
  * Created by caojiajun on 2024/2/20
  */
 public class CamelliaMqIsolationController implements MqIsolationController {
+
+    private static final Logger logger = LoggerFactory.getLogger(CamelliaMqIsolationController.class);
+
     private final String url;
     private final OkHttpClient okHttpClient;
 
@@ -109,8 +114,10 @@ public class CamelliaMqIsolationController implements MqIsolationController {
             }
             return json;
         } catch (IllegalStateException e) {
+            logger.error("get error, url = {}", url, e);
             throw e;
         } catch (Exception e) {
+            logger.error("get error, url = {}", url, e);
             throw new IllegalStateException(e);
         }
     }
@@ -135,8 +142,10 @@ public class CamelliaMqIsolationController implements MqIsolationController {
             }
             return json;
         } catch (IllegalStateException e) {
+            logger.error("post error, url = {}, body = {}", url, body, e);
             throw e;
         } catch (Exception e) {
+            logger.error("post error, url = {}, body = {}", url, body, e);
             throw new IllegalStateException(e);
         }
     }

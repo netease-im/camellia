@@ -3,8 +3,8 @@ package com.netease.nim.camellia.mq.isolation.core;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
 import com.netease.nim.camellia.mq.isolation.core.config.DispatcherConfig;
-import com.netease.nim.camellia.mq.isolation.core.config.ManualConfig;
 import com.netease.nim.camellia.mq.isolation.core.config.MqIsolationConfig;
+import com.netease.nim.camellia.mq.isolation.core.config.MqIsolationConfigUtils;
 import com.netease.nim.camellia.mq.isolation.core.domain.ConsumerContext;
 import com.netease.nim.camellia.mq.isolation.core.domain.MqIsolationMsg;
 import com.netease.nim.camellia.mq.isolation.core.domain.MqIsolationMsgPacket;
@@ -197,41 +197,12 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
     private boolean initMqInfoConfig() {
         try {
             MqIsolationConfig config = controller.getMqIsolationConfig(namespace);
-            ConcurrentHashMap<MqInfo, TopicType> topicTypeMap = new ConcurrentHashMap<>();
-            initMqInfo(topicTypeMap, config.getFast(), TopicType.FAST);
-            initMqInfo(topicTypeMap, config.getFastError(), TopicType.FAST_ERROR);
-            initMqInfo(topicTypeMap, config.getSlow(), TopicType.SLOW);
-            initMqInfo(topicTypeMap, config.getSlowError(), TopicType.SLOW_ERROR);
-            initMqInfo(topicTypeMap, config.getRetryLevel0(), TopicType.RETRY_LEVEL_0);
-            initMqInfo(topicTypeMap, config.getRetryLevel1(), TopicType.RETRY_LEVEL_1);
-            initMqInfo(topicTypeMap, config.getAutoIsolationLevel0(), TopicType.AUTO_ISOLATION_LEVEL_0);
-            initMqInfo(topicTypeMap, config.getAutoIsolationLevel1(), TopicType.AUTO_ISOLATION_LEVEL_1);
-            List<ManualConfig> manualConfigs = config.getManualConfigs();
-            if (manualConfigs != null) {
-                Set<MqInfo> mqInfoSet = new HashSet<>();
-                for (ManualConfig manualConfig : manualConfigs) {
-                    MqInfo mqInfo = manualConfig.getMqInfo();
-                    mqInfoSet.add(mqInfo);
-                }
-                initMqInfo(topicTypeMap, mqInfoSet, TopicType.MANUAL_ISOLATION);
-            }
+            this.topicTypeMap = MqIsolationConfigUtils.topicTypeMap(config);
             this.mqIsolationConfig = config;
-            this.topicTypeMap = topicTypeMap;
             return true;
         } catch (Exception e) {
             logger.error("initMqInfoConfig error, namespace = {}", namespace, e);
             return false;
-        }
-    }
-
-    private void initMqInfo(Map<MqInfo, TopicType> map, Collection<MqInfo> list, TopicType topicType) {
-        for (MqInfo mqInfo : list) {
-            if (topicType == TopicType.MANUAL_ISOLATION && map.containsKey(mqInfo)) {
-                continue;
-            } else if (map.containsKey(mqInfo)) {
-                throw new IllegalArgumentException("duplicate mq info");
-            }
-            map.put(mqInfo, topicType);
         }
     }
 }
