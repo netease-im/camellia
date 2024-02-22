@@ -3,7 +3,7 @@
 提供了一些简单实用的工具类，如下：  
 |tools|description|描述|documents|
 |:---:|:---:|:---:|:---:|
-|CamelliaCompressor|compress utils|解压缩工具类｜[QUICK START](/docs/tools/compressor.md)|
+|CamelliaCompressor|compress utils|解压缩工具类|[QUICK START](/docs/tools/compressor.md)|
 |CamelliaEncryptor|encrypt utils|加解密工具类|[QUICK START](/docs/tools/encryptor.md)|
 |CamelliaLoadingCache|local loading cache utils|本地缓存（loading-cache）工具类|[QUICK START](/docs/tools/loading_cache.md)|
 |CamelliaLocalCache|local cache utils|本地缓存工具类|[QUICK START](/docs/tools/local_cache.md)|
