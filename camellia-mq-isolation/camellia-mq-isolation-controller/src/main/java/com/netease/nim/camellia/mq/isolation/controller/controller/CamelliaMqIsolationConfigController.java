@@ -13,13 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/camellia/mq/isolation/config")
-public class ConfigController {
+public class CamelliaMqIsolationConfigController {
 
     @Autowired
     private ConfigServiceWrapper configServiceWrapper;
 
     @RequestMapping(value = "/getMqIsolationConfig", method = RequestMethod.GET)
     public WebResult getMqIsolationConfig(@RequestParam(name = "namespace") String namespace) {
+        CamelliaMqIsolationControllerStatus.updateLastUseTime();
         MqIsolationConfig config = configServiceWrapper.getMqIsolationConfig(namespace);
         return WebResult.success(config);
     }

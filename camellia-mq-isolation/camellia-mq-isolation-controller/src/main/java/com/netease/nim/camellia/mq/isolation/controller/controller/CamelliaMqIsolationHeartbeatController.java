@@ -13,31 +13,35 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/camellia/mq/isolation/heartbeat")
-public class HeartbeatController {
+public class CamelliaMqIsolationHeartbeatController {
 
     @Autowired
     private HeartbeatService heartbeatService;
 
     @RequestMapping(value = "/senderHeartbeat", method = RequestMethod.POST)
     public WebResult senderHeartbeat(@RequestBody SenderHeartbeat heartbeat) {
+        CamelliaMqIsolationControllerStatus.updateLastUseTime();
         heartbeatService.senderHeartbeat(heartbeat);
         return WebResult.success();
     }
 
     @RequestMapping(value = "/consumerHeartbeat", method = RequestMethod.POST)
     public WebResult consumerHeartbeat(@RequestBody ConsumerHeartbeat heartbeat) {
+        CamelliaMqIsolationControllerStatus.updateLastUseTime();
         heartbeatService.consumerHeartbeat(heartbeat);
         return WebResult.success();
     }
 
     @RequestMapping(value = "/querySenderHeartbeat", method = RequestMethod.GET)
     public WebResult querySenderHeartbeat(@RequestParam(name = "namespace") String namespace) {
+        CamelliaMqIsolationControllerStatus.updateLastUseTime();
         List<SenderHeartbeat> list = heartbeatService.querySenderHeartbeat(namespace);
         return WebResult.success(list);
     }
 
     @RequestMapping(value = "/queryConsumerHeartbeat", method = RequestMethod.GET)
     public WebResult queryConsumerHeartbeat(@RequestParam(name = "namespace") String namespace) {
+        CamelliaMqIsolationControllerStatus.updateLastUseTime();
         List<ConsumerHeartbeat> list = heartbeatService.queryConsumerHeartbeat(namespace);
         return WebResult.success(list);
     }

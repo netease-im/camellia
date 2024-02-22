@@ -14,19 +14,21 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/camellia/mq/isolation/route")
-public class RouteController {
+public class CamelliaMqIsolationRouteController {
 
     @Autowired
     private RouteService routeService;
 
     @RequestMapping(value = "/reportConsumerBizStats", method = RequestMethod.POST)
     public WebResult reportConsumerBizStats(@RequestBody ConsumerBizStatsRequest request) {
+        CamelliaMqIsolationControllerStatus.updateLastUseTime();
         routeService.reportConsumerBizStats(request);
         return WebResult.success();
     }
 
     @RequestMapping(value = "/reportSenderBizStats", method = RequestMethod.POST)
     public WebResult reportSenderBizStats(@RequestBody SenderBizStatsRequest request) {
+        CamelliaMqIsolationControllerStatus.updateLastUseTime();
         routeService.reportSenderBizStats(request);
         return WebResult.success();
     }
@@ -34,6 +36,7 @@ public class RouteController {
     @RequestMapping(value = "/selectMq", method = RequestMethod.GET)
     public WebResult selectMq(@RequestParam(name = "namespace") String namespace,
                               @RequestParam(name = "bizId") String bizId) {
+        CamelliaMqIsolationControllerStatus.updateLastUseTime();
         List<MqInfo> mqInfos = routeService.selectMqInfo(namespace, bizId);
         return WebResult.success(mqInfos);
     }
