@@ -349,7 +349,7 @@ public class ConfigService {
             }
         } else if (type == ConfigType.JSON_STRING) {
             try {
-                JSON.parseObject(value);
+                JSON.parse(value);
             } catch (Exception e) {
                 LogBean.get().addProps("type.value.not.match", true);
                 throw new AppException(HttpStatus.BAD_REQUEST.value(), "type/value not match");
