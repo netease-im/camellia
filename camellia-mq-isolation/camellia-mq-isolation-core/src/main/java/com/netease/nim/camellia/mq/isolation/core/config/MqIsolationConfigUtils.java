@@ -260,9 +260,7 @@ public class MqIsolationConfigUtils {
 
     private static void initMqInfo(Map<MqInfo, TopicType> map, Collection<MqInfo> list, TopicType topicType) {
         for (MqInfo mqInfo : list) {
-            if (topicType == TopicType.MANUAL_ISOLATION && map.containsKey(mqInfo)) {
-                continue;
-            } else if (map.containsKey(mqInfo)) {
+            if (map.containsKey(mqInfo)) {
                 throw new IllegalArgumentException("duplicate mq info");
             }
             map.put(mqInfo, topicType);

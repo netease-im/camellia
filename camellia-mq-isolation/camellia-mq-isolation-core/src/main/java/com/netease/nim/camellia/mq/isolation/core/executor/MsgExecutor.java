@@ -33,8 +33,8 @@ public class MsgExecutor {
         this.maxPermitPercent = maxPermitPercent;
     }
 
-    public boolean submit(TopicType topicType, String bizId, Runnable runnable) {
-        if (!topicType.isAutoIsolation()) {
+    public boolean submit(String bizId, boolean autoIsolation, Runnable runnable) {
+        if (!autoIsolation) {
             executor.submit(strategy.wrapperRunnable(runnable));
             return true;
         }

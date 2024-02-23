@@ -9,6 +9,7 @@ public class ManualConfig {
     private MatchType matchType;
     private String bizId;
     private MqInfo mqInfo;
+    private boolean autoIsolation;
 
     public MatchType getMatchType() {
         return matchType;
@@ -32,5 +33,13 @@ public class ManualConfig {
 
     public void setMqInfo(MqInfo mqInfo) {
         this.mqInfo = mqInfo;
+    }
+
+    public boolean isAutoIsolation() {
+        return autoIsolation;
+    }
+
+    public void setAutoIsolation(boolean autoIsolation) {
+        this.autoIsolation = autoIsolation;
     }
 }
