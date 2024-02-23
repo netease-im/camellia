@@ -11,9 +11,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Created by caojiajun on 2024/2/7
@@ -29,6 +31,8 @@ public class ConsumerMonitor {
 
     private static final CamelliaStatisticsManager namespaceSpend = new CamelliaStatisticsManager();
     private static final CamelliaStatisticsManager namespaceBizIdSpend = new CamelliaStatisticsManager();
+
+    private static ConcurrentHashMap<String, ConcurrentHashMap<TopicType, ConcurrentHashMap<MqInfo, ConcurrentHashMap<String, LongAdder>>>> distributionCountMap = new ConcurrentHashMap<>();
 
     private static final AtomicBoolean initOk = new AtomicBoolean(false);
 
@@ -54,6 +58,7 @@ public class ConsumerMonitor {
             topicTypeMqLatency.update(namespace + "|" + topicType.name(), mqLatency);
             namespaceMsgLatency.update(namespace, msgLatency);
             namespaceBizIdMsgLatency.update(new BizKey(namespace, bizId).toString(), msgLatency);
+            getCount(mqInfo, topicType, namespace, bizId).increment();
         } catch (Exception e) {
             logger.error("latency error", e);
         }
@@ -67,6 +72,26 @@ public class ConsumerMonitor {
         } catch (Exception e) {
             logger.error("spend error", e);
         }
+    }
+
+    private static LongAdder getCount(MqInfo mqInfo, TopicType topicType, String namespace, String bizId) {
+        ConcurrentHashMap<TopicType, ConcurrentHashMap<MqInfo, ConcurrentHashMap<String, LongAdder>>> map1 = distributionCountMap.get(namespace);
+        if (map1 == null) {
+            map1 = distributionCountMap.computeIfAbsent(namespace, k -> new ConcurrentHashMap<>());
+        }
+        ConcurrentHashMap<MqInfo, ConcurrentHashMap<String, LongAdder>> map2 = map1.get(topicType);
+        if (map2 == null) {
+            map2 = map1.computeIfAbsent(topicType, k -> new ConcurrentHashMap<>());
+        }
+        ConcurrentHashMap<String, LongAdder> map3 = map2.get(mqInfo);
+        if (map3 == null) {
+            map3 = map2.computeIfAbsent(mqInfo, k -> new ConcurrentHashMap<>());
+        }
+        LongAdder count = map3.get(bizId);
+        if (count == null) {
+            count = map3.computeIfAbsent(bizId, k -> new LongAdder());
+        }
+        return count;
     }
 
     private static void calc() {
@@ -187,6 +212,33 @@ public class ConsumerMonitor {
                 }
             }
             consumerStats.setSpendStats(spendStats);
+
+            DistributionStats distributionStats = new DistributionStats();
+            {
+                ConcurrentHashMap<String, ConcurrentHashMap<TopicType, ConcurrentHashMap<MqInfo, ConcurrentHashMap<String, LongAdder>>>> map = distributionCountMap;
+                distributionCountMap = new ConcurrentHashMap<>();
+                for (Map.Entry<String, ConcurrentHashMap<TopicType, ConcurrentHashMap<MqInfo, ConcurrentHashMap<String, LongAdder>>>> entry : map.entrySet()) {
+                    String namespace = entry.getKey();
+                    for (Map.Entry<TopicType, ConcurrentHashMap<MqInfo, ConcurrentHashMap<String, LongAdder>>> entry2 : entry.getValue().entrySet()) {
+                        TopicType topicType = entry2.getKey();
+                        for (Map.Entry<MqInfo, ConcurrentHashMap<String, LongAdder>> entry3 : entry2.getValue().entrySet()) {
+                            MqInfo mqInfo = entry3.getKey();
+                            for (Map.Entry<String, LongAdder> entry4 : entry3.getValue().entrySet()) {
+                                String bizId = entry4.getKey();
+                                LongAdder count = entry4.getValue();
+                                NamespaceBizIdDistributionStats stats = new NamespaceBizIdDistributionStats();
+                                stats.setNamespace(namespace);
+                                stats.setTopicType(topicType);
+                                stats.setMqInfo(mqInfo);
+                                stats.setBizId(bizId);
+                                stats.setCount(count.sumThenReset());
+                                distributionStats.getDistributionStatsList().add(stats);
+                            }
+                        }
+                    }
+                }
+            }
+            consumerStats.setDistributionStats(distributionStats);
 
             ConsumerMonitor.consumerStats = consumerStats;
         } catch (Exception e) {

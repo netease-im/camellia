@@ -6,6 +6,7 @@ package com.netease.nim.camellia.mq.isolation.core.stats.model;
 public class ConsumerStats {
     private LatencyStats latencyStats = new LatencyStats();
     private SpendStats spendStats = new SpendStats();
+    private DistributionStats distributionStats = new DistributionStats();
 
     public LatencyStats getLatencyStats() {
         return latencyStats;
@@ -21,5 +22,13 @@ public class ConsumerStats {
 
     public void setSpendStats(SpendStats spendStats) {
         this.spendStats = spendStats;
+    }
+
+    public DistributionStats getDistributionStats() {
+        return distributionStats;
+    }
+
+    public void setDistributionStats(DistributionStats distributionStats) {
+        this.distributionStats = distributionStats;
     }
 }
