@@ -1,6 +1,5 @@
 package com.netease.nim.camellia.redis.proxy.upstream.connection;
 
-import io.netty.util.concurrent.FastThreadLocal;
 
 import java.util.Objects;
 
@@ -19,7 +18,7 @@ public class RedisConnectionAddr {
 
     private final String url;
 
-    private final FastThreadLocal<RedisConnection> cache;
+    private final ThreadLocal<RedisConnection> cache;
 
     public RedisConnectionAddr(String host, int port, String userName, String password) {
         this(host, port, userName, password, false);
@@ -67,7 +66,7 @@ public class RedisConnectionAddr {
         }
         this.url = builder.toString();
         if (cacheEnable) {
-            this.cache = new FastThreadLocal<>();
+            this.cache = new ThreadLocal<>();
         } else {
             this.cache = null;
         }
@@ -103,7 +102,7 @@ public class RedisConnectionAddr {
         }
         this.url = builder.toString();
         if (cacheEnable) {
-            this.cache = new FastThreadLocal<>();
+            this.cache = new ThreadLocal<>();
         } else {
             this.cache = null;
         }
