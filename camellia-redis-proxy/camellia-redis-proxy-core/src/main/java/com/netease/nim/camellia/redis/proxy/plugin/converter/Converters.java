@@ -320,14 +320,15 @@ public class Converters {
                 command.updateObjects(args);
             }
         } else if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE
-                || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
+                || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE
+                || redisCommand == RedisCommand.SSUBSCRIBE || redisCommand == RedisCommand.SUNSUBSCRIBE) {
             if (objects.length > 1) {
                 for (int i = 1; i < objects.length; i ++) {
                     byte[] convertedChannels = convert(commandContext, redisCommand, objects[i], convert);
                     objects[i] = convertedChannels;
                 }
             }
-        } else if (redisCommand == RedisCommand.PUBLISH) {
+        } else if (redisCommand == RedisCommand.PUBLISH || redisCommand == RedisCommand.SPUBLISH) {
             if (objects.length > 1) {
                 byte[] convertedChannels = convert(commandContext, redisCommand, objects[1], convert);
                 objects[1] = convertedChannels;
@@ -384,7 +385,8 @@ public class Converters {
                 }
             }
         } else if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE
-                || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
+                || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE
+                || redisCommand == RedisCommand.SSUBSCRIBE || redisCommand == RedisCommand.SUNSUBSCRIBE) {
             PubSubUtils.checkKeyConverter(redisCommand, command.getCommandContext(), keyConverter, reply);
         } else if (redisCommand == RedisCommand.PUBSUB) {
             byte[][] objects = command.getObjects();

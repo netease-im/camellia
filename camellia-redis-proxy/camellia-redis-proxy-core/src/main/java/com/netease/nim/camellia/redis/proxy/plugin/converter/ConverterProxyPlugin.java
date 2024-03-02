@@ -86,7 +86,8 @@ public class ConverterProxyPlugin implements ProxyPlugin {
             RedisCommand redisCommand = reply.getRedisCommand();
             CommandContext commandContext = reply.getCommandContext();
             if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE
-                    || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
+                    || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE
+                    || redisCommand == RedisCommand.SSUBSCRIBE || redisCommand == RedisCommand.SUNSUBSCRIBE) {
                 PubSubUtils.checkKeyConverter(redisCommand, commandContext, converters.getKeyConverter(), reply.getReply());
             }
         }

@@ -372,7 +372,7 @@ public class CommandsTransponder {
                 }
 
                 //订阅命令特殊处理
-                if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE) {
+                if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE || redisCommand == RedisCommand.SSUBSCRIBE) {
                     channelInfo.setInSubscribe(true);
                 }
 

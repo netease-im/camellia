@@ -238,7 +238,8 @@ public class UpstreamRedisClientTemplate implements IUpstreamRedisClientTemplate
                     continue;
                 }
                 if (redisCommand == RedisCommand.SUBSCRIBE || redisCommand == RedisCommand.PSUBSCRIBE
-                        || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE) {
+                        || redisCommand == RedisCommand.UNSUBSCRIBE || redisCommand == RedisCommand.PUNSUBSCRIBE
+                        || redisCommand == RedisCommand.SSUBSCRIBE || redisCommand == RedisCommand.SUNSUBSCRIBE) {
                     List<Resource> writeResources = resourceSelector.getWriteResources(Utils.EMPTY_ARRAY);
                     if (writeResources == null || writeResources.isEmpty()) {
                         ChannelInfo channelInfo = command.getChannelInfo();
