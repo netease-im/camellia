@@ -233,7 +233,7 @@ public class RedisConnectionHub {
             //如果没有，则使用公共eventLoopGroup去初始化一个连接
             if (channelType == ChannelType.tcp) {
                 eventLoop = eventLoopGroup.next();
-            } else if (channelType == ChannelType.uds) {//使用uds应该只能有一个连接
+            } else if (channelType == ChannelType.uds) {
                 eventLoop = udsEventLoopGroup.next();
             } else {
                 return null;
