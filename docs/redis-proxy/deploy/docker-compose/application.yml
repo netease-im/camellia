@@ -1,0 +1,18 @@
+server:
+  port: 6380
+spring:
+  application:
+    name: camellia-redis-proxy-server
+camellia-redis-proxy:
+  console-port: 16379 
+  monitor-enable: false 
+  monitor-interval-seconds: 60 
+  plugins: 
+    - monitorPlugin
+    - bigKeyPlugin
+    - hotKeyPlugin
+  transpond:
+    type: local 
+    local:
+      type: complex
+      json-file: resource-table.json

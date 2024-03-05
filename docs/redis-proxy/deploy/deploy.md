@@ -1,5 +1,8 @@
 ## 部署和接入
-在生产环境，需要部署至少2个proxy实例来保证高可用，并且proxy是可以水平扩展的   
+在生产环境，需要部署至少2个proxy实例来保证高可用，并且proxy是可以水平扩展的
+注意：
+- 如果后端pod大于15个以上，避免K8S内部DNS的问题，可以使用statefulset，使用多个svc来分散代理一定数量的statefulset
+- 如果小于15个，则可以使用deployment类型部署
 
 ## 目录
 * 基于lb组成集群（如lvs，或者k8s中的service等），见：[standalone_mode](standalone_mode.md)

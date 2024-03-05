@@ -1,0 +1,23 @@
+version: '3'
+services:
+    redis_master1:
+        container_name: redis_master1
+        image: redis:6.0.5-alpine3.12
+
+    redis_slave1:
+        container_name: redis_slave01
+        image: redis:6.0.5-alpine3.12
+        command: ["redis-server", "--replicaof redis_master1 6379"]
+
+    redis_slave2:
+        container_name: redis_slave02
+        image: redis:6.0.5-alpine3.12
+        command: ["redis-server", "--replicaof redis_master1 6379"]
+
+    camellia_proxy_rw:
+        container_name: camellia_proxy_rw
+        image: 48n6e/camellia-redis-proxy:1.2.26-0.0.2
+        volumes:
+            - "./application.yml:/opt/camellia-redis-proxy/BOOT-INF/classes/application.yml"
+            - "./resource-table.json:/opt/camellia-redis-proxy/BOOT-INF/classes/resource-table.json"
+        command: ["java","-XX:+UseG1GC","-XX:+UseContainerSupport","-Xms128m","-Xmx2048m","-server","org.springframework.boot.loader.JarLauncher"]
