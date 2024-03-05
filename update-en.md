@@ -1,5 +1,19 @@
 [中文版](update-zh.md)
 
+# 1.2.27（2024/03/xx）
+### add
+* camellia-redis-proxy support `MOVE`、`CF.RESERVE`、`BF.CARD`、`BF.RESERVE` command
+* camellia-redis-proxy support `GEORADIUSBYMEMBER_RO`、`GEORADIUS_RO` commands，thanks [@wozaizhe55](https://github.com/wozaizhe55)
+* add mq-isolation module (alpha preview)
+
+### update
+* none
+
+### fix
+* camellia-redis-proxy fix shard pubsub commands not available
+* camellia-redis-proxy fix memory leak
+
+
 # 1.2.26（2024/02/04）
 ### add
 * camellia-redis-proxy support use http to invoke command (redis resp protocol over http)

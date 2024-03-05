@@ -1,5 +1,20 @@
 [ENGLISH](update-en.md)
 
+
+# 1.2.27（2024/03/xx）
+### add
+* camellia-redis-proxy新增 `MOVE`、`CF.RESERVE`、`BF.CARD`、`BF.RESERVE` 命令支持
+* camellia-redis-proxy新增 `GEORADIUSBYMEMBER_RO`、`GEORADIUS_RO` 命令支持，感谢 [@wozaizhe55](https://github.com/wozaizhe55)
+* 新增mq-isolation模块 (alpha预览)
+
+### update
+* none
+
+### fix
+* camellia-redis-proxy修复shard pubsub相关命令不可用的问题
+* camellia-redis-proxy修复内存泄漏
+
+
 # 1.2.26（2024/02/04）
 ### 新增
 * camellia-redis-proxy新增通过http访问proxy执行command的功能
