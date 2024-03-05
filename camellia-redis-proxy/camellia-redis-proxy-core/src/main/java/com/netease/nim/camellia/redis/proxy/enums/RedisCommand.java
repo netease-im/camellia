@@ -20,6 +20,7 @@ public enum RedisCommand {
     AUTH(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     QUIT(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     COMMAND(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
+    MOVE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.DB, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     SCAN(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.DB, Blocking.FALSE, CommandKeyType.None),
     SET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     GET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.STRING, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
@@ -387,7 +388,6 @@ public enum RedisCommand {
      */
     FLUSHDB(CommandSupportType.NOT_SUPPORT, Type.WRITE, null, Blocking.FALSE, null),
     DBSIZE(CommandSupportType.NOT_SUPPORT, Type.READ, null, Blocking.FALSE, null),
-    MOVE(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     FLUSHALL(CommandSupportType.NOT_SUPPORT, Type.WRITE, null, Blocking.FALSE, null),
     SAVE(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
     BGSAVE(CommandSupportType.NOT_SUPPORT, null, null, Blocking.FALSE, null),
