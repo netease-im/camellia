@@ -156,6 +156,8 @@ public enum RedisCommand {
     BF_MADD(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     BF_MEXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     BF_SCANDUMP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    BF_CARD(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    BF_RESERVE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.BF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXHSET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXHGET(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.TAIR_HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     EXHMSET(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.TAIR_HASH, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
