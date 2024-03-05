@@ -349,14 +349,17 @@ public class CommandsTransponder {
 
                     if (redisCommand == RedisCommand.CLUSTER) {
                         //cluster mode
-                        if (clusterModeProcessor != null) {
-                            CompletableFuture<Reply> future = clusterModeProcessor.clusterCommands(command);
-                            future.thenAccept(task::replyCompleted);
-                        } else {
+                        if (clusterModeProcessor == null) {
                             task.replyCompleted(ErrorReply.NOT_SUPPORT);
+                            hasCommandsSkip = true;
+                            continue;
                         }
-                        hasCommandsSkip = true;
-                        continue;
+                        CompletableFuture<Reply> future = clusterModeProcessor.clusterCommands(command);
+                        if (future != null) {
+                            future.thenAccept(task::replyCompleted);
+                            hasCommandsSkip = true;
+                            continue;
+                        }
                     }
                 }
 

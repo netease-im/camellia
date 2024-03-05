@@ -210,6 +210,8 @@ public class ProxyClusterModeProcessor {
             } else {
                 return wrapper(ErrorReply.argNumWrong(redisCommand));
             }
+        } else if (isSupportClusterCommand(arg)) {
+            return null;
         } else {
             ErrorLogCollector.collect(ProxyClusterModeProcessor.class, "not support cluster command, arg = " + arg);
             return wrapper(ErrorReply.NOT_SUPPORT);
@@ -230,6 +232,10 @@ public class ProxyClusterModeProcessor {
      */
     public List<ProxyNode> getOnlineNodes() {
         return new ArrayList<>(onlineNodes);
+    }
+
+    private boolean isSupportClusterCommand(String arg) {
+        return arg.equalsIgnoreCase(RedisKeyword.KEYSLOT.name());
     }
 
     private CompletableFuture<Reply> wrapper(Reply reply) {
