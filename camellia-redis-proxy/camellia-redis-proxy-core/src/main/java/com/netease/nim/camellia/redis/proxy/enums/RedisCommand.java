@@ -249,6 +249,7 @@ public enum RedisCommand {
     CF_LOADCHUNK(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     CF_MEXISTS(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
     CF_SCANDUMP(CommandSupportType.FULL_SUPPORT, Type.READ, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
+    CF_RESERVE(CommandSupportType.FULL_SUPPORT, Type.WRITE, CommandType.CF, Blocking.FALSE, CommandKeyType.SIMPLE_SINGLE),
 
 
     /**
