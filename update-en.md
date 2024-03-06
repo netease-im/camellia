@@ -7,7 +7,7 @@
 * add mq-isolation module (alpha preview)
 
 ### update
-* none
+* camellia-redis-proxy add docker-compose/k8s docs, thanks [48N6E](https://github.com/48N6E)
 
 ### fix
 * camellia-redis-proxy fix shard pubsub commands not available

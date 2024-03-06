@@ -2,13 +2,13 @@
 
 
 # 1.2.27（2024/03/xx）
-### add
+### 新增
 * camellia-redis-proxy新增 `MOVE`、`CF.RESERVE`、`BF.CARD`、`BF.RESERVE` 命令支持
 * camellia-redis-proxy新增 `GEORADIUSBYMEMBER_RO`、`GEORADIUS_RO` 命令支持，感谢 [@wozaizhe55](https://github.com/wozaizhe55)
 * 新增mq-isolation模块 (alpha预览)
 
-### update
-* none
+### 更新
+* camellia-redis-proxy新增 docker-compose/k8s 相关文档，感谢 [48N6E](https://github.com/48N6E)
 
 ### fix
 * camellia-redis-proxy修复shard pubsub相关命令不可用的问题
