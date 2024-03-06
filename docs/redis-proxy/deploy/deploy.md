@@ -11,4 +11,6 @@
 * 伪redis-sentinel模式，见：[sentinel_mode](sentinel_mode.md)
 * jvm-in-sidecar模式，见：[jvm-in-sidecar](jvm-in-sidecar.md)
 * 优雅上下线，见：[console](console.md)
-
+* docker-compose 快速部署读写分离模式 [docker-compose](docker-compose/docker-compose-rw-separate.yaml)
+* kubernetes 部署模板 [kubernetes](kubernetes/camellia-deployment.yaml)
+* 构建镜像样例 [docker-build](docker/Dockerfile)
