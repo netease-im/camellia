@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.conf.ApiBasedCamelliaConfig;
 import com.netease.nim.camellia.mq.isolation.core.config.MqIsolationConfig;
 import com.netease.nim.camellia.mq.isolation.core.config.MqIsolationConfigUtils;
+import com.netease.nim.camellia.mq.isolation.core.config.ReadableMqIsolationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,13 +30,14 @@ public class DefaultConfigService implements ConfigService {
         if (string == null) {
             throw new IllegalArgumentException("mq isolation config = " + namespace + " not exists");
         }
-        MqIsolationConfig mqIsolationConfig;
+        ReadableMqIsolationConfig readableMqIsolationConfig;
         try {
-            mqIsolationConfig = JSONObject.parseObject(string, MqIsolationConfig.class);
+            readableMqIsolationConfig = JSONObject.parseObject(string, ReadableMqIsolationConfig.class);
         } catch (Exception e) {
-            logger.error("parse MqIsolationConfig error", e);
+            logger.error("parse ReadableMqIsolationConfig error", e);
             return cache.get(namespace);
         }
+        MqIsolationConfig mqIsolationConfig = MqIsolationConfigUtils.toMqIsolationConfig(readableMqIsolationConfig);
         try {
             MqIsolationConfigUtils.checkValid(mqIsolationConfig);
         } catch (Exception e) {

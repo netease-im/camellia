@@ -258,6 +258,65 @@ public class MqIsolationConfigUtils {
         return set;
     }
 
+    public static MqIsolationConfig toMqIsolationConfig(ReadableMqIsolationConfig config) {
+        MqIsolationConfig mqIsolationConfig = new MqIsolationConfig();
+        Map<String, String> mqAlias = config.getMqAlias();
+        mqIsolationConfig.setNamespace(config.getNamespace());
+
+        mqIsolationConfig.setConsumerSpendMsAvgThreshold(config.getConsumerSpendMsAvgThreshold());
+        mqIsolationConfig.setConsumerFailRateThreshold(config.getConsumerFailRateThreshold());
+        mqIsolationConfig.setConsumerStatsExpireSeconds(config.getConsumerStatsExpireSeconds());
+        mqIsolationConfig.setConsumerStatsIntervalSeconds(config.getConsumerStatsIntervalSeconds());
+
+        mqIsolationConfig.setSenderStatsIntervalSeconds(config.getSenderStatsIntervalSeconds());
+        mqIsolationConfig.setSenderStatsExpireSeconds(config.getSenderStatsExpireSeconds());
+        mqIsolationConfig.setSenderHeavyTrafficPercent(config.getSenderHeavyTrafficPercent());
+        mqIsolationConfig.setSenderHeavyTrafficThreshold1(config.getSenderHeavyTrafficThreshold1());
+        mqIsolationConfig.setSenderHeavyTrafficThreshold2(config.getSenderHeavyTrafficThreshold2());
+
+        mqIsolationConfig.setFast(config.getFast());
+        mqIsolationConfig.setSlow(config.getSlow());
+        mqIsolationConfig.setFastError(config.getFastError());
+        mqIsolationConfig.setSlowError(config.getSlowError());
+        mqIsolationConfig.setRetryLevel0(config.getRetryLevel0());
+        mqIsolationConfig.setRetryLevel1(config.getRetryLevel1());
+        mqIsolationConfig.setAutoIsolationLevel0(config.getAutoIsolationLevel0());
+        mqIsolationConfig.setAutoIsolationLevel1(config.getAutoIsolationLevel1());
+        mqIsolationConfig.setManualConfigs(config.getManualConfigs());
+
+        replaceMqIfNeed(mqIsolationConfig.getFast(), mqAlias);
+        replaceMqIfNeed(mqIsolationConfig.getSlow(), mqAlias);
+        replaceMqIfNeed(mqIsolationConfig.getFastError(), mqAlias);
+        replaceMqIfNeed(mqIsolationConfig.getSlowError(), mqAlias);
+        replaceMqIfNeed(mqIsolationConfig.getRetryLevel0(), mqAlias);
+        replaceMqIfNeed(mqIsolationConfig.getRetryLevel1(), mqAlias);
+        replaceMqIfNeed(mqIsolationConfig.getAutoIsolationLevel0(), mqAlias);
+        replaceMqIfNeed(mqIsolationConfig.getAutoIsolationLevel1(), mqAlias);
+
+        List<ManualConfig> manualConfigs = config.getManualConfigs();
+        if (manualConfigs != null) {
+            for (ManualConfig manualConfig : manualConfigs) {
+                MqInfo mqInfo = manualConfig.getMqInfo();
+                String realMq = mqAlias.get(mqInfo.getMq());
+                if (realMq != null) {
+                    mqInfo.setMq(realMq);
+                }
+            }
+        }
+        return mqIsolationConfig;
+    }
+
+    private static void replaceMqIfNeed(List<MqInfo> mqInfos, Map<String, String> mqAlias) {
+        if (mqInfos == null || mqInfos.isEmpty()) return;
+        if (mqAlias == null || mqAlias.isEmpty()) return;
+        for (MqInfo mqInfo : mqInfos) {
+            String realMq = mqAlias.get(mqInfo.getMq());
+            if (realMq != null) {
+                mqInfo.setMq(realMq);
+            }
+        }
+    }
+
     private static void initMqInfo(Map<MqInfo, TopicType> map, Collection<MqInfo> list, TopicType topicType) {
         for (MqInfo mqInfo : list) {
             if (map.containsKey(mqInfo)) {
