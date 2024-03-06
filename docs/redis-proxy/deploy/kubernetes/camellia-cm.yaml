@@ -1,0 +1,214 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm-db-camellia-test
+data:
+  application.yml: |
+    server:
+      port: 6380
+    spring:
+      application:
+        name: camellia-redis-proxy-server
+
+    camellia-redis-proxy:
+      console-port: 16379 
+      password: pass123  
+      monitor-enable: false  
+      monitor-interval-seconds: 60 
+      plugins: #plugin list
+        - monitorPlugin
+        - bigKeyPlugin
+        - hotKeyPlugin
+      transpond:
+        type: local 
+        local:
+          type: complex 
+          json-file: resource-table.json
+
+  logback.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <configuration scan="true" scanPeriod="60 seconds" debug="false">
+          <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+                  <encoder>
+                        <pattern>%d %-5p %t %X %c{1}:%L - %m%n</pattern>
+                  </encoder>
+          </appender>
+
+          <logger name="com.netease.nim" level="INFO" additivity="false" >
+                  <appender-ref ref="STDOUT" />
+          </logger>
+          <root level="INFO">
+                  <appender-ref ref="STDOUT" />
+          </root>
+
+    </configuration>
+
+  resource-table.json: |
+    {
+      "type": "simple",
+      "operation": {
+        "read": "redis://sts-db-redis-single-2:6379",
+        "type": "rw_separate",
+        "write": {
+          "resources": [
+            "redis://sts-db-redis-single-0:6379",
+            "redis://sts-db-redis-single-1:6379"
+          ],
+          "type": "multi"
+        }
+      }
+    }
+
+  application-single.yml: |
+    server:
+      port: 6380
+    spring:
+      application:
+        name: camellia-redis-proxy-server
+    camellia-redis-proxy:
+      console-port: 16379 
+      monitor-enable: false  
+      monitor-interval-seconds: 60
+      plugins: #plugin list
+        - monitorPlugin
+        - bigKeyPlugin
+        - hotKeyPlugin
+      transpond:
+        type: local 
+        local:
+          type: simple #simple、complex
+          resource: redis://@sts-db-redis-single1-camellia-0.svc-db-redis-single1-camellia.db.svc.cluster.local:6379
+
+  application-singlewrite-multiread.yml: |
+    server:
+      port: 6380
+    spring:
+      application:
+        name: camellia-redis-proxy-server
+    camellia-redis-proxy:
+      console-port: 16379 
+      monitor-enable: false  
+      monitor-interval-seconds: 60
+      plugins: #plugin list
+        - monitorPlugin
+        - bigKeyPlugin
+        - hotKeyPlugin
+      transpond:
+        type: local 
+        local:
+          type: complex
+          json-file: resource-singlewrite-multiread.json
+
+  resource-singlewrite-multiread.json: |
+    {
+      "type": "simple",
+      "operation": {
+        "read": {
+          "resources": [
+            "redis://@sts-db-redis-master-slave1-camellia-2.svc-db-redis-master-slave1-camellia.db.svc.cluster.local:6379",
+            "redis://@sts-db-redis-master-slave1-camellia-1.svc-db-redis-master-slave1-camellia.db.svc.cluster.local:6379"
+          ],
+          "type": "random"
+        },
+        "type": "rw_separate",
+        "write": "redis://@sts-db-redis-master-slave1-camellia-0.svc-db-redis-master-slave1-camellia.db.svc.cluster.local:6379"
+      }
+    }
+
+  application-sharding-singlewrite-multiread.yml: |
+    server:
+      port: 6380
+    spring:
+      application:
+        name: camellia-redis-proxy-server
+    camellia-redis-proxy:
+      console-port: 16379 
+      monitor-enable: true  
+      monitor-interval-seconds: 60
+      plugins: #plugin list
+        - monitorPlugin
+        - bigKeyPlugin
+        - hotKeyPlugin
+        - hotKeyCachePlugin
+      transpond:
+        type: local 
+        local:
+          type: complex
+          json-file: resource-sharding-singlewrite-multiread.json
+        redis-conf:
+          sharding-func: com.netease.nim.camellia.core.client.env.CRC16HashTagShardingFunc
+
+  resource-sharding-singlewrite-multiread.json: |
+    {
+      "type": "sharding",
+      "operation": {
+        "operationMap": {
+          "0": {
+            "read": {
+              "resources": [
+                "redis://@sts-db-redis-master-slave1-camellia-2.svc-db-redis-master-slave1-camellia.db.svc.cluster.local:6379",
+                "redis://@sts-db-redis-master-slave1-camellia-1.svc-db-redis-master-slave1-camellia.db.svc.cluster.local:6379"
+              ],
+              "type": "random"
+            },
+            "type": "rw_separate",
+            "write": "redis://@sts-db-redis-master-slave1-camellia-0.svc-db-redis-master-slave1-camellia.db.svc.cluster.local:6379"
+          },
+          "1": {
+            "read": {
+              "resources": [
+                "redis://@sts-db-redis-master-slave2-camellia-2.svc-db-redis-master-slave2-camellia.db.svc.cluster.local:6379",
+                "redis://@sts-db-redis-master-slave2-camellia-1.svc-db-redis-master-slave2-camellia.db.svc.cluster.local:6379"
+              ],
+              "type": "random"
+            },
+            "type": "rw_separate",
+            "write": "redis://@sts-db-redis-master-slave2-camellia-0.svc-db-redis-master-slave2-camellia.db.svc.cluster.local:6379"
+          },
+          "2": {
+            "read": {
+              "resources": [
+                "redis://@sts-db-redis-master-slave3-camellia-2.svc-db-redis-master-slave3-camellia.db.svc.cluster.local:6379",
+                "redis://@sts-db-redis-master-slave3-camellia-1.svc-db-redis-master-slave3-camellia.db.svc.cluster.local:6379"
+              ],
+              "type": "random"
+            },
+            "type": "rw_separate",
+            "write": "redis://@sts-db-redis-master-slave3-camellia-0.svc-db-redis-master-slave3-camellia.db.svc.cluster.local:6379"
+          }
+        },
+        "bucketSize": 3
+      }
+    }
+
+
+  application-sentinel-singlewrite-multiread.yml: |
+    server:
+      port: 6380
+    spring:
+      application:
+        name: camellia-redis-proxy-server
+    camellia-redis-proxy:
+      console-port: 16379 
+      monitor-enable: false  
+      monitor-interval-seconds: 60
+      plugins: #plugin list
+        - monitorPlugin
+        - bigKeyPlugin
+        - hotKeyPlugin
+      transpond:
+        type: local 
+        local:
+          type: complex
+          json-file: resource-sentinel-singlewrite-multiread.json
+
+  resource-sentinel-singlewrite-multiread.json: |
+    {
+      "type": "simple",
+      "operation": {
+        "read": "redis-sentinel-slaves://@sts-db-redis-sentinel-camellia-0.svc-db-redis-sentinel-camellia.db.svc.cluster.local:26379/mymaster?withMaster=false",
+        "type": "rw_separate",
+        "write": "redis-sentinel://@sts-db-redis-sentinel-camellia-0.svc-db-redis-sentinel-camellia.db.svc.cluster.local:26379/mymaster"
+      }
+    }
+

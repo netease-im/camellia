@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sts-db-camellia-test
+  labels:
+    app: pod-db-camellia-test
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '16379' 
+    prometheus.io/services:   'true'
+    prometheus.io/path: '/metrics'
+spec:
+  replicas: 1
+  serviceName: svc-db-camellia-test
+  selector:
+    matchLabels:
+      app: pod-db-camellia-test
+  template:
+    metadata:
+      labels:
+        app: pod-db-camellia-test
+    spec:
+      enableServiceLinks: false
+      containers:
+      - name: container-camellia
+        image: 48n6e/camellia-redis-proxy:1.2.26-0.0.3
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "1"
+        ports:
+          - containerPort: 6380
+            name: db
+            protocol: TCP
+        volumeMounts:
+        - name: cm-db-camellia-test
+          mountPath: /opt/camellia-redis-proxy/BOOT-INF/classes/application.yml
+          subPath: application-sharding-singlewrite-multiread.yml
+        # - name: cm-db-camellia-test
+        #   mountPath: /opt/camellia-redis-proxy/BOOT-INF/classes/logback.xml
+        #   subPath: logback.xml
+        # - name: cm-db-camellia-test
+        #   mountPath: /opt/camellia-redis-proxy/BOOT-INF/classes/camellia-redis-proxy.properties
+        #   subPath: camellia-redis-proxy.properties
+        - name: cm-db-camellia-test
+          mountPath: /opt/camellia-redis-proxy/BOOT-INF/classes/resource-sharding-singlewrite-multiread.json
+          subPath: resource-sharding-singlewrite-multiread.json
+      volumes:
+      - name: cm-db-camellia-test
+        configMap:
+          name: cm-db-camellia-test

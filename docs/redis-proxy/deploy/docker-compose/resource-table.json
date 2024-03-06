@@ -1,0 +1,14 @@
+{
+    "type": "simple",
+    "operation": {
+      "read": "redis://@redis_master1:6379",
+      "type": "rw_separate",
+      "write": {
+        "resources": [
+          "redis://@redis_slave01:6379",
+          "redis://@redis_slave02:6379"
+        ],
+        "type": "multi"
+      }
+    }
+  }
