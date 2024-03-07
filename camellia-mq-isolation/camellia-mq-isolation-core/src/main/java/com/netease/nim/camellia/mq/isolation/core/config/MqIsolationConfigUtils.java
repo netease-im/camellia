@@ -294,7 +294,7 @@ public class MqIsolationConfigUtils {
         replaceMqIfNeed(mqIsolationConfig.getAutoIsolationLevel1(), mqAlias);
 
         List<ManualConfig> manualConfigs = config.getManualConfigs();
-        if (manualConfigs != null) {
+        if (manualConfigs != null && mqAlias != null) {
             for (ManualConfig manualConfig : manualConfigs) {
                 MqInfo mqInfo = manualConfig.getMqInfo();
                 String realMq = mqAlias.get(mqInfo.getMq());
