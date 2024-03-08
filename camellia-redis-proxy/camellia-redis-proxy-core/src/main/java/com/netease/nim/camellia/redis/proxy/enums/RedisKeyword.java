@@ -22,6 +22,7 @@ public enum RedisKeyword {
     STREAMS,BLOCK,
     SLOTS, NODES, INFO, PROXY_HEARTBEAT,
     DELETE,DUMP,RESTORE,STATS,
+    KEYSLOT,
     ;
 
     private final byte[] raw;

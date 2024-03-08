@@ -178,6 +178,8 @@ public class ProxyClusterModeProcessor {
             return wrapper(clusterNodes == null ? ErrorReply.NOT_AVAILABLE : clusterNodes);
         } else if (arg.equalsIgnoreCase(RedisKeyword.SLOTS.name())) {
             return wrapper(clusterSlots == null ? ErrorReply.NOT_AVAILABLE : clusterSlots);
+        } else if (arg.equalsIgnoreCase(RedisKeyword.KEYSLOT.name())) {
+            return wrapper(clusterSlots == null ? ErrorReply.NOT_AVAILABLE : calKeySlot(objects[2]));
         } else if (arg.equalsIgnoreCase(RedisKeyword.PROXY_HEARTBEAT.name())) {//camellia定义的proxy间心跳
             if (objects.length >= 4) {
                 ProxyNode node = ProxyNode.parseString(Utils.bytesToString(objects[2]));
@@ -222,6 +224,10 @@ public class ProxyClusterModeProcessor {
      */
     public ProxyNode getCurrentNode() {
         return currentNode;
+    }
+
+    private Reply calKeySlot(byte[] objects) {
+        return new IntegerReply((long) RedisClusterCRC16Utils.getSlot(objects));
     }
 
     /**
