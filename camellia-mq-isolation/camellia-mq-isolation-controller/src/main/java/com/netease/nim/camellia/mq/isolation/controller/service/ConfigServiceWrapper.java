@@ -8,6 +8,8 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 
 /**
  * Created by caojiajun on 2024/2/19
@@ -25,6 +27,10 @@ public class ConfigServiceWrapper implements InitializingBean {
 
     public MqIsolationConfig getMqIsolationConfig(String namespace) {
         return service.getMqIsolationConfig(namespace);
+    }
+
+    public List<String> listNamespaces() {
+        return service.listNamespaces();
     }
 
     @Override

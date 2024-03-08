@@ -8,6 +8,9 @@ import com.netease.nim.camellia.mq.isolation.core.config.ReadableMqIsolationConf
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -47,6 +50,12 @@ public class DefaultConfigService implements ConfigService {
         }
         cache.put(namespace, mqIsolationConfig);
         return mqIsolationConfig;
+    }
+
+    @Override
+    public List<String> listNamespaces() {
+        Set<String> strings = config.getConf().keySet();
+        return new ArrayList<>(strings);
     }
 
 }
