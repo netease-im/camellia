@@ -123,7 +123,7 @@ CLIENT
 #only support RESP2
 HELLO,
 #only proxy start with cluster-mode support
-#only support: 'cluster info', 'cluster nodes', 'cluser slots', 'cluser proxy_heartbeat', 'cluser keyslot'
+#only support: 'cluster info', 'cluster nodes', 'cluster slots', 'cluster proxy_heartbeat', 'cluster keyslot'
 CLUSTER,
 #direct reply OK for proxy start with cluster-mode
 ASKING,
