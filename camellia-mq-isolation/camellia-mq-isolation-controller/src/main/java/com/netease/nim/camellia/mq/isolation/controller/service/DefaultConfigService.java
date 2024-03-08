@@ -28,20 +28,21 @@ public class DefaultConfigService implements ConfigService {
     public MqIsolationConfig getMqIsolationConfig(String namespace) {
         String string = config.getString(namespace, null);
         if (string == null) {
-            throw new IllegalArgumentException("mq isolation config = " + namespace + " not exists");
+            logger.warn("ReadableMqIsolationConfig of namespace = {} not found", namespace);
+            return null;
         }
         ReadableMqIsolationConfig readableMqIsolationConfig;
         try {
             readableMqIsolationConfig = JSONObject.parseObject(string, ReadableMqIsolationConfig.class);
         } catch (Exception e) {
-            logger.error("parse ReadableMqIsolationConfig error", e);
+            logger.error("parse ReadableMqIsolationConfig error, config = {}", string, e);
             return cache.get(namespace);
         }
         MqIsolationConfig mqIsolationConfig = MqIsolationConfigUtils.toMqIsolationConfig(readableMqIsolationConfig);
         try {
             MqIsolationConfigUtils.checkValid(mqIsolationConfig);
         } catch (Exception e) {
-            logger.error("MqIsolationConfig checkValid error", e);
+            logger.error("MqIsolationConfig checkValid error, config = {}", string, e);
             return cache.get(namespace);
         }
         cache.put(namespace, mqIsolationConfig);
