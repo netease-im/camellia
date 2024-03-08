@@ -5,6 +5,7 @@
 ### 新增
 * camellia-redis-proxy新增 `MOVE`、`CF.RESERVE`、`BF.CARD`、`BF.RESERVE` 命令支持
 * camellia-redis-proxy新增 `GEORADIUSBYMEMBER_RO`、`GEORADIUS_RO` 命令支持，感谢 [@wozaizhe55](https://github.com/wozaizhe55)
+* camellia-redis-proxy新增 `CLUSTER KEYSLOT` 命令支持，感谢 [@ttiantian006](https://github.com/ttiantian006)
 * 新增mq-isolation模块 (alpha预览)
 
 ### 更新
