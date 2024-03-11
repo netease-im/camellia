@@ -10,6 +10,7 @@ import com.netease.nim.camellia.mq.isolation.core.domain.ConsumerHeartbeat;
 import com.netease.nim.camellia.mq.isolation.core.domain.SenderHeartbeat;
 import com.netease.nim.camellia.mq.isolation.core.mq.MqInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,6 +36,9 @@ public class CamelliaMqIsolationConfigController {
     public WebResult getMqIsolationConfig(@RequestParam(name = "namespace") String namespace) {
         CamelliaMqIsolationControllerStatus.updateLastUseTime();
         MqIsolationConfig config = configServiceWrapper.getMqIsolationConfig(namespace);
+        if (config == null) {
+            return new WebResult(HttpStatus.NOT_FOUND.value());
+        }
         return WebResult.success(config);
     }
 
@@ -48,6 +52,9 @@ public class CamelliaMqIsolationConfigController {
     @RequestMapping(value = "/getNamespaceInfo", method = RequestMethod.GET)
     public WebResult getNamespaceInfo(@RequestParam("namespace") String namespace) {
         MqIsolationConfig config = configServiceWrapper.getMqIsolationConfig(namespace);
+        if (config == null) {
+            return new WebResult(HttpStatus.NOT_FOUND.value());
+        }
         JSONObject json = new JSONObject();
         json.put("config", config);
 
