@@ -4,7 +4,9 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -15,7 +17,7 @@ import java.util.concurrent.atomic.LongAdder;
  * 一个简单的熔断器计算器
  * Created by caojiajun on 2022/3/25
  */
-public class CamelliaCircuitBreaker {
+public class CamelliaCircuitBreaker implements Closeable {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaCircuitBreaker.class);
 
@@ -36,6 +38,8 @@ public class CamelliaCircuitBreaker {
     private volatile long openTimestamp = 0;//熔断器打开的时间戳
     private final AtomicLong lastSingleTestTimestamp = new AtomicLong(0L);//上一次探测的时间戳（半开）
 
+    private final ScheduledFuture<?> future;
+
     public CamelliaCircuitBreaker() {
         this(new CircuitBreakerConfig());
     }
@@ -52,7 +56,7 @@ public class CamelliaCircuitBreaker {
         }
         this.index = 0;
         long slidePeriodMillis = config.getStatisticSlidingWindowTime() / bucketSize;
-        scheduledExecutorService.scheduleAtFixedRate(this::slideToNextBucket, slidePeriodMillis, slidePeriodMillis, TimeUnit.MILLISECONDS);
+        this.future = scheduledExecutorService.scheduleAtFixedRate(this::slideToNextBucket, slidePeriodMillis, slidePeriodMillis, TimeUnit.MILLISECONDS);
         logger.info("camellia-circuit-breaker init success, name = {}", name);
     }
 
@@ -61,6 +65,16 @@ public class CamelliaCircuitBreaker {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * 关闭并释放资源
+     */
+    @Override
+    public void close() {
+        if (future != null) {
+            future.cancel(false);
+        }
     }
 
     /**
