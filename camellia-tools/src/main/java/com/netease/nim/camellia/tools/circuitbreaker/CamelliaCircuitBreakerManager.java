@@ -19,17 +19,21 @@ public class CamelliaCircuitBreakerManager {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaCircuitBreakerManager.class);
 
+    private static final int default_capacity = 10000;
+    private static final int default_expire_time = 10;
+    private static final TimeUnit default_time_unit = TimeUnit.MINUTES;
+
     private final Cache<String, CamelliaCircuitBreaker> breakerCache;
     private final String name;
     private DynamicConfig config; //动态配置
     private CircuitBreakerConfig circuitBreakerConfig; //固定配置
 
     public CamelliaCircuitBreakerManager(String name) {
-        this(name, 10000, 1, TimeUnit.DAYS, new CircuitBreakerConfig());
+        this(name, default_capacity, default_expire_time, default_time_unit, new CircuitBreakerConfig());
     }
 
     public CamelliaCircuitBreakerManager(String name, CircuitBreakerConfig config) {
-        this(name, 10000, 1, TimeUnit.DAYS, config);
+        this(name, default_capacity, default_expire_time, default_time_unit, config);
     }
 
     public CamelliaCircuitBreakerManager(String name, int capacity, int expireTime, TimeUnit timeUnit, CircuitBreakerConfig config) {
@@ -49,7 +53,7 @@ public class CamelliaCircuitBreakerManager {
     }
 
     public CamelliaCircuitBreakerManager(String name, DynamicConfig config) {
-        this(name, 10000, 1, TimeUnit.DAYS, config);
+        this(name, default_capacity, default_expire_time, default_time_unit, config);
     }
 
     public CamelliaCircuitBreakerManager(String name, int capacity, int expireTime, TimeUnit timeUnit, DynamicConfig config) {
