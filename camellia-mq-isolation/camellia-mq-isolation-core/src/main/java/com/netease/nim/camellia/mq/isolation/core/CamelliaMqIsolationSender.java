@@ -63,6 +63,16 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
         }
     }
 
+    @Override
+    public SenderResult sendSpecifyMqInfo(MqIsolationMsg msg, MqInfo mqInfo) {
+        byte[] data = PacketSerializer.marshal(newPacket(msg));
+        try {
+            return mqSender.send(mqInfo, data);
+        } finally {
+            collector.stats(msg.getNamespace(), msg.getBizId());
+        }
+    }
+
     private MqIsolationMsgPacket newPacket(MqIsolationMsg msg) {
         MqIsolationMsgPacket packet = new MqIsolationMsgPacket();
         packet.setMsg(msg);
