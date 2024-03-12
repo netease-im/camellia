@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.tools.circuitbreaker;
 
-import io.netty.util.concurrent.DefaultThreadFactory;
+import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
+import com.netease.nim.camellia.tools.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +22,8 @@ public class CamelliaCircuitBreaker implements Closeable {
 
     private static final Logger logger = LoggerFactory.getLogger(CamelliaCircuitBreaker.class);
 
-    private static final ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
-            new DefaultThreadFactory("camellia-circuit-breaker-schedule"));
+    private static final ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(SysUtils.getCpuNum(),
+            new CamelliaThreadFactory("camellia-circuit-breaker-schedule"));
     private static final AtomicLong idGen = new AtomicLong();
 
     private final CircuitBreakerConfig config;
@@ -75,6 +76,7 @@ public class CamelliaCircuitBreaker implements Closeable {
         if (future != null) {
             future.cancel(false);
         }
+        logger.info("camellia-circuit-breaker closed, name = {}", name);
     }
 
     /**
@@ -233,7 +235,7 @@ public class CamelliaCircuitBreaker implements Closeable {
                 totalFail += adder.sum();
             }
             //如果总的请求数超过了基准值，才会尝试计算失败率
-            if (totalSuccess + totalFail > config.getRequestVolumeThreshold().get() && totalFail > 0) {
+            if (totalFail > 0 && totalSuccess + totalFail > config.getRequestVolumeThreshold().get()) {
                 //如果失败率超过了阈值，则断路器打开
                 double failRate = ((double)totalFail) / (totalSuccess + totalFail);
                 if (failRate > config.getFailThresholdPercentage().get()) {
