@@ -5,6 +5,7 @@
 * camellia-redis-proxy support `MOVE`、`CF.RESERVE`、`BF.CARD`、`BF.RESERVE` command
 * camellia-redis-proxy support `GEORADIUSBYMEMBER_RO`、`GEORADIUS_RO` commands，thanks [@wozaizhe55](https://github.com/wozaizhe55)
 * camellia-redis-proxy support `CLUSTER KEYSLOT` commands，thanks [@ttiantian006](https://github.com/ttiantian006)
+* camellia-tools add CamelliaCircuitBreakerManager，thanks [@hkj-07](https://github.com/hkj-07)
 * add mq-isolation module (alpha preview)
 
 ### update
