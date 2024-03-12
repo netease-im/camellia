@@ -74,7 +74,7 @@ public class CamelliaCircuitBreakerManager {
      * @param circuitBreakerConfig 配置
      * @return CircuitBreaker实例
      */
-    public CamelliaCircuitBreaker getCircuitBreaker(String key, CircuitBreakerConfig circuitBreakerConfig) {
+    public CamelliaCircuitBreaker get(String key, CircuitBreakerConfig circuitBreakerConfig) {
         return breakerCache.get(key, k -> new CamelliaCircuitBreaker(circuitBreakerConfig));
     }
 
@@ -84,7 +84,7 @@ public class CamelliaCircuitBreakerManager {
      * @param configKey 配置key
      * @return CircuitBreaker实例
      */
-    public CamelliaCircuitBreaker getCircuitBreaker(String key, String configKey) {
+    public CamelliaCircuitBreaker get(String key, String configKey) {
         if (this.config != null) {
             return breakerCache.get(key, k -> {
                 CircuitBreakerConfig breakerConfig = getCircuitBreakerConfig(configKey, this.config);
@@ -106,8 +106,8 @@ public class CamelliaCircuitBreakerManager {
      * @param key 唯一key
      * @return CircuitBreaker实例
      */
-    public CamelliaCircuitBreaker getCircuitBreaker(String key) {
-        return getCircuitBreaker(key, key);
+    public CamelliaCircuitBreaker get(String key) {
+        return get(key, key);
     }
 
     /**
