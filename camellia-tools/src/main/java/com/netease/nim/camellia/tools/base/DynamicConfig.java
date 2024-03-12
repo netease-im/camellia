@@ -59,4 +59,18 @@ public interface DynamicConfig {
             return value;
         };
     }
+
+    static DynamicValueGetter<Boolean> wrapper(DynamicConfig config, String key, Boolean defaultValue) {
+        return () -> {
+            String value = config.get(key);
+            if (value == null) {
+                return defaultValue;
+            }
+            try {
+                return Boolean.parseBoolean(value);
+            } catch (Exception e) {
+                return defaultValue;
+            }
+        };
+    }
 }
