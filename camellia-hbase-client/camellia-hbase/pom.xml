@@ -4,19 +4,19 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-hbase</artifactId>
-	<version>1.2.27</version>
+	<version>1.2.28-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-hbase-client</artifactId>
-		<version>1.2.27</version>
+		<version>1.2.28-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-core</artifactId>
-			<version>1.2.27</version>
+			<version>1.2.28-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hbase</groupId>

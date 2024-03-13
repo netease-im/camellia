@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>camellia-id-gen-segment-spring-boot</artifactId>
-	<version>1.2.27</version>
+	<version>1.2.28-SNAPSHOT</version>
 
 	<parent>
 		<groupId>com.netease.nim</groupId>
 		<artifactId>camellia-id-gen-spring-boot-starters</artifactId>
-		<version>1.2.27</version>
+		<version>1.2.28-SNAPSHOT</version>
 	</parent>
 
 	<dependencyManagement>
@@ -28,12 +28,12 @@
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-id-gen-core</artifactId>
-			<version>1.2.27</version>
+			<version>1.2.28-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netease.nim</groupId>
 			<artifactId>camellia-id-gen-sdk</artifactId>
-			<version>1.2.27</version>
+			<version>1.2.28-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
