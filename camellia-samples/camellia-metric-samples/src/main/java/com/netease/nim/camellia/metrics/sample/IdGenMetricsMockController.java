@@ -33,7 +33,7 @@ public class IdGenMetricsMockController {
         builder.append("# TYPE info gauge\n");
         builder.append("info");
         builder.append("{");
-        builder.append("camellia_version=\"").append("1.2.26").append("\"").append(",");
+        builder.append("camellia_version=\"").append("1.2.27").append("\"").append(",");
         builder.append("arch=\"").append(osBean.getArch()).append("\"").append(",");
         builder.append("os_name=\"").append(osBean.getName()).append("\"").append(",");
         builder.append("os_version=\"").append(osBean.getVersion()).append("\"").append(",");

@@ -1,6 +1,6 @@
 [中文版](update-zh.md)
 
-# 1.2.27（2024/03/xx）
+# 1.2.27（2024/03/13）
 ### add
 * camellia-redis-proxy support `MOVE`、`CF.RESERVE`、`BF.CARD`、`BF.RESERVE` command
 * camellia-redis-proxy support `GEORADIUSBYMEMBER_RO`、`GEORADIUS_RO` commands，thanks [@wozaizhe55](https://github.com/wozaizhe55)

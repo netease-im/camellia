@@ -31,7 +31,7 @@ public class RedisProxyMetricMockController {
         builder.append("# HELP proxy_info Redis Proxy Info\n");
         builder.append("# TYPE proxy_info gauge\n");
         builder.append("proxy_info{");
-        builder.append("proxy_version=").append("\"1.2.26\"").append(",");
+        builder.append("proxy_version=").append("\"1.2.27\"").append(",");
         builder.append("arch=\"").append(osBean.getArch()).append("\"").append(",");
         builder.append("os_name=\"").append(osBean.getName()).append("\"").append(",");
         builder.append("os_version=\"").append(osBean.getVersion()).append("\"").append(",");

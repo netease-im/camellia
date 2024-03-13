@@ -66,7 +66,7 @@ you should:
 ```
 # HELP proxy_info Redis Proxy Info
 # TYPE proxy_info gauge
-proxy_info{camellia_version="1.2.26",arch="x86_64",os_name="Mac OS X",os_version="14.1.2",system_load_average="4.59716796875",vm_vendor="Oracle Corporation",vm_name="Java HotSpot(TM) 64-Bit Server VM",vm_version="17.0.1+12-LTS-39",jvm_info="mixed mode, sharing",java_version="17.0.1",} 1
+proxy_info{camellia_version="1.2.27",arch="x86_64",os_name="Mac OS X",os_version="14.1.2",system_load_average="4.59716796875",vm_vendor="Oracle Corporation",vm_name="Java HotSpot(TM) 64-Bit Server VM",vm_version="17.0.1+12-LTS-39",jvm_info="mixed mode, sharing",java_version="17.0.1",} 1
 # HELP uptime Redis Proxy Uptime
 # TYPE uptime gauge
 uptime 494556717
