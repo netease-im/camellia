@@ -12,9 +12,9 @@
 
 ### 其他
 * 优雅上下线，见：[console](console.md)
-* docker-compose 快速部署读写分离模式 [docker-compose](docker-compose/docker-compose-rw-separate.yaml)
-* kubernetes 部署模板 [kubernetes](kubernetes/camellia-deployment.yaml)
-* 构建镜像样例 [docker-build](docker/Dockerfile)
+* docker-compose 快速部署读写分离模式，见： [docker-compose](docker-compose/docker-compose-rw-separate.yaml)
+* kubernetes 部署模板，见： [kubernetes](kubernetes/camellia-deployment.yaml)
+* 构建镜像样例，见： [docker-build](docker/Dockerfile)
 * proxy默认使用java8/spring-boot2运行，如果要使用java21/spring-boot3，请参考：[camellia-jdk21-bootstraps](https://github.com/caojiajun/camellia-jdk21-bootstraps)
 * k8s环境部署注意事项：  
   - 如果后端pod大于15个以上，避免K8S内部DNS的问题，可以使用statefulset，使用多个svc来分散代理一定数量的statefulset

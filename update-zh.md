@@ -10,7 +10,7 @@
 * 新增mq-isolation模块 (alpha预览)
 
 ### 更新
-* camellia-redis-proxy新增 docker-compose/k8s 相关文档，感谢 [48N6E](https://github.com/48N6E)
+* camellia-redis-proxy新增 docker-compose/k8s 相关文档，感谢 [@48N6E](https://github.com/48N6E)
 
 ### fix
 * camellia-redis-proxy修复shard pubsub相关命令不可用的问题
