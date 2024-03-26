@@ -1,8 +1,6 @@
 package com.netease.nim.camellia.core.client.callback;
 
-import com.netease.nim.camellia.core.client.env.MultiWriteType;
-import com.netease.nim.camellia.core.client.env.ProxyEnv;
-import com.netease.nim.camellia.core.client.env.ThreadContextSwitchStrategy;
+import com.netease.nim.camellia.core.client.env.*;
 import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.model.operation.ResourceOperation;
 import com.netease.nim.camellia.core.model.operation.ResourceReadOperation;
@@ -18,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -69,50 +68,92 @@ public class OperationCallback<T> implements MethodInterceptor {
         }
     }
 
+    private void addFailedWriteTask(ResourceOperation.Type type, ResourceWriteOperation.Type writeType,
+                                    FailedReason failedReason, int index, Resource resource, Object client, Object[] objects, Method method) {
+        FailedWriteTaskQueue queue = env.getFailedWriteTaskQueue();
+        if (queue != null) {
+            FailedWriteTask task = new FailedWriteTask(type, writeType, failedReason, index, env,
+                    resource, client, className, method, objects, readWriteOperationCache);
+            queue.offerQueue(task);
+        }
+    }
+
     private Object write(final Object[] objects, final Method method) throws Throwable {
         ResourceOperation.Type type = resourceOperation.getType();
         switch (type) {
-            case SIMPLE:
-                Resource resource1 = resourceOperation.getResource();
-                T client = clientMap.get(resource1);
-                incrWrite(resource1, method);
-                return method.invoke(client, objects);
-            case RW_SEPARATE:
+            case SIMPLE: {
+                Resource resource = resourceOperation.getResource();
+                T client = clientMap.get(resource);
+                try {
+                    incrWrite(resource, method);
+                    return method.invoke(client, objects);
+                } catch (Throwable e) {
+                    addFailedWriteTask(type, null, FailedReason.EXCEPTION, 0, resource, client, objects, method);
+                    throw e;
+                }
+            }
+            case RW_SEPARATE: {
                 ResourceWriteOperation writeOperation = resourceOperation.getWriteOperation();
                 switch (writeOperation.getType()) {
-                    case SIMPLE:
-                        Resource resource2 = writeOperation.getWriteResource();
-                        T client1 = clientMap.get(resource2);
-                        incrWrite(resource2, method);
-                        return method.invoke(client1, objects);
-                    case MULTI:
+                    case SIMPLE: {
+                        Resource resource = writeOperation.getWriteResource();
+                        T client = clientMap.get(resource);
+                        try {
+                            incrWrite(resource, method);
+                            return method.invoke(client, objects);
+                        } catch (Throwable e) {
+                            addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, 0, resource, client, objects, method);
+                            throw e;
+                        }
+                    }
+                    case MULTI: {
+                        //只有1个写地址
                         List<Resource> writeResources = writeOperation.getWriteResources();
                         if (writeResources.size() == 1) {
-                            Resource resource3 = writeResources.get(0);
-                            T client2 = clientMap.get(resource3);
-                            incrWrite(resource3, method);
-                            return method.invoke(client2, objects);
+                            Resource resource = writeResources.get(0);
+                            T client = clientMap.get(resource);
+                            try {
+                                incrWrite(resource, method);
+                                return method.invoke(client, objects);
+                            } catch (Throwable e) {
+                                addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, 0, resource, client, objects, method);
+                                throw e;
+                            }
                         }
+                        //有多个写地址
                         MultiWriteType multiWriteType = env.getMultiWriteType();
-                        if (multiWriteType == MultiWriteType.MULTI_THREAD_CONCURRENT) {
+                        if (multiWriteType == MultiWriteType.MULTI_THREAD_CONCURRENT) {//多线程并发
                             ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
                             List<Future<Object>> futureList = new ArrayList<>();
-                            for (Resource resource : writeOperation.getWriteResources()) {
-                                final T client2 = clientMap.get(resource);
-                                Future<Object> future = env.getMultiWriteConcurrentExec().submit(strategy.wrapperCallable(() -> {
-                                    try {
-                                        incrWrite(resource, method);
-                                        return method.invoke(client2, objects);
-                                    } catch (Exception e) {
-                                        logger.error("multi thread concurrent invoke error, class = {}, method = {}, resource = {}",
-                                                className, method.getName(), resource.getUrl(), e);
-                                        throw e;
+                            for (int i = 0; i < writeOperation.getWriteResources().size(); i++) {
+                                Resource resource = writeOperation.getWriteResources().get(i);
+                                final T client = clientMap.get(resource);
+                                final AtomicBoolean exception = new AtomicBoolean(false);
+                                final int index = i;
+                                Future<Object> future;
+                                try {
+                                    future = env.getMultiWriteConcurrentExec().submit(strategy.wrapperCallable(() -> {
+                                        try {
+                                            incrWrite(resource, method);
+                                            return method.invoke(client, objects);
+                                        } catch (Throwable e) {
+                                            logger.error("multi thread concurrent invoke error, class = {}, method = {}, resource = {}",
+                                                    className, method.getName(), resource.getUrl(), e);
+                                            addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, index, resource, client, objects, method);
+                                            exception.set(true);
+                                            throw e;
+                                        }
+                                    }));
+                                } catch (Throwable e) {
+                                    if (!exception.get()) {
+                                        addFailedWriteTask(type, writeOperation.getType(), FailedReason.DISCARD, index, resource, client, objects, method);
                                     }
-                                }));
+                                    throw e;
+                                }
                                 futureList.add(future);
                             }
                             Object ret = null;
-                            for (int i=0; i<futureList.size(); i++) {
+                            for (int i = 0; i < futureList.size(); i++) {
                                 Future<Object> future = futureList.get(i);
                                 Object obj = future.get();
                                 boolean first = i == 0;
@@ -121,39 +162,51 @@ public class OperationCallback<T> implements MethodInterceptor {
                                 }
                             }
                             return ret;
-                        } else if (multiWriteType == MultiWriteType.SINGLE_THREAD) {
+                        } else if (multiWriteType == MultiWriteType.SINGLE_THREAD) {//单线程
                             Object ret = null;
-                            for (int i=0; i<writeOperation.getWriteResources().size(); i++) {
+                            for (int i = 0; i < writeOperation.getWriteResources().size(); i++) {
                                 Resource resource = writeOperation.getWriteResources().get(i);
-                                T client2 = clientMap.get(resource);
-                                incrWrite(resource, method);
-                                Object obj = method.invoke(client2, objects);
-                                boolean first = i == 0;
-                                if (first) {
-                                    ret = obj;
+                                T client = clientMap.get(resource);
+                                try {
+                                    incrWrite(resource, method);
+                                    Object obj = method.invoke(client, objects);
+                                    boolean first = i == 0;
+                                    if (first) {
+                                        ret = obj;
+                                    }
+                                } catch (Throwable e) {
+                                    addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, i, resource, client, objects, method);
+                                    throw e;
                                 }
                             }
                             return ret;
                         } else if (multiWriteType == MultiWriteType.ASYNC_MULTI_THREAD) {
                             ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
                             Future<Object> targetFuture = null;
-                            for (int i=0; i<writeOperation.getWriteResources().size(); i++) {
+                            for (int i = 0; i < writeOperation.getWriteResources().size(); i++) {
                                 Resource resource = writeOperation.getWriteResources().get(i);
                                 boolean first = i == 0;
-                                T client2 = clientMap.get(resource);
+                                T client = clientMap.get(resource);
+                                final AtomicBoolean exception = new AtomicBoolean(false);
+                                final int index = i;
                                 Future<Object> future = null;
                                 try {
                                     future = env.getMultiWriteAsyncExec().submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
                                         try {
                                             incrWrite(resource, method);
-                                            return method.invoke(client2, objects);
-                                        } catch (Exception e) {
+                                            return method.invoke(client, objects);
+                                        } catch (Throwable e) {
                                             logger.error("async multi thread invoke error, class = {}, method = {}, resource = {}",
                                                     className, method.getName(), resource.getUrl(), e);
+                                            addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, index, resource, client, objects, method);
+                                            exception.set(true);
                                             throw e;
                                         }
                                     }));
-                                } catch (Exception e) {
+                                } catch (Throwable e) {
+                                    if (!exception.get()) {
+                                        addFailedWriteTask(type, writeOperation.getType(), FailedReason.DISCARD, index, resource, client, objects, method);
+                                    }
                                     if (!first) {
                                         logger.error("submit async multi thread task error, class = {}, method = {}, resource = {}",
                                                 className, method.getName(), resource.getUrl(), e);
@@ -173,28 +226,41 @@ public class OperationCallback<T> implements MethodInterceptor {
                         } else if (multiWriteType == MultiWriteType.MISC_ASYNC_MULTI_THREAD) {
                             ThreadContextSwitchStrategy strategy = env.getThreadContextSwitchStrategy();
                             Object target = null;
-                            for (int i=0; i<writeOperation.getWriteResources().size(); i++) {
+                            for (int i = 0; i < writeOperation.getWriteResources().size(); i++) {
                                 Resource resource = writeOperation.getWriteResources().get(i);
                                 boolean first = i == 0;
-                                T client2 = clientMap.get(resource);
+                                final AtomicBoolean exception = new AtomicBoolean(false);
+                                final int index = i;
+                                T client = clientMap.get(resource);
                                 if (first) {
-                                    incrWrite(resource, method);
-                                    target = method.invoke(client2, objects);
+                                    try {
+                                        incrWrite(resource, method);
+                                        target = method.invoke(client, objects);
+                                    } catch (Throwable e) {
+                                        addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, index, resource, client, objects, method);
+                                        exception.set(true);
+                                        throw e;
+                                    }
                                 } else {
                                     try {
                                         env.getMultiWriteAsyncExec().submit(String.valueOf(Thread.currentThread().getId()), strategy.wrapperCallable(() -> {
                                             try {
                                                 incrWrite(resource, method);
-                                                return method.invoke(client2, objects);
-                                            } catch (Exception e) {
+                                                return method.invoke(client, objects);
+                                            } catch (Throwable e) {
                                                 logger.error("async multi thread invoke error, class = {}, method = {}, resource = {}",
                                                         className, method.getName(), resource.getUrl(), e);
+                                                addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, index, resource, client, objects, method);
+                                                exception.set(true);
                                                 throw e;
                                             }
                                         }));
-                                    } catch (Exception e) {
+                                    } catch (Throwable e) {
                                         logger.error("submit async multi thread task error, class = {}, method = {}, resource = {}",
                                                 className, method.getName(), resource.getUrl(), e);
+                                        if (!exception.get()) {
+                                            addFailedWriteTask(type, writeOperation.getType(), FailedReason.DISCARD, index, resource, client, objects, method);
+                                        }
                                     }
                                 }
                             }
@@ -202,9 +268,11 @@ public class OperationCallback<T> implements MethodInterceptor {
                         } else {
                             throw new IllegalArgumentException("unknown multiWriteType");
                         }
+                    }
                     default:
                         throw new IllegalArgumentException("unknown operation write type");
                 }
+            }
             default:
                 throw new IllegalArgumentException("unknown operation type");
         }
@@ -213,26 +281,28 @@ public class OperationCallback<T> implements MethodInterceptor {
     private Object read(Object[] objects, Method method) throws Throwable {
         ResourceOperation.Type type = resourceOperation.getType();
         switch (type) {
-            case SIMPLE:
-                Resource resource1 = resourceOperation.getResource();
-                T client = clientMap.get(resource1);
-                incrRead(resource1, method);
+            case SIMPLE: {
+                Resource resource = resourceOperation.getResource();
+                T client = clientMap.get(resource);
+                incrRead(resource, method);
                 return method.invoke(client, objects);
-            case RW_SEPARATE:
+            }
+            case RW_SEPARATE: {
                 ResourceReadOperation readOperation = resourceOperation.getReadOperation();
                 switch (readOperation.getType()) {
-                    case SIMPLE:
-                        Resource resource2 = readOperation.getReadResource();
-                        T client1 = clientMap.get(resource2);
-                        incrRead(resource2, method);
-                        return method.invoke(client1, objects);
-                    case ORDER:
+                    case SIMPLE: {
+                        Resource resource = readOperation.getReadResource();
+                        T client = clientMap.get(resource);
+                        incrRead(resource, method);
+                        return method.invoke(client, objects);
+                    }
+                    case ORDER: {
                         Throwable ex = null;
                         for (Resource resource : readOperation.getReadResources()) {
-                            T client2 = clientMap.get(resource);
+                            T client = clientMap.get(resource);
                             try {
                                 incrRead(resource, method);
-                                return method.invoke(client2, objects);
+                                return method.invoke(client, objects);
                             } catch (Throwable throwable) {
                                 ex = throwable;
                             }
@@ -241,16 +311,19 @@ public class OperationCallback<T> implements MethodInterceptor {
                             throw ex;
                         }
                         throw new RuntimeException("no reachable read client");
-                    case RANDOM:
+                    }
+                    case RANDOM: {
                         List<Resource> list = readOperation.getReadResources();
                         int index = ThreadLocalRandom.current().nextInt(list.size());
                         Resource resource = list.get(index);
-                        T client3 = clientMap.get(resource);
+                        T client = clientMap.get(resource);
                         incrRead(resource, method);
-                        return method.invoke(client3, objects);
+                        return method.invoke(client, objects);
+                    }
                     default:
                         throw new RuntimeException("unknown operation read type");
                 }
+            }
             default:
                 throw new IllegalArgumentException("unknown operation type");
         }

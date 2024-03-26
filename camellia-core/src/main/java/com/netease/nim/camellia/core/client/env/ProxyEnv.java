@@ -46,6 +46,8 @@ public class ProxyEnv {
 
     private ThreadContextSwitchStrategy threadContextSwitchStrategy = new ThreadContextSwitchStrategy.Default();
 
+    private FailedWriteTaskQueue failedWriteTaskQueue;
+
     //分片函数
     private ShardingFunc shardingFunc = new DefaultShardingFunc();
 
@@ -116,6 +118,10 @@ public class ProxyEnv {
         return threadContextSwitchStrategy;
     }
 
+    public FailedWriteTaskQueue getFailedWriteTaskQueue() {
+        return failedWriteTaskQueue;
+    }
+
     public static class Builder {
 
         private final ProxyEnv proxyEnv;
@@ -133,6 +139,7 @@ public class ProxyEnv {
             this.proxyEnv.multiWriteConcurrentExec = proxyEnv.multiWriteConcurrentExec;
             this.proxyEnv.multiWriteAsyncExec = proxyEnv.multiWriteAsyncExec;
             this.proxyEnv.threadContextSwitchStrategy = proxyEnv.threadContextSwitchStrategy;
+            this.proxyEnv.failedWriteTaskQueue = proxyEnv.failedWriteTaskQueue;
         }
 
         public Builder shardingConcurrentEnable(boolean shardingConcurrentEnable) {
@@ -211,6 +218,13 @@ public class ProxyEnv {
         public Builder threadContextSwitchStrategy(ThreadContextSwitchStrategy threadContextSwitchStrategy) {
             if (threadContextSwitchStrategy != null) {
                 proxyEnv.threadContextSwitchStrategy = threadContextSwitchStrategy;
+            }
+            return this;
+        }
+
+        public Builder failedWriteTaskQueue(FailedWriteTaskQueue failedWriteTaskQueue) {
+            if (failedWriteTaskQueue != null) {
+                proxyEnv.failedWriteTaskQueue = failedWriteTaskQueue;
             }
             return this;
         }

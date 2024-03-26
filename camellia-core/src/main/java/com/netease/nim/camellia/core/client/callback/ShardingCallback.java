@@ -683,7 +683,7 @@ public class ShardingCallback<T> implements MethodInterceptor {
         }
         if (shardingConfig != null) {
             String prefixStr = shardingConfig.prefix();
-            if (prefixStr.length() != 0) {
+            if (!prefixStr.isEmpty()) {
                 prefix = prefixStr.getBytes(StandardCharsets.UTF_8);
             }
         }
