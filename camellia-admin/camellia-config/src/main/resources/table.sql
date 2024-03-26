@@ -4,7 +4,7 @@ CREATE TABLE `camellia_config` (
   `namespaceId` bigint(20) NOT NULL comment 'namespaceId',
   `namespace` varchar(128) NOT NULL comment 'namespace',
   `ckey` varchar(256) NOT NULL comment '配置key',
-  `cvalue` varchar(4096) DEFAULT NULL comment '配置value',
+  `cvalue` text DEFAULT NULL comment '配置value',
   `ctype` int(9) NOT NULL comment '配置类型',
   `info` varchar(4096) DEFAULT NULL comment '配置描述',
   `version` bigint(20) NOT NULL comment '版本',

@@ -36,7 +36,7 @@ public class ConfigService {
     private static final int maxInfoLen = 4096;
     private static final int maxKeyLen = 256;
     private static final int maxOperatorInfoLen = 256;
-    private static final int maxValueLen = 4096;
+    private static final int maxValueLen = 65536;
 
     @Autowired
     private ConfigDaoWrapper daoWrapper;
