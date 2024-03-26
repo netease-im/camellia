@@ -69,10 +69,10 @@ public class OperationCallback<T> implements MethodInterceptor {
     }
 
     private void addFailedWriteTask(ResourceOperation.Type type, ResourceWriteOperation.Type writeType,
-                                    FailedReason failedReason, int index, Resource resource, Object client, Object[] objects, Method method) {
+                                    FailedReason failedReason, Throwable error, int index, Resource resource, Object client, Object[] objects, Method method) {
         FailedWriteTaskQueue queue = env.getFailedWriteTaskQueue();
         if (queue != null) {
-            FailedWriteTask task = new FailedWriteTask(type, writeType, failedReason, index, env,
+            FailedWriteTask task = new FailedWriteTask(type, writeType, failedReason, error, index, env,
                     resource, client, className, method, objects, readWriteOperationCache);
             queue.offerQueue(task);
         }
@@ -88,7 +88,7 @@ public class OperationCallback<T> implements MethodInterceptor {
                     incrWrite(resource, method);
                     return method.invoke(client, objects);
                 } catch (Throwable e) {
-                    addFailedWriteTask(type, null, FailedReason.EXCEPTION, 0, resource, client, objects, method);
+                    addFailedWriteTask(type, null, FailedReason.EXCEPTION, e, 0, resource, client, objects, method);
                     throw e;
                 }
             }
@@ -102,7 +102,7 @@ public class OperationCallback<T> implements MethodInterceptor {
                             incrWrite(resource, method);
                             return method.invoke(client, objects);
                         } catch (Throwable e) {
-                            addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, 0, resource, client, objects, method);
+                            addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, e, 0, resource, client, objects, method);
                             throw e;
                         }
                     }
@@ -116,7 +116,7 @@ public class OperationCallback<T> implements MethodInterceptor {
                                 incrWrite(resource, method);
                                 return method.invoke(client, objects);
                             } catch (Throwable e) {
-                                addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, 0, resource, client, objects, method);
+                                addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, e, 0, resource, client, objects, method);
                                 throw e;
                             }
                         }
@@ -139,14 +139,14 @@ public class OperationCallback<T> implements MethodInterceptor {
                                         } catch (Throwable e) {
                                             logger.error("multi thread concurrent invoke error, class = {}, method = {}, resource = {}",
                                                     className, method.getName(), resource.getUrl(), e);
-                                            addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, index, resource, client, objects, method);
+                                            addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, e, index, resource, client, objects, method);
                                             exception.set(true);
                                             throw e;
                                         }
                                     }));
                                 } catch (Throwable e) {
                                     if (!exception.get()) {
-                                        addFailedWriteTask(type, writeOperation.getType(), FailedReason.DISCARD, index, resource, client, objects, method);
+                                        addFailedWriteTask(type, writeOperation.getType(), FailedReason.DISCARD, e, index, resource, client, objects, method);
                                     }
                                     throw e;
                                 }
@@ -175,7 +175,7 @@ public class OperationCallback<T> implements MethodInterceptor {
                                         ret = obj;
                                     }
                                 } catch (Throwable e) {
-                                    addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, i, resource, client, objects, method);
+                                    addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, e, i, resource, client, objects, method);
                                     throw e;
                                 }
                             }
@@ -198,14 +198,14 @@ public class OperationCallback<T> implements MethodInterceptor {
                                         } catch (Throwable e) {
                                             logger.error("async multi thread invoke error, class = {}, method = {}, resource = {}",
                                                     className, method.getName(), resource.getUrl(), e);
-                                            addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, index, resource, client, objects, method);
+                                            addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, e, index, resource, client, objects, method);
                                             exception.set(true);
                                             throw e;
                                         }
                                     }));
                                 } catch (Throwable e) {
                                     if (!exception.get()) {
-                                        addFailedWriteTask(type, writeOperation.getType(), FailedReason.DISCARD, index, resource, client, objects, method);
+                                        addFailedWriteTask(type, writeOperation.getType(), FailedReason.DISCARD, e, index, resource, client, objects, method);
                                     }
                                     if (!first) {
                                         logger.error("submit async multi thread task error, class = {}, method = {}, resource = {}",
@@ -237,7 +237,7 @@ public class OperationCallback<T> implements MethodInterceptor {
                                         incrWrite(resource, method);
                                         target = method.invoke(client, objects);
                                     } catch (Throwable e) {
-                                        addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, index, resource, client, objects, method);
+                                        addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, e, index, resource, client, objects, method);
                                         exception.set(true);
                                         throw e;
                                     }
@@ -250,7 +250,7 @@ public class OperationCallback<T> implements MethodInterceptor {
                                             } catch (Throwable e) {
                                                 logger.error("async multi thread invoke error, class = {}, method = {}, resource = {}",
                                                         className, method.getName(), resource.getUrl(), e);
-                                                addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, index, resource, client, objects, method);
+                                                addFailedWriteTask(type, writeOperation.getType(), FailedReason.EXCEPTION, e, index, resource, client, objects, method);
                                                 exception.set(true);
                                                 throw e;
                                             }
@@ -259,7 +259,7 @@ public class OperationCallback<T> implements MethodInterceptor {
                                         logger.error("submit async multi thread task error, class = {}, method = {}, resource = {}",
                                                 className, method.getName(), resource.getUrl(), e);
                                         if (!exception.get()) {
-                                            addFailedWriteTask(type, writeOperation.getType(), FailedReason.DISCARD, index, resource, client, objects, method);
+                                            addFailedWriteTask(type, writeOperation.getType(), FailedReason.DISCARD, e, index, resource, client, objects, method);
                                         }
                                     }
                                 }

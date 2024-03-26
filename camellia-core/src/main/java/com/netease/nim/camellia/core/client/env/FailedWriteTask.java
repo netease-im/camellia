@@ -23,12 +23,15 @@ public class FailedWriteTask {
     private final ProxyEnv proxyEnv;
     private final String className;
     private final ReadWriteOperationCache readWriteOperationCache;
+    private final Throwable error;
 
-    public FailedWriteTask(ResourceOperation.Type type, ResourceWriteOperation.Type writeType, FailedReason failedReason, int index, ProxyEnv proxyEnv, Resource resource, Object client, String className, Method method,
+    public FailedWriteTask(ResourceOperation.Type type, ResourceWriteOperation.Type writeType, FailedReason failedReason, Throwable error,
+                           int index, ProxyEnv proxyEnv, Resource resource, Object client, String className, Method method,
                            Object[] objects, ReadWriteOperationCache readWriteOperationCache) {
         this.type = type;
         this.writeType = writeType;
         this.failedReason = failedReason;
+        this.error = error;
         this.index = index;
         this.proxyEnv = proxyEnv;
         this.resource = resource;
@@ -87,6 +90,10 @@ public class FailedWriteTask {
 
     public MultiWriteType getMultiWriteType() {
         return proxyEnv.getMultiWriteType();
+    }
+
+    public Throwable getError() {
+        return error;
     }
 
     private void incrWrite(Resource resource, Method method) {

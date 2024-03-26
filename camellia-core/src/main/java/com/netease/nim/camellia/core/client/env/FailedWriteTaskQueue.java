@@ -23,8 +23,9 @@ public class FailedWriteTaskQueue {
     public void offerQueue(FailedWriteTask task) {
         boolean success = queue.offer(task);
         if (!success) {
-            logger.warn("failed write task queue full, resource = {}, class = {}, method = {}, reason = {}",
-                    task.getResource().getUrl(), task.getClient().getClass().getName(), task.getMethod().getName(), task.getFailedReason());
+            logger.warn("failed write task queue full, resource = {}, class = {}, method = {}, reason = {}, error = {}",
+                    task.getResource().getUrl(), task.getClient().getClass().getName(),
+                    task.getMethod().getName(), task.getFailedReason(), task.getError().toString());
         }
     }
 
