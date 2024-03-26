@@ -19,7 +19,6 @@ public class MqIsolationConfigUtils {
     private static final int senderHeavyTrafficThreshold2 = 2000;
     private static final double senderHeavyTrafficPercent = 0.5;
     private static final double consumerFailRateThreshold = 0.5;
-    private static final double consumerSpendMsAvgThreshold = 300;
 
     public static void checkValid(MqIsolationConfig config) {
         if (config == null) {
@@ -95,25 +94,9 @@ public class MqIsolationConfigUtils {
         }
 
         //
-        if (config.getConsumerSpendMsAvgThreshold() == null) {
-            config.setConsumerSpendMsAvgThreshold(consumerSpendMsAvgThreshold);
-        }
-        if (!checkPositiveNumber(config.getConsumerSpendMsAvgThreshold())) {
-            throw new IllegalArgumentException("consumerSpendMsAvgThreshold is illegal");
-        }
+        checkLevelInfoList(config.getLevelInfoList());
+        checkLevelInfoList(config.getErrorLevelInfoList());
 
-        if (!checkMqInfoList(config.getFast())) {
-            throw new IllegalArgumentException("fast is illegal");
-        }
-        if (!checkMqInfoList(config.getFastError())) {
-            throw new IllegalArgumentException("fastError is illegal");
-        }
-        if (!checkMqInfoList(config.getSlow())) {
-            throw new IllegalArgumentException("slow is illegal");
-        }
-        if (!checkMqInfoList(config.getSlowError())) {
-            throw new IllegalArgumentException("slowError is illegal");
-        }
         if (!checkMqInfoList(config.getRetryLevel0())) {
             throw new IllegalArgumentException("retryLevel0 is illegal");
         }
@@ -147,10 +130,14 @@ public class MqIsolationConfigUtils {
 
     public static ConcurrentHashMap<MqInfo, TopicType> topicTypeMap(MqIsolationConfig config) {
         ConcurrentHashMap<MqInfo, TopicType> topicTypeMap = new ConcurrentHashMap<>();
-        initMqInfo(topicTypeMap, config.getFast(), TopicType.FAST);
-        initMqInfo(topicTypeMap, config.getFastError(), TopicType.FAST_ERROR);
-        initMqInfo(topicTypeMap, config.getSlow(), TopicType.SLOW);
-        initMqInfo(topicTypeMap, config.getSlowError(), TopicType.SLOW_ERROR);
+        List<MqLevelInfo> levelInfoList = config.getLevelInfoList();
+        for (MqLevelInfo mqLevelInfo : levelInfoList) {
+            initMqInfo(topicTypeMap, mqLevelInfo.getMqInfoList(), TopicType.NORMAL);
+        }
+        List<MqLevelInfo> errorLevelInfoList = config.getErrorLevelInfoList();
+        for (MqLevelInfo mqLevelInfo : errorLevelInfoList) {
+            initMqInfo(topicTypeMap, mqLevelInfo.getMqInfoList(), TopicType.ERROR);
+        }
         initMqInfo(topicTypeMap, config.getRetryLevel0(), TopicType.RETRY_LEVEL_0);
         initMqInfo(topicTypeMap, config.getRetryLevel1(), TopicType.RETRY_LEVEL_1);
         initMqInfo(topicTypeMap, config.getAutoIsolationLevel0(), TopicType.AUTO_ISOLATION_LEVEL_0);
@@ -167,12 +154,48 @@ public class MqIsolationConfigUtils {
         return topicTypeMap;
     }
 
+    private static void checkLevelInfoList(List<MqLevelInfo> levelInfoList) {
+        if (levelInfoList == null) {
+            throw new IllegalArgumentException("levelInfoList is null");
+        }
+        if (levelInfoList.isEmpty()) {
+            throw new IllegalArgumentException("levelInfoList is empty");
+        }
+        List<Long> list = new ArrayList<>();
+        for (MqLevelInfo info : levelInfoList) {
+            TimeRange timeRange = info.getTimeRange();
+            long min = timeRange.getMin();
+            long max = timeRange.getMax();
+            list.add(min);
+            list.add(max);
+        }
+        Collections.sort(list);
+        if (list.get(0) > 0) {
+            throw new IllegalArgumentException("time range not cover all");
+        }
+        if (list.get(list.size() - 1) != Long.MAX_VALUE) {
+            throw new IllegalArgumentException("time range not cover all");
+        }
+        //0 1 2 3 4 5
+        if (list.size() > 2) {
+            for (int i=1; i<list.size() - 2; i+=2) {
+                if (!Objects.equals(list.get(i), list.get(i + 1))) {
+                    throw new IllegalArgumentException("time range not cover all");
+                }
+            }
+        }
+    }
+
     public static Set<MqInfo> getAllMqInfo(MqIsolationConfig config) {
         Set<MqInfo> set = new HashSet<>();
-        set.addAll(config.getFast());
-        set.addAll(config.getFastError());
-        set.addAll(config.getSlow());
-        set.addAll(config.getSlowError());
+        List<MqLevelInfo> levelInfoList = config.getLevelInfoList();
+        for (MqLevelInfo mqLevelInfo : levelInfoList) {
+            set.addAll(mqLevelInfo.getMqInfoList());
+        }
+        List<MqLevelInfo> errorLevelInfoList = config.getErrorLevelInfoList();
+        for (MqLevelInfo mqLevelInfo : errorLevelInfoList) {
+            set.addAll(mqLevelInfo.getMqInfoList());
+        }
         set.addAll(config.getRetryLevel0());
         set.addAll(config.getRetryLevel1());
         set.addAll(config.getAutoIsolationLevel0());
@@ -188,14 +211,22 @@ public class MqIsolationConfigUtils {
 
     public static Set<MqInfo> getMqInfoSetSpecifyTopicType(MqIsolationConfig config, TopicType type) {
         switch (type) {
-            case FAST:
-                return new HashSet<>(config.getFast());
-            case SLOW:
-                return new HashSet<>(config.getSlow());
-            case FAST_ERROR:
-                return new HashSet<>(config.getFastError());
-            case SLOW_ERROR:
-                return new HashSet<>(config.getSlowError());
+            case NORMAL: {
+                Set<MqInfo> set = new HashSet<>();
+                List<MqLevelInfo> levelInfoList = config.getLevelInfoList();
+                for (MqLevelInfo mqLevelInfo : levelInfoList) {
+                    set.addAll(mqLevelInfo.getMqInfoList());
+                }
+                return set;
+            }
+            case ERROR: {
+                Set<MqInfo> set = new HashSet<>();
+                List<MqLevelInfo> levelInfoList = config.getErrorLevelInfoList();
+                for (MqLevelInfo mqLevelInfo : levelInfoList) {
+                    set.addAll(mqLevelInfo.getMqInfoList());
+                }
+                return set;
+            }
             case RETRY_LEVEL_0:
                 return new HashSet<>(config.getRetryLevel0());
             case RETRY_LEVEL_1:
@@ -204,7 +235,7 @@ public class MqIsolationConfigUtils {
                 return new HashSet<>(config.getAutoIsolationLevel0());
             case AUTO_ISOLATION_LEVEL_1:
                 return new HashSet<>(config.getAutoIsolationLevel1());
-            case MANUAL_ISOLATION:
+            case MANUAL_ISOLATION: {
                 List<ManualConfig> manualConfigs = config.getManualConfigs();
                 Set<MqInfo> set = new HashSet<>();
                 if (manualConfigs != null) {
@@ -213,6 +244,7 @@ public class MqIsolationConfigUtils {
                     }
                 }
                 return set;
+            }
             default:
                 return new HashSet<>();
         }
@@ -223,17 +255,17 @@ public class MqIsolationConfigUtils {
             return getAllMqInfo(config);
         }
         Set<MqInfo> set = new HashSet<>();
-        if (!excludeTopicTypeSet.contains(TopicType.FAST)) {
-            set.addAll(config.getFast());
+        if (!excludeTopicTypeSet.contains(TopicType.NORMAL)) {
+            List<MqLevelInfo> levelInfoList = config.getLevelInfoList();
+            for (MqLevelInfo mqLevelInfo : levelInfoList) {
+                set.addAll(mqLevelInfo.getMqInfoList());
+            }
         }
-        if (!excludeTopicTypeSet.contains(TopicType.FAST_ERROR)) {
-            set.addAll(config.getFastError());
-        }
-        if (!excludeTopicTypeSet.contains(TopicType.SLOW)) {
-            set.addAll(config.getSlow());
-        }
-        if (!excludeTopicTypeSet.contains(TopicType.SLOW_ERROR)) {
-            set.addAll(config.getSlowError());
+        if (!excludeTopicTypeSet.contains(TopicType.ERROR)) {
+            List<MqLevelInfo> levelInfoList = config.getLevelInfoList();
+            for (MqLevelInfo mqLevelInfo : levelInfoList) {
+                set.addAll(mqLevelInfo.getMqInfoList());
+            }
         }
         if (!excludeTopicTypeSet.contains(TopicType.RETRY_LEVEL_0)) {
             set.addAll(config.getRetryLevel0());
@@ -263,7 +295,6 @@ public class MqIsolationConfigUtils {
         Map<String, String> mqAlias = config.getMqAlias();
         mqIsolationConfig.setNamespace(config.getNamespace());
 
-        mqIsolationConfig.setConsumerSpendMsAvgThreshold(config.getConsumerSpendMsAvgThreshold());
         mqIsolationConfig.setConsumerFailRateThreshold(config.getConsumerFailRateThreshold());
         mqIsolationConfig.setConsumerStatsExpireSeconds(config.getConsumerStatsExpireSeconds());
         mqIsolationConfig.setConsumerStatsIntervalSeconds(config.getConsumerStatsIntervalSeconds());
@@ -274,20 +305,24 @@ public class MqIsolationConfigUtils {
         mqIsolationConfig.setSenderHeavyTrafficThreshold1(config.getSenderHeavyTrafficThreshold1());
         mqIsolationConfig.setSenderHeavyTrafficThreshold2(config.getSenderHeavyTrafficThreshold2());
 
-        mqIsolationConfig.setFast(config.getFast());
-        mqIsolationConfig.setSlow(config.getSlow());
-        mqIsolationConfig.setFastError(config.getFastError());
-        mqIsolationConfig.setSlowError(config.getSlowError());
+        mqIsolationConfig.setLevelInfoList(config.getLevelInfoList());
+        mqIsolationConfig.setErrorLevelInfoList(config.getErrorLevelInfoList());
         mqIsolationConfig.setRetryLevel0(config.getRetryLevel0());
         mqIsolationConfig.setRetryLevel1(config.getRetryLevel1());
         mqIsolationConfig.setAutoIsolationLevel0(config.getAutoIsolationLevel0());
         mqIsolationConfig.setAutoIsolationLevel1(config.getAutoIsolationLevel1());
         mqIsolationConfig.setManualConfigs(config.getManualConfigs());
 
-        replaceMqIfNeed(mqIsolationConfig.getFast(), mqAlias);
-        replaceMqIfNeed(mqIsolationConfig.getSlow(), mqAlias);
-        replaceMqIfNeed(mqIsolationConfig.getFastError(), mqAlias);
-        replaceMqIfNeed(mqIsolationConfig.getSlowError(), mqAlias);
+        List<MqLevelInfo> levelInfoList = mqIsolationConfig.getLevelInfoList();
+        for (MqLevelInfo levelInfo : levelInfoList) {
+            replaceMqIfNeed(levelInfo.getMqInfoList(), mqAlias);
+        }
+
+        List<MqLevelInfo> errorLevelInfoList = mqIsolationConfig.getErrorLevelInfoList();
+        for (MqLevelInfo levelInfo : errorLevelInfoList) {
+            replaceMqIfNeed(levelInfo.getMqInfoList(), mqAlias);
+        }
+
         replaceMqIfNeed(mqIsolationConfig.getRetryLevel0(), mqAlias);
         replaceMqIfNeed(mqIsolationConfig.getRetryLevel1(), mqAlias);
         replaceMqIfNeed(mqIsolationConfig.getAutoIsolationLevel0(), mqAlias);

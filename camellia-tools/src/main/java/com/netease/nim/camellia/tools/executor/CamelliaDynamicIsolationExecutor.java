@@ -400,8 +400,8 @@ public class CamelliaDynamicIsolationExecutor implements CamelliaExecutor {
         return poolSize;
     }
 
-    public int getCompletedTaskCount() {
-        int completedTaskCount = 0;
+    public long getCompletedTaskCount() {
+        long completedTaskCount = 0;
         completedTaskCount += fastExecutor.getCompletedTaskCount();
         completedTaskCount += fastBackUpExecutor.getCompletedTaskCount();
         completedTaskCount += slowExecutor.getCompletedTaskCount();

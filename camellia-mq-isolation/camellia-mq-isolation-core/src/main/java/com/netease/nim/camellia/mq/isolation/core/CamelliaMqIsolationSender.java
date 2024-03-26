@@ -42,10 +42,10 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
                         mqInfos = controller.selectMqInfo(key.getNamespace(), key.getBidId());
                     } catch (Exception e) {
                         logger.error("select mq info error, use fast mq info backup", e);
-                        mqInfos = controller.getMqIsolationConfig(key.getNamespace()).getFast();
+                        mqInfos = controller.getMqIsolationConfig(key.getNamespace()).getLevelInfoList().get(0).getMqInfoList();
                     }
                     if (mqInfos == null || mqInfos.isEmpty()) {
-                        mqInfos = controller.getMqIsolationConfig(key.getNamespace()).getFast();
+                        mqInfos = controller.getMqIsolationConfig(key.getNamespace()).getLevelInfoList().get(0).getMqInfoList();
                     }
                     return mqInfos;
                 });

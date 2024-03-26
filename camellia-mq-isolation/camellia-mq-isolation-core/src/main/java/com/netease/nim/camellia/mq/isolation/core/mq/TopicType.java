@@ -2,9 +2,9 @@ package com.netease.nim.camellia.mq.isolation.core.mq;
 
 /**
  *
- * 根据统计数据，会动态路由到FAST、SLOW、FAST_ERROR、SLOW_ERROR
+ * 根据统计数据，会动态路由到NORMAL和ERROR
  * <p>
- * 如果在FAST、SLOW、FAST_ERROR、SLOW_ERROR中执行失败了，并且期望重试，则会到RETRY_LEVEL_0
+ * 如果在NORMAL和ERROR中执行失败了，并且期望重试，则会到RETRY_LEVEL_0
  * <p>
  * 如果重试次数过多，则会进入RETRY_LEVEL_1
  * <p>
@@ -20,10 +20,8 @@ package com.netease.nim.camellia.mq.isolation.core.mq;
  * Created by caojiajun on 2024/2/4
  */
 public enum TopicType {
-    FAST(true),//快的
-    SLOW(true),//慢的
-    FAST_ERROR(true),//快的，但是有错误
-    SLOW_ERROR(true),//慢的，而且有错误
+    NORMAL(true),//正常请求，按照耗时做梯度
+    ERROR(true),//异常请求，按照耗时做梯度
     RETRY_LEVEL_0(false),//重试，到这里的都是至少已经执行过1次的任务了
     RETRY_LEVEL_1(false),//重试，到这里的都是至少已经执行过5次的任务了
     AUTO_ISOLATION_LEVEL_0(true),//自动隔离，主要是应对突发流量的情况

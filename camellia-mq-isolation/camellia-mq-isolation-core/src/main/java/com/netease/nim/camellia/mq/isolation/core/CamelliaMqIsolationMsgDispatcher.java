@@ -170,7 +170,7 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
         if (topicInfo == null) {
             TopicType topicType = topicTypeMap.get(mqInfo);
             if (topicType == null) {
-                topicType = TopicType.FAST;
+                topicType = TopicType.NORMAL;
             }
             topicInfo = new TopicInfo(topicType, topicType.isAutoIsolation());
         }

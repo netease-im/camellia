@@ -20,11 +20,8 @@ public class ReadableMqIsolationConfig {
     private Integer senderHeavyTrafficThreshold2;
     private Double senderHeavyTrafficPercent;
     private Double consumerFailRateThreshold;
-    private Double consumerSpendMsAvgThreshold;
-    private List<MqInfo> fast;
-    private List<MqInfo> fastError;
-    private List<MqInfo> slow;
-    private List<MqInfo> slowError;
+    private List<MqLevelInfo> levelInfoList;
+    private List<MqLevelInfo> errorLevelInfoList;
     private List<MqInfo> retryLevel0;
     private List<MqInfo> retryLevel1;
     private List<MqInfo> autoIsolationLevel0;
@@ -111,44 +108,20 @@ public class ReadableMqIsolationConfig {
         this.consumerFailRateThreshold = consumerFailRateThreshold;
     }
 
-    public Double getConsumerSpendMsAvgThreshold() {
-        return consumerSpendMsAvgThreshold;
+    public List<MqLevelInfo> getLevelInfoList() {
+        return levelInfoList;
     }
 
-    public void setConsumerSpendMsAvgThreshold(Double consumerSpendMsAvgThreshold) {
-        this.consumerSpendMsAvgThreshold = consumerSpendMsAvgThreshold;
+    public void setLevelInfoList(List<MqLevelInfo> levelInfoList) {
+        this.levelInfoList = levelInfoList;
     }
 
-    public List<MqInfo> getFast() {
-        return fast;
+    public List<MqLevelInfo> getErrorLevelInfoList() {
+        return errorLevelInfoList;
     }
 
-    public void setFast(List<MqInfo> fast) {
-        this.fast = fast;
-    }
-
-    public List<MqInfo> getFastError() {
-        return fastError;
-    }
-
-    public void setFastError(List<MqInfo> fastError) {
-        this.fastError = fastError;
-    }
-
-    public List<MqInfo> getSlow() {
-        return slow;
-    }
-
-    public void setSlow(List<MqInfo> slow) {
-        this.slow = slow;
-    }
-
-    public List<MqInfo> getSlowError() {
-        return slowError;
-    }
-
-    public void setSlowError(List<MqInfo> slowError) {
-        this.slowError = slowError;
+    public void setErrorLevelInfoList(List<MqLevelInfo> errorLevelInfoList) {
+        this.errorLevelInfoList = errorLevelInfoList;
     }
 
     public List<MqInfo> getRetryLevel0() {

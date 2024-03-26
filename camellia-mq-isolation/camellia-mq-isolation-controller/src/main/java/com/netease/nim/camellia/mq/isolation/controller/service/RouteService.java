@@ -2,9 +2,7 @@ package com.netease.nim.camellia.mq.isolation.controller.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.camellia.core.util.CacheUtil;
-import com.netease.nim.camellia.mq.isolation.core.config.ManualConfig;
-import com.netease.nim.camellia.mq.isolation.core.config.MatchType;
-import com.netease.nim.camellia.mq.isolation.core.config.MqIsolationConfig;
+import com.netease.nim.camellia.mq.isolation.core.config.*;
 import com.netease.nim.camellia.mq.isolation.core.mq.MqInfo;
 import com.netease.nim.camellia.mq.isolation.core.stats.model.ConsumerBizStats;
 import com.netease.nim.camellia.mq.isolation.core.stats.model.ConsumerBizStatsRequest;
@@ -125,7 +123,6 @@ public class RouteService {
 
             //check consumer stats
             double failRateThreshold = config.getConsumerFailRateThreshold();
-            double spendMsAvgThreshold = config.getConsumerSpendMsAvgThreshold();
 
             long success = 0;
             long fail = 0;
@@ -144,46 +141,41 @@ public class RouteService {
                     spendMsAll += stats.getSpendAvg() * (stats.getSuccess() + stats.getFail());
                 }
             }
-            //没有统计数据，则默认fast
+            //没有统计数据，则走默认
             if (success + fail <= 0) {
-                return config.getFast();
+                return config.getLevelInfoList().get(0).getMqInfoList();
             }
             double failRate = fail / (1.0 * (success + fail));
             double spendMsAvg = spendMsAll / (success + fail);
-            //响应快，并且错误率低
-            if (spendMsAvg < spendMsAvgThreshold && failRate < failRateThreshold) {
-                List<MqInfo> mqInfos = checkActive(config.getFast());
-                if (mqInfos != null) {
-                    return mqInfos;
-                }
+            boolean error = failRate >= failRateThreshold;
+            List<MqInfo> mqInfoList;
+            if (error) {
+                //错误序列
+                mqInfoList = checkTimeRange(config.getErrorLevelInfoList(), spendMsAvg);
+            } else {
+                mqInfoList = checkTimeRange(config.getLevelInfoList(), spendMsAvg);
             }
-            //响应快，但是错误率高
-            if (spendMsAvg < spendMsAvgThreshold && failRate > failRateThreshold) {
-                List<MqInfo> mqInfos = checkActive(config.getFastError());
-                if (mqInfos != null) {
-                    return mqInfos;
-                }
-            }
-            //响应慢，并且错误率高
-            if (spendMsAvg > spendMsAvgThreshold && failRate > failRateThreshold) {
-                List<MqInfo> mqInfos = checkActive(config.getSlowError());
-                if (mqInfos != null) {
-                    return mqInfos;
-                }
-            }
-            //响应慢，但是错误率低
-            if (spendMsAvg > spendMsAvgThreshold && failRate < failRateThreshold) {
-                List<MqInfo> mqInfos = checkActive(config.getSlow());
-                if (mqInfos != null) {
-                    return mqInfos;
-                }
+            if (mqInfoList != null) {
+                return mqInfoList;
             }
             //兜底
-            return config.getFast();
+            return config.getLevelInfoList().get(0).getMqInfoList();
         } catch (Exception e) {
-            logger.error("select mq info error, namespace = {}, bizId = {}, return default config = {}", namespace, bizId, config.getFast());
-            return config.getFast();
+            List<MqInfo> mqInfoList = config.getLevelInfoList().get(0).getMqInfoList();
+            logger.error("select mq info error, namespace = {}, bizId = {}, return default config = {}", namespace, bizId, mqInfoList);
+            return mqInfoList;
         }
+    }
+
+    private List<MqInfo> checkTimeRange(List<MqLevelInfo> mqLevelInfoList, double spendMsAvg) {
+        for (MqLevelInfo mqLevelInfo : mqLevelInfoList) {
+            TimeRange timeRange = mqLevelInfo.getTimeRange();
+            if (spendMsAvg >= timeRange.getMin() && spendMsAvg < timeRange.getMax()) {
+                List<MqInfo> mqInfoList = mqLevelInfo.getMqInfoList();
+                return checkActive(mqInfoList);
+            }
+        }
+        return null;
     }
 
     private List<MqInfo> checkActive(List<MqInfo> list) {
