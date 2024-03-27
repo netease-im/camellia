@@ -7,6 +7,7 @@ import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.function.Consumer;
 
 /**
  * Created by caojiajun on 2023/8/22
@@ -103,6 +104,20 @@ public class FileUtils {
         }
     }
 
+    public static void readInLine(String filePath, Consumer<String> consumer) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+                consumer.accept(line);
+            }
+        } catch (IOException e) {
+            logger.error("readInLine error, filePath = {}", filePath, e);
+        }
+    }
+
     private static String readFileContentByFileNameInStream(String fileName) {
         byte[] buffer;
         InputStream fis = null;
@@ -172,4 +187,6 @@ public class FileUtils {
         }
         return new String(buffer, StandardCharsets.UTF_8);
     }
+
+
 }
