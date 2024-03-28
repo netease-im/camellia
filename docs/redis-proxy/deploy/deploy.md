@@ -19,4 +19,5 @@
 * k8s环境部署注意事项：  
   - 如果后端pod大于15个以上，避免K8S内部DNS的问题，可以使用statefulset，使用多个svc来分散代理一定数量的statefulset
   - 如果小于15个，则可以使用deployment类型部署
+  - 如果后端redis和camellia-redis-proxy实例在短时间内先后发生重启/宕机,默认情况下可能会导致camellia-redis-proxy初始化后不监听端口,建议配置preheat: false或者 "upstream.lazy.init.enable": true,请参考:[初始化](https://github.com/netease-im/camellia/blob/master/docs/redis-proxy/other/init.md)
 
