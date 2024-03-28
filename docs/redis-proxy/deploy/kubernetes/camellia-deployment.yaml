@@ -22,7 +22,7 @@ spec:
       enableServiceLinks: false
       containers:
       - name: container-camellia
-        image: 48n6e/camellia-redis-proxy:1.2.26-0.0.3
+        image: 48n6e/camellia-redis-proxy:1.2.27-0.0.1
         resources:
           requests:
             memory: "100Mi"
