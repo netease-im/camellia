@@ -356,15 +356,16 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
 
     private UpstreamRedisClientTemplate initLocalTemplate(CamelliaTranspondProperties.LocalProperties local) {
         ResourceTable resourceTable = local.getResourceTable();
+        UpstreamRedisClientTemplate template = null;
         if (resourceTable != null) {
-            localInstance = new UpstreamRedisClientTemplate(env, resourceTable);
+            template = new UpstreamRedisClientTemplate(env, resourceTable);
         } else {
             String resourceTableFilePath = local.getResourceTableFilePath();
             if (resourceTableFilePath != null) {
-                localInstance = new UpstreamRedisClientTemplate(env, resourceTableFilePath, local.getCheckIntervalMillis());
+                template = new UpstreamRedisClientTemplate(env, resourceTableFilePath, local.getCheckIntervalMillis());
             }
         }
-        return localInstance;
+        return template;
     }
 
     private void initRemote() {
