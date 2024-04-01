@@ -30,4 +30,7 @@ public @interface CamelliaFeignClient {
     //请求失败的回调
     Class<?> failureListener() default void.class;
 
+    int retry() default 0;//最大重试次数
+
+    Class<? extends RetryPolicy> retryPolicy() default RetryPolicy.NeverRetryPolicy.class;//重试策略，主要是看
 }

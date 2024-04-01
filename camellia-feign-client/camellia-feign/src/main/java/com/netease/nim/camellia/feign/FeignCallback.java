@@ -17,6 +17,7 @@ import com.netease.nim.camellia.feign.discovery.DiscoveryResourcePool;
 import com.netease.nim.camellia.feign.discovery.FeignResourcePool;
 import com.netease.nim.camellia.feign.discovery.FeignServerInfo;
 import com.netease.nim.camellia.feign.discovery.SimpleResourcePool;
+import com.netease.nim.camellia.feign.exception.CamelliaFeignException;
 import com.netease.nim.camellia.feign.exception.CamelliaFeignFallbackErrorException;
 import com.netease.nim.camellia.feign.resource.FeignDiscoveryResource;
 import com.netease.nim.camellia.feign.resource.FeignResource;
@@ -62,6 +63,8 @@ public class FeignCallback<T> implements MethodInterceptor {
     private final String className;
     private final Monitor monitor;
     private final CamelliaFeignFailureListener failureListener;
+    private final int retry;
+    private final RetryPolicy retryPolicy;
 
     public FeignCallback(CamelliaFeignBuildParam<T> buildParam) {
         this.bid = buildParam.getBid();
@@ -84,6 +87,8 @@ public class FeignCallback<T> implements MethodInterceptor {
             }
             circuitBreakerConfig.setName(name);
         }
+        this.retry = buildParam.getRetry();
+        this.retryPolicy = buildParam.getRetryPolicy();
         this.serverSelector = buildParam.getDynamicOption() == null ? new RandomCamelliaServerSelector<>() : buildParam.getDynamicOption().getServerSelector();
         annotationValueGetterCache.preheatAnnotationValueByParameterField(apiType, LoadBalanceKey.class);
         readWriteOperationCache.preheat(apiType);
@@ -151,7 +156,7 @@ public class FeignCallback<T> implements MethodInterceptor {
         }
         FeignResourcePool pool = map.get(resource.getUrl());
         FeignResource feignResource = pool.getResource(loadBalanceKey);
-        T t = factory.get(feignResource);
+        T client = factory.get(feignResource);
         CamelliaCircuitBreaker circuitBreaker = getCircuitBreaker(resource);
         boolean success = true;
         try {
@@ -166,13 +171,46 @@ public class FeignCallback<T> implements MethodInterceptor {
                                 return method.invoke(fallback, objects);
                             }
                         } catch (Exception ex) {
+                            Throwable error = ExceptionUtils.onError(ex);
+                            boolean skip = feignEnv.getFallbackExceptionChecker().isSkipError(error);
+                            if (skip) {
+                                throw error;
+                            }
                             throw new CamelliaFeignFallbackErrorException(ExceptionUtils.onError(ex));
                         }
                     }
                     throw new CamelliaCircuitBreakerException("camellia-circuit-breaker[" + circuitBreaker.getName() + "] short-circuit, and no fallback");
                 }
             }
-            return method.invoke(t, objects);
+            if (retry <= 0 || retryPolicy == null) {
+                return method.invoke(client, objects);
+            }
+            Throwable throwable = null;
+            for (int i=0; i<retry; i++) {
+                try {
+                    return method.invoke(client, objects);
+                } catch (Throwable e) {
+                    Throwable error = ExceptionUtils.onError(e);
+                    boolean skip = feignEnv.getFallbackExceptionChecker().isSkipError(error);
+                    if (skip) {
+                        throw e;
+                    }
+                    RetryPolicy.RetryInfo retryInfo = retryPolicy.retryError(error);
+                    if (retryInfo == null || !retryInfo.isRetry()) {
+                        throw e;
+                    }
+                    if (retryInfo.isNextServer()) {
+                        feignResource = pool.getResource(loadBalanceKey);
+                        client = factory.get(feignResource);
+                        continue;
+                    }
+                    throwable = e;
+                }
+            }
+            if (throwable != null) {
+                throw throwable;
+            }
+            throw new CamelliaFeignException("exceed retry");
         } catch (Throwable e) {
             Throwable error = ExceptionUtils.onError(e);
             success = feignEnv.getFallbackExceptionChecker().isSkipError(error);

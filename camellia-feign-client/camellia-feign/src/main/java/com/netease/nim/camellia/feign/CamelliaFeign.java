@@ -290,6 +290,20 @@ public final class CamelliaFeign {
             }
 
             CamelliaFeignBuildParam<T> buildParam = new CamelliaFeignBuildParam<>(bid, bgroup, apiType, fallbackFactory, feignProps, updater, feignEnv, dynamicOption, monitor, failureListener);
+
+            int retry = 0;
+            RetryPolicy retryPolicy = null;
+            if (annotation != null) {
+                try {
+                    retry = annotation.retry();
+                    retryPolicy = annotation.retryPolicy().getConstructor().newInstance();
+                } catch (Exception ignore) {
+                }
+            }
+
+            buildParam.setRetry(retry);
+            buildParam.setRetryPolicy(retryPolicy);
+
             T defaultFeignClient = ProxyClientFactory.createProxy(apiType, new FeignCallback<>(buildParam));
             if (camelliaFeignDynamicOptionGetter != null && camelliaFeignDynamicOptionGetter.getDynamicRouteConfGetter(bid) != null && bid > 0 && camelliaApi != null ) {
                 //如果设置了DynamicRouteConfGetter，则允许根据请求参数做动态路由下发

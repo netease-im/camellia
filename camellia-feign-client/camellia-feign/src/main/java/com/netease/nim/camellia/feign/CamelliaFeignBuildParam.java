@@ -19,6 +19,8 @@ public class CamelliaFeignBuildParam<T> {
     private DynamicOption dynamicOption;
     private Monitor monitor;
     private CamelliaFeignFailureListener failureListener;
+    private int retry;
+    private RetryPolicy retryPolicy;
 
     public CamelliaFeignBuildParam() {
     }
@@ -38,7 +40,10 @@ public class CamelliaFeignBuildParam<T> {
     }
 
     public CamelliaFeignBuildParam<T> duplicate() {
-        return new CamelliaFeignBuildParam<>(bid, bgroup, apiType, fallbackFactory, feignProps, updater, feignEnv, dynamicOption, monitor, failureListener);
+        CamelliaFeignBuildParam<T> param = new CamelliaFeignBuildParam<>(bid, bgroup, apiType, fallbackFactory, feignProps, updater, feignEnv, dynamicOption, monitor, failureListener);
+        param.setRetry(retry);
+        param.setRetryPolicy(retryPolicy);
+        return param;
     }
 
     public long getBid() {
@@ -119,5 +124,21 @@ public class CamelliaFeignBuildParam<T> {
 
     public void setFailureListener(CamelliaFeignFailureListener failureListener) {
         this.failureListener = failureListener;
+    }
+
+    public int getRetry() {
+        return retry;
+    }
+
+    public void setRetry(int retry) {
+        this.retry = retry;
+    }
+
+    public RetryPolicy getRetryPolicy() {
+        return retryPolicy;
+    }
+
+    public void setRetryPolicy(RetryPolicy retryPolicy) {
+        this.retryPolicy = retryPolicy;
     }
 }
