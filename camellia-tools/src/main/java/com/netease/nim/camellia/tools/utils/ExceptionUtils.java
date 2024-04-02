@@ -37,4 +37,23 @@ public class ExceptionUtils {
         }
         return e;
     }
+
+    public static boolean isConnectError(Throwable t) {
+        Throwable cause = t;
+        while (true) {
+            if (t.getCause() != null) {
+                cause = t.getCause();
+                t = cause;
+            } else {
+                break;
+            }
+        }
+        if (cause instanceof java.net.ConnectException) {
+            return true;
+        }
+        if (cause instanceof java.net.SocketTimeoutException) {
+            return cause.getMessage().contains("connect timed out");
+        }
+        return false;
+    }
 }

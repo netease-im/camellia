@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.core.client.annotation;
 
+import com.netease.nim.camellia.tools.utils.ExceptionUtils;
+
 /**
  * Created by caojiajun on 2024/4/1
  */
@@ -28,6 +30,15 @@ public interface RetryPolicy {
         }
     }
 
+    final class ConnectErrorRetryPolicy implements RetryPolicy {
+        @Override
+        public RetryAction onError(Throwable t) {
+            if (ExceptionUtils.isConnectError(t)) {
+                return RetryAction.RETRY_NEXT;
+            }
+            return RetryAction.NO_RETRY;
+        }
+    }
 
     class RetryAction {
 
