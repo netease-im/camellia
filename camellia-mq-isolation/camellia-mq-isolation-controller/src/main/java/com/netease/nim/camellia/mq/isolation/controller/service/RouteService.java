@@ -199,10 +199,10 @@ public class RouteService {
         if (list == null) return;
         String instanceId = request.getInstanceId();
         for (ConsumerBizStats consumerBizStats : list) {
-            long timestamp = consumerBizStats.getTimestamp();
-            MqIsolationConfig config = configServiceWrapper.getMqIsolationConfig(request.getInstanceId());
-            int expireSeconds = config.getConsumerStatsExpireSeconds();
             String namespace = consumerBizStats.getNamespace();
+            long timestamp = consumerBizStats.getTimestamp();
+            MqIsolationConfig config = configServiceWrapper.getMqIsolationConfig(namespace);
+            int expireSeconds = config.getConsumerStatsExpireSeconds();
             String bizId = consumerBizStats.getBizId();
 
             String key = CacheUtil.buildCacheKey(consumer_stats, namespace, bizId, instanceId);
