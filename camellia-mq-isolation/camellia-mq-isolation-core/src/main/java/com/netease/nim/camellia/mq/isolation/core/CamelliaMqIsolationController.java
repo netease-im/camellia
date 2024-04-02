@@ -96,12 +96,13 @@ public class CamelliaMqIsolationController implements MqIsolationController {
     }
 
     public static JSONObject invokeGet(OkHttpClient okHttpClient, String url) {
+        Response response = null;
         try {
             Request request = new Request.Builder()
                     .url(url)
                     .get()
                     .build();
-            Response response = okHttpClient.newCall(request).execute();
+            response = okHttpClient.newCall(request).execute();
             int httpCode = response.code();
             if (httpCode != 200) {
                 throw new IllegalStateException("http.code=" + httpCode);
@@ -119,17 +120,26 @@ public class CamelliaMqIsolationController implements MqIsolationController {
         } catch (Exception e) {
             logger.error("get error, url = {}", url, e);
             throw new IllegalStateException(e);
+        } finally {
+            try {
+                if (response != null) {
+                    response.close();
+                }
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
         }
     }
 
     public static JSONObject invokePost(OkHttpClient okHttpClient, String url, String body) {
+        Response response = null;
         try {
             RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), body);
             Request request = new Request.Builder()
                     .url(url)
                     .post(requestBody)
                     .build();
-            Response response = okHttpClient.newCall(request).execute();
+            response = okHttpClient.newCall(request).execute();
             int httpCode = response.code();
             if (httpCode != 200) {
                 throw new IllegalStateException("http.code=" + httpCode);
@@ -147,6 +157,14 @@ public class CamelliaMqIsolationController implements MqIsolationController {
         } catch (Exception e) {
             logger.error("post error, url = {}, body = {}", url, body, e);
             throw new IllegalStateException(e);
+        } finally {
+            try {
+                if (response != null) {
+                    response.close();
+                }
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
         }
     }
 }

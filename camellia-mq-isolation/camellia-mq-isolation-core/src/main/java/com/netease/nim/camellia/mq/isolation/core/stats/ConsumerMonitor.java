@@ -137,7 +137,7 @@ public class ConsumerMonitor {
             }
 
             {
-                Map<String, CamelliaStatsData> map = namespaceBizIdMsgLatency.getStatsDataAndReset();
+                Map<String, CamelliaStatsData> map = namespaceMsgLatency.getStatsDataAndReset();
                 for (Map.Entry<String, CamelliaStatsData> entry : map.entrySet()) {
                     NamespaceBizIdMsgLatencyStats stats = new NamespaceBizIdMsgLatencyStats();
                     stats.setNamespace(entry.getKey());
@@ -153,7 +153,7 @@ public class ConsumerMonitor {
             }
 
             {
-                Map<String, CamelliaStatsData> map = namespaceMsgLatency.getStatsDataAndReset();
+                Map<String, CamelliaStatsData> map = namespaceBizIdMsgLatency.getStatsDataAndReset();
                 for (Map.Entry<String, CamelliaStatsData> entry : map.entrySet()) {
                     BizKey bizKey = BizKey.byString(entry.getKey());
                     NamespaceBizIdMsgLatencyStats stats = new NamespaceBizIdMsgLatencyStats();
