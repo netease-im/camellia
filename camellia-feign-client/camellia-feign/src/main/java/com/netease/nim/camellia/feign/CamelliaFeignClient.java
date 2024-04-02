@@ -1,5 +1,7 @@
 package com.netease.nim.camellia.feign;
 
+import com.netease.nim.camellia.core.client.annotation.RetryPolicy;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -32,5 +34,5 @@ public @interface CamelliaFeignClient {
 
     int retry() default 0;//最大重试次数
 
-    Class<? extends RetryPolicy> retryPolicy() default RetryPolicy.NeverRetryPolicy.class;//重试策略，主要是看
+    Class<? extends RetryPolicy> retryPolicy() default RetryPolicy.NeverRetryPolicy.class;//重试策略
 }

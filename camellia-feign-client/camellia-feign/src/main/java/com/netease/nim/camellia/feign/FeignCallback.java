@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.feign;
 
 import com.netease.nim.camellia.core.client.annotation.LoadBalanceKey;
+import com.netease.nim.camellia.core.client.annotation.RetryPolicy;
 import com.netease.nim.camellia.core.client.env.Monitor;
 import com.netease.nim.camellia.core.client.env.MultiWriteType;
 import com.netease.nim.camellia.core.client.env.ProxyEnv;
@@ -63,8 +64,7 @@ public class FeignCallback<T> implements MethodInterceptor {
     private final String className;
     private final Monitor monitor;
     private final CamelliaFeignFailureListener failureListener;
-    private final int retry;
-    private final RetryPolicy retryPolicy;
+    private final RetryInfoCache retryInfoCache;
 
     public FeignCallback(CamelliaFeignBuildParam<T> buildParam) {
         this.bid = buildParam.getBid();
@@ -87,8 +87,7 @@ public class FeignCallback<T> implements MethodInterceptor {
             }
             circuitBreakerConfig.setName(name);
         }
-        this.retry = buildParam.getRetry();
-        this.retryPolicy = buildParam.getRetryPolicy();
+        this.retryInfoCache = new RetryInfoCache(apiType, buildParam.getRetry(), buildParam.getRetryPolicy());
         this.serverSelector = buildParam.getDynamicOption() == null ? new RandomCamelliaServerSelector<>() : buildParam.getDynamicOption().getServerSelector();
         annotationValueGetterCache.preheatAnnotationValueByParameterField(apiType, LoadBalanceKey.class);
         readWriteOperationCache.preheat(apiType);
@@ -182,9 +181,16 @@ public class FeignCallback<T> implements MethodInterceptor {
                     throw new CamelliaCircuitBreakerException("camellia-circuit-breaker[" + circuitBreaker.getName() + "] short-circuit, and no fallback");
                 }
             }
+
+            RetryInfoCache.RetryInfo cache = retryInfoCache.getRetryInfo(method);
+            int retry = cache.getRetry();
+            RetryPolicy retryPolicy = cache.getRetryPolicy();
+
+            //不重试
             if (retry <= 0 || retryPolicy == null) {
                 return method.invoke(client, objects);
             }
+            //有重试
             Throwable throwable = null;
             for (int i=0; i<retry; i++) {
                 try {
@@ -195,11 +201,12 @@ public class FeignCallback<T> implements MethodInterceptor {
                     if (skip) {
                         throw e;
                     }
-                    RetryPolicy.RetryInfo retryInfo = retryPolicy.retryError(error);
-                    if (retryInfo == null || !retryInfo.isRetry()) {
+                    RetryPolicy.RetryAction retryAction = retryPolicy.onError(error);
+                    if (retryAction == null || !retryAction.isRetry()) {
                         throw e;
                     }
-                    if (retryInfo.isNextServer()) {
+                    pool.onError(feignResource);
+                    if (retryAction.isNextServer()) {
                         feignResource = pool.getResource(loadBalanceKey);
                         client = factory.get(feignResource);
                         continue;

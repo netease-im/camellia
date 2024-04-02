@@ -1,44 +1,44 @@
-package com.netease.nim.camellia.feign;
+package com.netease.nim.camellia.core.client.annotation;
 
 /**
  * Created by caojiajun on 2024/4/1
  */
 public interface RetryPolicy {
 
-    RetryInfo retryError(Throwable t);
+    RetryAction onError(Throwable t);
 
     final class NeverRetryPolicy implements RetryPolicy {
         @Override
-        public RetryInfo retryError(Throwable t) {
-            return RetryInfo.NO_RETRY;
+        public RetryAction onError(Throwable t) {
+            return RetryAction.NO_RETRY;
         }
     }
 
     final class AlwaysRetryCurrentPolicy implements RetryPolicy {
         @Override
-        public RetryInfo retryError(Throwable t) {
-            return RetryInfo.RETRY_CURRENT;
+        public RetryAction onError(Throwable t) {
+            return RetryAction.RETRY_CURRENT;
         }
     }
 
     final class AlwaysRetryNextPolicy implements RetryPolicy {
         @Override
-        public RetryInfo retryError(Throwable t) {
-            return RetryInfo.RETRY_NEXT;
+        public RetryAction onError(Throwable t) {
+            return RetryAction.RETRY_NEXT;
         }
     }
 
 
-    class RetryInfo {
+    class RetryAction {
 
-        public static RetryInfo NO_RETRY = new RetryInfo(false, false);
-        public static RetryInfo RETRY_CURRENT = new RetryInfo(true, false);
-        public static RetryInfo RETRY_NEXT = new RetryInfo(true, true);
+        public static RetryAction NO_RETRY = new RetryAction(false, false);
+        public static RetryAction RETRY_CURRENT = new RetryAction(true, false);
+        public static RetryAction RETRY_NEXT = new RetryAction(true, true);
 
         private final boolean retry;
         private final boolean nextServer;
 
-        public RetryInfo(boolean retry, boolean nextServer) {
+        public RetryAction(boolean retry, boolean nextServer) {
             this.retry = retry;
             this.nextServer = nextServer;
         }

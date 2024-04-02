@@ -3,6 +3,7 @@ package com.netease.nim.camellia.feign;
 import com.netease.nim.camellia.core.api.CamelliaApi;
 import com.netease.nim.camellia.core.api.CamelliaApiUtil;
 import com.netease.nim.camellia.core.api.RemoteMonitor;
+import com.netease.nim.camellia.core.client.annotation.RetryPolicy;
 import com.netease.nim.camellia.core.client.callback.ProxyClientFactory;
 import com.netease.nim.camellia.core.client.env.Monitor;
 import com.netease.nim.camellia.core.model.ResourceTable;

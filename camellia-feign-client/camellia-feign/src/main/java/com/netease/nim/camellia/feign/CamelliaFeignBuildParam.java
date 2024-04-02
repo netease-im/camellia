@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.feign;
 
+import com.netease.nim.camellia.core.client.annotation.RetryPolicy;
 import com.netease.nim.camellia.core.client.env.Monitor;
 import com.netease.nim.camellia.feign.client.DynamicOption;
 import com.netease.nim.camellia.feign.route.FeignResourceTableUpdater;
