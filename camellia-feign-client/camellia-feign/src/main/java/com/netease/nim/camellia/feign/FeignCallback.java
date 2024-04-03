@@ -192,7 +192,7 @@ public class FeignCallback<T> implements MethodInterceptor {
             }
             //有重试
             Throwable throwable = null;
-            for (int i=0; i<retry; i++) {
+            for (int i=0; i<retry+1; i++) {
                 try {
                     return method.invoke(client, objects);
                 } catch (Throwable e) {

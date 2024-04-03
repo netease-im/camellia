@@ -17,6 +17,9 @@ public class User {
     private String name;
     private String ext;
 
+    private int timeout;
+    private boolean error;
+
     public long getTenantId() {
         return tenantId;
     }
@@ -47,5 +50,21 @@ public class User {
 
     public void setExt(String ext) {
         this.ext = ext;
+    }
+
+    public int getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
+    }
+
+    public boolean isError() {
+        return error;
+    }
+
+    public void setError(boolean error) {
+        this.error = error;
     }
 }

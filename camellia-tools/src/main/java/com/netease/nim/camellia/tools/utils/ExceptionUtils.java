@@ -52,7 +52,8 @@ public class ExceptionUtils {
             return true;
         }
         if (cause instanceof java.net.SocketTimeoutException) {
-            return cause.getMessage().contains("connect timed out");
+            String message = cause.getMessage();
+            return message != null && message.contains("connect timed out");
         }
         return false;
     }

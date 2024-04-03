@@ -14,4 +14,20 @@ public class TestFeignServiceFallback implements ITestFeignService {
         response.setUser(user);
         return response;
     }
+
+    @Override
+    public UserResponse getUserNoRetry(User user) {
+        UserResponse response = new UserResponse();
+        user.setName("fallback-no-retry");
+        response.setUser(user);
+        return response;
+    }
+
+    @Override
+    public UserResponse getUserByServiceRetry(User user) {
+        UserResponse response = new UserResponse();
+        user.setName("fallback-by-service-retry");
+        response.setUser(user);
+        return response;
+    }
 }
