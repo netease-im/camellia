@@ -1,0 +1,23 @@
+server:
+  port: 6381
+spring:
+  application:
+    name: camellia-redis-proxy-server
+
+camellia-redis-proxy:
+  #  port: 6380 #priority greater than server.port, if missing, use server.port; if setting -6379, proxy will choose a random port
+  #  application-name: camellia-redis-proxy-server  #priority greater than spring.application.name, if missing, use spring.application.name
+  console-port: 16378 #console port, default 16379, if setting -16379, proxy will choose a random port, if setting 0, will disable console
+  password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
+  monitor-enable: false  #monitor enable/disable configure
+  monitor-interval-seconds: 60 #monitor data refresh interval seconds
+  plugins: #plugin list
+    - monitorPlugin
+    - bigKeyPlugin
+    - hotKeyPlugin
+  upstream-client-template-factory-class-name: com.netease.nim.camellia.redis.proxy.kv.core.UpstreamKVClientTemplateFactory
+  transpond:
+    type: local #local、remote、custom
+    local:
+      type: simple #simple、complex
+      resource: redis://@127.0.0.1:6379

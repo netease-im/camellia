@@ -41,7 +41,8 @@ public class KeyMeta {
         if (_data != null) {
             return _data;
         }
-        _data = BytesUtils.merge(keyType.getValue(), BytesUtils.toBytes(expireTime));
+        _data = BytesUtils.merge(keyType.getValue(), BytesUtils.toBytes(version));
+        _data = BytesUtils.merge(_data, BytesUtils.toBytes(expireTime));
         return _data;
     }
 

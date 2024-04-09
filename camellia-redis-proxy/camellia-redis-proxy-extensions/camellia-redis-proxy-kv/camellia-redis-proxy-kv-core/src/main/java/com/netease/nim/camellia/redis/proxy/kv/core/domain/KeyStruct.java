@@ -13,12 +13,14 @@ public class KeyStruct {
     private static final byte[] HASH_TAG_LEFT = "{".getBytes(StandardCharsets.UTF_8);
     private static final byte[] HASH_TAG_RIGHT = "}".getBytes(StandardCharsets.UTF_8);
 
+    private final int namespaceLen;
     private final byte[] namespace;
     private final byte[] metaPrefix;
     private final byte[] cachePrefix;
 
     public KeyStruct(byte[] namespace) {
         this.namespace = namespace;
+        this.namespaceLen = namespace.length;
         this.metaPrefix = BytesUtils.merge("m#".getBytes(StandardCharsets.UTF_8), namespace);
         this.cachePrefix = BytesUtils.merge("c#".getBytes(StandardCharsets.UTF_8), namespace);
     }
@@ -54,5 +56,13 @@ public class KeyStruct {
             data = BytesUtils.merge(data, field);
         }
         return data;
+    }
+
+    public byte[] decodeHashFieldByStoreKey(byte[] storeKey, KeyMeta keyMeta, byte[] key) {
+        int prefixSize = namespaceLen + 4 + key.length + 8;
+        int fieldSize = storeKey.length - prefixSize;
+        byte[] field = new byte[fieldSize];
+        System.arraycopy(storeKey, prefixSize, field, 0, fieldSize);
+        return field;
     }
 }

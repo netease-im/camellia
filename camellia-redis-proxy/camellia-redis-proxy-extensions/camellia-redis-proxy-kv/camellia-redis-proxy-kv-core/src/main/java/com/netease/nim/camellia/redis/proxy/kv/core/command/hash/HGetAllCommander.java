@@ -81,15 +81,19 @@ public class HGetAllCommander extends Commander {
         int hashMaxSize = kvConfig.hashMaxSize();
         while (true) {
             List<KeyValue> scan = kvClient.scan(startKey, prefix, limit);
-            if (scan.isEmpty() || scan.size() < limit) {
+            if (scan.isEmpty()) {
                 break;
             }
             for (KeyValue keyValue : scan) {
-                map.put(new BytesKey(keyValue.getKey()), keyValue.getValue());
+                byte[] field = keyStruct.decodeHashFieldByStoreKey(keyValue.getKey(), keyMeta, key);
+                map.put(new BytesKey(field), keyValue.getValue());
                 startKey = keyValue.getKey();
                 if (map.size() >= hashMaxSize) {
                     break;
                 }
+            }
+            if (scan.size() < limit) {
+                break;
             }
         }
 

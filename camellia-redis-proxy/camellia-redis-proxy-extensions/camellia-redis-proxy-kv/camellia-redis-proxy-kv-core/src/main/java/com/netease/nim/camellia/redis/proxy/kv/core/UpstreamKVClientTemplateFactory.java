@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.kv.core;
 
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.kv.core.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.kv.core.command.RedisTemplate;
@@ -14,6 +15,7 @@ import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
+import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
 import com.netease.nim.camellia.tools.utils.SysUtils;
@@ -39,6 +41,8 @@ public class UpstreamKVClientTemplateFactory implements IUpstreamClientTemplateF
         KVClient kvClient = initKVClient();
 
         this.template = initUpstreamKVClientTemplate(namespace, kvClient, executor);
+
+        RedisConnectionHub.getInstance().init(new CamelliaTranspondProperties(), GlobalRedisProxyEnv.getProxyBeanFactory());
     }
 
     @Override

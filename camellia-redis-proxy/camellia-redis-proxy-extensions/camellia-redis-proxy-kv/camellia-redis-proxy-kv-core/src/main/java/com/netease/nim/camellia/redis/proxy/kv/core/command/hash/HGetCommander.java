@@ -76,7 +76,7 @@ public class HGetCommander extends Commander {
         if (reply1 instanceof MultiBulkReply) {
             Reply[] replies = ((MultiBulkReply) reply1).getReplies();
             String type = Utils.bytesToString(((BulkReply) replies[0]).getRaw());
-            if (type.equalsIgnoreCase("1") && type.equalsIgnoreCase("2")) {
+            if (type.equalsIgnoreCase("1") || type.equalsIgnoreCase("2")) {
                 return replies[1];
             }
         }
@@ -85,7 +85,7 @@ public class HGetCommander extends Commander {
         byte[] storeKey = keyStruct.hashFieldStoreKey(keyMeta, key, field);
         KeyValue keyValue = kvClient.get(storeKey);
 
-        if (keyValue == null) {
+        if (keyValue == null || keyValue.getValue() == null) {
             return BulkReply.NIL_REPLY;
         }
 
