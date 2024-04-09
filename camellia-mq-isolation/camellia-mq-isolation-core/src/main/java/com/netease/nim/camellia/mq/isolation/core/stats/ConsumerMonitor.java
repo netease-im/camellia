@@ -139,7 +139,7 @@ public class ConsumerMonitor {
             {
                 Map<String, CamelliaStatsData> map = namespaceMsgLatency.getStatsDataAndReset();
                 for (Map.Entry<String, CamelliaStatsData> entry : map.entrySet()) {
-                    NamespaceBizIdMsgLatencyStats stats = new NamespaceBizIdMsgLatencyStats();
+                    NamespaceMsgLatencyStats stats = new NamespaceMsgLatencyStats();
                     stats.setNamespace(entry.getKey());
                     CamelliaStatsData data = entry.getValue();
                     stats.setCount(data.getCount());
@@ -148,7 +148,7 @@ public class ConsumerMonitor {
                     stats.setP50(data.getP50());
                     stats.setP90(data.getP90());
                     stats.setP99(data.getP99());
-                    latencyStats.getNamespaceBizIdMsgLatencyStatsList().add(stats);
+                    latencyStats.getNamespaceMsgLatencyStatsList().add(stats);
                 }
             }
 
@@ -158,7 +158,7 @@ public class ConsumerMonitor {
                     BizKey bizKey = BizKey.byString(entry.getKey());
                     NamespaceBizIdMsgLatencyStats stats = new NamespaceBizIdMsgLatencyStats();
                     stats.setNamespace(bizKey.getNamespace());
-                    stats.setBizId(bizKey.getBidId());
+                    stats.setBizId(bizKey.getBizId());
                     CamelliaStatsData data = entry.getValue();
                     stats.setCount(data.getCount());
                     stats.setAvg(data.getCount());

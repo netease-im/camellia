@@ -39,7 +39,7 @@ public class CamelliaMqIsolationSender implements MqIsolationSender {
                 .build(key -> {
                     List<MqInfo> mqInfos;
                     try {
-                        mqInfos = controller.selectMqInfo(key.getNamespace(), key.getBidId());
+                        mqInfos = controller.selectMqInfo(key.getNamespace(), key.getBizId());
                     } catch (Exception e) {
                         logger.error("select mq info error, use fast mq info backup", e);
                         mqInfos = controller.getMqIsolationConfig(key.getNamespace()).getLevelInfoList().get(0).getMqInfoList();

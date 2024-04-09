@@ -10,19 +10,19 @@ import java.util.Objects;
  */
 public class BizKey {
     private final String namespace;
-    private final String bidId;
+    private final String bizId;
 
-    public BizKey(String namespace, String bidId) {
+    public BizKey(String namespace, String bizId) {
         this.namespace = namespace;
-        this.bidId = bidId;
+        this.bizId = bizId;
     }
 
     public String getNamespace() {
         return namespace;
     }
 
-    public String getBidId() {
-        return bidId;
+    public String getBizId() {
+        return bizId;
     }
 
     @Override
@@ -30,12 +30,12 @@ public class BizKey {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BizKey cacheKey = (BizKey) o;
-        return Objects.equals(namespace, cacheKey.namespace) && Objects.equals(bidId, cacheKey.bidId);
+        return Objects.equals(namespace, cacheKey.namespace) && Objects.equals(bizId, cacheKey.bizId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(namespace, bidId);
+        return Objects.hash(namespace, bizId);
     }
 
     private String _string = null;
@@ -47,7 +47,7 @@ public class BizKey {
         }
         JSONObject json = new JSONObject(true);
         json.put("namespace", namespace);
-        json.put("bidId", bidId);
+        json.put("bizId", bizId);
         _string = json.toJSONString();
         return _string;
     }
@@ -55,7 +55,7 @@ public class BizKey {
     public static BizKey byString(String json) {
         JSONObject jsonObject = JSONObject.parseObject(json);
         String namespace = jsonObject.getString("namespace");
-        String bidId = jsonObject.getString("bidId");
+        String bidId = jsonObject.getString("bizId");
         return new BizKey(namespace, bidId);
     }
 }
