@@ -38,6 +38,7 @@ public class ErrorReply implements Reply {
     public static final ErrorReply SYNTAX_ERROR = new ErrorReply(Utils.syntaxError);
     public static final ErrorReply TOO_MANY_CLIENTS = new ErrorReply("ERR max number of clients reached");
     public static final ErrorReply COMMAND_MOVED_BY_UPSTREAM_SERVER = new ErrorReply("ERR command moved by upstream server");
+    public static final ErrorReply TIMEOUT = new ErrorReply("ERR command execute timeout");
 
     private static final char MARKER = Marker.ErrorReply.getMarker();
     private final String error;

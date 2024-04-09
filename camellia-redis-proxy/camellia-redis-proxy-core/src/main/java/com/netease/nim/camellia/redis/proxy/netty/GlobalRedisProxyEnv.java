@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.command.DefaultQueueFactory;
 import com.netease.nim.camellia.redis.proxy.command.QueueFactory;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
+import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import io.netty.channel.EventLoopGroup;
@@ -70,6 +71,8 @@ public class GlobalRedisProxyEnv {
 
     private static QueueFactory queueFactory = new DefaultQueueFactory();
 
+    private static ProxyBeanFactory proxyBeanFactory;
+
     private static final DefaultProxyShutdown proxyShutdown = new DefaultProxyShutdown();
 
     private static final Set<Runnable> beforeStartCallbackSet = new HashSet<>();
@@ -129,6 +132,7 @@ public class GlobalRedisProxyEnv {
             }
             queueFactory = (QueueFactory) serverProperties.getProxyBeanFactory()
                     .getBean(BeanInitUtils.parseClass(serverProperties.getQueueFactoryClassName()));
+            proxyBeanFactory = serverProperties.getProxyBeanFactory();
             initOk.set(true);
         }
     }
@@ -332,5 +336,9 @@ public class GlobalRedisProxyEnv {
 
     public static DefaultProxyShutdown getProxyShutdown() {
         return proxyShutdown;
+    }
+
+    public static ProxyBeanFactory getProxyBeanFactory() {
+        return proxyBeanFactory;
     }
 }
