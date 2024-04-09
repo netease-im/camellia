@@ -162,36 +162,36 @@ public class ProxyClusterModeProcessor {
     public CompletableFuture<Reply> clusterCommands(Command command) {
         RedisCommand redisCommand = command.getRedisCommand();
         if (redisCommand != RedisCommand.CLUSTER) {
-            return wrapper(ErrorReply.NOT_SUPPORT);
+            return CompletableFuture.completedFuture(ErrorReply.NOT_SUPPORT);
         }
         byte[][] objects = command.getObjects();
         if (objects.length <= 1) {
-            return wrapper(ErrorReply.argNumWrong(redisCommand));
+            return CompletableFuture.completedFuture(ErrorReply.argNumWrong(redisCommand));
         }
         if (!init) {
-            return wrapper(ErrorReply.NOT_AVAILABLE);
+            return CompletableFuture.completedFuture(ErrorReply.NOT_AVAILABLE);
         }
         String arg = Utils.bytesToString(objects[1]);
         if (arg.equalsIgnoreCase(RedisKeyword.INFO.name())) {
-            return wrapper(clusterInfo == null ? ErrorReply.NOT_AVAILABLE : clusterInfo);
+            return CompletableFuture.completedFuture(clusterInfo == null ? ErrorReply.NOT_AVAILABLE : clusterInfo);
         } else if (arg.equalsIgnoreCase(RedisKeyword.NODES.name())) {
-            return wrapper(clusterNodes == null ? ErrorReply.NOT_AVAILABLE : clusterNodes);
+            return CompletableFuture.completedFuture(clusterNodes == null ? ErrorReply.NOT_AVAILABLE : clusterNodes);
         } else if (arg.equalsIgnoreCase(RedisKeyword.SLOTS.name())) {
-            return wrapper(clusterSlots == null ? ErrorReply.NOT_AVAILABLE : clusterSlots);
+            return CompletableFuture.completedFuture(clusterSlots == null ? ErrorReply.NOT_AVAILABLE : clusterSlots);
         } else if (arg.equalsIgnoreCase(RedisKeyword.KEYSLOT.name())) {
             if (objects.length != 3) {
-                return wrapper(ErrorReply.argNumWrong(RedisCommand.CLUSTER));
+                return CompletableFuture.completedFuture(ErrorReply.argNumWrong(RedisCommand.CLUSTER));
             }
-            return wrapper(calKeySlot(objects[2]));
+            return CompletableFuture.completedFuture(calKeySlot(objects[2]));
         } else if (arg.equalsIgnoreCase(RedisKeyword.PROXY_HEARTBEAT.name())) {//camellia定义的proxy间心跳
             if (objects.length >= 4) {
                 ProxyNode node = ProxyNode.parseString(Utils.bytesToString(objects[2]));
                 if (node == null) {
-                    return wrapper(ErrorReply.argNumWrong(redisCommand));
+                    return CompletableFuture.completedFuture(ErrorReply.argNumWrong(redisCommand));
                 }
                 ClusterModeStatus.Status status = ClusterModeStatus.Status.getByValue((int) Utils.bytesToNum(objects[3]));
                 if (status == null) {
-                    return wrapper(ErrorReply.argNumWrong(redisCommand));
+                    return CompletableFuture.completedFuture(ErrorReply.argNumWrong(redisCommand));
                 }
                 ProxyHeartbeatRequest request = new ProxyHeartbeatRequest();
                 request.setNode(node);
@@ -213,11 +213,11 @@ public class ProxyClusterModeProcessor {
                 }
                 return future;
             } else {
-                return wrapper(ErrorReply.argNumWrong(redisCommand));
+                return CompletableFuture.completedFuture(ErrorReply.argNumWrong(redisCommand));
             }
         } else {
             ErrorLogCollector.collect(ProxyClusterModeProcessor.class, "not support cluster command, arg = " + arg);
-            return wrapper(ErrorReply.NOT_SUPPORT);
+            return CompletableFuture.completedFuture(ErrorReply.NOT_SUPPORT);
         }
     }
 
@@ -239,12 +239,6 @@ public class ProxyClusterModeProcessor {
      */
     public List<ProxyNode> getOnlineNodes() {
         return new ArrayList<>(onlineNodes);
-    }
-
-    private CompletableFuture<Reply> wrapper(Reply reply) {
-        CompletableFuture<Reply> future = new CompletableFuture<>();
-        future.complete(reply);
-        return future;
     }
 
     private Reply initClusterInfo() {

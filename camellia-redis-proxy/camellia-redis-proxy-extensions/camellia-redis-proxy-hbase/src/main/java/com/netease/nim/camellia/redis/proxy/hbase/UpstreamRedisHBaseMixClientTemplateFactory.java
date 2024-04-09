@@ -38,7 +38,7 @@ public class UpstreamRedisHBaseMixClientTemplateFactory implements IUpstreamClie
 
     @Override
     public CompletableFuture<IUpstreamClientTemplate> getOrInitializeAsync(Long bid, String bgroup) {
-        return IUpstreamClientTemplateFactory.wrapper(template);
+        return CompletableFuture.completedFuture(template);
     }
 
     @Override

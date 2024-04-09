@@ -114,7 +114,7 @@ public class HotKeyPackBizServerHandler implements HotKeyPackBizHandler {
         } catch (Exception e) {
             logger.error("onPushPack error", e);
         }
-        return wrapper(PushRepPack.INSTANCE);
+        return CompletableFuture.completedFuture(PushRepPack.INSTANCE);
     }
 
     @Override

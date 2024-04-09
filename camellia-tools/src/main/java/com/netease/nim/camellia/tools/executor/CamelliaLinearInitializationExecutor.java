@@ -73,12 +73,12 @@ public class CamelliaLinearInitializationExecutor<K, T> implements CamelliaExecu
         String keyStr = key.toString();
         T value = cache.get(keyStr);
         if (value != null) {
-            return wrapper(value);
+            return CompletableFuture.completedFuture(value);
         }
         synchronized (lockMap.getLockObj(keyStr)) {
             value = cache.get(keyStr);
             if (value != null) {
-                return wrapper(value);
+                return CompletableFuture.completedFuture(value);
             }
             CompletableFuture<T> future = new CompletableFuture<>();
             boolean offer = offerFutureQueue(keyStr, future);
@@ -183,12 +183,6 @@ public class CamelliaLinearInitializationExecutor<K, T> implements CamelliaExecu
             queue = futureQueueMap.computeIfAbsent(keyStr, k -> new DynamicCapacityLinkedBlockingQueue<>(pendingQueueSize));
         }
         return queue;
-    }
-
-    private CompletableFuture<T> wrapper(T value) {
-        CompletableFuture<T> future = new CompletableFuture<>();
-        future.complete(value);
-        return future;
     }
 
     public static interface Initializer<K, T> {

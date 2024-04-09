@@ -60,9 +60,4 @@ public interface IUpstreamClientTemplateFactory {
      */
     int shutdown();
 
-    static CompletableFuture<IUpstreamClientTemplate> wrapper(IUpstreamClientTemplate template) {
-        CompletableFuture<IUpstreamClientTemplate> future = new CompletableFuture<>();
-        future.complete(template);
-        return future;
-    }
 }

@@ -48,7 +48,7 @@ public class UpstreamKVClientTemplateFactory implements IUpstreamClientTemplateF
 
     @Override
     public CompletableFuture<IUpstreamClientTemplate> getOrInitializeAsync(Long bid, String bgroup) {
-        return IUpstreamClientTemplateFactory.wrapper(template);
+        return CompletableFuture.completedFuture(template);
     }
 
     @Override

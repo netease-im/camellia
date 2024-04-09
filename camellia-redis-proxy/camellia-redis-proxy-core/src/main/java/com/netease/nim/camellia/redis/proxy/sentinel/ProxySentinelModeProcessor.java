@@ -307,13 +307,9 @@ public class ProxySentinelModeProcessor {
             connection.channelInfo.getCommandTaskQueue().reply(redisCommand, reply, false, false);
             return null;
         } else {
-            CompletableFuture<Reply> future = new CompletableFuture<>();
-            future.complete(reply);
-            return future;
+            return CompletableFuture.completedFuture(reply);
         }
     }
-
-
 
     private void schedule() {
         try {

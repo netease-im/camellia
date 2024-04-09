@@ -11,32 +11,27 @@ import java.util.concurrent.CompletableFuture;
 public interface HotKeyPackBizHandler {
 
     default CompletableFuture<NotifyHotKeyRepPack> onNotifyHotKeyPack(Channel channel, NotifyHotKeyPack pack) {
-        return wrapper(NotifyHotKeyRepPack.INSTANCE);
+        return CompletableFuture.completedFuture(NotifyHotKeyRepPack.INSTANCE);
     }
 
     default CompletableFuture<NotifyHotKeyConfigRepPack> onNotifyHotKeyConfigPack(Channel channel, NotifyHotKeyConfigPack pack) {
-        return wrapper(NotifyHotKeyConfigRepPack.INSTANCE);
+        return CompletableFuture.completedFuture(NotifyHotKeyConfigRepPack.INSTANCE);
     }
 
     default CompletableFuture<PushRepPack> onPushPack(Channel channel, PushPack pack) {
-        return wrapper(PushRepPack.INSTANCE);
+        return CompletableFuture.completedFuture(PushRepPack.INSTANCE);
     }
 
     default CompletableFuture<HeartbeatRepPack> onHeartbeatPack(Channel channel, HeartbeatPack pack) {
-        return wrapper(HeartbeatRepPack.INSTANCE);
+        return CompletableFuture.completedFuture(HeartbeatRepPack.INSTANCE);
     }
 
     default CompletableFuture<GetConfigRepPack> onGetConfigPack(Channel channel, GetConfigPack pack) {
-        return wrapper(null);
+        return CompletableFuture.completedFuture(null);
     }
 
     default CompletableFuture<HotKeyCacheStatsRepPack> onHotKeyCacheStatsPack(Channel channel, HotKeyCacheStatsPack pack) {
-        return wrapper(HotKeyCacheStatsRepPack.INSTANCE);
+        return CompletableFuture.completedFuture(HotKeyCacheStatsRepPack.INSTANCE);
     }
 
-    default <T> CompletableFuture<T> wrapper(T t) {
-        CompletableFuture<T> future = new CompletableFuture<>();
-        future.complete(t);
-        return future;
-    }
 }

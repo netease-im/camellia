@@ -126,7 +126,7 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
         CamelliaTranspondProperties.Type type = properties.getType();
         if (type == CamelliaTranspondProperties.Type.LOCAL) {
             if (localInstance != null) {
-                return IUpstreamClientTemplateFactory.wrapper(localInstance);
+                return CompletableFuture.completedFuture(localInstance);
             }
             if (executor != null && EXECUTOR_KEY != null) {
                 return executor.getOrInitialize(EXECUTOR_KEY);
@@ -135,10 +135,10 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
             CamelliaTranspondProperties.RemoteProperties remote = properties.getRemote();
             if (remoteInstance != null) {
                 if (!remote.isDynamic()) {
-                    return IUpstreamClientTemplateFactory.wrapper(remoteInstance);
+                    return CompletableFuture.completedFuture(remoteInstance);
                 }
                 if (bid == null || bid <= 0 || bgroup == null) {
-                    return IUpstreamClientTemplateFactory.wrapper(remoteInstance);
+                    return CompletableFuture.completedFuture(remoteInstance);
                 }
             }
             if (executor != null) {
@@ -160,10 +160,10 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
             CamelliaTranspondProperties.CustomProperties custom = properties.getCustom();
             if (customInstance != null) {
                 if (!custom.isDynamic()) {
-                    return IUpstreamClientTemplateFactory.wrapper(customInstance);
+                    return CompletableFuture.completedFuture(customInstance);
                 }
                 if (bid == null || bid <= 0 || bgroup == null) {
-                    return IUpstreamClientTemplateFactory.wrapper(customInstance);
+                    return CompletableFuture.completedFuture(customInstance);
                 }
             }
             if (executor != null) {
