@@ -37,10 +37,13 @@ public class Commanders {
 
     public Reply execute(Command command) {
         RedisCommand redisCommand = command.getRedisCommand();
-        Commander commander = map.get(command.getRedisCommand());
+        Commander commander = map.get(redisCommand);
+        if (commander == null) {
+            return ErrorReply.NOT_SUPPORT;
+        }
         try {
             if (!commander.parse(command)) {
-                return ErrorReply.argNumWrong(command.getRedisCommand());
+                return ErrorReply.argNumWrong(redisCommand);
             }
             return commander.execute(command);
         } catch (KvException | IllegalArgumentException e) {
