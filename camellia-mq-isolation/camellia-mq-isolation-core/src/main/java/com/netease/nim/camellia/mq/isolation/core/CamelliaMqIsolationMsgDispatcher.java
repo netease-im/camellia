@@ -144,7 +144,8 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
     private TopicInfo topicInfo(MqInfo mqInfo, MqIsolationMsgPacket packet) {
         String bizId = packet.getMsg().getBizId();
         String tag = "auto";
-        TopicInfo topicInfo = cache.get(tag, bizId, TopicInfo.class);
+        String cacheKey = bizId + "|" + mqInfo.getMq() + "|" + mqInfo.getTopic();
+        TopicInfo topicInfo = cache.get(tag, cacheKey, TopicInfo.class);
         if (topicInfo != null) {
             return topicInfo;
         }
@@ -174,7 +175,7 @@ public class CamelliaMqIsolationMsgDispatcher implements MqIsolationMsgDispatche
             }
             topicInfo = new TopicInfo(topicType, topicType.isAutoIsolation());
         }
-        cache.put(tag, bizId, topicInfo, -1);
+        cache.put(tag, cacheKey, topicInfo, -1);
         return topicInfo;
     }
 
