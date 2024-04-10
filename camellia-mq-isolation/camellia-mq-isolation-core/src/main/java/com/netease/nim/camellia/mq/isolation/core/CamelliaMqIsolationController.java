@@ -71,7 +71,7 @@ public class CamelliaMqIsolationController implements MqIsolationController {
     @Override
     public List<MqInfo> selectMqInfo(String namespace, String bizId) {
         try {
-            String url = this.url + "/camellia/mq/isolation/config/selectMq?namespace="
+            String url = this.url + "/camellia/mq/isolation/route/selectMq?namespace="
                     + URLEncoder.encode(namespace, "utf-8") + "&bizId=" + URLEncoder.encode(bizId, "utf-8");
             JSONObject result = invokeGet(okHttpClient, url);
             JSONArray array = result.getJSONArray("data");
