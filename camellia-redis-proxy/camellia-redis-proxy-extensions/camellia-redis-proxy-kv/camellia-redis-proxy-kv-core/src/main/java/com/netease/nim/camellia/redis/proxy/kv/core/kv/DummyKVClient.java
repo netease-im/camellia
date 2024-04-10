@@ -72,7 +72,7 @@ public class DummyKVClient implements KVClient {
     }
 
     @Override
-    public List<KeyValue> scan(byte[] startKey, byte[] prefix, int limit) {
+    public List<KeyValue> scan(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         List<KeyValue> list = new ArrayList<>();
         for (Map.Entry<BytesKey, byte[]> entry : map.entrySet()) {
             if (BytesUtils.startWith(entry.getKey().getKey(), prefix)) {
@@ -81,5 +81,10 @@ public class DummyKVClient implements KVClient {
         }
         logger.info("scan, size = {}", list.size());
         return list;
+    }
+
+    @Override
+    public List<KeyValue> scan(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey, boolean includeEndKey) {
+        return null;
     }
 }

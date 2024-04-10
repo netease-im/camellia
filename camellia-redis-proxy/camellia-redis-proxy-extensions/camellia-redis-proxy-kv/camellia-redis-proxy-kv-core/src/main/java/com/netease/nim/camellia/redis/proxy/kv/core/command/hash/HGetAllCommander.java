@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.kv.core.command.Commander;
 import com.netease.nim.camellia.redis.proxy.kv.core.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.kv.core.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.kv.core.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.kv.core.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.kv.core.kv.KeyValue;
@@ -80,7 +81,7 @@ public class HGetAllCommander extends Commander {
         int limit = kvConfig.scanBatch();
         int hashMaxSize = kvConfig.hashMaxSize();
         while (true) {
-            List<KeyValue> scan = kvClient.scan(startKey, prefix, limit);
+            List<KeyValue> scan = kvClient.scan(startKey, prefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
                 break;
             }

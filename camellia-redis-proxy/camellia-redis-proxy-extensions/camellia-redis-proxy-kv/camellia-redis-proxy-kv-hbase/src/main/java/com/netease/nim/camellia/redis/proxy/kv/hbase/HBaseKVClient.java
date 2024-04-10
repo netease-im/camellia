@@ -7,11 +7,13 @@ import com.netease.nim.camellia.hbase.util.HBaseResourceUtil;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.kv.core.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.kv.core.kv.KeyValue;
+import com.netease.nim.camellia.redis.proxy.kv.core.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.kv.core.utils.BytesUtils;
 import org.apache.hadoop.hbase.client.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -104,26 +106,60 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
-    public List<KeyValue> scan(byte[] startKey, byte[] prefix, int limit) {
+    public List<KeyValue> scan(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         Scan scan = new Scan();
         scan.setStartRow(startKey);
         scan.setCaching(limit);
         scan.setSmall(true);
-        ResultScanner scanner = template.scan(tableName, scan);
-        List<KeyValue> list = new ArrayList<>();
-        for (Result result : scanner) {
-            byte[] row = result.getRow();
-            if (BytesUtils.startWith(row, prefix)) {
+        scan.setReversed(sort != Sort.ASC);
+        try (ResultScanner scanner = template.scan(tableName, scan)) {
+            List<KeyValue> list = new ArrayList<>();
+            for (Result result : scanner) {
+                byte[] row = result.getRow();
+                if (!includeStartKey && Arrays.equals(row, startKey)) {
+                    continue;
+                }
+                if (BytesUtils.startWith(row, prefix)) {
+                    byte[] key = result.getRow();
+                    byte[] value = result.getValue(cf, column);
+                    list.add(new KeyValue(key, value));
+                    if (list.size() >= limit) {
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            }
+            return list;
+        }
+    }
+
+    @Override
+    public List<KeyValue> scan(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey, boolean includeEndKey) {
+        Scan scan = new Scan();
+        scan.setStartRow(startKey);
+        scan.setStopRow(endKey);
+        scan.setCaching(limit);
+        scan.setSmall(true);
+        scan.setReversed(sort != Sort.ASC);
+        try (ResultScanner scanner = template.scan(tableName, scan)) {
+            List<KeyValue> list = new ArrayList<>();
+            for (Result result : scanner) {
+                byte[] row = result.getRow();
+                if (!includeStartKey && Arrays.equals(row, startKey)) {
+                    continue;
+                }
+                if (!includeEndKey && Arrays.equals(row, endKey)) {
+                    continue;
+                }
                 byte[] key = result.getRow();
                 byte[] value = result.getValue(cf, column);
                 list.add(new KeyValue(key, value));
                 if (list.size() >= limit) {
                     break;
                 }
-            } else {
-                break;
             }
+            return list;
         }
-        return list;
     }
 }
