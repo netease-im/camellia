@@ -4,10 +4,7 @@ import com.netease.nim.camellia.redis.proxy.kv.core.command.RedisTemplate;
 import com.netease.nim.camellia.redis.proxy.kv.core.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.kv.core.domain.KeyStruct;
 import com.netease.nim.camellia.redis.proxy.kv.core.exception.KvException;
-import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
-import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
-import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
+import com.netease.nim.camellia.redis.proxy.reply.*;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -71,6 +68,32 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         if (reply instanceof ErrorReply) {
             throw new KvException(((ErrorReply) reply).getError());
         }
+    }
+
+    @Override
+    public int deleteKeyMeta(byte[] key) {
+        byte[] redisKey = keyStruct.metaKey(key);
+        Reply reply = sync(keyMetaRedisTemplate.sendDel(redisKey));
+        if (reply instanceof IntegerReply) {
+            return ((IntegerReply) reply).getInteger().intValue();
+        }
+        if (reply instanceof ErrorReply) {
+            throw new KvException(((ErrorReply) reply).getError());
+        }
+        throw new KvException("ERR internal error");
+    }
+
+    @Override
+    public int existsKeyMeta(byte[] key) {
+        byte[] redisKey = keyStruct.metaKey(key);
+        Reply reply = sync(keyMetaRedisTemplate.sendExists(redisKey));
+        if (reply instanceof IntegerReply) {
+            return ((IntegerReply) reply).getInteger().intValue();
+        }
+        if (reply instanceof ErrorReply) {
+            throw new KvException(((ErrorReply) reply).getError());
+        }
+        throw new KvException("ERR internal error");
     }
 
     private Reply sync(CompletableFuture<Reply> future) {

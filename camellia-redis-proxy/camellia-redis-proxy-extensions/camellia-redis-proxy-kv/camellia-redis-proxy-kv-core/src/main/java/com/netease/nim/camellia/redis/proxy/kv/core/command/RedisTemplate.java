@@ -59,6 +59,14 @@ public class RedisTemplate {
         return sendCommand(command);
     }
 
+    public CompletableFuture<Reply> sendDel(byte[] key) {
+        return sendCommand(new Command(new byte[][]{RedisCommand.DEL.raw(), key}));
+    }
+
+    public CompletableFuture<Reply> sendExists(byte[] key) {
+        return sendCommand(new Command(new byte[][]{RedisCommand.EXISTS.raw(), key}));
+    }
+
     public CompletableFuture<Reply> sendGet(byte[] key) {
         return sendCommand(new Command(new byte[][]{RedisCommand.GET.raw(), key}));
     }

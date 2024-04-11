@@ -3,8 +3,7 @@ package com.netease.nim.camellia.redis.proxy.kv.core.command;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.kv.core.command.db.ExpireCommander;
-import com.netease.nim.camellia.redis.proxy.kv.core.command.db.PExpireCommander;
+import com.netease.nim.camellia.redis.proxy.kv.core.command.db.*;
 import com.netease.nim.camellia.redis.proxy.kv.core.command.hash.HGetAllCommander;
 import com.netease.nim.camellia.redis.proxy.kv.core.command.hash.HGetCommander;
 import com.netease.nim.camellia.redis.proxy.kv.core.command.hash.HSetCommander;
@@ -29,6 +28,9 @@ public class Commanders {
         initCommander(new HGetAllCommander(commanderConfig));
         initCommander(new PExpireCommander(commanderConfig));
         initCommander(new ExpireCommander(commanderConfig));
+        initCommander(new DelCommander(commanderConfig));
+        initCommander(new ExistsCommander(commanderConfig));
+        initCommander(new UnlinkCommander(commanderConfig));
     }
 
     private void initCommander(Commander commander) {

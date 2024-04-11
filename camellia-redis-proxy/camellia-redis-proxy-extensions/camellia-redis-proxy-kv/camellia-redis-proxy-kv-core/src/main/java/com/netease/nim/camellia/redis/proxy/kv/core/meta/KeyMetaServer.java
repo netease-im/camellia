@@ -8,4 +8,8 @@ public interface KeyMetaServer {
     KeyMeta getKeyMeta(byte[] key, KeyType keyType, boolean createIfNotExists);
 
     void createOrUpdateKeyMeta(byte[] key, KeyMeta keyMeta);
+
+    int deleteKeyMeta(byte[] key);
+
+    int existsKeyMeta(byte[] key);
 }

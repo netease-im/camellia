@@ -9,6 +9,8 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplate;
+import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtils;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
 
 import java.util.ArrayList;
@@ -37,14 +39,14 @@ public class UpstreamKVClientTemplate implements IUpstreamClientTemplate {
             RedisCommand redisCommand = command.getRedisCommand();
             if (redisCommand.getCommandKeyType() == RedisCommand.CommandKeyType.None) {
                 sendNoneKeyCommand(redisCommand, command, future);
-                continue;
-            }
-            List<byte[]> keys = command.getKeys();
-            if (keys.size() == 1) {
-                byte[] key = keys.get(0);
-                sendCommand(key, command, future);
             } else {
-                future.complete(ErrorReply.NOT_SUPPORT);
+                List<byte[]> keys = command.getKeys();
+                if (keys.size() == 1) {
+                    byte[] key = keys.get(0);
+                    sendCommand(key, command, future);
+                } else {
+                    sendMultiKeyCommand(redisCommand, command, future);
+                }
             }
         }
         return futureList;
@@ -58,8 +60,23 @@ public class UpstreamKVClientTemplate implements IUpstreamClientTemplate {
             if (objects.length == 2) {
                 future.complete(new BulkReply(objects[1]));
             } else {
-                future.complete(ErrorReply.argNumWrong(command.getRedisCommand()));
+                future.complete(ErrorReply.argNumWrong(redisCommand));
             }
+        } else {
+            future.complete(ErrorReply.NOT_SUPPORT);
+        }
+    }
+
+    private void sendMultiKeyCommand(RedisCommand redisCommand, Command command, CompletableFuture<Reply> future) {
+        List<byte[]> keys = command.getKeys();
+        if (redisCommand == RedisCommand.DEL || redisCommand == RedisCommand.UNLINK || redisCommand == RedisCommand.EXISTS) {
+            List<CompletableFuture<Reply>> futures = new ArrayList<>(keys.size());
+            for (byte[] key : keys) {
+                CompletableFuture<Reply> f = new CompletableFuture<>();
+                sendCommand(key, new Command(new byte[][]{redisCommand.raw(), key}), f);
+                futures.add(f);
+            }
+            CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
         } else {
             future.complete(ErrorReply.NOT_SUPPORT);
         }
