@@ -262,7 +262,7 @@ public class MqIsolationConfigUtils {
             }
         }
         if (!excludeTopicTypeSet.contains(TopicType.ERROR)) {
-            List<MqLevelInfo> levelInfoList = config.getLevelInfoList();
+            List<MqLevelInfo> levelInfoList = config.getErrorLevelInfoList();
             for (MqLevelInfo mqLevelInfo : levelInfoList) {
                 set.addAll(mqLevelInfo.getMqInfoList());
             }
