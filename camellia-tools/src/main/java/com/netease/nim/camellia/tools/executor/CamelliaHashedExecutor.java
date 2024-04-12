@@ -33,6 +33,7 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
     private final int poolSize;
     private int queueSize;
     private DynamicValueGetter<Integer> dynamicQueueSize;
+    private final Runnable workThreadInitCallback;
     private final List<WorkThread> workThreads;
     private final DynamicValueGetter<RejectedExecutionHandler> rejectedExecutionHandler;
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
@@ -67,16 +68,22 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
         this.dynamicQueueSize = config.getDynamicQueueSize();
         this.workThreads = new ArrayList<>(poolSize);
         this.rejectedExecutionHandler = config.getRejectedExecutionHandler();
+        this.workThreadInitCallback = config.getWorkThreadInitCallback();
 
         CamelliaExecutorMonitor.register(this);
     }
 
     public CamelliaHashedExecutor(String name, int poolSize, int queueSize, RejectedExecutionHandler rejectedExecutionHandler) {
+        this(name, poolSize, queueSize, rejectedExecutionHandler, null);
+    }
+
+    public CamelliaHashedExecutor(String name, int poolSize, int queueSize, RejectedExecutionHandler rejectedExecutionHandler, Runnable workThreadInitCallback) {
         this.name = CamelliaExecutorMonitor.genExecutorName(name);
         this.poolSize = poolSize;
         this.queueSize = queueSize;
         this.workThreads = new ArrayList<>(poolSize);
         this.rejectedExecutionHandler = () -> rejectedExecutionHandler;
+        this.workThreadInitCallback = workThreadInitCallback;
 
         CamelliaExecutorMonitor.register(this);
     }
@@ -89,9 +96,9 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
                 for (int i = 0; i < poolSize; i++) {
                     WorkThread workThread;
                     if (dynamicQueueSize != null) {
-                        workThread = new WorkThread(this, dynamicQueueSize);
+                        workThread = new WorkThread(this, dynamicQueueSize, workThreadInitCallback);
                     } else {
-                        workThread = new WorkThread(this, queueSize);
+                        workThread = new WorkThread(this, queueSize, workThreadInitCallback);
                     }
                     workThread.start();
                     workThreads.add(workThread);
@@ -318,17 +325,28 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
         private final AtomicBoolean active = new AtomicBoolean(false);
 
         private final AtomicLong completedTaskCount = new AtomicLong(0);
+        private final Runnable initCallback;
 
         public WorkThread(CamelliaHashedExecutor executor, int queueSize) {
+            this(executor, queueSize, null);
+        }
+
+        public WorkThread(CamelliaHashedExecutor executor, int queueSize, Runnable initCallback) {
             this.queue = new LinkedBlockingQueue<>(queueSize);
             this.executor = executor;
             setName("camellia-hashed-executor-" + executor.getName() + "-" + executor.workerIdGen.getAndIncrement());
+            this.initCallback = initCallback;
         }
 
         public WorkThread(CamelliaHashedExecutor executor, DynamicValueGetter<Integer> dynamicQueueSize) {
+            this(executor, dynamicQueueSize, null);
+        }
+
+        public WorkThread(CamelliaHashedExecutor executor, DynamicValueGetter<Integer> dynamicQueueSize, Runnable initCallback) {
             this.queue = new DynamicCapacityLinkedBlockingQueue<>(dynamicQueueSize);
             this.executor = executor;
             setName("camellia-hashed-executor-" + executor.getName() + "-" + executor.workerIdGen.getAndIncrement());
+            this.initCallback = initCallback;
         }
 
         public boolean submit(FutureTask<?> task) {
@@ -349,6 +367,9 @@ public class CamelliaHashedExecutor implements CamelliaExecutor {
 
         @Override
         public void run() {
+            if (initCallback != null) {
+                initCallback.run();
+            }
             while (!executor.shutdown.get()) {
                 try {
                     FutureTask<?> task = queue.poll(1, TimeUnit.SECONDS);

@@ -14,6 +14,7 @@ public class CamelliaHashedExecutorConfig {
     private int poolSize = CamelliaHashedExecutor.defaultPoolSize;
     private DynamicValueGetter<Integer> dynamicQueueSize = () -> CamelliaHashedExecutor.defaultQueueSize;
     private DynamicValueGetter<CamelliaHashedExecutor.RejectedExecutionHandler> rejectedExecutionHandler = () -> CamelliaHashedExecutor.defaultRejectedPolicy;
+    private Runnable workThreadInitCallback;
 
     public CamelliaHashedExecutorConfig(String name) {
         this.name = name;
@@ -74,5 +75,13 @@ public class CamelliaHashedExecutorConfig {
 
     public void setRejectedExecutionHandler(DynamicValueGetter<CamelliaHashedExecutor.RejectedExecutionHandler> rejectedExecutionHandler) {
         this.rejectedExecutionHandler = rejectedExecutionHandler;
+    }
+
+    public Runnable getWorkThreadInitCallback() {
+        return workThreadInitCallback;
+    }
+
+    public void setWorkThreadInitCallback(Runnable workThreadInitCallback) {
+        this.workThreadInitCallback = workThreadInitCallback;
     }
 }
