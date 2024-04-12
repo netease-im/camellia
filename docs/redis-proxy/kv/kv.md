@@ -11,7 +11,7 @@
 * proxy内部多work-thread运行，每个命令根据key哈希到同一个work-thread运行
 * proxy本身弱状态
 * proxy依赖的存储包括三种类型：key-meta-server、cache-server、kv-storage
-* key-meta-server用于维护key的meta信息，包括key的类型、版本、ttl等，可以基于redis实现，也可以基于hbase/tikv/oceanbase实现
+* key-meta-server，用于维护key的meta信息，包括key的类型、版本、ttl等，可以基于redis实现，也可以基于hbase/tikv/oceanbase实现
 * cache-server，可选组件，基于redis，特点是key的ttl很短，并且允许换出
 * kv-storage，持久化层，抽象简单的put/get/delete/scan等接口，可以基于hbase/tikv/oceanbase实现
 
