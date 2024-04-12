@@ -58,7 +58,7 @@ public class CamelliaRedisProxyStarter {
                     logger.warn("CamelliaRedisProxyServer has started");
                     return;
                 }
-                GlobalRedisProxyEnv.init(serverProperties);
+                GlobalRedisProxyEnv.init(serverProperties, transpondProperties);
                 CommandInvoker commandInvoker = new CommandInvoker(serverProperties, transpondProperties);
                 CamelliaRedisProxyServer server = new CamelliaRedisProxyServer(serverProperties, commandInvoker);
                 server.start();

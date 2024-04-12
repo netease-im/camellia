@@ -4,6 +4,7 @@ import com.netease.nim.camellia.redis.base.proxy.ProxyDiscoveryFactory;
 import com.netease.nim.camellia.redis.proxy.command.DefaultQueueFactory;
 import com.netease.nim.camellia.redis.proxy.command.QueueFactory;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
+import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
@@ -37,6 +38,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class GlobalRedisProxyEnv {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalRedisProxyEnv.class);
+
+    private static CamelliaServerProperties serverProperties;
+    private static CamelliaTranspondProperties transpondProperties;
 
     private static final String BOSS_GROUP_NAME = "camellia-boss-group";
     private static final String WORK_GROUP_NAME = "camellia-work-group";
@@ -78,10 +82,12 @@ public class GlobalRedisProxyEnv {
     private static final Set<Runnable> beforeStartCallbackSet = new HashSet<>();
     private static final Set<Runnable> afterStartCallbackSet = new HashSet<>();
 
-    public static void init(CamelliaServerProperties serverProperties) {
+    public static void init(CamelliaServerProperties serverProperties, CamelliaTranspondProperties transpondProperties) {
         if (initOk.get()) return;
         synchronized (GlobalRedisProxyEnv.class) {
             if (initOk.get()) return;
+            GlobalRedisProxyEnv.serverProperties = serverProperties;
+            GlobalRedisProxyEnv.transpondProperties = transpondProperties;
             GlobalRedisProxyEnv.nettyTransportMode = serverProperties.getNettyTransportMode();
             if (nettyTransportMode == NettyTransportMode.epoll && isEpollAvailable()) {
                 bossThread = serverProperties.getBossThread();
@@ -340,5 +346,13 @@ public class GlobalRedisProxyEnv {
 
     public static ProxyBeanFactory getProxyBeanFactory() {
         return proxyBeanFactory;
+    }
+
+    public static CamelliaServerProperties getServerProperties() {
+        return serverProperties;
+    }
+
+    public static CamelliaTranspondProperties getTranspondProperties() {
+        return transpondProperties;
     }
 }

@@ -12,6 +12,7 @@ import com.netease.nim.camellia.redis.proxy.kv.core.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.kv.core.meta.DefaultKeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.kv.core.meta.KeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
@@ -19,6 +20,12 @@ import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionH
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
 import com.netease.nim.camellia.tools.utils.SysUtils;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
+import io.netty.util.concurrent.DefaultThreadFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
@@ -29,20 +36,14 @@ import java.util.concurrent.CompletableFuture;
 public class UpstreamKVClientTemplateFactory implements IUpstreamClientTemplateFactory {
 
     private final UpstreamKVClientTemplate template;
+    private EventLoopGroup eventLoopGroup;
 
     public UpstreamKVClientTemplateFactory() {
         String namespace = ProxyDynamicConf.getString("kv.namespace", "d");
-
-        int threads = ProxyDynamicConf.getInt("kv.command.executor.threads", SysUtils.getCpuNum() * 4);
-        int queueSize = ProxyDynamicConf.getInt("kv.command.executor.queue.size", 100000);
-
-        CamelliaHashedExecutor executor = new CamelliaHashedExecutor("kv-command-executor", threads, queueSize, new CamelliaHashedExecutor.AbortPolicy());
-
         KVClient kvClient = initKVClient();
+        CamelliaHashedExecutor executor = initExecutor();
 
         this.template = initUpstreamKVClientTemplate(namespace, kvClient, executor);
-
-        RedisConnectionHub.getInstance().init(new CamelliaTranspondProperties(), GlobalRedisProxyEnv.getProxyBeanFactory());
     }
 
     @Override
@@ -68,6 +69,31 @@ public class UpstreamKVClientTemplateFactory implements IUpstreamClientTemplateF
     @Override
     public int shutdown() {
         return 0;
+    }
+
+    private CamelliaHashedExecutor initExecutor() {
+        //init upstream redis connection
+        RedisConnectionHub.getInstance().init(GlobalRedisProxyEnv.getTranspondProperties(), GlobalRedisProxyEnv.getProxyBeanFactory());
+
+        //init upstream redis event loop
+        CamelliaTranspondProperties.RedisConfProperties redisConf = GlobalRedisProxyEnv.getTranspondProperties().getRedisConf();
+        NettyTransportMode nettyTransportMode = GlobalRedisProxyEnv.getNettyTransportMode();
+        if (nettyTransportMode == NettyTransportMode.epoll) {
+            this.eventLoopGroup = new EpollEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-kv-redis-connection"));
+        } else if (nettyTransportMode == NettyTransportMode.kqueue) {
+            this.eventLoopGroup = new KQueueEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-kv-redis-connection"));
+        } else if (nettyTransportMode == NettyTransportMode.io_uring) {
+            this.eventLoopGroup = new IOUringEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-kv-redis-connection"));
+        } else {
+            this.eventLoopGroup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-kv-redis-connection"));
+        }
+
+        Runnable workThreadInitCallback = () -> RedisConnectionHub.getInstance().updateEventLoop(eventLoopGroup.next());
+
+        int threads = ProxyDynamicConf.getInt("kv.command.executor.threads", SysUtils.getCpuNum() * 4);
+        int queueSize = ProxyDynamicConf.getInt("kv.command.executor.queue.size", 100000);
+        return new CamelliaHashedExecutor("kv-command-executor", threads, queueSize,
+                new CamelliaHashedExecutor.AbortPolicy(), workThreadInitCallback);
     }
 
     private KVClient initKVClient() {

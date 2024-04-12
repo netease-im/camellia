@@ -41,7 +41,6 @@ public class CamelliaRedisProxyServer {
     private int httpPort;
 
     public CamelliaRedisProxyServer(CamelliaServerProperties serverProperties, ICommandInvoker invoker) {
-        GlobalRedisProxyEnv.init(serverProperties);
         this.serverProperties = serverProperties;
         this.invoker = invoker;
         this.serverHandler = new ServerHandler(invoker);

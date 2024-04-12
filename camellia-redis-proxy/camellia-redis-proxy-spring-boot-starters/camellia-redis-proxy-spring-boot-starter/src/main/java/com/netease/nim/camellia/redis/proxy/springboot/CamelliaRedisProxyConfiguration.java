@@ -52,7 +52,6 @@ public class CamelliaRedisProxyConfiguration implements ApplicationContextAware 
     @Bean
     public CamelliaRedisProxyBoot redisProxyBoot(CamelliaRedisProxyProperties properties) throws Exception {
         CamelliaServerProperties serverProperties = camelliaServerProperties(properties);
-        GlobalRedisProxyEnv.init(serverProperties);
 
         CamelliaTranspondProperties transpondProperties = new CamelliaTranspondProperties();
         TranspondProperties transpond = properties.getTranspond();
@@ -64,9 +63,10 @@ public class CamelliaRedisProxyConfiguration implements ApplicationContextAware 
         transpondProperties.setRedisConf(CamelliaRedisProxyUtil.parse(transpond.getRedisConf()));
         transpondProperties.setNettyProperties(CamelliaRedisProxyUtil.parse(transpond.getNetty()));
 
+        GlobalRedisProxyEnv.init(serverProperties, transpondProperties);
+
         CommandInvoker commandInvoker = new CommandInvoker(serverProperties, transpondProperties);
 
-        GlobalRedisProxyEnv.init(serverProperties);
         return new CamelliaRedisProxyBoot(serverProperties, commandInvoker);
     }
 
