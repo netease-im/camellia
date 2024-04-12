@@ -16,6 +16,8 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import java.nio.charset.StandardCharsets;
 
 /**
+ * HGET key field
+ * <p>
  * Created by caojiajun on 2024/4/7
  */
 public class HGetCommander extends Commander {
@@ -58,26 +60,30 @@ public class HGetCommander extends Commander {
         byte[] field = objects[2];
 
         //meta
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key, KeyType.hash, false);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
             return BulkReply.NIL_REPLY;
         }
+        if (keyMeta.getKeyType() != KeyType.hash) {
+            return ErrorReply.WRONG_TYPE;
+        }
+
+        byte[] hashFieldCacheKey = keyStruct.hashFieldCacheKey(keyMeta, key, field);
+        byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
 
         //cache
-        //hget cache
-        byte[] hashFieldCacheKey = keyStruct.hashFieldCacheKey(keyMeta, key, field);
-        //hgetall cache
-        byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
-        Reply reply1 = sync(cacheRedisTemplate.sendLua(script, new byte[][]{hashFieldCacheKey, cacheKey},
-                new byte[][]{field, hgetCacheMillis(), hgetallCacheMillis()}));
-        if (reply1 instanceof ErrorReply) {
-            return reply1;
-        }
-        if (reply1 instanceof MultiBulkReply) {
-            Reply[] replies = ((MultiBulkReply) reply1).getReplies();
-            String type = Utils.bytesToString(((BulkReply) replies[0]).getRaw());
-            if (type.equalsIgnoreCase("1") || type.equalsIgnoreCase("2")) {
-                return replies[1];
+        {
+            Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{hashFieldCacheKey, cacheKey},
+                    new byte[][]{field, hgetCacheMillis(), hgetallCacheMillis()}));
+            if (reply instanceof ErrorReply) {
+                return reply;
+            }
+            if (reply instanceof MultiBulkReply) {
+                Reply[] replies = ((MultiBulkReply) reply).getReplies();
+                String type = Utils.bytesToString(((BulkReply) replies[0]).getRaw());
+                if (type.equalsIgnoreCase("1") || type.equalsIgnoreCase("2")) {
+                    return replies[1];
+                }
             }
         }
 
@@ -90,9 +96,9 @@ public class HGetCommander extends Commander {
         }
 
         //build hget cache
-        Reply reply2 = sync(cacheRedisTemplate.sendPSetEx(hashFieldCacheKey, cacheConfig.hgetCacheMillis(), keyValue.getValue()));
-        if (reply2 instanceof ErrorReply) {
-            return reply2;
+        Reply reply = sync(cacheRedisTemplate.sendPSetEx(hashFieldCacheKey, cacheConfig.hgetCacheMillis(), keyValue.getValue()));
+        if (reply instanceof ErrorReply) {
+            return reply;
         }
         return new BulkReply(keyValue.getValue());
     }

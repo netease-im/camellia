@@ -22,6 +22,26 @@ public class IntegerReply implements Reply {
         return integer;
     }
 
+    public static IntegerReply parse(int value) {
+        if (value == 0) {
+            return REPLY_0;
+        } else if (value == 1) {
+            return REPLY_1;
+        } else {
+            return new IntegerReply((long) value);
+        }
+    }
+
+    public static IntegerReply parse(long value) {
+        if (value == 0) {
+            return REPLY_0;
+        } else if (value == 1) {
+            return REPLY_1;
+        } else {
+            return new IntegerReply(value);
+        }
+    }
+
     @Override
     public void write(ByteBuf byteBuf) throws IOException {
         if (integer == null) {

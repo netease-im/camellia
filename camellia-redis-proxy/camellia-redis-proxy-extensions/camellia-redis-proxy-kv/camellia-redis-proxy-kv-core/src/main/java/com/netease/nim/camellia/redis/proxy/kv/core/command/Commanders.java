@@ -4,9 +4,11 @@ package com.netease.nim.camellia.redis.proxy.kv.core.command;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.kv.core.command.db.*;
-import com.netease.nim.camellia.redis.proxy.kv.core.command.hash.HGetAllCommander;
-import com.netease.nim.camellia.redis.proxy.kv.core.command.hash.HGetCommander;
-import com.netease.nim.camellia.redis.proxy.kv.core.command.hash.HSetCommander;
+import com.netease.nim.camellia.redis.proxy.kv.core.command.hash.*;
+import com.netease.nim.camellia.redis.proxy.kv.core.command.string.GetCommander;
+import com.netease.nim.camellia.redis.proxy.kv.core.command.string.PSetExCommander;
+import com.netease.nim.camellia.redis.proxy.kv.core.command.string.SetCommander;
+import com.netease.nim.camellia.redis.proxy.kv.core.command.string.SetExCommander;
 import com.netease.nim.camellia.redis.proxy.kv.core.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -23,14 +25,30 @@ public class Commanders {
     private final Map<RedisCommand, Commander> map = new HashMap<>();
 
     public Commanders(CommanderConfig commanderConfig) {
-        initCommander(new HSetCommander(commanderConfig));
-        initCommander(new HGetCommander(commanderConfig));
-        initCommander(new HGetAllCommander(commanderConfig));
+        //db
         initCommander(new PExpireCommander(commanderConfig));
         initCommander(new ExpireCommander(commanderConfig));
         initCommander(new DelCommander(commanderConfig));
         initCommander(new ExistsCommander(commanderConfig));
         initCommander(new UnlinkCommander(commanderConfig));
+
+        //string
+        initCommander(new GetCommander(commanderConfig));
+        initCommander(new PSetExCommander(commanderConfig));
+        initCommander(new SetExCommander(commanderConfig));
+        initCommander(new SetCommander(commanderConfig));
+
+        //hash
+        initCommander(new HSetCommander(commanderConfig));
+        initCommander(new HMsetCommander(commanderConfig));
+        initCommander(new HGetCommander(commanderConfig));
+        initCommander(new HGetAllCommander(commanderConfig));
+        initCommander(new HDelCommander(commanderConfig));
+        initCommander(new HLenCommander(commanderConfig));
+
+        //zset
+
+
     }
 
     private void initCommander(Commander commander) {

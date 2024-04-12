@@ -5,11 +5,11 @@ package com.netease.nim.camellia.redis.proxy.kv.core.meta;
  */
 public interface KeyMetaServer {
 
-    KeyMeta getKeyMeta(byte[] key, KeyType keyType, boolean createIfNotExists);
+    KeyMeta getKeyMeta(byte[] key);
 
     void createOrUpdateKeyMeta(byte[] key, KeyMeta keyMeta);
 
     int deleteKeyMeta(byte[] key);
 
-    int existsKeyMeta(byte[] key);
+    boolean existsKeyMeta(byte[] key);
 }

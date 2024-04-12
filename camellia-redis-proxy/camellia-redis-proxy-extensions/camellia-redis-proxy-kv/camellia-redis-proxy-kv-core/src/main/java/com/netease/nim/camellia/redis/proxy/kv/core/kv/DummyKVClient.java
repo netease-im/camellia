@@ -47,6 +47,11 @@ public class DummyKVClient implements KVClient {
     }
 
     @Override
+    public boolean[] exists(byte[]... keys) {
+        return new boolean[0];
+    }
+
+    @Override
     public List<KeyValue> batchGet(byte[]... keys) {
         logger.info("batchGet, size = {}", keys.length);
         List<KeyValue> list = new ArrayList<>();
@@ -84,7 +89,17 @@ public class DummyKVClient implements KVClient {
     }
 
     @Override
+    public long count(byte[] startKey, byte[] prefix, boolean includeStartKey) {
+        return 0;
+    }
+
+    @Override
     public List<KeyValue> scan(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey, boolean includeEndKey) {
         return null;
+    }
+
+    @Override
+    public long count(byte[] startKey, byte[] endKey, boolean includeStartKey, boolean includeEndKey) {
+        return 0;
     }
 }

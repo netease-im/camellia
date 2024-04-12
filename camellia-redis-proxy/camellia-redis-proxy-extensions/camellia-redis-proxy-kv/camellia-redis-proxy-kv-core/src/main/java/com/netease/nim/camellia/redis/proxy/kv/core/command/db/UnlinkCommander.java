@@ -8,6 +8,8 @@ import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 
 /**
+ * UNLINK key
+ * <p>
  * Created by caojiajun on 2024/4/8
  */
 public class UnlinkCommander extends Commander {
@@ -32,12 +34,6 @@ public class UnlinkCommander extends Commander {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
         int ret = keyMetaServer.deleteKeyMeta(key);
-        if (ret == 0) {
-            return IntegerReply.REPLY_0;
-        } else if (ret == 1) {
-            return IntegerReply.REPLY_1;
-        } else {
-            return new IntegerReply((long) ret);
-        }
+        return IntegerReply.parse(ret);
     }
 }

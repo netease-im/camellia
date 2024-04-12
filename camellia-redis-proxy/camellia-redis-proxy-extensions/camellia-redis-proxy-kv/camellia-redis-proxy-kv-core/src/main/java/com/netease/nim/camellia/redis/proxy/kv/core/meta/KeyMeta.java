@@ -7,22 +7,23 @@ import com.netease.nim.camellia.redis.proxy.kv.core.utils.BytesUtils;
  * Created by caojiajun on 2024/4/7
  */
 public class KeyMeta {
+    private final KeyMetaVersion keyMetaVersion;
     private final KeyType keyType;
-    private final long version;
+    private final long keyVersion;
     private final long expireTime;
-    private byte[] _data;
+    private final byte[] extra;
+    private byte[] raw;
 
-    private KeyMeta(KeyType keyType, long version, long expireTime, byte[] _data) {
-        this.keyType = keyType;
-        this.version = version;
-        this.expireTime = expireTime;
-        this._data = _data;
+    public KeyMeta(KeyMetaVersion keyMetaVersion, KeyType keyType, long keyVersion, long expireTime) {
+        this(keyMetaVersion, keyType, keyVersion, expireTime, null);
     }
 
-    public KeyMeta(KeyType keyType, long version, long expireTime) {
+    public KeyMeta(KeyMetaVersion keyMetaVersion, KeyType keyType, long keyVersion, long expireTime, byte[] extra) {
+        this.keyMetaVersion = keyMetaVersion;
         this.keyType = keyType;
-        this.version = version;
+        this.keyVersion = keyVersion;
         this.expireTime = expireTime;
+        this.extra = extra;
     }
 
     public KeyType getKeyType() {
@@ -33,29 +34,55 @@ public class KeyMeta {
         return expireTime;
     }
 
-    public long getVersion() {
-        return version;
+    public KeyMetaVersion getKeyMetaVersion() {
+        return keyMetaVersion;
+    }
+
+    public long getKeyVersion() {
+        return keyVersion;
+    }
+
+    public byte[] getExtra() {
+        return extra;
+    }
+
+    private void setRaw(byte[] raw) {
+        this.raw = raw;
     }
 
     public byte[] toBytes() {
-        if (_data != null) {
-            return _data;
+        if (raw != null) {
+            return raw;
         }
-        _data = BytesUtils.merge(keyType.getValue(), BytesUtils.toBytes(version));
-        _data = BytesUtils.merge(_data, BytesUtils.toBytes(expireTime));
-        return _data;
+        byte[] flag = new byte[2];
+        flag[0] = keyMetaVersion.getValue();
+        flag[1] = keyType.getValue();
+        byte[] data = BytesUtils.merge(flag, BytesUtils.toBytes(keyVersion), BytesUtils.toBytes(expireTime));
+        if (extra != null && extra.length > 0) {
+            data = BytesUtils.merge(data, extra);
+        }
+        this.raw = data;
+        return data;
     }
 
-    public static KeyMeta fromBytes(byte[] data) {
-        if (data == null) {
+    public static KeyMeta fromBytes(byte[] raw) {
+        if (raw == null) {
             return null;
         }
-        if (data.length != 17) {
+        if (raw.length < 18) {
             return null;
         }
-        KeyType keyType = KeyType.getByValue(data[0]);
-        long version = BytesUtils.toLong(data, 1);
-        long expireTime = BytesUtils.toLong(data, 9);
-        return new KeyMeta(keyType, version, expireTime, data);
+        KeyMetaVersion keyMetaVersion = KeyMetaVersion.getByValue(raw[0]);
+        KeyType keyType = KeyType.getByValue(raw[1]);
+        long keyVersion = BytesUtils.toLong(raw, 2);
+        long expireTime = BytesUtils.toLong(raw, 10);
+        byte[] extra = null;
+        if (raw.length > 18) {
+            extra = new byte[raw.length - 18];
+            System.arraycopy(raw, 18, extra, 0, extra.length);
+        }
+        KeyMeta keyMeta = new KeyMeta(keyMetaVersion, keyType, keyVersion, expireTime, extra);
+        keyMeta.setRaw(raw);
+        return keyMeta;
     }
 }

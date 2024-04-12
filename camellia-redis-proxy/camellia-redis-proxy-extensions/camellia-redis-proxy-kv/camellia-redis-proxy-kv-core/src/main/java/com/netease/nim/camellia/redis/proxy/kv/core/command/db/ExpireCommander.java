@@ -10,6 +10,8 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 /**
+ * EXPIRE key seconds
+ * <p>
  * Created by caojiajun on 2024/4/8
  */
 public class ExpireCommander extends Commander {
@@ -34,11 +36,12 @@ public class ExpireCommander extends Commander {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
         long expireSeconds = Utils.bytesToNum(objects[2]);
-        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key, null, false);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
             return IntegerReply.REPLY_0;
         }
-        keyMeta = new KeyMeta(keyMeta.getKeyType(), keyMeta.getVersion(), System.currentTimeMillis() + expireSeconds*1000L);
+        keyMeta = new KeyMeta(keyMeta.getKeyMetaVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(),
+                System.currentTimeMillis() + expireSeconds*1000L, keyMeta.getExtra());
         keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
         return IntegerReply.REPLY_1;
     }

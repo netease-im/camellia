@@ -15,6 +15,8 @@ public interface KVClient {
 
     boolean exists(byte[] key);
 
+    boolean[] exists(byte[]... keys);
+
     List<KeyValue> batchGet(byte[]... keys);
 
     void delete(byte[] key);
@@ -23,5 +25,9 @@ public interface KVClient {
 
     List<KeyValue> scan(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey);
 
+    long count(byte[] startKey, byte[] prefix, boolean includeStartKey);
+
     List<KeyValue> scan(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey, boolean includeEndKey);
+
+    long count(byte[] startKey, byte[] endKey, boolean includeStartKey, boolean includeEndKey);
 }

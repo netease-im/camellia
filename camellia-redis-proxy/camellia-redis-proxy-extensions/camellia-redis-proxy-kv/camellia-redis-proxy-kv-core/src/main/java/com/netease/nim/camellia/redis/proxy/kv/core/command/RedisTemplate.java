@@ -30,7 +30,8 @@ public class RedisTemplate {
         this.template = template;
     }
 
-    public CompletableFuture<Reply> sendLua(byte[] script, byte[][] keys, byte[][] args) {
+
+    public Command luaCommand(byte[] script, byte[][] keys, byte[][] args) {
         int length = keys.length;
         byte[][] cmd = new byte[3 + keys.length + args.length][];
         cmd[0] = RedisCommand.EVAL.raw();
@@ -55,8 +56,11 @@ public class RedisTemplate {
             cmd[index] = arg;
             index ++;
         }
-        Command command = new Command(cmd);
-        return sendCommand(command);
+        return new Command(cmd);
+    }
+
+    public CompletableFuture<Reply> sendLua(byte[] script, byte[][] keys, byte[][] args) {
+        return sendCommand(luaCommand(script, keys, args));
     }
 
     public CompletableFuture<Reply> sendDel(byte[] key) {

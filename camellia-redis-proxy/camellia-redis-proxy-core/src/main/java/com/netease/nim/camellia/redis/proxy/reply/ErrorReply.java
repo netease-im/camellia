@@ -39,6 +39,8 @@ public class ErrorReply implements Reply {
     public static final ErrorReply TOO_MANY_CLIENTS = new ErrorReply("ERR max number of clients reached");
     public static final ErrorReply COMMAND_MOVED_BY_UPSTREAM_SERVER = new ErrorReply("ERR command moved by upstream server");
     public static final ErrorReply TIMEOUT = new ErrorReply("ERR command execute timeout");
+    public static final ErrorReply INTERNAL_ERROR = new ErrorReply("ERR internal error");
+    public static final ErrorReply WRONG_TYPE = new ErrorReply("WRONGTYPE Operation against a key holding the wrong kind of value");
 
     private static final char MARKER = Marker.ErrorReply.getMarker();
     private final String error;

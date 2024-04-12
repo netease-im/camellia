@@ -24,7 +24,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
     }
 
     @Override
-    public KeyMeta getKeyMeta(byte[] key, KeyType keyType, boolean createIfNotExists) {
+    public KeyMeta getKeyMeta(byte[] key) {
         byte[] redisKey = keyStruct.metaKey(key);
         Reply reply = sync(keyMetaRedisTemplate.sendGet(redisKey));
         if (reply instanceof ErrorReply) {
@@ -35,22 +35,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             if (raw != null) {
                 return KeyMeta.fromBytes(raw);
             }
-            if (!createIfNotExists) {
-                return null;
-            }
-            if (keyType == null) {
-                throw new KvException("ERR key meta error");
-            }
-            KeyMeta keyMeta = new KeyMeta(keyType, System.currentTimeMillis(), -1);
-            Reply reply1 = sync(keyMetaRedisTemplate.sendSet(redisKey, keyMeta.toBytes()));
-            if (reply1 instanceof StatusReply) {
-                if (((StatusReply) reply1).getStatus().equalsIgnoreCase(StatusReply.OK.getStatus())) {
-                    return keyMeta;
-                }
-            }
-            if (reply1 instanceof ErrorReply) {
-                throw new KvException(((ErrorReply) reply1).getError());
-            }
+            return null;
         }
         throw new KvException("ERR key meta error");
     }
@@ -58,8 +43,13 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
     @Override
     public void createOrUpdateKeyMeta(byte[] key, KeyMeta keyMeta) {
         byte[] redisKey = keyStruct.metaKey(key);
-        long expireMillis = keyMeta.getExpireTime() - System.currentTimeMillis();
-        Reply reply = sync(keyMetaRedisTemplate.sendPSetEx(redisKey, expireMillis, keyMeta.toBytes()));
+        Reply reply;
+        if (keyMeta.getExpireTime() > 0) {
+            long expireMillis = keyMeta.getExpireTime() - System.currentTimeMillis();
+            reply = sync(keyMetaRedisTemplate.sendPSetEx(redisKey, expireMillis, keyMeta.toBytes()));
+        } else {
+            reply = sync(keyMetaRedisTemplate.sendSet(redisKey, keyMeta.toBytes()));
+        }
         if (reply instanceof StatusReply) {
             if (((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.OK.getStatus())) {
                 return;
@@ -84,11 +74,11 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
     }
 
     @Override
-    public int existsKeyMeta(byte[] key) {
+    public boolean existsKeyMeta(byte[] key) {
         byte[] redisKey = keyStruct.metaKey(key);
         Reply reply = sync(keyMetaRedisTemplate.sendExists(redisKey));
         if (reply instanceof IntegerReply) {
-            return ((IntegerReply) reply).getInteger().intValue();
+            return ((IntegerReply) reply).getInteger().intValue() > 0;
         }
         if (reply instanceof ErrorReply) {
             throw new KvException(((ErrorReply) reply).getError());

@@ -73,6 +73,15 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
+    public boolean[] exists(byte[]... keys) {
+        List<Get> getList = new ArrayList<>(keys.length);
+        for (byte[] key : keys) {
+            getList.add(new Get(key));
+        }
+        return template.existsAll(tableName, getList);
+    }
+
+    @Override
     public List<KeyValue> batchGet(byte[]... keys) {
         List<Get> list = new ArrayList<>(keys.length);
         for (byte[] key : keys) {
@@ -135,6 +144,28 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
+    public long count(byte[] startKey, byte[] prefix, boolean includeStartKey) {
+        Scan scan = new Scan();
+        scan.setStartRow(startKey);
+        scan.setSmall(true);
+        int count=0;
+        try (ResultScanner scanner = template.scan(tableName, scan)) {
+            for (Result result : scanner) {
+                byte[] row = result.getRow();
+                if (!includeStartKey && Arrays.equals(row, startKey)) {
+                    continue;
+                }
+                if (BytesUtils.startWith(row, prefix)) {
+                    count ++;
+                } else {
+                    break;
+                }
+            }
+            return count;
+        }
+    }
+
+    @Override
     public List<KeyValue> scan(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey, boolean includeEndKey) {
         Scan scan = new Scan();
         scan.setStartRow(startKey);
@@ -160,6 +191,28 @@ public class HBaseKVClient implements KVClient {
                 }
             }
             return list;
+        }
+    }
+
+    @Override
+    public long count(byte[] startKey, byte[] endKey, boolean includeStartKey, boolean includeEndKey) {
+        Scan scan = new Scan();
+        scan.setStartRow(startKey);
+        scan.setStopRow(endKey);
+        scan.setSmall(true);
+        int count = 0;
+        try (ResultScanner scanner = template.scan(tableName, scan)) {
+            for (Result result : scanner) {
+                byte[] row = result.getRow();
+                if (!includeStartKey && Arrays.equals(row, startKey)) {
+                    continue;
+                }
+                if (!includeEndKey && Arrays.equals(row, endKey)) {
+                    continue;
+                }
+                count ++;
+            }
+            return count;
         }
     }
 }
