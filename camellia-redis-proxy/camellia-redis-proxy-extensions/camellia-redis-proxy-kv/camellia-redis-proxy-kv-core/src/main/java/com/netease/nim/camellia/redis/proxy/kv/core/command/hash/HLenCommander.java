@@ -5,7 +5,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.kv.core.command.Commander;
 import com.netease.nim.camellia.redis.proxy.kv.core.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.kv.core.meta.KeyMeta;
-import com.netease.nim.camellia.redis.proxy.kv.core.meta.KeyMetaVersion;
+import com.netease.nim.camellia.redis.proxy.kv.core.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.kv.core.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.kv.core.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
@@ -45,10 +45,10 @@ public class HLenCommander extends Commander {
         if (keyMeta.getKeyType() != KeyType.hash) {
             return ErrorReply.WRONG_TYPE;
         }
-        if (keyMeta.getKeyMetaVersion() == KeyMetaVersion.version_0) {
+        if (keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
             int size = BytesUtils.toInt(keyMeta.getExtra());
             return IntegerReply.parse(size);
-        } else if (keyMeta.getKeyMetaVersion() == KeyMetaVersion.version_1) {
+        } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_1) {
             byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
             Reply reply = sync(cacheRedisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.HLEN.raw(), cacheKey})));
             if (reply instanceof IntegerReply) {

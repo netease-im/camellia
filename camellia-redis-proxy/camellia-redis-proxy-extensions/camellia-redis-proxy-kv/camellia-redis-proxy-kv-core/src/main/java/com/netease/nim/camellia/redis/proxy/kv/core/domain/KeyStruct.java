@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.kv.core.domain;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.kv.core.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.kv.core.meta.KeyMeta;
-import com.netease.nim.camellia.redis.proxy.kv.core.meta.KeyMetaVersion;
+import com.netease.nim.camellia.redis.proxy.kv.core.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.kv.core.utils.BytesUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -69,12 +69,12 @@ public class KeyStruct {
         return field;
     }
 
-    public KeyMetaVersion hashKeyMetaVersion() {
+    public EncodeVersion hashKeyMetaVersion() {
         int version = ProxyDynamicConf.getInt("kv.hash.key.meta.version", 0);
         if (version == 0) {
-            return KeyMetaVersion.version_0;
+            return EncodeVersion.version_0;
         } else if (version == 1) {
-            return KeyMetaVersion.version_1;
+            return EncodeVersion.version_1;
         } else {
             throw new KvException("ERR illegal key meta version");
         }

@@ -40,7 +40,7 @@ public class PExpireCommander extends Commander {
         if (keyMeta == null) {
             return IntegerReply.REPLY_0;
         }
-        keyMeta = new KeyMeta(keyMeta.getKeyMetaVersion(), keyMeta.getKeyType(),
+        keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(),
                 keyMeta.getKeyVersion(), System.currentTimeMillis() + expireMillis, keyMeta.getExtra());
         keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
         return IntegerReply.REPLY_1;

@@ -5,7 +5,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.kv.core.command.Commander;
 import com.netease.nim.camellia.redis.proxy.kv.core.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.kv.core.meta.KeyMeta;
-import com.netease.nim.camellia.redis.proxy.kv.core.meta.KeyMetaVersion;
+import com.netease.nim.camellia.redis.proxy.kv.core.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.kv.core.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.kv.core.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.reply.*;
@@ -85,19 +85,19 @@ public class HDelCommander extends Commander {
 
                 byte[] hashFieldStoreKey = keyStruct.hashFieldStoreKey(keyMeta, key, field);
 
-                if (!hit && keyMeta.getKeyMetaVersion() == KeyMetaVersion.version_0) {
+                if (!hit && keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
                     hit = kvClient.exists(hashFieldStoreKey);
                 }
 
-                if (hit && keyMeta.getKeyMetaVersion() == KeyMetaVersion.version_0) {
+                if (hit && keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
                     int size = BytesUtils.toInt(keyMeta.getExtra());
                     byte[] extra = BytesUtils.toBytes(size - 1);
-                    keyMeta = new KeyMeta(keyMeta.getKeyMetaVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
+                    keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
                     keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
                 }
 
                 kvClient.delete(hashFieldStoreKey);
-                if (hit || keyMeta.getKeyMetaVersion() == KeyMetaVersion.version_1) {
+                if (hit || keyMeta.getEncodeVersion() == EncodeVersion.version_1) {
                     return IntegerReply.REPLY_1;
                 } else {
                     return IntegerReply.REPLY_0;
@@ -140,7 +140,7 @@ public class HDelCommander extends Commander {
             kvClient.batchDelete(storeKeys);
             return result;
         }
-        if (keyMeta.getKeyMetaVersion() == KeyMetaVersion.version_0) {
+        if (keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
             int cacheHitCount = 0;
             List<byte[]> cacheMissFieldStoreKey = new ArrayList<>();
             for (int i=1; i<replyList.size(); i++) {
@@ -169,12 +169,12 @@ public class HDelCommander extends Commander {
 
             int size = BytesUtils.toInt(keyMeta.getExtra());
             byte[] extra = BytesUtils.toBytes(size - delCount);
-            keyMeta = new KeyMeta(keyMeta.getKeyMetaVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
+            keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
             keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
 
             kvClient.batchDelete(storeKeys);
             return IntegerReply.parse(delCount);
-        } else if (keyMeta.getKeyMetaVersion() == KeyMetaVersion.version_1) {
+        } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_1) {
             kvClient.batchDelete(storeKeys);
             return IntegerReply.parse(fieldSize);
         } else {

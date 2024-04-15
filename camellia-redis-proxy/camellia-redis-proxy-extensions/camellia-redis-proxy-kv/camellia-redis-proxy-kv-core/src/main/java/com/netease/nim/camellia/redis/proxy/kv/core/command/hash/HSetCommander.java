@@ -5,7 +5,7 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.kv.core.command.Commander;
 import com.netease.nim.camellia.redis.proxy.kv.core.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.kv.core.meta.KeyMeta;
-import com.netease.nim.camellia.redis.proxy.kv.core.meta.KeyMetaVersion;
+import com.netease.nim.camellia.redis.proxy.kv.core.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.kv.core.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.kv.core.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.kv.core.utils.BytesUtils;
@@ -75,12 +75,12 @@ public class HSetCommander extends Commander {
         //check meta
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
-            KeyMetaVersion keyMetaVersion = keyStruct.hashKeyMetaVersion();
-            if (keyMetaVersion == KeyMetaVersion.version_0) {
+            EncodeVersion keyMetaVersion = keyStruct.hashKeyMetaVersion();
+            if (keyMetaVersion == EncodeVersion.version_0) {
                 int count = fieldMap.size();
                 byte[] extra = BytesUtils.toBytes(count);
                 keyMeta = new KeyMeta(keyMetaVersion, KeyType.hash, System.currentTimeMillis(), -1, extra);
-            } else if (keyMetaVersion == KeyMetaVersion.version_1) {
+            } else if (keyMetaVersion == EncodeVersion.version_1) {
                 keyMeta = new KeyMeta(keyMetaVersion, KeyType.hash, System.currentTimeMillis(), -1);
             } else {
                 return ErrorReply.INTERNAL_ERROR;
@@ -163,7 +163,7 @@ public class HSetCommander extends Commander {
             index ++;
         }
 
-        if (keyMeta.getKeyMetaVersion() == KeyMetaVersion.version_0) {
+        if (keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
             int existsCount = existsFields;
             if (!unknownFields.isEmpty()) {
                 byte[][] storeKeys = new byte[unknownFields.size()][];
@@ -183,12 +183,12 @@ public class HSetCommander extends Commander {
             if (add > 0) {
                 int size = BytesUtils.toInt(keyMeta.getExtra());
                 size = size + add;
-                keyMeta = new KeyMeta(keyMeta.getKeyMetaVersion(), keyMeta.getKeyType(),
+                keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(),
                         keyMeta.getKeyVersion(), keyMeta.getExpireTime(), BytesUtils.toBytes(size));
                 keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
             }
             return IntegerReply.parse(add);
-        } else if (keyMeta.getKeyMetaVersion() == KeyMetaVersion.version_1) {
+        } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_1) {
             //store
             kvClient.batchPut(list);
             return IntegerReply.parse(list.size());//可能不准

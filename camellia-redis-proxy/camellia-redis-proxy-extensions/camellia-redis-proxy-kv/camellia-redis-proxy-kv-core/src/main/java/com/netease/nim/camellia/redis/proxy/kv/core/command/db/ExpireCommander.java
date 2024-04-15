@@ -40,7 +40,7 @@ public class ExpireCommander extends Commander {
         if (keyMeta == null) {
             return IntegerReply.REPLY_0;
         }
-        keyMeta = new KeyMeta(keyMeta.getKeyMetaVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(),
+        keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(),
                 System.currentTimeMillis() + expireSeconds*1000L, keyMeta.getExtra());
         keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
         return IntegerReply.REPLY_1;
