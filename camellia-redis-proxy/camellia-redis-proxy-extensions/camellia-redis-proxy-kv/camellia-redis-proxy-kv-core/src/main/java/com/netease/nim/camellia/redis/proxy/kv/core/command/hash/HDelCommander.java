@@ -58,6 +58,35 @@ public class HDelCommander extends Commander {
 
         int fieldSize = objects.length - 2;
 
+        if (!cacheConfig.isCacheEnable()) {
+            byte[][] storeKeys = new byte[fieldSize][];
+            for (int i=2; i<objects.length; i++) {
+                storeKeys[i-2] = keyStruct.hashFieldStoreKey(keyMeta, key, objects[i]);
+            }
+            if (keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
+                int delCount = 0;
+                boolean[] exists = kvClient.exists(storeKeys);
+                for (boolean exist : exists) {
+                    if (exist) {
+                        delCount ++;
+                    }
+                }
+                if (delCount > 0) {
+                    int size = BytesUtils.toInt(keyMeta.getExtra());
+                    byte[] extra = BytesUtils.toBytes(size - delCount);
+                    keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
+                    keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+                }
+                kvClient.batchDelete(storeKeys);
+                return IntegerReply.parse(delCount);
+            } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_1) {
+                kvClient.batchDelete(storeKeys);
+                return IntegerReply.parse(fieldSize);
+            } else {
+                return ErrorReply.INTERNAL_ERROR;
+            }
+        }
+
         byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
 
         {

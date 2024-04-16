@@ -93,7 +93,7 @@ public class HSetCommander extends Commander {
             }
         }
 
-        if (first) {
+        if (first || !cacheConfig.isCacheEnable()) {
             List<KeyValue> list = new ArrayList<>();
             for (Map.Entry<BytesKey, byte[]> entry : fieldMap.entrySet()) {
                 byte[] field = entry.getKey().getKey();

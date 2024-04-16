@@ -65,6 +65,23 @@ public class HGetAllCommander extends Commander {
             return ErrorReply.WRONG_TYPE;
         }
 
+        //disable cache
+        if (!cacheConfig.isCacheEnable()) {
+            Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
+            if (map.isEmpty()) {
+                return MultiBulkReply.EMPTY;
+            }
+            Reply[] replies = new Reply[map.size() * 2];
+            int i = 0;
+            for (Map.Entry<BytesKey, byte[]> entry : map.entrySet()) {
+                replies[i] = new BulkReply(entry.getKey().getKey());
+                replies[i + 1] = new BulkReply(entry.getValue());
+                i += 2;
+            }
+            return new MultiBulkReply(replies);
+        }
+
+        //get cache first
         byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
         {
             //cache
@@ -81,29 +98,8 @@ public class HGetAllCommander extends Commander {
             }
         }
 
-        Map<BytesKey, byte[]> map = new HashMap<>();
-        //store
-        byte[] startKey = keyStruct.hashFieldStoreKey(keyMeta, key, new byte[0]);
-        byte[] prefix = startKey;
-        int limit = kvConfig.scanBatch();
-        int hashMaxSize = kvConfig.hashMaxSize();
-        while (true) {
-            List<KeyValue> scan = kvClient.scan(startKey, prefix, limit, Sort.ASC, false);
-            if (scan.isEmpty()) {
-                break;
-            }
-            for (KeyValue keyValue : scan) {
-                byte[] field = keyStruct.decodeHashFieldByStoreKey(keyValue.getKey(), key);
-                map.put(new BytesKey(field), keyValue.getValue());
-                startKey = keyValue.getKey();
-                if (map.size() >= hashMaxSize) {
-                    break;
-                }
-            }
-            if (scan.size() < limit) {
-                break;
-            }
-        }
+        //get from kv
+        Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
 
         if (map.isEmpty()) {
             return MultiBulkReply.EMPTY;
@@ -136,6 +132,33 @@ public class HGetAllCommander extends Commander {
             }
         }
         return new MultiBulkReply(replies);
+    }
+
+    private Map<BytesKey, byte[]> hgetallFromKv(KeyMeta keyMeta, byte[] key) {
+        Map<BytesKey, byte[]> map = new HashMap<>();
+        //store
+        byte[] startKey = keyStruct.hashFieldStoreKey(keyMeta, key, new byte[0]);
+        byte[] prefix = startKey;
+        int limit = kvConfig.scanBatch();
+        int hashMaxSize = kvConfig.hashMaxSize();
+        while (true) {
+            List<KeyValue> scan = kvClient.scan(startKey, prefix, limit, Sort.ASC, false);
+            if (scan.isEmpty()) {
+                break;
+            }
+            for (KeyValue keyValue : scan) {
+                byte[] field = keyStruct.decodeHashFieldByStoreKey(keyValue.getKey(), key);
+                map.put(new BytesKey(field), keyValue.getValue());
+                startKey = keyValue.getKey();
+                if (map.size() >= hashMaxSize) {
+                    break;
+                }
+            }
+            if (scan.size() < limit) {
+                break;
+            }
+        }
+        return map;
     }
 
     private byte[] hgetallCacheMillis() {

@@ -103,7 +103,8 @@ public class UpstreamKVClientTemplateFactory implements IUpstreamClientTemplateF
 
     private UpstreamKVClientTemplate initUpstreamKVClientTemplate(String namespace, KVClient kvClient, CamelliaHashedExecutor executor) {
         KeyStruct keyStruct = new KeyStruct(namespace.getBytes(StandardCharsets.UTF_8));
-        CacheConfig cacheConfig = new CacheConfig(namespace);
+        boolean cacheEnable = ProxyDynamicConf.getBoolean("kv.cache.enable", true);
+        CacheConfig cacheConfig = new CacheConfig(namespace, cacheEnable);
         KvConfig kvConfig = new KvConfig(namespace);
 
         String metaRedisUrl = ProxyDynamicConf.getString("kv.meta.redis.url", null);

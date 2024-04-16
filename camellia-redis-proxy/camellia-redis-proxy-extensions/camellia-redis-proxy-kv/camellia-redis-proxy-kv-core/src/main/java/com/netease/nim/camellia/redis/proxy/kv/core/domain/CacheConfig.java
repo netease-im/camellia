@@ -8,9 +8,15 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 public class CacheConfig {
 
     private final String namespace;
+    private final boolean cacheEnable;
 
-    public CacheConfig(String namespace) {
+    public CacheConfig(String namespace, boolean cacheEnable) {
         this.namespace = namespace;
+        this.cacheEnable = cacheEnable;
+    }
+
+    public boolean isCacheEnable() {
+        return cacheEnable;
     }
 
     public long keyMetaTimeoutMillis() {

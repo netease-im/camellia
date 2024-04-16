@@ -7,7 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 
 /**
- * HSET key field value [field value ...]
+ * HMSET key field value [field value ...]
  * <p>
  * Created by caojiajun on 2024/4/11
  */
