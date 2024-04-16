@@ -5,7 +5,7 @@
 
 ## 基本架构
 
-![img_12.png](img_12.png)
+![img.png](img.png)
 
 * proxy基于redis-cluster模式运行，因此相同key会路由到同一个proxy节点（proxy节点扩缩容时需要精细化处理，todo）
 * proxy内部多work-thread运行，每个命令根据key哈希到同一个work-thread运行
@@ -19,14 +19,16 @@
 
 |           key            |                           value                           |
 |:------------------------:|:---------------------------------------------------------:|
-|   m# + namespace + key   |           1-bit / 1-bit / 8-bit / 8-bit / N-bit           |
-| prefix + namespace + key | encode-version / type / key-version / expire-time / extra |
+|   m# + namespace + key   |           1-bit + 1-bit + 8-bit + 8-bit + N-bit           |
+| prefix + namespace + key | encode-version + type + key-version + expire-time + extra |
 
 ```java
 public enum KeyType {
     string((byte) 1),
     hash((byte) 2),
     zset((byte) 3),
+    list((byte) 4),
+    set((byte) 5),
 }
 ```
 
@@ -42,10 +44,10 @@ hash数据有两种编码模式，区别在于key-meta中是否记录size字段�
 
 #### version-0
 
-|           key            |                    value                     |
-|:------------------------:|:--------------------------------------------:|
-|   m# + namespace + key   |    1-bit / 1-bit / 8-bit / 8-bit / 4-bit     |
-| prefix + namespace + key | 0 / 2 / key-version / expire-time / key-size |
+|           key            |                      value                      |
+|:------------------------:|:-----------------------------------------------:|
+|   m# + namespace + key   |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit      |
+| prefix + namespace + key | 0 + 2 + key-version + expire-time + field-count |
 
 * 优点：hlen快，hset/hdel返回结果准确
 * 缺点：写操作的读放大多
@@ -54,22 +56,39 @@ hash数据有两种编码模式，区别在于key-meta中是否记录size字段�
 
 |           key            |               value               |
 |:------------------------:|:---------------------------------:|
-|   m# + namespace + key   |   1-bit / 1-bit / 8-bit / 8-bit   |
-| prefix + namespace + key | 0 / 2 / key-version / expire-time |
+|   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit   |
+| prefix + namespace + key | 0 + 2 + key-version + expire-time |
 
 * 优点：写入快
 * 缺点：hlen慢，hset/hdel等操作返回结果不准确
 
+### hget-cache-key
+
+|                 redis-key                  |            redis-type             | redis-value |
+|:------------------------------------------:|:---------------------------------:|------------:|
+| c# + namespace + key + key-version + field |              string               | field-value |
+
+### hgetall-cache-key
+
+|                 redis-key                 | redis-type |     redis-value |
+|:-----------------------------------------:|:----------:|----------------:|
+|    c# + namespace + key + key-version     |    hash    | full-hash-value |
+
+### hash-field-store-key
+
+|                      redis-key                       |    value    |
+|:----------------------------------------------------:|:-----------:|
+| s# + namespace + key.len + key + key-version + field | field-value |
 
 ### commands
 
-| command | version-0 | version-1 |
-|:-------:|:---------:|:---------:|
-|  hset   |           |           |
-|  hget   |           |           |
-|  hdel   |           |           |
-| hgetall |           |           |
-|  hlen   |           |           |
+| command |         version-0         |         version-1         |
+|:-------:|:-------------------------:|:-------------------------:|
+|  hset   | [hset-v0](./hash/hset-v0) | [hset-v1](./hash/hset-v1) |
+|  hget   |    [hget](./hash/hget)    |        同version-0         |
+|  hdel   | [hdel-v0](./hash/hdel-v0) | [hdel-v1](./hash/hdel-v1) |
+| hgetall | [hgetall](./hash/hgetall) |        同version-0         |
+|  hlen   | [hlen-v0](./hash/hlen-v0) | [hlen-v1](./hash/hlen-v1) |
 
 
 ## zset数据结构

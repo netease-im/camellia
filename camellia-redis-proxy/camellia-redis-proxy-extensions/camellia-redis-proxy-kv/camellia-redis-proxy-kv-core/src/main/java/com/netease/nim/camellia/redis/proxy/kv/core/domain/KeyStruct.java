@@ -16,16 +16,18 @@ public class KeyStruct {
     private static final byte[] HASH_TAG_LEFT = "{".getBytes(StandardCharsets.UTF_8);
     private static final byte[] HASH_TAG_RIGHT = "}".getBytes(StandardCharsets.UTF_8);
 
-    private final int namespaceLen;
+    private final int storePrefixLen;
     private final byte[] namespace;
     private final byte[] metaPrefix;
     private final byte[] cachePrefix;
+    private final byte[] storePrefix;
 
     public KeyStruct(byte[] namespace) {
         this.namespace = namespace;
-        this.namespaceLen = namespace.length;
         this.metaPrefix = BytesUtils.merge("m#".getBytes(StandardCharsets.UTF_8), namespace);
         this.cachePrefix = BytesUtils.merge("c#".getBytes(StandardCharsets.UTF_8), namespace);
+        this.storePrefix = BytesUtils.merge("s#".getBytes(StandardCharsets.UTF_8), namespace);
+        this.storePrefixLen = storePrefix.length;
     }
 
     public byte[] getNamespace() {
@@ -53,7 +55,7 @@ public class KeyStruct {
 
     public byte[] hashFieldStoreKey(KeyMeta keyMeta, byte[] key, byte[] field) {
         byte[] keySize = BytesUtils.toBytes(key.length);
-        byte[] data = BytesUtils.merge(namespace, keySize, key);
+        byte[] data = BytesUtils.merge(storePrefix, keySize, key);
         data = BytesUtils.merge(data, BytesUtils.toBytes(keyMeta.getKeyVersion()));
         if (field.length > 0) {
             data = BytesUtils.merge(data, field);
@@ -62,7 +64,7 @@ public class KeyStruct {
     }
 
     public byte[] decodeHashFieldByStoreKey(byte[] storeKey, byte[] key) {
-        int prefixSize = namespaceLen + 4 + key.length + 8;
+        int prefixSize = storePrefixLen + 4 + key.length + 8;
         int fieldSize = storeKey.length - prefixSize;
         byte[] field = new byte[fieldSize];
         System.arraycopy(storeKey, prefixSize, field, 0, fieldSize);

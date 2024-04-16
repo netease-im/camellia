@@ -8,6 +8,8 @@ public enum KeyType {
     string((byte) 1),
     hash((byte) 2),
     zset((byte) 3),
+    list((byte) 4),
+    set((byte) 5),
     ;
 
     private final byte value;
