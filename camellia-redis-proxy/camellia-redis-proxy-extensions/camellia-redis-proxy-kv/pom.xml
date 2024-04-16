@@ -11,6 +11,7 @@
     <modules>
         <module>camellia-redis-proxy-kv-core</module>
         <module>camellia-redis-proxy-kv-hbase</module>
+        <module>camellia-redis-proxy-kv-obkv</module>
     </modules>
 
     <parent>
