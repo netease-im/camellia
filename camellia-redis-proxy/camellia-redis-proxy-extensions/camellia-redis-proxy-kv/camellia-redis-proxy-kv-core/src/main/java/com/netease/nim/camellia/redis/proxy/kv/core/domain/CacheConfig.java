@@ -8,15 +8,29 @@ import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 public class CacheConfig {
 
     private final String namespace;
-    private final boolean cacheEnable;
+    private final boolean valueCacheEnable;
+    private final boolean metaCacheEnable;
 
-    public CacheConfig(String namespace, boolean cacheEnable) {
+    public CacheConfig(String namespace, boolean metaCacheEnable, boolean valueCacheEnable) {
         this.namespace = namespace;
-        this.cacheEnable = cacheEnable;
+        this.metaCacheEnable = metaCacheEnable;
+        this.valueCacheEnable = valueCacheEnable;
     }
 
-    public boolean isCacheEnable() {
-        return cacheEnable;
+    public boolean isMetaCacheEnable() {
+        return metaCacheEnable;
+    }
+
+    public boolean isValueCacheEnable() {
+        return valueCacheEnable;
+    }
+
+    public long metaCacheMillis() {
+        long keyMetaTimeoutMillis = ProxyDynamicConf.getLong(namespace + ".kv.key.meta.cache.millis", -1L);
+        if (keyMetaTimeoutMillis > 0) {
+            return keyMetaTimeoutMillis;
+        }
+        return ProxyDynamicConf.getLong("kv.key.meta.cache.millis", 1000L * 60 * 10);
     }
 
     public long keyMetaTimeoutMillis() {

@@ -103,18 +103,19 @@ public class UpstreamKVClientTemplateFactory implements IUpstreamClientTemplateF
 
     private UpstreamKVClientTemplate initUpstreamKVClientTemplate(String namespace, KVClient kvClient, CamelliaHashedExecutor executor) {
         KeyStruct keyStruct = new KeyStruct(namespace.getBytes(StandardCharsets.UTF_8));
-        boolean cacheEnable = ProxyDynamicConf.getBoolean("kv.cache.enable", true);
-        CacheConfig cacheConfig = new CacheConfig(namespace, cacheEnable);
+        boolean valueCacheEnable = ProxyDynamicConf.getBoolean("kv.value.cache.enable", true);
+        boolean metaCacheEnable = ProxyDynamicConf.getBoolean("kv.meta.cache.enable", true);
+        CacheConfig cacheConfig = new CacheConfig(namespace, metaCacheEnable, valueCacheEnable);
         KvConfig kvConfig = new KvConfig(namespace);
 
-        String metaRedisUrl = ProxyDynamicConf.getString("kv.meta.redis.url", null);
-        RedisTemplate metaRedisTemplate = new RedisTemplate(new UpstreamRedisClientTemplate(ReadableResourceTableUtil.parseTable(metaRedisUrl)));
-        KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(metaRedisTemplate, keyStruct, cacheConfig);
+        String metaCacheRedisUrl = ProxyDynamicConf.getString("kv.meta.cache.redis.url", null);
+        RedisTemplate metaCacheRedisTemplate = new RedisTemplate(new UpstreamRedisClientTemplate(ReadableResourceTableUtil.parseTable(metaCacheRedisUrl)));
+        KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(kvClient, metaCacheRedisTemplate, keyStruct, cacheConfig);
 
-        String cacheRedisUrl = ProxyDynamicConf.getString("kv.cache.redis.url", null);
-        RedisTemplate cacheRedisTemplate = new RedisTemplate(new UpstreamRedisClientTemplate(ReadableResourceTableUtil.parseTable(cacheRedisUrl)));
+        String cacheRedisUrl = ProxyDynamicConf.getString("kv.value.cache.redis.url", null);
+        RedisTemplate valueCacheRedisTemplate = new RedisTemplate(new UpstreamRedisClientTemplate(ReadableResourceTableUtil.parseTable(cacheRedisUrl)));
 
-        CommanderConfig commanderConfig = new CommanderConfig(kvClient, keyStruct, cacheConfig, kvConfig, keyMetaServer, cacheRedisTemplate);
+        CommanderConfig commanderConfig = new CommanderConfig(kvClient, keyStruct, cacheConfig, kvConfig, keyMetaServer, valueCacheRedisTemplate);
 
         return new UpstreamKVClientTemplate(executor, commanderConfig);
     }

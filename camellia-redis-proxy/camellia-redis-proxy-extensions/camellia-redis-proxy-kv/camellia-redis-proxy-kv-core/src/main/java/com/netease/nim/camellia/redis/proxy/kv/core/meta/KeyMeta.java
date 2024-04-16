@@ -50,6 +50,10 @@ public class KeyMeta {
         this.raw = raw;
     }
 
+    public boolean isExpire() {
+        return System.currentTimeMillis() - expireTime < 0;
+    }
+
     public byte[] toBytes() {
         if (raw != null) {
             return raw;

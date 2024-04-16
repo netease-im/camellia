@@ -49,7 +49,7 @@ public class HLenCommander extends Commander {
             int size = BytesUtils.toInt(keyMeta.getExtra());
             return IntegerReply.parse(size);
         } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_1) {
-            if (!cacheConfig.isCacheEnable()) {
+            if (!cacheConfig.isValueCacheEnable()) {
                 long size = getSizeFromKv(keyMeta, key);
                 return IntegerReply.parse(size);
             }

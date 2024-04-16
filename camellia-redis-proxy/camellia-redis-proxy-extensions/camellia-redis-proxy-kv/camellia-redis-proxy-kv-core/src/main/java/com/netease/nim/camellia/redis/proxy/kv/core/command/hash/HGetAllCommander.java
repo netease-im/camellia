@@ -66,7 +66,7 @@ public class HGetAllCommander extends Commander {
         }
 
         //disable cache
-        if (!cacheConfig.isCacheEnable()) {
+        if (!cacheConfig.isValueCacheEnable()) {
             Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
             if (map.isEmpty()) {
                 return MultiBulkReply.EMPTY;

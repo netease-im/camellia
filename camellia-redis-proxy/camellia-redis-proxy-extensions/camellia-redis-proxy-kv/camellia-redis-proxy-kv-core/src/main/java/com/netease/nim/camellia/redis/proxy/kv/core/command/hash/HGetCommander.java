@@ -69,7 +69,7 @@ public class HGetCommander extends Commander {
         }
 
         //disable cache
-        if (!cacheConfig.isCacheEnable()) {
+        if (!cacheConfig.isValueCacheEnable()) {
             byte[] storeKey = keyStruct.hashFieldStoreKey(keyMeta, key, field);
             KeyValue keyValue = kvClient.get(storeKey);
             if (keyValue == null || keyValue.getValue() == null) {

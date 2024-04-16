@@ -58,7 +58,7 @@ public class HDelCommander extends Commander {
 
         int fieldSize = objects.length - 2;
 
-        if (!cacheConfig.isCacheEnable()) {
+        if (!cacheConfig.isValueCacheEnable()) {
             byte[][] storeKeys = new byte[fieldSize][];
             for (int i=2; i<objects.length; i++) {
                 storeKeys[i-2] = keyStruct.hashFieldStoreKey(keyMeta, key, objects[i]);
