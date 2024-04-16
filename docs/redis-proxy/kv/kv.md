@@ -38,7 +38,7 @@ todo
 
 ## hash数据结构
 
-hash数据有两种编码模式，区别在于key-meta中是否记录size字段，也就是哈希中元素个数
+hash数据有两种编码模式，区别在于key-meta中是否记录field-count字段，也就是哈希中元素个数
 
 ### key-meta
 
