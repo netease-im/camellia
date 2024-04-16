@@ -34,6 +34,16 @@ public enum KeyType {
 }
 ```
 
+## db commands
+
+| command |
+|:-------:|
+|   del   |
+| exists  |
+| expire  |
+| pexpire |
+| unlink  |
+
 ## string数据结构
 
 todo
