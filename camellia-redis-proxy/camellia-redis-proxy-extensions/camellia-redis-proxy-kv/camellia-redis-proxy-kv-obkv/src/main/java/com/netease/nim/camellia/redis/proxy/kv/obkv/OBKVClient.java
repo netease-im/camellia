@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.kv.hbase;
+package com.netease.nim.camellia.redis.proxy.kv.obkv;
 
 import com.alipay.oceanbase.rpc.ObTableClient;
 import com.alipay.oceanbase.rpc.stream.QueryResultSet;
