@@ -15,6 +15,7 @@
 * subkey-server，用于存储hash中的field等subkey，可以基于hbase/tikv/obkv实现
 * cache-server，可选组件，基于redis，特点是key的ttl很短，并且允许换出，支持对key-meta和kv-storage分别增加cache层
 * kv-storage层，抽象了简单的put/get/delete/scan接口，从而可以自由的选择hbase/tikv/obkv，也可以基于其他kv存储
+* 参考了 [pika](https://github.com/OpenAtomFoundation/pika) 、 [kvrocks](https://github.com/apache/kvrocks) 、 [tidis](https://github.com/yongman/tidis)、[titan](https://github.com/distributedio/titan)、[titea](https://github.com/distributedio/titan) 的设计
 
 ## key-meta结构
 
