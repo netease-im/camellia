@@ -84,13 +84,13 @@ hash数据有两种编码模式，区别在于key-meta中是否记录field-count
 
 ### commands
 
-| command |         version-0         |         version-1         |
-|:-------:|:-------------------------:|:-------------------------:|
-|  hset   | [hset-v0](./hash/hset-v0) | [hset-v1](./hash/hset-v1) |
-|  hget   |    [hget](./hash/hget)    |        同version-0         |
-|  hdel   | [hdel-v0](./hash/hdel-v0) | [hdel-v1](./hash/hdel-v1) |
-| hgetall | [hgetall](./hash/hgetall) |        同version-0         |
-|  hlen   | [hlen-v0](./hash/hlen-v0) | [hlen-v1](./hash/hlen-v1) |
+| command |          version-0           |          version-1           |
+|:-------:|:----------------------------:|:----------------------------:|
+|  hset   | [hset-v0](./hash/hset-v0.md) | [hset-v1](./hash/hset-v1.md) |
+|  hget   |    [hget](./hash/hget.md)    |          同version-0          |
+|  hdel   | [hdel-v0](./hash/hdel-v0.md) | [hdel-v1](./hash/hdel-v1.md) |
+| hgetall | [hgetall](./hash/hgetall.md) |          同version-0          |
+|  hlen   | [hlen-v0](./hash/hlen-v0.md) | [hlen-v1](./hash/hlen-v1.md) |
 
 
 ## zset数据结构
