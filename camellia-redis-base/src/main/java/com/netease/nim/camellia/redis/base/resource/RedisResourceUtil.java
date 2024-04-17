@@ -408,6 +408,9 @@ public class RedisResourceUtil {
                     udsPath = str;
                 }
                 return new RedisUnixDomainSocketResource(udsPath, userName, password, db);
+            } else if (redisType == RedisType.RedisKV) {
+                String namespace = url.substring(redisType.getPrefix().length());
+                return new RedisKvResource(namespace);
             }
             throw new CamelliaRedisException("not redis resource");
         } catch (CamelliaRedisException e) {

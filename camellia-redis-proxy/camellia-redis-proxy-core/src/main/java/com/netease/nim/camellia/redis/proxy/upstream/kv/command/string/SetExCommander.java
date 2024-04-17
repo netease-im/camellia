@@ -1,0 +1,32 @@
+package com.netease.nim.camellia.redis.proxy.upstream.kv.command.string;
+
+import com.netease.nim.camellia.redis.proxy.command.Command;
+import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.reply.Reply;
+
+/**
+ * Created by caojiajun on 2024/4/11
+ */
+public class SetExCommander extends Commander {
+
+    public SetExCommander(CommanderConfig commanderConfig) {
+        super(commanderConfig);
+    }
+
+    @Override
+    public RedisCommand redisCommand() {
+        return null;
+    }
+
+    @Override
+    protected boolean parse(Command command) {
+        return false;
+    }
+
+    @Override
+    protected Reply execute(Command command) {
+        return null;
+    }
+}

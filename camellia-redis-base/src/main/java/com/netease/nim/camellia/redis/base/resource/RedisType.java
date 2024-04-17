@@ -83,6 +83,10 @@ public enum RedisType {
     //仅camellia-redis-proxy支持
     UnixDomainSocket("redis-uds://", false),
 
+    //格式：redis-kv://namespace
+    //仅camellia-redis-proxy支持
+    RedisKV("redis-kv://", false),
+
     ;
     private final String prefix;
     private final boolean tlsEnable;

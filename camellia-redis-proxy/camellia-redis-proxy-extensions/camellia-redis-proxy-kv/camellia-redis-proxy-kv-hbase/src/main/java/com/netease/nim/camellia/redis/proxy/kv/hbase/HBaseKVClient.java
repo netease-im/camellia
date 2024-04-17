@@ -5,10 +5,10 @@ import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.hbase.resource.HBaseResource;
 import com.netease.nim.camellia.hbase.util.HBaseResourceUtil;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.kv.core.kv.KVClient;
-import com.netease.nim.camellia.redis.proxy.kv.core.kv.KeyValue;
-import com.netease.nim.camellia.redis.proxy.kv.core.kv.Sort;
-import com.netease.nim.camellia.redis.proxy.kv.core.utils.BytesUtils;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import org.apache.hadoop.hbase.client.*;
 
 import java.nio.charset.StandardCharsets;

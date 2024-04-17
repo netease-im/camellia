@@ -1,11 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.kv.tikv;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
-import com.netease.nim.camellia.redis.proxy.kv.core.exception.KvException;
-import com.netease.nim.camellia.redis.proxy.kv.core.kv.KVClient;
-import com.netease.nim.camellia.redis.proxy.kv.core.kv.KeyValue;
-import com.netease.nim.camellia.redis.proxy.kv.core.kv.Sort;
-import com.netease.nim.camellia.redis.proxy.kv.core.utils.BytesUtils;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tikv.common.TiConfiguration;
