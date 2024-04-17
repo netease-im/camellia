@@ -15,9 +15,8 @@ camellia-redis-proxy:
     - monitorPlugin
     - bigKeyPlugin
     - hotKeyPlugin
-  upstream-client-template-factory-class-name: com.netease.nim.camellia.redis.proxy.kv.core.UpstreamKVClientTemplateFactory
   transpond:
     type: local #local、remote、custom
     local:
       type: simple #simple、complex
-      resource: redis://@127.0.0.1:6379
+      resource: redis-kv://d

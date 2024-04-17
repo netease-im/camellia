@@ -4,18 +4,15 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.base.resource.RedisKvResource;
 import com.netease.nim.camellia.redis.proxy.command.Command;
-import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
-import com.netease.nim.camellia.redis.proxy.netty.NettyTransportMode;
 import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
-import com.netease.nim.camellia.redis.proxy.upstream.connection.RedisConnectionHub;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commanders;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
@@ -29,13 +26,8 @@ import com.netease.nim.camellia.redis.proxy.upstream.utils.CompletableFutureUtil
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
-import com.netease.nim.camellia.tools.utils.SysUtils;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.kqueue.KQueueEventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
-import io.netty.util.concurrent.DefaultThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -45,15 +37,16 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Created by caojiajun on 2024/4/17
  */
-public class RedisKvUpstreamClient implements IUpstreamClient {
+public class RedisKvClient implements IUpstreamClient {
 
+    private static final Logger logger = LoggerFactory.getLogger(RedisKvClient.class);
+
+    private CamelliaHashedExecutor executor;
     private final Resource resource;
     private final String namespace;
-    private CamelliaHashedExecutor executor;
     private Commanders commanders;
-    private EventLoopGroup eventLoopGroup;
 
-    public RedisKvUpstreamClient(RedisKvResource resource) {
+    public RedisKvClient(RedisKvResource resource) {
         this.resource = resource;
         this.namespace = resource.getNamespace();
     }
@@ -86,9 +79,10 @@ public class RedisKvUpstreamClient implements IUpstreamClient {
 
     @Override
     public void start() {
-        this.executor = initExecutor();
+        this.executor = RedisKvClientExecutor.getInstance().getExecutor();
         KVClient kvClient = initKVClient();
         this.commanders = initCommanders(kvClient);
+        logger.info("RedisKvClient start success, resource = {}", getResource());
     }
 
     private void sendNoneKeyCommand(RedisCommand redisCommand, Command command, CompletableFuture<Reply> future) {
@@ -136,31 +130,6 @@ public class RedisKvUpstreamClient implements IUpstreamClient {
         }
     }
 
-    private CamelliaHashedExecutor initExecutor() {
-        //init upstream redis connection
-        RedisConnectionHub.getInstance().init(GlobalRedisProxyEnv.getTranspondProperties(), GlobalRedisProxyEnv.getProxyBeanFactory());
-
-        //init upstream redis event loop
-        CamelliaTranspondProperties.RedisConfProperties redisConf = GlobalRedisProxyEnv.getTranspondProperties().getRedisConf();
-        NettyTransportMode nettyTransportMode = GlobalRedisProxyEnv.getNettyTransportMode();
-        if (nettyTransportMode == NettyTransportMode.epoll) {
-            this.eventLoopGroup = new EpollEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-kv-redis-connection"));
-        } else if (nettyTransportMode == NettyTransportMode.kqueue) {
-            this.eventLoopGroup = new KQueueEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-kv-redis-connection"));
-        } else if (nettyTransportMode == NettyTransportMode.io_uring) {
-            this.eventLoopGroup = new IOUringEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-kv-redis-connection"));
-        } else {
-            this.eventLoopGroup = new NioEventLoopGroup(redisConf.getDefaultTranspondWorkThread(), new DefaultThreadFactory("camellia-kv-redis-connection"));
-        }
-
-        Runnable workThreadInitCallback = () -> RedisConnectionHub.getInstance().updateEventLoop(eventLoopGroup.next());
-
-        int threads = ProxyDynamicConf.getInt("kv.command.executor.threads", SysUtils.getCpuNum() * 4);
-        int queueSize = ProxyDynamicConf.getInt("kv.command.executor.queue.size", 100000);
-        return new CamelliaHashedExecutor("kv-command-executor", threads, queueSize,
-                new CamelliaHashedExecutor.AbortPolicy(), workThreadInitCallback);
-    }
-
     private KVClient initKVClient() {
         String className = ProxyDynamicConf.getString("kv.client.class.name", null);
         return (KVClient) GlobalRedisProxyEnv.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
@@ -168,16 +137,16 @@ public class RedisKvUpstreamClient implements IUpstreamClient {
 
     private Commanders initCommanders(KVClient kvClient) {
         KeyStruct keyStruct = new KeyStruct(namespace.getBytes(StandardCharsets.UTF_8));
-        boolean valueCacheEnable = ProxyDynamicConf.getBoolean("kv.value.cache.enable", true);
-        boolean metaCacheEnable = ProxyDynamicConf.getBoolean("kv.meta.cache.enable", true);
+        boolean valueCacheEnable = RedisKvConf.getBoolean(namespace, "kv.value.cache.enable", true);
+        boolean metaCacheEnable = RedisKvConf.getBoolean(namespace, "kv.meta.cache.enable", true);
         CacheConfig cacheConfig = new CacheConfig(namespace, metaCacheEnable, valueCacheEnable);
         KvConfig kvConfig = new KvConfig(namespace);
 
-        String metaCacheRedisUrl = ProxyDynamicConf.getString("kv.meta.cache.redis.url", null);
+        String metaCacheRedisUrl = RedisKvConf.getString(namespace, "kv.meta.cache.redis.url", null);
         RedisTemplate metaCacheRedisTemplate = new RedisTemplate(new UpstreamRedisClientTemplate(ReadableResourceTableUtil.parseTable(metaCacheRedisUrl)));
         KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(kvClient, metaCacheRedisTemplate, keyStruct, cacheConfig);
 
-        String cacheRedisUrl = ProxyDynamicConf.getString("kv.value.cache.redis.url", null);
+        String cacheRedisUrl = RedisKvConf.getString(namespace, "kv.value.cache.redis.url", null);
         RedisTemplate valueCacheRedisTemplate = new RedisTemplate(new UpstreamRedisClientTemplate(ReadableResourceTableUtil.parseTable(cacheRedisUrl)));
 
         CommanderConfig commanderConfig = new CommanderConfig(kvClient, keyStruct, cacheConfig, kvConfig, keyMetaServer, valueCacheRedisTemplate);

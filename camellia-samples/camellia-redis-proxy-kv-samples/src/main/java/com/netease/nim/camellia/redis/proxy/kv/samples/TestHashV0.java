@@ -3,7 +3,6 @@ package com.netease.nim.camellia.redis.proxy.kv.samples;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 

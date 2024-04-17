@@ -5,7 +5,7 @@ import com.netease.nim.camellia.redis.base.exception.CamelliaRedisException;
 import com.netease.nim.camellia.redis.base.resource.*;
 import com.netease.nim.camellia.redis.proxy.conf.Constants;
 import com.netease.nim.camellia.redis.proxy.upstream.cluster.RedisClusterClient;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.RedisKvUpstreamClient;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.RedisKvClient;
 import com.netease.nim.camellia.redis.proxy.upstream.proxies.RedisProxiesClient;
 import com.netease.nim.camellia.redis.proxy.upstream.proxies.RedisProxiesDiscoveryClient;
 import com.netease.nim.camellia.redis.proxy.upstream.sentinel.RedisSentinelClient;
@@ -244,7 +244,7 @@ public interface UpstreamRedisClientFactory {
             if (client == null) {
                 client = map.computeIfAbsent(resource.getUrl(),
                         u -> {
-                            RedisKvUpstreamClient client0 = new RedisKvUpstreamClient(resource);
+                            RedisKvClient client0 = new RedisKvClient(resource);
                             client0.start();
                             return client0;
                         });
