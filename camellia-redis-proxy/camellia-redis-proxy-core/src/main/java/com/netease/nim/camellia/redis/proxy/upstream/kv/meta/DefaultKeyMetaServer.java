@@ -16,13 +16,13 @@ import java.util.concurrent.CompletableFuture;
 public class DefaultKeyMetaServer implements KeyMetaServer {
 
     private final KVClient kvClient;
-    private final RedisTemplate keyMetaRedisTemplate;
+    private final RedisTemplate redisTemplate;
     private final KeyStruct keyStruct;
     private final CacheConfig cacheConfig;
 
-    public DefaultKeyMetaServer(KVClient kvClient, RedisTemplate keyMetaRedisTemplate, KeyStruct keyStruct, CacheConfig cacheConfig) {
+    public DefaultKeyMetaServer(KVClient kvClient, RedisTemplate redisTemplate, KeyStruct keyStruct, CacheConfig cacheConfig) {
         this.kvClient = kvClient;
-        this.keyMetaRedisTemplate = keyMetaRedisTemplate;
+        this.redisTemplate = redisTemplate;
         this.keyStruct = keyStruct;
         this.cacheConfig = cacheConfig;
     }
@@ -39,7 +39,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             return KeyMeta.fromBytes(keyValue.getKey());
         }
 
-        Reply reply = sync(keyMetaRedisTemplate.sendGet(metaKey));
+        Reply reply = sync(redisTemplate.sendGet(metaKey));
         if (reply instanceof ErrorReply) {
             throw new KvException(((ErrorReply) reply).getError());
         }
@@ -65,7 +65,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             long redisExpireMillis = redisExpireMillis(keyMeta);
 
             if (redisExpireMillis > 0) {
-                Reply reply1 = sync(keyMetaRedisTemplate.sendPSetEx(metaKey, redisExpireMillis, keyMeta.toBytes()));
+                Reply reply1 = sync(redisTemplate.sendPSetEx(metaKey, redisExpireMillis, keyMeta.toBytes()));
                 if (reply1 instanceof ErrorReply) {
                     throw new KvException(((ErrorReply) reply1).getError());
                 }
@@ -91,7 +91,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         byte[] metaKey = keyStruct.metaKey(key);
         Reply reply;
         long redisExpireMillis = redisExpireMillis(keyMeta);
-        reply = sync(keyMetaRedisTemplate.sendPSetEx(metaKey, redisExpireMillis, keyMeta.toBytes()));
+        reply = sync(redisTemplate.sendPSetEx(metaKey, redisExpireMillis, keyMeta.toBytes()));
 
         if (reply instanceof StatusReply) {
             if (((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.OK.getStatus())) {
@@ -109,7 +109,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         byte[] metaKey = keyStruct.metaKey(key);
         int result = 0;
         if (cacheConfig.isMetaCacheEnable()) {
-            Reply reply = sync(keyMetaRedisTemplate.sendDel(metaKey));
+            Reply reply = sync(redisTemplate.sendDel(metaKey));
             if (reply instanceof ErrorReply) {
                 throw new KvException(((ErrorReply) reply).getError());
             }
@@ -134,7 +134,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
     public boolean existsKeyMeta(byte[] key) {
         byte[] metaKey = keyStruct.metaKey(key);
         if (cacheConfig.isMetaCacheEnable()) {
-            Reply reply = sync(keyMetaRedisTemplate.sendExists(metaKey));
+            Reply reply = sync(redisTemplate.sendExists(metaKey));
             if (reply instanceof ErrorReply) {
                 throw new KvException(((ErrorReply) reply).getError());
             }
@@ -154,6 +154,6 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
     }
 
     private Reply sync(CompletableFuture<Reply> future) {
-        return keyMetaRedisTemplate.sync(future, cacheConfig.keyMetaTimeoutMillis());
+        return redisTemplate.sync(future, cacheConfig.keyMetaTimeoutMillis());
     }
 }

@@ -1,6 +1,9 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv;
 
+import com.netease.nim.camellia.core.api.CamelliaApi;
+import com.netease.nim.camellia.core.api.CamelliaApiUtil;
 import com.netease.nim.camellia.core.model.Resource;
+import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.base.resource.RedisKvResource;
 import com.netease.nim.camellia.redis.proxy.command.Command;
@@ -12,6 +15,7 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
+import com.netease.nim.camellia.redis.proxy.upstream.RedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commanders;
@@ -19,6 +23,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyStruct;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.DefaultKeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
@@ -142,15 +147,42 @@ public class RedisKvClient implements IUpstreamClient {
         CacheConfig cacheConfig = new CacheConfig(namespace, metaCacheEnable, valueCacheEnable);
         KvConfig kvConfig = new KvConfig(namespace);
 
-        String metaCacheRedisUrl = RedisKvConf.getString(namespace, "kv.meta.cache.redis.url", null);
-        RedisTemplate metaCacheRedisTemplate = new RedisTemplate(new UpstreamRedisClientTemplate(ReadableResourceTableUtil.parseTable(metaCacheRedisUrl)));
+        RedisTemplate metaCacheRedisTemplate = initRedisTemplate("key.meta.cache");
         KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(kvClient, metaCacheRedisTemplate, keyStruct, cacheConfig);
 
-        String cacheRedisUrl = RedisKvConf.getString(namespace, "kv.value.cache.redis.url", null);
-        RedisTemplate valueCacheRedisTemplate = new RedisTemplate(new UpstreamRedisClientTemplate(ReadableResourceTableUtil.parseTable(cacheRedisUrl)));
+        RedisTemplate valueCacheRedisTemplate = initRedisTemplate("key.value.cache");
 
         CommanderConfig commanderConfig = new CommanderConfig(kvClient, keyStruct, cacheConfig, kvConfig, keyMetaServer, valueCacheRedisTemplate);
         return new Commanders(commanderConfig);
+    }
+
+    private RedisTemplate initRedisTemplate(String key) {
+        String type = RedisKvConf.getString(namespace, key + ".config.type", "local");
+        if (type.equalsIgnoreCase("local")) {
+            String url = RedisKvConf.getString(namespace, key + ".redis.url", null);
+            ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(url);
+            RedisProxyEnv env = GlobalRedisProxyEnv.getClientTemplateFactory().getEnv();
+            UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, resourceTable);
+            return new RedisTemplate(template);
+        } else if (type.equalsIgnoreCase("remote")) {
+            String dashboardUrl = RedisKvConf.getString(namespace, key + ".camellia.dashboard.url", null);
+            if (dashboardUrl == null) {
+                throw new KvException("illegal dashboardUrl");
+            }
+            boolean monitorEnable = RedisKvConf.getBoolean(namespace, key + ".camellia.dashboard.monitor.enable", true);
+            long checkIntervalMillis = RedisKvConf.getLong(namespace, key + ".camellia.dashboard.check.interval.millis", 3000L);
+            long bid = RedisKvConf.getLong(namespace, key + ".bid", -1);
+            String bgroup = RedisKvConf.getString(namespace, key + ".bgroup", "default");
+            if (bid <= 0) {
+                throw new KvException("illegal bid");
+            }
+            RedisProxyEnv env = GlobalRedisProxyEnv.getClientTemplateFactory().getEnv();
+            CamelliaApi camelliaApi = CamelliaApiUtil.init(dashboardUrl);
+            UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, camelliaApi, bid, bgroup, monitorEnable, checkIntervalMillis);
+            return new RedisTemplate(template);
+        } else {
+            throw new KvException("init redis template error");
+        }
     }
 
     @Override
