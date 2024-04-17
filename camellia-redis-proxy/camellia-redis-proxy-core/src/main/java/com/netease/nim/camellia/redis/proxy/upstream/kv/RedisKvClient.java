@@ -142,17 +142,25 @@ public class RedisKvClient implements IUpstreamClient {
 
     private Commanders initCommanders(KVClient kvClient) {
         KeyStruct keyStruct = new KeyStruct(namespace.getBytes(StandardCharsets.UTF_8));
-        boolean valueCacheEnable = RedisKvConf.getBoolean(namespace, "kv.value.cache.enable", true);
+
         boolean metaCacheEnable = RedisKvConf.getBoolean(namespace, "kv.meta.cache.enable", true);
+        boolean valueCacheEnable = RedisKvConf.getBoolean(namespace, "kv.value.cache.enable", true);
         CacheConfig cacheConfig = new CacheConfig(namespace, metaCacheEnable, valueCacheEnable);
+
         KvConfig kvConfig = new KvConfig(namespace);
 
-        RedisTemplate metaCacheRedisTemplate = initRedisTemplate("key.meta.cache");
+        RedisTemplate metaCacheRedisTemplate = null;
+        if (metaCacheEnable) {
+            metaCacheRedisTemplate = initRedisTemplate("key.meta.cache");
+        }
         KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(kvClient, metaCacheRedisTemplate, keyStruct, cacheConfig);
 
-        RedisTemplate valueCacheRedisTemplate = initRedisTemplate("key.value.cache");
-
+        RedisTemplate valueCacheRedisTemplate = null;
+        if (valueCacheEnable) {
+            valueCacheRedisTemplate = initRedisTemplate("key.value.cache");
+        }
         CommanderConfig commanderConfig = new CommanderConfig(kvClient, keyStruct, cacheConfig, kvConfig, keyMetaServer, valueCacheRedisTemplate);
+
         return new Commanders(commanderConfig);
     }
 
