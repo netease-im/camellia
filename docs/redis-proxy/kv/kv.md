@@ -103,7 +103,7 @@ hash数据有两种编码模式，区别在于key-meta中是否记录field-count
 
 ### hash-field-store-key
 
-|                      redis-key                       |    value    |
+|                      key                       |    value    |
 |:----------------------------------------------------:|:-----------:|
 | s# + namespace + key.len + key + key-version + field | field-value |
 
