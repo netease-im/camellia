@@ -47,6 +47,14 @@ public enum KeyType {
 
 ## string数据结构
 
+|           key            |                   value                   |
+|:------------------------:|:-----------------------------------------:|
+|   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit + N-bit   |
+| prefix + namespace + key | 0 + 1 + key-version + expire-time + value |
+
+* 只有key-meta，没有subkey
+* 没有专门的缓存结构，依赖于key-meta本身的缓存
+
 | command |                                                                                                                                  info |
 |:-------:|--------------------------------------------------------------------------------------------------------------------------------------:|
 |  setex  |                                                                                                             `SETEX key seconds value` |
