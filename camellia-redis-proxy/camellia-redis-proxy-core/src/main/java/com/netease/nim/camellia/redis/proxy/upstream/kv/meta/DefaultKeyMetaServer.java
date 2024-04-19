@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.meta;
 
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
@@ -7,6 +8,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyStruct;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
+import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -15,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class DefaultKeyMetaServer implements KeyMetaServer {
 
+    private final ConcurrentLinkedHashMap<BytesKey, Long> delayCacheKeyMap;
     private final KVClient kvClient;
     private final RedisTemplate redisTemplate;
     private final KeyStruct keyStruct;
@@ -25,6 +28,10 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         this.redisTemplate = redisTemplate;
         this.keyStruct = keyStruct;
         this.cacheConfig = cacheConfig;
+        delayCacheKeyMap = new ConcurrentLinkedHashMap.Builder<BytesKey, Long>()
+                .initialCapacity(cacheConfig.keyMetaCacheDelayMapSize())
+                .maximumWeightedCapacity(cacheConfig.keyMetaCacheDelayMapSize())
+                .build();
     }
 
     @Override
@@ -50,6 +57,15 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 keyMeta = KeyMeta.fromBytes(raw);
             }
             if (keyMeta != null) {
+                BytesKey bytesKey = new BytesKey(key);
+                Long lastDelayTime = delayCacheKeyMap.get(bytesKey);
+                if (lastDelayTime == null || System.currentTimeMillis() - lastDelayTime > cacheConfig.keyMetaCacheKeyDelayMinIntervalSeconds()*1000L) {
+                    long redisExpireMillis = redisExpireMillis(keyMeta);
+                    if (redisExpireMillis > 0) {
+                        redisTemplate.sendPSetEx(metaKey, redisExpireMillis, keyMeta.toBytes());
+                        delayCacheKeyMap.put(bytesKey, System.currentTimeMillis());
+                    }
+                }
                 return keyMeta;
             }
             KeyValue keyValue = kvClient.get(metaKey);
@@ -69,6 +85,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 if (reply1 instanceof ErrorReply) {
                     throw new KvException(((ErrorReply) reply1).getError());
                 }
+                delayCacheKeyMap.put(new BytesKey(key), System.currentTimeMillis());
             }
             return keyMeta;
         }
@@ -92,12 +109,8 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         Reply reply;
         long redisExpireMillis = redisExpireMillis(keyMeta);
         reply = sync(redisTemplate.sendPSetEx(metaKey, redisExpireMillis, keyMeta.toBytes()));
+        delayCacheKeyMap.put(new BytesKey(key), System.currentTimeMillis());
 
-        if (reply instanceof StatusReply) {
-            if (((StatusReply) reply).getStatus().equalsIgnoreCase(StatusReply.OK.getStatus())) {
-                return;
-            }
-        }
         if (reply instanceof ErrorReply) {
             throw new KvException(((ErrorReply) reply).getError());
         }
@@ -116,6 +129,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             if (reply instanceof IntegerReply) {
                 result = ((IntegerReply) reply).getInteger().intValue();
             }
+            delayCacheKeyMap.remove(new BytesKey(key));
         }
         if (result > 0) {
             kvClient.delete(metaKey);
@@ -139,7 +153,9 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 throw new KvException(((ErrorReply) reply).getError());
             }
             if (reply instanceof IntegerReply) {
-                return ((IntegerReply) reply).getInteger().intValue() > 0;
+                if (((IntegerReply) reply).getInteger().intValue() > 0) {
+                    return true;
+                }
             }
         }
         KeyValue keyValue = kvClient.get(metaKey);

@@ -29,6 +29,14 @@ public class CacheConfig {
         return RedisKvConf.getLong(namespace, "kv.key.meta.cache.millis", 1000L * 60 * 10);
     }
 
+    public int keyMetaCacheDelayMapSize() {
+        return RedisKvConf.getInt(namespace, "kv.meta.cache.delay.map.size", 100000);
+    }
+
+    public long keyMetaCacheKeyDelayMinIntervalSeconds() {
+        return RedisKvConf.getLong(namespace, "kv.meta.cache.delay.min.interval.seconds", 10);
+    }
+
     public long keyMetaTimeoutMillis() {
         return RedisKvConf.getLong(namespace, "kv.key.meta.timeout.millis", 2000L);
     }
