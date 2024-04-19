@@ -10,10 +10,7 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
-import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
-import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
-import com.netease.nim.camellia.redis.proxy.reply.Reply;
-import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
+import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClient;
 import com.netease.nim.camellia.redis.proxy.upstream.RedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
@@ -115,6 +112,22 @@ public class RedisKvClient implements IUpstreamClient {
                 futures.add(f);
             }
             CompletableFutureUtils.allOf(futures).thenAccept(replies -> future.complete(Utils.mergeIntegerReply(replies)));
+        } else if (redisCommand == RedisCommand.MGET) {
+            List<CompletableFuture<Reply>> futures = new ArrayList<>(keys.size());
+            for (byte[] key : keys) {
+                CompletableFuture<Reply> f = new CompletableFuture<>();
+                sendCommand(key, new Command(new byte[][]{RedisCommand.GET.raw(), key}), f);
+                futures.add(f);
+            }
+            CompletableFutureUtils.allOf(futures).thenAccept(replies -> {
+                for (Reply reply : replies) {
+                    if (reply instanceof ErrorReply) {
+                        future.complete(reply);
+                        return;
+                    }
+                }
+                future.complete(new MultiBulkReply(replies.toArray(new Reply[0])));
+            });
         } else {
             future.complete(ErrorReply.NOT_SUPPORT);
         }
