@@ -13,8 +13,8 @@
 * proxy依赖的服务逻辑上包括三组：key-meta-server、subkey-server、cache-server
 * key-meta-server，用于维护key的meta信息，包括key的类型、版本、ttl等，可以基于hbase/tikv/obkv实现
 * subkey-server，用于存储hash中的field等subkey，可以基于hbase/tikv/obkv实现
-* cache-server，可选，基于redis，特点是key的ttl很短，并且允许换出，支持对key-meta和subkey-server分别增加cache层
-* kv-storage层，抽象了简单的put/get/delete/scan接口，从而可以自由的选择hbase/tikv/obkv，也可以基于其他kv存储
+* cache-server，可选，基于redis，特点是key的ttl很短，并且允许换出，支持对key-meta-server和subkey-server分别增加cache层
+* kv-storage层，抽象了简单的put/get/delete/scan接口，从而可以自由的选择hbase/tikv/obkv去实现key-meta-server和subkey-server，也可以基于其他kv存储
 * 参考了 [pika](https://github.com/OpenAtomFoundation/pika) 、 [kvrocks](https://github.com/apache/kvrocks) 、 [tidis](https://github.com/yongman/tidis)、 [titan](https://github.com/distributedio/titan)、 [titea](https://github.com/distributedio/titan) 的设计
 * 使用gc机制来回收kv存储层的过期数据（todo）
 
@@ -37,17 +37,23 @@ public enum KeyType {
 
 ## db commands
 
-| command |
-|:-------:|
-|   del   |
-| exists  |
-| expire  |
-| pexpire |
-| unlink  |
+| command |                                            info |
+|:-------:|------------------------------------------------:|
+|   del   |                             `DEL key [key ...]` |
+| exists  |                          `EXISTS key [key ...]` | 
+| expire  |                            `EXPIRE key seconds` |
+| pexpire |                      `PEXPIRE key milliseconds` |
+| unlink  |                          `UNLINK key [key ...]` |
 
 ## string数据结构
 
-todo
+| command |                                                                                                                                  info |
+|:-------:|--------------------------------------------------------------------------------------------------------------------------------------:|
+|  setex  |                                                                                                             `SETEX key seconds value` |
+| psetex  |                                                                                                       `PSETEX key milliseconds value` | 
+|   set   |  `SET key value [NX \| XX] [GET] [EX seconds \| PX milliseconds \| EXAT unix-time-seconds \| PXAT unix-time-milliseconds \| KEEPTTL]` |
+|   get   |                                                                                                                             `GET key` |
+|  mget   |                                                                                                                  `MGET key [key ...]` |
 
 ## hash数据结构
 
@@ -95,13 +101,13 @@ hash数据有两种编码模式，区别在于key-meta中是否记录field-count
 
 ### commands
 
-| command |          version-0           |          version-1           |
-|:-------:|:----------------------------:|:----------------------------:|
-|  hset   | [hset-v0](./hash/hset-v0.md) | [hset-v1](./hash/hset-v1.md) |
-|  hget   |    [hget](./hash/hget.md)    |          同version-0          |
-|  hdel   | [hdel-v0](./hash/hdel-v0.md) | [hdel-v1](./hash/hdel-v1.md) |
-| hgetall | [hgetall](./hash/hgetall.md) |          同version-0          |
-|  hlen   | [hlen-v0](./hash/hlen-v0.md) | [hlen-v1](./hash/hlen-v1.md) |
+| command |                                     info |          version-0           |          version-1           |
+|:-------:|-----------------------------------------:|:----------------------------:|:----------------------------:|
+|  hset   | `HSET key field value [field value ...]` | [hset-v0](./hash/hset-v0.md) | [hset-v1](./hash/hset-v1.md) |
+|  hget   |                         `HGET key field` |    [hget](./hash/hget.md)    |          同version-0          |
+|  hdel   |             `HDEL key field [field ...]` | [hdel-v0](./hash/hdel-v0.md) | [hdel-v1](./hash/hdel-v1.md) |
+| hgetall |                            `HGETALL key` | [hgetall](./hash/hgetall.md) |          同version-0          |
+|  hlen   |                               `HLEN key` | [hlen-v0](./hash/hlen-v0.md) | [hlen-v1](./hash/hlen-v1.md) |
 
 
 ## zset数据结构
