@@ -111,7 +111,7 @@ public class ConsumerMonitor {
                     stats.setTopicType(topicType);
                     CamelliaStatsData data = entry.getValue();
                     stats.setCount(data.getCount());
-                    stats.setAvg(data.getCount());
+                    stats.setAvg(data.getAvg());
                     stats.setMax(data.getMax());
                     stats.setP50(data.getP50());
                     stats.setP90(data.getP90());
@@ -127,7 +127,7 @@ public class ConsumerMonitor {
                     stats.setMqInfo(mqInfo);
                     CamelliaStatsData data = entry.getValue();
                     stats.setCount(data.getCount());
-                    stats.setAvg(data.getCount());
+                    stats.setAvg(data.getAvg());
                     stats.setMax(data.getMax());
                     stats.setP50(data.getP50());
                     stats.setP90(data.getP90());
@@ -143,7 +143,7 @@ public class ConsumerMonitor {
                     stats.setNamespace(entry.getKey());
                     CamelliaStatsData data = entry.getValue();
                     stats.setCount(data.getCount());
-                    stats.setAvg(data.getCount());
+                    stats.setAvg(data.getAvg());
                     stats.setMax(data.getMax());
                     stats.setP50(data.getP50());
                     stats.setP90(data.getP90());
@@ -161,7 +161,7 @@ public class ConsumerMonitor {
                     stats.setBizId(bizKey.getBizId());
                     CamelliaStatsData data = entry.getValue();
                     stats.setCount(data.getCount());
-                    stats.setAvg(data.getCount());
+                    stats.setAvg(data.getAvg());
                     stats.setMax(data.getMax());
                     stats.setP50(data.getP50());
                     stats.setP90(data.getP90());
@@ -185,7 +185,7 @@ public class ConsumerMonitor {
                     stats.setResult(result);
                     CamelliaStatsData data = entry.getValue();
                     stats.setCount(data.getCount());
-                    stats.setAvg(data.getCount());
+                    stats.setAvg(data.getAvg());
                     stats.setMax(data.getMax());
                     stats.setP50(data.getP50());
                     stats.setP90(data.getP90());
@@ -203,7 +203,7 @@ public class ConsumerMonitor {
                     stats.setResult(bizResultKey.getResult());
                     CamelliaStatsData data = entry.getValue();
                     stats.setCount(data.getCount());
-                    stats.setAvg(data.getCount());
+                    stats.setAvg(data.getAvg());
                     stats.setMax(data.getMax());
                     stats.setP50(data.getP50());
                     stats.setP90(data.getP90());
