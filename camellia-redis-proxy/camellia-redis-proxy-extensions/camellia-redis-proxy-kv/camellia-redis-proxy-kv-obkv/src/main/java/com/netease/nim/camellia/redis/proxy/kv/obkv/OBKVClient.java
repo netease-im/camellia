@@ -1,22 +1,24 @@
 package com.netease.nim.camellia.redis.proxy.kv.obkv;
 
-import com.alipay.oceanbase.rpc.ObTableClient;
-import com.alipay.oceanbase.rpc.stream.QueryResultSet;
-import com.alipay.oceanbase.rpc.table.api.TableBatchOps;
-import com.alipay.oceanbase.rpc.table.api.TableQuery;
+import com.alipay.oceanbase.hbase.OHTableClient;
+import com.alipay.oceanbase.hbase.constants.OHConstants;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+
 
 /**
  *
@@ -26,24 +28,32 @@ public class OBKVClient implements KVClient {
 
     private static final Logger logger = LoggerFactory.getLogger(OBKVClient.class);
 
-    private static final String row = "row";
-    private static final String val = "val";
+    private static final byte[] cf = "d".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] column = "v".getBytes(StandardCharsets.UTF_8);
 
-    private final ObTableClient obTableClient;
-    private final String tableName;
+    private final OHTableClient template;
 
     public OBKVClient() {
         try {
-            obTableClient = new ObTableClient();
-            obTableClient.setFullUserName(ProxyDynamicConf.getString("kv.obkv.full.user.name", null));
-            obTableClient.setParamURL(ProxyDynamicConf.getString("kv.obkv.param.url", null));
-            obTableClient.setPassword(ProxyDynamicConf.getString("kv.obkv.password", null));
-            obTableClient.setSysUserName(ProxyDynamicConf.getString("kv.obkv.sys.user.name", null));
-            obTableClient.setSysPassword(ProxyDynamicConf.getString("kv.obkv.sys.password", null));
-            obTableClient.init();
-            tableName = ProxyDynamicConf.getString("kv.obkv.table.name", "camellia_kv");
+            String fullUserName = ProxyDynamicConf.getString("kv.obkv.full.user.name", null);
+            String paramUrl = ProxyDynamicConf.getString("kv.obkv.param.url", null);
+            String password = ProxyDynamicConf.getString("kv.obkv.password", null);
+            String sysUserName = ProxyDynamicConf.getString("kv.obkv.sys.user.name", null);
+            String sysPassword = ProxyDynamicConf.getString("kv.obkv.sys.password", null);
+
+            Configuration conf = new Configuration();
+            conf.set(OHConstants.HBASE_OCEANBASE_PARAM_URL, paramUrl);
+            conf.set(OHConstants.HBASE_OCEANBASE_FULL_USER_NAME, fullUserName);
+            conf.set(OHConstants.HBASE_OCEANBASE_PASSWORD, password);
+            conf.set(OHConstants.HBASE_OCEANBASE_SYS_USER_NAME, sysUserName);
+            conf.set(OHConstants.HBASE_OCEANBASE_SYS_PASSWORD, sysPassword);
+
+            String tableName = ProxyDynamicConf.getString("kv.obkv.table.name", "camellia_kv");
+
+            template = new OHTableClient(tableName, conf);
+            template.init();
         } catch (Exception e) {
-            logger.error("OBKVClient init error", e);
+            logger.error("OHTableClient init error", e);
             throw new KvException(e);
         }
     }
@@ -51,9 +61,10 @@ public class OBKVClient implements KVClient {
     @Override
     public void put(byte[] key, byte[] value) {
         try {
-            obTableClient.insert(tableName, key, new String[]{val}, new Object[]{value});
-        } catch (Exception e) {
-            logger.error("put error, tableName = {}", tableName, e);
+            Put put = new Put(key);
+            put.add(cf, column, value);
+            template.put(put);
+        } catch (IOException e) {
             throw new KvException(e);
         }
     }
@@ -61,13 +72,14 @@ public class OBKVClient implements KVClient {
     @Override
     public void batchPut(List<KeyValue> list) {
         try {
-            TableBatchOps batch = obTableClient.batch(tableName);
+            List<Put> putList = new ArrayList<>();
             for (KeyValue keyValue : list) {
-                batch.insert(keyValue.getKey(), new String[]{val}, new Object[]{keyValue.getValue()});
+                Put put = new Put(keyValue.getKey());
+                put.add(cf, column, keyValue.getValue());
+                putList.add(put);
             }
-            batch.execute();
-        } catch (Exception e) {
-            logger.error("batch put error, tableName = {}", tableName, e);
+            template.put(putList);
+        } catch (IOException e) {
             throw new KvException(e);
         }
     }
@@ -75,11 +87,17 @@ public class OBKVClient implements KVClient {
     @Override
     public KeyValue get(byte[] key) {
         try {
-            Map<String, Object> map = obTableClient.get(tableName, key, new String[]{"val"});
-            byte[] value = (byte[]) map.get("val");
+            Get get = new Get(key);
+            Result result = template.get(get);
+            if (result == null) {
+                return null;
+            }
+            byte[] value = result.getValue(cf, column);
+            if (value == null) {
+                return null;
+            }
             return new KeyValue(key, value);
-        } catch (Exception e) {
-            logger.error("get error, tableName = {}", tableName, e);
+        } catch (IOException e) {
             throw new KvException(e);
         }
     }
@@ -87,11 +105,9 @@ public class OBKVClient implements KVClient {
     @Override
     public boolean exists(byte[] key) {
         try {
-            Map<String, Object> map = obTableClient.get(tableName, key, new String[]{"val"});
-            byte[] value = (byte[]) map.get("val");
-            return value != null;
-        } catch (Exception e) {
-            logger.error("exists error, tableName = {}", tableName, e);
+            Get get = new Get(key);
+            return template.exists(get);
+        } catch (IOException e) {
             throw new KvException(e);
         }
     }
@@ -99,23 +115,14 @@ public class OBKVClient implements KVClient {
     @Override
     public boolean[] exists(byte[]... keys) {
         try {
-            TableBatchOps batch = obTableClient.batch(tableName);
+            boolean[] results = new boolean[keys.length];
+            int i=0;
             for (byte[] key : keys) {
-                batch.get(key, new String[]{"val"});
+                results[i] = template.exists(new Get(key));
+                i++;
             }
-            List<Object> list = batch.executeWithResult();
-            boolean[] result = new boolean[keys.length];
-            for (int i=0; i<list.size(); i++) {
-                Object o = list.get(i);
-                if (o instanceof Map) {
-                    result[i] = !((Map<?, ?>) o).isEmpty();
-                } else {
-                    result[i] = false;
-                }
-            }
-            return result;
-        } catch (Exception e) {
-            logger.error("exists error, tableName = {}", tableName, e);
+            return results;
+        } catch (IOException e) {
             throw new KvException(e);
         }
     }
@@ -123,24 +130,21 @@ public class OBKVClient implements KVClient {
     @Override
     public List<KeyValue> batchGet(byte[]... keys) {
         try {
-            TableBatchOps batch = obTableClient.batch(tableName);
+            List<Get> list = new ArrayList<>(keys.length);
             for (byte[] key : keys) {
-                batch.get(key, new String[]{"val"});
+                Get get = new Get(key);
+                list.add(get);
             }
-            List<Object> list = batch.executeWithResult();
-            List<KeyValue> result = new ArrayList<>(keys.length);
-            for (int i=0; i<list.size(); i++) {
-                Object o = list.get(i);
-                if (o instanceof Map) {
-                    Object val = ((Map<?, ?>) o).get("val");
-                    if (val instanceof byte[]) {
-                        result.add(new KeyValue(keys[i], (byte[]) val));
-                    }
-                }
+            List<KeyValue> keyValues = new ArrayList<>(list.size());
+            Result[] results = template.get(list);
+            for (Result result : results) {
+                if (result == null) continue;
+                byte[] key = result.getRow();
+                byte[] value = result.getValue(cf, column);
+                keyValues.add(new KeyValue(key, value));
             }
-            return result;
-        } catch (Exception e) {
-            logger.error("batchGet error, tableName = {}", tableName, e);
+            return keyValues;
+        } catch (IOException e) {
             throw new KvException(e);
         }
     }
@@ -148,9 +152,9 @@ public class OBKVClient implements KVClient {
     @Override
     public void delete(byte[] key) {
         try {
-            obTableClient.delete(tableName, key);
-        } catch (Exception e) {
-            logger.error("delete error, tableName = {}", tableName, e);
+            Delete delete = new Delete(key);
+            template.delete(delete);
+        } catch (IOException e) {
             throw new KvException(e);
         }
     }
@@ -158,13 +162,12 @@ public class OBKVClient implements KVClient {
     @Override
     public void batchDelete(byte[]... keys) {
         try {
-            TableBatchOps batch = obTableClient.batch(tableName);
+            List<Delete> list = new ArrayList<>(keys.length);
             for (byte[] key : keys) {
-                batch.delete(key);
+                list.add(new Delete(key));
             }
-            batch.execute();
-        } catch (Exception e) {
-            logger.error("batchDelete error, tableName = {}", tableName, e);
+            template.delete(list);
+        } catch (IOException e) {
             throw new KvException(e);
         }
     }
@@ -172,45 +175,31 @@ public class OBKVClient implements KVClient {
     @Override
     public List<KeyValue> scan(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         try {
-            TableQuery query = obTableClient.query(tableName);
-            query.addScanRangeStartsWith(startKey);
-            if (sort == Sort.ASC) {
-                query.scanOrder(true);
-            } else if (sort == Sort.DESC) {
-                query.scanOrder(false);
-            }
-            List<KeyValue> list = new ArrayList<>(limit);
-            query.addScanRangeStartsWith(new Object[]{startKey}, includeStartKey);
-            query.select("row", "val");
-            query.limit(limit);
-            QueryResultSet execute = query.execute();
-            while (execute.isHasMore()) {
-                Map<String, Object> rowMap = execute.getRow();
-                Object row = rowMap.get("row");
-                Object val = rowMap.get("val");
-                if (row instanceof byte[] && val instanceof byte[]) {
-                    byte[] key = (byte[]) row;
-                    byte[] value = (byte[]) val;
-                    if (!includeStartKey && Arrays.equals(key, startKey)) {
+            Scan scan = new Scan();
+            scan.setStartRow(startKey);
+            scan.setCaching(limit);
+            scan.setSmall(true);
+            try (ResultScanner scanner = template.getScanner(scan)) {
+                List<KeyValue> list = new ArrayList<>();
+                for (Result result : scanner) {
+                    byte[] row = result.getRow();
+                    if (!includeStartKey && Arrays.equals(row, startKey)) {
                         continue;
                     }
-                    if (BytesUtils.startWith(key, prefix)) {
+                    if (BytesUtils.startWith(row, prefix)) {
+                        byte[] key = result.getRow();
+                        byte[] value = result.getValue(cf, column);
                         list.add(new KeyValue(key, value));
                         if (list.size() >= limit) {
                             break;
                         }
-                        boolean next = execute.next();
-                        if (!next) {
-                            break;
-                        }
-                        continue;
+                    } else {
+                        break;
                     }
                 }
-                break;
+                return list;
             }
-            return list;
-        } catch (Exception e) {
-            logger.error("scan error, tableName = {}", tableName, e);
+        } catch (IOException e) {
             throw new KvException(e);
         }
     }
@@ -218,34 +207,25 @@ public class OBKVClient implements KVClient {
     @Override
     public long count(byte[] startKey, byte[] prefix, boolean includeStartKey) {
         try {
-            TableQuery query = obTableClient.query(tableName);
-            query.addScanRangeStartsWith(startKey);
-            long result = 0;
-            query.addScanRangeStartsWith(new Object[]{startKey}, includeStartKey);
-            query.select(row);
-            QueryResultSet execute = query.execute();
-            while (execute.isHasMore()) {
-                Map<String, Object> rowMap = execute.getRow();
-                Object rowObj = rowMap.get(row);
-                if (rowObj instanceof byte[]) {
-                    byte[] key = (byte[]) rowObj;
-                    if (!includeStartKey && Arrays.equals(key, startKey)) {
+            Scan scan = new Scan();
+            scan.setStartRow(startKey);
+            scan.setSmall(true);
+            int count = 0;
+            try (ResultScanner scanner = template.getScanner(scan)) {
+                for (Result result : scanner) {
+                    byte[] row = result.getRow();
+                    if (!includeStartKey && Arrays.equals(row, startKey)) {
                         continue;
                     }
-                    if (BytesUtils.startWith(key, prefix)) {
-                        result ++;
-                        boolean next = execute.next();
-                        if (!next) {
-                            break;
-                        }
-                        continue;
+                    if (BytesUtils.startWith(row, prefix)) {
+                        count++;
+                    } else {
+                        break;
                     }
                 }
-                break;
+                return count;
             }
-            return result;
-        } catch (Exception e) {
-            logger.error("count error, tableName = {}", tableName, e);
+        } catch (IOException e) {
             throw new KvException(e);
         }
     }
@@ -253,47 +233,31 @@ public class OBKVClient implements KVClient {
     @Override
     public List<KeyValue> scan(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey, boolean includeEndKey) {
         try {
-            TableQuery query = obTableClient.query(tableName);
-            query.addScanRangeStartsWith(startKey);
-            if (sort == Sort.ASC) {
-                query.scanOrder(true);
-            } else if (sort == Sort.DESC) {
-                query.scanOrder(false);
-            }
-            List<KeyValue> list = new ArrayList<>(limit);
-            query.addScanRangeStartsWith(new Object[]{startKey}, includeStartKey);
-            query.addScanRangeEndsWith(new Object[]{endKey}, includeEndKey);
-            query.select(row, val);
-            query.limit(limit);
-            QueryResultSet execute = query.execute();
-            while (execute.isHasMore()) {
-                Map<String, Object> rowMap = execute.getRow();
-                Object rowObj = rowMap.get(row);
-                Object valueObj = rowMap.get(val);
-                if (rowObj instanceof byte[] && valueObj instanceof byte[]) {
-                    byte[] key = (byte[]) rowObj;
-                    byte[] value = (byte[]) valueObj;
-                    if (!includeStartKey && Arrays.equals(key, startKey)) {
+            Scan scan = new Scan();
+            scan.setStartRow(startKey);
+            scan.setStopRow(endKey);
+            scan.setCaching(limit);
+            scan.setSmall(true);
+            try (ResultScanner scanner = template.getScanner(scan)) {
+                List<KeyValue> list = new ArrayList<>();
+                for (Result result : scanner) {
+                    byte[] row = result.getRow();
+                    if (!includeStartKey && Arrays.equals(row, startKey)) {
                         continue;
                     }
-                    if (!includeEndKey && Arrays.equals(key, endKey)) {
+                    if (!includeEndKey && Arrays.equals(row, endKey)) {
                         continue;
                     }
+                    byte[] key = result.getRow();
+                    byte[] value = result.getValue(cf, column);
                     list.add(new KeyValue(key, value));
                     if (list.size() >= limit) {
                         break;
                     }
-                    boolean next = execute.next();
-                    if (!next) {
-                        break;
-                    }
-                    continue;
                 }
-                break;
+                return list;
             }
-            return list;
-        } catch (Exception e) {
-            logger.error("scan error, tableName = {}", tableName, e);
+        } catch (IOException e) {
             throw new KvException(e);
         }
     }
@@ -301,36 +265,25 @@ public class OBKVClient implements KVClient {
     @Override
     public long count(byte[] startKey, byte[] endKey, boolean includeStartKey, boolean includeEndKey) {
         try {
-            TableQuery query = obTableClient.query(tableName);
-            query.addScanRangeStartsWith(startKey);
-            long result = 0;
-            query.addScanRangeStartsWith(new Object[]{startKey}, includeStartKey);
-            query.addScanRangeEndsWith(new Object[]{endKey}, includeEndKey);
-            query.select(row);
-            QueryResultSet execute = query.execute();
-            while (execute.isHasMore()) {
-                Map<String, Object> rowMap = execute.getRow();
-                Object rowObj = rowMap.get(row);
-                if (rowObj instanceof byte[]) {
-                    byte[] key = (byte[]) rowObj;
-                    if (!includeStartKey && Arrays.equals(key, startKey)) {
+            Scan scan = new Scan();
+            scan.setStartRow(startKey);
+            scan.setStopRow(endKey);
+            scan.setSmall(true);
+            int count = 0;
+            try (ResultScanner scanner = template.getScanner(scan)) {
+                for (Result result : scanner) {
+                    byte[] row = result.getRow();
+                    if (!includeStartKey && Arrays.equals(row, startKey)) {
                         continue;
                     }
-                    if (!includeEndKey && Arrays.equals(key, endKey)) {
+                    if (!includeEndKey && Arrays.equals(row, endKey)) {
                         continue;
                     }
-                    result ++;
-                    boolean next = execute.next();
-                    if (!next) {
-                        break;
-                    }
-                    continue;
+                    count++;
                 }
-                break;
+                return count;
             }
-            return result;
-        } catch (Exception e) {
-            logger.error("count error, tableName = {}", tableName, e);
+        } catch (IOException e) {
             throw new KvException(e);
         }
     }
