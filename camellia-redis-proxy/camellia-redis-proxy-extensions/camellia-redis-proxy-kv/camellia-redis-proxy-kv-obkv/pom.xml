@@ -20,8 +20,8 @@
 		</dependency>
 		<dependency>
 			<groupId>com.oceanbase</groupId>
-			<artifactId>obkv-hbase-client</artifactId>
-			<version>0.1.4</version>
+			<artifactId>obkv-table-client</artifactId>
+			<version>1.2.8</version>
 		</dependency>
 	</dependencies>
 

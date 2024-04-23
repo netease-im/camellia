@@ -24,9 +24,6 @@ public class TiKVClient implements KVClient {
 
     private static final Logger logger = LoggerFactory.getLogger(TiKVClient.class);
 
-    private static final String row = "row";
-    private static final String val = "val";
-
     private final RawKVClient tikvClient;
 
     public TiKVClient() {
