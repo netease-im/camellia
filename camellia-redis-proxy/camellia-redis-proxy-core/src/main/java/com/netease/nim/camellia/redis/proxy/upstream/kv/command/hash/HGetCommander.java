@@ -70,8 +70,8 @@ public class HGetCommander extends Commander {
 
         //disable cache
         if (!cacheConfig.isValueCacheEnable()) {
-            byte[] storeKey = keyStruct.hashFieldStoreKey(keyMeta, key, field);
-            KeyValue keyValue = kvClient.get(storeKey);
+            byte[] subKey = keyStruct.hashFieldSubKey(keyMeta, key, field);
+            KeyValue keyValue = kvClient.get(subKey);
             if (keyValue == null || keyValue.getValue() == null) {
                 return BulkReply.NIL_REPLY;
             }
@@ -98,8 +98,8 @@ public class HGetCommander extends Commander {
         }
 
         //get from kv
-        byte[] storeKey = keyStruct.hashFieldStoreKey(keyMeta, key, field);
-        KeyValue keyValue = kvClient.get(storeKey);
+        byte[] subKey = keyStruct.hashFieldSubKey(keyMeta, key, field);
+        KeyValue keyValue = kvClient.get(subKey);
 
         if (keyValue == null || keyValue.getValue() == null) {
             return BulkReply.NIL_REPLY;

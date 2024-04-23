@@ -59,13 +59,13 @@ public class HDelCommander extends Commander {
         int fieldSize = objects.length - 2;
 
         if (!cacheConfig.isValueCacheEnable()) {
-            byte[][] storeKeys = new byte[fieldSize][];
+            byte[][] subKeys = new byte[fieldSize][];
             for (int i=2; i<objects.length; i++) {
-                storeKeys[i-2] = keyStruct.hashFieldStoreKey(keyMeta, key, objects[i]);
+                subKeys[i-2] = keyStruct.hashFieldSubKey(keyMeta, key, objects[i]);
             }
             if (keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
                 int delCount = 0;
-                boolean[] exists = kvClient.exists(storeKeys);
+                boolean[] exists = kvClient.exists(subKeys);
                 for (boolean exist : exists) {
                     if (exist) {
                         delCount ++;
@@ -77,10 +77,10 @@ public class HDelCommander extends Commander {
                     keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
                     keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
                 }
-                kvClient.batchDelete(storeKeys);
+                kvClient.batchDelete(subKeys);
                 return IntegerReply.parse(delCount);
             } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_1) {
-                kvClient.batchDelete(storeKeys);
+                kvClient.batchDelete(subKeys);
                 return IntegerReply.parse(fieldSize);
             } else {
                 return ErrorReply.INTERNAL_ERROR;
@@ -112,10 +112,10 @@ public class HDelCommander extends Commander {
                     }
                 }
 
-                byte[] hashFieldStoreKey = keyStruct.hashFieldStoreKey(keyMeta, key, field);
+                byte[] hashFieldSubKey = keyStruct.hashFieldSubKey(keyMeta, key, field);
 
                 if (!hit && keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
-                    hit = kvClient.exists(hashFieldStoreKey);
+                    hit = kvClient.exists(hashFieldSubKey);
                 }
 
                 if (hit && keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
@@ -125,7 +125,7 @@ public class HDelCommander extends Commander {
                     keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
                 }
 
-                kvClient.delete(hashFieldStoreKey);
+                kvClient.delete(hashFieldSubKey);
                 if (hit || keyMeta.getEncodeVersion() == EncodeVersion.version_1) {
                     return IntegerReply.REPLY_1;
                 } else {
@@ -147,7 +147,7 @@ public class HDelCommander extends Commander {
             byte[] hashFieldCacheKey = keyStruct.hashFieldCacheKey(keyMeta, key, objects[i]);
             Command cmd = new Command(new byte[][]{RedisCommand.DEL.raw(), hashFieldCacheKey});
             commands.add(cmd);
-            storeKeys[i-2] = keyStruct.hashFieldStoreKey(keyMeta, key, objects[i]);
+            storeKeys[i-2] = keyStruct.hashFieldSubKey(keyMeta, key, objects[i]);
         }
         List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(commands));
         for (Reply reply : replyList) {

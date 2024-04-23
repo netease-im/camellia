@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.domain;
 
-import com.netease.nim.camellia.redis.proxy.upstream.kv.RedisKvConf;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 
 /**
  * Created by caojiajun on 2024/4/8

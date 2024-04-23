@@ -16,11 +16,14 @@ import com.netease.nim.camellia.redis.proxy.upstream.RedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commanders;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisKvClientExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyStruct;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.DefaultKeyMetaServer;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
@@ -83,7 +86,11 @@ public class RedisKvClient implements IUpstreamClient {
     public void start() {
         this.executor = RedisKvClientExecutor.getInstance().getExecutor();
         KVClient kvClient = initKVClient();
-        this.commanders = initCommanders(kvClient);
+        KeyStruct keyStruct = new KeyStruct(namespace.getBytes(StandardCharsets.UTF_8));
+        KvConfig kvConfig = new KvConfig(namespace);
+        KvGcExecutor gcExecutor = new KvGcExecutor(kvClient, keyStruct, kvConfig);
+        gcExecutor.start();
+        this.commanders = initCommanders(kvClient, keyStruct, kvConfig, gcExecutor);
         logger.info("RedisKvClient start success, resource = {}", getResource());
     }
 
@@ -153,14 +160,10 @@ public class RedisKvClient implements IUpstreamClient {
         return (KVClient) GlobalRedisProxyEnv.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
     }
 
-    private Commanders initCommanders(KVClient kvClient) {
-        KeyStruct keyStruct = new KeyStruct(namespace.getBytes(StandardCharsets.UTF_8));
-
+    private Commanders initCommanders(KVClient kvClient, KeyStruct keyStruct, KvConfig kvConfig, KvGcExecutor gcExecutor) {
         boolean metaCacheEnable = RedisKvConf.getBoolean(namespace, "kv.meta.cache.enable", true);
         boolean valueCacheEnable = RedisKvConf.getBoolean(namespace, "kv.value.cache.enable", true);
         CacheConfig cacheConfig = new CacheConfig(namespace, metaCacheEnable, valueCacheEnable);
-
-        KvConfig kvConfig = new KvConfig(namespace);
 
         RedisTemplate metaCacheRedisTemplate = null;
         if (metaCacheEnable) {
@@ -172,7 +175,7 @@ public class RedisKvClient implements IUpstreamClient {
         if (valueCacheEnable) {
             valueCacheRedisTemplate = initRedisTemplate("key.value.cache");
         }
-        CommanderConfig commanderConfig = new CommanderConfig(kvClient, keyStruct, cacheConfig, kvConfig, keyMetaServer, valueCacheRedisTemplate);
+        CommanderConfig commanderConfig = new CommanderConfig(kvClient, keyStruct, cacheConfig, kvConfig, keyMetaServer, valueCacheRedisTemplate, gcExecutor);
 
         return new Commanders(commanderConfig);
     }

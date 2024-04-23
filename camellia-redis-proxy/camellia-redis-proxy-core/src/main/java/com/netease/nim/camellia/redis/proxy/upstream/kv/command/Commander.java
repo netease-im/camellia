@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyStruct;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
 
@@ -23,6 +24,7 @@ public abstract class Commander {
     protected final KvConfig kvConfig;
     protected final KeyMetaServer keyMetaServer;
     protected final RedisTemplate cacheRedisTemplate;
+    protected final KvGcExecutor gcExecutor;
 
     public Commander(CommanderConfig commanderConfig) {
         this.kvClient = commanderConfig.getKvClient();
@@ -31,6 +33,7 @@ public abstract class Commander {
         this.kvConfig = commanderConfig.getKvConfig();
         this.keyMetaServer = commanderConfig.getKeyMetaServer();
         this.cacheRedisTemplate = commanderConfig.getRedisTemplate();
+        this.gcExecutor = commanderConfig.getGcExecutor();
     }
 
     public abstract RedisCommand redisCommand();

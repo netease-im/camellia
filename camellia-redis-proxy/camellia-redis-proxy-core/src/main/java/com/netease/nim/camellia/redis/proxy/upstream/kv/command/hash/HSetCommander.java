@@ -101,8 +101,8 @@ public class HSetCommander extends Commander {
             for (Map.Entry<BytesKey, byte[]> entry : fieldMap.entrySet()) {
                 byte[] field = entry.getKey().getKey();
                 byte[] value = entry.getValue();
-                byte[] storeKey = keyStruct.hashFieldStoreKey(keyMeta, key, field);//store-key
-                KeyValue keyValue = new KeyValue(storeKey, value);
+                byte[] subKey = keyStruct.hashFieldSubKey(keyMeta, key, field);//store-key
+                KeyValue keyValue = new KeyValue(subKey, value);
                 list.add(keyValue);
             }
             kvClient.batchPut(list);
@@ -118,8 +118,8 @@ public class HSetCommander extends Commander {
             byte[] field = entry.getKey().getKey();
             fieldList.add(field);
             byte[] value = entry.getValue();
-            byte[] storeKey = keyStruct.hashFieldStoreKey(keyMeta, key, field);//store-key
-            KeyValue keyValue = new KeyValue(storeKey, value);
+            byte[] subKey = keyStruct.hashFieldSubKey(keyMeta, key, field);//store-key
+            KeyValue keyValue = new KeyValue(subKey, value);
             list.add(keyValue);
             byte[] hashFieldCacheKey = keyStruct.hashFieldCacheKey(keyMeta, key, field);//cache-key
             Command cmd = new Command(new byte[][]{RedisCommand.EVAL.raw(), script, two, cacheKey, hashFieldCacheKey, field, value});
@@ -169,12 +169,12 @@ public class HSetCommander extends Commander {
         if (keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
             int existsCount = existsFields;
             if (!unknownFields.isEmpty()) {
-                byte[][] storeKeys = new byte[unknownFields.size()][];
+                byte[][] subKeys = new byte[unknownFields.size()][];
                 for (int i=0; i<unknownFields.size(); i++) {
                     byte[] field = unknownFields.get(i);
-                    storeKeys[i] = keyStruct.hashFieldStoreKey(keyMeta, key, field);
+                    subKeys[i] = keyStruct.hashFieldSubKey(keyMeta, key, field);
                 }
-                boolean[] exists = kvClient.exists(storeKeys);
+                boolean[] exists = kvClient.exists(subKeys);
                 for (boolean exist : exists) {
                     if (exist) {
                         existsCount ++;

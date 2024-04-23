@@ -20,14 +20,14 @@ public class KeyStruct {
     private final byte[] namespace;
     private final byte[] metaPrefix;
     private final byte[] cachePrefix;
-    private final byte[] storePrefix;
+    private final byte[] subKeyPrefix;
 
     public KeyStruct(byte[] namespace) {
         this.namespace = namespace;
         this.metaPrefix = BytesUtils.merge("m#".getBytes(StandardCharsets.UTF_8), namespace);
         this.cachePrefix = BytesUtils.merge("c#".getBytes(StandardCharsets.UTF_8), namespace);
-        this.storePrefix = BytesUtils.merge("s#".getBytes(StandardCharsets.UTF_8), namespace);
-        this.storePrefixLen = storePrefix.length;
+        this.subKeyPrefix = BytesUtils.merge("s#".getBytes(StandardCharsets.UTF_8), namespace);
+        this.storePrefixLen = subKeyPrefix.length;
     }
 
     public byte[] getNamespace() {
@@ -53,9 +53,9 @@ public class KeyStruct {
         return data;
     }
 
-    public byte[] hashFieldStoreKey(KeyMeta keyMeta, byte[] key, byte[] field) {
+    public byte[] hashFieldSubKey(KeyMeta keyMeta, byte[] key, byte[] field) {
         byte[] keySize = BytesUtils.toBytes(key.length);
-        byte[] data = BytesUtils.merge(storePrefix, keySize, key);
+        byte[] data = BytesUtils.merge(subKeyPrefix, keySize, key);
         data = BytesUtils.merge(data, BytesUtils.toBytes(keyMeta.getKeyVersion()));
         if (field.length > 0) {
             data = BytesUtils.merge(data, field);
@@ -63,12 +63,40 @@ public class KeyStruct {
         return data;
     }
 
-    public byte[] decodeHashFieldByStoreKey(byte[] storeKey, byte[] key) {
+    public byte[] decodeHashFieldBySubKey(byte[] storeKey, byte[] key) {
         int prefixSize = storePrefixLen + 4 + key.length + 8;
         int fieldSize = storeKey.length - prefixSize;
         byte[] field = new byte[fieldSize];
         System.arraycopy(storeKey, prefixSize, field, 0, fieldSize);
         return field;
+    }
+
+    public byte[] getMetaPrefix() {
+        return metaPrefix;
+    }
+
+    public byte[] decodeKeyByMetaKey(byte[] metaKey) {
+        if (metaKey.length <= metaPrefix.length) {
+            return null;
+        }
+        byte[] key = new byte[metaKey.length - metaPrefix.length];
+        System.arraycopy(metaKey, metaPrefix.length, key, 0, key.length);
+        return key;
+    }
+
+    public byte[] getSubKeyPrefix() {
+        return subKeyPrefix;
+    }
+
+    public byte[] decodeKeyBySubKey(byte[] subKey) {
+        int keyLen = BytesUtils.toInt(subKey, storePrefixLen);
+        byte[] key = new byte[keyLen];
+        System.arraycopy(subKey, storePrefixLen + 4, key, 0, keyLen);
+        return key;
+    }
+
+    public long decodeKeyVersionBySubKey(byte[] subKey, int keyLen) {
+        return BytesUtils.toLong(subKey, storePrefixLen + 4 + keyLen);
     }
 
     public EncodeVersion hashKeyMetaVersion() {

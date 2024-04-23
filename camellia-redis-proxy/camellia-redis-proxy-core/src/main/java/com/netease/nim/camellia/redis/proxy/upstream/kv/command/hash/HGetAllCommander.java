@@ -137,7 +137,7 @@ public class HGetAllCommander extends Commander {
     private Map<BytesKey, byte[]> hgetallFromKv(KeyMeta keyMeta, byte[] key) {
         Map<BytesKey, byte[]> map = new HashMap<>();
         //store
-        byte[] startKey = keyStruct.hashFieldStoreKey(keyMeta, key, new byte[0]);
+        byte[] startKey = keyStruct.hashFieldSubKey(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         int limit = kvConfig.scanBatch();
         int hashMaxSize = kvConfig.hashMaxSize();
@@ -147,7 +147,7 @@ public class HGetAllCommander extends Commander {
                 break;
             }
             for (KeyValue keyValue : scan) {
-                byte[] field = keyStruct.decodeHashFieldByStoreKey(keyValue.getKey(), key);
+                byte[] field = keyStruct.decodeHashFieldBySubKey(keyValue.getKey(), key);
                 map.put(new BytesKey(field), keyValue.getValue());
                 startKey = keyValue.getKey();
                 if (map.size() >= hashMaxSize) {

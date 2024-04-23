@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 
 /**
  * DEL key
@@ -33,7 +34,13 @@ public class DelCommander extends Commander {
     protected Reply execute(Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        int ret = keyMetaServer.deleteKeyMeta(key);
+        KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
+        int ret = 0;
+        if (keyMeta != null) {
+            keyMetaServer.deleteKeyMeta(key);
+            ret = 1;
+            gcExecutor.submitKeyDeleteTask(key, keyMeta);
+        }
         return IntegerReply.parse(ret);
     }
 }

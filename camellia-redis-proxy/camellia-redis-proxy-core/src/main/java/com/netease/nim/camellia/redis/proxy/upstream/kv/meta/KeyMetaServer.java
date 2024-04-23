@@ -9,7 +9,7 @@ public interface KeyMetaServer {
 
     void createOrUpdateKeyMeta(byte[] key, KeyMeta keyMeta);
 
-    int deleteKeyMeta(byte[] key);
+    void deleteKeyMeta(byte[] key);
 
     boolean existsKeyMeta(byte[] key);
 }

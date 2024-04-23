@@ -1,6 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.domain;
 
-import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 
 /**
  * Created by caojiajun on 2024/4/8
@@ -13,20 +13,24 @@ public class KvConfig {
         this.namespace = namespace;
     }
 
+    public int gcExecutorPoolSize() {
+        return RedisKvConf.getInt(namespace, "kv.gc.executor.pool.size", 2);
+    }
+
+    public int gcExecutorQueueSize() {
+        return RedisKvConf.getInt(namespace, "kv.gc.executor.queue.size", 100000);
+    }
+
+    public long gcBatchSleepMs() {
+        return RedisKvConf.getLong(namespace, "kv.gc.executor.batch.sleep.ms", 5L);
+    }
+
     public int scanBatch() {
-        int scanBatch = ProxyDynamicConf.getInt(namespace + ".kv.scan.batch", -1);
-        if (scanBatch > 0) {
-            return scanBatch;
-        }
-        return ProxyDynamicConf.getInt("kv.scan.batch", 100);
+        return RedisKvConf.getInt(namespace, "kv.scan.batch", 100);
     }
 
     public int hashMaxSize() {
-        int hashMaxSize = ProxyDynamicConf.getInt(namespace + ".kv.hash.max.size", -1);
-        if (hashMaxSize > 0) {
-            return hashMaxSize;
-        }
-        return ProxyDynamicConf.getInt("kv.hash.max.size", Integer.MAX_VALUE);
+        return RedisKvConf.getInt(namespace, "kv.hash.max.size", Integer.MAX_VALUE);
     }
 
 }

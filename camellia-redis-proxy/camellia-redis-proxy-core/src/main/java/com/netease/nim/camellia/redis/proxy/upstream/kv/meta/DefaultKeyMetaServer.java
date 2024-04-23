@@ -118,30 +118,16 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
     }
 
     @Override
-    public int deleteKeyMeta(byte[] key) {
+    public void deleteKeyMeta(byte[] key) {
         byte[] metaKey = keyStruct.metaKey(key);
-        int result = 0;
         if (cacheConfig.isMetaCacheEnable()) {
             Reply reply = sync(redisTemplate.sendDel(metaKey));
             if (reply instanceof ErrorReply) {
                 throw new KvException(((ErrorReply) reply).getError());
             }
-            if (reply instanceof IntegerReply) {
-                result = ((IntegerReply) reply).getInteger().intValue();
-            }
             delayCacheKeyMap.remove(new BytesKey(key));
         }
-        if (result > 0) {
-            kvClient.delete(metaKey);
-            return result;
-        }
-        KeyValue keyValue = kvClient.get(metaKey);
-        if (keyValue == null || keyValue.getValue() == null) {
-            return 0;
-        }
-        KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getValue());
         kvClient.delete(metaKey);
-        return (keyMeta == null || keyMeta.isExpire()) ? 0 : 1;
     }
 
     @Override

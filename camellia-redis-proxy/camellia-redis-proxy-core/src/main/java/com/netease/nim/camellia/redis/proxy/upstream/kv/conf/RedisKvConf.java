@@ -1,4 +1,4 @@
-package com.netease.nim.camellia.redis.proxy.upstream.kv;
+package com.netease.nim.camellia.redis.proxy.upstream.kv.conf;
 
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 
