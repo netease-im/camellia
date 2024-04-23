@@ -1,8 +1,16 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.gc;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.netease.nim.camellia.core.model.ResourceTable;
+import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
+import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.upstream.RedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyStruct;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
@@ -31,6 +39,7 @@ public class KvGcExecutor {
     private final CamelliaHashedExecutor deleteExecutor;
     private final ThreadPoolExecutor submitExecutor;
     private final ScheduledThreadPoolExecutor scheduleExecutor;
+    private RedisTemplate redisTemplate;
 
     public KvGcExecutor(KVClient kvClient, KeyStruct keyStruct, KvConfig kvConfig) {
         this.kvClient = kvClient;
@@ -41,6 +50,16 @@ public class KvGcExecutor {
         this.submitExecutor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(100000), new CamelliaThreadFactory("camellia-kv-gc-submit"), new ThreadPoolExecutor.AbortPolicy());
         this.scheduleExecutor = new ScheduledThreadPoolExecutor(1, new CamelliaThreadFactory("camellia-kv-gc-scheduler"));
+
+        if (!kvClient.supportCheckAndDelete()) {
+            String url = ProxyDynamicConf.getString("current.proxy.cluster.url", null);
+            if (url == null) {
+                throw new KvException("kv client do not support checkAndDelete api, should config 'current.proxy.cluster.url'");
+            }
+            ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(url);
+            RedisProxyEnv env = GlobalRedisProxyEnv.getClientTemplateFactory().getEnv();
+            this.redisTemplate = new RedisTemplate(new UpstreamRedisClientTemplate(env, resourceTable));
+        }
     }
 
     public void start() {
@@ -87,7 +106,16 @@ public class KvGcExecutor {
                         if (key != null && keyMeta.getKeyType() != KeyType.string) {
                             deleteExecutor.submit(key, new SubKeyDeleteTask(key, keyMeta, kvClient, keyStruct, kvConfig));
                         }
-                        kvClient.checkAndDelete(startKey, keyValue.getValue());
+                        if (kvClient.supportCheckAndDelete()) {//kv本身已经支持cas的删除，则可以直接删
+                            kvClient.checkAndDelete(startKey, keyValue.getValue());
+                        } else {
+                            //如果kv不支持cas的删除，则hash到特定的proxy节点处理，避免并发问题
+                            try {
+                                redisTemplate.sendDelExpiredKeyInKv(key, kvConfig.gcDeleteKeyMetaTimeoutMillis());
+                            } catch (Exception e) {
+                                logger.error("send del expired key in kv error", e);
+                            }
+                        }
                     }
                 }
                 if (scan.size() < limit) {

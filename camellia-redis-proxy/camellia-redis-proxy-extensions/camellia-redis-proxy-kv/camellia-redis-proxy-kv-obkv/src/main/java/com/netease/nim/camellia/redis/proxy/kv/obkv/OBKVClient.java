@@ -31,7 +31,7 @@ public class OBKVClient implements KVClient {
     private static final byte[] cf = "d".getBytes(StandardCharsets.UTF_8);
     private static final byte[] column = "v".getBytes(StandardCharsets.UTF_8);
 
-    private final OHTableClient template;
+    private final OHTableClient tableClient;
 
     public OBKVClient() {
         try {
@@ -50,8 +50,8 @@ public class OBKVClient implements KVClient {
 
             String tableName = ProxyDynamicConf.getString("kv.obkv.table.name", "camellia_kv");
 
-            template = new OHTableClient(tableName, conf);
-            template.init();
+            tableClient = new OHTableClient(tableName, conf);
+            tableClient.init();
         } catch (Exception e) {
             logger.error("OHTableClient init error", e);
             throw new KvException(e);
@@ -63,7 +63,7 @@ public class OBKVClient implements KVClient {
         try {
             Put put = new Put(key);
             put.add(cf, column, value);
-            template.put(put);
+            tableClient.put(put);
         } catch (IOException e) {
             logger.error("put error", e);
             throw new KvException(e);
@@ -79,7 +79,7 @@ public class OBKVClient implements KVClient {
                 put.add(cf, column, keyValue.getValue());
                 putList.add(put);
             }
-            template.put(putList);
+            tableClient.put(putList);
         } catch (IOException e) {
             logger.error("batchPut error", e);
             throw new KvException(e);
@@ -90,7 +90,7 @@ public class OBKVClient implements KVClient {
     public KeyValue get(byte[] key) {
         try {
             Get get = new Get(key);
-            Result result = template.get(get);
+            Result result = tableClient.get(get);
             if (result == null) {
                 return null;
             }
@@ -109,7 +109,7 @@ public class OBKVClient implements KVClient {
     public boolean exists(byte[] key) {
         try {
             Get get = new Get(key);
-            return template.exists(get);
+            return tableClient.exists(get);
         } catch (IOException e) {
             logger.error("exists error", e);
             throw new KvException(e);
@@ -122,7 +122,7 @@ public class OBKVClient implements KVClient {
             boolean[] results = new boolean[keys.length];
             int i=0;
             for (byte[] key : keys) {
-                results[i] = template.exists(new Get(key));
+                results[i] = tableClient.exists(new Get(key));
                 i++;
             }
             return results;
@@ -141,7 +141,7 @@ public class OBKVClient implements KVClient {
                 list.add(get);
             }
             List<KeyValue> keyValues = new ArrayList<>(list.size());
-            Result[] results = template.get(list);
+            Result[] results = tableClient.get(list);
             for (Result result : results) {
                 if (result == null) continue;
                 byte[] key = result.getRow();
@@ -159,7 +159,7 @@ public class OBKVClient implements KVClient {
     public void delete(byte[] key) {
         try {
             Delete delete = new Delete(key);
-            template.delete(delete);
+            tableClient.delete(delete);
         } catch (IOException e) {
             logger.error("delete error", e);
             throw new KvException(e);
@@ -173,7 +173,7 @@ public class OBKVClient implements KVClient {
             for (byte[] key : keys) {
                 list.add(new Delete(key));
             }
-            template.delete(list);
+            tableClient.delete(list);
         } catch (IOException e) {
             logger.error("batchDelete error", e);
             throw new KvException(e);
@@ -181,9 +181,14 @@ public class OBKVClient implements KVClient {
     }
 
     @Override
+    public boolean supportCheckAndDelete() {
+        return true;
+    }
+
+    @Override
     public void checkAndDelete(byte[] key, byte[] value) {
         try {
-            template.checkAndDelete(key, cf, column, value, new Delete(key));
+            tableClient.checkAndDelete(key, cf, column, value, new Delete(key));
         } catch (IOException e) {
             logger.error("checkAndDelete error", e);
             throw new KvException(e);
@@ -197,7 +202,7 @@ public class OBKVClient implements KVClient {
             scan.setStartRow(startKey);
             scan.setCaching(limit);
             scan.setSmall(true);
-            try (ResultScanner scanner = template.getScanner(scan)) {
+            try (ResultScanner scanner = tableClient.getScanner(scan)) {
                 List<KeyValue> list = new ArrayList<>();
                 for (Result result : scanner) {
                     byte[] row = result.getRow();
@@ -230,7 +235,7 @@ public class OBKVClient implements KVClient {
             scan.setStartRow(startKey);
             scan.setSmall(true);
             int count = 0;
-            try (ResultScanner scanner = template.getScanner(scan)) {
+            try (ResultScanner scanner = tableClient.getScanner(scan)) {
                 for (Result result : scanner) {
                     byte[] row = result.getRow();
                     if (!includeStartKey && Arrays.equals(row, startKey)) {
@@ -258,7 +263,7 @@ public class OBKVClient implements KVClient {
             scan.setStopRow(endKey);
             scan.setCaching(limit);
             scan.setSmall(true);
-            try (ResultScanner scanner = template.getScanner(scan)) {
+            try (ResultScanner scanner = tableClient.getScanner(scan)) {
                 List<KeyValue> list = new ArrayList<>();
                 for (Result result : scanner) {
                     byte[] row = result.getRow();
@@ -291,7 +296,7 @@ public class OBKVClient implements KVClient {
             scan.setStopRow(endKey);
             scan.setSmall(true);
             int count = 0;
-            try (ResultScanner scanner = template.getScanner(scan)) {
+            try (ResultScanner scanner = tableClient.getScanner(scan)) {
                 for (Result result : scanner) {
                     byte[] row = result.getRow();
                     if (!includeStartKey && Arrays.equals(row, startKey)) {

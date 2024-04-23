@@ -154,8 +154,13 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
+    public boolean supportCheckAndDelete() {
+        return false;
+    }
+
+    @Override
     public void checkAndDelete(byte[] key, byte[] value) {
-        tikvClient.compareAndSet(ByteString.copyFrom(key), Optional.of(ByteString.copyFrom(value)), ByteString.copyFrom(new byte[0]), 1);
+        throw new UnsupportedOperationException();
     }
 
     @Override

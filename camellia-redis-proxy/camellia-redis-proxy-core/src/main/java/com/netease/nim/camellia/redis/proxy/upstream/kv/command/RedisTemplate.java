@@ -83,6 +83,10 @@ public class RedisTemplate {
         return sendCommand(new Command(new byte[][]{RedisCommand.PSETEX.raw(), key, Utils.stringToBytes(String.valueOf(expireMillis)), value}));
     }
 
+    public Reply sendDelExpiredKeyInKv(byte[] key, long timeoutMillis) {
+        return sync(sendCommand(new Command(new byte[][]{RedisCommand.DEL_EXPIRED_KEY_IN_KV.raw(), key})), timeoutMillis);
+    }
+
     public CompletableFuture<Reply> sendCommand(Command command) {
         List<CompletableFuture<Reply>> futures = template.sendCommand(-1, Collections.singletonList(command));
         return futures.get(0);

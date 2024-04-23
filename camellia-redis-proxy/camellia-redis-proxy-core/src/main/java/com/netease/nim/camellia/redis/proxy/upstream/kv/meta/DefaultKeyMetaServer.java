@@ -161,6 +161,19 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         return !keyMeta.isExpire();
     }
 
+    @Override
+    public void checkKeyMetaExpired(byte[] key) {
+        byte[] metaKey = keyStruct.metaKey(key);
+        KeyValue keyValue = kvClient.get(metaKey);
+        if (keyValue == null || keyValue.getValue() == null) {
+            return;
+        }
+        KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getKey());
+        if (keyMeta == null || keyMeta.isExpire()) {
+            kvClient.delete(metaKey);
+        }
+    }
+
     private Reply sync(CompletableFuture<Reply> future) {
         return redisTemplate.sync(future, cacheConfig.keyMetaTimeoutMillis());
     }

@@ -12,4 +12,6 @@ public interface KeyMetaServer {
     void deleteKeyMeta(byte[] key);
 
     boolean existsKeyMeta(byte[] key);
+
+    void checkKeyMetaExpired(byte[] key);
 }

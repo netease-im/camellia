@@ -115,6 +115,11 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
+    public boolean supportCheckAndDelete() {
+        return true;
+    }
+
+    @Override
     public void checkAndDelete(byte[] key, byte[] value) {
         template.checkAndDelete(tableName, key, cf, column, value, new Delete(key));
     }
