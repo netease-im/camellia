@@ -79,7 +79,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             if (keyMeta == null || keyMeta.isExpire()) {
                 kvClient.delete(metaKey);
                 if (keyMeta != null) {
-                    gcExecutor.submitKeyDeleteTask(key, keyMeta);
+                    gcExecutor.submitSubKeyDeleteTask(key, keyMeta);
                 }
                 return null;
             }

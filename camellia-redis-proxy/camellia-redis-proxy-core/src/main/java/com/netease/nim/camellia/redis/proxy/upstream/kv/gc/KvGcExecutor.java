@@ -50,11 +50,11 @@ public class KvGcExecutor {
         }, 1, 1, TimeUnit.DAYS);
     }
 
-    public void submitKeyDeleteTask(byte[] key, KeyMeta keyMeta) {
+    public void submitSubKeyDeleteTask(byte[] key, KeyMeta keyMeta) {
         try {
             submitExecutor.submit(() -> {
                 try {
-                    deleteExecutor.submit(key, new KeyDeleteTask(key, keyMeta, kvClient, keyStruct, kvConfig));
+                    deleteExecutor.submit(key, new SubKeyDeleteTask(key, keyMeta, kvClient, keyStruct, kvConfig));
                 } catch (Exception e) {
                     logger.warn("execute delete task error, ex = {}", e.toString());
                 }
@@ -79,11 +79,15 @@ public class KvGcExecutor {
                 for (KeyValue keyValue : scan) {
                     startKey = keyValue.getKey();
                     KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getValue());
+                    if (keyMeta == null) {
+                        continue;
+                    }
                     if (keyMeta.isExpire()) {
                         byte[] key = keyStruct.decodeKeyByMetaKey(startKey);
-                        if (key != null) {
-                            deleteExecutor.submit(key, new KeyDeleteTask(key, keyMeta, kvClient, keyStruct, kvConfig));
+                        if (key != null && keyMeta.getKeyType() != KeyType.string) {
+                            deleteExecutor.submit(key, new SubKeyDeleteTask(key, keyMeta, kvClient, keyStruct, kvConfig));
                         }
+                        kvClient.delete(startKey);//todo safe delete for concurrent write
                     }
                 }
                 if (scan.size() < limit) {
@@ -196,14 +200,14 @@ public class KvGcExecutor {
         ;
     }
 
-    private static class KeyDeleteTask implements Runnable {
+    private static class SubKeyDeleteTask implements Runnable {
         private final byte[] key;
         private final KeyMeta keyMeta;
         private final KVClient kvClient;
         private final KeyStruct keyStruct;
         private final KvConfig kvConfig;
 
-        public KeyDeleteTask(byte[] key, KeyMeta keyMeta, KVClient kvClient, KeyStruct keyStruct, KvConfig kvConfig) {
+        public SubKeyDeleteTask(byte[] key, KeyMeta keyMeta, KVClient kvClient, KeyStruct keyStruct, KvConfig kvConfig) {
             this.key = key;
             this.keyMeta = keyMeta;
             this.kvClient = kvClient;

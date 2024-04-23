@@ -39,7 +39,7 @@ public class DelCommander extends Commander {
         if (keyMeta != null) {
             keyMetaServer.deleteKeyMeta(key);
             ret = 1;
-            gcExecutor.submitKeyDeleteTask(key, keyMeta);
+            gcExecutor.submitSubKeyDeleteTask(key, keyMeta);
         }
         return IntegerReply.parse(ret);
     }
