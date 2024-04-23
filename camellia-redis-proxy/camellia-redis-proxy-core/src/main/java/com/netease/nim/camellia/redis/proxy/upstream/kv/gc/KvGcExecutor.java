@@ -87,7 +87,7 @@ public class KvGcExecutor {
                         if (key != null && keyMeta.getKeyType() != KeyType.string) {
                             deleteExecutor.submit(key, new SubKeyDeleteTask(key, keyMeta, kvClient, keyStruct, kvConfig));
                         }
-                        kvClient.delete(startKey);//todo safe delete for concurrent write
+                        kvClient.checkAndDelete(startKey, keyValue.getValue());
                     }
                 }
                 if (scan.size() < limit) {

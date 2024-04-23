@@ -154,6 +154,11 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
+    public void checkAndDelete(byte[] key, byte[] value) {
+        tikvClient.compareAndSet(ByteString.copyFrom(key), Optional.of(ByteString.copyFrom(value)), ByteString.copyFrom(new byte[0]), 1);
+    }
+
+    @Override
     public List<KeyValue> scan(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         try {
             Iterator<Kvrpcpb.KvPair> iterator = tikvClient.scan0(ByteString.copyFrom(startKey), limit);

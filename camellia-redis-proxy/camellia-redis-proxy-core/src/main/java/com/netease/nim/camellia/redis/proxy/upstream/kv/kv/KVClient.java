@@ -23,6 +23,8 @@ public interface KVClient {
 
     void batchDelete(byte[]...keys);
 
+    void checkAndDelete(byte[] key, byte[] value);
+
     List<KeyValue> scan(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey);
 
     long count(byte[] startKey, byte[] prefix, boolean includeStartKey);
