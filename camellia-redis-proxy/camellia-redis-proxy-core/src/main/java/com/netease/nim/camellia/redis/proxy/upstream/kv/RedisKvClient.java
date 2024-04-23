@@ -85,12 +85,7 @@ public class RedisKvClient implements IUpstreamClient {
     @Override
     public void start() {
         this.executor = RedisKvClientExecutor.getInstance().getExecutor();
-        KVClient kvClient = initKVClient();
-        KeyStruct keyStruct = new KeyStruct(namespace.getBytes(StandardCharsets.UTF_8));
-        KvConfig kvConfig = new KvConfig(namespace);
-        KvGcExecutor gcExecutor = new KvGcExecutor(kvClient, keyStruct, kvConfig);
-        gcExecutor.start();
-        this.commanders = initCommanders(kvClient, keyStruct, kvConfig, gcExecutor);
+        this.commanders = initCommanders();
         logger.info("RedisKvClient start success, resource = {}", getResource());
     }
 
@@ -160,7 +155,15 @@ public class RedisKvClient implements IUpstreamClient {
         return (KVClient) GlobalRedisProxyEnv.getProxyBeanFactory().getBean(BeanInitUtils.parseClass(className));
     }
 
-    private Commanders initCommanders(KVClient kvClient, KeyStruct keyStruct, KvConfig kvConfig, KvGcExecutor gcExecutor) {
+    private Commanders initCommanders() {
+        KVClient kvClient = initKVClient();
+
+        KeyStruct keyStruct = new KeyStruct(namespace.getBytes(StandardCharsets.UTF_8));
+        KvConfig kvConfig = new KvConfig(namespace);
+
+        KvGcExecutor gcExecutor = new KvGcExecutor(kvClient, keyStruct, kvConfig);
+        gcExecutor.start();
+
         boolean metaCacheEnable = RedisKvConf.getBoolean(namespace, "kv.meta.cache.enable", true);
         boolean valueCacheEnable = RedisKvConf.getBoolean(namespace, "kv.value.cache.enable", true);
         CacheConfig cacheConfig = new CacheConfig(namespace, metaCacheEnable, valueCacheEnable);
@@ -169,7 +172,7 @@ public class RedisKvClient implements IUpstreamClient {
         if (metaCacheEnable) {
             metaCacheRedisTemplate = initRedisTemplate("key.meta.cache");
         }
-        KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(kvClient, metaCacheRedisTemplate, keyStruct, cacheConfig);
+        KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(kvClient, metaCacheRedisTemplate, keyStruct, gcExecutor, cacheConfig);
 
         RedisTemplate valueCacheRedisTemplate = null;
         if (valueCacheEnable) {

@@ -6,6 +6,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyStruct;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.tools.utils.BytesKey;
@@ -21,14 +22,16 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
     private final KVClient kvClient;
     private final RedisTemplate redisTemplate;
     private final KeyStruct keyStruct;
+    private final KvGcExecutor gcExecutor;
     private final CacheConfig cacheConfig;
 
-    public DefaultKeyMetaServer(KVClient kvClient, RedisTemplate redisTemplate, KeyStruct keyStruct, CacheConfig cacheConfig) {
+    public DefaultKeyMetaServer(KVClient kvClient, RedisTemplate redisTemplate, KeyStruct keyStruct, KvGcExecutor gcExecutor, CacheConfig cacheConfig) {
         this.kvClient = kvClient;
         this.redisTemplate = redisTemplate;
         this.keyStruct = keyStruct;
+        this.gcExecutor = gcExecutor;
         this.cacheConfig = cacheConfig;
-        delayCacheKeyMap = new ConcurrentLinkedHashMap.Builder<BytesKey, Long>()
+        this.delayCacheKeyMap = new ConcurrentLinkedHashMap.Builder<BytesKey, Long>()
                 .initialCapacity(cacheConfig.keyMetaCacheDelayMapSize())
                 .maximumWeightedCapacity(cacheConfig.keyMetaCacheDelayMapSize())
                 .build();
@@ -73,8 +76,11 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 return null;
             }
             keyMeta = KeyMeta.fromBytes(keyValue.getKey());
-            if (keyMeta.isExpire()) {
+            if (keyMeta == null || keyMeta.isExpire()) {
                 kvClient.delete(metaKey);
+                if (keyMeta != null) {
+                    gcExecutor.submitKeyDeleteTask(key, keyMeta);
+                }
                 return null;
             }
 
