@@ -63,11 +63,11 @@ public class KeyStruct {
         return data;
     }
 
-    public byte[] decodeHashFieldBySubKey(byte[] storeKey, byte[] key) {
+    public byte[] decodeHashFieldBySubKey(byte[] subKey, byte[] key) {
         int prefixSize = storePrefixLen + 4 + key.length + 8;
-        int fieldSize = storeKey.length - prefixSize;
+        int fieldSize = subKey.length - prefixSize;
         byte[] field = new byte[fieldSize];
-        System.arraycopy(storeKey, prefixSize, field, 0, fieldSize);
+        System.arraycopy(subKey, prefixSize, field, 0, fieldSize);
         return field;
     }
 

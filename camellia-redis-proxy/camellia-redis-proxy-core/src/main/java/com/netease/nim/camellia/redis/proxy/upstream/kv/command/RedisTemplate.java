@@ -68,6 +68,10 @@ public class RedisTemplate {
         return sendCommand(new Command(new byte[][]{RedisCommand.DEL.raw(), key}));
     }
 
+    public CompletableFuture<Reply> sendPExpire(byte[] key, long pexpire) {
+        return sendCommand(new Command(new byte[][]{RedisCommand.PEXPIRE.raw(), key, Utils.stringToBytes(String.valueOf(pexpire))}));
+    }
+
     public CompletableFuture<Reply> sendExists(byte[] key) {
         return sendCommand(new Command(new byte[][]{RedisCommand.EXISTS.raw(), key}));
     }

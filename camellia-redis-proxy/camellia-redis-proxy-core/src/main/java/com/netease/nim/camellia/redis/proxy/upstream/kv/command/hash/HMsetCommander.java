@@ -11,9 +11,9 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
  * <p>
  * Created by caojiajun on 2024/4/11
  */
-public class HMsetCommander extends HSetCommander {
+public class HMSetCommander extends HSetCommander {
 
-    public HMsetCommander(CommanderConfig commanderConfig) {
+    public HMSetCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
     }
 

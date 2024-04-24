@@ -41,11 +41,12 @@ public class Commanders {
 
         //hash
         initCommander(new HSetCommander(commanderConfig));
-        initCommander(new HMsetCommander(commanderConfig));
+        initCommander(new HMSetCommander(commanderConfig));
         initCommander(new HGetCommander(commanderConfig));
         initCommander(new HGetAllCommander(commanderConfig));
         initCommander(new HDelCommander(commanderConfig));
         initCommander(new HLenCommander(commanderConfig));
+        initCommander(new HMGetCommander(commanderConfig));
 
         //zset
 
