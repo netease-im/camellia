@@ -113,6 +113,7 @@ hash数据有两种编码模式，区别在于key-meta中是否记录field-count
 |:-------:|-----------------------------------------:|:----------------------------:|:----------------------------:|
 |  hset   | `HSET key field value [field value ...]` | [hset-v0](./hash/hset-v0.md) | [hset-v1](./hash/hset-v1.md) |
 |  hget   |                         `HGET key field` |    [hget](./hash/hget.md)    |          同version-0          |
+|  hmget  |            `HMGET key field [field ...]` |   [hmget](./hash/hmget.md)   |          同version-0          |
 |  hdel   |             `HDEL key field [field ...]` | [hdel-v0](./hash/hdel-v0.md) | [hdel-v1](./hash/hdel-v1.md) |
 | hgetall |                            `HGETALL key` | [hgetall](./hash/hgetall.md) |          同version-0          |
 |  hlen   |                               `HLEN key` | [hlen-v0](./hash/hlen-v0.md) | [hlen-v1](./hash/hlen-v1.md) |
