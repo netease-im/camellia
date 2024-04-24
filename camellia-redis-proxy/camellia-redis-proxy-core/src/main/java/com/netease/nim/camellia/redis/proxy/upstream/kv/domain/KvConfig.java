@@ -25,8 +25,8 @@ public class KvConfig {
         return RedisKvConf.getLong(namespace, "kv.gc.executor.batch.sleep.ms", 5L);
     }
 
-    public long gcDeleteKeyMetaTimeoutMillis() {
-        return RedisKvConf.getLong(namespace, "kv.gc.delete.key.meta.timeout.millis", 10000L);
+    public long gcCleanExpiredKeyMetaTimeoutMillis() {
+        return RedisKvConf.getLong(namespace, "kv.gc.clean.expired.key.meta.timeout.millis", 10000L);
     }
 
     public int scanBatch() {

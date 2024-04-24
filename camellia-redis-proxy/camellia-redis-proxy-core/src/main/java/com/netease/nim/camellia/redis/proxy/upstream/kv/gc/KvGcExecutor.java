@@ -5,6 +5,8 @@ import com.netease.nim.camellia.core.model.ResourceTable;
 import com.netease.nim.camellia.core.util.ReadableResourceTableUtil;
 import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
+import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
+import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.RedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
@@ -52,9 +54,9 @@ public class KvGcExecutor {
         this.scheduleExecutor = new ScheduledThreadPoolExecutor(1, new CamelliaThreadFactory("camellia-kv-gc-scheduler"));
 
         if (!kvClient.supportCheckAndDelete()) {
-            String url = ProxyDynamicConf.getString("current.proxy.cluster.url", null);
+            String url = ProxyDynamicConf.getString("kv.gc.clean.expired.key.meta.target.proxy.cluster.url", null);
             if (url == null) {
-                throw new KvException("kv client do not support checkAndDelete api, should config 'current.proxy.cluster.url'");
+                throw new KvException("kv client do not support checkAndDelete api, should config 'kv.gc.clean.expired.key.meta.target.proxy.cluster.url'");
             }
             ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(url);
             RedisProxyEnv env = GlobalRedisProxyEnv.getClientTemplateFactory().getEnv();
@@ -111,9 +113,12 @@ public class KvGcExecutor {
                         } else {
                             //如果kv不支持cas的删除，则hash到特定的proxy节点处理，避免并发问题
                             try {
-                                redisTemplate.sendDelExpiredKeyInKv(key, kvConfig.gcDeleteKeyMetaTimeoutMillis());
+                                Reply reply = redisTemplate.sendCleanExpiredKeyMetaInKv(keyStruct.getNamespace(), key, kvConfig.gcCleanExpiredKeyMetaTimeoutMillis());
+                                if (reply instanceof ErrorReply) {
+                                    logger.error("send clean expired key meta in kv failed, reply = {}", ((ErrorReply) reply).getError());
+                                }
                             } catch (Exception e) {
-                                logger.error("send del expired key in kv error", e);
+                                logger.error("send clean expired key meta in kv error", e);
                             }
                         }
                     }

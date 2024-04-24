@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
@@ -83,8 +84,8 @@ public class RedisTemplate {
         return sendCommand(new Command(new byte[][]{RedisCommand.PSETEX.raw(), key, Utils.stringToBytes(String.valueOf(expireMillis)), value}));
     }
 
-    public Reply sendDelExpiredKeyInKv(byte[] key, long timeoutMillis) {
-        return sync(sendCommand(new Command(new byte[][]{RedisCommand.DEL_EXPIRED_KEY_IN_KV.raw(), key})), timeoutMillis);
+    public Reply sendCleanExpiredKeyMetaInKv(byte[] namespace, byte[] key, long timeoutMillis) {
+        return sync(sendCommand(new Command(new byte[][]{RedisCommand.KV.raw(), RedisKeyword.CLEAN.getRaw(), namespace, key})), timeoutMillis);
     }
 
     public CompletableFuture<Reply> sendCommand(Command command) {

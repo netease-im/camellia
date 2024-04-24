@@ -31,7 +31,7 @@ public class Commanders {
         initCommander(new DelCommander(commanderConfig));
         initCommander(new ExistsCommander(commanderConfig));
         initCommander(new UnlinkCommander(commanderConfig));
-        initCommander(new DelExpiredKeyInKvCommander(commanderConfig));
+        initCommander(new KvCommander(commanderConfig));
 
         //string
         initCommander(new GetCommander(commanderConfig));

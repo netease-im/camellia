@@ -231,6 +231,14 @@ public class CommandsTransponder {
                         hasCommandsSkip = true;
                         continue;
                     }
+
+                    //kv command
+                    if (redisCommand == RedisCommand.KV) {
+                        CompletableFuture<Reply> future = KvCommandInvoker.invoke(command);
+                        future.thenAccept(task::replyCompleted);
+                        hasCommandsSkip = true;
+                        continue;
+                    }
                 }
 
                 //如果需要密码，但是没有auth，则返回NO_AUTH

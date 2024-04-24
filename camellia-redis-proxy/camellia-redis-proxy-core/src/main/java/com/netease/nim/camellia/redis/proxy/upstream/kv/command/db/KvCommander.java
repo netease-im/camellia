@@ -8,31 +8,31 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 
 /**
- * DEL key
+ * KV clean namespace key
  * <p>
  * Created by caojiajun on 2024/4/8
  */
-public class DelExpiredKeyInKvCommander extends Commander {
+public class KvCommander extends Commander {
 
-    public DelExpiredKeyInKvCommander(CommanderConfig commanderConfig) {
+    public KvCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
     }
 
     @Override
     public RedisCommand redisCommand() {
-        return RedisCommand.DEL_EXPIRED_KEY_IN_KV;
+        return RedisCommand.KV;
     }
 
     @Override
     protected boolean parse(Command command) {
         byte[][] objects = command.getObjects();
-        return objects.length == 2;
+        return objects.length == 4;
     }
 
     @Override
     protected Reply execute(Command command) {
         byte[][] objects = command.getObjects();
-        byte[] key = objects[1];
+        byte[] key = objects[3];
         keyMetaServer.checkKeyMetaExpired(key);
         return StatusReply.OK;
     }
