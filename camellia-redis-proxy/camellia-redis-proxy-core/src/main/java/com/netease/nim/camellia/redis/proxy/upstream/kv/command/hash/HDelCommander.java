@@ -141,13 +141,13 @@ public class HDelCommander extends Commander {
         Command luaCmd = cacheRedisTemplate.luaCommand(script, new byte[][]{cacheKey}, args);
         commands.add(luaCmd);
 
-        byte[][] storeKeys = new byte[fieldSize][];
+        byte[][] subKeys = new byte[fieldSize][];
 
         for (int i=2; i<objects.length; i++) {
             byte[] hashFieldCacheKey = keyStruct.hashFieldCacheKey(keyMeta, key, objects[i]);
             Command cmd = new Command(new byte[][]{RedisCommand.DEL.raw(), hashFieldCacheKey});
             commands.add(cmd);
-            storeKeys[i-2] = keyStruct.hashFieldSubKey(keyMeta, key, objects[i]);
+            subKeys[i-2] = keyStruct.hashFieldSubKey(keyMeta, key, objects[i]);
         }
         List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(commands));
         for (Reply reply : replyList) {
@@ -166,7 +166,7 @@ public class HDelCommander extends Commander {
         }
 
         if (result != null) {
-            kvClient.batchDelete(storeKeys);
+            kvClient.batchDelete(subKeys);
             return result;
         }
         if (keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
@@ -177,12 +177,12 @@ public class HDelCommander extends Commander {
                 if (reply instanceof IntegerReply) {
                     Long integer = ((IntegerReply) reply).getInteger();
                     if (integer == 0) {
-                        cacheMissFieldStoreKey.add(storeKeys[i-1]);
+                        cacheMissFieldStoreKey.add(subKeys[i-1]);
                     } else {
                         cacheHitCount ++;
                     }
                 } else {
-                    cacheMissFieldStoreKey.add(storeKeys[i-1]);
+                    cacheMissFieldStoreKey.add(subKeys[i-1]);
                 }
             }
             if (cacheMissFieldStoreKey.isEmpty()) {
@@ -201,10 +201,10 @@ public class HDelCommander extends Commander {
             keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
             keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
 
-            kvClient.batchDelete(storeKeys);
+            kvClient.batchDelete(subKeys);
             return IntegerReply.parse(delCount);
         } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_1) {
-            kvClient.batchDelete(storeKeys);
+            kvClient.batchDelete(subKeys);
             return IntegerReply.parse(fieldSize);
         } else {
             return ErrorReply.INTERNAL_ERROR;
