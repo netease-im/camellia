@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
@@ -24,7 +25,10 @@ public class HMSetCommander extends HSetCommander {
 
     @Override
     protected Reply execute(Command command) {
-        super.execute(command);
+        Reply reply = super.execute(command);
+        if (reply instanceof ErrorReply) {
+            return reply;
+        }
         return StatusReply.OK;
     }
 }
