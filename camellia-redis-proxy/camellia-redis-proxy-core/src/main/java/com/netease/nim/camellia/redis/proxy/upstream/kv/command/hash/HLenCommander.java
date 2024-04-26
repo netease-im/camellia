@@ -45,14 +45,14 @@ public class HLenCommander extends Commander {
         if (keyMeta.getKeyType() != KeyType.hash) {
             return ErrorReply.WRONG_TYPE;
         }
-        if (keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
             int size = BytesUtils.toInt(keyMeta.getExtra());
             return IntegerReply.parse(size);
-        } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_1) {
-            if (!cacheConfig.isValueCacheEnable()) {
-                long size = getSizeFromKv(keyMeta, key);
-                return IntegerReply.parse(size);
-            }
+        } else if (encodeVersion == EncodeVersion.version_1) {
+            long size = getSizeFromKv(keyMeta, key);
+            return IntegerReply.parse(size);
+        } else if (encodeVersion == EncodeVersion.version_3) {
             byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
             Reply reply = sync(cacheRedisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.HLEN.raw(), cacheKey})));
             if (reply instanceof IntegerReply) {

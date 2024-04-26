@@ -58,12 +58,13 @@ public class HDelCommander extends Commander {
 
         int fieldSize = objects.length - 2;
 
-        if (!cacheConfig.isValueCacheEnable()) {
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
             byte[][] subKeys = new byte[fieldSize][];
             for (int i=2; i<objects.length; i++) {
                 subKeys[i-2] = keyStruct.hashFieldSubKey(keyMeta, key, objects[i]);
             }
-            if (keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
+            if (encodeVersion == EncodeVersion.version_0) {
                 int delCount = 0;
                 boolean[] exists = kvClient.exists(subKeys);
                 for (boolean exist : exists) {
@@ -79,11 +80,9 @@ public class HDelCommander extends Commander {
                 }
                 kvClient.batchDelete(subKeys);
                 return IntegerReply.parse(delCount);
-            } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_1) {
+            } else {
                 kvClient.batchDelete(subKeys);
                 return IntegerReply.parse(fieldSize);
-            } else {
-                return ErrorReply.INTERNAL_ERROR;
             }
         }
 
@@ -114,11 +113,11 @@ public class HDelCommander extends Commander {
 
                 byte[] hashFieldSubKey = keyStruct.hashFieldSubKey(keyMeta, key, field);
 
-                if (!hit && keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
+                if (!hit && keyMeta.getEncodeVersion() == EncodeVersion.version_2) {
                     hit = kvClient.exists(hashFieldSubKey);
                 }
 
-                if (hit && keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
+                if (hit && keyMeta.getEncodeVersion() == EncodeVersion.version_2) {
                     int size = BytesUtils.toInt(keyMeta.getExtra());
                     byte[] extra = BytesUtils.toBytes(size - 1);
                     keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
@@ -126,7 +125,7 @@ public class HDelCommander extends Commander {
                 }
 
                 kvClient.delete(hashFieldSubKey);
-                if (hit || keyMeta.getEncodeVersion() == EncodeVersion.version_1) {
+                if (hit || keyMeta.getEncodeVersion() == EncodeVersion.version_3) {
                     return IntegerReply.REPLY_1;
                 } else {
                     return IntegerReply.REPLY_0;
@@ -169,7 +168,7 @@ public class HDelCommander extends Commander {
             kvClient.batchDelete(subKeys);
             return result;
         }
-        if (keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
+        if (encodeVersion == EncodeVersion.version_2) {
             int cacheHitCount = 0;
             List<byte[]> cacheMissFieldStoreKey = new ArrayList<>();
             for (int i=1; i<replyList.size(); i++) {
@@ -203,7 +202,7 @@ public class HDelCommander extends Commander {
 
             kvClient.batchDelete(subKeys);
             return IntegerReply.parse(delCount);
-        } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_1) {
+        } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_3) {
             kvClient.batchDelete(subKeys);
             return IntegerReply.parse(fieldSize);
         } else {

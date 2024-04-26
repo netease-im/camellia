@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -68,8 +69,9 @@ public class HGetCommander extends Commander {
             return ErrorReply.WRONG_TYPE;
         }
 
-        //disable cache
-        if (!cacheConfig.isValueCacheEnable()) {
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+
+        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
             byte[] subKey = keyStruct.hashFieldSubKey(keyMeta, key, field);
             KeyValue keyValue = kvClient.get(subKey);
             if (keyValue == null || keyValue.getValue() == null) {

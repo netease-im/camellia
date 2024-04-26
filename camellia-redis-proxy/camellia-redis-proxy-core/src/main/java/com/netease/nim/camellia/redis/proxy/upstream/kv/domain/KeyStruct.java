@@ -105,6 +105,10 @@ public class KeyStruct {
             return EncodeVersion.version_0;
         } else if (version == 1) {
             return EncodeVersion.version_1;
+        } else if (version == 2) {
+            return EncodeVersion.version_2;
+        } else if (version == 3) {
+            return EncodeVersion.version_3;
         } else {
             throw new KvException("ERR illegal key meta version");
         }

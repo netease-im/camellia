@@ -10,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
@@ -65,8 +66,8 @@ public class HGetAllCommander extends Commander {
             return ErrorReply.WRONG_TYPE;
         }
 
-        //disable cache
-        if (!cacheConfig.isValueCacheEnable()) {
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
             Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
             if (map.isEmpty()) {
                 return MultiBulkReply.EMPTY;
@@ -136,7 +137,6 @@ public class HGetAllCommander extends Commander {
 
     private Map<BytesKey, byte[]> hgetallFromKv(KeyMeta keyMeta, byte[] key) {
         Map<BytesKey, byte[]> map = new HashMap<>();
-        //store
         byte[] startKey = keyStruct.hashFieldSubKey(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         int limit = kvConfig.scanBatch();

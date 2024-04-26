@@ -78,13 +78,13 @@ public class HSetCommander extends Commander {
         //check meta
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
-            EncodeVersion keyMetaVersion = keyStruct.hashKeyMetaVersion();
-            if (keyMetaVersion == EncodeVersion.version_0) {
+            EncodeVersion encodeVersion = keyStruct.hashKeyMetaVersion();
+            if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
                 int count = fieldMap.size();
                 byte[] extra = BytesUtils.toBytes(count);
-                keyMeta = new KeyMeta(keyMetaVersion, KeyType.hash, System.currentTimeMillis(), -1, extra);
-            } else if (keyMetaVersion == EncodeVersion.version_1) {
-                keyMeta = new KeyMeta(keyMetaVersion, KeyType.hash, System.currentTimeMillis(), -1);
+                keyMeta = new KeyMeta(encodeVersion, KeyType.hash, System.currentTimeMillis(), -1, extra);
+            } else if (encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_3) {
+                keyMeta = new KeyMeta(encodeVersion, KeyType.hash, System.currentTimeMillis(), -1);
             } else {
                 return ErrorReply.INTERNAL_ERROR;
             }
@@ -95,18 +95,51 @@ public class HSetCommander extends Commander {
                 return ErrorReply.WRONG_TYPE;
             }
         }
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
-        if (first || !cacheConfig.isValueCacheEnable()) {
+        if (first || encodeVersion == EncodeVersion.version_1) {
             List<KeyValue> list = new ArrayList<>();
             for (Map.Entry<BytesKey, byte[]> entry : fieldMap.entrySet()) {
                 byte[] field = entry.getKey().getKey();
                 byte[] value = entry.getValue();
-                byte[] subKey = keyStruct.hashFieldSubKey(keyMeta, key, field);//store-key
+                byte[] subKey = keyStruct.hashFieldSubKey(keyMeta, key, field);
                 KeyValue keyValue = new KeyValue(subKey, value);
                 list.add(keyValue);
             }
             kvClient.batchPut(list);
             return IntegerReply.parse(list.size());
+        }
+
+        if (encodeVersion == EncodeVersion.version_0) {
+            byte[][] subKeys = new byte[fieldMap.size()][];
+            List<KeyValue> list = new ArrayList<>();
+            int i=0;
+            for (Map.Entry<BytesKey, byte[]> entry : fieldMap.entrySet()) {
+                byte[] field = entry.getKey().getKey();
+                byte[] value = entry.getValue();
+                byte[] subKey = keyStruct.hashFieldSubKey(keyMeta, key, field);
+                KeyValue keyValue = new KeyValue(subKey, value);
+                list.add(keyValue);
+                subKeys[i] = subKey;
+                i++;
+            }
+            boolean[] exists = kvClient.exists(subKeys);
+            int existsCount = 0;
+            for (boolean exist : exists) {
+                if (exist) {
+                    existsCount ++;
+                }
+            }
+            int add = list.size() - existsCount;
+            if (add > 0) {
+                int size = BytesUtils.toInt(keyMeta.getExtra());
+                size = size + add;
+                keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(),
+                        keyMeta.getKeyVersion(), keyMeta.getExpireTime(), BytesUtils.toBytes(size));
+                keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+            }
+            kvClient.batchPut(list);
+            return IntegerReply.parse(list.size() - existsCount);
         }
 
         //param parse
@@ -143,11 +176,11 @@ public class HSetCommander extends Commander {
                         if (replies[1] instanceof IntegerReply) {
                             Long integer = ((IntegerReply) replies[1]).getInteger();
                             if (integer == 0) {
-                                existsFields ++;
-                                index ++;
+                                existsFields++;
+                                index++;
                                 continue;
                             } else if (integer == 1) {
-                                index ++;
+                                index++;
                                 continue;
                             }
                         }
@@ -156,17 +189,17 @@ public class HSetCommander extends Commander {
                 if (replies[2] instanceof BulkReply) {
                     byte[] raw = ((BulkReply) replies[2]).getRaw();
                     if (Utils.bytesToString(raw).equalsIgnoreCase("2")) {
-                        existsFields ++;
-                        index ++;
+                        existsFields++;
+                        index++;
                         continue;
                     }
                 }
             }
             unknownFields.add(fieldList.get(index));
-            index ++;
+            index++;
         }
 
-        if (keyMeta.getEncodeVersion() == EncodeVersion.version_0) {
+        if (keyMeta.getEncodeVersion() == EncodeVersion.version_2) {
             int existsCount = existsFields;
             if (!unknownFields.isEmpty()) {
                 byte[][] subKeys = new byte[unknownFields.size()][];
@@ -191,8 +224,7 @@ public class HSetCommander extends Commander {
                 keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
             }
             return IntegerReply.parse(add);
-        } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_1) {
-            //store
+        } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_3) {
             kvClient.batchPut(list);
             return IntegerReply.parse(list.size());//可能不准
         } else {
