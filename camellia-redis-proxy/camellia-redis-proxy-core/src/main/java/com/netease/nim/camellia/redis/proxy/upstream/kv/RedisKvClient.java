@@ -181,7 +181,7 @@ public class RedisKvClient implements IUpstreamClient {
     private RedisTemplate initRedisTemplate(String key) {
         String type = RedisKvConf.getString(namespace, key + ".config.type", "local");
         if (type.equalsIgnoreCase("local")) {
-            String url = RedisKvConf.getString(namespace, key + ".redis.url", null);
+            String url = RedisKvConf.getString(namespace, key + ".url", null);
             if (url == null) {
                 return null;
             }
