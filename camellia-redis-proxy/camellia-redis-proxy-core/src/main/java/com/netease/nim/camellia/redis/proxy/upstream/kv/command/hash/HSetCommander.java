@@ -139,7 +139,7 @@ public class HSetCommander extends Commander {
                 keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
             }
             kvClient.batchPut(list);
-            return IntegerReply.parse(list.size() - existsCount);
+            return IntegerReply.parse(add);
         }
 
         //param parse

@@ -165,20 +165,15 @@ public class RedisKvClient implements IUpstreamClient {
         gcExecutor.start();
 
         boolean metaCacheEnable = RedisKvConf.getBoolean(namespace, "kv.meta.cache.enable", true);
-        boolean valueCacheEnable = RedisKvConf.getBoolean(namespace, "kv.value.cache.enable", true);
-        CacheConfig cacheConfig = new CacheConfig(namespace, metaCacheEnable, valueCacheEnable);
+        CacheConfig cacheConfig = new CacheConfig(namespace, metaCacheEnable);
 
-        RedisTemplate metaCacheRedisTemplate = null;
-        if (metaCacheEnable) {
-            metaCacheRedisTemplate = initRedisTemplate("key.meta.cache");
-        }
-        KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(kvClient, metaCacheRedisTemplate, keyStruct, gcExecutor, cacheConfig);
+        RedisTemplate cacheRedisTemplate = initRedisTemplate("kv.redis.cache");
+        RedisTemplate storeRedisTemplate = initRedisTemplate("kv.redis.store");
 
-        RedisTemplate valueCacheRedisTemplate = null;
-        if (valueCacheEnable) {
-            valueCacheRedisTemplate = initRedisTemplate("key.value.cache");
-        }
-        CommanderConfig commanderConfig = new CommanderConfig(kvClient, keyStruct, cacheConfig, kvConfig, keyMetaServer, valueCacheRedisTemplate, gcExecutor);
+        KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(kvClient, storeRedisTemplate, keyStruct, gcExecutor, cacheConfig);
+
+        CommanderConfig commanderConfig = new CommanderConfig(kvClient, keyStruct, cacheConfig, kvConfig,
+                keyMetaServer, cacheRedisTemplate, storeRedisTemplate, gcExecutor);
 
         return new Commanders(commanderConfig);
     }
@@ -187,6 +182,9 @@ public class RedisKvClient implements IUpstreamClient {
         String type = RedisKvConf.getString(namespace, key + ".config.type", "local");
         if (type.equalsIgnoreCase("local")) {
             String url = RedisKvConf.getString(namespace, key + ".redis.url", null);
+            if (url == null) {
+                return null;
+            }
             ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(url);
             RedisProxyEnv env = GlobalRedisProxyEnv.getClientTemplateFactory().getEnv();
             UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, resourceTable);

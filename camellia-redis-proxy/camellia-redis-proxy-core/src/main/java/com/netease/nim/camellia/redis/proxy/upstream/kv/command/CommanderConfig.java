@@ -19,16 +19,19 @@ public class CommanderConfig {
     private final KvConfig kvConfig;
     private final KeyMetaServer keyMetaServer;
     private final RedisTemplate cacheRedisTemplate;
+    private final RedisTemplate storeRedisTemplate;
     private final KvGcExecutor gcExecutor;
 
     public CommanderConfig(KVClient kvClient, KeyStruct keyStruct, CacheConfig cacheConfig,
-                           KvConfig kvConfig, KeyMetaServer keyMetaServer, RedisTemplate cacheRedisTemplate, KvGcExecutor gcExecutor) {
+                           KvConfig kvConfig, KeyMetaServer keyMetaServer,
+                           RedisTemplate cacheRedisTemplate, RedisTemplate storeRedisTemplate, KvGcExecutor gcExecutor) {
         this.kvClient = kvClient;
         this.keyStruct = keyStruct;
         this.cacheConfig = cacheConfig;
         this.kvConfig = kvConfig;
         this.keyMetaServer = keyMetaServer;
         this.cacheRedisTemplate = cacheRedisTemplate;
+        this.storeRedisTemplate = storeRedisTemplate;
         this.gcExecutor = gcExecutor;
     }
 
@@ -52,8 +55,12 @@ public class CommanderConfig {
         return keyMetaServer;
     }
 
-    public RedisTemplate getRedisTemplate() {
+    public RedisTemplate getCacheRedisTemplate() {
         return cacheRedisTemplate;
+    }
+
+    public RedisTemplate getStoreRedisTemplate() {
+        return storeRedisTemplate;
     }
 
     public KvGcExecutor getGcExecutor() {

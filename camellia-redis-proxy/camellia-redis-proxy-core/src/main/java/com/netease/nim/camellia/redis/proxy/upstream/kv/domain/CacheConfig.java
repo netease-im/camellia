@@ -8,21 +8,15 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 public class CacheConfig {
 
     private final String namespace;
-    private final boolean valueCacheEnable;
     private final boolean metaCacheEnable;
 
-    public CacheConfig(String namespace, boolean metaCacheEnable, boolean valueCacheEnable) {
+    public CacheConfig(String namespace, boolean metaCacheEnable) {
         this.namespace = namespace;
         this.metaCacheEnable = metaCacheEnable;
-        this.valueCacheEnable = valueCacheEnable;
     }
 
     public boolean isMetaCacheEnable() {
         return metaCacheEnable;
-    }
-
-    public boolean isValueCacheEnable() {
-        return valueCacheEnable;
     }
 
     public long metaCacheMillis() {

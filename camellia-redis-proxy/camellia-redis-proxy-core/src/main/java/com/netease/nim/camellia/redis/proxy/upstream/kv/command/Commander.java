@@ -24,6 +24,7 @@ public abstract class Commander {
     protected final KvConfig kvConfig;
     protected final KeyMetaServer keyMetaServer;
     protected final RedisTemplate cacheRedisTemplate;
+    protected final RedisTemplate storeRedisTemplate;
     protected final KvGcExecutor gcExecutor;
 
     public Commander(CommanderConfig commanderConfig) {
@@ -32,7 +33,8 @@ public abstract class Commander {
         this.cacheConfig = commanderConfig.getCacheConfig();
         this.kvConfig = commanderConfig.getKvConfig();
         this.keyMetaServer = commanderConfig.getKeyMetaServer();
-        this.cacheRedisTemplate = commanderConfig.getRedisTemplate();
+        this.cacheRedisTemplate = commanderConfig.getCacheRedisTemplate();
+        this.storeRedisTemplate = commanderConfig.getStoreRedisTemplate();
         this.gcExecutor = commanderConfig.getGcExecutor();
     }
 
