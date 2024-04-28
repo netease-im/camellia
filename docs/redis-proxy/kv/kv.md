@@ -39,7 +39,7 @@ key-meta本身支持配置redis-cache-server，从而加快读写（可换出）
 
 ```properties
 #key-meta是否开启缓存，默认false
-kv.meta.cache.enable=false
+kv.key.meta.cache.enable=false
 #key-meta开启缓存时的ttl，默认10分钟
 kv.key.meta.cache.millis=600000
 ```
