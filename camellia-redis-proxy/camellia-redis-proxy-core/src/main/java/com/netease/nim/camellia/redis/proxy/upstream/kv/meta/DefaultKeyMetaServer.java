@@ -120,7 +120,12 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         if (reply instanceof ErrorReply) {
             throw new KvException(((ErrorReply) reply).getError());
         }
-        kvClient.put(metaKey, keyMeta.toBytes());
+        if (keyMeta.getExpireTime() > 0 && kvClient.supportTTL()) {
+            long ttl = keyMeta.getExpireTime() - System.currentTimeMillis();
+            kvClient.put(metaKey, keyMeta.toBytes(), ttl);
+        } else {
+            kvClient.put(metaKey, keyMeta.toBytes());
+        }
     }
 
     @Override

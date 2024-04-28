@@ -35,6 +35,19 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
+    public boolean supportTTL() {
+        return true;
+    }
+
+    @Override
+    public void put(byte[] key, byte[] value, long ttl) {
+        Put put = new Put(key);
+        put.addColumn(cf, column, value);
+        put.setTTL(ttl);
+        template.put(tableName, put);
+    }
+
+    @Override
     public void put(byte[] key, byte[] value) {
         Put put = new Put(key);
         put.addColumn(cf, column, value);

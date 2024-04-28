@@ -7,6 +7,10 @@ import java.util.List;
  */
 public interface KVClient {
 
+    boolean supportTTL();
+
+    void put(byte[] key, byte[] value, long ttl);
+
     void put(byte[] key, byte[] value);
 
     void batchPut(List<KeyValue> list);

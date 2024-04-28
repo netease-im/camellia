@@ -42,6 +42,8 @@ public class KvGcExecutor {
     private final ThreadPoolExecutor submitExecutor;
     private final ScheduledThreadPoolExecutor scheduleExecutor;
     private RedisTemplate redisTemplate;
+    private final boolean gcScheduleEnable;
+    private final int gcScheduleIntervalSeconds;
 
     public KvGcExecutor(KVClient kvClient, KeyStruct keyStruct, KvConfig kvConfig) {
         this.kvClient = kvClient;
@@ -53,22 +55,34 @@ public class KvGcExecutor {
                 new LinkedBlockingQueue<>(100000), new CamelliaThreadFactory("camellia-kv-gc-submit"), new ThreadPoolExecutor.AbortPolicy());
         this.scheduleExecutor = new ScheduledThreadPoolExecutor(1, new CamelliaThreadFactory("camellia-kv-gc-scheduler"));
 
-        if (!kvClient.supportCheckAndDelete()) {
-            String url = ProxyDynamicConf.getString("kv.gc.clean.expired.key.meta.target.proxy.cluster.url", null);
-            if (url == null) {
-                throw new KvException("kv client do not support checkAndDelete api, should config 'kv.gc.clean.expired.key.meta.target.proxy.cluster.url'");
+        this.gcScheduleEnable = ProxyDynamicConf.getBoolean("kv.gc.schedule.enable", false);
+        this.gcScheduleIntervalSeconds = ProxyDynamicConf.getInt("kv.gc.schedule.interval.seconds", 24*3600);
+        if (gcScheduleEnable) {
+            if (!kvClient.supportCheckAndDelete() && !kvClient.supportTTL()) {
+                String url = ProxyDynamicConf.getString("kv.gc.clean.expired.key.meta.target.proxy.cluster.url", null);
+                if (url == null) {
+                    throw new KvException("kv client do not support checkAndDelete api, should config 'kv.gc.clean.expired.key.meta.target.proxy.cluster.url'");
+                }
+                ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(url);
+                RedisProxyEnv env = GlobalRedisProxyEnv.getClientTemplateFactory().getEnv();
+                this.redisTemplate = new RedisTemplate(new UpstreamRedisClientTemplate(env, resourceTable));
             }
-            ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(url);
-            RedisProxyEnv env = GlobalRedisProxyEnv.getClientTemplateFactory().getEnv();
-            this.redisTemplate = new RedisTemplate(new UpstreamRedisClientTemplate(env, resourceTable));
         }
     }
 
     public void start() {
-        scheduleExecutor.scheduleAtFixedRate(() -> {
-            scanMetaKeys();
-            scanSubKeys();
-        }, 1, 1, TimeUnit.DAYS);
+        if (gcScheduleEnable) {
+            scheduleExecutor.scheduleAtFixedRate(() -> {
+                try {
+                    if (!kvClient.supportTTL()) {
+                        scanMetaKeys();
+                    }
+                    scanSubKeys();
+                } catch (Throwable e) {
+                    logger.error("gc schedule error", e);
+                }
+            }, gcScheduleIntervalSeconds, gcScheduleIntervalSeconds, TimeUnit.SECONDS);
+        }
     }
 
     public void submitSubKeyDeleteTask(byte[] key, KeyMeta keyMeta) {
@@ -129,7 +143,7 @@ public class KvGcExecutor {
                 TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
             }
             logger.info("scan meta keys end, spendMs = {}", System.currentTimeMillis() - startTime);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error("scan meta keys error, spendMs = {}", System.currentTimeMillis() - startTime, e);
         }
     }
@@ -170,7 +184,7 @@ public class KvGcExecutor {
             }
             cacheMap.clear();
             logger.info("scan sub keys end, spendMs = {}", System.currentTimeMillis() - startTime);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error("scan sub keys error, spendMs = {}", System.currentTimeMillis() - startTime);
         }
     }

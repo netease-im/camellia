@@ -59,6 +59,16 @@ public class OBKVClient implements KVClient {
     }
 
     @Override
+    public boolean supportTTL() {
+        return false;
+    }
+
+    @Override
+    public void put(byte[] key, byte[] value, long ttl) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void put(byte[] key, byte[] value) {
         try {
             Put put = new Put(key);

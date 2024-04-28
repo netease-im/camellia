@@ -39,6 +39,21 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
+    public boolean supportTTL() {
+        return true;
+    }
+
+    @Override
+    public void put(byte[] key, byte[] value, long ttl) {
+        try {
+            tikvClient.put(ByteString.copyFrom(key), ByteString.copyFrom(value), ttl);
+        } catch (Exception e) {
+            logger.error("put error", e);
+            throw new KvException(e);
+        }
+    }
+
+    @Override
     public void put(byte[] key, byte[] value) {
         try {
             tikvClient.put(ByteString.copyFrom(key), ByteString.copyFrom(value));
