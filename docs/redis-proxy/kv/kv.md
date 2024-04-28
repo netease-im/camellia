@@ -85,6 +85,7 @@ hash数据有四种编码模式
 |:----------------------------------------------------:|:-----------:|
 | s# + namespace + key.len + key + key-version + field | field-value |
 
+* 特点：encode-version固定为0
 * 优点：hlen快，hset/hdel返回结果准确
 * 缺点：写操作的读放大多
 
@@ -103,6 +104,7 @@ hash数据有四种编码模式
 |:----------------------------------------------------:|:-----------:|
 | s# + namespace + key.len + key + key-version + field | field-value |
 
+* 特点：encode-version固定为1
 * 优点：写入快
 * 缺点：hlen慢，hset/hdel等操作返回结果不准确
 
@@ -110,15 +112,15 @@ hash数据有四种编码模式
 
 #### key-meta
 
-* version-2同version-0，但是encode-version=2
-* version-3同version-1，但是encode-version=3
+* version-2同version-0，但是encode-version固定为2
+* version-3同version-1，但是encode-version固定为3
 
 #### sub-key
 
 * version-2同version-0
 * version-3同version-1
 
-新增缓存结构
+相比version-0和version-1，新增了redis缓存层
 
 #### hget-cache-key
 
@@ -138,6 +140,7 @@ hash数据有四种编码模式
 | command |                                     info |    
 |:-------:|-----------------------------------------:|
 |  hset   | `HSET key field value [field value ...]` |
+|  hmset  | `HSET key field value [field value ...]` |
 |  hget   |                         `HGET key field` |
 |  hmget  |            `HMGET key field [field ...]` |
 |  hdel   |             `HDEL key field [field ...]` |
