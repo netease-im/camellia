@@ -37,6 +37,14 @@ public enum EncodeVersion {
             return EncodeVersion.version_0;
         } else if (value == (byte) 1) {
             return EncodeVersion.version_1;
+        } else if (value == (byte) 2) {
+            return EncodeVersion.version_2;
+        } else if (value == (byte) 3) {
+            return EncodeVersion.version_3;
+        } else if (value == (byte) 4) {
+            return EncodeVersion.version_4;
+        } else if (value == (byte) 5) {
+            return EncodeVersion.version_5;
         }
         return null;
     }

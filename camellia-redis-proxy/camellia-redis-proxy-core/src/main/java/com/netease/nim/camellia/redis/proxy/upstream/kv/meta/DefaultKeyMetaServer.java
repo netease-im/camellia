@@ -46,7 +46,15 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             if (keyValue == null || keyValue.getValue() == null) {
                 return null;
             }
-            return KeyMeta.fromBytes(keyValue.getKey());
+            KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getValue());
+            if (keyMeta == null) {
+                return null;
+            }
+            if (keyMeta.isExpire()) {
+                kvClient.delete(metaKey);
+                return null;
+            }
+            return keyMeta;
         }
 
         Reply reply = sync(redisTemplate.sendGet(metaKey));
@@ -75,7 +83,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             if (keyValue == null || keyValue.getValue() == null) {
                 return null;
             }
-            keyMeta = KeyMeta.fromBytes(keyValue.getKey());
+            keyMeta = KeyMeta.fromBytes(keyValue.getValue());
             if (keyMeta == null || keyMeta.isExpire()) {
                 kvClient.delete(metaKey);
                 if (keyMeta != null) {
@@ -112,13 +120,15 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
     @Override
     public void createOrUpdateKeyMeta(byte[] key, KeyMeta keyMeta) {
         byte[] metaKey = keyStruct.metaKey(key);
-        Reply reply;
-        long redisExpireMillis = redisExpireMillis(keyMeta);
-        reply = sync(redisTemplate.sendPSetEx(metaKey, redisExpireMillis, keyMeta.toBytes()));
-        delayCacheKeyMap.put(new BytesKey(key), System.currentTimeMillis());
+        if (cacheConfig.isMetaCacheEnable()) {
+            Reply reply;
+            long redisExpireMillis = redisExpireMillis(keyMeta);
+            reply = sync(redisTemplate.sendPSetEx(metaKey, redisExpireMillis, keyMeta.toBytes()));
+            delayCacheKeyMap.put(new BytesKey(key), System.currentTimeMillis());
 
-        if (reply instanceof ErrorReply) {
-            throw new KvException(((ErrorReply) reply).getError());
+            if (reply instanceof ErrorReply) {
+                throw new KvException(((ErrorReply) reply).getError());
+            }
         }
         if (keyMeta.getExpireTime() > 0 && kvClient.supportTTL()) {
             long ttl = keyMeta.getExpireTime() - System.currentTimeMillis();
@@ -173,7 +183,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         if (keyValue == null || keyValue.getValue() == null) {
             return;
         }
-        KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getKey());
+        KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getValue());
         if (keyMeta == null || keyMeta.isExpire()) {
             kvClient.delete(metaKey);
         }

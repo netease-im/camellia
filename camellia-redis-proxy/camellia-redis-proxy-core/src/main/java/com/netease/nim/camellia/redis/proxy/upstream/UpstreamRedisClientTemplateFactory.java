@@ -524,5 +524,6 @@ public class UpstreamRedisClientTemplateFactory implements IUpstreamClientTempla
                 .clientFactory(clientFactory)
                 .resourceChecker(new ScheduledResourceChecker(clientFactory))
                 .build();
+        GlobalRedisProxyEnv.setRedisProxyEnv(env);
     }
 }

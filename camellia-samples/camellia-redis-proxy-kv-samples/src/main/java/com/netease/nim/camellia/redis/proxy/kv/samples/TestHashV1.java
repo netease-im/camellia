@@ -1,6 +1,11 @@
 package com.netease.nim.camellia.redis.proxy.kv.samples;
 
+import com.netease.nim.camellia.core.model.Resource;
+import com.netease.nim.camellia.core.util.ResourceTableUtil;
+import com.netease.nim.camellia.redis.CamelliaRedisEnv;
 import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
+import com.netease.nim.camellia.redis.jedis.JedisPoolFactory;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +18,10 @@ public class TestHashV1 {
 
     public static void main(String[] args) throws InterruptedException {
         String url = "redis://pass123@127.0.0.1:6381";
-        CamelliaRedisTemplate template = new CamelliaRedisTemplate(url);
+        CamelliaRedisEnv redisEnv = new CamelliaRedisEnv.Builder()
+                .jedisPoolFactory(new JedisPoolFactory.DefaultJedisPoolFactory(new JedisPoolConfig(), 6000000))
+                .build();
+        CamelliaRedisTemplate template = new CamelliaRedisTemplate(redisEnv, ResourceTableUtil.simpleTable(new Resource(url)));
 
         //
         template.del("key1");

@@ -51,7 +51,10 @@ public class KeyMeta {
     }
 
     public boolean isExpire() {
-        return System.currentTimeMillis() - expireTime < 0;
+        if (expireTime < 0) {
+            return false;
+        }
+        return expireTime <= System.currentTimeMillis();
     }
 
     public byte[] toBytes() {

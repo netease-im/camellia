@@ -186,7 +186,7 @@ public class RedisKvClient implements IUpstreamClient {
                 return null;
             }
             ResourceTable resourceTable = ReadableResourceTableUtil.parseTable(url);
-            RedisProxyEnv env = GlobalRedisProxyEnv.getClientTemplateFactory().getEnv();
+            RedisProxyEnv env = GlobalRedisProxyEnv.getRedisProxyEnv();
             UpstreamRedisClientTemplate template = new UpstreamRedisClientTemplate(env, resourceTable);
             return new RedisTemplate(template);
         } else if (type.equalsIgnoreCase("remote")) {

@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.conf.CamelliaServerProperties;
 import com.netease.nim.camellia.redis.proxy.conf.CamelliaTranspondProperties;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyBeanFactory;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
+import com.netease.nim.camellia.redis.proxy.upstream.RedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
@@ -69,6 +70,7 @@ public class GlobalRedisProxyEnv {
     private static int httpPort;
 
     private static IUpstreamClientTemplateFactory clientTemplateFactory;
+    private static RedisProxyEnv redisProxyEnv;
     private static ProxyDiscoveryFactory discoveryFactory;
     private static boolean clusterModeEnable;
     private static boolean sentinelModeEnable;
@@ -169,6 +171,10 @@ public class GlobalRedisProxyEnv {
     public static void setClientTemplateFactory(IUpstreamClientTemplateFactory clientTemplateFactory) {
         GlobalRedisProxyEnv.clientTemplateFactory = clientTemplateFactory;
         GlobalRedisProxyEnv.getProxyShutdown().updateUpstreamClientTemplateFactory(clientTemplateFactory);
+    }
+
+    public static void setRedisProxyEnv(RedisProxyEnv redisProxyEnv) {
+        GlobalRedisProxyEnv.redisProxyEnv = redisProxyEnv;
     }
 
     public static void setDiscoveryFactory(ProxyDiscoveryFactory discoveryFactory) {
@@ -279,6 +285,10 @@ public class GlobalRedisProxyEnv {
 
     public static NettyTransportMode getNettyTransportMode() {
         return nettyTransportMode;
+    }
+
+    public static RedisProxyEnv getRedisProxyEnv() {
+        return redisProxyEnv;
     }
 
     public static boolean isServerTcpQuickAckEnable() {
