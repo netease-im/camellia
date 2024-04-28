@@ -37,6 +37,13 @@ public enum KeyType {
 
 key-meta本身支持配置redis-cache-server，从而加快读写（可换出）
 
+```properties
+#key-meta是否开启缓存，默认false
+kv.meta.cache.enable=false
+#key-meta开启缓存时的ttl，默认10分钟
+kv.key.meta.cache.millis=600000
+```
+
 ## db commands
 
 | command |                                            info |
@@ -69,6 +76,15 @@ key-meta本身支持配置redis-cache-server，从而加快读写（可换出）
 ## hash数据结构
 
 hash数据有四种编码模式
+
+```properties
+##四种编码模式，0、1、2、3，默认0
+kv.hash.key.meta.version=0
+##在2和3这两种编码下，hget缓存的ttl，默认5分钟
+kv.cache.hget.cache.millis=300000
+##在2和3这两种编码下，hgetall缓存的ttl，默认5分钟
+kv.cache.hgetall.cache.millis=30000
+```
 
 ### version-0
 
