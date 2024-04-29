@@ -20,3 +20,4 @@ camellia-redis-proxy:
     local:
       type: simple #simple、complex
       resource: redis-kv://d
+#      resource: redis://@127.0.0.1:6379

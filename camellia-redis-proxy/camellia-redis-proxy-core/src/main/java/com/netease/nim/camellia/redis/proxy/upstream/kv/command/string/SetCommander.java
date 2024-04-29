@@ -101,6 +101,8 @@ public class SetCommander extends Commander {
             keyMeta = new KeyMeta(EncodeVersion.version_0, KeyType.string, System.currentTimeMillis(), expireTime, value);
         } else if (expireTime > 0) {
             keyMeta = new KeyMeta(EncodeVersion.version_0, KeyType.string, System.currentTimeMillis(), expireTime, value);
+        } else {
+            keyMeta = new KeyMeta(EncodeVersion.version_0, KeyType.string, System.currentTimeMillis(), -1 , value);
         }
         keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
         if (get) {

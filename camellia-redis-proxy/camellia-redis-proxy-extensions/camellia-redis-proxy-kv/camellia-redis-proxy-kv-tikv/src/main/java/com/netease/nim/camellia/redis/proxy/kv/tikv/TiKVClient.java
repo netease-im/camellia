@@ -30,6 +30,7 @@ public class TiKVClient implements KVClient {
         try {
             String string = ProxyDynamicConf.getString("kv.tikv.pd.address", null);
             TiConfiguration conf = TiConfiguration.createRawDefault(string);
+            conf.setWarmUpEnable(false);
             TiSession session = TiSession.create(conf);
             tikvClient = session.createRawClient();
         } catch (Exception e) {

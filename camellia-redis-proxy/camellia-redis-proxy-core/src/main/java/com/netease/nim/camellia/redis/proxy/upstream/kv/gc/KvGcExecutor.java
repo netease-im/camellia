@@ -18,6 +18,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
+import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
 import org.slf4j.Logger;
@@ -28,12 +29,23 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Created by caojiajun on 2024/4/22
  */
 public class KvGcExecutor {
     private static final Logger logger = LoggerFactory.getLogger(KvGcExecutor.class);
+
+    private static final LongAdder deleteSubKeys = new LongAdder();
+    static {
+        ExecutorUtils.scheduleAtFixedRate(() -> {
+            long count = deleteSubKeys.sumThenReset();
+            if (count > 0) {
+                logger.info("delete sub keys, count = {}", count);
+            }
+        }, 30, 30, TimeUnit.SECONDS);
+    }
 
     private final KVClient kvClient;
     private final KeyStruct keyStruct;
@@ -102,6 +114,7 @@ public class KvGcExecutor {
     private void scanMetaKeys() {
         long startTime = System.currentTimeMillis();
         logger.info("scan meta keys start");
+        long deleteMetaKeys = 0;
         try {
             byte[] metaPrefix = keyStruct.getMetaPrefix();
             byte[] startKey = metaPrefix;
@@ -124,12 +137,15 @@ public class KvGcExecutor {
                         }
                         if (kvClient.supportCheckAndDelete()) {//kv本身已经支持cas的删除，则可以直接删
                             kvClient.checkAndDelete(startKey, keyValue.getValue());
+                            deleteMetaKeys ++;
                         } else {
                             //如果kv不支持cas的删除，则hash到特定的proxy节点处理，避免并发问题
                             try {
                                 Reply reply = redisTemplate.sendCleanExpiredKeyMetaInKv(keyStruct.getNamespace(), key, kvConfig.gcCleanExpiredKeyMetaTimeoutMillis());
                                 if (reply instanceof ErrorReply) {
                                     logger.error("send clean expired key meta in kv failed, reply = {}", ((ErrorReply) reply).getError());
+                                } else {
+                                    deleteMetaKeys++;
                                 }
                             } catch (Exception e) {
                                 logger.error("send clean expired key meta in kv error", e);
@@ -142,15 +158,16 @@ public class KvGcExecutor {
                 }
                 TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
             }
-            logger.info("scan meta keys end, spendMs = {}", System.currentTimeMillis() - startTime);
+            logger.info("scan meta keys end, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteMetaKeys);
         } catch (Throwable e) {
-            logger.error("scan meta keys error, spendMs = {}", System.currentTimeMillis() - startTime, e);
+            logger.error("scan meta keys error, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteMetaKeys, e);
         }
     }
 
     private void scanSubKeys() {
         long startTime = System.currentTimeMillis();
         logger.info("scan sub keys start");
+        long deleteSubKeys = 0;
         try {
             ConcurrentLinkedHashMap<CacheKey, KeyStatus> cacheMap = new ConcurrentLinkedHashMap.Builder<CacheKey, KeyStatus>()
                     .initialCapacity(10000)
@@ -176,6 +193,7 @@ public class KvGcExecutor {
                 }
                 if (!toDeleteKeys.isEmpty()) {
                     kvClient.batchDelete(toDeleteKeys.toArray(new byte[0][0]));
+                    deleteSubKeys += toDeleteKeys.size();
                 }
                 if (scan.size() < limit) {
                     break;
@@ -183,9 +201,9 @@ public class KvGcExecutor {
                 TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
             }
             cacheMap.clear();
-            logger.info("scan sub keys end, spendMs = {}", System.currentTimeMillis() - startTime);
+            logger.info("scan sub keys end, spendMs = {}, deleteSubKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys);
         } catch (Throwable e) {
-            logger.error("scan sub keys error, spendMs = {}", System.currentTimeMillis() - startTime);
+            logger.error("scan sub keys error, spendMs = {}, deleteSubKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys);
         }
     }
 
@@ -265,6 +283,7 @@ public class KvGcExecutor {
         @Override
         public void run() {
             try {
+                int count = 0;
                 KeyType keyType = keyMeta.getKeyType();
                 if (keyType == KeyType.hash) {
                     byte[] startKey = keyStruct.hashFieldSubKey(keyMeta, key, new byte[0]);
@@ -275,15 +294,24 @@ public class KvGcExecutor {
                         if (scan.isEmpty()) {
                             break;
                         }
+                        byte[][] keys = new byte[scan.size()][];
+                        int i=0;
                         for (KeyValue keyValue : scan) {
-                            kvClient.delete(keyValue.getKey());
+                            keys[i] = keyValue.getKey();
                             startKey = keyValue.getKey();
+                            i++;
                         }
+                        kvClient.batchDelete(keys);
+                        count += keys.length;
                         if (scan.size() < limit) {
                             break;
                         }
                     }
                 }
+                if (logger.isDebugEnabled()) {
+                    logger.debug("sub key delete, count = {}", count);
+                }
+                deleteSubKeys.add(count);
             } catch (Exception e) {
                 logger.warn("add delete task error, ex = {}", e.toString());
             }

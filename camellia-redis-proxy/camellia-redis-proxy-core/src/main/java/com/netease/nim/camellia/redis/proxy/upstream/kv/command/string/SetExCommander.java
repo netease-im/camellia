@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.string;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
+import com.netease.nim.camellia.redis.proxy.reply.StatusReply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -43,6 +43,6 @@ public class SetExCommander extends Commander {
         long expireTime = System.currentTimeMillis() + seconds * 1000L;
         KeyMeta keyMeta = new KeyMeta(EncodeVersion.version_0, KeyType.string, System.currentTimeMillis(), expireTime, value);
         keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
-        return null;
+        return StatusReply.OK;
     }
 }

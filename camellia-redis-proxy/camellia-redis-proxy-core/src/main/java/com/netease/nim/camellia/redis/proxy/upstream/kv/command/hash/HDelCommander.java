@@ -5,6 +5,8 @@ import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.reply.*;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
@@ -73,14 +75,21 @@ public class HDelCommander extends Commander {
                     }
                 }
                 if (delCount > 0) {
-                    int size = BytesUtils.toInt(keyMeta.getExtra());
-                    byte[] extra = BytesUtils.toBytes(size - delCount);
-                    keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
-                    keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+                    int size = BytesUtils.toInt(keyMeta.getExtra()) - delCount;
+                    if (size <= 0) {
+                        keyMetaServer.deleteKeyMeta(key);
+                    } else {
+                        byte[] extra = BytesUtils.toBytes(size);
+                        keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
+                        keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+                    }
                 }
                 kvClient.batchDelete(subKeys);
                 return IntegerReply.parse(delCount);
             } else {
+                if (checkHLenZero(key, keyMeta)) {
+                    keyMetaServer.deleteKeyMeta(key);
+                }
                 kvClient.batchDelete(subKeys);
                 return IntegerReply.parse(fieldSize);
             }
@@ -194,19 +203,30 @@ public class HDelCommander extends Commander {
                     delCount ++;
                 }
             }
-
-            int size = BytesUtils.toInt(keyMeta.getExtra());
-            byte[] extra = BytesUtils.toBytes(size - delCount);
-            keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
-            keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
-
+            int size = BytesUtils.toInt(keyMeta.getExtra()) - delCount;
+            if (size <= 0) {
+                keyMetaServer.deleteKeyMeta(key);
+            } else {
+                byte[] extra = BytesUtils.toBytes(size);
+                keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
+                keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+            }
             kvClient.batchDelete(subKeys);
             return IntegerReply.parse(delCount);
         } else if (keyMeta.getEncodeVersion() == EncodeVersion.version_3) {
+            if (checkHLenZero(key, keyMeta)) {
+                keyMetaServer.deleteKeyMeta(key);
+            }
             kvClient.batchDelete(subKeys);
             return IntegerReply.parse(fieldSize);
         } else {
             return ErrorReply.INTERNAL_ERROR;
         }
+    }
+
+    private boolean checkHLenZero(byte[] key, KeyMeta keyMeta) {
+        byte[] startKey = keyStruct.hashFieldSubKey(keyMeta, key, new byte[0]);
+        List<KeyValue> scan = kvClient.scan(startKey, startKey, 1, Sort.ASC, false);
+        return scan.isEmpty();
     }
 }

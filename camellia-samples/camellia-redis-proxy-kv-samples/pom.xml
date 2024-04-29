@@ -29,9 +29,9 @@
 			<version>1.2.28-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>org.tikv</groupId>
-			<artifactId>tikv-client-java</artifactId>
-			<version>3.3.0</version>
+			<groupId>com.netease.nim</groupId>
+			<artifactId>camellia-redis-proxy-kv-tikv</artifactId>
+			<version>1.2.28-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>
