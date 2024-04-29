@@ -7,7 +7,7 @@
 
 ![img.png](img.png)
 
-* proxy基于redis-cluster模式运行，因此相同key会路由到同一个proxy节点（proxy节点扩缩容时需要精细化处理，todo）
+* proxy基于redis-cluster模式运行，因此相同key会路由到同一个proxy节点（proxy节点扩缩容时需要精细化处理，todo-optimize）
 * proxy内部多work-thread运行，每个命令根据key哈希到同一个work-thread运行
 * proxy本身弱状态
 * proxy依赖的服务逻辑上包括三组：key-meta-server、subkey-server、redis-cache-server
@@ -16,7 +16,7 @@
 * redis-cache-server，可选，基于redis，特点是key的ttl很短，并且允许换出
 * kv-storage层，抽象了简单的put/get/delete/scan接口，从而可以自由的选择hbase/tikv/obkv去实现key-meta-server和subkey-server，也可以基于其他kv存储
 * 参考了 [pika](https://github.com/OpenAtomFoundation/pika) 、 [kvrocks](https://github.com/apache/kvrocks) 、 [tidis](https://github.com/yongman/tidis)、 [titan](https://github.com/distributedio/titan)、 [titea](https://github.com/distributedio/titan) 的设计
-* 使用gc机制来回收kv存储层的过期数据（todo）
+* 使用gc机制来回收kv存储层的过期数据，具体见: [gc](gc.md)
 
 ## key-meta结构
 
@@ -103,7 +103,7 @@ kv.cache.hgetall.cache.millis=30000
 
 * 特点：encode-version固定为0
 * 优点：hlen快，hset/hdel返回结果准确
-* 缺点：写操作的读放大多
+* 缺点：写操作的读放大多（每次写入都需要读一下是否是已经存在的field还是新的field，如hset操作，前者返回0，后者返回1）
 
 ### version-1
 
@@ -122,7 +122,7 @@ kv.cache.hgetall.cache.millis=30000
 
 * 特点：encode-version固定为1
 * 优点：写入快
-* 缺点：hlen慢，hset/hdel等操作返回结果不准确
+* 缺点：hlen慢，hset/hdel等操作返回结果不准确，比如hset操作，不管写入的是已存在的field还是新的field，都返回1
 
 ### version-2和version-3
 
