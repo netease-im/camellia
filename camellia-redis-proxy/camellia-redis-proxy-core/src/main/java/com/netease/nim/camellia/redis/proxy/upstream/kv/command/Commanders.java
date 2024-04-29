@@ -32,6 +32,9 @@ public class Commanders {
         initCommander(new ExistsCommander(commanderConfig));
         initCommander(new UnlinkCommander(commanderConfig));
         initCommander(new KvCommander(commanderConfig));
+        initCommander(new TTLCommander(commanderConfig));
+        initCommander(new PTTLCommander(commanderConfig));
+        initCommander(new TypeCommander(commanderConfig));
 
         //string
         initCommander(new GetCommander(commanderConfig));

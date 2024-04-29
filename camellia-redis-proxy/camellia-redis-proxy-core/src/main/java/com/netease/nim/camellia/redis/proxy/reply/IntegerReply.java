@@ -10,6 +10,8 @@ public class IntegerReply implements Reply {
 
     public static final IntegerReply REPLY_1 = new IntegerReply(1L);
     public static final IntegerReply REPLY_0 = new IntegerReply(0L);
+    public static final IntegerReply REPLY_NEGATIVE_1 = new IntegerReply(-1L);
+    public static final IntegerReply REPLY_NEGATIVE_2 = new IntegerReply(-2L);
 
     private static final char MARKER = Marker.IntegerReply.getMarker();
     private final Long integer;
@@ -27,6 +29,10 @@ public class IntegerReply implements Reply {
             return REPLY_0;
         } else if (value == 1) {
             return REPLY_1;
+        } else if (value == -1) {
+            return REPLY_NEGATIVE_1;
+        } else if (value == -2) {
+            return REPLY_NEGATIVE_2;
         } else {
             return new IntegerReply((long) value);
         }
