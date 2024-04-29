@@ -47,10 +47,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
                 return null;
             }
             KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getValue());
-            if (keyMeta == null) {
-                return null;
-            }
-            if (keyMeta.isExpire()) {
+            if (keyMeta == null || keyMeta.isExpire()) {
                 kvClient.delete(metaKey);
                 return null;
             }
@@ -170,10 +167,11 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
             return false;
         }
         KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getValue());
-        if (keyMeta == null) {
+        if (keyMeta == null || keyMeta.isExpire()) {
+            kvClient.delete(metaKey);
             return false;
         }
-        return !keyMeta.isExpire();
+        return true;
     }
 
     @Override
