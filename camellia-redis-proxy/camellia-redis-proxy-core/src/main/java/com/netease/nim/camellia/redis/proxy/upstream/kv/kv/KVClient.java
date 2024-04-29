@@ -88,6 +88,12 @@ public interface KVClient {
     void checkAndDelete(byte[] key, byte[] value);
 
     /**
+     * support reverse scan
+     * @return true/false
+     */
+    boolean supportReverseScan();
+
+    /**
      * scan k-v list with prefix
      * @param startKey start key
      * @param prefix prefix

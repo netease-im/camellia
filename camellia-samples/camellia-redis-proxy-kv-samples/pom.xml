@@ -28,6 +28,11 @@
 			<artifactId>camellia-redis-proxy-kv-hbase</artifactId>
 			<version>1.2.28-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>org.tikv</groupId>
+			<artifactId>tikv-client-java</artifactId>
+			<version>3.3.0</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

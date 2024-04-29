@@ -135,6 +135,11 @@ public class HBaseKVClient implements KVClient {
     }
 
     @Override
+    public boolean supportReverseScan() {
+        return true;
+    }
+
+    @Override
     public List<KeyValue> scan(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         Scan scan = new Scan();
         scan.setStartRow(startKey);

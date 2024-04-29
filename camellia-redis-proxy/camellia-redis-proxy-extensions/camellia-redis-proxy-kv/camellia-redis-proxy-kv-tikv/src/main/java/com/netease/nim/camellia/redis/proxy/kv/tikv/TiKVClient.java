@@ -33,7 +33,7 @@ public class TiKVClient implements KVClient {
             TiSession session = TiSession.create(conf);
             tikvClient = session.createRawClient();
         } catch (Exception e) {
-            logger.error("OBKVClient init error", e);
+            logger.error("TiKVClient init error", e);
             throw new KvException(e);
         }
     }
@@ -46,6 +46,9 @@ public class TiKVClient implements KVClient {
     @Override
     public void put(byte[] key, byte[] value, long ttl) {
         try {
+            if (ttl / 1000 * 1000 < ttl) {
+                ttl = ttl / 1000 + 1;// +1 seconds
+            }
             tikvClient.put(ByteString.copyFrom(key), ByteString.copyFrom(value), ttl);
         } catch (Exception e) {
             logger.error("put error", e);
@@ -176,6 +179,11 @@ public class TiKVClient implements KVClient {
     @Override
     public void checkAndDelete(byte[] key, byte[] value) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean supportReverseScan() {
+        return false;
     }
 
     @Override

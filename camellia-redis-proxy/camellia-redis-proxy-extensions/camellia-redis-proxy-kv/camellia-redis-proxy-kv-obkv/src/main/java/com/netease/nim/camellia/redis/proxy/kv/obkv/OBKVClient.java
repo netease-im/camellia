@@ -206,6 +206,11 @@ public class OBKVClient implements KVClient {
     }
 
     @Override
+    public boolean supportReverseScan() {
+        return false;
+    }
+
+    @Override
     public List<KeyValue> scan(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         try {
             Scan scan = new Scan();
