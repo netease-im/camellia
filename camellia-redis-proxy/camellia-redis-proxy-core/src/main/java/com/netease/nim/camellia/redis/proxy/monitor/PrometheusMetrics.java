@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.monitor;
 
+import com.netease.nim.camellia.redis.proxy.conf.ProxyDynamicConf;
 import com.netease.nim.camellia.redis.proxy.info.ProxyInfoUtils;
 import com.netease.nim.camellia.redis.proxy.monitor.model.*;
 import com.netease.nim.camellia.redis.proxy.netty.GlobalRedisProxyEnv;
@@ -26,10 +27,12 @@ public class PrometheusMetrics {
     public static String metrics() {
         StringBuilder builder = new StringBuilder();
 
+        String prefix = ProxyDynamicConf.getString("metrics.prefix", "");
+
         //proxy_info
         builder.append("# HELP proxy_info Redis Proxy Info\n");
         builder.append("# TYPE proxy_info gauge\n");
-        builder.append("proxy_info");
+        builder.append(prefix).append("proxy_info");
         builder.append("{");
         builder.append("camellia_version=\"").append(ProxyInfoUtils.VERSION).append("\"").append(",");
         builder.append("arch=\"").append(osBean.getArch()).append("\"").append(",");
@@ -49,12 +52,12 @@ public class PrometheusMetrics {
         //uptime
         builder.append("# HELP uptime Redis Proxy Uptime\n");
         builder.append("# TYPE uptime gauge\n");
-        builder.append(String.format("uptime %d\n", System.currentTimeMillis() - startTime));
+        builder.append(prefix).append(String.format("uptime %d\n", System.currentTimeMillis() - startTime));
 
         //start_time
         builder.append("# HELP start_time Redis Proxy StartTime\n");
         builder.append("# TYPE start_time gauge\n");
-        builder.append(String.format("start_time %d\n", startTime));
+        builder.append(prefix).append(String.format("start_time %d\n", startTime));
 
         //memory
         builder.append("# HELP memory_info Redis Proxy Memory\n");
@@ -66,43 +69,43 @@ public class PrometheusMetrics {
         long heapMemoryUsage = memoryInfo.getHeapMemoryUsed();
         long noneHeapMemoryUsage = memoryInfo.getNonHeapMemoryUsed();
         long nettyDirectMemory = memoryInfo.getNettyDirectMemory();
-        builder.append(String.format("memory_info{type=\"free_memory\"} %d\n", freeMemory));
-        builder.append(String.format("memory_info{type=\"total_memory\"} %d\n", totalMemory));
-        builder.append(String.format("memory_info{type=\"max_memory\"} %d\n", maxMemory));
-        builder.append(String.format("memory_info{type=\"heap_memory_usage\"} %d\n", heapMemoryUsage));
-        builder.append(String.format("memory_info{type=\"no_heap_memory_usage\"} %d\n", noneHeapMemoryUsage));
-        builder.append(String.format("memory_info{type=\"netty_direct_memory\"} %d\n", nettyDirectMemory));
+        builder.append(prefix).append(String.format("memory_info{type=\"free_memory\"} %d\n", freeMemory));
+        builder.append(prefix).append(String.format("memory_info{type=\"total_memory\"} %d\n", totalMemory));
+        builder.append(prefix).append(String.format("memory_info{type=\"max_memory\"} %d\n", maxMemory));
+        builder.append(prefix).append(String.format("memory_info{type=\"heap_memory_usage\"} %d\n", heapMemoryUsage));
+        builder.append(prefix).append(String.format("memory_info{type=\"no_heap_memory_usage\"} %d\n", noneHeapMemoryUsage));
+        builder.append(prefix).append(String.format("memory_info{type=\"netty_direct_memory\"} %d\n", nettyDirectMemory));
 
         //cpu
         builder.append("# HELP cpu Redis Proxy Cpu\n");
         builder.append("# TYPE cpu gauge\n");
         CpuUsage cpuUsageInfo = ProxyMonitorCollector.getCpuUsageCollector().getCpuUsageInfo();
-        builder.append(String.format("cpu{type=\"cpu_num\"} %d\n", cpuUsageInfo.getCpuNum()));
-        builder.append(String.format("cpu{type=\"usage\"} %f\n", cpuUsageInfo.getRatio()));
+        builder.append(prefix).append(String.format("cpu{type=\"cpu_num\"} %d\n", cpuUsageInfo.getCpuNum()));
+        builder.append(prefix).append(String.format("cpu{type=\"usage\"} %f\n", cpuUsageInfo.getRatio()));
 
         //thread
         builder.append("# HELP thread Redis Proxy Thread\n");
         builder.append("# TYPE thread gauge\n");
-        builder.append(String.format("thread{type=\"boss_thread\"} %d\n", GlobalRedisProxyEnv.getBossThread()));
-        builder.append(String.format("thread{type=\"work_thread\"} %d\n", GlobalRedisProxyEnv.getWorkThread()));
+        builder.append(prefix).append(String.format("thread{type=\"boss_thread\"} %d\n", GlobalRedisProxyEnv.getBossThread()));
+        builder.append(prefix).append(String.format("thread{type=\"work_thread\"} %d\n", GlobalRedisProxyEnv.getWorkThread()));
 
         //gc
         builder.append("# HELP gc Redis Proxy gc\n");
         builder.append("# TYPE gc gauge\n");
         for (GarbageCollectorMXBean bean : garbageCollectorMXBeanList) {
-            builder.append(String.format("gc{name=\"%s\", type=\"count\"} %d\n", bean.getName(), bean.getCollectionCount()));
-            builder.append(String.format("gc{name=\"%s\", type=\"time\"} %d\n", bean.getName(), bean.getCollectionTime()));
+            builder.append(prefix).append(String.format("gc{name=\"%s\", type=\"count\"} %d\n", bean.getName(), bean.getCollectionCount()));
+            builder.append(prefix).append(String.format("gc{name=\"%s\", type=\"time\"} %d\n", bean.getName(), bean.getCollectionTime()));
         }
 
         //client_connect
         builder.append("# HELP client_connect Redis Proxy Client Connect\n");
         builder.append("# TYPE client_connect gauge\n");
-        builder.append("client_connect ").append(ChannelMonitor.connect()).append("\n");
+        builder.append(prefix).append("client_connect ").append(ChannelMonitor.connect()).append("\n");
 
         //qps
         builder.append("# HELP qps Redis Proxy QPS\n");
         builder.append("# TYPE qps gauge\n");
-        String totalFormat = "qps{type=\"%s\"} %d\n";
+        String totalFormat = prefix + "qps{type=\"%s\"} %d\n";
         Stats stats = ProxyMonitorCollector.getStats();
         long maxReadQps = stats.getMaxReadQps();
         long maxWriteQps = stats.getMaxWriteQps();
@@ -128,7 +131,7 @@ public class PrometheusMetrics {
         builder.append("# TYPE command_qps gauge\n");
         List<TotalStats> totalStatsList = stats.getTotalStatsList();
         for (TotalStats totalStats : totalStatsList) {
-            builder.append(String.format("command_qps{command=\"%s\"} %d\n", totalStats.getCommand(), totalStats.getCount() / intervalSeconds));
+            builder.append(prefix).append(String.format("command_qps{command=\"%s\"} %d\n", totalStats.getCommand(), totalStats.getCount() / intervalSeconds));
         }
 
         //command_spend_stats
@@ -142,12 +145,12 @@ public class PrometheusMetrics {
             double p50 = spendStats.getSpendMsP50();
             double p90 = spendStats.getSpendMsP90();
             double p99 = spendStats.getSpendMsP99();
-            builder.append(String.format("command_spend_stats{command=\"%s\",type=\"count\"} %d\n", command, spendStats.getCount()));
-            builder.append(String.format("command_spend_stats{command=\"%s\",type=\"avg\"} %f\n", command, avg));
-            builder.append(String.format("command_spend_stats{command=\"%s\",type=\"max\"} %f\n", command, max));
-            builder.append(String.format("command_spend_stats{command=\"%s\",type=\"p50\"} %f\n", command, p50));
-            builder.append(String.format("command_spend_stats{command=\"%s\",type=\"p90\"} %f\n", command, p90));
-            builder.append(String.format("command_spend_stats{command=\"%s\",type=\"p99\"} %f\n", command, p99));
+            builder.append(prefix).append(String.format("command_spend_stats{command=\"%s\",type=\"count\"} %d\n", command, spendStats.getCount()));
+            builder.append(prefix).append(String.format("command_spend_stats{command=\"%s\",type=\"avg\"} %f\n", command, avg));
+            builder.append(prefix).append(String.format("command_spend_stats{command=\"%s\",type=\"max\"} %f\n", command, max));
+            builder.append(prefix).append(String.format("command_spend_stats{command=\"%s\",type=\"p50\"} %f\n", command, p50));
+            builder.append(prefix).append(String.format("command_spend_stats{command=\"%s\",type=\"p90\"} %f\n", command, p90));
+            builder.append(prefix).append(String.format("command_spend_stats{command=\"%s\",type=\"p99\"} %f\n", command, p99));
         }
 
         //client_connect_detail
@@ -156,7 +159,7 @@ public class PrometheusMetrics {
         List<BidBgroupConnectStats> bidBgroupConnectStats = ChannelMonitor.bidBgroupConnect();
         for (BidBgroupConnectStats bidBgroupConnectStat : bidBgroupConnectStats) {
             String tenant = tenant(bidBgroupConnectStat.getBid(), bidBgroupConnectStat.getBgroup());
-            builder.append(String.format("client_connect_detail{tenant=\"%s\"} %d\n", tenant, bidBgroupConnectStat.getConnect()));
+            builder.append(prefix).append(String.format("client_connect_detail{tenant=\"%s\"} %d\n", tenant, bidBgroupConnectStat.getConnect()));
         }
 
         //tenant_qps
@@ -165,7 +168,7 @@ public class PrometheusMetrics {
         List<BidBgroupStats> bidBgroupStatsList = stats.getBidBgroupStatsList();
         for (BidBgroupStats bidBgroupStats : bidBgroupStatsList) {
             String tenant = tenant(bidBgroupStats.getBid(), bidBgroupStats.getBgroup());
-            builder.append(String.format("tenant_qps{tenant=\"%s\"} %d\n", tenant, bidBgroupStats.getCount() / intervalSeconds));
+            builder.append(prefix).append(String.format("tenant_qps{tenant=\"%s\"} %d\n", tenant, bidBgroupStats.getCount() / intervalSeconds));
         }
 
         //tenant_command_qps
@@ -175,7 +178,7 @@ public class PrometheusMetrics {
         for (DetailStats detailStats : detailStatsList) {
             String tenant = tenant(detailStats.getBid(), detailStats.getBgroup());
             String command = detailStats.getCommand();
-            builder.append(String.format("tenant_command_qps{tenant=\"%s\",command=\"%s\"} %d\n", tenant, command, detailStats.getCount() / intervalSeconds));
+            builder.append(prefix).append(String.format("tenant_command_qps{tenant=\"%s\",command=\"%s\"} %d\n", tenant, command, detailStats.getCount() / intervalSeconds));
         }
 
         //tenant_command_spend_stats
@@ -191,12 +194,12 @@ public class PrometheusMetrics {
             double p90 = bidBgroupSpendStats.getSpendMsP90();
             double p99 = bidBgroupSpendStats.getSpendMsP99();
             double max = bidBgroupSpendStats.getMaxSpendMs();
-            builder.append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"count\"} %d\n", tenant, command, count1));
-            builder.append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"avg\"} %f\n", tenant, command, avg));
-            builder.append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"max\"} %f\n", tenant, command, max));
-            builder.append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"p50\"} %f\n", tenant, command, p50));
-            builder.append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"p90\"} %f\n", tenant,  command, p90));
-            builder.append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"p99\"} %f\n", tenant, command, p99));
+            builder.append(prefix).append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"count\"} %d\n", tenant, command, count1));
+            builder.append(prefix).append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"avg\"} %f\n", tenant, command, avg));
+            builder.append(prefix).append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"max\"} %f\n", tenant, command, max));
+            builder.append(prefix).append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"p50\"} %f\n", tenant, command, p50));
+            builder.append(prefix).append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"p90\"} %f\n", tenant,  command, p90));
+            builder.append(prefix).append(String.format("tenant_command_spend_stats{tenant=\"%s\",command=\"%s\",type=\"p99\"} %f\n", tenant, command, p99));
         }
 
         //proxy_route_conf
@@ -207,21 +210,21 @@ public class PrometheusMetrics {
             String tenant = tenant(routeConf.getBid(), routeConf.getBgroup());
             String resourceTable = routeConf.getResourceTable();
             resourceTable = resourceTable.replaceAll("\"", "'");
-            builder.append(String.format("proxy_route_conf{tenant=\"%s\", route=\"%s\"} 1\n", tenant, resourceTable));
+            builder.append(prefix).append(String.format("proxy_route_conf{tenant=\"%s\", route=\"%s\"} 1\n", tenant, resourceTable));
         }
 
         //upstream_redis_connect
         RedisConnectStats redisConnectStats = stats.getRedisConnectStats();
         builder.append("# HELP upstream_redis_connect Redis Proxy Upstream Redis Connect\n");
         builder.append("# TYPE upstream_redis_connect gauge\n");
-        builder.append("upstream_redis_connect ").append(redisConnectStats.getConnectCount()).append("\n");
+        builder.append(prefix).append("upstream_redis_connect ").append(redisConnectStats.getConnectCount()).append("\n");
 
         //upstream_redis_connect_detail
         builder.append("# HELP upstream_redis_connect_detail Redis Proxy Upstream Redis Connect Detail\n");
         builder.append("# TYPE upstream_redis_connect_detail gauge\n");
         List<RedisConnectStats.Detail> detailList = redisConnectStats.getDetailList();
         for (RedisConnectStats.Detail detail : detailList) {
-            builder.append(String.format("upstream_redis_connect_detail{upstream=\"%s\"} %d\n", detail.getAddr(), detail.getConnectCount()));
+            builder.append(prefix).append(String.format("upstream_redis_connect_detail{upstream=\"%s\"} %d\n", detail.getAddr(), detail.getConnectCount()));
         }
 
 
@@ -230,7 +233,7 @@ public class PrometheusMetrics {
         builder.append("# TYPE upstream_redis_qps gauge\n");
         List<ResourceStats> resourceStatsList = stats.getResourceStatsList();
         for (ResourceStats resourceStats : resourceStatsList) {
-            builder.append(String.format("upstream_redis_qps{upstream=\"%s\"} %d\n", resourceStats.getResource(), resourceStats.getCount() / intervalSeconds));
+            builder.append(prefix).append(String.format("upstream_redis_qps{upstream=\"%s\"} %d\n", resourceStats.getResource(), resourceStats.getCount() / intervalSeconds));
         }
 
         //upstream_redis_spend_stats
@@ -245,12 +248,12 @@ public class PrometheusMetrics {
             double p90 = upstreamRedisSpendStats.getSpendMsP90();
             double p99 = upstreamRedisSpendStats.getSpendMsP99();
             double max = upstreamRedisSpendStats.getMaxSpendMs();
-            builder.append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"count\"} %d\n", upstream, count1));
-            builder.append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"avg\"} %f\n", upstream, avg));
-            builder.append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"max\"} %f\n", upstream, max));
-            builder.append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"p50\"} %f\n", upstream, p50));
-            builder.append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"p90\"} %f\n", upstream, p90));
-            builder.append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"p99\"} %f\n", upstream, p99));
+            builder.append(prefix).append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"count\"} %d\n", upstream, count1));
+            builder.append(prefix).append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"avg\"} %f\n", upstream, avg));
+            builder.append(prefix).append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"max\"} %f\n", upstream, max));
+            builder.append(prefix).append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"p50\"} %f\n", upstream, p50));
+            builder.append(prefix).append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"p90\"} %f\n", upstream, p90));
+            builder.append(prefix).append(String.format("upstream_redis_spend_stats{upstream=\"%s\", type=\"p99\"} %f\n", upstream, p99));
         }
 
         //client_fail
@@ -258,7 +261,7 @@ public class PrometheusMetrics {
         builder.append("# TYPE client_fail gauge\n");
         Map<String, Long> failMap = stats.getFailMap();
         for (Map.Entry<String, Long> entry : failMap.entrySet()) {
-            builder.append(String.format("client_fail{reason=\"%s\",} %d\n", entry.getKey(), entry.getValue()));
+            builder.append(prefix).append(String.format("client_fail{reason=\"%s\",} %d\n", entry.getKey(), entry.getValue()));
         }
 
         //upstream_fail
@@ -270,7 +273,7 @@ public class PrometheusMetrics {
             String command = upstreamFailStats.getCommand();
             String msg = upstreamFailStats.getMsg();
             long count1 = upstreamFailStats.getCount();
-            builder.append(String.format("upstream_fail{upstream=\"%s\",command=\"%s\",msg=\"%s\"} %d\n", upstream, command, msg, count1));
+            builder.append(prefix).append(String.format("upstream_fail{upstream=\"%s\",command=\"%s\",msg=\"%s\"} %d\n", upstream, command, msg, count1));
         }
 
         //slow_command
@@ -282,7 +285,7 @@ public class PrometheusMetrics {
             String command = slowCommandStats.getCommand();
             String keys = slowCommandStats.getKeys();
             double spendMillis = slowCommandStats.getSpendMillis();
-            builder.append(String.format("slow_command{tenant=\"%s\",command=\"%s\",keys=\"%s\"} %f\n", tenant, command, keys, spendMillis));
+            builder.append(prefix).append(String.format("slow_command{tenant=\"%s\",command=\"%s\",keys=\"%s\"} %f\n", tenant, command, keys, spendMillis));
         }
 
         List<BigKeyStats> bigKeyStatsList = stats.getBigKeyStatsList();
@@ -297,7 +300,7 @@ public class PrometheusMetrics {
             String command = bigKeyStats.getCommand();
             String key = bigKeyStats.getKey();
             long size = bigKeyStats.getSize();
-            builder.append(String.format("string_big_key{tenant=\"%s\",commandType=\"%s\",command=\"%s\",key=\"%s\"} %d\n", tenant, commandType, command, key, size));
+            builder.append(prefix).append(String.format("string_big_key{tenant=\"%s\",commandType=\"%s\",command=\"%s\",key=\"%s\"} %d\n", tenant, commandType, command, key, size));
         }
 
         //collection_big_key
@@ -310,7 +313,7 @@ public class PrometheusMetrics {
             String command = bigKeyStats.getCommand();
             String key = bigKeyStats.getKey();
             long size = bigKeyStats.getSize();
-            builder.append(String.format("collection_big_key{tenant=\"%s\",commandType=\"%s\",command=\"%s\",key=\"%s\"} %d\n", tenant, commandType, command, key, size));
+            builder.append(prefix).append(String.format("collection_big_key{tenant=\"%s\",commandType=\"%s\",command=\"%s\",key=\"%s\"} %d\n", tenant, commandType, command, key, size));
         }
 
         //hot_key
@@ -322,8 +325,8 @@ public class PrometheusMetrics {
             String key = hotKeyStats.getKey();
             long count1 = hotKeyStats.getCount();
             long max = hotKeyStats.getMax();
-            builder.append(String.format("hot_key{tenant=\"%s\",key=\"%s\",type=\"qps\"} %d\n", tenant, key, max));
-            builder.append(String.format("hot_key{tenant=\"%s\",key=\"%s\",type=\"count\"} %d\n", tenant, key, count1));
+            builder.append(prefix).append(String.format("hot_key{tenant=\"%s\",key=\"%s\",type=\"qps\"} %d\n", tenant, key, max));
+            builder.append(prefix).append(String.format("hot_key{tenant=\"%s\",key=\"%s\",type=\"count\"} %d\n", tenant, key, count1));
         }
 
         //hot_key_cache_hit
@@ -334,7 +337,7 @@ public class PrometheusMetrics {
             String tenant = tenant(hotKeyCacheStats.getBid(), hotKeyCacheStats.getBgroup());
             String key = hotKeyCacheStats.getKey();
             long hitCount = hotKeyCacheStats.getHitCount();
-            builder.append(String.format("hot_key_cache_hit{tenant=\"%s\",key=\"%s\"} %d\n", tenant, key, hitCount));
+            builder.append(prefix).append(String.format("hot_key_cache_hit{tenant=\"%s\",key=\"%s\"} %d\n", tenant, key, hitCount));
         }
 
         return builder.toString();
