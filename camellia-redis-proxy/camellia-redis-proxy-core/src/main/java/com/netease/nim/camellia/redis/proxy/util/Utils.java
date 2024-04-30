@@ -366,4 +366,14 @@ public class Utils {
             return clazz.getName();
         }
     }
+
+    public static int count(boolean[] booleans) {
+        int count = 0;
+        for (boolean b : booleans) {
+            if (b) {
+                count ++;
+            }
+        }
+        return count;
+    }
 }

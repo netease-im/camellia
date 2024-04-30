@@ -6,7 +6,9 @@ import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 
 /**
  * DEL key
@@ -40,6 +42,17 @@ public class DelCommander extends Commander {
             keyMetaServer.deleteKeyMeta(key);
             ret = 1;
             gcExecutor.submitSubKeyDeleteTask(key, keyMeta);
+
+            KeyType keyType = keyMeta.getKeyType();
+            EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+            if (keyType == KeyType.zset && (encodeVersion == EncodeVersion.version_3 || encodeVersion == EncodeVersion.version_4)) {
+                byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+                storeRedisTemplate.sendDel(cacheKey);
+            }
+            if (keyType == KeyType.hash && (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
+                byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+                storeRedisTemplate.sendDel(cacheKey);
+            }
         }
         return IntegerReply.parse(ret);
     }

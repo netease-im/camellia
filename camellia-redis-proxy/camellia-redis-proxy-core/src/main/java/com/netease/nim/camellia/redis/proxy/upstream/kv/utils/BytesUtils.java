@@ -9,6 +9,18 @@ public class BytesUtils {
     public static final int SIZEOF_LONG = Long.SIZE / Byte.SIZE;
     public static final int SIZEOF_INT = Integer.SIZE / Byte.SIZE;
 
+    public static byte[] toBytes(double val) {
+        return toBytes(Double.doubleToRawLongBits(val));
+    }
+
+    public static double toDouble(byte [] bytes) {
+        return toDouble(bytes, 0);
+    }
+
+    public static double toDouble(byte [] bytes, int offset) {
+        return Double.longBitsToDouble(toLong(bytes, offset, SIZEOF_LONG));
+    }
+
     public static byte[] toBytes(int val) {
         byte [] b = new byte[4];
         for(int i = 3; i > 0; i--) {

@@ -177,14 +177,14 @@ kv.cache.hgetall.cache.millis=30000
 
 ## zset数据结构
 
-zset有四种编码结构
+zset有5种编码结构
 
 ```properties
-##四种编码模式，0、1、2、3，默认0
+##四种编码模式，0、1、2、3、4，默认0
 ##0这种编码结构，需要底层kv存储支持reverse-scan，当前tikv和obkv不支持
 kv.zset.key.meta.version=0
-kv.zset.zrange.cache.millis=300000
-kv.zset.zmember.cache.millis=300000
+kv.cache.zset.member.cache.millis=300000
+kv.cache.zset.range.cache.millis=300000
 ```
 
 ### version-0
@@ -214,10 +214,10 @@ kv.zset.zmember.cache.millis=300000
 
 #### key-meta
 
-|           key            |               value               |
-|:------------------------:|:---------------------------------:|
-|   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit   |
-| prefix + namespace + key | 1 + 3 + key-version + expire-time |
+|           key            |                      value                       |
+|:------------------------:|:------------------------------------------------:|
+|   m# + namespace + key   |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
+| prefix + namespace + key | 0 + 3 + key-version + expire-time + member-count |
 
 #### sub-key
 
@@ -239,14 +239,14 @@ kv.zset.zmember.cache.millis=300000
 
 #### key-meta
 
-|           key            |               value               |
-|:------------------------:|:---------------------------------:|
-|   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit   |
-| prefix + namespace + key | 2 + 3 + key-version + expire-time |
+|           key            |                      value                       |
+|:------------------------:|:------------------------------------------------:|
+|   m# + namespace + key   |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
+| prefix + namespace + key | 0 + 3 + key-version + expire-time + member-count |
 
 #### index
 
-index=md5(member)
+index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 
 #### sub-key
 
@@ -257,6 +257,8 @@ index=md5(member)
 |                         key                          | value  |
 |:----------------------------------------------------:|:------:|
 | i# + namespace + key.len + key + key-version + index | member |
+
+* 如果member很小，则只有第一个sub-key
 
 #### redis-index-zset-cache-key
 
@@ -275,7 +277,7 @@ index=md5(member)
 * 优点：redis纯缓存使用，可以换出，且redis里可以只存部分数据
 * 缺点：当redis过期时，需要从kv中导出数据重建cache（可以只导出index）
 
-### version-3
+### version-3/version-4
 
 #### key-meta
 
@@ -286,19 +288,23 @@ index=md5(member)
 
 #### index
 
-index=md5(member)
+index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 
 #### sub-key
 
-|                         key                          |     value      |
-|:----------------------------------------------------:|:--------------:|
-| i# + namespace + key.len + key + key-version + index | member + score |
+|                         key                          | value  |
+|:----------------------------------------------------:|:------:|
+| i# + namespace + key.len + key + key-version + index | member |
+
+* 如果member很小，则不会产生二级的index，只会在redis中写入，不会写入kv
 
 #### redis-index-zset-store-key
 
 |                redis-key                | redis-type | redis-value |
 |:---------------------------------------:|:----------:|------------:|
-|   c# + namespace + key + key-version    |    zset    |   index-zet |
+|   c# + namespace + key + key-version    |    zset    |  index-zset |
+
+* index-zset中可能存的是index，也可能不是index，通过前缀的第一个字节来判断
 
 #### redis-index-member-cache-key
 
@@ -306,8 +312,9 @@ index=md5(member)
 |:------------------------------------------:|:----------:|------------:|
 | c# + namespace + key + key-version + index |   string   |      member |
 
-* 特点：encode-version固定为3，key-type固定为3
+* 特点：encode-version固定为3或者4，key-type固定为3
 * 特点：依赖redis做复杂的zset操作
+* 特点：3和4的区别在于，zadd时，是否立即写入index-member缓存
 * 优点：redis里可以只存部分数据，对于kv只有get/put/delete，没有scan操作
 * 缺点：redis-index-zset-store-key不属于cache，属于storage
 

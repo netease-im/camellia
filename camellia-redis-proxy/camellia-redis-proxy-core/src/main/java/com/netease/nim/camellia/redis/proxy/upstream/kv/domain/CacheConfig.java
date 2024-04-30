@@ -46,4 +46,13 @@ public class CacheConfig {
     public long hgetallCacheMillis() {
         return RedisKvConf.getLong(namespace, "kv.cache.hgetall.cache.millis", 5*60*1000L);
     }
+
+    public long zsetMemberCacheMillis() {
+        return RedisKvConf.getLong(namespace, "kv.cache.zset.member.cache.millis", 5*60*1000L);
+    }
+
+    public long zsetRangeCacheMillis() {
+        return RedisKvConf.getLong(namespace, "kv.cache.zset.range.cache.millis", 5*60*1000L);
+    }
+
 }

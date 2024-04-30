@@ -6,7 +6,9 @@ import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 /**
@@ -66,6 +68,12 @@ public class PExpireAtCommander extends Commander {
         keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(),
                 expireTime, keyMeta.getExtra());
         keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+        //
+        if (keyMeta.getKeyType() == KeyType.zset && (keyMeta.getEncodeVersion() == EncodeVersion.version_3
+                || keyMeta.getEncodeVersion() == EncodeVersion.version_4)) {
+            byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+            storeRedisTemplate.sendPExpire(cacheKey, expireTime - System.currentTimeMillis() + 1000L);
+        }
         return IntegerReply.REPLY_1;
     }
 }
