@@ -20,10 +20,10 @@
 
 ## key-meta结构
 
-|           key            |                           value                           |
-|:------------------------:|:---------------------------------------------------------:|
-|   m# + namespace + key   |           1-bit + 1-bit + 8-bit + 8-bit + N-bit           |
-| prefix + namespace + key | encode-version + type + key-version + expire-time + extra |
+|           key            |                             value                             |
+|:------------------------:|:-------------------------------------------------------------:|
+|   m# + namespace + key   |             1-bit + 1-bit + 8-bit + 8-bit + N-bit             |
+| prefix + namespace + key | encode-version + key-type + key-version + expire-time + extra |
 
 ```java
 public enum KeyType {
@@ -35,7 +35,10 @@ public enum KeyType {
 }
 ```
 
-key-meta本身支持配置redis-cache-server，从而加快读写（可换出）
+* key-meta本身支持配置redis-cache-server，从而加快读写（可换出）
+* key-version使用创建key时的时间戳表示
+* expire-time记录key的过期时间戳，如果key没有ttl，则为-1
+* extra取决于encode-version和type，可选
 
 ```properties
 #key-meta是否开启缓存，默认false
@@ -68,7 +71,8 @@ kv.key.meta.cache.millis=600000
 |   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit + N-bit   |
 | prefix + namespace + key | 0 + 1 + key-version + expire-time + value |
 
-* 只有一种编码结构
+* 只有一种编码结构，encode-version固定为0
+* key-type固定为1
 * 只有key-meta，没有sub-key
 * 没有专门的缓存结构，依赖于key-meta本身的缓存
 
@@ -108,7 +112,7 @@ kv.cache.hgetall.cache.millis=30000
 |:----------------------------------------------------:|:-----------:|
 | s# + namespace + key.len + key + key-version + field | field-value |
 
-* 特点：encode-version固定为0
+* 特点：encode-version固定为0，key-type固定为2
 * 优点：hlen快，hset/hdel返回结果准确
 * 缺点：写操作的读放大多（每次写入都需要读一下是否是已经存在的field还是新的field，如hset操作，前者返回0，后者返回1）
 
@@ -127,7 +131,7 @@ kv.cache.hgetall.cache.millis=30000
 |:----------------------------------------------------:|:-----------:|
 | s# + namespace + key.len + key + key-version + field | field-value |
 
-* 特点：encode-version固定为1
+* 特点：encode-version固定为1，key-type固定为2
 * 优点：写入快
 * 缺点：hlen慢，hset/hdel等操作返回结果不准确，比如hset操作，不管写入的是已存在的field还是新的field，都返回1
 
@@ -160,15 +164,15 @@ kv.cache.hgetall.cache.millis=30000
 
 ### commands
 
-| command |                                     info |    
-|:-------:|-----------------------------------------:|
-|  hset   | `HSET key field value [field value ...]` |
-|  hmset  | `HSET key field value [field value ...]` |
-|  hget   |                         `HGET key field` |
-|  hmget  |            `HMGET key field [field ...]` |
-|  hdel   |             `HDEL key field [field ...]` |
-| hgetall |                            `HGETALL key` |
-|  hlen   |                               `HLEN key` |
+| command |                                      info |    
+|:-------:|------------------------------------------:|
+|  hset   |  `HSET key field value [field value ...]` |
+|  hmset  | `HMSET key field value [field value ...]` |
+|  hget   |                          `HGET key field` |
+|  hmget  |             `HMGET key field [field ...]` |
+|  hdel   |              `HDEL key field [field ...]` |
+| hgetall |                             `HGETALL key` |
+|  hlen   |                                `HLEN key` |
 
 
 ## zset数据结构
