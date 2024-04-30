@@ -20,6 +20,11 @@ public enum EncodeVersion {
     version_3((byte) 3),
     version_4((byte) 4),
     version_5((byte) 5),
+    version_6((byte) 6),
+    version_7((byte) 7),
+    version_8((byte) 8),
+    version_9((byte) 9),
+    version_10((byte) 10),
     ;
 
     private final byte value;
@@ -32,20 +37,23 @@ public enum EncodeVersion {
         return value;
     }
 
-    public static EncodeVersion getByValue(byte value) {
-        if (value == (byte) 0) {
-            return EncodeVersion.version_0;
-        } else if (value == (byte) 1) {
-            return EncodeVersion.version_1;
-        } else if (value == (byte) 2) {
-            return EncodeVersion.version_2;
-        } else if (value == (byte) 3) {
-            return EncodeVersion.version_3;
-        } else if (value == (byte) 4) {
-            return EncodeVersion.version_4;
-        } else if (value == (byte) 5) {
-            return EncodeVersion.version_5;
+    private static final EncodeVersion[] array = new EncodeVersion[127];
+    static {
+        for (byte i = 0; i<127; i++) {
+            array[i] = getByValue0(i);
+        }
+    }
+
+    private static EncodeVersion getByValue0(byte value) {
+        for (EncodeVersion version : EncodeVersion.values()) {
+            if (version.value == value) {
+                return version;
+            }
         }
         return null;
+    }
+
+    public static EncodeVersion getByValue(byte value) {
+        return array[value];
     }
 }

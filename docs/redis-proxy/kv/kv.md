@@ -157,9 +157,9 @@ kv.cache.hgetall.cache.millis=30000
 
 #### hgetall-cache-key
 
-|                 redis-key                 | redis-type |     redis-value |
-|:-----------------------------------------:|:----------:|----------------:|
-|    c# + namespace + key + key-version     |    hash    | full-hash-value |
+|             redis-key              | redis-type | redis-value |
+|:----------------------------------:|:----------:|------------:|
+| c# + namespace + key + key-version |    hash    |   full-hash |
 
 
 ### commands
@@ -177,7 +177,139 @@ kv.cache.hgetall.cache.millis=30000
 
 ## zset数据结构
 
-todo
+zset有四种编码结构
+
+```properties
+##四种编码模式，0、1、2、3，默认0
+##0这种编码结构，需要底层kv存储支持reverse-scan，当前tikv和obkv不支持
+kv.zset.key.meta.version=0
+kv.zset.zrange.cache.millis=300000
+kv.zset.zmember.cache.millis=300000
+```
+
+### version-0
+
+#### key-meta
+
+|           key            |                      value                       |
+|:------------------------:|:------------------------------------------------:|
+|   m# + namespace + key   |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
+| prefix + namespace + key | 0 + 3 + key-version + expire-time + member-count |
+
+#### sub-key
+
+|                          key                          | value |
+|:-----------------------------------------------------:|:-----:|
+| s# + namespace + key.len + key + key-version + member | score |
+
+|                              key                              | value |
+|:-------------------------------------------------------------:|:-----:|
+| s# + namespace + key.len + key + key-version + score + member | null  |
+
+* 特点：encode-version固定为0，key-type固定为3
+* 优点：不依赖任何redis，zcard快
+* 缺点：写操作的读放大多（每次写入都需要读一下是否是已经存在的member还是新的member，如zadd操作，前者返回0，后者返回1）
+
+### version-1
+
+#### key-meta
+
+|           key            |               value               |
+|:------------------------:|:---------------------------------:|
+|   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit   |
+| prefix + namespace + key | 1 + 3 + key-version + expire-time |
+
+#### sub-key
+
+|                          key                          | value |
+|:-----------------------------------------------------:|:-----:|
+| s# + namespace + key.len + key + key-version + member | score |
+
+#### redis-cache-key
+
+|                redis-key                | redis-type | redis-value |
+|:---------------------------------------:|:----------:|------------:|
+|   c# + namespace + key + key-version    |    zset    |    full-zet |
+
+* 特点：encode-version固定为1，key-type固定为3
+* 特点：依赖redis做复杂的zset操作
+* 缺点：当redis过期时，需要从kv中全量导出所有数据重建cache
+
+### version-2
+
+#### key-meta
+
+|           key            |               value               |
+|:------------------------:|:---------------------------------:|
+|   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit   |
+| prefix + namespace + key | 2 + 3 + key-version + expire-time |
+
+#### index
+
+index=md5(member)
+
+#### sub-key
+
+|                          key                          | value |
+|:-----------------------------------------------------:|:-----:|
+| s# + namespace + key.len + key + key-version + member | score |
+
+|                         key                          | value  |
+|:----------------------------------------------------:|:------:|
+| i# + namespace + key.len + key + key-version + index | member |
+
+#### redis-index-zset-cache-key
+
+|                redis-key                | redis-type | redis-value |
+|:---------------------------------------:|:----------:|------------:|
+|   c# + namespace + key + key-version    |    zset    |   index-zet |
+
+#### redis-index-member-cache-key
+
+|                 redis-key                  | redis-type | redis-value |
+|:------------------------------------------:|:----------:|------------:|
+| c# + namespace + key + key-version + index |   string   |      member |
+
+* 特点：encode-version固定为2，key-type固定为3
+* 特点：依赖redis做复杂的zset操作
+* 优点：redis纯缓存使用，可以换出，且redis里可以只存部分数据
+* 缺点：当redis过期时，需要从kv中导出数据重建cache（可以只导出index）
+
+### version-3
+
+#### key-meta
+
+|           key            |               value               |
+|:------------------------:|:---------------------------------:|
+|   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit   |
+| prefix + namespace + key | 3 + 3 + key-version + expire-time |
+
+#### index
+
+index=md5(member)
+
+#### sub-key
+
+|                         key                          |     value      |
+|:----------------------------------------------------:|:--------------:|
+| i# + namespace + key.len + key + key-version + index | member + score |
+
+#### redis-index-zset-store-key
+
+|                redis-key                | redis-type | redis-value |
+|:---------------------------------------:|:----------:|------------:|
+|   c# + namespace + key + key-version    |    zset    |   index-zet |
+
+#### redis-index-member-cache-key
+
+|                 redis-key                  | redis-type | redis-value |
+|:------------------------------------------:|:----------:|------------:|
+| c# + namespace + key + key-version + index |   string   |      member |
+
+* 特点：encode-version固定为3，key-type固定为3
+* 特点：依赖redis做复杂的zset操作
+* 优点：redis里可以只存部分数据，对于kv只有get/put/delete，没有scan操作
+* 缺点：redis-index-zset-store-key不属于cache，属于storage
 
 ## list数据结构
 
