@@ -51,6 +51,7 @@ public class ProxyClusterModeProcessor {
 
     private boolean clusterModeCommandMoveEnable;
     private int clusterModeCommandMoveIntervalSeconds;
+    private boolean clusterModeCommandMoveAlways;
 
     private boolean init = false;
 
@@ -86,6 +87,7 @@ public class ProxyClusterModeProcessor {
     private void reloadConf() {
         clusterModeCommandMoveEnable = ProxyDynamicConf.getBoolean("proxy.cluster.mode.command.move.enable", true);
         clusterModeCommandMoveIntervalSeconds = ProxyDynamicConf.getInt("proxy.cluster.mode.command.move.interval.seconds", 30);
+        clusterModeCommandMoveAlways = ProxyDynamicConf.getBoolean("proxy.cluster.mode.command.move.always", true);
     }
 
     private void refresh() {
@@ -127,6 +129,27 @@ public class ProxyClusterModeProcessor {
         try {
             if (!init) return null;
             if (!clusterModeCommandMoveEnable) return null;//不开启move，则直接返回null
+            if (clusterModeCommandMoveAlways) {
+                List<byte[]> keys = command.getKeys();
+                if (keys.isEmpty()) {
+                    return null;
+                }
+                for (byte[] key : keys) {
+                    int slot = RedisClusterCRC16Utils.getSlot(key);
+                    if (!currentNodeOnline || slot < slotStart || slot > slotEnd) {
+                        ProxyNode node = slotMap.get(slot);
+                        if (node == null) {
+                            return ErrorReply.CLUSTER_MODE_SLOT_INFO_LOADING;
+                        }
+                        if (node.equals(currentNode)) {
+                            continue;
+                        }
+                        return new ErrorReply("MOVED " + slot + " " + node.getHost() + ":" + node.getPort());
+                    }
+                }
+                return null;
+            }
+
             if (onlineNodes.isEmpty()) return null;
             if (refreshing.get()) return null;//正在更新slot信息，则别move了
             ChannelInfo channelInfo = command.getChannelInfo();

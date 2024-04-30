@@ -41,6 +41,7 @@ public class ErrorReply implements Reply {
     public static final ErrorReply TIMEOUT = new ErrorReply("ERR command execute timeout");
     public static final ErrorReply INTERNAL_ERROR = new ErrorReply("ERR internal error");
     public static final ErrorReply WRONG_TYPE = new ErrorReply("WRONGTYPE Operation against a key holding the wrong kind of value");
+    public static final ErrorReply CLUSTER_MODE_SLOT_INFO_LOADING = new ErrorReply("ERR proxy cluster mode slot info loading");
 
     private static final char MARKER = Marker.ErrorReply.getMarker();
     private final String error;
