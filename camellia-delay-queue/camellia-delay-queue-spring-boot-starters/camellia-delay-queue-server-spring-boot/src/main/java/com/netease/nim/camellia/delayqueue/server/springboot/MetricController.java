@@ -35,10 +35,15 @@ public class MetricController {
     public String metrics() {
         StringBuilder builder = new StringBuilder();
 
+        String prefix = System.getProperty("metrics.prefix");
+        if (prefix == null) {
+            prefix = "";
+        }
+
         //proxy_info
         builder.append("# HELP info Delay Queue Info\n");
         builder.append("# TYPE info gauge\n");
-        builder.append("info");
+        builder.append(prefix).append("info");
         builder.append("{");
         builder.append("camellia_version=\"").append(CamelliaVersion.version).append("\"").append(",");
         builder.append("arch=\"").append(osBean.getArch()).append("\"").append(",");
@@ -57,12 +62,12 @@ public class MetricController {
         //uptime
         builder.append("# HELP uptime Delay Queue Uptime\n");
         builder.append("# TYPE uptime gauge\n");
-        builder.append(String.format("uptime %d\n", System.currentTimeMillis() - startTime));
+        builder.append(prefix).append(String.format("uptime %d\n", System.currentTimeMillis() - startTime));
 
         //start_time
         builder.append("# HELP start_time Delay Queue StartTime\n");
         builder.append("# TYPE start_time gauge\n");
-        builder.append(String.format("start_time %d\n", startTime));
+        builder.append(prefix).append(String.format("start_time %d\n", startTime));
 
         //memory
         builder.append("# HELP memory_info Delay Queue Memory\n");
@@ -74,26 +79,26 @@ public class MetricController {
         long heapMemoryUsage = memoryInfo.getHeapMemoryUsed();
         long noneHeapMemoryUsage = memoryInfo.getNonHeapMemoryUsed();
         long nettyDirectMemory = memoryInfo.getNettyDirectMemory();
-        builder.append(String.format("memory_info{type=\"free_memory\"} %d\n", freeMemory));
-        builder.append(String.format("memory_info{type=\"total_memory\"} %d\n", totalMemory));
-        builder.append(String.format("memory_info{type=\"max_memory\"} %d\n", maxMemory));
-        builder.append(String.format("memory_info{type=\"heap_memory_usage\"} %d\n", heapMemoryUsage));
-        builder.append(String.format("memory_info{type=\"no_heap_memory_usage\"} %d\n", noneHeapMemoryUsage));
-        builder.append(String.format("memory_info{type=\"netty_direct_memory\"} %d\n", nettyDirectMemory));
+        builder.append(prefix).append(String.format("memory_info{type=\"free_memory\"} %d\n", freeMemory));
+        builder.append(prefix).append(String.format("memory_info{type=\"total_memory\"} %d\n", totalMemory));
+        builder.append(prefix).append(String.format("memory_info{type=\"max_memory\"} %d\n", maxMemory));
+        builder.append(prefix).append(String.format("memory_info{type=\"heap_memory_usage\"} %d\n", heapMemoryUsage));
+        builder.append(prefix).append(String.format("memory_info{type=\"no_heap_memory_usage\"} %d\n", noneHeapMemoryUsage));
+        builder.append(prefix).append(String.format("memory_info{type=\"netty_direct_memory\"} %d\n", nettyDirectMemory));
 
         //cpu
         builder.append("# HELP cpu Delay Queue Cpu\n");
         builder.append("# TYPE cpu gauge\n");
         CpuUsage cpuUsageInfo = CamelliaDelayQueueMonitor.getCpuUsageCollector().getCpuUsageInfo();
-        builder.append(String.format("cpu{type=\"cpu_num\"} %d\n", cpuUsageInfo.getCpuNum()));
-        builder.append(String.format("cpu{type=\"usage\"} %f\n", cpuUsageInfo.getRatio()));
+        builder.append(prefix).append(String.format("cpu{type=\"cpu_num\"} %d\n", cpuUsageInfo.getCpuNum()));
+        builder.append(prefix).append(String.format("cpu{type=\"usage\"} %f\n", cpuUsageInfo.getRatio()));
 
         //gc
         builder.append("# HELP gc Delay Queue gc\n");
         builder.append("# TYPE gc gauge\n");
         for (GarbageCollectorMXBean bean : garbageCollectorMXBeanList) {
-            builder.append(String.format("gc{name=\"%s\", type=\"count\"} %d\n", bean.getName(), bean.getCollectionCount()));
-            builder.append(String.format("gc{name=\"%s\", type=\"time\"} %d\n", bean.getName(), bean.getCollectionTime()));
+            builder.append(prefix).append(String.format("gc{name=\"%s\", type=\"count\"} %d\n", bean.getName(), bean.getCollectionCount()));
+            builder.append(prefix).append(String.format("gc{name=\"%s\", type=\"time\"} %d\n", bean.getName(), bean.getCollectionTime()));
         }
 
         CamelliaDelayQueueMonitorData monitorData = CamelliaDelayQueueMonitor.getMonitorData();
@@ -104,14 +109,14 @@ public class MetricController {
         List<CamelliaDelayQueueMonitorData.RequestStats> requestStatsList = monitorData.getRequestStatsList();
         for (CamelliaDelayQueueMonitorData.RequestStats requestStats : requestStatsList) {
             String topic = requestStats.getTopic();
-            builder.append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "sendMsg", requestStats.getSendMsg()));
-            builder.append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "pullMsg", requestStats.getPullMsg()));
-            builder.append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "deleteMsg", requestStats.getDeleteMsg()));
-            builder.append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "ackMsg", requestStats.getAckMsg()));
-            builder.append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "getMsg", requestStats.getGetMsg()));
-            builder.append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "triggerMsgReady", requestStats.getTriggerMsgReady()));
-            builder.append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "triggerMsgTimeout", requestStats.getTriggerMsgTimeout()));
-            builder.append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "triggerMsgEndLife", requestStats.getTriggerMsgEndLife()));
+            builder.append(prefix).append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "sendMsg", requestStats.getSendMsg()));
+            builder.append(prefix).append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "pullMsg", requestStats.getPullMsg()));
+            builder.append(prefix).append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "deleteMsg", requestStats.getDeleteMsg()));
+            builder.append(prefix).append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "ackMsg", requestStats.getAckMsg()));
+            builder.append(prefix).append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "getMsg", requestStats.getGetMsg()));
+            builder.append(prefix).append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "triggerMsgReady", requestStats.getTriggerMsgReady()));
+            builder.append(prefix).append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "triggerMsgTimeout", requestStats.getTriggerMsgTimeout()));
+            builder.append(prefix).append(String.format("request{topic=\"%s\", type=\"%s\"} %d\n", topic, "triggerMsgEndLife", requestStats.getTriggerMsgEndLife()));
         }
 
         //pull_msg_time_gap
@@ -120,9 +125,9 @@ public class MetricController {
         List<CamelliaDelayQueueMonitorData.TimeGapStats> pullMsgTimeGapStatsList = monitorData.getPullMsgTimeGapStatsList();
         for (CamelliaDelayQueueMonitorData.TimeGapStats timeGapStats : pullMsgTimeGapStatsList) {
             String topic = timeGapStats.getTopic();
-            builder.append(String.format("pull_msg_time_gap{topic=\"%s\", type=\"%s\"} %d\n", topic, "count", timeGapStats.getCount()));
-            builder.append(String.format("pull_msg_time_gap{topic=\"%s\", type=\"%s\"} %f\n", topic, "avg", timeGapStats.getAvg()));
-            builder.append(String.format("pull_msg_time_gap{topic=\"%s\", type=\"%s\"} %d\n", topic, "max", timeGapStats.getMax()));
+            builder.append(prefix).append(String.format("pull_msg_time_gap{topic=\"%s\", type=\"%s\"} %d\n", topic, "count", timeGapStats.getCount()));
+            builder.append(prefix).append(String.format("pull_msg_time_gap{topic=\"%s\", type=\"%s\"} %f\n", topic, "avg", timeGapStats.getAvg()));
+            builder.append(prefix).append(String.format("pull_msg_time_gap{topic=\"%s\", type=\"%s\"} %d\n", topic, "max", timeGapStats.getMax()));
         }
 
         //ready_queue_time_gap
@@ -131,9 +136,9 @@ public class MetricController {
         List<CamelliaDelayQueueMonitorData.TimeGapStats> readyQueueTimeGapStatsList = monitorData.getReadyQueueTimeGapStatsList();
         for (CamelliaDelayQueueMonitorData.TimeGapStats timeGapStats : readyQueueTimeGapStatsList) {
             String topic = timeGapStats.getTopic();
-            builder.append(String.format("ready_queue_time_gap{topic=\"%s\", type=\"%s\"} %d\n", topic, "count", timeGapStats.getCount()));
-            builder.append(String.format("ready_queue_time_gap{topic=\"%s\", type=\"%s\"} %f\n", topic, "avg", timeGapStats.getAvg()));
-            builder.append(String.format("ready_queue_time_gap{topic=\"%s\", type=\"%s\"} %d\n", topic, "max", timeGapStats.getMax()));
+            builder.append(prefix).append(String.format("ready_queue_time_gap{topic=\"%s\", type=\"%s\"} %d\n", topic, "count", timeGapStats.getCount()));
+            builder.append(prefix).append(String.format("ready_queue_time_gap{topic=\"%s\", type=\"%s\"} %f\n", topic, "avg", timeGapStats.getAvg()));
+            builder.append(prefix).append(String.format("ready_queue_time_gap{topic=\"%s\", type=\"%s\"} %d\n", topic, "max", timeGapStats.getMax()));
         }
 
         List<CamelliaDelayQueueTopicInfo> topicInfoList = server.getTopicInfoList();
@@ -141,19 +146,19 @@ public class MetricController {
         builder.append("# TYPE topic_info gauge\n");
         for (CamelliaDelayQueueTopicInfo topicInfo : topicInfoList) {
             String topic = topicInfo.getTopic();
-            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "readyQueueSize", topicInfo.getReadyQueueSize()));
-            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "ackQueueSize", topicInfo.getAckQueueSize()));
-            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "waitingQueueSize", topicInfo.getWaitingQueueSize()));
+            builder.append(prefix).append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "readyQueueSize", topicInfo.getReadyQueueSize()));
+            builder.append(prefix).append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "ackQueueSize", topicInfo.getAckQueueSize()));
+            builder.append(prefix).append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "waitingQueueSize", topicInfo.getWaitingQueueSize()));
             CamelliaDelayQueueTopicInfo.WaitingQueueInfo waitingQueueInfo = topicInfo.getWaitingQueueInfo();
-            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_0_1min", waitingQueueInfo.getSizeOf0To1min()));
-            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_1min_10min", waitingQueueInfo.getSizeOf1minTo10min()));
-            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_10min_30min", waitingQueueInfo.getSizeOf10minTo30min()));
-            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_30min_1hour", waitingQueueInfo.getSizeOf30minTo1hour()));
-            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_1hour_6hour", waitingQueueInfo.getSizeOf1hourTo6hour()));
-            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_6hour_1day", waitingQueueInfo.getSizeOf6hourTo1day()));
-            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_1day_7day", waitingQueueInfo.getSizeOf1dayTo7day()));
-            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_7day_30day", waitingQueueInfo.getSizeOf7dayTo30day()));
-            builder.append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_30day_infinite", waitingQueueInfo.getSizeOf30dayToInfinite()));
+            builder.append(prefix).append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_0_1min", waitingQueueInfo.getSizeOf0To1min()));
+            builder.append(prefix).append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_1min_10min", waitingQueueInfo.getSizeOf1minTo10min()));
+            builder.append(prefix).append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_10min_30min", waitingQueueInfo.getSizeOf10minTo30min()));
+            builder.append(prefix).append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_30min_1hour", waitingQueueInfo.getSizeOf30minTo1hour()));
+            builder.append(prefix).append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_1hour_6hour", waitingQueueInfo.getSizeOf1hourTo6hour()));
+            builder.append(prefix).append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_6hour_1day", waitingQueueInfo.getSizeOf6hourTo1day()));
+            builder.append(prefix).append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_1day_7day", waitingQueueInfo.getSizeOf1dayTo7day()));
+            builder.append(prefix).append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_7day_30day", waitingQueueInfo.getSizeOf7dayTo30day()));
+            builder.append(prefix).append(String.format("topic_info{topic=\"%s\", type=\"%s\"} %d\n", topic, "size_30day_infinite", waitingQueueInfo.getSizeOf30dayToInfinite()));
         }
         return builder.toString();
     }

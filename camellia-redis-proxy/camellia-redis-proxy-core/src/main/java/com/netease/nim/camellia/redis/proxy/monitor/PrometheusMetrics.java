@@ -27,7 +27,10 @@ public class PrometheusMetrics {
     public static String metrics() {
         StringBuilder builder = new StringBuilder();
 
-        String prefix = ProxyDynamicConf.getString("metrics.prefix", "");
+        String prefix = System.getProperty("metrics.prefix");
+        if (prefix == null || prefix.isEmpty()) {
+            prefix = ProxyDynamicConf.getString("metrics.prefix", "");
+        }
 
         //proxy_info
         builder.append("# HELP proxy_info Redis Proxy Info\n");

@@ -20,11 +20,15 @@ public class PrometheusMetrics {
 
     public static String metrics() {
         StringBuilder builder = new StringBuilder();
+        String prefix = System.getProperty("metrics.prefix");
+        if (prefix == null) {
+            prefix = "";
+        }
 
         //info
         builder.append("# HELP info Id Gen Server Info\n");
         builder.append("# TYPE info gauge\n");
-        builder.append("info");
+        builder.append(prefix).append("info");
         builder.append("{");
         builder.append("camellia_version=\"").append(CamelliaVersion.version).append("\"").append(",");
         builder.append("arch=\"").append(osBean.getArch()).append("\"").append(",");
@@ -43,12 +47,12 @@ public class PrometheusMetrics {
         //uptime
         builder.append("# HELP uptime Id Gen Server Uptime\n");
         builder.append("# TYPE uptime gauge\n");
-        builder.append(String.format("uptime %d\n", System.currentTimeMillis() - startTime));
+        builder.append(prefix).append(String.format("uptime %d\n", System.currentTimeMillis() - startTime));
 
         //start_time
         builder.append("# HELP start_time Id Gen Server StartTime\n");
         builder.append("# TYPE start_time gauge\n");
-        builder.append(String.format("start_time %d\n", startTime));
+        builder.append(prefix).append(String.format("start_time %d\n", startTime));
 
         //memory
         builder.append("# HELP memory_info Id Gen Server Memory\n");
@@ -60,26 +64,26 @@ public class PrometheusMetrics {
         long heapMemoryUsage = memoryInfo.getHeapMemoryUsed();
         long noneHeapMemoryUsage = memoryInfo.getNonHeapMemoryUsed();
         long nettyDirectMemory = memoryInfo.getNettyDirectMemory();
-        builder.append(String.format("memory_info{type=\"free_memory\"} %d\n", freeMemory));
-        builder.append(String.format("memory_info{type=\"total_memory\"} %d\n", totalMemory));
-        builder.append(String.format("memory_info{type=\"max_memory\"} %d\n", maxMemory));
-        builder.append(String.format("memory_info{type=\"heap_memory_usage\"} %d\n", heapMemoryUsage));
-        builder.append(String.format("memory_info{type=\"no_heap_memory_usage\"} %d\n", noneHeapMemoryUsage));
-        builder.append(String.format("memory_info{type=\"netty_direct_memory\"} %d\n", nettyDirectMemory));
+        builder.append(prefix).append(String.format("memory_info{type=\"free_memory\"} %d\n", freeMemory));
+        builder.append(prefix).append(String.format("memory_info{type=\"total_memory\"} %d\n", totalMemory));
+        builder.append(prefix).append(String.format("memory_info{type=\"max_memory\"} %d\n", maxMemory));
+        builder.append(prefix).append(String.format("memory_info{type=\"heap_memory_usage\"} %d\n", heapMemoryUsage));
+        builder.append(prefix).append(String.format("memory_info{type=\"no_heap_memory_usage\"} %d\n", noneHeapMemoryUsage));
+        builder.append(prefix).append(String.format("memory_info{type=\"netty_direct_memory\"} %d\n", nettyDirectMemory));
 
         //cpu
         builder.append("# HELP cpu Id Gen Server Cpu\n");
         builder.append("# TYPE cpu gauge\n");
         CpuUsage cpuUsageInfo = IdGenMonitor.getCpuUsageCollector().getCpuUsageInfo();
-        builder.append(String.format("cpu{type=\"cpu_num\"} %d\n", cpuUsageInfo.getCpuNum()));
-        builder.append(String.format("cpu{type=\"usage\"} %f\n", cpuUsageInfo.getRatio()));
+        builder.append(prefix).append(String.format("cpu{type=\"cpu_num\"} %d\n", cpuUsageInfo.getCpuNum()));
+        builder.append(prefix).append(String.format("cpu{type=\"usage\"} %f\n", cpuUsageInfo.getRatio()));
 
         //gc
         builder.append("# HELP gc Id Gen Server gc\n");
         builder.append("# TYPE gc gauge\n");
         for (GarbageCollectorMXBean bean : garbageCollectorMXBeanList) {
-            builder.append(String.format("gc{name=\"%s\", type=\"count\"} %d\n", bean.getName(), bean.getCollectionCount()));
-            builder.append(String.format("gc{name=\"%s\", type=\"time\"} %d\n", bean.getName(), bean.getCollectionTime()));
+            builder.append(prefix).append(String.format("gc{name=\"%s\", type=\"count\"} %d\n", bean.getName(), bean.getCollectionCount()));
+            builder.append(prefix).append(String.format("gc{name=\"%s\", type=\"time\"} %d\n", bean.getName(), bean.getCollectionTime()));
         }
 
         //request
@@ -90,12 +94,12 @@ public class PrometheusMetrics {
         for (Stats.UriStats uriStats : statsList) {
             String uri = uriStats.getUri();
             int code = uriStats.getCode();
-            builder.append(String.format("request{uri=\"%s\", code=\"%s\", type=\"count\"} %d\n", uri, code, uriStats.getCount()));
-            builder.append(String.format("request{uri=\"%s\", code=\"%s\", type=\"spendAvg\"} %d\n", uri, code, uriStats.getSpendAvg()));
-            builder.append(String.format("request{uri=\"%s\", code=\"%s\", type=\"spendMax\"} %d\n", uri, code, uriStats.getSpendMax()));
-            builder.append(String.format("request{uri=\"%s\", code=\"%s\", type=\"spendP50\"} %d\n", uri, code, uriStats.getSpendP50()));
-            builder.append(String.format("request{uri=\"%s\", code=\"%s\", type=\"spendP90\"} %d\n", uri, code, uriStats.getSpendP90()));
-            builder.append(String.format("request{uri=\"%s\", code=\"%s\", type=\"spendP99\"} %d\n", uri, code, uriStats.getSpendP99()));
+            builder.append(prefix).append(String.format("request{uri=\"%s\", code=\"%s\", type=\"count\"} %d\n", uri, code, uriStats.getCount()));
+            builder.append(prefix).append(String.format("request{uri=\"%s\", code=\"%s\", type=\"spendAvg\"} %d\n", uri, code, uriStats.getSpendAvg()));
+            builder.append(prefix).append(String.format("request{uri=\"%s\", code=\"%s\", type=\"spendMax\"} %d\n", uri, code, uriStats.getSpendMax()));
+            builder.append(prefix).append(String.format("request{uri=\"%s\", code=\"%s\", type=\"spendP50\"} %d\n", uri, code, uriStats.getSpendP50()));
+            builder.append(prefix).append(String.format("request{uri=\"%s\", code=\"%s\", type=\"spendP90\"} %d\n", uri, code, uriStats.getSpendP90()));
+            builder.append(prefix).append(String.format("request{uri=\"%s\", code=\"%s\", type=\"spendP99\"} %d\n", uri, code, uriStats.getSpendP99()));
         }
 
         return builder.toString();
