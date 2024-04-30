@@ -180,7 +180,7 @@ kv.cache.hgetall.cache.millis=30000
 zset有5种编码结构
 
 ```properties
-##四种编码模式，0、1、2、3、4，默认0
+##5种编码模式，0、1、2、3、4，默认0
 ##0这种编码结构，需要底层kv存储支持reverse-scan，当前tikv和obkv不支持
 kv.zset.key.meta.version=0
 kv.cache.zset.member.cache.millis=300000
@@ -305,6 +305,7 @@ index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 |   c# + namespace + key + key-version    |    zset    |  index-zset |
 
 * index-zset中可能存的是index，也可能不是index，通过前缀的第一个字节来判断
+* 这部分redis数据不允许换出
 
 #### redis-index-member-cache-key
 
@@ -317,6 +318,14 @@ index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 * 特点：3和4的区别在于，zadd时，是否立即写入index-member缓存
 * 优点：redis里可以只存部分数据，对于kv只有get/put/delete，没有scan操作
 * 缺点：redis-index-zset-store-key不属于cache，属于storage
+
+### commands
+
+| command |                                         info |    
+|:-------:|---------------------------------------------:|
+|  zadd   | `ZADD key score member [score member   ...]` |
+|  zcard  |                                  `ZCARD key` |
+| zrange  |         `ZRANGE key start stop [WITHSCORES]` |
 
 ## list数据结构
 
