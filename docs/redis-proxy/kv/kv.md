@@ -46,16 +46,20 @@ kv.key.meta.cache.millis=600000
 
 ## db commands
 
-| command |                       info |
-|:-------:|---------------------------:|
-|   del   |        `DEL key [key ...]` |
-| exists  |     `EXISTS key [key ...]` | 
-| expire  |       `EXPIRE key seconds` |
-| pexpire | `PEXPIRE key milliseconds` |
-| unlink  |     `UNLINK key [key ...]` |
-|  type   |                 `TYPE key` |
-|   ttl   |                  `TTL key` |
-|  pttl   |                 `PTTL key` |
+|   command   |                                                          info |
+|:-----------:|--------------------------------------------------------------:|
+|     del     |                                           `DEL key [key ...]` |
+|   exists    |                                        `EXISTS key [key ...]` | 
+|   expire    |                   `EXPIRE key seconds [NX \| XX \| GT \| LT]` |
+|   pexpire   |             `PEXPIRE key milliseconds [NX \| XX \| GT \| LT]` |
+|  expireat   |       `EXPIREAT key unix-time-seconds [NX \| XX \| GT \| LT]` |
+|  pexpireat  | `PEXPIREAT key unix-time-milliseconds [NX \| XX \| GT \| LT]` |
+|   unlink    |                                        `UNLINK key [key ...]` |
+|    type     |                                                    `TYPE key` |
+|     ttl     |                                                     `TTL key` |
+|    pttl     |                                                    `PTTL key` |
+| expiretime  |                                              `EXPIRETIME key` |
+| pexpiretime |                                             `PEXPIRETIME key` |
 
 ## string数据结构
 

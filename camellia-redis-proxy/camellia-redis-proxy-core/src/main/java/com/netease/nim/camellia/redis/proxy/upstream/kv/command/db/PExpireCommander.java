@@ -10,7 +10,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 /**
- * PEXPIRE key millis
+ * PEXPIRE key milliseconds [NX | XX | GT | LT]
  * <p>
  * Created by caojiajun on 2024/4/8
  */
@@ -28,7 +28,7 @@ public class PExpireCommander extends Commander {
     @Override
     protected boolean parse(Command command) {
         byte[][] objects = command.getObjects();
-        return objects.length == 3;
+        return objects.length == 3 || objects.length == 4;
     }
 
     @Override
@@ -40,8 +40,32 @@ public class PExpireCommander extends Commander {
         if (keyMeta == null) {
             return IntegerReply.REPLY_0;
         }
+        long expireTime = System.currentTimeMillis() + expireMillis;
+        String arg = null;
+        if (objects.length == 4) {
+            arg = Utils.bytesToString(objects[3]);
+        }
+        if (arg != null) {
+            if (arg.equalsIgnoreCase("NX")) {
+                if (keyMeta.getExpireTime() > 0) {
+                    return IntegerReply.REPLY_0;
+                }
+            } else if (arg.equalsIgnoreCase("XX")) {
+                if (keyMeta.getExpireTime() < 0) {
+                    return IntegerReply.REPLY_0;
+                }
+            } else if (arg.equalsIgnoreCase("GT")) {
+                if (expireTime <= keyMeta.getExpireTime()) {
+                    return IntegerReply.REPLY_0;
+                }
+            } else if (arg.equalsIgnoreCase("LT")) {
+                if (expireTime >= keyMeta.getExpireTime()) {
+                    return IntegerReply.REPLY_0;
+                }
+            }
+        }
         keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(),
-                keyMeta.getKeyVersion(), System.currentTimeMillis() + expireMillis, keyMeta.getExtra());
+                keyMeta.getKeyVersion(), expireTime, keyMeta.getExtra());
         keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
         return IntegerReply.REPLY_1;
     }

@@ -10,37 +10,36 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 /**
- * EXPIRE key seconds [NX | XX | GT | LT]
+ * PEXPIREAT key unix-time-milliseconds [NX | XX | GT | LT]
  * <p>
- * Created by caojiajun on 2024/4/8
+ * Created by caojiajun on 2024/4/30
  */
-public class ExpireCommander extends Commander {
+public class PExpireAtCommander extends Commander {
 
-    public ExpireCommander(CommanderConfig commanderConfig) {
+    public PExpireAtCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
     }
 
     @Override
     public RedisCommand redisCommand() {
-        return RedisCommand.EXPIRE;
+        return RedisCommand.PEXPIREAT;
     }
 
     @Override
     protected boolean parse(Command command) {
         byte[][] objects = command.getObjects();
-        return objects.length == 3;
+        return objects.length == 3 || objects.length == 4;
     }
 
     @Override
     protected Reply execute(Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-        long expireSeconds = Utils.bytesToNum(objects[2]);
+        long expireTime = Utils.bytesToNum(objects[2]);
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
             return IntegerReply.REPLY_0;
         }
-        long expireTime = System.currentTimeMillis() + expireSeconds * 1000L;
         String arg = null;
         if (objects.length == 4) {
             arg = Utils.bytesToString(objects[3]);
