@@ -9,31 +9,30 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
-import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.nio.charset.StandardCharsets;
 
 /**
- * ZRANGE key start stop [WITHSCORES]
+ * ZRANGEBYLEX key min max [LIMIT offset count]
  * <p>
  * Created by caojiajun on 2024/4/11
  */
-public class ZRangeCommander extends ZRange0Commander {
+public class ZRangeByLexCommander extends ZRange0Commander {
 
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
             "if ret1 then\n" +
-            "  local ret = redis.call('zrange', KEYS[1], unpack(ARGV));\n" +
+            "  local ret = redis.call('zrangebylex', KEYS[1], unpack(ARGV));\n" +
             "  return {'2', ret};\n" +
             "end\n" +
             "return {'1'};").getBytes(StandardCharsets.UTF_8);
 
-    public ZRangeCommander(CommanderConfig commanderConfig) {
+    public ZRangeByLexCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
     }
 
     @Override
     public RedisCommand redisCommand() {
-        return RedisCommand.ZRANGE;
+        return RedisCommand.ZRANGEBYSCORE;
     }
 
     @Override
@@ -53,30 +52,26 @@ public class ZRangeCommander extends ZRange0Commander {
         if (keyMeta.getKeyType() != KeyType.zset) {
             return ErrorReply.WRONG_TYPE;
         }
-        boolean withScores = false;
-        if (objects.length == 5) {
-            withScores = Utils.bytesToString(objects[4]).equalsIgnoreCase("withscores");
-            if (!withScores) {
-                return ErrorReply.SYNTAX_ERROR;
-            }
-        }
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            return zrangeVersion0(keyMeta, key, objects, withScores);
+            return zrangeByLexVersion0(keyMeta, key, objects);
         }
         if (encodeVersion == EncodeVersion.version_1) {
             return zrangeVersion1(keyMeta, key, objects, script);
         }
         if (encodeVersion == EncodeVersion.version_2) {
-            return zrangeVersion2(keyMeta, key, objects, withScores, script);
+            return zrangeVersion2(keyMeta, key, objects, false, script);
         }
         if (encodeVersion == EncodeVersion.version_3) {
-            return zrangeVersion3(keyMeta, key, objects, withScores);
+            return zrangeVersion3(keyMeta, key, objects, false);
         }
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zrangeVersion0(KeyMeta keyMeta, byte[] key, byte[][] objects, boolean withScores) {
+    private Reply zrangeByLexVersion0(KeyMeta keyMeta, byte[] key, byte[][] objects) {
         return ErrorReply.SYNTAX_ERROR;
     }
+
+
+
 }

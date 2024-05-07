@@ -5,7 +5,6 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
-import com.netease.nim.camellia.tools.utils.MD5Util;
 
 import java.nio.charset.StandardCharsets;
 
@@ -80,8 +79,8 @@ public class KeyStruct {
         byte[] keySize = BytesUtils.toBytes(key.length);
         byte[] data = BytesUtils.merge(indexKeyPrefix, keySize, key);
         data = BytesUtils.merge(data, BytesUtils.toBytes(keyMeta.getKeyVersion()));
-        if (index != null && index.getData().length > 0) {
-            data = BytesUtils.merge(data, index.getData());
+        if (index != null && index.getRef().length > 0) {
+            data = BytesUtils.merge(data, index.getRef());
         }
         return data;
     }
@@ -90,8 +89,8 @@ public class KeyStruct {
         long version = keyMeta.getKeyVersion();
         byte[] data = BytesUtils.merge(cachePrefix, key, BytesUtils.toBytes(version));
         data = BytesUtils.merge(HASH_TAG_LEFT, data, HASH_TAG_RIGHT);
-        if (index != null && index.getData().length > 0) {
-            data = BytesUtils.merge(data, index.getData());
+        if (index != null && index.getRef().length > 0) {
+            data = BytesUtils.merge(data, index.getRef());
         }
         return data;
     }
@@ -114,6 +113,14 @@ public class KeyStruct {
         int fieldSize = subKey.length - prefixSize;
         byte[] field = new byte[fieldSize];
         System.arraycopy(subKey, prefixSize, field, 0, fieldSize);
+        return field;
+    }
+
+    public byte[] decodeZSetMemberBySubKey1(byte[] subKey1, byte[] key) {
+        int prefixSize = storePrefixLen + 4 + key.length + 8;
+        int fieldSize = subKey1.length - prefixSize;
+        byte[] field = new byte[fieldSize];
+        System.arraycopy(subKey1, prefixSize, field, 0, fieldSize);
         return field;
     }
 
@@ -145,11 +152,6 @@ public class KeyStruct {
         return BytesUtils.toLong(subKey, storePrefixLen + 4 + keyLen);
     }
 
-    public static void main(String[] args) {
-        byte[] bytes = MD5Util.md5("abc".getBytes(StandardCharsets.UTF_8));
-        System.out.println(bytes.length);
-    }
-
     public EncodeVersion hashKeyMetaVersion() {
         int version = ProxyDynamicConf.getInt("kv.hash.key.meta.version", 0);
         if (version == 0) {
@@ -175,8 +177,6 @@ public class KeyStruct {
             return EncodeVersion.version_2;
         } else if (version == 3) {
             return EncodeVersion.version_3;
-        } else if (version == 4) {
-            return EncodeVersion.version_4;
         } else {
             throw new KvException("ERR illegal key meta version");
         }

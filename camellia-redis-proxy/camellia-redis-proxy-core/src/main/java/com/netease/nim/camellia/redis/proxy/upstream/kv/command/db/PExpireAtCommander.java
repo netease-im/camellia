@@ -69,10 +69,21 @@ public class PExpireAtCommander extends Commander {
                 expireTime, keyMeta.getExtra());
         keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
         //
-        if (keyMeta.getKeyType() == KeyType.zset && (keyMeta.getEncodeVersion() == EncodeVersion.version_3
-                || keyMeta.getEncodeVersion() == EncodeVersion.version_4)) {
+        KeyType keyType = keyMeta.getKeyType();
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+        if (keyType == KeyType.zset && encodeVersion == EncodeVersion.version_3) {
             byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
             storeRedisTemplate.sendPExpire(cacheKey, expireTime - System.currentTimeMillis() + 1000L);
+        }
+        if (keyType == KeyType.zset && (encodeVersion == EncodeVersion.version_1 || encodeVersion == EncodeVersion.version_2)) {
+            byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+            long pexpire = Math.min(expireTime - System.currentTimeMillis() + 1000L, cacheConfig.zsetRangeCacheMillis());
+            cacheRedisTemplate.sendPExpire(cacheKey, pexpire);
+        }
+        if (keyType == KeyType.hash && (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
+            byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+            long pexpire = Math.min(expireTime - System.currentTimeMillis() + 1000L, cacheConfig.hgetallCacheMillis());
+            cacheRedisTemplate.sendPExpire(cacheKey, pexpire);
         }
         return IntegerReply.REPLY_1;
     }

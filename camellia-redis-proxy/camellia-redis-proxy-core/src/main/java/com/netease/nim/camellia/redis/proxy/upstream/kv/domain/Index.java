@@ -12,12 +12,12 @@ public class Index {
     private static final byte prefix2 = 1;
 
     private final boolean index;
-    private final byte[] data;
+    private final byte[] ref;
     private final byte[] raw;
 
-    private Index(boolean index, byte[] data, byte[] raw) {
+    private Index(boolean index, byte[] ref, byte[] raw) {
         this.index = index;
-        this.data = data;
+        this.ref = ref;
         this.raw = raw;
     }
 
@@ -36,15 +36,15 @@ public class Index {
         }
     }
 
-    public static Index fromData(byte[] data) {
-        byte prefix = data[0];
+    public static Index fromRef(byte[] ref) {
+        byte prefix = ref[0];
         if (prefix == prefix1) {
-            byte[] raw = new byte[data.length - 1];
-            System.arraycopy(data, 1, raw, 0, raw.length);
-            return new Index(false, data, raw);
+            byte[] raw = new byte[ref.length - 1];
+            System.arraycopy(ref, 1, raw, 0, raw.length);
+            return new Index(false, ref, raw);
         }
         if (prefix == prefix2) {
-            return new Index(true, data, null);
+            return new Index(true, ref, null);
         }
         throw new IllegalArgumentException("to index error");
     }
@@ -53,8 +53,8 @@ public class Index {
         return index;
     }
 
-    public byte[] getData() {
-        return data;
+    public byte[] getRef() {
+        return ref;
     }
 
     public byte[] getRaw() {

@@ -27,11 +27,13 @@ import java.util.Map;
  */
 public class ZAddCommander extends Commander {
 
-    private static final byte[] script1 = ("").getBytes(StandardCharsets.UTF_8);
+    private static final byte[] script1 = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
+            "if ret1 then\n" +
+            "  local ret = redis.call('zadd', KEYS[1], unpack(ARGV));\n" +
+            "  return {'2', ret};\n" +
+            "end\n" +
+            "return {'1'};").getBytes(StandardCharsets.UTF_8);
 
-    private static final byte[] script2 = ("").getBytes(StandardCharsets.UTF_8);
-
-    private static final byte[] script3 = ("").getBytes(StandardCharsets.UTF_8);
 
     public ZAddCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -94,8 +96,8 @@ public class ZAddCommander extends Commander {
         if (encodeVersion == EncodeVersion.version_2) {
             return zaddVersion2(keyMeta, key, first, memberSize, memberMap);
         }
-        if (encodeVersion == EncodeVersion.version_3 || encodeVersion == EncodeVersion.version_4) {
-            return zaddVersion3Or4(keyMeta, key, memberSize, memberMap);
+        if (encodeVersion == EncodeVersion.version_3) {
+            return zaddVersion3(keyMeta, key, memberSize, memberMap);
         }
         return ErrorReply.INTERNAL_ERROR;
     }
@@ -251,17 +253,14 @@ public class ZAddCommander extends Commander {
                     KeyValue keyValue2 = new KeyValue(subKey2, member);
                     list.add(keyValue2);
                     byte[] zsetMemberIndexCacheKey = keyStruct.zsetMemberIndexCacheKey(keyMeta, key, index);
-                    Command cmd = cacheRedisTemplate.luaCommand(script2, new byte[][]{zsetMemberIndexCacheKey}, new byte[][]{member, zsetMemberCacheMillis()});
-                    cmdList.add(cmd);
-                    zsetIndexCmd[i] = score;
-                    zsetIndexCmd[i+1] = index.getData();
-                } else {
-                    zsetIndexCmd[i] = score;
-                    zsetIndexCmd[i+1] = member;
+                    cmdList.add(new Command(new byte[][]{RedisCommand.PSETEX.raw(), zsetMemberIndexCacheKey, zsetMemberCacheMillis(), member}));
                 }
+                zsetIndexCmd[i] = score;
+                zsetIndexCmd[i+1] = index.getRef();
                 i+=2;
             }
-            Command zsetIndexLuaCmd = cacheRedisTemplate.luaCommand(script3, new byte[][]{keyStruct.cacheKey(keyMeta, key)}, zsetIndexCmd);
+            byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+            Command zsetIndexLuaCmd = cacheRedisTemplate.luaCommand(script1, new byte[][]{cacheKey}, zsetIndexCmd);
             List<Command> commands = new ArrayList<>(cmdList.size() + 1);
             commands.add(zsetIndexLuaCmd);
             commands.addAll(cmdList);
@@ -301,9 +300,7 @@ public class ZAddCommander extends Commander {
         }
     }
 
-    private Reply zaddVersion3Or4(KeyMeta keyMeta, byte[] key, int memberSize, Map<BytesKey, byte[]> memberMap) {
-        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-        boolean writeCache = encodeVersion == EncodeVersion.version_3;
+    private Reply zaddVersion3(KeyMeta keyMeta, byte[] key, int memberSize, Map<BytesKey, byte[]> memberMap) {
         byte[][] rewriteCmd = new byte[memberSize*2+2][];
         rewriteCmd[0] = RedisCommand.ZADD.raw();
         rewriteCmd[1] = keyStruct.cacheKey(keyMeta, key);
@@ -316,13 +313,11 @@ public class ZAddCommander extends Commander {
             if (index.isIndex()) {
                 byte[] indexSubKey = keyStruct.zsetIndexSubKey(keyMeta, key, index);
                 list.add(new KeyValue(indexSubKey, member));
-                byte[] memberIndexCacheKey = keyStruct.zsetMemberIndexCacheKey(keyMeta, key, index);
-                if (writeCache) {
-                    memberIndexCacheWriteCommands.add(new Command(new byte[][]{RedisCommand.PSETEX.raw(), memberIndexCacheKey, zsetMemberCacheMillis(), member}));
-                }
+                byte[] zsetMemberIndexCacheKey = keyStruct.zsetMemberIndexCacheKey(keyMeta, key, index);
+                memberIndexCacheWriteCommands.add(new Command(new byte[][]{RedisCommand.PSETEX.raw(), zsetMemberIndexCacheKey, zsetMemberCacheMillis(), member}));
             }
             rewriteCmd[i] = entry.getValue();
-            rewriteCmd[i+1] = index.getData();
+            rewriteCmd[i+1] = index.getRef();
             i+=2;
         }
         if (!list.isEmpty()) {
@@ -342,4 +337,6 @@ public class ZAddCommander extends Commander {
     private byte[] zsetMemberCacheMillis() {
         return Utils.stringToBytes(String.valueOf(cacheConfig.zsetMemberCacheMillis()));
     }
+
+
 }

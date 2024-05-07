@@ -321,11 +321,13 @@ index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 
 ### commands
 
-| command |                                         info |    
-|:-------:|---------------------------------------------:|
-|  zadd   | `ZADD key score member [score member   ...]` |
-|  zcard  |                                  `ZCARD key` |
-| zrange  |         `ZRANGE key start stop [WITHSCORES]` |
+|    command    |                                                          info |    
+|:-------------:|--------------------------------------------------------------:|
+|     zadd      |                  `ZADD key score member [score member   ...]` |
+|     zcard     |                                                   `ZCARD key` |
+|    zrange     |                          `ZRANGE key start stop [WITHSCORES]` |
+| zrangebyscore | `ZRANGEBYSCORE key min max [WITHSCORES] [LIMIT offset count]` |
+|  zrangebylex  |                `ZRANGEBYLEX key min max [LIMIT offset count]` |
 
 ## list数据结构
 

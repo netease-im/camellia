@@ -46,7 +46,7 @@ public class ZCardCommander extends Commander {
             return ErrorReply.WRONG_TYPE;
         }
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-        if (encodeVersion == EncodeVersion.version_3 || encodeVersion == EncodeVersion.version_4) {
+        if (encodeVersion == EncodeVersion.version_3) {
             byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
             return sync(storeRedisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.ZCARD.raw(), cacheKey})));
         } else {

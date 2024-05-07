@@ -14,26 +14,26 @@ import com.netease.nim.camellia.redis.proxy.util.Utils;
 import java.nio.charset.StandardCharsets;
 
 /**
- * ZRANGE key start stop [WITHSCORES]
+ * ZRANGEBYSCORE key min max [WITHSCORES] [LIMIT offset count]
  * <p>
  * Created by caojiajun on 2024/4/11
  */
-public class ZRangeCommander extends ZRange0Commander {
+public class ZRangeByScoreCommander extends ZRange0Commander {
 
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
             "if ret1 then\n" +
-            "  local ret = redis.call('zrange', KEYS[1], unpack(ARGV));\n" +
+            "  local ret = redis.call('zrangebyscore', KEYS[1], unpack(ARGV));\n" +
             "  return {'2', ret};\n" +
             "end\n" +
             "return {'1'};").getBytes(StandardCharsets.UTF_8);
 
-    public ZRangeCommander(CommanderConfig commanderConfig) {
+    public ZRangeByScoreCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
     }
 
     @Override
     public RedisCommand redisCommand() {
-        return RedisCommand.ZRANGE;
+        return RedisCommand.ZRANGEBYSCORE;
     }
 
     @Override
@@ -54,15 +54,17 @@ public class ZRangeCommander extends ZRange0Commander {
             return ErrorReply.WRONG_TYPE;
         }
         boolean withScores = false;
-        if (objects.length == 5) {
-            withScores = Utils.bytesToString(objects[4]).equalsIgnoreCase("withscores");
-            if (!withScores) {
-                return ErrorReply.SYNTAX_ERROR;
+        if (objects.length >= 5) {
+            for (int i=4; i<objects.length; i++) {
+                withScores = Utils.bytesToString(objects[i]).equalsIgnoreCase("withscores");
+                if (withScores) {
+                    break;
+                }
             }
         }
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            return zrangeVersion0(keyMeta, key, objects, withScores);
+            return zrangeByScoreVersion0(keyMeta, key, objects, withScores);
         }
         if (encodeVersion == EncodeVersion.version_1) {
             return zrangeVersion1(keyMeta, key, objects, script);
@@ -76,7 +78,10 @@ public class ZRangeCommander extends ZRange0Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zrangeVersion0(KeyMeta keyMeta, byte[] key, byte[][] objects, boolean withScores) {
+    private Reply zrangeByScoreVersion0(KeyMeta keyMeta, byte[] key, byte[][] objects, boolean withScores) {
         return ErrorReply.SYNTAX_ERROR;
     }
+
+
+
 }
