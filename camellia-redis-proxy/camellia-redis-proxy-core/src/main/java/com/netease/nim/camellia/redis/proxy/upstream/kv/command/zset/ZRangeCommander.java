@@ -68,7 +68,7 @@ public class ZRangeCommander extends ZRange0Commander {
             return zrangeVersion1(keyMeta, key, objects, script);
         }
         if (encodeVersion == EncodeVersion.version_2) {
-            return zrangeVersion2(keyMeta, key, objects, withScores, script);
+            return zrangeVersion2(keyMeta, key, objects, withScores, script, true);
         }
         if (encodeVersion == EncodeVersion.version_3) {
             return zrangeVersion3(keyMeta, key, objects, withScores);

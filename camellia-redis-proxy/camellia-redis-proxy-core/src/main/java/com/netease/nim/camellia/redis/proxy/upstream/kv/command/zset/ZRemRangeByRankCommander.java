@@ -3,7 +3,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
-import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
+import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -13,32 +13,32 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import java.nio.charset.StandardCharsets;
 
 /**
- * ZREVRANGEBYLEX key max min [LIMIT offset count]
+ * ZREMRANGEBYRANK key start stop
  * <p>
- * Created by caojiajun on 2024/4/11
+ * Created by caojiajun on 2024/5/8
  */
-public class ZRevRangeByLexCommander extends ZRange0Commander {
+public class ZRemRangeByRankCommander extends ZRemRange0Commander {
 
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
             "if ret1 then\n" +
-            "  local ret = redis.call('zrevrangebylex', KEYS[1], unpack(ARGV));\n" +
+            "  local ret = redis.call('zrange', KEYS[1], unpack(ARGV));\n" +
             "  return {'2', ret};\n" +
             "end\n" +
             "return {'1'};").getBytes(StandardCharsets.UTF_8);
 
-    public ZRevRangeByLexCommander(CommanderConfig commanderConfig) {
+    public ZRemRangeByRankCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
     }
 
     @Override
     public RedisCommand redisCommand() {
-        return RedisCommand.ZREVRANGEBYLEX;
+        return RedisCommand.ZREMRANGEBYRANK;
     }
 
     @Override
     protected boolean parse(Command command) {
         byte[][] objects = command.getObjects();
-        return objects.length >= 4;
+        return objects.length == 4;
     }
 
     @Override
@@ -47,29 +47,31 @@ public class ZRevRangeByLexCommander extends ZRange0Commander {
         byte[] key = objects[1];
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
-            return MultiBulkReply.EMPTY;
+            return IntegerReply.REPLY_0;
         }
         if (keyMeta.getKeyType() != KeyType.zset) {
             return ErrorReply.WRONG_TYPE;
         }
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            return zrevrangeByLexVersion0(keyMeta, key, objects);
+            return zremrangeByRank(keyMeta, key, objects);
         }
+        byte[][] zrangeArgs = new byte[objects.length][];
+        System.arraycopy(objects, 0, zrangeArgs, 0, zrangeArgs.length);
+        zrangeArgs[0] = RedisCommand.ZRANGE.raw();
         if (encodeVersion == EncodeVersion.version_1) {
-            return zrangeVersion1(keyMeta, key, objects, script);
+            return zremrangeVersion1(keyMeta, key, zrangeArgs, script);
         }
         if (encodeVersion == EncodeVersion.version_2) {
-            return zrangeVersion2(keyMeta, key, objects, false, script, true);
+            return zremrangeVersion2(keyMeta, key, zrangeArgs, script);
         }
         if (encodeVersion == EncodeVersion.version_3) {
-            return zrangeVersion3(keyMeta, key, objects, false);
+            return zremrangeVersion3(keyMeta, key, zrangeArgs);
         }
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zrevrangeByLexVersion0(KeyMeta keyMeta, byte[] key, byte[][] objects) {
+    private Reply zremrangeByRank(KeyMeta keyMeta, byte[] key, byte[][] objects) {
         return ErrorReply.SYNTAX_ERROR;
     }
-
 }

@@ -334,6 +334,9 @@ index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 |    zrevrange     |                          `ZREVRANGE key start stop [WITHSCORES]` |
 | zrevrangebyscore | `ZREVRANGEBYSCORE key min max [WITHSCORES] [LIMIT offset count]` |
 |  zrevrangebylex  |                `ZREVRANGEBYLEX key min max [LIMIT offset count]` |
+| zremrangebyrank  |                                 `ZREMRANGEBYRANK key start stop` |
+| zremrangebyscore |                                   `ZREMRANGEBYSCORE key min max` |
+|  zremrangebylex  |                                     `ZREMRANGEBYLEX key min max` |
 
 ## list数据结构
 

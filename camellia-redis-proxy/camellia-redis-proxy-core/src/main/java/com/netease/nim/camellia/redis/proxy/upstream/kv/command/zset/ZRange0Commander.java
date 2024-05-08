@@ -66,7 +66,7 @@ public abstract class ZRange0Commander extends Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    protected final Reply zrangeVersion2(KeyMeta keyMeta, byte[] key, byte[][] objects, boolean withScores, byte[] script) {
+    protected final Reply zrangeVersion2(KeyMeta keyMeta, byte[] key, byte[][] objects, boolean withScores, byte[] script, boolean forRead) {
         byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
         byte[][] args = new byte[objects.length - 2][];
         System.arraycopy(objects, 2, args, 0, args.length);
@@ -89,8 +89,10 @@ public abstract class ZRange0Commander extends Commander {
             Index index = Index.fromRaw(member);
             cmd[i + 1] = index.getRef();
             if (index.isIndex()) {
-                byte[] zsetMemberIndexCacheKey = keyStruct.zsetMemberIndexCacheKey(keyMeta, key, index);
-                refCommands.add(new Command(new byte[][]{RedisCommand.PSETEX.raw(), zsetMemberIndexCacheKey, zsetMemberCacheMillis(), member}));
+                if (forRead) {
+                    byte[] zsetMemberIndexCacheKey = keyStruct.zsetMemberIndexCacheKey(keyMeta, key, index);
+                    refCommands.add(new Command(new byte[][]{RedisCommand.PSETEX.raw(), zsetMemberIndexCacheKey, zsetMemberCacheMillis(), member}));
+                }
             }
             i += 2;
         }
