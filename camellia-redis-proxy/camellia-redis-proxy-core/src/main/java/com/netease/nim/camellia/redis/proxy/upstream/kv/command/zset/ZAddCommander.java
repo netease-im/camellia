@@ -107,7 +107,7 @@ public class ZAddCommander extends Commander {
             List<KeyValue> list = new ArrayList<>(memberSize*2);
             for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
-                byte[] score = entry.getValue();
+                byte[] score = BytesUtils.toBytes(Utils.bytesToDouble(entry.getValue()));
                 byte[] subKey1 = keyStruct.zsetMemberSubKey1(keyMeta, key, member);
                 byte[] subKey2 = keyStruct.zsetMemberSubKey2(keyMeta, key, member, score);
                 KeyValue keyValue1 = new KeyValue(subKey1, score);
@@ -123,7 +123,7 @@ public class ZAddCommander extends Commander {
             List<KeyValue> list = new ArrayList<>(memberSize * 2);
             for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
-                byte[] score = entry.getValue();
+                byte[] score = BytesUtils.toBytes(Utils.bytesToDouble(entry.getValue()));
                 byte[] subKey1 = keyStruct.zsetMemberSubKey1(keyMeta, key, member);
                 byte[] subKey2 = keyStruct.zsetMemberSubKey2(keyMeta, key, member, score);
                 KeyValue keyValue1 = new KeyValue(subKey1, score);
@@ -137,12 +137,7 @@ public class ZAddCommander extends Commander {
             int existsCount = Utils.count(exists);
             int add = memberSize - existsCount;
             kvClient.batchPut(list);
-            if (add > 0) {
-                int count = BytesUtils.toInt(keyMeta.getExtra()) + add;
-                byte[] extra = BytesUtils.toBytes(count);
-                keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
-                keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
-            }
+            updateKeyMeta(keyMeta, key, add);
             return IntegerReply.parse(add);
         }
     }
@@ -209,12 +204,7 @@ public class ZAddCommander extends Commander {
                 }
             }
             kvClient.batchPut(list);
-            if (add > 0) {
-                long count = BytesUtils.toInt(keyMeta.getExtra()) + add;
-                byte[] extra = BytesUtils.toBytes(count);
-                keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
-                keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
-            }
+            updateKeyMeta(keyMeta, key, add);
             return IntegerReply.parse(add);
         }
     }
@@ -289,13 +279,8 @@ public class ZAddCommander extends Commander {
                 int existsCount = Utils.count(exists);
                 add = memberSize - existsCount;
             }
-            if (add > 0) {
-                long count = BytesUtils.toInt(keyMeta.getExtra()) + add;
-                byte[] extra = BytesUtils.toBytes(count);
-                keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
-                keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
-            }
             kvClient.batchPut(list);
+            updateKeyMeta(keyMeta, key, add);
             return IntegerReply.parse(add);
         }
     }
@@ -334,9 +319,17 @@ public class ZAddCommander extends Commander {
         return sync(storeRedisTemplate.sendCommand(new Command(rewriteCmd)));
     }
 
+    private void updateKeyMeta(KeyMeta keyMeta, byte[] key, int add) {
+        if (add > 0) {
+            int count = BytesUtils.toInt(keyMeta.getExtra()) + add;
+            byte[] extra = BytesUtils.toBytes(count);
+            keyMeta = new KeyMeta(keyMeta.getEncodeVersion(), keyMeta.getKeyType(), keyMeta.getKeyVersion(), keyMeta.getExpireTime(), extra);
+            keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
+        }
+    }
+
     private byte[] zsetMemberCacheMillis() {
         return Utils.stringToBytes(String.valueOf(cacheConfig.zsetMemberCacheMillis()));
     }
-
 
 }
