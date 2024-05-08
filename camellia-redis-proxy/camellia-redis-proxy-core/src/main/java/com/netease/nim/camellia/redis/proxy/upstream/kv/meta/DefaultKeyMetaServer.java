@@ -9,6 +9,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.util.concurrent.CompletableFuture;
@@ -184,6 +185,12 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
         KeyMeta keyMeta = KeyMeta.fromBytes(keyValue.getValue());
         if (keyMeta == null || keyMeta.isExpire()) {
             kvClient.delete(metaKey);
+            if (cacheConfig.isMetaCacheEnable()) {
+                Reply reply = sync(redisTemplate.sendDel(metaKey));
+                if (reply instanceof ErrorReply) {
+                    ErrorLogCollector.collect(DefaultKeyMetaServer.class, "checkKeyMetaExpired error, error = " + ((ErrorReply) reply).getError());
+                }
+            }
         }
     }
 

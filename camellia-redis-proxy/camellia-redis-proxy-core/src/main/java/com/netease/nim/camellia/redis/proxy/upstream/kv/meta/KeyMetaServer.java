@@ -1,6 +1,7 @@
 package com.netease.nim.camellia.redis.proxy.upstream.kv.meta;
 
 /**
+ * key-meta-server, crud of key-meta
  * Created by caojiajun on 2024/4/9
  */
 public interface KeyMetaServer {

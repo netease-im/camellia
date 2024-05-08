@@ -18,6 +18,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
+import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 import com.netease.nim.camellia.redis.proxy.util.ExecutorUtils;
 import com.netease.nim.camellia.tools.executor.CamelliaHashedExecutor;
 import com.netease.nim.camellia.tools.executor.CamelliaThreadFactory;
@@ -54,8 +55,7 @@ public class KvGcExecutor {
     private final ThreadPoolExecutor submitExecutor;
     private final ScheduledThreadPoolExecutor scheduleExecutor;
     private RedisTemplate redisTemplate;
-    private final boolean gcScheduleEnable;
-    private final int gcScheduleIntervalSeconds;
+    private long lastGcTime = 0;
 
     public KvGcExecutor(KVClient kvClient, KeyStruct keyStruct, KvConfig kvConfig) {
         this.kvClient = kvClient;
@@ -67,8 +67,7 @@ public class KvGcExecutor {
                 new LinkedBlockingQueue<>(100000), new CamelliaThreadFactory("camellia-kv-gc-submit"), new ThreadPoolExecutor.AbortPolicy());
         this.scheduleExecutor = new ScheduledThreadPoolExecutor(1, new CamelliaThreadFactory("camellia-kv-gc-scheduler"));
 
-        this.gcScheduleEnable = ProxyDynamicConf.getBoolean("kv.gc.schedule.enable", false);
-        this.gcScheduleIntervalSeconds = ProxyDynamicConf.getInt("kv.gc.schedule.interval.seconds", 24*3600);
+        boolean gcScheduleEnable = ProxyDynamicConf.getBoolean("kv.gc.schedule.enable", false);
         if (gcScheduleEnable) {
             if (!kvClient.supportCheckAndDelete() && !kvClient.supportTTL()) {
                 String url = ProxyDynamicConf.getString("kv.gc.clean.expired.key.meta.target.proxy.cluster.url", null);
@@ -83,35 +82,49 @@ public class KvGcExecutor {
     }
 
     public void start() {
-        if (gcScheduleEnable) {
-            scheduleExecutor.scheduleAtFixedRate(() -> {
-                try {
-                    if (!kvClient.supportTTL()) {
-                        scanMetaKeys();
-                    }
-                    scanSubKeys();
-                } catch (Throwable e) {
-                    logger.error("gc schedule error", e);
+        scheduleExecutor.scheduleAtFixedRate(() -> {
+            try {
+                boolean gcScheduleEnable = ProxyDynamicConf.getBoolean("kv.gc.schedule.enable", false);
+                if (!gcScheduleEnable) {
+                    return;
                 }
-            }, gcScheduleIntervalSeconds, gcScheduleIntervalSeconds, TimeUnit.SECONDS);
-        }
+                int gcScheduleIntervalSeconds = ProxyDynamicConf.getInt("kv.gc.schedule.interval.seconds", 24 * 3600);
+                if (System.currentTimeMillis() - lastGcTime < gcScheduleIntervalSeconds*1000L) {
+                    return;
+                }
+                boolean scanMetaKeysSuccess = true;
+                boolean scanSubKeysSuccess = true;
+                if (!kvClient.supportTTL()) {
+                    scanMetaKeysSuccess = scanMetaKeys();
+                }
+                scanSubKeysSuccess = scanSubKeys();
+                if (scanMetaKeysSuccess && scanSubKeysSuccess) {
+                    lastGcTime = System.currentTimeMillis();
+                }
+            } catch (Throwable e) {
+                logger.error("gc schedule error", e);
+            }
+        }, 60, 60, TimeUnit.SECONDS);
     }
 
     public void submitSubKeyDeleteTask(byte[] key, KeyMeta keyMeta) {
         try {
+            if (keyMeta.getKeyType() == KeyType.string) {
+                return;
+            }
             submitExecutor.submit(() -> {
                 try {
                     deleteExecutor.submit(key, new SubKeyDeleteTask(key, keyMeta, kvClient, keyStruct, kvConfig));
                 } catch (Exception e) {
-                    logger.warn("execute delete task error, ex = {}", e.toString());
+                    logger.warn("execute sub key delete task error, ex = {}", e.toString());
                 }
             });
         } catch (Exception e) {
-            logger.error("submit key delete task error");
+            ErrorLogCollector.collect(KvGcExecutor.class, "submit sub key delete task error", e);
         }
     }
 
-    private void scanMetaKeys() {
+    private boolean scanMetaKeys() {
         long startTime = System.currentTimeMillis();
         logger.info("scan meta keys start");
         long deleteMetaKeys = 0;
@@ -159,12 +172,14 @@ public class KvGcExecutor {
                 TimeUnit.MILLISECONDS.sleep(kvConfig.gcBatchSleepMs());
             }
             logger.info("scan meta keys end, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteMetaKeys);
+            return true;
         } catch (Throwable e) {
             logger.error("scan meta keys error, spendMs = {}, deleteMetaKeys = {}", System.currentTimeMillis() - startTime, deleteMetaKeys, e);
+            return false;
         }
     }
 
-    private void scanSubKeys() {
+    private boolean scanSubKeys() {
         long startTime = System.currentTimeMillis();
         logger.info("scan sub keys start");
         long deleteSubKeys = 0;
@@ -202,8 +217,10 @@ public class KvGcExecutor {
             }
             cacheMap.clear();
             logger.info("scan sub keys end, spendMs = {}, deleteSubKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys);
+            return true;
         } catch (Throwable e) {
             logger.error("scan sub keys error, spendMs = {}, deleteSubKeys = {}", System.currentTimeMillis() - startTime, deleteSubKeys);
+            return false;
         }
     }
 

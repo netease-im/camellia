@@ -4,6 +4,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.meta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 
 /**
+ * key-meta
  * Created by caojiajun on 2024/4/7
  */
 public class KeyMeta {
@@ -26,23 +27,23 @@ public class KeyMeta {
         this.extra = extra;
     }
 
-    public KeyType getKeyType() {
+    public final KeyType getKeyType() {
         return keyType;
     }
 
-    public long getExpireTime() {
+    public final long getExpireTime() {
         return expireTime;
     }
 
-    public EncodeVersion getEncodeVersion() {
+    public final EncodeVersion getEncodeVersion() {
         return encodeVersion;
     }
 
-    public long getKeyVersion() {
+    public final long getKeyVersion() {
         return keyVersion;
     }
 
-    public byte[] getExtra() {
+    public final byte[] getExtra() {
         return extra;
     }
 
@@ -50,14 +51,14 @@ public class KeyMeta {
         this.raw = raw;
     }
 
-    public boolean isExpire() {
+    public final boolean isExpire() {
         if (expireTime < 0) {
             return false;
         }
         return expireTime <= System.currentTimeMillis();
     }
 
-    public byte[] toBytes() {
+    public final byte[] toBytes() {
         if (raw != null) {
             return raw;
         }
