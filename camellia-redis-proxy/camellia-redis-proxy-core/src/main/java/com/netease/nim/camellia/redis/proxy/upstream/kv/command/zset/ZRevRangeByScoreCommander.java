@@ -9,30 +9,31 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 
 import java.nio.charset.StandardCharsets;
 
 /**
- * ZRANGEBYLEX key min max [LIMIT offset count]
+ * ZREVRANGEBYSCORE key max min [WITHSCORES] [LIMIT offset count]
  * <p>
  * Created by caojiajun on 2024/4/11
  */
-public class ZRangeByLexCommander extends ZRange0Commander {
+public class ZRevRangeByScoreCommander extends ZRange0Commander {
 
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
             "if ret1 then\n" +
-            "  local ret = redis.call('zrangebylex', KEYS[1], unpack(ARGV));\n" +
+            "  local ret = redis.call('zrevrangebyscore', KEYS[1], unpack(ARGV));\n" +
             "  return {'2', ret};\n" +
             "end\n" +
             "return {'1'};").getBytes(StandardCharsets.UTF_8);
 
-    public ZRangeByLexCommander(CommanderConfig commanderConfig) {
+    public ZRevRangeByScoreCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
     }
 
     @Override
     public RedisCommand redisCommand() {
-        return RedisCommand.ZRANGEBYLEX;
+        return RedisCommand.ZREVRANGEBYSCORE;
     }
 
     @Override
@@ -52,23 +53,32 @@ public class ZRangeByLexCommander extends ZRange0Commander {
         if (keyMeta.getKeyType() != KeyType.zset) {
             return ErrorReply.WRONG_TYPE;
         }
+        boolean withScores = false;
+        if (objects.length >= 5) {
+            for (int i=4; i<objects.length; i++) {
+                withScores = Utils.bytesToString(objects[i]).equalsIgnoreCase("withscores");
+                if (withScores) {
+                    break;
+                }
+            }
+        }
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            return zrangeByLexVersion0(keyMeta, key, objects);
+            return zrevrangeByScoreVersion0(keyMeta, key, objects, withScores);
         }
         if (encodeVersion == EncodeVersion.version_1) {
             return zrangeVersion1(keyMeta, key, objects, script);
         }
         if (encodeVersion == EncodeVersion.version_2) {
-            return zrangeVersion2(keyMeta, key, objects, false, script);
+            return zrangeVersion2(keyMeta, key, objects, withScores, script);
         }
         if (encodeVersion == EncodeVersion.version_3) {
-            return zrangeVersion3(keyMeta, key, objects, false);
+            return zrangeVersion3(keyMeta, key, objects, withScores);
         }
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zrangeByLexVersion0(KeyMeta keyMeta, byte[] key, byte[][] objects) {
+    private Reply zrevrangeByScoreVersion0(KeyMeta keyMeta, byte[] key, byte[][] objects, boolean withScores) {
         return ErrorReply.SYNTAX_ERROR;
     }
 

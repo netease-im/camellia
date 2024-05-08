@@ -11,9 +11,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.GetComman
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.PSetExCommander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.SetCommander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.SetExCommander;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.ZAddCommander;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.ZCardCommander;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.ZRangeCommander;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
 
@@ -62,6 +60,11 @@ public class Commanders {
         initCommander(new ZAddCommander(commanderConfig));
         initCommander(new ZCardCommander(commanderConfig));
         initCommander(new ZRangeCommander(commanderConfig));
+        initCommander(new ZRangeByScoreCommander(commanderConfig));
+        initCommander(new ZRangeByLexCommander(commanderConfig));
+        initCommander(new ZRevRangeCommander(commanderConfig));
+        initCommander(new ZRevRangeByScoreCommander(commanderConfig));
+        initCommander(new ZRevRangeByLexCommander(commanderConfig));
 
     }
 

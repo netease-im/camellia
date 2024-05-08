@@ -13,26 +13,26 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
 import java.nio.charset.StandardCharsets;
 
 /**
- * ZRANGEBYLEX key min max [LIMIT offset count]
+ * ZREVRANGEBYLEX key max min [LIMIT offset count]
  * <p>
  * Created by caojiajun on 2024/4/11
  */
-public class ZRangeByLexCommander extends ZRange0Commander {
+public class ZRevRangeByLexCommander extends ZRange0Commander {
 
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
             "if ret1 then\n" +
-            "  local ret = redis.call('zrangebylex', KEYS[1], unpack(ARGV));\n" +
+            "  local ret = redis.call('zrevrangebylex', KEYS[1], unpack(ARGV));\n" +
             "  return {'2', ret};\n" +
             "end\n" +
             "return {'1'};").getBytes(StandardCharsets.UTF_8);
 
-    public ZRangeByLexCommander(CommanderConfig commanderConfig) {
+    public ZRevRangeByLexCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
     }
 
     @Override
     public RedisCommand redisCommand() {
-        return RedisCommand.ZRANGEBYLEX;
+        return RedisCommand.ZREVRANGEBYLEX;
     }
 
     @Override
@@ -54,7 +54,7 @@ public class ZRangeByLexCommander extends ZRange0Commander {
         }
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            return zrangeByLexVersion0(keyMeta, key, objects);
+            return zrevrangeByLexVersion0(keyMeta, key, objects);
         }
         if (encodeVersion == EncodeVersion.version_1) {
             return zrangeVersion1(keyMeta, key, objects, script);
@@ -68,7 +68,7 @@ public class ZRangeByLexCommander extends ZRange0Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zrangeByLexVersion0(KeyMeta keyMeta, byte[] key, byte[][] objects) {
+    private Reply zrevrangeByLexVersion0(KeyMeta keyMeta, byte[] key, byte[][] objects) {
         return ErrorReply.SYNTAX_ERROR;
     }
 
