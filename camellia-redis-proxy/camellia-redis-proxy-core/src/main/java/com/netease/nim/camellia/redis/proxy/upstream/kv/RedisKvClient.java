@@ -130,6 +130,29 @@ public class RedisKvClient implements IUpstreamClient {
                 }
                 future.complete(new MultiBulkReply(replies.toArray(new Reply[0])));
             });
+        } else if (redisCommand == RedisCommand.MSET) {
+            byte[][] objects = command.getObjects();
+            if (objects.length < 3 || objects.length % 2 == 0) {
+                future.complete(ErrorReply.argNumWrong(redisCommand));
+                return;
+            }
+            List<CompletableFuture<Reply>> futures = new ArrayList<>(keys.size());
+            for (int i=1; i<objects.length; i+=2) {
+                byte[] key = objects[i];
+                byte[] value = objects[i+1];
+                CompletableFuture<Reply> f = new CompletableFuture<>();
+                sendCommand(key, new Command(new byte[][]{RedisCommand.SET.raw(), key, value}), f);
+                futures.add(f);
+            }
+            CompletableFutureUtils.allOf(futures).thenAccept(replies -> {
+                for (Reply reply : replies) {
+                    if (reply instanceof ErrorReply) {
+                        future.complete(reply);
+                        return;
+                    }
+                }
+                future.complete(StatusReply.OK);
+            });
         } else {
             future.complete(ErrorReply.NOT_SUPPORT);
         }

@@ -76,13 +76,15 @@ kv.key.meta.cache.millis=600000
 * 只有key-meta，没有sub-key
 * 没有专门的缓存结构，依赖于key-meta本身的缓存
 
-| command |                                                                                                                                  info |
-|:-------:|--------------------------------------------------------------------------------------------------------------------------------------:|
-|  setex  |                                                                                                             `SETEX key seconds value` |
-| psetex  |                                                                                                       `PSETEX key milliseconds value` | 
-|   set   |  `SET key value [NX \| XX] [GET] [EX seconds \| PX milliseconds \| EXAT unix-time-seconds \| PXAT unix-time-milliseconds \| KEEPTTL]` |
-|   get   |                                                                                                                             `GET key` |
-|  mget   |                                                                                                                  `MGET key [key ...]` |
+| command |                                                                                                                                              info |
+|:-------:|--------------------------------------------------------------------------------------------------------------------------------------------------:|
+|  setex  |                                                                                                                         `SETEX key seconds value` |
+| psetex  |                                                                                                                   `PSETEX key milliseconds value` | 
+|   set   |              `SET key value [NX \| XX] [GET] [EX seconds \| PX milliseconds \| EXAT unix-time-seconds \| PXAT unix-time-milliseconds \| KEEPTTL]` |
+|   get   |                                                                                                                                         `GET key` |
+|  mget   |                                                                                                                              `MGET key [key ...]` |
+|  mset   |                                                                                                                  `MSET key value [key value ...]` |
+|  setnx  |                                                                                                                                 `SETNX key value` |
 
 ## hash数据结构
 
@@ -112,9 +114,10 @@ kv.cache.hgetall.cache.millis=30000
 |:----------------------------------------------------:|:-----------:|
 | s# + namespace + key.len + key + key-version + field | field-value |
 
-* 特点：encode-version固定为0，key-type固定为2
-* 优点：hlen快，hset/hdel返回结果准确
-* 缺点：写操作的读放大多（每次写入都需要读一下是否是已经存在的field还是新的field，如hset操作，前者返回0，后者返回1）
+* encode-version固定为0，key-type固定为2
+* 因为key-meta中记录了field-count，因此hlen快
+* hset/hdel返回结果准确
+* 写操作的读放大多，因为每次写入都需要读一下是否是已经存在的field还是新的field，如hset操作，前者返回0，后者返回1
 
 ### version-1
 
@@ -131,9 +134,9 @@ kv.cache.hgetall.cache.millis=30000
 |:----------------------------------------------------:|:-----------:|
 | s# + namespace + key.len + key + key-version + field | field-value |
 
-* 特点：encode-version固定为1，key-type固定为2
-* 优点：写入快
-* 缺点：hlen慢，hset/hdel等操作返回结果不准确，比如hset操作，不管写入的是已存在的field还是新的field，都返回1
+* encode-version固定为1，key-type固定为2
+* 因为不在key-meta中记录field-count，纯覆盖写，写入快，但是导致了hlen慢
+* hset/hdel等操作返回结果不准确，比如hset操作，不管写入的是已存在的field还是新的field，都返回1
 
 ### version-2和version-3
 
@@ -180,7 +183,7 @@ kv.cache.hgetall.cache.millis=30000
 zset有5种编码结构
 
 ```properties
-##5种编码模式，0、1、2、3、4，默认0
+##4种编码模式，0、1、2、3，默认0
 ##0这种编码结构，需要底层kv存储支持reverse-scan，当前tikv和obkv不支持
 kv.zset.key.meta.version=0
 kv.cache.zset.member.cache.millis=300000
@@ -206,9 +209,10 @@ kv.cache.zset.range.cache.millis=300000
 |:-------------------------------------------------------------:|:-----:|
 | s# + namespace + key.len + key + key-version + score + member | null  |
 
-* 特点：encode-version固定为0，key-type固定为3
-* 优点：不依赖任何redis，zcard快
-* 缺点：写操作的读放大多（每次写入都需要读一下是否是已经存在的member还是新的member，如zadd操作，前者返回0，后者返回1）
+* encode-version固定为0，key-type固定为3
+* 不依赖任何redis
+* key-meta中记录了member-count，zcard快
+* 写操作的读放大多，因为每次写入都需要读一下是否是已经存在的member还是新的member，如zadd操作，前者返回0，后者返回1
 
 ### version-1
 
@@ -231,9 +235,9 @@ kv.cache.zset.range.cache.millis=300000
 |:---------------------------------------:|:----------:|------------:|
 |   c# + namespace + key + key-version    |    zset    |    full-zet |
 
-* 特点：encode-version固定为1，key-type固定为3
-* 特点：依赖redis做复杂的zset操作
-* 缺点：当redis过期时，需要从kv中全量导出所有数据重建cache
+* encode-version固定为1，key-type固定为3
+* 依赖redis做复杂的zset操作
+* 当redis过期时，需要从kv中全量导出所有数据重建cache
 
 ### version-2
 
@@ -272,12 +276,12 @@ index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 |:------------------------------------------:|:----------:|------------:|
 | c# + namespace + key + key-version + index |   string   |      member |
 
-* 特点：encode-version固定为2，key-type固定为3
-* 特点：依赖redis做复杂的zset操作
-* 优点：redis纯缓存使用，可以换出，且redis里可以只存部分数据
-* 缺点：当redis过期时，需要从kv中导出数据重建cache（可以只导出index）
+* encode-version固定为2，key-type固定为3
+* 依赖redis做复杂的zset操作
+* redis纯缓存使用，可以换出，且redis里可以只存部分数据
+* 当redis过期时，需要从kv中导出数据重建cache（可以只导出index）
 
-### version-3/version-4
+### version-3
 
 #### key-meta
 
@@ -313,11 +317,10 @@ index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 |:------------------------------------------:|:----------:|------------:|
 | c# + namespace + key + key-version + index |   string   |      member |
 
-* 特点：encode-version固定为3或者4，key-type固定为3
-* 特点：依赖redis做复杂的zset操作
-* 特点：3和4的区别在于，zadd时，是否立即写入index-member缓存
-* 优点：redis里可以只存部分数据，对于kv只有get/put/delete，没有scan操作
-* 缺点：redis-index-zset-store-key不属于cache，属于storage
+* encode-version固定为3，key-type固定为3
+* 依赖redis做复杂的zset操作
+* redis里可以只存部分数据，对于kv只有get/put/delete，没有scan操作
+* redis-index-zset-store-key不属于cache，属于storage，需要确保storage部分redis内存足够，否则可能被驱逐
 
 ### commands
 

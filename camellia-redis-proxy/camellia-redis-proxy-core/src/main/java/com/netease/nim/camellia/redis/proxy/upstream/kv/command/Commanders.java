@@ -7,10 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.db.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash.*;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.GetCommander;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.PSetExCommander;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.SetCommander;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.SetExCommander;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.command.string.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.util.ErrorLogCollector;
@@ -46,6 +43,7 @@ public class Commanders {
         initCommander(new PSetExCommander(commanderConfig));
         initCommander(new SetExCommander(commanderConfig));
         initCommander(new SetCommander(commanderConfig));
+        initCommander(new SetNxCommander(commanderConfig));
 
         //hash
         initCommander(new HSetCommander(commanderConfig));
