@@ -184,7 +184,7 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private void updateKeyMeta(KeyMeta keyMeta, byte[] key, int size) {
+    protected final void updateKeyMeta(KeyMeta keyMeta, byte[] key, int size) {
         if (size <= 0) {
             keyMetaServer.deleteKeyMeta(key);
             return;
