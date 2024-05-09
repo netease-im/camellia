@@ -1,5 +1,6 @@
 package com.netease.nim.camellia.redis.proxy.command;
 
+import com.netease.nim.camellia.redis.proxy.cluster.DefaultProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProcessor;
 import com.netease.nim.camellia.redis.proxy.cluster.ProxyClusterModeProvider;
 import com.netease.nim.camellia.redis.proxy.conf.*;
@@ -9,6 +10,7 @@ import com.netease.nim.camellia.redis.proxy.monitor.*;
 import com.netease.nim.camellia.redis.proxy.netty.ChannelInfo;
 import com.netease.nim.camellia.redis.proxy.plugin.DefaultProxyPluginFactory;
 import com.netease.nim.camellia.redis.proxy.plugin.ProxyPluginInitResp;
+import com.netease.nim.camellia.redis.proxy.sentinel.DefaultProxySentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.sentinel.ProxySentinelModeProcessor;
 import com.netease.nim.camellia.redis.proxy.upstream.IUpstreamClientTemplateFactory;
 import com.netease.nim.camellia.redis.proxy.util.BeanInitUtils;
@@ -50,9 +52,9 @@ public class CommandInvoker implements ICommandInvoker {
         if (serverProperties.isClusterModeEnable()) {
             ProxyClusterModeProvider provider = (ProxyClusterModeProvider)serverProperties.getProxyBeanFactory()
                     .getBean(BeanInitUtils.parseClass(serverProperties.getClusterModeProviderClassName()));
-            clusterModeProcessor = new ProxyClusterModeProcessor(provider);
+            clusterModeProcessor = new DefaultProxyClusterModeProcessor(provider);
         } else if (serverProperties.isSentinelModeEnable()) {
-            sentinelModeProcessor = new ProxySentinelModeProcessor();
+            sentinelModeProcessor = new DefaultProxySentinelModeProcessor();
         }
 
         //init ProxyNodesDiscovery
