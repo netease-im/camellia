@@ -76,7 +76,7 @@ public class HMGetCommander extends Commander {
             List<BytesKey> list = new ArrayList<>(objects.length - 2);
             byte[][] subKeys = new byte[objects.length - 2][];
             for (int i=2; i<objects.length; i++) {
-                subKeys[i-2] = keyStruct.hashFieldSubKey(keyMeta, key, objects[i]);
+                subKeys[i-2] = keyDesign.hashFieldSubKey(keyMeta, key, objects[i]);
                 list.add(new BytesKey(subKeys[i-2]));
             }
             List<KeyValue> keyValues = kvClient.batchGet(subKeys);
@@ -100,7 +100,7 @@ public class HMGetCommander extends Commander {
         byte[][] fields = new byte[objects.length - 2][];
         System.arraycopy(objects, 2, fields, 0, objects.length - 2);
         {
-            byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             Reply reply = sync(cacheRedisTemplate.sendLua(script1, new byte[][]{cacheKey}, fields));
             if (reply instanceof ErrorReply) {
                 return reply;
@@ -117,7 +117,7 @@ public class HMGetCommander extends Commander {
         {
             List<Command> commandList = new ArrayList<>(fields.length);
             for (byte[] field : fields) {
-                byte[] hashFieldCacheKey = keyStruct.hashFieldCacheKey(keyMeta, key, field);
+                byte[] hashFieldCacheKey = keyDesign.hashFieldCacheKey(keyMeta, key, field);
                 Command cmd = cacheRedisTemplate.luaCommand(script2, new byte[][]{hashFieldCacheKey}, new byte[][]{hgetCacheMillis()});
                 commandList.add(cmd);
             }
@@ -146,7 +146,7 @@ public class HMGetCommander extends Commander {
             byte[][] subKeys = new byte[cacheMissingFields.size()][];
             int i=0;
             for (byte[] cacheMissingField : cacheMissingFields) {
-                byte[] subKey = keyStruct.hashFieldSubKey(keyMeta, key, cacheMissingField);
+                byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, cacheMissingField);
                 subKeys[i] = subKey;
                 i ++;
             }
@@ -161,10 +161,10 @@ public class HMGetCommander extends Commander {
                 if (v == null) {
                     continue;
                 }
-                byte[] field = keyStruct.decodeHashFieldBySubKey(k, key);
+                byte[] field = keyDesign.decodeHashFieldBySubKey(k, key);
                 hitMap.put(new BytesKey(field), new BulkReply(v));
 
-                byte[] hashFieldCacheKey = keyStruct.hashFieldCacheKey(keyMeta, key, field);
+                byte[] hashFieldCacheKey = keyDesign.hashFieldCacheKey(keyMeta, key, field);
                 Command cmd = new Command(new byte[][]{RedisCommand.PSETEX.raw(), hashFieldCacheKey, v});
                 commands.add(cmd);
             }

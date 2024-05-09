@@ -31,7 +31,7 @@ public abstract class ZRange0Commander extends Commander {
     }
 
     protected final Reply zrangeVersion1(KeyMeta keyMeta, byte[] key, byte[][] objects, byte[] script) {
-        byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
         byte[][] args = new byte[objects.length - 2][];
         System.arraycopy(objects, 2, args, 0, args.length);
         Reply reply = zrangeFromRedis(cacheKey, script, args);
@@ -67,7 +67,7 @@ public abstract class ZRange0Commander extends Commander {
     }
 
     protected final Reply zrangeVersion2(KeyMeta keyMeta, byte[] key, byte[][] objects, boolean withScores, byte[] script, boolean forRead) {
-        byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
         byte[][] args = new byte[objects.length - 2][];
         System.arraycopy(objects, 2, args, 0, args.length);
         Reply reply = zrangeFromRedis(cacheKey, script, args);
@@ -90,7 +90,7 @@ public abstract class ZRange0Commander extends Commander {
             cmd[i + 1] = index.getRef();
             if (index.isIndex()) {
                 if (forRead) {
-                    byte[] zsetMemberIndexCacheKey = keyStruct.zsetMemberIndexCacheKey(keyMeta, key, index);
+                    byte[] zsetMemberIndexCacheKey = keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index);
                     refCommands.add(new Command(new byte[][]{RedisCommand.PSETEX.raw(), zsetMemberIndexCacheKey, zsetMemberCacheMillis(), member}));
                 }
             }
@@ -119,7 +119,7 @@ public abstract class ZRange0Commander extends Commander {
     }
 
     protected final Reply zrangeVersion3(KeyMeta keyMeta, byte[] key, byte[][] objects, boolean withScores) {
-        byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
         byte[][] cmd = new byte[objects.length][];
         cmd[0] = objects[0];
         cmd[1] = cacheKey;
@@ -144,7 +144,7 @@ public abstract class ZRange0Commander extends Commander {
 
     protected final List<ZSetTuple> zrangeAllFromKv(KeyMeta keyMeta, byte[] key) {
         List<ZSetTuple> list = new ArrayList<>();
-        byte[] startKey = keyStruct.zsetMemberSubKey1(keyMeta, key, new byte[0]);
+        byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         int limit = kvConfig.scanBatch();
         int zsetMaxSize = kvConfig.zsetMaxSize();
@@ -154,7 +154,7 @@ public abstract class ZRange0Commander extends Commander {
                 break;
             }
             for (KeyValue keyValue : scan) {
-                byte[] member = keyStruct.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
+                byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
                 list.add(new ZSetTuple(new BytesKey(member), new BytesKey(keyValue.getValue())));
                 startKey = keyValue.getKey();
                 if (list.size() >= zsetMaxSize) {
@@ -208,7 +208,7 @@ public abstract class ZRange0Commander extends Commander {
             List<Command> commandList = new ArrayList<>(bytesKeys.length);
             for (BytesKey bytesKey : bytesKeys) {
                 Index index = missingMemberMap.get(bytesKey);
-                byte[] memberCacheKey = keyStruct.zsetMemberIndexCacheKey(keyMeta, key, index);
+                byte[] memberCacheKey = keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index);
                 Command cmd1 = new Command(new byte[][]{RedisCommand.GET.raw(), memberCacheKey});
                 Command cmd2 = new Command(new byte[][]{RedisCommand.PEXPIRE.raw(), memberCacheKey, zsetMemberCacheMillis()});
                 commandList.add(cmd1);
@@ -239,7 +239,7 @@ public abstract class ZRange0Commander extends Commander {
             Map<BytesKey, BytesKey> reverseMap = new HashMap<>(missingMemberMap.size());
             for (Map.Entry<BytesKey, Index> entry : missingMemberMap.entrySet()) {
                 Index index = entry.getValue();
-                byte[] subKey = keyStruct.zsetIndexSubKey(keyMeta, key, index);
+                byte[] subKey = keyDesign.zsetIndexSubKey(keyMeta, key, index);
                 batchGetKeys[i] = subKey;
                 i++;
                 reverseMap.put(new BytesKey(subKey), entry.getKey());
@@ -251,7 +251,7 @@ public abstract class ZRange0Commander extends Commander {
                 memberMap.put(bytesKey, keyValue.getValue());
 
                 Index index = missingMemberMap.get(bytesKey);
-                byte[] memberCacheKey = keyStruct.zsetMemberIndexCacheKey(keyMeta, key, index);
+                byte[] memberCacheKey = keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index);
                 buildCacheCommands.add(new Command(new byte[][]{RedisCommand.PSETEX.raw(), memberCacheKey, zsetMemberCacheMillis(), keyValue.getValue()}));
 
                 missingMemberMap.remove(bytesKey);

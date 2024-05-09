@@ -20,7 +20,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisKvClientExe
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.conf.RedisKvConf;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyStruct;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
@@ -199,10 +199,10 @@ public class RedisKvClient implements IUpstreamClient {
     private Commanders initCommanders() {
         KVClient kvClient = initKVClient();
 
-        KeyStruct keyStruct = new KeyStruct(namespace.getBytes(StandardCharsets.UTF_8));
+        KeyDesign keyDesign = new KeyDesign(namespace.getBytes(StandardCharsets.UTF_8));
         KvConfig kvConfig = new KvConfig(namespace);
 
-        KvGcExecutor gcExecutor = new KvGcExecutor(kvClient, keyStruct, kvConfig);
+        KvGcExecutor gcExecutor = new KvGcExecutor(kvClient, keyDesign, kvConfig);
         gcExecutor.start();
 
         boolean metaCacheEnable = RedisKvConf.getBoolean(namespace, "kv.key.meta.cache.enable", true);
@@ -211,9 +211,9 @@ public class RedisKvClient implements IUpstreamClient {
         RedisTemplate cacheRedisTemplate = initRedisTemplate("kv.redis.cache");
         RedisTemplate storeRedisTemplate = initRedisTemplate("kv.redis.store");
 
-        KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(kvClient, storeRedisTemplate, keyStruct, gcExecutor, cacheConfig);
+        KeyMetaServer keyMetaServer = new DefaultKeyMetaServer(kvClient, storeRedisTemplate, keyDesign, gcExecutor, cacheConfig);
 
-        CommanderConfig commanderConfig = new CommanderConfig(kvClient, keyStruct, cacheConfig, kvConfig,
+        CommanderConfig commanderConfig = new CommanderConfig(kvClient, keyDesign, cacheConfig, kvConfig,
                 keyMetaServer, cacheRedisTemplate, storeRedisTemplate, gcExecutor);
 
         return new Commanders(commanderConfig);

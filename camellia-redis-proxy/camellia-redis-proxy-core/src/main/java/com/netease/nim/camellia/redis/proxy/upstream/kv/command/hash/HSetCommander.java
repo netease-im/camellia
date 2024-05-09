@@ -78,7 +78,7 @@ public class HSetCommander extends Commander {
         //check meta
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
-            EncodeVersion encodeVersion = keyStruct.hashKeyMetaVersion();
+            EncodeVersion encodeVersion = keyDesign.hashKeyMetaVersion();
             if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
                 int count = fieldMap.size();
                 byte[] extra = BytesUtils.toBytes(count);
@@ -102,7 +102,7 @@ public class HSetCommander extends Commander {
             for (Map.Entry<BytesKey, byte[]> entry : fieldMap.entrySet()) {
                 byte[] field = entry.getKey().getKey();
                 byte[] value = entry.getValue();
-                byte[] subKey = keyStruct.hashFieldSubKey(keyMeta, key, field);
+                byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
                 KeyValue keyValue = new KeyValue(subKey, value);
                 list.add(keyValue);
             }
@@ -117,7 +117,7 @@ public class HSetCommander extends Commander {
             for (Map.Entry<BytesKey, byte[]> entry : fieldMap.entrySet()) {
                 byte[] field = entry.getKey().getKey();
                 byte[] value = entry.getValue();
-                byte[] subKey = keyStruct.hashFieldSubKey(keyMeta, key, field);
+                byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
                 KeyValue keyValue = new KeyValue(subKey, value);
                 list.add(keyValue);
                 subKeys[i] = subKey;
@@ -143,7 +143,7 @@ public class HSetCommander extends Commander {
         }
 
         //param parse
-        byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
         List<Command> commands = new ArrayList<>(fieldMap.size());
         List<KeyValue> list = new ArrayList<>(fieldMap.size());
         List<byte[]> fieldList = new ArrayList<>(fieldMap.size());
@@ -151,10 +151,10 @@ public class HSetCommander extends Commander {
             byte[] field = entry.getKey().getKey();
             fieldList.add(field);
             byte[] value = entry.getValue();
-            byte[] subKey = keyStruct.hashFieldSubKey(keyMeta, key, field);//store-key
+            byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);//store-key
             KeyValue keyValue = new KeyValue(subKey, value);
             list.add(keyValue);
-            byte[] hashFieldCacheKey = keyStruct.hashFieldCacheKey(keyMeta, key, field);//cache-key
+            byte[] hashFieldCacheKey = keyDesign.hashFieldCacheKey(keyMeta, key, field);//cache-key
             Command cmd = new Command(new byte[][]{RedisCommand.EVAL.raw(), script, two, cacheKey, hashFieldCacheKey, field, value});
             commands.add(cmd);
         }
@@ -205,7 +205,7 @@ public class HSetCommander extends Commander {
                 byte[][] subKeys = new byte[unknownFields.size()][];
                 for (int i=0; i<unknownFields.size(); i++) {
                     byte[] field = unknownFields.get(i);
-                    subKeys[i] = keyStruct.hashFieldSubKey(keyMeta, key, field);
+                    subKeys[i] = keyDesign.hashFieldSubKey(keyMeta, key, field);
                 }
                 boolean[] exists = kvClient.exists(subKeys);
                 for (boolean exist : exists) {

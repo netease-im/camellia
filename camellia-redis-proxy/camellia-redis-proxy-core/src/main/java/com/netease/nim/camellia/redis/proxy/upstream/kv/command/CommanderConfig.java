@@ -2,7 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command;
 
 
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyStruct;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
@@ -14,7 +14,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMetaServer;
 public class CommanderConfig {
 
     private final KVClient kvClient;
-    private final KeyStruct keyStruct;
+    private final KeyDesign keyDesign;
     private final CacheConfig cacheConfig;
     private final KvConfig kvConfig;
     private final KeyMetaServer keyMetaServer;
@@ -22,11 +22,11 @@ public class CommanderConfig {
     private final RedisTemplate storeRedisTemplate;
     private final KvGcExecutor gcExecutor;
 
-    public CommanderConfig(KVClient kvClient, KeyStruct keyStruct, CacheConfig cacheConfig,
+    public CommanderConfig(KVClient kvClient, KeyDesign keyDesign, CacheConfig cacheConfig,
                            KvConfig kvConfig, KeyMetaServer keyMetaServer,
                            RedisTemplate cacheRedisTemplate, RedisTemplate storeRedisTemplate, KvGcExecutor gcExecutor) {
         this.kvClient = kvClient;
-        this.keyStruct = keyStruct;
+        this.keyDesign = keyDesign;
         this.cacheConfig = cacheConfig;
         this.kvConfig = kvConfig;
         this.keyMetaServer = keyMetaServer;
@@ -39,8 +39,8 @@ public class CommanderConfig {
         return kvClient;
     }
 
-    public KeyStruct getKeyStruct() {
-        return keyStruct;
+    public KeyDesign getKeyDesign() {
+        return keyDesign;
     }
 
     public CacheConfig getCacheConfig() {

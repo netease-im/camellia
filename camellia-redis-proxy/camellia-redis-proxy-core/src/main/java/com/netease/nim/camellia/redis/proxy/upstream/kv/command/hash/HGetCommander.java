@@ -72,7 +72,7 @@ public class HGetCommander extends Commander {
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
 
         if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
-            byte[] subKey = keyStruct.hashFieldSubKey(keyMeta, key, field);
+            byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
             KeyValue keyValue = kvClient.get(subKey);
             if (keyValue == null || keyValue.getValue() == null) {
                 return BulkReply.NIL_REPLY;
@@ -80,8 +80,8 @@ public class HGetCommander extends Commander {
             return new BulkReply(keyValue.getValue());
         }
 
-        byte[] hashFieldCacheKey = keyStruct.hashFieldCacheKey(keyMeta, key, field);
-        byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+        byte[] hashFieldCacheKey = keyDesign.hashFieldCacheKey(keyMeta, key, field);
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
         //cache
         {
@@ -100,7 +100,7 @@ public class HGetCommander extends Commander {
         }
 
         //get from kv
-        byte[] subKey = keyStruct.hashFieldSubKey(keyMeta, key, field);
+        byte[] subKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
         KeyValue keyValue = kvClient.get(subKey);
 
         if (keyValue == null || keyValue.getValue() == null) {

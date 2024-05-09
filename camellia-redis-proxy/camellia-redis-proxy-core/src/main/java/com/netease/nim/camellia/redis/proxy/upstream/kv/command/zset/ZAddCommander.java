@@ -66,7 +66,7 @@ public class ZAddCommander extends Commander {
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         EncodeVersion encodeVersion;
         if (keyMeta == null) {
-            encodeVersion = keyStruct.zsetKeyMetaVersion();
+            encodeVersion = keyDesign.zsetKeyMetaVersion();
             if (encodeVersion == EncodeVersion.version_0) {
                 if (!kvClient.supportReverseScan()) {
                     return ErrorReply.KV_STORAGE_NOT_SUPPORTED_ENCODE;
@@ -108,8 +108,8 @@ public class ZAddCommander extends Commander {
             for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
                 byte[] score = BytesUtils.toBytes(Utils.bytesToDouble(entry.getValue()));
-                byte[] subKey1 = keyStruct.zsetMemberSubKey1(keyMeta, key, member);
-                byte[] subKey2 = keyStruct.zsetMemberSubKey2(keyMeta, key, member, score);
+                byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
+                byte[] subKey2 = keyDesign.zsetMemberSubKey2(keyMeta, key, member, score);
                 KeyValue keyValue1 = new KeyValue(subKey1, score);
                 KeyValue keyValue2 = new KeyValue(subKey2, new byte[0]);
                 list.add(keyValue1);
@@ -124,8 +124,8 @@ public class ZAddCommander extends Commander {
             for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
                 byte[] score = BytesUtils.toBytes(Utils.bytesToDouble(entry.getValue()));
-                byte[] subKey1 = keyStruct.zsetMemberSubKey1(keyMeta, key, member);
-                byte[] subKey2 = keyStruct.zsetMemberSubKey2(keyMeta, key, member, score);
+                byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
+                byte[] subKey2 = keyDesign.zsetMemberSubKey2(keyMeta, key, member, score);
                 KeyValue keyValue1 = new KeyValue(subKey1, score);
                 KeyValue keyValue2 = new KeyValue(subKey2, new byte[0]);
                 list.add(keyValue1);
@@ -148,14 +148,14 @@ public class ZAddCommander extends Commander {
             for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
                 byte[] score = entry.getValue();
-                byte[] subKey1 = keyStruct.zsetMemberSubKey1(keyMeta, key, member);
+                byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
                 KeyValue keyValue1 = new KeyValue(subKey1, score);
                 list.add(keyValue1);
             }
             kvClient.batchPut(list);
             return IntegerReply.parse(memberSize);
         } else {
-            byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             byte[][] args = new byte[memberSize + 2][];
             int i = 0;
             for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
@@ -185,7 +185,7 @@ public class ZAddCommander extends Commander {
                 for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
                     byte[] member = entry.getKey().getKey();
                     byte[] score = entry.getValue();
-                    byte[] subKey1 = keyStruct.zsetMemberSubKey1(keyMeta, key, member);
+                    byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
                     KeyValue keyValue1 = new KeyValue(subKey1, score);
                     list.add(keyValue1);
                     existsKeys[j] = subKey1;
@@ -198,7 +198,7 @@ public class ZAddCommander extends Commander {
                 for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
                     byte[] member = entry.getKey().getKey();
                     byte[] score = entry.getValue();
-                    byte[] subKey1 = keyStruct.zsetMemberSubKey1(keyMeta, key, member);
+                    byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
                     KeyValue keyValue1 = new KeyValue(subKey1, score);
                     list.add(keyValue1);
                 }
@@ -215,12 +215,12 @@ public class ZAddCommander extends Commander {
             for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
                 byte[] score = entry.getValue();
-                byte[] subKey1 = keyStruct.zsetMemberSubKey1(keyMeta, key, member);
+                byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
                 KeyValue keyValue1 = new KeyValue(subKey1, score);
                 list.add(keyValue1);
                 Index index = Index.fromRaw(member);
                 if (index.isIndex()) {
-                    byte[] subKey2 = keyStruct.zsetIndexSubKey(keyMeta, key, index);
+                    byte[] subKey2 = keyDesign.zsetIndexSubKey(keyMeta, key, index);
                     KeyValue keyValue2 = new KeyValue(subKey2, member);
                     list.add(keyValue2);
                 }
@@ -234,22 +234,22 @@ public class ZAddCommander extends Commander {
             for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
                 byte[] member = entry.getKey().getKey();
                 byte[] score = entry.getValue();
-                byte[] subKey1 = keyStruct.zsetMemberSubKey1(keyMeta, key, member);
+                byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
                 KeyValue keyValue1 = new KeyValue(subKey1, score);
                 list.add(keyValue1);
                 Index index = Index.fromRaw(member);
                 if (index.isIndex()) {
-                    byte[] subKey2 = keyStruct.zsetIndexSubKey(keyMeta, key, index);
+                    byte[] subKey2 = keyDesign.zsetIndexSubKey(keyMeta, key, index);
                     KeyValue keyValue2 = new KeyValue(subKey2, member);
                     list.add(keyValue2);
-                    byte[] zsetMemberIndexCacheKey = keyStruct.zsetMemberIndexCacheKey(keyMeta, key, index);
+                    byte[] zsetMemberIndexCacheKey = keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index);
                     cmdList.add(new Command(new byte[][]{RedisCommand.PSETEX.raw(), zsetMemberIndexCacheKey, zsetMemberCacheMillis(), member}));
                 }
                 zsetIndexCmd[i] = score;
                 zsetIndexCmd[i+1] = index.getRef();
                 i+=2;
             }
-            byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             Command zsetIndexLuaCmd = cacheRedisTemplate.luaCommand(script1, new byte[][]{cacheKey}, zsetIndexCmd);
             List<Command> commands = new ArrayList<>(cmdList.size() + 1);
             commands.add(zsetIndexLuaCmd);
@@ -271,7 +271,7 @@ public class ZAddCommander extends Commander {
                 int j = 0;
                 for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
                     byte[] member = entry.getKey().getKey();
-                    byte[] subKey1 = keyStruct.zsetMemberSubKey1(keyMeta, key, member);
+                    byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
                     existsKeys[j] = subKey1;
                     j++;
                 }
@@ -288,7 +288,7 @@ public class ZAddCommander extends Commander {
     private Reply zaddVersion3(KeyMeta keyMeta, byte[] key, int memberSize, Map<BytesKey, byte[]> memberMap) {
         byte[][] rewriteCmd = new byte[memberSize*2+2][];
         rewriteCmd[0] = RedisCommand.ZADD.raw();
-        rewriteCmd[1] = keyStruct.cacheKey(keyMeta, key);
+        rewriteCmd[1] = keyDesign.cacheKey(keyMeta, key);
         int i=2;
         List<KeyValue> list = new ArrayList<>(memberSize);
         List<Command> memberIndexCacheWriteCommands = new ArrayList<>();
@@ -296,9 +296,9 @@ public class ZAddCommander extends Commander {
             byte[] member = entry.getKey().getKey();
             Index index = Index.fromRaw(member);
             if (index.isIndex()) {
-                byte[] indexSubKey = keyStruct.zsetIndexSubKey(keyMeta, key, index);
+                byte[] indexSubKey = keyDesign.zsetIndexSubKey(keyMeta, key, index);
                 list.add(new KeyValue(indexSubKey, member));
-                byte[] zsetMemberIndexCacheKey = keyStruct.zsetMemberIndexCacheKey(keyMeta, key, index);
+                byte[] zsetMemberIndexCacheKey = keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index);
                 memberIndexCacheWriteCommands.add(new Command(new byte[][]{RedisCommand.PSETEX.raw(), zsetMemberIndexCacheKey, zsetMemberCacheMillis(), member}));
             }
             rewriteCmd[i] = entry.getValue();

@@ -207,7 +207,7 @@ kv.cache.zset.range.cache.millis=300000
 
 |                              key                              | value |
 |:-------------------------------------------------------------:|:-----:|
-| s# + namespace + key.len + key + key-version + score + member | null  |
+| k# + namespace + key.len + key + key-version + score + member | null  |
 
 * encode-version固定为0，key-type固定为3
 * 不依赖任何redis

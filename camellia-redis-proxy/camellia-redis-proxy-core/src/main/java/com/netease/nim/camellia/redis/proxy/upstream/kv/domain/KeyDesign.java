@@ -11,25 +11,27 @@ import java.nio.charset.StandardCharsets;
 /**
  * Created by caojiajun on 2024/4/7
  */
-public class KeyStruct {
+public class KeyDesign {
 
     private static final byte[] HASH_TAG_LEFT = "{".getBytes(StandardCharsets.UTF_8);
     private static final byte[] HASH_TAG_RIGHT = "}".getBytes(StandardCharsets.UTF_8);
 
-    private final int storePrefixLen;
+    private final int prefixLen;
     private final byte[] namespace;
     private final byte[] metaPrefix;
     private final byte[] cachePrefix;
     private final byte[] subKeyPrefix;
+    private final byte[] subKey2Prefix;
     private final byte[] indexKeyPrefix;
 
-    public KeyStruct(byte[] namespace) {
+    public KeyDesign(byte[] namespace) {
         this.namespace = namespace;
         this.metaPrefix = BytesUtils.merge("m#".getBytes(StandardCharsets.UTF_8), namespace);
         this.cachePrefix = BytesUtils.merge("c#".getBytes(StandardCharsets.UTF_8), namespace);
         this.subKeyPrefix = BytesUtils.merge("s#".getBytes(StandardCharsets.UTF_8), namespace);
+        this.subKey2Prefix = BytesUtils.merge("k#".getBytes(StandardCharsets.UTF_8), namespace);
         this.indexKeyPrefix = BytesUtils.merge("i#".getBytes(StandardCharsets.UTF_8), namespace);
-        this.storePrefixLen = subKeyPrefix.length;
+        this.prefixLen = subKeyPrefix.length;
     }
 
     public byte[] getNamespace() {
@@ -97,7 +99,7 @@ public class KeyStruct {
 
     public byte[] zsetMemberSubKey2(KeyMeta keyMeta, byte[] key, byte[] member, byte[] score) {
         byte[] keySize = BytesUtils.toBytes(key.length);
-        byte[] data = BytesUtils.merge(subKeyPrefix, keySize, key);
+        byte[] data = BytesUtils.merge(subKey2Prefix, keySize, key);
         data = BytesUtils.merge(data, BytesUtils.toBytes(keyMeta.getKeyVersion()));
         if (score.length > 0) {
             data = BytesUtils.merge(data, score);
@@ -109,7 +111,7 @@ public class KeyStruct {
     }
 
     public byte[] decodeHashFieldBySubKey(byte[] subKey, byte[] key) {
-        int prefixSize = storePrefixLen + 4 + key.length + 8;
+        int prefixSize = prefixLen + 4 + key.length + 8;
         int fieldSize = subKey.length - prefixSize;
         byte[] field = new byte[fieldSize];
         System.arraycopy(subKey, prefixSize, field, 0, fieldSize);
@@ -117,7 +119,7 @@ public class KeyStruct {
     }
 
     public byte[] decodeZSetMemberBySubKey1(byte[] subKey1, byte[] key) {
-        int prefixSize = storePrefixLen + 4 + key.length + 8;
+        int prefixSize = prefixLen + 4 + key.length + 8;
         int fieldSize = subKey1.length - prefixSize;
         byte[] field = new byte[fieldSize];
         System.arraycopy(subKey1, prefixSize, field, 0, fieldSize);
@@ -142,14 +144,14 @@ public class KeyStruct {
     }
 
     public byte[] decodeKeyBySubKey(byte[] subKey) {
-        int keyLen = BytesUtils.toInt(subKey, storePrefixLen);
+        int keyLen = BytesUtils.toInt(subKey, prefixLen);
         byte[] key = new byte[keyLen];
-        System.arraycopy(subKey, storePrefixLen + 4, key, 0, keyLen);
+        System.arraycopy(subKey, prefixLen + 4, key, 0, keyLen);
         return key;
     }
 
     public long decodeKeyVersionBySubKey(byte[] subKey, int keyLen) {
-        return BytesUtils.toLong(subKey, storePrefixLen + 4 + keyLen);
+        return BytesUtils.toLong(subKey, prefixLen + 4 + keyLen);
     }
 
     public EncodeVersion hashKeyMetaVersion() {

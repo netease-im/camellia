@@ -64,7 +64,7 @@ public class HDelCommander extends Commander {
         if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
             byte[][] subKeys = new byte[fieldSize][];
             for (int i=2; i<objects.length; i++) {
-                subKeys[i-2] = keyStruct.hashFieldSubKey(keyMeta, key, objects[i]);
+                subKeys[i-2] = keyDesign.hashFieldSubKey(keyMeta, key, objects[i]);
             }
             if (encodeVersion == EncodeVersion.version_0) {
                 int delCount = 0;
@@ -95,13 +95,13 @@ public class HDelCommander extends Commander {
             }
         }
 
-        byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
         {
             if (fieldSize == 1) {
                 byte[] field = objects[2];
 
-                byte[] hashFieldCacheKey = keyStruct.hashFieldCacheKey(keyMeta, key, field);
+                byte[] hashFieldCacheKey = keyDesign.hashFieldCacheKey(keyMeta, key, field);
                 Command cmd1 = new Command(new byte[][]{RedisCommand.HDEL.raw(), cacheKey, field});
                 Command cmd2 = new Command(new byte[][]{RedisCommand.DEL.raw(), hashFieldCacheKey});
                 List<Command> commands = new ArrayList<>(2);
@@ -120,7 +120,7 @@ public class HDelCommander extends Commander {
                     }
                 }
 
-                byte[] hashFieldSubKey = keyStruct.hashFieldSubKey(keyMeta, key, field);
+                byte[] hashFieldSubKey = keyDesign.hashFieldSubKey(keyMeta, key, field);
 
                 if (!hit && keyMeta.getEncodeVersion() == EncodeVersion.version_2) {
                     hit = kvClient.exists(hashFieldSubKey);
@@ -152,10 +152,10 @@ public class HDelCommander extends Commander {
         byte[][] subKeys = new byte[fieldSize][];
 
         for (int i=2; i<objects.length; i++) {
-            byte[] hashFieldCacheKey = keyStruct.hashFieldCacheKey(keyMeta, key, objects[i]);
+            byte[] hashFieldCacheKey = keyDesign.hashFieldCacheKey(keyMeta, key, objects[i]);
             Command cmd = new Command(new byte[][]{RedisCommand.DEL.raw(), hashFieldCacheKey});
             commands.add(cmd);
-            subKeys[i-2] = keyStruct.hashFieldSubKey(keyMeta, key, objects[i]);
+            subKeys[i-2] = keyDesign.hashFieldSubKey(keyMeta, key, objects[i]);
         }
         List<Reply> replyList = sync(cacheRedisTemplate.sendCommand(commands));
         for (Reply reply : replyList) {
@@ -225,7 +225,7 @@ public class HDelCommander extends Commander {
     }
 
     private boolean checkHLenZero(byte[] key, KeyMeta keyMeta) {
-        byte[] startKey = keyStruct.hashFieldSubKey(keyMeta, key, new byte[0]);
+        byte[] startKey = keyDesign.hashFieldSubKey(keyMeta, key, new byte[0]);
         List<KeyValue> scan = kvClient.scan(startKey, startKey, 1, Sort.ASC, false);
         return scan.isEmpty();
     }

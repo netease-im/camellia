@@ -47,11 +47,11 @@ public class DelCommander extends Commander {
             EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
             if (keyType == KeyType.zset && (encodeVersion == EncodeVersion.version_1
                     || encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
-                byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+                byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
                 storeRedisTemplate.sendDel(cacheKey);
             }
             if (keyType == KeyType.hash && (encodeVersion == EncodeVersion.version_2 || encodeVersion == EncodeVersion.version_3)) {
-                byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+                byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
                 cacheRedisTemplate.sendDel(cacheKey);
             }
         }

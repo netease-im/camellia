@@ -83,7 +83,7 @@ public class HGetAllCommander extends Commander {
         }
 
         //get cache first
-        byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
         {
             //cache
             Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, new byte[][]{hgetallCacheMillis()}));
@@ -137,7 +137,7 @@ public class HGetAllCommander extends Commander {
 
     private Map<BytesKey, byte[]> hgetallFromKv(KeyMeta keyMeta, byte[] key) {
         Map<BytesKey, byte[]> map = new HashMap<>();
-        byte[] startKey = keyStruct.hashFieldSubKey(keyMeta, key, new byte[0]);
+        byte[] startKey = keyDesign.hashFieldSubKey(keyMeta, key, new byte[0]);
         byte[] prefix = startKey;
         int limit = kvConfig.scanBatch();
         int hashMaxSize = kvConfig.hashMaxSize();
@@ -147,7 +147,7 @@ public class HGetAllCommander extends Commander {
                 break;
             }
             for (KeyValue keyValue : scan) {
-                byte[] field = keyStruct.decodeHashFieldBySubKey(keyValue.getKey(), key);
+                byte[] field = keyDesign.decodeHashFieldBySubKey(keyValue.getKey(), key);
                 map.put(new BytesKey(field), keyValue.getValue());
                 startKey = keyValue.getKey();
                 if (map.size() >= hashMaxSize) {

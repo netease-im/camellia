@@ -10,7 +10,7 @@ import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.RedisProxyEnv;
 import com.netease.nim.camellia.redis.proxy.upstream.UpstreamRedisClientTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyStruct;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KvConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
@@ -49,7 +49,7 @@ public class KvGcExecutor {
     }
 
     private final KVClient kvClient;
-    private final KeyStruct keyStruct;
+    private final KeyDesign keyDesign;
     private final KvConfig kvConfig;
     private final CamelliaHashedExecutor deleteExecutor;
     private final ThreadPoolExecutor submitExecutor;
@@ -57,9 +57,9 @@ public class KvGcExecutor {
     private RedisTemplate redisTemplate;
     private long lastGcTime = 0;
 
-    public KvGcExecutor(KVClient kvClient, KeyStruct keyStruct, KvConfig kvConfig) {
+    public KvGcExecutor(KVClient kvClient, KeyDesign keyDesign, KvConfig kvConfig) {
         this.kvClient = kvClient;
-        this.keyStruct = keyStruct;
+        this.keyDesign = keyDesign;
         this.kvConfig = kvConfig;
         this.deleteExecutor = new CamelliaHashedExecutor("camellia-kv-gc", kvConfig.gcExecutorPoolSize(),
                 kvConfig.gcExecutorQueueSize(), new CamelliaHashedExecutor.CallerRunsPolicy());
@@ -114,7 +114,7 @@ public class KvGcExecutor {
             }
             submitExecutor.submit(() -> {
                 try {
-                    deleteExecutor.submit(key, new SubKeyDeleteTask(key, keyMeta, kvClient, keyStruct, kvConfig));
+                    deleteExecutor.submit(key, new SubKeyDeleteTask(key, keyMeta, kvClient, keyDesign, kvConfig));
                 } catch (Exception e) {
                     logger.warn("execute sub key delete task error, ex = {}", e.toString());
                 }
@@ -129,7 +129,7 @@ public class KvGcExecutor {
         logger.info("scan meta keys start");
         long deleteMetaKeys = 0;
         try {
-            byte[] metaPrefix = keyStruct.getMetaPrefix();
+            byte[] metaPrefix = keyDesign.getMetaPrefix();
             byte[] startKey = metaPrefix;
             int limit = kvConfig.scanBatch();
             while (true) {
@@ -144,9 +144,9 @@ public class KvGcExecutor {
                         continue;
                     }
                     if (keyMeta.isExpire()) {
-                        byte[] key = keyStruct.decodeKeyByMetaKey(startKey);
+                        byte[] key = keyDesign.decodeKeyByMetaKey(startKey);
                         if (key != null && keyMeta.getKeyType() != KeyType.string) {
-                            deleteExecutor.submit(key, new SubKeyDeleteTask(key, keyMeta, kvClient, keyStruct, kvConfig));
+                            deleteExecutor.submit(key, new SubKeyDeleteTask(key, keyMeta, kvClient, keyDesign, kvConfig));
                         }
                         if (kvClient.supportCheckAndDelete()) {//kv本身已经支持cas的删除，则可以直接删
                             kvClient.checkAndDelete(startKey, keyValue.getValue());
@@ -154,7 +154,7 @@ public class KvGcExecutor {
                         } else {
                             //如果kv不支持cas的删除，则hash到特定的proxy节点处理，避免并发问题
                             try {
-                                Reply reply = redisTemplate.sendCleanExpiredKeyMetaInKv(keyStruct.getNamespace(), key, kvConfig.gcCleanExpiredKeyMetaTimeoutMillis());
+                                Reply reply = redisTemplate.sendCleanExpiredKeyMetaInKv(keyDesign.getNamespace(), key, kvConfig.gcCleanExpiredKeyMetaTimeoutMillis());
                                 if (reply instanceof ErrorReply) {
                                     logger.error("send clean expired key meta in kv failed, reply = {}", ((ErrorReply) reply).getError());
                                 } else {
@@ -188,7 +188,7 @@ public class KvGcExecutor {
                     .initialCapacity(10000)
                     .maximumWeightedCapacity(10000)
                     .build();
-            byte[] storePrefix = keyStruct.getSubKeyPrefix();
+            byte[] storePrefix = keyDesign.getSubKeyPrefix();
             byte[] startKey = storePrefix;
             int limit = kvConfig.scanBatch();
             while (true) {
@@ -199,8 +199,8 @@ public class KvGcExecutor {
                 List<byte[]> toDeleteKeys = new ArrayList<>();
                 for (KeyValue keyValue : scan) {
                     startKey = keyValue.getKey();
-                    byte[] key = keyStruct.decodeKeyBySubKey(startKey);
-                    long keyVersion = keyStruct.decodeKeyVersionBySubKey(startKey, key.length);
+                    byte[] key = keyDesign.decodeKeyBySubKey(startKey);
+                    long keyVersion = keyDesign.decodeKeyVersionBySubKey(startKey, key.length);
                     KeyStatus keyStatus = checkExpireOrNotExists(cacheMap, key, keyVersion);
                     if (keyStatus == KeyStatus.NOT_EXISTS || keyStatus == KeyStatus.EXPIRE) {
                         toDeleteKeys.add(keyValue.getKey());
@@ -230,7 +230,7 @@ public class KvGcExecutor {
         if (keyStatus != null) {
             return keyStatus;
         }
-        byte[] metaKey = keyStruct.metaKey(key);
+        byte[] metaKey = keyDesign.metaKey(key);
         KeyValue metaValue = kvClient.get(metaKey);
         if (metaValue == null) {
             keyStatus = KeyStatus.NOT_EXISTS;
@@ -286,14 +286,14 @@ public class KvGcExecutor {
         private final byte[] key;
         private final KeyMeta keyMeta;
         private final KVClient kvClient;
-        private final KeyStruct keyStruct;
+        private final KeyDesign keyDesign;
         private final KvConfig kvConfig;
 
-        public SubKeyDeleteTask(byte[] key, KeyMeta keyMeta, KVClient kvClient, KeyStruct keyStruct, KvConfig kvConfig) {
+        public SubKeyDeleteTask(byte[] key, KeyMeta keyMeta, KVClient kvClient, KeyDesign keyDesign, KvConfig kvConfig) {
             this.key = key;
             this.keyMeta = keyMeta;
             this.kvClient = kvClient;
-            this.keyStruct = keyStruct;
+            this.keyDesign = keyDesign;
             this.kvConfig = kvConfig;
         }
 
@@ -303,7 +303,7 @@ public class KvGcExecutor {
                 int count = 0;
                 KeyType keyType = keyMeta.getKeyType();
                 if (keyType == KeyType.hash) {
-                    byte[] startKey = keyStruct.hashFieldSubKey(keyMeta, key, new byte[0]);
+                    byte[] startKey = keyDesign.hashFieldSubKey(keyMeta, key, new byte[0]);
                     byte[] prefix = startKey;
                     int limit = kvConfig.scanBatch();
                     while (true) {

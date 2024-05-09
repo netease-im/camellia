@@ -78,7 +78,7 @@ public class ZRemCommander extends Commander {
         byte[][] storeKeys = new byte[objects.length - 2][];
         for (int i=2; i<objects.length; i++) {
             byte[] member = objects[i];
-            byte[] zsetMemberSubKey1 = keyStruct.zsetMemberSubKey1(keyMeta, key, member);
+            byte[] zsetMemberSubKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
             storeKeys[i-2] = zsetMemberSubKey1;
         }
         List<byte[]> delStoreKeys = new ArrayList<>(storeKeys.length * 2);
@@ -87,10 +87,10 @@ public class ZRemCommander extends Commander {
             if (keyValue == null || keyValue.getValue() == null) {
                 continue;
             }
-            byte[] member = keyStruct.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
+            byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
             byte[] score = keyValue.getValue();
             delStoreKeys.add(keyValue.getKey());
-            delStoreKeys.add(keyStruct.zsetMemberSubKey2(keyMeta, key, member, score));
+            delStoreKeys.add(keyDesign.zsetMemberSubKey2(keyMeta, key, member, score));
         }
         int deleteCount = delStoreKeys.size() / 2;
         kvClient.batchDelete(delStoreKeys.toArray(new byte[0][0]));
@@ -101,7 +101,7 @@ public class ZRemCommander extends Commander {
     private Reply zremVersion1(KeyMeta keyMeta, byte[] key, byte[][] objects) {
         byte[][] args = new byte[objects.length - 2][];
         System.arraycopy(objects, 2, args, 0, args.length);
-        byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
         Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, args));
         if (reply instanceof ErrorReply) {
             return reply;
@@ -122,7 +122,7 @@ public class ZRemCommander extends Commander {
         byte[][] storeKeys = new byte[objects.length - 2][];
         for (int i=2; i<objects.length; i++) {
             byte[] member = objects[i];
-            byte[] zsetMemberSubKey1 = keyStruct.zsetMemberSubKey1(keyMeta, key, member);
+            byte[] zsetMemberSubKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
             storeKeys[i-2] = zsetMemberSubKey1;
         }
 
@@ -147,7 +147,7 @@ public class ZRemCommander extends Commander {
     private Reply zremVersion2(KeyMeta keyMeta, byte[] key, byte[][] objects) {
         byte[][] args = new byte[objects.length - 2][];
         System.arraycopy(objects, 2, args, 0, args.length);
-        byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
         List<byte[]> cacheDelCmd = new ArrayList<>(args.length);
         List<byte[]> deleteIndexKeys = new ArrayList<>(args.length);
@@ -157,12 +157,12 @@ public class ZRemCommander extends Commander {
             byte[] member = objects[i];
             Index index = Index.fromRaw(member);
             if (index.isIndex()) {
-                cacheDelCmd.add(keyStruct.zsetMemberIndexCacheKey(keyMeta, key, index));
-                deleteIndexKeys.add(keyStruct.zsetIndexSubKey(keyMeta, key, index));
+                cacheDelCmd.add(keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index));
+                deleteIndexKeys.add(keyDesign.zsetIndexSubKey(keyMeta, key, index));
             }
             args[i-2] = index.getRef();
 
-            byte[] zsetMemberSubKey1 = keyStruct.zsetMemberSubKey1(keyMeta, key, member);
+            byte[] zsetMemberSubKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
             deleteSubKeys.add(zsetMemberSubKey1);
         }
         List<Command> commandList = new ArrayList<>(2);
@@ -213,7 +213,7 @@ public class ZRemCommander extends Commander {
     private Reply zremVersion3(KeyMeta keyMeta, byte[] key, byte[][] objects) {
         byte[][] cmd = new byte[objects.length][];
         System.arraycopy(objects, 0, cmd, 0, cmd.length);
-        byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+        byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
         cmd[1] = cacheKey;
         List<byte[]> cacheDelCmd = new ArrayList<>(cmd.length);
         List<byte[]> deleteIndexKeys = new ArrayList<>(cmd.length);
@@ -222,8 +222,8 @@ public class ZRemCommander extends Commander {
             byte[] member = objects[i];
             Index index = Index.fromRaw(member);
             if (index.isIndex()) {
-                cacheDelCmd.add(keyStruct.zsetMemberIndexCacheKey(keyMeta, key, index));
-                deleteIndexKeys.add(keyStruct.zsetIndexSubKey(keyMeta, key, index));
+                cacheDelCmd.add(keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index));
+                deleteIndexKeys.add(keyDesign.zsetIndexSubKey(keyMeta, key, index));
             }
             cmd[i] = index.getRef();
         }

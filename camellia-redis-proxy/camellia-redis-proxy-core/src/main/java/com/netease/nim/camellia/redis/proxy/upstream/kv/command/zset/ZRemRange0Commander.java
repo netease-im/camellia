@@ -31,7 +31,7 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
             if (replies.length == 0) {
                 return IntegerReply.REPLY_0;
             }
-            byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             byte[][] zremCmd = new byte[replies.length + 2][];
             zremCmd[0] = RedisCommand.ZREM.raw();
             zremCmd[1] = cacheKey;
@@ -41,7 +41,7 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
                 if (reply1 instanceof BulkReply) {
                     byte[] member = ((BulkReply) reply1).getRaw();
                     zremCmd[i] = member;
-                    delKeys[i-2] = keyStruct.zsetMemberSubKey1(keyMeta, key, member);
+                    delKeys[i-2] = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
                 } else {
                     return ErrorReply.INTERNAL_ERROR;
                 }
@@ -78,7 +78,7 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
             if (replies.length == 0) {
                 return IntegerReply.REPLY_0;
             }
-            byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             byte[][] zremCmd = new byte[replies.length + 2][];
             zremCmd[0] = RedisCommand.ZREM.raw();
             zremCmd[1] = cacheKey;
@@ -91,10 +91,10 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
                     byte[] member = ((BulkReply) reply1).getRaw();
                     Index index = Index.fromRaw(member);
                     zremCmd[i] = index.getRef();
-                    delStoreKeys.add(keyStruct.zsetMemberSubKey1(keyMeta, key, member));
+                    delStoreKeys.add(keyDesign.zsetMemberSubKey1(keyMeta, key, member));
                     if (index.isIndex()) {
-                        delStoreKeys.add(keyStruct.zsetIndexSubKey(keyMeta, key, index));
-                        delCacheKeys.add(keyStruct.zsetMemberIndexCacheKey(keyMeta, key, index));
+                        delStoreKeys.add(keyDesign.zsetIndexSubKey(keyMeta, key, index));
+                        delCacheKeys.add(keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index));
                     }
                 } else {
                     return ErrorReply.INTERNAL_ERROR;
@@ -135,7 +135,7 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
             if (replies.length == 0) {
                 return IntegerReply.REPLY_0;
             }
-            byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             byte[][] zremCmd = new byte[replies.length + 2][];
             zremCmd[0] = RedisCommand.ZREM.raw();
             zremCmd[1] = cacheKey;
@@ -149,8 +149,8 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
                     Index index = Index.fromRef(member);
                     zremCmd[i] = member;
                     if (index.isIndex()) {
-                        delStoreKeys.add(keyStruct.zsetIndexSubKey(keyMeta, key, index));
-                        delCacheKeys.add(keyStruct.zsetMemberIndexCacheKey(keyMeta, key, index));
+                        delStoreKeys.add(keyDesign.zsetIndexSubKey(keyMeta, key, index));
+                        delCacheKeys.add(keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index));
                     }
                 } else {
                     return ErrorReply.INTERNAL_ERROR;

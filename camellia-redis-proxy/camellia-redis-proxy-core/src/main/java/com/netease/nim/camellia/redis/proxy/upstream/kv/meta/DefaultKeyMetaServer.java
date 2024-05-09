@@ -4,7 +4,7 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.netease.nim.camellia.redis.proxy.reply.*;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.RedisTemplate;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.CacheConfig;
-import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyStruct;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.KeyDesign;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.gc.KvGcExecutor;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KVClient;
@@ -22,14 +22,14 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
     private final ConcurrentLinkedHashMap<BytesKey, Long> delayCacheKeyMap;
     private final KVClient kvClient;
     private final RedisTemplate redisTemplate;
-    private final KeyStruct keyStruct;
+    private final KeyDesign keyDesign;
     private final KvGcExecutor gcExecutor;
     private final CacheConfig cacheConfig;
 
-    public DefaultKeyMetaServer(KVClient kvClient, RedisTemplate redisTemplate, KeyStruct keyStruct, KvGcExecutor gcExecutor, CacheConfig cacheConfig) {
+    public DefaultKeyMetaServer(KVClient kvClient, RedisTemplate redisTemplate, KeyDesign keyDesign, KvGcExecutor gcExecutor, CacheConfig cacheConfig) {
         this.kvClient = kvClient;
         this.redisTemplate = redisTemplate;
-        this.keyStruct = keyStruct;
+        this.keyDesign = keyDesign;
         this.gcExecutor = gcExecutor;
         this.cacheConfig = cacheConfig;
         this.delayCacheKeyMap = new ConcurrentLinkedHashMap.Builder<BytesKey, Long>()
@@ -40,7 +40,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
 
     @Override
     public KeyMeta getKeyMeta(byte[] key) {
-        byte[] metaKey = keyStruct.metaKey(key);
+        byte[] metaKey = keyDesign.metaKey(key);
 
         if (!cacheConfig.isMetaCacheEnable()) {
             KeyValue keyValue = kvClient.get(metaKey);
@@ -117,7 +117,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
 
     @Override
     public void createOrUpdateKeyMeta(byte[] key, KeyMeta keyMeta) {
-        byte[] metaKey = keyStruct.metaKey(key);
+        byte[] metaKey = keyDesign.metaKey(key);
         if (cacheConfig.isMetaCacheEnable()) {
             Reply reply;
             long redisExpireMillis = redisExpireMillis(keyMeta);
@@ -138,7 +138,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
 
     @Override
     public void deleteKeyMeta(byte[] key) {
-        byte[] metaKey = keyStruct.metaKey(key);
+        byte[] metaKey = keyDesign.metaKey(key);
         if (cacheConfig.isMetaCacheEnable()) {
             Reply reply = sync(redisTemplate.sendDel(metaKey));
             if (reply instanceof ErrorReply) {
@@ -151,7 +151,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
 
     @Override
     public boolean existsKeyMeta(byte[] key) {
-        byte[] metaKey = keyStruct.metaKey(key);
+        byte[] metaKey = keyDesign.metaKey(key);
         if (cacheConfig.isMetaCacheEnable()) {
             Reply reply = sync(redisTemplate.sendExists(metaKey));
             if (reply instanceof ErrorReply) {
@@ -177,7 +177,7 @@ public class DefaultKeyMetaServer implements KeyMetaServer {
 
     @Override
     public void checkKeyMetaExpired(byte[] key) {
-        byte[] metaKey = keyStruct.metaKey(key);
+        byte[] metaKey = keyDesign.metaKey(key);
         KeyValue keyValue = kvClient.get(metaKey);
         if (keyValue == null || keyValue.getValue() == null) {
             return;

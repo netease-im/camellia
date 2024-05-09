@@ -53,7 +53,7 @@ public class HLenCommander extends Commander {
             long size = getSizeFromKv(keyMeta, key);
             return IntegerReply.parse(size);
         } else if (encodeVersion == EncodeVersion.version_3) {
-            byte[] cacheKey = keyStruct.cacheKey(keyMeta, key);
+            byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
             Reply reply = sync(cacheRedisTemplate.sendCommand(new Command(new byte[][]{RedisCommand.HLEN.raw(), cacheKey})));
             if (reply instanceof IntegerReply) {
                 Long size = ((IntegerReply) reply).getInteger();
@@ -69,7 +69,7 @@ public class HLenCommander extends Commander {
     }
 
     private long getSizeFromKv(KeyMeta keyMeta, byte[] key) {
-        byte[] startKey = keyStruct.hashFieldSubKey(keyMeta, key, new byte[0]);
+        byte[] startKey = keyDesign.hashFieldSubKey(keyMeta, key, new byte[0]);
         return kvClient.count(startKey, startKey, false);
     }
 }

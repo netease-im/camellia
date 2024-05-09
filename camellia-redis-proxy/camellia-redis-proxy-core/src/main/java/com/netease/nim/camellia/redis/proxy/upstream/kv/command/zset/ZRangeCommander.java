@@ -2,16 +2,23 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import com.netease.nim.camellia.redis.proxy.util.Utils;
+import com.netease.nim.camellia.tools.utils.BytesKey;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ZRANGE key start stop [WITHSCORES]
@@ -77,6 +84,67 @@ public class ZRangeCommander extends ZRange0Commander {
     }
 
     private Reply zrangeVersion0(KeyMeta keyMeta, byte[] key, byte[][] objects, boolean withScores) {
-        return ErrorReply.SYNTAX_ERROR;
+        int start = (int) Utils.bytesToNum(objects[2]);
+        int stop = (int) Utils.bytesToNum(objects[3]);
+
+        int size = BytesUtils.toInt(keyMeta.getExtra());
+
+        if (start < 0) {
+            start += size;
+        }
+        if (stop < 0) {
+            stop += size;
+        }
+        if (start < 0) {
+            start = 0;
+        }
+        if (stop < 0 || start > stop) {
+            return MultiBulkReply.EMPTY;
+        }
+        byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
+        byte[] prefix = startKey;
+        int scanBatch = kvConfig.scanBatch();
+
+        List<ZSetTuple> list = new ArrayList<>();
+        int count = 0;
+        while (true) {
+            List<KeyValue> scan = kvClient.scan(startKey, prefix, scanBatch, Sort.ASC, false);
+            if (scan.isEmpty()) {
+                break;
+            }
+            for (KeyValue keyValue : scan) {
+                if (keyValue == null || keyValue.getValue() == null) {
+                    continue;
+                }
+                startKey = keyValue.getKey();
+                if (count >= start) {
+                    byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
+                    byte[] score = Utils.doubleToBytes(BytesUtils.toDouble(keyValue.getValue()));
+                    list.add(new ZSetTuple(new BytesKey(member), new BytesKey(score)));
+                }
+                count++;
+            }
+            if (scan.size() < scanBatch) {
+                break;
+            }
+        }
+        Reply[] replies;
+        if (withScores) {
+            replies = new Reply[list.size()*2];
+            int i = 0;
+            for (ZSetTuple tuple : list) {
+                replies[i] = new BulkReply(tuple.getMember().getKey());
+                replies[i+1] = new BulkReply(tuple.getScore().getKey());
+                i+=2;
+            }
+        } else {
+            replies = new Reply[list.size()];
+            int i = 0;
+            for (ZSetTuple tuple : list) {
+                replies[i] = new BulkReply(tuple.getMember().getKey());
+                i+=1;
+            }
+        }
+        return new MultiBulkReply(replies);
     }
 }
