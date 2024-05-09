@@ -102,32 +102,8 @@ public class ZRangeCommander extends ZRange0Commander {
             return MultiBulkReply.EMPTY;
         }
         byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
-        byte[] prefix = startKey;
-        int scanBatch = kvConfig.scanBatch();
+        List<ZSetTuple> list = zrange0(key, startKey, startKey, start, stop, withScores);
 
-        List<ZSetTuple> list = new ArrayList<>();
-        int count = 0;
-        while (true) {
-            List<KeyValue> scan = kvClient.scan(startKey, prefix, scanBatch, Sort.ASC, false);
-            if (scan.isEmpty()) {
-                break;
-            }
-            for (KeyValue keyValue : scan) {
-                if (keyValue == null || keyValue.getValue() == null) {
-                    continue;
-                }
-                startKey = keyValue.getKey();
-                if (count >= start) {
-                    byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
-                    byte[] score = Utils.doubleToBytes(BytesUtils.toDouble(keyValue.getValue()));
-                    list.add(new ZSetTuple(new BytesKey(member), new BytesKey(score)));
-                }
-                count++;
-            }
-            if (scan.size() < scanBatch) {
-                break;
-            }
-        }
         Reply[] replies;
         if (withScores) {
             replies = new Reply[list.size()*2];
@@ -146,5 +122,41 @@ public class ZRangeCommander extends ZRange0Commander {
             }
         }
         return new MultiBulkReply(replies);
+    }
+
+    private List<ZSetTuple> zrange0(byte[] key, byte[] startKey, byte[] prefix, int start, int stop, boolean withScores) {
+        int targetSize = stop - start;
+        List<ZSetTuple> list = new ArrayList<>();
+        int scanBatch = kvConfig.scanBatch();
+        int count = 0;
+        while (true) {
+            int limit = Math.min(targetSize - list.size(), scanBatch);
+            List<KeyValue> scan = kvClient.scan(startKey, prefix, limit, Sort.ASC, false);
+            if (scan.isEmpty()) {
+                return list;
+            }
+            for (KeyValue keyValue : scan) {
+                if (keyValue == null || keyValue.getValue() == null) {
+                    continue;
+                }
+                startKey = keyValue.getKey();
+                if (count >= start) {
+                    byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
+                    if (withScores) {
+                        byte[] score = Utils.doubleToBytes(BytesUtils.toDouble(keyValue.getValue()));
+                        list.add(new ZSetTuple(new BytesKey(member), new BytesKey(score)));
+                    } else {
+                        list.add(new ZSetTuple(new BytesKey(member), null));
+                    }
+                }
+                if (count >= stop) {
+                    return list;
+                }
+                count++;
+            }
+            if (scan.size() < limit) {
+                return list;
+            }
+        }
     }
 }
