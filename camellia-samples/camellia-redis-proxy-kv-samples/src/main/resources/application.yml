@@ -11,6 +11,11 @@ camellia-redis-proxy:
   password: pass123   #password of proxy, priority less than custom client-auth-provider-class-name
   monitor-enable: false  #monitor enable/disable configure
   monitor-interval-seconds: 60 #monitor data refresh interval seconds
+#  cluster-mode-enable: true
+#  config:
+#    "proxy.cluster.mode.nodes": "10.242.171.218:6381@16381"
+#    "proxy.cluster.mode.current.node.host": "10.242.171.218"
+#    "proxy.cluster.mode.command.move.always": true
   plugins: #plugin list
     - monitorPlugin
     - bigKeyPlugin

@@ -54,6 +54,24 @@ public class RedisKvClient implements IUpstreamClient {
     public RedisKvClient(RedisKvResource resource) {
         this.resource = resource;
         this.namespace = resource.getNamespace();
+        checkConfig();
+    }
+
+    private void checkConfig() {
+        boolean standaloneModeEnable = ProxyDynamicConf.getBoolean("kv.standalone.mode.enable", false);
+        if (!standaloneModeEnable) {
+            boolean clusterModeEnable = GlobalRedisProxyEnv.getServerProperties().isClusterModeEnable();
+            if (!clusterModeEnable) {
+                logger.error("proxy cluster mode not enabled, kv client possible concurrency issues");
+                throw new KvException("proxy cluster mode not enabled, kv client possible concurrency issues");
+            } else {
+                boolean clusterModeCommandMoveAlways = ProxyDynamicConf.getBoolean("proxy.cluster.mode.command.move.always", false);
+                if (!clusterModeCommandMoveAlways) {
+                    logger.error("proxy cluster mode command move always not enabled, kv client possible concurrency issues");
+                    throw new KvException("proxy cluster mode command move always not enabled, kv client possible concurrency issues");
+                }
+            }
+        }
     }
 
     @Override
