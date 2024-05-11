@@ -18,9 +18,9 @@ public class CamelliaHealthController {
     @RequestMapping(value = "/status")
     public ResponseEntity<String> status() {
         if (CamelliaIdGenSegmentServerStatus.getStatus() == CamelliaIdGenSegmentServerStatus.Status.ONLINE) {
-            return new ResponseEntity<>(OK, HttpStatus.OK);
+            return ResponseEntity.ok(OK);
         } else {
-            return new ResponseEntity<>(ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ERROR);
         }
     }
 
@@ -32,16 +32,18 @@ public class CamelliaHealthController {
     @RequestMapping(value = "/online")
     public ResponseEntity<String> online() {
         CamelliaIdGenSegmentServerStatus.setStatus(CamelliaIdGenSegmentServerStatus.Status.ONLINE);
-        return new ResponseEntity<>(OK, HttpStatus.OK);
+        CamelliaIdGenSegmentServerStatus.invokeOnlineCallback();
+        return ResponseEntity.ok(OK);
     }
 
     @RequestMapping(value = "/offline")
     public ResponseEntity<String> offline() {
         CamelliaIdGenSegmentServerStatus.setStatus(CamelliaIdGenSegmentServerStatus.Status.OFFLINE);
+        CamelliaIdGenSegmentServerStatus.invokeOfflineCallback();
         if (CamelliaIdGenSegmentServerStatus.isIdle()) {
-            return new ResponseEntity<>(OK, HttpStatus.OK);
+            return ResponseEntity.ok(OK);
         } else {
-            return new ResponseEntity<>(ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ERROR);
         }
     }
 

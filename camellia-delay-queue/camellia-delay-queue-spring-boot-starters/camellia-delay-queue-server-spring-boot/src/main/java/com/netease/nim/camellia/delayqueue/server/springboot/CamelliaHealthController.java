@@ -18,30 +18,32 @@ public class CamelliaHealthController {
     @RequestMapping(value = "/status")
     public ResponseEntity<String> status() {
         if (CamelliaDelayQueueServerStatus.getStatus() == CamelliaDelayQueueServerStatus.Status.ONLINE) {
-            return new ResponseEntity<>(OK, HttpStatus.OK);
+            return ResponseEntity.ok(OK);
         } else {
-            return new ResponseEntity<>(ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ERROR);
         }
     }
 
     @RequestMapping(value = "/check")
     public ResponseEntity<String> check() {
-        return new ResponseEntity<>(OK, HttpStatus.OK);
+        return ResponseEntity.ok(OK);
     }
 
     @RequestMapping(value = "/online")
     public ResponseEntity<String> online() {
         CamelliaDelayQueueServerStatus.setStatus(CamelliaDelayQueueServerStatus.Status.ONLINE);
-        return new ResponseEntity<>(OK, HttpStatus.OK);
+        CamelliaDelayQueueServerStatus.invokeOnlineCallback();
+        return ResponseEntity.ok(OK);
     }
 
     @RequestMapping(value = "/offline")
     public ResponseEntity<String> offline() {
         CamelliaDelayQueueServerStatus.setStatus(CamelliaDelayQueueServerStatus.Status.OFFLINE);
+        CamelliaDelayQueueServerStatus.invokeOfflineCallback();
         if (CamelliaDelayQueueServerStatus.isIdle()) {
-            return new ResponseEntity<>(OK, HttpStatus.OK);
+            return ResponseEntity.ok(OK);
         } else {
-            return new ResponseEntity<>(ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ERROR);
         }
     }
 }

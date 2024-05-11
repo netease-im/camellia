@@ -18,30 +18,32 @@ public class CamelliaHealthController {
     @RequestMapping(value = "/status")
     public ResponseEntity<String> status() {
         if (CamelliaIdGenSnowflakeServerStatus.getStatus() == CamelliaIdGenSnowflakeServerStatus.Status.ONLINE) {
-            return new ResponseEntity<>(OK, HttpStatus.OK);
+            return ResponseEntity.ok(OK);
         } else {
-            return new ResponseEntity<>(ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ERROR);
         }
     }
 
     @RequestMapping(value = "/check")
     public ResponseEntity<String> check() {
-        return new ResponseEntity<>(OK, HttpStatus.OK);
+        return ResponseEntity.ok(OK);
     }
 
     @RequestMapping(value = "/online")
     public ResponseEntity<String> online() {
         CamelliaIdGenSnowflakeServerStatus.setStatus(CamelliaIdGenSnowflakeServerStatus.Status.ONLINE);
-        return new ResponseEntity<>(OK, HttpStatus.OK);
+        CamelliaIdGenSnowflakeServerStatus.invokeOnlineCallback();
+        return ResponseEntity.ok(OK);
     }
 
     @RequestMapping(value = "/offline")
     public ResponseEntity<String> offline() {
         CamelliaIdGenSnowflakeServerStatus.setStatus(CamelliaIdGenSnowflakeServerStatus.Status.OFFLINE);
+        CamelliaIdGenSnowflakeServerStatus.invokeOfflineCallback();
         if (CamelliaIdGenSnowflakeServerStatus.isIdle()) {
-            return new ResponseEntity<>(OK, HttpStatus.OK);
+            return ResponseEntity.ok(OK);
         } else {
-            return new ResponseEntity<>(ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ERROR);
         }
     }
 
