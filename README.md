@@ -37,7 +37,8 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 基于netty4开发的一款高性能redis代理  
 * 支持redis-standalone/redis-sentinel/redis-cluster
 * 支持其他proxy作为后端（如双写迁移场景），如 [twemproxy](https://github.com/twitter/twemproxy) 、[codis](https://github.com/CodisLabs/codis) 等
-* 支持 [kvrocks](https://github.com/apache/kvrocks) 、 [pika](https://github.com/OpenAtomFoundation/pika) 、 [tendis](https://github.com/Tencent/Tendis) 等作为后端    
+* 支持 [kvrocks](https://github.com/apache/kvrocks) 、 [pika](https://github.com/OpenAtomFoundation/pika) 、 [tendis](https://github.com/Tencent/Tendis) 等作为后端
+* 支持使用hbase/obkv/tikv等作为底层存储，构建一个类redis的系统，具体见：[kv](docs/redis-proxy/kv/kv.md)
 * 支持普通的GET/SET/EVAL，也支持MGET/MSET，也支持阻塞型的BLPOP，也支持PUBSUB和TRANSACTION，也支持STREAMS/JSON/SEARCH/BloomFilter/CuckooFilter，也支持TAIR_HASH/TAIR_ZSET/TAIR_STRING
 * 支持SCAN命令，即使后端是redis-cluster或者自定义分片，也可以透明的扫描到所有key
 * 支持SELECT命令，从而可以使用多database
@@ -52,8 +53,7 @@ Camellia提供了一系列简单易用的服务器组件，包括但不限于：
 * 高可用，可以基于lb组成集群，也可以基于注册中心组成集群，也可以伪装成redis-cluster组成集群，也可以伪装成redis-sentinel组成集群
 * 支持自定义插件，并且内置了很多插件，可以按需使用（包括：大key监控、热key监控、热key缓存、key命名空间、ip黑白名单、速率控制等等）  
 * 支持丰富的监控，如TPS、RT、热key、大key、慢查询、连接数等
-* 支持使用prometheus/grafana来监控proxy集群
-* 支持使用hbase/obkv/tikv等作为底层存储，构建一个类redis的系统，具体见：[kv](docs/redis-proxy/kv/kv.md)  
+* 支持使用prometheus/grafana来监控proxy集群  
 [快速开始](/docs/redis-proxy/redis-proxy-zh.md)  
 
 ### camellia-id-gen
