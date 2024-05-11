@@ -10,11 +10,11 @@
 * proxy基于redis-cluster模式运行，因此相同key会路由到同一个proxy节点（proxy节点扩缩容时需要精细化处理，todo-optimize）
 * proxy内部多work-thread运行，每个命令根据key哈希到同一个work-thread运行
 * proxy本身弱状态
-* proxy依赖的服务逻辑上包括三组：key-meta-server、subkey-server、redis-cache-server
-* key-meta-server，用于维护key的meta信息，包括key的类型、版本、ttl等，可以基于hbase/tikv/obkv实现
-* subkey-server，用于存储hash中的field等subkey，可以基于hbase/tikv/obkv实现
-* redis-cache-server，可选，基于redis，特点是key的ttl很短，并且允许换出
-* kv-storage层，抽象了简单的put/get/delete/scan接口，从而可以自由的选择hbase/tikv/obkv去实现key-meta-server和subkey-server，也可以基于其他kv存储
+* proxy依赖的服务逻辑上包括三组：key-meta-server、sub-key-server、redis-cache-server（可选）、redis-storage-server（可选）
+* key-meta-server，用于维护key的meta信息，包括key的类型、版本、ttl等，可以基于hbase/tikv/obkv实现，可以前置redis-cache-server
+* sub-key-server，用于存储hash中的field等subkey，可以基于hbase/tikv/obkv实现，可以前置redis-cache-server
+* 部分场景下，可以在sub-key-server层，混合使用redis作为storage，而非完全的cache，来提升性能
+* 对于hbase/tikv/obkv的访问有一个抽象层，也可以替换为其他kv存储
 * 参考了 [pika](https://github.com/OpenAtomFoundation/pika) 、 [kvrocks](https://github.com/apache/kvrocks) 、 [tidis](https://github.com/yongman/tidis)、 [titan](https://github.com/distributedio/titan)、 [titea](https://github.com/distributedio/titan) 的设计
 * 使用gc机制来回收kv存储层的过期数据，具体见: [gc](gc.md)
 
@@ -221,7 +221,7 @@ kv.cache.zset.range.cache.millis=300000
 |           key            |                      value                       |
 |:------------------------:|:------------------------------------------------:|
 |   m# + namespace + key   |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
-| prefix + namespace + key | 0 + 3 + key-version + expire-time + member-count |
+| prefix + namespace + key | 1 + 3 + key-version + expire-time + member-count |
 
 #### sub-key
 
