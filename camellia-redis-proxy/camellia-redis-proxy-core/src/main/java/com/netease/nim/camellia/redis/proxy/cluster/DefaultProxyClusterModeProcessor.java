@@ -118,6 +118,7 @@ public class DefaultProxyClusterModeProcessor implements ProxyClusterModeProcess
                     clusterNodes = initClusterNodes();
                     currentNodeOnline = onlineNodes.contains(currentNode);
                     logger.info("refresh proxy cluster mode nodes success, onlineNodes = {}, currentNodeOnline = {}", onlineNodes, currentNodeOnline);
+                    ClusterModeStatus.invokeClusterModeSlotRefreshCallback();
                 } finally {
                     refreshing.compareAndSet(true, false);
                 }

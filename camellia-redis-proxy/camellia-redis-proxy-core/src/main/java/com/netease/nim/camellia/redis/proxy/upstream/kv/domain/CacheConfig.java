@@ -9,14 +9,24 @@ public class CacheConfig {
 
     private final String namespace;
     private final boolean metaCacheEnable;
+    private final boolean metaLocalCacheEnable;
 
-    public CacheConfig(String namespace, boolean metaCacheEnable) {
+    public CacheConfig(String namespace, boolean metaCacheEnable, boolean metaLocalCacheEnable) {
         this.namespace = namespace;
         this.metaCacheEnable = metaCacheEnable;
+        this.metaLocalCacheEnable = metaLocalCacheEnable;
     }
 
     public boolean isMetaCacheEnable() {
         return metaCacheEnable;
+    }
+
+    public boolean isMetaLocalCacheEnable() {
+        return metaLocalCacheEnable;
+    }
+
+    public int metaLocalCacheCapacity() {
+        return RedisKvConf.getInt(namespace, "kv.key.meta.local.cache.capacity", 100000);
     }
 
     public long metaCacheMillis() {
