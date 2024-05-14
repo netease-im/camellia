@@ -2,7 +2,6 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -104,24 +103,7 @@ public class ZRangeCommander extends ZRange0Commander {
         byte[] startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
         List<ZSetTuple> list = zrange0(key, startKey, startKey, start, stop, withScores);
 
-        Reply[] replies;
-        if (withScores) {
-            replies = new Reply[list.size()*2];
-            int i = 0;
-            for (ZSetTuple tuple : list) {
-                replies[i] = new BulkReply(tuple.getMember().getKey());
-                replies[i+1] = new BulkReply(tuple.getScore().getKey());
-                i+=2;
-            }
-        } else {
-            replies = new Reply[list.size()];
-            int i = 0;
-            for (ZSetTuple tuple : list) {
-                replies[i] = new BulkReply(tuple.getMember().getKey());
-                i+=1;
-            }
-        }
-        return new MultiBulkReply(replies);
+        return ZSetTupleUtils.toReply(list, withScores);
     }
 
     private List<ZSetTuple> zrange0(byte[] key, byte[] startKey, byte[] prefix, int start, int stop, boolean withScores) {

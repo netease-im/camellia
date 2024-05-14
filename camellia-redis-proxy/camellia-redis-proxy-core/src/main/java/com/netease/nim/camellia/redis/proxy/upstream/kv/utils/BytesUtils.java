@@ -9,6 +9,25 @@ public class BytesUtils {
     public static final int SIZEOF_LONG = Long.SIZE / Byte.SIZE;
     public static final int SIZEOF_INT = Integer.SIZE / Byte.SIZE;
 
+    public static byte[] nextBytes(byte[] bytes) {
+        byte[] result = new byte[bytes.length];
+        System.arraycopy(bytes, 0, result, 0, result.length);
+        int index = bytes.length - 1;
+        while (true) {
+            if (index < 0) {
+                throw new IllegalStateException("illegal bytes");
+            }
+            byte b = result[index];
+            if (b < Byte.MAX_VALUE) {
+                result[index] = (byte) (b + 1);
+                break;
+            } else {
+                index --;
+            }
+        }
+        return result;
+    }
+
     public static byte[] toBytes(double val) {
         return toBytes(Double.doubleToRawLongBits(val));
     }
