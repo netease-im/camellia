@@ -4,13 +4,19 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
+import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ZREMRANGEBYLEX key min max
@@ -32,7 +38,7 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
 
     @Override
     public RedisCommand redisCommand() {
-        return RedisCommand.ZREMRANGEBYRANK;
+        return RedisCommand.ZREMRANGEBYLEX;
     }
 
     @Override
@@ -72,6 +78,69 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
     }
 
     private Reply zremrangeByLex(KeyMeta keyMeta, byte[] key, byte[][] objects) {
-        return ErrorReply.SYNTAX_ERROR;
+        ZSetLex minLex;
+        ZSetLex maxLex;
+        try {
+            minLex = ZSetLex.fromLex(objects[2]);
+            maxLex = ZSetLex.fromLex(objects[3]);
+            if (minLex == null || maxLex == null) {
+                return new ErrorReply("ERR min or max not valid string range item");
+            }
+        } catch (Exception e) {
+            return ErrorReply.SYNTAX_ERROR;
+        }
+        if (minLex.isMax() || maxLex.isMin()) {
+            return MultiBulkReply.EMPTY;
+        }
+        byte[] startKey;
+        if (minLex.isMin()) {
+            startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]);
+        } else {
+            startKey = keyDesign.zsetMemberSubKey1(keyMeta, key, minLex.getLex());
+        }
+        byte[] endKey;
+        if (maxLex.isMax()) {
+            endKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey1(keyMeta, key, new byte[0]));
+        } else {
+            if (maxLex.isExcludeLex()) {
+                endKey = keyDesign.zsetMemberSubKey1(keyMeta, key, maxLex.getLex());
+            } else {
+                endKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey1(keyMeta, key, maxLex.getLex()));
+            }
+        }
+        List<byte[]> toDeleteKeys = new ArrayList<>();
+        int scanBatch = kvConfig.scanBatch();
+        int count = 0;
+        while (true) {
+            List<KeyValue> scan = kvClient.scanByStartEnd(startKey, endKey, scanBatch, Sort.ASC, !minLex.isExcludeLex());
+            if (scan.isEmpty()) {
+                break;
+            }
+            for (KeyValue keyValue : scan) {
+                if (keyValue == null || keyValue.getValue() == null) {
+                    continue;
+                }
+                startKey = keyValue.getKey();
+                byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
+                boolean pass = ZSetLexUtil.checkLex(member, minLex, maxLex);
+                if (!pass) {
+                    continue;
+                }
+                toDeleteKeys.add(keyValue.getKey());
+                toDeleteKeys.add(keyDesign.zsetMemberSubKey2(keyMeta, key, member, keyValue.getValue()));
+                count++;
+            }
+            if (scan.size() < scanBatch) {
+                break;
+            }
+        }
+        if (!toDeleteKeys.isEmpty()) {
+            kvClient.batchDelete(toDeleteKeys.toArray(new byte[0][0]));
+            int size = BytesUtils.toInt(keyMeta.getExtra());
+            size = size - count;
+            updateKeyMeta(keyMeta, key, size);
+            return IntegerReply.parse(count);
+        }
+        return IntegerReply.REPLY_0;
     }
 }
