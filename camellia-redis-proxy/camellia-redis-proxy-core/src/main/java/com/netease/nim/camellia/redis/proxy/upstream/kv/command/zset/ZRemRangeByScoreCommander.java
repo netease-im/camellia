@@ -4,13 +4,19 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
+import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyType;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ZREMRANGEBYSCORE key min max
@@ -72,6 +78,57 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
     }
 
     private Reply zremrangeByScore(KeyMeta keyMeta, byte[] key, byte[][] objects) {
-        return ErrorReply.SYNTAX_ERROR;
+        ZSetScore minScore;
+        ZSetScore maxScore;
+        try {
+            minScore = ZSetScore.fromBytes(objects[2]);
+            maxScore = ZSetScore.fromBytes(objects[3]);
+        } catch (Exception e) {
+            return ErrorReply.SYNTAX_ERROR;
+        }
+        if (minScore.getScore() > maxScore.getScore()) {
+            return IntegerReply.REPLY_0;
+        }
+        byte[] startKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(minScore.getScore()));
+        byte[] endKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(maxScore.getScore())));
+        int batch = kvConfig.scanBatch();
+        List<byte[]> toDeleteKeys = new ArrayList<>();
+        int count = 0;
+        while (true) {
+            List<KeyValue> list = kvClient.scan(startKey, endKey, batch, Sort.ASC, false, false);
+            if (list.isEmpty()) {
+                break;
+            }
+            for (KeyValue keyValue : list) {
+                if (keyValue == null) {
+                    continue;
+                }
+                startKey = keyValue.getKey();
+                if (keyValue.getValue() == null) {
+                    continue;
+                }
+                double score = keyDesign.decodeZSetScoreBySubKey2(keyValue.getKey(), key);
+                boolean pass = ZSetScoreUtils.checkScore(score, minScore, maxScore);
+                if (!pass) {
+                    continue;
+                }
+                toDeleteKeys.add(keyValue.getKey());
+                byte[] member = keyDesign.decodeZSetMemberBySubKey2(keyValue.getKey(), key);
+                byte[] subKey2 = keyDesign.zsetMemberSubKey2(keyMeta, key, member, keyValue.getValue());
+                toDeleteKeys.add(subKey2);
+                count ++;
+            }
+            if (list.size() < batch) {
+                break;
+            }
+        }
+        if (!toDeleteKeys.isEmpty()) {
+            kvClient.batchDelete(toDeleteKeys.toArray(new byte[0][0]));
+            int size = BytesUtils.toInt(keyMeta.getExtra());
+            size = size - count;
+            updateKeyMeta(keyMeta, key, size);
+            return IntegerReply.parse(count);
+        }
+        return IntegerReply.REPLY_0;
     }
 }

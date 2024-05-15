@@ -96,6 +96,9 @@ public class ZRangeByScoreCommander extends ZRange0Commander {
         } catch (Exception e) {
             return ErrorReply.SYNTAX_ERROR;
         }
+        if (minScore.getScore() > maxScore.getScore()) {
+            return MultiBulkReply.EMPTY;
+        }
         byte[] startKey = keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(minScore.getScore()));
         byte[] endKey = BytesUtils.nextBytes(keyDesign.zsetMemberSubKey2(keyMeta, key, new byte[0], BytesUtils.toBytes(maxScore.getScore())));
         int batch = kvConfig.scanBatch();
