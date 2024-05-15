@@ -176,6 +176,8 @@ kv.cache.hgetall.cache.millis=30000
 |  hdel   |              `HDEL key field [field ...]` |
 | hgetall |                             `HGETALL key` |
 |  hlen   |                                `HLEN key` |
+|  hkeys  |                               `HKEYS key` |
+|  hvals  |                               `HVALS key` |
 
 
 ## zset数据结构

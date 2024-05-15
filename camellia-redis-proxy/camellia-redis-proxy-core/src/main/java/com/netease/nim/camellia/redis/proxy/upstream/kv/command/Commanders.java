@@ -53,6 +53,8 @@ public class Commanders {
         initCommander(new HDelCommander(commanderConfig));
         initCommander(new HLenCommander(commanderConfig));
         initCommander(new HMGetCommander(commanderConfig));
+        initCommander(new HKeysCommander(commanderConfig));
+        initCommander(new HValsCommander(commanderConfig));
 
         //zset
         initCommander(new ZAddCommander(commanderConfig));

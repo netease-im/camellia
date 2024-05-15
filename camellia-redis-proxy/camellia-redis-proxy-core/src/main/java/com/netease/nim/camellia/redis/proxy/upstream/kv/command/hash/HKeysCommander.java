@@ -16,27 +16,27 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
- * HGETALL key
+ * HKEYS key
  * <p>
- * Created by caojiajun on 2024/4/7
+ * Created by caojiajun on 2024/5/15
  */
-public class HGetAllCommander extends Hash0Commander {
+public class HKeysCommander extends Hash0Commander {
 
     private static final byte[] script = ("local arg = redis.call('exists', KEYS[1]);\n" +
             "if tonumber(arg) == 1 then\n" +
-            "\tlocal ret = redis.call('hgetall', KEYS[1]);\n" +
+            "\tlocal ret = redis.call('hkeys', KEYS[1]);\n" +
             "\tredis.call('pexpire', KEYS[1], ARGV[1]);\n" +
             "\treturn {'1', ret};\n" +
             "end\n" +
             "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
-    public HGetAllCommander(CommanderConfig commanderConfig) {
+    public HKeysCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
     }
 
     @Override
     public RedisCommand redisCommand() {
-        return RedisCommand.HGETALL;
+        return RedisCommand.HKEYS;
     }
 
     @Override
@@ -49,8 +49,6 @@ public class HGetAllCommander extends Hash0Commander {
     protected Reply execute(Command command) {
         byte[][] objects = command.getObjects();
         byte[] key = objects[1];
-
-        //meta
         KeyMeta keyMeta = keyMetaServer.getKeyMeta(key);
         if (keyMeta == null) {
             return MultiBulkReply.EMPTY;
@@ -58,19 +56,18 @@ public class HGetAllCommander extends Hash0Commander {
         if (keyMeta.getKeyType() != KeyType.hash) {
             return ErrorReply.WRONG_TYPE;
         }
-
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
+
         if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_1) {
             Map<BytesKey, byte[]> map = hgetallFromKv(keyMeta, key);
             if (map.isEmpty()) {
                 return MultiBulkReply.EMPTY;
             }
-            Reply[] replies = new Reply[map.size() * 2];
+            Reply[] replies = new Reply[map.size()];
             int i = 0;
             for (Map.Entry<BytesKey, byte[]> entry : map.entrySet()) {
                 replies[i] = new BulkReply(entry.getKey().getKey());
-                replies[i + 1] = new BulkReply(entry.getValue());
-                i += 2;
+                i++;
             }
             return new MultiBulkReply(replies);
         }
@@ -93,14 +90,12 @@ public class HGetAllCommander extends Hash0Commander {
             return errorReply;
         }
 
-        Reply[] replies = new Reply[map.size() * 2];
+        Reply[] replies = new Reply[map.size()];
         int i = 0;
         for (Map.Entry<BytesKey, byte[]> entry : map.entrySet()) {
             replies[i] = new BulkReply(entry.getKey().getKey());
-            replies[i + 1] = new BulkReply(entry.getValue());
-            i += 2;
+            i++;
         }
         return new MultiBulkReply(replies);
     }
-
 }
