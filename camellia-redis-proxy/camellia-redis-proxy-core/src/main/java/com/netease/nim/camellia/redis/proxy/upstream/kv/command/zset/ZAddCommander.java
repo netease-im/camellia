@@ -133,8 +133,25 @@ public class ZAddCommander extends Commander {
                 existsKeys[j] = subKey1;
                 j++;
             }
-            boolean[] exists = kvClient.exists(existsKeys);
-            int existsCount = Utils.count(exists);
+            int existsCount = 0;
+            List<KeyValue> keyValues = kvClient.batchGet(existsKeys);
+            List<byte[]> toDeleteSubKey2 = new ArrayList<>(existsKeys.length);
+            for (KeyValue keyValue : keyValues) {
+                if (keyValue == null) {
+                    continue;
+                }
+                if (keyValue.getValue() == null) {
+                    continue;
+                }
+                byte[] subKey1 = keyValue.getKey();
+                byte[] member = keyDesign.decodeZSetMemberBySubKey1(subKey1, key);
+                byte[] subKey2 = keyDesign.zsetMemberSubKey2(keyMeta, key, member, keyValue.getValue());
+                toDeleteSubKey2.add(subKey2);
+                existsCount ++;
+            }
+            if (!toDeleteSubKey2.isEmpty()) {
+                kvClient.batchDelete(toDeleteSubKey2.toArray(new byte[0][0]));
+            }
             int add = memberSize - existsCount;
             kvClient.batchPut(list);
             updateKeyMeta(keyMeta, key, add);
