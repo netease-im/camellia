@@ -108,7 +108,7 @@ public class ZRangeByScoreCommander extends ZRange0Commander {
             if (limit.getCount() > 0) {
                 batch = Math.min(kvConfig.scanBatch(), limit.getCount() - result.size());
             }
-            List<KeyValue> list = kvClient.scan(startKey, endKey, batch, Sort.ASC, false, false);
+            List<KeyValue> list = kvClient.scanByStartEnd(startKey, endKey, batch, Sort.ASC, false);
             if (list.isEmpty()) {
                 break;
             }

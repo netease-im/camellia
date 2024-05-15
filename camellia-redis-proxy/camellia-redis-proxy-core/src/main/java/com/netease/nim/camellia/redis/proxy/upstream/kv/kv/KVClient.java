@@ -102,7 +102,7 @@ public interface KVClient {
      * @param includeStartKey include start key
      * @return k-v list
      */
-    List<KeyValue> scan(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey);
+    List<KeyValue> scanByPrefix(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey);
 
     /**
      * count key count with key prefix
@@ -111,7 +111,7 @@ public interface KVClient {
      * @param includeStartKey include start key
      * @return count
      */
-    long count(byte[] startKey, byte[] prefix, boolean includeStartKey);
+    long countByPrefix(byte[] startKey, byte[] prefix, boolean includeStartKey);
 
     /**
      * scan k-v list with start and end
@@ -120,18 +120,16 @@ public interface KVClient {
      * @param limit limit
      * @param sort sort
      * @param includeStartKey include start key
-     * @param includeEndKey include end key
      * @return k-v list
      */
-    List<KeyValue> scan(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey, boolean includeEndKey);
+    List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey);
 
     /**
      * count key count with start and end
      * @param startKey start key
      * @param endKey end key
      * @param includeStartKey include start key
-     * @param includeEndKey include end key
      * @return count
      */
-    long count(byte[] startKey, byte[] endKey, boolean includeStartKey, boolean includeEndKey);
+    long countByStartEnd(byte[] startKey, byte[] endKey, boolean includeStartKey);
 }

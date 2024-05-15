@@ -226,7 +226,7 @@ public class HDelCommander extends Commander {
 
     private boolean checkHLenZero(byte[] key, KeyMeta keyMeta) {
         byte[] startKey = keyDesign.hashFieldSubKey(keyMeta, key, new byte[0]);
-        List<KeyValue> scan = kvClient.scan(startKey, startKey, 1, Sort.ASC, false);
+        List<KeyValue> scan = kvClient.scanByPrefix(startKey, startKey, 1, Sort.ASC, false);
         return scan.isEmpty();
     }
 }

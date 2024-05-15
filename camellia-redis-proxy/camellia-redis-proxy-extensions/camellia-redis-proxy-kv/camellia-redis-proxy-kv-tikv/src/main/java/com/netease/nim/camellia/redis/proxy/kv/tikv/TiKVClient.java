@@ -188,7 +188,7 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public List<KeyValue> scan(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
+    public List<KeyValue> scanByPrefix(byte[] startKey, byte[] prefix, int limit, Sort sort, boolean includeStartKey) {
         try {
             Iterator<Kvrpcpb.KvPair> iterator = tikvClient.scan0(ByteString.copyFrom(startKey), limit);
             List<KeyValue> list = new ArrayList<>();
@@ -215,7 +215,7 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public long count(byte[] startKey, byte[] prefix, boolean includeStartKey) {
+    public long countByPrefix(byte[] startKey, byte[] prefix, boolean includeStartKey) {
         try {
             List<Kvrpcpb.KvPair> kvPairs = tikvClient.scanPrefix(ByteString.copyFrom(prefix), true);
             long count = 0;
@@ -233,7 +233,7 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public List<KeyValue> scan(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey, boolean includeEndKey) {
+    public List<KeyValue> scanByStartEnd(byte[] startKey, byte[] endKey, int limit, Sort sort, boolean includeStartKey) {
         try {
             Iterator<Kvrpcpb.KvPair> iterator = tikvClient.scan0(ByteString.copyFrom(startKey), ByteString.copyFrom(endKey), limit);
             List<KeyValue> list = new ArrayList<>();
@@ -241,9 +241,6 @@ public class TiKVClient implements KVClient {
                 Kvrpcpb.KvPair kvPair = iterator.next();
                 byte[] byteArray = kvPair.getKey().toByteArray();
                 if (!includeStartKey && Arrays.equals(startKey, byteArray)) {
-                    continue;
-                }
-                if (!includeEndKey && Arrays.equals(endKey, byteArray)) {
                     continue;
                 }
                 list.add(toKeyValue(kvPair));
@@ -259,16 +256,13 @@ public class TiKVClient implements KVClient {
     }
 
     @Override
-    public long count(byte[] startKey, byte[] endKey, boolean includeStartKey, boolean includeEndKey) {
+    public long countByStartEnd(byte[] startKey, byte[] endKey, boolean includeStartKey) {
         try {
             List<Kvrpcpb.KvPair> scan = tikvClient.scan(ByteString.copyFrom(startKey), ByteString.copyFrom(endKey), true);
             long count = 0;
             for (Kvrpcpb.KvPair kvPair : scan) {
                 byte[] byteArray = kvPair.getKey().toByteArray();
                 if (!includeStartKey && Arrays.equals(startKey, byteArray)) {
-                    continue;
-                }
-                if (!includeEndKey && Arrays.equals(endKey, byteArray)) {
                     continue;
                 }
                 count ++;

@@ -114,7 +114,7 @@ public class ZRevRangeCommander extends ZRange0Commander {
         int count = 0;
         while (true) {
             int limit = Math.min(targetSize - list.size(), scanBatch);
-            List<KeyValue> scan = kvClient.scan(startKey, prefix, limit, Sort.DESC, false);
+            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.DESC, false);
             if (scan.isEmpty()) {
                 return list;
             }

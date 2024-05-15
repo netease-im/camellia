@@ -9,6 +9,29 @@ public class BytesUtils {
     public static final int SIZEOF_LONG = Long.SIZE / Byte.SIZE;
     public static final int SIZEOF_INT = Integer.SIZE / Byte.SIZE;
 
+    public static int compare(byte[] a, byte[] b) {
+        if (a == b) {
+            return 0;
+        }
+        if (a == null) {
+            return -1;
+        }
+        if (b == null) {
+            return 1;
+        }
+        int minLen = Math.min(a.length, b.length);
+        for (int i = 0; i < minLen; ++i) {
+            int aVal = a[i] & 0xFF, bVal = b[i] & 0xFF;
+            if (aVal < bVal) {
+                return -1;
+            }
+            if (aVal > bVal) {
+                return 1;
+            }
+        }
+        return Integer.compare(a.length, b.length);
+    }
+
     public static byte[] nextBytes(byte[] bytes) {
         byte[] result = new byte[bytes.length];
         System.arraycopy(bytes, 0, result, 0, result.length);

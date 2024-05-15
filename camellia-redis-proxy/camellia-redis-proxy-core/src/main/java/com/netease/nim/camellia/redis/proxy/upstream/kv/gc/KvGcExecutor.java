@@ -133,7 +133,7 @@ public class KvGcExecutor {
             byte[] startKey = metaPrefix;
             int limit = kvConfig.scanBatch();
             while (true) {
-                List<KeyValue> scan = kvClient.scan(startKey, metaPrefix, limit, Sort.ASC, false);
+                List<KeyValue> scan = kvClient.scanByPrefix(startKey, metaPrefix, limit, Sort.ASC, false);
                 if (scan.isEmpty()) {
                     break;
                 }
@@ -192,7 +192,7 @@ public class KvGcExecutor {
             byte[] startKey = storePrefix;
             int limit = kvConfig.scanBatch();
             while (true) {
-                List<KeyValue> scan = kvClient.scan(startKey, storePrefix, limit, Sort.ASC, false);
+                List<KeyValue> scan = kvClient.scanByPrefix(startKey, storePrefix, limit, Sort.ASC, false);
                 if (scan.isEmpty()) {
                     break;
                 }
@@ -307,7 +307,7 @@ public class KvGcExecutor {
                     byte[] prefix = startKey;
                     int limit = kvConfig.scanBatch();
                     while (true) {
-                        List<KeyValue> scan = kvClient.scan(startKey, prefix, limit, Sort.ASC, false);
+                        List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
                         if (scan.isEmpty()) {
                             break;
                         }

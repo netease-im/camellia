@@ -4,7 +4,6 @@ import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
-import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
@@ -95,7 +94,7 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
         List<byte[]> toDeleteKeys = new ArrayList<>();
         int count = 0;
         while (true) {
-            List<KeyValue> list = kvClient.scan(startKey, endKey, batch, Sort.ASC, false, false);
+            List<KeyValue> list = kvClient.scanByStartEnd(startKey, endKey, batch, Sort.ASC, false);
             if (list.isEmpty()) {
                 break;
             }

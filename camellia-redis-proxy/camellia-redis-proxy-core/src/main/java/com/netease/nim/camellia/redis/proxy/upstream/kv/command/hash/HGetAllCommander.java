@@ -142,7 +142,7 @@ public class HGetAllCommander extends Commander {
         int limit = kvConfig.scanBatch();
         int hashMaxSize = kvConfig.hashMaxSize();
         while (true) {
-            List<KeyValue> scan = kvClient.scan(startKey, prefix, limit, Sort.ASC, false);
+            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
                 break;
             }

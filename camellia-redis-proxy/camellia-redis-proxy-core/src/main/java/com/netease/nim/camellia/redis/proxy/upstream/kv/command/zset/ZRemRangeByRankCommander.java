@@ -109,7 +109,7 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
         int count = 0;
         while (true) {
             int limit = Math.min(targetSize - list.size(), scanBatch);
-            List<KeyValue> scan = kvClient.scan(startKey, prefix, limit, Sort.ASC, false);
+            List<KeyValue> scan = kvClient.scanByPrefix(startKey, prefix, limit, Sort.ASC, false);
             if (scan.isEmpty()) {
                 return deleteKv(list);
             }

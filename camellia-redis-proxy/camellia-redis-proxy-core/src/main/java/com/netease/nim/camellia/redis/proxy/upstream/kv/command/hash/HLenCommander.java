@@ -70,6 +70,6 @@ public class HLenCommander extends Commander {
 
     private long getSizeFromKv(KeyMeta keyMeta, byte[] key) {
         byte[] startKey = keyDesign.hashFieldSubKey(keyMeta, key, new byte[0]);
-        return kvClient.count(startKey, startKey, false);
+        return kvClient.countByPrefix(startKey, startKey, false);
     }
 }

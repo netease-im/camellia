@@ -1,0 +1,31 @@
+package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
+
+
+import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+
+/**
+ * Created by caojiajun on 2024/5/15
+ */
+public class ZSetLexUtil {
+
+    public static boolean checkLex(byte[] member, ZSetLex minLex, ZSetLex maxLex) {
+        if (minLex.isMin() && maxLex.isMax()) {
+            return true;
+        }
+        if (!maxLex.isMax()) {
+            if (maxLex.isExcludeLex()) {
+                return BytesUtils.compare(member, maxLex.getLex()) < 0;
+            } else {
+                return BytesUtils.compare(member, maxLex.getLex()) <= 0;
+            }
+        }
+        if (!minLex.isMin()) {
+            if (minLex.isExcludeLex()) {
+                return BytesUtils.compare(member, minLex.getLex()) > 0;
+            } else {
+                return BytesUtils.compare(member, minLex.getLex()) >= 0;
+            }
+        }
+        return true;
+    }
+}

@@ -4,10 +4,7 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.hbase.resource.HBaseResource;
 import com.netease.nim.camellia.hbase.util.HBaseResourceUtil;
-import org.apache.hadoop.hbase.client.Delete;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.*;
 
 import java.nio.charset.StandardCharsets;
 
@@ -28,33 +25,48 @@ public class TestHBase {
 
         String table = "camellia_kv";
 
-        Put put0 = new Put("k1".getBytes(StandardCharsets.UTF_8));
-        put0.addColumn(cf, column1, "v0".getBytes(StandardCharsets.UTF_8));
+        for (int i=1; i<10; i++) {
+            Put put0 = new Put(("q" + i).getBytes(StandardCharsets.UTF_8));
+            put0.addColumn(cf, column1, ("v" + i).getBytes(StandardCharsets.UTF_8));
+            template.put(table, put0);
+        }
+
+        Scan scan = new Scan();
+        scan.setStartRow("q2".getBytes(StandardCharsets.UTF_8));
+        scan.setStopRow("q5".getBytes(StandardCharsets.UTF_8));
+        ResultScanner scan1 = template.scan(table, scan);
+        for (Result result : scan1) {
+            byte[] value = result.getValue(cf, column1);
+            if (value == null) {
+                break;
+            }
+            System.out.println(new String(value));
+        }
 //        put0.setTTL(10*1000L);
 
-        template.put(table, put0);
-
-        Put put1 = new Put("k1".getBytes(StandardCharsets.UTF_8));
-        put1.addColumn(cf, column1, "v1".getBytes(StandardCharsets.UTF_8));
-        put1.setTTL(5*1000L);
-
-        template.put(table, put1);
-
-        int i=10;
-        while (i-->0) {
-            Result result = template.get(table, new Get("k1".getBytes(StandardCharsets.UTF_8)));
-            System.out.println(parseValue(result));
-            Thread.sleep(1000);
-        }
-
-        template.delete(table, new Delete("k1".getBytes(StandardCharsets.UTF_8)));
-
-        int j=10;
-        while (j-->0) {
-            Result result = template.get(table, new Get("k1".getBytes(StandardCharsets.UTF_8)));
-            System.out.println(parseValue(result));
-            Thread.sleep(1000);
-        }
+//        template.put(table, put0);
+//
+//        Put put1 = new Put("k1".getBytes(StandardCharsets.UTF_8));
+//        put1.addColumn(cf, column1, "v1".getBytes(StandardCharsets.UTF_8));
+//        put1.setTTL(5*1000L);
+//
+//        template.put(table, put1);
+//
+//        int i=10;
+//        while (i-->0) {
+//            Result result = template.get(table, new Get("k1".getBytes(StandardCharsets.UTF_8)));
+//            System.out.println(parseValue(result));
+//            Thread.sleep(1000);
+//        }
+//
+//        template.delete(table, new Delete("k1".getBytes(StandardCharsets.UTF_8)));
+//
+//        int j=10;
+//        while (j-->0) {
+//            Result result = template.get(table, new Get("k1".getBytes(StandardCharsets.UTF_8)));
+//            System.out.println(parseValue(result));
+//            Thread.sleep(1000);
+//        }
 
 //        Put put11 = new Put("k1".getBytes(StandardCharsets.UTF_8));
 //        put11.addColumn(cf, column2, "v11".getBytes(StandardCharsets.UTF_8));
