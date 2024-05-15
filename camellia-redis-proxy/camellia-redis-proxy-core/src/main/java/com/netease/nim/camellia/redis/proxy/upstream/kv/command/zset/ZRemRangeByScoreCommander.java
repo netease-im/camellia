@@ -37,7 +37,7 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
 
     @Override
     public RedisCommand redisCommand() {
-        return RedisCommand.ZREMRANGEBYRANK;
+        return RedisCommand.ZREMRANGEBYSCORE;
     }
 
     @Override
