@@ -2,6 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.zset;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
+import com.netease.nim.camellia.redis.proxy.enums.RedisKeyword;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
@@ -61,7 +62,7 @@ public class ZRevRangeCommander extends ZRange0Commander {
         }
         boolean withScores = false;
         if (objects.length == 5) {
-            withScores = Utils.bytesToString(objects[4]).equalsIgnoreCase("withscores");
+            withScores = Utils.bytesToString(objects[4]).equalsIgnoreCase(RedisKeyword.WITHSCORES.name());
             if (!withScores) {
                 return ErrorReply.SYNTAX_ERROR;
             }

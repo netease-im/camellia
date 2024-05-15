@@ -126,6 +126,18 @@ public class KeyDesign {
         return field;
     }
 
+    public double decodeZSetScoreBySubKey2(byte[] subKey2, byte[] key) {
+        int prefixSize = prefixLen + 4 + key.length + 8;
+        return BytesUtils.toDouble(subKey2, prefixSize);
+    }
+
+    public byte[] decodeZSetMemberBySubKey2(byte[] subKey2, byte[] key) {
+        int prefixSize = prefixLen + 4 + key.length + 8;
+        byte[] member = new byte[subKey2.length - prefixSize - 8];
+        System.arraycopy(subKey2, prefixSize + 8, member, 0, member.length);
+        return member;
+    }
+
     public byte[] getMetaPrefix() {
         return metaPrefix;
     }
