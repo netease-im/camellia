@@ -4,6 +4,7 @@ import com.netease.nim.camellia.core.model.Resource;
 import com.netease.nim.camellia.hbase.CamelliaHBaseTemplate;
 import com.netease.nim.camellia.hbase.resource.HBaseResource;
 import com.netease.nim.camellia.hbase.util.HBaseResourceUtil;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import org.apache.hadoop.hbase.client.*;
 
 import java.nio.charset.StandardCharsets;
@@ -25,15 +26,46 @@ public class TestHBase {
 
         String table = "camellia_kv";
 
-        for (int i=1; i<10; i++) {
-            Put put0 = new Put(("q" + i).getBytes(StandardCharsets.UTF_8));
-            put0.addColumn(cf, column1, ("v" + i).getBytes(StandardCharsets.UTF_8));
-            template.put(table, put0);
-        }
+        byte[] row0 = new byte[] {1, 1, 1, -2};//次大 00
+        byte[] row1 = new byte[] {1, 1, 1, -1};//最大 11
+        byte[] row2 = new byte[] {1, 1, 1, 0};//小 22
+        byte[] row3 = new byte[] {1, 1, 1, 1};//中 33
+
+        System.out.println(BytesUtils.compare(row0, row1));
+        System.out.println(BytesUtils.compare(row0, row2));
+        System.out.println(BytesUtils.compare(row0, row3));
+        System.out.println(BytesUtils.compare(row1, row2));
+        System.out.println(BytesUtils.compare(row2, row3));
+        System.out.println(BytesUtils.compare(row1, row3));
+
+        System.out.println("==");
+
+        Put put0 = new Put(row0);
+        put0.addColumn(cf, column1, "00".getBytes(StandardCharsets.UTF_8));
+
+        Put put1 = new Put(row1);
+        put1.addColumn(cf, column1, "11".getBytes(StandardCharsets.UTF_8));
+
+        Put put2 = new Put(row2);
+        put2.addColumn(cf, column1, "22".getBytes(StandardCharsets.UTF_8));
+
+        Put put3 = new Put(row3);
+        put3.addColumn(cf, column1, "33".getBytes(StandardCharsets.UTF_8));
+
+        template.put(table, put0);
+        template.put(table, put1);
+        template.put(table, put2);
+        template.put(table, put3);
+
+//        for (int i=1; i<10; i++) {
+//            Put put0 = new Put(("q" + i).getBytes(StandardCharsets.UTF_8));
+//            put0.addColumn(cf, column1, ("v" + i).getBytes(StandardCharsets.UTF_8));
+//            template.put(table, put0);
+//        }
 
         Scan scan = new Scan();
-        scan.setStartRow("q2".getBytes(StandardCharsets.UTF_8));
-        scan.setStopRow("q5".getBytes(StandardCharsets.UTF_8));
+        scan.setStartRow(row2);
+//        scan.setStopRow("q5".getBytes(StandardCharsets.UTF_8));
         ResultScanner scan1 = template.scan(table, scan);
         for (Result result : scan1) {
             byte[] value = result.getValue(cf, column1);

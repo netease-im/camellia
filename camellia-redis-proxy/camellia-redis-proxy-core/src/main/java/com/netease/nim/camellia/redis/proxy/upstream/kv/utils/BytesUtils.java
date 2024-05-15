@@ -41,7 +41,7 @@ public class BytesUtils {
                 throw new IllegalStateException("illegal bytes");
             }
             byte b = result[index];
-            if (b < Byte.MAX_VALUE) {
+            if (b != -1) {
                 result[index] = (byte) (b + 1);
                 break;
             } else {
@@ -60,7 +60,7 @@ public class BytesUtils {
                 throw new IllegalStateException("illegal bytes");
             }
             byte b = result[index];
-            if (b > Byte.MIN_VALUE) {
+            if (b != 0) {
                 result[index] = (byte) (b - 1);
                 break;
             } else {
