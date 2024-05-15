@@ -30,11 +30,11 @@ public abstract class ZRange0Commander extends Commander {
         super(commanderConfig);
     }
 
-    protected final Reply zrangeVersion1(KeyMeta keyMeta, byte[] key, byte[][] objects, byte[] script) {
+    protected final Reply zrangeVersion1(KeyMeta keyMeta, byte[] key, byte[][] objects, byte[] script, boolean forRead) {
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
         byte[][] args = new byte[objects.length - 2][];
         System.arraycopy(objects, 2, args, 0, args.length);
-        Reply reply = zrangeFromRedis(cacheKey, script, args);
+        Reply reply = zrangeFromRedis(cacheKey, script, args, forRead);
         if (reply != null) {
             return reply;
         }
@@ -59,7 +59,7 @@ public abstract class ZRange0Commander extends Commander {
                 return reply1;
             }
         }
-        reply = zrangeFromRedis(cacheKey, script, args);
+        reply = zrangeFromRedis(cacheKey, script, args, false);
         if (reply != null) {
             return reply;
         }
@@ -70,7 +70,7 @@ public abstract class ZRange0Commander extends Commander {
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
         byte[][] args = new byte[objects.length - 2][];
         System.arraycopy(objects, 2, args, 0, args.length);
-        Reply reply = zrangeFromRedis(cacheKey, script, args);
+        Reply reply = zrangeFromRedis(cacheKey, script, args, forRead);
         if (reply != null) {
             if (reply instanceof MultiBulkReply) {
                 return checkReplyWithIndex(keyMeta, key, (MultiBulkReply) reply, withScores);
@@ -108,7 +108,7 @@ public abstract class ZRange0Commander extends Commander {
                 return reply1;
             }
         }
-        reply = zrangeFromRedis(cacheKey, script, args);
+        reply = zrangeFromRedis(cacheKey, script, args, false);
         if (reply != null) {
             if (reply instanceof MultiBulkReply) {
                 return checkReplyWithIndex(keyMeta, key, (MultiBulkReply) reply, withScores);
@@ -168,7 +168,7 @@ public abstract class ZRange0Commander extends Commander {
         return list;
     }
 
-    protected final Reply zrangeFromRedis(byte[] cacheKey, byte[] script, byte[][] args) {
+    protected final Reply zrangeFromRedis(byte[] cacheKey, byte[] script, byte[][] args, boolean delayTtl) {
         Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, args));
         if (reply instanceof ErrorReply) {
             return reply;
@@ -177,7 +177,10 @@ public abstract class ZRange0Commander extends Commander {
             Reply[] replies = ((MultiBulkReply) reply).getReplies();
             if (replies[0] instanceof BulkReply) {
                 byte[] raw = ((BulkReply) replies[0]).getRaw();
-                if (Utils.bytesToString(raw).equalsIgnoreCase("2")) {
+                if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
+                    if (delayTtl) {
+                        cacheRedisTemplate.sendPExpire(cacheKey, cacheConfig.zsetRangeCacheMillis());
+                    }
                     return replies[1];
                 }
             }

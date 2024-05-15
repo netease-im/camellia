@@ -28,9 +28,9 @@ public class ZRemCommander extends Commander {
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
             "if ret1 then\n" +
             "  local ret = redis.call('zrem', KEYS[1], unpack(ARGV));\n" +
-            "  return {'2', ret};\n" +
+            "  return {'1', ret};\n" +
             "end\n" +
-            "return {'1'};").getBytes(StandardCharsets.UTF_8);
+            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
     public ZRemCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);

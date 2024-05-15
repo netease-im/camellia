@@ -30,9 +30,9 @@ public class ZRevRangeCommander extends ZRange0Commander {
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
             "if ret1 then\n" +
             "  local ret = redis.call('zrevrange', KEYS[1], unpack(ARGV));\n" +
-            "  return {'2', ret};\n" +
+            "  return {'1', ret};\n" +
             "end\n" +
-            "return {'1'};").getBytes(StandardCharsets.UTF_8);
+            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
     public ZRevRangeCommander(CommanderConfig commanderConfig) {
         super(commanderConfig);
@@ -72,7 +72,7 @@ public class ZRevRangeCommander extends ZRange0Commander {
             return zrevrangeVersion0(keyMeta, key, objects, withScores);
         }
         if (encodeVersion == EncodeVersion.version_1) {
-            return zrangeVersion1(keyMeta, key, objects, script);
+            return zrangeVersion1(keyMeta, key, objects, script, true);
         }
         if (encodeVersion == EncodeVersion.version_2) {
             return zrangeVersion2(keyMeta, key, objects, withScores, script, true);

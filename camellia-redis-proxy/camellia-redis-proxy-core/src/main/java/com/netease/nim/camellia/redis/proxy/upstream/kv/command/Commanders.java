@@ -69,6 +69,7 @@ public class Commanders {
         initCommander(new ZRemRangeByScoreCommander(commanderConfig));
         initCommander(new ZRemRangeByLexCommander(commanderConfig));
         initCommander(new ZRemCommander(commanderConfig));
+        initCommander(new ZScoreCommander(commanderConfig));
 
     }
 

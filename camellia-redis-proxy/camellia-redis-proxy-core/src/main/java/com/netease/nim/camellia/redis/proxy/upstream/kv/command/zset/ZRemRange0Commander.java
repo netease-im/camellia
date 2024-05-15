@@ -22,7 +22,7 @@ public abstract class ZRemRange0Commander extends ZRange0Commander {
     }
 
     protected final Reply zremrangeVersion1(KeyMeta keyMeta, byte[] key, byte[][] zrangeArgs, byte[] script) {
-        Reply reply = zrangeVersion1(keyMeta, key, zrangeArgs, script);
+        Reply reply = zrangeVersion1(keyMeta, key, zrangeArgs, script, false);
         if (reply instanceof ErrorReply) {
             return reply;
         }

@@ -77,7 +77,7 @@ public class HGetAllCommander extends Hash0Commander {
 
         byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
 
-        Reply reply = checkCache(script, cacheKey);
+        Reply reply = checkCache(script, cacheKey, new byte[][]{hgetallCacheMillis()});
         if (reply != null) {
             return reply;
         }

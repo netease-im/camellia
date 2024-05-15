@@ -2,9 +2,7 @@ package com.netease.nim.camellia.redis.proxy.upstream.kv.command.hash;
 
 import com.netease.nim.camellia.redis.proxy.command.Command;
 import com.netease.nim.camellia.redis.proxy.enums.RedisCommand;
-import com.netease.nim.camellia.redis.proxy.reply.BulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.ErrorReply;
-import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.Commander;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
@@ -52,22 +50,6 @@ public abstract class Hash0Commander extends Commander {
             }
         }
         return map;
-    }
-
-    protected final Reply checkCache(byte[] script, byte[] cacheKey) {
-        //cache
-        Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, new byte[][]{hgetallCacheMillis()}));
-        if (reply instanceof ErrorReply) {
-            return reply;
-        }
-        if (reply instanceof MultiBulkReply) {
-            Reply[] replies = ((MultiBulkReply) reply).getReplies();
-            String type = Utils.bytesToString(((BulkReply) replies[0]).getRaw());
-            if (type.equalsIgnoreCase("1")) {//cache hit
-                return replies[1];
-            }
-        }
-        return null;
     }
 
     protected final ErrorReply buildCache(byte[] cacheKey, Map<BytesKey, byte[]> map) {
