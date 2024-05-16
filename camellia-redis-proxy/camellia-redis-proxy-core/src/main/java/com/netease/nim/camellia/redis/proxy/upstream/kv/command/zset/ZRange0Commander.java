@@ -39,7 +39,7 @@ public abstract class ZRange0Commander extends Commander {
             return reply;
         }
         List<ZSetTuple> tuples = zrangeAllFromKv(keyMeta, key);
-        byte[][] cmd = new byte[tuples.size() + 2][];
+        byte[][] cmd = new byte[tuples.size() * 2 + 2][];
         cmd[0] = RedisCommand.ZADD.raw();
         cmd[1] = cacheKey;
         int i = 2;
@@ -78,7 +78,7 @@ public abstract class ZRange0Commander extends Commander {
             return reply;
         }
         List<ZSetTuple> tuples = zrangeAllFromKv(keyMeta, key);
-        byte[][] cmd = new byte[tuples.size() + 2][];
+        byte[][] cmd = new byte[tuples.size() * 2 + 2][];
         cmd[0] = RedisCommand.ZADD.raw();
         cmd[1] = cacheKey;
         List<Command> refCommands = new ArrayList<>();
@@ -282,7 +282,7 @@ public abstract class ZRange0Commander extends Commander {
                     if (bytes == null) {
                         continue;
                     }
-                    list.add(memberReply);
+                    list.add(new BulkReply(bytes));
                     list.add(scoreReply);
                 }
             }
@@ -294,7 +294,7 @@ public abstract class ZRange0Commander extends Commander {
                     if (bytes == null) {
                         continue;
                     }
-                    list.add(reply1);
+                    list.add(new BulkReply(bytes));
                 }
             }
         }

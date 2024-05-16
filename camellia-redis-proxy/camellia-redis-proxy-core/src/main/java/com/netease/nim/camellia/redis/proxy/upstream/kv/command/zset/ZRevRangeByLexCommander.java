@@ -26,7 +26,7 @@ import java.util.List;
 public class ZRevRangeByLexCommander extends ZRange0Commander {
 
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if ret1 then\n" +
+            "if tonumber(ret1) == 1 then\n" +
             "  local ret = redis.call('zrevrangebylex', KEYS[1], unpack(ARGV));\n" +
             "  return {'1', ret};\n" +
             "end\n" +
@@ -59,22 +59,19 @@ public class ZRevRangeByLexCommander extends ZRange0Commander {
             return ErrorReply.WRONG_TYPE;
         }
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
-        if (encodeVersion == EncodeVersion.version_0) {
-            return zrevrangeByLexVersion0(keyMeta, key, objects);
+        if (encodeVersion == EncodeVersion.version_0 || encodeVersion == EncodeVersion.version_2) {
+            return zrevrangeByLexVersion0OrVersion2(keyMeta, key, objects);
         }
         if (encodeVersion == EncodeVersion.version_1) {
             return zrangeVersion1(keyMeta, key, objects, script, true);
         }
-        if (encodeVersion == EncodeVersion.version_2) {
-            return zrangeVersion2(keyMeta, key, objects, false, script, true);
-        }
         if (encodeVersion == EncodeVersion.version_3) {
-            return zrangeVersion3(keyMeta, key, objects, false);
+            return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
         }
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zrevrangeByLexVersion0(KeyMeta keyMeta, byte[] key, byte[][] objects) {
+    private Reply zrevrangeByLexVersion0OrVersion2(KeyMeta keyMeta, byte[] key, byte[][] objects) {
         ZSetLex minLex;
         ZSetLex maxLex;
         ZSetLimit limit;

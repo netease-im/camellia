@@ -7,6 +7,7 @@ import com.netease.nim.camellia.redis.proxy.reply.IntegerReply;
 import com.netease.nim.camellia.redis.proxy.reply.MultiBulkReply;
 import com.netease.nim.camellia.redis.proxy.reply.Reply;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.command.CommanderConfig;
+import com.netease.nim.camellia.redis.proxy.upstream.kv.domain.Index;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.KeyValue;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.kv.Sort;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
@@ -17,6 +18,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * ZREMRANGEBYLEX key min max
@@ -26,7 +28,7 @@ import java.util.List;
 public class ZRemRangeByLexCommander extends ZRemRange0Commander {
 
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if ret1 then\n" +
+            "if tonumber(ret1) == 1 then\n" +
             "  local ret = redis.call('zrangebylex', KEYS[1], unpack(ARGV));\n" +
             "  return {'1', ret};\n" +
             "end\n" +
@@ -60,7 +62,10 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
         }
         EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         if (encodeVersion == EncodeVersion.version_0) {
-            return zremrangeByLex(keyMeta, key, objects);
+            return zremrangeByLexVersion0OrVersion1(keyMeta, key, objects);
+        }
+        if (encodeVersion == EncodeVersion.version_2) {
+            return zremrangeByLexVersion0OrVersion1(keyMeta, key, objects);
         }
         byte[][] zrangeArgs = new byte[objects.length][];
         System.arraycopy(objects, 0, zrangeArgs, 0, zrangeArgs.length);
@@ -68,16 +73,14 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
         if (encodeVersion == EncodeVersion.version_1) {
             return zremrangeVersion1(keyMeta, key, zrangeArgs, script);
         }
-        if (encodeVersion == EncodeVersion.version_2) {
-            return zremrangeVersion2(keyMeta, key, zrangeArgs, script);
-        }
         if (encodeVersion == EncodeVersion.version_3) {
-            return zremrangeVersion3(keyMeta, key, zrangeArgs);
+            return ErrorReply.COMMAND_NOT_SUPPORT_IN_CURRENT_KV_ENCODE_VERSION;
         }
         return ErrorReply.INTERNAL_ERROR;
     }
 
-    private Reply zremrangeByLex(KeyMeta keyMeta, byte[] key, byte[][] objects) {
+    private Reply zremrangeByLexVersion0OrVersion1(KeyMeta keyMeta, byte[] key, byte[][] objects) {
+        EncodeVersion encodeVersion = keyMeta.getEncodeVersion();
         ZSetLex minLex;
         ZSetLex maxLex;
         try {
@@ -109,6 +112,7 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
             }
         }
         List<byte[]> toDeleteKeys = new ArrayList<>();
+        List<byte[]> toDeleteRedisKeys = new ArrayList<>();
         int scanBatch = kvConfig.scanBatch();
         int count = 0;
         while (true) {
@@ -127,7 +131,17 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
                     continue;
                 }
                 toDeleteKeys.add(keyValue.getKey());
-                toDeleteKeys.add(keyDesign.zsetMemberSubKey2(keyMeta, key, member, keyValue.getValue()));
+                if (encodeVersion == EncodeVersion.version_0) {
+                    toDeleteKeys.add(keyDesign.zsetMemberSubKey2(keyMeta, key, member, keyValue.getValue()));
+                }
+                if (encodeVersion == EncodeVersion.version_2) {
+                    Index index = Index.fromRaw(member);
+                    if (index.isIndex()) {
+                        toDeleteKeys.add(keyDesign.zsetIndexSubKey(keyMeta, key, index));
+                        byte[] indexCacheKey = keyDesign.zsetMemberIndexCacheKey(keyMeta, key, index);
+                        toDeleteRedisKeys.add(indexCacheKey);
+                    }
+                }
                 count++;
             }
             if (scan.size() < scanBatch) {
@@ -135,12 +149,27 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
             }
         }
         if (!toDeleteKeys.isEmpty()) {
-            kvClient.batchDelete(toDeleteKeys.toArray(new byte[0][0]));
             int size = BytesUtils.toInt(keyMeta.getExtra());
             size = size - count;
+            if (size <= 0) {
+                toDeleteRedisKeys.add(keyDesign.cacheKey(keyMeta, key));
+            }
+
+            CompletableFuture<Reply> future = cacheRedisTemplate.sendDel(toDeleteRedisKeys.toArray(new byte[0][0]));
+
+            kvClient.batchDelete(toDeleteKeys.toArray(new byte[0][0]));
+
             updateKeyMeta(keyMeta, key, size);
+
+            if (future != null) {
+                Reply reply = sync(future);
+                if (reply instanceof ErrorReply) {
+                    return reply;
+                }
+            }
             return IntegerReply.parse(count);
         }
         return IntegerReply.REPLY_0;
     }
+
 }

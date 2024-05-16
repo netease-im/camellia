@@ -25,6 +25,6 @@ public class ZSetScoreUtils {
                 return false;
             }
         }
-        return false;
+        return true;
     }
 }

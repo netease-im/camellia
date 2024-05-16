@@ -28,7 +28,7 @@ import java.util.List;
 public class ZRevRangeByScoreCommander extends ZRange0Commander {
 
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if ret1 then\n" +
+            "if tonumber(ret1) == 1 then\n" +
             "  local ret = redis.call('zrevrangebyscore', KEYS[1], unpack(ARGV));\n" +
             "  return {'1', ret};\n" +
             "end\n" +

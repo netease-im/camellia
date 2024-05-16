@@ -27,12 +27,12 @@ import java.util.Map;
  */
 public class ZAddCommander extends Commander {
 
-    private static final byte[] script1 = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if ret1 then\n" +
+    private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
+            "if tonumber(ret1) == 1 then\n" +
             "  local ret = redis.call('zadd', KEYS[1], unpack(ARGV));\n" +
-            "  return {'2', ret};\n" +
+            "  return {'1', ret};\n" +
             "end\n" +
-            "return {'1'};").getBytes(StandardCharsets.UTF_8);
+            "return {'2'};").getBytes(StandardCharsets.UTF_8);
 
 
     public ZAddCommander(CommanderConfig commanderConfig) {
@@ -173,13 +173,14 @@ public class ZAddCommander extends Commander {
             return IntegerReply.parse(memberSize);
         } else {
             byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            byte[][] args = new byte[memberSize + 2][];
+            byte[][] args = new byte[memberSize * 2][];
             int i = 0;
             for (Map.Entry<BytesKey, byte[]> entry : memberMap.entrySet()) {
                 args[i] = entry.getValue();
                 args[i+1] = entry.getKey().getKey();
+                i+=2;
             }
-            Reply reply = sync(cacheRedisTemplate.sendLua(script1, new byte[][]{cacheKey}, args));
+            Reply reply = sync(cacheRedisTemplate.sendLua(script, new byte[][]{cacheKey}, args));
             if (reply instanceof ErrorReply) {
                 return reply;
             }
@@ -188,7 +189,7 @@ public class ZAddCommander extends Commander {
                 Reply[] replies = ((MultiBulkReply) reply).getReplies();
                 if (replies[0] instanceof BulkReply) {
                     byte[] raw = ((BulkReply) replies[0]).getRaw();
-                    if (Utils.bytesToString(raw).equalsIgnoreCase("2")) {
+                    if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
                         if (replies[1] instanceof IntegerReply) {
                             add = (((IntegerReply) replies[1]).getInteger()).intValue();
                         }
@@ -267,7 +268,7 @@ public class ZAddCommander extends Commander {
                 i+=2;
             }
             byte[] cacheKey = keyDesign.cacheKey(keyMeta, key);
-            Command zsetIndexLuaCmd = cacheRedisTemplate.luaCommand(script1, new byte[][]{cacheKey}, zsetIndexCmd);
+            Command zsetIndexLuaCmd = cacheRedisTemplate.luaCommand(script, new byte[][]{cacheKey}, zsetIndexCmd);
             List<Command> commands = new ArrayList<>(cmdList.size() + 1);
             commands.add(zsetIndexLuaCmd);
             commands.addAll(cmdList);
@@ -277,7 +278,7 @@ public class ZAddCommander extends Commander {
             if (reply instanceof MultiBulkReply) {
                 Reply[] replies = ((MultiBulkReply) reply).getReplies();
                 byte[] raw = ((BulkReply) replies[0]).getRaw();
-                if (Utils.bytesToString(raw).equalsIgnoreCase("2")) {
+                if (Utils.bytesToString(raw).equalsIgnoreCase("1")) {
                     if (replies[1] instanceof IntegerReply) {
                         add = ((IntegerReply) replies[1]).getInteger().intValue();
                     }

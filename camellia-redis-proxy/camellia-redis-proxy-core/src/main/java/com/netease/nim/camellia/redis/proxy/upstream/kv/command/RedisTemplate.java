@@ -68,6 +68,13 @@ public class RedisTemplate {
         return sendCommand(new Command(new byte[][]{RedisCommand.DEL.raw(), key}));
     }
 
+    public CompletableFuture<Reply> sendDel(byte[]... key) {
+        byte[][] cmd = new byte[key.length + 1][];
+        cmd[0] = RedisCommand.DEL.raw();
+        System.arraycopy(key, 0, cmd, 1, key.length);
+        return sendCommand(new Command(cmd));
+    }
+
     public CompletableFuture<Reply> sendPExpire(byte[] key, long pexpire) {
         return sendCommand(new Command(new byte[][]{RedisCommand.PEXPIRE.raw(), key, Utils.stringToBytes(String.valueOf(pexpire))}));
     }
@@ -78,10 +85,6 @@ public class RedisTemplate {
 
     public CompletableFuture<Reply> sendGet(byte[] key) {
         return sendCommand(new Command(new byte[][]{RedisCommand.GET.raw(), key}));
-    }
-
-    public CompletableFuture<Reply> sendSet(byte[] key, byte[] value) {
-        return sendCommand(new Command(new byte[][]{RedisCommand.SET.raw(), key, value}));
     }
 
     public CompletableFuture<Reply> sendPSetEx(byte[] key, long expireMillis, byte[] value) {

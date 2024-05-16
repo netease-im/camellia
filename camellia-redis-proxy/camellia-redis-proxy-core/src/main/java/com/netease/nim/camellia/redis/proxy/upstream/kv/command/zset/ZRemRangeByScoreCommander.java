@@ -25,7 +25,7 @@ import java.util.List;
 public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
 
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if ret1 then\n" +
+            "if tonumber(ret1) == 1 then\n" +
             "  local ret = redis.call('zrangebyscore', KEYS[1], unpack(ARGV));\n" +
             "  return {'1', ret};\n" +
             "end\n" +
@@ -71,6 +71,7 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
             return zremrangeVersion2(keyMeta, key, zrangeArgs, script);
         }
         if (encodeVersion == EncodeVersion.version_3) {
+            zrangeArgs[1] = keyDesign.cacheKey(keyMeta, key);
             return zremrangeVersion3(keyMeta, key, zrangeArgs);
         }
         return ErrorReply.INTERNAL_ERROR;
@@ -113,8 +114,8 @@ public class ZRemRangeByScoreCommander extends ZRemRange0Commander {
                 }
                 toDeleteKeys.add(keyValue.getKey());
                 byte[] member = keyDesign.decodeZSetMemberBySubKey2(keyValue.getKey(), key);
-                byte[] subKey2 = keyDesign.zsetMemberSubKey2(keyMeta, key, member, keyValue.getValue());
-                toDeleteKeys.add(subKey2);
+                byte[] subKey1 = keyDesign.zsetMemberSubKey1(keyMeta, key, member);
+                toDeleteKeys.add(subKey1);
                 count ++;
             }
             if (list.size() < batch) {

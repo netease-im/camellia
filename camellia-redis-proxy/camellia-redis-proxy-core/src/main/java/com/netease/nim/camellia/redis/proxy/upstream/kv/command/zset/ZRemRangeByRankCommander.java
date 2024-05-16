@@ -24,7 +24,7 @@ import java.util.List;
 public class ZRemRangeByRankCommander extends ZRemRange0Commander {
 
     private static final byte[] script = ("local ret1 = redis.call('exists', KEYS[1]);\n" +
-            "if ret1 then\n" +
+            "if tonumber(ret1) == 1 then\n" +
             "  local ret = redis.call('zrange', KEYS[1], unpack(ARGV));\n" +
             "  return {'1', ret};\n" +
             "end\n" +
@@ -70,6 +70,7 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
             return zremrangeVersion2(keyMeta, key, zrangeArgs, script);
         }
         if (encodeVersion == EncodeVersion.version_3) {
+            zrangeArgs[1] = keyDesign.cacheKey(keyMeta, key);
             return zremrangeVersion3(keyMeta, key, zrangeArgs);
         }
         return ErrorReply.INTERNAL_ERROR;
@@ -120,9 +121,8 @@ public class ZRemRangeByRankCommander extends ZRemRange0Commander {
                 startKey = keyValue.getKey();
                 if (count >= start) {
                     byte[] member = keyDesign.decodeZSetMemberBySubKey1(keyValue.getKey(), key);
-                    byte[] score = Utils.doubleToBytes(BytesUtils.toDouble(keyValue.getValue()));
                     list.add(keyValue.getKey());
-                    list.add(keyDesign.zsetMemberSubKey2(keyMeta, key, member, score));
+                    list.add(keyDesign.zsetMemberSubKey2(keyMeta, key, member, keyValue.getValue()));
                 }
                 if (count >= stop) {
                     return deleteKv(list);
