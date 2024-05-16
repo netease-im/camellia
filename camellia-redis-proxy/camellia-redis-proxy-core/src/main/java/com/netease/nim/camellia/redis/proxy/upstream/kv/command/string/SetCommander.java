@@ -96,6 +96,10 @@ public class SetCommander extends Commander {
                 return BulkReply.NIL_REPLY;
             }
         }
+        if (keepTtl && keyMeta == null) {
+            keyMeta = keyMetaServer.getKeyMeta(key);
+        }
+        byte[] oldValue = keyMeta == null ? null : keyMeta.getExtra();
         if (keepTtl) {
             expireTime = keyMeta == null ? -1 : keyMeta.getExpireTime();
             keyMeta = new KeyMeta(EncodeVersion.version_0, KeyType.string, System.currentTimeMillis(), expireTime, value);
@@ -106,7 +110,7 @@ public class SetCommander extends Commander {
         }
         keyMetaServer.createOrUpdateKeyMeta(key, keyMeta);
         if (get) {
-            return new BulkReply(value);
+            return new BulkReply(oldValue);
         } else {
             return StatusReply.OK;
         }

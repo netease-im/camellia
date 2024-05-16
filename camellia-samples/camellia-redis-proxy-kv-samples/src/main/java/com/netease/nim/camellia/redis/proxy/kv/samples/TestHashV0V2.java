@@ -7,18 +7,16 @@ import com.netease.nim.camellia.redis.CamelliaRedisTemplate;
 import com.netease.nim.camellia.redis.jedis.JedisPoolFactory;
 import redis.clients.jedis.JedisPoolConfig;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Created by caojiajun on 2024/4/12
  */
-public class TestHashV1 {
+public class TestHashV0V2 {
 
     public static void main(String[] args) throws InterruptedException {
         String url = "redis://pass123@127.0.0.1:6381";
+//        String url = "redis://@127.0.0.1:6379";
         CamelliaRedisEnv redisEnv = new CamelliaRedisEnv.Builder()
                 .jedisPoolFactory(new JedisPoolFactory.DefaultJedisPoolFactory(new JedisPoolConfig(), 6000000))
                 .build();
@@ -32,7 +30,7 @@ public class TestHashV1 {
             assertEquals(hset1, 1L);
 
             Long hset2 = template.hset(key, "f1", "v1");
-            assertEquals(hset2, 1L);
+            assertEquals(hset2, 0L);
 
             Long hlen1 = template.hlen(key);
             assertEquals(hlen1, 1L);
@@ -41,7 +39,7 @@ public class TestHashV1 {
             assertEquals(hdel1, 1L);
 
             Long hdel2 = template.hdel(key, "f1");
-            assertEquals(hdel2, 1L);
+            assertEquals(hdel2, 0L);
 
             Long hlen2 = template.hlen(key);
             assertEquals(hlen2, 0L);
@@ -93,7 +91,7 @@ public class TestHashV1 {
             assertEquals(hgetall1.get("f2"), "v2");
 
             Long hset3 = template.hset(key, "f1", "v11");
-            assertEquals(hset3, 1L);
+            assertEquals(hset3, 0L);
 
             String hget3 = template.hget(key, "f1");
             assertEquals(hget3, "v11");
@@ -163,6 +161,24 @@ public class TestHashV1 {
             Map<String, String> hgetall6 = template.hgetAll(key);
             assertEquals(hgetall6.size(), 0);
         }
+        template.del(key);
+        {
+            Long hset1 = template.hset(key, "f1", "v1");
+            assertEquals(hset1, 1L);
+
+            Long hset2 = template.hset(key, "f2", "v2");
+            assertEquals(hset2, 1L);
+
+            Set<String> hkeys = template.hkeys(key);
+            assertEquals(hkeys.size(), 2);
+            assertEquals(hkeys.contains("f1"), true);
+            assertEquals(hkeys.contains("f2"), true);
+
+            List<String> hvals = template.hvals(key);
+            assertEquals(hvals.size(), 2);
+            assertEquals(hvals.contains("v1"), true);
+            assertEquals(hvals.contains("v1"), true);
+        }
 
         Thread.sleep(100);
         System.exit(-1);
@@ -173,8 +189,7 @@ public class TestHashV1 {
             System.out.println("SUCCESS");
         } else {
             System.out.println("ERROR, expect " + expect + " but found " + result);
-            Thread.sleep(100);
-            System.exit(-1);
+            throw new RuntimeException();
         }
     }
 }

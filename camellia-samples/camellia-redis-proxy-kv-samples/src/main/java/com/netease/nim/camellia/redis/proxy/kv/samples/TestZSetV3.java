@@ -13,7 +13,7 @@ import java.util.*;
 /**
  * Created by caojiajun on 2024/5/16
  */
-public class TestZSet {
+public class TestZSetV3 {
 
     public static void main(String[] args) throws InterruptedException {
         String url = "redis://pass123@127.0.0.1:6381";
@@ -24,8 +24,6 @@ public class TestZSet {
         CamelliaRedisTemplate template = new CamelliaRedisTemplate(redisEnv, ResourceTableUtil.simpleTable(new Resource(url)));
 
         String key = UUID.randomUUID().toString().replace("-", "");
-
-        boolean testLex = false;
 
         template.del(key);
 
@@ -54,6 +52,10 @@ public class TestZSet {
         {
             Long zcard = template.zcard(key);
             assertEquals(zcard, 7L);
+        }
+        {
+            Double v1 = template.zscore(key, "v1");
+            assertEquals(v1, 1.0);
         }
         {
             Set<String> set = template.zrange(key, 0, -1);
@@ -123,45 +125,6 @@ public class TestZSet {
             assertEquals(iterator.next(), "v3");
         }
         {
-            if (testLex) {
-                Set<String> strings = template.zrangeByLex(key, "[v2", "[v5");
-                assertEquals(strings.size(), 4);
-                Iterator<String> iterator = strings.iterator();
-                assertEquals(iterator.next(), "v2");
-                assertEquals(iterator.next(), "v3");
-                assertEquals(iterator.next(), "v4");
-                assertEquals(iterator.next(), "v5");
-            }
-        }
-        {
-            if (testLex) {
-                Set<String> strings = template.zrangeByLex(key, "-", "+");
-                assertEquals(strings.size(), 7);
-                Iterator<String> iterator = strings.iterator();
-                assertEquals(iterator.next(), "v1");
-                assertEquals(iterator.next(), "v2");
-                assertEquals(iterator.next(), "v3");
-                assertEquals(iterator.next(), "v4");
-                assertEquals(iterator.next(), "v5");
-                assertEquals(iterator.next(), "v6");
-                assertEquals(iterator.next(), "v7");
-            }
-        }
-        {
-            if (testLex) {
-                Set<String> strings = template.zrevrangeByLex(key, "+", "-");
-                assertEquals(strings.size(), 7);
-                Iterator<String> iterator = strings.iterator();
-                assertEquals(iterator.next(), "v7");
-                assertEquals(iterator.next(), "v6");
-                assertEquals(iterator.next(), "v5");
-                assertEquals(iterator.next(), "v4");
-                assertEquals(iterator.next(), "v3");
-                assertEquals(iterator.next(), "v2");
-                assertEquals(iterator.next(), "v1");
-            }
-        }
-        {
             Long zremrange = template.zremrangeByRank(key, 1, 2);
             assertEquals(zremrange, 2L);
         }
@@ -196,7 +159,6 @@ public class TestZSet {
             System.out.println("SUCCESS");
         } else {
             System.out.println("ERROR, expect " + expect + " but found " + result);
-            Thread.sleep(100);
             throw new RuntimeException();
         }
     }

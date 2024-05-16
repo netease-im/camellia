@@ -23,13 +23,13 @@ public class SetNxCommander extends Commander {
 
     @Override
     public RedisCommand redisCommand() {
-        return RedisCommand.SETEX;
+        return RedisCommand.SETNX;
     }
 
     @Override
     protected boolean parse(Command command) {
         byte[][] objects = command.getObjects();
-        return objects.length == 4;
+        return objects.length == 3;
     }
 
     @Override

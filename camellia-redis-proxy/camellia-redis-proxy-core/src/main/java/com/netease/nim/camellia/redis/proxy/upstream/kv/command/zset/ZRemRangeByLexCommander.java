@@ -155,7 +155,10 @@ public class ZRemRangeByLexCommander extends ZRemRange0Commander {
                 toDeleteRedisKeys.add(keyDesign.cacheKey(keyMeta, key));
             }
 
-            CompletableFuture<Reply> future = cacheRedisTemplate.sendDel(toDeleteRedisKeys.toArray(new byte[0][0]));
+            CompletableFuture<Reply> future = null;
+            if (!toDeleteRedisKeys.isEmpty()) {
+                future = cacheRedisTemplate.sendDel(toDeleteRedisKeys.toArray(new byte[0][0]));
+            }
 
             kvClient.batchDelete(toDeleteKeys.toArray(new byte[0][0]));
 
