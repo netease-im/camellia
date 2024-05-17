@@ -148,9 +148,40 @@ public class TestZSetV3 {
             Long zcard = template.zcard(key);
             assertEquals(zcard, 1L);
         }
+        template.del(key);
+        {
+            Map<String, Double> map1 = new HashMap<>();
+            map1.put("v1", 1.0);
+            map1.put("v2", 2.0);
+            map1.put("v3", 3.0);
+            map1.put("v4", 4.0);
+            map1.put("v5", 5.0);
+            map1.put("v6", 6.0);
+            Long zadd = template.zadd(key, map1);
+            assertEquals(zadd, 6L);
+            Set<String> strings = template.zrangeByScore(key, "3.0", "5.0");
+            assertEquals(strings.size(), 3);
+            Iterator<String> iterator = strings.iterator();
+            assertEquals(iterator.next(), "v3");
+            assertEquals(iterator.next(), "v4");
+            assertEquals(iterator.next(), "v5");
+
+            Set<String> strings1 = template.zrangeByScore(key, "(3.0", "5.0");
+            assertEquals(strings1.size(), 2);
+            Iterator<String> iterator1 = strings1.iterator();
+            assertEquals(iterator1.next(), "v4");
+            assertEquals(iterator1.next(), "v5");
+
+            Set<String> strings2 = template.zrangeByScore(key, "(3.0", "+inf");
+            assertEquals(strings2.size(), 3);
+            Iterator<String> iterator2 = strings2.iterator();
+            assertEquals(iterator2.next(), "v4");
+            assertEquals(iterator2.next(), "v5");
+            assertEquals(iterator2.next(), "v6");
+        }
 
         //end
-        Thread.sleep(500);
+        Thread.sleep(100);
         System.exit(-1);
     }
 
