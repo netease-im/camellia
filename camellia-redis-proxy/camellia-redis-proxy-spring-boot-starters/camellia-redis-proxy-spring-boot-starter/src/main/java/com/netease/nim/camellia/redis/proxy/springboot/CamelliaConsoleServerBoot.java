@@ -10,7 +10,6 @@ import com.netease.nim.camellia.redis.proxy.util.SocketUtils;
 import io.netty.channel.ChannelFuture;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.PostConstruct;
 
 /**
  *
@@ -24,8 +23,7 @@ public class CamelliaConsoleServerBoot {
     @Autowired
     private ConsoleService consoleService;
 
-    @PostConstruct
-    public void init() throws Exception {
+    public void start() throws Exception {
         if (properties.getConsolePort() == 0) {
             return;
         }

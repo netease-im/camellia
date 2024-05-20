@@ -11,10 +11,11 @@ public class CamelliaHotKeyServerBoot {
     private final String applicationName;
     private final int port;
 
-    public CamelliaHotKeyServerBoot(HotKeyServerProperties properties) {
+    public CamelliaHotKeyServerBoot(HotKeyServerProperties properties, CamelliaConsoleServerBoot consoleServerBoot) {
         this.applicationName = properties.getApplicationName();
         CamelliaHotKeyServer server = new CamelliaHotKeyServer(properties);
         server.start();
+        consoleServerBoot.start();
         this.port = server.getPort();
     }
 

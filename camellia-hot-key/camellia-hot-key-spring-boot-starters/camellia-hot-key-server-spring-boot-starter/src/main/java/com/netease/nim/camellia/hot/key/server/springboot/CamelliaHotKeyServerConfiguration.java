@@ -48,7 +48,7 @@ public class CamelliaHotKeyServerConfiguration implements ApplicationContextAwar
         properties.setPort(port);
         properties.setRedisTemplate(template);
         properties.setBeanFactory(springProxyBeanFactory());
-        return new CamelliaHotKeyServerBoot(properties);
+        return new CamelliaHotKeyServerBoot(properties, consoleServerBoot());
     }
 
     @Bean

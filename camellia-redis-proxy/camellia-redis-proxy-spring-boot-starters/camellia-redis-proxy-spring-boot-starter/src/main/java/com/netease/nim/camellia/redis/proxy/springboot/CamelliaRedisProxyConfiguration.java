@@ -67,7 +67,7 @@ public class CamelliaRedisProxyConfiguration implements ApplicationContextAware 
 
         CommandInvoker commandInvoker = new CommandInvoker(serverProperties, transpondProperties);
 
-        return new CamelliaRedisProxyBoot(serverProperties, commandInvoker);
+        return new CamelliaRedisProxyBoot(serverProperties, commandInvoker, consoleServerBoot());
     }
 
     @Bean

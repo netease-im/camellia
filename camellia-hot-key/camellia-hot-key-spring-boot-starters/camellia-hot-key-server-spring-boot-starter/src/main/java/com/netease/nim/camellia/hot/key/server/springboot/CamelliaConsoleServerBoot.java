@@ -6,7 +6,6 @@ import com.netease.nim.camellia.http.console.CamelliaHttpConsoleConfig;
 import com.netease.nim.camellia.http.console.CamelliaHttpConsoleServer;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.PostConstruct;
 
 /**
  *
@@ -20,8 +19,7 @@ public class CamelliaConsoleServerBoot {
     @Autowired
     private ConsoleService consoleService;
 
-    @PostConstruct
-    public void init() throws Exception {
+    public void start() {
         CamelliaHttpConsoleConfig config = new CamelliaHttpConsoleConfig();
         config.setPort(properties.getConsolePort());
         config.setConsoleService(consoleService);

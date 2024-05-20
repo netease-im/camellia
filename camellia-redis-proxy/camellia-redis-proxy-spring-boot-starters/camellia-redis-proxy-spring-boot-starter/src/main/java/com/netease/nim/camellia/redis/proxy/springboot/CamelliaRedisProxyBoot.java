@@ -16,11 +16,12 @@ public class CamelliaRedisProxyBoot {
     private final int tlsPort;
 
     public CamelliaRedisProxyBoot(CamelliaServerProperties serverProperties,
-                                  ICommandInvoker commandInvoker) throws Exception {
+                                  ICommandInvoker commandInvoker, CamelliaConsoleServerBoot consoleServerBoot) throws Exception {
         CamelliaApiEnv.source = serverProperties.getApplicationName();
         this.applicationName = serverProperties.getApplicationName();
         CamelliaRedisProxyServer server = new CamelliaRedisProxyServer(serverProperties, commandInvoker);
         server.start();
+        consoleServerBoot.start();
         this.port = server.getPort();
         this.tlsPort = server.getTlsPort();
     }
