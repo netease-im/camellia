@@ -20,10 +20,10 @@
 
 ## key-meta结构
 
-|           key            |                             value                             |
-|:------------------------:|:-------------------------------------------------------------:|
-|   m# + namespace + key   |             1-bit + 1-bit + 8-bit + 8-bit + N-bit             |
-| prefix + namespace + key | encode-version + key-type + key-version + expire-time + extra |
+|                  key                  |                             value                             |
+|:-------------------------------------:|:-------------------------------------------------------------:|
+| m# + namespace + md5(key)[0-8] + key  |             1-bit + 1-bit + 8-bit + 8-bit + N-bit             |
+| prefix + namespace + md5_prefix + key | encode-version + key-type + key-version + expire-time + extra |
 
 ```java
 public enum KeyType {
@@ -66,10 +66,10 @@ kv.key.meta.cache.millis=600000
 
 ## string数据结构
 
-|           key            |                   value                   |
-|:------------------------:|:-----------------------------------------:|
-|   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit + N-bit   |
-| prefix + namespace + key | 0 + 1 + key-version + expire-time + value |
+|                  key                  |                   value                   |
+|:-------------------------------------:|:-----------------------------------------:|
+| m# + namespace + md5(key)[0-8] + key  |   1-bit + 1-bit + 8-bit + 8-bit + N-bit   |
+| prefix + namespace + md5_prefix + key | 0 + 1 + key-version + expire-time + value |
 
 * 只有一种编码结构，encode-version固定为0
 * key-type固定为1
@@ -103,10 +103,10 @@ kv.cache.hgetall.cache.millis=30000
 
 #### key-meta
 
-|           key            |                      value                      |
-|:------------------------:|:-----------------------------------------------:|
-|   m# + namespace + key   |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit      |
-| prefix + namespace + key | 0 + 2 + key-version + expire-time + field-count |
+|                  key                  |                      value                      |
+|:-------------------------------------:|:-----------------------------------------------:|
+| m# + namespace + md5(key)[0-8] + key  |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit      |
+| prefix + namespace + md5_prefix + key | 0 + 2 + key-version + expire-time + field-count |
 
 #### sub-key
 
@@ -123,10 +123,10 @@ kv.cache.hgetall.cache.millis=30000
 
 #### key-meta
 
-|           key            |               value               |
-|:------------------------:|:---------------------------------:|
-|   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit   |
-| prefix + namespace + key | 1 + 2 + key-version + expire-time |
+|                  key                  |               value               |
+|:-------------------------------------:|:---------------------------------:|
+| m# + namespace + md5(key)[0-8] + key  |   1-bit + 1-bit + 8-bit + 8-bit   |
+| prefix + namespace + md5_prefix + key | 1 + 2 + key-version + expire-time |
 
 #### sub-key
 
@@ -154,9 +154,9 @@ kv.cache.hgetall.cache.millis=30000
 
 #### hget-cache-key
 
-|                 redis-key                  |            redis-type             | redis-value |
-|:------------------------------------------:|:---------------------------------:|------------:|
-| c# + namespace + key + key-version + field |              string               | field-value |
+|                 redis-key                  | redis-type | redis-value |
+|:------------------------------------------:|:----------:|------------:|
+| c# + namespace + key + key-version + field |   string   | field-value |
 
 #### hgetall-cache-key
 
@@ -196,20 +196,20 @@ kv.cache.zset.range.cache.millis=300000
 
 #### key-meta
 
-|           key            |                      value                       |
-|:------------------------:|:------------------------------------------------:|
-|   m# + namespace + key   |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
-| prefix + namespace + key | 0 + 3 + key-version + expire-time + member-count |
+|                  key                  |                      value                       |
+|:-------------------------------------:|:------------------------------------------------:|
+| m# + namespace + md5(key)[0-8] + key  |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
+| prefix + namespace + md5_prefix + key | 0 + 3 + key-version + expire-time + member-count |
 
 #### sub-key
 
-|                          key                          | value |
-|:-----------------------------------------------------:|:-----:|
-| s# + namespace + key.len + key + key-version + member | score |
+|                                  key                                  | value |
+|:---------------------------------------------------------------------:|:-----:|
+| s# + namespace + md5(key)[0-8] + key.len + key + key-version + member | score |
 
-|                              key                              | value |
-|:-------------------------------------------------------------:|:-----:|
-| k# + namespace + key.len + key + key-version + score + member | null  |
+|                                      key                                      | value |
+|:-----------------------------------------------------------------------------:|:-----:|
+| k# + namespace + md5(key)[0-8] + key.len + key + key-version + score + member | null  |
 
 * encode-version固定为0，key-type固定为3
 * 不依赖任何redis
@@ -220,16 +220,16 @@ kv.cache.zset.range.cache.millis=300000
 
 #### key-meta
 
-|           key            |                      value                       |
-|:------------------------:|:------------------------------------------------:|
-|   m# + namespace + key   |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
-| prefix + namespace + key | 1 + 3 + key-version + expire-time + member-count |
+|                  key                  |                      value                       |
+|:-------------------------------------:|:------------------------------------------------:|
+| m# + namespace + md5(key)[0-8] + key  |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
+| prefix + namespace + md5_prefix + key | 1 + 3 + key-version + expire-time + member-count |
 
 #### sub-key
 
-|                          key                          | value |
-|:-----------------------------------------------------:|:-----:|
-| s# + namespace + key.len + key + key-version + member | score |
+|                                  key                                  | value |
+|:---------------------------------------------------------------------:|:-----:|
+| s# + namespace + md5(key)[0-8] + key.len + key + key-version + member | score |
 
 #### redis-cache-key
 
@@ -245,10 +245,10 @@ kv.cache.zset.range.cache.millis=300000
 
 #### key-meta
 
-|           key            |                      value                       |
-|:------------------------:|:------------------------------------------------:|
-|   m# + namespace + key   |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
-| prefix + namespace + key | 0 + 3 + key-version + expire-time + member-count |
+|                  key                  |                      value                       |
+|:-------------------------------------:|:------------------------------------------------:|
+| m# + namespace + md5(key)[0-8] + key  |      1-bit + 1-bit + 8-bit + 8-bit + 4-bit       |
+| prefix + namespace + md5_prefix + key | 0 + 3 + key-version + expire-time + member-count |
 
 #### index
 
@@ -256,21 +256,21 @@ index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 
 #### sub-key
 
-|                          key                          | value |
-|:-----------------------------------------------------:|:-----:|
-| s# + namespace + key.len + key + key-version + member | score |
+|                                  key                                  | value |
+|:---------------------------------------------------------------------:|:-----:|
+| s# + namespace + md5(key)[0-8] + key.len + key + key-version + member | score |
 
-|                         key                          | value  |
-|:----------------------------------------------------:|:------:|
-| i# + namespace + key.len + key + key-version + index | member |
+|                                 key                                  | value  |
+|:--------------------------------------------------------------------:|:------:|
+| i# + namespace + md5(key)[0-8] + key.len + key + key-version + index | member |
 
 * 如果member很小，则只有第一个sub-key
 
 #### redis-index-zset-cache-key
 
-|                redis-key                | redis-type | redis-value |
-|:---------------------------------------:|:----------:|------------:|
-|   c# + namespace + key + key-version    |    zset    |   index-zet |
+|             redis-key              | redis-type | redis-value |
+|:----------------------------------:|:----------:|------------:|
+| c# + namespace + key + key-version |    zset    |   index-zet |
 
 #### redis-index-member-cache-key
 
@@ -287,10 +287,10 @@ index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 
 #### key-meta
 
-|           key            |               value               |
-|:------------------------:|:---------------------------------:|
-|   m# + namespace + key   |   1-bit + 1-bit + 8-bit + 8-bit   |
-| prefix + namespace + key | 3 + 3 + key-version + expire-time |
+|                  key                  |               value               |
+|:-------------------------------------:|:---------------------------------:|
+| m# + namespace + md5(key)[0-8] + key  |   1-bit + 1-bit + 8-bit + 8-bit   |
+| prefix + namespace + md5_prefix + key | 3 + 3 + key-version + expire-time |
 
 #### index
 
@@ -298,17 +298,17 @@ index=member.len < 15 ? (prefix1+member) : (prefix2+md5(member))
 
 #### sub-key
 
-|                         key                          | value  |
-|:----------------------------------------------------:|:------:|
-| i# + namespace + key.len + key + key-version + index | member |
+|                                 key                                  | value  |
+|:--------------------------------------------------------------------:|:------:|
+| i# + namespace + md5(key)[0-8] + key.len + key + key-version + index | member |
 
 * 如果member很小，则不会产生二级的index，只会在redis中写入，不会写入kv
 
 #### redis-index-zset-store-key
 
-|                redis-key                | redis-type | redis-value |
-|:---------------------------------------:|:----------:|------------:|
-|   c# + namespace + key + key-version    |    zset    |  index-zset |
+|             redis-key              | redis-type | redis-value |
+|:----------------------------------:|:----------:|------------:|
+| c# + namespace + key + key-version |    zset    |  index-zset |
 
 * index-zset中可能存的是index，也可能不是index，通过前缀的第一个字节来判断
 * 这部分redis数据不允许换出
