@@ -5,6 +5,7 @@ import com.netease.nim.camellia.redis.proxy.upstream.kv.exception.KvException;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.EncodeVersion;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.meta.KeyMeta;
 import com.netease.nim.camellia.redis.proxy.upstream.kv.utils.BytesUtils;
+import com.netease.nim.camellia.redis.proxy.util.Utils;
 import com.netease.nim.camellia.tools.utils.MD5Util;
 
 import java.nio.charset.StandardCharsets;
@@ -45,13 +46,14 @@ public class KeyDesign {
 
     public byte[] cacheKey(KeyMeta keyMeta, byte[] key) {
         long version = keyMeta.getKeyVersion();
-        return BytesUtils.merge(cachePrefix, key, BytesUtils.toBytes(version));
+        key = BytesUtils.merge(HASH_TAG_LEFT, key, HASH_TAG_RIGHT);
+        return BytesUtils.merge(cachePrefix, key, Utils.stringToBytes(String.valueOf(version)));
     }
 
     public byte[] hashFieldCacheKey(KeyMeta keyMeta, byte[] key, byte[] field) {
         long version = keyMeta.getKeyVersion();
-        byte[] data = BytesUtils.merge(cachePrefix, key, BytesUtils.toBytes(version));
-        data = BytesUtils.merge(HASH_TAG_LEFT, data, HASH_TAG_RIGHT);
+        key = BytesUtils.merge(HASH_TAG_LEFT, key, HASH_TAG_RIGHT);
+        byte[] data = BytesUtils.merge(cachePrefix, key, Utils.stringToBytes(String.valueOf(version)));
         if (field.length > 0) {
             data = BytesUtils.merge(data, field);
         }
@@ -90,8 +92,8 @@ public class KeyDesign {
 
     public byte[] zsetMemberIndexCacheKey(KeyMeta keyMeta, byte[] key, Index index) {
         long version = keyMeta.getKeyVersion();
-        byte[] data = BytesUtils.merge(cachePrefix, key, BytesUtils.toBytes(version));
-        data = BytesUtils.merge(HASH_TAG_LEFT, data, HASH_TAG_RIGHT);
+        key = BytesUtils.merge(HASH_TAG_LEFT, key, HASH_TAG_RIGHT);
+        byte[] data = BytesUtils.merge(cachePrefix, key, Utils.stringToBytes(String.valueOf(version)));
         if (index != null && index.getRef().length > 0) {
             data = BytesUtils.merge(data, index.getRef());
         }
